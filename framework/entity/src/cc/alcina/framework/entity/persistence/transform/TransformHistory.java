@@ -43,6 +43,12 @@ public class TransformHistory {
 		}
 	}
 
+	private static TransformHistory get(Class<?> clazz, Set<Long> ids) {
+		TransformHistory history = new TransformHistory();
+		history.transforms = TransformHistorySearcher.get().search(clazz, ids);
+		return history;
+	}
+
 	public static TransformHistory get(Entity entity) {
 		TransformHistory cached = cache.get().get(entity.toLocator());
 		return cached != null ? cached
@@ -53,12 +59,6 @@ public class TransformHistory {
 						// one
 						entity.entityClass(),
 						Collections.singleton(entity.getId()));
-	}
-
-	private static TransformHistory get(Class<?> clazz, Set<Long> ids) {
-		TransformHistory history = new TransformHistory();
-		history.transforms = TransformHistorySearcher.get().search(clazz, ids);
-		return history;
 	}
 
 	public List<DomainTransformEventView> transforms;
@@ -83,6 +83,14 @@ public class TransformHistory {
 				.collect(Collectors.toList());
 	}
 
+	private TransformHistory filter(Entity entity) {
+		TransformHistory info = new TransformHistory();
+		info.transforms = transforms.stream()
+				.filter(event -> event.toObjectLocator().matches(entity))
+				.collect(Collectors.toList());
+		return info;
+	}
+
 	public <U extends IUser> U getCreationUser() {
 		DomainTransformEventView transformEvent = creationEvent();
 		return transformEvent == null ? null
@@ -97,14 +105,6 @@ public class TransformHistory {
 				: (U) Domain.find(
 						(Class) PersistentImpl.getImplementation(IUser.class),
 						transformEvent.getUserId());
-	}
-
-	private TransformHistory filter(Entity entity) {
-		TransformHistory info = new TransformHistory();
-		info.transforms = transforms.stream()
-				.filter(event -> event.toObjectLocator().matches(entity))
-				.collect(Collectors.toList());
-		return info;
 	}
 
 	@Registration(TransformHistorySearcher.class)

@@ -48,36 +48,58 @@ class SyncMutations {
 		this.mutationsAccess = mutationsAccess;
 	}
 
-	public MutationNode mutationNode(NodeJso nodeJso) {
-		return nodeJso == null ? null
-				: mutationNodes.computeIfAbsent(nodeJso,
-						n -> new MutationNode(n, this, mutationsAccess, false,
-								null));
-	}
-
-	/**
-	 * Applies a sequence of remote (browser) dom mutations to the local dom
-	 */
-	public void sync(JsArray<MutationRecordJso> records) {
-		long start = System.currentTimeMillis();
-		List<MutationRecord> recordList = null;
+	void applyDetachedMutationsToLocalDom(List<MutationRecord> recordList,
+			boolean applyToRemote) {
 		try {
-			// ensure remote is not updated
-			mutationsAccess.setApplyToRemote(false);
-			recordList = sync0(records);
-		} catch (RuntimeException e) {
-			hadException = true;
-			throw e;
+			mutationsAccess.setApplyToRemote(applyToRemote);
+			recordList.stream().forEach(record -> {
+				record.sync = this;
+				record.connectMutationNodeRefs();
+				record.apply(ApplyTo.local);
+				record.addedNodes.forEach(added -> {
+					record.connectMutationNodeRef(added);
+					if (!GWT.isClient()) {
+						added.node.implAccess()
+								.putRemote(NodePathref.create(added.node));
+					}
+				});
+			});
 		} finally {
 			mutationsAccess.setApplyToRemote(true);
-			LocalDom.log(Level.INFO, "mutations - sync - %s ms",
-					System.currentTimeMillis() - start);
 		}
-		MutationHistory.Event.publish(Type.MUTATIONS, recordList);
 	}
 
-	public NodeJso typedRemote(Node n) {
-		return mutationsAccess.typedRemote(n);
+	void applyRemoteMutationsToLocalDom(List<MutationRecord> recordList) {
+		// post-sync, any remotes for which there is no localcorrespondent
+		// (at S0) can be ignored
+		recordList.stream().forEach(record -> {
+			// remote -> local (more complex) call
+			NodeJso targetRemote = record.target.remoteNode();
+			Node target = mutationsAccess.nodeForNoResolve(targetRemote);
+			if (target != null) {
+				// if it's a structural mutation, and was part of a subtree
+				// created during mutation, do not apply changes (the
+				// subtree
+				// reparse will do that, and we don't have enough
+				// information
+				// apply via mutation)
+				if (record.provideIsStructuralMutation()
+						&& !applyStructuralMutations.contains(targetRemote)) {
+					// with the caveat that any removed nodes must be
+					// unlinked
+					// from the localdom
+					record.removedNodes.forEach(removed -> {
+						Node removedNode = mutationsAccess
+								.nodeForNoResolve(removed.remoteNode());
+						if (removedNode != null) {
+							mutationsAccess.removeFromRemoteLookup(removedNode);
+						}
+					});
+					return;
+				}
+				record.apply(ApplyTo.local);
+			}
+		});
 	}
 
 	private final native JsArray<MutationRecordJso>
@@ -124,6 +146,49 @@ class SyncMutations {
     }
     return result;
 	}-*/;
+
+	boolean isApplicable(MutationRecord record) {
+		if (record.target.getNodeName().equalsIgnoreCase("title")) {
+			// FIXME - merge with other 'can't track' checks
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	public MutationNode mutationNode(NodeJso nodeJso) {
+		return nodeJso == null ? null
+				: mutationNodes.computeIfAbsent(nodeJso,
+						n -> new MutationNode(n, this, mutationsAccess, false,
+								null));
+	}
+
+	void recordLocalCreation(Node newChild) {
+		if (newChild instanceof Element) {
+			createdLocals.add((Element) newChild);
+		}
+	}
+
+	/**
+	 * Applies a sequence of remote (browser) dom mutations to the local dom
+	 */
+	public void sync(JsArray<MutationRecordJso> records) {
+		long start = System.currentTimeMillis();
+		List<MutationRecord> recordList = null;
+		try {
+			// ensure remote is not updated
+			mutationsAccess.setApplyToRemote(false);
+			recordList = sync0(records);
+		} catch (RuntimeException e) {
+			hadException = true;
+			throw e;
+		} finally {
+			mutationsAccess.setApplyToRemote(true);
+			LocalDom.log(Level.INFO, "mutations - sync - %s ms",
+					System.currentTimeMillis() - start);
+		}
+		MutationHistory.Event.publish(Type.MUTATIONS, recordList);
+	}
 
 	private List<MutationRecord> sync0(JsArray<MutationRecordJso> records) {
 		int unfilteredLength = records.length();
@@ -292,72 +357,7 @@ class SyncMutations {
 		}
 	}
 
-	void applyDetachedMutationsToLocalDom(List<MutationRecord> recordList,
-			boolean applyToRemote) {
-		try {
-			mutationsAccess.setApplyToRemote(applyToRemote);
-			recordList.stream().forEach(record -> {
-				record.sync = this;
-				record.connectMutationNodeRefs();
-				record.apply(ApplyTo.local);
-				record.addedNodes.forEach(added -> {
-					record.connectMutationNodeRef(added);
-					if (!GWT.isClient()) {
-						added.node.implAccess()
-								.putRemote(NodePathref.create(added.node));
-					}
-				});
-			});
-		} finally {
-			mutationsAccess.setApplyToRemote(true);
-		}
-	}
-
-	void applyRemoteMutationsToLocalDom(List<MutationRecord> recordList) {
-		// post-sync, any remotes for which there is no localcorrespondent
-		// (at S0) can be ignored
-		recordList.stream().forEach(record -> {
-			// remote -> local (more complex) call
-			NodeJso targetRemote = record.target.remoteNode();
-			Node target = mutationsAccess.nodeForNoResolve(targetRemote);
-			if (target != null) {
-				// if it's a structural mutation, and was part of a subtree
-				// created during mutation, do not apply changes (the
-				// subtree
-				// reparse will do that, and we don't have enough
-				// information
-				// apply via mutation)
-				if (record.provideIsStructuralMutation()
-						&& !applyStructuralMutations.contains(targetRemote)) {
-					// with the caveat that any removed nodes must be
-					// unlinked
-					// from the localdom
-					record.removedNodes.forEach(removed -> {
-						Node removedNode = mutationsAccess
-								.nodeForNoResolve(removed.remoteNode());
-						if (removedNode != null) {
-							mutationsAccess.removeFromRemoteLookup(removedNode);
-						}
-					});
-					return;
-				}
-				record.apply(ApplyTo.local);
-			}
-		});
-	}
-
-	boolean isApplicable(MutationRecord record) {
-		if (record.target.getNodeName().equalsIgnoreCase("title")) {
-			// FIXME - merge with other 'can't track' checks
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	void recordLocalCreation(Node newChild) {
-		if (newChild instanceof Element) {
-			createdLocals.add((Element) newChild);
-		}
+	public NodeJso typedRemote(Node n) {
+		return mutationsAccess.typedRemote(n);
 	}
 }

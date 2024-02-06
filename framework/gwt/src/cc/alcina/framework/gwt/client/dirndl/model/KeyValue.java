@@ -41,12 +41,12 @@ public class KeyValue<T> extends Model.All {
 		this.value = value;
 	}
 
+	public void addTo(List<KeyValue> list) {
+		list.add(this);
+	}
+
 	public KeyValue withClassName(String className) {
 		this.className = className;
 		return this;
-	}
-
-	public void addTo(List<KeyValue> list) {
-		list.add(this);
 	}
 }

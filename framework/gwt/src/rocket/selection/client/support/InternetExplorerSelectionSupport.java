@@ -60,56 +60,6 @@ public class InternetExplorerSelectionSupport extends SelectionSupport {
 		return element;
 	}
 
-	@Override
-	public SelectionEndPoint getEnd(final Selection selection) {
-		try {
-			return this.getEnd0(selection, ignoreEmptySelections);
-		} catch (Exception e) {
-			// cheap squelch
-			return null;
-		}
-	}
-
-	@Override
-	native public Selection getSelection(JavaScriptObject window)/*-{
-																	return window.document.selection;
-																	}-*/;
-
-	@Override
-	public SelectionEndPoint getStart(final Selection selection) {
-		Checker.notNull("parameter:selection", selection);
-		try {
-			return this.getStart0(selection, ignoreEmptySelections);
-		} catch (Exception e) {
-			// cheap squelch
-			return null;
-		}
-	}
-
-	@Override
-	native public boolean isEmpty(final Selection selection)/*-{
-															return selection.type == "None";
-															}-*/;
-
-	@Override
-	public void setEnd(final Selection selection, final SelectionEndPoint end) {
-		Checker.notNull("parameter:selection", selection);
-		Checker.notNull("parameter:end", end);
-		final Text textNode = end.getTextNode();
-		final int offset = end.getOffset();
-		this.setEnd0(selection, textNode, offset);
-	}
-
-	@Override
-	public void setStart(final Selection selection,
-			final SelectionEndPoint start) {
-		Checker.notNull("parameter:selection", selection);
-		Checker.notNull("parameter:start", start);
-		final Text textNode = start.getTextNode();
-		final int offset = start.getOffset();
-		this.setStart0(selection, textNode, offset);
-	}
-
 	/**
 	 * Extracts the html that represents the selected area and sets the
 	 * innerHTML attribute of the given element.
@@ -141,103 +91,15 @@ public class InternetExplorerSelectionSupport extends SelectionSupport {
 																	return i;
 																	}-*/;
 
-	/**
-	 * This method is necessary because GWT's DOM.insertChild( Element parent,
-	 * Element element, int index ) fails because it skip text nodes when
-	 * inserting.
-	 * 
-	 * @param textNode
-	 * @return
-	 */
-	native private void insertChild(final Element parent, final Element element,
-			final int index)/*-{
-							var childNodes = parent.childNodes;
-							if (index >= childNodes.length) {
-							parent.appendChild(element);
-							} else {
-							parent.insertBefore(element, childNodes[index]);
-							}
-							}-*/;
-
-	native private void setEnd0(final Selection selection, final Text textNode,
-			final int offset)/*-{
-								var rangeOffset = offset;
-								var moveToElement = null;
-								
-								// try an element before $textNode counting the number of characters one has moved backwards...
-								var node = textNode.previousSibling;
-								
-								while (node) {
-								// if textNode is try its previous sibling...
-								if (node.nodeType == 3) {
-								rangeOffset = rangeOffset + node.data.length;
-								continue;
-								}
-								
-								// found an element stop searching...
-								if (node.nodeType == 1) {
-								moveToElement = node;
-								rangeOffset = rangeOffset + node.innerText.toString().length;
-								break;
-								}
-								
-								// ignore other types...
-								node = node.previousSibling;
-								}
-								
-								// if moveToElement is null use textNode's parent.
-								if (!moveToElement) {
-								moveToElement = textNode.parentNode;
-								}
-								
-								// update the end of selection range...
-								var range = selection.createRange();
-								range.moveToElementText(moveToElement);
-								range.moveStart("character", rangeOffset);
-								range.collapse();
-								
-								var selectionRange = selection.createRange();
-								selectionRange.setEndPoint("EndToStart", range);
-								selectionRange.select();
-								}-*/;
-
-	native private void setStart0(final Selection selection,
-			final Text textNode, final int offset)/*-{
-													var rangeOffset = offset;
-													var moveToElement = null;
-													
-													// try an element before $textNode counting the number of characters one has moved backwards...
-													var node = textNode.previousSibling;
-													
-													while (node) {
-													// if a textNode is try its previous sibling...
-													if (node.nodeType == 3) {
-													rangeOffset = rangeOffset + node.data.length;
-													continue;
-													}
-													
-													// found an element stop searching...
-													if (node.nodeType == 1) {
-													moveToElement = node;
-													rangeOffset = rangeOffset + node.innerText.toString().length;
-													break;
-													}
-													
-													// ignore other types...
-													node = node.previousSibling;
-													}
-													
-													// if moveToElement is null use textNode's parent.
-													if (!moveToElement) {
-													moveToElement = textNode.parentNode;
-													}
-													
-													// update the start of selection range...
-													var range = selection.createRange();
-													range.moveToElementText(moveToElement);
-													range.moveStart("character", rangeOffset);
-													range.select();
-													}-*/;
+	@Override
+	public SelectionEndPoint getEnd(final Selection selection) {
+		try {
+			return this.getEnd0(selection, ignoreEmptySelections);
+		} catch (Exception e) {
+			// cheap squelch
+			return null;
+		}
+	}
 
 	protected native SelectionEndPoint getEnd0(final Selection selection,
 			boolean ignoreEmptySelections) /*-{
@@ -299,6 +161,22 @@ public class InternetExplorerSelectionSupport extends SelectionSupport {
 									
 									return endPoint;
 									}-*/;
+
+	@Override
+	native public Selection getSelection(JavaScriptObject window)/*-{
+																	return window.document.selection;
+																	}-*/;
+
+	@Override
+	public SelectionEndPoint getStart(final Selection selection) {
+		Checker.notNull("parameter:selection", selection);
+		try {
+			return this.getStart0(selection, ignoreEmptySelections);
+		} catch (Exception e) {
+			// cheap squelch
+			return null;
+		}
+	}
 
 	native protected SelectionEndPoint getStart0(final Selection selection,
 			boolean ignoreEmptySelections) /*-{
@@ -456,6 +334,128 @@ public class InternetExplorerSelectionSupport extends SelectionSupport {
 								
 								}
 								}-*/;
+
+	/**
+	 * This method is necessary because GWT's DOM.insertChild( Element parent,
+	 * Element element, int index ) fails because it skip text nodes when
+	 * inserting.
+	 * 
+	 * @param textNode
+	 * @return
+	 */
+	native private void insertChild(final Element parent, final Element element,
+			final int index)/*-{
+							var childNodes = parent.childNodes;
+							if (index >= childNodes.length) {
+							parent.appendChild(element);
+							} else {
+							parent.insertBefore(element, childNodes[index]);
+							}
+							}-*/;
+
+	@Override
+	native public boolean isEmpty(final Selection selection)/*-{
+															return selection.type == "None";
+															}-*/;
+
+	@Override
+	public void setEnd(final Selection selection, final SelectionEndPoint end) {
+		Checker.notNull("parameter:selection", selection);
+		Checker.notNull("parameter:end", end);
+		final Text textNode = end.getTextNode();
+		final int offset = end.getOffset();
+		this.setEnd0(selection, textNode, offset);
+	}
+
+	native private void setEnd0(final Selection selection, final Text textNode,
+			final int offset)/*-{
+								var rangeOffset = offset;
+								var moveToElement = null;
+								
+								// try an element before $textNode counting the number of characters one has moved backwards...
+								var node = textNode.previousSibling;
+								
+								while (node) {
+								// if textNode is try its previous sibling...
+								if (node.nodeType == 3) {
+								rangeOffset = rangeOffset + node.data.length;
+								continue;
+								}
+								
+								// found an element stop searching...
+								if (node.nodeType == 1) {
+								moveToElement = node;
+								rangeOffset = rangeOffset + node.innerText.toString().length;
+								break;
+								}
+								
+								// ignore other types...
+								node = node.previousSibling;
+								}
+								
+								// if moveToElement is null use textNode's parent.
+								if (!moveToElement) {
+								moveToElement = textNode.parentNode;
+								}
+								
+								// update the end of selection range...
+								var range = selection.createRange();
+								range.moveToElementText(moveToElement);
+								range.moveStart("character", rangeOffset);
+								range.collapse();
+								
+								var selectionRange = selection.createRange();
+								selectionRange.setEndPoint("EndToStart", range);
+								selectionRange.select();
+								}-*/;
+
+	@Override
+	public void setStart(final Selection selection,
+			final SelectionEndPoint start) {
+		Checker.notNull("parameter:selection", selection);
+		Checker.notNull("parameter:start", start);
+		final Text textNode = start.getTextNode();
+		final int offset = start.getOffset();
+		this.setStart0(selection, textNode, offset);
+	}
+
+	native private void setStart0(final Selection selection,
+			final Text textNode, final int offset)/*-{
+													var rangeOffset = offset;
+													var moveToElement = null;
+													
+													// try an element before $textNode counting the number of characters one has moved backwards...
+													var node = textNode.previousSibling;
+													
+													while (node) {
+													// if a textNode is try its previous sibling...
+													if (node.nodeType == 3) {
+													rangeOffset = rangeOffset + node.data.length;
+													continue;
+													}
+													
+													// found an element stop searching...
+													if (node.nodeType == 1) {
+													moveToElement = node;
+													rangeOffset = rangeOffset + node.innerText.toString().length;
+													break;
+													}
+													
+													// ignore other types...
+													node = node.previousSibling;
+													}
+													
+													// if moveToElement is null use textNode's parent.
+													if (!moveToElement) {
+													moveToElement = textNode.parentNode;
+													}
+													
+													// update the start of selection range...
+													var range = selection.createRange();
+													range.moveToElementText(moveToElement);
+													range.moveStart("character", rangeOffset);
+													range.select();
+													}-*/;
 
 	@Override
 	protected void surround0(final Selection selection, final Element element) {

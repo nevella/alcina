@@ -42,6 +42,57 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 
 	private List<DomainViewNodeContent.Response> savedResponses = new ArrayList<>();
 
+	protected void apply(Transform transform, WaitPolicy waitPolicy) {
+		boolean fireCollectionModificationEvents = waitPolicy == WaitPolicy.WAIT_FOR_DELTAS;
+		if (waitPolicy == WaitPolicy.WAIT_FOR_DELTAS) {
+			// don't apply delta transforms if outside the visible tree
+			switch (transform.getOperation()) {
+			case REMOVE:
+			case CHANGE:
+				if (!getRoot().getTreePath().hasPath(transform.getTreePath())) {
+					return;
+				}
+				break;
+			case INSERT:
+				String parentPathStr = TreePath
+						.parentPath(transform.getTreePath());
+				Optional<TreePath<DomainViewNode>> parentPathOptional = getRoot()
+						.getTreePath().getPath(parentPathStr);
+				if (parentPathOptional.isEmpty()) {
+					return;
+				}
+				TreePath<DomainViewNode> parentPath = parentPathOptional.get();
+				if (!parentPath.hasChildrenLoaded() && !isDepthFirst()) {
+					return;
+				}
+				if (transform.getBeforePath() != null && !getRoot()
+						.getTreePath().hasPath(transform.getBeforePath())) {
+					return;
+				}
+				break;
+			}
+		}
+		DomainViewNode node = getRoot().ensureNode(transform.getNode(),
+				transform.getTreePath(), transform.getBeforePath(),
+				fireCollectionModificationEvents);
+		switch (transform.getOperation()) {
+		case INSERT:
+		case CHANGE:
+			node.setNode(transform.getNode());
+			afterNodeChange.publish(new NodeChangeEvent(node.getTreePath()));
+			break;
+		case REMOVE:
+			TreePath next = node.getTreePath().walker().next();
+			if (next == null) {
+				next = node.getTreePath().walker().previous();
+			}
+			beforeNodeRemoval.publish(new BeforeNodeRemovalEvent(
+					node.getTreePath(), next == null ? null : next));
+			node.removeFromParent();
+			break;
+		}
+	}
+
 	@AlcinaTransient
 	public DomainViewNode.LabelGenerator getLabelGenerator() {
 		return this.labelGenerator;
@@ -215,57 +266,6 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 		this.saveResponses = saveResponses;
 	}
 
-	protected void apply(Transform transform, WaitPolicy waitPolicy) {
-		boolean fireCollectionModificationEvents = waitPolicy == WaitPolicy.WAIT_FOR_DELTAS;
-		if (waitPolicy == WaitPolicy.WAIT_FOR_DELTAS) {
-			// don't apply delta transforms if outside the visible tree
-			switch (transform.getOperation()) {
-			case REMOVE:
-			case CHANGE:
-				if (!getRoot().getTreePath().hasPath(transform.getTreePath())) {
-					return;
-				}
-				break;
-			case INSERT:
-				String parentPathStr = TreePath
-						.parentPath(transform.getTreePath());
-				Optional<TreePath<DomainViewNode>> parentPathOptional = getRoot()
-						.getTreePath().getPath(parentPathStr);
-				if (parentPathOptional.isEmpty()) {
-					return;
-				}
-				TreePath<DomainViewNode> parentPath = parentPathOptional.get();
-				if (!parentPath.hasChildrenLoaded() && !isDepthFirst()) {
-					return;
-				}
-				if (transform.getBeforePath() != null && !getRoot()
-						.getTreePath().hasPath(transform.getBeforePath())) {
-					return;
-				}
-				break;
-			}
-		}
-		DomainViewNode node = getRoot().ensureNode(transform.getNode(),
-				transform.getTreePath(), transform.getBeforePath(),
-				fireCollectionModificationEvents);
-		switch (transform.getOperation()) {
-		case INSERT:
-		case CHANGE:
-			node.setNode(transform.getNode());
-			afterNodeChange.publish(new NodeChangeEvent(node.getTreePath()));
-			break;
-		case REMOVE:
-			TreePath next = node.getTreePath().walker().next();
-			if (next == null) {
-				next = node.getTreePath().walker().previous();
-			}
-			beforeNodeRemoval.publish(new BeforeNodeRemovalEvent(
-					node.getTreePath(), next == null ? null : next));
-			node.removeFromParent();
-			break;
-		}
-	}
-
 	public class BeforeNodeRemovalEvent {
 		public TreePath removed;
 
@@ -308,6 +308,10 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			populated = false;
 		}
 
+		protected void constructLabel(DomainViewNodeContent<?> node) {
+			getLabel().setLabel(labelGenerator.apply(node));
+		}
+
 		public DomainViewNode ensureNode(DomainViewNodeContent nodeContent,
 				String path, String beforePath,
 				boolean fireCollectionModificationEvents) {
@@ -340,6 +344,40 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			return this.node instanceof ExposePathSegment
 					? getTreePath().getSegment()
 					: null;
+		}
+
+		private void modifyChildren(Operation operation, String beforePath,
+				DomainViewNode node, boolean fireCollectionModificationEvents) {
+			List<TreeNode<DomainViewNode>> newValue = getChildren();
+			if (fireCollectionModificationEvents) {
+				newValue = new ArrayList<>(newValue);
+			}
+			switch (operation) {
+			case INSERT:
+				int index = newValue.size();
+				if (beforePath != null) {
+					Optional<TreePath<DomainViewNode>> path = node.getTreePath()
+							.getPath(beforePath);
+					if (path.isPresent()) {
+						DomainViewNode beforePathNode = path.get().getValue();
+						index = beforePathNode.getParent().getChildren()
+								.indexOf(beforePathNode);
+					}
+				}
+				if (index == newValue.size()) {
+					newValue.add(node);
+				} else {
+					newValue.add(index, node);
+				}
+				break;
+			case REMOVE:
+				newValue.remove(node);
+				node.getTreePath().removeFromParent();
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+			setChildren(newValue);
 		}
 
 		public DomainViewTree provideContainingTree() {
@@ -382,44 +420,6 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 		public String toString() {
 			return Ax.format("%s [%s children]", getTreePath(),
 					getChildren().size());
-		}
-
-		private void modifyChildren(Operation operation, String beforePath,
-				DomainViewNode node, boolean fireCollectionModificationEvents) {
-			List<TreeNode<DomainViewNode>> newValue = getChildren();
-			if (fireCollectionModificationEvents) {
-				newValue = new ArrayList<>(newValue);
-			}
-			switch (operation) {
-			case INSERT:
-				int index = newValue.size();
-				if (beforePath != null) {
-					Optional<TreePath<DomainViewNode>> path = node.getTreePath()
-							.getPath(beforePath);
-					if (path.isPresent()) {
-						DomainViewNode beforePathNode = path.get().getValue();
-						index = beforePathNode.getParent().getChildren()
-								.indexOf(beforePathNode);
-					}
-				}
-				if (index == newValue.size()) {
-					newValue.add(node);
-				} else {
-					newValue.add(index, node);
-				}
-				break;
-			case REMOVE:
-				newValue.remove(node);
-				node.getTreePath().removeFromParent();
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
-			setChildren(newValue);
-		}
-
-		protected void constructLabel(DomainViewNodeContent<?> node) {
-			getLabel().setLabel(labelGenerator.apply(node));
 		}
 
 		public static class ContentGenerator implements LabelGenerator {

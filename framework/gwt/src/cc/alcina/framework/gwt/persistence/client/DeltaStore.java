@@ -201,6 +201,10 @@ public class DeltaStore {
 				.get(getExistingVersionedSignature(sig)) != null;
 	}
 
+	private boolean hasNoSerializedContent(String nonVersionedKey) {
+		return cache.hasNoSerializedContent(nonVersionedKey);
+	}
+
 	public void invalidate(Class<?> clazz) {
 		DomainModelDeltaSignature sig = new DomainModelDeltaSignature()
 				.clazz(clazz);
@@ -214,26 +218,6 @@ public class DeltaStore {
 				response, deserializeTranches, removeUnusedTranches, callback);
 		new SubconsortSupport().maybeAttach(callback, mergeResponseConsort,
 				false);
-	}
-
-	public void refreshCache(AsyncCallback callback) {
-		EnsureCacheConsort ensureCacheConsort = new EnsureCacheConsort(
-				callback);
-		if (callback instanceof Player) {
-			Player player = (Player) callback;
-			new SubconsortSupport().run(player.getConsort(), ensureCacheConsort,
-					player);
-		} else {
-			ensureCacheConsort.start();
-		}
-	}
-
-	public void registerDelegate(PersistenceObjectStore objectStore) {
-		this.objectStore = objectStore;
-	}
-
-	private boolean hasNoSerializedContent(String nonVersionedKey) {
-		return cache.hasNoSerializedContent(nonVersionedKey);
 	}
 
 	private void persistTranches(
@@ -253,6 +237,22 @@ public class DeltaStore {
 			}
 		}
 		objectStore.put(out, callback);
+	}
+
+	public void refreshCache(AsyncCallback callback) {
+		EnsureCacheConsort ensureCacheConsort = new EnsureCacheConsort(
+				callback);
+		if (callback instanceof Player) {
+			Player player = (Player) callback;
+			new SubconsortSupport().run(player.getConsort(), ensureCacheConsort,
+					player);
+		} else {
+			ensureCacheConsort.start();
+		}
+	}
+
+	public void registerDelegate(PersistenceObjectStore objectStore) {
+		this.objectStore = objectStore;
 	}
 
 	void removeUnusedTranches(List<String> preserveClientDeltaSignatures,

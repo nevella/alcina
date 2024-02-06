@@ -29,10 +29,19 @@ import java.util.SortedMap;
  */
 public class Tries {
 	/**
-	 * Returns true if bitIndex is a {@link KeyAnalyzer#OUT_OF_BOUNDS_BIT_KEY}
+	 * Returns true if both values are either null or equal
 	 */
-	static boolean isOutOfBoundsIndex(int bitIndex) {
-		return bitIndex == KeyAnalyzer.OUT_OF_BOUNDS_BIT_KEY;
+	static boolean areEqual(Object a, Object b) {
+		return (a == null ? b == null : a.equals(b));
+	}
+
+	/**
+	 * A utility method to cast keys. It actually doesn't cast anything. It's
+	 * just fooling the compiler!
+	 */
+	@SuppressWarnings("unchecked")
+	static <K> K cast(Object key) {
+		return (K) key;
 	}
 
 	/**
@@ -50,18 +59,18 @@ public class Tries {
 	}
 
 	/**
+	 * Returns true if bitIndex is a {@link KeyAnalyzer#OUT_OF_BOUNDS_BIT_KEY}
+	 */
+	static boolean isOutOfBoundsIndex(int bitIndex) {
+		return bitIndex == KeyAnalyzer.OUT_OF_BOUNDS_BIT_KEY;
+	}
+
+	/**
 	 * Returns true if the given bitIndex is valid. Indices are considered valid
 	 * if they're between 0 and {@link Integer#MAX_VALUE}
 	 */
 	static boolean isValidBitIndex(int bitIndex) {
 		return 0 <= bitIndex && bitIndex <= Integer.MAX_VALUE;
-	}
-
-	/**
-	 * Returns true if both values are either null or equal
-	 */
-	static boolean areEqual(Object a, Object b) {
-		return (a == null ? b == null : a.equals(b));
 	}
 
 	/**
@@ -73,18 +82,6 @@ public class Tries {
 			throw new NullPointerException(message);
 		}
 		return o;
-	}
-
-	/**
-	 * A utility method to cast keys. It actually doesn't cast anything. It's
-	 * just fooling the compiler!
-	 */
-	@SuppressWarnings("unchecked")
-	static <K> K cast(Object key) {
-		return (K) key;
-	}
-
-	private Tries() {
 	}
 
 	/**
@@ -111,159 +108,7 @@ public class Tries {
 		return new UnmodifiableTrie<K, V>(trie);
 	}
 
-	/**
-	 * A synchronized {@link Trie}
-	 */
-	private static class SynchronizedTrie<K, V>
-			implements Trie<K, V>, Serializable {
-		private static final long serialVersionUID = 3121878833178676939L;
-
-		private final Trie<K, V> delegate;
-
-		public SynchronizedTrie(Trie<K, V> delegate) {
-			this.delegate = Tries.notNull(delegate, "delegate");
-		}
-
-		@Override
-		public synchronized Entry<K, V> select(K key,
-				Cursor<? super K, ? super V> cursor) {
-			return delegate.select(key, cursor);
-		}
-
-		@Override
-		public synchronized Entry<K, V> select(K key) {
-			return delegate.select(key);
-		}
-
-		@Override
-		public synchronized K selectKey(K key) {
-			return delegate.selectKey(key);
-		}
-
-		@Override
-		public synchronized V selectValue(K key) {
-			return delegate.selectValue(key);
-		}
-
-		@Override
-		public synchronized Entry<K, V>
-				traverse(Cursor<? super K, ? super V> cursor) {
-			return delegate.traverse(cursor);
-		}
-
-		@Override
-		public synchronized Set<Entry<K, V>> entrySet() {
-			return new SynchronizedSet<Entry<K, V>>(this, delegate.entrySet());
-		}
-
-		@Override
-		public synchronized Set<K> keySet() {
-			return new SynchronizedSet<K>(this, delegate.keySet());
-		}
-
-		@Override
-		public synchronized Collection<V> values() {
-			return new SynchronizedCollection<V>(this, delegate.values());
-		}
-
-		@Override
-		public synchronized void clear() {
-			delegate.clear();
-		}
-
-		@Override
-		public synchronized boolean containsKey(Object key) {
-			return delegate.containsKey(key);
-		}
-
-		@Override
-		public synchronized boolean containsValue(Object value) {
-			return delegate.containsValue(value);
-		}
-
-		@Override
-		public synchronized V get(Object key) {
-			return delegate.get(key);
-		}
-
-		@Override
-		public synchronized boolean isEmpty() {
-			return delegate.isEmpty();
-		}
-
-		@Override
-		public synchronized V put(K key, V value) {
-			return delegate.put(key, value);
-		}
-
-		@Override
-		public synchronized void putAll(Map<? extends K, ? extends V> m) {
-			delegate.putAll(m);
-		}
-
-		@Override
-		public synchronized V remove(Object key) {
-			return delegate.remove(key);
-		}
-
-		@Override
-		public synchronized K lastKey() {
-			return delegate.lastKey();
-		}
-
-		@Override
-		public synchronized SortedMap<K, V> subMap(K fromKey, K toKey) {
-			return new SynchronizedSortedMap<K, V>(this,
-					delegate.subMap(fromKey, toKey));
-		}
-
-		@Override
-		public synchronized SortedMap<K, V> tailMap(K fromKey) {
-			return new SynchronizedSortedMap<K, V>(this,
-					delegate.tailMap(fromKey));
-		}
-
-		@Override
-		public synchronized Comparator<? super K> comparator() {
-			return delegate.comparator();
-		}
-
-		@Override
-		public synchronized K firstKey() {
-			return delegate.firstKey();
-		}
-
-		@Override
-		public synchronized SortedMap<K, V> headMap(K toKey) {
-			return new SynchronizedSortedMap<K, V>(this,
-					delegate.headMap(toKey));
-		}
-
-		@Override
-		public synchronized SortedMap<K, V> prefixMap(K prefix) {
-			return new SynchronizedSortedMap<K, V>(this,
-					delegate.prefixMap(prefix));
-		}
-
-		@Override
-		public synchronized int size() {
-			return delegate.size();
-		}
-
-		@Override
-		public synchronized int hashCode() {
-			return delegate.hashCode();
-		}
-
-		@Override
-		public synchronized boolean equals(Object obj) {
-			return delegate.equals(obj);
-		}
-
-		@Override
-		public synchronized String toString() {
-			return delegate.toString();
-		}
+	private Tries() {
 	}
 
 	/**
@@ -314,6 +159,20 @@ public class Tries {
 		public boolean containsAll(Collection<?> c) {
 			synchronized (lock) {
 				return delegate.containsAll(c);
+			}
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			synchronized (delegate) {
+				return delegate.equals(obj);
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			synchronized (delegate) {
+				return delegate.hashCode();
 			}
 		}
 
@@ -374,20 +233,6 @@ public class Tries {
 		}
 
 		@Override
-		public int hashCode() {
-			synchronized (delegate) {
-				return delegate.hashCode();
-			}
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			synchronized (delegate) {
-				return delegate.equals(obj);
-			}
-		}
-
-		@Override
 		public String toString() {
 			synchronized (lock) {
 				return delegate.toString();
@@ -424,76 +269,16 @@ public class Tries {
 		}
 
 		@Override
-		public Comparator<? super K> comparator() {
-			synchronized (lock) {
-				return delegate.comparator();
-			}
-		}
-
-		@Override
-		public Set<Entry<K, V>> entrySet() {
-			synchronized (lock) {
-				return new SynchronizedSet<Entry<K, V>>(lock,
-						delegate.entrySet());
-			}
-		}
-
-		@Override
-		public K firstKey() {
-			synchronized (lock) {
-				return delegate.firstKey();
-			}
-		}
-
-		@Override
-		public SortedMap<K, V> headMap(K toKey) {
-			synchronized (lock) {
-				return new SynchronizedSortedMap<K, V>(lock,
-						delegate.headMap(toKey));
-			}
-		}
-
-		@Override
-		public Set<K> keySet() {
-			synchronized (lock) {
-				return new SynchronizedSet<K>(lock, delegate.keySet());
-			}
-		}
-
-		@Override
-		public K lastKey() {
-			synchronized (lock) {
-				return delegate.lastKey();
-			}
-		}
-
-		@Override
-		public SortedMap<K, V> subMap(K fromKey, K toKey) {
-			synchronized (lock) {
-				return new SynchronizedSortedMap<K, V>(lock,
-						delegate.subMap(fromKey, toKey));
-			}
-		}
-
-		@Override
-		public SortedMap<K, V> tailMap(K fromKey) {
-			synchronized (lock) {
-				return new SynchronizedSortedMap<K, V>(lock,
-						delegate.tailMap(fromKey));
-			}
-		}
-
-		@Override
-		public Collection<V> values() {
-			synchronized (lock) {
-				return new SynchronizedCollection<V>(lock, delegate.values());
-			}
-		}
-
-		@Override
 		public void clear() {
 			synchronized (lock) {
 				delegate.clear();
+			}
+		}
+
+		@Override
+		public Comparator<? super K> comparator() {
+			synchronized (lock) {
+				return delegate.comparator();
 			}
 		}
 
@@ -512,6 +297,28 @@ public class Tries {
 		}
 
 		@Override
+		public Set<Entry<K, V>> entrySet() {
+			synchronized (lock) {
+				return new SynchronizedSet<Entry<K, V>>(lock,
+						delegate.entrySet());
+			}
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			synchronized (delegate) {
+				return delegate.equals(obj);
+			}
+		}
+
+		@Override
+		public K firstKey() {
+			synchronized (lock) {
+				return delegate.firstKey();
+			}
+		}
+
+		@Override
 		public V get(Object key) {
 			synchronized (lock) {
 				return delegate.get(key);
@@ -519,9 +326,38 @@ public class Tries {
 		}
 
 		@Override
+		public int hashCode() {
+			synchronized (delegate) {
+				return delegate.hashCode();
+			}
+		}
+
+		@Override
+		public SortedMap<K, V> headMap(K toKey) {
+			synchronized (lock) {
+				return new SynchronizedSortedMap<K, V>(lock,
+						delegate.headMap(toKey));
+			}
+		}
+
+		@Override
 		public boolean isEmpty() {
 			synchronized (lock) {
 				return delegate.isEmpty();
+			}
+		}
+
+		@Override
+		public Set<K> keySet() {
+			synchronized (lock) {
+				return new SynchronizedSet<K>(lock, delegate.keySet());
+			}
+		}
+
+		@Override
+		public K lastKey() {
+			synchronized (lock) {
+				return delegate.lastKey();
 			}
 		}
 
@@ -554,16 +390,18 @@ public class Tries {
 		}
 
 		@Override
-		public int hashCode() {
-			synchronized (delegate) {
-				return delegate.hashCode();
+		public SortedMap<K, V> subMap(K fromKey, K toKey) {
+			synchronized (lock) {
+				return new SynchronizedSortedMap<K, V>(lock,
+						delegate.subMap(fromKey, toKey));
 			}
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			synchronized (delegate) {
-				return delegate.equals(obj);
+		public SortedMap<K, V> tailMap(K fromKey) {
+			synchronized (lock) {
+				return new SynchronizedSortedMap<K, V>(lock,
+						delegate.tailMap(fromKey));
 			}
 		}
 
@@ -572,6 +410,168 @@ public class Tries {
 			synchronized (lock) {
 				return delegate.toString();
 			}
+		}
+
+		@Override
+		public Collection<V> values() {
+			synchronized (lock) {
+				return new SynchronizedCollection<V>(lock, delegate.values());
+			}
+		}
+	}
+
+	/**
+	 * A synchronized {@link Trie}
+	 */
+	private static class SynchronizedTrie<K, V>
+			implements Trie<K, V>, Serializable {
+		private static final long serialVersionUID = 3121878833178676939L;
+
+		private final Trie<K, V> delegate;
+
+		public SynchronizedTrie(Trie<K, V> delegate) {
+			this.delegate = Tries.notNull(delegate, "delegate");
+		}
+
+		@Override
+		public synchronized void clear() {
+			delegate.clear();
+		}
+
+		@Override
+		public synchronized Comparator<? super K> comparator() {
+			return delegate.comparator();
+		}
+
+		@Override
+		public synchronized boolean containsKey(Object key) {
+			return delegate.containsKey(key);
+		}
+
+		@Override
+		public synchronized boolean containsValue(Object value) {
+			return delegate.containsValue(value);
+		}
+
+		@Override
+		public synchronized Set<Entry<K, V>> entrySet() {
+			return new SynchronizedSet<Entry<K, V>>(this, delegate.entrySet());
+		}
+
+		@Override
+		public synchronized boolean equals(Object obj) {
+			return delegate.equals(obj);
+		}
+
+		@Override
+		public synchronized K firstKey() {
+			return delegate.firstKey();
+		}
+
+		@Override
+		public synchronized V get(Object key) {
+			return delegate.get(key);
+		}
+
+		@Override
+		public synchronized int hashCode() {
+			return delegate.hashCode();
+		}
+
+		@Override
+		public synchronized SortedMap<K, V> headMap(K toKey) {
+			return new SynchronizedSortedMap<K, V>(this,
+					delegate.headMap(toKey));
+		}
+
+		@Override
+		public synchronized boolean isEmpty() {
+			return delegate.isEmpty();
+		}
+
+		@Override
+		public synchronized Set<K> keySet() {
+			return new SynchronizedSet<K>(this, delegate.keySet());
+		}
+
+		@Override
+		public synchronized K lastKey() {
+			return delegate.lastKey();
+		}
+
+		@Override
+		public synchronized SortedMap<K, V> prefixMap(K prefix) {
+			return new SynchronizedSortedMap<K, V>(this,
+					delegate.prefixMap(prefix));
+		}
+
+		@Override
+		public synchronized V put(K key, V value) {
+			return delegate.put(key, value);
+		}
+
+		@Override
+		public synchronized void putAll(Map<? extends K, ? extends V> m) {
+			delegate.putAll(m);
+		}
+
+		@Override
+		public synchronized V remove(Object key) {
+			return delegate.remove(key);
+		}
+
+		@Override
+		public synchronized Entry<K, V> select(K key) {
+			return delegate.select(key);
+		}
+
+		@Override
+		public synchronized Entry<K, V> select(K key,
+				Cursor<? super K, ? super V> cursor) {
+			return delegate.select(key, cursor);
+		}
+
+		@Override
+		public synchronized K selectKey(K key) {
+			return delegate.selectKey(key);
+		}
+
+		@Override
+		public synchronized V selectValue(K key) {
+			return delegate.selectValue(key);
+		}
+
+		@Override
+		public synchronized int size() {
+			return delegate.size();
+		}
+
+		@Override
+		public synchronized SortedMap<K, V> subMap(K fromKey, K toKey) {
+			return new SynchronizedSortedMap<K, V>(this,
+					delegate.subMap(fromKey, toKey));
+		}
+
+		@Override
+		public synchronized SortedMap<K, V> tailMap(K fromKey) {
+			return new SynchronizedSortedMap<K, V>(this,
+					delegate.tailMap(fromKey));
+		}
+
+		@Override
+		public synchronized String toString() {
+			return delegate.toString();
+		}
+
+		@Override
+		public synchronized Entry<K, V>
+				traverse(Cursor<? super K, ? super V> cursor) {
+			return delegate.traverse(cursor);
+		}
+
+		@Override
+		public synchronized Collection<V> values() {
+			return new SynchronizedCollection<V>(this, delegate.values());
 		}
 	}
 
@@ -586,6 +586,97 @@ public class Tries {
 
 		public UnmodifiableTrie(Trie<K, V> delegate) {
 			this.delegate = Tries.notNull(delegate, "delegate");
+		}
+
+		@Override
+		public void clear() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Comparator<? super K> comparator() {
+			return delegate.comparator();
+		}
+
+		@Override
+		public boolean containsKey(Object key) {
+			return delegate.containsKey(key);
+		}
+
+		@Override
+		public boolean containsValue(Object value) {
+			return delegate.containsValue(value);
+		}
+
+		@Override
+		public Set<Entry<K, V>> entrySet() {
+			return Collections.unmodifiableSet(delegate.entrySet());
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return delegate.equals(obj);
+		}
+
+		@Override
+		public K firstKey() {
+			return delegate.firstKey();
+		}
+
+		@Override
+		public V get(Object key) {
+			return delegate.get(key);
+		}
+
+		@Override
+		public int hashCode() {
+			return delegate.hashCode();
+		}
+
+		@Override
+		public SortedMap<K, V> headMap(K toKey) {
+			return Collections.unmodifiableSortedMap(delegate.headMap(toKey));
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return delegate.isEmpty();
+		}
+
+		@Override
+		public Set<K> keySet() {
+			return Collections.unmodifiableSet(delegate.keySet());
+		}
+
+		@Override
+		public K lastKey() {
+			return delegate.lastKey();
+		}
+
+		@Override
+		public SortedMap<K, V> prefixMap(K prefix) {
+			return Collections
+					.unmodifiableSortedMap(delegate.prefixMap(prefix));
+		}
+
+		@Override
+		public V put(K key, V value) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void putAll(Map<? extends K, ? extends V> m) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public V remove(Object key) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Entry<K, V> select(K key) {
+			return delegate.select(key);
 		}
 
 		@Override
@@ -608,11 +699,6 @@ public class Tries {
 		}
 
 		@Override
-		public Entry<K, V> select(K key) {
-			return delegate.select(key);
-		}
-
-		@Override
 		public K selectKey(K key) {
 			return delegate.selectKey(key);
 		}
@@ -620,6 +706,27 @@ public class Tries {
 		@Override
 		public V selectValue(K key) {
 			return delegate.selectValue(key);
+		}
+
+		@Override
+		public int size() {
+			return delegate.size();
+		}
+
+		@Override
+		public SortedMap<K, V> subMap(K fromKey, K toKey) {
+			return Collections
+					.unmodifiableSortedMap(delegate.subMap(fromKey, toKey));
+		}
+
+		@Override
+		public SortedMap<K, V> tailMap(K fromKey) {
+			return Collections.unmodifiableSortedMap(delegate.tailMap(fromKey));
+		}
+
+		@Override
+		public String toString() {
+			return delegate.toString();
 		}
 
 		@Override
@@ -641,115 +748,8 @@ public class Tries {
 		}
 
 		@Override
-		public Set<Entry<K, V>> entrySet() {
-			return Collections.unmodifiableSet(delegate.entrySet());
-		}
-
-		@Override
-		public Set<K> keySet() {
-			return Collections.unmodifiableSet(delegate.keySet());
-		}
-
-		@Override
 		public Collection<V> values() {
 			return Collections.unmodifiableCollection(delegate.values());
-		}
-
-		@Override
-		public void clear() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean containsKey(Object key) {
-			return delegate.containsKey(key);
-		}
-
-		@Override
-		public boolean containsValue(Object value) {
-			return delegate.containsValue(value);
-		}
-
-		@Override
-		public V get(Object key) {
-			return delegate.get(key);
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return delegate.isEmpty();
-		}
-
-		@Override
-		public V put(K key, V value) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void putAll(Map<? extends K, ? extends V> m) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public V remove(Object key) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public K firstKey() {
-			return delegate.firstKey();
-		}
-
-		@Override
-		public SortedMap<K, V> headMap(K toKey) {
-			return Collections.unmodifiableSortedMap(delegate.headMap(toKey));
-		}
-
-		@Override
-		public K lastKey() {
-			return delegate.lastKey();
-		}
-
-		@Override
-		public SortedMap<K, V> subMap(K fromKey, K toKey) {
-			return Collections
-					.unmodifiableSortedMap(delegate.subMap(fromKey, toKey));
-		}
-
-		@Override
-		public SortedMap<K, V> tailMap(K fromKey) {
-			return Collections.unmodifiableSortedMap(delegate.tailMap(fromKey));
-		}
-
-		@Override
-		public SortedMap<K, V> prefixMap(K prefix) {
-			return Collections
-					.unmodifiableSortedMap(delegate.prefixMap(prefix));
-		}
-
-		@Override
-		public Comparator<? super K> comparator() {
-			return delegate.comparator();
-		}
-
-		@Override
-		public int size() {
-			return delegate.size();
-		}
-
-		@Override
-		public int hashCode() {
-			return delegate.hashCode();
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			return delegate.equals(obj);
-		}
-
-		@Override
-		public String toString() {
-			return delegate.toString();
 		}
 	}
 }

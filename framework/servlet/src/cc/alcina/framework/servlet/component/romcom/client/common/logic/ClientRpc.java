@@ -34,6 +34,13 @@ public class ClientRpc {
 
 	static int awaitDelay = 0;
 
+	static RemoteComponentRequest createRequest() {
+		RemoteComponentRequest request = new RemoteComponentRequest();
+		request.session = session;
+		request.requestId = ++clientMessageId;
+		return request;
+	}
+
 	public static void runAsync(Class clazz, Runnable runnable) {
 		GWT.runAsync(clazz, new RunAsyncCallback() {
 			@Override
@@ -62,17 +69,6 @@ public class ClientRpc {
 		};
 	}
 
-	public static void submitRequest(RemoteComponentRequest request) {
-		submitRequest(request, null);
-	}
-
-	static RemoteComponentRequest createRequest() {
-		RemoteComponentRequest request = new RemoteComponentRequest();
-		request.session = session;
-		request.requestId = ++clientMessageId;
-		return request;
-	}
-
 	static void send(Message message) {
 		send(message, false);
 	}
@@ -92,6 +88,10 @@ public class ClientRpc {
 
 	static void sendAwaitRemoteMessage() {
 		send(new Message.AwaitRemote());
+	}
+
+	public static void submitRequest(RemoteComponentRequest request) {
+		submitRequest(request, null);
 	}
 
 	static void submitRequest(RemoteComponentRequest request,

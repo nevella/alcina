@@ -42,24 +42,13 @@ public final class TourJso extends JavaScriptObject implements Tour {
 			return ClientUtils.jsArrayToTypedArray(getConditionsArray());
 		}
 
-		@Override
-		public final native String getEvaluatorClassName()/*-{
-      return this.evaluatorClassName;
+		final private native JsArray<ConditionJso> getConditionsArray()/*-{
+      return (this.conditions) ? this.conditions : [];
 		}-*/;
 
 		@Override
-		public final Tour.Operator getOperator() {
-			return CommonUtils.getEnumValueOrNull(Tour.Operator.class,
-					getOperatorString(), true, Tour.Operator.AND);
-		}
-
-		@Override
-		public final List<String> getSelectors() {
-			return ClientUtils.jsStringArrayAsStringList(getJsSelectors());
-		}
-
-		final private native JsArray<ConditionJso> getConditionsArray()/*-{
-      return (this.conditions) ? this.conditions : [];
+		public final native String getEvaluatorClassName()/*-{
+      return this.evaluatorClassName;
 		}-*/;
 
 		final private native JsArrayString getJsSelectors()/*-{
@@ -72,9 +61,20 @@ public final class TourJso extends JavaScriptObject implements Tour {
       return this.selectors;
 		}-*/;
 
+		@Override
+		public final Tour.Operator getOperator() {
+			return CommonUtils.getEnumValueOrNull(Tour.Operator.class,
+					getOperatorString(), true, Tour.Operator.AND);
+		}
+
 		final private native String getOperatorString()/*-{
       return this.action;
 		}-*/;
+
+		@Override
+		public final List<String> getSelectors() {
+			return ClientUtils.jsStringArrayAsStringList(getJsSelectors());
+		}
 	}
 
 	static final class PopupInfoJso extends JavaScriptObject
@@ -115,6 +115,10 @@ public final class TourJso extends JavaScriptObject implements Tour {
 					Tour.PositioningDirection.LEFT_BOTTOM);
 		}
 
+		private final native String getDirectionString()/*-{
+      return this.direction;
+		}-*/;
+
 		@Override
 		final public native String getElement()/*-{
       return this.element;
@@ -141,6 +145,10 @@ public final class TourJso extends JavaScriptObject implements Tour {
       return (this.pointerRightMargin) ? this.pointerRightMargin : 0;
 		}-*/;
 
+		final native String getPointerString()/*-{
+      return this.pointer;
+		}-*/;
+
 		@Override
 		final public native int getPopupFromBottom()/*-{
       return (this.popupFromBottom) ? this.popupFromBottom : 0;
@@ -154,14 +162,6 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		@Override
 		final public native boolean isStepTarget()/*-{
       return !!this.stepTarget;
-		}-*/;
-
-		private final native String getDirectionString()/*-{
-      return this.direction;
-		}-*/;
-
-		final native String getPointerString()/*-{
-      return this.pointer;
 		}-*/;
 	}
 
@@ -184,6 +184,10 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		@Override
 		final public native int getActionDelay()/*-{
       return this.actionDelay || 0;
+		}-*/;
+
+		final private native String getActionString()/*-{
+      return this.action;
 		}-*/;
 
 		@Override
@@ -211,6 +215,16 @@ public final class TourJso extends JavaScriptObject implements Tour {
       return this.ignoreIf;
 		}-*/;
 
+		final private native JsArray<PopupInfoJso> getPopupsArray()/*-{
+      return (this.popups) ? this.popups : [ {
+        caption : this.caption,
+        description : this.description,
+        relativeTo : this.relativeTo,
+        style : this.style
+
+      } ];
+		}-*/;
+
 		@Override
 		final public native ConditionJso getWaitFor()/*-{
       return this.waitFor;
@@ -234,20 +248,6 @@ public final class TourJso extends JavaScriptObject implements Tour {
       return {
         "selectors" : this.target
       }
-		}-*/;
-
-		final private native String getActionString()/*-{
-      return this.action;
-		}-*/;
-
-		final private native JsArray<PopupInfoJso> getPopupsArray()/*-{
-      return (this.popups) ? this.popups : [ {
-        caption : this.caption,
-        description : this.description,
-        relativeTo : this.relativeTo,
-        style : this.style
-
-      } ];
 		}-*/;
 	}
 }

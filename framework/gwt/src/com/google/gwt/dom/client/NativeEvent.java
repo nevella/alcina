@@ -230,6 +230,26 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		return data.metaKey;
 	}
 
+	@AlcinaTransient
+	public Set<Modifier> getModifiers() {
+		if (modifiers == null) {
+			modifiers = new HashSet<>();
+			if (getCtrlKey()) {
+				modifiers.add(Modifier.CTRL);
+			}
+			if (getAltKey()) {
+				modifiers.add(Modifier.ALT);
+			}
+			if (getShiftKey()) {
+				modifiers.add(Modifier.SHIFT);
+			}
+			if (getMetaKey()) {
+				modifiers.add(Modifier.META);
+			}
+		}
+		return modifiers;
+	}
+
 	/**
 	 * Gets the velocity of the mouse wheel associated with the event along the
 	 * Y axis.
@@ -390,24 +410,6 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		return (NE) event;
 	}
 
-	/**
-	 * Stops the event from being propagated to parent elements.
-	 */
-	public final void stopPropagation() {
-		DOMImpl.impl.eventStopPropagation(this);
-	}
-
-	@Override
-	public String toString() {
-		if (jso != null) {
-			return jso.toString();
-		}
-		if (data.type != null) {
-			return data.toString();
-		}
-		return super.toString();
-	}
-
 	void serializableForm0() {
 		getAltKey();
 		getButton();
@@ -430,6 +432,24 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		getType();
 		data.toSerializableForm();
 		jso = null;
+	}
+
+	/**
+	 * Stops the event from being propagated to parent elements.
+	 */
+	public final void stopPropagation() {
+		DOMImpl.impl.eventStopPropagation(this);
+	}
+
+	@Override
+	public String toString() {
+		if (jso != null) {
+			return jso.toString();
+		}
+		if (data.type != null) {
+			return data.toString();
+		}
+		return super.toString();
 	}
 
 	@Bean(PropertySource.FIELDS)
@@ -474,17 +494,37 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 		String key;
 
-		@Override
-		public String toString() {
-			return ReflectiveSerializer.serialize(this);
-		}
-
 		void toSerializableForm() {
 			relatedEventTarget = EventTarget
 					.serializableForm(relatedEventTarget);
 			eventTarget = EventTarget.serializableForm(eventTarget);
 			currentEventTarget = EventTarget
 					.serializableForm(currentEventTarget);
+		}
+
+		@Override
+		public String toString() {
+			return ReflectiveSerializer.serialize(this);
+		}
+	}
+
+	@Reflected
+	public static enum Modifier {
+		META, CTRL, ALT, SHIFT,
+		/*
+		 * META (osx), CTRL (other) - not emitted by getModifiers, but used as a
+		 * matcher
+		 */
+		OS_MODIFIER;
+
+		public Modifier osDependent() {
+			switch (this) {
+			case OS_MODIFIER:
+				boolean mac = Window.Navigator.getPlatform().matches("Mac.*");
+				return mac ? Modifier.META : CTRL;
+			default:
+				return this;
+			}
 		}
 	}
 
@@ -510,45 +550,5 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		public native boolean getIsComposing() /*-{
       return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.isComposing;
 		}-*/;
-	}
-
-	@Reflected
-	public static enum Modifier {
-		META, CTRL, ALT, SHIFT,
-		/*
-		 * META (osx), CTRL (other) - not emitted by getModifiers, but used as a
-		 * matcher
-		 */
-		OS_MODIFIER;
-
-		public Modifier osDependent() {
-			switch (this) {
-			case OS_MODIFIER:
-				boolean mac = Window.Navigator.getPlatform().matches("Mac.*");
-				return mac ? Modifier.META : CTRL;
-			default:
-				return this;
-			}
-		}
-	}
-
-	@AlcinaTransient
-	public Set<Modifier> getModifiers() {
-		if (modifiers == null) {
-			modifiers = new HashSet<>();
-			if (getCtrlKey()) {
-				modifiers.add(Modifier.CTRL);
-			}
-			if (getAltKey()) {
-				modifiers.add(Modifier.ALT);
-			}
-			if (getShiftKey()) {
-				modifiers.add(Modifier.SHIFT);
-			}
-			if (getMetaKey()) {
-				modifiers.add(Modifier.META);
-			}
-		}
-		return modifiers;
 	}
 }

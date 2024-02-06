@@ -31,6 +31,8 @@ public abstract class WebdbSingleSqlStatementPersistenceHandler<T>
 		this.arguments = arguments;
 	}
 
+	protected abstract T getResult();
+
 	@Override
 	public boolean onFailure(SQLTransaction transaction, SQLError error) {
 		statementError = error;
@@ -52,6 +54,4 @@ public abstract class WebdbSingleSqlStatementPersistenceHandler<T>
 	public void onTransactionSuccess() {
 		postTransactionCallback.onSuccess(getResult());
 	}
-
-	protected abstract T getResult();
 }

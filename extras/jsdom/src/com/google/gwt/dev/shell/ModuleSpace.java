@@ -51,10 +51,6 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 	 */
 	private static ThreadLocal<TreeLogger> threadLocalLogger = new ThreadLocal<TreeLogger>();
 
-	public static void setThrownJavaException(Throwable t) {
-		sThrownJavaExceptionObject.set(t);
-	}
-
 	/**
 	 * Equivalent to
 	 * {@link #createJavaScriptException(ClassLoader,Object,String)
@@ -144,6 +140,10 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 		throw new RuntimeException("Error getting exception value", caught);
 	}
 
+	public static void setThrownJavaException(Throwable t) {
+		sThrownJavaExceptionObject.set(t);
+	}
+
 	protected final ModuleSpaceHost host;
 
 	private final TreeLogger logger;
@@ -158,10 +158,55 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 		threadLocalLogger.set(host.getLogger());
 	}
 
+	private String composeResultErrorMsgPrefix(String name, String typePhrase) {
+		return "Something other than " + typePhrase
+				+ " was returned from JSNI method '" + name + "'";
+	}
+
+	/**
+	 * Create the __defineStatic method.
+	 *
+	 * @param logger
+	 */
+	protected abstract void createStaticDispatcher(TreeLogger logger);
+
+	private void displayErrorGlassPanel(String summary,
+			String entryPointTypeName, Throwable e) throws Throwable {
+		StringWriter writer = new StringWriter();
+		e.printStackTrace(new PrintWriter(writer));
+		String stackTrace = Util.escapeXml(writer.toString()).replaceFirst(
+				// (?ms) for regex pattern modifiers MULTILINE and DOTALL
+				"(?ms)(Caused by:.+)", "<b>$1</b>");
+		String details = "<p>Exception while loading module <b>"
+				+ Util.escapeXml(entryPointTypeName) + "</b>."
+				+ " See Development Mode for details.</p>"
+				+ "<div style='overflow:visible;white-space:pre;'>" + stackTrace
+				+ "</div>";
+		invokeNativeVoid("__gwt_displayGlassMessage", null,
+				new Class[] { String.class, String.class },
+				new Object[] { Util.escapeXml(summary), details });
+	}
+
 	public void dispose() {
 		// Clear our class loader.
 		getIsolatedClassLoader().clear();
 	}
+
+	/**
+	 * Invokes a native JavaScript function.
+	 *
+	 * @param name
+	 *            the name of the function to invoke
+	 * @param jthis
+	 *            the function's 'this' context
+	 * @param types
+	 *            the type of each argument
+	 * @param args
+	 *            the arguments to be passed
+	 * @return the return value as a Variant.
+	 */
+	protected abstract JsValue doInvoke(String name, Object jthis,
+			Class<?>[] types, Object[] args) throws Throwable;
 
 	@Override
 	public void exceptionCaught(Object exception) {
@@ -191,6 +236,10 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 		sCaughtJavaExceptionObject.set(caught);
 	}
 
+	protected CompilingClassLoader getIsolatedClassLoader() {
+		return host.getClassLoader();
+	}
+
 	/**
 	 * Get the module name.
 	 *
@@ -198,6 +247,37 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 	 */
 	public String getModuleName() {
 		return moduleName;
+	}
+
+	/**
+	 * Injects the magic needed to resolve JSNI references from module-space.
+	 */
+	protected abstract Object getStaticDispatcher();
+
+	/**
+	 * Invokes a native JavaScript function.
+	 *
+	 * @param name
+	 *            the name of the function to invoke
+	 * @param jthis
+	 *            the function's 'this' context
+	 * @param types
+	 *            the type of each argument
+	 * @param args
+	 *            the arguments to be passed
+	 * @return the return value as a Variant.
+	 */
+	protected final JsValue invokeNative(String name, Object jthis,
+			Class<?>[] types, Object[] args) throws Throwable {
+		JsValue result = doInvoke(name, jthis, types, args);
+		// Is an exception active?
+		Throwable thrown = sCaughtJavaExceptionObject.get();
+		if (thrown == null) {
+			return result;
+		}
+		sCaughtJavaExceptionObject.set(null);
+		scrubStackTrace(thrown);
+		throw thrown;
 	}
 
 	@Override
@@ -324,6 +404,71 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 					+ "' returned a value of type " + result.getTypeString()
 					+ " but was declared void; it should not have returned a value at all",
 					null);
+		}
+	}
+
+	/**
+	 * @param original
+	 *            the thrown exception
+	 * @param exception
+	 *            the caught exception
+	 */
+	protected boolean isExceptionSame(Throwable original, Object exception) {
+		// For most platforms, the null exception means we threw it.
+		// IE overrides this.
+		return exception == null;
+	}
+
+	private boolean isUserFrame(StackTraceElement element) {
+		try {
+			CompilingClassLoader cl = getIsolatedClassLoader();
+			String className = element.getClassName();
+			Class<?> clazz = Class.forName(className, false, cl);
+			if (clazz.getClassLoader() == cl) {
+				// Lives in user classLoader.
+				return true;
+			}
+			// At this point, it must be a JRE class to qualify.
+			if (clazz.getClassLoader() != null
+					|| !className.startsWith("java.")) {
+				return false;
+			}
+			if (className.startsWith("java.lang.reflect.")) {
+				return false;
+			}
+			return true;
+		} catch (ClassNotFoundException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Handles loading a class that might be nested given a source type name.
+	 */
+	private Class<?> loadClassFromSourceName(String sourceName)
+			throws ClassNotFoundException {
+		Event moduleSpaceClassLoad = SpeedTracerLogger.start(
+				DevModeEventType.MODULE_SPACE_CLASS_LOAD, "Source Name",
+				sourceName);
+		try {
+			String toTry = sourceName;
+			while (true) {
+				try {
+					return Class.forName(toTry, false,
+							getIsolatedClassLoader());
+				} catch (ClassNotFoundException e) {
+					// Assume that the last '.' should be '$' and try again.
+					//
+					int i = toTry.lastIndexOf('.');
+					if (i == -1) {
+						throw e;
+					}
+					toTry = toTry.substring(0, i) + "$"
+							+ toTry.substring(i + 1);
+				}
+			}
+		} finally {
+			moduleSpaceClassLoad.end();
 		}
 	}
 
@@ -473,6 +618,23 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 		}
 	}
 
+	protected String rebind(String sourceName)
+			throws UnableToCompleteException {
+		try {
+			String result = host.rebind(logger, sourceName);
+			if (result != null) {
+				return result;
+			} else {
+				return sourceName;
+			}
+		} catch (UnableToCompleteException e) {
+			String msg = "Deferred binding failed for '" + sourceName
+					+ "'; expect subsequent failures";
+			host.getLogger().log(TreeLogger.ERROR, msg);
+			throw e;
+		}
+	}
+
 	@SuppressWarnings("deprecation")
 	@Override
 	public <T> T rebindAndCreate(String requestedClassName)
@@ -541,81 +703,6 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 		throw new UnableToCompleteException();
 	}
 
-	private String composeResultErrorMsgPrefix(String name, String typePhrase) {
-		return "Something other than " + typePhrase
-				+ " was returned from JSNI method '" + name + "'";
-	}
-
-	private void displayErrorGlassPanel(String summary,
-			String entryPointTypeName, Throwable e) throws Throwable {
-		StringWriter writer = new StringWriter();
-		e.printStackTrace(new PrintWriter(writer));
-		String stackTrace = Util.escapeXml(writer.toString()).replaceFirst(
-				// (?ms) for regex pattern modifiers MULTILINE and DOTALL
-				"(?ms)(Caused by:.+)", "<b>$1</b>");
-		String details = "<p>Exception while loading module <b>"
-				+ Util.escapeXml(entryPointTypeName) + "</b>."
-				+ " See Development Mode for details.</p>"
-				+ "<div style='overflow:visible;white-space:pre;'>" + stackTrace
-				+ "</div>";
-		invokeNativeVoid("__gwt_displayGlassMessage", null,
-				new Class[] { String.class, String.class },
-				new Object[] { Util.escapeXml(summary), details });
-	}
-
-	private boolean isUserFrame(StackTraceElement element) {
-		try {
-			CompilingClassLoader cl = getIsolatedClassLoader();
-			String className = element.getClassName();
-			Class<?> clazz = Class.forName(className, false, cl);
-			if (clazz.getClassLoader() == cl) {
-				// Lives in user classLoader.
-				return true;
-			}
-			// At this point, it must be a JRE class to qualify.
-			if (clazz.getClassLoader() != null
-					|| !className.startsWith("java.")) {
-				return false;
-			}
-			if (className.startsWith("java.lang.reflect.")) {
-				return false;
-			}
-			return true;
-		} catch (ClassNotFoundException e) {
-			return false;
-		}
-	}
-
-	/**
-	 * Handles loading a class that might be nested given a source type name.
-	 */
-	private Class<?> loadClassFromSourceName(String sourceName)
-			throws ClassNotFoundException {
-		Event moduleSpaceClassLoad = SpeedTracerLogger.start(
-				DevModeEventType.MODULE_SPACE_CLASS_LOAD, "Source Name",
-				sourceName);
-		try {
-			String toTry = sourceName;
-			while (true) {
-				try {
-					return Class.forName(toTry, false,
-							getIsolatedClassLoader());
-				} catch (ClassNotFoundException e) {
-					// Assume that the last '.' should be '$' and try again.
-					//
-					int i = toTry.lastIndexOf('.');
-					if (i == -1) {
-						throw e;
-					}
-					toTry = toTry.substring(0, i) + "$"
-							+ toTry.substring(i + 1);
-				}
-			}
-		} finally {
-			moduleSpaceClassLoad.end();
-		}
-	}
-
 	/**
 	 * Clean up the stack trace by removing our hosting frames. But don't do
 	 * this if our own frames are at the top of the stack, because we may be the
@@ -656,92 +743,5 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 		}
 		thrown.setStackTrace(
 				trace.toArray(new StackTraceElement[trace.size()]));
-	}
-
-	/**
-	 * Create the __defineStatic method.
-	 *
-	 * @param logger
-	 */
-	protected abstract void createStaticDispatcher(TreeLogger logger);
-
-	/**
-	 * Invokes a native JavaScript function.
-	 *
-	 * @param name
-	 *            the name of the function to invoke
-	 * @param jthis
-	 *            the function's 'this' context
-	 * @param types
-	 *            the type of each argument
-	 * @param args
-	 *            the arguments to be passed
-	 * @return the return value as a Variant.
-	 */
-	protected abstract JsValue doInvoke(String name, Object jthis,
-			Class<?>[] types, Object[] args) throws Throwable;
-
-	protected CompilingClassLoader getIsolatedClassLoader() {
-		return host.getClassLoader();
-	}
-
-	/**
-	 * Injects the magic needed to resolve JSNI references from module-space.
-	 */
-	protected abstract Object getStaticDispatcher();
-
-	/**
-	 * Invokes a native JavaScript function.
-	 *
-	 * @param name
-	 *            the name of the function to invoke
-	 * @param jthis
-	 *            the function's 'this' context
-	 * @param types
-	 *            the type of each argument
-	 * @param args
-	 *            the arguments to be passed
-	 * @return the return value as a Variant.
-	 */
-	protected final JsValue invokeNative(String name, Object jthis,
-			Class<?>[] types, Object[] args) throws Throwable {
-		JsValue result = doInvoke(name, jthis, types, args);
-		// Is an exception active?
-		Throwable thrown = sCaughtJavaExceptionObject.get();
-		if (thrown == null) {
-			return result;
-		}
-		sCaughtJavaExceptionObject.set(null);
-		scrubStackTrace(thrown);
-		throw thrown;
-	}
-
-	/**
-	 * @param original
-	 *            the thrown exception
-	 * @param exception
-	 *            the caught exception
-	 */
-	protected boolean isExceptionSame(Throwable original, Object exception) {
-		// For most platforms, the null exception means we threw it.
-		// IE overrides this.
-		return exception == null;
-	}
-
-	protected String rebind(String sourceName)
-			throws UnableToCompleteException {
-		try {
-			String result = host.rebind(logger, sourceName);
-			if (result != null) {
-				return result;
-			} else {
-				return sourceName;
-			}
-		} catch (UnableToCompleteException e) {
-			String msg = "Deferred binding failed for '" + sourceName
-					+ "'; expect subsequent failures";
-			host.getLogger().log(TreeLogger.ERROR, msg);
-			throw e;
-		}
 	}
 }

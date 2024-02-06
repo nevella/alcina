@@ -24,11 +24,6 @@ import javaemul.internal.annotations.DoNotInline;
  * typeMarker fields.
  */
 final class Util {
-	@DoNotInline
-	public static String makeEnumName(String enumName) {
-		return enumName;
-	}
-
 	static native JavaScriptObject getCastableTypeMap(Object o) /*-{
     return o.@java.lang.Object::castableTypeMap;
 	}-*/;
@@ -37,6 +32,11 @@ final class Util {
 													o.@java.lang.Object::typeMarker =
 													@com.google.gwt.lang.Runtime::typeMarkerFn(*);
 													}-*/;
+
+	@DoNotInline
+	public static String makeEnumName(String enumName) {
+		return enumName;
+	}
 
 	static native void setCastableTypeMap(Object o,
 			JavaScriptObject castableTypeMap) /*-{

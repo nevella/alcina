@@ -31,6 +31,10 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 	public void a1test() {
 	}
 
+	private void disallowedInnerAccessMethod(int v) {
+		v = 5;
+	}
+
 	@Override
 	public long getId() {
 		return this.id;
@@ -58,6 +62,10 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 		MvccTestEntity invalidInstance = this;
 	}
 
+	Date invalidInnerClassAccessMethod2(Object resolutionCache) {
+		return null;
+	}
+
 	@Override
 	public void setId(long id) {
 		super.setId(id);
@@ -75,14 +83,6 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 		} else {
 			return domainIdentity().valid_InnerConstructor();
 		}
-	}
-
-	private void disallowedInnerAccessMethod(int v) {
-		v = 5;
-	}
-
-	Date invalidInnerClassAccessMethod2(Object resolutionCache) {
-		return null;
 	}
 
 	public class Inner1 {
@@ -113,6 +113,10 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 		public InnerStatic1() {
 		}
 
+		private Date dateLookupLambda(MvccTestEntity entity) {
+			return entity.invalidInnerClassAccessMethod2(resolutionCache);
+		}
+
 		public void invalid_InnerClassOuterFieldAccess() {
 			String s = disallowedInnerAccessField2;
 		}
@@ -120,10 +124,6 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 		public void invalid_InnerClassOuterPrivateMethodRef() {
 			IntStream.of(1, 2)
 					.forEach(MvccTestEntity.this::disallowedInnerAccessMethod);
-		}
-
-		private Date dateLookupLambda(MvccTestEntity entity) {
-			return entity.invalidInnerClassAccessMethod2(resolutionCache);
 		}
 	}
 }

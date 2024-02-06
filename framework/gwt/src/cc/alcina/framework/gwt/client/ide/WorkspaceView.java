@@ -119,6 +119,10 @@ public class WorkspaceView extends Composite implements HasName,
 		this.vetoableActionSupport.fireVetoableActionEvent(event);
 	}
 
+	protected Class<? extends Entity> getDefaultEntityClass() {
+		return null;
+	}
+
 	@Override
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo();
@@ -133,21 +137,6 @@ public class WorkspaceView extends Composite implements HasName,
 		return this.widget;
 	}
 
-	@Override
-	public void
-			removeVetoableActionListener(PermissibleActionListener listener) {
-		this.vetoableActionSupport.removeVetoableActionListener(listener);
-	}
-
-	@Override
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	protected Class<? extends Entity> getDefaultEntityClass() {
-		return null;
-	}
-
 	protected Collection<? extends Class<? extends PermissibleAction>>
 			getUnselectedActions() {
 		return getDefaultEntityClass() == null ? Collections.emptyList()
@@ -157,6 +146,17 @@ public class WorkspaceView extends Composite implements HasName,
 	@Override
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(getElement(), DEBUG_ID_PREFIX + (id == null ? name : id));
+	}
+
+	@Override
+	public void
+			removeVetoableActionListener(PermissibleActionListener listener) {
+		this.vetoableActionSupport.removeVetoableActionListener(listener);
+	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public static abstract class DataTreeView extends WorkspaceView
@@ -231,182 +231,17 @@ public class WorkspaceView extends Composite implements HasName,
 			initWidget(fp);
 		}
 
-		@Override
-		public Focusable firstFocusable() {
-			return filter.getTextBox();
-		}
-
-		public DataTree getDataTree() {
-			return this.dataTree;
-		}
-
-		public FilterWidget getFilter() {
-			return this.filter;
-		}
-
-		@Override
-		public LayoutInfo getLayoutInfo() {
-			return new LayoutInfo() {
-				@Override
-				public int getClientAdjustHeight() {
-					return 0;// 2
-				}
-
-				@Override
-				public Iterator<Widget> getLayoutWidgets() {
-					return Arrays.asList(new Widget[] { fp }).iterator();
-				}
-
-				@Override
-				public boolean to100percentOfAvailableHeight() {
-					return true;
-				}
-			};
-		}
-
-		public ScrollPanel getScroller() {
-			return this.scroller;
-		}
-
-		public Toolbar getToolbar() {
-			return this.toolbar;
-		}
-
-		public boolean isAllowEditCollections() {
-			return allowEditCollections;
-		}
-
-		public boolean isShowCollapseButton() {
-			return showCollapseButton;
-		}
-
-		@Override
-		public void onExtraTreeEvent(ExtraTreeEventEvent evt) {
-			List<Class<? extends PermissibleAction>> actions = getAvailableActions(
-					evt.getSource());
-			boolean canEdit = actions.contains(EditAction.class);
-			if (actions.contains(ViewAction.class)
-					&& evt.getType() == ExtraTreeEventType.DBL_CLICK) {
-				Class<? extends PermissibleAction> actionClass = canEdit
-						&& (allowEditCollections || evt.getSource()
-								.getUserObject() instanceof Entity)
-										? EditAction.class
-										: ViewAction.class;
-				vetoableAction(new PermissibleActionEvent(evt.getSource(),
-						Reflections.newInstance(actionClass)));
-			}
-		}
-
-		@Override
-		public void onSelection(SelectionEvent<TreeItem> event) {
-			if (LooseContext.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)) {
-				return;
-			}
-			TreeItem item = event.getSelectedItem();
-			onTreeItemSelected(item);
-		}
-
-		public void resetTree() {
-			try {
-				this.scroller.remove(dataTree);
-				getDataTree().removeItems();
-				Object items = getTopLevelItems();
-				if (items instanceof TreeItem) {
-					TreeItem root = (TreeItem) items;
-					if (showTopLevelNode()) {
-						getDataTree().addItem(root);
-						root.setState(true);
-					} else {
-						List<TreeItem> children = new ArrayList<>();
-						for (int idx = 0; idx < root.getChildCount(); idx++) {
-							children.add(root.getChild(idx));
-						}
-						children.forEach(getDataTree()::addItem);
-						if (getDefaultEntityClass() != null
-								&& listener == null) {
-							listener = e -> {
-								if (isAttached()) {
-									Scheduler.get()
-											.scheduleFinally(() -> resetTree());
-								}
-							};
-							TransformManager.get()
-									.addCollectionModificationListener(listener,
-											getDefaultEntityClass());
-						}
-					}
-				} else {
-					Collection<TreeItem> roots = (Collection<TreeItem>) items;
-					for (TreeItem root : roots) {
-						getDataTree().addItem(root);
-						root.setState(true);
-					}
-				}
-			} finally {
-				if (showTopLevelNode()
-						|| expandFirstLevelNodesOnInitialRender()) {
-					dataTree.collapseToFirstLevel();
-				}
-				// localdom opt - attach out of browser tree
-				Panel parent = (Panel) this.scroller.getParent();
-				if (parent != null) {
-					this.scroller.removeFromParent();
-					this.scroller.setWidget(dataTree);
-					parent.add(this.scroller);
-				} else {
-					this.scroller.setWidget(dataTree);
-				}
-			}
-		}
-
-		public TreeItem selectNodeForObject(Object object) {
-			return dataTree.selectNodeForObject(object);
-		}
-
-		public void setAllowEditCollections(boolean allowEditCollections) {
-			this.allowEditCollections = allowEditCollections;
-		}
-
-		public void setFilter(FilterWidget filter) {
-			this.filter = filter;
-		}
-
-		public void setShowCollapseButton(boolean showCollapseButton) {
-			this.showCollapseButton = showCollapseButton;
-			collapse.setVisible(showCollapseButton);
-		}
-
-		@Override
-		public void setVisible(boolean visible) {
-			super.setVisible(visible);
-			if (!treeInitialised && visible && isAttached()) {
-				treeInitialised = true;
-				resetTree();
-			}
-			filter.getTextBox().setFocus(true);
-		}
-
-		@Override
-		public void vetoableAction(PermissibleActionEvent evt) {
-			TreeItem item = dataTree.getSelectedItem();
-			if (evt.getAction().getClass() == DeleteAction.class) {
-				onTreeItemSelected(item);
-			}
-			// hack - do better when we rework this for dirndl
-			if (item == null) {
-				item = new DomainNode(
-						Reflections.newInstance(getDefaultEntityClass()));
-			}
-			fireVetoableActionEvent(
-					new PermissibleActionEvent(item, evt.getAction()));
-		}
-
 		protected DataTree createTree() {
 			return new DataTree(useCssTreeImages(), useNodeImages());
 		}
 
 		protected boolean expandFirstLevelNodesOnInitialRender() {
 			return true;
+		}
+
+		@Override
+		public Focusable firstFocusable() {
+			return filter.getTextBox();
 		}
 
 		protected List<Class<? extends PermissibleAction>>
@@ -513,6 +348,14 @@ public class WorkspaceView extends Composite implements HasName,
 			return node;
 		}
 
+		public DataTree getDataTree() {
+			return this.dataTree;
+		}
+
+		public FilterWidget getFilter() {
+			return this.filter;
+		}
+
 		protected <C> ContainerNode getFilteredCollectionNode(String name,
 				Class<C> clazz, ImageResource imageResource, Predicate cf) {
 			return getFilteredCollectionNode(name, clazz, imageResource, cf,
@@ -543,12 +386,40 @@ public class WorkspaceView extends Composite implements HasName,
 			return node;
 		}
 
+		@Override
+		public LayoutInfo getLayoutInfo() {
+			return new LayoutInfo() {
+				@Override
+				public int getClientAdjustHeight() {
+					return 0;// 2
+				}
+
+				@Override
+				public Iterator<Widget> getLayoutWidgets() {
+					return Arrays.asList(new Widget[] { fp }).iterator();
+				}
+
+				@Override
+				public boolean to100percentOfAvailableHeight() {
+					return true;
+				}
+			};
+		}
+
 		protected Widget getPostFilterWidget() {
 			return null;
 		}
 
 		protected Widget getPreFilterWidget() {
 			return null;
+		}
+
+		public ScrollPanel getScroller() {
+			return this.scroller;
+		}
+
+		public Toolbar getToolbar() {
+			return this.toolbar;
 		}
 
 		protected abstract Object getTopLevelItems();
@@ -569,6 +440,31 @@ public class WorkspaceView extends Composite implements HasName,
 			return node;
 		}
 
+		public boolean isAllowEditCollections() {
+			return allowEditCollections;
+		}
+
+		public boolean isShowCollapseButton() {
+			return showCollapseButton;
+		}
+
+		@Override
+		public void onExtraTreeEvent(ExtraTreeEventEvent evt) {
+			List<Class<? extends PermissibleAction>> actions = getAvailableActions(
+					evt.getSource());
+			boolean canEdit = actions.contains(EditAction.class);
+			if (actions.contains(ViewAction.class)
+					&& evt.getType() == ExtraTreeEventType.DBL_CLICK) {
+				Class<? extends PermissibleAction> actionClass = canEdit
+						&& (allowEditCollections || evt.getSource()
+								.getUserObject() instanceof Entity)
+										? EditAction.class
+										: ViewAction.class;
+				vetoableAction(new PermissibleActionEvent(evt.getSource(),
+						Reflections.newInstance(actionClass)));
+			}
+		}
+
 		@Override
 		protected void onLoad() {
 			super.onLoad();
@@ -585,6 +481,15 @@ public class WorkspaceView extends Composite implements HasName,
 			if (toolbar != null) {
 				toolbar.processAvailableActions(getAvailableActions(null));
 			}
+		}
+
+		@Override
+		public void onSelection(SelectionEvent<TreeItem> event) {
+			if (LooseContext.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)) {
+				return;
+			}
+			TreeItem item = event.getSelectedItem();
+			onTreeItemSelected(item);
 		}
 
 		protected void onTreeItemSelected(TreeItem item) {
@@ -612,6 +517,86 @@ public class WorkspaceView extends Composite implements HasName,
 			}
 		}
 
+		public void resetTree() {
+			try {
+				this.scroller.remove(dataTree);
+				getDataTree().removeItems();
+				Object items = getTopLevelItems();
+				if (items instanceof TreeItem) {
+					TreeItem root = (TreeItem) items;
+					if (showTopLevelNode()) {
+						getDataTree().addItem(root);
+						root.setState(true);
+					} else {
+						List<TreeItem> children = new ArrayList<>();
+						for (int idx = 0; idx < root.getChildCount(); idx++) {
+							children.add(root.getChild(idx));
+						}
+						children.forEach(getDataTree()::addItem);
+						if (getDefaultEntityClass() != null
+								&& listener == null) {
+							listener = e -> {
+								if (isAttached()) {
+									Scheduler.get()
+											.scheduleFinally(() -> resetTree());
+								}
+							};
+							TransformManager.get()
+									.addCollectionModificationListener(listener,
+											getDefaultEntityClass());
+						}
+					}
+				} else {
+					Collection<TreeItem> roots = (Collection<TreeItem>) items;
+					for (TreeItem root : roots) {
+						getDataTree().addItem(root);
+						root.setState(true);
+					}
+				}
+			} finally {
+				if (showTopLevelNode()
+						|| expandFirstLevelNodesOnInitialRender()) {
+					dataTree.collapseToFirstLevel();
+				}
+				// localdom opt - attach out of browser tree
+				Panel parent = (Panel) this.scroller.getParent();
+				if (parent != null) {
+					this.scroller.removeFromParent();
+					this.scroller.setWidget(dataTree);
+					parent.add(this.scroller);
+				} else {
+					this.scroller.setWidget(dataTree);
+				}
+			}
+		}
+
+		public TreeItem selectNodeForObject(Object object) {
+			return dataTree.selectNodeForObject(object);
+		}
+
+		public void setAllowEditCollections(boolean allowEditCollections) {
+			this.allowEditCollections = allowEditCollections;
+		}
+
+		public void setFilter(FilterWidget filter) {
+			this.filter = filter;
+		}
+
+		public void setShowCollapseButton(boolean showCollapseButton) {
+			this.showCollapseButton = showCollapseButton;
+			collapse.setVisible(showCollapseButton);
+		}
+
+		@Override
+		public void setVisible(boolean visible) {
+			super.setVisible(visible);
+			if (!treeInitialised && visible && isAttached()) {
+				treeInitialised = true;
+				resetTree();
+			}
+			filter.getTextBox().setFocus(true);
+		}
+
 		protected boolean showTopLevelNode() {
 			return true;
 		}
@@ -622,6 +607,21 @@ public class WorkspaceView extends Composite implements HasName,
 
 		protected boolean useNodeImages() {
 			return false;
+		}
+
+		@Override
+		public void vetoableAction(PermissibleActionEvent evt) {
+			TreeItem item = dataTree.getSelectedItem();
+			if (evt.getAction().getClass() == DeleteAction.class) {
+				onTreeItemSelected(item);
+			}
+			// hack - do better when we rework this for dirndl
+			if (item == null) {
+				item = new DomainNode(
+						Reflections.newInstance(getDefaultEntityClass()));
+			}
+			fireVetoableActionEvent(
+					new PermissibleActionEvent(item, evt.getAction()));
 		}
 	}
 }

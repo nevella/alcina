@@ -37,24 +37,18 @@ import com.google.gwt.user.client.ui.Image;
  * may change in the future.
  */
 public class ClippedImageImpl {
-	interface DraggableTemplate extends SafeHtmlTemplates {
-		@SafeHtmlTemplates.Template("<img src='{0}' "
-				+ "style='{1}' border='0' draggable='true'>")
-		SafeHtml image(SafeUri clearImage, SafeStyles style);
-	}
-
-	interface Template extends SafeHtmlTemplates {
-		@SafeHtmlTemplates.Template("<img src='{0}' "
-				+ "style='{1}' border='0'>")
-		SafeHtml image(SafeUri clearImage, SafeStyles style);
-	}
-
 	protected static final SafeUri clearImage = UriUtils
 			.fromTrustedString(GWT.getModuleBaseURL() + "clear.cache.gif");
 
 	private static Template template;
 
 	private static DraggableTemplate draggableTemplate;
+
+	public static native JavaScriptObject createOnLoadHandlerFunction() /*-{
+    return function() {
+      this.__gwtLastUnhandledEvent = 'load';
+    }
+  }-*/;
 
 	public void adjust(Element img, SafeUri url, int left, int top, int width,
 			int height) {
@@ -75,11 +69,13 @@ public class ClippedImageImpl {
 		return elem;
 	}
 
-	public static native JavaScriptObject createOnLoadHandlerFunction() /*-{
-    return function() {
-      this.__gwtLastUnhandledEvent = 'load';
-    }
-  }-*/;
+	private DraggableTemplate getDraggableTemplate() {
+		// no need to synchronize, JavaScript in the browser is single-threaded
+		if (draggableTemplate == null) {
+			draggableTemplate = GWT.create(DraggableTemplate.class);
+		}
+		return draggableTemplate;
+	}
 
 	public Element getImgElement(Image image) {
 		return image.getElement();
@@ -106,19 +102,23 @@ public class ClippedImageImpl {
 		}
 	}
 
-	private DraggableTemplate getDraggableTemplate() {
-		// no need to synchronize, JavaScript in the browser is single-threaded
-		if (draggableTemplate == null) {
-			draggableTemplate = GWT.create(DraggableTemplate.class);
-		}
-		return draggableTemplate;
-	}
-
 	private Template getTemplate() {
 		// no need to synchronize, JavaScript in the browser is single-threaded
 		if (template == null) {
 			template = GWT.create(Template.class);
 		}
 		return template;
+	}
+
+	interface DraggableTemplate extends SafeHtmlTemplates {
+		@SafeHtmlTemplates.Template("<img src='{0}' "
+				+ "style='{1}' border='0' draggable='true'>")
+		SafeHtml image(SafeUri clearImage, SafeStyles style);
+	}
+
+	interface Template extends SafeHtmlTemplates {
+		@SafeHtmlTemplates.Template("<img src='{0}' "
+				+ "style='{1}' border='0'>")
+		SafeHtml image(SafeUri clearImage, SafeStyles style);
 	}
 }

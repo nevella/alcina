@@ -178,6 +178,11 @@ public class Context {
 
 	private static Method threadLocalSet;
 
+	// Rudimentary support for Design-by-Contract
+	static void codeBug() {
+		throw new RuntimeException("FAILED ASSERTION");
+	}
+
 	/**
 	 * Get a context associated with the current thread, creating one if need
 	 * be.
@@ -279,6 +284,18 @@ public class Context {
 	}
 
 	/**
+	 * Internal method that reports an error for missing calls to enter().
+	 */
+	static Context getContext() {
+		Context cx = getCurrentContext();
+		if (cx == null) {
+			throw new RuntimeException(
+					"No Context associated with current Thread");
+		}
+		return cx;
+	}
+
+	/**
 	 * Get the current Context.
 	 *
 	 * The current Context is per-thread; this method looks up the Context
@@ -300,6 +317,49 @@ public class Context {
 		}
 		Thread t = Thread.currentThread();
 		return (Context) threadContexts.get(t);
+	}
+
+	static String getMessage(String messageId, Object[] arguments) {
+		Context cx = getCurrentContext();
+		Locale locale = cx != null ? cx.getLocale() : Locale.getDefault();
+		// ResourceBundle does cacheing.
+		ResourceBundle rb = ResourceBundle.getBundle(defaultResource, locale);
+		String formatString;
+		try {
+			formatString = rb.getString(messageId);
+		} catch (java.util.MissingResourceException mre) {
+			throw new RuntimeException(
+					"no message resource found for message property "
+							+ messageId);
+		}
+		/*
+		 * It's OK to format the string, even if 'arguments' is null; we need to
+		 * format it anyway, to make double ''s collapse to single 's.
+		 */
+		// TODO: MessageFormat is not available on pJava
+		MessageFormat formatter = new MessageFormat(formatString);
+		return formatter.format(arguments);
+	}
+
+	/********** end of API **********/
+	static String getMessage0(String messageId) {
+		return getMessage(messageId, null);
+	}
+
+	static String getMessage1(String messageId, Object arg1) {
+		Object[] arguments = { arg1 };
+		return getMessage(messageId, arguments);
+	}
+
+	static String getMessage2(String messageId, Object arg1, Object arg2) {
+		Object[] arguments = { arg1, arg2 };
+		return getMessage(messageId, arguments);
+	}
+
+	static String getMessage3(String messageId, Object arg1, Object arg2,
+			Object arg3) {
+		Object[] arguments = { arg1, arg2, arg3 };
+		return getMessage(messageId, arguments);
 	}
 
 	/**
@@ -443,66 +503,6 @@ public class Context {
 		}
 	}
 
-	// Rudimentary support for Design-by-Contract
-	static void codeBug() {
-		throw new RuntimeException("FAILED ASSERTION");
-	}
-
-	/**
-	 * Internal method that reports an error for missing calls to enter().
-	 */
-	static Context getContext() {
-		Context cx = getCurrentContext();
-		if (cx == null) {
-			throw new RuntimeException(
-					"No Context associated with current Thread");
-		}
-		return cx;
-	}
-
-	static String getMessage(String messageId, Object[] arguments) {
-		Context cx = getCurrentContext();
-		Locale locale = cx != null ? cx.getLocale() : Locale.getDefault();
-		// ResourceBundle does cacheing.
-		ResourceBundle rb = ResourceBundle.getBundle(defaultResource, locale);
-		String formatString;
-		try {
-			formatString = rb.getString(messageId);
-		} catch (java.util.MissingResourceException mre) {
-			throw new RuntimeException(
-					"no message resource found for message property "
-							+ messageId);
-		}
-		/*
-		 * It's OK to format the string, even if 'arguments' is null; we need to
-		 * format it anyway, to make double ''s collapse to single 's.
-		 */
-		// TODO: MessageFormat is not available on pJava
-		MessageFormat formatter = new MessageFormat(formatString);
-		return formatter.format(arguments);
-	}
-
-	/********** end of API **********/
-	static String getMessage0(String messageId) {
-		return getMessage(messageId, null);
-	}
-
-	static String getMessage1(String messageId, Object arg1) {
-		Object[] arguments = { arg1 };
-		return getMessage(messageId, arguments);
-	}
-
-	static String getMessage2(String messageId, Object arg1, Object arg2) {
-		Object[] arguments = { arg1, arg2 };
-		return getMessage(messageId, arguments);
-	}
-
-	static String getMessage3(String messageId, Object arg1, Object arg2,
-			Object arg3) {
-		Object[] arguments = { arg1, arg2, arg3 };
-		return getMessage(messageId, arguments);
-	}
-
 	int version;
 
 	int errorCount;
@@ -548,6 +548,39 @@ public class Context {
 	 */
 	public Context() {
 		setLanguageVersion(VERSION_DEFAULT);
+	}
+
+	/**
+	 * Notify any registered listeners that a bounded property has changed
+	 * 
+	 * @see #addPropertyChangeListener(java.beans.PropertyChangeListener)
+	 * @see #removePropertyChangeListener(java.beans.PropertyChangeListener)
+	 * @see java.beans.PropertyChangeListener
+	 * @see java.beans.PropertyChangeEvent
+	 * @param property
+	 *            the bound property
+	 * @param oldValue
+	 *            the old value
+	 * @param newVale
+	 *            the new value
+	 */
+	void firePropertyChange(String property, Object oldValue, Object newValue) {
+		Object[] array = listeners;
+		if (array != null) {
+			firePropertyChangeImpl(array, property, oldValue, newValue);
+		}
+	}
+
+	private void firePropertyChangeImpl(Object[] array, String property,
+			Object oldValue, Object newValue) {
+		for (int i = array.length; i-- != 0;) {
+			Object obj = array[i];
+			if (obj instanceof PropertyChangeListener) {
+				PropertyChangeListener l = (PropertyChangeListener) obj;
+				l.propertyChange(new PropertyChangeEvent(this, property,
+						oldValue, newValue));
+			}
+		}
 	}
 
 	/**
@@ -677,6 +710,10 @@ public class Context {
 		throw new IllegalArgumentException();
 	}
 
+	final boolean isVersionECMA1() {
+		return version == VERSION_DEFAULT || version >= VERSION_1_3;
+	}
+
 	/**
 	 * Put a value that can later be retrieved using a given key.
 	 * <p>
@@ -752,42 +789,5 @@ public class Context {
 		Locale result = locale;
 		locale = loc;
 		return result;
-	}
-
-	private void firePropertyChangeImpl(Object[] array, String property,
-			Object oldValue, Object newValue) {
-		for (int i = array.length; i-- != 0;) {
-			Object obj = array[i];
-			if (obj instanceof PropertyChangeListener) {
-				PropertyChangeListener l = (PropertyChangeListener) obj;
-				l.propertyChange(new PropertyChangeEvent(this, property,
-						oldValue, newValue));
-			}
-		}
-	}
-
-	/**
-	 * Notify any registered listeners that a bounded property has changed
-	 * 
-	 * @see #addPropertyChangeListener(java.beans.PropertyChangeListener)
-	 * @see #removePropertyChangeListener(java.beans.PropertyChangeListener)
-	 * @see java.beans.PropertyChangeListener
-	 * @see java.beans.PropertyChangeEvent
-	 * @param property
-	 *            the bound property
-	 * @param oldValue
-	 *            the old value
-	 * @param newVale
-	 *            the new value
-	 */
-	void firePropertyChange(String property, Object oldValue, Object newValue) {
-		Object[] array = listeners;
-		if (array != null) {
-			firePropertyChangeImpl(array, property, oldValue, newValue);
-		}
-	}
-
-	final boolean isVersionECMA1() {
-		return version == VERSION_DEFAULT || version >= VERSION_1_3;
 	}
 }

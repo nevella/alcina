@@ -32,22 +32,6 @@ public interface UmbrellaProvider<T> {
 			this.withSecondLetter = withSecondLetter;
 		}
 
-		@Override
-		public void forCollection(Collection<T> collection,
-				Predicate<T> predicate) {
-			ensureLookups(collection, predicate);
-		}
-
-		@Override
-		public List<String> getUmbrellaNames(String prefix) {
-			return childPrefixes.getAndEnsure(prefix);
-		}
-
-		@Override
-		public List<T> getUmbrellaObjects(String prefix) {
-			return childObjects.getAndEnsure(prefix);
-		}
-
 		private void ensureLookups(Collection<T> collection,
 				Predicate<T> predicate) {
 			childObjects = new Multimap<String, List<T>>();
@@ -80,6 +64,22 @@ public interface UmbrellaProvider<T> {
 					childObjects.add(s1, t);
 				}
 			}
+		}
+
+		@Override
+		public void forCollection(Collection<T> collection,
+				Predicate<T> predicate) {
+			ensureLookups(collection, predicate);
+		}
+
+		@Override
+		public List<String> getUmbrellaNames(String prefix) {
+			return childPrefixes.getAndEnsure(prefix);
+		}
+
+		@Override
+		public List<T> getUmbrellaObjects(String prefix) {
+			return childObjects.getAndEnsure(prefix);
 		}
 	}
 

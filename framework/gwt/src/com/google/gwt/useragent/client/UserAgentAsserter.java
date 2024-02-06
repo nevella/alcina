@@ -26,26 +26,6 @@ import com.google.gwt.core.client.GWT;
  * being executed in the wrong browser.
  */
 public class UserAgentAsserter implements EntryPoint {
-	/**
-	 * Replacement for UserAgentAsserter to disable it.
-	 */
-	public static class UserAgentAsserterDisabled implements EntryPoint {
-		@Override
-		public void onModuleLoad() {
-			/* Empty - no assertions */}
-	}
-
-	@Override
-	public void onModuleLoad() {
-		scheduleUserAgentCheck();
-	}
-
-	private static native void scheduleUserAgentCheck() /*-{
-    // Keeping minimal dependency to reduce risk of problems due to use of wrong permutation:
-    $wnd
-        .setTimeout($entry(@com.google.gwt.useragent.client.UserAgentAsserter::assertCompileTimeUserAgent()));
-	}-*/;
-
 	private static void assertCompileTimeUserAgent() {
 		UserAgent impl = GWT.create(UserAgent.class);
 		String compileTimeValue = impl.getCompileTimeValue();
@@ -60,6 +40,26 @@ public class UserAgentAsserter implements EntryPoint {
 						runtimeValue);
 			}
 		}
+	}
+
+	private static native void scheduleUserAgentCheck() /*-{
+    // Keeping minimal dependency to reduce risk of problems due to use of wrong permutation:
+    $wnd
+        .setTimeout($entry(@com.google.gwt.useragent.client.UserAgentAsserter::assertCompileTimeUserAgent()));
+	}-*/;
+
+	@Override
+	public void onModuleLoad() {
+		scheduleUserAgentCheck();
+	}
+
+	/**
+	 * Replacement for UserAgentAsserter to disable it.
+	 */
+	public static class UserAgentAsserterDisabled implements EntryPoint {
+		@Override
+		public void onModuleLoad() {
+			/* Empty - no assertions */}
 	}
 
 	/**

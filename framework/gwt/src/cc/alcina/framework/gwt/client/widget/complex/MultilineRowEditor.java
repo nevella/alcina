@@ -58,8 +58,34 @@ public abstract class MultilineRowEditor<H extends Entity>
 		initWidget(holder);
 	}
 
+	protected void customiseActions(List<PermissibleAction> actions) {
+	}
+
+	protected void customiseContentViewFactory(
+			ContentViewFactory contentViewFactory, Object model) {
+	}
+
+	protected abstract void doCreateRow();
+
+	protected abstract void doDeleteRows();
+
+	protected List<H> filterVisibleValues(List<H> values) {
+		return values;
+	}
+
+	protected abstract Class<H> getItemClass();
+
 	public Set<H> getValue() {
 		return this.value;
+	}
+
+	/**
+	 * @param multilineRowEditor
+	 * @return true if the table should be refreshed
+	 */
+	protected boolean handleCustomAction(MultilineRowEditor multilineRowEditor,
+			PermissibleAction action) {
+		return false;
 	}
 
 	public boolean isEditable() {
@@ -73,16 +99,6 @@ public abstract class MultilineRowEditor<H extends Entity>
 
 	public void redraw() {
 		renderTable();
-	}
-
-	public void setEditable(boolean editable) {
-		this.editable = editable;
-	}
-
-	public void setValue(Set<H> value) {
-		this.value = value;
-		renderTable();
-		setStyleName("empty", CommonUtils.nonNullSet(value).isEmpty());
 	}
 
 	private void renderTable() {
@@ -124,30 +140,14 @@ public abstract class MultilineRowEditor<H extends Entity>
 		toolbar.addVetoableActionListener(toolbarListener);
 	}
 
-	protected void customiseActions(List<PermissibleAction> actions) {
+	public void setEditable(boolean editable) {
+		this.editable = editable;
 	}
 
-	protected void customiseContentViewFactory(
-			ContentViewFactory contentViewFactory, Object model) {
-	}
-
-	protected abstract void doCreateRow();
-
-	protected abstract void doDeleteRows();
-
-	protected List<H> filterVisibleValues(List<H> values) {
-		return values;
-	}
-
-	protected abstract Class<H> getItemClass();
-
-	/**
-	 * @param multilineRowEditor
-	 * @return true if the table should be refreshed
-	 */
-	protected boolean handleCustomAction(MultilineRowEditor multilineRowEditor,
-			PermissibleAction action) {
-		return false;
+	public void setValue(Set<H> value) {
+		this.value = value;
+		renderTable();
+		setStyleName("empty", CommonUtils.nonNullSet(value).isEmpty());
 	}
 
 	protected abstract void sortValues(List<H> values);

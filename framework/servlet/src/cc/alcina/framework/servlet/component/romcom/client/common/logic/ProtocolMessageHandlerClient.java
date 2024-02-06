@@ -37,6 +37,27 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		}
 	}
 
+	public static class InvokeHandler
+			extends ProtocolMessageHandlerClient<Message.Invoke> {
+		@Override
+		public void handle(RemoteComponentResponse response,
+				Message.Invoke message) {
+			Element elem = (Element) message.path.node();
+			Message.InvokeResponse responseMessage = new Message.InvokeResponse();
+			responseMessage.id = message.id;
+			try {
+				Object result = Reflections.at(elem).invoke(elem,
+						message.methodName, message.argumentTypes,
+						message.arguments);
+				responseMessage.response = result;
+			} catch (Exception e) {
+				e.printStackTrace();
+				responseMessage.exception = e;
+			}
+			ClientRpc.send(responseMessage);
+		}
+	}
+
 	public static class MutationsHandler
 			extends ProtocolMessageHandlerClient<Message.Mutations> {
 		@Override
@@ -125,27 +146,6 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			}
 			// FIXME - remcon - prettier?
 			Window.alert(clientMessage);
-		}
-	}
-
-	public static class InvokeHandler
-			extends ProtocolMessageHandlerClient<Message.Invoke> {
-		@Override
-		public void handle(RemoteComponentResponse response,
-				Message.Invoke message) {
-			Element elem = (Element) message.path.node();
-			Message.InvokeResponse responseMessage = new Message.InvokeResponse();
-			responseMessage.id = message.id;
-			try {
-				Object result = Reflections.at(elem).invoke(elem,
-						message.methodName, message.argumentTypes,
-						message.arguments);
-				responseMessage.response = result;
-			} catch (Exception e) {
-				e.printStackTrace();
-				responseMessage.exception = e;
-			}
-			ClientRpc.send(responseMessage);
 		}
 	}
 }

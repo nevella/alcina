@@ -179,6 +179,11 @@ public class RelativePopupValidationFeedback
 		return this.asHtml;
 	}
 
+	protected Widget renderExceptionWidget(ValidationException exception) {
+		return asHtml ? new HTML(this.getMessage(exception))
+				: new Label(this.getMessage(exception));
+	}
+
 	@Override
 	public void resolve(Object source) {
 		RelativePopup p = (RelativePopup) popups.get(source);
@@ -212,11 +217,6 @@ public class RelativePopupValidationFeedback
 
 	public void setPosition(int position) {
 		this.position = position;
-	}
-
-	protected Widget renderExceptionWidget(ValidationException exception) {
-		return asHtml ? new HTML(this.getMessage(exception))
-				: new Label(this.getMessage(exception));
 	}
 
 	static class ProviderImpl implements ValidationFeedback.Provider {

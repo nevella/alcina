@@ -56,9 +56,29 @@ public class TrieEntry<K, V> implements Map.Entry<K, V> {
 		return false;
 	}
 
+	protected int getBitIndex() {
+		return bitIndex;
+	}
+
 	@Override
 	public K getKey() {
 		return key;
+	}
+
+	protected TrieEntry<K, V> getLeft() {
+		return left;
+	}
+
+	protected TrieEntry<K, V> getParent() {
+		return parent;
+	}
+
+	protected TrieEntry<K, V> getPredecessor() {
+		return predecessor;
+	}
+
+	protected TrieEntry<K, V> getRight() {
+		return right;
 	}
 
 	@Override
@@ -96,6 +116,14 @@ public class TrieEntry<K, V> implements Map.Entry<K, V> {
 		return left != this && right != this;
 	}
 
+	protected void setBitIndex(int bitIndex) {
+		this.bitIndex = bitIndex;
+	}
+
+	protected void setKey(K key) {
+		this.key = key;
+	}
+
 	/**
 	 * Replaces the current key and value with the provided key &amp; value
 	 */
@@ -103,6 +131,22 @@ public class TrieEntry<K, V> implements Map.Entry<K, V> {
 		this.key = key;
 		this.hashCode = 0;
 		return setValue(value);
+	}
+
+	protected void setLeft(TrieEntry<K, V> left) {
+		this.left = left;
+	}
+
+	protected void setParent(TrieEntry<K, V> parent) {
+		this.parent = parent;
+	}
+
+	protected void setPredecessor(TrieEntry<K, V> predecessor) {
+		this.predecessor = predecessor;
+	}
+
+	protected void setRight(TrieEntry<K, V> right) {
+		this.right = right;
 	}
 
 	@Override
@@ -167,49 +211,5 @@ public class TrieEntry<K, V> implements Map.Entry<K, V> {
 		}
 		buffer.append(")");
 		return buffer.toString();
-	}
-
-	protected int getBitIndex() {
-		return bitIndex;
-	}
-
-	protected TrieEntry<K, V> getLeft() {
-		return left;
-	}
-
-	protected TrieEntry<K, V> getParent() {
-		return parent;
-	}
-
-	protected TrieEntry<K, V> getPredecessor() {
-		return predecessor;
-	}
-
-	protected TrieEntry<K, V> getRight() {
-		return right;
-	}
-
-	protected void setBitIndex(int bitIndex) {
-		this.bitIndex = bitIndex;
-	}
-
-	protected void setKey(K key) {
-		this.key = key;
-	}
-
-	protected void setLeft(TrieEntry<K, V> left) {
-		this.left = left;
-	}
-
-	protected void setParent(TrieEntry<K, V> parent) {
-		this.parent = parent;
-	}
-
-	protected void setPredecessor(TrieEntry<K, V> predecessor) {
-		this.predecessor = predecessor;
-	}
-
-	protected void setRight(TrieEntry<K, V> right) {
-		this.right = right;
 	}
 }

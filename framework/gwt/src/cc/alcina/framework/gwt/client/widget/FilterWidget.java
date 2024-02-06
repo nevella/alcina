@@ -130,6 +130,25 @@ public class FilterWidget extends Composite
 		maybeCommit();
 	}
 
+	private void clearHint() {
+		if (!hintWasCleared) {
+			hintWasCleared = true;
+			if (isHinted()) {
+				textBox.setText("");
+				lastFilteredText = textBox.getText();
+			}
+			textBox.removeStyleName(ALCINA_FILTER_HINT);
+		}
+	}
+
+	private void commit() {
+		if (queueingFinishedTimer != null) {
+			queueingFinishedTimer.cancel();
+		}
+		queueingFinishedTimer = null;
+		filter();
+	}
+
 	public void filter() {
 		vf.filter(textBox.getText());
 		lastFilteredText = textBox.getText();
@@ -183,6 +202,41 @@ public class FilterWidget extends Composite
 		return queueingFinishedTimer != null;
 	}
 
+	protected void maybeCommit() {
+		String currentText = getTextBox().getText();
+		if (CommonUtils.isNotNullOrEmpty(currentText)
+				&& !currentText.equals(lastQueuedText)
+				&& !getTextBox().getStyleName().contains(ALCINA_FILTER_HINT)) {
+			queueCommit();
+		}
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		registrations.add(textBox.addKeyUpHandler(this));
+		registrations.add(textBox.addKeyDownHandler(this));
+		registrations.add(textBox.addBlurHandler(this));
+		registrations.add(textBox.addClickHandler(this));
+		if (isFocusOnAttach()
+				&& WidgetUtils.getAncestorWidget(this, "GridForm") == null) {
+			// just in case this widget is inside a popup panel e.g.
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					String text = textBox.getText();
+					if (CommonUtils.isNotNullOrEmpty(text) && !isHinted()) {
+						textBox.setCursorPos(text.length());
+					}
+					textBox.setFocus(true);
+					if (!isHinted()) {
+						commit();
+					}
+				}
+			});
+		}
+	}
+
 	@Override
 	public void onBlur(BlurEvent event) {
 		changeListenerTimer.cancel();
@@ -193,6 +247,17 @@ public class FilterWidget extends Composite
 		clearHint();
 		onFocus(null);
 		textBox.setFocus(true);
+	}
+
+	@Override
+	protected void onDetach() {
+		if (queueingFinishedTimer != null) {
+			queueingFinishedTimer.cancel();
+			queueingFinishedTimer = null;
+		}
+		changeListenerTimer.cancel();
+		registrations.forEach(HandlerRegistration::removeHandler);
+		super.onDetach();
 	}
 
 	/*
@@ -236,6 +301,30 @@ public class FilterWidget extends Composite
 			return;
 		}
 		queueCommit();
+	}
+
+	protected void queueCommit() {
+		String filterText = getTextBox().getText();
+		if (CommonUtils.isNullOrEmpty(lastQueuedText)
+				&& CommonUtils.isNullOrEmpty(filterText)) {
+			return;
+		}
+		lastQueueAddMillis = System.currentTimeMillis();
+		lastQueuedText = filterText;
+		if (queueingFinishedTimer == null) {
+			queueingFinishedTimer = new Timer() {
+				long timerAddedMillis = lastQueueAddMillis;
+
+				@Override
+				public void run() {
+					if (lastQueueAddMillis - timerAddedMillis == 0) {
+						commit();
+					}
+					timerAddedMillis = lastQueueAddMillis;
+				}
+			};
+			queueingFinishedTimer.scheduleRepeating(filterDelayMs);
+		}
 	}
 
 	public void registerFilterable(VisualFilterable vf) {
@@ -287,95 +376,6 @@ public class FilterWidget extends Composite
 			OneOffHandler oneOff = new OneOffHandler(
 					() -> textBox.setCursorPos(initialCursorPos));
 			oneOff.register(addAttachHandler(e -> oneOff.run()));
-		}
-	}
-
-	private void clearHint() {
-		if (!hintWasCleared) {
-			hintWasCleared = true;
-			if (isHinted()) {
-				textBox.setText("");
-				lastFilteredText = textBox.getText();
-			}
-			textBox.removeStyleName(ALCINA_FILTER_HINT);
-		}
-	}
-
-	private void commit() {
-		if (queueingFinishedTimer != null) {
-			queueingFinishedTimer.cancel();
-		}
-		queueingFinishedTimer = null;
-		filter();
-	}
-
-	protected void maybeCommit() {
-		String currentText = getTextBox().getText();
-		if (CommonUtils.isNotNullOrEmpty(currentText)
-				&& !currentText.equals(lastQueuedText)
-				&& !getTextBox().getStyleName().contains(ALCINA_FILTER_HINT)) {
-			queueCommit();
-		}
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		registrations.add(textBox.addKeyUpHandler(this));
-		registrations.add(textBox.addKeyDownHandler(this));
-		registrations.add(textBox.addBlurHandler(this));
-		registrations.add(textBox.addClickHandler(this));
-		if (isFocusOnAttach()
-				&& WidgetUtils.getAncestorWidget(this, "GridForm") == null) {
-			// just in case this widget is inside a popup panel e.g.
-			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-				@Override
-				public void execute() {
-					String text = textBox.getText();
-					if (CommonUtils.isNotNullOrEmpty(text) && !isHinted()) {
-						textBox.setCursorPos(text.length());
-					}
-					textBox.setFocus(true);
-					if (!isHinted()) {
-						commit();
-					}
-				}
-			});
-		}
-	}
-
-	@Override
-	protected void onDetach() {
-		if (queueingFinishedTimer != null) {
-			queueingFinishedTimer.cancel();
-			queueingFinishedTimer = null;
-		}
-		changeListenerTimer.cancel();
-		registrations.forEach(HandlerRegistration::removeHandler);
-		super.onDetach();
-	}
-
-	protected void queueCommit() {
-		String filterText = getTextBox().getText();
-		if (CommonUtils.isNullOrEmpty(lastQueuedText)
-				&& CommonUtils.isNullOrEmpty(filterText)) {
-			return;
-		}
-		lastQueueAddMillis = System.currentTimeMillis();
-		lastQueuedText = filterText;
-		if (queueingFinishedTimer == null) {
-			queueingFinishedTimer = new Timer() {
-				long timerAddedMillis = lastQueueAddMillis;
-
-				@Override
-				public void run() {
-					if (lastQueueAddMillis - timerAddedMillis == 0) {
-						commit();
-					}
-					timerAddedMillis = lastQueueAddMillis;
-				}
-			};
-			queueingFinishedTimer.scheduleRepeating(filterDelayMs);
 		}
 	}
 

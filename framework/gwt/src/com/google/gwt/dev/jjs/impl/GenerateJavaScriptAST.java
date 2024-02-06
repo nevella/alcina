@@ -200,6 +200,24 @@ public class GenerateJavaScriptAST {
 					"Class.createForInterface", "Class.createForEnum",
 					"Class.createForAnonymousClass");
 
+	private static JsNameRef createGlobalQualifier(String qualifier,
+			SourceInfo sourceInfo) {
+		return JsUtils.createQualifiedNameRef(
+				JsInteropUtil.normalizeQualifier(qualifier), sourceInfo);
+	}
+
+	/**
+	 * Return false if the method needs to be generated. Some methods do not
+	 * need any output, in particular abstract methods and static intializers
+	 * that are never called.
+	 */
+	private static boolean doesNotHaveConcreteImplementation(JMethod method) {
+		return method.isAbstract() || method.isJsNative()
+				|| JjsUtils.isJsMemberUnnecessaryAccidentalOverride(method)
+				|| (JProgram.isClinit(method) && method.getEnclosingType()
+						.getClinitTarget() != method.getEnclosingType());
+	}
+
 	/**
 	 * This is the main entry point for the translation from Java to JavaScript.
 	 * Starts from a Java AST and constructs a JavaScript AST while collecting
@@ -232,24 +250,6 @@ public class GenerateJavaScriptAST {
 		} finally {
 			event.end();
 		}
-	}
-
-	private static JsNameRef createGlobalQualifier(String qualifier,
-			SourceInfo sourceInfo) {
-		return JsUtils.createQualifiedNameRef(
-				JsInteropUtil.normalizeQualifier(qualifier), sourceInfo);
-	}
-
-	/**
-	 * Return false if the method needs to be generated. Some methods do not
-	 * need any output, in particular abstract methods and static intializers
-	 * that are never called.
-	 */
-	private static boolean doesNotHaveConcreteImplementation(JMethod method) {
-		return method.isAbstract() || method.isJsNative()
-				|| JjsUtils.isJsMemberUnnecessaryAccidentalOverride(method)
-				|| (JProgram.isClinit(method) && method.getEnclosingType()
-						.getClinitTarget() != method.getEnclosingType());
 	}
 
 	private final Map<JBlock, JsCatch> catchMap = Maps.newIdentityHashMap();
@@ -449,6 +449,13 @@ public class GenerateJavaScriptAST {
 		return jsFunctionsByJavaMethodBody.get(jMethod.getBody());
 	}
 
+	/**
+	 * Retrieves the runtime typeId for {@code type}.
+	 */
+	JExpression getRuntimeTypeReference(JReferenceType type) {
+		return typeMapper.get(type);
+	}
+
 	private String mangleName(JField x) {
 		return JjsUtils.mangleMemberName(x.getEnclosingType().getName(),
 				x.getName());
@@ -506,13 +513,6 @@ public class GenerateJavaScriptAST {
 	private String mangleNameForPublicPoly(JMethod method) {
 		return StringInterner.get().intern(JjsUtils.constructManglingSignature(
 				method, JjsUtils.mangledNameString(method)));
-	}
-
-	/**
-	 * Retrieves the runtime typeId for {@code type}.
-	 */
-	JExpression getRuntimeTypeReference(JReferenceType type) {
-		return typeMapper.get(type);
 	}
 
 	private class CollectJsFunctionsForInlining extends JVisitor {
@@ -684,6 +684,68 @@ public class GenerateJavaScriptAST {
 			}
 		}
 
+		/**
+		 * Generate a file name URI string for a source info, for symbol data
+		 * export.
+		 */
+		private String makeUriString(HasSourceInfo x) {
+			String fileName = x.getSourceInfo().getFileName();
+			if (fileName == null) {
+				return null;
+			}
+			String uriString = fileNameToUriString.get(fileName);
+			if (uriString == null) {
+				uriString = StandardSymbolData.toUriString(fileName);
+				fileNameToUriString.put(fileName, uriString);
+			}
+			return uriString;
+		}
+
+		private void recordSymbol(JReferenceType type, JsName jsName) {
+			if (getRuntimeTypeReference(type) == null
+					|| !program.typeOracle.isInstantiatedType(type)) {
+				return;
+			}
+			String typeId = getRuntimeTypeReference(type).toSource();
+			StandardSymbolData symbolData = StandardSymbolData.forClass(
+					type.getName(), type.getSourceInfo().getFileName(),
+					type.getSourceInfo().getStartLine(), typeId);
+			assert !symbolTable.containsKey(symbolData);
+			symbolTable.put(symbolData, jsName);
+		}
+
+		private <T extends HasEnclosingType & HasName & HasSourceInfo> void
+				recordSymbol(T member, JsName jsName) {
+			/*
+			 * NB: The use of member.getName() can produce confusion in cases
+			 * where a type has both polymorphic and static dispatch for a
+			 * method, because you might see HashSet::$add() and HashSet::add().
+			 * Logically, these methods should be treated equally, however they
+			 * will be implemented with separate global functions and must be
+			 * recorded independently.
+			 *
+			 * Automated systems that process the symbol information can easily
+			 * map the statically-dispatched function by looking for method
+			 * names that begin with a dollar-sign and whose first parameter is
+			 * the enclosing type.
+			 */
+			String methodSignature = null;
+			if (member instanceof JMethod) {
+				JMethod method = ((JMethod) member);
+				methodSignature = StringInterner.get().intern(method
+						.getSignature().substring(method.getName().length()));
+			}
+			StandardSymbolData symbolData = StandardSymbolData.forMember(
+					member.getEnclosingType().getName(), member.getName(),
+					methodSignature, makeUriString(member),
+					member.getSourceInfo().getStartLine());
+			assert !symbolTable
+					.containsKey(symbolData) : "Duplicate symbol recorded "
+							+ jsName.getIdent() + " for " + member.getName()
+							+ " and key " + symbolData.getJsniIdent();
+			symbolTable.put(symbolData, jsName);
+		}
+
 		@Override
 		public boolean visit(JClassType x, Context ctx) {
 			// have I already been visited as a super type?
@@ -828,68 +890,6 @@ public class GenerateJavaScriptAST {
 			}
 			return false;
 		}
-
-		/**
-		 * Generate a file name URI string for a source info, for symbol data
-		 * export.
-		 */
-		private String makeUriString(HasSourceInfo x) {
-			String fileName = x.getSourceInfo().getFileName();
-			if (fileName == null) {
-				return null;
-			}
-			String uriString = fileNameToUriString.get(fileName);
-			if (uriString == null) {
-				uriString = StandardSymbolData.toUriString(fileName);
-				fileNameToUriString.put(fileName, uriString);
-			}
-			return uriString;
-		}
-
-		private void recordSymbol(JReferenceType type, JsName jsName) {
-			if (getRuntimeTypeReference(type) == null
-					|| !program.typeOracle.isInstantiatedType(type)) {
-				return;
-			}
-			String typeId = getRuntimeTypeReference(type).toSource();
-			StandardSymbolData symbolData = StandardSymbolData.forClass(
-					type.getName(), type.getSourceInfo().getFileName(),
-					type.getSourceInfo().getStartLine(), typeId);
-			assert !symbolTable.containsKey(symbolData);
-			symbolTable.put(symbolData, jsName);
-		}
-
-		private <T extends HasEnclosingType & HasName & HasSourceInfo> void
-				recordSymbol(T member, JsName jsName) {
-			/*
-			 * NB: The use of member.getName() can produce confusion in cases
-			 * where a type has both polymorphic and static dispatch for a
-			 * method, because you might see HashSet::$add() and HashSet::add().
-			 * Logically, these methods should be treated equally, however they
-			 * will be implemented with separate global functions and must be
-			 * recorded independently.
-			 *
-			 * Automated systems that process the symbol information can easily
-			 * map the statically-dispatched function by looking for method
-			 * names that begin with a dollar-sign and whose first parameter is
-			 * the enclosing type.
-			 */
-			String methodSignature = null;
-			if (member instanceof JMethod) {
-				JMethod method = ((JMethod) member);
-				methodSignature = StringInterner.get().intern(method
-						.getSignature().substring(method.getName().length()));
-			}
-			StandardSymbolData symbolData = StandardSymbolData.forMember(
-					member.getEnclosingType().getName(), member.getName(),
-					methodSignature, makeUriString(member),
-					member.getSourceInfo().getStartLine());
-			assert !symbolTable
-					.containsKey(symbolData) : "Duplicate symbol recorded "
-							+ jsName.getIdent() + " for " + member.getName()
-							+ " and key " + symbolData.getJsniIdent();
-			symbolTable.put(symbolData, jsName);
-		}
 	}
 
 	/**
@@ -932,764 +932,6 @@ public class GenerateJavaScriptAST {
 
 		private final JsName global = topScope
 				.declareUnobfuscatableName("global");
-
-		public JsStatement jsEmptyIfNull(SourceInfo info,
-				JsStatement statement) {
-			return statement != null ? statement : new JsEmpty(info);
-		}
-
-		@Override
-		public JsExpression transformArrayLength(JArrayLength expression) {
-			assert expression
-					.getInstance() != null : "Can't access the length of a null array";
-			return arrayLength.makeQualifiedRef(expression.getSourceInfo(),
-					transform(expression.getInstance()));
-		}
-
-		@Override
-		public JsExpression transformArrayRef(JArrayRef arrayRef) {
-			JsArrayAccess jsArrayAccess = new JsArrayAccess(
-					arrayRef.getSourceInfo());
-			jsArrayAccess.setIndexExpr(transform(arrayRef.getIndexExpr()));
-			jsArrayAccess.setArrayExpr(transform(arrayRef.getInstance()));
-			return jsArrayAccess;
-		}
-
-		@Override
-		public JsExpression
-				transformBinaryOperation(JBinaryOperation binaryOperation) {
-			JsExpression lhs = transform(binaryOperation.getLhs());
-			JsExpression rhs = transform(binaryOperation.getRhs());
-			JsBinaryOperator op = JavaToJsOperatorMap
-					.get(binaryOperation.getOp());
-			/*
-			 * Use === and !== on reference types, or else you can get wrong
-			 * answers when Object.toString() == 'some string'.
-			 */
-			if (binaryOperation.getLhs().getType() instanceof JReferenceType
-					&& binaryOperation.getRhs()
-							.getType() instanceof JReferenceType) {
-				switch (op) {
-				case EQ:
-					op = JsBinaryOperator.REF_EQ;
-					break;
-				case NEQ:
-					op = JsBinaryOperator.REF_NEQ;
-					break;
-				}
-			}
-			return new JsBinaryOperation(binaryOperation.getSourceInfo(), op,
-					lhs, rhs);
-		}
-
-		@Override
-		public JsStatement transformBlock(JBlock block) {
-			JsBlock jsBlock = new JsBlock(block.getSourceInfo());
-			List<JsStatement> stmts = jsBlock.getStatements();
-			transformIntoExcludingNulls(block.getStatements(), stmts);
-			Iterables.removeIf(stmts, Predicates.instanceOf(JsEmpty.class));
-			return jsBlock;
-		}
-
-		@Override
-		public JsNode transformBreakStatement(JBreakStatement breakStatement) {
-			SourceInfo info = breakStatement.getSourceInfo();
-			return new JsBreak(info, transformIntoLabelReference(info,
-					breakStatement.getLabel()));
-		}
-
-		@Override
-		public JsNode transformCaseStatement(JCaseStatement caseStatement) {
-			if (caseStatement.getExpr() == null) {
-				return new JsDefault(caseStatement.getSourceInfo());
-			} else {
-				JsCase jsCase = new JsCase(caseStatement.getSourceInfo());
-				jsCase.setCaseExpr(transform(caseStatement.getExpr()));
-				return jsCase;
-			}
-		}
-
-		@Override
-		public JsNode transformCastMap(JCastMap castMap) {
-			SourceInfo sourceInfo = castMap.getSourceInfo();
-			List<JsExpression> jsCastToTypes = transform(
-					castMap.getCanCastToTypes());
-			return buildJsCastMapLiteral(jsCastToTypes, sourceInfo);
-		}
-
-		@Override
-		public JsNode transformCastOperation(JCastOperation castOperation) {
-			// These are left in when cast checking is disabled.
-			return transform(castOperation.getExpr());
-		}
-
-		@Override
-		public JsNode transformClassLiteral(JClassLiteral classLiteral) {
-			JsName classLit = names.get(classLiteral.getField());
-			return classLit.makeRef(classLiteral.getSourceInfo());
-		}
-
-		@Override
-		public JsNode transformConditional(JConditional conditional) {
-			JsExpression ifTest = transform(conditional.getIfTest());
-			JsExpression thenExpr = transform(conditional.getThenExpr());
-			JsExpression elseExpr = transform(conditional.getElseExpr());
-			return new JsConditional(conditional.getSourceInfo(), ifTest,
-					thenExpr, elseExpr);
-		}
-
-		@Override
-		public JsNode transformContinueStatement(
-				JContinueStatement continueStatement) {
-			SourceInfo info = continueStatement.getSourceInfo();
-			return new JsContinue(info, transformIntoLabelReference(info,
-					continueStatement.getLabel()));
-		}
-
-		@Override
-		public JsNode transformDebuggerStatement(
-				JDebuggerStatement debuggerStatement) {
-			return new JsDebugger(debuggerStatement.getSourceInfo());
-		}
-
-		@Override
-		public JsNode transformDeclarationStatement(
-				JDeclarationStatement declarationStatement) {
-			if (declarationStatement.getInitializer() == null) {
-				return null;
-			}
-			JVariable target = declarationStatement.getVariableRef()
-					.getTarget();
-			if (target instanceof JField
-					&& initializeAtTopScope((JField) target)) {
-				// Will initialize at top scope; no need to double-initialize.
-				return null;
-			}
-			JsExpression initializer = transform(
-					declarationStatement.getInitializer());
-			JsNameRef localRef = transform(
-					declarationStatement.getVariableRef());
-			SourceInfo info = declarationStatement.getSourceInfo();
-			return JsUtils.createAssignment(info, localRef, initializer)
-					.makeStmt();
-		}
-
-		@Override
-		public JsNode transformDeclaredType(JDeclaredType type) {
-			// Don't generate JS for types not in current module if separate
-			// compilation is on.
-			if (program.isReferenceOnly(type)) {
-				return null;
-			}
-			if (alreadyRan.contains(type)) {
-				return null;
-			}
-			alreadyRan.add(type);
-			if (type.isJsNative()) {
-				// Emit JsOverlay static methods for native JsTypes.
-				emitStaticMethods(type);
-				// Emit JsOverlay (static) fields for native JsTypes.
-				emitFields(type);
-				return null;
-			}
-			checkForDuplicateMethods(type);
-			assert program.getTypeClassLiteralHolder() != type;
-			assert !program.immortalCodeGenTypes.contains(type);
-			// Super classes should be emitted before the actual class.
-			assert type.getSuperClass() == null
-					|| program.isReferenceOnly(type.getSuperClass())
-					|| alreadyRan.contains(type.getSuperClass());
-			emitStaticMethods(type);
-			generateTypeSetup(type);
-			emitFields(type);
-			return null;
-		}
-
-		@Override
-		public JsNode transformDoStatement(JDoStatement doStatement) {
-			JsDoWhile stmt = new JsDoWhile(doStatement.getSourceInfo());
-			stmt.setCondition(transform(doStatement.getTestExpr()));
-			stmt.setBody(jsEmptyIfNull(doStatement.getSourceInfo(),
-					transform(doStatement.getBody())));
-			return stmt;
-		}
-
-		@Override
-		public JsNode
-				transformExpressionStatement(JExpressionStatement statement) {
-			return transform(statement.getExpr()).makeStmt();
-		}
-
-		@Override
-		public JsNode transformFieldRef(JFieldRef fieldRef) {
-			JsExpression qualifier = transform(fieldRef.getInstance());
-			boolean isStatic = fieldRef.getField().isStatic();
-			return isStatic ? dispatchToStaticField(fieldRef, qualifier)
-					: dispatchToInstanceField(fieldRef, qualifier);
-		}
-
-		@Override
-		public JsNode transformForStatement(JForStatement forStatement) {
-			JsFor result = new JsFor(forStatement.getSourceInfo());
-			JsExpression initExpr = null;
-			List<JsExprStmt> initStmts = transform(
-					forStatement.getInitializers());
-			for (int i = 0; i < initStmts.size(); ++i) {
-				JsExprStmt initStmt = initStmts.get(i);
-				if (initStmt != null) {
-					initExpr = JsUtils.createCommaExpression(initExpr,
-							initStmt.getExpression());
-				}
-			}
-			result.setInitExpr(initExpr);
-			result.setCondition(transform(forStatement.getCondition()));
-			result.setIncrExpr(transform(forStatement.getIncrements()));
-			result.setBody(jsEmptyIfNull(forStatement.getSourceInfo(),
-					transform(forStatement.getBody())));
-			return result;
-		}
-
-		@Override
-		public JsNode transformIfStatement(JIfStatement ifStatement) {
-			JsIf result = new JsIf(ifStatement.getSourceInfo());
-			result.setIfExpr(transform(ifStatement.getIfExpr()));
-			result.setThenStmt(jsEmptyIfNull(ifStatement.getSourceInfo(),
-					transform(ifStatement.getThenStmt())));
-			result.setElseStmt(transform(ifStatement.getElseStmt()));
-			return result;
-		}
-
-		@Override
-		public JsFunction
-				transformJsniMethodBody(JsniMethodBody jsniMethodBody) {
-			final Map<String, JNode> nodeByJsniReference = Maps.newHashMap();
-			for (JsniClassLiteral ref : jsniMethodBody.getClassRefs()) {
-				nodeByJsniReference.put(ref.getIdent(), ref.getField());
-			}
-			for (JsniFieldRef ref : jsniMethodBody.getJsniFieldRefs()) {
-				nodeByJsniReference.put(ref.getIdent(), ref.getField());
-			}
-			for (JsniMethodRef ref : jsniMethodBody.getJsniMethodRefs()) {
-				nodeByJsniReference.put(ref.getIdent(), ref.getTarget());
-			}
-			final JsFunction function = jsniMethodBody.getFunc();
-			// replace all JSNI idents with a real JsName now that we know it
-			new JsModVisitor() {
-				/**
-				 * Marks a ctor that is a direct child of an invocation. Instead
-				 * of replacing the ctor with a tear-off, we replace the
-				 * invocation with a new operation.
-				 */
-				private JsNameRef dontReplaceCtor;
-
-				@Override
-				public void endVisit(JsInvocation x, JsContext ctx) {
-					// TODO(rluble): this fixup should be done during the
-					// initial JSNI processing in
-					// GwtAstBuilder.JsniReferenceCollector.
-					if (!(x.getQualifier() instanceof JsNameRef)) {
-						// If the invocation does not have a name as a qualifier
-						// (it might be an expression).
-						return;
-					}
-					JsNameRef ref = (JsNameRef) x.getQualifier();
-					if (!ref.isJsniReference()) {
-						// The invocation is not to a JSNI method.
-						return;
-					}
-					// Only constructors reach this point, all other JSNI
-					// references in the method body
-					// would have already been replaced at endVisit(JsNameRef).
-					// Replace invocation to ctor with a new op.
-					String ident = ref.getIdent();
-					assert ref.getQualifier() == null;
-					JConstructor constructor = (JConstructor) nodeByJsniReference
-							.get(ident);
-					JsNameRef constructorJsName = createStaticReference(
-							constructor, x.getSourceInfo());
-					ctx.replaceMe(new JsNew(x.getSourceInfo(),
-							constructorJsName, x.getArguments()));
-				}
-
-				@Override
-				public void endVisit(JsNameRef x, JsContext ctx) {
-					if (!x.isJsniReference()) {
-						return;
-					}
-					String ident = x.getIdent();
-					JNode node = nodeByJsniReference.get(ident);
-					assert (node != null);
-					if (node instanceof JField) {
-						JField field = (JField) node;
-						if (field.isStatic() && field.isJsNative()) {
-							ctx.replaceMe(createQualifiedNameRef(
-									field.getQualifiedJsName(),
-									x.getSourceInfo()));
-							return;
-						}
-						JsName jsName = names.get(field);
-						assert (jsName != null);
-						x.resolve(jsName);
-						// See if we need to add a clinit call to a static field
-						// ref
-						JsInvocation clinitCall = maybeCreateClinitCall(field);
-						if (clinitCall != null) {
-							JsExpression commaExpr = JsUtils
-									.createCommaExpression(clinitCall, x);
-							ctx.replaceMe(commaExpr);
-						}
-					} else if (node instanceof JConstructor) {
-						if (x == dontReplaceCtor) {
-							// Do nothing, parent will handle.
-						} else {
-							// Replace with a local closure function.
-							// function(a,b,c){return new Obj(a,b,c);}
-							JConstructor constructor = (JConstructor) node;
-							SourceInfo info = x.getSourceInfo();
-							JsNameRef constructorJsNameRef = createStaticReference(
-									constructor, info);
-							JsFunction anonymousFunction = new JsFunction(info,
-									function.getScope());
-							for (JParameter p : constructor.getParams()) {
-								JsName name = anonymousFunction.getScope()
-										.declareName(p.getName());
-								anonymousFunction.getParameters()
-										.add(new JsParameter(info, name));
-							}
-							JsNew jsNew = new JsNew(info, constructorJsNameRef);
-							for (JsParameter p : anonymousFunction
-									.getParameters()) {
-								jsNew.getArguments()
-										.add(p.getName().makeRef(info));
-							}
-							anonymousFunction.setBody(new JsBlock(info));
-							anonymousFunction.getBody().getStatements()
-									.add(new JsReturn(info, jsNew));
-							ctx.replaceMe(anonymousFunction);
-						}
-					} else {
-						JMethod method = (JMethod) node;
-						if (!method.needsDynamicDispatch()
-								&& method.isJsNative()) {
-							ctx.replaceMe(createGlobalQualifier(
-									method.getQualifiedJsName(),
-									x.getSourceInfo()));
-							return;
-						}
-						if (x.getQualifier() == null) {
-							JsName jsName = names.get(method);
-							assert (jsName != null);
-							x.resolve(jsName);
-						} else {
-							JsName jsName = polymorphicNames.get(method);
-							if (jsName == null) {
-								// this can occur when JSNI references an
-								// instance method on a
-								// type that was never actually instantiated.
-								jsName = getIndexedMethodJsName(
-										RuntimeConstants.RUNTIME_EMPTY_METHOD);
-							}
-							x.resolve(jsName);
-						}
-					}
-				}
-
-				@Override
-				public boolean visit(JsInvocation x, JsContext ctx) {
-					if (x.getQualifier() instanceof JsNameRef) {
-						dontReplaceCtor = (JsNameRef) x.getQualifier();
-					}
-					return true;
-				}
-			}.accept(function);
-			return function;
-		}
-
-		@Override
-		public JsNameRef transformJsniMethodRef(JsniMethodRef jsniMethodRef) {
-			JMethod method = jsniMethodRef.getTarget();
-			if (method.isJsNative()) {
-				// Construct Constructor.prototype.jsname or Constructor.
-				return createGlobalQualifier(method.getQualifiedJsName(),
-						jsniMethodRef.getSourceInfo());
-			}
-			return names.get(method).makeRef(jsniMethodRef.getSourceInfo());
-		}
-
-		@Override
-		public JsArrayLiteral transformJsonArray(JsonArray jsonArray) {
-			JsArrayLiteral jsArrayLiteral = new JsArrayLiteral(
-					jsonArray.getSourceInfo());
-			transformInto(jsonArray.getExpressions(),
-					jsArrayLiteral.getExpressions());
-			return jsArrayLiteral;
-		}
-
-		@Override
-		public JsLabel transformLabel(JLabel label) {
-			return new JsLabel(label.getSourceInfo(), names.get(label));
-		}
-
-		@Override
-		public JsStatement
-				transformLabeledStatement(JLabeledStatement labeledStatement) {
-			JsLabel label = transform(labeledStatement.getLabel());
-			label.setStmt(transform(labeledStatement.getBody()));
-			return label;
-		}
-
-		@Override
-		public JsLiteral transformLiteral(JLiteral literal) {
-			return JjsUtils.translateLiteral(literal);
-		}
-
-		@Override
-		public JsNode transformLocalRef(JLocalRef localRef) {
-			return names.get(localRef.getTarget())
-					.makeRef(localRef.getSourceInfo());
-		}
-
-		@Override
-		public JsNode transformMethod(JMethod method) {
-			if (method.isAbstract()) {
-				return generateAbstractMethodDefinition(method);
-			} else if (doesNotHaveConcreteImplementation(method)) {
-				return null;
-			}
-			currentMethod = method;
-			JsFunction function = transform(method.getBody());
-			function.setInliningMode(method.getInliningMode());
-			if (!method.isJsniMethod()) {
-				// Setup params on the generated function. A native method
-				// already got
-				// its jsParams set when parsed from JSNI.
-				List<JParameter> parameterList = method.getParams();
-				if (method.isJsMethodVarargs()) {
-					parameterList = parameterList.subList(0,
-							parameterList.size() - 1);
-				}
-				transformInto(parameterList, function.getParameters());
-			}
-			JsInvocation jsInvocation = maybeCreateClinitCall(method);
-			if (jsInvocation != null) {
-				function.getBody().getStatements().add(0,
-						jsInvocation.makeStmt());
-			}
-			if (JProgram.isClinit(method)) {
-				function.markAsClinit();
-			}
-			currentMethod = null;
-			return function;
-		}
-
-		@Override
-		public JsNode transformMethodBody(JMethodBody methodBody) {
-			JsBlock body = transform(methodBody.getBlock());
-			JsFunction function = jsFunctionsByJavaMethodBody.get(methodBody);
-			function.setBody(body);
-			/*
-			 * Emit a statement to declare the method's complete set of local
-			 * variables. JavaScript doesn't have the same concept of lexical
-			 * scoping as Java, so it's okay to just predeclare all local vars
-			 * at the top of the function, which saves us having to use the
-			 * "var" keyword over and over.
-			 *
-			 * Note: it's fine to use the same JS ident to represent two
-			 * different Java locals of the same name since they could never
-			 * conflict with each other in Java. We use the alreadySeen set to
-			 * make sure we don't declare the same-named local var twice.
-			 */
-			JsVars vars = new JsVars(methodBody.getSourceInfo());
-			Set<String> alreadySeen = Sets.newHashSet();
-			for (JLocal local : methodBody.getLocals()) {
-				JsName name = names.get(local);
-				String ident = name.getIdent();
-				if (!alreadySeen.contains(ident)
-						// Catch block params don't need var declarations
-						&& !catchParamIdentifiers.contains(name)) {
-					alreadySeen.add(ident);
-					vars.add(new JsVar(methodBody.getSourceInfo(), name));
-				}
-			}
-			if (!vars.isEmpty()) {
-				function.getBody().getStatements().add(0, vars);
-			}
-			return function;
-		}
-
-		@Override
-		public JsNode transformMethodCall(JMethodCall methodCall) {
-			JMethod method = methodCall.getTarget();
-			if (JProgram.isClinit(method)) {
-				/*
-				 * It is possible for clinits to be referenced here that have
-				 * actually been retargeted (see {@link
-				 * JTypeOracle.recomputeAfterOptimizations}). Most of the time,
-				 * these will get cleaned up by other optimization passes prior
-				 * to this point, but it's not guaranteed. In this case we need
-				 * to replace the method call with the replaced clinit, unless
-				 * the replacement is null, in which case we generate a
-				 * JsNullLiteral as a place-holder expression.
-				 */
-				JDeclaredType type = method.getEnclosingType();
-				JDeclaredType clinitTarget = type.getClinitTarget();
-				if (clinitTarget == null) {
-					// generate a null expression, which will get optimized out
-					return JsNullLiteral.INSTANCE;
-				}
-				method = clinitTarget.getClinitMethod();
-			}
-			JsExpression qualifier = transform(methodCall.getInstance());
-			List<JsExpression> args = transform(methodCall.getArgs());
-			SourceInfo sourceInfo = methodCall.getSourceInfo();
-			if (method.isStatic()) {
-				return dispatchToStatic(qualifier, method, args, sourceInfo);
-			} else if (methodCall.isStaticDispatchOnly()) {
-				return dispatchToSuper(qualifier, method, args, sourceInfo);
-			} else if (method.isOrOverridesJsFunctionMethod()) {
-				return dispatchToJsFunction(qualifier, method, args,
-						sourceInfo);
-			} else {
-				return dispatchToInstanceMethod(qualifier, method, args,
-						sourceInfo);
-			}
-		}
-
-		@Override
-		public JsNode
-				transformMultiExpression(JMultiExpression multiExpression) {
-			if (multiExpression.isEmpty()) {
-				// the multi-expression was empty; use undefined
-				return JsRootScope.INSTANCE.getUndefined()
-						.makeRef(multiExpression.getSourceInfo());
-			}
-			List<JsExpression> exprs = transform(
-					multiExpression.getExpressions());
-			JsExpression cur = null;
-			for (int i = 0; i < exprs.size(); ++i) {
-				JsExpression next = exprs.get(i);
-				cur = JsUtils.createCommaExpression(cur, next);
-			}
-			return cur;
-		}
-
-		@Override
-		public JsNode transformNameOf(JNameOf nameof) {
-			JsName name = names.get(nameof.getNode());
-			if (name == null) {
-				return JsRootScope.INSTANCE.getUndefined()
-						.makeRef(nameof.getSourceInfo());
-			}
-			return new JsNameOf(nameof.getSourceInfo(), name);
-		}
-
-		@Override
-		public JsNode transformNewInstance(JNewInstance newInstance) {
-			SourceInfo sourceInfo = newInstance.getSourceInfo();
-			JConstructor ctor = newInstance.getTarget();
-			JsName ctorName = names.get(ctor);
-			JsNameRef reference = ctor.isJsNative()
-					? createGlobalQualifier(ctor.getQualifiedJsName(),
-							sourceInfo)
-					: ctorName.makeRef(sourceInfo);
-			List<JsExpression> arguments = transform(newInstance.getArgs());
-			if (newInstance.getClassType().isJsFunctionImplementation()) {
-				// Synthesize makeLambdaFunction(samMethodReference,
-				// constructorReference, ctorArguments)
-				// which will create the function instance and run the
-				// constructor on it.
-				// TODO(rluble): optimize the constructor call away if it is
-				// empty.
-				return constructJsFunctionObject(sourceInfo,
-						newInstance.getClassType(), ctorName, reference,
-						new JsArrayLiteral(sourceInfo, arguments));
-			}
-			return JsUtils.createInvocationOrPropertyAccess(
-					InvocationStyle.NEWINSTANCE, sourceInfo, ctor, null,
-					reference, arguments);
-		}
-
-		@Override
-		public JsNode transformNumericEntry(JNumericEntry entry) {
-			return new JsNumericEntry(entry.getSourceInfo(), entry.getKey(),
-					entry.getValue());
-		}
-
-		@Override
-		public JsNode transformParameter(JParameter parameter) {
-			assert !(currentMethod.isJsMethodVarargs()
-					&& parameter.isVarargs());
-			return new JsParameter(parameter.getSourceInfo(),
-					names.get(parameter));
-		}
-
-		@Override
-		public JsNode transformParameterRef(JParameterRef parameterRef) {
-			return names.get(parameterRef.getTarget())
-					.makeRef(parameterRef.getSourceInfo());
-		}
-
-		@Override
-		public JsNode transformPermutationDependentValue(
-				JPermutationDependentValue dependentValue) {
-			throw new AssertionError(
-					"AST should not contain permutation dependent values at "
-							+ "this point but contains " + dependentValue);
-		}
-
-		@Override
-		public JsNode transformPostfixOperation(JPostfixOperation expression) {
-			return new JsPostfixOperation(expression.getSourceInfo(),
-					JavaToJsOperatorMap.get(expression.getOp()),
-					transform(expression.getArg()));
-		}
-
-		@Override
-		public JsNode transformPrefixOperation(JPrefixOperation expression) {
-			return new JsPrefixOperation(expression.getSourceInfo(),
-					JavaToJsOperatorMap.get(expression.getOp()),
-					transform(expression.getArg()));
-		}
-
-		@Override
-		public JsNode transformProgram(JProgram program) {
-			// Handle the visiting here as we need to slightly change the order.
-			// 1.1 (preamble) Immortal code gentypes.
-			// 1.2 (preamble) Classes in the preamble, i.e. all the classes that
-			// are needed
-			// to support creation of class literals (reachable through
-			// Class.createFor* ).
-			// 1.3 (preamble) Class literals for classes in the preamble.
-			// 2. (body) Normal classes, each with its corresponding class
-			// literal (if live).
-			// 3. (epilogue) Code to start the execution of the program
-			// (gwtOnLoad, etc).
-			Set<JDeclaredType> preambleTypes = generatePreamble(program);
-			if (incremental) {
-				// Record the names of preamble types so that it's possible to
-				// invalidate caches when the
-				// preamble types are known to have become stale.
-				if (!minimalRebuildCache.hasPreambleTypeNames()) {
-					Set<String> preambleTypeNames = Sets.newHashSet();
-					for (JDeclaredType preambleType : preambleTypes) {
-						preambleTypeNames.add(preambleType.getName());
-					}
-					minimalRebuildCache.setPreambleTypeNames(logger,
-							preambleTypeNames);
-				}
-			}
-			// Sort normal types according to superclass relationship.
-			Set<JDeclaredType> topologicallySortedBodyTypes = Sets
-					.newLinkedHashSet();
-			for (JDeclaredType type : program.getModuleDeclaredTypes()) {
-				insertInTopologicalOrder(type, topologicallySortedBodyTypes);
-			}
-			// Remove all preamble types that might have been inserted here.
-			topologicallySortedBodyTypes.removeAll(preambleTypes);
-			// Iterate over each type in the right order.
-			markPosition("Program", Type.PROGRAM_START);
-			for (JDeclaredType type : topologicallySortedBodyTypes) {
-				markPosition(type.getName(), Type.CLASS_START);
-				transform(type);
-				maybeGenerateClassLiteral(type);
-				installClassLiterals(Arrays.asList(type));
-				markPosition(type.getName(), Type.CLASS_END);
-			}
-			markPosition("Program", Type.PROGRAM_END);
-			generateEpilogue();
-			// All done, do not visit children.
-			return null;
-		}
-
-		@Override
-		public JsNode
-				transformReturnStatement(JReturnStatement returnStatement) {
-			return new JsReturn(returnStatement.getSourceInfo(),
-					transform(returnStatement.getExpr()));
-		}
-
-		@Override
-		public JsNode transformRunAsync(JRunAsync runAsync) {
-			return transform(runAsync.getRunAsyncCall());
-		}
-
-		@Override
-		public JsStatement
-				transformSwitchStatement(JSwitchStatement switchStatement) {
-			/*
-			 * What a pain.. JSwitchStatement and JsSwitch are modeled
-			 * completely differently. Here we try to resolve those differences.
-			 */
-			JsSwitch jsSwitch = new JsSwitch(switchStatement.getSourceInfo());
-			jsSwitch.setExpr(transform(switchStatement.getExpr()));
-			List<JStatement> bodyStmts = switchStatement.getBody()
-					.getStatements();
-			List<JsStatement> curStatements = null;
-			for (JStatement stmt : bodyStmts) {
-				if (stmt instanceof JCaseStatement) {
-					// create a new switch member
-					JsSwitchMember switchMember = transform((JNode) stmt);
-					jsSwitch.getCases().add(switchMember);
-					curStatements = switchMember.getStmts();
-				} else {
-					// add to statements for current case
-					assert (curStatements != null);
-					JsStatement newStmt = transform(stmt);
-					if (newStmt != null) {
-						// Empty JDeclarationStatement produces a null
-						curStatements.add(newStmt);
-					}
-				}
-			}
-			return jsSwitch;
-		}
-
-		@Override
-		public JsNode transformThisRef(JThisRef thisRef) {
-			return new JsThisRef(thisRef.getSourceInfo());
-		}
-
-		@Override
-		public JsNode transformThrowStatement(JThrowStatement throwStatement) {
-			return new JsThrow(throwStatement.getSourceInfo(),
-					transform(throwStatement.getExpr()));
-		}
-
-		@Override
-		public JsNode transformTryStatement(JTryStatement tryStatement) {
-			JsTry jsTry = new JsTry(tryStatement.getSourceInfo());
-			jsTry.setTryBlock(transform(tryStatement.getTryBlock()));
-			int size = tryStatement.getCatchClauses().size();
-			assert (size < 2);
-			if (size == 1) {
-				JBlock block = tryStatement.getCatchClauses().get(0).getBlock();
-				JsCatch jsCatch = catchMap.get(block);
-				jsCatch.setBody(transform(block));
-				jsTry.getCatches().add(jsCatch);
-			}
-			JsBlock finallyBlock = transform(tryStatement.getFinallyBlock());
-			if (finallyBlock != null
-					&& finallyBlock.getStatements().size() > 0) {
-				jsTry.setFinallyBlock(finallyBlock);
-			}
-			return jsTry;
-		}
-
-		@Override
-		public JsNode transformUnsafeTypeCoercion(
-				JUnsafeTypeCoercion unsafeTypeCoercion) {
-			return transform(unsafeTypeCoercion.getExpression());
-		}
-
-		@Override
-		public JsNode transformWhileStatement(JWhileStatement whileStatement) {
-			SourceInfo info = whileStatement.getSourceInfo();
-			JsWhile stmt = new JsWhile(info);
-			stmt.setCondition(transform(whileStatement.getTestExpr()));
-			stmt.setBody(
-					jsEmptyIfNull(info, transform(whileStatement.getBody())));
-			return stmt;
-		}
 
 		private void addMethodDefinitionStatement(int position, JMethod method,
 				JsExprStmt methodDefinitionStatement) {
@@ -2898,6 +2140,11 @@ public class GenerateJavaScriptAST {
 					|| method.isJsInteropEntryPoint();
 		}
 
+		public JsStatement jsEmptyIfNull(SourceInfo info,
+				JsStatement statement) {
+			return statement != null ? statement : new JsEmpty(info);
+		}
+
 		private void markPosition(String name, Type type) {
 			getGlobalStatements().add(
 					new JsPositionMarker(SourceOrigin.UNKNOWN, name, type));
@@ -3138,12 +2385,765 @@ public class GenerateJavaScriptAST {
 			return transform((JNode) statement);
 		}
 
+		@Override
+		public JsExpression transformArrayLength(JArrayLength expression) {
+			assert expression
+					.getInstance() != null : "Can't access the length of a null array";
+			return arrayLength.makeQualifiedRef(expression.getSourceInfo(),
+					transform(expression.getInstance()));
+		}
+
+		@Override
+		public JsExpression transformArrayRef(JArrayRef arrayRef) {
+			JsArrayAccess jsArrayAccess = new JsArrayAccess(
+					arrayRef.getSourceInfo());
+			jsArrayAccess.setIndexExpr(transform(arrayRef.getIndexExpr()));
+			jsArrayAccess.setArrayExpr(transform(arrayRef.getInstance()));
+			return jsArrayAccess;
+		}
+
+		@Override
+		public JsExpression
+				transformBinaryOperation(JBinaryOperation binaryOperation) {
+			JsExpression lhs = transform(binaryOperation.getLhs());
+			JsExpression rhs = transform(binaryOperation.getRhs());
+			JsBinaryOperator op = JavaToJsOperatorMap
+					.get(binaryOperation.getOp());
+			/*
+			 * Use === and !== on reference types, or else you can get wrong
+			 * answers when Object.toString() == 'some string'.
+			 */
+			if (binaryOperation.getLhs().getType() instanceof JReferenceType
+					&& binaryOperation.getRhs()
+							.getType() instanceof JReferenceType) {
+				switch (op) {
+				case EQ:
+					op = JsBinaryOperator.REF_EQ;
+					break;
+				case NEQ:
+					op = JsBinaryOperator.REF_NEQ;
+					break;
+				}
+			}
+			return new JsBinaryOperation(binaryOperation.getSourceInfo(), op,
+					lhs, rhs);
+		}
+
+		@Override
+		public JsStatement transformBlock(JBlock block) {
+			JsBlock jsBlock = new JsBlock(block.getSourceInfo());
+			List<JsStatement> stmts = jsBlock.getStatements();
+			transformIntoExcludingNulls(block.getStatements(), stmts);
+			Iterables.removeIf(stmts, Predicates.instanceOf(JsEmpty.class));
+			return jsBlock;
+		}
+
+		@Override
+		public JsNode transformBreakStatement(JBreakStatement breakStatement) {
+			SourceInfo info = breakStatement.getSourceInfo();
+			return new JsBreak(info, transformIntoLabelReference(info,
+					breakStatement.getLabel()));
+		}
+
+		@Override
+		public JsNode transformCaseStatement(JCaseStatement caseStatement) {
+			if (caseStatement.getExpr() == null) {
+				return new JsDefault(caseStatement.getSourceInfo());
+			} else {
+				JsCase jsCase = new JsCase(caseStatement.getSourceInfo());
+				jsCase.setCaseExpr(transform(caseStatement.getExpr()));
+				return jsCase;
+			}
+		}
+
+		@Override
+		public JsNode transformCastMap(JCastMap castMap) {
+			SourceInfo sourceInfo = castMap.getSourceInfo();
+			List<JsExpression> jsCastToTypes = transform(
+					castMap.getCanCastToTypes());
+			return buildJsCastMapLiteral(jsCastToTypes, sourceInfo);
+		}
+
+		@Override
+		public JsNode transformCastOperation(JCastOperation castOperation) {
+			// These are left in when cast checking is disabled.
+			return transform(castOperation.getExpr());
+		}
+
+		@Override
+		public JsNode transformClassLiteral(JClassLiteral classLiteral) {
+			JsName classLit = names.get(classLiteral.getField());
+			return classLit.makeRef(classLiteral.getSourceInfo());
+		}
+
+		@Override
+		public JsNode transformConditional(JConditional conditional) {
+			JsExpression ifTest = transform(conditional.getIfTest());
+			JsExpression thenExpr = transform(conditional.getThenExpr());
+			JsExpression elseExpr = transform(conditional.getElseExpr());
+			return new JsConditional(conditional.getSourceInfo(), ifTest,
+					thenExpr, elseExpr);
+		}
+
+		@Override
+		public JsNode transformContinueStatement(
+				JContinueStatement continueStatement) {
+			SourceInfo info = continueStatement.getSourceInfo();
+			return new JsContinue(info, transformIntoLabelReference(info,
+					continueStatement.getLabel()));
+		}
+
+		@Override
+		public JsNode transformDebuggerStatement(
+				JDebuggerStatement debuggerStatement) {
+			return new JsDebugger(debuggerStatement.getSourceInfo());
+		}
+
+		@Override
+		public JsNode transformDeclarationStatement(
+				JDeclarationStatement declarationStatement) {
+			if (declarationStatement.getInitializer() == null) {
+				return null;
+			}
+			JVariable target = declarationStatement.getVariableRef()
+					.getTarget();
+			if (target instanceof JField
+					&& initializeAtTopScope((JField) target)) {
+				// Will initialize at top scope; no need to double-initialize.
+				return null;
+			}
+			JsExpression initializer = transform(
+					declarationStatement.getInitializer());
+			JsNameRef localRef = transform(
+					declarationStatement.getVariableRef());
+			SourceInfo info = declarationStatement.getSourceInfo();
+			return JsUtils.createAssignment(info, localRef, initializer)
+					.makeStmt();
+		}
+
+		@Override
+		public JsNode transformDeclaredType(JDeclaredType type) {
+			// Don't generate JS for types not in current module if separate
+			// compilation is on.
+			if (program.isReferenceOnly(type)) {
+				return null;
+			}
+			if (alreadyRan.contains(type)) {
+				return null;
+			}
+			alreadyRan.add(type);
+			if (type.isJsNative()) {
+				// Emit JsOverlay static methods for native JsTypes.
+				emitStaticMethods(type);
+				// Emit JsOverlay (static) fields for native JsTypes.
+				emitFields(type);
+				return null;
+			}
+			checkForDuplicateMethods(type);
+			assert program.getTypeClassLiteralHolder() != type;
+			assert !program.immortalCodeGenTypes.contains(type);
+			// Super classes should be emitted before the actual class.
+			assert type.getSuperClass() == null
+					|| program.isReferenceOnly(type.getSuperClass())
+					|| alreadyRan.contains(type.getSuperClass());
+			emitStaticMethods(type);
+			generateTypeSetup(type);
+			emitFields(type);
+			return null;
+		}
+
+		@Override
+		public JsNode transformDoStatement(JDoStatement doStatement) {
+			JsDoWhile stmt = new JsDoWhile(doStatement.getSourceInfo());
+			stmt.setCondition(transform(doStatement.getTestExpr()));
+			stmt.setBody(jsEmptyIfNull(doStatement.getSourceInfo(),
+					transform(doStatement.getBody())));
+			return stmt;
+		}
+
+		@Override
+		public JsNode
+				transformExpressionStatement(JExpressionStatement statement) {
+			return transform(statement.getExpr()).makeStmt();
+		}
+
+		@Override
+		public JsNode transformFieldRef(JFieldRef fieldRef) {
+			JsExpression qualifier = transform(fieldRef.getInstance());
+			boolean isStatic = fieldRef.getField().isStatic();
+			return isStatic ? dispatchToStaticField(fieldRef, qualifier)
+					: dispatchToInstanceField(fieldRef, qualifier);
+		}
+
+		@Override
+		public JsNode transformForStatement(JForStatement forStatement) {
+			JsFor result = new JsFor(forStatement.getSourceInfo());
+			JsExpression initExpr = null;
+			List<JsExprStmt> initStmts = transform(
+					forStatement.getInitializers());
+			for (int i = 0; i < initStmts.size(); ++i) {
+				JsExprStmt initStmt = initStmts.get(i);
+				if (initStmt != null) {
+					initExpr = JsUtils.createCommaExpression(initExpr,
+							initStmt.getExpression());
+				}
+			}
+			result.setInitExpr(initExpr);
+			result.setCondition(transform(forStatement.getCondition()));
+			result.setIncrExpr(transform(forStatement.getIncrements()));
+			result.setBody(jsEmptyIfNull(forStatement.getSourceInfo(),
+					transform(forStatement.getBody())));
+			return result;
+		}
+
+		@Override
+		public JsNode transformIfStatement(JIfStatement ifStatement) {
+			JsIf result = new JsIf(ifStatement.getSourceInfo());
+			result.setIfExpr(transform(ifStatement.getIfExpr()));
+			result.setThenStmt(jsEmptyIfNull(ifStatement.getSourceInfo(),
+					transform(ifStatement.getThenStmt())));
+			result.setElseStmt(transform(ifStatement.getElseStmt()));
+			return result;
+		}
+
 		private JsNameRef transformIntoLabelReference(SourceInfo info,
 				JLabel label) {
 			if (label == null) {
 				return null;
 			}
 			return ((JsLabel) transform(label)).getName().makeRef(info);
+		}
+
+		@Override
+		public JsFunction
+				transformJsniMethodBody(JsniMethodBody jsniMethodBody) {
+			final Map<String, JNode> nodeByJsniReference = Maps.newHashMap();
+			for (JsniClassLiteral ref : jsniMethodBody.getClassRefs()) {
+				nodeByJsniReference.put(ref.getIdent(), ref.getField());
+			}
+			for (JsniFieldRef ref : jsniMethodBody.getJsniFieldRefs()) {
+				nodeByJsniReference.put(ref.getIdent(), ref.getField());
+			}
+			for (JsniMethodRef ref : jsniMethodBody.getJsniMethodRefs()) {
+				nodeByJsniReference.put(ref.getIdent(), ref.getTarget());
+			}
+			final JsFunction function = jsniMethodBody.getFunc();
+			// replace all JSNI idents with a real JsName now that we know it
+			new JsModVisitor() {
+				/**
+				 * Marks a ctor that is a direct child of an invocation. Instead
+				 * of replacing the ctor with a tear-off, we replace the
+				 * invocation with a new operation.
+				 */
+				private JsNameRef dontReplaceCtor;
+
+				@Override
+				public void endVisit(JsInvocation x, JsContext ctx) {
+					// TODO(rluble): this fixup should be done during the
+					// initial JSNI processing in
+					// GwtAstBuilder.JsniReferenceCollector.
+					if (!(x.getQualifier() instanceof JsNameRef)) {
+						// If the invocation does not have a name as a qualifier
+						// (it might be an expression).
+						return;
+					}
+					JsNameRef ref = (JsNameRef) x.getQualifier();
+					if (!ref.isJsniReference()) {
+						// The invocation is not to a JSNI method.
+						return;
+					}
+					// Only constructors reach this point, all other JSNI
+					// references in the method body
+					// would have already been replaced at endVisit(JsNameRef).
+					// Replace invocation to ctor with a new op.
+					String ident = ref.getIdent();
+					assert ref.getQualifier() == null;
+					JConstructor constructor = (JConstructor) nodeByJsniReference
+							.get(ident);
+					JsNameRef constructorJsName = createStaticReference(
+							constructor, x.getSourceInfo());
+					ctx.replaceMe(new JsNew(x.getSourceInfo(),
+							constructorJsName, x.getArguments()));
+				}
+
+				@Override
+				public void endVisit(JsNameRef x, JsContext ctx) {
+					if (!x.isJsniReference()) {
+						return;
+					}
+					String ident = x.getIdent();
+					JNode node = nodeByJsniReference.get(ident);
+					assert (node != null);
+					if (node instanceof JField) {
+						JField field = (JField) node;
+						if (field.isStatic() && field.isJsNative()) {
+							ctx.replaceMe(createQualifiedNameRef(
+									field.getQualifiedJsName(),
+									x.getSourceInfo()));
+							return;
+						}
+						JsName jsName = names.get(field);
+						assert (jsName != null);
+						x.resolve(jsName);
+						// See if we need to add a clinit call to a static field
+						// ref
+						JsInvocation clinitCall = maybeCreateClinitCall(field);
+						if (clinitCall != null) {
+							JsExpression commaExpr = JsUtils
+									.createCommaExpression(clinitCall, x);
+							ctx.replaceMe(commaExpr);
+						}
+					} else if (node instanceof JConstructor) {
+						if (x == dontReplaceCtor) {
+							// Do nothing, parent will handle.
+						} else {
+							// Replace with a local closure function.
+							// function(a,b,c){return new Obj(a,b,c);}
+							JConstructor constructor = (JConstructor) node;
+							SourceInfo info = x.getSourceInfo();
+							JsNameRef constructorJsNameRef = createStaticReference(
+									constructor, info);
+							JsFunction anonymousFunction = new JsFunction(info,
+									function.getScope());
+							for (JParameter p : constructor.getParams()) {
+								JsName name = anonymousFunction.getScope()
+										.declareName(p.getName());
+								anonymousFunction.getParameters()
+										.add(new JsParameter(info, name));
+							}
+							JsNew jsNew = new JsNew(info, constructorJsNameRef);
+							for (JsParameter p : anonymousFunction
+									.getParameters()) {
+								jsNew.getArguments()
+										.add(p.getName().makeRef(info));
+							}
+							anonymousFunction.setBody(new JsBlock(info));
+							anonymousFunction.getBody().getStatements()
+									.add(new JsReturn(info, jsNew));
+							ctx.replaceMe(anonymousFunction);
+						}
+					} else {
+						JMethod method = (JMethod) node;
+						if (!method.needsDynamicDispatch()
+								&& method.isJsNative()) {
+							ctx.replaceMe(createGlobalQualifier(
+									method.getQualifiedJsName(),
+									x.getSourceInfo()));
+							return;
+						}
+						if (x.getQualifier() == null) {
+							JsName jsName = names.get(method);
+							assert (jsName != null);
+							x.resolve(jsName);
+						} else {
+							JsName jsName = polymorphicNames.get(method);
+							if (jsName == null) {
+								// this can occur when JSNI references an
+								// instance method on a
+								// type that was never actually instantiated.
+								jsName = getIndexedMethodJsName(
+										RuntimeConstants.RUNTIME_EMPTY_METHOD);
+							}
+							x.resolve(jsName);
+						}
+					}
+				}
+
+				@Override
+				public boolean visit(JsInvocation x, JsContext ctx) {
+					if (x.getQualifier() instanceof JsNameRef) {
+						dontReplaceCtor = (JsNameRef) x.getQualifier();
+					}
+					return true;
+				}
+			}.accept(function);
+			return function;
+		}
+
+		@Override
+		public JsNameRef transformJsniMethodRef(JsniMethodRef jsniMethodRef) {
+			JMethod method = jsniMethodRef.getTarget();
+			if (method.isJsNative()) {
+				// Construct Constructor.prototype.jsname or Constructor.
+				return createGlobalQualifier(method.getQualifiedJsName(),
+						jsniMethodRef.getSourceInfo());
+			}
+			return names.get(method).makeRef(jsniMethodRef.getSourceInfo());
+		}
+
+		@Override
+		public JsArrayLiteral transformJsonArray(JsonArray jsonArray) {
+			JsArrayLiteral jsArrayLiteral = new JsArrayLiteral(
+					jsonArray.getSourceInfo());
+			transformInto(jsonArray.getExpressions(),
+					jsArrayLiteral.getExpressions());
+			return jsArrayLiteral;
+		}
+
+		@Override
+		public JsLabel transformLabel(JLabel label) {
+			return new JsLabel(label.getSourceInfo(), names.get(label));
+		}
+
+		@Override
+		public JsStatement
+				transformLabeledStatement(JLabeledStatement labeledStatement) {
+			JsLabel label = transform(labeledStatement.getLabel());
+			label.setStmt(transform(labeledStatement.getBody()));
+			return label;
+		}
+
+		@Override
+		public JsLiteral transformLiteral(JLiteral literal) {
+			return JjsUtils.translateLiteral(literal);
+		}
+
+		@Override
+		public JsNode transformLocalRef(JLocalRef localRef) {
+			return names.get(localRef.getTarget())
+					.makeRef(localRef.getSourceInfo());
+		}
+
+		@Override
+		public JsNode transformMethod(JMethod method) {
+			if (method.isAbstract()) {
+				return generateAbstractMethodDefinition(method);
+			} else if (doesNotHaveConcreteImplementation(method)) {
+				return null;
+			}
+			currentMethod = method;
+			JsFunction function = transform(method.getBody());
+			function.setInliningMode(method.getInliningMode());
+			if (!method.isJsniMethod()) {
+				// Setup params on the generated function. A native method
+				// already got
+				// its jsParams set when parsed from JSNI.
+				List<JParameter> parameterList = method.getParams();
+				if (method.isJsMethodVarargs()) {
+					parameterList = parameterList.subList(0,
+							parameterList.size() - 1);
+				}
+				transformInto(parameterList, function.getParameters());
+			}
+			JsInvocation jsInvocation = maybeCreateClinitCall(method);
+			if (jsInvocation != null) {
+				function.getBody().getStatements().add(0,
+						jsInvocation.makeStmt());
+			}
+			if (JProgram.isClinit(method)) {
+				function.markAsClinit();
+			}
+			currentMethod = null;
+			return function;
+		}
+
+		@Override
+		public JsNode transformMethodBody(JMethodBody methodBody) {
+			JsBlock body = transform(methodBody.getBlock());
+			JsFunction function = jsFunctionsByJavaMethodBody.get(methodBody);
+			function.setBody(body);
+			/*
+			 * Emit a statement to declare the method's complete set of local
+			 * variables. JavaScript doesn't have the same concept of lexical
+			 * scoping as Java, so it's okay to just predeclare all local vars
+			 * at the top of the function, which saves us having to use the
+			 * "var" keyword over and over.
+			 *
+			 * Note: it's fine to use the same JS ident to represent two
+			 * different Java locals of the same name since they could never
+			 * conflict with each other in Java. We use the alreadySeen set to
+			 * make sure we don't declare the same-named local var twice.
+			 */
+			JsVars vars = new JsVars(methodBody.getSourceInfo());
+			Set<String> alreadySeen = Sets.newHashSet();
+			for (JLocal local : methodBody.getLocals()) {
+				JsName name = names.get(local);
+				String ident = name.getIdent();
+				if (!alreadySeen.contains(ident)
+						// Catch block params don't need var declarations
+						&& !catchParamIdentifiers.contains(name)) {
+					alreadySeen.add(ident);
+					vars.add(new JsVar(methodBody.getSourceInfo(), name));
+				}
+			}
+			if (!vars.isEmpty()) {
+				function.getBody().getStatements().add(0, vars);
+			}
+			return function;
+		}
+
+		@Override
+		public JsNode transformMethodCall(JMethodCall methodCall) {
+			JMethod method = methodCall.getTarget();
+			if (JProgram.isClinit(method)) {
+				/*
+				 * It is possible for clinits to be referenced here that have
+				 * actually been retargeted (see {@link
+				 * JTypeOracle.recomputeAfterOptimizations}). Most of the time,
+				 * these will get cleaned up by other optimization passes prior
+				 * to this point, but it's not guaranteed. In this case we need
+				 * to replace the method call with the replaced clinit, unless
+				 * the replacement is null, in which case we generate a
+				 * JsNullLiteral as a place-holder expression.
+				 */
+				JDeclaredType type = method.getEnclosingType();
+				JDeclaredType clinitTarget = type.getClinitTarget();
+				if (clinitTarget == null) {
+					// generate a null expression, which will get optimized out
+					return JsNullLiteral.INSTANCE;
+				}
+				method = clinitTarget.getClinitMethod();
+			}
+			JsExpression qualifier = transform(methodCall.getInstance());
+			List<JsExpression> args = transform(methodCall.getArgs());
+			SourceInfo sourceInfo = methodCall.getSourceInfo();
+			if (method.isStatic()) {
+				return dispatchToStatic(qualifier, method, args, sourceInfo);
+			} else if (methodCall.isStaticDispatchOnly()) {
+				return dispatchToSuper(qualifier, method, args, sourceInfo);
+			} else if (method.isOrOverridesJsFunctionMethod()) {
+				return dispatchToJsFunction(qualifier, method, args,
+						sourceInfo);
+			} else {
+				return dispatchToInstanceMethod(qualifier, method, args,
+						sourceInfo);
+			}
+		}
+
+		@Override
+		public JsNode
+				transformMultiExpression(JMultiExpression multiExpression) {
+			if (multiExpression.isEmpty()) {
+				// the multi-expression was empty; use undefined
+				return JsRootScope.INSTANCE.getUndefined()
+						.makeRef(multiExpression.getSourceInfo());
+			}
+			List<JsExpression> exprs = transform(
+					multiExpression.getExpressions());
+			JsExpression cur = null;
+			for (int i = 0; i < exprs.size(); ++i) {
+				JsExpression next = exprs.get(i);
+				cur = JsUtils.createCommaExpression(cur, next);
+			}
+			return cur;
+		}
+
+		@Override
+		public JsNode transformNameOf(JNameOf nameof) {
+			JsName name = names.get(nameof.getNode());
+			if (name == null) {
+				return JsRootScope.INSTANCE.getUndefined()
+						.makeRef(nameof.getSourceInfo());
+			}
+			return new JsNameOf(nameof.getSourceInfo(), name);
+		}
+
+		@Override
+		public JsNode transformNewInstance(JNewInstance newInstance) {
+			SourceInfo sourceInfo = newInstance.getSourceInfo();
+			JConstructor ctor = newInstance.getTarget();
+			JsName ctorName = names.get(ctor);
+			JsNameRef reference = ctor.isJsNative()
+					? createGlobalQualifier(ctor.getQualifiedJsName(),
+							sourceInfo)
+					: ctorName.makeRef(sourceInfo);
+			List<JsExpression> arguments = transform(newInstance.getArgs());
+			if (newInstance.getClassType().isJsFunctionImplementation()) {
+				// Synthesize makeLambdaFunction(samMethodReference,
+				// constructorReference, ctorArguments)
+				// which will create the function instance and run the
+				// constructor on it.
+				// TODO(rluble): optimize the constructor call away if it is
+				// empty.
+				return constructJsFunctionObject(sourceInfo,
+						newInstance.getClassType(), ctorName, reference,
+						new JsArrayLiteral(sourceInfo, arguments));
+			}
+			return JsUtils.createInvocationOrPropertyAccess(
+					InvocationStyle.NEWINSTANCE, sourceInfo, ctor, null,
+					reference, arguments);
+		}
+
+		@Override
+		public JsNode transformNumericEntry(JNumericEntry entry) {
+			return new JsNumericEntry(entry.getSourceInfo(), entry.getKey(),
+					entry.getValue());
+		}
+
+		@Override
+		public JsNode transformParameter(JParameter parameter) {
+			assert !(currentMethod.isJsMethodVarargs()
+					&& parameter.isVarargs());
+			return new JsParameter(parameter.getSourceInfo(),
+					names.get(parameter));
+		}
+
+		@Override
+		public JsNode transformParameterRef(JParameterRef parameterRef) {
+			return names.get(parameterRef.getTarget())
+					.makeRef(parameterRef.getSourceInfo());
+		}
+
+		@Override
+		public JsNode transformPermutationDependentValue(
+				JPermutationDependentValue dependentValue) {
+			throw new AssertionError(
+					"AST should not contain permutation dependent values at "
+							+ "this point but contains " + dependentValue);
+		}
+
+		@Override
+		public JsNode transformPostfixOperation(JPostfixOperation expression) {
+			return new JsPostfixOperation(expression.getSourceInfo(),
+					JavaToJsOperatorMap.get(expression.getOp()),
+					transform(expression.getArg()));
+		}
+
+		@Override
+		public JsNode transformPrefixOperation(JPrefixOperation expression) {
+			return new JsPrefixOperation(expression.getSourceInfo(),
+					JavaToJsOperatorMap.get(expression.getOp()),
+					transform(expression.getArg()));
+		}
+
+		@Override
+		public JsNode transformProgram(JProgram program) {
+			// Handle the visiting here as we need to slightly change the order.
+			// 1.1 (preamble) Immortal code gentypes.
+			// 1.2 (preamble) Classes in the preamble, i.e. all the classes that
+			// are needed
+			// to support creation of class literals (reachable through
+			// Class.createFor* ).
+			// 1.3 (preamble) Class literals for classes in the preamble.
+			// 2. (body) Normal classes, each with its corresponding class
+			// literal (if live).
+			// 3. (epilogue) Code to start the execution of the program
+			// (gwtOnLoad, etc).
+			Set<JDeclaredType> preambleTypes = generatePreamble(program);
+			if (incremental) {
+				// Record the names of preamble types so that it's possible to
+				// invalidate caches when the
+				// preamble types are known to have become stale.
+				if (!minimalRebuildCache.hasPreambleTypeNames()) {
+					Set<String> preambleTypeNames = Sets.newHashSet();
+					for (JDeclaredType preambleType : preambleTypes) {
+						preambleTypeNames.add(preambleType.getName());
+					}
+					minimalRebuildCache.setPreambleTypeNames(logger,
+							preambleTypeNames);
+				}
+			}
+			// Sort normal types according to superclass relationship.
+			Set<JDeclaredType> topologicallySortedBodyTypes = Sets
+					.newLinkedHashSet();
+			for (JDeclaredType type : program.getModuleDeclaredTypes()) {
+				insertInTopologicalOrder(type, topologicallySortedBodyTypes);
+			}
+			// Remove all preamble types that might have been inserted here.
+			topologicallySortedBodyTypes.removeAll(preambleTypes);
+			// Iterate over each type in the right order.
+			markPosition("Program", Type.PROGRAM_START);
+			for (JDeclaredType type : topologicallySortedBodyTypes) {
+				markPosition(type.getName(), Type.CLASS_START);
+				transform(type);
+				maybeGenerateClassLiteral(type);
+				installClassLiterals(Arrays.asList(type));
+				markPosition(type.getName(), Type.CLASS_END);
+			}
+			markPosition("Program", Type.PROGRAM_END);
+			generateEpilogue();
+			// All done, do not visit children.
+			return null;
+		}
+
+		@Override
+		public JsNode
+				transformReturnStatement(JReturnStatement returnStatement) {
+			return new JsReturn(returnStatement.getSourceInfo(),
+					transform(returnStatement.getExpr()));
+		}
+
+		@Override
+		public JsNode transformRunAsync(JRunAsync runAsync) {
+			return transform(runAsync.getRunAsyncCall());
+		}
+
+		@Override
+		public JsStatement
+				transformSwitchStatement(JSwitchStatement switchStatement) {
+			/*
+			 * What a pain.. JSwitchStatement and JsSwitch are modeled
+			 * completely differently. Here we try to resolve those differences.
+			 */
+			JsSwitch jsSwitch = new JsSwitch(switchStatement.getSourceInfo());
+			jsSwitch.setExpr(transform(switchStatement.getExpr()));
+			List<JStatement> bodyStmts = switchStatement.getBody()
+					.getStatements();
+			List<JsStatement> curStatements = null;
+			for (JStatement stmt : bodyStmts) {
+				if (stmt instanceof JCaseStatement) {
+					// create a new switch member
+					JsSwitchMember switchMember = transform((JNode) stmt);
+					jsSwitch.getCases().add(switchMember);
+					curStatements = switchMember.getStmts();
+				} else {
+					// add to statements for current case
+					assert (curStatements != null);
+					JsStatement newStmt = transform(stmt);
+					if (newStmt != null) {
+						// Empty JDeclarationStatement produces a null
+						curStatements.add(newStmt);
+					}
+				}
+			}
+			return jsSwitch;
+		}
+
+		@Override
+		public JsNode transformThisRef(JThisRef thisRef) {
+			return new JsThisRef(thisRef.getSourceInfo());
+		}
+
+		@Override
+		public JsNode transformThrowStatement(JThrowStatement throwStatement) {
+			return new JsThrow(throwStatement.getSourceInfo(),
+					transform(throwStatement.getExpr()));
+		}
+
+		@Override
+		public JsNode transformTryStatement(JTryStatement tryStatement) {
+			JsTry jsTry = new JsTry(tryStatement.getSourceInfo());
+			jsTry.setTryBlock(transform(tryStatement.getTryBlock()));
+			int size = tryStatement.getCatchClauses().size();
+			assert (size < 2);
+			if (size == 1) {
+				JBlock block = tryStatement.getCatchClauses().get(0).getBlock();
+				JsCatch jsCatch = catchMap.get(block);
+				jsCatch.setBody(transform(block));
+				jsTry.getCatches().add(jsCatch);
+			}
+			JsBlock finallyBlock = transform(tryStatement.getFinallyBlock());
+			if (finallyBlock != null
+					&& finallyBlock.getStatements().size() > 0) {
+				jsTry.setFinallyBlock(finallyBlock);
+			}
+			return jsTry;
+		}
+
+		@Override
+		public JsNode transformUnsafeTypeCoercion(
+				JUnsafeTypeCoercion unsafeTypeCoercion) {
+			return transform(unsafeTypeCoercion.getExpression());
+		}
+
+		@Override
+		public JsNode transformWhileStatement(JWhileStatement whileStatement) {
+			SourceInfo info = whileStatement.getSourceInfo();
+			JsWhile stmt = new JsWhile(info);
+			stmt.setCondition(transform(whileStatement.getTestExpr()));
+			stmt.setBody(
+					jsEmptyIfNull(info, transform(whileStatement.getBody())));
+			return stmt;
 		}
 	}
 

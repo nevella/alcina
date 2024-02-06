@@ -55,41 +55,6 @@ abstract class DOMImplTrident extends DOMImpl {
     }
 	}-*/;
 
-	private native ElementJso createElementInternal(DocumentJso doc,
-			String tagName) /*-{
-    return doc.createElement(tagName);
-	}-*/;
-
-	// IE needs a container div *for each Document* for use by createElement().
-	private native ElementJso ensureContainer(DocumentJso doc) /*-{
-    if (!doc.__gwt_container) {
-      doc.__gwt_container = doc.createElement('div');
-    }
-    return doc.__gwt_container;
-	}-*/;
-
-	/**
-	 * clientLeft is non-standard and not implemented on all browsers.
-	 */
-	private native int getClientLeft(ElementJso elem) /*-{
-    return elem.clientLeft;
-	}-*/;
-
-	/**
-	 * clientTop is non-standard and not implemented on all browsers.
-	 */
-	private native int getClientTop(ElementJso elem) /*-{
-    return elem.clientTop;
-	}-*/;
-
-	private native String getScopeNameInternal(ElementJso elem) /*-{
-    return elem.scopeName;
-	}-*/;
-
-	private native String getTagNameInternal(ElementJso elem) /*-{
-    return elem.tagName;
-	}-*/;
-
 	@Override
 	protected native NodeJso createButtonElement(DocumentJso doc, String type) /*-{
     return doc.createElement("<BUTTON type='" + type + "'></BUTTON>");
@@ -116,6 +81,11 @@ abstract class DOMImplTrident extends DOMImpl {
 		// here in case it changes at some point in the future).
 		return createElementInternal(doc, tagName);
 	}
+
+	private native ElementJso createElementInternal(DocumentJso doc,
+			String tagName) /*-{
+    return doc.createElement(tagName);
+	}-*/;
 
 	@Override
 	protected native NativeEventJso createHtmlEvent(DocumentJso doc,
@@ -211,6 +181,14 @@ abstract class DOMImplTrident extends DOMImpl {
     target.fireEvent("on" + evt.type, evt);
 	}-*/;
 
+	// IE needs a container div *for each Document* for use by createElement().
+	private native ElementJso ensureContainer(DocumentJso doc) /*-{
+    if (!doc.__gwt_container) {
+      doc.__gwt_container = doc.createElement('div');
+    }
+    return doc.__gwt_container;
+	}-*/;
+
 	@Override
 	protected native int eventGetCharCode(NativeEventJso evt) /*-{
     return evt.keyCode || 0;
@@ -297,6 +275,20 @@ abstract class DOMImplTrident extends DOMImpl {
     }
 	}-*/;
 
+	/**
+	 * clientLeft is non-standard and not implemented on all browsers.
+	 */
+	private native int getClientLeft(ElementJso elem) /*-{
+    return elem.clientLeft;
+	}-*/;
+
+	/**
+	 * clientTop is non-standard and not implemented on all browsers.
+	 */
+	private native int getClientTop(ElementJso elem) /*-{
+    return elem.clientTop;
+	}-*/;
+
 	@Override
 	protected native String getInnerText(ElementJso elem) /*-{
     return elem.innerText;
@@ -312,6 +304,10 @@ abstract class DOMImplTrident extends DOMImpl {
     return typeof (style[name]) == "number" ? "" + style[name] : style[name];
 	}-*/;
 
+	private native String getScopeNameInternal(ElementJso elem) /*-{
+    return elem.scopeName;
+	}-*/;
+
 	@Override
 	protected String getTagName(ElementJso elem) {
 		String tagName = getTagNameInternal(elem);
@@ -321,6 +317,10 @@ abstract class DOMImplTrident extends DOMImpl {
 		}
 		return scopeName + ":" + tagName;
 	}
+
+	private native String getTagNameInternal(ElementJso elem) /*-{
+    return elem.tagName;
+	}-*/;
 
 	@Override
 	protected native boolean hasAttribute(ElementJso elem, String name) /*-{

@@ -62,6 +62,31 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	public DomainSegmentLoader() {
 	}
 
+	protected DomainSegmentLoaderProperty addProperty(
+			Class<? extends Entity> source, String propertyName,
+			Class<? extends Entity> target, DomainSegmentPropertyType type) {
+		return addProperty(source, propertyName, target, type,
+				DomainSegmentLoaderPhase.ALL_PHASES);
+	}
+
+	protected DomainSegmentLoaderProperty addProperty(
+			Class<? extends Entity> source, String propertyName,
+			Class<? extends Entity> target, DomainSegmentPropertyType type,
+			DomainSegmentLoaderPhase phase) {
+		DomainSegmentLoaderProperty property = new DomainSegmentLoaderProperty(
+				source, propertyName, target, type, phase);
+		properties.add(property);
+		return property;
+	}
+
+	protected void clearCache() {
+		new File(getFilename()).delete();
+	}
+
+	synchronized void ensureClass(Class clazz) {
+		toLoadIds.addCollection(clazz, new ArrayList<>());
+	}
+
 	public synchronized Collection<Long> filterForQueried(Class clazz,
 			String property, Collection<Long> ids) {
 		ids = new ArrayList<>(ids);
@@ -111,6 +136,11 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 		}
 	}
 
+	protected void initialiseProperties() {
+	}
+
+	protected abstract void initialiseSeedLookup0() throws Exception;
+
 	public boolean isReload() {
 		return new File(getFilename()).exists();
 	}
@@ -121,6 +151,14 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 				loadedInPhase.put(clazz, id, phase);
 			}
 		});
+	}
+
+	void loadSegmentData() {
+		logger.info("Loading segment data...\n\t{}", getFilename());
+		SavedSegmentDataHolder holder = KryoUtils.deserializeFromFile(
+				new File(getFilename()), SavedSegmentDataHolder.class);
+		savedRsResults = holder.savedRsResults;
+		toLoadIds.addAll(holder.initialToLoadIds);
 	}
 
 	public synchronized void notifyLater(Ref item, Class type, long id) {
@@ -165,42 +203,23 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 		return loadedInPhase.get(clazz, id) == phase;
 	}
 
-	protected DomainSegmentLoaderProperty addProperty(
-			Class<? extends Entity> source, String propertyName,
-			Class<? extends Entity> target, DomainSegmentPropertyType type) {
-		return addProperty(source, propertyName, target, type,
-				DomainSegmentLoaderPhase.ALL_PHASES);
-	}
+	static class ConnRsKey extends AtomKey {
+		String clazzName;
 
-	protected DomainSegmentLoaderProperty addProperty(
-			Class<? extends Entity> source, String propertyName,
-			Class<? extends Entity> target, DomainSegmentPropertyType type,
-			DomainSegmentLoaderPhase phase) {
-		DomainSegmentLoaderProperty property = new DomainSegmentLoaderProperty(
-				source, propertyName, target, type, phase);
-		properties.add(property);
-		return property;
-	}
+		String sqlFilter;
 
-	protected void clearCache() {
-		new File(getFilename()).delete();
-	}
+		public ConnRsKey() {
+		}
 
-	protected void initialiseProperties() {
-	}
+		public ConnRsKey(ConnResults connResults) {
+			this(connResults.clazz == null ? "(null)"
+					: connResults.clazz.getName(), connResults.sqlFilter);
+		}
 
-	protected abstract void initialiseSeedLookup0() throws Exception;
-
-	synchronized void ensureClass(Class clazz) {
-		toLoadIds.addCollection(clazz, new ArrayList<>());
-	}
-
-	void loadSegmentData() {
-		logger.info("Loading segment data...\n\t{}", getFilename());
-		SavedSegmentDataHolder holder = KryoUtils.deserializeFromFile(
-				new File(getFilename()), SavedSegmentDataHolder.class);
-		savedRsResults = holder.savedRsResults;
-		toLoadIds.addAll(holder.initialToLoadIds);
+		public ConnRsKey(String clazzName, String sqlFilter) {
+			this.clazzName = clazzName;
+			this.sqlFilter = sqlFilter;
+		}
 	}
 
 	public enum DomainSegmentLoaderPhase {
@@ -293,24 +312,5 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 		public Map<ConnRsKey, List<ValueContainer[]>> savedRsResults = new LinkedHashMap<>();
 
 		public Multiset<Class, Set<Long>> initialToLoadIds = new Multiset<>();
-	}
-
-	static class ConnRsKey extends AtomKey {
-		String clazzName;
-
-		String sqlFilter;
-
-		public ConnRsKey() {
-		}
-
-		public ConnRsKey(ConnResults connResults) {
-			this(connResults.clazz == null ? "(null)"
-					: connResults.clazz.getName(), connResults.sqlFilter);
-		}
-
-		public ConnRsKey(String clazzName, String sqlFilter) {
-			this.clazzName = clazzName;
-			this.sqlFilter = sqlFilter;
-		}
 	}
 }

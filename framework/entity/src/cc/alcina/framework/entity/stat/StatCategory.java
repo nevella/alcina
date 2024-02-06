@@ -20,6 +20,13 @@ public abstract class StatCategory {
 		this.name = name;
 	}
 
+	protected int depth() {
+		if (parent == null) {
+			return 0;
+		}
+		return Reflections.newInstance(parent).depth() + 1;
+	}
+
 	public void emit() {
 		emit(System.currentTimeMillis());
 	}
@@ -51,12 +58,5 @@ public abstract class StatCategory {
 
 	public Class<? extends StatCategory> parent() {
 		return parent;
-	}
-
-	protected int depth() {
-		if (parent == null) {
-			return 0;
-		}
-		return Reflections.newInstance(parent).depth() + 1;
 	}
 }

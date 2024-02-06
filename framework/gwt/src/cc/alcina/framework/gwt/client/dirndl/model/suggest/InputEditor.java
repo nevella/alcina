@@ -48,10 +48,20 @@ public class InputEditor extends Model implements Suggestor.Editor,
 		input.clear();
 	}
 
+	private StringAsk computeAsk() {
+		StringAsk ask = new StringAsk();
+		ask.setValue(input.getCurrentValue());
+		return ask;
+	}
+
 	@Override
 	public void copyInputFrom(Editor editor) {
 		input.copyStateFrom(((InputEditor) editor).input);
 		deferEmitAsk();
+	}
+
+	void deferEmitAsk() {
+		Client.eventBus().queued().lambda(this::emitAsk).distinct().dispatch();
 	}
 
 	@Override
@@ -113,15 +123,5 @@ public class InputEditor extends Model implements Suggestor.Editor,
 		if (builder.isInputEditorKeyboardNavigationEnabled()) {
 			keyboardNavigation = new KeyboardNavigation(this);
 		}
-	}
-
-	private StringAsk computeAsk() {
-		StringAsk ask = new StringAsk();
-		ask.setValue(input.getCurrentValue());
-		return ask;
-	}
-
-	void deferEmitAsk() {
-		Client.eventBus().queued().lambda(this::emitAsk).distinct().dispatch();
 	}
 }

@@ -82,6 +82,19 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 	 */
 	public static abstract class AbstractMergeStrategy<A extends Annotation>
 			implements MergeStrategyTypeinfo<A> {
+		protected abstract List<A> atClass(Class<A> annotationClass,
+				JClassType clazz, JClassType resolvingClass,
+				AnnotationLocation.Resolver resolver);
+
+		boolean permitPackages(JClassType clazz) {
+			switch (clazz.getPackage().getName()) {
+			case "javax.swing":
+				return false;
+			default:
+				return true;
+			}
+		}
+
 		@Override
 		public List<A> resolveType(Class<A> annotationClass, JClassType clazz,
 				List<Inheritance> inheritance,
@@ -111,19 +124,6 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 				}
 			}
 			return result;
-		}
-
-		protected abstract List<A> atClass(Class<A> annotationClass,
-				JClassType clazz, JClassType resolvingClass,
-				AnnotationLocation.Resolver resolver);
-
-		boolean permitPackages(JClassType clazz) {
-			switch (clazz.getPackage().getName()) {
-			case "javax.swing":
-				return false;
-			default:
-				return true;
-			}
 		}
 
 		public static abstract class AdditiveMergeStrategy<A extends Annotation>
@@ -170,6 +170,27 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		}
 	}
 
+	interface MergeStrategyTypeinfo<A extends Annotation>
+			extends MergeStrategy<A> {
+		@Override
+		default List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
+				List<Inheritance> inheritance,
+				AnnotationLocation.Resolver resolver) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		default List<A> resolveProperty(Class<A> annotationClass,
+				Property property, List<Inheritance> inheritance,
+				AnnotationLocation.Resolver resolver) {
+			throw new UnsupportedOperationException();
+		}
+
+		List<A> resolveType(Class<A> annotationClass, JClassType clazz,
+				List<Inheritance> inheritance,
+				AnnotationLocation.Resolver resolver);
+	}
+
 	public static class ReflectedMergeStrategy extends
 			AbstractMergeStrategy.SingleResultMergeStrategy.ClassOnly<Reflected> {
 	}
@@ -194,54 +215,6 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-		}
-
-		@Override
-		public void finish(List<Registration> merged) {
-			merged.removeIf(r -> r.priority() == Priority.REMOVE);
-		}
-
-		@Override
-		public List<Registration> merge(List<Registration> lessSpecific,
-				List<Registration> moreSpecific) {
-			if (lessSpecific.stream()
-					.allMatch(r -> r instanceof NonGenericSubtypeWrapper)
-					&& !moreSpecific.isEmpty()) {
-				return moreSpecific;
-			}
-			return Registration.MergeStrategy.Shared.merge(lessSpecific,
-					moreSpecific, (t1, t2) -> t1.isAssignableFrom(t2));
-		}
-
-		@Override
-		protected List<Registration> atClass(
-				Class<Registration> annotationClass, JClassType clazz,
-				JClassType resolvingClass,
-				AnnotationLocation.Resolver resolver) {
-			List<Registration> result = new ArrayList<>();
-			Registration registration = clazz.getAnnotation(Registration.class);
-			Registrations registrations = clazz
-					.getAnnotation(Registrations.class);
-			Registration.Singleton singleton = clazz
-					.getAnnotation(Registration.Singleton.class);
-			Registration.NonGenericSubtypes nonGenericSubtypes = clazz
-					.getAnnotation(Registration.NonGenericSubtypes.class);
-			if (registration != null) {
-				result.add(registration);
-			}
-			if (registrations != null) {
-				Arrays.stream(registrations.value()).forEach(result::add);
-			}
-			if (singleton != null) {
-				result.add(new Registration.MergeStrategy.SingletonWrapper(
-						singleton, typeModelToJdkType(clazz)));
-			}
-			if (nonGenericSubtypes != null) {
-				Optional<Registration> applicableNonGeneric = applicableNonGeneric(
-						clazz, resolvingClass, nonGenericSubtypes);
-				applicableNonGeneric.ifPresent(result::add);
-			}
-			return result;
 		}
 
 		/**
@@ -275,6 +248,54 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 					.of(new Registration.MergeStrategy.NonGenericSubtypeWrapper(
 							nonGenericSubtypes.value(), firstJdkBound,
 							typeModelToJdkType(clazz)));
+		}
+
+		@Override
+		protected List<Registration> atClass(
+				Class<Registration> annotationClass, JClassType clazz,
+				JClassType resolvingClass,
+				AnnotationLocation.Resolver resolver) {
+			List<Registration> result = new ArrayList<>();
+			Registration registration = clazz.getAnnotation(Registration.class);
+			Registrations registrations = clazz
+					.getAnnotation(Registrations.class);
+			Registration.Singleton singleton = clazz
+					.getAnnotation(Registration.Singleton.class);
+			Registration.NonGenericSubtypes nonGenericSubtypes = clazz
+					.getAnnotation(Registration.NonGenericSubtypes.class);
+			if (registration != null) {
+				result.add(registration);
+			}
+			if (registrations != null) {
+				Arrays.stream(registrations.value()).forEach(result::add);
+			}
+			if (singleton != null) {
+				result.add(new Registration.MergeStrategy.SingletonWrapper(
+						singleton, typeModelToJdkType(clazz)));
+			}
+			if (nonGenericSubtypes != null) {
+				Optional<Registration> applicableNonGeneric = applicableNonGeneric(
+						clazz, resolvingClass, nonGenericSubtypes);
+				applicableNonGeneric.ifPresent(result::add);
+			}
+			return result;
+		}
+
+		@Override
+		public void finish(List<Registration> merged) {
+			merged.removeIf(r -> r.priority() == Priority.REMOVE);
+		}
+
+		@Override
+		public List<Registration> merge(List<Registration> lessSpecific,
+				List<Registration> moreSpecific) {
+			if (lessSpecific.stream()
+					.allMatch(r -> r instanceof NonGenericSubtypeWrapper)
+					&& !moreSpecific.isEmpty()) {
+				return moreSpecific;
+			}
+			return Registration.MergeStrategy.Shared.merge(lessSpecific,
+					moreSpecific, (t1, t2) -> t1.isAssignableFrom(t2));
 		}
 	}
 
@@ -314,26 +335,5 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			mergeStrategy.finish(typeAnnotations);
 			return typeAnnotations;
 		}
-	}
-
-	interface MergeStrategyTypeinfo<A extends Annotation>
-			extends MergeStrategy<A> {
-		@Override
-		default List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
-				List<Inheritance> inheritance,
-				AnnotationLocation.Resolver resolver) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		default List<A> resolveProperty(Class<A> annotationClass,
-				Property property, List<Inheritance> inheritance,
-				AnnotationLocation.Resolver resolver) {
-			throw new UnsupportedOperationException();
-		}
-
-		List<A> resolveType(Class<A> annotationClass, JClassType clazz,
-				List<Inheritance> inheritance,
-				AnnotationLocation.Resolver resolver);
 	}
 }

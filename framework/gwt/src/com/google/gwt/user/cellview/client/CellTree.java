@@ -234,6 +234,55 @@ public class CellTree extends AbstractCellTree
 	}
 
 	/**
+	 * Cancel a pending animation.
+	 */
+	void cancelTreeNodeAnimation() {
+		animation.cancel();
+	}
+
+	/**
+	 * Collects parents going up the element tree, terminated at the tree root.
+	 */
+	private void collectElementChain(ArrayList<Element> chain, Element hRoot,
+			Element hElem) {
+		if ((hElem == null) || (hElem == hRoot)) {
+			return;
+		}
+		collectElementChain(chain, hRoot, hElem.getParentElement());
+		chain.add(hElem);
+	}
+
+	private CellTreeNodeView<?> findItemByChain(ArrayList<Element> chain,
+			int idx, CellTreeNodeView<?> parent) {
+		if (idx == chain.size()) {
+			return parent;
+		}
+		Element hCurElem = chain.get(idx);
+		for (int i = 0, n = parent.getChildCount(); i < n; ++i) {
+			CellTreeNodeView<?> child = parent.getChildNode(i);
+			if (child.getElement() == hCurElem) {
+				CellTreeNodeView<?> retItem = findItemByChain(chain, idx + 1,
+						child);
+				if (retItem == null) {
+					return child;
+				}
+				return retItem;
+			}
+		}
+		return findItemByChain(chain, idx + 1, parent);
+	}
+
+	/**
+	 * Get the access key.
+	 *
+	 * @return the access key, or -1 if not set
+	 * @see #setAccessKey(char)
+	 */
+	protected char getAccessKey() {
+		return accessKey;
+	}
+
+	/**
 	 * Get the animation used to open and close nodes in this tree if animations
 	 * are enabled.
 	 *
@@ -250,6 +299,17 @@ public class CellTree extends AbstractCellTree
 	}
 
 	/**
+	 * Get the HTML to render the closed image.
+	 *
+	 * @param isTop
+	 *            true if the top element, false if not
+	 * @return the HTML string
+	 */
+	SafeHtml getClosedImageHtml(boolean isTop) {
+		return isTop ? closedImageTopHtml : closedImageHtml;
+	}
+
+	/**
 	 * Get the default maximum number of children to display under each tree
 	 * node.
 	 *
@@ -260,9 +320,81 @@ public class CellTree extends AbstractCellTree
 		return defaultNodeSize;
 	}
 
+	/**
+	 * Get the HTML representation of an image.
+	 *
+	 * @param res
+	 *            the {@link ImageResource} to render as HTML
+	 * @param isTop
+	 *            true if the image is for a top level element.
+	 * @return the rendered HTML
+	 */
+	private SafeHtml getImageHtml(ImageResource res, boolean isTop) {
+		// Build the classes.
+		StringBuilder classesBuilder = new StringBuilder(
+				style.cellTreeItemImage());
+		if (isTop) {
+			classesBuilder.append(" ").append(style.cellTreeTopItemImage());
+		}
+		// Build the css.
+		SafeStylesBuilder cssBuilder = new SafeStylesBuilder();
+		if (LocaleInfo.getCurrentLocale().isRTL()) {
+			cssBuilder.appendTrustedString("right: 0px;");
+		} else {
+			cssBuilder.appendTrustedString("left: 0px;");
+		}
+		cssBuilder.appendTrustedString("width: " + res.getWidth() + "px;");
+		cssBuilder.appendTrustedString("height: " + res.getHeight() + "px;");
+		AbstractImagePrototype proto = AbstractImagePrototype.create(res);
+		SafeHtml image = SafeHtmlUtils.fromTrustedString(proto.getHTML());
+		return template.imageWrapper(classesBuilder.toString(),
+				cssBuilder.toSafeStyles(), image);
+	}
+
+	/**
+	 * Get the width required for the images.
+	 *
+	 * @return the maximum width required for images.
+	 */
+	int getImageWidth() {
+		return imageWidth;
+	}
+
+	/**
+	 * Return the node that has keyboard selection.
+	 */
+	CellTreeNodeView<?> getKeyboardSelectedNode() {
+		return keyboardSelectedNode;
+	}
+
+	/**
+	 * Return the HTML to render the loading image.
+	 */
+	SafeHtml getLoadingImageHtml() {
+		return loadingImageHtml;
+	}
+
+	/**
+	 * Get the HTML to render the open image.
+	 *
+	 * @param isTop
+	 *            true if the top element, false if not
+	 * @return the HTML string
+	 */
+	SafeHtml getOpenImageHtml(boolean isTop) {
+		return isTop ? openImageTopHtml : openImageHtml;
+	}
+
 	@Override
 	public TreeNode getRootTreeNode() {
 		return rootNode.getTreeNode();
+	}
+
+	/**
+	 * Return the Style used by the tree.
+	 */
+	Style getStyle() {
+		return style;
 	}
 
 	@Override
@@ -278,9 +410,155 @@ public class CellTree extends AbstractCellTree
 		}
 	}
 
+	/**
+	 * Handle keyboard navigation.
+	 *
+	 * @param keyCode
+	 *            the key code that was pressed
+	 */
+	private void handleKeyNavigation(int keyCode) {
+		CellTreeNodeView<?> parent = keyboardSelectedNode.getParentNode();
+		int parentChildCount = (parent == null) ? 0 : parent.getChildCount();
+		int index = keyboardSelectedNode.getIndex();
+		int childCount = keyboardSelectedNode.getChildCount();
+		switch (keyCode) {
+		case KeyCodes.KEY_DOWN:
+			if (keyboardSelectedNode.isOpen() && childCount > 0) {
+				// Select first child.
+				keyboardSelect(keyboardSelectedNode.getChildNode(0), true);
+			} else if (index < parentChildCount - 1) {
+				// Next sibling.
+				keyboardSelect(parent.getChildNode(index + 1), true);
+			} else {
+				// Next available sibling of parent hierarchy.
+				CellTreeNodeView<?> curParent = parent;
+				CellTreeNodeView<?> nextSibling = null;
+				while (curParent != null && curParent != rootNode) {
+					CellTreeNodeView<?> grandparent = curParent.getParentNode();
+					if (grandparent == null) {
+						break;
+					}
+					int curParentIndex = grandparent.indexOf(curParent);
+					if (curParentIndex < grandparent.getChildCount() - 1) {
+						nextSibling = grandparent
+								.getChildNode(curParentIndex + 1);
+						break;
+					}
+					curParent = grandparent;
+				}
+				if (nextSibling != null) {
+					keyboardSelect(nextSibling, true);
+				}
+			}
+			break;
+		case KeyCodes.KEY_UP:
+			if (index > 0) {
+				// Deepest node of previous sibling hierarchy.
+				CellTreeNodeView<?> prevSibling = parent
+						.getChildNode(index - 1);
+				if (prevSibling.isOpen() && prevSibling.getChildCount() > 0) {
+					prevSibling = prevSibling
+							.getChildNode(prevSibling.getChildCount() - 1);
+				}
+				keyboardSelect(prevSibling, true);
+			} else if (parent != null && parent != rootNode) {
+				// Parent.
+				keyboardSelect(parent, true);
+			}
+			break;
+		case KeyCodes.KEY_RIGHT:
+			if (LocaleInfo.getCurrentLocale().isRTL()) {
+				keyboardNavigateShallow();
+			} else {
+				keyboardNavigateDeep();
+			}
+			break;
+		case KeyCodes.KEY_LEFT:
+			if (LocaleInfo.getCurrentLocale().isRTL()) {
+				keyboardNavigateDeep();
+			} else {
+				keyboardNavigateShallow();
+			}
+			break;
+		}
+	}
+
 	@Override
 	public boolean isAnimationEnabled() {
 		return isAnimationEnabled;
+	}
+
+	/**
+	 * Navigate to a deeper node. If the node is closed, open it. If it is open,
+	 * move to the first child.
+	 */
+	private void keyboardNavigateDeep() {
+		if (!keyboardSelectedNode.isLeaf()) {
+			boolean isOpen = keyboardSelectedNode.isOpen();
+			if (isOpen && keyboardSelectedNode.getChildCount() > 0) {
+				// First child.
+				keyboardSelect(keyboardSelectedNode.getChildNode(0), true);
+			} else if (!isOpen) {
+				// Open the node.
+				keyboardSelectedNode.setOpen(true, true);
+			}
+		}
+	}
+
+	/**
+	 * Navigate to a shallower node. If the node is open, close it. If it is
+	 * closed, move to the parent.
+	 */
+	private void keyboardNavigateShallow() {
+		CellTreeNodeView<?> parent = keyboardSelectedNode.getParentNode();
+		if (keyboardSelectedNode.isOpen()) {
+			// Close the node.
+			keyboardSelectedNode.setOpen(false, true);
+		} else if (parent != null && parent != rootNode) {
+			// Select the parent.
+			keyboardSelect(parent, true);
+		}
+	}
+
+	/**
+	 * Select a node using the keyboard.
+	 *
+	 * @param node
+	 *            the new node to select
+	 * @param stealFocus
+	 *            true to steal focus, false not to
+	 */
+	void keyboardSelect(CellTreeNodeView<?> node, boolean stealFocus) {
+		if (isKeyboardSelectionDisabled()) {
+			return;
+		}
+		// Deselect the old node if it not destroyed.
+		if (keyboardSelectedNode != null
+				&& !keyboardSelectedNode.isDestroyed()) {
+			keyboardSelectedNode.setKeyboardSelected(false, false);
+		}
+		keyboardSelectedNode = node;
+		keyboardSelectedNode.setKeyboardSelected(true, stealFocus);
+	}
+
+	/**
+	 * Animate the current state of a {@link CellTreeNodeView} in this tree.
+	 *
+	 * @param node
+	 *            the node to animate
+	 */
+	void maybeAnimateTreeNode(CellTreeNodeView<?> node) {
+		if (animation != null) {
+			animation.animate(node, node.consumeAnimate()
+					&& isAnimationEnabled() && !node.isRootNode());
+		}
+	}
+
+	/**
+	 * Called when the keyboard selected node loses focus.
+	 */
+	protected void onBlur() {
+		keyboardSelectedNode.setKeyboardSelectedStyle(false);
 	}
 
 	@Override
@@ -363,6 +641,28 @@ public class CellTree extends AbstractCellTree
 	}
 
 	/**
+	 * Called when the keyboard selected node gains focus.
+	 */
+	protected void onFocus() {
+		keyboardSelectedNode.setKeyboardSelectedStyle(true);
+	}
+
+	/**
+	 * If this widget has focus, reset it.
+	 */
+	void resetFocus() {
+		CellBasedWidgetImpl.get().resetFocus(new Scheduler.ScheduledCommand() {
+			@Override
+			public void execute() {
+				if (isFocused && !keyboardSelectedNode.isDestroyed()
+						&& !keyboardSelectedNode.resetFocusOnCell()) {
+					keyboardSelectedNode.setKeyboardSelected(true, true);
+				}
+			}
+		});
+	}
+
+	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>
@@ -426,306 +726,6 @@ public class CellTree extends AbstractCellTree
 	}
 
 	/**
-	 * Collects parents going up the element tree, terminated at the tree root.
-	 */
-	private void collectElementChain(ArrayList<Element> chain, Element hRoot,
-			Element hElem) {
-		if ((hElem == null) || (hElem == hRoot)) {
-			return;
-		}
-		collectElementChain(chain, hRoot, hElem.getParentElement());
-		chain.add(hElem);
-	}
-
-	private CellTreeNodeView<?> findItemByChain(ArrayList<Element> chain,
-			int idx, CellTreeNodeView<?> parent) {
-		if (idx == chain.size()) {
-			return parent;
-		}
-		Element hCurElem = chain.get(idx);
-		for (int i = 0, n = parent.getChildCount(); i < n; ++i) {
-			CellTreeNodeView<?> child = parent.getChildNode(i);
-			if (child.getElement() == hCurElem) {
-				CellTreeNodeView<?> retItem = findItemByChain(chain, idx + 1,
-						child);
-				if (retItem == null) {
-					return child;
-				}
-				return retItem;
-			}
-		}
-		return findItemByChain(chain, idx + 1, parent);
-	}
-
-	/**
-	 * Get the HTML representation of an image.
-	 *
-	 * @param res
-	 *            the {@link ImageResource} to render as HTML
-	 * @param isTop
-	 *            true if the image is for a top level element.
-	 * @return the rendered HTML
-	 */
-	private SafeHtml getImageHtml(ImageResource res, boolean isTop) {
-		// Build the classes.
-		StringBuilder classesBuilder = new StringBuilder(
-				style.cellTreeItemImage());
-		if (isTop) {
-			classesBuilder.append(" ").append(style.cellTreeTopItemImage());
-		}
-		// Build the css.
-		SafeStylesBuilder cssBuilder = new SafeStylesBuilder();
-		if (LocaleInfo.getCurrentLocale().isRTL()) {
-			cssBuilder.appendTrustedString("right: 0px;");
-		} else {
-			cssBuilder.appendTrustedString("left: 0px;");
-		}
-		cssBuilder.appendTrustedString("width: " + res.getWidth() + "px;");
-		cssBuilder.appendTrustedString("height: " + res.getHeight() + "px;");
-		AbstractImagePrototype proto = AbstractImagePrototype.create(res);
-		SafeHtml image = SafeHtmlUtils.fromTrustedString(proto.getHTML());
-		return template.imageWrapper(classesBuilder.toString(),
-				cssBuilder.toSafeStyles(), image);
-	}
-
-	/**
-	 * Handle keyboard navigation.
-	 *
-	 * @param keyCode
-	 *            the key code that was pressed
-	 */
-	private void handleKeyNavigation(int keyCode) {
-		CellTreeNodeView<?> parent = keyboardSelectedNode.getParentNode();
-		int parentChildCount = (parent == null) ? 0 : parent.getChildCount();
-		int index = keyboardSelectedNode.getIndex();
-		int childCount = keyboardSelectedNode.getChildCount();
-		switch (keyCode) {
-		case KeyCodes.KEY_DOWN:
-			if (keyboardSelectedNode.isOpen() && childCount > 0) {
-				// Select first child.
-				keyboardSelect(keyboardSelectedNode.getChildNode(0), true);
-			} else if (index < parentChildCount - 1) {
-				// Next sibling.
-				keyboardSelect(parent.getChildNode(index + 1), true);
-			} else {
-				// Next available sibling of parent hierarchy.
-				CellTreeNodeView<?> curParent = parent;
-				CellTreeNodeView<?> nextSibling = null;
-				while (curParent != null && curParent != rootNode) {
-					CellTreeNodeView<?> grandparent = curParent.getParentNode();
-					if (grandparent == null) {
-						break;
-					}
-					int curParentIndex = grandparent.indexOf(curParent);
-					if (curParentIndex < grandparent.getChildCount() - 1) {
-						nextSibling = grandparent
-								.getChildNode(curParentIndex + 1);
-						break;
-					}
-					curParent = grandparent;
-				}
-				if (nextSibling != null) {
-					keyboardSelect(nextSibling, true);
-				}
-			}
-			break;
-		case KeyCodes.KEY_UP:
-			if (index > 0) {
-				// Deepest node of previous sibling hierarchy.
-				CellTreeNodeView<?> prevSibling = parent
-						.getChildNode(index - 1);
-				if (prevSibling.isOpen() && prevSibling.getChildCount() > 0) {
-					prevSibling = prevSibling
-							.getChildNode(prevSibling.getChildCount() - 1);
-				}
-				keyboardSelect(prevSibling, true);
-			} else if (parent != null && parent != rootNode) {
-				// Parent.
-				keyboardSelect(parent, true);
-			}
-			break;
-		case KeyCodes.KEY_RIGHT:
-			if (LocaleInfo.getCurrentLocale().isRTL()) {
-				keyboardNavigateShallow();
-			} else {
-				keyboardNavigateDeep();
-			}
-			break;
-		case KeyCodes.KEY_LEFT:
-			if (LocaleInfo.getCurrentLocale().isRTL()) {
-				keyboardNavigateDeep();
-			} else {
-				keyboardNavigateShallow();
-			}
-			break;
-		}
-	}
-
-	/**
-	 * Navigate to a deeper node. If the node is closed, open it. If it is open,
-	 * move to the first child.
-	 */
-	private void keyboardNavigateDeep() {
-		if (!keyboardSelectedNode.isLeaf()) {
-			boolean isOpen = keyboardSelectedNode.isOpen();
-			if (isOpen && keyboardSelectedNode.getChildCount() > 0) {
-				// First child.
-				keyboardSelect(keyboardSelectedNode.getChildNode(0), true);
-			} else if (!isOpen) {
-				// Open the node.
-				keyboardSelectedNode.setOpen(true, true);
-			}
-		}
-	}
-
-	/**
-	 * Navigate to a shallower node. If the node is open, close it. If it is
-	 * closed, move to the parent.
-	 */
-	private void keyboardNavigateShallow() {
-		CellTreeNodeView<?> parent = keyboardSelectedNode.getParentNode();
-		if (keyboardSelectedNode.isOpen()) {
-			// Close the node.
-			keyboardSelectedNode.setOpen(false, true);
-		} else if (parent != null && parent != rootNode) {
-			// Select the parent.
-			keyboardSelect(parent, true);
-		}
-	}
-
-	/**
-	 * Get the access key.
-	 *
-	 * @return the access key, or -1 if not set
-	 * @see #setAccessKey(char)
-	 */
-	protected char getAccessKey() {
-		return accessKey;
-	}
-
-	/**
-	 * Called when the keyboard selected node loses focus.
-	 */
-	protected void onBlur() {
-		keyboardSelectedNode.setKeyboardSelectedStyle(false);
-	}
-
-	/**
-	 * Called when the keyboard selected node gains focus.
-	 */
-	protected void onFocus() {
-		keyboardSelectedNode.setKeyboardSelectedStyle(true);
-	}
-
-	/**
-	 * Cancel a pending animation.
-	 */
-	void cancelTreeNodeAnimation() {
-		animation.cancel();
-	}
-
-	/**
-	 * Get the HTML to render the closed image.
-	 *
-	 * @param isTop
-	 *            true if the top element, false if not
-	 * @return the HTML string
-	 */
-	SafeHtml getClosedImageHtml(boolean isTop) {
-		return isTop ? closedImageTopHtml : closedImageHtml;
-	}
-
-	/**
-	 * Get the width required for the images.
-	 *
-	 * @return the maximum width required for images.
-	 */
-	int getImageWidth() {
-		return imageWidth;
-	}
-
-	/**
-	 * Return the node that has keyboard selection.
-	 */
-	CellTreeNodeView<?> getKeyboardSelectedNode() {
-		return keyboardSelectedNode;
-	}
-
-	/**
-	 * Return the HTML to render the loading image.
-	 */
-	SafeHtml getLoadingImageHtml() {
-		return loadingImageHtml;
-	}
-
-	/**
-	 * Get the HTML to render the open image.
-	 *
-	 * @param isTop
-	 *            true if the top element, false if not
-	 * @return the HTML string
-	 */
-	SafeHtml getOpenImageHtml(boolean isTop) {
-		return isTop ? openImageTopHtml : openImageHtml;
-	}
-
-	/**
-	 * Return the Style used by the tree.
-	 */
-	Style getStyle() {
-		return style;
-	}
-
-	/**
-	 * Select a node using the keyboard.
-	 *
-	 * @param node
-	 *            the new node to select
-	 * @param stealFocus
-	 *            true to steal focus, false not to
-	 */
-	void keyboardSelect(CellTreeNodeView<?> node, boolean stealFocus) {
-		if (isKeyboardSelectionDisabled()) {
-			return;
-		}
-		// Deselect the old node if it not destroyed.
-		if (keyboardSelectedNode != null
-				&& !keyboardSelectedNode.isDestroyed()) {
-			keyboardSelectedNode.setKeyboardSelected(false, false);
-		}
-		keyboardSelectedNode = node;
-		keyboardSelectedNode.setKeyboardSelected(true, stealFocus);
-	}
-
-	/**
-	 * Animate the current state of a {@link CellTreeNodeView} in this tree.
-	 *
-	 * @param node
-	 *            the node to animate
-	 */
-	void maybeAnimateTreeNode(CellTreeNodeView<?> node) {
-		if (animation != null) {
-			animation.animate(node, node.consumeAnimate()
-					&& isAnimationEnabled() && !node.isRootNode());
-		}
-	}
-
-	/**
-	 * If this widget has focus, reset it.
-	 */
-	void resetFocus() {
-		CellBasedWidgetImpl.get().resetFocus(new Scheduler.ScheduledCommand() {
-			@Override
-			public void execute() {
-				if (isFocused && !keyboardSelectedNode.isDestroyed()
-						&& !keyboardSelectedNode.resetFocusOnCell()) {
-					keyboardSelectedNode.setKeyboardSelected(true, true);
-				}
-			}
-		});
-	}
-
-	/**
 	 * Resources that match the GWT standard style theme.
 	 */
 	public interface BasicResources extends Resources {
@@ -751,6 +751,17 @@ public class CellTree extends AbstractCellTree
 	}
 
 	/**
+	 * Styles used by {@link BasicResources}.
+	 */
+	@ImportedWithPrefix("gwt-CellTree")
+	interface BasicStyle extends Style {
+		/**
+		 * The path to the default CSS styles used by this resource.
+		 */
+		String DEFAULT_CSS = "com/google/gwt/user/cellview/client/CellTreeBasic.css";
+	}
+
+	/**
 	 * A node animation.
 	 */
 	public abstract static class NodeAnimation extends Animation {
@@ -766,6 +777,17 @@ public class CellTree extends AbstractCellTree
 
 		NodeAnimation() {
 		}
+
+		/**
+		 * Animate a tree node into its new state.
+		 *
+		 * @param node
+		 *            the node to animate
+		 * @param isAnimationEnabled
+		 *            true to animate
+		 */
+		abstract void animate(CellTreeNodeView<?> node,
+				boolean isAnimationEnabled);
 
 		/**
 		 * Return the duration of the animation in milliseconds.
@@ -786,17 +808,6 @@ public class CellTree extends AbstractCellTree
 		public void setDuration(int duration) {
 			this.duration = duration;
 		}
-
-		/**
-		 * Animate a tree node into its new state.
-		 *
-		 * @param node
-		 *            the node to animate
-		 * @param isAnimationEnabled
-		 *            true to animate
-		 */
-		abstract void animate(CellTreeNodeView<?> node,
-				boolean isAnimationEnabled);
 	}
 
 	/**
@@ -881,6 +892,40 @@ public class CellTree extends AbstractCellTree
 		}
 
 		/**
+		 * Animate a {@link CellTreeNodeView} into its new state.
+		 *
+		 * @param node
+		 *            the {@link CellTreeNodeView} to animate
+		 * @param isAnimationEnabled
+		 *            true to animate
+		 */
+		@Override
+		void animate(CellTreeNodeView<?> node, boolean isAnimationEnabled) {
+			// Cancel any pending animations.
+			cancel();
+			// Initialize the fields.
+			this.opening = node.isOpen();
+			animFrame = node.ensureAnimationFrame();
+			contentContainer = node.ensureContentContainer();
+			childContainer = node.ensureChildContainer();
+			if (isAnimationEnabled) {
+				// Animated.
+				int duration = getDuration();
+				int childCount = childContainer.getChildCount();
+				if (childCount < 4) {
+					// Reduce the duration if there are less than four items or
+					// it will
+					// look really slow.
+					duration = (int) ((childCount / 4.0) * duration);
+				}
+				run(duration);
+			} else {
+				// Non animated.
+				cleanup();
+			}
+		}
+
+		/**
 		 * Put the node back into a clean state and clear fields.
 		 */
 		private void cleanup() {
@@ -926,40 +971,6 @@ public class CellTree extends AbstractCellTree
 			// Remind IE6 that we want the overflow to be hidden.
 			animFrame.getStyle().setOverflow(Overflow.HIDDEN);
 			animFrame.getStyle().setPosition(Position.RELATIVE);
-		}
-
-		/**
-		 * Animate a {@link CellTreeNodeView} into its new state.
-		 *
-		 * @param node
-		 *            the {@link CellTreeNodeView} to animate
-		 * @param isAnimationEnabled
-		 *            true to animate
-		 */
-		@Override
-		void animate(CellTreeNodeView<?> node, boolean isAnimationEnabled) {
-			// Cancel any pending animations.
-			cancel();
-			// Initialize the fields.
-			this.opening = node.isOpen();
-			animFrame = node.ensureAnimationFrame();
-			contentContainer = node.ensureContentContainer();
-			childContainer = node.ensureChildContainer();
-			if (isAnimationEnabled) {
-				// Animated.
-				int duration = getDuration();
-				int childCount = childContainer.getChildCount();
-				if (childCount < 4) {
-					// Reduce the duration if there are less than four items or
-					// it will
-					// look really slow.
-					duration = (int) ((childCount / 4.0) * duration);
-				}
-				run(duration);
-			} else {
-				// Non animated.
-				cleanup();
-			}
 		}
 	}
 
@@ -1088,17 +1099,6 @@ public class CellTree extends AbstractCellTree
 		 * Applied to the widget.
 		 */
 		String cellTreeWidget();
-	}
-
-	/**
-	 * Styles used by {@link BasicResources}.
-	 */
-	@ImportedWithPrefix("gwt-CellTree")
-	interface BasicStyle extends Style {
-		/**
-		 * The path to the default CSS styles used by this resource.
-		 */
-		String DEFAULT_CSS = "com/google/gwt/user/cellview/client/CellTreeBasic.css";
 	}
 
 	interface Template extends SafeHtmlTemplates {

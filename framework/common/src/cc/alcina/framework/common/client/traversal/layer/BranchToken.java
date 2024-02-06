@@ -27,13 +27,8 @@ import cc.alcina.framework.common.client.util.TextUtils;
  * instances or some other guarantee
  */
 public interface BranchToken extends Token, BranchGroupMember {
-	/*
-	 * By default non-text end boundary locations are ignored for this token
-	 * (when forwards traversing, that's after - when backwards traversing,
-	 * that's !after)
-	 */
-	default MatchesBoundary matchesBoundary() {
-		return MatchesBoundary.START;
+	default Group getGroup() {
+		return null;
 	}
 
 	/**
@@ -43,30 +38,31 @@ public interface BranchToken extends Token, BranchGroupMember {
 		return true;
 	}
 
-	public enum MatchesBoundary {
-		START, END, ANY
+	default Measure match(ParserState state) {
+		throw new UnsupportedOperationException(
+				Ax.format("%s - %s - see BranchToken constraints",
+						NestedName.get(this), toString()));
 	}
 
-	default Measure measure(Location start, Location end) {
-		return Measure.fromRange(new Range(start, end), this);
+	/*
+	 * By default non-text end boundary locations are ignored for this token
+	 * (when forwards traversing, that's after - when backwards traversing,
+	 * that's !after)
+	 */
+	default MatchesBoundary matchesBoundary() {
+		return MatchesBoundary.START;
 	}
 
 	default Measure measure(DomNode node) {
 		return Measure.fromRange(node.asRange(), this);
 	}
 
+	default Measure measure(Location start, Location end) {
+		return Measure.fromRange(new Range(start, end), this);
+	}
+
 	default Measure pointMeasure(LayerParser.ExtendedState state) {
 		return measure(state.getLocation(), state.getLocation());
-	}
-
-	default Group getGroup() {
-		return null;
-	}
-
-	default Measure match(ParserState state) {
-		throw new UnsupportedOperationException(
-				Ax.format("%s - %s - see BranchToken constraints",
-						NestedName.get(this), toString()));
 	}
 
 	/*
@@ -78,6 +74,41 @@ public interface BranchToken extends Token, BranchGroupMember {
 	 * 
 	 */
 	public static class Group implements BranchGroupMember {
+		public static Group of(BranchGroupMember... members) {
+			List<Group> memberGroups = Arrays.stream(members).map(m -> {
+				if (m instanceof Group) {
+					return (Group) m;
+				} else {
+					BranchToken token = (BranchToken) m;
+					Group group = token.getGroup();
+					if (group == null) {
+						group = Group.primitive(token);
+					} else {
+						group = group.clone();
+					}
+					group.token = token;
+					return group;
+				}
+			}).collect(Collectors.toList());
+			Group result = new Group(memberGroups);
+			if (members.length == 1 && members[0] instanceof BranchToken) {
+				result.token = (BranchToken) members[0];
+			}
+			return result;
+		}
+
+		public static Group oneOf(BranchGroupMember... members) {
+			return of(members).withOrderAny();
+		}
+
+		public static Group optional(BranchGroupMember... members) {
+			return of(members).withMatchesZeroOrOne();
+		}
+
+		private static Group primitive(BranchToken token) {
+			return new Group(token);
+		}
+
 		int min = 1;
 
 		int max = 1;
@@ -89,6 +120,23 @@ public interface BranchToken extends Token, BranchGroupMember {
 		BranchToken token;
 
 		Quantifier quantifier = Quantifier.GREEDY;
+
+		/*
+		 * initially unsupported (except for leaf tokens)
+		 */
+		boolean negated;
+
+		// clone constructor
+		private Group() {
+		}
+
+		private Group(BranchToken token) {
+			this.token = token;
+		}
+
+		private Group(List<Group> groups) {
+			this.groups = groups;
+		}
 
 		public Group clone() {
 			Group result = new Group();
@@ -103,21 +151,31 @@ public interface BranchToken extends Token, BranchGroupMember {
 			return result;
 		}
 
-		/*
-		 * initially unsupported (except for leaf tokens)
-		 */
-		boolean negated;
-
-		// clone constructor
-		private Group() {
+		public int getTermCount() {
+			if (groups.isEmpty()) {
+				return 1;
+			} else {
+				return order == Order.SEQUENCE ? groups.size() : 1;
+			}
 		}
 
-		private Group(List<Group> groups) {
-			this.groups = groups;
+		public boolean isComplex() {
+			return groups.size() > 0;
 		}
 
-		private Group(BranchToken token) {
-			this.token = token;
+		boolean isPrimitive() {
+			return groups.size() == 0;
+		}
+
+		Stream<BranchToken> primitiveTokens() {
+			if (isPrimitive()) {
+				return Stream.of(token);
+			}
+			Stream<BranchToken> result = Stream.empty();
+			for (Group group : groups) {
+				result = Stream.concat(result, group.primitiveTokens());
+			}
+			return result;
 		}
 
 		@Override
@@ -173,58 +231,30 @@ public interface BranchToken extends Token, BranchGroupMember {
 			return builder.toString();
 		}
 
-		public int getTermCount() {
-			if (groups.isEmpty()) {
-				return 1;
-			} else {
-				return order == Order.SEQUENCE ? groups.size() : 1;
-			}
+		public Group withMatchesOneToAny() {
+			this.max = Integer.MAX_VALUE;
+			return this;
 		}
 
-		public boolean isComplex() {
-			return groups.size() > 0;
+		public Group withMatchesZeroOrOne() {
+			this.min = 0;
+			return this;
 		}
 
-		Stream<BranchToken> primitiveTokens() {
-			if (isPrimitive()) {
-				return Stream.of(token);
-			}
-			Stream<BranchToken> result = Stream.empty();
-			for (Group group : groups) {
-				result = Stream.concat(result, group.primitiveTokens());
-			}
-			return result;
+		public Group withMatchesZeroToAny() {
+			this.min = 0;
+			this.max = Integer.MAX_VALUE;
+			return this;
 		}
 
-		boolean isPrimitive() {
-			return groups.size() == 0;
+		public Group withMax(int max) {
+			this.max = max;
+			return this;
 		}
 
-		public static Group of(BranchGroupMember... members) {
-			List<Group> memberGroups = Arrays.stream(members).map(m -> {
-				if (m instanceof Group) {
-					return (Group) m;
-				} else {
-					BranchToken token = (BranchToken) m;
-					Group group = token.getGroup();
-					if (group == null) {
-						group = Group.primitive(token);
-					} else {
-						group = group.clone();
-					}
-					group.token = token;
-					return group;
-				}
-			}).collect(Collectors.toList());
-			Group result = new Group(memberGroups);
-			if (members.length == 1 && members[0] instanceof BranchToken) {
-				result.token = (BranchToken) members[0];
-			}
-			return result;
-		}
-
-		private static Group primitive(BranchToken token) {
-			return new Group(token);
+		public Group withMin(int min) {
+			this.min = min;
+			return this;
 		}
 
 		// this negates the contained primitive group
@@ -239,40 +269,10 @@ public interface BranchToken extends Token, BranchGroupMember {
 			this.order = Order.ANY;
 			return this;
 		}
+	}
 
-		public Group withMatchesOneToAny() {
-			this.max = Integer.MAX_VALUE;
-			return this;
-		}
-
-		public Group withMatchesZeroToAny() {
-			this.min = 0;
-			this.max = Integer.MAX_VALUE;
-			return this;
-		}
-
-		public Group withMatchesZeroOrOne() {
-			this.min = 0;
-			return this;
-		}
-
-		public Group withMin(int min) {
-			this.min = min;
-			return this;
-		}
-
-		public Group withMax(int max) {
-			this.max = max;
-			return this;
-		}
-
-		public static Group optional(BranchGroupMember... members) {
-			return of(members).withMatchesZeroOrOne();
-		}
-
-		public static Group oneOf(BranchGroupMember... members) {
-			return of(members).withOrderAny();
-		}
+	public enum MatchesBoundary {
+		START, END, ANY
 	}
 
 	enum Order {
@@ -342,13 +342,13 @@ public interface BranchToken extends Token, BranchGroupMember {
 			 */
 		ANON_NON_DOM {
 			@Override
-			public Measure match(ParserState state) {
-				return null;
+			public boolean isNonDomToken() {
+				return true;
 			}
 
 			@Override
-			public boolean isNonDomToken() {
-				return true;
+			public Measure match(ParserState state) {
+				return null;
 			}
 		},
 		WHITESPACE_NODE {

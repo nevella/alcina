@@ -40,24 +40,6 @@ public class ConsolePanel extends Composite {
 		getRecords();
 	}
 
-	private void getRecords() {
-		RemoteConsoleRequest request = RemoteConsoleRequest.create();
-		request.setType(RemoteConsoleRequestType.GET_RECORDS);
-		RemoteConsoleClientUtils.submitRequest(request, this::handleRecords);
-	}
-
-	private void render() {
-		fp.clear();
-		LuxMainPanelBuilder builder = new LuxMainPanelBuilder();
-		LuxMainPanel mainPanel = builder.build();
-		ConsoleStyles.CONSOLE.addTo(mainPanel);
-		outputPanel = new OutputPanel();
-		commandBarPanel = new CommandBarPanel();
-		mainPanel.add(outputPanel);
-		mainPanel.add(commandBarPanel);
-		fp.add(mainPanel);
-	}
-
 	void arrowDown() {
 		RemoteConsoleRequest request = RemoteConsoleRequest.create();
 		request.setType(RemoteConsoleRequestType.ARROW_DOWN);
@@ -76,6 +58,12 @@ public class ConsolePanel extends Composite {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void getRecords() {
+		RemoteConsoleRequest request = RemoteConsoleRequest.create();
+		request.setType(RemoteConsoleRequestType.GET_RECORDS);
+		RemoteConsoleClientUtils.submitRequest(request, this::handleRecords);
 	}
 
 	void handleRecords(RemoteConsoleResponse response) {
@@ -100,6 +88,18 @@ public class ConsolePanel extends Composite {
 		getRecords();
 	}
 
+	private void render() {
+		fp.clear();
+		LuxMainPanelBuilder builder = new LuxMainPanelBuilder();
+		LuxMainPanel mainPanel = builder.build();
+		ConsoleStyles.CONSOLE.addTo(mainPanel);
+		outputPanel = new OutputPanel();
+		commandBarPanel = new CommandBarPanel();
+		mainPanel.add(outputPanel);
+		mainPanel.add(commandBarPanel);
+		fp.add(mainPanel);
+	}
+
 	void submitCommand(String string) {
 		RemoteConsoleRequest request = RemoteConsoleRequest.create();
 		request.setCommandString(string);
@@ -122,9 +122,20 @@ public class ConsolePanel extends Composite {
 			render();
 		}
 
-		public void setCommandText(String commandLine) {
-			box.setText(commandLine);
-			focus();
+		void focus() {
+			Scheduler.get().scheduleDeferred(() -> box.setFocus(true));
+		}
+
+		@Override
+		protected void onAttach() {
+			super.onAttach();
+			box.setFocus(true);
+			RemoteConsoleLayout.get().topicLayoutMessage.add(m -> {
+				if (m == RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR
+						&& WidgetUtils.isVisibleAncestorChain(this)) {
+					box.setFocus(true);
+				}
+			});
 		}
 
 		private void render() {
@@ -152,20 +163,9 @@ public class ConsolePanel extends Composite {
 			});
 		}
 
-		@Override
-		protected void onAttach() {
-			super.onAttach();
-			box.setFocus(true);
-			RemoteConsoleLayout.get().topicLayoutMessage.add(m -> {
-				if (m == RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR
-						&& WidgetUtils.isVisibleAncestorChain(this)) {
-					box.setFocus(true);
-				}
-			});
-		}
-
-		void focus() {
-			Scheduler.get().scheduleDeferred(() -> box.setFocus(true));
+		public void setCommandText(String commandLine) {
+			box.setText(commandLine);
+			focus();
 		}
 	}
 

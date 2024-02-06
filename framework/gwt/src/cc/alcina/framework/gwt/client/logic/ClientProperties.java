@@ -77,6 +77,15 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 @Registration.Singleton
 public class ClientProperties {
 	/**
+	 * Fetch singleton instance
+	 *
+	 * @return Singleton instance
+	 */
+	private static ClientProperties get() {
+		return Registry.impl(ClientProperties.class);
+	}
+
+	/**
 	 * Fetch the value from property stores. Returns the first found in order of
 	 * priortiy.
 	 *
@@ -141,27 +150,6 @@ public class ClientProperties {
 	}
 
 	/**
-	 * Register serialized server properties from the server.
-	 *
-	 * @param configurationPropertiesSerialized
-	 *            Serialized server properties
-	 */
-	public static void registerConfigurationProperties(
-			String configurationPropertiesSerialized) {
-		get().registerConfigurationProperties0(
-				configurationPropertiesSerialized);
-	}
-
-	/**
-	 * Fetch singleton instance
-	 *
-	 * @return Singleton instance
-	 */
-	private static ClientProperties get() {
-		return Registry.impl(ClientProperties.class);
-	}
-
-	/**
 	 * Get property key for a given marker class and property name
 	 *
 	 * @param propertyLocation
@@ -172,6 +160,18 @@ public class ClientProperties {
 	 */
 	private static String key(Class propertyLocation, String propertyName) {
 		return propertyLocation.getSimpleName() + "." + propertyName;
+	}
+
+	/**
+	 * Register serialized server properties from the server.
+	 *
+	 * @param configurationPropertiesSerialized
+	 *            Serialized server properties
+	 */
+	public static void registerConfigurationProperties(
+			String configurationPropertiesSerialized) {
+		get().registerConfigurationProperties0(
+				configurationPropertiesSerialized);
 	}
 
 	/** Properties stored on the cookies */

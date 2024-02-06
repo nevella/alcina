@@ -105,6 +105,15 @@ public class DomainStoreCriteria implements Criteria {
 		return this;
 	}
 
+	private String cleanAssociationPath(String associationPath) {
+		if (parent == null && alias != null && associationPath.startsWith(alias)
+				&& associationPath.charAt(alias.length()) == '.') {
+			return associationPath.substring(alias.length() + 1);
+		} else {
+			return associationPath;
+		}
+	}
+
 	@Override
 	public Criteria createAlias(String arg0, String arg1)
 			throws HibernateException {
@@ -366,14 +375,5 @@ public class DomainStoreCriteria implements Criteria {
 	@Override
 	public Object uniqueResult() throws HibernateException {
 		return this.entityManagerCriteria.uniqueResult();
-	}
-
-	private String cleanAssociationPath(String associationPath) {
-		if (parent == null && alias != null && associationPath.startsWith(alias)
-				&& associationPath.charAt(alias.length()) == '.') {
-			return associationPath.substring(alias.length() + 1);
-		} else {
-			return associationPath;
-		}
 	}
 }

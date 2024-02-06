@@ -47,6 +47,11 @@ public class PlaceChangeRequestEvent
 	}
 
 	@Override
+	protected void dispatch(Handler handler) {
+		handler.onPlaceChangeRequest(this);
+	}
+
+	@Override
 	public Type<Handler> getAssociatedType() {
 		return TYPE;
 	}
@@ -98,11 +103,6 @@ public class PlaceChangeRequestEvent
 		if (this.warning == null) {
 			this.warning = warning;
 		}
-	}
-
-	@Override
-	protected void dispatch(Handler handler) {
-		handler.onPlaceChangeRequest(this);
 	}
 
 	/**

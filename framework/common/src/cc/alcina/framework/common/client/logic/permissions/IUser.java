@@ -31,6 +31,11 @@ public interface IUser
 		return (IU) PermissionsManager.get().getUser();
 	}
 
+	@Override
+	default String displayName() {
+		return Ax.blankTo(getUserName(), "(null)");
+	}
+
 	public abstract String getEmail();
 
 	public abstract String getFirstName();
@@ -53,15 +58,11 @@ public interface IUser
 		return UserlandProvider.get().getAnonymousUser() == this;
 	}
 
-	public void setPassword(String password);
-
-	public void setSalt(String salt);
-
-	public void setUserName(String userName);
-
-	@Override
-	default String displayName() {
-		return Ax.blankTo(getUserName(), "(null)");
+	/**
+	 * Provide if this user is the current user
+	 */
+	default boolean provideIsCurrent() {
+		return this.equals(PermissionsManager.get().getUser());
 	}
 
 	default boolean provideIsMemberOf(IGroup group) {
@@ -79,17 +80,16 @@ public interface IUser
 		return false;
 	}
 
-	/**
-	 * Provide if this user is the current user
-	 */
-	default boolean provideIsCurrent() {
-		return this.equals(PermissionsManager.get().getUser());
-	}
-
 	@Override
 	default void putDisplayName(String name) {
 		setUserName(name);
 	}
+
+	public void setPassword(String password);
+
+	public void setSalt(String salt);
+
+	public void setUserName(String userName);
 
 	default String toIdNameString() {
 		return Ax.format("%s/%s", getId(), getUserName());

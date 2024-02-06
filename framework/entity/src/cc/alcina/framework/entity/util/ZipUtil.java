@@ -40,6 +40,31 @@ import cc.alcina.framework.entity.Io;
  * @author Nick Reddel
  */
 public class ZipUtil {
+	public static byte[] gunzipBytes(byte[] bytes) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			GZIPInputStream gzipInputStream = new GZIPInputStream(
+					new ByteArrayInputStream(bytes));
+			Io.Streams.copy(gzipInputStream, baos);
+			return baos.toByteArray();
+		} catch (Exception e) {
+			return bytes;
+		}
+	}
+
+	public static byte[] gzipBytes(byte[] bytes) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			GZIPOutputStream gzipOutputStream = new GZIPOutputStream(baos);
+			gzipOutputStream.write(bytes);
+			gzipOutputStream.flush();
+			gzipOutputStream.close();
+			return baos.toByteArray();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	private static void writeStreamToStream(InputStream in, OutputStream os,
 			boolean keepOutputOpen) throws IOException {
 		OutputStream bos = os instanceof ByteArrayOutputStream ? os
@@ -159,30 +184,5 @@ public class ZipUtil {
 			}
 		}
 		s.close();
-	}
-
-	public static byte[] gzipBytes(byte[] bytes) {
-		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			GZIPOutputStream gzipOutputStream = new GZIPOutputStream(baos);
-			gzipOutputStream.write(bytes);
-			gzipOutputStream.flush();
-			gzipOutputStream.close();
-			return baos.toByteArray();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static byte[] gunzipBytes(byte[] bytes) {
-		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			GZIPInputStream gzipInputStream = new GZIPInputStream(
-					new ByteArrayInputStream(bytes));
-			Io.Streams.copy(gzipInputStream, baos);
-			return baos.toByteArray();
-		} catch (Exception e) {
-			return bytes;
-		}
 	}
 }

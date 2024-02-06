@@ -32,6 +32,10 @@ public class GridFormCellRendererGrid implements GridFormCellRenderer {
 				widget);
 	}
 
+	private int col(int vRow, int vCol) {
+		return horizontalGrid ? vRow : vCol;
+	}
+
 	@Override
 	public <T extends Widget> T getBoundWidget(int row) {
 		return (T) base.getWidget(row(row, 1), col(row, 1));
@@ -85,6 +89,10 @@ public class GridFormCellRendererGrid implements GridFormCellRenderer {
 		}
 	}
 
+	private int row(int vRow, int vCol) {
+		return horizontalGrid ? vCol : vRow;
+	}
+
 	@Override
 	public void setRowVisibility(int row, boolean visible) {
 		if (horizontalGrid) {
@@ -92,13 +100,5 @@ public class GridFormCellRendererGrid implements GridFormCellRenderer {
 		} else {
 			base.getRowFormatter().setVisible(row, visible);
 		}
-	}
-
-	private int col(int vRow, int vCol) {
-		return horizontalGrid ? vRow : vCol;
-	}
-
-	private int row(int vRow, int vCol) {
-		return horizontalGrid ? vCol : vRow;
 	}
 }

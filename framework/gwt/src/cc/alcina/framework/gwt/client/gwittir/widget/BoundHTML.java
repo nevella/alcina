@@ -125,6 +125,12 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		return retValue;
 	}
 
+	private void init(String text) {
+		base = text == null ? new com.google.gwt.user.client.ui.HTML()
+				: new com.google.gwt.user.client.ui.HTML(text);
+		super.initWidget(base);
+	}
+
 	@Override
 	public boolean isMultiline() {
 		return true;
@@ -213,11 +219,5 @@ public class BoundHTML extends AbstractBoundWidget<String>
 	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	private void init(String text) {
-		base = text == null ? new com.google.gwt.user.client.ui.HTML()
-				: new com.google.gwt.user.client.ui.HTML(text);
-		super.initWidget(base);
 	}
 }

@@ -24,6 +24,28 @@ public class ClientReflections {
 	public static Set<Class> emptyReflectorClasses = new JsUniqueSet(
 			Class.class);
 
+	private static Map<Class, Boolean> computeToMap(Class to) {
+		Map<Class, Boolean> map = assignableTo.get(to);
+		if (map != null) {
+			return map;
+		}
+		// monitor ensures only one thread populates - but concurrent reads are
+		// fine
+		synchronized (assignableTo) {
+			map = CollectionCreators.Bootstrap.createConcurrentClassMap();
+			map.put(to, Boolean.TRUE);
+			Class superclass = to.getSuperclass();
+			if (superclass != null) {
+				map.putAll(computeToMap(superclass));
+			}
+			for (Class implemented : getClassReflector(to).getInterfaces()) {
+				map.putAll(computeToMap(implemented));
+			}
+			assignableTo.put(to, map);
+			return map;
+		}
+	}
+
 	public static Class<?> forName(String fqn) {
 		Optional<Class> optional = moduleReflectors.stream()
 				.map(mr -> mr.forName(fqn)).filter(Objects::nonNull)
@@ -61,27 +83,5 @@ public class ClientReflections {
 	public static void register(ModuleReflector reflector) {
 		moduleReflectors.add(reflector);
 		reflector.registerRegistrations();
-	}
-
-	private static Map<Class, Boolean> computeToMap(Class to) {
-		Map<Class, Boolean> map = assignableTo.get(to);
-		if (map != null) {
-			return map;
-		}
-		// monitor ensures only one thread populates - but concurrent reads are
-		// fine
-		synchronized (assignableTo) {
-			map = CollectionCreators.Bootstrap.createConcurrentClassMap();
-			map.put(to, Boolean.TRUE);
-			Class superclass = to.getSuperclass();
-			if (superclass != null) {
-				map.putAll(computeToMap(superclass));
-			}
-			for (Class implemented : getClassReflector(to).getInterfaces()) {
-				map.putAll(computeToMap(implemented));
-			}
-			assignableTo.put(to, map);
-			return map;
-		}
 	}
 }

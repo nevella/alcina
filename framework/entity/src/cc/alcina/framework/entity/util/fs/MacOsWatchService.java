@@ -56,23 +56,6 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 		nioKey.signalEvent(translate(event.kind()), file.toPath());
 	}
 
-	private Kind<?> translate(
-			com.barbarysoftware.watchservice.WatchEvent.Kind<?> kind) {
-		if (kind == StandardWatchEventKind.ENTRY_CREATE) {
-			return StandardWatchEventKinds.ENTRY_CREATE;
-		}
-		if (kind == StandardWatchEventKind.ENTRY_DELETE) {
-			return StandardWatchEventKinds.ENTRY_DELETE;
-		}
-		if (kind == StandardWatchEventKind.ENTRY_MODIFY) {
-			return StandardWatchEventKinds.ENTRY_MODIFY;
-		}
-		if (kind == StandardWatchEventKind.OVERFLOW) {
-			return StandardWatchEventKinds.OVERFLOW;
-		}
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	void implClose() throws IOException {
 		barbaryWatchService.close();
@@ -135,6 +118,23 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 		MacOsWatchKey nioKey = new MacOsWatchKey(path, this, barbaryKey);
 		nioKeys.put(barbaryKey, nioKey);
 		return nioKey;
+	}
+
+	private Kind<?> translate(
+			com.barbarysoftware.watchservice.WatchEvent.Kind<?> kind) {
+		if (kind == StandardWatchEventKind.ENTRY_CREATE) {
+			return StandardWatchEventKinds.ENTRY_CREATE;
+		}
+		if (kind == StandardWatchEventKind.ENTRY_DELETE) {
+			return StandardWatchEventKinds.ENTRY_DELETE;
+		}
+		if (kind == StandardWatchEventKind.ENTRY_MODIFY) {
+			return StandardWatchEventKinds.ENTRY_MODIFY;
+		}
+		if (kind == StandardWatchEventKind.OVERFLOW) {
+			return StandardWatchEventKinds.OVERFLOW;
+		}
+		throw new UnsupportedOperationException();
 	}
 
 	static class MacOsWatchKey extends AbstractNonSunWatchKey {

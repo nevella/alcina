@@ -27,6 +27,8 @@ public abstract class BindablePlace<SD extends BindableSearchDefinition>
 		def = createSearchDefinition();
 	}
 
+	protected abstract SD createSearchDefinition();
+
 	@Override
 	public SD getSearchDefinition() {
 		return def;
@@ -60,6 +62,4 @@ public abstract class BindablePlace<SD extends BindableSearchDefinition>
 	public <T extends BindablePlace> T withId(String stringId) {
 		return withId(Long.parseLong(stringId));
 	}
-
-	protected abstract SD createSearchDefinition();
 }

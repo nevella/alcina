@@ -17,14 +17,6 @@ public class TaskSwitchPostgresUrl extends PerformerTask {
 		return this.newUrl;
 	}
 
-	public void setDescriptorClassName(String descriptorClassName) {
-		this.descriptorClassName = descriptorClassName;
-	}
-
-	public void setNewUrl(String newUrl) {
-		this.newUrl = newUrl;
-	}
-
 	@Override
 	public void run() throws Exception  {
 		DomainStore store = DomainStore.stores().storeFor(descriptorClassName);
@@ -34,5 +26,13 @@ public class TaskSwitchPostgresUrl extends PerformerTask {
 					.changeJdbcConnectionUrl(newUrl);
 		}
 		logger.info("Connection url changed to: {}", newUrl);
+	}
+
+	public void setDescriptorClassName(String descriptorClassName) {
+		this.descriptorClassName = descriptorClassName;
+	}
+
+	public void setNewUrl(String newUrl) {
+		this.newUrl = newUrl;
 	}
 }

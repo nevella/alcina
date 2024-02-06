@@ -46,12 +46,12 @@ public class BeforeInputEvent extends DomEvent<BeforeInputHandler> {
 	}
 
 	@Override
-	public final Type<BeforeInputHandler> getAssociatedType() {
-		return TYPE;
+	protected void dispatch(BeforeInputHandler handler) {
+		handler.onBeforeInput(this);
 	}
 
 	@Override
-	protected void dispatch(BeforeInputHandler handler) {
-		handler.onBeforeInput(this);
+	public final Type<BeforeInputHandler> getAssociatedType() {
+		return TYPE;
 	}
 }

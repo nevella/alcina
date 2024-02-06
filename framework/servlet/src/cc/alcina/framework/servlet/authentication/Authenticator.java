@@ -45,8 +45,14 @@ public abstract class Authenticator<U extends Entity & IUser> {
 
 	protected LoginModel loginModel;
 
+	protected Logger logger = LoggerFactory.getLogger(getClass());
+
 	public Authenticator() {
 		super();
+	}
+
+	protected boolean appUsesTwoFactorAuthentication() {
+		return false;
 	}
 
 	public LoginResponse authenticate(LoginBean loginBean)
@@ -71,8 +77,6 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		validateAccount(loginModel.loginResponse, loginBean.getUserName());
 	}
 
-	protected Logger logger = LoggerFactory.getLogger(getClass());
-
 	public void checkExternalExpiration(AuthenticationSession session) {
 	}
 
@@ -84,6 +88,10 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		return user;
 	}
 
+	public String getExternalAuthorizationUrl(Permission requiredPermission) {
+		return null;
+	}
+
 	public void invalidateSession(AuthenticationSession asi) {
 	}
 
@@ -91,6 +99,12 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		AuthenticationManager.get().createAuthenticationSession(new Date(),
 				UserlandProvider.get().getAnonymousUser(), "logout", false);
 		Transaction.commit();
+	}
+
+	public void postCreateAuthenticationSession(AuthenticationSession session) {
+	}
+
+	public void postCreateClientInstance(ClientInstance clientInstance) {
 	}
 
 	public void processValidLogin(LoginResponse loginResponse, String userName,
@@ -134,6 +148,11 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		} else {
 			return true;
 		}
+	}
+
+	protected boolean
+			validateLoginAttemptFromHistory(LoginModel<U> loginModel) {
+		return true;
 	}
 
 	public boolean validatePassword(LoginModel<U> loginModel) {
@@ -216,15 +235,6 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		return loginModel.user != null;
 	}
 
-	protected boolean appUsesTwoFactorAuthentication() {
-		return false;
-	}
-
-	protected boolean
-			validateLoginAttemptFromHistory(LoginModel<U> loginModel) {
-		return true;
-	}
-
 	public interface PasswordEncryptionSupport {
 		public static PasswordEncryptionSupport get() {
 			return Registry.impl(PasswordEncryptionSupport.class);
@@ -263,15 +273,5 @@ public abstract class Authenticator<U extends Entity & IUser> {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-	}
-
-	public void postCreateAuthenticationSession(AuthenticationSession session) {
-	}
-
-	public String getExternalAuthorizationUrl(Permission requiredPermission) {
-		return null;
-	}
-
-	public void postCreateClientInstance(ClientInstance clientInstance) {
 	}
 }

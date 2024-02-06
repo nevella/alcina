@@ -51,6 +51,40 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 
 	transient private IU createdUser3;
 
+	@Override
+	protected void run1() throws Exception {
+		txLatch = new CountDownLatch(3);
+		tx1Latch1 = new CountDownLatch(1);
+		tx1Latch2 = new CountDownLatch(1);
+		tx2Latch1 = new CountDownLatch(1);
+		tx2Latch2 = new CountDownLatch(1);
+		tx3Latch1 = new CountDownLatch(1);
+		long suffix = System.currentTimeMillis();
+		createdGroup = Domain.create(groupClass);
+		createdGroup.setGroupName("testgroup-" + suffix);
+		String username1 = "moew1" + System.currentTimeMillis()
+				+ "@nodomain.com";
+		String username2 = "moew2" + System.currentTimeMillis()
+				+ "@nodomain.com";
+		String username3 = "moew3" + System.currentTimeMillis()
+				+ "@nodomain.com";
+		createdUser1 = Domain.create(userClass);
+		createdUser2 = Domain.create(userClass);
+		createdUser3 = Domain.create(userClass);
+		createdUser1.setUserName(username1);
+		createdUser2.setUserName(username2);
+		createdUser3.setUserName(username3);
+		initialSize = 0;
+		Transaction.commit();
+		Transaction.end();
+		Thread.sleep(100);
+		startTx1();
+		startTx2();
+		startTx3();
+		txLatch.await();
+		Transaction.begin();
+	}
+
 	private void startTx1() {
 		new Thread("test-mvcc-1") {
 			@Override
@@ -162,39 +196,5 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 				}
 			}
 		}.start();
-	}
-
-	@Override
-	protected void run1() throws Exception {
-		txLatch = new CountDownLatch(3);
-		tx1Latch1 = new CountDownLatch(1);
-		tx1Latch2 = new CountDownLatch(1);
-		tx2Latch1 = new CountDownLatch(1);
-		tx2Latch2 = new CountDownLatch(1);
-		tx3Latch1 = new CountDownLatch(1);
-		long suffix = System.currentTimeMillis();
-		createdGroup = Domain.create(groupClass);
-		createdGroup.setGroupName("testgroup-" + suffix);
-		String username1 = "moew1" + System.currentTimeMillis()
-				+ "@nodomain.com";
-		String username2 = "moew2" + System.currentTimeMillis()
-				+ "@nodomain.com";
-		String username3 = "moew3" + System.currentTimeMillis()
-				+ "@nodomain.com";
-		createdUser1 = Domain.create(userClass);
-		createdUser2 = Domain.create(userClass);
-		createdUser3 = Domain.create(userClass);
-		createdUser1.setUserName(username1);
-		createdUser2.setUserName(username2);
-		createdUser3.setUserName(username3);
-		initialSize = 0;
-		Transaction.commit();
-		Transaction.end();
-		Thread.sleep(100);
-		startTx1();
-		startTx2();
-		startTx3();
-		txLatch.await();
-		Transaction.begin();
 	}
 }

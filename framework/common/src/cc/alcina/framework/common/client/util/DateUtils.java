@@ -35,6 +35,18 @@ public class DateUtils {
 		return singleton;
 	}
 
+	protected int ageInDays0(Date date) {
+		return (int) (date == null ? 0
+				: (System.currentTimeMillis() - date.getTime())
+						/ TimeConstants.ONE_DAY_MS);
+	}
+
+	protected int ageInMinutes0(Date date) {
+		return (int) (date == null ? 0
+				: (System.currentTimeMillis() - date.getTime())
+						/ TimeConstants.ONE_MINUTE_MS);
+	}
+
 	public DatePair getYearRange(int startingMonth, int yearOffset) {
 		DatePair result = new DatePair(new Date(), new Date());
 		toMonth(result.d1, startingMonth - 1);
@@ -51,17 +63,5 @@ public class DateUtils {
 		d.setMonth(month);
 		CalendarUtil.setToFirstDayOfMonth(d);
 		CommonUtils.roundDate(d, false);
-	}
-
-	protected int ageInDays0(Date date) {
-		return (int) (date == null ? 0
-				: (System.currentTimeMillis() - date.getTime())
-						/ TimeConstants.ONE_DAY_MS);
-	}
-
-	protected int ageInMinutes0(Date date) {
-		return (int) (date == null ? 0
-				: (System.currentTimeMillis() - date.getTime())
-						/ TimeConstants.ONE_MINUTE_MS);
 	}
 }

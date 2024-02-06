@@ -76,98 +76,6 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 
 	private String criterionNameRemovalRegex;
 
-	public Action getAction() {
-		return this.action;
-	}
-
-	public String getClassPathList() {
-		return this.classPathList;
-	}
-
-	public String getCriterionNameRemovalRegex() {
-		return this.criterionNameRemovalRegex;
-	}
-
-	public List<Class<? extends SearchDefinition>> getSearchDefinitions() {
-		return this.searchDefinitions;
-	}
-
-	public boolean isOverwriteOriginals() {
-		return this.overwriteOriginals;
-	}
-
-	public boolean isRefresh() {
-		return refresh;
-	}
-
-	public boolean isTest() {
-		return this.test;
-	}
-
-	@Override
-	public void run() throws Exception {
-		StringMap classPaths = StringMap.fromStringList(classPathList);
-		SingletonCache<CompilationUnits> cache = FsObjectCache
-				.singletonCache(CompilationUnits.class, getClass())
-				.asSingletonCache();
-		FsObjectCache<FlatSerializationConfigurations> flatSerializationConfigurationsCache = FsObjectCache
-				.singletonCache(FlatSerializationConfigurations.class,
-						getClass());
-		flatSerializationConfigurationsCache.setSerializationStrategy(
-				new SerializationStrategy_WrappedObject());
-		flatSerializationConfigurations = flatSerializationConfigurationsCache
-				.asSingletonCache();
-		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
-				DeclarationVisitor::new, isRefresh());
-		switch (getAction()) {
-		case LIST_INTERESTING: {
-			compUnits.declarations.values().forEach(dec -> Ax.out("%s - %s",
-					dec.clazz().getSimpleName(), dec.typeFlags));
-			break;
-		}
-		case ENUMERATE_SEARCH_DEFINITIONS: {
-			enumerateSearchDefinitions();
-			break;
-		}
-		case ENSURE_ANNOTATIONS:
-			ensureAnnotations();
-			flatSerializationConfigurations.persist();
-			break;
-		case CREATE_TASK_HIERARCHY:
-			createTaskHierarchy();
-			break;
-		}
-	}
-
-	public void setAction(Action action) {
-		this.action = action;
-	}
-
-	public void setClassPathList(String classPathList) {
-		this.classPathList = classPathList;
-	}
-
-	public void setCriterionNameRemovalRegex(String criterionNameRemovalRegex) {
-		this.criterionNameRemovalRegex = criterionNameRemovalRegex;
-	}
-
-	public void setOverwriteOriginals(boolean overwriteOriginals) {
-		this.overwriteOriginals = overwriteOriginals;
-	}
-
-	public void setRefresh(boolean refresh) {
-		this.refresh = refresh;
-	}
-
-	public void setSearchDefinitions(
-			List<Class<? extends SearchDefinition>> searchDefinitions) {
-		this.searchDefinitions = searchDefinitions;
-	}
-
-	public void setTest(boolean test) {
-		this.test = test;
-	}
-
 	private void createTaskHierarchy() {
 		List<Class<? extends Task>> taskClasses = (List) compUnits.declarations
 				.values().stream()
@@ -193,50 +101,6 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 		ensureSearchDefinitionAnnotations(criterionHandlers);
 		ensureSearchCriterionAnnotations(criterionHandlers);
 		compUnits.writeDirty(isTest());
-	}
-
-	private void enumerateSearchDefinitions() {
-		compUnits.declarations.values().stream().filter(
-				dec -> SearchDefinition.class.isAssignableFrom(dec.clazz()))
-				.forEach(dec -> {
-					Ax.out(dec.qualifiedSourceName);
-				});
-	}
-
-	private String shortForm(
-			Class<? extends SearchCriterion> searchCriterionClass,
-			List<DomainCriterionHandler<?>> dchs) {
-		String name = searchCriterionClass.getSimpleName();
-		if (criterionNameRemovalRegex != null) {
-			name = name.replaceFirst(criterionNameRemovalRegex, "$1");
-		}
-		name = name.replaceFirst("(.+?)(?:Multiple)?(?:Enum)?Criterion", "$1");
-		if (dchs.size() == 1) {
-			Class<? extends SearchDefinition> defClass = dchs.get(0)
-					.handlesSearchDefinition();
-			if (defClass != null) {
-				SearchDefinition def = Reflections.newInstance(defClass);
-				if (def instanceof BindableSearchDefinition) {
-					Class<? extends Bindable> bindableClass = ((BindableSearchDefinition) def)
-							.queriedBindableClass();
-					String bindableSimpleName = bindableClass.getSimpleName();
-					if (criterionNameRemovalRegex != null) {
-						bindableSimpleName = bindableSimpleName
-								.replaceFirst(criterionNameRemovalRegex, "$1");
-					}
-					if (name.startsWith(bindableSimpleName)) {
-						name = name.substring(bindableSimpleName.length());
-					}
-				}
-			}
-		}
-		// remove type/status/object if there's anything else
-		name = name.replaceFirst("(.+)Object$", "$1");
-		// name = name.replaceFirst("(.+)Status", "$1");
-		name = name.replaceFirst("(.+)Type$", "$1");
-		name = name.toLowerCase();
-		Preconditions.checkArgument(name.length() > 0);
-		return name;
 	}
 
 	// TODO - refactor as per SearchDefinitionModifier
@@ -339,6 +203,26 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 		});
 	}
 
+	private void enumerateSearchDefinitions() {
+		compUnits.declarations.values().stream().filter(
+				dec -> SearchDefinition.class.isAssignableFrom(dec.clazz()))
+				.forEach(dec -> {
+					Ax.out(dec.qualifiedSourceName);
+				});
+	}
+
+	public Action getAction() {
+		return this.action;
+	}
+
+	public String getClassPathList() {
+		return this.classPathList;
+	}
+
+	public String getCriterionNameRemovalRegex() {
+		return this.criterionNameRemovalRegex;
+	}
+
 	<T> Class<? extends T> getHighestImplementor(Class<? extends T> clazz,
 			Class<T> implementing) {
 		Class<? extends T> cursor = clazz;
@@ -349,9 +233,165 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 		return cursor;
 	}
 
+	public List<Class<? extends SearchDefinition>> getSearchDefinitions() {
+		return this.searchDefinitions;
+	}
+
+	public boolean isOverwriteOriginals() {
+		return this.overwriteOriginals;
+	}
+
+	public boolean isRefresh() {
+		return refresh;
+	}
+
+	public boolean isTest() {
+		return this.test;
+	}
+
+	@Override
+	public void run() throws Exception {
+		StringMap classPaths = StringMap.fromStringList(classPathList);
+		SingletonCache<CompilationUnits> cache = FsObjectCache
+				.singletonCache(CompilationUnits.class, getClass())
+				.asSingletonCache();
+		FsObjectCache<FlatSerializationConfigurations> flatSerializationConfigurationsCache = FsObjectCache
+				.singletonCache(FlatSerializationConfigurations.class,
+						getClass());
+		flatSerializationConfigurationsCache.setSerializationStrategy(
+				new SerializationStrategy_WrappedObject());
+		flatSerializationConfigurations = flatSerializationConfigurationsCache
+				.asSingletonCache();
+		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
+				DeclarationVisitor::new, isRefresh());
+		switch (getAction()) {
+		case LIST_INTERESTING: {
+			compUnits.declarations.values().forEach(dec -> Ax.out("%s - %s",
+					dec.clazz().getSimpleName(), dec.typeFlags));
+			break;
+		}
+		case ENUMERATE_SEARCH_DEFINITIONS: {
+			enumerateSearchDefinitions();
+			break;
+		}
+		case ENSURE_ANNOTATIONS:
+			ensureAnnotations();
+			flatSerializationConfigurations.persist();
+			break;
+		case CREATE_TASK_HIERARCHY:
+			createTaskHierarchy();
+			break;
+		}
+	}
+
+	public void setAction(Action action) {
+		this.action = action;
+	}
+
+	public void setClassPathList(String classPathList) {
+		this.classPathList = classPathList;
+	}
+
+	public void setCriterionNameRemovalRegex(String criterionNameRemovalRegex) {
+		this.criterionNameRemovalRegex = criterionNameRemovalRegex;
+	}
+
+	public void setOverwriteOriginals(boolean overwriteOriginals) {
+		this.overwriteOriginals = overwriteOriginals;
+	}
+
+	public void setRefresh(boolean refresh) {
+		this.refresh = refresh;
+	}
+
+	public void setSearchDefinitions(
+			List<Class<? extends SearchDefinition>> searchDefinitions) {
+		this.searchDefinitions = searchDefinitions;
+	}
+
+	public void setTest(boolean test) {
+		this.test = test;
+	}
+
+	private String shortForm(
+			Class<? extends SearchCriterion> searchCriterionClass,
+			List<DomainCriterionHandler<?>> dchs) {
+		String name = searchCriterionClass.getSimpleName();
+		if (criterionNameRemovalRegex != null) {
+			name = name.replaceFirst(criterionNameRemovalRegex, "$1");
+		}
+		name = name.replaceFirst("(.+?)(?:Multiple)?(?:Enum)?Criterion", "$1");
+		if (dchs.size() == 1) {
+			Class<? extends SearchDefinition> defClass = dchs.get(0)
+					.handlesSearchDefinition();
+			if (defClass != null) {
+				SearchDefinition def = Reflections.newInstance(defClass);
+				if (def instanceof BindableSearchDefinition) {
+					Class<? extends Bindable> bindableClass = ((BindableSearchDefinition) def)
+							.queriedBindableClass();
+					String bindableSimpleName = bindableClass.getSimpleName();
+					if (criterionNameRemovalRegex != null) {
+						bindableSimpleName = bindableSimpleName
+								.replaceFirst(criterionNameRemovalRegex, "$1");
+					}
+					if (name.startsWith(bindableSimpleName)) {
+						name = name.substring(bindableSimpleName.length());
+					}
+				}
+			}
+		}
+		// remove type/status/object if there's anything else
+		name = name.replaceFirst("(.+)Object$", "$1");
+		// name = name.replaceFirst("(.+)Status", "$1");
+		name = name.replaceFirst("(.+)Type$", "$1");
+		name = name.toLowerCase();
+		Preconditions.checkArgument(name.length() > 0);
+		return name;
+	}
+
 	public enum Action {
 		LIST_INTERESTING, ENUMERATE_SEARCH_DEFINITIONS, ENSURE_ANNOTATIONS,
 		CREATE_TASK_HIERARCHY;
+	}
+
+	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
+		public DeclarationVisitor(CompilationUnits units,
+				CompilationUnitWrapper compUnit) {
+			super(units, compUnit);
+		}
+
+		@Override
+		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
+			try {
+				visit0(node, arg);
+			} catch (VerifyError ve) {
+				Ax.out("Verify error: %s", node.getName());
+			}
+		}
+
+		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
+			if (!node.isInterface()) {
+				UnitType type = new UnitType(unit, node);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
+				if (type.isAssignableFrom(DomainCriterionHandler.class)) {
+					type.setFlag(Type.DomainCriterionHandler);
+				}
+				if (type.isAssignableFrom(SearchCriterion.class)) {
+					type.setFlag(Type.SearchCriterion);
+				}
+				if (type.isAssignableFrom(CriteriaGroup.class)) {
+					type.setFlag(Type.CriteriaGroup);
+				}
+				if (type.isAssignableFrom(BindableSearchDefinition.class)) {
+					type.setFlag(Type.BindableSearchDefinition);
+				}
+				if (type.isAssignableFrom(Task.class)) {
+					type.setFlag(Type.Task);
+				}
+			}
+			super.visit(node, arg);
+		}
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -394,18 +434,6 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 
 		public SearchDefinitionModifier(UnitType type) {
 			super(type);
-		}
-
-		public SearchDefinitionModifier withCriterionHandlers(
-				List<DomainCriterionHandler> criterionHandlers) {
-			this.criterionHandlers = criterionHandlers;
-			return this;
-		}
-
-		public SearchDefinitionModifier withSearchDefinitionClass(
-				Class<? extends SearchDefinition> searchDefinitionClass) {
-			this.searchDefinitionClass = searchDefinitionClass;
-			return this;
 		}
 
 		private void addModifier(TypeDeclaration declaration, Keyword keyword) {
@@ -458,38 +486,20 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 			type.ensureImport(fqn);
 		}
 
-		private void ensureNoGetCriteriaGroupsMethod() {
-			declaration.getMethodsByName("getCriteriaGroups").forEach(m -> {
-				m.remove();
-				logger.info("Removed {}.{}", declaration.getName(),
-						m.getName());
-			});
-		}
-
-		private void populateReachableCriteria() {
-			ArrayInitializerExpr initializerExpr = new ArrayInitializerExpr();
-			criteriaPropertySerialization.addPair("types", initializerExpr);
-			List<ClassExpr> expressions = criterionHandlers.stream()
-					.filter(dch -> dch
-							.handlesSearchDefinition() == searchDefinitionClass)
-					.map(dch -> {
-						Class<? extends SearchCriterion> searchCriterion = dch
-								.handlesSearchCriterion();
-						type.ensureImport(searchCriterion);
-						ClassOrInterfaceType type = StaticJavaParser
-								.parseClassOrInterfaceType(
-										searchCriterion.getSimpleName());
-						return new ClassExpr(type);
-					}).collect(Collectors.toList());
-			initializerExpr.setValues(new NodeList(expressions));
-		}
-
 		@Override
 		protected void ensureImports() {
 			type.ensureImport(CriteriaGroup.class);
 			type.ensureImport(Set.class);
 			type.ensureImport(TypeSerialization.class);
 			type.ensureImport(PropertySerialization.class);
+		}
+
+		private void ensureNoGetCriteriaGroupsMethod() {
+			declaration.getMethodsByName("getCriteriaGroups").forEach(m -> {
+				m.remove();
+				logger.info("Removed {}.{}", declaration.getName(),
+						m.getName());
+			});
 		}
 
 		@Override
@@ -516,45 +526,35 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 					.add(criteriaPropertySerialization);
 			populateReachableCriteria();
 		}
-	}
 
-	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
-		public DeclarationVisitor(CompilationUnits units,
-				CompilationUnitWrapper compUnit) {
-			super(units, compUnit);
+		private void populateReachableCriteria() {
+			ArrayInitializerExpr initializerExpr = new ArrayInitializerExpr();
+			criteriaPropertySerialization.addPair("types", initializerExpr);
+			List<ClassExpr> expressions = criterionHandlers.stream()
+					.filter(dch -> dch
+							.handlesSearchDefinition() == searchDefinitionClass)
+					.map(dch -> {
+						Class<? extends SearchCriterion> searchCriterion = dch
+								.handlesSearchCriterion();
+						type.ensureImport(searchCriterion);
+						ClassOrInterfaceType type = StaticJavaParser
+								.parseClassOrInterfaceType(
+										searchCriterion.getSimpleName());
+						return new ClassExpr(type);
+					}).collect(Collectors.toList());
+			initializerExpr.setValues(new NodeList(expressions));
 		}
 
-		@Override
-		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
-			try {
-				visit0(node, arg);
-			} catch (VerifyError ve) {
-				Ax.out("Verify error: %s", node.getName());
-			}
+		public SearchDefinitionModifier withCriterionHandlers(
+				List<DomainCriterionHandler> criterionHandlers) {
+			this.criterionHandlers = criterionHandlers;
+			return this;
 		}
 
-		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
-			if (!node.isInterface()) {
-				UnitType type = new UnitType(unit, node);
-				type.setDeclaration(node);
-				unit.declarations.add(type);
-				if (type.isAssignableFrom(DomainCriterionHandler.class)) {
-					type.setFlag(Type.DomainCriterionHandler);
-				}
-				if (type.isAssignableFrom(SearchCriterion.class)) {
-					type.setFlag(Type.SearchCriterion);
-				}
-				if (type.isAssignableFrom(CriteriaGroup.class)) {
-					type.setFlag(Type.CriteriaGroup);
-				}
-				if (type.isAssignableFrom(BindableSearchDefinition.class)) {
-					type.setFlag(Type.BindableSearchDefinition);
-				}
-				if (type.isAssignableFrom(Task.class)) {
-					type.setFlag(Type.Task);
-				}
-			}
-			super.visit(node, arg);
+		public SearchDefinitionModifier withSearchDefinitionClass(
+				Class<? extends SearchDefinition> searchDefinitionClass) {
+			this.searchDefinitionClass = searchDefinitionClass;
+			return this;
 		}
 	}
 

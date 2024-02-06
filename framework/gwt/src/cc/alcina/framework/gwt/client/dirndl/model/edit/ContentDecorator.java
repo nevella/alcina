@@ -158,8 +158,17 @@ public class ContentDecorator<T>
 		this.decoratorParent = builder.decoratorParent;
 	}
 
+	boolean canDecorate(RelativeInputModel relativeInput) {
+		return decoratorParent.canDecorate(relativeInput);
+	}
+
 	public boolean isActive() {
 		return chooser != null;
+	}
+
+	boolean isSpaceOrLeftBracketish(String characterString) {
+		return characterString != null
+				&& characterString.matches("[ \u200B({\\[]");
 	}
 
 	@Override
@@ -211,65 +220,6 @@ public class ContentDecorator<T>
 		topicInput.publish(event);
 	}
 
-	@Override
-	public void onKeyDown(KeyDown event) {
-		validateSelection();
-	}
-
-	@Override
-	public void onMouseUp(MouseUp event) {
-		validateSelection();
-	}
-
-	@Override
-	public void onNavigation(Navigation event) {
-		if (chooser != null) {
-			chooser.suggestor.onNavigation(event);
-		}
-		// FIXME - ui2 - there's probably a better way to do this. but not
-		// super-obvious. Possibly suggestor -> non-overlay results
-		if (overlay != null) {
-			if (event.getModel() == Type.CANCEL
-					|| event.getModel() == Type.COMMIT) {
-				overlay.close(null, false);
-			}
-		}
-	}
-
-	@Override
-	public void onReferenceSelected(ReferenceSelected event) {
-		if (event.getContext().getPrevious().node.getModel() == chooser) {
-			decorator.toNonEditable();
-			decorator.putEntity(event.getModel());
-			decorator.positionCursorPostEntitySelection();
-		}
-	}
-
-	protected void validateSelection0() {
-		RelativeInputModel relativeInput = new RelativeInputModel();
-		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
-		Optional<DomNode> partiallySelectedAncestor = relativeInput
-				.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
-						.getFragmentNode(n) instanceof DecoratorNode);
-		if (partiallySelectedAncestor.isPresent()) {
-			DomNode node = partiallySelectedAncestor.get();
-			DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
-					.getFragmentNode(node);
-			if (!decoratorNode.contentEditable) {
-				relativeInput.extendSelectionToIncludeAllOf(node);
-			}
-		}
-	}
-
-	boolean canDecorate(RelativeInputModel relativeInput) {
-		return decoratorParent.canDecorate(relativeInput);
-	}
-
-	boolean isSpaceOrLeftBracketish(String characterString) {
-		return characterString != null
-				&& characterString.matches("[ \u200B({\\[]");
-	}
-
 	void onInput0(RelativeInputModel relativeInput) {
 		boolean trigger = false;
 		// FIXME - DN -
@@ -305,6 +255,40 @@ public class ContentDecorator<T>
 		}
 	}
 
+	@Override
+	public void onKeyDown(KeyDown event) {
+		validateSelection();
+	}
+
+	@Override
+	public void onMouseUp(MouseUp event) {
+		validateSelection();
+	}
+
+	@Override
+	public void onNavigation(Navigation event) {
+		if (chooser != null) {
+			chooser.suggestor.onNavigation(event);
+		}
+		// FIXME - ui2 - there's probably a better way to do this. but not
+		// super-obvious. Possibly suggestor -> non-overlay results
+		if (overlay != null) {
+			if (event.getModel() == Type.CANCEL
+					|| event.getModel() == Type.COMMIT) {
+				overlay.close(null, false);
+			}
+		}
+	}
+
+	@Override
+	public void onReferenceSelected(ReferenceSelected event) {
+		if (event.getContext().getPrevious().node.getModel() == chooser) {
+			decorator.toNonEditable();
+			decorator.putEntity(event.getModel());
+			decorator.positionCursorPostEntitySelection();
+		}
+	}
+
 	void showOverlay(DomNode decorator) {
 		LocalDom.flush();
 		DomNode parent = decorator.parent();
@@ -334,6 +318,22 @@ public class ContentDecorator<T>
 					validateSelection0();
 				}
 			});
+		}
+	}
+
+	protected void validateSelection0() {
+		RelativeInputModel relativeInput = new RelativeInputModel();
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		Optional<DomNode> partiallySelectedAncestor = relativeInput
+				.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
+						.getFragmentNode(n) instanceof DecoratorNode);
+		if (partiallySelectedAncestor.isPresent()) {
+			DomNode node = partiallySelectedAncestor.get();
+			DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
+					.getFragmentNode(node);
+			if (!decoratorNode.contentEditable) {
+				relativeInput.extendSelectionToIncludeAllOf(node);
+			}
 		}
 	}
 

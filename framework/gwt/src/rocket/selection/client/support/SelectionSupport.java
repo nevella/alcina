@@ -68,6 +68,11 @@ abstract public class SelectionSupport {
 		this.clear(selection);
 	}
 
+	native private void delete0(final Selection selection)/*-{
+    var range = selection.getRangeAt(0);
+    range.deleteContents();
+	}-*/;
+
 	/**
 	 * Extracts any selection and makes it a child of an element not attached to
 	 * the DOM.
@@ -78,6 +83,16 @@ abstract public class SelectionSupport {
 		throw new UnsupportedOperationException();
 		// return this.extract0(selection);
 	}
+
+	native private Element extract0(final Selection selection)/*-{
+    var element = selection.anchorNode.ownerDocument.createElement("span");
+
+    var range = selection.getRangeAt(0);
+    if (range) {
+      range.surroundContents(element);
+    }
+    return element;
+	}-*/;
 
 	public SelectionEndPoint getEnd(final Selection selection) {
 		int debugInfo = 0;
@@ -119,6 +134,51 @@ abstract public class SelectionSupport {
 			return null;
 		}
 	}
+
+	native protected TextJso getFirstTextDepthFirst(
+			final ElementJso parent, int childIndex, int direction)/*-{
+    var childNodes = parent.childNodes;
+    var i = childIndex;
+    for (; i >= 0 && i < childNodes.length; i += direction) {
+      var node = childNodes[i];
+      var nodeType = node.nodeType;
+      if (3 == nodeType) {
+        return node;
+      }
+      if (1 == nodeType && node.childNodes.length != 0) {
+        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementJso;II)(node,direction==-1?node.childNodes.length-1:0,direction);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    return null;
+
+	}-*/;
+
+	native protected TextJso getFirstTextDepthFirstWithParent(
+			final ElementJso element, int direction)/*-{
+    var childNodes = element.parentNode.childNodes;
+    var i = direction == 1 ? 0 : childNodes.length - 1;
+    var found = false;
+    for (; i >= 0 && i < childNodes.length; i += direction) {
+      if (element == childNodes[i]) {
+        found = true;
+      }
+      if (found) {
+        var node = childNodes[i];
+        var nodeType = node.nodeType;
+        if (3 == nodeType) {
+          return node;
+        }
+        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementJso;II)(node,direction==-1?node.childNodes.length-1:0,direction);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    return this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirstWithParent(Lcom/google/gwt/dom/client/ElementJso;I)(element.parentNode,direction);
+	}-*/;
 
 	abstract public Selection getSelection(JavaScriptObject window);
 
@@ -178,37 +238,6 @@ abstract public class SelectionSupport {
 		setEnd0(selection, end.getTextNode(), end.getOffset());
 	}
 
-	public void setStart(final Selection selection,
-			final SelectionEndPoint start) {
-		Checker.notNull("parameter:selection", selection);
-		Checker.notNull("parameter:start", start);
-		setStart0(selection, start.getTextNode(), start.getOffset());
-	}
-
-	final public void surround(final Selection selection,
-			final Element element) {
-		if (this.isEmpty(selection)) {
-			throw new IllegalStateException(
-					"No selection exists unable to perform surround");
-		}
-		this.surround0(selection, element);
-	}
-
-	native private void delete0(final Selection selection)/*-{
-    var range = selection.getRangeAt(0);
-    range.deleteContents();
-	}-*/;
-
-	native private Element extract0(final Selection selection)/*-{
-    var element = selection.anchorNode.ownerDocument.createElement("span");
-
-    var range = selection.getRangeAt(0);
-    if (range) {
-      range.surroundContents(element);
-    }
-    return element;
-	}-*/;
-
 	native private void setEnd0(final Selection selection, final Text text,
 			final int offset)/*-{
     var textNode = @rocket.selection.client.support.SelectionSupport::remote(Lcom/google/gwt/dom/client/Text;)(text);
@@ -231,6 +260,13 @@ abstract public class SelectionSupport {
     selection.addRange(range);
 	}-*/;
 
+	public void setStart(final Selection selection,
+			final SelectionEndPoint start) {
+		Checker.notNull("parameter:selection", selection);
+		Checker.notNull("parameter:start", start);
+		setStart0(selection, start.getTextNode(), start.getOffset());
+	}
+
 	native private void setStart0(final Selection selection, final Text text,
 			final int offset)/*-{
     var textNode = @rocket.selection.client.support.SelectionSupport::remote(Lcom/google/gwt/dom/client/Text;)(text);
@@ -252,50 +288,14 @@ abstract public class SelectionSupport {
     selection.addRange(range);
 	}-*/;
 
-	native protected TextJso getFirstTextDepthFirst(
-			final ElementJso parent, int childIndex, int direction)/*-{
-    var childNodes = parent.childNodes;
-    var i = childIndex;
-    for (; i >= 0 && i < childNodes.length; i += direction) {
-      var node = childNodes[i];
-      var nodeType = node.nodeType;
-      if (3 == nodeType) {
-        return node;
-      }
-      if (1 == nodeType && node.childNodes.length != 0) {
-        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementJso;II)(node,direction==-1?node.childNodes.length-1:0,direction);
-        if (result != null) {
-          return result;
-        }
-      }
-    }
-    return null;
-
-	}-*/;
-
-	native protected TextJso getFirstTextDepthFirstWithParent(
-			final ElementJso element, int direction)/*-{
-    var childNodes = element.parentNode.childNodes;
-    var i = direction == 1 ? 0 : childNodes.length - 1;
-    var found = false;
-    for (; i >= 0 && i < childNodes.length; i += direction) {
-      if (element == childNodes[i]) {
-        found = true;
-      }
-      if (found) {
-        var node = childNodes[i];
-        var nodeType = node.nodeType;
-        if (3 == nodeType) {
-          return node;
-        }
-        var result = this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirst(Lcom/google/gwt/dom/client/ElementJso;II)(node,direction==-1?node.childNodes.length-1:0,direction);
-        if (result != null) {
-          return result;
-        }
-      }
-    }
-    return this.@rocket.selection.client.support.SelectionSupport::getFirstTextDepthFirstWithParent(Lcom/google/gwt/dom/client/ElementJso;I)(element.parentNode,direction);
-	}-*/;
+	final public void surround(final Selection selection,
+			final Element element) {
+		if (this.isEmpty(selection)) {
+			throw new IllegalStateException(
+					"No selection exists unable to perform surround");
+		}
+		this.surround0(selection, element);
+	}
 
 	native protected void surround0(final Selection selection,
 			final Element element)/*-{

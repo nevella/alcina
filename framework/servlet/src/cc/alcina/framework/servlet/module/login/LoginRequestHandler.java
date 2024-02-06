@@ -25,15 +25,7 @@ public abstract class LoginRequestHandler<U extends IUser> {
 
 	protected LoginModel<U> loginModel;
 
-	public LoginResponse handle(LoginRequest request) {
-		this.loginRequest = request;
-		loginResponse = new LoginResponse();
-		createLoginModel();
-		authenticator = createAuthenticator();
-		handle0();
-		postRequestHandled();
-		return loginResponse;
-	}
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	protected abstract Authenticator createAuthenticator();
 
@@ -46,6 +38,16 @@ public abstract class LoginRequestHandler<U extends IUser> {
 		loginModel.loginRequest = loginRequest;
 		loginModel.loginBean = loginBean;
 		loginModel.loginResponse = loginResponse;
+	}
+
+	public LoginResponse handle(LoginRequest request) {
+		this.loginRequest = request;
+		loginResponse = new LoginResponse();
+		createLoginModel();
+		authenticator = createAuthenticator();
+		handle0();
+		postRequestHandled();
+		return loginResponse;
 	}
 
 	protected void handle0() {
@@ -110,8 +112,6 @@ public abstract class LoginRequestHandler<U extends IUser> {
 					loginResponse.getStates());
 		}
 	}
-
-	Logger logger = LoggerFactory.getLogger(getClass());
 
 	protected void processLogin() throws Exception {
 		authenticator.processValidLogin(loginResponse,

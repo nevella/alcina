@@ -62,6 +62,23 @@ public abstract class JAbstractMethod
 		}
 	}
 
+	void addModifierBits(int bits) {
+		modifierBits |= bits;
+	}
+
+	void addParameter(JParameter param) {
+		params = Lists.add(params, param);
+	}
+
+	void addThrows(JClassType type) {
+		thrownTypes = Lists.add(thrownTypes, type);
+	}
+
+	private void fetchRealParameterNames() {
+		realParameterNames = getEnclosingType().getOracle()
+				.getJavaSourceParser().getArguments(this);
+	}
+
 	@Override
 	public JParameter findParameter(String name) {
 		for (JParameter param : params) {
@@ -110,6 +127,10 @@ public abstract class JAbstractMethod
 	@Override
 	public abstract String getJsniSignature();
 
+	protected int getModifierBits() {
+		return modifierBits;
+	}
+
 	@Override
 	public String getName() {
 		return name;
@@ -133,6 +154,29 @@ public abstract class JAbstractMethod
 	@Override
 	public abstract String getReadableDeclaration();
 
+	// Called only by a JParameter, passing itself as a reference for lookup.
+	String getRealParameterName(JParameter parameter) {
+		if (realParameterNames == null) {
+			fetchRealParameterNames();
+		}
+		int n = params.size();
+		for (int i = 0; i < n; ++i) {
+			// Identity tests are ok since identity is durable within an oracle.
+			if (params.get(i) == parameter) {
+				String realParameterName;
+				if (realParameterNames == null) {
+					realParameterName = StringInterner.get().intern("arg" + i);
+				} else {
+					realParameterName = StringInterner.get()
+							.intern(realParameterNames[i]);
+				}
+				return realParameterName;
+			}
+		}
+		// TODO: report error if we are asked for an unknown JParameter?
+		return null;
+	}
+
 	@Override
 	public JClassType[] getThrows() {
 		return thrownTypes.toArray(TypeOracle.NO_JCLASSES);
@@ -141,6 +185,33 @@ public abstract class JAbstractMethod
 	@Override
 	public JTypeParameter[] getTypeParameters() {
 		return typeParams.toArray(new JTypeParameter[typeParams.size()]);
+	}
+
+	boolean hasParamTypes(JType[] paramTypes) {
+		if (params.size() != paramTypes.length) {
+			return false;
+		}
+		for (int i = 0; i < paramTypes.length; i++) {
+			JParameter candidate = params.get(i);
+			// Identity tests are ok since identity is durable within an oracle.
+			//
+			// nick - ah...maybe not
+			if (candidate.getType() != paramTypes[i]) {
+				boolean baseMatch = false;
+				if (candidate.getType() instanceof JTypeParameter
+						&& paramTypes[i] instanceof JTypeParameter) {
+					if (((JTypeParameter) candidate.getType())
+							.getBaseType() == ((JTypeParameter) paramTypes[i])
+									.getBaseType()) {
+						baseMatch = true;
+					}
+				}
+				if (!baseMatch) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	@Override
@@ -186,13 +257,8 @@ public abstract class JAbstractMethod
 		return isVarArgs;
 	}
 
-	private void fetchRealParameterNames() {
-		realParameterNames = getEnclosingType().getOracle()
-				.getJavaSourceParser().getArguments(this);
-	}
-
-	protected int getModifierBits() {
-		return modifierBits;
+	void setVarArgs() {
+		isVarArgs = true;
 	}
 
 	protected void toStringParamsAndThrows(StringBuilder sb) {
@@ -245,71 +311,5 @@ public abstract class JAbstractMethod
 			sb.append(typeParam.getQualifiedSourceName());
 		}
 		sb.append(">");
-	}
-
-	void addModifierBits(int bits) {
-		modifierBits |= bits;
-	}
-
-	void addParameter(JParameter param) {
-		params = Lists.add(params, param);
-	}
-
-	void addThrows(JClassType type) {
-		thrownTypes = Lists.add(thrownTypes, type);
-	}
-
-	// Called only by a JParameter, passing itself as a reference for lookup.
-	String getRealParameterName(JParameter parameter) {
-		if (realParameterNames == null) {
-			fetchRealParameterNames();
-		}
-		int n = params.size();
-		for (int i = 0; i < n; ++i) {
-			// Identity tests are ok since identity is durable within an oracle.
-			if (params.get(i) == parameter) {
-				String realParameterName;
-				if (realParameterNames == null) {
-					realParameterName = StringInterner.get().intern("arg" + i);
-				} else {
-					realParameterName = StringInterner.get()
-							.intern(realParameterNames[i]);
-				}
-				return realParameterName;
-			}
-		}
-		// TODO: report error if we are asked for an unknown JParameter?
-		return null;
-	}
-
-	boolean hasParamTypes(JType[] paramTypes) {
-		if (params.size() != paramTypes.length) {
-			return false;
-		}
-		for (int i = 0; i < paramTypes.length; i++) {
-			JParameter candidate = params.get(i);
-			// Identity tests are ok since identity is durable within an oracle.
-			//
-			// nick - ah...maybe not
-			if (candidate.getType() != paramTypes[i]) {
-				boolean baseMatch = false;
-				if (candidate.getType() instanceof JTypeParameter
-						&& paramTypes[i] instanceof JTypeParameter) {
-					if (((JTypeParameter) candidate.getType())
-							.getBaseType() == ((JTypeParameter) paramTypes[i])
-									.getBaseType()) {
-						baseMatch = true;
-					}
-				}
-				if (!baseMatch) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	void setVarArgs() {
-		isVarArgs = true;
 	}
 }

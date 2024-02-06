@@ -87,20 +87,6 @@ public class ReportUtils {
 		}
 	}
 
-	public static String twoPlaces(double d) {
-		String sign = d < 0 ? "-" : "";
-		d = Math.abs(d);
-		d = CommonUtils.roundNumeric(d, 2);
-		int decimal = (int) (d);
-		int fractional = (int) ((d * 100) % 100);
-		return Ax.format("%s%s.%s", sign, decimal,
-				CommonUtils.padTwo(fractional));
-	}
-
-	public static double twoPlacesDouble(double d) {
-		return CommonUtils.roundNumeric(d, 2);
-	}
-
 	private static String getValue(MultikeyMap values, Object row, int col,
 			List<String> columnNames, boolean stringKeyedColumns) {
 		Object key2 = stringKeyedColumns ? columnNames.get(col) : col;
@@ -127,5 +113,19 @@ public class ReportUtils {
 			}
 		}
 		return result;
+	}
+
+	public static String twoPlaces(double d) {
+		String sign = d < 0 ? "-" : "";
+		d = Math.abs(d);
+		d = CommonUtils.roundNumeric(d, 2);
+		int decimal = (int) (d);
+		int fractional = (int) ((d * 100) % 100);
+		return Ax.format("%s%s.%s", sign, decimal,
+				CommonUtils.padTwo(fractional));
+	}
+
+	public static double twoPlacesDouble(double d) {
+		return CommonUtils.roundNumeric(d, 2);
 	}
 }

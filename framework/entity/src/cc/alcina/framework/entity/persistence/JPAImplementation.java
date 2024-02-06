@@ -42,6 +42,11 @@ public interface JPAImplementation {
 
 	public void afterSpecificSetId(Object fromBefore) throws Exception;
 
+	boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2);
+
+	Object beforeSpecificSetId(EntityManager entityManager, Object toPersist)
+			throws Exception;
+
 	/**
 	 * return false if no optimisation
 	 */
@@ -50,9 +55,15 @@ public interface JPAImplementation {
 
 	public void cache(Query query);
 
+	Set createPersistentSetProjection(GraphProjectionContext context);
+
+	String entityDebugString(Object entity);
+
 	public abstract InstantiateImplCallback getClassrefInstantiator();
 
 	public File getConfigDirectory();
+
+	DomainStoreJoinHandler getDomainStoreJoinHandler(PropertyDescriptor pd);
 
 	public <T> T getInstantiatedObject(T object);
 
@@ -60,29 +71,18 @@ public interface JPAImplementation {
 			InstantiateImplCallback callback, DetachedEntityCache cache,
 			boolean useDomainStore);
 
+	Set<EntityLocator> getSessionEntityLocators(EntityManager entityManager);
+
 	public void interpretException(DomainTransformException exception);
 
 	public boolean isCacheDisabled();
+
+	boolean isLazyInitialisationException(Exception e);
+
+	boolean isProxy(Entity e);
 
 	public void registerBatchExceptionConsumer(
 			BiConsumer<RuntimeException, PreparedStatement> exceptionConsumer);
 
 	public void setCacheDisabled(boolean cacheDisabled);
-
-	boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2);
-
-	Object beforeSpecificSetId(EntityManager entityManager, Object toPersist)
-			throws Exception;
-
-	Set createPersistentSetProjection(GraphProjectionContext context);
-
-	String entityDebugString(Object entity);
-
-	DomainStoreJoinHandler getDomainStoreJoinHandler(PropertyDescriptor pd);
-
-	Set<EntityLocator> getSessionEntityLocators(EntityManager entityManager);
-
-	boolean isLazyInitialisationException(Exception e);
-
-	boolean isProxy(Entity e);
 }

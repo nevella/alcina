@@ -143,12 +143,12 @@ public abstract class NodeLocalNull implements ClientDomNode {
 		return null;
 	}
 
+	void setParentNode(NodeLocalNull local) {
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("%s: null::remote-placeholder",
 				getClass().getSimpleName());
-	}
-
-	void setParentNode(NodeLocalNull local) {
 	}
 }

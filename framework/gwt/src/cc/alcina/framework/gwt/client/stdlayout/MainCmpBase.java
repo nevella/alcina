@@ -56,6 +56,12 @@ public abstract class MainCmpBase extends Composite
 		initWidget(tabPanel);
 	}
 
+	protected abstract void afterTabSelect(int tabIndex);
+
+	protected MainTabPanel createTabPanel() {
+		return new MainTabPanel(buttons);
+	}
+
 	public MainTabPanel getTabPanel() {
 		return this.tabPanel;
 	}
@@ -64,8 +70,22 @@ public abstract class MainCmpBase extends Composite
 		return this.tabs;
 	}
 
+	protected abstract void initButtons();
+
+	@Override
+	protected void onAttach() {
+		this.historyHandlerRegistration = History.addValueChangeHandler(this);
+		super.onAttach();
+	}
+
 	public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
 		// no cancel
+	}
+
+	@Override
+	protected void onDetach() {
+		historyHandlerRegistration.removeHandler();
+		super.onDetach();
 	}
 
 	public void onSelection(SelectionEvent<Integer> event) {
@@ -90,25 +110,5 @@ public abstract class MainCmpBase extends Composite
 			}
 		}
 		return false;
-	}
-
-	protected abstract void afterTabSelect(int tabIndex);
-
-	protected MainTabPanel createTabPanel() {
-		return new MainTabPanel(buttons);
-	}
-
-	protected abstract void initButtons();
-
-	@Override
-	protected void onAttach() {
-		this.historyHandlerRegistration = History.addValueChangeHandler(this);
-		super.onAttach();
-	}
-
-	@Override
-	protected void onDetach() {
-		historyHandlerRegistration.removeHandler();
-		super.onDetach();
 	}
 }

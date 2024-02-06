@@ -55,6 +55,16 @@ public class CollectionDataProvider implements SortableDataProvider {
 		return result;
 	}
 
+	protected Comparator getComparator(String propertyName, ArrayList keys) {
+		if (!keys.isEmpty()) {
+			Object key = keys.get(0);
+			if (key instanceof String) {
+				return String.CASE_INSENSITIVE_ORDER;
+			}
+		}
+		return null;
+	}
+
 	public int getPageSize() {
 		return pageSize;
 	}
@@ -142,15 +152,5 @@ public class CollectionDataProvider implements SortableDataProvider {
 		if (table != null) {
 			init(table);
 		}
-	}
-
-	protected Comparator getComparator(String propertyName, ArrayList keys) {
-		if (!keys.isEmpty()) {
-			Object key = keys.get(0);
-			if (key instanceof String) {
-				return String.CASE_INSENSITIVE_ORDER;
-			}
-		}
-		return null;
 	}
 }

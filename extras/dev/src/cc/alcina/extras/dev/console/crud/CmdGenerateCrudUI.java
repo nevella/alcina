@@ -68,15 +68,6 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 		return "hyup";
 	}
 
-	@XmlRootElement
-	public static class Spec {
-		public List<String> referredObjectPaths = new ArrayList<>();
-
-		public String entityClassPath;
-
-		public String token;
-	}
-
 	enum GeneratedUnitType {
 		Place, Referred_object_handler, BaseCriterion, SearchDefinition,
 		SearchOrders, TextCriterionPack, Searchables, Referred_object;
@@ -134,6 +125,15 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 				throw new UnsupportedOperationException();
 			}
 		}
+	}
+
+	@XmlRootElement
+	public static class Spec {
+		public List<String> referredObjectPaths = new ArrayList<>();
+
+		public String entityClassPath;
+
+		public String token;
 	}
 
 	class TemplateGenerator {

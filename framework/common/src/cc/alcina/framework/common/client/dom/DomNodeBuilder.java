@@ -39,6 +39,12 @@ public class DomNodeBuilder {
 		return appendTo(relativeTo);
 	}
 
+	private DomNode appendTo(DomNode appendTo) {
+		DomNode node = build();
+		appendTo.node.appendChild(node.node);
+		return node;
+	}
+
 	public DomNodeBuilder attr(String key, String value) {
 		if (Ax.notBlank(value)) {
 			attrs(key, value);
@@ -105,6 +111,10 @@ public class DomNodeBuilder {
 		return this;
 	}
 
+	private DomDocument doc() {
+		return relativeTo.document;
+	}
+
 	public DomNode getRelativeTo() {
 		return this.relativeTo;
 	}
@@ -119,6 +129,13 @@ public class DomNodeBuilder {
 		DomNode node = build();
 		relativeTo.node.insertBefore(node.node,
 				relativeTo.node.getFirstChild());
+		return node;
+	}
+
+	private DomNode insertBefore(DomNode insertBefore) {
+		DomNode node = build();
+		insertBefore.node.getParentNode().insertBefore(node.node,
+				insertBefore.node);
 		return node;
 	}
 
@@ -185,23 +202,6 @@ public class DomNodeBuilder {
 		DomNode node = build();
 		node.children.adoptFrom(relativeTo);
 		relativeTo.children.append(node);
-		return node;
-	}
-
-	private DomNode appendTo(DomNode appendTo) {
-		DomNode node = build();
-		appendTo.node.appendChild(node.node);
-		return node;
-	}
-
-	private DomDocument doc() {
-		return relativeTo.document;
-	}
-
-	private DomNode insertBefore(DomNode insertBefore) {
-		DomNode node = build();
-		insertBefore.node.getParentNode().insertBefore(node.node,
-				insertBefore.node);
 		return node;
 	}
 }

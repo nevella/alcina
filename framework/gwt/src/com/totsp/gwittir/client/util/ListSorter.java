@@ -33,10 +33,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  *         Cooper</a>
  */
 public class ListSorter {
-	/** Creates a new instance of ListSorter */
-	private ListSorter() {
-	}
-
 	/**
 	 * Performs a selection sort on a List of Introspectables
 	 */
@@ -67,5 +63,9 @@ public class ListSorter {
 				}
 			}
 		}
+	}
+
+	/** Creates a new instance of ListSorter */
+	private ListSorter() {
 	}
 }

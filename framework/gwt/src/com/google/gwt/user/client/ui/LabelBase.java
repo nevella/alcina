@@ -48,14 +48,6 @@ public class LabelBase<T> extends Widget implements HasWordWrap,
 	 */
 	private HorizontalAlignmentConstant horzAlign;
 
-	private LabelBase(Element element, boolean isElementInline) {
-		assert (isElementInline ? "span" : "div")
-				.equalsIgnoreCase(element.getTagName());
-		setElement(element);
-		directionalTextHelper = new DirectionalTextHelper(getElement(),
-				isElementInline);
-	}
-
 	protected LabelBase(boolean inline) {
 		this(inline ? Document.get().createSpanElement()
 				: Document.get().createDivElement(), inline);
@@ -63,6 +55,14 @@ public class LabelBase<T> extends Widget implements HasWordWrap,
 
 	protected LabelBase(Element element) {
 		this(element, "span".equalsIgnoreCase(element.getTagName()));
+	}
+
+	private LabelBase(Element element, boolean isElementInline) {
+		assert (isElementInline ? "span" : "div")
+				.equalsIgnoreCase(element.getTagName());
+		setElement(element);
+		directionalTextHelper = new DirectionalTextHelper(getElement(),
+				isElementInline);
 	}
 
 	@Override

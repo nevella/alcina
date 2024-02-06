@@ -95,17 +95,80 @@ public class LocalDom implements ContextFrame {
 
 	private static Map<String, Supplier<Element>> elementCreators;
 
+	static LocalDomCollections collections() {
+		return collections;
+	}
+
+	static void consoleLog(String message) {
+		if (LocalDomDebugImpl.debugAll) {
+			consoleLog0(message);
+		}
+	}
+
+	private static native void consoleLog(String message, boolean error) /*-{
+    if (error) {
+      console.error(message);
+    } else {
+      console.log(message);
+    }
+	}-*/;;
+
+	static void consoleLog(Supplier<String> messageSupplier) {
+		if (LocalDomDebugImpl.debugAll) {
+			consoleLog0(messageSupplier.get());
+		}
+	}
+
+	native static void consoleLog0(String message) /*-{
+    console.log(message);
+
+	}-*/;
+
+	static Element createElement(String tagName) {
+		return get().createElement0(tagName);
+	}
+
 	public static void debug(ElementJso elementJso) {
 		get().debug0(elementJso);
+	}
+
+	synchronized static String declarativeCssName(String key) {
+		return declarativeCssNames.computeIfAbsent(key, k -> {
+			String lcKey = k.toLowerCase();
+			if (!lcKey.equals(k)) {
+				StringBuilder sb = new StringBuilder();
+				for (int idx = 0; idx < k.length(); idx++) {
+					char c = k.charAt(idx);
+					if (c >= 'A' && c <= 'Z') {
+						sb.append("-");
+						sb.append(String.valueOf(c).toLowerCase());
+					} else {
+						sb.append(c);
+					}
+				}
+				return sb.toString();
+			} else {
+				return k;
+			}
+		});
 	}
 
 	public static void ensureRemote(Node node) {
 		get().ensureRemote0(node);
 	}
 
+	static void ensureRemoteDocument() {
+		nodeFor(Document.get().jsoRemote().getDocumentElement0());
+	}
+
+	static <C extends ClientDomNode> C
+			ensureRemoteNodeMaybePendingSync(Node node) {
+		return (C) get().ensureRemoteNodeMaybePendingSync0(node);
+	}
+
 	public static void eventMod(NativeEvent evt, String eventName) {
 		get().eventMod0(evt, eventName);
-	};
+	}
 
 	/**
 	 * Flush any pending sync (sync local subtree to remote) jobs and mark the
@@ -115,12 +178,24 @@ public class LocalDom implements ContextFrame {
 		get().flush0();
 	}
 
+	public static void flushLocalMutations() {
+		get().localMutations.fireMutations();
+	}
+
+	private static LocalDom get() {
+		return Document.get().localDom;
+	}
+
 	public static LocalMutations getLocalMutations() {
 		return get().localMutations;
 	}
 
 	public static RemoteMutations getRemoteMutations() {
 		return get().remoteMutations;
+	}
+
+	static boolean hasNode(JavaScriptObject remote) {
+		return get().remoteLookup.containsKey(remote);
 	}
 
 	public static void initalize() {
@@ -142,131 +217,6 @@ public class LocalDom implements ContextFrame {
 
 	public static void initalizeDetachedSync() {
 		get().initalizeDetachedSync0();
-	}
-
-	public static void invokeExternal(Runnable runnable) {
-		get().invokeExternal0(runnable);
-	}
-
-	public static boolean isPending(NodeJso nodeJso) {
-		return get().isPending0(nodeJso);
-	}
-
-	public static boolean isStopPropagation(NativeEvent evt) {
-		return get().isStopPropagation0(evt);
-	}
-
-	public static void log(Level level, String template, Object... args) {
-		boolean error = level.intValue() > Level.INFO.intValue();
-		if (!error && !get().loggingConfiguration.logEvents) {
-			return;
-		}
-		String message = Ax.format(template, args);
-		if (error) {
-			Ax.err(message);
-		} else {
-			Ax.out(message);
-		}
-		consoleLog(message, error);
-	}
-
-	public static <T extends Node> T nodeFor(JavaScriptObject jso) {
-		return nodeFor((NodeJso) jso);
-	}
-
-	public static <T extends Node> T nodeFor(NodeJso remote) {
-		return (T) get().nodeFor0(remote);
-	}
-
-	public static void notifyLocalMutations(Runnable runnable) {
-		LocalMutations localMutations = get().localMutations;
-		if (localMutations == null) {
-			return;
-		}
-		localMutations.notify(runnable);
-	}
-
-	public static void flushLocalMutations() {
-		get().localMutations.fireMutations();
-	}
-
-	public static void onRelatedException(RuntimeException e) {
-		if (logParseAndMutationIssues) {
-			throw e;
-		} else {
-			// devmode only
-			Ax.simpleExceptionOut(e);
-		}
-	}
-
-	public static PathRefRepresentations pathRefRepresentations() {
-		return get().pathRefRepresentations;
-	}
-
-	public static void register(Document doc) {
-		if (GWT.isClient()) {
-			get().initalizeRemoteSync(doc);
-			doc.getDocumentElement().setAttached(true);
-		}
-	}
-
-	public static void
-			registerContextProvider(LocalDomContextProvider contextProvider) {
-		LocalDom.contextProvider = contextProvider;
-	}
-
-	public static Node resolveExternal(NodeJso nodeJso) {
-		return get().resolveExternal0(nodeJso);
-	}
-
-	public static void setDisableRemoteWrite(boolean disableRemoteWrite) {
-		LocalDom.disableRemoteWrite = disableRemoteWrite;
-	}
-
-	public static void setSyncing(boolean syncing) {
-		get().syncing = syncing;
-	}
-
-	public static void syncToRemote(Element element) {
-		get().parseAndMarkSynced(element.jsoRemote(),
-				element.jsoRemote().getOuterHtml(), element);
-	}
-
-	public static void triggerLocalDomException() {
-		topicReportException.publish(new Exception("test exception trigger"));
-	}
-
-	public static String validateHtml(String html) {
-		return get().validateHtml0(html);
-	}
-
-	public static void verifyDomEquivalence(boolean fromUserGesture) {
-		boolean logEvents = get().loggingConfiguration.logEvents;
-		try {
-			if (fromUserGesture) {
-				get().loggingConfiguration.logEvents = true;
-			}
-			get().remoteMutations.verifyDomEquivalence();
-		} catch (Exception e) {
-			e.printStackTrace();
-			topicReportException.publish(e);
-		} finally {
-			if (fromUserGesture) {
-				get().loggingConfiguration.logEvents = logEvents;
-			}
-		}
-	}
-
-	private static native void consoleLog(String message, boolean error) /*-{
-    if (error) {
-      console.error(message);
-    } else {
-      console.log(message);
-    }
-	}-*/;
-
-	private static LocalDom get() {
-		return Document.get().localDom;
 	}
 
 	private static void initElementCreators() {
@@ -341,71 +291,46 @@ public class LocalDom implements ContextFrame {
 		elementCreators.put(LegendElement.TAG, () -> new LegendElement());
 	}
 
-	static LocalDomCollections collections() {
-		return collections;
-	}
-
-	static void consoleLog(String message) {
-		if (LocalDomDebugImpl.debugAll) {
-			consoleLog0(message);
-		}
-	}
-
-	static void consoleLog(Supplier<String> messageSupplier) {
-		if (LocalDomDebugImpl.debugAll) {
-			consoleLog0(messageSupplier.get());
-		}
-	}
-
-	native static void consoleLog0(String message) /*-{
-    console.log(message);
-
-	}-*/;
-
-	static Element createElement(String tagName) {
-		return get().createElement0(tagName);
-	}
-
-	synchronized static String declarativeCssName(String key) {
-		return declarativeCssNames.computeIfAbsent(key, k -> {
-			String lcKey = k.toLowerCase();
-			if (!lcKey.equals(k)) {
-				StringBuilder sb = new StringBuilder();
-				for (int idx = 0; idx < k.length(); idx++) {
-					char c = k.charAt(idx);
-					if (c >= 'A' && c <= 'Z') {
-						sb.append("-");
-						sb.append(String.valueOf(c).toLowerCase());
-					} else {
-						sb.append(c);
-					}
-				}
-				return sb.toString();
-			} else {
-				return k;
-			}
-		});
-	}
-
-	static void ensureRemoteDocument() {
-		nodeFor(Document.get().jsoRemote().getDocumentElement0());
-	}
-
-	static <C extends ClientDomNode> C
-			ensureRemoteNodeMaybePendingSync(Node node) {
-		return (C) get().ensureRemoteNodeMaybePendingSync0(node);
-	}
-
-	static boolean hasNode(JavaScriptObject remote) {
-		return get().remoteLookup.containsKey(remote);
+	public static void invokeExternal(Runnable runnable) {
+		get().invokeExternal0(runnable);
 	}
 
 	static boolean isApplyToRemote() {
 		return get().isApplyToRemote0();
 	}
 
+	public static boolean isPending(NodeJso nodeJso) {
+		return get().isPending0(nodeJso);
+	}
+
+	public static boolean isStopPropagation(NativeEvent evt) {
+		return get().isStopPropagation0(evt);
+	}
+
 	static boolean isUseRemoteDom() {
 		return GWT.isClient();
+	}
+
+	public static void log(Level level, String template, Object... args) {
+		boolean error = level.intValue() > Level.INFO.intValue();
+		if (!error && !get().loggingConfiguration.logEvents) {
+			return;
+		}
+		String message = Ax.format(template, args);
+		if (error) {
+			Ax.err(message);
+		} else {
+			Ax.out(message);
+		}
+		consoleLog(message, error);
+	}
+
+	public static <T extends Node> T nodeFor(JavaScriptObject jso) {
+		return nodeFor((NodeJso) jso);
+	}
+
+	public static <T extends Node> T nodeFor(NodeJso remote) {
+		return (T) get().nodeFor0(remote);
 	}
 
 	/**
@@ -416,14 +341,89 @@ public class LocalDom implements ContextFrame {
 		return get().remoteLookup.get(nodeJso);
 	}
 
+	public static void notifyLocalMutations(Runnable runnable) {
+		LocalMutations localMutations = get().localMutations;
+		if (localMutations == null) {
+			return;
+		}
+		localMutations.notify(runnable);
+	}
+
+	public static void onRelatedException(RuntimeException e) {
+		if (logParseAndMutationIssues) {
+			throw e;
+		} else {
+			// devmode only
+			Ax.simpleExceptionOut(e);
+		}
+	}
+
+	public static PathRefRepresentations pathRefRepresentations() {
+		return get().pathRefRepresentations;
+	}
+
 	static void putRemote(Element element, ElementJso remote) {
 		get().putRemote0(element, remote);
+	}
+
+	public static void register(Document doc) {
+		if (GWT.isClient()) {
+			get().initalizeRemoteSync(doc);
+			doc.getDocumentElement().setAttached(true);
+		}
+	}
+
+	public static void
+			registerContextProvider(LocalDomContextProvider contextProvider) {
+		LocalDom.contextProvider = contextProvider;
+	}
+
+	public static Node resolveExternal(NodeJso nodeJso) {
+		return get().resolveExternal0(nodeJso);
 	}
 
 	static String safeParseByBrowser(String html) {
 		ElementJso remote = Document.get().jsoRemote()
 				.generateFromOuterHtml(html);
 		return remote.buildOuterHtml();
+	}
+
+	public static void setDisableRemoteWrite(boolean disableRemoteWrite) {
+		LocalDom.disableRemoteWrite = disableRemoteWrite;
+	}
+
+	public static void setSyncing(boolean syncing) {
+		get().syncing = syncing;
+	}
+
+	public static void syncToRemote(Element element) {
+		get().parseAndMarkSynced(element.jsoRemote(),
+				element.jsoRemote().getOuterHtml(), element);
+	}
+
+	public static void triggerLocalDomException() {
+		topicReportException.publish(new Exception("test exception trigger"));
+	}
+
+	public static String validateHtml(String html) {
+		return get().validateHtml0(html);
+	}
+
+	public static void verifyDomEquivalence(boolean fromUserGesture) {
+		boolean logEvents = get().loggingConfiguration.logEvents;
+		try {
+			if (fromUserGesture) {
+				get().loggingConfiguration.logEvents = true;
+			}
+			get().remoteMutations.verifyDomEquivalence();
+		} catch (Exception e) {
+			e.printStackTrace();
+			topicReportException.publish(e);
+		} finally {
+			if (fromUserGesture) {
+				get().loggingConfiguration.logEvents = logEvents;
+			}
+		}
 	}
 
 	/**
@@ -480,34 +480,53 @@ public class LocalDom implements ContextFrame {
 		topicReportException.add(this::handleReportedException);
 	}
 
-	public void ensurePendingSynced(Node node) {
-		Preconditions.checkState(node.linkedToRemote());
-		Element element = (Element) node;
-		if (element.isPendingSync()) {
-			ElementJso remote = (ElementJso) node.remote();
-			ClientDomElement local = node.local();
-			localToRemote(element, remote, local);
-		}
+	void applyContiguousTextNodesToLocal(ContiguousTextNodes contiguous) {
+		/*
+		 * will be either text or comment, and will contain the full text
+		 * content of [contiguous.previous,contiguousnode] + possibly content
+		 * after [contiguous.node]
+		 */
+		NodeIndex previousIndex = NodeIndex.forNode(contiguous.previous);
+		Node previousNode = previousIndex.getNode();
+		Node parent = previousNode.getParentNode();
+		NodeLocal contiguousLocal = null;
+		Node created = createAndInsertAfter(parent, previousNode,
+				contiguous.node.getNodeType(), contiguous.node.getNodeName(),
+				contiguous.node.getNodeValue(), contiguous.node);
+		String previousLocalText = previousNode.getTextContent();
+		String remotePreviousTextContent = contiguous.previous.getNodeValue();
+		previousNode.setTextContent(remotePreviousTextContent);
+		created.setTextContent(previousLocalText
+				.substring(remotePreviousTextContent.length()));
 	}
 
-	public Node resolveExternal0(NodeJso nodeJso) {
-		switch (nodeJso.getNodeType()) {
-		case Node.ELEMENT_NODE:
-			ElementJso elementJso = (ElementJso) nodeJso;
-			Element element = Document.get().local()
-					.createElement(elementJso.getTagNameRemote());
-			element.putRemote(nodeJso, false);
-			syncToRemote(element);
-			linkRemote(elementJso, element);
-			return element;
+	Node createAndInsertAfter(Node parentNode, Node previousSibling,
+			short nodeType, String nodeName, String nodeValue,
+			NodeJso remoteNode) {
+		ElementLocal parent = parentNode.local();
+		Node newChild = null;
+		switch (nodeType) {
+		case Node.COMMENT_NODE:
+			newChild = parent.ownerDocument.createComment(nodeValue);
+			break;
 		case Node.TEXT_NODE:
-			Text textNode = Document.get()
-					.createTextNode(nodeJso.getNodeValue());
-			textNode.putRemote(nodeJso, true);
-			return textNode;
+			newChild = parent.ownerDocument.createTextNode(nodeValue);
+			break;
+		case Node.ELEMENT_NODE:
+			newChild = parent.ownerDocument.createElement(nodeName);
+			break;
 		default:
 			throw new UnsupportedOperationException();
 		}
+		// FIXME - remoteNode
+		if (remoteNode != null) {
+			newChild.putRemote(remoteNode, false);
+		}
+		parentNode.insertAfter(newChild, previousSibling);
+		if (remoteNode != null) {
+			linkRemote(remoteNode, newChild);
+		}
+		return newChild;
 	}
 
 	private Element createElement0(String tagName) {
@@ -527,6 +546,16 @@ public class LocalDom implements ContextFrame {
 		if (flushCommand == null && GWT.isClient()) {
 			flushCommand = () -> flush();
 			Scheduler.get().scheduleFinally(flushCommand);
+		}
+	}
+
+	public void ensurePendingSynced(Node node) {
+		Preconditions.checkState(node.linkedToRemote());
+		Element element = (Element) node;
+		if (element.isPendingSync()) {
+			ElementJso remote = (ElementJso) node.remote();
+			ClientDomElement local = node.local();
+			localToRemote(element, remote, local);
 		}
 	}
 
@@ -629,6 +658,72 @@ public class LocalDom implements ContextFrame {
 		eventMods.get(evt).add(eventName);
 	}
 
+	void flush0() {
+		flush0(false);
+	}
+
+	void flush0(boolean force) {
+		if (syncing) {
+			return;
+		}
+		if (flushCommand == null && !force) {
+			return;
+		}
+		flushCommand = null;
+		try {
+			syncing = true;
+			if (syncEventIdDirty) {
+				syncEventId++;
+				syncEventIdDirty = false;
+			}
+			new ArrayList<>(pendingSync).stream()
+					.forEach(this::ensurePendingSynced);
+			if (syncEventIdDirty) {
+				syncEventId++;
+			}
+		} catch (RuntimeException re) {
+			topicReportException.publish(re);
+			throw re;
+		} finally {
+			syncEventIdDirty = false;
+			syncing = false;
+		}
+		/*
+		 * REVISIT - there are a few considerations here:
+		 * 
+		 * The more general question is
+		 * "when to group events, and flush their consequents, and when to flush one-by-one"
+		 * . The latter is ... generally better, but does mean local/remote are
+		 * out of sync.
+		 * 
+		 * That said, flush() is pretty rare (pre-tree sync is the non-obvious
+		 * time it's called), so - what's below is an ok first approximation.
+		 */
+		if (get().applyToRemote) {
+			localMutations.fireMutations();
+		} else {
+			localMutations.notify(() -> {
+				// noop, just trigger a finally flush of mutations
+			});
+		}
+	}
+
+	void handleReportedException(Exception exception) {
+		String message = null;
+		if (loggingConfiguration.logHistoryOnEception) {
+			try {
+				message = remoteMutations.serializeHistory();
+			} catch (Exception serializeException) {
+				message = CommonUtils
+						.toSimpleExceptionMessage(serializeException);
+			}
+		}
+		log(Level.WARNING, "local dom :: %s",
+				CommonUtils.toSimpleExceptionMessage(exception));
+		topicPublishException
+				.publish(new LocalDomException(exception, message));
+	}
+
 	private void initalizeDetachedSync0() {
 		remoteMutations = new RemoteMutations(new MutationsAccess(),
 				new RemoteMutations.LoggingConfiguration());
@@ -666,6 +761,10 @@ public class LocalDom implements ContextFrame {
 
 	private boolean isApplyToRemote0() {
 		return applyToRemote;
+	}
+
+	boolean isPathref() {
+		return Document.get().remoteType == RemoteType.PATHREF;
 	}
 
 	private boolean isPending0(NodeJso nodeJso) {
@@ -968,6 +1067,26 @@ public class LocalDom implements ContextFrame {
 		Ax.out("Reparse successful");
 	}
 
+	public Node resolveExternal0(NodeJso nodeJso) {
+		switch (nodeJso.getNodeType()) {
+		case Node.ELEMENT_NODE:
+			ElementJso elementJso = (ElementJso) nodeJso;
+			Element element = Document.get().local()
+					.createElement(elementJso.getTagNameRemote());
+			element.putRemote(nodeJso, false);
+			syncToRemote(element);
+			linkRemote(elementJso, element);
+			return element;
+		case Node.TEXT_NODE:
+			Text textNode = Document.get()
+					.createTextNode(nodeJso.getNodeValue());
+			textNode.putRemote(nodeJso, true);
+			return textNode;
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	private boolean shouldTryReparseFromRemote(ElementJso elem, Element hasNode,
 			ElementJsoIndex remoteIndex) {
 		if (remoteIndex.hasRemoteDefined()) {
@@ -1018,125 +1137,6 @@ public class LocalDom implements ContextFrame {
 	private void wasSynced0(Element elem) {
 		elem.local().walk(nl -> nl.node().onSync(syncEventId));
 		syncEventIdDirty = true;
-	}
-
-	void applyContiguousTextNodesToLocal(ContiguousTextNodes contiguous) {
-		/*
-		 * will be either text or comment, and will contain the full text
-		 * content of [contiguous.previous,contiguousnode] + possibly content
-		 * after [contiguous.node]
-		 */
-		NodeIndex previousIndex = NodeIndex.forNode(contiguous.previous);
-		Node previousNode = previousIndex.getNode();
-		Node parent = previousNode.getParentNode();
-		NodeLocal contiguousLocal = null;
-		Node created = createAndInsertAfter(parent, previousNode,
-				contiguous.node.getNodeType(), contiguous.node.getNodeName(),
-				contiguous.node.getNodeValue(), contiguous.node);
-		String previousLocalText = previousNode.getTextContent();
-		String remotePreviousTextContent = contiguous.previous.getNodeValue();
-		previousNode.setTextContent(remotePreviousTextContent);
-		created.setTextContent(previousLocalText
-				.substring(remotePreviousTextContent.length()));
-	}
-
-	Node createAndInsertAfter(Node parentNode, Node previousSibling,
-			short nodeType, String nodeName, String nodeValue,
-			NodeJso remoteNode) {
-		ElementLocal parent = parentNode.local();
-		Node newChild = null;
-		switch (nodeType) {
-		case Node.COMMENT_NODE:
-			newChild = parent.ownerDocument.createComment(nodeValue);
-			break;
-		case Node.TEXT_NODE:
-			newChild = parent.ownerDocument.createTextNode(nodeValue);
-			break;
-		case Node.ELEMENT_NODE:
-			newChild = parent.ownerDocument.createElement(nodeName);
-			break;
-		default:
-			throw new UnsupportedOperationException();
-		}
-		// FIXME - remoteNode
-		if (remoteNode != null) {
-			newChild.putRemote(remoteNode, false);
-		}
-		parentNode.insertAfter(newChild, previousSibling);
-		if (remoteNode != null) {
-			linkRemote(remoteNode, newChild);
-		}
-		return newChild;
-	}
-
-	void flush0() {
-		flush0(false);
-	}
-
-	void flush0(boolean force) {
-		if (syncing) {
-			return;
-		}
-		if (flushCommand == null && !force) {
-			return;
-		}
-		flushCommand = null;
-		try {
-			syncing = true;
-			if (syncEventIdDirty) {
-				syncEventId++;
-				syncEventIdDirty = false;
-			}
-			new ArrayList<>(pendingSync).stream()
-					.forEach(this::ensurePendingSynced);
-			if (syncEventIdDirty) {
-				syncEventId++;
-			}
-		} catch (RuntimeException re) {
-			topicReportException.publish(re);
-			throw re;
-		} finally {
-			syncEventIdDirty = false;
-			syncing = false;
-		}
-		/*
-		 * REVISIT - there are a few considerations here:
-		 * 
-		 * The more general question is
-		 * "when to group events, and flush their consequents, and when to flush one-by-one"
-		 * . The latter is ... generally better, but does mean local/remote are
-		 * out of sync.
-		 * 
-		 * That said, flush() is pretty rare (pre-tree sync is the non-obvious
-		 * time it's called), so - what's below is an ok first approximation.
-		 */
-		if (get().applyToRemote) {
-			localMutations.fireMutations();
-		} else {
-			localMutations.notify(() -> {
-				// noop, just trigger a finally flush of mutations
-			});
-		}
-	}
-
-	void handleReportedException(Exception exception) {
-		String message = null;
-		if (loggingConfiguration.logHistoryOnEception) {
-			try {
-				message = remoteMutations.serializeHistory();
-			} catch (Exception serializeException) {
-				message = CommonUtils
-						.toSimpleExceptionMessage(serializeException);
-			}
-		}
-		log(Level.WARNING, "local dom :: %s",
-				CommonUtils.toSimpleExceptionMessage(exception));
-		topicPublishException
-				.publish(new LocalDomException(exception, message));
-	}
-
-	boolean isPathref() {
-		return Document.get().remoteType == RemoteType.PATHREF;
 	}
 
 	public class BrowserBehaviour {

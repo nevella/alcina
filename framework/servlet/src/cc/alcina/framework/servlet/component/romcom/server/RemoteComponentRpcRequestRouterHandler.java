@@ -44,15 +44,15 @@ public class RemoteComponentRpcRequestRouterHandler extends AbstractHandler {
 	public static class RemoteInvocationServlet_RemoteComponent
 			extends RemoteInvocationServlet {
 		@Override
-		public void doPost(HttpServletRequest req, HttpServletResponse res)
-				throws ServletException, IOException {
-			super.doPost(req, res);
-		}
-
-		@Override
 		protected void customiseContextBeforePayloadWrite() {
 			RemoteInvocationServlet_RemoteComponent_Customiser.get()
 					.customiseContextBeforePayloadWrite();
+		}
+
+		@Override
+		public void doPost(HttpServletRequest req, HttpServletResponse res)
+				throws ServletException, IOException {
+			super.doPost(req, res);
 		}
 
 		@Override

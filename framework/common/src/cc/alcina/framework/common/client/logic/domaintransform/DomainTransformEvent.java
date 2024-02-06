@@ -107,6 +107,14 @@ public class DomainTransformEvent
 		return CommonUtils.compareLongs(getEventId(), o.getEventId());
 	}
 
+	private void copyValueRefs(DomainTransformEvent result) {
+		result.valueClass = valueClass;
+		result.valueClassName = valueClassName;
+		result.valueClassRef = valueClassRef;
+		result.valueId = valueId;
+		result.valueLocalId = valueLocalId;
+	}
+
 	public boolean equivalentTo(DomainTransformEvent o) {
 		return o != null && objectId == o.objectId
 				&& (objectId != 0 || objectLocalId == o.objectLocalId)
@@ -583,13 +591,5 @@ public class DomainTransformEvent
 
 	public EntityLocator toValueLocator() {
 		return EntityLocator.valueLocator(this);
-	}
-
-	private void copyValueRefs(DomainTransformEvent result) {
-		result.valueClass = valueClass;
-		result.valueClassName = valueClassName;
-		result.valueClassRef = valueClassRef;
-		result.valueId = valueId;
-		result.valueLocalId = valueLocalId;
 	}
 }

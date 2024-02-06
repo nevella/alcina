@@ -39,10 +39,10 @@ public abstract class VersionableEntity<T extends VersionableEntity>
 
 	private Date creationDate;
 
-	public VersionableEntity(boolean exDomain) {
+	protected VersionableEntity() {
 	}
 
-	protected VersionableEntity() {
+	public VersionableEntity(boolean exDomain) {
 	}
 
 	@Override

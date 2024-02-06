@@ -34,8 +34,8 @@ public class DefaultKeyAnalyzer<K extends Key<K>> extends AbstractKeyAnalyzer<K>
 	}
 
 	@Override
-	public int lengthInBits(K key) {
-		return key.lengthInBits();
+	public int bitIndex(K key, K otherKey) {
+		return key.bitIndex(otherKey);
 	}
 
 	@Override
@@ -44,12 +44,12 @@ public class DefaultKeyAnalyzer<K extends Key<K>> extends AbstractKeyAnalyzer<K>
 	}
 
 	@Override
-	public int bitIndex(K key, K otherKey) {
-		return key.bitIndex(otherKey);
+	public boolean isPrefix(K key, K prefix) {
+		return key.isPrefixedBy(prefix);
 	}
 
 	@Override
-	public boolean isPrefix(K key, K prefix) {
-		return key.isPrefixedBy(prefix);
+	public int lengthInBits(K key) {
+		return key.lengthInBits();
 	}
 }

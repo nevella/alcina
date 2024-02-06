@@ -41,6 +41,57 @@ public class UIRendererClient extends UIRenderer
 	private StepPopupView stepPopupView;
 
 	@Override
+	protected void afterStepListenerAction() {
+		WidgetUtils.squelchCurrentEvent();
+	}
+
+	@Override
+	protected void clearPopups(int delay) {
+		if (delay != 0) {
+			new Timer() {
+				@Override
+				public void run() {
+					clearPopups(0);
+				}
+			}.schedule(delay);
+			return;
+		}
+		for (DecoratedRelativePopupPanel popupPanel : popups) {
+			StepPopupView stepView = (StepPopupView) popupPanel.getWidget();
+			stepView.topicAction.remove(tourManager.stepListener);
+			popupPanel.hide();
+		}
+		popups.clear();
+		if (nativePreviewHandlerRegistration != null) {
+			nativePreviewHandlerRegistration.removeHandler();
+			nativePreviewHandlerRegistration = null;
+		}
+	}
+
+	@Override
+	protected void exitTour(String message) {
+		Registry.impl(ClientNotifications.class).showMessage(message);
+	}
+
+	Element getElement(List<String> selectors) {
+		Element selected = null;
+		for (String selector : selectors) {
+			selected = WidgetUtils.getElementForSelector(
+					Document.get().getDocumentElement(), selector);
+			if (selected != null
+					&& WidgetUtils.isVisibleAncestorChain(selected)) {
+				return selected;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	protected boolean hasElement(List<String> selectors) {
+		return getElement(selectors) != null;
+	}
+
+	@Override
 	public void onPreviewNativeEvent(NativePreviewEvent npe) {
 		Event event = Event.as(npe.getNativeEvent());
 		EventTarget target = event.getEventTarget();
@@ -53,6 +104,11 @@ public class UIRendererClient extends UIRenderer
 				stepPopupView.topicAction.publish(Action.NEXT);
 			}
 		}
+	}
+
+	@Override
+	protected boolean performAction(Step step) {
+		return performAction(step, 0);
 	}
 
 	private boolean performAction(Step step, int delay) {
@@ -96,49 +152,6 @@ public class UIRendererClient extends UIRenderer
 			throw new UnsupportedOperationException();
 		}
 		return true;
-	}
-
-	@Override
-	protected void afterStepListenerAction() {
-		WidgetUtils.squelchCurrentEvent();
-	}
-
-	@Override
-	protected void clearPopups(int delay) {
-		if (delay != 0) {
-			new Timer() {
-				@Override
-				public void run() {
-					clearPopups(0);
-				}
-			}.schedule(delay);
-			return;
-		}
-		for (DecoratedRelativePopupPanel popupPanel : popups) {
-			StepPopupView stepView = (StepPopupView) popupPanel.getWidget();
-			stepView.topicAction.remove(tourManager.stepListener);
-			popupPanel.hide();
-		}
-		popups.clear();
-		if (nativePreviewHandlerRegistration != null) {
-			nativePreviewHandlerRegistration.removeHandler();
-			nativePreviewHandlerRegistration = null;
-		}
-	}
-
-	@Override
-	protected void exitTour(String message) {
-		Registry.impl(ClientNotifications.class).showMessage(message);
-	}
-
-	@Override
-	protected boolean hasElement(List<String> selectors) {
-		return getElement(selectors) != null;
-	}
-
-	@Override
-	protected boolean performAction(Step step) {
-		return performAction(step, 0);
 	}
 
 	@Override
@@ -271,18 +284,5 @@ public class UIRendererClient extends UIRenderer
 		this.tourManager = tourManager;
 		TourResources res = (TourResources) GWT.create(TourResources.class);
 		StyleInjector.inject(res.tourCss().getText());
-	}
-
-	Element getElement(List<String> selectors) {
-		Element selected = null;
-		for (String selector : selectors) {
-			selected = WidgetUtils.getElementForSelector(
-					Document.get().getDocumentElement(), selector);
-			if (selected != null
-					&& WidgetUtils.isVisibleAncestorChain(selected)) {
-				return selected;
-			}
-		}
-		return null;
 	}
 }

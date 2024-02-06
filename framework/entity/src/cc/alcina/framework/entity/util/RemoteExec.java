@@ -12,6 +12,8 @@ public class RemoteExec {
 
 	private RemoteConnection remoteConnection;
 
+	private boolean throwOnException = true;
+
 	public Output exec() throws Exception {
 		if (isRemote()) {
 			syncTargetFolder(true);
@@ -25,21 +27,6 @@ public class RemoteExec {
 			syncTargetFolder(false);
 		}
 		return output;
-	}
-
-	public RemoteExec withCommand(String command) {
-		this.command = command;
-		return this;
-	}
-
-	public RemoteExec withRemoteConnection(RemoteConnection remoteConnection) {
-		this.remoteConnection = remoteConnection;
-		return this;
-	}
-
-	public RemoteExec withTargetFolder(String targetFolder) {
-		this.targetFolder = targetFolder;
-		return this;
 	}
 
 	private Output exec(String cmd) throws Exception {
@@ -62,7 +49,9 @@ public class RemoteExec {
 		return output;
 	}
 
-	private boolean throwOnException = true;
+	private boolean isRemote() {
+		return remoteConnection != null;
+	}
 
 	public boolean isThrowOnException() {
 		return this.throwOnException;
@@ -70,15 +59,6 @@ public class RemoteExec {
 
 	public void setThrowOnException(boolean throwOnException) {
 		this.throwOnException = throwOnException;
-	}
-
-	public RemoteExec withThrowOnException(boolean throwOnException) {
-		this.throwOnException = throwOnException;
-		return this;
-	}
-
-	private boolean isRemote() {
-		return remoteConnection != null;
 	}
 
 	/*
@@ -104,6 +84,26 @@ public class RemoteExec {
 			// TODO - check it's tmp
 			// exec(Ax.format("rm -rf %s", targetFolder));
 		}
+	}
+
+	public RemoteExec withCommand(String command) {
+		this.command = command;
+		return this;
+	}
+
+	public RemoteExec withRemoteConnection(RemoteConnection remoteConnection) {
+		this.remoteConnection = remoteConnection;
+		return this;
+	}
+
+	public RemoteExec withTargetFolder(String targetFolder) {
+		this.targetFolder = targetFolder;
+		return this;
+	}
+
+	public RemoteExec withThrowOnException(boolean throwOnException) {
+		this.throwOnException = throwOnException;
+		return this;
 	}
 
 	public static class RemoteConnection {

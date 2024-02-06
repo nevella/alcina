@@ -34,12 +34,12 @@ public class DomSubmitEvent extends DomEvent<DomSubmitHandler> {
 	}
 
 	@Override
-	public final Type<DomSubmitHandler> getAssociatedType() {
-		return TYPE;
+	protected void dispatch(DomSubmitHandler handler) {
+		handler.onDomSubmit(this);
 	}
 
 	@Override
-	protected void dispatch(DomSubmitHandler handler) {
-		handler.onDomSubmit(this);
+	public final Type<DomSubmitHandler> getAssociatedType() {
+		return TYPE;
 	}
 }

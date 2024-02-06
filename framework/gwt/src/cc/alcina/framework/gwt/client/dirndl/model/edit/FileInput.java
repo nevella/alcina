@@ -61,6 +61,15 @@ public class FileInput extends Model.Value<FileData>
 	public FileInput() {
 	}
 
+	boolean elementValue() {
+		return provideElement().getPropertyBoolean("checked");
+	}
+
+	native JsArray<Html5File> getFiles(Element element) /*-{
+    var remote = element.@com.google.gwt.dom.client.Element::jsoRemote()();
+    return remote.files;
+	}-*/;
+
 	@Override
 	public FileData getValue() {
 		return this.value;
@@ -89,15 +98,6 @@ public class FileInput extends Model.Value<FileData>
 	public void setValue(FileData value) {
 		set(VALUE, this.value, value, () -> this.value = value);
 	}
-
-	boolean elementValue() {
-		return provideElement().getPropertyBoolean("checked");
-	}
-
-	native JsArray<Html5File> getFiles(Element element) /*-{
-    var remote = element.@com.google.gwt.dom.client.Element::jsoRemote()();
-    return remote.files;
-	}-*/;
 
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)

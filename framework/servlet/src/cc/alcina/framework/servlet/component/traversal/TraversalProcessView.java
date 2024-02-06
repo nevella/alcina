@@ -33,6 +33,21 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
 public class TraversalProcessView {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	static class ClientImpl extends ClientRemoteImpl {
+		@Override
+		protected void createPlaceController() {
+			placeController = new PlaceController(eventBus);
+		}
+
+		@Override
+		public void setupPlaceMapping() {
+			historyHandler = new PlaceHistoryHandler(
+					new RegistryHistoryMapperImpl());
+			historyHandler.register(placeController, eventBus,
+					() -> new TraversalPlace());
+		}
+	}
+
 	@Registration(RemoteComponent.class)
 	public static class Component implements RemoteComponent {
 		@Override
@@ -63,25 +78,26 @@ public class TraversalProcessView {
 	}
 
 	public static class Ui implements RemoteUi {
+		public static Ui get() {
+			return (Ui) Environment.get().ui;
+		}
+
 		Page page;
 
 		Environment environment;
+
+		@Override
+		public Client createClient() {
+			return new ClientImpl();
+		}
 
 		public Environment getEnvironment() {
 			return environment;
 		}
 
-		public void setEnvironment(Environment environment) {
-			this.environment = environment;
-		}
-
-		public static Ui get() {
-			return (Ui) Environment.get().ui;
-		}
-
-		@Override
-		public Client createClient() {
-			return new ClientImpl();
+		public RemoteComponentObservables<SelectionTraversal>.ObservableHistory
+				getHistory() {
+			return page.history;
 		}
 
 		public String getMainCaption() {
@@ -101,24 +117,8 @@ public class TraversalProcessView {
 					.appendToRoot();
 		}
 
-		public RemoteComponentObservables<SelectionTraversal>.ObservableHistory
-				getHistory() {
-			return page.history;
-		}
-	}
-
-	static class ClientImpl extends ClientRemoteImpl {
-		@Override
-		public void setupPlaceMapping() {
-			historyHandler = new PlaceHistoryHandler(
-					new RegistryHistoryMapperImpl());
-			historyHandler.register(placeController, eventBus,
-					() -> new TraversalPlace());
-		}
-
-		@Override
-		protected void createPlaceController() {
-			placeController = new PlaceController(eventBus);
+		public void setEnvironment(Environment environment) {
+			this.environment = environment;
 		}
 	}
 }

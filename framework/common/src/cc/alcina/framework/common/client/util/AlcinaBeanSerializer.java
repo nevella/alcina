@@ -57,12 +57,30 @@ public abstract class AlcinaBeanSerializer {
 
 	public abstract <T> T deserialize(String jsonString);
 
+	protected Class getClassMaybeAbbreviated(String cns) {
+		Class clazz;
+		if (abbrevLookup.containsKey(cns)) {
+			clazz = abbrevLookup.get(cns);
+		} else {
+			clazz = Reflections.forName(cns);
+		}
+		return clazz;
+	}
+
 	public boolean isThrowOnUnrecognisedClass() {
 		return this.throwOnUnrecognisedClass;
 	}
 
 	public boolean isThrowOnUnrecognisedProperty() {
 		return this.throwOnUnrecognisedProperty;
+	}
+
+	protected String normaliseReverseAbbreviation(Class<? extends Object> type,
+			String typeName) {
+		if (reverseAbbrevLookup.containsKey(type)) {
+			typeName = reverseAbbrevLookup.get(type);
+		}
+		return typeName;
 	}
 
 	public AlcinaBeanSerializer registerLookups(Map<String, Class> abbrevLookup,
@@ -82,24 +100,6 @@ public abstract class AlcinaBeanSerializer {
 	public AlcinaBeanSerializer throwOnUnrecognisedProperty() {
 		throwOnUnrecognisedProperty = true;
 		return this;
-	}
-
-	protected Class getClassMaybeAbbreviated(String cns) {
-		Class clazz;
-		if (abbrevLookup.containsKey(cns)) {
-			clazz = abbrevLookup.get(cns);
-		} else {
-			clazz = Reflections.forName(cns);
-		}
-		return clazz;
-	}
-
-	protected String normaliseReverseAbbreviation(Class<? extends Object> type,
-			String typeName) {
-		if (reverseAbbrevLookup.containsKey(type)) {
-			typeName = reverseAbbrevLookup.get(type);
-		}
-		return typeName;
 	}
 
 	public static class SerializationHolder extends Bindable {

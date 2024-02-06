@@ -90,6 +90,19 @@ public class Hyperlink extends Widget implements HasHTML, SourcesClickEvents,
 		this(DOM.createDiv());
 	}
 
+	protected Hyperlink(Element elem) {
+		if (elem == null) {
+			setElement(anchorElem);
+		} else {
+			setElement(elem);
+			DOM.appendChild(getElement(), anchorElem);
+		}
+		sinkEvents(Event.ONCLICK);
+		setStyleName("gwt-Hyperlink");
+		directionalTextHelper = new DirectionalTextHelper(anchorElem,
+				/* is inline */ true);
+	}
+
 	/**
 	 * Creates a hyperlink with its html and target history token specified.
 	 *
@@ -134,6 +147,49 @@ public class Hyperlink extends Widget implements HasHTML, SourcesClickEvents,
 	 */
 	public Hyperlink(SafeHtml html, String targetHistoryToken) {
 		this(html.asString(), true, targetHistoryToken);
+	}
+
+	/**
+	 * Creates a hyperlink with its text target history token specified.
+	 *
+	 * @param text
+	 *            the hyperlink's text
+	 * @param asHTML
+	 *            <code>true</code> to treat the specified text as html
+	 * @param dir
+	 *            the text's direction
+	 * @param targetHistoryToken
+	 *            the history token to which it will link
+	 * @see #setTargetHistoryToken
+	 */
+	private Hyperlink(String text, boolean asHTML, Direction dir,
+			String targetHistoryToken) {
+		this();
+		directionalTextHelper.setTextOrHtml(text, dir, asHTML);
+		setTargetHistoryToken(targetHistoryToken);
+	}
+
+	/**
+	 * Creates a hyperlink with its text and target history token specified.
+	 *
+	 * @param text
+	 *            the hyperlink's text
+	 * @param asHTML
+	 *            <code>true</code> to treat the specified text as html
+	 * @param directionEstimator
+	 *            A DirectionEstimator object used for automatic direction
+	 *            adjustment. For convenience,
+	 *            {@link #DEFAULT_DIRECTION_ESTIMATOR} can be used.
+	 * @param targetHistoryToken
+	 *            the history token to which it will link
+	 * @see #setTargetHistoryToken
+	 */
+	private Hyperlink(String text, boolean asHTML,
+			DirectionEstimator directionEstimator, String targetHistoryToken) {
+		this();
+		directionalTextHelper.setDirectionEstimator(directionEstimator);
+		directionalTextHelper.setTextOrHtml(text, asHTML);
+		setTargetHistoryToken(targetHistoryToken);
 	}
 
 	/**
@@ -203,62 +259,6 @@ public class Hyperlink extends Widget implements HasHTML, SourcesClickEvents,
 	}
 
 	/**
-	 * Creates a hyperlink with its text target history token specified.
-	 *
-	 * @param text
-	 *            the hyperlink's text
-	 * @param asHTML
-	 *            <code>true</code> to treat the specified text as html
-	 * @param dir
-	 *            the text's direction
-	 * @param targetHistoryToken
-	 *            the history token to which it will link
-	 * @see #setTargetHistoryToken
-	 */
-	private Hyperlink(String text, boolean asHTML, Direction dir,
-			String targetHistoryToken) {
-		this();
-		directionalTextHelper.setTextOrHtml(text, dir, asHTML);
-		setTargetHistoryToken(targetHistoryToken);
-	}
-
-	/**
-	 * Creates a hyperlink with its text and target history token specified.
-	 *
-	 * @param text
-	 *            the hyperlink's text
-	 * @param asHTML
-	 *            <code>true</code> to treat the specified text as html
-	 * @param directionEstimator
-	 *            A DirectionEstimator object used for automatic direction
-	 *            adjustment. For convenience,
-	 *            {@link #DEFAULT_DIRECTION_ESTIMATOR} can be used.
-	 * @param targetHistoryToken
-	 *            the history token to which it will link
-	 * @see #setTargetHistoryToken
-	 */
-	private Hyperlink(String text, boolean asHTML,
-			DirectionEstimator directionEstimator, String targetHistoryToken) {
-		this();
-		directionalTextHelper.setDirectionEstimator(directionEstimator);
-		directionalTextHelper.setTextOrHtml(text, asHTML);
-		setTargetHistoryToken(targetHistoryToken);
-	}
-
-	protected Hyperlink(Element elem) {
-		if (elem == null) {
-			setElement(anchorElem);
-		} else {
-			setElement(elem);
-			DOM.appendChild(getElement(), anchorElem);
-		}
-		sinkEvents(Event.ONCLICK);
-		setStyleName("gwt-Hyperlink");
-		directionalTextHelper = new DirectionalTextHelper(anchorElem,
-				/* is inline */ true);
-	}
-
-	/**
 	 * @deprecated Use {@link Anchor#addClickHandler} instead and call
 	 *             History.newItem from the handler if you need to process the
 	 *             click before the history token is set.
@@ -312,6 +312,20 @@ public class Hyperlink extends Widget implements HasHTML, SourcesClickEvents,
 			History.newItem(getTargetHistoryToken());
 			event.preventDefault();
 		}
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-wrapper = the div around the link.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		ensureDebugId(anchorElem, "", baseID);
+		ensureDebugId(getElement(), baseID, "wrapper");
 	}
 
 	/**
@@ -387,20 +401,6 @@ public class Hyperlink extends Widget implements HasHTML, SourcesClickEvents,
 
 	public void setText(String text, Direction dir) {
 		directionalTextHelper.setTextOrHtml(text, dir, false);
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-wrapper = the div around the link.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		ensureDebugId(anchorElem, "", baseID);
-		ensureDebugId(getElement(), baseID, "wrapper");
 	}
 
 	protected void superOnBrowserEvent(Event event) {

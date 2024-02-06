@@ -84,6 +84,45 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public static Node debugNode;
 
+	private static void addVisibleTextNodes(Element elt, List<Text> texts) {
+		Element displayNone = null;
+		ClientNodeIterator itr = new ClientNodeIterator(elt,
+				ClientNodeIterator.SHOW_ALL);
+		itr.setRoot(elt);
+		Node n;
+		TextVisibilityObserver textVisibilityObserver = new TextVisibilityObserver();
+		// duplicates ArticleTextModel (Jade)
+		while ((n = itr.getCurrentNode()) != null) {
+			if (n.getNodeType() == Node.TEXT_NODE
+					&& !textVisibilityObserver.isIgnoreText()) {
+				boolean currentDisplayNoneIsAncestor = displayNone != null
+						&& DomUtils.isAncestorOf(displayNone, n);
+				if (!currentDisplayNoneIsAncestor) {
+					texts.add((Text) n);
+				}
+			} else if (n.getNodeType() == Node.ELEMENT_NODE) {
+				Element element = (Element) n;
+				String styleAttribute = element.getAttribute("style");
+				boolean thisDisplayNone = styleAttribute != null
+						&& (styleAttribute.contains("display: none")
+								|| styleAttribute.contains("display:none"));
+				boolean currentDisplayNoneIsAncestor = displayNone != null
+						&& DomUtils.isAncestorOf(displayNone, element);
+				if (thisDisplayNone) {
+					if (!currentDisplayNoneIsAncestor) {
+						displayNone = element;
+					}
+				} else {
+					if (!currentDisplayNoneIsAncestor) {
+						displayNone = null;
+					}
+				}
+				textVisibilityObserver.update(element);
+			}
+			itr.nextNode();
+		}
+	}
+
 	public static Stream<Element> ancestorStream(Element element) {
 		// FIXME - dirndl 1x3 - (not optimal)
 		List<Element> elements = new ArrayList<>();
@@ -368,45 +407,6 @@ public class DomUtils implements NodeFromXpathProvider {
 		return CommonUtils.join(parts, "/");
 	}
 
-	private static void addVisibleTextNodes(Element elt, List<Text> texts) {
-		Element displayNone = null;
-		ClientNodeIterator itr = new ClientNodeIterator(elt,
-				ClientNodeIterator.SHOW_ALL);
-		itr.setRoot(elt);
-		Node n;
-		TextVisibilityObserver textVisibilityObserver = new TextVisibilityObserver();
-		// duplicates ArticleTextModel (Jade)
-		while ((n = itr.getCurrentNode()) != null) {
-			if (n.getNodeType() == Node.TEXT_NODE
-					&& !textVisibilityObserver.isIgnoreText()) {
-				boolean currentDisplayNoneIsAncestor = displayNone != null
-						&& DomUtils.isAncestorOf(displayNone, n);
-				if (!currentDisplayNoneIsAncestor) {
-					texts.add((Text) n);
-				}
-			} else if (n.getNodeType() == Node.ELEMENT_NODE) {
-				Element element = (Element) n;
-				String styleAttribute = element.getAttribute("style");
-				boolean thisDisplayNone = styleAttribute != null
-						&& (styleAttribute.contains("display: none")
-								|| styleAttribute.contains("display:none"));
-				boolean currentDisplayNoneIsAncestor = displayNone != null
-						&& DomUtils.isAncestorOf(displayNone, element);
-				if (thisDisplayNone) {
-					if (!currentDisplayNoneIsAncestor) {
-						displayNone = element;
-					}
-				} else {
-					if (!currentDisplayNoneIsAncestor) {
-						displayNone = null;
-					}
-				}
-				textVisibilityObserver.update(element);
-			}
-			itr.nextNode();
-		}
-	}
-
 	private boolean useXpathMap = true;
 
 	private Node lastContainer = null;
@@ -466,6 +466,28 @@ public class DomUtils implements NodeFromXpathProvider {
 		return dumpMap0(regenerate);
 	}
 
+	private String dumpMap0(boolean regenerate) {
+		StringBuilder builder = new StringBuilder();
+		if (regenerate) {
+			exactTextMap = mapSupplier.get();
+			xpathMap = mapSupplier.get();
+			generateMap(lastContainer, "");
+		} else {
+			exactTextMap = null;
+		}
+		builder.append("---dump xpath map\n");
+		for (String key : xpathMap.keySet()) {
+			Node node = xpathMap.get(key);
+			String tc = node.getNodeType() == Node.TEXT_NODE
+					? " - " + (exactTextMap != null ? exactTextMap.get(node)
+							: node.getNodeValue())
+					: "";
+			builder.append(key + tc + "\n");
+		}
+		builder.append("\n---\n\n");
+		return builder.toString();
+	}
+
 	public Node dumpNearestMatch(String xpathStr, Node container) {
 		String ucXpath = xpathStr.toUpperCase();
 		String[] sections = ucXpath.split("/");
@@ -499,6 +521,23 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 		}
 		return null;
+	}
+
+	private void ensureMaps(Node container) {
+		if (lastContainer != container) {
+			lastContainer = container;
+			xpathMap = mapSupplier.get();
+			reverseXpathMap = mapSupplier.get();
+			ClientNotifications notifications = Registry
+					.optional(ClientNotifications.class).orElse(null);
+			if (notifications != null) {
+				notifications.metricLogStart(DOM_XPATH_MAP);
+			}
+			generateMap(container, GWT.isClient() ? "" : "/");
+			if (notifications != null) {
+				notifications.metricLogEnd(DOM_XPATH_MAP);
+			}
+		}
 	}
 
 	@Override
@@ -612,152 +651,6 @@ public class DomUtils implements NodeFromXpathProvider {
 		generateMap0(container, prefix);
 	}
 
-	public BackupNodeResolver getBackupNodeResolver() {
-		return this.backupNodeResolver;
-	}
-
-	public NodeFromXpathProvider getNodeProvider() {
-		return nodeProvider;
-	}
-
-	public Map<Node, Node> getPrecededByNonHtmlDomNodes() {
-		return this.precededByNonHtmlDomNodes;
-	}
-
-	public Node getPrecededByNonHtmlDomNodes(Text text) {
-		return precededByNonHtmlDomNodes.get(text);
-	}
-
-	public Map<Node, String> getReverseXpathMap(Element container) {
-		if (reverseXpathMap == null) {
-			ensureMaps(container);
-		}
-		return this.reverseXpathMap;
-	}
-
-	public Map<String, Node> getXpathMap() {
-		return this.xpathMap;
-	}
-
-	public void invalidateUnwrapOrIgnoreCache() {
-		// unwrapOrIgnoreCache = new IdentityHashMap<Node, Node>(10000);
-	}
-
-	public boolean isUseXpathMap() {
-		return this.useXpathMap;
-	}
-
-	public void setBackupNodeResolver(BackupNodeResolver backupNodeResolver) {
-		this.backupNodeResolver = backupNodeResolver;
-	}
-
-	public void setNodeProvider(NodeFromXpathProvider nodeProvider) {
-		this.nodeProvider = nodeProvider;
-	}
-
-	public void setPrecededByNonHtmlDomNodes(
-			Map<Node, Node> precededByNonHtmlDomNodes) {
-		this.precededByNonHtmlDomNodes = precededByNonHtmlDomNodes;
-	}
-
-	public void setUseXpathMap(boolean useXpathMap) {
-		this.useXpathMap = useXpathMap;
-	}
-
-	public void setXpathMap(Map<String, Node> xpathMap) {
-		this.xpathMap = xpathMap;
-	}
-
-	public void unwrap(Element el) {
-		// NO nodelist.stream - because our old faux-element doesn't support
-		Element parent = (Element) el.getParentNode();
-		NodeList nl = el.getChildNodes();
-		Node[] tmp = new Node[nl.getLength()];
-		for (int i = 0; i < nl.getLength(); i++) {
-			tmp[i] = nl.item(i);
-		}
-		for (int i = 0; i < tmp.length; i++) {
-			Node n = tmp[i];
-			parent.insertBefore(n, el);
-		}
-		parent.removeChild(el);
-		if (domRequiredSplitInfo.containsKey(el)) {
-			domRequiredSplitInfo.get(el).unsplit();
-			domRequiredSplitInfo.remove(el);
-		}
-	}
-
-	public void wrap(Element wrapper, Text toWrap) {
-		wrapper.setAttribute(ATTR_WRAP_EXPANDO_ID, "1");
-		Node t = toWrap;
-		Node lastT = null;
-		Node splitAround = toWrap;
-		while (t != null) {
-			if (t.getNodeType() == Node.ELEMENT_NODE) {
-				Element ancestor = (Element) t;
-				if (isBlockHTMLElement(ancestor)) {
-					break;
-				}
-				if (requiresSplit(ancestor, wrapper)) {
-					DomRequiredSplitInfo info = new DomRequiredSplitInfo(
-							ancestor, lastT);
-					info.split();
-					domRequiredSplitInfo.put(wrapper, info);
-					break;
-				}
-			}
-			lastT = t;
-			t = t.getParentNode();
-		}
-		try {
-			Element parent = (Element) toWrap.getParentNode();
-			parent.insertBefore(wrapper, toWrap);
-			parent.removeChild(toWrap);
-			wrapper.appendChild(toWrap);
-		} catch (RuntimeException e) {
-			throw e;
-		}
-	}
-
-	private String dumpMap0(boolean regenerate) {
-		StringBuilder builder = new StringBuilder();
-		if (regenerate) {
-			exactTextMap = mapSupplier.get();
-			xpathMap = mapSupplier.get();
-			generateMap(lastContainer, "");
-		} else {
-			exactTextMap = null;
-		}
-		builder.append("---dump xpath map\n");
-		for (String key : xpathMap.keySet()) {
-			Node node = xpathMap.get(key);
-			String tc = node.getNodeType() == Node.TEXT_NODE
-					? " - " + (exactTextMap != null ? exactTextMap.get(node)
-							: node.getNodeValue())
-					: "";
-			builder.append(key + tc + "\n");
-		}
-		builder.append("\n---\n\n");
-		return builder.toString();
-	}
-
-	private void ensureMaps(Node container) {
-		if (lastContainer != container) {
-			lastContainer = container;
-			xpathMap = mapSupplier.get();
-			reverseXpathMap = mapSupplier.get();
-			ClientNotifications notifications = Registry
-					.optional(ClientNotifications.class).orElse(null);
-			if (notifications != null) {
-				notifications.metricLogStart(DOM_XPATH_MAP);
-			}
-			generateMap(container, GWT.isClient() ? "" : "/");
-			if (notifications != null) {
-				notifications.metricLogEnd(DOM_XPATH_MAP);
-			}
-		}
-	}
-
 	private void generateMap0(Node container, String prefix) {
 		if (container == null) {
 			return;
@@ -843,6 +736,33 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 	}
 
+	public BackupNodeResolver getBackupNodeResolver() {
+		return this.backupNodeResolver;
+	}
+
+	public NodeFromXpathProvider getNodeProvider() {
+		return nodeProvider;
+	}
+
+	public Map<Node, Node> getPrecededByNonHtmlDomNodes() {
+		return this.precededByNonHtmlDomNodes;
+	}
+
+	public Node getPrecededByNonHtmlDomNodes(Text text) {
+		return precededByNonHtmlDomNodes.get(text);
+	}
+
+	public Map<Node, String> getReverseXpathMap(Element container) {
+		if (reverseXpathMap == null) {
+			ensureMaps(container);
+		}
+		return this.reverseXpathMap;
+	}
+
+	public Map<String, Node> getXpathMap() {
+		return this.xpathMap;
+	}
+
 	private boolean include(short lastNodeType, short nodeType, Node node) {
 		if (nodeType == Node.ELEMENT_NODE) {
 			return true;
@@ -858,13 +778,12 @@ public class DomUtils implements NodeFromXpathProvider {
 		// throw new RuntimeException();
 	}
 
-	private Node resolveContainer(Node container) {
-		return // all server-side addressing should be relative to the document
-		GWT.isClient() ? // all server-side addressing should be relative to the
-							// document
-				container
-				: container.getNodeType() == Node.DOCUMENT_NODE ? container
-						: container.getOwnerDocument();
+	public void invalidateUnwrapOrIgnoreCache() {
+		// unwrapOrIgnoreCache = new IdentityHashMap<Node, Node>(10000);
+	}
+
+	public boolean isUseXpathMap() {
+		return this.useXpathMap;
 	}
 
 	boolean requiresSplit(Element ancestor, Element wrapper) {
@@ -875,103 +794,89 @@ public class DomUtils implements NodeFromXpathProvider {
 		return false;
 	}
 
+	private Node resolveContainer(Node container) {
+		return // all server-side addressing should be relative to the document
+		GWT.isClient() ? // all server-side addressing should be relative to the
+							// document
+				container
+				: container.getNodeType() == Node.DOCUMENT_NODE ? container
+						: container.getOwnerDocument();
+	}
+
+	public void setBackupNodeResolver(BackupNodeResolver backupNodeResolver) {
+		this.backupNodeResolver = backupNodeResolver;
+	}
+
+	public void setNodeProvider(NodeFromXpathProvider nodeProvider) {
+		this.nodeProvider = nodeProvider;
+	}
+
+	public void setPrecededByNonHtmlDomNodes(
+			Map<Node, Node> precededByNonHtmlDomNodes) {
+		this.precededByNonHtmlDomNodes = precededByNonHtmlDomNodes;
+	}
+
+	public void setUseXpathMap(boolean useXpathMap) {
+		this.useXpathMap = useXpathMap;
+	}
+
+	public void setXpathMap(Map<String, Node> xpathMap) {
+		this.xpathMap = xpathMap;
+	}
+
+	public void unwrap(Element el) {
+		// NO nodelist.stream - because our old faux-element doesn't support
+		Element parent = (Element) el.getParentNode();
+		NodeList nl = el.getChildNodes();
+		Node[] tmp = new Node[nl.getLength()];
+		for (int i = 0; i < nl.getLength(); i++) {
+			tmp[i] = nl.item(i);
+		}
+		for (int i = 0; i < tmp.length; i++) {
+			Node n = tmp[i];
+			parent.insertBefore(n, el);
+		}
+		parent.removeChild(el);
+		if (domRequiredSplitInfo.containsKey(el)) {
+			domRequiredSplitInfo.get(el).unsplit();
+			domRequiredSplitInfo.remove(el);
+		}
+	}
+
+	public void wrap(Element wrapper, Text toWrap) {
+		wrapper.setAttribute(ATTR_WRAP_EXPANDO_ID, "1");
+		Node t = toWrap;
+		Node lastT = null;
+		Node splitAround = toWrap;
+		while (t != null) {
+			if (t.getNodeType() == Node.ELEMENT_NODE) {
+				Element ancestor = (Element) t;
+				if (isBlockHTMLElement(ancestor)) {
+					break;
+				}
+				if (requiresSplit(ancestor, wrapper)) {
+					DomRequiredSplitInfo info = new DomRequiredSplitInfo(
+							ancestor, lastT);
+					info.split();
+					domRequiredSplitInfo.put(wrapper, info);
+					break;
+				}
+			}
+			lastT = t;
+			t = t.getParentNode();
+		}
+		try {
+			Element parent = (Element) toWrap.getParentNode();
+			parent.insertBefore(wrapper, toWrap);
+			parent.removeChild(toWrap);
+			wrapper.appendChild(toWrap);
+		} catch (RuntimeException e) {
+			throw e;
+		}
+	}
+
 	public interface BackupNodeResolver {
 		Node resolve(String xpathStr, int backupAbsTextOffset);
-	}
-
-	@Reflected
-	@Registration.Singleton
-	public static class DomUtilsBlockResolver {
-		public boolean isBlockHTMLElement(Element e) {
-			return HtmlConstants.isHtmlBlock(e.getTagName());
-		}
-	}
-
-	public static class HighlightInfo {
-		public String cssClassName;
-
-		public StringMap styleProperties = new StringMap();
-
-		public StringMap properties = new StringMap();
-
-		public String tag = "a";
-
-		public HighlightInfo() {
-		}
-
-		public HighlightInfo(String cssClassName, StringMap styleProperties,
-				StringMap properties) {
-			this.cssClassName = cssClassName;
-			this.styleProperties = styleProperties;
-			this.properties = properties;
-		}
-
-		public void applyTo(Element elem) {
-			elem.setAttribute("class", cssClassName);
-			for (Entry<String, String> entry : styleProperties.entrySet()) {
-				DomContext.setStyleProperty(elem, entry.getKey(),
-						entry.getValue());
-			}
-			for (Entry<String, String> entry : properties.entrySet()) {
-				DomContext.setProperty(elem, entry.getKey(), entry.getValue());
-			}
-		}
-
-		public HighlightInfo copy() {
-			return new HighlightInfo(cssClassName,
-					new StringMap(styleProperties), new StringMap(properties))
-							.tag(tag);
-		}
-
-		public HighlightInfo span() {
-			this.tag = "span";
-			return this;
-		}
-
-		public HighlightInfo tag(String tag) {
-			this.tag = tag;
-			return this;
-		}
-	}
-
-	public static class IsBlockFilter implements Predicate<Node> {
-		@Override
-		public boolean test(Node o) {
-			return o.getNodeType() == Node.ELEMENT_NODE
-					&& isBlockHTMLElement((Element) o);
-		}
-	}
-
-	/**
-	 * @param maxNodes
-	 * @return true if finished
-	 */
-	public static class TextVisibilityObserver {
-		private boolean ignoreText = false;
-
-		// displaynone content (legislation TOC) has to stay in the DOM, for
-		// printing...but we need to know for search filtering
-		private Object displayNone;
-
-		public boolean isDisplayNoneText() {
-			return this.displayNone != null;
-		}
-
-		public boolean isIgnoreText() {
-			return this.ignoreText;
-		}
-
-		public void update(Element element) {
-			ignoreText = isInvisibleContentElement(element);
-		}
-
-		public void update(String tagName) {
-			ignoreText = isInvisibleContentElement(tagName);
-		}
-
-		public void updateDisplayNone(Object displayNone) {
-			this.displayNone = displayNone;
-		}
 	}
 
 	static class DomRequiredSplitInfo {
@@ -1075,6 +980,69 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 	}
 
+	@Reflected
+	@Registration.Singleton
+	public static class DomUtilsBlockResolver {
+		public boolean isBlockHTMLElement(Element e) {
+			return HtmlConstants.isHtmlBlock(e.getTagName());
+		}
+	}
+
+	public static class HighlightInfo {
+		public String cssClassName;
+
+		public StringMap styleProperties = new StringMap();
+
+		public StringMap properties = new StringMap();
+
+		public String tag = "a";
+
+		public HighlightInfo() {
+		}
+
+		public HighlightInfo(String cssClassName, StringMap styleProperties,
+				StringMap properties) {
+			this.cssClassName = cssClassName;
+			this.styleProperties = styleProperties;
+			this.properties = properties;
+		}
+
+		public void applyTo(Element elem) {
+			elem.setAttribute("class", cssClassName);
+			for (Entry<String, String> entry : styleProperties.entrySet()) {
+				DomContext.setStyleProperty(elem, entry.getKey(),
+						entry.getValue());
+			}
+			for (Entry<String, String> entry : properties.entrySet()) {
+				DomContext.setProperty(elem, entry.getKey(), entry.getValue());
+			}
+		}
+
+		public HighlightInfo copy() {
+			return new HighlightInfo(cssClassName,
+					new StringMap(styleProperties), new StringMap(properties))
+							.tag(tag);
+		}
+
+		public HighlightInfo span() {
+			this.tag = "span";
+			return this;
+		}
+
+		public HighlightInfo tag(String tag) {
+			this.tag = tag;
+			return this;
+		}
+	}
+
+	public static class IsBlockFilter implements Predicate<Node> {
+		@Override
+		public boolean test(Node o) {
+			return o.getNodeType() == Node.ELEMENT_NODE
+					&& isBlockHTMLElement((Element) o);
+		}
+	}
+
 	/*
 	 * this makes a linear list of unwrapped elts - and unwraps wrapped - e.g.
 	 * <a-uw><span>trux</span></a-uw><a-w>blah</a-w><a-uw><i>trix</i></a-uw>
@@ -1148,18 +1116,6 @@ public class DomUtils implements NodeFromXpathProvider {
 			flushToUnwrap();
 		}
 
-		private boolean isBnjIdAnchor(DomNode n) {
-			return n.isElement() && n.attrMatches("id", "bnj_.*");
-		}
-
-		public final Node getItem(int index) {
-			return kids.get(index);
-		}
-
-		public final int getLength() {
-			return kids.size();
-		}
-
 		private void flushToUnwrap() {
 			// the interesting bit - here we merge...
 			if (currentToUnwrap.size() > 0) {
@@ -1176,6 +1132,50 @@ public class DomUtils implements NodeFromXpathProvider {
 				}
 				currentToUnwrap.clear();
 			}
+		}
+
+		public final Node getItem(int index) {
+			return kids.get(index);
+		}
+
+		public final int getLength() {
+			return kids.size();
+		}
+
+		private boolean isBnjIdAnchor(DomNode n) {
+			return n.isElement() && n.attrMatches("id", "bnj_.*");
+		}
+	}
+
+	/**
+	 * @param maxNodes
+	 * @return true if finished
+	 */
+	public static class TextVisibilityObserver {
+		private boolean ignoreText = false;
+
+		// displaynone content (legislation TOC) has to stay in the DOM, for
+		// printing...but we need to know for search filtering
+		private Object displayNone;
+
+		public boolean isDisplayNoneText() {
+			return this.displayNone != null;
+		}
+
+		public boolean isIgnoreText() {
+			return this.ignoreText;
+		}
+
+		public void update(Element element) {
+			ignoreText = isInvisibleContentElement(element);
+		}
+
+		public void update(String tagName) {
+			ignoreText = isInvisibleContentElement(tagName);
+		}
+
+		public void updateDisplayNone(Object displayNone) {
+			this.displayNone = displayNone;
 		}
 	}
 

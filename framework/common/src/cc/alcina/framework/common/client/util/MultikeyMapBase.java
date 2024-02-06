@@ -78,6 +78,11 @@ public abstract class MultikeyMapBase<V>
 		return all;
 	}
 
+	MultikeyMap<V> asMap(boolean ensure, Object... objects) {
+		MultikeyMap m = (MultikeyMap) getWithKeys(ensure, 0, objects);
+		return m;
+	}
+
 	@Override
 	public MultikeyMap<V> asMap(Object... objects) {
 		return asMap(true, objects);
@@ -86,6 +91,11 @@ public abstract class MultikeyMapBase<V>
 	@Override
 	public MultikeyMap<V> asMapEnsure(boolean ensure, Object... objects) {
 		return asMap(ensure, objects);
+	}
+
+	protected Map asMapEnsureDelegate(boolean ensure, Object... objects) {
+		MultikeyMapBase mkm = (MultikeyMapBase) asMap(ensure, objects);
+		return mkm == null ? null : mkm.delegate;
 	}
 
 	@Override
@@ -140,6 +150,10 @@ public abstract class MultikeyMapBase<V>
 		return m != null && m.containsKey(objects[objects.length - 1]);
 	}
 
+	protected Map createDelegateMap() {
+		return delegateMapCreator.createDelegateMap(depthFromRoot, depth);
+	}
+
 	@Override
 	public Map delegate() {
 		if (readonlyDelegate == null) {
@@ -161,6 +175,8 @@ public abstract class MultikeyMapBase<V>
 		return v;
 	}
 
+	protected abstract DelegateMapCreator ensureDelegateMapCreator();
+
 	@Override
 	public V get(Object... objects) {
 		return (V) getEnsure(false, objects);
@@ -175,6 +191,43 @@ public abstract class MultikeyMapBase<V>
 	public V getEnsure(boolean ensure, Object... objects) {
 		assert objects.length == getDepth();
 		return (V) getWithKeys(ensure, 0, objects);
+	}
+
+	private Map getMapForObjects(boolean ensure, int length,
+			Object... objects) {
+		Object withKeys = getWithKeys(ensure, length, objects);
+		MultikeyMap mkm = (MultikeyMap) withKeys;
+		return mkm != null ? mkm.writeableDelegate() : null;
+	}
+
+	Object getWithKeys(boolean ensure, int ignoreCount, Object... objects) {
+		MultikeyMap map = this;
+		int last = objects.length - 1 - ignoreCount;
+		for (int idx = 0; idx <= last; idx++) {
+			Object key = objects[idx];
+			if (key == null && this instanceof SortedMultikeyMap) {
+				// invalid key, would throw NPE on a treemap
+				return null;
+			}
+			Object object = map.writeableDelegate().get(key);
+			if (object != null) {
+				if (idx == last) {
+					return object;
+				} else {
+					map = (MultikeyMap) object;
+				}
+			} else {
+				if (ensure && idx != getDepth() - 1) {
+					// only use ensure if we're ensuring a map, not a key
+					object = createMap(getDepth() - idx - 1);
+					map.writeableDelegate().put(key, object);
+					map = (MultikeyMap) object;
+				} else {
+					return null;
+				}
+			}
+		}
+		return map;
 	}
 
 	@Override
@@ -224,6 +277,30 @@ public abstract class MultikeyMapBase<V>
 						.putMulti((MultikeyMap<V>) other.asMap(key));
 			}
 		}
+	}
+
+	private V remove(boolean allowNonValue, Object... objects) {
+		int trim = objects.length == getDepth() + 1 ? 1 : 0;
+		assert objects.length == getDepth() + trim || allowNonValue;
+		// ignore last value (k/k/k/v) if it's there
+		Map m = getMapForObjects(false, 1 + trim, objects);
+		if (m == null) {
+			return null;
+		}
+		V result = (V) m.remove(objects[objects.length - 1 - trim]);
+		for (int keyIndex = objects.length - 2
+				- trim; keyIndex >= 0; keyIndex--) {
+			Map parent = getMapForObjects(false, objects.length - keyIndex,
+					objects);
+			if (m.isEmpty()) {
+				Object keyWithEmptyMap = objects[keyIndex];
+				parent.remove(keyWithEmptyMap);
+				m = parent;
+			} else {
+				break;
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -302,83 +379,6 @@ public abstract class MultikeyMapBase<V>
 	@Override
 	public Map writeableDelegate() {
 		return delegate;
-	}
-
-	private Map getMapForObjects(boolean ensure, int length,
-			Object... objects) {
-		Object withKeys = getWithKeys(ensure, length, objects);
-		MultikeyMap mkm = (MultikeyMap) withKeys;
-		return mkm != null ? mkm.writeableDelegate() : null;
-	}
-
-	private V remove(boolean allowNonValue, Object... objects) {
-		int trim = objects.length == getDepth() + 1 ? 1 : 0;
-		assert objects.length == getDepth() + trim || allowNonValue;
-		// ignore last value (k/k/k/v) if it's there
-		Map m = getMapForObjects(false, 1 + trim, objects);
-		if (m == null) {
-			return null;
-		}
-		V result = (V) m.remove(objects[objects.length - 1 - trim]);
-		for (int keyIndex = objects.length - 2
-				- trim; keyIndex >= 0; keyIndex--) {
-			Map parent = getMapForObjects(false, objects.length - keyIndex,
-					objects);
-			if (m.isEmpty()) {
-				Object keyWithEmptyMap = objects[keyIndex];
-				parent.remove(keyWithEmptyMap);
-				m = parent;
-			} else {
-				break;
-			}
-		}
-		return result;
-	}
-
-	protected Map asMapEnsureDelegate(boolean ensure, Object... objects) {
-		MultikeyMapBase mkm = (MultikeyMapBase) asMap(ensure, objects);
-		return mkm == null ? null : mkm.delegate;
-	}
-
-	protected Map createDelegateMap() {
-		return delegateMapCreator.createDelegateMap(depthFromRoot, depth);
-	}
-
-	protected abstract DelegateMapCreator ensureDelegateMapCreator();
-
-	MultikeyMap<V> asMap(boolean ensure, Object... objects) {
-		MultikeyMap m = (MultikeyMap) getWithKeys(ensure, 0, objects);
-		return m;
-	}
-
-	Object getWithKeys(boolean ensure, int ignoreCount, Object... objects) {
-		MultikeyMap map = this;
-		int last = objects.length - 1 - ignoreCount;
-		for (int idx = 0; idx <= last; idx++) {
-			Object key = objects[idx];
-			if (key == null && this instanceof SortedMultikeyMap) {
-				// invalid key, would throw NPE on a treemap
-				return null;
-			}
-			Object object = map.writeableDelegate().get(key);
-			if (object != null) {
-				if (idx == last) {
-					return object;
-				} else {
-					map = (MultikeyMap) object;
-				}
-			} else {
-				if (ensure && idx != getDepth() - 1) {
-					// only use ensure if we're ensuring a map, not a key
-					object = createMap(getDepth() - idx - 1);
-					map.writeableDelegate().put(key, object);
-					map = (MultikeyMap) object;
-				} else {
-					return null;
-				}
-			}
-		}
-		return map;
 	}
 
 	static class MissingObject {

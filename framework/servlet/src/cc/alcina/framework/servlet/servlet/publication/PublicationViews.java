@@ -156,22 +156,6 @@ public class PublicationViews {
 				doc.getDocumentElementNode().w3cNode());
 	}
 
-	private String untilFirstCamel(String text) {
-		List<String> out = new ArrayList<>();
-		List<String> words = Arrays.asList(text.split(" "));
-		Pattern pattern = Pattern.compile("(\\w[a-z]+)[A-Z].*");
-		for (String word : words) {
-			Matcher matcher = pattern.matcher(word);
-			if (matcher.matches()) {
-				out.add(matcher.group(1));
-				break;
-			} else {
-				out.add(word);
-			}
-		}
-		return out.stream().collect(Collectors.joining(" "));
-	}
-
 	protected Message parseMessage(ClientLogRecord record) {
 		Message out = new Message();
 		String text = record.getMessage();
@@ -195,6 +179,22 @@ public class PublicationViews {
 		}
 		out.text = text;
 		return out;
+	}
+
+	private String untilFirstCamel(String text) {
+		List<String> out = new ArrayList<>();
+		List<String> words = Arrays.asList(text.split(" "));
+		Pattern pattern = Pattern.compile("(\\w[a-z]+)[A-Z].*");
+		for (String word : words) {
+			Matcher matcher = pattern.matcher(word);
+			if (matcher.matches()) {
+				out.add(matcher.group(1));
+				break;
+			} else {
+				out.add(word);
+			}
+		}
+		return out.stream().collect(Collectors.joining(" "));
 	}
 
 	static class Message {

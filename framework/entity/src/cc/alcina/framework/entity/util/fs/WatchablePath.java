@@ -17,52 +17,12 @@ import java.util.function.Consumer;
 public class WatchablePath implements Path {
 	private Path delegate;
 
-	public void forEach(Consumer<? super Path> action) {
-		this.delegate.forEach(action);
+	public WatchablePath(Path delegate) {
+		this.delegate = delegate;
 	}
 
-	public Spliterator<Path> spliterator() {
-		return this.delegate.spliterator();
-	}
-
-	public FileSystem getFileSystem() {
-		return this.delegate.getFileSystem();
-	}
-
-	public boolean isAbsolute() {
-		return this.delegate.isAbsolute();
-	}
-
-	public Path getRoot() {
-		return this.delegate.getRoot();
-	}
-
-	public Path getFileName() {
-		return this.delegate.getFileName();
-	}
-
-	public Path getParent() {
-		return this.delegate.getParent();
-	}
-
-	public int getNameCount() {
-		return this.delegate.getNameCount();
-	}
-
-	public Path getName(int index) {
-		return this.delegate.getName(index);
-	}
-
-	public Path subpath(int beginIndex, int endIndex) {
-		return this.delegate.subpath(beginIndex, endIndex);
-	}
-
-	public boolean startsWith(Path other) {
-		return this.delegate.startsWith(other);
-	}
-
-	public boolean startsWith(String other) {
-		return this.delegate.startsWith(other);
+	public int compareTo(Path other) {
+		return this.delegate.compareTo(other);
 	}
 
 	public boolean endsWith(Path other) {
@@ -73,8 +33,76 @@ public class WatchablePath implements Path {
 		return this.delegate.endsWith(other);
 	}
 
+	public boolean equals(Object other) {
+		return this.delegate.equals(other);
+	}
+
+	public void forEach(Consumer<? super Path> action) {
+		this.delegate.forEach(action);
+	}
+
+	public Path getFileName() {
+		return this.delegate.getFileName();
+	}
+
+	public FileSystem getFileSystem() {
+		return this.delegate.getFileSystem();
+	}
+
+	public Path getName(int index) {
+		return this.delegate.getName(index);
+	}
+
+	public int getNameCount() {
+		return this.delegate.getNameCount();
+	}
+
+	public Path getParent() {
+		return this.delegate.getParent();
+	}
+
+	public Path getRoot() {
+		return this.delegate.getRoot();
+	}
+
+	public int hashCode() {
+		return this.delegate.hashCode();
+	}
+
+	public boolean isAbsolute() {
+		return this.delegate.isAbsolute();
+	}
+
+	public Iterator<Path> iterator() {
+		return this.delegate.iterator();
+	}
+
 	public Path normalize() {
 		return this.delegate.normalize();
+	}
+
+	public WatchKey register(WatchService watcher, Kind<?>... events)
+			throws IOException {
+		if (watcher instanceof AbstractNonSunWatchService) {
+			return ((AbstractNonSunWatchService) watcher).register(this,
+					events);
+		} else {
+			return this.delegate.register(watcher, events);
+		}
+	}
+
+	public WatchKey register(WatchService watcher, Kind<?>[] events,
+			Modifier... modifiers) throws IOException {
+		if (watcher instanceof AbstractNonSunWatchService) {
+			return ((AbstractNonSunWatchService) watcher).register(this, events,
+					modifiers);
+		} else {
+			return this.delegate.register(watcher, events, modifiers);
+		}
+	}
+
+	public Path relativize(Path other) {
+		return this.delegate.relativize(other);
 	}
 
 	public Path resolve(Path other) {
@@ -93,67 +121,39 @@ public class WatchablePath implements Path {
 		return this.delegate.resolveSibling(other);
 	}
 
-	public Path relativize(Path other) {
-		return this.delegate.relativize(other);
+	public Spliterator<Path> spliterator() {
+		return this.delegate.spliterator();
 	}
 
-	public URI toUri() {
-		return this.delegate.toUri();
+	public boolean startsWith(Path other) {
+		return this.delegate.startsWith(other);
+	}
+
+	public boolean startsWith(String other) {
+		return this.delegate.startsWith(other);
+	}
+
+	public Path subpath(int beginIndex, int endIndex) {
+		return this.delegate.subpath(beginIndex, endIndex);
 	}
 
 	public Path toAbsolutePath() {
 		return this.delegate.toAbsolutePath();
 	}
 
-	public Path toRealPath(LinkOption... options) throws IOException {
-		return this.delegate.toRealPath(options);
-	}
-
 	public File toFile() {
 		return this.delegate.toFile();
 	}
 
-	public WatchKey register(WatchService watcher, Kind<?>[] events,
-			Modifier... modifiers) throws IOException {
-		if (watcher instanceof AbstractNonSunWatchService) {
-			return ((AbstractNonSunWatchService) watcher).register(this, events,
-					modifiers);
-		} else {
-			return this.delegate.register(watcher, events, modifiers);
-		}
-	}
-
-	public WatchKey register(WatchService watcher, Kind<?>... events)
-			throws IOException {
-		if (watcher instanceof AbstractNonSunWatchService) {
-			return ((AbstractNonSunWatchService) watcher).register(this,
-					events);
-		} else {
-			return this.delegate.register(watcher, events);
-		}
-	}
-
-	public Iterator<Path> iterator() {
-		return this.delegate.iterator();
-	}
-
-	public int compareTo(Path other) {
-		return this.delegate.compareTo(other);
-	}
-
-	public boolean equals(Object other) {
-		return this.delegate.equals(other);
-	}
-
-	public int hashCode() {
-		return this.delegate.hashCode();
+	public Path toRealPath(LinkOption... options) throws IOException {
+		return this.delegate.toRealPath(options);
 	}
 
 	public String toString() {
 		return this.delegate.toString();
 	}
 
-	public WatchablePath(Path delegate) {
-		this.delegate = delegate;
+	public URI toUri() {
+		return this.delegate.toUri();
 	}
 }

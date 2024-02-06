@@ -30,10 +30,6 @@ import com.google.web.bindery.event.shared.Event.Type;
  * Basic implementation of {@link EventBus}.
  */
 public class SimpleEventBus extends EventBus {
-	private interface Command {
-		void execute();
-	}
-
 	private final boolean isReverseOrder;
 
 	private int firingDepth = 0;
@@ -81,71 +77,6 @@ public class SimpleEventBus extends EventBus {
 					"Cannot add a handler with a null source");
 		}
 		return doAdd(type, source, handler);
-	}
-
-	@Override
-	public void fireEvent(Event<?> event) {
-		doFire(event, null);
-	}
-
-	@Override
-	public void fireEventFromSource(Event<?> event, Object source) {
-		if (source == null) {
-			throw new NullPointerException("Cannot fire from a null source");
-		}
-		doFire(event, source);
-	}
-
-	/*
-	 * Added - NR - to allow one-off setting of handlers (dirndl nodeevent
-	 * dispatch)
-	 */
-	public void fireEventFromSource(Event<?> event, Object source,
-			List handlers) {
-		if (source == null) {
-			throw new NullPointerException("Cannot fire from a null source");
-		}
-		doFire(event, source, handlers);
-	}
-
-	/**
-	 * @deprecated required by legacy features in GWT's old HandlerManager
-	 */
-	@Deprecated
-	protected <H> void doRemove(Event.Type<H> type, Object source, H handler) {
-		if (firingDepth > 0) {
-			enqueueRemove(type, source, handler);
-		} else {
-			doRemoveNow(type, source, handler);
-		}
-	}
-
-	/**
-	 * @deprecated required by legacy features in GWT's old HandlerManager
-	 */
-	@Deprecated
-	protected <H> H getHandler(Event.Type<H> type, int index) {
-		assert index < getHandlerCount(type) : "handlers for " + type.getClass()
-				+ " have size: " + getHandlerCount(type)
-				+ " so do not have a handler at index: " + index;
-		List<H> l = getHandlerList(type, null);
-		return l.get(index);
-	}
-
-	/**
-	 * @deprecated required by legacy features in GWT's old HandlerManager
-	 */
-	@Deprecated
-	protected int getHandlerCount(Event.Type<?> eventKey) {
-		return getHandlerList(eventKey, null).size();
-	}
-
-	/**
-	 * @deprecated required by legacy features in GWT's old HandlerManager
-	 */
-	@Deprecated
-	protected boolean isEventHandled(Event.Type<?> eventKey) {
-		return map.containsKey(eventKey);
 	}
 
 	private void defer(Command command) {
@@ -226,6 +157,18 @@ public class SimpleEventBus extends EventBus {
 		}
 	}
 
+	/**
+	 * @deprecated required by legacy features in GWT's old HandlerManager
+	 */
+	@Deprecated
+	protected <H> void doRemove(Event.Type<H> type, Object source, H handler) {
+		if (firingDepth > 0) {
+			enqueueRemove(type, source, handler);
+		} else {
+			doRemoveNow(type, source, handler);
+		}
+	}
+
 	private <H> void doRemoveNow(Event.Type<H> type, Object source, H handler) {
 		List<H> l = getHandlerList(type, source);
 		boolean removed = l.remove(handler);
@@ -268,6 +211,31 @@ public class SimpleEventBus extends EventBus {
 		return handlers;
 	}
 
+	@Override
+	public void fireEvent(Event<?> event) {
+		doFire(event, null);
+	}
+
+	@Override
+	public void fireEventFromSource(Event<?> event, Object source) {
+		if (source == null) {
+			throw new NullPointerException("Cannot fire from a null source");
+		}
+		doFire(event, source);
+	}
+
+	/*
+	 * Added - NR - to allow one-off setting of handlers (dirndl nodeevent
+	 * dispatch)
+	 */
+	public void fireEventFromSource(Event<?> event, Object source,
+			List handlers) {
+		if (source == null) {
+			throw new NullPointerException("Cannot fire from a null source");
+		}
+		doFire(event, source, handlers);
+	}
+
 	private <H> List<H> getDispatchList(Event.Type<H> type, Object source) {
 		List<H> directHandlers = getHandlerList(type, source);
 		if (source == null) {
@@ -277,6 +245,26 @@ public class SimpleEventBus extends EventBus {
 		List<H> rtn = new ArrayList<H>(directHandlers);
 		rtn.addAll(globalHandlers);
 		return rtn;
+	}
+
+	/**
+	 * @deprecated required by legacy features in GWT's old HandlerManager
+	 */
+	@Deprecated
+	protected <H> H getHandler(Event.Type<H> type, int index) {
+		assert index < getHandlerCount(type) : "handlers for " + type.getClass()
+				+ " have size: " + getHandlerCount(type)
+				+ " so do not have a handler at index: " + index;
+		List<H> l = getHandlerList(type, null);
+		return l.get(index);
+	}
+
+	/**
+	 * @deprecated required by legacy features in GWT's old HandlerManager
+	 */
+	@Deprecated
+	protected int getHandlerCount(Event.Type<?> eventKey) {
+		return getHandlerList(eventKey, null).size();
 	}
 
 	private <H> List<H> getHandlerList(Event.Type<H> type, Object source) {
@@ -305,6 +293,14 @@ public class SimpleEventBus extends EventBus {
 		}
 	}
 
+	/**
+	 * @deprecated required by legacy features in GWT's old HandlerManager
+	 */
+	@Deprecated
+	protected boolean isEventHandled(Event.Type<?> eventKey) {
+		return map.containsKey(eventKey);
+	}
+
 	private void prune(Event.Type<?> type, Object source) {
 		Map<Object, List<?>> sourceMap = map.get(type);
 		List<?> pruned = sourceMap.remove(source);
@@ -313,5 +309,9 @@ public class SimpleEventBus extends EventBus {
 		if (sourceMap.isEmpty()) {
 			map.remove(type);
 		}
+	}
+
+	private interface Command {
+		void execute();
 	}
 }

@@ -22,11 +22,44 @@ public class RemoteComponentObservables<T> {
 
 	long evictionTimeMs;
 
+	TimerTask evictTask = new TimerTask() {
+		@Override
+		public void run() {
+			synchronized (histories) {
+				histories.entrySet().stream()
+						.filter(e -> e.getValue().getPublished() != null
+								&& e.getValue().getPublished().shouldEvict())
+						.forEach(e -> e.getValue().clearPublished());
+			}
+		}
+	};
+
+	Map<String, Topic<ObservableHistory>> histories = new LinkedHashMap<>();
+
 	public RemoteComponentObservables(Class<T> clazz,
 			Function<T, String> observableDisplayName, long evictionTimeMs) {
 		this.clazz = clazz;
 		this.observableDisplayName = observableDisplayName;
 		this.evictionTimeMs = evictionTimeMs;
+	}
+
+	synchronized Topic<ObservableHistory> ensureTopic(String traversalKey) {
+		return histories.computeIfAbsent(traversalKey,
+				k -> Topic.create().withRetainPublished(true));
+	}
+
+	public void observe() {
+		EntityLayerUtils.timer.scheduleAtFixedRate(evictTask, 0,
+				TimeConstants.ONE_MINUTE_MS);
+	}
+
+	public void publish(String id, T observable) {
+		ensureTopic(id).publish(new ObservableHistory(observable, id));
+	}
+
+	public ListenerReference subscribe(String traversalKey,
+			TopicListener<ObservableHistory> subscriber) {
+		return ensureTopic(traversalKey).addWithPublishedCheck(subscriber);
 	}
 
 	public class ObservableHistory {
@@ -50,38 +83,5 @@ public class RemoteComponentObservables<T> {
 			return id != null
 					&& !TimeConstants.within(lastAccessed, evictionTimeMs);
 		}
-	}
-
-	public void observe() {
-		EntityLayerUtils.timer.scheduleAtFixedRate(evictTask, 0,
-				TimeConstants.ONE_MINUTE_MS);
-	}
-
-	TimerTask evictTask = new TimerTask() {
-		@Override
-		public void run() {
-			synchronized (histories) {
-				histories.entrySet().stream()
-						.filter(e -> e.getValue().getPublished() != null
-								&& e.getValue().getPublished().shouldEvict())
-						.forEach(e -> e.getValue().clearPublished());
-			}
-		}
-	};
-
-	Map<String, Topic<ObservableHistory>> histories = new LinkedHashMap<>();
-
-	public ListenerReference subscribe(String traversalKey,
-			TopicListener<ObservableHistory> subscriber) {
-		return ensureTopic(traversalKey).addWithPublishedCheck(subscriber);
-	}
-
-	synchronized Topic<ObservableHistory> ensureTopic(String traversalKey) {
-		return histories.computeIfAbsent(traversalKey,
-				k -> Topic.create().withRetainPublished(true));
-	}
-
-	public void publish(String id, T observable) {
-		ensureTopic(id).publish(new ObservableHistory(observable, id));
 	}
 }

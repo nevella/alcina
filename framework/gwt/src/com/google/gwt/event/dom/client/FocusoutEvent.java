@@ -34,12 +34,12 @@ public class FocusoutEvent extends DomEvent<FocusoutHandler> {
 	}
 
 	@Override
-	public final Type<FocusoutHandler> getAssociatedType() {
-		return TYPE;
+	protected void dispatch(FocusoutHandler handler) {
+		handler.onFocusout(this);
 	}
 
 	@Override
-	protected void dispatch(FocusoutHandler handler) {
-		handler.onFocusout(this);
+	public final Type<FocusoutHandler> getAssociatedType() {
+		return TYPE;
 	}
 }

@@ -15,6 +15,27 @@ public class Decl {
 
 		private String propertyName;
 
+		private boolean cmp(int i, int j, double ratio, boolean gt) {
+			return cmp(i, j, -1, ratio, gt);
+		}
+
+		private boolean cmp(int i, int j, int i1, double ratio, boolean gt) {
+			if (list.size() <= i || list.size() <= j || list.size() <= i1) {
+				return false;
+			}
+			Number v1 = (Number) SEUtilities.getPropertyValue(list.get(i),
+					propertyName);
+			if (i1 >= 0) {
+				v1 = v1.doubleValue()
+						+ ((Number) SEUtilities.getPropertyValue(list.get(i1),
+								propertyName)).doubleValue();
+			}
+			Number v2 = (Number) SEUtilities.getPropertyValue(list.get(j),
+					propertyName);
+			return gt ? v1.doubleValue() / v2.doubleValue() > ratio
+					: v1.doubleValue() / v2.doubleValue() < ratio;
+		}
+
 		public Operation filter(Predicate filter) {
 			list.removeIf(filter.negate());
 			return this;
@@ -44,27 +65,6 @@ public class Decl {
 
 		public boolean secondGtThird(double ratio) {
 			return cmp(1, 2, ratio, true);
-		}
-
-		private boolean cmp(int i, int j, double ratio, boolean gt) {
-			return cmp(i, j, -1, ratio, gt);
-		}
-
-		private boolean cmp(int i, int j, int i1, double ratio, boolean gt) {
-			if (list.size() <= i || list.size() <= j || list.size() <= i1) {
-				return false;
-			}
-			Number v1 = (Number) SEUtilities.getPropertyValue(list.get(i),
-					propertyName);
-			if (i1 >= 0) {
-				v1 = v1.doubleValue()
-						+ ((Number) SEUtilities.getPropertyValue(list.get(i1),
-								propertyName)).doubleValue();
-			}
-			Number v2 = (Number) SEUtilities.getPropertyValue(list.get(j),
-					propertyName);
-			return gt ? v1.doubleValue() / v2.doubleValue() > ratio
-					: v1.doubleValue() / v2.doubleValue() < ratio;
 		}
 	}
 }

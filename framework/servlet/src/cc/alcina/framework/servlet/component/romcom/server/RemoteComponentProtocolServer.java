@@ -63,23 +63,6 @@ public class RemoteComponentProtocolServer {
 			}
 		}
 
-		@Override
-		public void handle(String target, Request baseRequest,
-				HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-			String method = request.getMethod();
-			switch (method) {
-			case "GET":
-				serveFile(baseRequest, request, response);
-				break;
-			case "POST":
-				serveProtocol(baseRequest, request, response);
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-
 		private InvalidClientException
 				buildInvalidClientException(String componentClassName) {
 			Class<? extends RemoteUi> uiType = Reflections
@@ -106,6 +89,23 @@ public class RemoteComponentProtocolServer {
 			return cl.getResource(Ax.format(
 					"cc/alcina/framework/servlet/component/romcom/war%s",
 					warRelativePart));
+		}
+
+		@Override
+		public void handle(String target, Request baseRequest,
+				HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+			String method = request.getMethod();
+			switch (method) {
+			case "GET":
+				serveFile(baseRequest, request, response);
+				break;
+			case "POST":
+				serveProtocol(baseRequest, request, response);
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		void serveFile(Request baseRequest, HttpServletRequest request,

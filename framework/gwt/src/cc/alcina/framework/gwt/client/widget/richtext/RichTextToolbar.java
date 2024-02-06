@@ -127,32 +127,6 @@ public class RichTextToolbar extends Composite {
 		init();
 	}
 
-	public void stylesAndIndentsOnly() {
-		List<Widget> toHide = (List) Arrays.asList(subscript, superscript,
-				strikethrough, hr, ol, ul, insertImage, createLink,
-				removeFormat, removeLink, backColors, foreColors, fonts,
-				fontSizes, justifyCenter, justifyLeft, justifyRight);
-		for (Widget widget : toHide) {
-			widget.setVisible(false);
-		}
-	}
-
-	/**
-	 * Updates the status of all the stateful buttons.
-	 */
-	public void updateStatus() {
-		if (basic != null) {
-			bold.setDown(basic.isBold());
-			italic.setDown(basic.isItalic());
-			underline.setDown(basic.isUnderlined());
-			subscript.setDown(basic.isSubscript());
-			superscript.setDown(basic.isSuperscript());
-		}
-		if (extended != null) {
-			strikethrough.setDown(extended.isStrikethrough());
-		}
-	}
-
 	private ListBox createColorList(String caption) {
 		ListBox lb = new ListBox();
 		lb.addChangeListener(listener);
@@ -165,6 +139,10 @@ public class RichTextToolbar extends Composite {
 		lb.addItem(strings.yellow(), "yellow");
 		lb.addItem(strings.blue(), "blue");
 		return lb;
+	}
+
+	protected EventListener createEventListener() {
+		return new EventListener();
 	}
 
 	private ListBox createFontList() {
@@ -195,6 +173,14 @@ public class RichTextToolbar extends Composite {
 		lb.addItem(strings.xlarge());
 		lb.addItem(strings.xxlarge());
 		return lb;
+	}
+
+	protected PushButton createPushButton(AbstractImagePrototype img,
+			String tip) {
+		PushButton pb = new PushButton(img.createImage());
+		pb.addClickListener(listener);
+		pb.setTitle(tip);
+		return pb;
 	}
 
 	private ToggleButton createToggleButton(AbstractImagePrototype img,
@@ -266,16 +252,128 @@ public class RichTextToolbar extends Composite {
 		}
 	}
 
-	protected EventListener createEventListener() {
-		return new EventListener();
+	public void stylesAndIndentsOnly() {
+		List<Widget> toHide = (List) Arrays.asList(subscript, superscript,
+				strikethrough, hr, ol, ul, insertImage, createLink,
+				removeFormat, removeLink, backColors, foreColors, fonts,
+				fontSizes, justifyCenter, justifyLeft, justifyRight);
+		for (Widget widget : toHide) {
+			widget.setVisible(false);
+		}
 	}
 
-	protected PushButton createPushButton(AbstractImagePrototype img,
-			String tip) {
-		PushButton pb = new PushButton(img.createImage());
-		pb.addClickListener(listener);
-		pb.setTitle(tip);
-		return pb;
+	/**
+	 * Updates the status of all the stateful buttons.
+	 */
+	public void updateStatus() {
+		if (basic != null) {
+			bold.setDown(basic.isBold());
+			italic.setDown(basic.isItalic());
+			underline.setDown(basic.isUnderlined());
+			subscript.setDown(basic.isSubscript());
+			superscript.setDown(basic.isSuperscript());
+		}
+		if (extended != null) {
+			strikethrough.setDown(extended.isStrikethrough());
+		}
+	}
+
+	/**
+	 * We use an inner EventListener class to avoid exposing event methods on
+	 * the RichTextToolbar itself.
+	 */
+	protected class EventListener
+			implements ClickListener, ChangeListener, KeyboardListener {
+		public void onChange(Widget sender) {
+			if (sender == backColors) {
+				basic.setBackColor(
+						backColors.getValue(backColors.getSelectedIndex()));
+				backColors.setSelectedIndex(0);
+			} else if (sender == foreColors) {
+				basic.setForeColor(
+						foreColors.getValue(foreColors.getSelectedIndex()));
+				foreColors.setSelectedIndex(0);
+			} else if (sender == fonts) {
+				basic.setFontName(fonts.getValue(fonts.getSelectedIndex()));
+				fonts.setSelectedIndex(0);
+			} else if (sender == fontSizes) {
+				basic.setFontSize(
+						fontSizesConstants[fontSizes.getSelectedIndex() - 1]);
+				fontSizes.setSelectedIndex(0);
+			}
+		}
+
+		public void onClick(Widget sender) {
+			if (sender == bold) {
+				basic.toggleBold();
+			} else if (sender == italic) {
+				basic.toggleItalic();
+			} else if (sender == underline) {
+				basic.toggleUnderline();
+			} else if (sender == subscript) {
+				basic.toggleSubscript();
+			} else if (sender == superscript) {
+				basic.toggleSuperscript();
+			} else if (sender == strikethrough) {
+				extended.toggleStrikethrough();
+			} else if (sender == indent) {
+				extended.rightIndent();
+			} else if (sender == outdent) {
+				extended.leftIndent();
+			} else if (sender == justifyLeft) {
+				basic.setJustification(RichTextArea.Justification.LEFT);
+			} else if (sender == justifyCenter) {
+				basic.setJustification(RichTextArea.Justification.CENTER);
+			} else if (sender == justifyRight) {
+				basic.setJustification(RichTextArea.Justification.RIGHT);
+			} else if (sender == insertImage) {
+				String url = Window.prompt("Enter an image URL:", "http://");
+				if (url != null) {
+					extended.insertImage(url);
+				}
+			} else if (sender == createLink) {
+				String url = Window.prompt("Enter a link URL:", "http://");
+				if (url != null) {
+					extended.createLink(url);
+				}
+			} else if (sender == removeLink) {
+				extended.removeLink();
+			} else if (sender == hr) {
+				extended.insertHorizontalRule();
+			} else if (sender == ol) {
+				extended.insertOrderedList();
+			} else if (sender == ul) {
+				extended.insertUnorderedList();
+			} else if (sender == removeFormat) {
+				extended.removeFormat();
+			} else if (sender == richText) {
+				// We use the RichTextArea's onKeyUp event to update the toolbar
+				// status.
+				// This will catch any cases where the user moves the cursur
+				// using the
+				// keyboard, or uses one of the browser's built-in keyboard
+				// shortcuts.
+				updateStatus();
+			}
+		}
+
+		public void onKeyDown(Widget sender, char keyCode, int modifiers) {
+		}
+
+		public void onKeyPress(Widget sender, char keyCode, int modifiers) {
+		}
+
+		public void onKeyUp(Widget sender, char keyCode, int modifiers) {
+			if (sender == richText) {
+				// We use the RichTextArea's onKeyUp event to update the toolbar
+				// status.
+				// This will catch any cases where the user moves the cursur
+				// using the
+				// keyboard, or uses one of the browser's built-in keyboard
+				// shortcuts.
+				updateStatus();
+			}
+		}
 	}
 
 	/**
@@ -440,103 +538,5 @@ public class RichTextToolbar extends Composite {
 		String xxsmall();
 
 		String yellow();
-	}
-
-	/**
-	 * We use an inner EventListener class to avoid exposing event methods on
-	 * the RichTextToolbar itself.
-	 */
-	protected class EventListener
-			implements ClickListener, ChangeListener, KeyboardListener {
-		public void onChange(Widget sender) {
-			if (sender == backColors) {
-				basic.setBackColor(
-						backColors.getValue(backColors.getSelectedIndex()));
-				backColors.setSelectedIndex(0);
-			} else if (sender == foreColors) {
-				basic.setForeColor(
-						foreColors.getValue(foreColors.getSelectedIndex()));
-				foreColors.setSelectedIndex(0);
-			} else if (sender == fonts) {
-				basic.setFontName(fonts.getValue(fonts.getSelectedIndex()));
-				fonts.setSelectedIndex(0);
-			} else if (sender == fontSizes) {
-				basic.setFontSize(
-						fontSizesConstants[fontSizes.getSelectedIndex() - 1]);
-				fontSizes.setSelectedIndex(0);
-			}
-		}
-
-		public void onClick(Widget sender) {
-			if (sender == bold) {
-				basic.toggleBold();
-			} else if (sender == italic) {
-				basic.toggleItalic();
-			} else if (sender == underline) {
-				basic.toggleUnderline();
-			} else if (sender == subscript) {
-				basic.toggleSubscript();
-			} else if (sender == superscript) {
-				basic.toggleSuperscript();
-			} else if (sender == strikethrough) {
-				extended.toggleStrikethrough();
-			} else if (sender == indent) {
-				extended.rightIndent();
-			} else if (sender == outdent) {
-				extended.leftIndent();
-			} else if (sender == justifyLeft) {
-				basic.setJustification(RichTextArea.Justification.LEFT);
-			} else if (sender == justifyCenter) {
-				basic.setJustification(RichTextArea.Justification.CENTER);
-			} else if (sender == justifyRight) {
-				basic.setJustification(RichTextArea.Justification.RIGHT);
-			} else if (sender == insertImage) {
-				String url = Window.prompt("Enter an image URL:", "http://");
-				if (url != null) {
-					extended.insertImage(url);
-				}
-			} else if (sender == createLink) {
-				String url = Window.prompt("Enter a link URL:", "http://");
-				if (url != null) {
-					extended.createLink(url);
-				}
-			} else if (sender == removeLink) {
-				extended.removeLink();
-			} else if (sender == hr) {
-				extended.insertHorizontalRule();
-			} else if (sender == ol) {
-				extended.insertOrderedList();
-			} else if (sender == ul) {
-				extended.insertUnorderedList();
-			} else if (sender == removeFormat) {
-				extended.removeFormat();
-			} else if (sender == richText) {
-				// We use the RichTextArea's onKeyUp event to update the toolbar
-				// status.
-				// This will catch any cases where the user moves the cursur
-				// using the
-				// keyboard, or uses one of the browser's built-in keyboard
-				// shortcuts.
-				updateStatus();
-			}
-		}
-
-		public void onKeyDown(Widget sender, char keyCode, int modifiers) {
-		}
-
-		public void onKeyPress(Widget sender, char keyCode, int modifiers) {
-		}
-
-		public void onKeyUp(Widget sender, char keyCode, int modifiers) {
-			if (sender == richText) {
-				// We use the RichTextArea's onKeyUp event to update the toolbar
-				// status.
-				// This will catch any cases where the user moves the cursur
-				// using the
-				// keyboard, or uses one of the browser's built-in keyboard
-				// shortcuts.
-				updateStatus();
-			}
-		}
 	}
 }

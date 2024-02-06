@@ -15,6 +15,14 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 public class TaskGenerateGwtTypemodelJar extends PerformerTask {
 	transient String outPath = "/tmp/gwt-typemodel";
 
+	boolean isTypeModel(File f) {
+		String packageFragment = "com.google.gwt.core.ext.typeinfo".replace(".",
+				"/");
+		String pathFilter = f.getAbsolutePath().replace(outPath + "/", "");
+		return packageFragment.contains(pathFilter)
+				|| pathFilter.contains(packageFragment);
+	}
+
 	@Override
 	public void run() throws Exception {
 		String path = "/g/alcina/lib/framework/gwt/gwt-dev.jar";
@@ -34,13 +42,5 @@ public class TaskGenerateGwtTypemodelJar extends PerformerTask {
 		Collections.reverse(list);
 		list.forEach(File::delete);
 		new ZipUtil().createZip(outJar, outFolder, Collections.emptyMap());
-	}
-
-	boolean isTypeModel(File f) {
-		String packageFragment = "com.google.gwt.core.ext.typeinfo".replace(".",
-				"/");
-		String pathFilter = f.getAbsolutePath().replace(outPath + "/", "");
-		return packageFragment.contains(pathFilter)
-				|| pathFilter.contains(packageFragment);
 	}
 }

@@ -20,114 +20,6 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementJso extends NodeJso implements ClientDomElement {
-	static class ContiguousTextNodes {
-		NodeJso previous;
-
-		NodeJso node;
-
-		int idx;
-
-		ContiguousTextNodes(int idx, NodeJso previous, NodeJso node) {
-			this.idx = idx;
-			this.previous = previous;
-			this.node = node;
-		}
-
-		void applyToLocal() {
-		}
-	}
-
-	static class ElementJsoIndex extends JavaScriptObject {
-		protected ElementJsoIndex() {
-		}
-
-		public final String getString() {
-			FormatBuilder fb = new FormatBuilder();
-			fb.line("Element remote:\n===========");
-			fb.line("Indicies (lowest first):\n%s", stringIndicies());
-			fb.line("Ancestors (lowest first):\n%s", ancestors());
-			fb.line("Root:\n%s",
-					root() != null ? root().getTagNameRemote() : "null");
-			fb.line("Debug data:\n%s", debugData());
-			fb.line("\nDebug log:\n%s", debugLog());
-			return fb.toString();
-		}
-
-		final native JsArray ancestors()/*-{
-      return this.ancestors;
-		}-*/;
-
-		final native String debugData()/*-{
-      return this.debugData.join("\n\n");
-		}-*/;
-
-		final native String debugLog()/*-{
-      return this.debugLog;
-		}-*/;
-
-		final native ElementJso hasNode()/*-{
-      return this.hasNode;
-		}-*/;
-
-		final boolean hasRemoteDefined() {
-			for (Boolean value : remoteDefined()) {
-				if (value) {
-					return true;
-				}
-			}
-			return false;
-		}
-
-		final List<Integer> indicies() {
-			return commaSeparatedIntsToList(stringIndicies());
-		}
-
-		final native JsArrayInteger jsIndicies()/*-{
-      return this.indicies;
-		}-*/;
-
-		final native JsArrayInteger jsSizes()/*-{
-      return this.sizes;
-		}-*/;
-
-		final List<Boolean> remoteDefined() {
-			return commaSeparatedBoolsToList(stringRemoteDefined());
-		}
-
-		final native ElementJso root()/*-{
-      return this.root;
-		}-*/;
-
-		final List<Integer> sizes() {
-			return commaSeparatedIntsToList(stringSizes());
-		}
-
-		final native String stringIndicies()/*-{
-      return this.indicies.join(",");
-		}-*/;
-
-		final native String stringRemoteDefined()/*-{
-      return this.remoteDefined.join(",");
-		}-*/;
-
-		final native String stringSizes()/*-{
-      return this.sizes.join(",");
-		}-*/;
-	}
-
-	/**
-	 * Determines whether the given {@link JavaScriptObject} can be cast to an
-	 * {@link Element}. A <code>null</code> object will cause this method to
-	 * return <code>false</code>.
-	 *
-	 *
-	 */
-	static class RemoteCache {
-		boolean lastIsResult;
-
-		JavaScriptObject lastIs;
-	}
-
 	/*
 	 * Non-private for access from bytecode generated (ElementJso$)
 	 */
@@ -149,25 +41,6 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	public static Element as(Node node) {
 		assert is((JavaScriptObject) node.remote());
 		return (Element) node;
-	}
-
-	public static boolean is(JavaScriptObject o) {
-		if (cache.lastIs == o) {
-			return cache.lastIsResult;
-		}
-		boolean is0 = isRemote(o);
-		cache.lastIs = o;
-		cache.lastIsResult = is0;
-		return is0;
-	}
-
-	/**
-	 * Determine whether the given {@link Node} can be cast to an
-	 * {@link Element}. A <code>null</code> node will cause this method to
-	 * return <code>false</code>.
-	 */
-	public static boolean is(Node node) {
-		return (node != null) && (node.getNodeType() == Node.ELEMENT_NODE);
 	}
 
 	/**
@@ -199,8 +72,23 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		return ClientDomElement.indexOfName(nameList, name);
 	}
 
-	static String trimClassName(String className) {
-		return ClientDomElement.trimClassName(className);
+	public static boolean is(JavaScriptObject o) {
+		if (cache.lastIs == o) {
+			return cache.lastIsResult;
+		}
+		boolean is0 = isRemote(o);
+		cache.lastIs = o;
+		cache.lastIsResult = is0;
+		return is0;
+	}
+
+	/**
+	 * Determine whether the given {@link Node} can be cast to an
+	 * {@link Element}. A <code>null</code> node will cause this method to
+	 * return <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		return (node != null) && (node.getNodeType() == Node.ELEMENT_NODE);
 	}
 
 	private static boolean isRemote(JavaScriptObject o) {
@@ -225,6 +113,10 @@ public class ElementJso extends NodeJso implements ClientDomElement {
     return val | 0;
 	}-*/;
 
+	static String trimClassName(String className) {
+		return ClientDomElement.trimClassName(className);
+	}
+
 	protected ElementJso() {
 	}
 
@@ -239,6 +131,89 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	@Override
 	public final native void blur() /*-{
     this.blur();
+	}-*/;
+
+	/**
+	 * Explicitly build html by traversing with javascript (cos we can't trust
+	 * IE11, although we can webkit and probably FF)
+	 *
+	 * FIXME dirndl 1x3 - probably remove
+	 */
+	final native String buildOuterHtml()/*-{
+
+    function escapeHtml(str, buffer) {
+      var node = document.createTextNode(str);
+      buffer.div.appendChild(node);
+      var result = buffer.div.innerHTML;
+      buffer.div.removeChild(node);
+      return result;
+    }
+    function addNodeToBuiltHtml(node, buffer, depth) {
+      var buf = buffer.buf;
+      //fixme - test
+      switch (node.nodeType) {
+      //TEXT_NODE
+      case 3:
+        buf += escapeHtml(node.data, buffer);
+        break;
+      //PROCESSING_INSTRUCTION_NODE
+      case 7:
+        buf += '<?';
+        buf += node.name;
+        buf += ' ';
+        buf += escapeHtml(node.data, buffer);
+        buf += '?>';
+        //COMMENT_NODE
+      case 8:
+        buf += '<!--';
+        buf += escapeHtml(node.data, buffer);
+        buf += '-->';
+        break;
+      //ELEMENT_NODE
+      case 1:
+        buf += '<';
+        buf += node.tagName;
+        if (node.attributes.length > 0) {
+          for (var idx = 0; idx < node.attributes.length; idx++) {
+            buf += ' ';
+            buf += node.attributes[idx].name;
+            buf += '="';
+            buf += escapeHtml(node.attributes[idx].value, buffer).split("\"")
+                .join("&quot;");
+            buf += '"';
+          }
+        }
+        buf += '>';
+        var idx = 0;
+        var size = node.childNodes.length;
+        buffer.buf = buf;
+        for (; idx < size; idx++) {
+          var child = node.childNodes.item(idx);
+          addNodeToBuiltHtml(child, buffer, depth + 1);
+        }
+        buf = buffer.buf;
+        var re = /^(?:area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
+        if (node.tagName.match(re)) {
+
+        } else {
+          buf += '</';
+          buf += node.tagName;
+          buf += '>';
+        }
+
+        break;
+      default:
+        throw "node not handled:" + node;
+      }
+      buffer.buf = buf;
+
+    }
+    var buffer = {
+      buf : '',
+      div : $doc.createElement('div')
+    }
+    addNodeToBuiltHtml(this, buffer, 0);
+    return buffer.buf;
 	}-*/;
 
 	/**
@@ -331,6 +306,16 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		return DOMImpl.impl.getAttribute(elementFor(), name);
 	}
 
+	private final native JsArrayString getAttributeList()/*-{
+    var result = [];
+    var attrs = this.attributes;
+    for (var i = 0; i < attrs.length; i++) {
+      result.push(attrs[i].name);
+      result.push(attrs[i].value);
+    }
+    return result;
+	}-*/;
+
 	@Override
 	public final Map<String, String> getAttributeMap() {
 		StringMap result = new StringMap();
@@ -384,6 +369,58 @@ public class ElementJso extends NodeJso implements ClientDomElement {
     return $wnd.getComputedStyle(this);
 	}-*/;
 
+	final List<ContiguousTextNodes> getContiguousTextContainers() {
+		List<ContiguousTextNodes> result = new ArrayList<>();
+		Stack<ElementJso> stack = new Stack<>();
+		stack.push(this);
+		while (!stack.isEmpty()) {
+			// breadth first is important here, because later application
+			// requires correct parent indicies (at time of application)
+			ElementJso elem = stack.remove(0);
+			List<NodeJso> list = new ArrayList<>();
+			NodeListJso<Node> childNodes = elem.getChildNodes0();
+			int length = childNodes.getLength();
+			int lastNodeType = -1;
+			NodeJso lastNode = null;
+			for (int idx = 0; idx < length; idx++) {
+				NodeJso node = childNodes.getItem0(idx);
+				int nodeType = node.getNodeType();
+				switch (nodeType) {
+				case Node.ELEMENT_NODE:
+					ElementJso elemChild = (ElementJso) node;
+					switch (elemChild.getNodeName().toLowerCase()) {
+					case "script":
+					case "style":
+						// not visual - and sometimes weird ("br" in script(!!))
+						// - don't descend
+						break;
+					default:
+						stack.push(elemChild);
+						break;
+					}
+					break;
+				case Node.TEXT_NODE:
+					if (lastNodeType == Node.TEXT_NODE) {
+						result.add(
+								new ContiguousTextNodes(idx, lastNode, node));
+					}
+					break;
+				case Node.COMMENT_NODE:
+					if (lastNodeType == Node.COMMENT_NODE) {
+						result.add(
+								new ContiguousTextNodes(idx, lastNode, node));
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+				lastNodeType = nodeType;
+				lastNode = node;
+			}
+		}
+		return result;
+	}
+
 	/**
 	 * Specifies the base direction of directionally neutral text and the
 	 * directionality of tables.
@@ -409,6 +446,20 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		return new NodeList(getElementsByTagName0(tagName));
 	}
 
+	/**
+	 * Returns a NodeList of all descendant Elements with a given tag name, in
+	 * the order in which they are encountered in a preorder traversal of this
+	 * Element tree.
+	 *
+	 * @param name
+	 *            The name of the tag to match on. The special value "*" matches
+	 *            all tags
+	 * @return A list of matching Element nodes
+	 */
+	private final native NodeListJso<Element> getElementsByTagName0(String name) /*-{
+    return this.getElementsByTagName(name);
+	}-*/;
+
 	@Override
 	public final Element getFirstChildElement() {
 		return ClientDomElementStatic.getFirstChildElement(this);
@@ -430,6 +481,10 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	public final String getInnerHTML() {
 		return ClientDomElementStatic.getInnerHTML(this);
 	}
+
+	final native String getInnerHTML0()/*-{
+    return this.innerHTML;
+	}-*/;
 
 	@Override
 	public final String getInnerText() {
@@ -570,6 +625,17 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	}
 
 	/**
+	 * Gets a property from this element.
+	 *
+	 * @param name
+	 *            the name of the property to be retrieved
+	 * @return the property value
+	 */
+	private final native String getPropertyString0(String name) /*-{
+    return (this[name] == null) ? null : String(this[name]);
+	}-*/;
+
+	/**
 	 * The height of the scroll view of an element.
 	 */
 	@Override
@@ -611,9 +677,52 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Gets this element's {@link Style} object.
+	 */
+	final native StyleRemote getStyle0() /*-{
+    return this.style;
+	}-*/;
+
 	public final StyleRemote getStyleRemote() {
 		return getStyle0();
 	}
+
+	private final native double getSubPixelClientHeight() /*-{
+    return this.clientHeight;
+	}-*/;
+
+	private final native double getSubPixelClientWidth() /*-{
+    return this.clientWidth;
+	}-*/;
+
+	private final native double getSubPixelOffsetHeight() /*-{
+    return this.offsetHeight || 0;
+	}-*/;
+
+	private final native double getSubPixelOffsetLeft() /*-{
+    return this.offsetLeft || 0;
+	}-*/;
+
+	private final native double getSubPixelOffsetTop() /*-{
+    return this.offsetTop || 0;
+	}-*/;
+
+	private final native double getSubPixelOffsetWidth() /*-{
+    return this.offsetWidth || 0;
+	}-*/;
+
+	private final native double getSubPixelScrollHeight() /*-{
+    return this.scrollHeight || 0;
+	}-*/;
+
+	private final native double getSubPixelScrollTop() /*-{
+    return this.scrollTop || 0;
+	}-*/;
+
+	private final native double getSubPixelScrollWidth() /*-{
+    return this.scrollWidth || 0;
+	}-*/;
 
 	@Override
 	public final int getTabIndex() {
@@ -624,6 +733,10 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	public final String getTagName() {
 		return ClientDomElementStatic.getTagName(this);
 	}
+
+	final native String getTagNameRemote()/*-{
+    return this.tagName;
+	}-*/;
 
 	/**
 	 * The element's advisory title.
@@ -648,8 +761,143 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		return ClientDomElementStatic.hasTagName(this, tagName);
 	}
 
+	final boolean hasTagNameInternal(String tag) {
+		return getTagNameRemote().equals(tag);
+	}
+
+	final String jsoPropertyName(String name) {
+		return Objects.equals(name, "class") ? "className" : name;
+	}
+
 	public final String provideRemoteDomTree() {
 		return provideRemoteDomTree0();
+	}
+
+	final native String provideRemoteDomTree0()/*-{
+    function addNode(node, buffer, depth) {
+      var buf = buffer.buf;
+      for (var idx = 0; idx < depth; idx++) {
+        buf += ' ';
+      }
+      buf += node.nodeType;
+      buf += ': ';
+      switch (node.nodeType) {
+      case 3:
+      case 8:
+        buf += '[';
+        buf += node.data.split('\n').join('\\n').split('\t').join('\\t').split(
+            '\r').join('\\r');
+        buf += ']';
+        break;
+      case 1:
+        buf += node.tagName;
+        buf += ' : ';
+        break;
+      }
+      buf += '\n';
+      buffer.buf = buf;
+      if (node.nodeType == 1) {
+        var idx = 0;
+        var size = node.childNodes.length;
+        for (; idx < size; idx++) {
+          var child = node.childNodes.item(idx);
+          addNode(child, buffer, depth + 1);
+        }
+      }
+    }
+    var buffer = {
+      buf : ''
+    };
+    addNode(this, buffer, 0);
+    return buffer.buf;
+	}-*/;
+
+	// FIXME - dirndl 1x1e - should also check tagname for really warped
+	// dom. unlikely to be an issue though. Also result should be a json form
+	// (JSO)
+	final native ElementJsoIndex provideRemoteIndex(boolean debug)/*-{
+    var result = {
+      hasNode : null,
+      root : null,
+      indicies : [],
+      ancestors : [],
+      sizes : [],
+      debugData : [],
+      remoteDefined : [],
+      debugLog : '',
+    };
+    var cursor = this;
+    while (true) {
+      var hasNode = @com.google.gwt.dom.client.LocalDom::hasNode(Lcom/google/gwt/core/client/JavaScriptObject;)(cursor);
+      if (hasNode) {
+        result.hasNode = cursor;
+        break;
+      }
+      var parent = cursor.parentElement;
+      if (parent == null) {
+        result.root = cursor;
+        break;
+      }
+      var idx = 0;
+      var size = parent.childNodes.length;
+      for (; idx < size; idx++) {
+        var node = parent.childNodes.item(idx);
+        if (debug) {
+          result.debugLog += "Checking node - depth: " + result.indicies.length;
+          result.debugLog += " - idx: " + idx;
+          result.debugLog += " - Node type: " + node.nodeType;
+          result.debugLog += " - Node name: " + node.nodeName;
+          result.debugLog += " - Cursor type: " + node.nodeType;
+          result.debugLog += " - Cursor name: " + node.nodeName;
+          result.debugLog += "\n";
+        }
+        if (node == cursor) {
+          result.indicies.push(idx);
+          result.ancestors.push(cursor);
+          var className = cursor.className;
+          if (!className.indexOf && typeof className.baseVal == 'string') {
+            className = className.baseVal;
+          }
+          result.remoteDefined
+              .push(className.indexOf(@Element::REMOTE_DEFINED) != -1);
+          break;
+        }
+      }
+      result.sizes.push(size);
+      if (debug) {
+        var buf = '';
+        var idx = 0;
+        for (; idx < size; idx++) {
+          var node = parent.childNodes.item(idx);
+          buf += node.nodeType;
+          buf += ': ';
+          switch (node.nodeType) {
+          case 3:
+          case 8:
+            buf += '[';
+            buf += node.data.split('\n').join('\\n').split('\t').join('\\t');
+            buf += ']';
+            break;
+          case 1:
+            buf += node.tagName;
+            buf += ' : ';
+            break;
+          }
+          buf += "\n";
+        }
+        result.debugData.push(buf);
+      }
+      cursor = parent;
+    }
+    return result;
+
+	}-*/;
+
+	/** only allow if telling all local nodes that they're detached **/
+	final Node removeAllChildren0() {
+		LocalDom.verifyMutatingState();
+		setInnerHTML("");
+		return node();
 	}
 
 	/**
@@ -665,6 +913,11 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	public final boolean removeClassName(String className) {
 		return ClientDomElementStatic.removeClassName(this, className);
 	}
+
+	final native void removeFromParent0()/*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
+    this.parentElement.removeChild(this);
+	}-*/;
 
 	@Override
 	public final void replaceClassName(String oldClassName,
@@ -849,6 +1102,11 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		setPropertyString0(jsoPropertyName(name), value);
 	}
 
+	final native void setPropertyString0(String name, String value) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
+    this[name] = value;
+	}-*/;
+
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
 		ClientDomElementStatic.setScrollLeft(this, scrollLeft);
@@ -904,369 +1162,111 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		ClientDomElementStatic.toggleClassName(this, className);
 	}
 
-	final native void setPropertyString0(String name, String value) /*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
-    this[name] = value;
-	}-*/;
+	static class ContiguousTextNodes {
+		NodeJso previous;
 
-	final String jsoPropertyName(String name) {
-		return Objects.equals(name, "class") ? "className" : name;
-	}
+		NodeJso node;
 
-	/**
-	 * Explicitly build html by traversing with javascript (cos we can't trust
-	 * IE11, although we can webkit and probably FF)
-	 *
-	 * FIXME dirndl 1x3 - probably remove
-	 */
-	final native String buildOuterHtml()/*-{
+		int idx;
 
-    function escapeHtml(str, buffer) {
-      var node = document.createTextNode(str);
-      buffer.div.appendChild(node);
-      var result = buffer.div.innerHTML;
-      buffer.div.removeChild(node);
-      return result;
-    }
-    function addNodeToBuiltHtml(node, buffer, depth) {
-      var buf = buffer.buf;
-      //fixme - test
-      switch (node.nodeType) {
-      //TEXT_NODE
-      case 3:
-        buf += escapeHtml(node.data, buffer);
-        break;
-      //PROCESSING_INSTRUCTION_NODE
-      case 7:
-        buf += '<?';
-        buf += node.name;
-        buf += ' ';
-        buf += escapeHtml(node.data, buffer);
-        buf += '?>';
-        //COMMENT_NODE
-      case 8:
-        buf += '<!--';
-        buf += escapeHtml(node.data, buffer);
-        buf += '-->';
-        break;
-      //ELEMENT_NODE
-      case 1:
-        buf += '<';
-        buf += node.tagName;
-        if (node.attributes.length > 0) {
-          for (var idx = 0; idx < node.attributes.length; idx++) {
-            buf += ' ';
-            buf += node.attributes[idx].name;
-            buf += '="';
-            buf += escapeHtml(node.attributes[idx].value, buffer).split("\"")
-                .join("&quot;");
-            buf += '"';
-          }
-        }
-        buf += '>';
-        var idx = 0;
-        var size = node.childNodes.length;
-        buffer.buf = buf;
-        for (; idx < size; idx++) {
-          var child = node.childNodes.item(idx);
-          addNodeToBuiltHtml(child, buffer, depth + 1);
-        }
-        buf = buffer.buf;
-        var re = /^(?:area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
-        if (node.tagName.match(re)) {
-
-        } else {
-          buf += '</';
-          buf += node.tagName;
-          buf += '>';
-        }
-
-        break;
-      default:
-        throw "node not handled:" + node;
-      }
-      buffer.buf = buf;
-
-    }
-    var buffer = {
-      buf : '',
-      div : $doc.createElement('div')
-    }
-    addNodeToBuiltHtml(this, buffer, 0);
-    return buffer.buf;
-	}-*/;
-
-	final List<ContiguousTextNodes> getContiguousTextContainers() {
-		List<ContiguousTextNodes> result = new ArrayList<>();
-		Stack<ElementJso> stack = new Stack<>();
-		stack.push(this);
-		while (!stack.isEmpty()) {
-			// breadth first is important here, because later application
-			// requires correct parent indicies (at time of application)
-			ElementJso elem = stack.remove(0);
-			List<NodeJso> list = new ArrayList<>();
-			NodeListJso<Node> childNodes = elem.getChildNodes0();
-			int length = childNodes.getLength();
-			int lastNodeType = -1;
-			NodeJso lastNode = null;
-			for (int idx = 0; idx < length; idx++) {
-				NodeJso node = childNodes.getItem0(idx);
-				int nodeType = node.getNodeType();
-				switch (nodeType) {
-				case Node.ELEMENT_NODE:
-					ElementJso elemChild = (ElementJso) node;
-					switch (elemChild.getNodeName().toLowerCase()) {
-					case "script":
-					case "style":
-						// not visual - and sometimes weird ("br" in script(!!))
-						// - don't descend
-						break;
-					default:
-						stack.push(elemChild);
-						break;
-					}
-					break;
-				case Node.TEXT_NODE:
-					if (lastNodeType == Node.TEXT_NODE) {
-						result.add(
-								new ContiguousTextNodes(idx, lastNode, node));
-					}
-					break;
-				case Node.COMMENT_NODE:
-					if (lastNodeType == Node.COMMENT_NODE) {
-						result.add(
-								new ContiguousTextNodes(idx, lastNode, node));
-					}
-					break;
-				default:
-					throw new UnsupportedOperationException();
-				}
-				lastNodeType = nodeType;
-				lastNode = node;
-			}
+		ContiguousTextNodes(int idx, NodeJso previous, NodeJso node) {
+			this.idx = idx;
+			this.previous = previous;
+			this.node = node;
 		}
-		return result;
+
+		void applyToLocal() {
+		}
 	}
 
-	final native String getInnerHTML0()/*-{
-    return this.innerHTML;
-	}-*/;
+	static class ElementJsoIndex extends JavaScriptObject {
+		protected ElementJsoIndex() {
+		}
+
+		final native JsArray ancestors()/*-{
+      return this.ancestors;
+		}-*/;
+
+		final native String debugData()/*-{
+      return this.debugData.join("\n\n");
+		}-*/;
+
+		final native String debugLog()/*-{
+      return this.debugLog;
+		}-*/;
+
+		public final String getString() {
+			FormatBuilder fb = new FormatBuilder();
+			fb.line("Element remote:\n===========");
+			fb.line("Indicies (lowest first):\n%s", stringIndicies());
+			fb.line("Ancestors (lowest first):\n%s", ancestors());
+			fb.line("Root:\n%s",
+					root() != null ? root().getTagNameRemote() : "null");
+			fb.line("Debug data:\n%s", debugData());
+			fb.line("\nDebug log:\n%s", debugLog());
+			return fb.toString();
+		}
+
+		final native ElementJso hasNode()/*-{
+      return this.hasNode;
+		}-*/;
+
+		final boolean hasRemoteDefined() {
+			for (Boolean value : remoteDefined()) {
+				if (value) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		final List<Integer> indicies() {
+			return commaSeparatedIntsToList(stringIndicies());
+		}
+
+		final native JsArrayInteger jsIndicies()/*-{
+      return this.indicies;
+		}-*/;
+
+		final native JsArrayInteger jsSizes()/*-{
+      return this.sizes;
+		}-*/;
+
+		final List<Boolean> remoteDefined() {
+			return commaSeparatedBoolsToList(stringRemoteDefined());
+		}
+
+		final native ElementJso root()/*-{
+      return this.root;
+		}-*/;
+
+		final List<Integer> sizes() {
+			return commaSeparatedIntsToList(stringSizes());
+		}
+
+		final native String stringIndicies()/*-{
+      return this.indicies.join(",");
+		}-*/;
+
+		final native String stringRemoteDefined()/*-{
+      return this.remoteDefined.join(",");
+		}-*/;
+
+		final native String stringSizes()/*-{
+      return this.sizes.join(",");
+		}-*/;
+	}
 
 	/**
-	 * Gets this element's {@link Style} object.
-	 */
-	final native StyleRemote getStyle0() /*-{
-    return this.style;
-	}-*/;
-
-	final native String getTagNameRemote()/*-{
-    return this.tagName;
-	}-*/;
-
-	final boolean hasTagNameInternal(String tag) {
-		return getTagNameRemote().equals(tag);
-	}
-
-	final native String provideRemoteDomTree0()/*-{
-    function addNode(node, buffer, depth) {
-      var buf = buffer.buf;
-      for (var idx = 0; idx < depth; idx++) {
-        buf += ' ';
-      }
-      buf += node.nodeType;
-      buf += ': ';
-      switch (node.nodeType) {
-      case 3:
-      case 8:
-        buf += '[';
-        buf += node.data.split('\n').join('\\n').split('\t').join('\\t').split(
-            '\r').join('\\r');
-        buf += ']';
-        break;
-      case 1:
-        buf += node.tagName;
-        buf += ' : ';
-        break;
-      }
-      buf += '\n';
-      buffer.buf = buf;
-      if (node.nodeType == 1) {
-        var idx = 0;
-        var size = node.childNodes.length;
-        for (; idx < size; idx++) {
-          var child = node.childNodes.item(idx);
-          addNode(child, buffer, depth + 1);
-        }
-      }
-    }
-    var buffer = {
-      buf : ''
-    };
-    addNode(this, buffer, 0);
-    return buffer.buf;
-	}-*/;
-
-	// FIXME - dirndl 1x1e - should also check tagname for really warped
-	// dom. unlikely to be an issue though. Also result should be a json form
-	// (JSO)
-	final native ElementJsoIndex provideRemoteIndex(boolean debug)/*-{
-    var result = {
-      hasNode : null,
-      root : null,
-      indicies : [],
-      ancestors : [],
-      sizes : [],
-      debugData : [],
-      remoteDefined : [],
-      debugLog : '',
-    };
-    var cursor = this;
-    while (true) {
-      var hasNode = @com.google.gwt.dom.client.LocalDom::hasNode(Lcom/google/gwt/core/client/JavaScriptObject;)(cursor);
-      if (hasNode) {
-        result.hasNode = cursor;
-        break;
-      }
-      var parent = cursor.parentElement;
-      if (parent == null) {
-        result.root = cursor;
-        break;
-      }
-      var idx = 0;
-      var size = parent.childNodes.length;
-      for (; idx < size; idx++) {
-        var node = parent.childNodes.item(idx);
-        if (debug) {
-          result.debugLog += "Checking node - depth: " + result.indicies.length;
-          result.debugLog += " - idx: " + idx;
-          result.debugLog += " - Node type: " + node.nodeType;
-          result.debugLog += " - Node name: " + node.nodeName;
-          result.debugLog += " - Cursor type: " + node.nodeType;
-          result.debugLog += " - Cursor name: " + node.nodeName;
-          result.debugLog += "\n";
-        }
-        if (node == cursor) {
-          result.indicies.push(idx);
-          result.ancestors.push(cursor);
-          var className = cursor.className;
-          if (!className.indexOf && typeof className.baseVal == 'string') {
-            className = className.baseVal;
-          }
-          result.remoteDefined
-              .push(className.indexOf(@Element::REMOTE_DEFINED) != -1);
-          break;
-        }
-      }
-      result.sizes.push(size);
-      if (debug) {
-        var buf = '';
-        var idx = 0;
-        for (; idx < size; idx++) {
-          var node = parent.childNodes.item(idx);
-          buf += node.nodeType;
-          buf += ': ';
-          switch (node.nodeType) {
-          case 3:
-          case 8:
-            buf += '[';
-            buf += node.data.split('\n').join('\\n').split('\t').join('\\t');
-            buf += ']';
-            break;
-          case 1:
-            buf += node.tagName;
-            buf += ' : ';
-            break;
-          }
-          buf += "\n";
-        }
-        result.debugData.push(buf);
-      }
-      cursor = parent;
-    }
-    return result;
-
-	}-*/;
-
-	/** only allow if telling all local nodes that they're detached **/
-	final Node removeAllChildren0() {
-		LocalDom.verifyMutatingState();
-		setInnerHTML("");
-		return node();
-	}
-
-	final native void removeFromParent0()/*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
-    this.parentElement.removeChild(this);
-	}-*/;
-
-	/**
-	 * Gets a property from this element.
+	 * Determines whether the given {@link JavaScriptObject} can be cast to an
+	 * {@link Element}. A <code>null</code> object will cause this method to
+	 * return <code>false</code>.
 	 *
-	 * @param name
-	 *            the name of the property to be retrieved
-	 * @return the property value
-	 */
-	private final native String getPropertyString0(String name) /*-{
-    return (this[name] == null) ? null : String(this[name]);
-	}-*/;
-
-	private final native JsArrayString getAttributeList()/*-{
-    var result = [];
-    var attrs = this.attributes;
-    for (var i = 0; i < attrs.length; i++) {
-      result.push(attrs[i].name);
-      result.push(attrs[i].value);
-    }
-    return result;
-	}-*/;
-
-	/**
-	 * Returns a NodeList of all descendant Elements with a given tag name, in
-	 * the order in which they are encountered in a preorder traversal of this
-	 * Element tree.
 	 *
-	 * @param name
-	 *            The name of the tag to match on. The special value "*" matches
-	 *            all tags
-	 * @return A list of matching Element nodes
 	 */
-	private final native NodeListJso<Element> getElementsByTagName0(String name) /*-{
-    return this.getElementsByTagName(name);
-	}-*/;
+	static class RemoteCache {
+		boolean lastIsResult;
 
-	private final native double getSubPixelClientHeight() /*-{
-    return this.clientHeight;
-	}-*/;
-
-	private final native double getSubPixelClientWidth() /*-{
-    return this.clientWidth;
-	}-*/;
-
-	private final native double getSubPixelOffsetHeight() /*-{
-    return this.offsetHeight || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetLeft() /*-{
-    return this.offsetLeft || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetTop() /*-{
-    return this.offsetTop || 0;
-	}-*/;
-
-	private final native double getSubPixelOffsetWidth() /*-{
-    return this.offsetWidth || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollHeight() /*-{
-    return this.scrollHeight || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollTop() /*-{
-    return this.scrollTop || 0;
-	}-*/;
-
-	private final native double getSubPixelScrollWidth() /*-{
-    return this.scrollWidth || 0;
-	}-*/;
+		JavaScriptObject lastIs;
+	}
 }

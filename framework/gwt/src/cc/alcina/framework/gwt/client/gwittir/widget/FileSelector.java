@@ -56,6 +56,12 @@ public class FileSelector extends AbstractBoundWidget<FileData>
 	}
 
 	@Override
+	protected void onAttach() {
+		super.onAttach();
+		base.setAccept(accept);
+	}
+
+	@Override
 	public void onChange(ChangeEvent event) {
 		Html5File[] files = base.getFiles();
 		if (files.length == 1) {
@@ -85,11 +91,5 @@ public class FileSelector extends AbstractBoundWidget<FileData>
 	@Override
 	public void setValue(FileData value) {
 		this.value = value;
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		base.setAccept(accept);
 	}
 }

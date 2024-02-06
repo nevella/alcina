@@ -32,6 +32,13 @@ public class WDManager {
 		return LooseContext.get(CONTEXT_TOKEN);
 	}
 
+	private void cacheToken(WDToken token) {
+		WDToken tCopy = new WDToken();
+		tCopy.setConfiguration(token.getConfiguration());
+		tCopy.setRootResult(token.getRootResult());
+		resultCache.put(tCopy.getConfiguration().topLevelClassName, tCopy);
+	}
+
 	// private WDToken checkCache(WDConfiguration config) {
 	// WDToken token = resultCache.get(config.topLevelClassName);
 	// if (token != null
@@ -107,12 +114,5 @@ public class WDManager {
 		}
 		logger.info(token.getRootResult().toString());
 		return token;
-	}
-
-	private void cacheToken(WDToken token) {
-		WDToken tCopy = new WDToken();
-		tCopy.setConfiguration(token.getConfiguration());
-		tCopy.setRootResult(token.getRootResult());
-		resultCache.put(tCopy.getConfiguration().topLevelClassName, tCopy);
 	}
 }

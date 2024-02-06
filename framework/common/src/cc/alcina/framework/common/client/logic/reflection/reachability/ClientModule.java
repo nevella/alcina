@@ -22,6 +22,8 @@ public abstract class ClientModule<T extends ClientModule> {
 		register(moduleClass, this);
 	}
 
+	protected abstract ModuleReflector createClientReflector();
+
 	private void register(Class<? extends ClientModule> moduleClass,
 			ClientModule<T> clientModule) {
 		if (!registered.containsKey(moduleClass)) {
@@ -35,8 +37,6 @@ public abstract class ClientModule<T extends ClientModule> {
 			register(ClientModule.class, null);
 		}
 	}
-
-	protected abstract ModuleReflector createClientReflector();
 
 	@ReflectionModule(ReflectionModule.LEFTOVER)
 	public abstract static class LeftoverReflector extends ModuleReflector {

@@ -14,9 +14,9 @@ public interface BaseMultilineEditor<T extends Entity> {
 
 	public void redraw();
 
-	public void setEditable(boolean editable);
-
 	void setCustomiser(BaseMultilineEditorCustomiser<T> customiser);
+
+	public void setEditable(boolean editable);
 
 	default void sortValues(List<T> values) {
 		values.sort(Entity.EntityComparatorLocalsHigh.INSTANCE);

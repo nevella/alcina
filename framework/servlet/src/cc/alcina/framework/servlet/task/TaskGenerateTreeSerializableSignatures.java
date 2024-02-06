@@ -69,6 +69,21 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 
 	private transient String signature;
 
+	private void checkAllFieldsAreProperties(TreeSerializable serializable) {
+		Field[] fields = serializable.getClass().getDeclaredFields();
+		for (Field field : fields) {
+			if (Modifier.isTransient(field.getModifiers())
+					|| Modifier.isStatic(field.getModifiers())) {
+				continue;
+			}
+			Property property = Reflections.at(serializable)
+					.property(field.getName());
+			if (property == null) {
+				missingPropertyDescriptors.add(field);
+			}
+		}
+	}
+
 	public void checkSerializationIssues(TreeSerializable serializable) {
 		try {
 			LooseContext.pushWithTrue(
@@ -99,6 +114,49 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	boolean filter(TreeSerializable treeSerializable) {
+		Class<? extends TreeSerializable> clazz = treeSerializable.getClass();
+		TypeSerialization typeSerialization = clazz
+				.getAnnotation(TypeSerialization.class);
+		if (typeSerialization != null
+				&& !typeSerialization.flatSerializable()) {
+			return false;
+		}
+		if (clazz.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
+			if (clazz.getAnnotation(ReflectiveSerializer.Checks.class)
+					.ignore()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void generateSignature(TreeSerializable serializable) {
+		String serializedDefaults = null;
+		try {
+			new GraphTraversal().traverse(serializable, o -> {
+				if (o instanceof Date) {
+					/*
+					 * one of those times it's useful that Date is mutable...
+					 */
+					((Date) o).setTime(0);
+				}
+			});
+			serializedDefaults = FlatTreeSerializer.serialize(serializable,
+					new SerializerOptions().withElideDefaults(false)
+							.withShortPaths(false).withTestSerialized(true));
+		} catch (RuntimeException e) {
+			Ax.simpleExceptionOut(e);
+			serializedDefaults = FlatTreeSerializer.serialize(serializable,
+					new SerializerOptions().withElideDefaults(false)
+							.withShortPaths(false).withTestSerialized(false));
+			Ax.out(serializedDefaults);
+			throw e;
+		}
+		signatures.getClassNameDefaultSerializedForms()
+				.put(serializable.getClass().getName(), serializedDefaults);
 	}
 
 	@AlcinaTransient
@@ -148,64 +206,6 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 		});
 		logger.info("TreeSerializable serializedDefaults signature: ({}) : {} ",
 				signatures.classNameDefaultSerializedForms.size(), sha1);
-	}
-
-	private void checkAllFieldsAreProperties(TreeSerializable serializable) {
-		Field[] fields = serializable.getClass().getDeclaredFields();
-		for (Field field : fields) {
-			if (Modifier.isTransient(field.getModifiers())
-					|| Modifier.isStatic(field.getModifiers())) {
-				continue;
-			}
-			Property property = Reflections.at(serializable)
-					.property(field.getName());
-			if (property == null) {
-				missingPropertyDescriptors.add(field);
-			}
-		}
-	}
-
-	private void generateSignature(TreeSerializable serializable) {
-		String serializedDefaults = null;
-		try {
-			new GraphTraversal().traverse(serializable, o -> {
-				if (o instanceof Date) {
-					/*
-					 * one of those times it's useful that Date is mutable...
-					 */
-					((Date) o).setTime(0);
-				}
-			});
-			serializedDefaults = FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withElideDefaults(false)
-							.withShortPaths(false).withTestSerialized(true));
-		} catch (RuntimeException e) {
-			Ax.simpleExceptionOut(e);
-			serializedDefaults = FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withElideDefaults(false)
-							.withShortPaths(false).withTestSerialized(false));
-			Ax.out(serializedDefaults);
-			throw e;
-		}
-		signatures.getClassNameDefaultSerializedForms()
-				.put(serializable.getClass().getName(), serializedDefaults);
-	}
-
-	boolean filter(TreeSerializable treeSerializable) {
-		Class<? extends TreeSerializable> clazz = treeSerializable.getClass();
-		TypeSerialization typeSerialization = clazz
-				.getAnnotation(TypeSerialization.class);
-		if (typeSerialization != null
-				&& !typeSerialization.flatSerializable()) {
-			return false;
-		}
-		if (clazz.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
-			if (clazz.getAnnotation(ReflectiveSerializer.Checks.class)
-					.ignore()) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	public static class TreeSerializableSignatures {

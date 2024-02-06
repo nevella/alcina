@@ -34,6 +34,10 @@ public final class JavascriptIntLookup extends JavaScriptObject {
     return v;
 	}-*/;
 
+	native int modCount()/*-{
+    return this.modCount;
+	}-*/;
+
 	public native void put(int key, Object value)/*-{
     if (this.valueLookup[key] === undefined) {
       this.length++;
@@ -62,10 +66,6 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 	public Iterator valuesIterator() {
 		return new ValuesIterator();
 	}
-
-	native int modCount()/*-{
-    return this.modCount;
-	}-*/;
 
 	private class ValuesIterator implements Iterator {
 		JsArrayInteger keysSnapshot;

@@ -61,11 +61,6 @@ public class ModelBinding<T> {
 
 	Topic<?> fromTopic;
 
-	public ModelBinding<T> withTransformsNull() {
-		this.transformsNull = true;
-		return this;
-	}
-
 	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
 	}
@@ -78,79 +73,6 @@ public class ModelBinding<T> {
 		this.consumer = consumer;
 	}
 
-	/**
-	 * add a terminal runnable (i.e. the actual action performer) to the end of
-	 * the pipeline
-	 */
-	public void signal(Runnable runnable) {
-		this.consumer = t -> runnable.run();
-	}
-
-	/**
-	 * When the change occurs, rather than pipe the event/change, pipe the
-	 * object from <code>supplier</code>
-	 */
-	public <V> ModelBinding<V> value(Supplier<V> supplier) {
-		this.supplier = supplier;
-		return (ModelBinding<V>) this;
-	}
-
-	/**
-	 * When the change occurs, rather than pipe the event/change, pipe the
-	 * replaceWith object
-	 */
-	public <V> ModelBinding<V> value(V replaceWith) {
-		return value(() -> replaceWith);
-	}
-
-	/**
-	 * The source of the binding property changes
-	 */
-	public ModelBinding<T> from(SourcesPropertyChangeEvents from) {
-		this.fromPropertyChangeSource = from;
-		return this;
-	}
-
-	/**
-	 * Add an intermediate mapping to the pipeline
-	 */
-	public <U> ModelBinding<U> map(Function<T, U> map) {
-		this.map = (Function) map;
-		return (ModelBinding<U>) this;
-	}
-
-	/**
-	 * The name of the property to bind to, or null for any property change
-	 */
-	public <P> ModelBinding<P> on(PropertyEnum fromPropertyName) {
-		this.on = fromPropertyName;
-		return (ModelBinding<P>) this;
-	}
-
-	/**
-	 * The name of the property to bind to, or null for any property change
-	 */
-	public <P> ModelBinding<P> on(String fromPropertyName) {
-		this.on = fromPropertyName;
-		return (ModelBinding<P>) this;
-	}
-
-	/**
-	 * Define the type of the incoming property
-	 */
-	public <V> ModelBinding<V> typed(Class<V> propertyType) {
-		return (ModelBinding<V>) this;
-	}
-
-	/**
-	 * Trigger the pipeline with the source's initial value when the binding is
-	 * created (defaults to true)
-	 */
-	public ModelBinding<T> withSetOnInitialise(boolean setOnInitialise) {
-		this.setOnInitialise = setOnInitialise;
-		return this;
-	}
-
 	void acceptStreamElement(Object obj) {
 		Consumer<Runnable> dispatch = ensureDispatch();
 		if (dispatch == null) {
@@ -158,19 +80,6 @@ public class ModelBinding<T> {
 		} else {
 			dispatch.accept(() -> acceptStreamElement0(obj));
 		}
-	}
-
-	Consumer<Runnable> ensureDispatch() {
-		if (dispatchRef == null) {
-			if (bindings.model().provideIsBound()) {
-				dispatchRef = bindings.model().provideNode().getResolver()
-						.dispatch();
-			} else {
-				// pre-binding, return null
-				return null;
-			}
-		}
-		return dispatchRef.get();
 	}
 
 	void acceptStreamElement0(Object obj) {
@@ -202,6 +111,66 @@ public class ModelBinding<T> {
 		}
 	}
 
+	Consumer<Runnable> ensureDispatch() {
+		if (dispatchRef == null) {
+			if (bindings.model().provideIsBound()) {
+				dispatchRef = bindings.model().provideNode().getResolver()
+						.dispatch();
+			} else {
+				// pre-binding, return null
+				return null;
+			}
+		}
+		return dispatchRef.get();
+	}
+
+	public ModelBinding<T> filter(Predicate<T> predicate) {
+		this.predicate = predicate;
+		return this;
+	}
+
+	/**
+	 * The source of the binding property changes
+	 */
+	public ModelBinding<T> from(SourcesPropertyChangeEvents from) {
+		this.fromPropertyChangeSource = from;
+		return this;
+	}
+
+	public <TE> ModelBinding<TE> from(Topic<TE> topic) {
+		this.fromTopic = topic;
+		return (ModelBinding<TE>) this;
+	}
+
+	/**
+	 * Add an intermediate mapping to the pipeline
+	 */
+	public <U> ModelBinding<U> map(Function<T, U> map) {
+		this.map = (Function) map;
+		return (ModelBinding<U>) this;
+	}
+
+	/**
+	 * The name of the property to bind to, or null for any property change
+	 */
+	public <P> ModelBinding<P> on(PropertyEnum fromPropertyName) {
+		this.on = fromPropertyName;
+		return (ModelBinding<P>) this;
+	}
+
+	/**
+	 * The name of the property to bind to, or null for any property change
+	 */
+	public <P> ModelBinding<P> on(String fromPropertyName) {
+		this.on = fromPropertyName;
+		return (ModelBinding<P>) this;
+	}
+
+	public ModelBinding<T> preMapFilter(Predicate<T> preMapPredicate) {
+		this.preMapPredicate = preMapPredicate;
+		return this;
+	}
+
 	void prepare() {
 		if (setOnInitialise) {
 			if (fromPropertyChangeSource != null) {
@@ -220,14 +189,44 @@ public class ModelBinding<T> {
 				: fromPropertyChangeSource;
 	}
 
-	public ModelBinding<T> filter(Predicate<T> predicate) {
-		this.predicate = predicate;
-		return this;
+	/**
+	 * add a terminal runnable (i.e. the actual action performer) to the end of
+	 * the pipeline
+	 */
+	public void signal(Runnable runnable) {
+		this.consumer = t -> runnable.run();
 	}
 
-	public ModelBinding<T> preMapFilter(Predicate<T> preMapPredicate) {
-		this.preMapPredicate = preMapPredicate;
-		return this;
+	public TargetBinding to(SourcesPropertyChangeEvents to) {
+		return new TargetBinding(to);
+	}
+
+	/**
+	 * Define the type of the incoming property
+	 */
+	public <V> ModelBinding<V> typed(Class<V> propertyType) {
+		return (ModelBinding<V>) this;
+	}
+
+	void unbind() {
+		listener.unbind();
+	}
+
+	/**
+	 * When the change occurs, rather than pipe the event/change, pipe the
+	 * object from <code>supplier</code>
+	 */
+	public <V> ModelBinding<V> value(Supplier<V> supplier) {
+		this.supplier = supplier;
+		return (ModelBinding<V>) this;
+	}
+
+	/**
+	 * When the change occurs, rather than pipe the event/change, pipe the
+	 * replaceWith object
+	 */
+	public <V> ModelBinding<V> value(V replaceWith) {
+		return value(() -> replaceWith);
 	}
 
 	public ModelBinding<?> withDeferredDispatch() {
@@ -237,8 +236,18 @@ public class ModelBinding<T> {
 		return this;
 	}
 
-	public TargetBinding to(SourcesPropertyChangeEvents to) {
-		return new TargetBinding(to);
+	/**
+	 * Trigger the pipeline with the source's initial value when the binding is
+	 * created (defaults to true)
+	 */
+	public ModelBinding<T> withSetOnInitialise(boolean setOnInitialise) {
+		this.setOnInitialise = setOnInitialise;
+		return this;
+	}
+
+	public ModelBinding<T> withTransformsNull() {
+		this.transformsNull = true;
+		return this;
 	}
 
 	public class TargetBinding {
@@ -248,20 +257,6 @@ public class ModelBinding<T> {
 
 		TargetBinding(SourcesPropertyChangeEvents to) {
 			this.to = to;
-		}
-
-		public TargetBinding on(String on) {
-			this.on = on;
-			return this;
-		}
-
-		public TargetBinding on(PropertyEnum on) {
-			this.on = on;
-			return this;
-		}
-
-		public void oneWay() {
-			acceptLeftToRight();
 		}
 
 		private void acceptLeftToRight() {
@@ -282,14 +277,19 @@ public class ModelBinding<T> {
 			reverseTargetBinding.acceptLeftToRight();
 			return reverse;
 		}
-	}
 
-	void unbind() {
-		listener.unbind();
-	}
+		public TargetBinding on(PropertyEnum on) {
+			this.on = on;
+			return this;
+		}
 
-	public <TE> ModelBinding<TE> from(Topic<TE> topic) {
-		this.fromTopic = topic;
-		return (ModelBinding<TE>) this;
+		public TargetBinding on(String on) {
+			this.on = on;
+			return this;
+		}
+
+		public void oneWay() {
+			acceptLeftToRight();
+		}
 	}
 }

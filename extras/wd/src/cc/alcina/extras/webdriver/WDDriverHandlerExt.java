@@ -14,6 +14,8 @@ import cc.alcina.framework.common.client.util.LooseContext;
 public abstract class WDDriverHandlerExt implements WDDriverHandler {
 	static Map<Class, RemoteWebDriver> lastDrivers = new LinkedHashMap<>();
 
+	private static Thread shutdownThread;
+
 	public static void closeDrivers() {
 		lastDrivers.values().forEach(driver -> {
 			try {
@@ -25,9 +27,14 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 		});
 	}
 
-	protected RemoteWebDriver driver;
+	static synchronized void ensureShutdownCleanup() {
+		if (shutdownThread == null) {
+			shutdownThread = new Thread(() -> closeDrivers());
+			Runtime.getRuntime().addShutdownHook(shutdownThread);
+		}
+	}
 
-	private static Thread shutdownThread;
+	protected RemoteWebDriver driver;
 
 	@Override
 	public void closeAndCleanup() {
@@ -44,12 +51,19 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 		}
 	}
 
-	static synchronized void ensureShutdownCleanup() {
-		if (shutdownThread == null) {
-			shutdownThread = new Thread(() -> closeDrivers());
-			Runtime.getRuntime().addShutdownHook(shutdownThread);
+	protected void closeLastDriver0(Class clazz) {
+		RemoteWebDriver lastDriver = lastDriver();
+		if (lastDriver != null) {
+			try {
+				lastDriver.close();
+				lastDriver.quit();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
+
+	protected abstract void createNewDriver() throws Exception;
 
 	@Override
 	public WebDriver getDriver() {
@@ -86,20 +100,6 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 		}
 		return driver;
 	}
-
-	protected void closeLastDriver0(Class clazz) {
-		RemoteWebDriver lastDriver = lastDriver();
-		if (lastDriver != null) {
-			try {
-				lastDriver.close();
-				lastDriver.quit();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	protected abstract void createNewDriver() throws Exception;
 
 	protected RemoteWebDriver lastDriver() {
 		return lastDrivers.get(getClass());

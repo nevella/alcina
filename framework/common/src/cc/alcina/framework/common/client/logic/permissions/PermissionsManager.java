@@ -271,6 +271,27 @@ public class PermissionsManager implements DomainTransformListener {
 		return Objects.equals(get().getSystemUser(), get().getUser());
 	}
 
+	private static void recursivePopulateGroupMemberships(Set<IGroup> members,
+			Set<IGroup> processed) {
+		while (true) {
+			boolean maybeAllProcessed = true;
+			for (Iterator<IGroup> itr = members.iterator(); itr.hasNext();) {
+				IGroup group = itr.next();
+				if (processed.contains(group)) {
+					continue;
+				} else {
+					processed.add(group);
+					members.addAll(group.getMemberOfGroups());
+					maybeAllProcessed = false;
+					break;
+				}
+			}
+			if (maybeAllProcessed) {
+				break;
+			}
+		}
+	}
+
 	public static void register(PermissionsManager pm) {
 		factoryInstance = pm;
 	}
@@ -280,6 +301,15 @@ public class PermissionsManager implements DomainTransformListener {
 			return;
 		}
 		factoryInstance.removePerThreadContext0();
+	}
+
+	public static void runAsUser(IUser user, ThrowingRunnable runnable) {
+		try {
+			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
+			ThrowingRunnable.asRunnable(runnable).run();
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public static void
@@ -314,27 +344,6 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public static final Topic<OnlineState> topicOnlineState() {
 		return topicOnlineState;
-	}
-
-	private static void recursivePopulateGroupMemberships(Set<IGroup> members,
-			Set<IGroup> processed) {
-		while (true) {
-			boolean maybeAllProcessed = true;
-			for (Iterator<IGroup> itr = members.iterator(); itr.hasNext();) {
-				IGroup group = itr.next();
-				if (processed.contains(group)) {
-					continue;
-				} else {
-					processed.add(group);
-					members.addAll(group.getMemberOfGroups());
-					maybeAllProcessed = false;
-					break;
-				}
-			}
-			if (maybeAllProcessed) {
-				break;
-			}
-		}
 	}
 
 	private LoginState loginState = LoginState.NOT_LOGGED_IN;
@@ -450,12 +459,30 @@ public class PermissionsManager implements DomainTransformListener {
 				bean == null ? reflector.templateInstance() : bean, true);
 	}
 
+	private int depth0() {
+		return stateStack.size();
+	}
+
 	@Override
 	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
 		if (evt.getSource() instanceof IGroup) {
 			invalidateGroupMap();
 		}
+	}
+
+	private boolean evaluatePermissionsExtension(Object o, Object assigningTo,
+			Permissible p, boolean permitted) {
+		Boolean b = null;
+		if (assigningTo != null) {
+			b = getPermissionsExtension().isPermitted(o, assigningTo, p);
+		} else {
+			b = getPermissionsExtension().isPermitted(o, p);
+		}
+		if (b != null) {
+			permitted = b;
+		}
+		return permitted;
 	}
 
 	public Long getAuthenticatedClientInstanceId() {
@@ -505,6 +532,10 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public OnlineState getOnlineState() {
 		return onlineState;
+	}
+
+	protected IUser getSystemUser() {
+		return UserlandProvider.get().getSystemUser();
 	}
 
 	public String getSystemUserName() {
@@ -557,6 +588,10 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public String getUserString() {
 		return Ax.format("%s/%s", getUserId(), getUserName());
+	}
+
+	protected void invalidateGroupMap() {
+		groupMap = null;
 	}
 
 	public boolean isAdmin() {
@@ -745,6 +780,12 @@ public class PermissionsManager implements DomainTransformListener {
 		setRoot(asRoot);
 	}
 
+	/*
+	 * Overridden by threaded subclasses
+	 */
+	protected void removePerThreadContext0() {
+	}
+
 	// This should never be necessary, if the code always surrounds user
 	// push/pop in try/finally...but...
 	public void reset() {
@@ -833,38 +874,6 @@ public class PermissionsManager implements DomainTransformListener {
 		return state;
 	}
 
-	private int depth0() {
-		return stateStack.size();
-	}
-
-	private boolean evaluatePermissionsExtension(Object o, Object assigningTo,
-			Permissible p, boolean permitted) {
-		Boolean b = null;
-		if (assigningTo != null) {
-			b = getPermissionsExtension().isPermitted(o, assigningTo, p);
-		} else {
-			b = getPermissionsExtension().isPermitted(o, p);
-		}
-		if (b != null) {
-			permitted = b;
-		}
-		return permitted;
-	}
-
-	protected IUser getSystemUser() {
-		return UserlandProvider.get().getSystemUser();
-	}
-
-	protected void invalidateGroupMap() {
-		groupMap = null;
-	}
-
-	/*
-	 * Overridden by threaded subclasses
-	 */
-	protected void removePerThreadContext0() {
-	}
-
 	@Reflected
 	public enum LoginState {
 		NOT_LOGGED_IN, LOGGED_IN
@@ -875,12 +884,12 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	public static interface PermissionsExtension extends Registration.Ensure {
-		public Boolean isPermitted(Object o, Permissible p);
-
 		default Boolean isPermitted(Object o, Object assigningTo,
 				Permissible p) {
 			return isPermitted(o, p);
 		}
+
+		public Boolean isPermitted(Object o, Permissible p);
 	}
 
 	@Reflected
@@ -989,15 +998,6 @@ public class PermissionsManager implements DomainTransformListener {
 
 		public void register(PermissionsExtensionForRule ext) {
 			perNameRules.put(ext.getRuleName(), ext);
-		}
-	}
-
-	public static void runAsUser(IUser user, ThrowingRunnable runnable) {
-		try {
-			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
-			ThrowingRunnable.asRunnable(runnable).run();
-		} finally {
-			PermissionsManager.get().popUser();
 		}
 	}
 }

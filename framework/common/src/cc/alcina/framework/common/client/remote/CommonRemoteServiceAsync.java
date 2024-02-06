@@ -43,12 +43,23 @@ public interface CommonRemoteServiceAsync {
 	public void getLogsForAction(RemoteAction action, Integer count,
 			AsyncCallback<List<JobTracker>> callback);
 
+	void getPersistentLocators(Set<EntityLocator> locators,
+			AsyncCallback<Map<EntityLocator, EntityLocator>> callback);
+
 	public void hello(AsyncCallback callback);
 
 	public void listRunningJobs(AsyncCallback<List<String>> callback);
 
+	void log(ILogRecord remoteLogRecord, AsyncCallback<Long> callback);
+
 	public void logClientError(String exceptionToString,
 			AsyncCallback<Long> callback);
+
+	void logClientError(String exceptionToString, String exceptionType,
+			AsyncCallback<Long> callback);
+
+	void logClientRecords(String serializedLogRecords,
+			AsyncCallback<Void> callback);
 
 	public void login(LoginBean loginBean, AsyncCallback callback);
 
@@ -57,8 +68,16 @@ public interface CommonRemoteServiceAsync {
 	public void performAction(RemoteAction action,
 			AsyncCallback<String> callback);
 
+	void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted,
+			AsyncCallback<Void> callback);
+
+	void ping(AsyncCallback<Void> callback);
+
 	public void pollJobStatus(JobTracker.Request request,
 			AsyncCallback<JobTracker.Response> callback);
+
+	void pollJobStatus(String id, boolean cancel,
+			AsyncCallback<JobTracker> callback);
 
 	public void search(SearchDefinition def,
 			AsyncCallback<SearchResultsBase> callback);
@@ -68,25 +87,6 @@ public interface CommonRemoteServiceAsync {
 
 	public void validateOnServer(List<ServerValidator> validators,
 			AsyncCallback<List<ServerValidator>> callback);
-
-	void getPersistentLocators(Set<EntityLocator> locators,
-			AsyncCallback<Map<EntityLocator, EntityLocator>> callback);
-
-	void log(ILogRecord remoteLogRecord, AsyncCallback<Long> callback);
-
-	void logClientError(String exceptionToString, String exceptionType,
-			AsyncCallback<Long> callback);
-
-	void logClientRecords(String serializedLogRecords,
-			AsyncCallback<Void> callback);
-
-	void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted,
-			AsyncCallback<Void> callback);
-
-	void ping(AsyncCallback<Void> callback);
-
-	void pollJobStatus(String id, boolean cancel,
-			AsyncCallback<JobTracker> callback);
 
 	void waitForTransforms(DomainTransformCommitPosition position,
 			AsyncCallback<DomainUpdate> callback);

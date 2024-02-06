@@ -14,6 +14,10 @@ public abstract class AbstractUrlSelection extends AbstractSelection<String>
 		super(parent, url, pathSegment);
 	}
 
+	public void open() {
+		VmEnvironment.BrowserAccess.get().openUrl(provideUrl());
+	}
+
 	@Override
 	public String provideUrl() {
 		return get();
@@ -22,9 +26,5 @@ public abstract class AbstractUrlSelection extends AbstractSelection<String>
 	@Override
 	public String toString() {
 		return get();
-	}
-
-	public void open() {
-		VmEnvironment.BrowserAccess.get().openUrl(provideUrl());
 	}
 }

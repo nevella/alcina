@@ -81,6 +81,10 @@ public class ServerValidator extends Model
 		return " validating";
 	}
 
+	protected void handleServerValidationException(ServerValidator sv) {
+		setMessage(sv.getMessage());
+	}
+
 	@AlcinaTransient
 	public boolean isValidated() {
 		return this.validated;
@@ -89,6 +93,10 @@ public class ServerValidator extends Model
 	@AlcinaTransient
 	public boolean isValidating() {
 		return this.validating;
+	}
+
+	protected ValidationException provideTypedException(String sMessage) {
+		return new ValidationException(sMessage, getClass());
 	}
 
 	public void reset() {
@@ -141,6 +149,20 @@ public class ServerValidator extends Model
 			final ProcessingServerValidationException psve = new ProcessingServerValidationException(
 					getValidatingMessage(), null);
 			AsyncCallback<List<ServerValidator>> callback = new AsyncCallback<List<ServerValidator>>() {
+				void cleanUp() {
+					validating = false;
+					validated = true;
+					lastValidated = value;
+					psve.setFeedback(null);
+					if (validateAfterServerReturns != null) {
+						AbstractBoundWidget bw = (AbstractBoundWidget) psve.sourceWidget;
+						if (bw != null) {
+							bw.setValue(validateAfterServerReturns);
+						}
+					}
+					psve.setSourceWidget(null);
+				}
+
 				@Override
 				public void onFailure(Throwable caught) {
 					setMessage("Validator error");
@@ -163,20 +185,6 @@ public class ServerValidator extends Model
 					}
 					resolveFeedback(lastValidatorWithException);
 					cleanUp();
-				}
-
-				void cleanUp() {
-					validating = false;
-					validated = true;
-					lastValidated = value;
-					psve.setFeedback(null);
-					if (validateAfterServerReturns != null) {
-						AbstractBoundWidget bw = (AbstractBoundWidget) psve.sourceWidget;
-						if (bw != null) {
-							bw.setValue(validateAfterServerReturns);
-						}
-					}
-					psve.setSourceWidget(null);
 				}
 
 				void resolveFeedback(
@@ -217,14 +225,6 @@ public class ServerValidator extends Model
 			throw psve;
 		}
 		return value;
-	}
-
-	protected void handleServerValidationException(ServerValidator sv) {
-		setMessage(sv.getMessage());
-	}
-
-	protected ValidationException provideTypedException(String sMessage) {
-		return new ValidationException(sMessage, getClass());
 	}
 
 	protected void validateWithCallback(

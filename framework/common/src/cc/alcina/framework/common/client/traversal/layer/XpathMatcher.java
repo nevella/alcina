@@ -16,29 +16,28 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 public class XpathMatcher {
 	private ParserState parserState;
 
+	Map<Token, QueryMatcher> matchers = AlcinaCollections.newLinkedHashMap();
+
 	public XpathMatcher(ParserState parserState) {
 		this.parserState = parserState;
 	}
 
-	Map<Token, QueryMatcher> matchers = AlcinaCollections.newLinkedHashMap();
+	public Measure match(Token token, String xpathQuery) {
+		QueryMatcher matcher = matchers
+				.computeIfAbsent(token, QueryMatcher::new)
+				.withXpathQuery(xpathQuery);
+		return matcher.match();
+	}
 
 	class QueryMatcher {
 		Token token;
 
 		String xpathQuery;
 
-		QueryMatcher(Token token) {
-			this.token = token;
-		}
-
 		Map<Location, Range> matches;
 
-		QueryMatcher withXpathQuery(String xpathQuery) {
-			Preconditions.checkState(
-					this.xpathQuery == null || this.xpathQuery == xpathQuery,
-					"xpathQuery must be invariant");
-			this.xpathQuery = xpathQuery;
-			return this;
+		QueryMatcher(Token token) {
+			this.token = token;
 		}
 
 		Measure match() {
@@ -58,12 +57,13 @@ public class XpathMatcher {
 			}
 			return match;
 		}
-	}
 
-	public Measure match(Token token, String xpathQuery) {
-		QueryMatcher matcher = matchers
-				.computeIfAbsent(token, QueryMatcher::new)
-				.withXpathQuery(xpathQuery);
-		return matcher.match();
+		QueryMatcher withXpathQuery(String xpathQuery) {
+			Preconditions.checkState(
+					this.xpathQuery == null || this.xpathQuery == xpathQuery,
+					"xpathQuery must be invariant");
+			this.xpathQuery = xpathQuery;
+			return this;
+		}
 	}
 }

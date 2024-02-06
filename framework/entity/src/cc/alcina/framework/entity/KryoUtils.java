@@ -83,6 +83,24 @@ public class KryoUtils {
 		resetPool();
 	}
 
+	protected static Kryo borrowKryo() {
+		KryoPoolKey key = getContextKey();
+		if (LooseContext.is(CONTEXT_BYPASS_POOL)) {
+			KryoPoolObjectFactory kryoPoolObjectFactory = new KryoPoolObjectFactory();
+			kryoPoolObjectFactory.key = key;
+			try {
+				return kryoPoolObjectFactory.create();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		KryoPool pool;
+		synchronized (Kryo.class) {
+			pool = kryosPool.get(key);
+		}
+		return pool.borrow(key);
+	}
+
 	public static <T> T clone(T t) {
 		Kryo kryo = borrowKryo();
 		try {
@@ -120,6 +138,39 @@ public class KryoUtils {
 		return deserializeFromStream(stream, clazz, null);
 	}
 
+	private static <T> T deserializeFromStream(InputStream stream,
+			Class<T> clazz, ThrowingSupplier<InputStream> retry) {
+		Kryo kryo = borrowKryo();
+		try {
+			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
+					? new UnsafeInput(stream)
+					: new Input(stream);
+			T someObject = kryo.readObject(input, clazz);
+			input.close();
+			someObject = resolve(clazz, someObject);
+			return someObject;
+		} catch (Exception e) {
+			throw new KryoDeserializationException(e);
+		} finally {
+			returnKryo(kryo);
+			try {
+				stream.close();
+			} catch (IOException e) {
+			}
+		}
+	}
+
+	private static KryoPoolKey getContextKey() {
+		boolean useCompatibleFieldSerializer = LooseContext
+				.is(CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
+		ClassLoader classLoader = LooseContext.has(CONTEXT_OVERRIDE_CLASSLOADER)
+				? LooseContext.get(CONTEXT_OVERRIDE_CLASSLOADER)
+				: Thread.currentThread().getContextClassLoader();
+		KryoPoolKey key = new KryoPoolKey(useCompatibleFieldSerializer,
+				classLoader);
+		return key;
+	}
+
 	public static void onlyErrorLogging() {
 		Log.set(Log.LEVEL_ERROR);
 	}
@@ -129,6 +180,40 @@ public class KryoUtils {
 			kryosPool = new CachingMap<>(
 					key -> new KryoPool(Configuration.is("usePool")));
 		}
+	}
+
+	private static <T> T resolve(Class<T> clazz, T object)
+			throws IllegalAccessException, InvocationTargetException {
+		Method readResolve = null;
+		synchronized (resolveMethods) {
+			if (!resolveMethods.containsKey(clazz)) {
+				readResolve = null;
+				try {
+					readResolve = clazz.getDeclaredMethod("readResolve",
+							new Class[0]);
+					readResolve.setAccessible(true);
+				} catch (NoSuchMethodException e) {
+				}
+				resolveMethods.put(clazz, readResolve);
+			}
+			readResolve = resolveMethods.get(clazz);
+		}
+		if (readResolve != null) {
+			object = (T) readResolve.invoke(object);
+		}
+		return object;
+	}
+
+	private static void returnKryo(Kryo kryo) {
+		if (LooseContext.is(CONTEXT_BYPASS_POOL)) {
+			return;
+		}
+		KryoPoolKey key = getContextKey();
+		KryoPool pool;
+		synchronized (Kryo.class) {
+			pool = kryosPool.get(key);
+		}
+		pool.returnObject(kryo);
 	}
 
 	public static <T> T serialClone(T t) {
@@ -190,73 +275,6 @@ public class KryoUtils {
 		}
 	}
 
-	private static <T> T deserializeFromStream(InputStream stream,
-			Class<T> clazz, ThrowingSupplier<InputStream> retry) {
-		Kryo kryo = borrowKryo();
-		try {
-			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
-					? new UnsafeInput(stream)
-					: new Input(stream);
-			T someObject = kryo.readObject(input, clazz);
-			input.close();
-			someObject = resolve(clazz, someObject);
-			return someObject;
-		} catch (Exception e) {
-			throw new KryoDeserializationException(e);
-		} finally {
-			returnKryo(kryo);
-			try {
-				stream.close();
-			} catch (IOException e) {
-			}
-		}
-	}
-
-	private static KryoPoolKey getContextKey() {
-		boolean useCompatibleFieldSerializer = LooseContext
-				.is(CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
-		ClassLoader classLoader = LooseContext.has(CONTEXT_OVERRIDE_CLASSLOADER)
-				? LooseContext.get(CONTEXT_OVERRIDE_CLASSLOADER)
-				: Thread.currentThread().getContextClassLoader();
-		KryoPoolKey key = new KryoPoolKey(useCompatibleFieldSerializer,
-				classLoader);
-		return key;
-	}
-
-	private static <T> T resolve(Class<T> clazz, T object)
-			throws IllegalAccessException, InvocationTargetException {
-		Method readResolve = null;
-		synchronized (resolveMethods) {
-			if (!resolveMethods.containsKey(clazz)) {
-				readResolve = null;
-				try {
-					readResolve = clazz.getDeclaredMethod("readResolve",
-							new Class[0]);
-					readResolve.setAccessible(true);
-				} catch (NoSuchMethodException e) {
-				}
-				resolveMethods.put(clazz, readResolve);
-			}
-			readResolve = resolveMethods.get(clazz);
-		}
-		if (readResolve != null) {
-			object = (T) readResolve.invoke(object);
-		}
-		return object;
-	}
-
-	private static void returnKryo(Kryo kryo) {
-		if (LooseContext.is(CONTEXT_BYPASS_POOL)) {
-			return;
-		}
-		KryoPoolKey key = getContextKey();
-		KryoPool pool;
-		synchronized (Kryo.class) {
-			pool = kryosPool.get(key);
-		}
-		pool.returnObject(kryo);
-	}
-
 	private static Object writeReplace(Object object) throws Exception {
 		Class<? extends Object> clazz = object.getClass();
 		Method method = null;
@@ -268,24 +286,6 @@ public class KryoUtils {
 		} else {
 			return object;
 		}
-	}
-
-	protected static Kryo borrowKryo() {
-		KryoPoolKey key = getContextKey();
-		if (LooseContext.is(CONTEXT_BYPASS_POOL)) {
-			KryoPoolObjectFactory kryoPoolObjectFactory = new KryoPoolObjectFactory();
-			kryoPoolObjectFactory.key = key;
-			try {
-				return kryoPoolObjectFactory.create();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		KryoPool pool;
-		synchronized (Kryo.class) {
-			pool = kryosPool.get(key);
-		}
-		return pool.borrow(key);
 	}
 
 	public static class ArraysArrayListSerializer extends Serializer {
@@ -369,6 +369,9 @@ public class KryoUtils {
 		}
 	}
 
+	private static class InvalidVersionException extends RuntimeException {
+	}
+
 	@Reflected
 	@Registration.Singleton
 	public static class KryoCreationCustomiser {
@@ -406,36 +409,6 @@ public class KryoUtils {
 		}
 	}
 
-	public static class UnmodifiableRandomAccessListSerializer
-			extends Serializer {
-		public UnmodifiableRandomAccessListSerializer(Kryo kryo,
-				Class<?> type) {
-		}
-
-		@Override
-		public Object read(Kryo kryo, Input input, Class type) {
-			int len = input.readInt();
-			Object[] array = new Object[len];
-			for (int idx = 0; idx < len; idx++) {
-				array[idx] = kryo.readClassAndObject(input);
-			}
-			return Collections.unmodifiableList(
-					Arrays.stream(array).collect(Collectors.toList()));
-		}
-
-		@Override
-		public void write(Kryo kryo, Output output, Object object) {
-			List list = (List) object;
-			output.writeInt(list.size());
-			for (Object element : list) {
-				kryo.writeClassAndObject(output, element);
-			}
-		}
-	}
-
-	private static class InvalidVersionException extends RuntimeException {
-	}
-
 	static class KryoPool {
 		private GenericObjectPool<Kryo> objectPool;
 
@@ -446,12 +419,6 @@ public class KryoUtils {
 			if (withPool) {
 				objectPool = new GenericObjectPool<Kryo>(factory);
 				objectPool.setMaxTotal(10);
-			}
-		}
-
-		public void returnObject(Kryo kryo) {
-			if (objectPool != null) {
-				objectPool.returnObject(kryo);
 			}
 		}
 
@@ -466,6 +433,12 @@ public class KryoUtils {
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public void returnObject(Kryo kryo) {
+			if (objectPool != null) {
+				objectPool.returnObject(kryo);
 			}
 		}
 
@@ -526,6 +499,33 @@ public class KryoUtils {
 		public int hashCode() {
 			return (useCompatibleFieldSerializer ? 1 : 0)
 					^ classLoader.hashCode();
+		}
+	}
+
+	public static class UnmodifiableRandomAccessListSerializer
+			extends Serializer {
+		public UnmodifiableRandomAccessListSerializer(Kryo kryo,
+				Class<?> type) {
+		}
+
+		@Override
+		public Object read(Kryo kryo, Input input, Class type) {
+			int len = input.readInt();
+			Object[] array = new Object[len];
+			for (int idx = 0; idx < len; idx++) {
+				array[idx] = kryo.readClassAndObject(input);
+			}
+			return Collections.unmodifiableList(
+					Arrays.stream(array).collect(Collectors.toList()));
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output, Object object) {
+			List list = (List) object;
+			output.writeInt(list.size());
+			for (Object element : list) {
+				kryo.writeClassAndObject(output, element);
+			}
 		}
 	}
 }

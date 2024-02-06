@@ -32,12 +32,12 @@ import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
  */
 public class RemoteDebugHandler
 		extends BaseRemoteActionPerformer<RemoteDebugAction> {
-	public static String immutableSecurityProperty() {
-		return RemoteDebugHandler.class.getSimpleName() + ".enabled";
-	}
-
 	private static boolean enabled() {
 		return Configuration.is("enabled");
+	}
+
+	public static String immutableSecurityProperty() {
+		return RemoteDebugHandler.class.getSimpleName() + ".enabled";
 	}
 
 	@Override
@@ -70,30 +70,6 @@ public class RemoteDebugHandler
 
 		List<String> logMessages = new ArrayList<>();
 
-		@Override
-		public void onApplicationShutdown() {
-			if (jdb != null) {
-				stopJdb();
-			}
-		}
-
-		public synchronized void onMessage(String string) {
-			logMessages.add(string);
-			lastLogTime = System.currentTimeMillis();
-		}
-
-		public String stopJdb() {
-			if (jdb == null || !jdb.getProcess().isAlive()) {
-				return log("jdb not running");
-			} else {
-				jdb.getProcess().destroy();
-				if (!jdb.getProcess().isAlive()) {
-					jdb = null;
-				}
-				return log("jdb terminated");
-			}
-		}
-
 		private void checkJdbStarted() throws JdbStateException {
 			if (jdb == null) {
 				throw new JdbStateException(
@@ -113,42 +89,6 @@ public class RemoteDebugHandler
 			jdb.getProcess().getOutputStream()
 					.write("\n".getBytes(StandardCharsets.UTF_8));
 			jdb.getProcess().getOutputStream().flush();
-		}
-
-		private String log(String string) {
-			onMessage(string);
-			return getLogMessages();
-		}
-
-		private String pollJdb() throws JdbStateException {
-			checkJdbStarted();
-			return getLogMessages();
-		}
-
-		private String startJdb() throws Exception {
-			if (jdb != null) {
-				if (!jdb.getProcess().isAlive()) {
-					logger.warn("jdb unexpectedly terminated - restarting");
-					jdb = null;
-				} else {
-					throw new JdbStateException("jdb already started");
-				}
-			}
-			String jdbPath = Configuration.get(RemoteDebugHandler.class,
-					"jdbPath");
-			String jdbPort = Configuration.get(RemoteDebugHandler.class,
-					"jdbPort");
-			String jdbHostname = Configuration.get(RemoteDebugHandler.class,
-					"jdbHostname");
-			logger.info("Launching jdb :: {}", jdbPath);
-			String connectionString = Ax.format(
-					"com.sun.jdi.SocketAttach:hostname=%s,port=%s", jdbHostname,
-					jdbPort);
-			jdb = new Shell();
-			jdb.launchProcess(
-					new String[] { jdbPath, "-connect", connectionString },
-					this::onMessage, this::onMessage);
-			return pollJdb();
 		}
 
 		synchronized String getLogMessages() {
@@ -186,6 +126,66 @@ public class RemoteDebugHandler
 					e.printStackTrace();
 				}
 				return CommonUtils.toSimpleExceptionMessage(e);
+			}
+		}
+
+		private String log(String string) {
+			onMessage(string);
+			return getLogMessages();
+		}
+
+		@Override
+		public void onApplicationShutdown() {
+			if (jdb != null) {
+				stopJdb();
+			}
+		}
+
+		public synchronized void onMessage(String string) {
+			logMessages.add(string);
+			lastLogTime = System.currentTimeMillis();
+		}
+
+		private String pollJdb() throws JdbStateException {
+			checkJdbStarted();
+			return getLogMessages();
+		}
+
+		private String startJdb() throws Exception {
+			if (jdb != null) {
+				if (!jdb.getProcess().isAlive()) {
+					logger.warn("jdb unexpectedly terminated - restarting");
+					jdb = null;
+				} else {
+					throw new JdbStateException("jdb already started");
+				}
+			}
+			String jdbPath = Configuration.get(RemoteDebugHandler.class,
+					"jdbPath");
+			String jdbPort = Configuration.get(RemoteDebugHandler.class,
+					"jdbPort");
+			String jdbHostname = Configuration.get(RemoteDebugHandler.class,
+					"jdbHostname");
+			logger.info("Launching jdb :: {}", jdbPath);
+			String connectionString = Ax.format(
+					"com.sun.jdi.SocketAttach:hostname=%s,port=%s", jdbHostname,
+					jdbPort);
+			jdb = new Shell();
+			jdb.launchProcess(
+					new String[] { jdbPath, "-connect", connectionString },
+					this::onMessage, this::onMessage);
+			return pollJdb();
+		}
+
+		public String stopJdb() {
+			if (jdb == null || !jdb.getProcess().isAlive()) {
+				return log("jdb not running");
+			} else {
+				jdb.getProcess().destroy();
+				if (!jdb.getProcess().isAlive()) {
+					jdb = null;
+				}
+				return log("jdb terminated");
 			}
 		}
 

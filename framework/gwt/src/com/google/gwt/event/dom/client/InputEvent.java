@@ -46,12 +46,12 @@ public class InputEvent extends DomEvent<InputHandler> {
 	}
 
 	@Override
-	public final Type<InputHandler> getAssociatedType() {
-		return TYPE;
+	protected void dispatch(InputHandler handler) {
+		handler.onInput(this);
 	}
 
 	@Override
-	protected void dispatch(InputHandler handler) {
-		handler.onInput(this);
+	public final Type<InputHandler> getAssociatedType() {
+		return TYPE;
 	}
 }

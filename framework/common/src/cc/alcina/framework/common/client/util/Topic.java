@@ -27,11 +27,6 @@ public class Topic<T> {
 
 	private boolean retainPublished;
 
-	public <V> Topic<V> withRetainPublished(boolean retainPublished) {
-		this.retainPublished = retainPublished;
-		return (Topic<V>) this;
-	}
-
 	private T published;
 
 	private Topic() {
@@ -42,8 +37,33 @@ public class Topic<T> {
 		return add(runnable, false);
 	}
 
+	private ListenerReference add(Runnable runnable,
+			boolean fireIfWasPublished) {
+		return add(new TopicListener() {
+			@Override
+			public void topicPublished(Object message) {
+				runnable.run();
+			}
+		}, fireIfWasPublished);
+	}
+
 	public ListenerReference add(TopicListener<T> listener) {
 		return add(listener, false);
+	}
+
+	private ListenerReference add(TopicListener<T> listener,
+			boolean fireIfWasPublished) {
+		delta(listener, true);
+		if (wasPublished && fireIfWasPublished) {
+			/*
+			 * note - unless retainpublished is set, we don't keep a ref to the
+			 * last published object - this assumes the caller knows how to get
+			 * it. Useful for adding async one-off listeners when the event may
+			 * have already occurred
+			 */
+			listener.topicPublished(published);
+		}
+		return new Topic.Reference(this, listener);
 	}
 
 	public ListenerReference addWithPublishedCheck(Runnable runnable) {
@@ -58,8 +78,23 @@ public class Topic<T> {
 		publisher.clearListeners();
 	}
 
+	public void clearPublished() {
+		wasPublished = false;
+		published = null;
+	}
+
 	public void delta(TopicListener<T> listener, boolean add) {
 		publisher.listenerDelta(listener, add);
+	}
+
+	public void fireIfPublished(Consumer<T> consumer) {
+		if (wasPublished) {
+			consumer.accept(published);
+		}
+	}
+
+	public T getPublished() {
+		return published;
 	}
 
 	public boolean hasListeners() {
@@ -82,35 +117,19 @@ public class Topic<T> {
 		publish(null);
 	}
 
-	private ListenerReference add(Runnable runnable,
-			boolean fireIfWasPublished) {
-		return add(new TopicListener() {
-			@Override
-			public void topicPublished(Object message) {
-				runnable.run();
-			}
-		}, fireIfWasPublished);
-	}
-
-	private ListenerReference add(TopicListener<T> listener,
-			boolean fireIfWasPublished) {
-		delta(listener, true);
-		if (wasPublished && fireIfWasPublished) {
-			/*
-			 * note - unless retainpublished is set, we don't keep a ref to the
-			 * last published object - this assumes the caller knows how to get
-			 * it. Useful for adding async one-off listeners when the event may
-			 * have already occurred
-			 */
-			listener.topicPublished(published);
-		}
-		return new Topic.Reference(this, listener);
+	public <V> Topic<V> withRetainPublished(boolean retainPublished) {
+		this.retainPublished = retainPublished;
+		return (Topic<V>) this;
 	}
 
 	public static class MultichannelTopics<TC> {
 		private TC firingChannel;
 
 		private Map<TC, Topic> byChannel = new LinkedHashMap<>();
+
+		private Topic ensureTopic(TC channel) {
+			return byChannel.computeIfAbsent(channel, c -> Topic.create());
+		}
 
 		public TC getFiringChannel() {
 			return this.firingChannel;
@@ -128,10 +147,6 @@ public class Topic<T> {
 			} finally {
 				firingChannel = null;
 			}
-		}
-
-		private Topic ensureTopic(TC channel) {
-			return byChannel.computeIfAbsent(channel, c -> Topic.create());
 		}
 	}
 
@@ -229,21 +244,6 @@ public class Topic<T> {
 				}
 			};
 			topic.add(wrapper);
-		}
-	}
-
-	public T getPublished() {
-		return published;
-	}
-
-	public void clearPublished() {
-		wasPublished = false;
-		published = null;
-	}
-
-	public void fireIfPublished(Consumer<T> consumer) {
-		if (wasPublished) {
-			consumer.accept(published);
 		}
 	}
 }

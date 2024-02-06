@@ -51,72 +51,7 @@ import com.google.gwt.util.tools.Utility;
  * The main executable entry point for the GWT Java to JavaScript compiler.
  */
 public class Compiler {
-	static class ArgProcessor extends PrecompileTaskArgProcessor {
-		public ArgProcessor(CompilerOptions options) {
-			super(options);
-			registerHandler(new ArgHandlerLocalWorkers(options));
-			// Override the ArgHandlerWorkDirRequired in the super class.
-			registerHandler(new ArgHandlerWorkDirOptional(options));
-			registerHandler(new ArgHandlerIncrementalCompile(options));
-			registerHandler(new ArgHandlerWarDir(options));
-			registerHandler(new ArgHandlerDeployDir(options));
-			registerHandler(new ArgHandlerExtraDir(options));
-			registerHandler(new ArgHandlerSaveSourceOutput(options));
-		}
-
-		@Override
-		protected String getName() {
-			return Compiler.class.getName();
-		}
-	}
-
-	/**
-	 * Locates the unit cache dir relative to the war dir and returns a
-	 * UnitCache instance.
-	 */
-	public static UnitCache getOrCreateUnitCache(TreeLogger logger,
-			CompilerOptions options) {
-		File persistentUnitCacheDir = null;
-		if (options.getWarDir() != null && options.getWarDir().isDirectory()) {
-			persistentUnitCacheDir = new File(options.getWarDir(), "../");
-		}
-		// TODO: returns the same UnitCache even if the passed directory
-		// changes. Make this less
-		// surprising.
-		return UnitCacheSingleton.get(logger, null, persistentUnitCacheDir,
-				options);
-	}
-
-	public static void main(String[] args) {
-		Memory.initialize();
-		if (System.getProperty("gwt.jjs.dumpAst") != null) {
-			System.out.println("Will dump AST to: "
-					+ System.getProperty("gwt.jjs.dumpAst"));
-		}
-		SpeedTracerLogger.init();
-		/*
-		 * NOTE: main always exits with a call to System.exit to terminate any
-		 * non-daemon threads that were started in Generators. Typically, this
-		 * is to shutdown AWT related threads, since the contract for their
-		 * termination is still implementation-dependent.
-		 */
-		final CompilerOptions options = new CompilerOptionsImpl();
-		if (new ArgProcessor(options).processArgs(args)) {
-			CompileTask task = new CompileTask() {
-				@Override
-				public boolean run(TreeLogger logger)
-						throws UnableToCompleteException {
-					return Compiler.compile(logger, options);
-				}
-			};
-			if (CompileTaskRunner.runWithAppropriateLogger(options, task)) {
-				// Exit w/ success code.
-				System.exit(0);
-			}
-		}
-		// Exit w/ non-success code.
-		System.exit(1);
-	}
+	public static boolean recompile;
 
 	public static boolean compile(TreeLogger logger,
 			CompilerOptions compilerOptions) throws UnableToCompleteException {
@@ -134,17 +69,6 @@ public class Compiler {
 				return result;
 			}
 		}
-	}
-
-	public static boolean recompile;
-
-	public static boolean compile(TreeLogger logger,
-			CompilerOptions compilerOptions, ModuleDef moduleDef)
-			throws UnableToCompleteException {
-		MinimalRebuildCache minimalRebuildCache = compilerOptions
-				.isIncrementalCompileEnabled() ? new MinimalRebuildCache()
-						: new NullRebuildCache();
-		return compile(logger, compilerOptions, minimalRebuildCache, moduleDef);
 	}
 
 	public static boolean compile(TreeLogger logger,
@@ -251,5 +175,81 @@ public class Compiler {
 			}
 		}
 		return true;
+	}
+
+	public static boolean compile(TreeLogger logger,
+			CompilerOptions compilerOptions, ModuleDef moduleDef)
+			throws UnableToCompleteException {
+		MinimalRebuildCache minimalRebuildCache = compilerOptions
+				.isIncrementalCompileEnabled() ? new MinimalRebuildCache()
+						: new NullRebuildCache();
+		return compile(logger, compilerOptions, minimalRebuildCache, moduleDef);
+	}
+
+	/**
+	 * Locates the unit cache dir relative to the war dir and returns a
+	 * UnitCache instance.
+	 */
+	public static UnitCache getOrCreateUnitCache(TreeLogger logger,
+			CompilerOptions options) {
+		File persistentUnitCacheDir = null;
+		if (options.getWarDir() != null && options.getWarDir().isDirectory()) {
+			persistentUnitCacheDir = new File(options.getWarDir(), "../");
+		}
+		// TODO: returns the same UnitCache even if the passed directory
+		// changes. Make this less
+		// surprising.
+		return UnitCacheSingleton.get(logger, null, persistentUnitCacheDir,
+				options);
+	}
+
+	public static void main(String[] args) {
+		Memory.initialize();
+		if (System.getProperty("gwt.jjs.dumpAst") != null) {
+			System.out.println("Will dump AST to: "
+					+ System.getProperty("gwt.jjs.dumpAst"));
+		}
+		SpeedTracerLogger.init();
+		/*
+		 * NOTE: main always exits with a call to System.exit to terminate any
+		 * non-daemon threads that were started in Generators. Typically, this
+		 * is to shutdown AWT related threads, since the contract for their
+		 * termination is still implementation-dependent.
+		 */
+		final CompilerOptions options = new CompilerOptionsImpl();
+		if (new ArgProcessor(options).processArgs(args)) {
+			CompileTask task = new CompileTask() {
+				@Override
+				public boolean run(TreeLogger logger)
+						throws UnableToCompleteException {
+					return Compiler.compile(logger, options);
+				}
+			};
+			if (CompileTaskRunner.runWithAppropriateLogger(options, task)) {
+				// Exit w/ success code.
+				System.exit(0);
+			}
+		}
+		// Exit w/ non-success code.
+		System.exit(1);
+	}
+
+	static class ArgProcessor extends PrecompileTaskArgProcessor {
+		public ArgProcessor(CompilerOptions options) {
+			super(options);
+			registerHandler(new ArgHandlerLocalWorkers(options));
+			// Override the ArgHandlerWorkDirRequired in the super class.
+			registerHandler(new ArgHandlerWorkDirOptional(options));
+			registerHandler(new ArgHandlerIncrementalCompile(options));
+			registerHandler(new ArgHandlerWarDir(options));
+			registerHandler(new ArgHandlerDeployDir(options));
+			registerHandler(new ArgHandlerExtraDir(options));
+			registerHandler(new ArgHandlerSaveSourceOutput(options));
+		}
+
+		@Override
+		protected String getName() {
+			return Compiler.class.getName();
+		}
 	}
 }

@@ -15,10 +15,6 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 */
 	private static DocumentJso doc;
 
-	private static native DocumentJso nativeGet() /*-{
-    return $doc;
-	}-*/;
-
 	/**
 	 * Gets the default document. This is the document in which the module is
 	 * running.
@@ -35,6 +31,10 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 		}
 		return doc;
 	}
+
+	private static native DocumentJso nativeGet() /*-{
+    return $doc;
+	}-*/;
 
 	protected DocumentJso() {
 	}
@@ -134,6 +134,10 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 		return LocalDom.nodeFor(remote);
 	}
 
+	native final CommentJso createCommentNode0(String data) /*-{
+    return this.createComment(data);
+	}-*/;
+
 	@Override
 	public final NativeEvent createContextMenuEvent() {
 		return ClientDomDocumentStatic.createContextMenuEvent(this);
@@ -167,6 +171,10 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	public final Element createElement(String tagName) {
 		return ClientDomDocumentStatic.createElement(this, tagName);
 	}
+
+	native final ElementJso createElementNode0(String tagName) /*-{
+    return this.createElement(tagName);
+	}-*/;
 
 	@Override
 	public final NativeEvent createErrorEvent() {
@@ -566,6 +574,10 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 		return LocalDom.nodeFor(remote);
 	}
 
+	native final TextJso createTextNode0(String data) /*-{
+    return this.createTextNode(data);
+	}-*/;
+
 	@Override
 	public final TableSectionElement createTFootElement() {
 		return ClientDomDocumentStatic.createTFootElement(this);
@@ -636,10 +648,26 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 				enable ? "auto" : "hidden");
 	}
 
+	final native ElementJso generateFromOuterHtml(String outer) /*-{
+    var div = this.createElement("div");
+    div.innerHTML = outer;
+    return div.childNodes[0];
+	}-*/;
+
 	@Override
 	public final BodyElement getBody() {
 		return nodeFor(getBody0());
 	}
+
+	/**
+	 * The element that contains the content for the document. In documents with
+	 * BODY contents, returns the BODY element.
+	 *
+	 * @return the document's body
+	 */
+	private final native NodeJso getBody0() /*-{
+    return this.body;
+	}-*/;
 
 	/**
 	 * Returns the left offset between the absolute coordinate system and the
@@ -725,6 +753,10 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 		return LocalDom.nodeFor(getDocumentElement0());
 	}
 
+	final native ElementJso getDocumentElement0() /*-{
+    return this.documentElement;
+	}-*/;
+
 	/**
 	 * The domain name of the server that served the document, or null if the
 	 * server cannot be identified by a domain name.
@@ -750,10 +782,28 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 		return LocalDom.nodeFor(getElementById0(elementId));
 	}
 
+	final native ElementJso getElementById0(String elementId) /*-{
+    return this.getElementById(elementId);
+	}-*/;
+
 	@Override
 	public final NodeList<Element> getElementsByTagName(String tagName) {
 		return new NodeList(getElementsByTagName0(tagName));
 	}
+
+	/**
+	 * Returns a {@link NodeList} of all the {@link Element Elements} with a
+	 * given tag name in the order in which they are encountered in a preorder
+	 * traversal of the document tree.
+	 *
+	 * @param tagName
+	 *            the name of the tag to match on (the special value
+	 *            <code>"*"</code> matches all tags)
+	 * @return a list containing all the matched elements
+	 */
+	final native NodeListJso<Element> getElementsByTagName0(String tagName) /*-{
+    return this.getElementsByTagName(tagName);
+	}-*/;
 
 	/**
 	 * The element that contains metadata about the document, including links to
@@ -955,55 +1005,5 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	@Override
 	public final native void setTitle(String title) /*-{
     this.title = title;
-	}-*/;
-
-	/**
-	 * The element that contains the content for the document. In documents with
-	 * BODY contents, returns the BODY element.
-	 *
-	 * @return the document's body
-	 */
-	private final native NodeJso getBody0() /*-{
-    return this.body;
-	}-*/;
-
-	native final CommentJso createCommentNode0(String data) /*-{
-    return this.createComment(data);
-	}-*/;
-
-	native final ElementJso createElementNode0(String tagName) /*-{
-    return this.createElement(tagName);
-	}-*/;
-
-	native final TextJso createTextNode0(String data) /*-{
-    return this.createTextNode(data);
-	}-*/;
-
-	final native ElementJso generateFromOuterHtml(String outer) /*-{
-    var div = this.createElement("div");
-    div.innerHTML = outer;
-    return div.childNodes[0];
-	}-*/;
-
-	final native ElementJso getDocumentElement0() /*-{
-    return this.documentElement;
-	}-*/;
-
-	final native ElementJso getElementById0(String elementId) /*-{
-    return this.getElementById(elementId);
-	}-*/;
-
-	/**
-	 * Returns a {@link NodeList} of all the {@link Element Elements} with a
-	 * given tag name in the order in which they are encountered in a preorder
-	 * traversal of the document tree.
-	 *
-	 * @param tagName
-	 *            the name of the tag to match on (the special value
-	 *            <code>"*"</code> matches all tags)
-	 * @return a list containing all the matched elements
-	 */
-	final native NodeListJso<Element> getElementsByTagName0(String tagName) /*-{
-    return this.getElementsByTagName(tagName);
 	}-*/;
 }

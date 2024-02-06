@@ -96,6 +96,56 @@ public class DomainTransformPersistenceQueue {
 		events.add(new Event().withType(Type.SHUTDOWN));
 	}
 
+	private DomainTransformPersistenceEvent
+			createPersistenceEventFromPersistedRequest(
+					DomainTransformRequestPersistent dtrp, Type type,
+					DomainTransformCommitPosition position) {
+		// create an "event" to publish in the queue
+		/*
+		 * note that on warmup ClientInstance.self() will be null, so guard for
+		 * that
+		 */
+		long selfId = ClientInstance.self() == null ? -1
+				: ClientInstance.self().getId();
+		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+				dtrp, null,
+				dtrp.getClientInstance() == null
+						|| dtrp.getClientInstance().getId() != selfId,
+				false, false, null, true);
+		persistenceToken.setLocalToVm(state.isLocalToVm(dtrp));
+		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
+				persistenceToken);
+		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>(
+				(List) dtrp.getEvents());
+		// cloning issue?
+		wrapper.persistentEvents = new ArrayList<>(events);
+		wrapper.persistentRequests = new ArrayList<>(Arrays.asList(dtrp));
+		DomainTransformResponse domainTransformResponse = new DomainTransformResponse();
+		domainTransformResponse
+				.setRequestId(persistenceToken.getRequest().getRequestId());
+		domainTransformResponse.setTransformsProcessed(events.size());
+		switch (type) {
+		case COMMIT:
+			domainTransformResponse.setResult(DomainTransformResponseResult.OK);
+			break;
+		case ABORTED:
+			domainTransformResponse
+					.setResult(DomainTransformResponseResult.FAILURE);
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		domainTransformResponse.setRequest(persistenceToken.getRequest());
+		wrapper.response = domainTransformResponse;
+		DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
+				persistenceToken, wrapper,
+				wrapper.providePersistenceEventType(),
+				persistenceToken.isLocalToVm());
+		event.setFiringFromQueue(true);
+		event.setPosition(position);
+		return event;
+	}
+
 	public Thread getFireEventsThread() {
 		return eventQueue;
 	}
@@ -103,6 +153,10 @@ public class DomainTransformPersistenceQueue {
 	public long getLength() {
 		Event event = this.firingEvent;
 		return events.size() + (event == null ? 0 : 1);
+	}
+
+	private Logger getLogger(boolean localToVm) {
+		return localToVm ? logger : eventQueue.fireEventThreadLogger;
 	}
 
 	public long getOldestTx() {
@@ -118,6 +172,49 @@ public class DomainTransformPersistenceQueue {
 
 	public DomainTransformCommitPosition getTransformCommitPosition() {
 		return state.transformCommitPosition;
+	}
+
+	void onEventListenerFiring(DomainTransformPersistenceEvent event) {
+		List<Long> persistedRequestIds = event.getPersistedRequestIds();
+		if (persistedRequestIds.isEmpty()) {
+			return;
+		}
+		Logger logger = getLogger(event.isLocalToVm());
+		event.firingStartTime = System.currentTimeMillis();
+		logger.debug("firing - {} - {} - {} events - range {}",
+				Ax.friendly(event.getPersistenceEventType()),
+				event.getTransformPersistenceToken().getRequest().shortId(),
+				event.getTransformPersistenceToken().getRequest().getEvents()
+						.size(),
+				new LongPair(
+						persistedRequestIds.stream()
+								.collect(Collectors
+										.minBy(Comparator.naturalOrder()))
+								.get(),
+						persistedRequestIds.stream()
+								.collect(Collectors
+										.maxBy(Comparator.naturalOrder()))
+								.get()));
+	}
+
+	void onEventListenerFiringCompleted(DomainTransformPersistenceEvent event) {
+		List<Long> persistedRequestIds = event.getPersistedRequestIds();
+		if (persistedRequestIds.isEmpty()) {
+			return;
+		}
+		getLogger(event.isLocalToVm()).info(
+				"fired: {} - {} - {} events - {} ms ",
+				Ax.friendly(event.getPersistenceEventType()),
+				event.getTransformPersistenceToken().getRequest().shortId(),
+				event.getTransformPersistenceToken().getRequest().getEvents()
+						.size(),
+				System.currentTimeMillis() - event.firingStartTime);
+	}
+
+	void onEventQueueEmpty() {
+		synchronized (state) {
+			state.notifyAll();
+		}
 	}
 
 	public void onLocalVmTxTimeout() {
@@ -235,103 +332,6 @@ public class DomainTransformPersistenceQueue {
 		new QueueWaiter(timeoutMs).withTimestamp(timestamp).await();
 	}
 
-	private DomainTransformPersistenceEvent
-			createPersistenceEventFromPersistedRequest(
-					DomainTransformRequestPersistent dtrp, Type type,
-					DomainTransformCommitPosition position) {
-		// create an "event" to publish in the queue
-		/*
-		 * note that on warmup ClientInstance.self() will be null, so guard for
-		 * that
-		 */
-		long selfId = ClientInstance.self() == null ? -1
-				: ClientInstance.self().getId();
-		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-				dtrp, null,
-				dtrp.getClientInstance() == null
-						|| dtrp.getClientInstance().getId() != selfId,
-				false, false, null, true);
-		persistenceToken.setLocalToVm(state.isLocalToVm(dtrp));
-		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
-				persistenceToken);
-		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>(
-				(List) dtrp.getEvents());
-		// cloning issue?
-		wrapper.persistentEvents = new ArrayList<>(events);
-		wrapper.persistentRequests = new ArrayList<>(Arrays.asList(dtrp));
-		DomainTransformResponse domainTransformResponse = new DomainTransformResponse();
-		domainTransformResponse
-				.setRequestId(persistenceToken.getRequest().getRequestId());
-		domainTransformResponse.setTransformsProcessed(events.size());
-		switch (type) {
-		case COMMIT:
-			domainTransformResponse.setResult(DomainTransformResponseResult.OK);
-			break;
-		case ABORTED:
-			domainTransformResponse
-					.setResult(DomainTransformResponseResult.FAILURE);
-			break;
-		default:
-			throw new UnsupportedOperationException();
-		}
-		domainTransformResponse.setRequest(persistenceToken.getRequest());
-		wrapper.response = domainTransformResponse;
-		DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
-				persistenceToken, wrapper,
-				wrapper.providePersistenceEventType(),
-				persistenceToken.isLocalToVm());
-		event.setFiringFromQueue(true);
-		event.setPosition(position);
-		return event;
-	}
-
-	private Logger getLogger(boolean localToVm) {
-		return localToVm ? logger : eventQueue.fireEventThreadLogger;
-	}
-
-	void onEventListenerFiring(DomainTransformPersistenceEvent event) {
-		List<Long> persistedRequestIds = event.getPersistedRequestIds();
-		if (persistedRequestIds.isEmpty()) {
-			return;
-		}
-		Logger logger = getLogger(event.isLocalToVm());
-		event.firingStartTime = System.currentTimeMillis();
-		logger.debug("firing - {} - {} - {} events - range {}",
-				Ax.friendly(event.getPersistenceEventType()),
-				event.getTransformPersistenceToken().getRequest().shortId(),
-				event.getTransformPersistenceToken().getRequest().getEvents()
-						.size(),
-				new LongPair(
-						persistedRequestIds.stream()
-								.collect(Collectors
-										.minBy(Comparator.naturalOrder()))
-								.get(),
-						persistedRequestIds.stream()
-								.collect(Collectors
-										.maxBy(Comparator.naturalOrder()))
-								.get()));
-	}
-
-	void onEventListenerFiringCompleted(DomainTransformPersistenceEvent event) {
-		List<Long> persistedRequestIds = event.getPersistedRequestIds();
-		if (persistedRequestIds.isEmpty()) {
-			return;
-		}
-		getLogger(event.isLocalToVm()).info(
-				"fired: {} - {} - {} events - {} ms ",
-				Ax.friendly(event.getPersistenceEventType()),
-				event.getTransformPersistenceToken().getRequest().shortId(),
-				event.getTransformPersistenceToken().getRequest().getEvents()
-						.size(),
-				System.currentTimeMillis() - event.firingStartTime);
-	}
-
-	void onEventQueueEmpty() {
-		synchronized (state) {
-			state.notifyAll();
-		}
-	}
-
 	@Registration.Singleton(
 		value = DomainTransformCommitPositionProvider.class,
 		priority = Registration.Priority.PREFERRED_LIBRARY)
@@ -354,6 +354,47 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
+	static class Event {
+		static Event aborted(long requestId) {
+			Event event = new Event().withType(Type.ABORTED);
+			event.requestId = requestId;
+			return event;
+		}
+
+		static Event committed(DomainTransformCommitPosition commitPosition) {
+			Event event = new Event().withType(Type.COMMIT);
+			event.requestId = commitPosition.getCommitRequestId();
+			event.commitPosition = commitPosition;
+			return event;
+		}
+
+		Type type;
+
+		long requestId;
+
+		DomainTransformCommitPosition commitPosition;
+
+		long submitTime;
+
+		private Event() {
+			submitTime = System.currentTimeMillis();
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
+		}
+
+		Event withType(Type type) {
+			this.type = type;
+			return this;
+		}
+
+		static enum Type {
+			COMMIT, ABORTED, SHUTDOWN
+		}
+	}
+
 	public class PersistenceEvents extends Thread {
 		Logger fireEventThreadLogger = OffThreadLogger.getLogger(getClass()
 				.getName().replace("DomainTransformPersistenceQueue$", ""));
@@ -362,49 +403,6 @@ public class DomainTransformPersistenceQueue {
 			String stacktraceSlice = SEUtilities.getStacktraceSlice(this);
 			logger.warn("Queue debug: firing event: {}\n============\n{}",
 					firingEvent, stacktraceSlice);
-		}
-
-		@Override
-		public void run() {
-			setName(Ax.format("persistence-queue:%s",
-					persistenceEvents.domainStore.name));
-			while (true) {
-				Exception logged = null;
-				try {
-					firingEvent = events.poll(5, TimeUnit.SECONDS);
-					if (closed.get()) {
-						return;
-					}
-					if (firingEvent == null) {
-						continue;
-					}
-					if (state.hasFired(firingEvent.requestId)) {
-						continue;
-					}
-					logger.debug("Polled event from queue: {}", firingEvent);
-					try {
-						Transaction.ensureBegun();
-						ThreadedPermissionsManager.cast().pushSystemUser();
-						publishTransformEvent(firingEvent);
-					} catch (Exception e) {
-						e.printStackTrace();
-						logged = e;
-						throw e;
-					} finally {
-						Transaction.ensureBegun();
-						ThreadedPermissionsManager.cast().popSystemUser();
-						Transaction.ensureEnded();
-						// LooseContext.pop();
-					}
-				} catch (Exception e) {
-					if (e != logged) {
-						e.printStackTrace();
-					}
-					logged = null;
-				} finally {
-					firingEvent = null;
-				}
-			}
 		}
 
 		private DomainTransformRequestPersistent loadRequest(Event event) {
@@ -521,58 +519,48 @@ public class DomainTransformPersistenceQueue {
 			loadedRequests.remove(requestId);
 			state.onEventFiringCompleted(request, event);
 		}
-	}
-
-	public interface Sequencer {
-		void onPersistedRequestCommitted(long requestId);
-
-		void onPersistedRequestPreCommitted(long requestId);
-
-		void refresh();
-
-		void vacuumTables();
-
-		void onPersistedRequestAborted(long requestId);
-	}
-
-	static class Event {
-		static Event aborted(long requestId) {
-			Event event = new Event().withType(Type.ABORTED);
-			event.requestId = requestId;
-			return event;
-		}
-
-		static Event committed(DomainTransformCommitPosition commitPosition) {
-			Event event = new Event().withType(Type.COMMIT);
-			event.requestId = commitPosition.getCommitRequestId();
-			event.commitPosition = commitPosition;
-			return event;
-		}
-
-		Type type;
-
-		long requestId;
-
-		DomainTransformCommitPosition commitPosition;
-
-		long submitTime;
-
-		private Event() {
-			submitTime = System.currentTimeMillis();
-		}
 
 		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToStringOneLine(this);
-		}
-
-		Event withType(Type type) {
-			this.type = type;
-			return this;
-		}
-
-		static enum Type {
-			COMMIT, ABORTED, SHUTDOWN
+		public void run() {
+			setName(Ax.format("persistence-queue:%s",
+					persistenceEvents.domainStore.name));
+			while (true) {
+				Exception logged = null;
+				try {
+					firingEvent = events.poll(5, TimeUnit.SECONDS);
+					if (closed.get()) {
+						return;
+					}
+					if (firingEvent == null) {
+						continue;
+					}
+					if (state.hasFired(firingEvent.requestId)) {
+						continue;
+					}
+					logger.debug("Polled event from queue: {}", firingEvent);
+					try {
+						Transaction.ensureBegun();
+						ThreadedPermissionsManager.cast().pushSystemUser();
+						publishTransformEvent(firingEvent);
+					} catch (Exception e) {
+						e.printStackTrace();
+						logged = e;
+						throw e;
+					} finally {
+						Transaction.ensureBegun();
+						ThreadedPermissionsManager.cast().popSystemUser();
+						Transaction.ensureEnded();
+						// LooseContext.pop();
+					}
+				} catch (Exception e) {
+					if (e != logged) {
+						e.printStackTrace();
+					}
+					logged = null;
+				} finally {
+					firingEvent = null;
+				}
+			}
 		}
 	}
 
@@ -593,9 +581,22 @@ public class DomainTransformPersistenceQueue {
 			this.timeoutMs = timeoutMs;
 		}
 
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToStringOneLine(this);
+		/*
+		 * returns true if completed normally, false if timed out/exception
+		 */
+		boolean await() {
+			try {
+				this.thread = Thread.currentThread();
+				awaitingRequestIds.remove(null);
+				queueWaiters.add(this);
+				await0();
+				queueWaiters.remove(this);
+				return !timedOut;
+			} catch (Exception e) {
+				// app shutdown
+				Ax.simpleExceptionOut(e);
+				return false;
+			}
 		}
 
 		private void await0() throws InterruptedException {
@@ -636,26 +637,13 @@ public class DomainTransformPersistenceQueue {
 			}
 		}
 
-		/*
-		 * returns true if completed normally, false if timed out/exception
-		 */
-		boolean await() {
-			try {
-				this.thread = Thread.currentThread();
-				awaitingRequestIds.remove(null);
-				queueWaiters.add(this);
-				await0();
-				queueWaiters.remove(this);
-				return !timedOut;
-			} catch (Exception e) {
-				// app shutdown
-				Ax.simpleExceptionOut(e);
-				return false;
-			}
-		}
-
 		void interrupt() {
 			thread.interrupt();
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
 		}
 
 		QueueWaiter withAwaitEventEmptyQueue(boolean awaitEmptyEventQueue) {
@@ -682,6 +670,18 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
+	public interface Sequencer {
+		void onPersistedRequestAborted(long requestId);
+
+		void onPersistedRequestCommitted(long requestId);
+
+		void onPersistedRequestPreCommitted(long requestId);
+
+		void refresh();
+
+		void vacuumTables();
+	}
+
 	/*
 	 * Modified atomically, where needed for consistency
 	 */
@@ -702,33 +702,16 @@ public class DomainTransformPersistenceQueue {
 
 		private Map<Timestamp, DomainTransformCommitPosition> commitPositionsByTimestamp = new Object2ObjectOpenHashMap<>();
 
-		public synchronized boolean isTimstampVisible(Timestamp timestamp) {
-			if (transformCommitPosition == null) {
-				return false;
-			}
-			int dir = transformCommitPosition.getCommitTimestamp()
-					.compareTo(timestamp);
-			if (dir < 0) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-
-		synchronized Long getLastRequestIdAtTimestamp(Timestamp timestamp) {
-			DomainTransformCommitPosition position = commitPositionsByTimestamp
-					.get(timestamp);
-			return position == null ? null : position.getCommitRequestId();
-		}
-
 		synchronized void addCommitPositions(
 				List<DomainTransformCommitPosition> positions) {
 			positions.forEach(p -> commitPositionsByTimestamp
 					.put(p.getCommitTimestamp(), p));
 		}
 
-		public synchronized void removeFiredFrom(Set<Long> requestIds) {
-			requestIds.removeAll(appLifetimeEventsFired);
+		synchronized Long getLastRequestIdAtTimestamp(Timestamp timestamp) {
+			DomainTransformCommitPosition position = commitPositionsByTimestamp
+					.get(timestamp);
+			return position == null ? null : position.getCommitRequestId();
 		}
 
 		synchronized boolean hasFired(long requestId) {
@@ -757,6 +740,19 @@ public class DomainTransformPersistenceQueue {
 					.contains(dtrp.getChunkUuidString());
 		}
 
+		public synchronized boolean isTimstampVisible(Timestamp timestamp) {
+			if (transformCommitPosition == null) {
+				return false;
+			}
+			int dir = transformCommitPosition.getCommitTimestamp()
+					.compareTo(timestamp);
+			if (dir < 0) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+
 		synchronized void onEventFiringCompleted(
 				DomainTransformRequestPersistent request, Event event) {
 			lastFired = new LinkedHashSet<>();
@@ -777,6 +773,10 @@ public class DomainTransformPersistenceQueue {
 		synchronized void
 				onPreparingVmLocalRequest(DomainTransformRequest dtr) {
 			appLifetimeEventUuidsThisVm.add(dtr.getChunkUuidString());
+		}
+
+		public synchronized void removeFiredFrom(Set<Long> requestIds) {
+			requestIds.removeAll(appLifetimeEventsFired);
 		}
 
 		synchronized boolean shouldPublishRequestCommitted(long requestId,

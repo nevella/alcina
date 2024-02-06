@@ -57,6 +57,20 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 		throw new UnsupportedOperationException();
 	}
 
+	private void ensureCapacity(int size) {
+		if (size >= elementData.length) {
+			Object oldData[] = elementData;
+			int newCapacity = (elementData.length * 4) / 2 + 1;
+			if (newCapacity < size) {
+				newCapacity = size * 3 / 2;
+			}
+			Object[] copy = new Object[newCapacity];
+			System.arraycopy(elementData, 0, copy, 0,
+					Math.min(elementData.length, newCapacity));
+			elementData = copy;
+		}
+	}
+
 	@Override
 	public Set<java.util.Map.Entry<Long, V>> entrySet() {
 		if (entrySet == null) {
@@ -78,6 +92,36 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			return failover.get(key);
 		}
 		return (V) elementData[idx];
+	}
+
+	private int intKey(Object key) {
+		if (failover != null) {
+			return -1;
+		}
+		if (key instanceof Long) {
+			long l = ((Long) key).longValue();
+			if (l == 0) {
+				return 0;
+			}
+			if (l < 0) {
+				throw new RuntimeException(
+						"accessing array backed with negative index");
+			}
+			if (l < 25000000 && l > 0) {
+				int idx = (int) l;
+				ensureCapacity(idx + 1);
+				return idx;
+			}
+		}
+		synchronized (this) {
+			if (this.failover == null) {
+				Long2ObjectLinkedOpenHashMap failover = new Long2ObjectLinkedOpenHashMap<V>();
+				failover.putAll(this);
+				this.failover = failover;
+				elementData = null;
+			}
+		}
+		return -1;
 	}
 
 	@Override
@@ -232,50 +276,6 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 		return values;
 	}
 
-	private void ensureCapacity(int size) {
-		if (size >= elementData.length) {
-			Object oldData[] = elementData;
-			int newCapacity = (elementData.length * 4) / 2 + 1;
-			if (newCapacity < size) {
-				newCapacity = size * 3 / 2;
-			}
-			Object[] copy = new Object[newCapacity];
-			System.arraycopy(elementData, 0, copy, 0,
-					Math.min(elementData.length, newCapacity));
-			elementData = copy;
-		}
-	}
-
-	private int intKey(Object key) {
-		if (failover != null) {
-			return -1;
-		}
-		if (key instanceof Long) {
-			long l = ((Long) key).longValue();
-			if (l == 0) {
-				return 0;
-			}
-			if (l < 0) {
-				throw new RuntimeException(
-						"accessing array backed with negative index");
-			}
-			if (l < 25000000 && l > 0) {
-				int idx = (int) l;
-				ensureCapacity(idx + 1);
-				return idx;
-			}
-		}
-		synchronized (this) {
-			if (this.failover == null) {
-				Long2ObjectLinkedOpenHashMap failover = new Long2ObjectLinkedOpenHashMap<V>();
-				failover.putAll(this);
-				this.failover = failover;
-				elementData = null;
-			}
-		}
-		return -1;
-	}
-
 	private final class EntrySet extends AbstractSet<Map.Entry<Long, V>> {
 		@Override
 		public void clear() {
@@ -381,25 +381,6 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				return !atEnd;
 			}
 
-			@Override
-			public Entry<Long, V> next() {
-				if (atEnd && !poppedNext) {
-					throw new NoSuchElementException();
-				}
-				maybePopNext();
-				poppedNext = false;
-				poppedNextObject = null;
-				return new ArrayBackedEntry(Long.valueOf(idx));
-			}
-
-			@Override
-			public void remove() {
-				ArrayBackedLongMap.this.remove(Long.valueOf(idx));
-				poppedNextObject = null;
-				poppedNext = false;
-				itrModCount++;
-			}
-
 			private void maybePopNext() {
 				if (atEnd) {
 					return;
@@ -411,6 +392,17 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				}
 			}
 
+			@Override
+			public Entry<Long, V> next() {
+				if (atEnd && !poppedNext) {
+					throw new NoSuchElementException();
+				}
+				maybePopNext();
+				poppedNext = false;
+				poppedNextObject = null;
+				return new ArrayBackedEntry(Long.valueOf(idx));
+			}
+
 			private boolean popNext() {
 				while (nextCount < size && poppedNextObject == null) {
 					if (modCount != itrModCount) {
@@ -419,6 +411,14 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 					poppedNextObject = (V) elementData[++idx];
 				}
 				return ++nextCount > size;
+			}
+
+			@Override
+			public void remove() {
+				ArrayBackedLongMap.this.remove(Long.valueOf(idx));
+				poppedNextObject = null;
+				poppedNext = false;
+				itrModCount++;
 			}
 		}
 	}

@@ -35,6 +35,15 @@ public class JsonUtil {
 	public static boolean FAST_STRINGIFY = false;
 
 	/**
+	 * Turn a single unicode character into a 32-bit unicode hex literal.
+	 */
+	private static String escapeCharAsUnicode(char toEscape) {
+		String hexValue = Integer.toString(toEscape, 16);
+		int padding = 4 - hexValue.length();
+		return "\\u" + ("0000".substring(0, padding)) + hexValue;
+	}
+
+	/**
 	 * Convert special control characters into unicode escape format.
 	 */
 	public static String escapeControlChars(String text) {
@@ -48,6 +57,17 @@ public class JsonUtil {
 			}
 		}
 		return toReturn.toString();
+	}
+
+	private static boolean isControlChar(char c) {
+		return (c >= 0x00 && c <= 0x1f) || (c >= 0x7f && c <= 0x9f)
+				|| c == '\u00ad' || c == '\u070f' || c == '\u17b4'
+				|| c == '\u17b5' || c == '\ufeff'
+				|| (c >= '\u0600' && c <= '\u0604')
+				|| (c >= '\u200c' && c <= '\u200f')
+				|| (c >= '\u2028' && c <= '\u202f')
+				|| (c >= '\u2060' && c <= '\u206f')
+				|| (c >= '\ufff0' && c <= '\uffff');
 	}
 
 	public static <T extends JsonValue> T parse(String json)
@@ -155,26 +175,6 @@ public class JsonUtil {
 		return sb.toString();
 	}
 
-	/**
-	 * Turn a single unicode character into a 32-bit unicode hex literal.
-	 */
-	private static String escapeCharAsUnicode(char toEscape) {
-		String hexValue = Integer.toString(toEscape, 16);
-		int padding = 4 - hexValue.length();
-		return "\\u" + ("0000".substring(0, padding)) + hexValue;
-	}
-
-	private static boolean isControlChar(char c) {
-		return (c >= 0x00 && c <= 0x1f) || (c >= 0x7f && c <= 0x9f)
-				|| c == '\u00ad' || c == '\u070f' || c == '\u17b4'
-				|| c == '\u17b5' || c == '\ufeff'
-				|| (c >= '\u0600' && c <= '\u0604')
-				|| (c >= '\u200c' && c <= '\u200f')
-				|| (c >= '\u2028' && c <= '\u202f')
-				|| (c >= '\u2060' && c <= '\u206f')
-				|| (c >= '\ufff0' && c <= '\uffff');
-	}
-
 	private static class StringifyJsonVisitor extends JsonVisitor {
 		private static final Set<String> skipKeys;
 		static {
@@ -203,6 +203,24 @@ public class JsonUtil {
 			visited = new HashSet<JsonValue>();
 		}
 
+		private void checkCycle(JsonValue value) {
+			if (visited.contains(value)) {
+				throw new JsonException("Cycled detected during stringify");
+			} else {
+				visited.add(value);
+			}
+		}
+
+		private void commaIfNotFirst(JsonContext ctx) {
+			if (!ctx.isFirst()) {
+				sb.append(",");
+				if (pretty) {
+					sb.append('\n');
+					sb.append(indentLevel);
+				}
+			}
+		}
+
 		@Override
 		public void endVisit(JsonArray array, JsonContext ctx) {
 			if (pretty) {
@@ -226,6 +244,14 @@ public class JsonUtil {
 			sb.append("}");
 			visited.remove(object);
 			assert !visited.contains(object);
+		}
+
+		private String format(double number) {
+			String n = String.valueOf(number);
+			if (n.endsWith(".0")) {
+				n = n.substring(0, n.length() - 2);
+			}
+			return n;
 		}
 
 		@Override
@@ -294,32 +320,6 @@ public class JsonUtil {
 		@Override
 		public void visitNull(JsonContext ctx) {
 			sb.append("null");
-		}
-
-		private void checkCycle(JsonValue value) {
-			if (visited.contains(value)) {
-				throw new JsonException("Cycled detected during stringify");
-			} else {
-				visited.add(value);
-			}
-		}
-
-		private void commaIfNotFirst(JsonContext ctx) {
-			if (!ctx.isFirst()) {
-				sb.append(",");
-				if (pretty) {
-					sb.append('\n');
-					sb.append(indentLevel);
-				}
-			}
-		}
-
-		private String format(double number) {
-			String n = String.valueOf(number);
-			if (n.endsWith(".0")) {
-				n = n.substring(0, n.length() - 2);
-			}
-			return n;
 		}
 	}
 }

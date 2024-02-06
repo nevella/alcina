@@ -90,11 +90,6 @@ public class LongPair
 	}
 
 	@Override
-	public boolean test(Long o) {
-		return o != null && o >= l1 && o < l2;
-	}
-
-	@Override
 	public int compareTo(LongPair ip) {
 		return l1 < ip.l1 ? -1
 				: l1 > ip.l1 ? 1 : l2 < ip.l2 ? -1 : l2 > ip.l2 ? 1 : 0;
@@ -182,6 +177,11 @@ public class LongPair
 	public void subtract(LongPair ip) {
 		l1 -= ip.l1;
 		l2 -= ip.l2;
+	}
+
+	@Override
+	public boolean test(Long o) {
+		return o != null && o >= l1 && o < l2;
 	}
 
 	@Override

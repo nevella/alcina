@@ -127,6 +127,10 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		return addDomHandler(handler, ClickEvent.getType());
 	}
 
+	protected void createElement() {
+		setElement(anchorElem);
+	}
+
 	public String getHref() {
 		return anchorElem.getPropertyString("href");
 	}
@@ -178,6 +182,19 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 				super.onBrowserEvent(event);
 			}
 		}
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-wrapper = the div around the link.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		ensureDebugId(anchorElem, "", baseID);
 	}
 
 	@Override
@@ -240,22 +257,5 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	public Link withTarget(String target) {
 		setTarget(target);
 		return this;
-	}
-
-	protected void createElement() {
-		setElement(anchorElem);
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-wrapper = the div around the link.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		ensureDebugId(anchorElem, "", baseID);
 	}
 }

@@ -215,6 +215,10 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	private int eventIndex = 0;
 
+	private I copyCurrent() {
+		return this.currentEvent == null ? null : (I) this.currentEvent.copy();
+	}
+
 	public I createHistoryInfo() {
 		return (I) new AlcinaHistoryItem();
 	}
@@ -267,6 +271,9 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public String getTokenDisplayName(String token) {
 		initTokenDisplayNames();
 		return tokenDisplayNames.get(token);
+	}
+
+	protected void initTokenDisplayNames() {
 	}
 
 	public boolean isEquivalentToCurrent(I info, String... keys) {
@@ -361,13 +368,6 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		hib.setSearchHistoryInfo(new SearchHistoryInfo(
 				searchDefinitionSerialized, searchDefinitionMarker));
 		return hib.toTokenString();
-	}
-
-	private I copyCurrent() {
-		return this.currentEvent == null ? null : (I) this.currentEvent.copy();
-	}
-
-	protected void initTokenDisplayNames() {
 	}
 
 	public enum HistoryEventType {

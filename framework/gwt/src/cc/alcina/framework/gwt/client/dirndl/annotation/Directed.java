@@ -156,6 +156,18 @@ public @interface Directed {
 	}
 
 	/**
+	 * Where a renderer has a default tag, such as SPAN, use it (rather than the
+	 * property name)
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@ClientVisible
+	@Inherited
+	public @interface HtmlDefaultTags {
+	}
+
+	/**
 	 *
 	 * FIXME - for consistency, all Impl annotation reifications should have
 	 * similar (auto-generated) hashcode/equals methods
@@ -217,9 +229,39 @@ public @interface Directed {
 			bindDomEvents = directed.bindDomEvents();
 		}
 
+		private String __stringValue(Object o) {
+			if (o instanceof Class) {
+				return ((Class) o).getSimpleName() + ".class";
+			}
+			if (o.getClass().isArray()) {
+				return "[" + java.util.Arrays.stream((Object[]) o)
+						.map(this::__stringValue).collect(
+								java.util.stream.Collectors.joining(","))
+						+ "]";
+			}
+			return o.toString();
+		}
+
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return Directed.class;
+		}
+
+		private void append(StringBuilder stringBuilder, String fieldName,
+				Function<Directed, ?> function, boolean elideDefaults) {
+			Object value = function.apply(this);
+			if (elideDefaults) {
+				Object defaultValue = function.apply(DEFAULT_INSTANCE);
+				if (Objects.deepEquals(value, defaultValue)) {
+					return;
+				}
+			}
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append(',');
+			}
+			stringBuilder.append(fieldName);
+			stringBuilder.append('=');
+			stringBuilder.append(__stringValue(value));
 		}
 
 		@Override
@@ -265,6 +307,12 @@ public @interface Directed {
 		@Override
 		public boolean merge() {
 			return merge;
+		}
+
+		private <V> V mergeAttribute(Directed parent,
+				Function<Directed, V> function) {
+			return Resolution.MergeStrategy.mergeValues(parent, this,
+					DEFAULT_INSTANCE, function);
 		}
 
 		public Impl mergeParent(Directed parent) {
@@ -338,56 +386,6 @@ public @interface Directed {
 			return toString(false);
 		}
 
-		public String toStringElideDefaults() {
-			return toString(true);
-		}
-
-		public Impl withBindDomEvents(boolean bindDomEvents) {
-			this.bindDomEvents = bindDomEvents;
-			return this;
-		}
-
-		public Impl withBindToModel(boolean bindToModel) {
-			this.bindToModel = bindToModel;
-			return this;
-		}
-
-		private String __stringValue(Object o) {
-			if (o instanceof Class) {
-				return ((Class) o).getSimpleName() + ".class";
-			}
-			if (o.getClass().isArray()) {
-				return "[" + java.util.Arrays.stream((Object[]) o)
-						.map(this::__stringValue).collect(
-								java.util.stream.Collectors.joining(","))
-						+ "]";
-			}
-			return o.toString();
-		}
-
-		private void append(StringBuilder stringBuilder, String fieldName,
-				Function<Directed, ?> function, boolean elideDefaults) {
-			Object value = function.apply(this);
-			if (elideDefaults) {
-				Object defaultValue = function.apply(DEFAULT_INSTANCE);
-				if (Objects.deepEquals(value, defaultValue)) {
-					return;
-				}
-			}
-			if (stringBuilder.length() > 0) {
-				stringBuilder.append(',');
-			}
-			stringBuilder.append(fieldName);
-			stringBuilder.append('=');
-			stringBuilder.append(__stringValue(value));
-		}
-
-		private <V> V mergeAttribute(Directed parent,
-				Function<Directed, V> function) {
-			return Resolution.MergeStrategy.mergeValues(parent, this,
-					DEFAULT_INSTANCE, function);
-		}
-
 		String toString(boolean elideDefaults) {
 			StringBuilder stringBuilder = new StringBuilder();
 			append(stringBuilder, "tag", Directed::tag, elideDefaults);
@@ -405,6 +403,20 @@ public @interface Directed {
 			append(stringBuilder, "bindDomEvents", Directed::bindDomEvents,
 					elideDefaults);
 			return stringBuilder.toString();
+		}
+
+		public String toStringElideDefaults() {
+			return toString(true);
+		}
+
+		public Impl withBindDomEvents(boolean bindDomEvents) {
+			this.bindDomEvents = bindDomEvents;
+			return this;
+		}
+
+		public Impl withBindToModel(boolean bindToModel) {
+			this.bindToModel = bindToModel;
+			return this;
 		}
 
 		public Directed withTag(String tag) {
@@ -438,24 +450,18 @@ public @interface Directed {
 		Directed[] value();
 	}
 
+	/**
+	 * Marker, the renderer should *not* use the model classname as a tag
+	 */
+	public static interface NonClassTag {
+	}
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Property {
 		String value();
-	}
-
-	/**
-	 * Where a renderer has a default tag, such as SPAN, use it (rather than the
-	 * property name)
-	 */
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target(ElementType.TYPE)
-	@ClientVisible
-	@Inherited
-	public @interface HtmlDefaultTags {
 	}
 
 	/*
@@ -652,11 +658,5 @@ public @interface Directed {
 	@ClientVisible
 	public static @interface Wrap {
 		String value();
-	}
-
-	/**
-	 * Marker, the renderer should *not* use the model classname as a tag
-	 */
-	public static interface NonClassTag {
 	}
 }

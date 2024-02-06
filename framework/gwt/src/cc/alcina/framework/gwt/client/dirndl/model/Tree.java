@@ -58,6 +58,10 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 				.withEmitLeftRightEvents(true);
 	}
 
+	void focusTree() {
+		provideElement().focus();
+	}
+
 	@Directed
 	public Paginator getPaginator() {
 		return this.paginator;
@@ -75,6 +79,31 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	@Binding(type = Type.CSS_CLASS)
 	public boolean isRootHidden() {
 		return this.rootHidden;
+	}
+
+	void keyboardSelectModel(ModelEvent<TN, ?> event) {
+		TN model = event.getModel();
+		if (model == keyboardSelectedNodeModel) {
+			return;
+		}
+		if (keyboardSelectedNodeModel != null) {
+			keyboardSelectedNodeModel.setKeyboardSelected(false);
+		}
+		if (selectedNodeModel != null) {
+			selectedNodeModel.setSelected(false);
+		}
+		keyboardSelectedNodeModel = model;
+		keyboardSelectedNodeModel.setKeyboardSelected(true);
+		if (commitAfterKeyboardNavigation) {
+			selectNode(event);
+		}
+	}
+
+	protected void loadChildren(TN model) {
+	}
+
+	protected void loadNextPage() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -126,6 +155,17 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		selectNode((ModelEvent) event);
 	}
 
+	void selectNode(ModelEvent<TN, ?> event) {
+		keyboardSelectModel(event);
+		TN model = event.getModel();
+		if (selectedNodeModel != null) {
+			selectedNodeModel.setSelected(false);
+		}
+		selectedNodeModel = model;
+		selectedNodeModel.setSelected(true);
+		event.reemitAs(this, SelectionChanged.class, model);
+	}
+
 	public void setCommitAfterKeyboardNavigation(
 			boolean commitAfterKeyboardNavigation) {
 		this.commitAfterKeyboardNavigation = commitAfterKeyboardNavigation;
@@ -146,46 +186,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	public void setRootHidden(boolean rootHidden) {
 		this.rootHidden = rootHidden;
-	}
-
-	protected void loadChildren(TN model) {
-	}
-
-	protected void loadNextPage() {
-		throw new UnsupportedOperationException();
-	}
-
-	void focusTree() {
-		provideElement().focus();
-	}
-
-	void keyboardSelectModel(ModelEvent<TN, ?> event) {
-		TN model = event.getModel();
-		if (model == keyboardSelectedNodeModel) {
-			return;
-		}
-		if (keyboardSelectedNodeModel != null) {
-			keyboardSelectedNodeModel.setKeyboardSelected(false);
-		}
-		if (selectedNodeModel != null) {
-			selectedNodeModel.setSelected(false);
-		}
-		keyboardSelectedNodeModel = model;
-		keyboardSelectedNodeModel.setKeyboardSelected(true);
-		if (commitAfterKeyboardNavigation) {
-			selectNode(event);
-		}
-	}
-
-	void selectNode(ModelEvent<TN, ?> event) {
-		keyboardSelectModel(event);
-		TN model = event.getModel();
-		if (selectedNodeModel != null) {
-			selectedNodeModel.setSelected(false);
-		}
-		selectedNodeModel = model;
-		selectedNodeModel.setSelected(true);
-		event.reemitAs(this, SelectionChanged.class, model);
 	}
 
 	/**

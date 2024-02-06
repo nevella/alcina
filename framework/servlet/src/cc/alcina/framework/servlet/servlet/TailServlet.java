@@ -37,14 +37,14 @@ import cc.alcina.framework.entity.Configuration;
 public class TailServlet extends AlcinaServlet {
 	private boolean finished;
 
+	private byte[] bytes(String string) {
+		return string.getBytes(StandardCharsets.UTF_8);
+	}
+
 	@Override
 	public void destroy() {
 		finished = true;
 		super.destroy();
-	}
-
-	private byte[] bytes(String string) {
-		return string.getBytes(StandardCharsets.UTF_8);
 	}
 
 	@Override

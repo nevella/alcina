@@ -42,11 +42,6 @@ public class PublicationContext {
 		return LooseContext.has(CONTEXT_PUBLICATION_CONTEXT);
 	}
 
-	public static PublicationContext setupForExternalToPublisher(
-			ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
-		return setupContext(contentDefinition, deliveryModel);
-	}
-
 	static PublicationContext setupContext(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel) {
 		PublicationContext ctx = new PublicationContext();
@@ -57,6 +52,11 @@ public class PublicationContext {
 			ctx.setVisitor(LooseContext.get(CONTEXT_PUBLICATION_VISITOR));
 		}
 		return ctx;
+	}
+
+	public static PublicationContext setupForExternalToPublisher(
+			ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
+		return setupContext(contentDefinition, deliveryModel);
 	}
 
 	public ContentDefinition contentDefinition;
@@ -120,14 +120,14 @@ public class PublicationContext {
 		return this.visitor == null ? new PublicationVisitor() : this.visitor;
 	}
 
-	public void setVisitor(PublicationVisitor visitor) {
-		this.visitor = visitor;
-	}
-
 	protected void logPublicationException(Exception e) {
 		String message = getContextInfoForPublicationException();
 		logger.warn(message, e);
 		EntityLayerLogging.log(LogMessageType.PUBLICATION_EXCEPTION, message,
 				e);
+	}
+
+	public void setVisitor(PublicationVisitor visitor) {
+		this.visitor = visitor;
 	}
 }

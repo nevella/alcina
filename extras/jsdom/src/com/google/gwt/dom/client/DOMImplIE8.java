@@ -20,15 +20,6 @@ class DOMImplIE8 extends DOMImplTrident {
 
 	private static boolean isIE8Detected;
 
-	// Stolen and modified from UserAgentPropertyGenerator
-	private static native boolean isIE8Impl() /*-{
-												var ua = navigator.userAgent.toLowerCase();
-												if (ua.indexOf("msie") != -1 && $doc.documentMode == 8) {
-												return true;
-												}
-												return false;
-												}-*/;
-
 	/**
 	 * Check if the browser is IE8 or IE9.
 	 * 
@@ -42,4 +33,13 @@ class DOMImplIE8 extends DOMImplTrident {
 		}
 		return isIE8;
 	}
+
+	// Stolen and modified from UserAgentPropertyGenerator
+	private static native boolean isIE8Impl() /*-{
+												var ua = navigator.userAgent.toLowerCase();
+												if (ua.indexOf("msie") != -1 && $doc.documentMode == 8) {
+												return true;
+												}
+												return false;
+												}-*/;
 }

@@ -52,6 +52,12 @@ public class LazyPropertyChangeSupport {
 		delegate.addPropertyChangeListener(propertyName, listener);
 	}
 
+	private void ensureDelegate() {
+		if (delegate == null) {
+			delegate = new PropertyChangeSupport(sourceBean);
+		}
+	}
+
 	public void firePropertyChange(PropertyChangeEvent evt) {
 		if (delegate == null) {
 			return;
@@ -93,6 +99,20 @@ public class LazyPropertyChangeSupport {
 		fireUnspecifiedPropertyChange(name, UNSPECIFIED_PROPERTY_CHANGE);
 	}
 
+	private void fireUnspecifiedPropertyChange(String name,
+			Object propagationId) {
+		if (delegate == null) {
+			return;
+		}
+		PropertyChangeEvent changeEvent = new PropertyChangeEvent(sourceBean,
+				name, null, null);
+		if (propagationId == null) {
+			propagationId = UNSPECIFIED_PROPERTY_CHANGE;
+		}
+		changeEvent.setPropagationId(propagationId);
+		delegate.firePropertyChange(changeEvent);
+	}
+
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		ensureDelegate();
 		return this.delegate.getPropertyChangeListeners();
@@ -111,25 +131,5 @@ public class LazyPropertyChangeSupport {
 			return;
 		}
 		this.delegate.removePropertyChangeListener(propertyName, listener);
-	}
-
-	private void ensureDelegate() {
-		if (delegate == null) {
-			delegate = new PropertyChangeSupport(sourceBean);
-		}
-	}
-
-	private void fireUnspecifiedPropertyChange(String name,
-			Object propagationId) {
-		if (delegate == null) {
-			return;
-		}
-		PropertyChangeEvent changeEvent = new PropertyChangeEvent(sourceBean,
-				name, null, null);
-		if (propagationId == null) {
-			propagationId = UNSPECIFIED_PROPERTY_CHANGE;
-		}
-		changeEvent.setPropagationId(propagationId);
-		delegate.firePropertyChange(changeEvent);
 	}
 }

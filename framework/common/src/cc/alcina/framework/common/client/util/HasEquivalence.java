@@ -145,6 +145,20 @@ public interface HasEquivalence<T> {
 			return true;
 		}
 
+		private static <T extends HasEquivalence> void
+				checkUnique(List<T> list) {
+			if (list.size() < 1) {
+				return;
+			}
+			HasEquivalenceMap<T> lookup = new HasEquivalenceMap<>(list);
+			for (T element : list) {
+				List<T> equivalents = lookup.getEquivalents(element);
+				if (equivalents.size() > 1) {
+					throw new NotUniqueException(equivalents);
+				}
+			}
+		}
+
 		public static <T extends HasEquivalence> boolean
 				contains(Collection<T> o1, T o2) {
 			return !intersection(o1, Collections.singletonList(o2)).isEmpty();
@@ -442,20 +456,6 @@ public interface HasEquivalence<T> {
 			result.secondOnly.forEach(
 					v -> v.right = correspondenceMapper.apply(v.o, c2));
 			return result;
-		}
-
-		private static <T extends HasEquivalence> void
-				checkUnique(List<T> list) {
-			if (list.size() < 1) {
-				return;
-			}
-			HasEquivalenceMap<T> lookup = new HasEquivalenceMap<>(list);
-			for (T element : list) {
-				List<T> equivalents = lookup.getEquivalents(element);
-				if (equivalents.size() > 1) {
-					throw new NotUniqueException(equivalents);
-				}
-			}
 		}
 
 		public static class DeduplicateHasEquivalencePredicate<C extends HasEquivalence>

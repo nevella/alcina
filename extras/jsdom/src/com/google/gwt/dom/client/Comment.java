@@ -88,8 +88,34 @@ public class Comment extends Node
 	}
 
 	@Override
+	protected CommentJso jsoRemote() {
+		return (CommentJso) remote();
+	}
+
+	@Override
+	protected boolean linkedToRemote() {
+		return remote != CommentNull.INSTANCE;
+	}
+
+	@Override
+	protected CommentLocal local() {
+		return local;
+	}
+
+	@Override
 	public Node node() {
 		return this;
+	}
+
+	@Override
+	protected void putRemote(ClientDomNode remote, boolean resolved) {
+		Preconditions.checkState(wasSynced() == resolved);
+		this.remote = (ClientDomComment) remote;
+	}
+
+	@Override
+	protected ClientDomComment remote() {
+		return remote;
 	}
 
 	@Override
@@ -97,6 +123,11 @@ public class Comment extends Node
 		ensureRemoteCheck();
 		local().replaceData(offset, length, data);
 		sync(() -> remote().replaceData(offset, length, data));
+	}
+
+	@Override
+	protected void resetRemote0() {
+		this.remote = CommentNull.INSTANCE;
 	}
 
 	@Override
@@ -119,37 +150,6 @@ public class Comment extends Node
 	@Override
 	public String toString() {
 		return Ax.format("#COMMENT[%s]", local().getData());
-	}
-
-	@Override
-	protected boolean linkedToRemote() {
-		return remote != CommentNull.INSTANCE;
-	}
-
-	@Override
-	protected CommentLocal local() {
-		return local;
-	}
-
-	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasSynced() == resolved);
-		this.remote = (ClientDomComment) remote;
-	}
-
-	@Override
-	protected ClientDomComment remote() {
-		return remote;
-	}
-
-	@Override
-	protected void resetRemote0() {
-		this.remote = CommentNull.INSTANCE;
-	}
-
-	@Override
-	protected CommentJso jsoRemote() {
-		return (CommentJso) remote();
 	}
 
 	public class CommentImplAccess extends Node.ImplAccess {

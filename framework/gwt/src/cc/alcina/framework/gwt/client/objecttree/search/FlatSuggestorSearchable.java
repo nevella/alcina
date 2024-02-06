@@ -40,8 +40,23 @@ public class FlatSuggestorSearchable<TC extends TruncatedObjectCriterion>
 		return boundSuggestBox;
 	}
 
+	@Override
+	public String getCriterionPropertyName() {
+		return "value";
+	}
+
 	protected String getHint() {
 		return "";
+	}
+
+	@Override
+	public SearchOperator getOperator(TC value) {
+		return value.getOperator();
+	}
+
+	@Override
+	public boolean hasValue(TC sc) {
+		return sc.getId() != 0;
 	}
 
 	class TruncatedObjectHelperRenderer implements Renderer<Object, String> {
@@ -61,20 +76,5 @@ public class FlatSuggestorSearchable<TC extends TruncatedObjectCriterion>
 			}
 			return CommonUtils.nullSafeToString(o);
 		}
-	}
-
-	@Override
-	public String getCriterionPropertyName() {
-		return "value";
-	}
-
-	@Override
-	public SearchOperator getOperator(TC value) {
-		return value.getOperator();
-	}
-
-	@Override
-	public boolean hasValue(TC sc) {
-		return sc.getId() != 0;
 	}
 }

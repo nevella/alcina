@@ -12,14 +12,14 @@ public class LuxWidgets {
 		return LuxWidgets.with(new LuxContainer());
 	}
 
-	public static LuxWidgets withText(String text) {
-		return with(Widgets.unstyledText(text));
-	}
-
 	public static LuxWidgets with(Widget widget) {
 		LuxWidgets widgets = new LuxWidgets();
 		widgets.widget = widget;
 		return widgets;
+	}
+
+	public static LuxWidgets withText(String text) {
+		return with(Widgets.unstyledText(text));
 	}
 
 	private Widget widget;

@@ -26,15 +26,15 @@ public class RemoteConsoleActivityMapper implements ActivityMapper {
 	public static class ConsolePlaceTokenizer
 			extends BasePlaceTokenizer<ConsolePlace> {
 		@Override
-		public String getToken(ConsolePlace place) {
-			// just one and very rooty
-			return "";
-		}
-
-		@Override
 		protected ConsolePlace getPlace0(String token) {
 			ConsolePlace place = new ConsolePlace();
 			return place;
+		}
+
+		@Override
+		public String getToken(ConsolePlace place) {
+			// just one and very rooty
+			return "";
 		}
 
 		@Override

@@ -32,18 +32,6 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 		return addDomHandler(handler, ClickEvent.getType());
 	}
 
-	public void wrap(HTML html, WidgetElementReplacer replacer) {
-		this.replacer = replacer;
-		Element elt = html.getElement();
-		Widget maybeWrap = maybeWrap(elt);
-		if (maybeWrap != null) {
-			fp.add(maybeWrap);
-		} else {
-			fp.add(html);
-		}
-		replaceMap.clear();
-	}
-
 	private Widget maybeWrap(Element element) {
 		Widget replace = replacer.replace(element);
 		replaceMap.put(element, replace);
@@ -78,6 +66,18 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 			return fp;
 		}
 		return null;
+	}
+
+	public void wrap(HTML html, WidgetElementReplacer replacer) {
+		this.replacer = replacer;
+		Element elt = html.getElement();
+		Widget maybeWrap = maybeWrap(elt);
+		if (maybeWrap != null) {
+			fp.add(maybeWrap);
+		} else {
+			fp.add(html);
+		}
+		replaceMap.clear();
 	}
 
 	public interface WidgetElementReplacer {

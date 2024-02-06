@@ -45,6 +45,13 @@ public class RemoteInvocation {
 
 	private String remoteAddress;
 
+	protected void customiseResult(Object obj) {
+	}
+
+	protected ArrayList deserializeResult(InputStream content) {
+		return KryoUtils.deserializeFromStream(content, ArrayList.class);
+	}
+
 	public PostAndClient getHttpPost(URI uri) throws Exception {
 		int timeoutSecs = 120;
 		PostAndClient postAndClient = new PostAndClient();
@@ -175,13 +182,6 @@ public class RemoteInvocation {
 		} else {
 			return false;
 		}
-	}
-
-	protected void customiseResult(Object obj) {
-	}
-
-	protected ArrayList deserializeResult(InputStream content) {
-		return KryoUtils.deserializeFromStream(content, ArrayList.class);
 	}
 
 	class PostAndClient {

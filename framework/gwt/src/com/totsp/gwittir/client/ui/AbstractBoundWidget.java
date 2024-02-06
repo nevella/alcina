@@ -53,6 +53,12 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	public AbstractBoundWidget() {
 	}
 
+	private void activateAction() {
+		if (this.getAction() instanceof BindingAction) {
+			((BindingAction<BoundWidget<T>>) getAction()).bind(this);
+		}
+	}
+
 	@Override
 	public void addPropertyChangeListener(PropertyChangeListener l) {
 		changes.addPropertyChangeListener(l);
@@ -62,6 +68,16 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	public void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener l) {
 		changes.addPropertyChangeListener(propertyName, l);
+	}
+
+	/*
+	 * Remove the bindings including the keybindings
+	 */
+	private void cleanupAction() {
+		if (this.getAction() instanceof BindingAction
+				&& (this.getModel() != null)) {
+			((BindingAction<BoundWidget<T>>) getAction()).unbind(this);
+		}
 	}
 
 	@Override
@@ -83,6 +99,33 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	@Override
 	public Object getModel() {
 		return model;
+	}
+
+	@Override
+	protected void onAttach() {
+		// Call cleanup action to remove any bindings just in case there are
+		// other bindings.
+		this.cleanupAction();
+		if (!wasDetached) {
+			this.setupAction();
+		}
+		wasDetached = false;
+		super.onAttach();
+		this.changes.firePropertyChange("attached", false, true);
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+		wasDetached = true;
+		this.cleanupAction();
+		this.changes.firePropertyChange("attached", true, false);
+	}
+
+	@Override
+	protected void onLoad() {
+		super.onLoad();
+		this.activateAction();
 	}
 
 	@Override
@@ -138,22 +181,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		this.changes.firePropertyChange("model", old, model);
 	}
 
-	private void activateAction() {
-		if (this.getAction() instanceof BindingAction) {
-			((BindingAction<BoundWidget<T>>) getAction()).bind(this);
-		}
-	}
-
-	/*
-	 * Remove the bindings including the keybindings
-	 */
-	private void cleanupAction() {
-		if (this.getAction() instanceof BindingAction
-				&& (this.getModel() != null)) {
-			((BindingAction<BoundWidget<T>>) getAction()).unbind(this);
-		}
-	}
-
 	/*
 	 * Calls the associated action with this widget to set the bindings.
 	 */
@@ -161,32 +188,5 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		if (this.getAction() instanceof BindingAction) {
 			((BindingAction<BoundWidget<T>>) getAction()).set(this);
 		}
-	}
-
-	@Override
-	protected void onAttach() {
-		// Call cleanup action to remove any bindings just in case there are
-		// other bindings.
-		this.cleanupAction();
-		if (!wasDetached) {
-			this.setupAction();
-		}
-		wasDetached = false;
-		super.onAttach();
-		this.changes.firePropertyChange("attached", false, true);
-	}
-
-	@Override
-	protected void onDetach() {
-		super.onDetach();
-		wasDetached = true;
-		this.cleanupAction();
-		this.changes.firePropertyChange("attached", true, false);
-	}
-
-	@Override
-	protected void onLoad() {
-		super.onLoad();
-		this.activateAction();
 	}
 }

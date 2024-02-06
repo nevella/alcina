@@ -106,6 +106,11 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 			super(State.PERSIST_TRANSFORMS);
 		}
 
+		private void cleanup() {
+			LocalTransformPersistence.get()
+					.getCommitToStorageTransformListener().setPaused(false);
+		}
+
 		@Override
 		public Collection<State> getProvides() {
 			return Arrays.asList(new State[] { State.PERSIST_TRANSFORMS_SUCCESS,
@@ -141,11 +146,6 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 			notifier.modalOff();
 			LocalTransformPersistence.get().persistOfflineTransforms(
 					transformsToPersistOnServer, notifier, this);
-		}
-
-		private void cleanup() {
-			LocalTransformPersistence.get()
-					.getCommitToStorageTransformListener().setPaused(false);
 		}
 	}
 

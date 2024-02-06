@@ -429,6 +429,19 @@ public class ContentViewFactory {
 				.createBeanView(bean);
 	}
 
+	private Widget createCaption(Object bean, PaneWrapperWithObjects cp) {
+		TextProvider.get().setTrimmed(true);
+		List<SimpleHistoryEventInfo> history = Arrays
+				.asList(new SimpleHistoryEventInfo[] {
+						new SimpleHistoryEventInfo(objName()),
+						new SimpleHistoryEventInfo(RenderedClass
+								.getTypeDisplayName(bean.getClass())),
+						new SimpleHistoryEventInfo(
+								TextProvider.get().getObjectName(bean)) });
+		TextProvider.get().setTrimmed(false);
+		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
+	}
+
 	public Widget createExtraActionsWidget(final Object bean) {
 		ClassReflector<? extends Object> reflector = Reflections.at(bean);
 		if (!reflector.provideIsReflective()) {
@@ -465,6 +478,16 @@ public class ContentViewFactory {
 			}
 		}
 		return fp;
+	}
+
+	private Widget createMultiCaption(Class beanClass,
+			PaneWrapperWithObjects cp) {
+		List<SimpleHistoryEventInfo> history = Arrays
+				.asList(new SimpleHistoryEventInfo[] {
+						new SimpleHistoryEventInfo(objName()),
+						new SimpleHistoryEventInfo(
+								RenderedClass.getTypeDisplayName(beanClass)) });
+		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
 	}
 
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans) {
@@ -518,6 +541,16 @@ public class ContentViewFactory {
 		this.doNotClone(doNotClone);
 		this.setTableMask(0);
 		return createMultipleBeanView(beans);
+	}
+
+	private PaneWrapperWithObjects
+			createPaneWrapper(PermissibleActionListener actionListener) {
+		PaneWrapperWithObjects vp = new PaneWrapperWithObjects();
+		vp.setStyleName("alcina-BeanPanel");
+		if (actionListener != null) {
+			vp.addVetoableActionListener(actionListener);
+		}
+		return vp;
 	}
 
 	public BoundTableExt createTable(Collection beans, boolean editable,
@@ -595,6 +628,28 @@ public class ContentViewFactory {
 		return this;
 	}
 
+	private List<Class<? extends PermissibleAction>>
+			getBeanActions(Object bean) {
+		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
+		ObjectActions actions = Reflections.at(bean)
+				.annotation(ObjectActions.class);
+		if (actions != null) {
+			for (Action action : actions.value()) {
+				Class<? extends PermissibleAction> actionClass = action
+						.actionClass();
+				boolean noPermissionsCheck = actionClass == CreateAction.class
+						|| actionClass == EditAction.class
+						|| actionClass == ViewAction.class
+						|| actionClass == DeleteAction.class;
+				if (noPermissionsCheck || PermissionsManager.get().isPermitted(
+						bean, new AnnotatedPermissible(action.permission()))) {
+					result.add(actionClass);
+				}
+			}
+		}
+		return result;
+	}
+
 	public Class getBeanClass() {
 		return this.beanClass;
 	}
@@ -647,6 +702,11 @@ public class ContentViewFactory {
 	public ContentViewFactory noCaption() {
 		noCaption = true;
 		return this;
+	}
+
+	private String objName() {
+		return TextProvider.get().getUiObjectText(getClass(), "caption-objects",
+				"Objects");
 	}
 
 	public ContentViewFactory okButtonName(String okButtonName) {
@@ -735,66 +795,6 @@ public class ContentViewFactory {
 		this.toolbarButtonStyle = toolbarButtonStyle;
 	}
 
-	private Widget createCaption(Object bean, PaneWrapperWithObjects cp) {
-		TextProvider.get().setTrimmed(true);
-		List<SimpleHistoryEventInfo> history = Arrays
-				.asList(new SimpleHistoryEventInfo[] {
-						new SimpleHistoryEventInfo(objName()),
-						new SimpleHistoryEventInfo(RenderedClass
-								.getTypeDisplayName(bean.getClass())),
-						new SimpleHistoryEventInfo(
-								TextProvider.get().getObjectName(bean)) });
-		TextProvider.get().setTrimmed(false);
-		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
-	}
-
-	private Widget createMultiCaption(Class beanClass,
-			PaneWrapperWithObjects cp) {
-		List<SimpleHistoryEventInfo> history = Arrays
-				.asList(new SimpleHistoryEventInfo[] {
-						new SimpleHistoryEventInfo(objName()),
-						new SimpleHistoryEventInfo(
-								RenderedClass.getTypeDisplayName(beanClass)) });
-		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
-	}
-
-	private PaneWrapperWithObjects
-			createPaneWrapper(PermissibleActionListener actionListener) {
-		PaneWrapperWithObjects vp = new PaneWrapperWithObjects();
-		vp.setStyleName("alcina-BeanPanel");
-		if (actionListener != null) {
-			vp.addVetoableActionListener(actionListener);
-		}
-		return vp;
-	}
-
-	private List<Class<? extends PermissibleAction>>
-			getBeanActions(Object bean) {
-		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
-		ObjectActions actions = Reflections.at(bean)
-				.annotation(ObjectActions.class);
-		if (actions != null) {
-			for (Action action : actions.value()) {
-				Class<? extends PermissibleAction> actionClass = action
-						.actionClass();
-				boolean noPermissionsCheck = actionClass == CreateAction.class
-						|| actionClass == EditAction.class
-						|| actionClass == ViewAction.class
-						|| actionClass == DeleteAction.class;
-				if (noPermissionsCheck || PermissionsManager.get().isPermitted(
-						bean, new AnnotatedPermissible(action.permission()))) {
-					result.add(actionClass);
-				}
-			}
-		}
-		return result;
-	}
-
-	private String objName() {
-		return TextProvider.get().getUiObjectText(getClass(), "caption-objects",
-				"Objects");
-	}
-
 	public static class ActionTableHolder extends Composite {
 		private FlowPanel fp;
 
@@ -837,32 +837,6 @@ public class ContentViewFactory {
 				DataProvider provider) {
 			this(mask, (Field[]) fields.toArray(new Field[fields.size()]),
 					provider);
-		}
-
-		@Override
-		public void init(Collection c, int numberOfChunks) {
-			super.init(c, numberOfChunks);
-			beautify();
-		}
-
-		@Override
-		/**
-		 * handles beautification of incrementally rendered tables
-		 */
-		public void renderBottom() {
-			super.renderBottom();
-			beautify();
-		}
-
-		@Override
-		public void setValue(Object value) {
-			super.setValue(value);
-		}
-
-		@Override
-		public void sortColumn(int index) {
-			super.sortColumn(index);
-			beautify();
 		}
 
 		@Override
@@ -914,8 +888,34 @@ public class ContentViewFactory {
 		}
 
 		@Override
+		public void init(Collection c, int numberOfChunks) {
+			super.init(c, numberOfChunks);
+			beautify();
+		}
+
+		@Override
 		protected void onAttach() {
 			super.onAttach();
+			beautify();
+		}
+
+		@Override
+		/**
+		 * handles beautification of incrementally rendered tables
+		 */
+		public void renderBottom() {
+			super.renderBottom();
+			beautify();
+		}
+
+		@Override
+		public void setValue(Object value) {
+			super.setValue(value);
+		}
+
+		@Override
+		public void sortColumn(int index) {
+			super.sortColumn(index);
 			beautify();
 		}
 	}
@@ -955,14 +955,6 @@ public class ContentViewFactory {
 			}
 		}
 
-		public Widget getCancelButton() {
-			return this.cancelButton;
-		}
-
-		public Widget getOkButton() {
-			return this.okButton;
-		}
-
 		protected Widget createButton(String buttonName) {
 			if (toolbarButtonStyle) {
 				StyledAWidget aWidget = new StyledAWidget(buttonName, true);
@@ -972,6 +964,14 @@ public class ContentViewFactory {
 			} else {
 				return new Button(SafeHtmlUtils.fromString(buttonName));
 			}
+		}
+
+		public Widget getCancelButton() {
+			return this.cancelButton;
+		}
+
+		public Widget getOkButton() {
+			return this.okButton;
 		}
 	}
 
@@ -1050,6 +1050,27 @@ public class ContentViewFactory {
 			this.support.addVetoableActionListener(listener);
 		}
 
+		private void commitChanges(boolean fireViewEvent) {
+			if (isProvisionalObjects()) {
+				TransformManager.get().promoteToDomainObject(objects);
+				objects.clear();
+			}
+			if (!fireViewEvent) {
+				return;
+			}
+			PermissibleAction actionInstance = isFireOkButtonClickAsOkActionEvent()
+					? OkAction.INSTANCE
+					: Reflections.newInstance(ViewAction.class);
+			final PermissibleActionEvent action = new PermissibleActionEvent(
+					initialObjects, actionInstance);
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					fireVetoableActionEvent(action);
+				}
+			});
+		}
+
 		public void fireVetoableActionEvent(PermissibleActionEvent event) {
 			this.support.fireVetoableActionEvent(event);
 		}
@@ -1066,8 +1087,17 @@ public class ContentViewFactory {
 			return this.cancelButton;
 		}
 
+		GridForm getGridForm() {
+			return (GridForm) getBoundWidget();
+		}
+
 		public Collection getInitialObjects() {
 			return this.initialObjects;
+		}
+
+		protected SourcesPropertyChangeEvents getModelSpce() {
+			return (SourcesPropertyChangeEvents) ((AbstractBoundWidget) boundWidget)
+					.getModel();
 		}
 
 		public Collection getObjects() {
@@ -1091,6 +1121,14 @@ public class ContentViewFactory {
 		}
 
 		@Override
+		protected void onAttach() {
+			super.onAttach();
+			if (objects != null && !doNotRegister) {
+				TransformManager.get().registerProvisionalObjects(objects);
+			}
+		}
+
+		@Override
 		public void onClick(ClickEvent clickEvent) {
 			final Widget sender = (Widget) clickEvent.getSource();
 			if (sender == okButton) {
@@ -1110,6 +1148,65 @@ public class ContentViewFactory {
 					}
 				});
 			}
+		}
+
+		@Override
+		protected void onDetach() {
+			try {
+				RenderContext.get().push();
+				RenderContext.get().setSuppressValidationFeedbackFor(this);
+				if (editable) {
+					preDetachFocus.setVisible(true);
+					preDetachFocus.setFocus(true);
+				}
+				if (editable && isVisible()) {
+					GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(),
+							null, false, false, true);
+				}
+				super.onDetach();// inter alia, detach children, forcing commit
+									// of
+				// richtexts etc
+				if (objects != null && TransformManager.get().dirty(objects)) {
+					boolean save = Window.confirm("You are closing a form that"
+							+ " has unsaved changes. Please press 'OK' to save the changes"
+							+ ", or 'Cancel' to ignore them.");
+					if (save) {
+						boolean result = validateAndCommit(null, null);
+						if (!result) {
+							Window.alert(
+									"Unable to save changes due to form validation error.");
+						}
+					}
+				}
+				if (objects != null) {
+					TransformManager.get()
+							.deregisterProvisionalObjects(objects);
+				}
+			} finally {
+				RenderContext.get().pop();
+			}
+		}
+
+		@Override
+		protected void onLoad() {
+			super.onLoad();
+			if (propertyChangeBeanValidator != null) {
+				propertyChangeValidatorResultPanel = new FlowPanel();
+				propertyChangeValidatorResultPanel
+						.setStyleName("property-change-validation-result");
+				propertyChangeValidatorResultPanel.setVisible(false);
+				add(propertyChangeValidatorResultPanel);
+				getModelSpce().addPropertyChangeListener(validationListener);
+			}
+		}
+
+		@Override
+		protected void onUnload() {
+			if (propertyChangeBeanValidator != null) {
+				getModelSpce().removePropertyChangeListener(validationListener);
+				remove(propertyChangeValidatorResultPanel);
+			}
+			super.onUnload();
 		}
 
 		@Override
@@ -1288,103 +1385,6 @@ public class ContentViewFactory {
 
 		public boolean validateFields() {
 			return getBoundWidget().getBinding().validate();
-		}
-
-		private void commitChanges(boolean fireViewEvent) {
-			if (isProvisionalObjects()) {
-				TransformManager.get().promoteToDomainObject(objects);
-				objects.clear();
-			}
-			if (!fireViewEvent) {
-				return;
-			}
-			PermissibleAction actionInstance = isFireOkButtonClickAsOkActionEvent()
-					? OkAction.INSTANCE
-					: Reflections.newInstance(ViewAction.class);
-			final PermissibleActionEvent action = new PermissibleActionEvent(
-					initialObjects, actionInstance);
-			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-				@Override
-				public void execute() {
-					fireVetoableActionEvent(action);
-				}
-			});
-		}
-
-		protected SourcesPropertyChangeEvents getModelSpce() {
-			return (SourcesPropertyChangeEvents) ((AbstractBoundWidget) boundWidget)
-					.getModel();
-		}
-
-		@Override
-		protected void onAttach() {
-			super.onAttach();
-			if (objects != null && !doNotRegister) {
-				TransformManager.get().registerProvisionalObjects(objects);
-			}
-		}
-
-		@Override
-		protected void onDetach() {
-			try {
-				RenderContext.get().push();
-				RenderContext.get().setSuppressValidationFeedbackFor(this);
-				if (editable) {
-					preDetachFocus.setVisible(true);
-					preDetachFocus.setFocus(true);
-				}
-				if (editable && isVisible()) {
-					GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(),
-							null, false, false, true);
-				}
-				super.onDetach();// inter alia, detach children, forcing commit
-									// of
-				// richtexts etc
-				if (objects != null && TransformManager.get().dirty(objects)) {
-					boolean save = Window.confirm("You are closing a form that"
-							+ " has unsaved changes. Please press 'OK' to save the changes"
-							+ ", or 'Cancel' to ignore them.");
-					if (save) {
-						boolean result = validateAndCommit(null, null);
-						if (!result) {
-							Window.alert(
-									"Unable to save changes due to form validation error.");
-						}
-					}
-				}
-				if (objects != null) {
-					TransformManager.get()
-							.deregisterProvisionalObjects(objects);
-				}
-			} finally {
-				RenderContext.get().pop();
-			}
-		}
-
-		@Override
-		protected void onLoad() {
-			super.onLoad();
-			if (propertyChangeBeanValidator != null) {
-				propertyChangeValidatorResultPanel = new FlowPanel();
-				propertyChangeValidatorResultPanel
-						.setStyleName("property-change-validation-result");
-				propertyChangeValidatorResultPanel.setVisible(false);
-				add(propertyChangeValidatorResultPanel);
-				getModelSpce().addPropertyChangeListener(validationListener);
-			}
-		}
-
-		@Override
-		protected void onUnload() {
-			if (propertyChangeBeanValidator != null) {
-				getModelSpce().removePropertyChangeListener(validationListener);
-				remove(propertyChangeValidatorResultPanel);
-			}
-			super.onUnload();
-		}
-
-		GridForm getGridForm() {
-			return (GridForm) getBoundWidget();
 		}
 	}
 

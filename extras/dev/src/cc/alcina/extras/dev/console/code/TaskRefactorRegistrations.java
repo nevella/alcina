@@ -46,12 +46,36 @@ public class TaskRefactorRegistrations extends PerformerTask {
 
 	private boolean test;
 
+	private void ensureRegistrations() {
+		compUnits.declarations.values().stream()
+				.filter(this::hasRegistryLocationAnnotations)
+				.forEach(type -> new RegistrationsModifier(type).modify());
+		compUnits.writeDirty(isTest());
+	}
+
 	public Action getAction() {
 		return this.action;
 	}
 
 	public String getClassPathList() {
 		return this.classPathList;
+	}
+
+	boolean hasRegistryLocationAnnotations(UnitType wrapper) {
+		// boolean hasOld = wrapper.getDeclaration()
+		// .getAnnotationByClass(RegistryLocation.class).isPresent()
+		// || wrapper.getDeclaration()
+		// .getAnnotationByClass(RegistryLocations.class)
+		// .isPresent();
+		// boolean hasNew = wrapper.getDeclaration()
+		// .getAnnotationByClass(Registration.class).isPresent()
+		// || wrapper.getDeclaration()
+		// .getAnnotationByClass(Registrations.class).isPresent()
+		// || wrapper.getDeclaration()
+		// .getAnnotationByClass(Registration.Singleton.class)
+		// .isPresent();
+		// return hasOld && !hasNew;
+		throw new UnsupportedOperationException();
 	}
 
 	public boolean isOverwriteOriginals() {
@@ -105,32 +129,36 @@ public class TaskRefactorRegistrations extends PerformerTask {
 		this.test = test;
 	}
 
-	private void ensureRegistrations() {
-		compUnits.declarations.values().stream()
-				.filter(this::hasRegistryLocationAnnotations)
-				.forEach(type -> new RegistrationsModifier(type).modify());
-		compUnits.writeDirty(isTest());
-	}
-
-	boolean hasRegistryLocationAnnotations(UnitType wrapper) {
-		// boolean hasOld = wrapper.getDeclaration()
-		// .getAnnotationByClass(RegistryLocation.class).isPresent()
-		// || wrapper.getDeclaration()
-		// .getAnnotationByClass(RegistryLocations.class)
-		// .isPresent();
-		// boolean hasNew = wrapper.getDeclaration()
-		// .getAnnotationByClass(Registration.class).isPresent()
-		// || wrapper.getDeclaration()
-		// .getAnnotationByClass(Registrations.class).isPresent()
-		// || wrapper.getDeclaration()
-		// .getAnnotationByClass(Registration.Singleton.class)
-		// .isPresent();
-		// return hasOld && !hasNew;
-		throw new UnsupportedOperationException();
-	}
-
 	public enum Action {
 		TRANSLATE_LOCATIONS, REMOVE_LOCATIONS
+	}
+
+	class DeclarationVisitor extends CompilationUnitWrapperVisitor {
+		public DeclarationVisitor(CompilationUnits units,
+				CompilationUnitWrapper compUnit) {
+			super(units, compUnit);
+		}
+
+		@Override
+		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
+			try {
+				visit0(node, arg);
+			} catch (VerifyError ve) {
+				Ax.out("Verify error: %s", node.getName());
+			}
+		}
+
+		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
+			if (!node.isInterface()) {
+				UnitType type = new UnitType(unit, node);
+				type.setDeclaration(node);
+				unit.declarations.add(type);
+				if (hasRegistryLocationAnnotations(type)) {
+					type.setFlag(Type.RegistryLocation);
+				}
+			}
+			super.visit(node, arg);
+		}
 	}
 
 	private class RegistrationsModifier extends SourceModifier {
@@ -142,6 +170,10 @@ public class TaskRefactorRegistrations extends PerformerTask {
 			SimpleName simpleName = new SimpleName(value.toString());
 			NameExpr scope = getNestedName(value.getClass());
 			return new FieldAccessExpr(scope, simpleName.toString());
+		}
+
+		@Override
+		protected void ensureImports() {
 		}
 
 		private List<Expression> getCoordinates(NormalAnnotationExpr in) {
@@ -214,10 +246,6 @@ public class TaskRefactorRegistrations extends PerformerTask {
 				}
 			}
 			return Registration.Priority._DEFAULT;
-		}
-
-		@Override
-		protected void ensureImports() {
 		}
 
 		@Override
@@ -325,34 +353,6 @@ public class TaskRefactorRegistrations extends PerformerTask {
 				});
 				return out;
 			}
-		}
-	}
-
-	class DeclarationVisitor extends CompilationUnitWrapperVisitor {
-		public DeclarationVisitor(CompilationUnits units,
-				CompilationUnitWrapper compUnit) {
-			super(units, compUnit);
-		}
-
-		@Override
-		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
-			try {
-				visit0(node, arg);
-			} catch (VerifyError ve) {
-				Ax.out("Verify error: %s", node.getName());
-			}
-		}
-
-		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
-			if (!node.isInterface()) {
-				UnitType type = new UnitType(unit, node);
-				type.setDeclaration(node);
-				unit.declarations.add(type);
-				if (hasRegistryLocationAnnotations(type)) {
-					type.setFlag(Type.RegistryLocation);
-				}
-			}
-			super.visit(node, arg);
 		}
 	}
 

@@ -32,11 +32,6 @@ public class NamedPlaceHolderReplacer<V> extends PlaceHolderReplacer {
 		return super.execute(text);
 	}
 
-	public void setValues(final Map<String, V> values) {
-		Checker.notNull("parameter:values", values);
-		this.values = values;
-	}
-
 	@Override
 	protected String getValue(final String placeHolder) {
 		final String value = (String) this.getValues().get(placeHolder);
@@ -49,5 +44,10 @@ public class NamedPlaceHolderReplacer<V> extends PlaceHolderReplacer {
 	protected Map<String, V> getValues() {
 		Checker.notNull("field:values", values);
 		return this.values;
+	}
+
+	public void setValues(final Map<String, V> values) {
+		Checker.notNull("parameter:values", values);
+		this.values = values;
 	}
 }

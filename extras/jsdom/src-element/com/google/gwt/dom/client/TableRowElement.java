@@ -83,6 +83,17 @@ public class TableRowElement extends Element {
 	}
 
 	/**
+	 * Delete a cell from the current row.
+	 * 
+	 * @see <a href=
+	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
+	 *      W3C HTML Specification</a>
+	 */
+	native void deleteCell0(ElementJso elt, int index) /*-{
+															elt.deleteCell(index);
+															}-*/;
+
+	/**
 	 * Horizontal alignment of data within cells of this row.
 	 * 
 	 * @see <a href=
@@ -109,6 +120,10 @@ public class TableRowElement extends Element {
 		return new NodeList<TableCellElement>(
 				(NodeListWrapped) new NodeListWrapped<>(nodes));
 	}
+
+	private final native NodeListJso getCells0(ElementJso elem) /*-{
+																		return elem.cells;
+																		}-*/;
 
 	/**
 	 * Alignment character for cells in a column.
@@ -225,10 +240,6 @@ public class TableRowElement extends Element {
 		this.setPropertyString("vAlign", vAlign);
 	}
 
-	private final native NodeListJso getCells0(ElementJso elem) /*-{
-																		return elem.cells;
-																		}-*/;
-
 	@Override
 	protected void validateInsert(Node newChild) {
 		if (newChild.provideIsElement()) {
@@ -238,15 +249,4 @@ public class TableRowElement extends Element {
 		}
 		super.validateInsert(newChild);
 	}
-
-	/**
-	 * Delete a cell from the current row.
-	 * 
-	 * @see <a href=
-	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/tables.html#adef-align-TD">
-	 *      W3C HTML Specification</a>
-	 */
-	native void deleteCell0(ElementJso elt, int index) /*-{
-															elt.deleteCell(index);
-															}-*/;
 }

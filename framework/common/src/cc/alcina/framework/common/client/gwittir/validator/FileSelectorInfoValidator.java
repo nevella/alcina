@@ -52,6 +52,12 @@ public class FileSelectorInfoValidator implements ParameterisedValidator {
 		required = p.booleanValue();
 	}
 
+	private void throwInvalidExtension() throws ValidationException {
+		throw new ValidationException(
+				Ax.format("Invalid file extension - valid extensions are: %s",
+						extensions));
+	}
+
 	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
@@ -81,11 +87,5 @@ public class FileSelectorInfoValidator implements ParameterisedValidator {
 			}
 		}
 		return value;
-	}
-
-	private void throwInvalidExtension() throws ValidationException {
-		throw new ValidationException(
-				Ax.format("Invalid file extension - valid extensions are: %s",
-						extensions));
 	}
 }

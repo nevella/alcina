@@ -95,8 +95,17 @@ public class Shell {
 		return this.process;
 	}
 
+	private String getScriptExtension() {
+		return isWindows() ? ".bat" : ".sh";
+	}
+
 	public boolean isTerminated() {
 		return this.terminated;
+	}
+
+	private boolean isWindows() {
+		String osName = System.getProperty("os.name").toLowerCase();
+		return osName.indexOf("win") >= 0;
 	}
 
 	public File launchBashScript(String script) throws Exception {
@@ -243,15 +252,6 @@ public class Shell {
 				errorBuffer.getStreamResult(), timedOut, process.exitValue(),
 				Ax.isBlank(logToFile) ? null
 						: Io.read().path(logToFile).asString());
-	}
-
-	private String getScriptExtension() {
-		return isWindows() ? ".bat" : ".sh";
-	}
-
-	private boolean isWindows() {
-		String osName = System.getProperty("os.name").toLowerCase();
-		return osName.indexOf("win") >= 0;
 	}
 
 	public static class Output {

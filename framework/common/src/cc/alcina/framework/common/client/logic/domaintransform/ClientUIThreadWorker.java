@@ -47,11 +47,6 @@ public abstract class ClientUIThreadWorker {
 		this.targetIterationTimeMs = targetIterationTimeMs;
 	}
 
-	public void start() {
-		startTime = System.currentTimeMillis();
-		iterate();
-	}
-
 	protected abstract boolean isComplete();
 
 	protected void iterate() {
@@ -93,4 +88,9 @@ public abstract class ClientUIThreadWorker {
 	protected abstract void onComplete();
 
 	protected abstract void performIteration();
+
+	public void start() {
+		startTime = System.currentTimeMillis();
+		iterate();
+	}
 }

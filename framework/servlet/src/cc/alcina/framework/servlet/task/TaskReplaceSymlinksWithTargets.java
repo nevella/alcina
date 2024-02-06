@@ -18,10 +18,6 @@ public class TaskReplaceSymlinksWithTargets extends PerformerTask {
 		return this.root;
 	}
 
-	public void setRoot(String root) {
-		this.root = root;
-	}
-
 	@Override
 	public void run() throws Exception {
 		Files.walkFileTree(Paths.get(root), new SimpleFileVisitor<Path>() {
@@ -37,5 +33,9 @@ public class TaskReplaceSymlinksWithTargets extends PerformerTask {
 				return FileVisitResult.CONTINUE;
 			}
 		});
+	}
+
+	public void setRoot(String root) {
+		this.root = root;
 	}
 }

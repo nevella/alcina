@@ -110,6 +110,13 @@ public abstract class Node
 	@Override
 	public abstract <T extends JavascriptObjectEquivalent> T cast();
 
+	/**
+	 * only call on reparse
+	 */
+	void clearSynced() {
+		syncId = 0;
+	}
+
 	@Override
 	public Node cloneNode(boolean deep) {
 		// The cloned subtree won't be *worse* than the current remote/local
@@ -121,6 +128,43 @@ public abstract class Node
 	public short compareDocumentPosition(org.w3c.dom.Node arg0)
 			throws DOMException {
 		throw new UnsupportedOperationException();
+	}
+
+	protected void doPreTreeSync(Node child) {
+		if (child != null) {
+			boolean ensureBecauseChildSynced = (child.wasSynced()
+					|| child.linkedToRemote())
+					&& (!linkedToRemote() || isPendingSync());
+			if (ensureBecauseChildSynced) {
+				LocalDom.ensureRemote(this);
+			}
+			boolean linkedBecauseFlushed = ensureRemoteCheck();
+			if (linkedToRemote() && (wasSynced() || child.wasSynced())) {
+				if (child.wasSynced()) {
+					LocalDom.ensureRemote(child);
+				} else {
+					LocalDom.ensureRemoteNodeMaybePendingSync(child);
+				}
+			}
+		}
+	}
+
+	/**
+	 * If the node was flushed (i.e. part of a tree that was flushed, has a
+	 * non-zero syncEventId), then we need to link it to the remote (or our
+	 * local/remote will be inconsistent)
+	 *
+	 */
+	protected boolean ensureRemoteCheck() {
+		if (!linkedToRemote() && wasSynced()
+				&& provideSelfOrAncestorLinkedToRemote() != null
+				&& getOwnerDocument().remoteType.hasRemote()
+				&& (provideIsText() || provideIsElement())) {
+			LocalDom.ensureRemote(this);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	@Override
@@ -146,6 +190,10 @@ public abstract class Node
 	@Override
 	public NodeList<Node> getChildNodes() {
 		return local().getChildNodes();
+	}
+
+	public DomNodeType getDomNodeType() {
+		return DomNodeType.fromW3cNode(this);
 	}
 
 	@Override
@@ -300,6 +348,10 @@ public abstract class Node
 		return local().isOrHasChild(child);
 	}
 
+	protected boolean isPendingSync() {
+		return false;
+	}
+
 	@Override
 	public boolean isSameNode(org.w3c.dom.Node arg0) {
 		throw new UnsupportedOperationException();
@@ -309,6 +361,12 @@ public abstract class Node
 	public boolean isSupported(String arg0, String arg1) {
 		throw new UnsupportedOperationException();
 	}
+
+	protected abstract NodeJso jsoRemote();
+
+	protected abstract boolean linkedToRemote();
+
+	protected abstract <T extends NodeLocal> T local();
 
 	@Override
 	public String lookupNamespaceURI(String arg0) {
@@ -328,6 +386,19 @@ public abstract class Node
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * Apply the runnable (to the local mutation list) only if the mutation
+	 * tracking state requires it
+	 */
+	protected final void notify(Runnable runnable) {
+		LocalDom.notifyLocalMutations(runnable);
+	}
+
+	void onSync(int syncId) {
+		Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
+		this.syncId = syncId;
+	}
+
 	@Override
 	public void preRemove(Node node) {
 	}
@@ -343,6 +414,27 @@ public abstract class Node
 	public boolean provideIsText() {
 		return getNodeType() == TEXT_NODE;
 	}
+
+	protected Node provideRoot() {
+		if (getParentElement() != null) {
+			return getParentElement().provideRoot();
+		}
+		return this;
+	}
+
+	protected Node provideSelfOrAncestorLinkedToRemote() {
+		if (linkedToRemote()) {
+			return this;
+		}
+		if (getParentElement() != null) {
+			return getParentElement().provideSelfOrAncestorLinkedToRemote();
+		}
+		return null;
+	}
+
+	protected abstract void putRemote(ClientDomNode remote, boolean synced);
+
+	protected abstract <T extends ClientDomNode> T remote();
 
 	@Override
 	public Node removeAllChildren() {
@@ -397,6 +489,13 @@ public abstract class Node
 		return replaceChild((Node) arg0, (Node) arg1);
 	}
 
+	protected void resetRemote() {
+		clearSynced();
+		resetRemote0();
+	}
+
+	protected abstract void resetRemote0();
+
 	public ClientDomNode sameTreeNodeFor(ClientDomNode domNode) {
 		if (domNode == null) {
 			return null;
@@ -436,89 +535,6 @@ public abstract class Node
 		return getChildNodes().stream();
 	}
 
-	protected void doPreTreeSync(Node child) {
-		if (child != null) {
-			boolean ensureBecauseChildSynced = (child.wasSynced()
-					|| child.linkedToRemote())
-					&& (!linkedToRemote() || isPendingSync());
-			if (ensureBecauseChildSynced) {
-				LocalDom.ensureRemote(this);
-			}
-			boolean linkedBecauseFlushed = ensureRemoteCheck();
-			if (linkedToRemote() && (wasSynced() || child.wasSynced())) {
-				if (child.wasSynced()) {
-					LocalDom.ensureRemote(child);
-				} else {
-					LocalDom.ensureRemoteNodeMaybePendingSync(child);
-				}
-			}
-		}
-	}
-
-	/**
-	 * If the node was flushed (i.e. part of a tree that was flushed, has a
-	 * non-zero syncEventId), then we need to link it to the remote (or our
-	 * local/remote will be inconsistent)
-	 *
-	 */
-	protected boolean ensureRemoteCheck() {
-		if (!linkedToRemote() && wasSynced()
-				&& provideSelfOrAncestorLinkedToRemote() != null
-				&& getOwnerDocument().remoteType.hasRemote()
-				&& (provideIsText() || provideIsElement())) {
-			LocalDom.ensureRemote(this);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	protected boolean isPendingSync() {
-		return false;
-	}
-
-	protected abstract NodeJso jsoRemote();
-
-	protected abstract boolean linkedToRemote();
-
-	protected abstract <T extends NodeLocal> T local();
-
-	/**
-	 * Apply the runnable (to the local mutation list) only if the mutation
-	 * tracking state requires it
-	 */
-	protected final void notify(Runnable runnable) {
-		LocalDom.notifyLocalMutations(runnable);
-	}
-
-	protected Node provideRoot() {
-		if (getParentElement() != null) {
-			return getParentElement().provideRoot();
-		}
-		return this;
-	}
-
-	protected Node provideSelfOrAncestorLinkedToRemote() {
-		if (linkedToRemote()) {
-			return this;
-		}
-		if (getParentElement() != null) {
-			return getParentElement().provideSelfOrAncestorLinkedToRemote();
-		}
-		return null;
-	}
-
-	protected abstract void putRemote(ClientDomNode remote, boolean synced);
-
-	protected abstract <T extends ClientDomNode> T remote();
-
-	protected void resetRemote() {
-		clearSynced();
-		resetRemote0();
-	}
-
-	protected abstract void resetRemote0();
-
 	/**
 	 * Apply the runnable (to the remote dom) only if the node + dom states
 	 * require it
@@ -542,20 +558,20 @@ public abstract class Node
 	protected void validateInsert(Node newChild) {
 	}
 
-	/**
-	 * only call on reparse
-	 */
-	void clearSynced() {
-		syncId = 0;
-	}
-
-	void onSync(int syncId) {
-		Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
-		this.syncId = syncId;
-	}
-
 	boolean wasSynced() {
 		return syncId > 0;
+	}
+
+	class ChildNodeList extends AbstractList<Node> {
+		@Override
+		public Node get(int index) {
+			return local().getChildren().get(index).node();
+		}
+
+		@Override
+		public int size() {
+			return local().getChildren().size();
+		}
 	}
 
 	/**
@@ -591,21 +607,5 @@ public abstract class Node
 		public <E extends ClientDomNode> E remote() {
 			return (E) Node.this.remote();
 		}
-	}
-
-	class ChildNodeList extends AbstractList<Node> {
-		@Override
-		public Node get(int index) {
-			return local().getChildren().get(index).node();
-		}
-
-		@Override
-		public int size() {
-			return local().getChildren().size();
-		}
-	}
-
-	public DomNodeType getDomNodeType() {
-		return DomNodeType.fromW3cNode(this);
 	}
 }

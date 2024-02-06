@@ -36,12 +36,6 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  */
 public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 	@Override
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom info) {
-		return this;
-	}
-
-	@Override
 	public BoundWidget get() {
 		RenderingHtml html = new RenderingHtml();
 		ModelPlaceRenderer renderer = provideRenderer();
@@ -49,6 +43,12 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 		html.setRenderer(renderer);
 		html.setStyleName("");
 		return html;
+	}
+
+	@Override
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom info) {
+		return this;
 	}
 
 	public ModelPlaceRenderer provideRenderer() {

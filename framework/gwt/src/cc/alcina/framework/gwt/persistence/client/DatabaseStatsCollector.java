@@ -22,6 +22,33 @@ public class DatabaseStatsCollector {
 
 	private long start;
 
+	protected void fail(SQLError error) {
+		infoCallback
+				.onFailure(new Exception("SQLError: " + error.getMessage()));
+	}
+
+	void iterate() {
+		switch (phase) {
+		case TRANSFORMS_DB_QUERY:
+			statTransforms();
+			break;
+		case LOGS_DB:
+			ObjectStoreWebDbImpl logWebDbStore = (ObjectStoreWebDbImpl) LogStore
+					.get().objectStore;
+			statStore(logWebDbStore, info, true, Phase.DELTAS_DB);
+			break;
+		case DELTAS_DB:
+			ObjectStoreWebDbImpl deltaWebDbStore = (ObjectStoreWebDbImpl) DeltaStore
+					.get().objectStore;
+			statStore(deltaWebDbStore, info, false, Phase.FINISHED);
+			break;
+		case FINISHED:
+			info.setCollectionTimeMs(System.currentTimeMillis() - start);
+			infoCallback.onSuccess(info);
+			break;
+		}
+	}
+
 	public void run(AsyncCallback<DatabaseStatsInfo> infoCallback) {
 		this.infoCallback = infoCallback;
 		start = System.currentTimeMillis();
@@ -125,33 +152,6 @@ public class DatabaseStatsCollector {
 			public void onTransactionSuccess() {
 			}
 		});
-	}
-
-	protected void fail(SQLError error) {
-		infoCallback
-				.onFailure(new Exception("SQLError: " + error.getMessage()));
-	}
-
-	void iterate() {
-		switch (phase) {
-		case TRANSFORMS_DB_QUERY:
-			statTransforms();
-			break;
-		case LOGS_DB:
-			ObjectStoreWebDbImpl logWebDbStore = (ObjectStoreWebDbImpl) LogStore
-					.get().objectStore;
-			statStore(logWebDbStore, info, true, Phase.DELTAS_DB);
-			break;
-		case DELTAS_DB:
-			ObjectStoreWebDbImpl deltaWebDbStore = (ObjectStoreWebDbImpl) DeltaStore
-					.get().objectStore;
-			statStore(deltaWebDbStore, info, false, Phase.FINISHED);
-			break;
-		case FINISHED:
-			info.setCollectionTimeMs(System.currentTimeMillis() - start);
-			infoCallback.onSuccess(info);
-			break;
-		}
 	}
 
 	enum Phase {

@@ -44,37 +44,6 @@ public class UIRendererWd extends UIRenderer {
 
 	protected List<RenderedPopup> popups = new ArrayList<>();
 
-	public String dashedEnum(Enum e) {
-		return CommonUtils.friendlyConstant(e, "-");
-	}
-
-	public void onTourInit() {
-		exec.executeScript("document.body.className+=' webdriver'");
-	}
-
-	public long timeout() {
-		return System.currentTimeMillis() + (TourManager.isImmediateGet() ? 1
-				: Configuration.getInt("timeout"));
-	}
-
-	private WebElement getElement(String selector) {
-		if (selector.startsWith("/")) {
-			exec.xpath(selector);
-		} else {
-			exec.css(selector);
-		}
-		if (exec.immediateTest()) {
-			return exec.getElement();
-		} else {
-			try {
-				Thread.sleep(200);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			return null;
-		}
-	}
-
 	@Override
 	protected void afterStepListenerAction() {
 	}
@@ -90,6 +59,10 @@ public class UIRendererWd extends UIRenderer {
 		}
 		popups.forEach(RenderedPopup::remove);
 		popups.clear();
+	}
+
+	public String dashedEnum(Enum e) {
+		return CommonUtils.friendlyConstant(e, "-");
 	}
 
 	@Override
@@ -111,9 +84,35 @@ public class UIRendererWd extends UIRenderer {
 				: selectors.toString());
 	}
 
+	private WebElement getElement(String selector) {
+		if (selector.startsWith("/")) {
+			exec.xpath(selector);
+		} else {
+			exec.css(selector);
+		}
+		if (exec.immediateTest()) {
+			return exec.getElement();
+		} else {
+			try {
+				Thread.sleep(200);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			return null;
+		}
+	}
+
 	@Override
 	protected boolean hasElement(List<String> selectors) {
 		return getElement(selectors) != null;
+	}
+
+	TourManagerWd managerWd() {
+		return (TourManagerWd) tourManager;
+	}
+
+	public void onTourInit() {
+		exec.executeScript("document.body.className+=' webdriver'");
 	}
 
 	@Override
@@ -211,8 +210,9 @@ public class UIRendererWd extends UIRenderer {
 		exec.executeScript(cmd);
 	}
 
-	TourManagerWd managerWd() {
-		return (TourManagerWd) tourManager;
+	public long timeout() {
+		return System.currentTimeMillis() + (TourManager.isImmediateGet() ? 1
+				: Configuration.getInt("timeout"));
 	}
 
 	<T> T wdJsInvoke(boolean escape, String template, Object... args) {
@@ -243,24 +243,6 @@ public class UIRendererWd extends UIRenderer {
 		public RenderedPopup(PopupInfo popupInfo) {
 			this.popupInfo = popupInfo;
 			id = Ax.format("__tmwd_rendered_popup_%s", ++idCounter);
-		}
-
-		public boolean textMatches(String string) {
-			return popupInfo.getCaption().matches(string);
-		}
-
-		@Override
-		public String toString() {
-			return Ax
-					.format("%s :: %s\n\n%s", popupInfo.getCaption(),
-							Tour.RelativeTo.provideElement(
-									popupInfo.getRelativeTo(), currentStep()),
-							popupInfo.getDescription());
-		}
-
-		public void waitForSelector() {
-			getElement(Collections.singletonList(Tour.RelativeTo
-					.provideElement(popupInfo.getRelativeTo(), currentStep())));
 		}
 
 		void remove() {
@@ -313,6 +295,24 @@ public class UIRendererWd extends UIRenderer {
 			wdJsInvoke("renderRelative('%s','%s', '%s')",
 					JacksonUtils.serializeNoTypes(popupInfo), soleSelector,
 					root.fullToString());
+		}
+
+		public boolean textMatches(String string) {
+			return popupInfo.getCaption().matches(string);
+		}
+
+		@Override
+		public String toString() {
+			return Ax
+					.format("%s :: %s\n\n%s", popupInfo.getCaption(),
+							Tour.RelativeTo.provideElement(
+									popupInfo.getRelativeTo(), currentStep()),
+							popupInfo.getDescription());
+		}
+
+		public void waitForSelector() {
+			getElement(Collections.singletonList(Tour.RelativeTo
+					.provideElement(popupInfo.getRelativeTo(), currentStep())));
 		}
 	}
 }

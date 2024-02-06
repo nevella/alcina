@@ -51,6 +51,9 @@ public class BaseTab extends Composite
 		return addHandler(handler, VisibilityChangeEvent.TYPE);
 	}
 
+	protected void ensureWidget() {
+	}
+
 	public String getDisplayName() {
 		return this.displayName != null ? this.displayName : this.name;
 	}
@@ -97,8 +100,5 @@ public class BaseTab extends Composite
 
 	public boolean visibleForLoginState(LoginState state) {
 		return true;
-	}
-
-	protected void ensureWidget() {
 	}
 }

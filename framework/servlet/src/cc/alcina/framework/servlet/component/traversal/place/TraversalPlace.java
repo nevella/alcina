@@ -18,6 +18,102 @@ import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
 
 @Bean(PropertySource.FIELDS)
 public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
+	String textFilter;
+
+	List<SelectionPath> paths = new ArrayList<>();
+
+	@Override
+	public TraversalPlace copy() {
+		return super.copy();
+	}
+
+	SelectionPath ensurePath(SelectionType type) {
+		return paths.stream().filter(p -> p.type == type).findFirst()
+				.orElseGet(() -> {
+					SelectionPath selectionPath = new SelectionPath();
+					selectionPath.type = type;
+					paths.add(selectionPath);
+					return selectionPath;
+				});
+	}
+
+	public SelectionType firstSelectionType() {
+		return paths.stream().findFirst().map(SelectionPath::type)
+				.orElse(SelectionType.VIEW);
+	}
+
+	public String getTextFilter() {
+		return textFilter;
+	}
+
+	public Selection provideSelection(SelectionType type) {
+		SelectionPath selectionPath = paths.stream().filter(p -> p.type == type)
+				.findFirst().orElse(null);
+		if (selectionPath == null) {
+			return null;
+		}
+		return selectionPath.selection();
+	}
+
+	public SelectionType selectionType(Selection selection) {
+		return paths.stream().filter(p -> p.selection == selection).findFirst()
+				.map(sp -> sp.type).orElse(null);
+	}
+
+	public boolean test(Selection selection) {
+		if (Ax.notBlank(textFilter)
+				&& firstSelectionType() == SelectionType.VIEW) {
+			return selection.matchesText(textFilter);
+		} else {
+			return paths.stream().filter(p -> p.isFilter()).findFirst()
+					.map(sp -> sp.test(selection)).orElse(true);
+		}
+	}
+
+	public TraversalPlace
+			withSelection(TraversalPlace.SelectionPath selectionPath) {
+		// descent/containment earlier in list than view
+		switch (selectionPath.type) {
+		case DESCENT:
+		case CONTAINMENT:
+			paths.clear();
+			paths.add(selectionPath);
+			break;
+		}
+		ensurePath(SelectionType.VIEW).selection = selectionPath.selection;
+		ensurePath(SelectionType.VIEW).path = selectionPath.path;
+		return this;
+	}
+
+	public TraversalPlace withSelectionType(SelectionType type) {
+		SelectionPath to = Ax.last(paths).copy();
+		to.type = type;
+		return withSelection(to);
+	}
+
+	public TraversalPlace withTextFilter(String textFilter) {
+		this.textFilter = textFilter;
+		return this;
+	}
+
+	static class Data extends Bindable.Fields implements TreeSerializable {
+		public static TreeSerializable from(TraversalPlace place) {
+			Data data = new Data();
+			data.textFilter = place.textFilter;
+			data.paths = place.paths;
+			return data;
+		}
+
+		String textFilter;
+
+		List<SelectionPath> paths = new ArrayList<>();
+
+		public void copyTo(TraversalPlace place) {
+			place.textFilter = textFilter;
+			place.paths = paths;
+		}
+	}
+
 	public static class SelectionPath extends Bindable.Fields
 			implements TreeSerializable {
 		public String path;
@@ -28,13 +124,26 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 		public SelectionType type;
 
-		public SelectionType type() {
-			return type;
-		}
-
 		boolean isFilter() {
 			return type == SelectionType.CONTAINMENT
 					|| type == SelectionType.DESCENT;
+		}
+
+		Selection selection() {
+			if (selection == null && !selectionFromPathAttempted) {
+				if (path != null
+						&& TraversalProcessView.Ui.get().getHistory() != null) {
+					SelectionTraversal observable = TraversalProcessView.Ui
+							.get().getHistory().observable;
+					if (observable.getRootSelection() != null) {
+						selection = (Selection) observable.getRootSelection()
+								.processNode().nodeForTreePath(path)
+								.map(Node::getValue).orElse(null);
+						selectionFromPathAttempted = true;
+					}
+				}
+			}
+			return selection;
 		}
 
 		boolean test(Selection selection) {
@@ -53,21 +162,8 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			}
 		}
 
-		Selection selection() {
-			if (selection == null && !selectionFromPathAttempted) {
-				if (path != null
-						&& TraversalProcessView.Ui.get().getHistory() != null) {
-					SelectionTraversal observable = TraversalProcessView.Ui
-							.get().getHistory().observable;
-					if (observable.getRootSelection() != null) {
-						selection = (Selection) observable.getRootSelection()
-								.processNode().nodeForTreePath(path)
-								.map(Node::getValue).orElse(null);
-						selectionFromPathAttempted = true;
-					}
-				}
-			}
-			return selection;
+		public SelectionType type() {
+			return type;
 		}
 	}
 
@@ -100,101 +196,5 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			addTokenPart(
 					FlatTreeSerializer.serializeSingleLine(Data.from(place)));
 		}
-	}
-
-	@Override
-	public TraversalPlace copy() {
-		return super.copy();
-	}
-
-	static class Data extends Bindable.Fields implements TreeSerializable {
-		public static TreeSerializable from(TraversalPlace place) {
-			Data data = new Data();
-			data.textFilter = place.textFilter;
-			data.paths = place.paths;
-			return data;
-		}
-
-		String textFilter;
-
-		List<SelectionPath> paths = new ArrayList<>();
-
-		public void copyTo(TraversalPlace place) {
-			place.textFilter = textFilter;
-			place.paths = paths;
-		}
-	}
-
-	String textFilter;
-
-	List<SelectionPath> paths = new ArrayList<>();
-
-	public String getTextFilter() {
-		return textFilter;
-	}
-
-	public TraversalPlace
-			withSelection(TraversalPlace.SelectionPath selectionPath) {
-		// descent/containment earlier in list than view
-		switch (selectionPath.type) {
-		case DESCENT:
-		case CONTAINMENT:
-			paths.clear();
-			paths.add(selectionPath);
-			break;
-		}
-		ensurePath(SelectionType.VIEW).selection = selectionPath.selection;
-		ensurePath(SelectionType.VIEW).path = selectionPath.path;
-		return this;
-	}
-
-	public Selection provideSelection(SelectionType type) {
-		SelectionPath selectionPath = paths.stream().filter(p -> p.type == type)
-				.findFirst().orElse(null);
-		if (selectionPath == null) {
-			return null;
-		}
-		return selectionPath.selection();
-	}
-
-	public SelectionType selectionType(Selection selection) {
-		return paths.stream().filter(p -> p.selection == selection).findFirst()
-				.map(sp -> sp.type).orElse(null);
-	}
-
-	public SelectionType firstSelectionType() {
-		return paths.stream().findFirst().map(SelectionPath::type)
-				.orElse(SelectionType.VIEW);
-	}
-
-	public boolean test(Selection selection) {
-		if (Ax.notBlank(textFilter)
-				&& firstSelectionType() == SelectionType.VIEW) {
-			return selection.matchesText(textFilter);
-		} else {
-			return paths.stream().filter(p -> p.isFilter()).findFirst()
-					.map(sp -> sp.test(selection)).orElse(true);
-		}
-	}
-
-	public TraversalPlace withTextFilter(String textFilter) {
-		this.textFilter = textFilter;
-		return this;
-	}
-
-	public TraversalPlace withSelectionType(SelectionType type) {
-		SelectionPath to = Ax.last(paths).copy();
-		to.type = type;
-		return withSelection(to);
-	}
-
-	SelectionPath ensurePath(SelectionType type) {
-		return paths.stream().filter(p -> p.type == type).findFirst()
-				.orElseGet(() -> {
-					SelectionPath selectionPath = new SelectionPath();
-					selectionPath.type = type;
-					paths.add(selectionPath);
-					return selectionPath;
-				});
 	}
 }

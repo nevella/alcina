@@ -137,6 +137,29 @@ public class FlowTabBar extends Composite
 		}
 	}
 
+	private void checkInsertBeforeTabIndex(int beforeIndex) {
+		if ((beforeIndex < 0) || (beforeIndex > getTabCount())) {
+			throw new IndexOutOfBoundsException();
+		}
+	}
+
+	private void checkTabIndex(int index) {
+		if ((index < -1) || (index >= getTabCount())) {
+			throw new IndexOutOfBoundsException();
+		}
+	}
+
+	/**
+	 * Create a {@link SimplePanel} that will wrap the contents in a tab.
+	 * Subclasses can use this method to wrap tabs in decorator panels.
+	 * 
+	 * @return a {@link SimplePanel} to wrap the tab contents, or null to leave
+	 *         tabs unwrapped
+	 */
+	protected SimplePanel createTabTextWrapper() {
+		return null;
+	}
+
 	/**
 	 * Gets the tab that is currently selected.
 	 * 
@@ -243,8 +266,60 @@ public class FlowTabBar extends Composite
 		insertTabWidget(widget, beforeIndex);
 	}
 
+	/**
+	 * Inserts a new tab at the specified index.
+	 * 
+	 * @param widget
+	 *            widget to be used in the new tab.
+	 * @param beforeIndex
+	 *            the index before which this tab will be inserted.
+	 */
+	protected void insertTabWidget(Widget widget, int beforeIndex) {
+		checkInsertBeforeTabIndex(beforeIndex);
+		ClickDelegatePanel delWidget = new ClickDelegatePanel(widget);
+		delWidget.addClickHandler(this);
+		delWidget.addKeyDownHandler(this);
+		delWidget.setStyleName(STYLENAME_DEFAULT);
+		// Add a11y role "tab"
+		SimplePanel focusablePanel = delWidget.getFocusablePanel();
+		Accessibility.setRole(focusablePanel.getElement(),
+				Accessibility.ROLE_TAB);
+		if (beforeIndex == tabs.size()) {
+			panel2.add(delWidget);
+		} else {
+			panel2.insert(delWidget,
+					panel2.getWidgetIndex(tabs.get(beforeIndex)));
+		}
+		tabs.add(delWidget);
+		setStyleName(DOM.getParent(delWidget.getElement()),
+				STYLENAME_DEFAULT + "-wrapper", true);
+	}
+
 	public void onClick(ClickEvent event) {
 		selectTabByTabWidget((Widget) event.getSource());
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-tab# = The element containing the contents of the tab.</li>
+	 * <li>-tab-wrapper# = The cell containing the tab at the index.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		int numTabs = getTabCount();
+		for (int i = 0; i < numTabs; i++) {
+			ClickDelegatePanel delPanel = tabs.get(i);
+			SimplePanel focusablePanel = delPanel.getFocusablePanel();
+			// ensureDebugId(focusablePanel.getContainerElement(), baseID, "tab"
+			// + i);
+			ensureDebugId(DOM.getParent(delPanel.getElement()), baseID,
+					"tab-wrapper" + i);
+		}
 	}
 
 	public void onKeyDown(KeyDownEvent event) {
@@ -296,6 +371,38 @@ public class FlowTabBar extends Composite
 	}
 
 	/**
+	 * Selects the tab corresponding to the widget for the tab. To be clear the
+	 * widget for the tab is not the widget INSIDE of the tab; it is the widget
+	 * used to represent the tab itself.
+	 * 
+	 * @param tabWidget
+	 *            The widget for the tab to be selected
+	 * @return true if the tab corresponding to the widget for the tab could
+	 *         located and selected, false otherwise
+	 */
+	private boolean selectTabByTabWidget(Widget tabWidget) {
+		int index = tabs.indexOf(tabWidget);
+		if (index >= 0) {
+			return selectTab(index);
+		}
+		return false;
+	}
+
+	private void setSelectionStyle(Widget item, boolean selected) {
+		if (item != null) {
+			if (selected) {
+				item.addStyleName("gwt-TabBarItem-selected");
+				setStyleName(DOM.getParent(item.getElement()),
+						"gwt-TabBarItem-wrapper-selected", true);
+			} else {
+				item.removeStyleName("gwt-TabBarItem-selected");
+				setStyleName(DOM.getParent(item.getElement()),
+						"gwt-TabBarItem-wrapper-selected", false);
+			}
+		}
+	}
+
+	/**
 	 * Sets a tab's contents via HTML.
 	 * 
 	 * Use care when setting an object's HTML; it is an easy way to expose
@@ -336,113 +443,6 @@ public class FlowTabBar extends Composite
 		focusablePanel.setWidget(new Label(text));
 	}
 
-	private void checkInsertBeforeTabIndex(int beforeIndex) {
-		if ((beforeIndex < 0) || (beforeIndex > getTabCount())) {
-			throw new IndexOutOfBoundsException();
-		}
-	}
-
-	private void checkTabIndex(int index) {
-		if ((index < -1) || (index >= getTabCount())) {
-			throw new IndexOutOfBoundsException();
-		}
-	}
-
-	/**
-	 * Selects the tab corresponding to the widget for the tab. To be clear the
-	 * widget for the tab is not the widget INSIDE of the tab; it is the widget
-	 * used to represent the tab itself.
-	 * 
-	 * @param tabWidget
-	 *            The widget for the tab to be selected
-	 * @return true if the tab corresponding to the widget for the tab could
-	 *         located and selected, false otherwise
-	 */
-	private boolean selectTabByTabWidget(Widget tabWidget) {
-		int index = tabs.indexOf(tabWidget);
-		if (index >= 0) {
-			return selectTab(index);
-		}
-		return false;
-	}
-
-	private void setSelectionStyle(Widget item, boolean selected) {
-		if (item != null) {
-			if (selected) {
-				item.addStyleName("gwt-TabBarItem-selected");
-				setStyleName(DOM.getParent(item.getElement()),
-						"gwt-TabBarItem-wrapper-selected", true);
-			} else {
-				item.removeStyleName("gwt-TabBarItem-selected");
-				setStyleName(DOM.getParent(item.getElement()),
-						"gwt-TabBarItem-wrapper-selected", false);
-			}
-		}
-	}
-
-	/**
-	 * Create a {@link SimplePanel} that will wrap the contents in a tab.
-	 * Subclasses can use this method to wrap tabs in decorator panels.
-	 * 
-	 * @return a {@link SimplePanel} to wrap the tab contents, or null to leave
-	 *         tabs unwrapped
-	 */
-	protected SimplePanel createTabTextWrapper() {
-		return null;
-	}
-
-	/**
-	 * Inserts a new tab at the specified index.
-	 * 
-	 * @param widget
-	 *            widget to be used in the new tab.
-	 * @param beforeIndex
-	 *            the index before which this tab will be inserted.
-	 */
-	protected void insertTabWidget(Widget widget, int beforeIndex) {
-		checkInsertBeforeTabIndex(beforeIndex);
-		ClickDelegatePanel delWidget = new ClickDelegatePanel(widget);
-		delWidget.addClickHandler(this);
-		delWidget.addKeyDownHandler(this);
-		delWidget.setStyleName(STYLENAME_DEFAULT);
-		// Add a11y role "tab"
-		SimplePanel focusablePanel = delWidget.getFocusablePanel();
-		Accessibility.setRole(focusablePanel.getElement(),
-				Accessibility.ROLE_TAB);
-		if (beforeIndex == tabs.size()) {
-			panel2.add(delWidget);
-		} else {
-			panel2.insert(delWidget,
-					panel2.getWidgetIndex(tabs.get(beforeIndex)));
-		}
-		tabs.add(delWidget);
-		setStyleName(DOM.getParent(delWidget.getElement()),
-				STYLENAME_DEFAULT + "-wrapper", true);
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-tab# = The element containing the contents of the tab.</li>
-	 * <li>-tab-wrapper# = The cell containing the tab at the index.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		int numTabs = getTabCount();
-		for (int i = 0; i < numTabs; i++) {
-			ClickDelegatePanel delPanel = tabs.get(i);
-			SimplePanel focusablePanel = delPanel.getFocusablePanel();
-			// ensureDebugId(focusablePanel.getContainerElement(), baseID, "tab"
-			// + i);
-			ensureDebugId(DOM.getParent(delPanel.getElement()), baseID,
-					"tab-wrapper" + i);
-		}
-	}
-
 	/**
 	 * <code>ClickDelegatePanel</code> decorates any widget with the minimal
 	 * amount of machinery to receive clicks for delegation to the parent.
@@ -479,10 +479,6 @@ public class FlowTabBar extends Composite
 			return addDomHandler(handler, KeyDownEvent.getType());
 		}
 
-		public SimplePanel getFocusablePanel() {
-			return focusablePanel;
-		}
-
 		protected Element createHiddenSpan() {
 			return Document.get().createSpanElement();
 		}
@@ -498,5 +494,9 @@ public class FlowTabBar extends Composite
 														span.style.position = 'absolute';
 														return span;
 														}-*/;
+
+		public SimplePanel getFocusablePanel() {
+			return focusablePanel;
+		}
 	}
 }

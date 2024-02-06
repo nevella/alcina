@@ -64,6 +64,16 @@ public class MessageHandlers {
 		}
 	}
 
+	public static class InvokeResponseHandler extends
+			RemoteComponentProtocolServer.MessageHandlerServer<Message.InvokeResponse> {
+		@Override
+		public void handle(RemoteComponentRequest request,
+				RemoteComponentResponse response, Environment env,
+				Message.InvokeResponse message) {
+			env.onInvokeResponse(message);
+		}
+	}
+
 	public static class MutationsHandler extends
 			RemoteComponentProtocolServer.MessageHandlerServer<Message.Mutations> {
 		@Override
@@ -97,16 +107,6 @@ public class MessageHandlers {
 		@Override
 		public boolean isValidateClientInstanceUid() {
 			return false;
-		}
-	}
-
-	public static class InvokeResponseHandler extends
-			RemoteComponentProtocolServer.MessageHandlerServer<Message.InvokeResponse> {
-		@Override
-		public void handle(RemoteComponentRequest request,
-				RemoteComponentResponse response, Environment env,
-				Message.InvokeResponse message) {
-			env.onInvokeResponse(message);
 		}
 	}
 }

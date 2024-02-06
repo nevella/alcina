@@ -52,6 +52,33 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 		return count1;
 	}
 
+	@Override
+	protected void run1() throws Exception {
+		minDeletionId = Domain.stream(getUserClass()).map(HasId::getId)
+				.max(Comparator.naturalOrder()).get();
+		for (int idx = 0; idx < 5; idx++) {
+			initialCount = getUsersSize();
+			Ax.sysLogHigh("Iteration: %s - intial count: %s", idx,
+					initialCount);
+			txLatch = new CountDownLatch(2);
+			tx1Latch1 = new CountDownLatch(1);
+			tx1Latch2 = new CountDownLatch(1);
+			tx2Latch1 = new CountDownLatch(1);
+			startTx1();
+			startTx2();
+			txLatch.await();
+			Transaction.endAndBeginNew();
+		}
+		// horribly slow
+		AlcinaChildRunnable.runInTransactionNewThread("Delete-created", () -> {
+			Ax.out("Deleting...");
+			Domain.stream(getUserClass()).filter(u -> u.getId() > minDeletionId)
+					.forEach(Entity::delete);
+			Transaction.commit();
+			Ax.out("Deleted");
+		});
+	}
+
 	private void startTx1() {
 		new Thread("test-mvcc-1") {
 			@Override
@@ -132,32 +159,5 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 						"non-committed-tx2: entities visible from tx2");
 			}
 		}.start();
-	}
-
-	@Override
-	protected void run1() throws Exception {
-		minDeletionId = Domain.stream(getUserClass()).map(HasId::getId)
-				.max(Comparator.naturalOrder()).get();
-		for (int idx = 0; idx < 5; idx++) {
-			initialCount = getUsersSize();
-			Ax.sysLogHigh("Iteration: %s - intial count: %s", idx,
-					initialCount);
-			txLatch = new CountDownLatch(2);
-			tx1Latch1 = new CountDownLatch(1);
-			tx1Latch2 = new CountDownLatch(1);
-			tx2Latch1 = new CountDownLatch(1);
-			startTx1();
-			startTx2();
-			txLatch.await();
-			Transaction.endAndBeginNew();
-		}
-		// horribly slow
-		AlcinaChildRunnable.runInTransactionNewThread("Delete-created", () -> {
-			Ax.out("Deleting...");
-			Domain.stream(getUserClass()).filter(u -> u.getId() > minDeletionId)
-					.forEach(Entity::delete);
-			Transaction.commit();
-			Ax.out("Deleted");
-		});
 	}
 }

@@ -48,34 +48,6 @@ final class Cast {
 
 	private static JavaScriptObject booleanCastMap;
 
-	/**
-	 * Returns whether the Object is a function.
-	 */
-	@HasNoSideEffects
-	private static native boolean isFunction(Object src)/*-{
-														return typeof (src) === "function";
-														}-*/;
-
-	@HasNoSideEffects
-	private static native boolean isJsObject(Object src)/*-{
-														return typeof (src) === "object";
-														}-*/;
-
-	@HasNoSideEffects
-	private static native boolean isJsObjectOrFunction(Object src) /*-{
-																	return typeof (src) === "object" || typeof (src) === "function";
-																	}-*/;
-
-	/**
-	 * Determine if object is an instanceof jsType regardless of window or
-	 * frame.
-	 */
-	@HasNoSideEffects
-	private static native boolean jsinstanceOf(Object obj,
-			JavaScriptObject jsType) /*-{
-										return obj && jsType && obj instanceof jsType;
-										}-*/;
-
 	@HasNoSideEffects
 	static native boolean canCast(Object src, JavaScriptObject dstId) /*-{
 																		if (@com.google.gwt.lang.Cast::instanceOfString(*)(src)) {
@@ -299,11 +271,29 @@ final class Cast {
 												return Array.isArray(src);
 												}-*/;
 
+	/**
+	 * Returns whether the Object is a function.
+	 */
+	@HasNoSideEffects
+	private static native boolean isFunction(Object src)/*-{
+														return typeof (src) === "function";
+														}-*/;
+
 	@HasNoSideEffects
 	static boolean isJavaScriptObject(Object src) {
 		// TODO(rluble): should return false to for plain arrays.
 		return isJsObjectOrFunction(src) && !Util.hasTypeMarker(src);
 	}
+
+	@HasNoSideEffects
+	private static native boolean isJsObject(Object src)/*-{
+														return typeof (src) === "object";
+														}-*/;
+
+	@HasNoSideEffects
+	private static native boolean isJsObjectOrFunction(Object src) /*-{
+																	return typeof (src) === "object" || typeof (src) === "function";
+																	}-*/;
 
 	/**
 	 * Uses the not operator to perform a null-check; do NOT use on anything
@@ -325,6 +315,16 @@ final class Cast {
 	static native boolean jsEquals(Object a, Object b) /*-{
 														return a == b;
 														}-*/;
+
+	/**
+	 * Determine if object is an instanceof jsType regardless of window or
+	 * frame.
+	 */
+	@HasNoSideEffects
+	private static native boolean jsinstanceOf(Object obj,
+			JavaScriptObject jsType) /*-{
+										return obj && jsType && obj instanceof jsType;
+										}-*/;
 
 	static native boolean jsNotEquals(Object a, Object b) /*-{
 															return a != b;

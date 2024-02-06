@@ -101,29 +101,6 @@ public class AppCacheManifestLinker extends AbstractLinker {
 		digester = MessageDigest.getInstance(DIGEST_ALGORITHM);
 	}
 
-	@Override
-	public String getDescription() {
-		return "App cache manifest linker";
-	}
-
-	@Override
-	public ArtifactSet link(TreeLogger logger, LinkerContext context,
-			ArtifactSet artifacts) throws UnableToCompleteException {
-		ArtifactSet toReturn = new ArtifactSet(artifacts);
-		SortedSet<EmittedArtifact> emitted = toReturn
-				.find(EmittedArtifact.class);
-		for (EmittedArtifact artifact : emitted) {
-			if (artifact.getPartialPath().equals(APPCACHE_MANIFEST)) {
-				userManifest = artifact;
-				toReturn.remove(artifact);
-				emitted.remove(artifact);
-				break;
-			}
-		}
-		toReturn.add(emitManifest(logger, context, userManifest, emitted));
-		return toReturn;
-	}
-
 	private EmittedArtifact emitManifest(TreeLogger logger,
 			LinkerContext context, EmittedArtifact userManifest,
 			SortedSet<EmittedArtifact> artifacts)
@@ -231,6 +208,29 @@ public class AppCacheManifestLinker extends AbstractLinker {
 		entries.append("/" + context.getModuleName() + "/"
 				+ context.getModuleName() + ".nocache.js\n");
 		return entries.toString();
+	}
+
+	@Override
+	public String getDescription() {
+		return "App cache manifest linker";
+	}
+
+	@Override
+	public ArtifactSet link(TreeLogger logger, LinkerContext context,
+			ArtifactSet artifacts) throws UnableToCompleteException {
+		ArtifactSet toReturn = new ArtifactSet(artifacts);
+		SortedSet<EmittedArtifact> emitted = toReturn
+				.find(EmittedArtifact.class);
+		for (EmittedArtifact artifact : emitted) {
+			if (artifact.getPartialPath().equals(APPCACHE_MANIFEST)) {
+				userManifest = artifact;
+				toReturn.remove(artifact);
+				emitted.remove(artifact);
+				break;
+			}
+		}
+		toReturn.add(emitManifest(logger, context, userManifest, emitted));
+		return toReturn;
 	}
 
 	/**

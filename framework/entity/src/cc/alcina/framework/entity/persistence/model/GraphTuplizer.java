@@ -32,6 +32,26 @@ public class GraphTuplizer {
 
 	public boolean onlyCustom;
 
+	private void create(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
+			return;
+		}
+		Class clazz = mapper.classFor(inObjRef.classRef);
+		long id = mapper.getId(inObjRef);
+		if (id == -1) {
+			return;
+		}
+		Entity t = (Entity) Reflections.newInstance(clazz);
+		t.setId(id);
+		DomainTransformEvent dte = new DomainTransformEvent();
+		dte.setObjectClass(clazz);
+		dte.setObjectId(id);
+		dte.setTransformType(TransformType.CREATE_OBJECT);
+		TransformManager.get().addTransform(dte);
+		TransformManager.get().registerDomainObject(t);
+		inObjRef.entity = t;
+	}
+
 	public void detupleize(GraphTuples tuples,
 			DetupleizeMapper detupelizeMapper) {
 		this.tuples = tuples;
@@ -53,36 +73,6 @@ public class GraphTuplizer {
 			Ax.out("\ndetupleize::do-custom\n");
 			tuples.objects.forEach(this::doCustom);
 		}
-	}
-
-	public GraphTuples tupleize(Collection objects,
-			Predicate<Field> fieldFilter) {
-		tuples = new GraphTuples();
-		tuples.fieldFilter = fieldFilter;
-		for (Object object : objects) {
-			tuple(object);
-		}
-		return tuples;
-	}
-
-	private void create(TObjectRef inObjRef) {
-		if (mapper.ignore(inObjRef)) {
-			return;
-		}
-		Class clazz = mapper.classFor(inObjRef.classRef);
-		long id = mapper.getId(inObjRef);
-		if (id == -1) {
-			return;
-		}
-		Entity t = (Entity) Reflections.newInstance(clazz);
-		t.setId(id);
-		DomainTransformEvent dte = new DomainTransformEvent();
-		dte.setObjectClass(clazz);
-		dte.setObjectId(id);
-		dte.setTransformType(TransformType.CREATE_OBJECT);
-		TransformManager.get().addTransform(dte);
-		TransformManager.get().registerDomainObject(t);
-		inObjRef.entity = t;
 	}
 
 	private void doCustom(TObjectRef inObjRef) {
@@ -230,6 +220,16 @@ public class GraphTuplizer {
 		for (TFieldRef field : classRef.fieldRefs) {
 			obj.values.put(field, getValue(object, field));
 		}
+	}
+
+	public GraphTuples tupleize(Collection objects,
+			Predicate<Field> fieldFilter) {
+		tuples = new GraphTuples();
+		tuples.fieldFilter = fieldFilter;
+		for (Object object : objects) {
+			tuple(object);
+		}
+		return tuples;
 	}
 
 	public static class DetupelizeInstruction {

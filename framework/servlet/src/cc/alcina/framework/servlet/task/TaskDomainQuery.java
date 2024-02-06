@@ -50,12 +50,95 @@ public class TaskDomainQuery extends PerformerTask {
 		return this.maxElementsPerCollection;
 	}
 
+	private List<Entity> getPropertyEntities(Entity entity, Property p) {
+		Object value = p.get(entity);
+		List<Entity> result = new ArrayList<>();
+		if (value instanceof Entity) {
+			result.add((Entity) value);
+		} else {
+			if (value instanceof Collection) {
+				((Collection) value).stream().forEach(e -> {
+					if (e instanceof Entity) {
+						result.add((Entity) e);
+					}
+				});
+			}
+		}
+		return result;
+	}
+
+	private String getPropertyValue(Entity entity, Property p) {
+		return getStringRepresentation(p.get(entity));
+	}
+
 	public List<String> getResultPaths() {
 		return this.resultPaths;
 	}
 
+	private String getStringRepresentation(Object object) {
+		if (object == null) {
+			return "(null)";
+		}
+		if (object instanceof Entity) {
+			Entity entity = (Entity) object;
+			return isWithEntityToString()
+					? Ax.format("%s :: %s", entity.getId(), entity)
+					: String.valueOf(entity.getId());
+		}
+		if (object instanceof Collection) {
+			Collection collection = (Collection) object;
+			if (collection.isEmpty()) {
+				return "[]";
+			} else {
+				FormatBuilder collectionWrapperBuilder = new FormatBuilder();
+				FormatBuilder collectionBuilder = new FormatBuilder()
+						.separator(",");
+				int limit = Math.min(collection.size(),
+						maxElementsPerCollection);
+				collectionWrapperBuilder.append(
+						Ax.format("[(%s/%s):", limit, collection.size()));
+				collection.stream().limit(limit).forEach(o -> collectionBuilder
+						.append(this.getStringRepresentation(o)));
+				collectionWrapperBuilder.append(collectionBuilder);
+				collectionWrapperBuilder.append("]");
+				return collectionWrapperBuilder.toString();
+			}
+		}
+		if (object instanceof String) {
+			maxChars = 200;
+			return Ax.format("\"%s\"", StringEscapeUtils.escapeJava(CommonUtils
+					.trimToWsChars(object.toString(), maxChars, true)));
+		} else {
+			return object.toString();
+		}
+	}
+
 	public boolean isWithEntityToString() {
 		return this.withEntityToString;
+	}
+
+	private void logPath(Entity entity, int depth) {
+		ClassReflector classReflector = Reflections.at(entity.entityClass());
+		List<Property> properties = pathSegments.properties(entity);
+		fb.indent(depth * 4);
+		fb.line("Entity: %s", entity.toStringId());
+		int propertyNameMaxLength = 20;
+		properties.stream().filter(Property::provideNotDefaultIgnoreable)
+				.filter(Property::isReadable)
+				.sorted(new Property.NameComparator()).forEach(p -> {
+					fb.indent(depth * 4 + 2);
+					String name = CommonUtils.trimToWsChars(p.getName(),
+							propertyNameMaxLength);
+					String propertyValue = getPropertyValue(entity, p);
+					fb.line("%s : %s", CommonUtils.padStringRight(name,
+							propertyNameMaxLength, ' '), propertyValue);
+					if (pathSegments.tryDescend(name)) {
+						// exact path match, can descend
+						List<Entity> entities = getPropertyEntities(entity, p);
+						entities.forEach(e -> logPath(e, depth + 1));
+						pathSegments.ascend(name);
+					}
+				});
 	}
 
 	@Override
@@ -108,89 +191,6 @@ public class TaskDomainQuery extends PerformerTask {
 		return this;
 	}
 
-	private List<Entity> getPropertyEntities(Entity entity, Property p) {
-		Object value = p.get(entity);
-		List<Entity> result = new ArrayList<>();
-		if (value instanceof Entity) {
-			result.add((Entity) value);
-		} else {
-			if (value instanceof Collection) {
-				((Collection) value).stream().forEach(e -> {
-					if (e instanceof Entity) {
-						result.add((Entity) e);
-					}
-				});
-			}
-		}
-		return result;
-	}
-
-	private String getPropertyValue(Entity entity, Property p) {
-		return getStringRepresentation(p.get(entity));
-	}
-
-	private String getStringRepresentation(Object object) {
-		if (object == null) {
-			return "(null)";
-		}
-		if (object instanceof Entity) {
-			Entity entity = (Entity) object;
-			return isWithEntityToString()
-					? Ax.format("%s :: %s", entity.getId(), entity)
-					: String.valueOf(entity.getId());
-		}
-		if (object instanceof Collection) {
-			Collection collection = (Collection) object;
-			if (collection.isEmpty()) {
-				return "[]";
-			} else {
-				FormatBuilder collectionWrapperBuilder = new FormatBuilder();
-				FormatBuilder collectionBuilder = new FormatBuilder()
-						.separator(",");
-				int limit = Math.min(collection.size(),
-						maxElementsPerCollection);
-				collectionWrapperBuilder.append(
-						Ax.format("[(%s/%s):", limit, collection.size()));
-				collection.stream().limit(limit).forEach(o -> collectionBuilder
-						.append(this.getStringRepresentation(o)));
-				collectionWrapperBuilder.append(collectionBuilder);
-				collectionWrapperBuilder.append("]");
-				return collectionWrapperBuilder.toString();
-			}
-		}
-		if (object instanceof String) {
-			maxChars = 200;
-			return Ax.format("\"%s\"", StringEscapeUtils.escapeJava(CommonUtils
-					.trimToWsChars(object.toString(), maxChars, true)));
-		} else {
-			return object.toString();
-		}
-	}
-
-	private void logPath(Entity entity, int depth) {
-		ClassReflector classReflector = Reflections.at(entity.entityClass());
-		List<Property> properties = pathSegments.properties(entity);
-		fb.indent(depth * 4);
-		fb.line("Entity: %s", entity.toStringId());
-		int propertyNameMaxLength = 20;
-		properties.stream().filter(Property::provideNotDefaultIgnoreable)
-				.filter(Property::isReadable)
-				.sorted(new Property.NameComparator()).forEach(p -> {
-					fb.indent(depth * 4 + 2);
-					String name = CommonUtils.trimToWsChars(p.getName(),
-							propertyNameMaxLength);
-					String propertyValue = getPropertyValue(entity, p);
-					fb.line("%s : %s", CommonUtils.padStringRight(name,
-							propertyNameMaxLength, ' '), propertyValue);
-					if (pathSegments.tryDescend(name)) {
-						// exact path match, can descend
-						List<Entity> entities = getPropertyEntities(entity, p);
-						entities.forEach(e -> logPath(e, depth + 1));
-						pathSegments.ascend(name);
-					}
-				});
-	}
-
 	@Registration(EntityTreeLogger.class)
 	public static class EntityTreeLoggerImpl implements EntityTreeLogger {
 		@Override
@@ -208,6 +208,17 @@ public class TaskDomainQuery extends PerformerTask {
 			segments = Arrays.asList(path.split("\\."));
 		}
 
+		void ascendIfActive() {
+			if (isActive()) {
+				activeSegments.remove(activeSegments.size() - 1);
+			}
+		}
+
+		protected boolean isActive() {
+			return activeSegments.size() == pathSegments.descendedSegments
+					.size();
+		}
+
 		public List<Property> properties(Entity entity) {
 			if (!isActive()) {
 				return Collections.emptyList();
@@ -217,17 +228,6 @@ public class TaskDomainQuery extends PerformerTask {
 			String segment = segments.get(activeSegments.size());
 			return segment.equals("*") ? classReflector.properties()
 					: List.of(classReflector.property(segment));
-		}
-
-		protected boolean isActive() {
-			return activeSegments.size() == pathSegments.descendedSegments
-					.size();
-		}
-
-		void ascendIfActive() {
-			if (isActive()) {
-				activeSegments.remove(activeSegments.size() - 1);
-			}
 		}
 
 		boolean tryDescend(String segment) {

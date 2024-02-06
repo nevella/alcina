@@ -54,6 +54,22 @@ public class DomainClassDescriptor<T extends Entity>
 		this.propertyIndicies = propertyIndicies;
 	}
 
+	protected DomainClassDescriptor<T> addAliasedFunction(Object alias,
+			Function<? super T, ?> function, Class lookupIndexClass) {
+		DomainStoreLookupDescriptor lookupDescriptor = new DomainStoreLookupDescriptor<>(
+				(Class) clazz, "no-path", (Function) function,
+				lookupIndexClass);
+		addLookup(lookupDescriptor);
+		aliasedFunctionLookups.put(alias, lookupDescriptor);
+		return this;
+	}
+
+	protected DomainClassDescriptor<T>
+			addLookup(DomainStoreLookupDescriptor lookup) {
+		lookupDescriptors.add(lookup);
+		return this;
+	}
+
 	@Override
 	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
@@ -203,21 +219,5 @@ public class DomainClassDescriptor<T extends Entity>
 	@Override
 	public String toString() {
 		return Ax.format("DomainClassDescriptor: %s", clazz.getName());
-	}
-
-	protected DomainClassDescriptor<T> addAliasedFunction(Object alias,
-			Function<? super T, ?> function, Class lookupIndexClass) {
-		DomainStoreLookupDescriptor lookupDescriptor = new DomainStoreLookupDescriptor<>(
-				(Class) clazz, "no-path", (Function) function,
-				lookupIndexClass);
-		addLookup(lookupDescriptor);
-		aliasedFunctionLookups.put(alias, lookupDescriptor);
-		return this;
-	}
-
-	protected DomainClassDescriptor<T>
-			addLookup(DomainStoreLookupDescriptor lookup) {
-		lookupDescriptors.add(lookup);
-		return this;
 	}
 }

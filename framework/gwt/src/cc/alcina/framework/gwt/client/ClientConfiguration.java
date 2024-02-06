@@ -27,18 +27,6 @@ import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderG
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 public class ClientConfiguration {
-	public void initServices() {
-		initNotifications();
-		initCss();
-		Registry.impl(ClientNotifications.class).metricLogStart("moduleLoad");
-		initExceptionHandling();
-		initCommonClient();
-		initContentProvider();
-		initValidationFeedback();
-		prepareDebugFromHistory();
-		extraConfiguration();
-	}
-
 	protected void afterConfiguration() {
 	}
 
@@ -94,6 +82,18 @@ public class ClientConfiguration {
 	protected void initNotifications() {
 		Registry.register().singleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
+	}
+
+	public void initServices() {
+		initNotifications();
+		initCss();
+		Registry.impl(ClientNotifications.class).metricLogStart("moduleLoad");
+		initExceptionHandling();
+		initCommonClient();
+		initContentProvider();
+		initValidationFeedback();
+		prepareDebugFromHistory();
+		extraConfiguration();
 	}
 
 	protected void initValidationFeedback() {

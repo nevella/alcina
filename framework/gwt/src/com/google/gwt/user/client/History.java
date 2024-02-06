@@ -145,6 +145,10 @@ public class History implements ContextFrame {
     $wnd.history.forward();
 	}-*/;
 
+	static History get() {
+		return contextProvider.contextFrame();
+	}
+
 	/**
 	 * Gets the current history token. The handler will not receive a
 	 * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
@@ -198,6 +202,19 @@ public class History implements ContextFrame {
 			if (issueEvent) {
 				get().historyEventSource.fireValueChangedEvent(historyToken);
 			}
+		}
+	}
+
+	// this is called from JS when the native onhashchange occurs
+	private static void onHashChanged() {
+		/*
+		 * We guard against firing events twice, some browser (e.g. safari) tend
+		 * to fire events on startup if HTML5 pushstate is used.
+		 */
+		String hashToken = get().getDecodedHash();
+		if (!hashToken.equals(getToken())) {
+			get().token = hashToken;
+			get().historyEventSource.fireValueChangedEvent(hashToken);
 		}
 	}
 
@@ -279,23 +296,6 @@ public class History implements ContextFrame {
 		}
 	}
 
-	// this is called from JS when the native onhashchange occurs
-	private static void onHashChanged() {
-		/*
-		 * We guard against firing events twice, some browser (e.g. safari) tend
-		 * to fire events on startup if HTML5 pushstate is used.
-		 */
-		String hashToken = get().getDecodedHash();
-		if (!hashToken.equals(getToken())) {
-			get().token = hashToken;
-			get().historyEventSource.fireValueChangedEvent(hashToken);
-		}
-	}
-
-	static History get() {
-		return contextProvider.contextFrame();
-	}
-
 	HistoryImpl impl;
 
 	HistoryEventSource historyEventSource = new HistoryEventSource();
@@ -317,6 +317,36 @@ public class History implements ContextFrame {
 		return tokenEncoder.decode(hashToken.substring(1));
 	}
 
+	static class HistoryEventSource implements HasValueChangeHandlers<String> {
+		private HandlerManager handlers = new HandlerManager(null);
+
+		@Override
+		public HandlerRegistration
+				addValueChangeHandler(ValueChangeHandler<String> handler) {
+			return handlers.addHandler(ValueChangeEvent.getType(), handler);
+		}
+
+		@Override
+		public void fireEvent(GwtEvent<?> event) {
+			handlers.fireEvent(event);
+		}
+
+		public void fireValueChangedEvent(String newToken) {
+			ValueChangeEvent.fire(this, newToken);
+		}
+
+		public HandlerManager getHandlers() {
+			return handlers;
+		}
+	}
+
+	/**
+	 * History implementation for IE8 using onhashchange.
+	 */
+	@SuppressWarnings("unused")
+	private static class HistoryImplIE8 extends HistoryImpl {
+	}
+
 	/**
 	 * HistoryTokenEncoder is responsible for encoding and decoding history
 	 * token, thus ensuring that tokens are safe to use in the browsers URL.
@@ -330,13 +360,6 @@ public class History implements ContextFrame {
       // encodeURI() does *not* encode the '#' character.
       return $wnd.encodeURI(toEncode).replace("#", "%23");
 		}-*/;
-	}
-
-	/**
-	 * History implementation for IE8 using onhashchange.
-	 */
-	@SuppressWarnings("unused")
-	private static class HistoryImplIE8 extends HistoryImpl {
 	}
 
 	/**
@@ -377,29 +400,6 @@ public class History implements ContextFrame {
 		@Override
 		public void onValueChange(ValueChangeEvent<String> event) {
 			listener.onHistoryChanged(event.getValue());
-		}
-	}
-
-	static class HistoryEventSource implements HasValueChangeHandlers<String> {
-		private HandlerManager handlers = new HandlerManager(null);
-
-		@Override
-		public HandlerRegistration
-				addValueChangeHandler(ValueChangeHandler<String> handler) {
-			return handlers.addHandler(ValueChangeEvent.getType(), handler);
-		}
-
-		@Override
-		public void fireEvent(GwtEvent<?> event) {
-			handlers.fireEvent(event);
-		}
-
-		public void fireValueChangedEvent(String newToken) {
-			ValueChangeEvent.fire(this, newToken);
-		}
-
-		public HandlerManager getHandlers() {
-			return handlers;
 		}
 	}
 }

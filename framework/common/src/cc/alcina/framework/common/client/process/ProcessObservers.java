@@ -104,12 +104,12 @@ public class ProcessObservers {
 	 * Thread-safe - due to the co
 	 */
 	public static class ContextObservers {
-		public static boolean has() {
-			return LooseContext.has(key());
-		}
-
 		static ContextObservers get() {
 			return has() ? LooseContext.get(key()) : new ContextObservers();
+		}
+
+		public static boolean has() {
+			return LooseContext.has(key());
 		}
 
 		static String key() {

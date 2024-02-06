@@ -5,6 +5,10 @@ public class CommentPathref extends NodePathref implements ClientDomComment {
 		super(node);
 	}
 
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public Node cloneNode(boolean deep) {
 		throw new UnsupportedOperationException();
@@ -68,10 +72,6 @@ public class CommentPathref extends NodePathref implements ClientDomComment {
 
 	@Override
 	public Text splitText(int offset) {
-		throw new UnsupportedOperationException();
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
 		throw new UnsupportedOperationException();
 	}
 }

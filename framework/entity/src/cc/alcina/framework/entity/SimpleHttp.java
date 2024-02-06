@@ -213,6 +213,10 @@ public class SimpleHttp {
 		}
 	}
 
+	private String escapeBash(String value) {
+		return value.replace("'", "'\\''");
+	}
+
 	// Get Content-Disposition header value from response
 	public String getContentDisposition() {
 		return this.contentDisposition;
@@ -226,6 +230,17 @@ public class SimpleHttp {
 	// Get status code of the response
 	public int getResponseCode() {
 		return this.responseCode;
+	}
+
+	// If the request reports a Content-Encoding of gzip, decode request as
+	// gzip
+	// otherwise, just return the input as is
+	private byte[] maybeDecodeGzip(byte[] input) throws IOException {
+		if ("gzip".equals(connection.getHeaderField("content-encoding"))) {
+			return Io.read().bytes(input).withDecompress(true).asBytes();
+		} else {
+			return input;
+		}
 	}
 
 	public String toCurlRequest() {
@@ -363,20 +378,5 @@ public class SimpleHttp {
 	public SimpleHttp withTimeout(int timeout) {
 		this.timeout = timeout;
 		return this;
-	}
-
-	private String escapeBash(String value) {
-		return value.replace("'", "'\\''");
-	}
-
-	// If the request reports a Content-Encoding of gzip, decode request as
-	// gzip
-	// otherwise, just return the input as is
-	private byte[] maybeDecodeGzip(byte[] input) throws IOException {
-		if ("gzip".equals(connection.getHeaderField("content-encoding"))) {
-			return Io.read().bytes(input).withDecompress(true).asBytes();
-		} else {
-			return input;
-		}
 	}
 }

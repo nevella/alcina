@@ -75,6 +75,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * appropriately)
  */
 class NodeEventBinding {
+	static boolean isDescendantBinding(Class<? extends NodeEvent> clazz) {
+		return Reflections.isAssignableFrom(ModelEvent.DescendantEvent.class,
+				clazz);
+	}
+
 	final DirectedLayout.Node node;
 
 	/*
@@ -94,17 +99,6 @@ class NodeEventBinding {
 			Class<? extends NodeEvent> type) {
 		this.node = node;
 		this.type = type;
-	}
-
-	public void onEvent(GwtEvent event) {
-		Context context = NodeEvent.Context.fromEvent(event, node);
-		fireEvent(type, context, node.getModel());
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("%s :: %s", node.model.getClass().getSimpleName(),
-				type.getSimpleName());
 	}
 
 	void addDescendantBinding(NodeEventBinding descendantBinding) {
@@ -236,14 +230,20 @@ class NodeEventBinding {
 		return node;
 	}
 
-	static boolean isDescendantBinding(Class<? extends NodeEvent> clazz) {
-		return Reflections.isAssignableFrom(ModelEvent.DescendantEvent.class,
-				clazz);
-	}
-
 	boolean isDomBinding() {
 		return Registry.query(DomBinding.class).addKeys(type)
 				.hasImplementation();
+	}
+
+	public void onEvent(GwtEvent event) {
+		Context context = NodeEvent.Context.fromEvent(event, node);
+		fireEvent(type, context, node.getModel());
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s :: %s", node.model.getClass().getSimpleName(),
+				type.getSimpleName());
 	}
 
 	void unbind() {
@@ -269,15 +269,15 @@ class NodeEventBinding {
 					.ensureDescendantBindings().ancestorEmitter = NodeEventBinding.this;
 		}
 
-		public void removeHandler(NodeEventBinding descendantBinding) {
-			handlers.remove(descendantBinding);
-		}
-
 		void dispatch(ModelEvent modelEvent) {
 			// it's in fact guaranteed that the handler NodeEventBinding is the
 			// right
 			// type
 			handlers.forEach(h -> h.fireEventIfType(modelEvent));
+		}
+
+		public void removeHandler(NodeEventBinding descendantBinding) {
+			handlers.remove(descendantBinding);
 		}
 
 		void unbind(NodeEventBinding nodeEventBinding) {

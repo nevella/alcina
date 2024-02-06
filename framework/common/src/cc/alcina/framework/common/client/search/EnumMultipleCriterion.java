@@ -106,6 +106,13 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 		return Ax.format("%s: %s", enumClass().getSimpleName(), getValue());
 	}
 
+	/**
+	 * If the enum is serialised in the db as a string, set to true
+	 */
+	protected boolean valueAsString() {
+		return false;
+	}
+
 	public <T extends EnumMultipleCriterion<E>> T withValue(E addEnum) {
 		Set<E> newValue = new LinkedHashSet<>(getValue());
 		newValue.add(addEnum);
@@ -125,17 +132,8 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 		return withValues(Arrays.asList(addEnums));
 	}
 
-	/**
-	 * If the enum is serialised in the db as a string, set to true
-	 */
-	protected boolean valueAsString() {
-		return false;
-	}
-
 	public interface Handler<T, E extends Enum, SC extends EnumMultipleCriterion<E>>
 			extends DomainCriterionFilter<SC> {
-		public boolean test(T t, Set<E> value);
-
 		@Override
 		default DomainFilter getFilter(SC sc) {
 			Set<E> values = sc.getValue();
@@ -146,6 +144,8 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 			return new DomainFilter(pred).invertIf(sc
 					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
 		}
+
+		public boolean test(T t, Set<E> value);
 	}
 
 	public static abstract class Searchable<E extends Enum, C extends EnumMultipleCriterion<E>>

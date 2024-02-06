@@ -36,6 +36,16 @@ public class DeltaApplicationRecordSerializerImpl
 
 	private static final String TRANSFORM_PROTOCOL_VERSION = "Transform-protocol-version:";
 
+	private DeltaApplicationSerializer otherSerializer(String data) {
+		int idx = data.indexOf(VERSION);
+		int idxDtr = data.indexOf(
+				DTRSimpleSerialSerializerOld.DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0);
+		if (idxDtr != -1 && (idx == -1 || idxDtr < idx)) {
+			return new DTRSimpleSerialSerializerOld();
+		}
+		return null;
+	}
+
 	@Override
 	public DeltaApplicationRecord read(String data) {
 		DeltaApplicationSerializer otherSerializer = otherSerializer(data);
@@ -99,15 +109,5 @@ public class DeltaApplicationRecordSerializerImpl
 				wrapper.getUserId(), wrapper.getType(), wrapper.getTag(),
 				wrapper.getProtocolVersion(), wrapper.getChunkUuidString(),
 				wrapper.getText());
-	}
-
-	private DeltaApplicationSerializer otherSerializer(String data) {
-		int idx = data.indexOf(VERSION);
-		int idxDtr = data.indexOf(
-				DTRSimpleSerialSerializerOld.DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0);
-		if (idxDtr != -1 && (idx == -1 || idxDtr < idx)) {
-			return new DTRSimpleSerialSerializerOld();
-		}
-		return null;
 	}
 }

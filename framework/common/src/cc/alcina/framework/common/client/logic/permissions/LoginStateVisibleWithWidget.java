@@ -22,11 +22,11 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public interface LoginStateVisibleWithWidget
 		extends LoginStateVisible, IsWidget {
-	public String getDebugId();
-
-	public Widget getWidget();
-
 	default Widget asWidget() {
 		return getWidget();
 	}
+
+	public String getDebugId();
+
+	public Widget getWidget();
 }

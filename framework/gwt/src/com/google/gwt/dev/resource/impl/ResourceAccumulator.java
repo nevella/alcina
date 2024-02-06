@@ -61,32 +61,6 @@ class ResourceAccumulator {
 		this.pathPrefixSetRef = new WeakReference<PathPrefixSet>(pathPrefixSet);
 	}
 
-	public Map<AbstractResource, ResourceResolution> getResources() {
-		return resolutionsByResource;
-	}
-
-	public boolean isWatchServiceActive() {
-		return watchService != null;
-	}
-
-	/**
-	 * Make sure the resources associated with this directory and pathPrefixSet
-	 * are up-to-date.
-	 */
-	public void refreshResources() throws IOException {
-		if (isWatchServiceActive()) {
-			refresh();
-		} else {
-			fullRefresh();
-		}
-	}
-
-	public void shutdown() throws IOException {
-		// watchService field is not cleared so any attempt to use this class
-		// after shutdown will fail.
-		stopWatchService();
-	}
-
 	/**
 	 * Full refresh clears existing resources and watchers and does a clean
 	 * refresh.
@@ -115,6 +89,14 @@ class ResourceAccumulator {
 	 * FIXME - gwt - it would be nice to separate inject Alcina dependencies
 	 * here rather than call out...but...
 	 */
+
+	public Map<AbstractResource, ResourceResolution> getResources() {
+		return resolutionsByResource;
+	}
+
+	public boolean isWatchServiceActive() {
+		return watchService != null;
+	}
 
 	private void maybeInitializeWatchService() throws IOException {
 		if (watchFileChanges) {
@@ -207,6 +189,24 @@ class ResourceAccumulator {
 			}
 			watchKey.reset();
 		}
+	}
+
+	/**
+	 * Make sure the resources associated with this directory and pathPrefixSet
+	 * are up-to-date.
+	 */
+	public void refreshResources() throws IOException {
+		if (isWatchServiceActive()) {
+			refresh();
+		} else {
+			fullRefresh();
+		}
+	}
+
+	public void shutdown() throws IOException {
+		// watchService field is not cleared so any attempt to use this class
+		// after shutdown will fail.
+		stopWatchService();
 	}
 
 	private void stopWatchService() throws IOException {

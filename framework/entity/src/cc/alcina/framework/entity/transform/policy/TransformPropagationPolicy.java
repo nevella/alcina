@@ -33,6 +33,8 @@ public class TransformPropagationPolicy {
 		return Registry.impl(TransformPropagationPolicy.class);
 	}
 
+	private List<NonPersistentData> nonPersistentData;
+
 	public long
 			getProjectedPersistentCount(Stream<DomainTransformEvent> events) {
 		return events.filter(event -> {
@@ -46,6 +48,44 @@ public class TransformPropagationPolicy {
 
 	public boolean handlesEvent(DomainTransformEvent event) {
 		return DomainStore.stores().storeFor(event.getObjectClass()) != null;
+	}
+
+	protected boolean isNonDomainStoreClass(Class<? extends Entity> clazz) {
+		return !DomainStore.stores().storeFor(clazz).isCached(clazz);
+	}
+
+	/**
+	 * Filter any transforms which by default would not have been persisted.
+	 */
+	public void populateCriteriaGroupFromNonPersistent(
+			NotPersistentObjectCriteriaGroup criteriaGroup) {
+		if (nonPersistentData == null) {
+			// concurrent population harmless
+			nonPersistentData = Registry.query(Entity.class).registrations()
+					.filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
+					.map(NonPersistentData::new).collect(Collectors.toList());
+		}
+		nonPersistentData.stream().map(NonPersistentData::toCriteria)
+				.flatMap(Collection::stream)
+				.forEach(criteriaGroup::addCriterion);
+	}
+
+	public DomainTransformPropagation
+			resolvePropagation(DomainTransformEvent event) {
+		// this could be improved to use TreeResolver and go via the DomainStore
+		// (to allow imperative customization)
+		// but that only gives a slight reduction in transform propagation
+		// chatter - and the primary purpose of the DomainStore customisations
+		// is to trim initial cache load as much as possible. So....
+		// low-priority
+		AnnotationLocation location = new AnnotationLocation(
+				event.getObjectClass(),
+				event.getPropertyName() == null ? null
+						: Reflections.at(event.getObjectClass())
+								.property(event.getPropertyName()));
+		DomainTransformPropagation annotation = location
+				.getAnnotation(DomainTransformPropagation.class);
+		return annotation;
 	}
 
 	/*
@@ -91,28 +131,6 @@ public class TransformPropagationPolicy {
 				|| propagation.value() == PropagationType.NON_PERSISTENT;
 	}
 
-	public DomainTransformPropagation
-			resolvePropagation(DomainTransformEvent event) {
-		// this could be improved to use TreeResolver and go via the DomainStore
-		// (to allow imperative customization)
-		// but that only gives a slight reduction in transform propagation
-		// chatter - and the primary purpose of the DomainStore customisations
-		// is to trim initial cache load as much as possible. So....
-		// low-priority
-		AnnotationLocation location = new AnnotationLocation(
-				event.getObjectClass(),
-				event.getPropertyName() == null ? null
-						: Reflections.at(event.getObjectClass())
-								.property(event.getPropertyName()));
-		DomainTransformPropagation annotation = location
-				.getAnnotation(DomainTransformPropagation.class);
-		return annotation;
-	}
-
-	protected boolean isNonDomainStoreClass(Class<? extends Entity> clazz) {
-		return !DomainStore.stores().storeFor(clazz).isCached(clazz);
-	}
-
 	class NonPersistentData {
 		Class<? extends Entity> clazz;
 
@@ -155,23 +173,5 @@ public class TransformPropagationPolicy {
 			});
 			return result;
 		}
-	}
-
-	private List<NonPersistentData> nonPersistentData;
-
-	/**
-	 * Filter any transforms which by default would not have been persisted.
-	 */
-	public void populateCriteriaGroupFromNonPersistent(
-			NotPersistentObjectCriteriaGroup criteriaGroup) {
-		if (nonPersistentData == null) {
-			// concurrent population harmless
-			nonPersistentData = Registry.query(Entity.class).registrations()
-					.filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
-					.map(NonPersistentData::new).collect(Collectors.toList());
-		}
-		nonPersistentData.stream().map(NonPersistentData::toCriteria)
-				.flatMap(Collection::stream)
-				.forEach(criteriaGroup::addCriterion);
 	}
 }

@@ -16,6 +16,10 @@ public class Async {
 		return new AsyncCallbackBuilder<T>();
 	}
 
+	public static AsyncCallback<Void> nullCallback() {
+		return new AsyncCallbackNull();
+	}
+
 	public static RunAsyncBuilder runAsyncBuilder() {
 		return new RunAsyncBuilder();
 	}
@@ -55,6 +59,10 @@ public class Async {
 			return this;
 		}
 
+		private void onFailure(Throwable caught) {
+			throw new WrappedRuntimeException(caught);
+		}
+
 		public AsyncCallbackBuilder<T> success(Consumer<T> successConsumer) {
 			this.successConsumer = successConsumer;
 			return this;
@@ -79,15 +87,18 @@ public class Async {
 			return this;
 		}
 
-		private void onFailure(Throwable caught) {
-			throw new WrappedRuntimeException(caught);
-		}
-
 		public final class BuilderCallback implements AsyncCallback<T> {
 			private boolean cancelled;
 
 			public boolean isCancelled() {
 				return this.cancelled;
+			}
+
+			private void onComplete() {
+				if (completionCallback != null) {
+					completionCallback.run();
+				}
+				inflight.remove(inflightMarker);
 			}
 
 			@Override
@@ -110,13 +121,6 @@ public class Async {
 
 			public void setCancelled(boolean cancelled) {
 				this.cancelled = cancelled;
-			}
-
-			private void onComplete() {
-				if (completionCallback != null) {
-					completionCallback.run();
-				}
-				inflight.remove(inflightMarker);
 			}
 		}
 	}
@@ -147,13 +151,13 @@ public class Async {
 			return this;
 		}
 
+		private void onFailure(Throwable caught) {
+			throw new WrappedRuntimeException(caught);
+		}
+
 		public RunAsyncBuilder success(Runnable onSuccess) {
 			this.onSuccess = onSuccess;
 			return this;
-		}
-
-		private void onFailure(Throwable caught) {
-			throw new WrappedRuntimeException(caught);
 		}
 
 		public class RunAsyncCallbackImpl implements RunAsyncCallback {
@@ -167,9 +171,5 @@ public class Async {
 				onSuccess.run();
 			}
 		}
-	}
-
-	public static AsyncCallback<Void> nullCallback() {
-		return new AsyncCallbackNull();
 	}
 }

@@ -15,6 +15,13 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseT
 
 @Registration.NonGenericSubtypes(BoundSuggestOracleRequestHandler.class)
 public abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
+	protected abstract List<T> getResponses(String query,
+			BoundSuggestOracleModel model, String hint);
+
+	protected long getSuggestionLimit() {
+		return 50;
+	}
+
 	public Response handleRequest(Class<T> clazz,
 			BoundSuggestOracleRequest request, String hint) {
 		Response response = new Response();
@@ -29,13 +36,6 @@ public abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOra
 					BoundSuggestOracleSuggestion.nullSuggestion());
 		}
 		return projectResponse(response);
-	}
-
-	protected abstract List<T> getResponses(String query,
-			BoundSuggestOracleModel model, String hint);
-
-	protected long getSuggestionLimit() {
-		return 50;
 	}
 
 	protected boolean offerNullSuggestion() {

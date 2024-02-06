@@ -130,6 +130,12 @@ public abstract class DomainViews {
 		trees.clear();
 	}
 
+	protected boolean filterViewTransformCollation(QueryResult qr) {
+		return true;
+	}
+
+	protected abstract Class<? extends Entity>[] getIndexableEntityClasses();
+
 	// does *not* run on the DTR eventqueue thread
 	public Response handleRequest(
 			Request<? extends DomainViewSearchDefinition> request) {
@@ -157,62 +163,83 @@ public abstract class DomainViews {
 		}
 	}
 
-	public void shutdown() {
-		finished = true;
-		tasks.add(new ViewsTask());
+	protected boolean
+			isIndexableTransformRequest(DomainTransformPersistenceEvent event) {
+		return Configuration.is("indexTransformRequests")
+				&& event.getTransformPersistenceToken().getTransformCollation()
+						.has((Class[]) getIndexableEntityClasses());
 	}
 
-	public <T> T submitLambda(
-			Request<? extends DomainViewSearchDefinition> request,
-			Function<LiveTree, T> lambda) {
-		ViewsTask task = new ViewsTask();
-		task.type = Type.HANDLE_LAMBDA;
-		task.handlerData.request = request;
-		task.handlerData.lambda = (Function<LiveTree, Object>) lambda;
-		queueTask(task);
-		task.await();
-		if (task.handlerData.exception == null) {
-			return (T) task.handlerData.lambdaResult;
-		} else {
-			throw task.handlerData.exception;
-		}
-	}
-
-	public void submitLambda(Runnable withViewsModelLambda) {
-		ViewsTask task = new ViewsTask();
-		task.type = Type.HANDLE_LAMBDA;
-		task.handlerData.lambda = tree -> {
-			withViewsModelLambda.run();
-			return null;
-		};
-		queueTask(task);
-		task.await();
-		if (task.handlerData.exception == null) {
-			return;
-		} else {
-			throw task.handlerData.exception;
-		}
-	}
-
-	public <V extends DomainView> List<V> viewsContaining(Entity e) {
-		// Concurrency - only allowed from event queue thread
-		Preconditions.checkState(Thread.currentThread() == thread);
-		return (List) trees.values().stream().filter(t -> t.containsEntity(e))
-				.map(t -> t.rootEntity).collect(Collectors.toList());
-	}
-
-	public void waitForEmptyQueue() {
-		try {
-			Thread.sleep(30);
-			// FIXME - index
-			// can't get more naive than that now...
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+	protected void onViewModified(DomainView view) {
+		Iterator<Entry<Key, LiveTree>> itr = trees.entrySet().iterator();
+		while (itr.hasNext()) {
+			Entry<Key, LiveTree> entry = itr.next();
+			if (entry.getKey().request.getRoot().equals(view.toLocator())) {
+				entry.getValue().onInvalidateTree();
+				itr.remove();
+				logger.info("Invalidated tree for view {}", view);
+			}
 		}
 	}
 
 	private void processCheckWaits(ViewsTask task) {
 		trees.values().forEach(LiveTree::checkChangeListeners);
+	}
+
+	synchronized void processEvent(ViewsTask task) {
+		switch (task.type) {
+		case MODEL_CHANGE:
+			logger.info(
+					"Processing domainviews request - {} - queue length: {}",
+					task.modelChange.event.getMaxPersistedRequestId(),
+					tasks.size());
+			Collection<LiveTree> liveTrees = trees.values();
+			Transaction.end();
+			Transaction.join(task.modelChange.preCommit);
+			/*
+			 * Ordering - we have to invalidate trees *first* - so they fire a
+			 * full invalidation event rather than partial
+			 *
+			 * In particular, the client relies on dtr position to know if it
+			 * should refresh - but the dtr pos of freshly generated,
+			 * invalidated tree will be the same as that of transforms affecting
+			 * the 'old' tree. So the client can't use logic 'my dtrpos is
+			 * earlier than the earliest of the new tree' - because it isn't.
+			 *
+			 * It could use 'my tree first dtr pos is earlier than the server
+			 * tree earliest pos' - but that would require sending two over the
+			 * wire. So this way is better (invalidate trees first).
+			 */
+			task.modelChange.event.getTransformPersistenceToken()
+					.getTransformCollation()
+					.query(PersistentImpl.getImplementation(DomainView.class))
+					.stream().
+					// don't bother processing if about to delete
+					filter(QueryResult::hasNoDeleteTransform)
+					// the entity will not exist, yet, if the entitycollation
+					// contains a creation (i.e. the entity was created during
+					// the modelChange.event)
+					.filter(QueryResult::hasNoCreateTransform)
+					.filter(this::filterViewTransformCollation)
+					.forEach(qr -> onViewModified(qr.<DomainView> getEntity()));
+			liveTrees
+					.forEach(tree -> tree.index(task.modelChange.event, false));
+			Transaction.end();
+			Transaction.join(task.modelChange.postCommit);
+			liveTrees.forEach(tree -> tree.index(task.modelChange.event, true));
+			Transaction.end();
+			break;
+		// throw new UnsupportedOperationException();
+		case HANDLE_PATH_REQUEST:
+			processRequest(task);
+			break;
+		case HANDLE_LAMBDA:
+			processLambda(task);
+			break;
+		case EVICT_LISTENERS:
+			processCheckWaits(task);
+			break;
+		}
 	}
 
 	private void processLambda(ViewsTask task) {
@@ -291,87 +318,6 @@ public abstract class DomainViews {
 		}
 	}
 
-	protected boolean filterViewTransformCollation(QueryResult qr) {
-		return true;
-	}
-
-	protected abstract Class<? extends Entity>[] getIndexableEntityClasses();
-
-	protected boolean
-			isIndexableTransformRequest(DomainTransformPersistenceEvent event) {
-		return Configuration.is("indexTransformRequests")
-				&& event.getTransformPersistenceToken().getTransformCollation()
-						.has((Class[]) getIndexableEntityClasses());
-	}
-
-	protected void onViewModified(DomainView view) {
-		Iterator<Entry<Key, LiveTree>> itr = trees.entrySet().iterator();
-		while (itr.hasNext()) {
-			Entry<Key, LiveTree> entry = itr.next();
-			if (entry.getKey().request.getRoot().equals(view.toLocator())) {
-				entry.getValue().onInvalidateTree();
-				itr.remove();
-				logger.info("Invalidated tree for view {}", view);
-			}
-		}
-	}
-
-	synchronized void processEvent(ViewsTask task) {
-		switch (task.type) {
-		case MODEL_CHANGE:
-			logger.info(
-					"Processing domainviews request - {} - queue length: {}",
-					task.modelChange.event.getMaxPersistedRequestId(),
-					tasks.size());
-			Collection<LiveTree> liveTrees = trees.values();
-			Transaction.end();
-			Transaction.join(task.modelChange.preCommit);
-			/*
-			 * Ordering - we have to invalidate trees *first* - so they fire a
-			 * full invalidation event rather than partial
-			 *
-			 * In particular, the client relies on dtr position to know if it
-			 * should refresh - but the dtr pos of freshly generated,
-			 * invalidated tree will be the same as that of transforms affecting
-			 * the 'old' tree. So the client can't use logic 'my dtrpos is
-			 * earlier than the earliest of the new tree' - because it isn't.
-			 *
-			 * It could use 'my tree first dtr pos is earlier than the server
-			 * tree earliest pos' - but that would require sending two over the
-			 * wire. So this way is better (invalidate trees first).
-			 */
-			task.modelChange.event.getTransformPersistenceToken()
-					.getTransformCollation()
-					.query(PersistentImpl.getImplementation(DomainView.class))
-					.stream().
-					// don't bother processing if about to delete
-					filter(QueryResult::hasNoDeleteTransform)
-					// the entity will not exist, yet, if the entitycollation
-					// contains a creation (i.e. the entity was created during
-					// the modelChange.event)
-					.filter(QueryResult::hasNoCreateTransform)
-					.filter(this::filterViewTransformCollation)
-					.forEach(qr -> onViewModified(qr.<DomainView> getEntity()));
-			liveTrees
-					.forEach(tree -> tree.index(task.modelChange.event, false));
-			Transaction.end();
-			Transaction.join(task.modelChange.postCommit);
-			liveTrees.forEach(tree -> tree.index(task.modelChange.event, true));
-			Transaction.end();
-			break;
-		// throw new UnsupportedOperationException();
-		case HANDLE_PATH_REQUEST:
-			processRequest(task);
-			break;
-		case HANDLE_LAMBDA:
-			processLambda(task);
-			break;
-		case EVICT_LISTENERS:
-			processCheckWaits(task);
-			break;
-		}
-	}
-
 	void queueTask(ViewsTask task) {
 		try {
 			addTaskLock.lock();
@@ -382,6 +328,116 @@ public abstract class DomainViews {
 			tasks.add(task);
 		} finally {
 			addTaskLock.unlock();
+		}
+	}
+
+	public void shutdown() {
+		finished = true;
+		tasks.add(new ViewsTask());
+	}
+
+	public <T> T submitLambda(
+			Request<? extends DomainViewSearchDefinition> request,
+			Function<LiveTree, T> lambda) {
+		ViewsTask task = new ViewsTask();
+		task.type = Type.HANDLE_LAMBDA;
+		task.handlerData.request = request;
+		task.handlerData.lambda = (Function<LiveTree, Object>) lambda;
+		queueTask(task);
+		task.await();
+		if (task.handlerData.exception == null) {
+			return (T) task.handlerData.lambdaResult;
+		} else {
+			throw task.handlerData.exception;
+		}
+	}
+
+	public void submitLambda(Runnable withViewsModelLambda) {
+		ViewsTask task = new ViewsTask();
+		task.type = Type.HANDLE_LAMBDA;
+		task.handlerData.lambda = tree -> {
+			withViewsModelLambda.run();
+			return null;
+		};
+		queueTask(task);
+		task.await();
+		if (task.handlerData.exception == null) {
+			return;
+		} else {
+			throw task.handlerData.exception;
+		}
+	}
+
+	public <V extends DomainView> List<V> viewsContaining(Entity e) {
+		// Concurrency - only allowed from event queue thread
+		Preconditions.checkState(Thread.currentThread() == thread);
+		return (List) trees.values().stream().filter(t -> t.containsEntity(e))
+				.map(t -> t.rootEntity).collect(Collectors.toList());
+	}
+
+	public void waitForEmptyQueue() {
+		try {
+			Thread.sleep(30);
+			// FIXME - index
+			// can't get more naive than that now...
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	static class Key {
+		Request<?> request;
+
+		private String stringKey;
+
+		EntityLocator viewLocator;
+
+		public Key(Request<?> request) {
+			this.request = request;
+			this.viewLocator = request.getRoot();
+			this.stringKey = request.getRoot().toString();
+		}
+
+		@Override
+		public boolean equals(Object anObject) {
+			return anObject instanceof Key
+					? this.stringKey.equals(((Key) anObject).stringKey)
+					: false;
+		}
+
+		@Override
+		public int hashCode() {
+			return this.stringKey.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return this.stringKey;
+		}
+	}
+
+	private static class LiveListener implements DomainListener {
+		@Override
+		public Class<?> getListenedClass() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void insert(Object o) {
+		}
+
+		@Override
+		public boolean isEnabled() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void remove(Object o) {
+		}
+
+		@Override
+		public void setEnabled(boolean enabled) {
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -434,62 +490,6 @@ public abstract class DomainViews {
 		}
 	}
 
-	private static class LiveListener implements DomainListener {
-		@Override
-		public Class<?> getListenedClass() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void insert(Object o) {
-		}
-
-		@Override
-		public boolean isEnabled() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void remove(Object o) {
-		}
-
-		@Override
-		public void setEnabled(boolean enabled) {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	static class Key {
-		Request<?> request;
-
-		private String stringKey;
-
-		EntityLocator viewLocator;
-
-		public Key(Request<?> request) {
-			this.request = request;
-			this.viewLocator = request.getRoot();
-			this.stringKey = request.getRoot().toString();
-		}
-
-		@Override
-		public boolean equals(Object anObject) {
-			return anObject instanceof Key
-					? this.stringKey.equals(((Key) anObject).stringKey)
-					: false;
-		}
-
-		@Override
-		public int hashCode() {
-			return this.stringKey.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return this.stringKey;
-		}
-	}
-
 	static class ViewsTask {
 		public LoginState loginState;
 
@@ -508,17 +508,17 @@ public abstract class DomainViews {
 			user = PermissionsManager.get().getUser();
 		}
 
-		@Override
-		public String toString() {
-			return type.toString();
-		}
-
 		void await() {
 			try {
 				latch.await();
 			} catch (Exception e) {
 				return;
 			}
+		}
+
+		@Override
+		public String toString() {
+			return type.toString();
 		}
 
 		static class HandlerData {

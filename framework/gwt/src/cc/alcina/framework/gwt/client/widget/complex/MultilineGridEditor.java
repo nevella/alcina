@@ -59,10 +59,48 @@ public abstract class MultilineGridEditor<H extends Entity>
 		initWidget(holder);
 	}
 
+	private void createPerObjectActions(FlowPanel gridAndActions, H rowValue) {
+		List<Link> links = createPerRowEditActions(rowValue);
+		FlowPanel panel = UsefulWidgetFactory.styledPanel("per-object-links");
+		links.stream().forEach(link -> panel.add(link));
+		gridAndActions.add(panel);
+	}
+
+	protected List<Link> createPerRowEditActions(H rowValue) {
+		Link link = Link.createNoUnderline("Delete", evt -> {
+			doDeleteRow(rowValue);
+		});
+		return Collections.singletonList(link);
+	}
+
+	protected void customiseActions(List<PermissibleAction> actions) {
+	}
+
+	protected void customiseContentViewFactory(
+			ContentViewFactory contentViewFactory, Object model) {
+	}
+
+	protected abstract void doCreateRow();
+
+	protected abstract void doDeleteRow(H item);
+
+	protected List<H> filterVisibleValues(List<H> values) {
+		return values;
+	}
+
 	public abstract String getCreateActionDisplayName();
 
 	public Set<H> getValue() {
 		return this.value;
+	}
+
+	/**
+	 * @param multilineRowEditor
+	 * @return true if the table should be refreshed
+	 */
+	protected boolean handleCustomAction(MultilineGridEditor multilineRowEditor,
+			PermissibleAction action) {
+		return false;
 	}
 
 	public boolean isEditable() {
@@ -76,23 +114,6 @@ public abstract class MultilineGridEditor<H extends Entity>
 
 	public void redraw() {
 		renderTable();
-	}
-
-	public void setEditable(boolean editable) {
-		this.editable = editable;
-	}
-
-	public void setValue(Set<H> value) {
-		this.value = value;
-		renderTable();
-		setStyleName("empty", value.isEmpty());
-	}
-
-	private void createPerObjectActions(FlowPanel gridAndActions, H rowValue) {
-		List<Link> links = createPerRowEditActions(rowValue);
-		FlowPanel panel = UsefulWidgetFactory.styledPanel("per-object-links");
-		links.stream().forEach(link -> panel.add(link));
-		gridAndActions.add(panel);
 	}
 
 	private void renderTable() {
@@ -140,36 +161,17 @@ public abstract class MultilineGridEditor<H extends Entity>
 		toolbar.addVetoableActionListener(toolbarListener);
 	}
 
-	protected void customiseContentViewFactory(
-			ContentViewFactory contentViewFactory, Object model) {
+	public void setEditable(boolean editable) {
+		this.editable = editable;
 	}
 
-	protected List<Link> createPerRowEditActions(H rowValue) {
-		Link link = Link.createNoUnderline("Delete", evt -> {
-			doDeleteRow(rowValue);
-		});
-		return Collections.singletonList(link);
+	public void setValue(Set<H> value) {
+		this.value = value;
+		renderTable();
+		setStyleName("empty", value.isEmpty());
 	}
 
-	protected void customiseActions(List<PermissibleAction> actions) {
-	}
-
-	protected abstract void doCreateRow();
-
-	protected abstract void doDeleteRow(H item);
-
-	protected List<H> filterVisibleValues(List<H> values) {
-		return values;
-	}
-
-	/**
-	 * @param multilineRowEditor
-	 * @return true if the table should be refreshed
-	 */
-	protected boolean handleCustomAction(MultilineGridEditor multilineRowEditor,
-			PermissibleAction action) {
-		return false;
-	}
+	protected abstract void sortValues(List<H> values);
 
 	public static class CreateGridAction extends CreateAction {
 		private String name;
@@ -187,6 +189,4 @@ public abstract class MultilineGridEditor<H extends Entity>
 			return name;
 		}
 	}
-
-	protected abstract void sortValues(List<H> values);
 }

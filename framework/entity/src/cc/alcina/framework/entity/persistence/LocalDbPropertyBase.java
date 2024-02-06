@@ -51,10 +51,6 @@ public abstract class LocalDbPropertyBase extends Entity {
 		return getOrSetLocalDbPropertyPreDomainStore(key, value, get);
 	}
 
-	public static String setLocalDbProperty(String key, String value) {
-		return getOrSetLocalDbProperty(key, value, false);
-	}
-
 	private static String getOrSetLocalDbPropertyPreDomainStore(String key,
 			String value, boolean get) {
 		LocalDbPropertyBase dbPropertyObject = getLocalDbPropertyObject(key);
@@ -74,6 +70,10 @@ public abstract class LocalDbPropertyBase extends Entity {
 			}
 			return null;
 		}
+	}
+
+	public static String setLocalDbProperty(String key, String value) {
+		return getOrSetLocalDbProperty(key, value, false);
 	}
 
 	private String propertyKey;

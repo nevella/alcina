@@ -37,13 +37,6 @@ public class IntegerValidator implements Validator {
 		return true;
 	}
 
-	public static class Primitive extends IntegerValidator {
-		@Override
-		protected boolean allowNull() {
-			return false;
-		}
-	}
-
 	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
@@ -64,5 +57,12 @@ public class IntegerValidator implements Validator {
 					IntegerValidator.class);
 		}
 		return i;
+	}
+
+	public static class Primitive extends IntegerValidator {
+		@Override
+		protected boolean allowNull() {
+			return false;
+		}
 	}
 }

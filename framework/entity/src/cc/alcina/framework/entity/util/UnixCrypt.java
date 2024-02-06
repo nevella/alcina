@@ -302,6 +302,51 @@ public class UnixCrypt extends Object {
 			0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77,
 			0x78, 0x79, 0x7A };
 
+	private static final int[] body(int schedule[], int Eswap0, int Eswap1) {
+		int left = 0;
+		int right = 0;
+		int t = 0;
+		for (int j = 0; j < 25; j++) {
+			for (int i = 0; i < ITERATIONS * 2; i += 4) {
+				left = D_ENCRYPT(left, right, i, Eswap0, Eswap1, schedule);
+				right = D_ENCRYPT(right, left, i + 2, Eswap0, Eswap1, schedule);
+			}
+			t = left;
+			left = right;
+			right = t;
+		}
+		t = right;
+		right = (left >>> 1) | (left << 31);
+		left = (t >>> 1) | (t << 31);
+		left &= 0xffffffff;
+		right &= 0xffffffff;
+		int results[] = new int[2];
+		PERM_OP(right, left, 1, 0x55555555, results);
+		right = results[0];
+		left = results[1];
+		PERM_OP(left, right, 8, 0x00ff00ff, results);
+		left = results[0];
+		right = results[1];
+		PERM_OP(right, left, 2, 0x33333333, results);
+		right = results[0];
+		left = results[1];
+		PERM_OP(left, right, 16, 0x0000ffff, results);
+		left = results[0];
+		right = results[1];
+		PERM_OP(right, left, 4, 0x0f0f0f0f, results);
+		right = results[0];
+		left = results[1];
+		int out[] = new int[2];
+		out[0] = left;
+		out[1] = right;
+		return (out);
+	}
+
+	private static final int byteToUnsigned(byte b) {
+		int value = (int) b;
+		return (value >= 0 ? value : value + 256);
+	}
+
 	/*
 	 * <P>Encrypt a password given the cleartext password. This method generates
 	 * a random salt using the 'java.util.Random' class.</P>
@@ -372,71 +417,6 @@ public class UnixCrypt extends Object {
 			}
 		}
 		return (buffer.toString());
-	}
-
-	/*
-	 * <P>Check that <I>enteredPassword</I> encrypts to
-	 * <I>encryptedPassword</I>.</P>
-	 * 
-	 * @param encryptedPassword The <I>encryptedPassword</I>. The first two
-	 * characters are assumed to be the salt. This string would be the same as
-	 * one found in a Unix <U>/etc/passwd</U> file.
-	 * 
-	 * @param enteredPassword The password as entered by the user (or otherwise
-	 * aquired).
-	 * 
-	 * @return <B>true</B> if the password should be considered correct.
-	 */
-	public final static boolean matches(String encryptedPassword,
-			String enteredPassword) {
-		String salt = encryptedPassword.substring(0, 3);
-		String newCrypt = crypt(salt, enteredPassword);
-		return newCrypt.equals(encryptedPassword);
-	}
-
-	private static final int[] body(int schedule[], int Eswap0, int Eswap1) {
-		int left = 0;
-		int right = 0;
-		int t = 0;
-		for (int j = 0; j < 25; j++) {
-			for (int i = 0; i < ITERATIONS * 2; i += 4) {
-				left = D_ENCRYPT(left, right, i, Eswap0, Eswap1, schedule);
-				right = D_ENCRYPT(right, left, i + 2, Eswap0, Eswap1, schedule);
-			}
-			t = left;
-			left = right;
-			right = t;
-		}
-		t = right;
-		right = (left >>> 1) | (left << 31);
-		left = (t >>> 1) | (t << 31);
-		left &= 0xffffffff;
-		right &= 0xffffffff;
-		int results[] = new int[2];
-		PERM_OP(right, left, 1, 0x55555555, results);
-		right = results[0];
-		left = results[1];
-		PERM_OP(left, right, 8, 0x00ff00ff, results);
-		left = results[0];
-		right = results[1];
-		PERM_OP(right, left, 2, 0x33333333, results);
-		right = results[0];
-		left = results[1];
-		PERM_OP(left, right, 16, 0x0000ffff, results);
-		left = results[0];
-		right = results[1];
-		PERM_OP(right, left, 4, 0x0f0f0f0f, results);
-		right = results[0];
-		left = results[1];
-		int out[] = new int[2];
-		out[0] = left;
-		out[1] = right;
-		return (out);
-	}
-
-	private static final int byteToUnsigned(byte b) {
-		int value = (int) b;
-		return (value >= 0 ? value : value + 256);
 	}
 
 	private static final int D_ENCRYPT(int L, int R, int S, int E0, int E1,
@@ -527,6 +507,26 @@ public class UnixCrypt extends Object {
 		b[offset++] = (byte) ((iValue >>> 8) & 0xff);
 		b[offset++] = (byte) ((iValue >>> 16) & 0xff);
 		b[offset++] = (byte) ((iValue >>> 24) & 0xff);
+	}
+
+	/*
+	 * <P>Check that <I>enteredPassword</I> encrypts to
+	 * <I>encryptedPassword</I>.</P>
+	 * 
+	 * @param encryptedPassword The <I>encryptedPassword</I>. The first two
+	 * characters are assumed to be the salt. This string would be the same as
+	 * one found in a Unix <U>/etc/passwd</U> file.
+	 * 
+	 * @param enteredPassword The password as entered by the user (or otherwise
+	 * aquired).
+	 * 
+	 * @return <B>true</B> if the password should be considered correct.
+	 */
+	public final static boolean matches(String encryptedPassword,
+			String enteredPassword) {
+		String salt = encryptedPassword.substring(0, 3);
+		String newCrypt = crypt(salt, enteredPassword);
+		return newCrypt.equals(encryptedPassword);
 	}
 
 	private static final void PERM_OP(int a, int b, int n, int m,

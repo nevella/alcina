@@ -310,6 +310,45 @@ public enum OperatingSystem {
 		}
 	}
 
+	private OperatingSystem checkUserAgent(String agentString) {
+		if (this.isInUserAgentString(agentString)) {
+			if (this.children.size() > 0) {
+				for (OperatingSystem childOperatingSystem : this.children) {
+					OperatingSystem match = childOperatingSystem
+							.checkUserAgent(agentString);
+					if (match != null) {
+						return match;
+					}
+				}
+			}
+			// if children didn't match we continue checking the current to
+			// prevent false positives
+			if (!this.containsExcludeToken(agentString)) {
+				return this;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Checks if the given user-agent does not contain one of the tokens which
+	 * should not match. In most cases there are no excluding tokens, so the
+	 * impact should be small.
+	 * 
+	 * @param agentString
+	 * @return
+	 */
+	private boolean containsExcludeToken(String agentString) {
+		if (excludeList != null) {
+			for (String exclude : excludeList) {
+				if (agentString.toLowerCase()
+						.indexOf(exclude.toLowerCase()) != -1)
+					return true;
+			}
+		}
+		return false;
+	}
+
 	public DeviceType getDeviceType() {
 		return deviceType;
 	}
@@ -362,44 +401,5 @@ public enum OperatingSystem {
 	 */
 	public boolean isMobileDevice() {
 		return deviceType.equals(DeviceType.MOBILE);
-	}
-
-	private OperatingSystem checkUserAgent(String agentString) {
-		if (this.isInUserAgentString(agentString)) {
-			if (this.children.size() > 0) {
-				for (OperatingSystem childOperatingSystem : this.children) {
-					OperatingSystem match = childOperatingSystem
-							.checkUserAgent(agentString);
-					if (match != null) {
-						return match;
-					}
-				}
-			}
-			// if children didn't match we continue checking the current to
-			// prevent false positives
-			if (!this.containsExcludeToken(agentString)) {
-				return this;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Checks if the given user-agent does not contain one of the tokens which
-	 * should not match. In most cases there are no excluding tokens, so the
-	 * impact should be small.
-	 * 
-	 * @param agentString
-	 * @return
-	 */
-	private boolean containsExcludeToken(String agentString) {
-		if (excludeList != null) {
-			for (String exclude : excludeList) {
-				if (agentString.toLowerCase()
-						.indexOf(exclude.toLowerCase()) != -1)
-					return true;
-			}
-		}
-		return false;
 	}
 }

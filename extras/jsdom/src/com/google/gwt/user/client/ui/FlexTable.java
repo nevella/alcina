@@ -27,75 +27,6 @@ package com.google.gwt.user.client.ui;
  * </p>
  */
 public class FlexTable extends HTMLTable {
-	/**
-	 * FlexTable-specific implementation of {@link HTMLTable.CellFormatter}. The
-	 * formatter retrieved from {@link HTMLTable#getCellFormatter()} may be cast
-	 * to this class.
-	 */
-	public class FlexCellFormatter extends CellFormatter {
-		/**
-		 * Gets the column span for the given cell. This is the number of
-		 * logical columns covered by the cell.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @return the cell's column span
-		 * @throws IndexOutOfBoundsException
-		 */
-		public int getColSpan(int row, int column) {
-			return getElement(row, column).getPropertyInt("colSpan");
-		}
-
-		/**
-		 * Gets the row span for the given cell. This is the number of logical
-		 * rows covered by the cell.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @return the cell's row span
-		 * @throws IndexOutOfBoundsException
-		 */
-		public int getRowSpan(int row, int column) {
-			return getElement(row, column).getPropertyInt("rowSpan");
-		}
-
-		/**
-		 * Sets the column span for the given cell. This is the number of
-		 * logical columns covered by the cell.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @param colSpan
-		 *            the cell's column span
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setColSpan(int row, int column, int colSpan) {
-			ensureElement(row, column).setPropertyInt("colSpan", colSpan);
-		}
-
-		/**
-		 * Sets the row span for the given cell. This is the number of logical
-		 * rows covered by the cell.
-		 * 
-		 * @param row
-		 *            the cell's row
-		 * @param column
-		 *            the cell's column
-		 * @param rowSpan
-		 *            the cell's row span
-		 * @throws IndexOutOfBoundsException
-		 */
-		public void setRowSpan(int row, int column, int rowSpan) {
-			ensureElement(row, column).setPropertyInt("rowSpan", rowSpan);
-		}
-	}
-
 	public FlexTable() {
 		super();
 		setCellFormatter(new FlexCellFormatter());
@@ -175,43 +106,6 @@ public class FlexTable extends HTMLTable {
 	}
 
 	/**
-	 * Remove all rows in this table.
-	 */
-	public void removeAllRows() {
-		int numRows = getRowCount();
-		for (int i = 0; i < numRows; i++) {
-			removeRow(0);
-		}
-	}
-
-	@Override
-	public void removeCell(int row, int col) {
-		super.removeCell(row, col);
-	}
-
-	/**
-	 * Removes a number of cells from a row in the table.
-	 * 
-	 * @param row
-	 *            the row of the cells to be removed
-	 * @param column
-	 *            the column of the first cell to be removed
-	 * @param num
-	 *            the number of cells to be removed
-	 * @throws IndexOutOfBoundsException
-	 */
-	public void removeCells(int row, int column, int num) {
-		for (int i = 0; i < num; i++) {
-			removeCell(row, column);
-		}
-	}
-
-	@Override
-	public void removeRow(int row) {
-		super.removeRow(row);
-	}
-
-	/**
 	 * Ensure that the cell exists.
 	 * 
 	 * @param row
@@ -255,6 +149,112 @@ public class FlexTable extends HTMLTable {
 		int rowCount = getRowCount();
 		for (int i = rowCount; i <= row; i++) {
 			insertRow(i);
+		}
+	}
+
+	/**
+	 * Remove all rows in this table.
+	 */
+	public void removeAllRows() {
+		int numRows = getRowCount();
+		for (int i = 0; i < numRows; i++) {
+			removeRow(0);
+		}
+	}
+
+	@Override
+	public void removeCell(int row, int col) {
+		super.removeCell(row, col);
+	}
+
+	/**
+	 * Removes a number of cells from a row in the table.
+	 * 
+	 * @param row
+	 *            the row of the cells to be removed
+	 * @param column
+	 *            the column of the first cell to be removed
+	 * @param num
+	 *            the number of cells to be removed
+	 * @throws IndexOutOfBoundsException
+	 */
+	public void removeCells(int row, int column, int num) {
+		for (int i = 0; i < num; i++) {
+			removeCell(row, column);
+		}
+	}
+
+	@Override
+	public void removeRow(int row) {
+		super.removeRow(row);
+	}
+
+	/**
+	 * FlexTable-specific implementation of {@link HTMLTable.CellFormatter}. The
+	 * formatter retrieved from {@link HTMLTable#getCellFormatter()} may be cast
+	 * to this class.
+	 */
+	public class FlexCellFormatter extends CellFormatter {
+		/**
+		 * Gets the column span for the given cell. This is the number of
+		 * logical columns covered by the cell.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @return the cell's column span
+		 * @throws IndexOutOfBoundsException
+		 */
+		public int getColSpan(int row, int column) {
+			return getElement(row, column).getPropertyInt("colSpan");
+		}
+
+		/**
+		 * Gets the row span for the given cell. This is the number of logical
+		 * rows covered by the cell.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @return the cell's row span
+		 * @throws IndexOutOfBoundsException
+		 */
+		public int getRowSpan(int row, int column) {
+			return getElement(row, column).getPropertyInt("rowSpan");
+		}
+
+		/**
+		 * Sets the column span for the given cell. This is the number of
+		 * logical columns covered by the cell.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @param colSpan
+		 *            the cell's column span
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setColSpan(int row, int column, int colSpan) {
+			ensureElement(row, column).setPropertyInt("colSpan", colSpan);
+		}
+
+		/**
+		 * Sets the row span for the given cell. This is the number of logical
+		 * rows covered by the cell.
+		 * 
+		 * @param row
+		 *            the cell's row
+		 * @param column
+		 *            the cell's column
+		 * @param rowSpan
+		 *            the cell's row span
+		 * @throws IndexOutOfBoundsException
+		 */
+		public void setRowSpan(int row, int column, int rowSpan) {
+			ensureElement(row, column).setPropertyInt("rowSpan", rowSpan);
 		}
 	}
 }

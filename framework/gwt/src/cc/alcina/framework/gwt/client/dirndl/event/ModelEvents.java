@@ -31,65 +31,6 @@ public class ModelEvents {
 		}
 	}
 
-	/**
-	 * Allow - say - child components to handle global keyboard shortcut
-	 * triggered events. The top-level component fires an event of this type,
-	 * and they receive and optionally handle it
-	 */
-	public static class TopLevelMissedEvent extends
-			DescendantEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Emitter> {
-		public static Topic<TopLevelMissedEvent> topicNotHandled = Topic
-				.create();
-
-		boolean handled;
-
-		@Override
-		public void dispatch(TopLevelMissedEvent.Handler handler) {
-			handler.onTopLevelMissedEvent(this);
-		}
-
-		@Override
-		protected void onDispatchComplete() {
-			if (!handled) {
-				topicNotHandled.publish(this);
-			}
-		}
-
-		public interface Emitter extends ModelEvent.Emitter {
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onTopLevelMissedEvent(TopLevelMissedEvent event);
-		}
-
-		public void handled() {
-			TopLevelMissedEvent previous = (TopLevelMissedEvent) getContext()
-					.getPrevious().getNodeEvent();
-			previous.handled = true;
-		}
-	}
-
-	public static class FilterContents extends
-			DescendantEvent<Object, FilterContents.Handler, FilterContents.Emitter> {
-		@Override
-		public void dispatch(FilterContents.Handler handler) {
-			handler.onFilterContents(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onFilterContents(FilterContents event);
-		}
-
-		public interface Emitter extends ModelEvent.Emitter {
-		}
-
-		public String provideFilterValue() {
-			ModelEvents.Input triggeringInput = getContext()
-					.getPreviousEvent(ModelEvents.Input.class);
-			return triggeringInput.getCurrentValue();
-		}
-	}
-
 	public static class Back extends ModelEvent<Object, Back.Handler> {
 		@Override
 		public void dispatch(Back.Handler handler) {
@@ -282,6 +223,43 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onFilter(Filter event);
 		}
+	}
+
+	public static class FilterContents extends
+			DescendantEvent<Object, FilterContents.Handler, FilterContents.Emitter> {
+		@Override
+		public void dispatch(FilterContents.Handler handler) {
+			handler.onFilterContents(this);
+		}
+
+		public String provideFilterValue() {
+			ModelEvents.Input triggeringInput = getContext()
+					.getPreviousEvent(ModelEvents.Input.class);
+			return triggeringInput.getCurrentValue();
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFilterContents(FilterContents event);
+		}
+	}
+
+	public interface FilterContentsElement {
+		boolean matchesFilter(String filterString);
+	}
+
+	public interface FilterContentsFilterable extends FilterContents.Handler {
+		boolean matchesFilter(String filterString);
+
+		@Override
+		default void onFilterContents(FilterContents event) {
+			String filterValue = event.provideFilterValue();
+			setVisible(matchesFilter(filterValue));
+		}
+
+		void setVisible(boolean visible);
 	}
 
 	public static class Find extends ModelEvent<Object, Find.Handler> {
@@ -515,6 +493,44 @@ public class ModelEvents {
 	}
 
 	/**
+	 * Allow - say - child components to handle global keyboard shortcut
+	 * triggered events. The top-level component fires an event of this type,
+	 * and they receive and optionally handle it
+	 */
+	public static class TopLevelMissedEvent extends
+			DescendantEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Emitter> {
+		public static Topic<TopLevelMissedEvent> topicNotHandled = Topic
+				.create();
+
+		boolean handled;
+
+		@Override
+		public void dispatch(TopLevelMissedEvent.Handler handler) {
+			handler.onTopLevelMissedEvent(this);
+		}
+
+		public void handled() {
+			TopLevelMissedEvent previous = (TopLevelMissedEvent) getContext()
+					.getPrevious().getNodeEvent();
+			previous.handled = true;
+		}
+
+		@Override
+		protected void onDispatchComplete() {
+			if (!handled) {
+				topicNotHandled.publish(this);
+			}
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onTopLevelMissedEvent(TopLevelMissedEvent event);
+		}
+	}
+
+	/**
 	 * The nested model knows (with its cleverness) that it's the source of the
 	 * transform. But of course the ancestor decides whether it should refresh
 	 * the transform
@@ -547,21 +563,5 @@ public class ModelEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onView(View event);
 		}
-	}
-
-	public interface FilterContentsFilterable extends FilterContents.Handler {
-		@Override
-		default void onFilterContents(FilterContents event) {
-			String filterValue = event.provideFilterValue();
-			setVisible(matchesFilter(filterValue));
-		}
-
-		boolean matchesFilter(String filterString);
-
-		void setVisible(boolean visible);
-	}
-
-	public interface FilterContentsElement {
-		boolean matchesFilter(String filterString);
 	}
 }

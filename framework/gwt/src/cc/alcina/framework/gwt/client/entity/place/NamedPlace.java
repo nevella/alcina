@@ -30,17 +30,6 @@ public abstract class NamedPlace extends BasePlace {
 	public static class Tokenizer extends BasePlaceTokenizer<NamedPlace> {
 		Map<String, ClassReflector<? extends NamedPlace>> byName;
 
-		@Override
-		public String getPrefix() {
-			return "";
-		}
-
-		@Override
-		public boolean handles(String token) {
-			ensureLookup();
-			return byName.containsKey(token);
-		}
-
 		private void ensureLookup() {
 			if (byName == null) {
 				Map<String, ClassReflector<? extends NamedPlace>> byName = AlcinaCollections
@@ -72,13 +61,8 @@ public abstract class NamedPlace extends BasePlace {
 		}
 
 		@Override
-		protected void getToken0(NamedPlace place) {
-			addTokenPart(place.getName());
-		}
-
-		@Override
-		protected boolean handlesPlaceSubclasses() {
-			return true;
+		public String getPrefix() {
+			return "";
 		}
 
 		ClassReflector<? extends NamedPlace> getReflector(String actionName) {
@@ -90,6 +74,22 @@ public abstract class NamedPlace extends BasePlace {
 				ensureLookup();
 			}
 			return reflector;
+		}
+
+		@Override
+		protected void getToken0(NamedPlace place) {
+			addTokenPart(place.getName());
+		}
+
+		@Override
+		public boolean handles(String token) {
+			ensureLookup();
+			return byName.containsKey(token);
+		}
+
+		@Override
+		protected boolean handlesPlaceSubclasses() {
+			return true;
 		}
 	}
 }

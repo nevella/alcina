@@ -120,6 +120,24 @@ public class ClientSession implements ClosingHandler {
 		}.scheduleRepeating(1000);
 	}
 
+	private void createCookies() {
+		storageCookie = new CrossTabCookie(storageSessionCookieName);
+		storageCookie.setActive(true);
+		persistingChunkCookie = new CrossTabCookie(persistingChunkCookieName);
+	}
+
+	private void deactivateCookies() {
+		if (storageCookie != null) {
+			storageCookie.setActive(false);
+			persistingChunkCookie.setActive(false);
+		}
+	}
+
+	protected void init() {
+		Window.addWindowClosingHandler((ClosingHandler) this);
+		setAppId("alcina");
+	}
+
 	public boolean isInitialObjectsPersisted() {
 		String s = Cookies.getCookie(hasPersistedInitialObjectsCookieName);
 		return s != null && Boolean.valueOf(s);
@@ -162,24 +180,6 @@ public class ClientSession implements ClosingHandler {
 	public void setInitialObjectsPersisted(boolean initialObjectsPersisted) {
 		Cookies.setCookie(hasPersistedInitialObjectsCookieName,
 				String.valueOf(initialObjectsPersisted));
-	}
-
-	private void createCookies() {
-		storageCookie = new CrossTabCookie(storageSessionCookieName);
-		storageCookie.setActive(true);
-		persistingChunkCookie = new CrossTabCookie(persistingChunkCookieName);
-	}
-
-	private void deactivateCookies() {
-		if (storageCookie != null) {
-			storageCookie.setActive(false);
-			persistingChunkCookie.setActive(false);
-		}
-	}
-
-	protected void init() {
-		Window.addWindowClosingHandler((ClosingHandler) this);
-		setAppId("alcina");
 	}
 
 	public static class ClientSessionSingleAccess extends ClientSession {
@@ -245,6 +245,41 @@ public class ClientSession implements ClosingHandler {
 			}
 		}
 
+		protected Map<Long, Long> parseCookie() {
+			Map<Long, Long> result = new LinkedHashMap<Long, Long>();
+			String s = Cookies.getCookie(cookieName);
+			try {
+				if (s != null && !s.isEmpty()) {
+					String[] split = s.split(",");
+					for (int i = 0; i < split.length; i += 2) {
+						result.put(Long.parseLong(split[i]),
+								Long.parseLong(split[i + 1]));
+					}
+				}
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+				Cookies.removeCookie(cookieName);
+			}
+			return result;
+		}
+
+		protected void removeExpiredTabs(Map<Long, Long> m) {
+			StringBuilder sb = new StringBuilder();
+			for (Entry<Long, Long> entry : m.entrySet()) {
+				long ckTabId = entry.getKey();
+				long ckUpdateTime = entry.getValue();
+				if (ckUpdateTime >= (System.currentTimeMillis()
+						- EXPIRES_TIME)) {
+					sb.append(ckTabId);
+					sb.append(",");
+					sb.append(ckUpdateTime);
+					sb.append(",");
+				} else {
+				}
+			}
+			Cookies.setCookie(cookieName, sb.toString());
+		}
+
 		public void setActive(boolean active) {
 			if (active) {
 				if (refreshTimer == null) {
@@ -282,41 +317,6 @@ public class ClientSession implements ClosingHandler {
 				tabId = null;
 			}
 			removeExpiredTabs(m);
-		}
-
-		protected Map<Long, Long> parseCookie() {
-			Map<Long, Long> result = new LinkedHashMap<Long, Long>();
-			String s = Cookies.getCookie(cookieName);
-			try {
-				if (s != null && !s.isEmpty()) {
-					String[] split = s.split(",");
-					for (int i = 0; i < split.length; i += 2) {
-						result.put(Long.parseLong(split[i]),
-								Long.parseLong(split[i + 1]));
-					}
-				}
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-				Cookies.removeCookie(cookieName);
-			}
-			return result;
-		}
-
-		protected void removeExpiredTabs(Map<Long, Long> m) {
-			StringBuilder sb = new StringBuilder();
-			for (Entry<Long, Long> entry : m.entrySet()) {
-				long ckTabId = entry.getKey();
-				long ckUpdateTime = entry.getValue();
-				if (ckUpdateTime >= (System.currentTimeMillis()
-						- EXPIRES_TIME)) {
-					sb.append(ckTabId);
-					sb.append(",");
-					sb.append(ckUpdateTime);
-					sb.append(",");
-				} else {
-				}
-			}
-			Cookies.setCookie(cookieName, sb.toString());
 		}
 	}
 }

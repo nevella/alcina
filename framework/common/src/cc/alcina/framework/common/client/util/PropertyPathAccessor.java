@@ -12,9 +12,8 @@ public class PropertyPathAccessor implements PathAccessor {
 		return paths.computeIfAbsent(path, PropertyPath::new);
 	}
 
-	@Override
-	public boolean hasPropertyKey(Object bean, String path) {
-		return ensurePath(path).hasPath(bean);
+	public Class getPropertyType(Object bean, String path) {
+		return ensurePath(path).getChainedPropertyType(bean);
 	}
 
 	@Override
@@ -23,11 +22,12 @@ public class PropertyPathAccessor implements PathAccessor {
 	}
 
 	@Override
-	public void setPropertyValue(Object bean, String path, Object value) {
-		ensurePath(path).setChainedProperty(bean, value);
+	public boolean hasPropertyKey(Object bean, String path) {
+		return ensurePath(path).hasPath(bean);
 	}
 
-	public Class getPropertyType(Object bean, String path) {
-		return ensurePath(path).getChainedPropertyType(bean);
+	@Override
+	public void setPropertyValue(Object bean, String path, Object value) {
+		ensurePath(path).setChainedProperty(bean, value);
 	}
 }

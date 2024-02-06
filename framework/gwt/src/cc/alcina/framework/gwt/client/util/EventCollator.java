@@ -81,11 +81,6 @@ public class EventCollator<T> {
 
 	boolean runOnCurrentThread;
 
-	public EventCollator(long waitToPerformAction, Runnable runnable) {
-		this(waitToPerformAction, collator -> runnable.run(),
-				Registry.impl(TimerWrapperProvider.class));
-	}
-
 	public EventCollator(long waitToPerformAction,
 			Consumer<EventCollator<T>> action) {
 		this(waitToPerformAction, action,
@@ -100,6 +95,11 @@ public class EventCollator<T> {
 		this.timerWrapperProvider = timerWrapperProvider;
 	}
 
+	public EventCollator(long waitToPerformAction, Runnable runnable) {
+		this(waitToPerformAction, collator -> runnable.run(),
+				Registry.impl(TimerWrapperProvider.class));
+	}
+
 	public void cancel() {
 		if (timer != null) {
 			timer.cancel();
@@ -111,14 +111,6 @@ public class EventCollator<T> {
 				action.accept(this);
 			}
 		}
-	}
-
-	public T getFirstObject() {
-		return this.firstObject;
-	}
-
-	public T getLastObject() {
-		return this.lastObject;
 	}
 
 	public void eventOccurred() {
@@ -148,13 +140,12 @@ public class EventCollator<T> {
 		eventOccurred();
 	}
 
-	public EventCollator
-			withMaxDelayFromFirstEvent(long maxDelayFromFirstEvent) {
-		this.maxDelayFromFirstEvent = maxDelayFromFirstEvent;
-		if (this.maxDelayFromFirstCollatedEvent == 0) {
-			this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstEvent;
-		}
-		return this;
+	public T getFirstObject() {
+		return this.firstObject;
+	}
+
+	public T getLastObject() {
+		return this.lastObject;
 	}
 
 	public EventCollator withMaxDelayFromFirstCollatedEvent(
@@ -162,6 +153,15 @@ public class EventCollator<T> {
 		Preconditions.checkArgument(
 				maxDelayFromFirstCollatedEvent >= maxDelayFromFirstEvent);
 		this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstCollatedEvent;
+		return this;
+	}
+
+	public EventCollator
+			withMaxDelayFromFirstEvent(long maxDelayFromFirstEvent) {
+		this.maxDelayFromFirstEvent = maxDelayFromFirstEvent;
+		if (this.maxDelayFromFirstCollatedEvent == 0) {
+			this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstEvent;
+		}
 		return this;
 	}
 

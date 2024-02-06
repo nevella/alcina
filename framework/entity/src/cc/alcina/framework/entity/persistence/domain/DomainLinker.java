@@ -106,6 +106,10 @@ public class DomainLinker<E extends Entity> {
 		}
 	}
 
+	private DetachedEntityCache cache() {
+		return parent == null ? cache : parent.cache();
+	}
+
 	public String createObjectRefSelect() {
 		fields = DomainStore.writableStore().getFields(clazz).stream()
 				.filter(f -> {
@@ -133,20 +137,6 @@ public class DomainLinker<E extends Entity> {
 			}
 		}
 		return clause;
-	}
-
-	public List<E> linkAndDetach(EntityManager em, String eql) {
-		MethodContext methodContext = MethodContext.instance();
-		if (TransformManager.get().getTransforms().isEmpty()) {
-			methodContext.withExecuteOutsideTransaction(true);
-		}
-		List<Object[]> objs = methodContext
-				.call(() -> em.createQuery(eql).getResultList());
-		return linkAndDetach(objs);
-	}
-
-	private DetachedEntityCache cache() {
-		return parent == null ? cache : parent.cache();
 	}
 
 	private void link(Set<Long> ids, String linkFieldName) {
@@ -178,6 +168,16 @@ public class DomainLinker<E extends Entity> {
 		}
 		queried().addCollection(clazz, ids);
 		linkAndDetach(resultList);
+	}
+
+	public List<E> linkAndDetach(EntityManager em, String eql) {
+		MethodContext methodContext = MethodContext.instance();
+		if (TransformManager.get().getTransforms().isEmpty()) {
+			methodContext.withExecuteOutsideTransaction(true);
+		}
+		List<Object[]> objs = methodContext
+				.call(() -> em.createQuery(eql).getResultList());
+		return linkAndDetach(objs);
 	}
 
 	private List<E> linkAndDetach(List<Object[]> objs) {
@@ -273,38 +273,6 @@ public class DomainLinker<E extends Entity> {
 			}
 		}
 
-		@Override
-		public String toString() {
-			return Ax.format("%s.%s", field.getDeclaringClass().getSimpleName(),
-					field.getName());
-		}
-
-		private Class<? extends Entity> getType() {
-			if (GraphProjection.isGenericEntityType(field)) {
-				Type pt = GraphProjection.getGenericType(field);
-				if (pt instanceof ParameterizedType) {
-					Type genericType = ((ParameterizedType) pt)
-							.getActualTypeArguments()[0];
-					if (genericType instanceof Class) {
-						return (Class<? extends Entity>) genericType;
-					}
-				}
-				throw new RuntimeException();
-			}
-			return (Class<? extends Entity>) field.getType();
-		}
-
-		private boolean isOneToMany() {
-			return Set.class.isAssignableFrom(field.getType());
-		}
-
-		private int offset() {
-			if (offset == -1) {
-				offset = mappings.indexOf(this);
-			}
-			return offset;
-		}
-
 		void apply(Object[] array, E detached) {
 			try {
 				apply0(array, detached);
@@ -333,8 +301,34 @@ public class DomainLinker<E extends Entity> {
 			}
 		}
 
+		private Class<? extends Entity> getType() {
+			if (GraphProjection.isGenericEntityType(field)) {
+				Type pt = GraphProjection.getGenericType(field);
+				if (pt instanceof ParameterizedType) {
+					Type genericType = ((ParameterizedType) pt)
+							.getActualTypeArguments()[0];
+					if (genericType instanceof Class) {
+						return (Class<? extends Entity>) genericType;
+					}
+				}
+				throw new RuntimeException();
+			}
+			return (Class<? extends Entity>) field.getType();
+		}
+
 		boolean isDomainClass() {
 			return DomainStore.writableStore().isCached(getType());
+		}
+
+		private boolean isOneToMany() {
+			return Set.class.isAssignableFrom(field.getType());
+		}
+
+		private int offset() {
+			if (offset == -1) {
+				offset = mappings.indexOf(this);
+			}
+			return offset;
 		}
 
 		void resolve() {
@@ -382,6 +376,12 @@ public class DomainLinker<E extends Entity> {
 
 		String toSelectClause() {
 			return Ax.format("%s.%s.id", alias, field.getName());
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s.%s", field.getDeclaringClass().getSimpleName(),
+					field.getName());
 		}
 	}
 }

@@ -34,6 +34,10 @@ public abstract class LoginConsort extends Consort<State> {
 	public LoginConsort() {
 	}
 
+	ReflectiveLoginRemoteServiceAsync getAsyncService() {
+		return Registry.impl(ReflectiveLoginRemoteServiceAsync.class);
+	}
+
 	public LoginResponse getLastResponse() {
 		return lastResponse;
 	}
@@ -42,8 +46,55 @@ public abstract class LoginConsort extends Consort<State> {
 		return "Please enter your password";
 	}
 
+	protected abstract String getTitleText();
+
 	public String getUsernamePageSubtitleText() {
 		return "Enter your email to log in";
+	}
+
+	protected void handleSuccess(LoginResponse response) {
+		boolean hasRequestUsername = Ax.notBlank(request.getUserName());
+		if (!hasRequestUsername) {
+			clearReachedStates();
+			nudge();
+			//
+			return;
+		}
+		if (Ax.notBlank(response.getErrorMsg())) {
+			topicMessage.publish(response.getErrorMsg());
+			return;
+		}
+		boolean hasRequestPassword = Ax.notBlank(request.getPassword());
+		if (response.getStates()
+				.contains(LoginResponseState.Username_not_found)) {
+			handleUsernameNotFound();
+			return;
+		}
+		addState(State.Got_username);
+		if (!hasRequestPassword) {
+			wasPlayed(playing.get(0));
+			return;
+		}
+		if (response.getStates().contains(LoginResponseState.Password_incorrect)
+				|| response.getStates()
+						.contains(LoginResponseState.Invalid_credentials)) {
+			return;
+		}
+		addState(State.Got_password);
+		if (response.getStates()
+				.contains(LoginResponseState.Two_factor_code_required)) {
+			wasPlayed(playing.get(0));
+			return;
+		}
+		if (response.getStates()
+				.contains(LoginResponseState.Account_cannot_login)) {
+			return;
+		}
+		wasPlayed(playing.get(0), Collections.singleton(State.Got_2fa_code));
+	}
+
+	protected void handleUsernameNotFound() {
+		// for subclasses, e.g. show a 'sign up' dialog
 	}
 
 	public void init(Consumer<Model> modelRenderer) {
@@ -92,61 +143,6 @@ public abstract class LoginConsort extends Consort<State> {
 				.contains(LoginResponseState.Two_factor_qr_code_required);
 	}
 
-	protected abstract String getTitleText();
-
-	protected void handleSuccess(LoginResponse response) {
-		boolean hasRequestUsername = Ax.notBlank(request.getUserName());
-		if (!hasRequestUsername) {
-			clearReachedStates();
-			nudge();
-			//
-			return;
-		}
-		if (Ax.notBlank(response.getErrorMsg())) {
-			topicMessage.publish(response.getErrorMsg());
-			return;
-		}
-		boolean hasRequestPassword = Ax.notBlank(request.getPassword());
-		if (response.getStates()
-				.contains(LoginResponseState.Username_not_found)) {
-			handleUsernameNotFound();
-			return;
-		}
-		addState(State.Got_username);
-		if (!hasRequestPassword) {
-			wasPlayed(playing.get(0));
-			return;
-		}
-		if (response.getStates().contains(LoginResponseState.Password_incorrect)
-				|| response.getStates()
-						.contains(LoginResponseState.Invalid_credentials)) {
-			return;
-		}
-		addState(State.Got_password);
-		if (response.getStates()
-				.contains(LoginResponseState.Two_factor_code_required)) {
-			wasPlayed(playing.get(0));
-			return;
-		}
-		if (response.getStates()
-				.contains(LoginResponseState.Account_cannot_login)) {
-			return;
-		}
-		wasPlayed(playing.get(0), Collections.singleton(State.Got_2fa_code));
-	}
-
-	protected void handleUsernameNotFound() {
-		// for subclasses, e.g. show a 'sign up' dialog
-	}
-
-	ReflectiveLoginRemoteServiceAsync getAsyncService() {
-		return Registry.impl(ReflectiveLoginRemoteServiceAsync.class);
-	}
-
-	public enum State {
-		Got_username, Got_password, Got_2fa_code
-	}
-
 	class Player_Got_2fa extends EnumPlayer<State> {
 		public Player_Got_2fa() {
 			super(State.Got_2fa_code);
@@ -181,5 +177,9 @@ public abstract class LoginConsort extends Consort<State> {
 		public void run() {
 			modelRenderer.accept(new LoginPageUsername(LoginConsort.this));
 		}
+	}
+
+	public enum State {
+		Got_username, Got_password, Got_2fa_code
 	}
 }

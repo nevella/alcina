@@ -26,11 +26,6 @@ public class LoginPageUsername extends LoginPage
 		setContents(input);
 	}
 
-	@Override
-	public void onCancel(Cancel event) {
-		History.back();
-	}
-
 	protected String getEmailAddress() {
 		return "Email address";
 	}
@@ -60,6 +55,11 @@ public class LoginPageUsername extends LoginPage
 						.add(new EmailAddressValidator())
 				: new NotNullValidator();
 		return validator;
+	}
+
+	@Override
+	public void onCancel(Cancel event) {
+		History.back();
 	}
 
 	@Override

@@ -27,6 +27,14 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 		this.endpointCallback = endpointCallback;
 	}
 
+	protected E finalState() {
+		return Ax.last(Arrays.asList(getStates()));
+	}
+
+	protected E[] getStates() {
+		return enumClass.getEnumConstants();
+	}
+
 	public boolean isAsynchronous() {
 		return this.asynchronous;
 	}
@@ -54,13 +62,6 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 		this.asynchronous = asynchronous;
 	}
 
-	@Override
-	public void start() {
-		setupPlayers();
-		this.startTime = System.currentTimeMillis();
-		super.start();
-	}
-
 	private void setupPlayers() {
 		// may not be in the natural ordering
 		E[] states = getStates();
@@ -71,12 +72,11 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 		addEndpointPlayer(endpointCallback, true);
 	}
 
-	protected E finalState() {
-		return Ax.last(Arrays.asList(getStates()));
-	}
-
-	protected E[] getStates() {
-		return enumClass.getEnumConstants();
+	@Override
+	public void start() {
+		setupPlayers();
+		this.startTime = System.currentTimeMillis();
+		super.start();
 	}
 
 	protected void timedOut(AllStatesPlayer allStatesPlayer, E state) {

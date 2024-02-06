@@ -77,6 +77,14 @@ public class SqlUtils {
 		}
 	}
 
+	static List<String> getColumnNames(ResultSet rs) throws SQLException {
+		List<String> columnNames = new ArrayList<String>();
+		for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+			columnNames.add(rs.getMetaData().getColumnName(i));
+		}
+		return columnNames;
+	}
+
 	public static <T> List<T> getMapped(Statement statement, String sql,
 			ThrowingFunction<ResultSet, T> mapper) {
 		try {
@@ -162,6 +170,39 @@ public class SqlUtils {
 		return values;
 	}
 
+	private static void maybeLogQuery(String sql) {
+		System.out.println(
+				"Query: " + CommonUtils.trimToWsChars(sql, 2000, true));
+	}
+
+	private static Set<Long> toIdList(ResultSet rs, String fieldName)
+			throws SQLException {
+		int log = CommonUtils
+				.iv(LooseContext.getInteger(CONTEXT_LOG_EVERY_X_RECORDS));
+		Set<Long> result = new TreeSet<Long>();
+		while (rs.next()) {
+			result.add(rs.getLong(fieldName));
+			if (log > 0 && result.size() % log == 0) {
+				System.out.println(result.size() + "...");
+			}
+		}
+		return result;
+	}
+
+	private static Map<Long, Long> toIdMap(ResultSet rs, String fn1, String fn2)
+			throws SQLException {
+		int log = CommonUtils
+				.iv(LooseContext.getInteger(CONTEXT_LOG_EVERY_X_RECORDS));
+		Map<Long, Long> result = new TreeMap<Long, Long>();
+		while (rs.next()) {
+			result.put(rs.getLong(fn1), rs.getLong(fn2));
+			if (log > 0 && result.size() % log == 0) {
+				System.out.println(result.size() + "...");
+			}
+		}
+		return result;
+	}
+
 	public static Map<Long, Long> toIdMap(Statement statement, String sql,
 			String fn1, String fn2) throws SQLException {
 		MetricLogging.get().start("query");
@@ -231,47 +272,6 @@ public class SqlUtils {
 		rs.close();
 		MetricLogging.get().end("query");
 		return result;
-	}
-
-	private static void maybeLogQuery(String sql) {
-		System.out.println(
-				"Query: " + CommonUtils.trimToWsChars(sql, 2000, true));
-	}
-
-	private static Set<Long> toIdList(ResultSet rs, String fieldName)
-			throws SQLException {
-		int log = CommonUtils
-				.iv(LooseContext.getInteger(CONTEXT_LOG_EVERY_X_RECORDS));
-		Set<Long> result = new TreeSet<Long>();
-		while (rs.next()) {
-			result.add(rs.getLong(fieldName));
-			if (log > 0 && result.size() % log == 0) {
-				System.out.println(result.size() + "...");
-			}
-		}
-		return result;
-	}
-
-	private static Map<Long, Long> toIdMap(ResultSet rs, String fn1, String fn2)
-			throws SQLException {
-		int log = CommonUtils
-				.iv(LooseContext.getInteger(CONTEXT_LOG_EVERY_X_RECORDS));
-		Map<Long, Long> result = new TreeMap<Long, Long>();
-		while (rs.next()) {
-			result.put(rs.getLong(fn1), rs.getLong(fn2));
-			if (log > 0 && result.size() % log == 0) {
-				System.out.println(result.size() + "...");
-			}
-		}
-		return result;
-	}
-
-	static List<String> getColumnNames(ResultSet rs) throws SQLException {
-		List<String> columnNames = new ArrayList<String>();
-		for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-			columnNames.add(rs.getMetaData().getColumnName(i));
-		}
-		return columnNames;
 	}
 
 	public static interface ColumnFormatter {

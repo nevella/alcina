@@ -62,6 +62,10 @@ public class CollectionRenderingSupport
 		refreshChildren(true);
 	}
 
+	protected Collection getCollection() {
+		return collectionProvider.getCollection();
+	}
+
 	public CollectionProvider getCollectionProvider() {
 		return this.collectionProvider;
 	}
@@ -72,6 +76,11 @@ public class CollectionRenderingSupport
 
 	public Class getListenedClass() {
 		return getCollectionProvider().getCollectionMemberClass();
+	}
+
+	protected NodeFactory getNodeFactory() {
+		NodeFactory nodeFactory = item.getNodeFactory();
+		return nodeFactory != null ? nodeFactory : NodeFactory.get();
 	}
 
 	public PropertyCollectionProvider getPropertyCollectionProvider() {
@@ -111,6 +120,47 @@ public class CollectionRenderingSupport
 	 */
 	public boolean isVolatileOrder() {
 		return volatileOrder;
+	}
+
+	/*
+	 * this could theoretically by O(n^2)...unlikely in the extreme but
+	 */
+	private int[] nextCommonObject(List l1, List l2, int i1, int i2) {
+		int[] res = new int[2];
+		int maxCheckIndex = Math.min(l1.size(), l2.size());
+		boolean matched = false;
+		while (i1 < maxCheckIndex && i2 < maxCheckIndex) {
+			for (int i = 0; i1 + i < maxCheckIndex; i++) {
+				// l1[n] <> l2[n+i]
+				if (i2 + i < l2.size()) {
+					if (l1.get(i1).equals(l2.get(i2 + i))) {
+						i2 = i2 + i;
+						matched = true;
+						break;
+					}
+				}
+				// other way
+				if (i1 + i < l1.size()) {
+					if (l1.get(i1 + i).equals(l2.get(i2))) {
+						i1 = i1 + i;
+						matched = true;
+						break;
+					}
+				}
+			}
+			if (matched) {
+				break;
+			}
+			i1++;
+			i2++;
+		}
+		if (!matched) {
+			i1 = l1.size();
+			i2 = l2.size();
+		}
+		res[0] = i1;
+		res[1] = i2;
+		return res;
 	}
 
 	public void onDetach() {
@@ -224,55 +274,5 @@ public class CollectionRenderingSupport
 
 	public void setVolatileOrder(boolean volatileOrder) {
 		this.volatileOrder = volatileOrder;
-	}
-
-	/*
-	 * this could theoretically by O(n^2)...unlikely in the extreme but
-	 */
-	private int[] nextCommonObject(List l1, List l2, int i1, int i2) {
-		int[] res = new int[2];
-		int maxCheckIndex = Math.min(l1.size(), l2.size());
-		boolean matched = false;
-		while (i1 < maxCheckIndex && i2 < maxCheckIndex) {
-			for (int i = 0; i1 + i < maxCheckIndex; i++) {
-				// l1[n] <> l2[n+i]
-				if (i2 + i < l2.size()) {
-					if (l1.get(i1).equals(l2.get(i2 + i))) {
-						i2 = i2 + i;
-						matched = true;
-						break;
-					}
-				}
-				// other way
-				if (i1 + i < l1.size()) {
-					if (l1.get(i1 + i).equals(l2.get(i2))) {
-						i1 = i1 + i;
-						matched = true;
-						break;
-					}
-				}
-			}
-			if (matched) {
-				break;
-			}
-			i1++;
-			i2++;
-		}
-		if (!matched) {
-			i1 = l1.size();
-			i2 = l2.size();
-		}
-		res[0] = i1;
-		res[1] = i2;
-		return res;
-	}
-
-	protected Collection getCollection() {
-		return collectionProvider.getCollection();
-	}
-
-	protected NodeFactory getNodeFactory() {
-		NodeFactory nodeFactory = item.getNodeFactory();
-		return nodeFactory != null ? nodeFactory : NodeFactory.get();
 	}
 }

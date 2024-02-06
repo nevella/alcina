@@ -78,42 +78,6 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
 		return intLookup() ? containsKey0(key2int(key)) : containsKey0(key);
 	}
 
-	public Iterator entryIterator() {
-		return new EntryIterator();
-	}
-
-	public <V> V get(Object key) {
-		return intLookup() ? get0(key2int(key)) : get0(key);
-	}
-
-	public native JavascriptJavaObjectArray keys()/*-{
-    var v = [];
-    for ( var k in this.keys) {
-      if (this.keys.hasOwnProperty(k)) {
-        var key = this.keys[k];
-        if (this.intLookup && typeof (key) != "Number") {
-          v.push(parseInt(key));
-        } else {
-          v.push(key);
-        }
-      }
-    }
-    return v;
-	}-*/;
-
-	public Object put(Object key, Object value) {
-		return intLookup() ? put0(key2int(key), value) : put0(key, value);
-	}
-
-	public Object remove(Object key) {
-		return intLookup() ? remove0(key2int(key)) : remove0(key);
-	}
-
-	public native int size()/*-{
-    //should really be an assert here...
-    return this.length >= 0 ? this.length : 0;
-	}-*/;
-
 	private native boolean containsKey0(int key)/*-{
     return this.containsKey(key);
 	}-*/;
@@ -121,6 +85,14 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
 	private native boolean containsKey0(Object key)/*-{
     return this.containsKey(key);
 	}-*/;
+
+	public Iterator entryIterator() {
+		return new EntryIterator();
+	}
+
+	public <V> V get(Object key) {
+		return intLookup() ? get0(key2int(key)) : get0(key);
+	}
 
 	private native <V> V get0(int key)/*-{
     return this.get(key);
@@ -138,6 +110,29 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
 		return ((Integer) key).intValue();
 	}
 
+	public native JavascriptJavaObjectArray keys()/*-{
+    var v = [];
+    for ( var k in this.keys) {
+      if (this.keys.hasOwnProperty(k)) {
+        var key = this.keys[k];
+        if (this.intLookup && typeof (key) != "Number") {
+          v.push(parseInt(key));
+        } else {
+          v.push(key);
+        }
+      }
+    }
+    return v;
+	}-*/;
+
+	native int modCount()/*-{
+    return this.modCount;
+	}-*/;
+
+	public Object put(Object key, Object value) {
+		return intLookup() ? put0(key2int(key), value) : put0(key, value);
+	}
+
 	private native Object put0(int key, Object value)/*-{
     return this.put(key, value);
 	}-*/;
@@ -145,6 +140,10 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
 	private native Object put0(Object key, Object value)/*-{
     return this.put(key, value);
 	}-*/;
+
+	public Object remove(Object key) {
+		return intLookup() ? remove0(key2int(key)) : remove0(key);
+	}
 
 	private native Object remove0(int key)/*-{
     return this.remove(key);
@@ -154,8 +153,9 @@ public final class JavascriptKeyableLookup extends JavaScriptObject {
     return this.remove(key);
 	}-*/;
 
-	native int modCount()/*-{
-    return this.modCount;
+	public native int size()/*-{
+    //should really be an assert here...
+    return this.length >= 0 ? this.length : 0;
 	}-*/;
 
 	class EntryIterator implements Iterator {

@@ -11,18 +11,18 @@ public class EndpointPlayer<D> extends RunnablePlayer<D> {
 
 	private boolean continueWithNoExit;
 
+	protected EndpointPlayer(D requiresState) {
+		super();
+		addRequires(requiresState);
+		this.finishes = true;
+	}
+
 	public EndpointPlayer(D requiresState, AsyncCallback completionCallback,
 			boolean finishes) {
 		super();
 		this.completionCallback = completionCallback;
 		this.finishes = finishes;
 		addRequires(requiresState);
-	}
-
-	protected EndpointPlayer(D requiresState) {
-		super();
-		addRequires(requiresState);
-		this.finishes = true;
 	}
 
 	public void continueWithNoExit() {

@@ -33,11 +33,6 @@ public class FeatureFlagProviderServer implements FeatureFlagProvider {
 				.impl(FeatureFlagProvider.class);
 	}
 
-	@Override
-	public boolean isEnabled(Class<?> clazz, String featureName) {
-		return Configuration.is(clazz, featureName);
-	}
-
 	/**
 	 * Make the feature flag provider aware of a feature flag property
 	 * 
@@ -61,5 +56,10 @@ public class FeatureFlagProviderServer implements FeatureFlagProvider {
 			map.put(feature.toString(), feature.get());
 		}
 		return map;
+	}
+
+	@Override
+	public boolean isEnabled(Class<?> clazz, String featureName) {
+		return Configuration.is(clazz, featureName);
 	}
 }

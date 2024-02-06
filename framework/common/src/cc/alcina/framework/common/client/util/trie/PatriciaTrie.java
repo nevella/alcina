@@ -90,6 +90,62 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		super(m);
 	}
 
+	/**
+	 * Returns a key-value mapping associated with the least key greater than or
+	 * equal to the given key, or null if there is no such key.
+	 */
+	TrieEntry<K, V> ceilingEntry(K key) {
+		// Basically:
+		// Follow the steps of adding an entry, but instead...
+		//
+		// - If we ever encounter a situation where we found an equal
+		// key, we return it immediately.
+		//
+		// - If we hit an empty root, return the first iterable item.
+		//
+		// - If we have to add a new item, we temporarily add it,
+		// find the successor to it, then remove the added item.
+		//
+		// These steps ensure that the returned value is either the
+		// entry for the key itself, or the first entry directly after
+		// the key.
+		// TODO: Cleanup so that we don't actually have to add/remove from the
+		// tree. (We do it here because there are other well-defined
+		// functions to perform the search.)
+		int lengthInBits = lengthInBits(key);
+		if (lengthInBits == 0) {
+			if (!root.isEmpty()) {
+				return root;
+			} else {
+				return firstEntry();
+			}
+		}
+		TrieEntry<K, V> found = getNearestEntryForKey(key);
+		if (compareKeys(key, found.getKey())) {
+			return found;
+		}
+		int bitIndex = bitIndex(key, found.getKey());
+		if (Tries.isValidBitIndex(bitIndex)) {
+			TrieEntry<K, V> added = createTrieEntry(key, null, bitIndex);
+			addEntry(added);
+			incrementSize(); // must increment because remove will decrement
+			TrieEntry<K, V> ceil = nextEntry(added);
+			removeEntry(added);
+			modCount -= 2; // we didn't really modify it.
+			return ceil;
+		} else if (Tries.isNullBitKey(bitIndex)) {
+			if (!root.isEmpty()) {
+				return root;
+			} else {
+				return firstEntry();
+			}
+		} else if (Tries.isEqualBitKey(bitIndex)) {
+			return found;
+		}
+		// we should have exited above.
+		throw new IllegalStateException("invalid lookup: " + key);
+	}
+
 	@Override
 	public Comparator<? super K> comparator() {
 		return keyAnalyzer;
@@ -100,37 +156,46 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		return firstEntry().getKey();
 	}
 
-	@Override
-	public SortedMap<K, V> headMap(K toKey) {
-		return new RangeEntryMap(null, toKey);
-	}
-
-	@Override
-	public K lastKey() {
-		TrieEntry<K, V> entry = lastEntry();
-		if (entry != null) {
-			return entry.getKey();
-		}
-		return null;
-	}
-
-	@Override
-	public SortedMap<K, V> prefixMap(K prefix) {
-		int lengthInBits = lengthInBits(prefix);
+	/**
+	 * Returns a key-value mapping associated with the greatest key less than or
+	 * equal to the given key, or null if there is no such key.
+	 */
+	TrieEntry<K, V> floorEntry(K key) {
+		// TODO: Cleanup so that we don't actually have to add/remove from the
+		// tree. (We do it here because there are other well-defined
+		// functions to perform the search.)
+		int lengthInBits = lengthInBits(key);
 		if (lengthInBits == 0) {
-			return this;
+			if (!root.isEmpty()) {
+				return root;
+			} else {
+				return null;
+			}
 		}
-		return new PrefixRangeMap(prefix);
-	}
-
-	@Override
-	public SortedMap<K, V> subMap(K fromKey, K toKey) {
-		return new RangeEntryMap(fromKey, toKey);
-	}
-
-	@Override
-	public SortedMap<K, V> tailMap(K fromKey) {
-		return new RangeEntryMap(fromKey, null);
+		TrieEntry<K, V> found = getNearestEntryForKey(key);
+		if (compareKeys(key, found.getKey())) {
+			return found;
+		}
+		int bitIndex = bitIndex(key, found.getKey());
+		if (Tries.isValidBitIndex(bitIndex)) {
+			TrieEntry<K, V> added = createTrieEntry(key, null, bitIndex);
+			addEntry(added);
+			incrementSize(); // must increment because remove will decrement
+			TrieEntry<K, V> floor = previousEntry(added);
+			removeEntry(added);
+			modCount -= 2; // we didn't really modify it.
+			return floor;
+		} else if (Tries.isNullBitKey(bitIndex)) {
+			if (!root.isEmpty()) {
+				return root;
+			} else {
+				return null;
+			}
+		} else if (Tries.isEqualBitKey(bitIndex)) {
+			return found;
+		}
+		// we should have exited above.
+		throw new IllegalStateException("invalid lookup: " + key);
 	}
 
 	/**
@@ -146,6 +211,11 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 			node = node.getRight();
 		}
 		return node.getRight();
+	}
+
+	@Override
+	public SortedMap<K, V> headMap(K toKey) {
+		return new RangeEntryMap(null, toKey);
 	}
 
 	/**
@@ -213,6 +283,62 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		return followRight(root.getLeft());
 	}
 
+	@Override
+	public K lastKey() {
+		TrieEntry<K, V> entry = lastEntry();
+		if (entry != null) {
+			return entry.getKey();
+		}
+		return null;
+	}
+
+	/**
+	 * Returns a key-value mapping associated with the greatest key strictly
+	 * less than the given key, or null if there is no such key.
+	 */
+	TrieEntry<K, V> lowerEntry(K key) {
+		// Basically:
+		// Follow the steps of adding an entry, but instead...
+		//
+		// - If we ever encounter a situation where we found an equal
+		// key, we return it's previousEntry immediately.
+		//
+		// - If we hit root (empty or not), return null.
+		//
+		// - If we have to add a new item, we temporarily add it,
+		// find the previousEntry to it, then remove the added item.
+		//
+		// These steps ensure that the returned value is always just before
+		// the key or null (if there was nothing before it).
+		// TODO: Cleanup so that we don't actually have to add/remove from the
+		// tree. (We do it here because there are other well-defined
+		// functions to perform the search.)
+		int lengthInBits = lengthInBits(key);
+		if (lengthInBits == 0) {
+			return null; // there can never be anything before root.
+		}
+		TrieEntry<K, V> found = getNearestEntryForKey(key);
+		if (compareKeys(key, found.getKey())) {
+			return previousEntry(found);
+		}
+		int bitIndex = bitIndex(key, found.getKey());
+		if (Tries.isValidBitIndex(bitIndex)) {
+			TrieEntry<K, V> added = createTrieEntry(key, null, bitIndex);
+			addEntry(added);
+			incrementSize(); // must increment because remove will decrement
+			TrieEntry<K, V> prior = previousEntry(added);
+			removeEntry(added);
+			modCount -= 2; // we didn't really modify it.
+			return prior;
+		} else if (Tries.isNullBitKey(bitIndex)) {
+			return null;
+		} else if (Tries.isEqualBitKey(bitIndex)) {
+			return previousEntry(found);
+		}
+		// we should have exited above.
+		throw new IllegalStateException("invalid lookup: " + key);
+	}
+
 	/**
 	 * Returns the entry lexicographically after the given entry. If the given
 	 * entry is null, returns the first node.
@@ -227,6 +353,15 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		} else {
 			return nextEntryImpl(node.getPredecessor(), node, parentOfSubtree);
 		}
+	}
+
+	@Override
+	public SortedMap<K, V> prefixMap(K prefix) {
+		int lengthInBits = lengthInBits(prefix);
+		if (lengthInBits == 0) {
+			return this;
+		}
+		return new PrefixRangeMap(prefix);
 	}
 
 	/**
@@ -284,6 +419,11 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		}
 	}
 
+	@Override
+	public SortedMap<K, V> subMap(K fromKey, K toKey) {
+		return new RangeEntryMap(fromKey, toKey);
+	}
+
 	/**
 	 * Finds the subtree that contains the prefix.
 	 * 
@@ -333,149 +473,9 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		return entry;
 	}
 
-	/**
-	 * Returns a key-value mapping associated with the least key greater than or
-	 * equal to the given key, or null if there is no such key.
-	 */
-	TrieEntry<K, V> ceilingEntry(K key) {
-		// Basically:
-		// Follow the steps of adding an entry, but instead...
-		//
-		// - If we ever encounter a situation where we found an equal
-		// key, we return it immediately.
-		//
-		// - If we hit an empty root, return the first iterable item.
-		//
-		// - If we have to add a new item, we temporarily add it,
-		// find the successor to it, then remove the added item.
-		//
-		// These steps ensure that the returned value is either the
-		// entry for the key itself, or the first entry directly after
-		// the key.
-		// TODO: Cleanup so that we don't actually have to add/remove from the
-		// tree. (We do it here because there are other well-defined
-		// functions to perform the search.)
-		int lengthInBits = lengthInBits(key);
-		if (lengthInBits == 0) {
-			if (!root.isEmpty()) {
-				return root;
-			} else {
-				return firstEntry();
-			}
-		}
-		TrieEntry<K, V> found = getNearestEntryForKey(key);
-		if (compareKeys(key, found.getKey())) {
-			return found;
-		}
-		int bitIndex = bitIndex(key, found.getKey());
-		if (Tries.isValidBitIndex(bitIndex)) {
-			TrieEntry<K, V> added = createTrieEntry(key, null, bitIndex);
-			addEntry(added);
-			incrementSize(); // must increment because remove will decrement
-			TrieEntry<K, V> ceil = nextEntry(added);
-			removeEntry(added);
-			modCount -= 2; // we didn't really modify it.
-			return ceil;
-		} else if (Tries.isNullBitKey(bitIndex)) {
-			if (!root.isEmpty()) {
-				return root;
-			} else {
-				return firstEntry();
-			}
-		} else if (Tries.isEqualBitKey(bitIndex)) {
-			return found;
-		}
-		// we should have exited above.
-		throw new IllegalStateException("invalid lookup: " + key);
-	}
-
-	/**
-	 * Returns a key-value mapping associated with the greatest key less than or
-	 * equal to the given key, or null if there is no such key.
-	 */
-	TrieEntry<K, V> floorEntry(K key) {
-		// TODO: Cleanup so that we don't actually have to add/remove from the
-		// tree. (We do it here because there are other well-defined
-		// functions to perform the search.)
-		int lengthInBits = lengthInBits(key);
-		if (lengthInBits == 0) {
-			if (!root.isEmpty()) {
-				return root;
-			} else {
-				return null;
-			}
-		}
-		TrieEntry<K, V> found = getNearestEntryForKey(key);
-		if (compareKeys(key, found.getKey())) {
-			return found;
-		}
-		int bitIndex = bitIndex(key, found.getKey());
-		if (Tries.isValidBitIndex(bitIndex)) {
-			TrieEntry<K, V> added = createTrieEntry(key, null, bitIndex);
-			addEntry(added);
-			incrementSize(); // must increment because remove will decrement
-			TrieEntry<K, V> floor = previousEntry(added);
-			removeEntry(added);
-			modCount -= 2; // we didn't really modify it.
-			return floor;
-		} else if (Tries.isNullBitKey(bitIndex)) {
-			if (!root.isEmpty()) {
-				return root;
-			} else {
-				return null;
-			}
-		} else if (Tries.isEqualBitKey(bitIndex)) {
-			return found;
-		}
-		// we should have exited above.
-		throw new IllegalStateException("invalid lookup: " + key);
-	}
-
-	/**
-	 * Returns a key-value mapping associated with the greatest key strictly
-	 * less than the given key, or null if there is no such key.
-	 */
-	TrieEntry<K, V> lowerEntry(K key) {
-		// Basically:
-		// Follow the steps of adding an entry, but instead...
-		//
-		// - If we ever encounter a situation where we found an equal
-		// key, we return it's previousEntry immediately.
-		//
-		// - If we hit root (empty or not), return null.
-		//
-		// - If we have to add a new item, we temporarily add it,
-		// find the previousEntry to it, then remove the added item.
-		//
-		// These steps ensure that the returned value is always just before
-		// the key or null (if there was nothing before it).
-		// TODO: Cleanup so that we don't actually have to add/remove from the
-		// tree. (We do it here because there are other well-defined
-		// functions to perform the search.)
-		int lengthInBits = lengthInBits(key);
-		if (lengthInBits == 0) {
-			return null; // there can never be anything before root.
-		}
-		TrieEntry<K, V> found = getNearestEntryForKey(key);
-		if (compareKeys(key, found.getKey())) {
-			return previousEntry(found);
-		}
-		int bitIndex = bitIndex(key, found.getKey());
-		if (Tries.isValidBitIndex(bitIndex)) {
-			TrieEntry<K, V> added = createTrieEntry(key, null, bitIndex);
-			addEntry(added);
-			incrementSize(); // must increment because remove will decrement
-			TrieEntry<K, V> prior = previousEntry(added);
-			removeEntry(added);
-			modCount -= 2; // we didn't really modify it.
-			return prior;
-		} else if (Tries.isNullBitKey(bitIndex)) {
-			return null;
-		} else if (Tries.isEqualBitKey(bitIndex)) {
-			return previousEntry(found);
-		}
-		// we should have exited above.
-		throw new IllegalStateException("invalid lookup: " + key);
+	@Override
+	public SortedMap<K, V> tailMap(K fromKey) {
+		return new RangeEntryMap(fromKey, null);
 	}
 
 	/**
@@ -541,6 +541,11 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 			}
 
 			@Override
+			protected TrieEntry<K, V> findNext(TrieEntry<K, V> prior) {
+				return PatriciaTrie.this.nextEntryInSubtree(prior, subtree);
+			}
+
+			@Override
 			public Map.Entry<K, V> next() {
 				Map.Entry<K, V> entry = nextEntry();
 				if (lastOne) {
@@ -570,11 +575,6 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 				if (lengthInBits(prefix) >= subtree.getBitIndex()) {
 					lastOne = true;
 				}
-			}
-
-			@Override
-			protected TrieEntry<K, V> findNext(TrieEntry<K, V> prior) {
-				return PatriciaTrie.this.nextEntryInSubtree(prior, subtree);
 			}
 		}
 
@@ -638,6 +638,18 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		}
 
 		@Override
+		protected Set<Map.Entry<K, V>> createEntrySet() {
+			return new PrefixRangeEntrySet(this);
+		}
+
+		@Override
+		protected SortedMap<K, V> createRangeMap(K fromKey,
+				boolean fromInclusive, K toKey, boolean toInclusive) {
+			return new RangeEntryMap(fromKey, fromInclusive, toKey,
+					toInclusive);
+		}
+
+		@Override
 		public K firstKey() {
 			fixup();
 			Map.Entry<K, V> e = null;
@@ -651,42 +663,6 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 				throw new NoSuchElementException();
 			}
 			return first;
-		}
-
-		@Override
-		public K getFromKey() {
-			return fromKey;
-		}
-
-		@Override
-		public K getToKey() {
-			return toKey;
-		}
-
-		@Override
-		public boolean isFromInclusive() {
-			return false;
-		}
-
-		@Override
-		public boolean isToInclusive() {
-			return false;
-		}
-
-		@Override
-		public K lastKey() {
-			fixup();
-			Map.Entry<K, V> e = null;
-			if (toKey == null) {
-				e = lastEntry();
-			} else {
-				e = lowerEntry(toKey);
-			}
-			K last = e != null ? e.getKey() : null;
-			if (e == null || !isPrefix(last, prefix)) {
-				throw new NoSuchElementException();
-			}
-			return last;
 		}
 
 		/**
@@ -727,15 +703,13 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		}
 
 		@Override
-		protected Set<Map.Entry<K, V>> createEntrySet() {
-			return new PrefixRangeEntrySet(this);
+		public K getFromKey() {
+			return fromKey;
 		}
 
 		@Override
-		protected SortedMap<K, V> createRangeMap(K fromKey,
-				boolean fromInclusive, K toKey, boolean toInclusive) {
-			return new RangeEntryMap(fromKey, fromInclusive, toKey,
-					toInclusive);
+		public K getToKey() {
+			return toKey;
 		}
 
 		/**
@@ -771,6 +745,32 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		@Override
 		protected boolean inToRange(K key, boolean forceInclusive) {
 			return isPrefix(key, prefix);
+		}
+
+		@Override
+		public boolean isFromInclusive() {
+			return false;
+		}
+
+		@Override
+		public boolean isToInclusive() {
+			return false;
+		}
+
+		@Override
+		public K lastKey() {
+			fixup();
+			Map.Entry<K, V> e = null;
+			if (toKey == null) {
+				e = lastEntry();
+			} else {
+				e = lowerEntry(toKey);
+			}
+			K last = e != null ? e.getKey() : null;
+			if (e == null || !isPrefix(last, prefix)) {
+				throw new NoSuchElementException();
+			}
+			return last;
 		}
 	}
 
@@ -822,6 +822,18 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		 */
 		protected RangeEntryMap(K fromKey, K toKey) {
 			this(fromKey, true, toKey, false);
+		}
+
+		@Override
+		protected Set<Entry<K, V>> createEntrySet() {
+			return new RangeEntrySet(this);
+		}
+
+		@Override
+		protected SortedMap<K, V> createRangeMap(K fromKey,
+				boolean fromInclusive, K toKey, boolean toInclusive) {
+			return new RangeEntryMap(fromKey, fromInclusive, toKey,
+					toInclusive);
 		}
 
 		@Override
@@ -880,18 +892,6 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 				throw new NoSuchElementException();
 			}
 			return last;
-		}
-
-		@Override
-		protected Set<Entry<K, V>> createEntrySet() {
-			return new RangeEntrySet(this);
-		}
-
-		@Override
-		protected SortedMap<K, V> createRangeMap(K fromKey,
-				boolean fromInclusive, K toKey, boolean toInclusive) {
-			return new RangeEntryMap(fromKey, fromInclusive, toKey,
-					toInclusive);
 		}
 	}
 
@@ -1040,6 +1040,18 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 			return PatriciaTrie.this.containsKey(key);
 		}
 
+		/**
+		 * Creates and returns an {@link #entrySet()} view of the
+		 * {@link RangeMap}
+		 */
+		protected abstract Set<Map.Entry<K, V>> createEntrySet();
+
+		/**
+		 * Creates and returns a sub-range view of the current {@link RangeMap}
+		 */
+		protected abstract SortedMap<K, V> createRangeMap(K fromKey,
+				boolean fromInclusive, K toKey, boolean toInclusive);
+
 		@Override
 		public Set<Map.Entry<K, V>> entrySet() {
 			if (entrySet == null) {
@@ -1056,69 +1068,6 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 			return PatriciaTrie.this.get(key);
 		}
 
-		@Override
-		public SortedMap<K, V> headMap(K toKey) {
-			if (!inRange2(toKey)) {
-				throw new IllegalArgumentException(
-						"ToKey is out of range: " + toKey);
-			}
-			return createRangeMap(getFromKey(), isFromInclusive(), toKey,
-					isToInclusive());
-		}
-
-		@Override
-		public V put(K key, V value) {
-			if (!inRange(key)) {
-				throw new IllegalArgumentException(
-						"Key is out of range: " + key);
-			}
-			return PatriciaTrie.this.put(key, value);
-		}
-
-		@Override
-		public V remove(Object key) {
-			if (!inRange(Tries.<K> cast(key))) {
-				return null;
-			}
-			return PatriciaTrie.this.remove(key);
-		}
-
-		@Override
-		public SortedMap<K, V> subMap(K fromKey, K toKey) {
-			if (!inRange2(fromKey)) {
-				throw new IllegalArgumentException(
-						"FromKey is out of range: " + fromKey);
-			}
-			if (!inRange2(toKey)) {
-				throw new IllegalArgumentException(
-						"ToKey is out of range: " + toKey);
-			}
-			return createRangeMap(fromKey, isFromInclusive(), toKey,
-					isToInclusive());
-		}
-
-		@Override
-		public SortedMap<K, V> tailMap(K fromKey) {
-			if (!inRange2(fromKey)) {
-				throw new IllegalArgumentException(
-						"FromKey is out of range: " + fromKey);
-			}
-			return createRangeMap(fromKey, isFromInclusive(), getToKey(),
-					isToInclusive());
-		}
-
-		/**
-		 * Creates and returns an {@link #entrySet()} view of the
-		 * {@link RangeMap}
-		 */
-		protected abstract Set<Map.Entry<K, V>> createEntrySet();
-
-		/**
-		 * Creates and returns a sub-range view of the current {@link RangeMap}
-		 */
-		protected abstract SortedMap<K, V> createRangeMap(K fromKey,
-				boolean fromInclusive, K toKey, boolean toInclusive);
-
 		/**
 		 * Returns the FROM Key
 		 */
@@ -1128,6 +1077,16 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		 * Returns the TO Key
 		 */
 		protected abstract K getToKey();
+
+		@Override
+		public SortedMap<K, V> headMap(K toKey) {
+			if (!inRange2(toKey)) {
+				throw new IllegalArgumentException(
+						"ToKey is out of range: " + toKey);
+			}
+			return createRangeMap(getFromKey(), isFromInclusive(), toKey,
+					isToInclusive());
+		}
 
 		/**
 		 * Returns true if the provided key is in the FROM range of the
@@ -1189,5 +1148,46 @@ public class PatriciaTrie<K, V> extends AbstractPatriciaTrie<K, V>
 		 * Whether or not the {@link #getToKey()} is in the range
 		 */
 		protected abstract boolean isToInclusive();
+
+		@Override
+		public V put(K key, V value) {
+			if (!inRange(key)) {
+				throw new IllegalArgumentException(
+						"Key is out of range: " + key);
+			}
+			return PatriciaTrie.this.put(key, value);
+		}
+
+		@Override
+		public V remove(Object key) {
+			if (!inRange(Tries.<K> cast(key))) {
+				return null;
+			}
+			return PatriciaTrie.this.remove(key);
+		}
+
+		@Override
+		public SortedMap<K, V> subMap(K fromKey, K toKey) {
+			if (!inRange2(fromKey)) {
+				throw new IllegalArgumentException(
+						"FromKey is out of range: " + fromKey);
+			}
+			if (!inRange2(toKey)) {
+				throw new IllegalArgumentException(
+						"ToKey is out of range: " + toKey);
+			}
+			return createRangeMap(fromKey, isFromInclusive(), toKey,
+					isToInclusive());
+		}
+
+		@Override
+		public SortedMap<K, V> tailMap(K fromKey) {
+			if (!inRange2(fromKey)) {
+				throw new IllegalArgumentException(
+						"FromKey is out of range: " + fromKey);
+			}
+			return createRangeMap(fromKey, isFromInclusive(), getToKey(),
+					isToInclusive());
+		}
 	}
 }

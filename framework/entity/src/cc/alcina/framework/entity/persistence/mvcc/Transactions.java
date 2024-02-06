@@ -64,6 +64,44 @@ public class Transactions {
 		((MvccObjectVersionsEntity) versions).copyIdFieldsToCurrentVersion();
 	}
 
+	static <T extends MvccObject> T copyObject(T from,
+			boolean withFieldValues) {
+		T clone = null;
+		try {
+			if (from instanceof TransactionalSet) {
+				clone = (T) new TransactionalSet();
+			} else if (from instanceof TransactionalTrieEntry) {
+				clone = (T) new TransactionalTrieEntry();
+			} else {
+				Constructor<T> constructor = copyConstructors
+						.computeIfAbsent(from.getClass(), clazz -> {
+							try {
+								Constructor<T> constructor0 = (Constructor<T>) from
+										.getClass()
+										.getConstructor(new Class[0]);
+								constructor0.setAccessible(true);
+								return constructor0;
+							} catch (Exception e) {
+								throw new WrappedRuntimeException(e);
+							}
+						});
+				clone = constructor.newInstance();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		if (withFieldValues) {
+			ObjectUtil.fieldwiseCopy(from, clone, false, true);
+		}
+		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
+		clone.__setMvccVersions__(__getMvccVersions__);
+		return clone;
+	}
+
+	static <T> void copyObjectFields(T from, T to) {
+		ObjectUtil.fieldwiseCopy(from, to, false, true);
+	}
+
 	public static void enqueueLazyLoad(EntityLocator locator) {
 		synchronized (get().enqueuedLazyLoads) {
 			get().enqueuedLazyLoads.add(locator);
@@ -77,8 +115,20 @@ public class Transactions {
 		}
 	}
 
+	static Transactions get() {
+		return instance;
+	}
+
 	public static List<EntityLocator> getEnqueuedLazyLoads() {
 		return get().getEnqueuedLazyLoads0();
+	}
+
+	// FIXME - mvcc.5 - only implement if performance warrants (as opposed to
+	// current 'synchronize on the object' logic)
+	static Object identityMutex(Object o) {
+		// to avoid synchronizing on o - slower, but means that object can
+		// maintain an identity hashcode
+		throw new UnsupportedOperationException();
 	}
 
 	public static boolean isCommitted(TransactionId committingTxId) {
@@ -241,56 +291,6 @@ public class Transactions {
 		get().waitForAllToCompleteExSelf0();
 	}
 
-	static <T extends MvccObject> T copyObject(T from,
-			boolean withFieldValues) {
-		T clone = null;
-		try {
-			if (from instanceof TransactionalSet) {
-				clone = (T) new TransactionalSet();
-			} else if (from instanceof TransactionalTrieEntry) {
-				clone = (T) new TransactionalTrieEntry();
-			} else {
-				Constructor<T> constructor = copyConstructors
-						.computeIfAbsent(from.getClass(), clazz -> {
-							try {
-								Constructor<T> constructor0 = (Constructor<T>) from
-										.getClass()
-										.getConstructor(new Class[0]);
-								constructor0.setAccessible(true);
-								return constructor0;
-							} catch (Exception e) {
-								throw new WrappedRuntimeException(e);
-							}
-						});
-				clone = constructor.newInstance();
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		if (withFieldValues) {
-			ObjectUtil.fieldwiseCopy(from, clone, false, true);
-		}
-		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
-		clone.__setMvccVersions__(__getMvccVersions__);
-		return clone;
-	}
-
-	static <T> void copyObjectFields(T from, T to) {
-		ObjectUtil.fieldwiseCopy(from, to, false, true);
-	}
-
-	static Transactions get() {
-		return instance;
-	}
-
-	// FIXME - mvcc.5 - only implement if performance warrants (as opposed to
-	// current 'synchronize on the object' logic)
-	static Object identityMutex(Object o) {
-		// to avoid synchronizing on o - slower, but means that object can
-		// maintain an identity hashcode
-		throw new UnsupportedOperationException();
-	}
-
 	private Vacuum vacuum = new Vacuum();
 
 	private AtomicLong transactionIdCounter = new AtomicLong();
@@ -316,87 +316,6 @@ public class Transactions {
 		Configuration.properties.topicInvalidated
 				.add(this::configurationInvalidated);
 		this.configurationInvalidated();
-	}
-
-	public List<Transaction> getCompletedNonDomainTransactions() {
-		synchronized (transactionMetadataLock) {
-			List<Transaction> result = completedNonDomainCommittedTransactions;
-			completedNonDomainCommittedTransactions = new ArrayList<>();
-			return result;
-		}
-	}
-
-	public void onDomainTransactionCommited(Transaction transaction) {
-		synchronized (transactionMetadataLock) {
-			committedTransactions.add(transaction);
-			/*
-			 * these occur sequentially, so transaction will always have the
-			 * highest visible id (for a tx of this type)
-			 */
-			highestVisibleCommittedTransactionId = transaction.getId();
-			committedTransactionIds.add(transaction.getId());
-		}
-	}
-
-	public void onTransactionEnded(Transaction transaction) {
-		synchronized (transactionMetadataLock) {
-			activeTransactions.remove(transaction.getId());
-			switch (transaction.phase) {
-			case TO_DOMAIN_COMMITTED:
-			case VACUUM_ENDED:
-				break;
-			default:
-				completedNonDomainCommittedTransactions.add(transaction);
-				break;
-			}
-			if (transaction.phase != TransactionPhase.VACUUM_ENDED) {
-				vacuum.enqueueVacuum(transaction);
-			}
-		}
-	}
-
-	private void configurationInvalidated() {
-		Transaction.retainStartEndTraces = Configuration.is(Transaction.class,
-				"retainTraces");
-	}
-
-	private TransactionsStats createStats() {
-		return new TransactionsStats();
-	}
-
-	private List<EntityLocator> getEnqueuedLazyLoads0() {
-		synchronized (enqueuedLazyLoads) {
-			List<EntityLocator> result = enqueuedLazyLoads.stream()
-					.collect(Collectors.toList());
-			enqueuedLazyLoads.clear();
-			return result;
-		}
-	}
-
-	private boolean isCommitted0(TransactionId committingTxId) {
-		synchronized (transactionMetadataLock) {
-			return committedTransactionIds.contains(committingTxId);
-		}
-	}
-
-	private void waitForAllToCompleteExSelf0() {
-		while (true) {
-			synchronized (transactionMetadataLock) {
-				Transaction current = Transaction.current();
-				if (activeTransactions.size() == 0) {
-					return;
-				}
-				if (activeTransactions.containsKey(current.getId())
-						&& activeTransactions.size() == 1) {
-					return;
-				}
-			}
-			try {
-				Thread.sleep(100);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
 	}
 
 	void cancelTimedOutTransactions() {
@@ -462,6 +381,32 @@ public class Transactions {
 					}
 				}
 			}
+		}
+	}
+
+	private void configurationInvalidated() {
+		Transaction.retainStartEndTraces = Configuration.is(Transaction.class,
+				"retainTraces");
+	}
+
+	private TransactionsStats createStats() {
+		return new TransactionsStats();
+	}
+
+	public List<Transaction> getCompletedNonDomainTransactions() {
+		synchronized (transactionMetadataLock) {
+			List<Transaction> result = completedNonDomainCommittedTransactions;
+			completedNonDomainCommittedTransactions = new ArrayList<>();
+			return result;
+		}
+	}
+
+	private List<EntityLocator> getEnqueuedLazyLoads0() {
+		synchronized (enqueuedLazyLoads) {
+			List<EntityLocator> result = enqueuedLazyLoads.stream()
+					.collect(Collectors.toList());
+			enqueuedLazyLoads.clear();
+			return result;
 		}
 	}
 
@@ -537,13 +482,68 @@ public class Transactions {
 		}
 	}
 
+	private boolean isCommitted0(TransactionId committingTxId) {
+		synchronized (transactionMetadataLock) {
+			return committedTransactionIds.contains(committingTxId);
+		}
+	}
+
 	void onAddedVacuumable(Transaction transaction, Vacuumable vacuumable) {
 		vacuum.addVacuumable(transaction, vacuumable);
+	}
+
+	public void onDomainTransactionCommited(Transaction transaction) {
+		synchronized (transactionMetadataLock) {
+			committedTransactions.add(transaction);
+			/*
+			 * these occur sequentially, so transaction will always have the
+			 * highest visible id (for a tx of this type)
+			 */
+			highestVisibleCommittedTransactionId = transaction.getId();
+			committedTransactionIds.add(transaction.getId());
+		}
+	}
+
+	public void onTransactionEnded(Transaction transaction) {
+		synchronized (transactionMetadataLock) {
+			activeTransactions.remove(transaction.getId());
+			switch (transaction.phase) {
+			case TO_DOMAIN_COMMITTED:
+			case VACUUM_ENDED:
+				break;
+			default:
+				completedNonDomainCommittedTransactions.add(transaction);
+				break;
+			}
+			if (transaction.phase != TransactionPhase.VACUUM_ENDED) {
+				vacuum.enqueueVacuum(transaction);
+			}
+		}
 	}
 
 	void vacuumComplete(List<Transaction> vacuumableTransactions) {
 		synchronized (transactionMetadataLock) {
 			committedTransactions.removeAll(vacuumableTransactions);
+		}
+	}
+
+	private void waitForAllToCompleteExSelf0() {
+		while (true) {
+			synchronized (transactionMetadataLock) {
+				Transaction current = Transaction.current();
+				if (activeTransactions.size() == 0) {
+					return;
+				}
+				if (activeTransactions.containsKey(current.getId())
+						&& activeTransactions.size() == 1) {
+					return;
+				}
+			}
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 

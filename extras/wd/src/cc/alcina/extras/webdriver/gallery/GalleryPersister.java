@@ -62,6 +62,14 @@ public class GalleryPersister {
 
 	private String build;
 
+	private Map<String, GalleryTuple> nameTuples() {
+		Map<String, GalleryTuple> nameTuples = new LinkedHashMap<>();
+		files.forEach(file -> nameTuples
+				.computeIfAbsent(file.getName(), GalleryTuple::new).put(file));
+		nameTuples.entrySet().removeIf(e -> e.getValue().isInvalid());
+		return nameTuples;
+	}
+
 	public void persist(File base, Element configuration, String userAgentType)
 			throws Exception {
 		this.base = base;
@@ -87,14 +95,6 @@ public class GalleryPersister {
 					() -> updateSheet());
 		}
 		updateViewer();
-	}
-
-	private Map<String, GalleryTuple> nameTuples() {
-		Map<String, GalleryTuple> nameTuples = new LinkedHashMap<>();
-		files.forEach(file -> nameTuples
-				.computeIfAbsent(file.getName(), GalleryTuple::new).put(file));
-		nameTuples.entrySet().removeIf(e -> e.getValue().isInvalid());
-		return nameTuples;
 	}
 
 	private void updateSheet() throws Exception {
@@ -289,11 +289,6 @@ public class GalleryPersister {
 			this.file = file;
 		}
 
-		public String toViewUrl() {
-			return id.equals("none") ? file.getName()
-					: Ax.format("/drive?id=%s", id);
-		}
-
 		String getFileName() {
 			return file.getName();
 		}
@@ -313,6 +308,11 @@ public class GalleryPersister {
 
 		String toPreviewUrl() {
 			return Ax.format("https://drive.google.com/file/d/%s/view", id);
+		}
+
+		public String toViewUrl() {
+			return id.equals("none") ? file.getName()
+					: Ax.format("/drive?id=%s", id);
 		}
 
 		void upload() {
@@ -345,6 +345,10 @@ public class GalleryPersister {
 			}
 		}
 
+		String name() {
+			return name;
+		}
+
 		public void put(GalleryFile file) {
 			if (file.isImage()) {
 				image = file;
@@ -355,10 +359,6 @@ public class GalleryPersister {
 
 		@Override
 		public String toString() {
-			return name;
-		}
-
-		String name() {
 			return name;
 		}
 	}

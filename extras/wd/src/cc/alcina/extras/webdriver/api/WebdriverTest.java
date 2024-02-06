@@ -49,10 +49,6 @@ public abstract class WebdriverTest implements Registration.Ensure {
 
 	private static final String ADD_GWT_CLIENT_SUFFIX = "addGwtClientSuffix";
 
-	public static <T extends WebdriverTest> T current() {
-		return LooseContext.get(CONTEXT_CURRENT_TEST);
-	}
-
 	protected static String addGwtClientUrl(String url) {
 		if (Configuration.key(ADD_GWT_CLIENT_SUFFIX).is()) {
 			String suffix = "?gwt.codesvr=127.0.0.1:9997";
@@ -60,6 +56,10 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		} else {
 			return url;
 		}
+	}
+
+	public static <T extends WebdriverTest> T current() {
+		return LooseContext.get(CONTEXT_CURRENT_TEST);
 	}
 
 	protected int myLevel;
@@ -71,6 +71,16 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	protected transient WDToken token;
 
 	protected transient WdExec exec;
+
+	private boolean cancelDueToError(int level) {
+		if (token.getRootResult()
+				.computeTreeResultType() == TestResultType.ERROR) {
+			token.getWriter().write("cancelled - prior error", level);
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 	// -->dependent tests
 	public Class<? extends WebdriverTest>[] childTests() {
@@ -103,6 +113,16 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		goToUri(uri);
 		token.setLoadedUrl(uri);
 		MetricLogging.get().end(key);
+	}
+
+	protected List<WebdriverTest> getChildTests() {
+		return Arrays.stream(childTests()).map(t -> {
+			try {
+				return t.getDeclaredConstructor().newInstance();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}).collect(Collectors.toList());
 	}
 
 	public StringMap getConfiguration() {
@@ -146,6 +166,20 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return this.result;
 	}
 
+	protected int getRetryCount() {
+		return 1;
+	}
+
+	protected Map<Class<? extends WebdriverTest>, WebdriverTest>
+			getTestTemplates() {
+		if (testTemplates == null) {
+			testTemplates = new HashMap<Class<? extends WebdriverTest>, WebdriverTest>();
+			Registry.query(WebdriverTest.class).implementations()
+					.forEach(t -> testTemplates.put(t.getClass(), t));
+		}
+		return testTemplates;
+	}
+
 	public WDToken getToken() {
 		return this.token;
 	}
@@ -169,8 +203,34 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 	}
 
+	private void goToUri(String url) {
+		Ax.out(" --> " + url);
+		driver().get(url);
+	}
+
+	protected void initialiseContext() {
+		if (configuration != null) {
+			LooseContext.getContext().addProperties(configuration, false);
+		}
+	}
+
 	public boolean noTimePayload() {
 		return false;
+	}
+
+	protected void onAfterProcess() {
+	}
+
+	protected void onBeforeChildTests() {
+	}
+
+	protected void onBeforeDependentTests() {
+	}
+
+	protected void onBeforeProcess() {
+		token.ensureDriver();
+		WebDriver driver = token.getWebDriver();
+		exec = new WdExec().driver(driver).token(token).timeout(5);
 	}
 
 	public void onTimeoutException(TimedOutException timedOutException) {
@@ -225,67 +285,6 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			}
 			LooseContext.pop();
 		}
-	}
-
-	/**
-	 * advertise
-	 *
-	 * @return
-	 */
-	public Enum<?>[] providesUIState() {
-		return new Enum[0];
-	}
-
-	/**
-	 * don't advertise
-	 *
-	 * @return
-	 */
-	public Enum<?>[] returnsUIState() {
-		return new Enum[0];
-	}
-
-	public abstract void run() throws Exception;
-
-	public void setConfiguration(StringMap configuration) {
-		this.configuration = configuration;
-	}
-
-	@Override
-	public String toString() {
-		FormatBuilder builder = new FormatBuilder().separator(" :: ");
-		builder.appendIfNotBlank(getClass().getName());
-		if (result != null && result.getException() != null) {
-			builder.appendIfNotBlank(
-					result.getException().getClass().getSimpleName());
-			builder.appendIfNotBlank(result.getException().getMessage());
-		}
-		return builder.toString();
-	}
-
-	public void uiStateChange(Enum<?> e) {
-		token.getUiStates().put(e.getDeclaringClass(), e);
-	}
-
-	public void uiStateChange(Enum<?>[] enums) {
-		for (Enum<?> e : enums) {
-			uiStateChange(e);
-		}
-	}
-
-	private boolean cancelDueToError(int level) {
-		if (token.getRootResult()
-				.computeTreeResultType() == TestResultType.ERROR) {
-			token.getWriter().write("cancelled - prior error", level);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	private void goToUri(String url) {
-		Ax.out(" --> " + url);
-		driver().get(url);
 	}
 
 	private TestResult process0(int level, TestResult parent) throws Exception {
@@ -405,49 +404,50 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return result;
 	}
 
-	protected List<WebdriverTest> getChildTests() {
-		return Arrays.stream(childTests()).map(t -> {
-			try {
-				return t.getDeclaredConstructor().newInstance();
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
-			}
-		}).collect(Collectors.toList());
+	/**
+	 * advertise
+	 *
+	 * @return
+	 */
+	public Enum<?>[] providesUIState() {
+		return new Enum[0];
 	}
 
-	protected int getRetryCount() {
-		return 1;
+	/**
+	 * don't advertise
+	 *
+	 * @return
+	 */
+	public Enum<?>[] returnsUIState() {
+		return new Enum[0];
 	}
 
-	protected Map<Class<? extends WebdriverTest>, WebdriverTest>
-			getTestTemplates() {
-		if (testTemplates == null) {
-			testTemplates = new HashMap<Class<? extends WebdriverTest>, WebdriverTest>();
-			Registry.query(WebdriverTest.class).implementations()
-					.forEach(t -> testTemplates.put(t.getClass(), t));
+	public abstract void run() throws Exception;
+
+	public void setConfiguration(StringMap configuration) {
+		this.configuration = configuration;
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder builder = new FormatBuilder().separator(" :: ");
+		builder.appendIfNotBlank(getClass().getName());
+		if (result != null && result.getException() != null) {
+			builder.appendIfNotBlank(
+					result.getException().getClass().getSimpleName());
+			builder.appendIfNotBlank(result.getException().getMessage());
 		}
-		return testTemplates;
+		return builder.toString();
 	}
 
-	protected void initialiseContext() {
-		if (configuration != null) {
-			LooseContext.getContext().addProperties(configuration, false);
+	public void uiStateChange(Enum<?> e) {
+		token.getUiStates().put(e.getDeclaringClass(), e);
+	}
+
+	public void uiStateChange(Enum<?>[] enums) {
+		for (Enum<?> e : enums) {
+			uiStateChange(e);
 		}
-	}
-
-	protected void onAfterProcess() {
-	}
-
-	protected void onBeforeChildTests() {
-	}
-
-	protected void onBeforeDependentTests() {
-	}
-
-	protected void onBeforeProcess() {
-		token.ensureDriver();
-		WebDriver driver = token.getWebDriver();
-		exec = new WdExec().driver(driver).token(token).timeout(5);
 	}
 
 	public static class CancelParentsException extends RuntimeException {

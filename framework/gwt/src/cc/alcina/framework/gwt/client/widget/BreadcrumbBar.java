@@ -96,17 +96,6 @@ public class BreadcrumbBar extends Composite {
 		initWidget(fp);
 	}
 
-	public String getTitle() {
-		return this.title;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-		if (titleLabel != null) {
-			titleLabel.setHTML(title);
-		}
-	}
-
 	private void addButtons() {
 		if (buttons == null) {
 			return;
@@ -116,6 +105,17 @@ public class BreadcrumbBar extends Composite {
 			SimplePanelWrapper spw = new SimplePanelWrapper(w);
 			spw.setStyleName("right");
 			fp.add(spw);
+		}
+	}
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+		if (titleLabel != null) {
+			titleLabel.setHTML(title);
 		}
 	}
 

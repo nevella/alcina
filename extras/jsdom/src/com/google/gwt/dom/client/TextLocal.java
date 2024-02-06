@@ -13,6 +13,20 @@ public class TextLocal extends NodeLocal implements ClientDomText {
 	}
 
 	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		builder.appendEscapedNoQuotes(text);
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		builder.append(getData());
+	}
+
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		builder.appendUnsafeHtml(text);
+	}
+
+	@Override
 	public Node cloneNode(boolean deep) {
 		return getOwnerDocument().createTextNode(getData());
 	}
@@ -57,6 +71,10 @@ public class TextLocal extends NodeLocal implements ClientDomText {
 		return textNode;
 	}
 
+	void putText(Text textNode) {
+		this.textNode = textNode;
+	}
+
 	@Override
 	public void replaceData(int offset, int length, String data) {
 		throw new UnsupportedOperationException();
@@ -80,23 +98,5 @@ public class TextLocal extends NodeLocal implements ClientDomText {
 	@Override
 	public String toString() {
 		return Ax.format("#TEXT[%s]", getData());
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscapedNoQuotes(text);
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		builder.append(getData());
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
-		builder.appendUnsafeHtml(text);
-	}
-
-	void putText(Text textNode) {
-		this.textNode = textNode;
 	}
 }

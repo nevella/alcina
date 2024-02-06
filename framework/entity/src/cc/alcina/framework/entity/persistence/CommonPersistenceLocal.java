@@ -41,9 +41,18 @@ import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 public interface CommonPersistenceLocal {
 	public <V> V callWithEntityManager(ThrowingFunction<EntityManager, V> call);
 
+	void changeJdbcConnectionUrl(String newUrl);
+
+	<T> T ensure(Class<T> clazz, String key, Object value);
+
+	void ensurePublicationCounters();
+
 	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
 
 	public <T> T findImplInstance(Class<? extends T> clazz, long id);
+
+	Integer getHighestPersistedRequestIdForClientInstance(
+			long clientInstanceId);
 
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2);
@@ -52,10 +61,14 @@ public interface CommonPersistenceLocal {
 
 	public EntityLocatorMap getLocatorMap(Long clientInstanceId);
 
+	long getNextPublicationIdForUser(IUser user);
+
 	public List<DomainTransformRequestPersistent>
 			getPersistentTransformRequests(long fromId, long toId,
 					Collection<Long> specificIds, boolean mostRecentOnly,
 					boolean populateTransformSourceObjects, Logger logger);
+
+	List<Long> listRecentClientInstanceIds(String iidKey);
 
 	public long log(String message, String componentKey);
 
@@ -70,6 +83,9 @@ public interface CommonPersistenceLocal {
 	public void ping();
 
 	public EntityLocatorMap reconstituteEntityMap(long clientInstanceId);
+
+	public boolean
+			removeProcessedRequests(TransformPersistenceToken persistenceToken);
 
 	public SearchResultsBase search(SearchDefinition def);
 
@@ -89,20 +105,4 @@ public interface CommonPersistenceLocal {
 	 * 
 	 */
 	public TransformCache warmupTransformCache();
-
-	void changeJdbcConnectionUrl(String newUrl);
-
-	<T> T ensure(Class<T> clazz, String key, Object value);
-
-	void ensurePublicationCounters();
-
-	Integer getHighestPersistedRequestIdForClientInstance(
-			long clientInstanceId);
-
-	long getNextPublicationIdForUser(IUser user);
-
-	List<Long> listRecentClientInstanceIds(String iidKey);
-
-	public boolean
-			removeProcessedRequests(TransformPersistenceToken persistenceToken);
 }

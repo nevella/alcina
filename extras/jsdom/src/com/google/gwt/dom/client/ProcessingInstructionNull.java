@@ -7,6 +7,10 @@ public class ProcessingInstructionNull extends NodeLocalNull
 	ProcessingInstructionNull() {
 	}
 
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public Node cloneNode(boolean deep) {
 		throw new UnsupportedOperationException();
@@ -50,9 +54,5 @@ public class ProcessingInstructionNull extends NodeLocalNull
 	@Override
 	public void setNodeValue(String nodeValue) {
 		// noop
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
 	}
 }

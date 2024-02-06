@@ -175,6 +175,20 @@ public class DomainDeltaSequencer {
 		}
 	}
 
+	private DomainModelDeltaMetadata createMetadata(DomainTranche tranche,
+			Long maxId) {
+		DomainModelDeltaMetadata metadata = new DomainModelDeltaMetadata();
+		metadata.setGenerationDate(new Date());
+		metadata.setMaxPersistedTransformIdWhenGenerated(maxId);
+		metadata.setContentObjectRpcTypeSignature(
+				rpcSignature(tranche.getClass()));
+		metadata.setContentObjectClassName(tranche.getClass().getName());
+		metadata.setUserId(PermissionsManager.get().getUserId());
+		metadata.setDomainObjectsFieldSet(
+				tranche.getDomainModelHolder() != null);
+		return metadata;
+	}
+
 	public DomainModelDeltaTransport createTransport(DomainTranche tranche,
 			DomainModelDeltaSignature signature, Long maxTransformId,
 			boolean logCache) throws Exception {
@@ -254,20 +268,6 @@ public class DomainDeltaSequencer {
 				.get(new DomainModelDeltaSignature().clazz(clazz).id(id)
 						.nonVersionedSignature());
 		return signature != null ? signature.checkValidUser() : null;
-	}
-
-	private DomainModelDeltaMetadata createMetadata(DomainTranche tranche,
-			Long maxId) {
-		DomainModelDeltaMetadata metadata = new DomainModelDeltaMetadata();
-		metadata.setGenerationDate(new Date());
-		metadata.setMaxPersistedTransformIdWhenGenerated(maxId);
-		metadata.setContentObjectRpcTypeSignature(
-				rpcSignature(tranche.getClass()));
-		metadata.setContentObjectClassName(tranche.getClass().getName());
-		metadata.setUserId(PermissionsManager.get().getUserId());
-		metadata.setDomainObjectsFieldSet(
-				tranche.getDomainModelHolder() != null);
-		return metadata;
 	}
 
 	public static class ReachableAndTrimmedFilter

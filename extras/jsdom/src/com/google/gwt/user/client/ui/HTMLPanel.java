@@ -65,6 +65,16 @@ public class HTMLPanel extends ComplexPanel {
 	}
 
 	/**
+	 * Construct a new {@link HTMLPanel} with the specified element.
+	 *
+	 * @param elem
+	 *            the element at the root of the panel
+	 */
+	private HTMLPanel(Element elem) {
+		setElement(elem);
+	}
+
+	/**
 	 * Initializes the panel's HTML from a given {@link SafeHtml} object.
 	 *
 	 * Similar to {@link #HTMLPanel(String)}
@@ -131,16 +141,6 @@ public class HTMLPanel extends ComplexPanel {
 		scratchDiv.setInnerHTML(b.toString());
 		setElement(scratchDiv.getFirstChildElement());
 		getElement().removeFromParent();
-	}
-
-	/**
-	 * Construct a new {@link HTMLPanel} with the specified element.
-	 *
-	 * @param elem
-	 *            the element at the root of the panel
-	 */
-	private HTMLPanel(Element elem) {
-		setElement(elem);
 	}
 
 	/**
@@ -311,24 +311,6 @@ public class HTMLPanel extends ComplexPanel {
 	}
 
 	/**
-	 * Finds an {@link Element element} within this panel by its id.
-	 *
-	 * This method uses
-	 * {@link com.google.gwt.dom.client.Document#getElementById(String)}, so the
-	 * id must still be unique within the document.
-	 *
-	 * @param id
-	 *            the id of the element to be found
-	 * @return the element with the given id, or <code>null</code> if none is
-	 *         found
-	 */
-	public Element getElementById(String id) {
-		Element elem = isAttached() ? Document.get().getElementById(id)
-				: attachToDomAndGetElement(id);
-		return DOM.asOld(elem);
-	}
-
-	/**
 	 * Performs a {@link Document#getElementById(String)} after attaching the
 	 * panel's element into a hidden DIV in the document's body. Attachment is
 	 * necessary to be able to use the native getElementById. The panel's
@@ -362,5 +344,23 @@ public class HTMLPanel extends ComplexPanel {
 			hiddenDiv.removeChild(getElement());
 		}
 		return child;
+	}
+
+	/**
+	 * Finds an {@link Element element} within this panel by its id.
+	 *
+	 * This method uses
+	 * {@link com.google.gwt.dom.client.Document#getElementById(String)}, so the
+	 * id must still be unique within the document.
+	 *
+	 * @param id
+	 *            the id of the element to be found
+	 * @return the element with the given id, or <code>null</code> if none is
+	 *         found
+	 */
+	public Element getElementById(String id) {
+		Element elem = isAttached() ? Document.get().getElementById(id)
+				: attachToDomAndGetElement(id);
+		return DOM.asOld(elem);
 	}
 }

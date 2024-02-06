@@ -59,6 +59,15 @@ public class DomainTransformPersistenceEvents
 		listenerList.add(listener);
 	}
 
+	String describeEvent(DomainTransformPersistenceEvent event) {
+		return Ax
+				.format("Persistence event: id: %s - %s - %s",
+						Ax.first(event.getPersistedRequestIds()),
+						event.getTransformPersistenceToken().getRequest()
+								.getChunkUuidString(),
+						event.getPersistenceEventType());
+	}
+
 	public void fireDomainTransformPersistenceEvent(
 			DomainTransformPersistenceEvent event) {
 		Preconditions.checkState(!LooseContext.is(CONTEXT_FIRING_EVENT));
@@ -68,19 +77,6 @@ public class DomainTransformPersistenceEvents
 		} finally {
 			LooseContext.pop();
 		}
-	}
-
-	public DomainTransformPersistenceQueue getQueue() {
-		return this.queue;
-	}
-
-	public void removeDomainTransformPersistenceListener(
-			DomainTransformPersistenceListener listener) {
-		listenerList.remove(listener);
-	}
-
-	public void startEventQueue() {
-		queue.startEventQueue();
 	}
 
 	private void fireDomainTransformPersistenceEvent0(
@@ -237,6 +233,19 @@ public class DomainTransformPersistenceEvents
 		}
 	}
 
+	public DomainTransformPersistenceQueue getQueue() {
+		return this.queue;
+	}
+
+	public void removeDomainTransformPersistenceListener(
+			DomainTransformPersistenceListener listener) {
+		listenerList.remove(listener);
+	}
+
+	public void startEventQueue() {
+		queue.startEventQueue();
+	}
+
 	private void throwOrLogBasedOnEventPhase(
 			DomainTransformPersistenceEventType persistenceEventType,
 			RuntimeException rex) {
@@ -248,15 +257,6 @@ public class DomainTransformPersistenceEvents
 		default:
 			break;
 		}
-	}
-
-	String describeEvent(DomainTransformPersistenceEvent event) {
-		return Ax
-				.format("Persistence event: id: %s - %s - %s",
-						Ax.first(event.getPersistedRequestIds()),
-						event.getTransformPersistenceToken().getRequest()
-								.getChunkUuidString(),
-						event.getPersistenceEventType());
 	}
 
 	// FIXME - mvcc.cascade - add optional - actually remove all

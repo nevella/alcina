@@ -21,13 +21,13 @@ public class FilteringIterator<E> implements Iterator<E> {
 
 	private Predicate<E> filter;
 
+	protected FilteringIterator() {
+		// for multi-iterator
+	}
+
 	public FilteringIterator(Iterator<E> source, Predicate<E> filter) {
 		this.source = source;
 		this.filter = filter;
-	}
-
-	protected FilteringIterator() {
-		// for multi-iterator
 	}
 
 	public Iterator<E> getSource() {

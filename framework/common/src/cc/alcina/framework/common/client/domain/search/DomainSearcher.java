@@ -51,6 +51,10 @@ public class DomainSearcher<T extends Entity> {
 	public DomainSearcher() {
 	}
 
+	void addFilter(DomainFilter filter) {
+		query.filter(filter);
+	}
+
 	public Stream<T> search(SearchDefinition def, Class<T> clazz,
 			Comparator<? super T> order) {
 		query = Domain.query(clazz);
@@ -64,10 +68,6 @@ public class DomainSearcher<T extends Entity> {
 				Registry.impl(DomainSearcherAppFilter.class).filter(def));
 		stream = stream.sorted(order);
 		return stream;
-	}
-
-	void addFilter(DomainFilter filter) {
-		query.filter(filter);
 	}
 
 	@Registration(DomainSearcherAppFilter.class)

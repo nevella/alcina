@@ -5,6 +5,10 @@ public class TextPathref extends NodePathref implements ClientDomText {
 		super(node);
 	}
 
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public Node cloneNode(boolean deep) {
 		throw new UnsupportedOperationException();
@@ -70,9 +74,5 @@ public class TextPathref extends NodePathref implements ClientDomText {
 	public Text splitText(int offset) {
 		// noop
 		return null;
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
 	}
 }

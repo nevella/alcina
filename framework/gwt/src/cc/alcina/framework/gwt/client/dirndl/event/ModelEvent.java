@@ -74,32 +74,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H>
 		implements NodeEvent.WithoutDomBinding, Registration.Ensure {
-	public static String staticDisplayName(Class<? extends ModelEvent> clazz) {
-		Optional<ClassDisplayName> classDisplayName = Registry
-				.optional(HasDisplayName.ClassDisplayName.class, clazz);
-		if (classDisplayName.isPresent()) {
-			return classDisplayName.get().displayName();
-		} else {
-			return Ax
-					.friendly(clazz.getSimpleName().replaceFirst("Event$", ""));
-		}
-	}
-
-	/**
-	 * The event should be routed to descendant nodes, rather than ancestors
-	 */
-	public abstract static class DescendantEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
-			extends ModelEvent<T, H> {
-		public Class<E> getEmitterClass() {
-			return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
-		}
-	}
-
-	// Marker interface - for descendant events, the receiver (handler) will
-	// bind to the nearest ancestor with this type
-	public interface Emitter {
-	}
-
 	// Although this is the one 'dispatch' call, access it via context (since
 	// context is always required)
 	static void dispatch(Context context, Class<? extends ModelEvent> type,
@@ -125,7 +99,15 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		modelEvent.onDispatchComplete();
 	}
 
-	protected void onDispatchComplete() {
+	public static String staticDisplayName(Class<? extends ModelEvent> clazz) {
+		Optional<ClassDisplayName> classDisplayName = Registry
+				.optional(HasDisplayName.ClassDisplayName.class, clazz);
+		if (classDisplayName.isPresent()) {
+			return classDisplayName.get().displayName();
+		} else {
+			return Ax
+					.friendly(clazz.getSimpleName().replaceFirst("Event$", ""));
+		}
 	}
 
 	private boolean handled;
@@ -163,6 +145,9 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		return handled;
 	}
 
+	protected void onDispatchComplete() {
+	}
+
 	public void setHandled(boolean handled) {
 		this.handled = handled;
 	}
@@ -180,6 +165,21 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public <M extends ModelEvent> M withTypedModel(T typedModel) {
 		this.model = typedModel;
 		return (M) this;
+	}
+
+	/**
+	 * The event should be routed to descendant nodes, rather than ancestors
+	 */
+	public abstract static class DescendantEvent<T, H extends NodeEvent.Handler, E extends ModelEvent.Emitter>
+			extends ModelEvent<T, H> {
+		public Class<E> getEmitterClass() {
+			return Reflections.at(getClass()).getGenericBounds().bounds.get(2);
+		}
+	}
+
+	// Marker interface - for descendant events, the receiver (handler) will
+	// bind to the nearest ancestor with this type
+	public interface Emitter {
 	}
 
 	/**

@@ -745,6 +745,12 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 		throw new UnsupportedOperationException();
 	}
 
+	public interface InvokeProxy {
+		void invoke(NodePathref node, String methodName,
+				List<Class> argumentTypes, List<?> arguments,
+				AsyncCallback<?> callback);
+	}
+
 	public interface MutationProxy {
 		void onLocationMutation(LocationMutation locationMutation);
 
@@ -753,11 +759,5 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 		void onSinkBitlessEvent(Pathref from, String eventTypeName);
 
 		void onSinkEvents(Pathref from, int eventBits);
-	}
-
-	public interface InvokeProxy {
-		void invoke(NodePathref node, String methodName,
-				List<Class> argumentTypes, List<?> arguments,
-				AsyncCallback<?> callback);
 	}
 }

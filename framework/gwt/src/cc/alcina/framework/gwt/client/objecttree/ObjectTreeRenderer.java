@@ -60,26 +60,6 @@ public class ObjectTreeRenderer {
 
 	protected Map<Widget, TreeRenderer> level1LabelMap = new HashMap<Widget, TreeRenderer>();
 
-	public ComplexPanel render(TreeRenderable root) {
-		try {
-			return render(root, RenderContext.branch());
-		} finally {
-			RenderContext.merge();
-		}
-	}
-
-	public ComplexPanel render(TreeRenderable root,
-			RenderContext renderContext) {
-		this.op = new FlowPanelWithBinding();
-		op.setRenderContext(renderContext);
-		renderToPanel(root, op, 0, true, renderContext, null);
-		op.setRenderContext(renderContext);
-		op.getBinding().bind();
-		op.getBinding().setLeft();
-		op.setStyleName("alcina-ObjectTree");
-		return op;
-	}
-
 	private void maybeSortChildRenderables(
 			List<? extends TreeRenderable> childRenderables,
 			TreeRenderer parent, final RenderContext renderContext) {
@@ -109,6 +89,26 @@ public class ObjectTreeRenderer {
 						}
 					});
 		}
+	}
+
+	public ComplexPanel render(TreeRenderable root) {
+		try {
+			return render(root, RenderContext.branch());
+		} finally {
+			RenderContext.merge();
+		}
+	}
+
+	public ComplexPanel render(TreeRenderable root,
+			RenderContext renderContext) {
+		this.op = new FlowPanelWithBinding();
+		op.setRenderContext(renderContext);
+		renderToPanel(root, op, 0, true, renderContext, null);
+		op.setRenderContext(renderContext);
+		op.getBinding().bind();
+		op.getBinding().setLeft();
+		op.setStyleName("alcina-ObjectTree");
+		return op;
 	}
 
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
@@ -253,15 +253,6 @@ public class ObjectTreeRenderer {
 			return binding;
 		}
 
-		public void setBinding(Binding binding) {
-			this.binding = binding;
-		}
-
-		@Override
-		public void setRenderContext(RenderContext renderContext) {
-			this.renderContext = renderContext;
-		}
-
 		@Override
 		protected void onAttach() {
 			super.onAttach();
@@ -278,6 +269,15 @@ public class ObjectTreeRenderer {
 			}
 			binding.unbind();
 		}
+
+		public void setBinding(Binding binding) {
+			this.binding = binding;
+		}
+
+		@Override
+		public void setRenderContext(RenderContext renderContext) {
+			this.renderContext = renderContext;
+		}
 	}
 
 	public static class HorizontalPanelWithBinding extends HorizontalPanel {
@@ -287,14 +287,14 @@ public class ObjectTreeRenderer {
 			return binding;
 		}
 
-		public void setBinding(Binding binding) {
-			this.binding = binding;
-		}
-
 		@Override
 		protected void onDetach() {
 			super.onDetach();
 			binding.unbind();
+		}
+
+		public void setBinding(Binding binding) {
+			this.binding = binding;
 		}
 	}
 

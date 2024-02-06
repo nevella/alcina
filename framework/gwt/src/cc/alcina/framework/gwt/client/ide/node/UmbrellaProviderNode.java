@@ -56,6 +56,13 @@ public class UmbrellaProviderNode extends ContainerNode
 		this.support.collectionModification(evt);
 	}
 
+	private void dummy() {
+		if (provider.getChildProviders().isEmpty()) {
+			removeItems();
+			addItem(dummy);
+		}
+	}
+
 	@Override
 	public boolean filter(String filterText, boolean enforceVisible) {
 		boolean top = getParentItem() == null;
@@ -89,6 +96,16 @@ public class UmbrellaProviderNode extends ContainerNode
 		}
 		setVisible(show || top);
 		return show;
+	}
+
+	protected void filterChildren(String filterText) {
+		for (int i = 0; i < getChildCount(); i++) {
+			TreeItem child = getChild(i);
+			if (child instanceof VisualFilterable) {
+				VisualFilterable vf = (VisualFilterable) child;
+				vf.filter(filterText);
+			}
+		}
 	}
 
 	@Override
@@ -128,11 +145,44 @@ public class UmbrellaProviderNode extends ContainerNode
 	}
 
 	@Override
+	protected String imageItemHTML(AbstractImagePrototype imageProto,
+			String title) {
+		if (((DataTree) getTree()).isUseNodeImages()) {
+			return imageProto.getHTML() + " " + title;
+		} else {
+			return title;
+		}
+	}
+
+	@Override
 	public void onDetach() {
 		if (support != null) {
 			support.onDetach();
 		}
 		super.onDetach();
+	}
+
+	// true == finished
+	@SuppressWarnings("deprecation")
+	protected boolean openToObject(Object userObject) {
+		setState(true, false);
+		for (int i = 0; i < getChildCount(); i++) {
+			TreeItem child = getChild(i);
+			Object childObject = child.getUserObject();
+			if (childObject == userObject) {
+				getTree().setSelectedItem(child);
+				getTree().ensureSelectedItemVisible();
+				DOM.scrollIntoView(child.getElement());
+				return true;
+			}
+			if (child instanceof UmbrellaProviderNode) {
+				UmbrellaProviderNode upn = (UmbrellaProviderNode) child;
+				if (upn.provider.containsObject(userObject)) {
+					return upn.openToObject(userObject);
+				}
+			}
+		}
+		return false;
 	}
 
 	public void refreshChildren() {
@@ -162,55 +212,5 @@ public class UmbrellaProviderNode extends ContainerNode
 			support.refreshChildrenIfDirty();
 		}
 		super.setState(open, fireEvents);
-	}
-
-	private void dummy() {
-		if (provider.getChildProviders().isEmpty()) {
-			removeItems();
-			addItem(dummy);
-		}
-	}
-
-	protected void filterChildren(String filterText) {
-		for (int i = 0; i < getChildCount(); i++) {
-			TreeItem child = getChild(i);
-			if (child instanceof VisualFilterable) {
-				VisualFilterable vf = (VisualFilterable) child;
-				vf.filter(filterText);
-			}
-		}
-	}
-
-	@Override
-	protected String imageItemHTML(AbstractImagePrototype imageProto,
-			String title) {
-		if (((DataTree) getTree()).isUseNodeImages()) {
-			return imageProto.getHTML() + " " + title;
-		} else {
-			return title;
-		}
-	}
-
-	// true == finished
-	@SuppressWarnings("deprecation")
-	protected boolean openToObject(Object userObject) {
-		setState(true, false);
-		for (int i = 0; i < getChildCount(); i++) {
-			TreeItem child = getChild(i);
-			Object childObject = child.getUserObject();
-			if (childObject == userObject) {
-				getTree().setSelectedItem(child);
-				getTree().ensureSelectedItemVisible();
-				DOM.scrollIntoView(child.getElement());
-				return true;
-			}
-			if (child instanceof UmbrellaProviderNode) {
-				UmbrellaProviderNode upn = (UmbrellaProviderNode) child;
-				if (upn.provider.containsObject(userObject)) {
-					return upn.openToObject(userObject);
-				}
-			}
-		}
-		return false;
 	}
 }

@@ -51,6 +51,39 @@ public class ClusterTransformListener
 		this.domainStore = domainStore;
 	}
 
+	void handleClusterTransformRequest(ClusterTransformRequest request) {
+		logger.info("Received transform message: {} {}", request.id,
+				request.state);
+		DomainTransformPersistenceQueue queue = domainStore
+				.getPersistenceEvents().getQueue();
+		switch (request.state) {
+		case PRE_COMMIT:
+			queue.onRequestDataReceived(request.request, true);
+			logger.info("Post request data received: {} {}", request.id,
+					request.state);
+			CountDownLatch latch = preCommitLatches
+					.remove(request.request.getId());
+			if (latch != null) {
+				latch.countDown();
+				logger.info("Released latch: {} {}", request.id, request.state);
+			}
+			break;
+		case COMMIT:
+			try {
+				queue.onTransformRequestCommitted(request.id, false);
+			} catch (Throwable t) {
+				logger.warn(
+						"DEVEX::0 - Exception in handleClusterTransformRequest::commit - {}",
+						t);
+				t.printStackTrace();
+			}
+			break;
+		case ABORTED:
+			queue.onTransformRequestAborted(request.id);
+			break;
+		}
+	}
+
 	@Override
 	/*
 	 * So that cache propagation is not blocked by the local event queue
@@ -116,26 +149,6 @@ public class ClusterTransformListener
 		}
 	}
 
-	public void startService() {
-		try {
-			transformCommitLog.consumer(commitLogHost,
-					this::handleClusterTransformRequest,
-					EntityLayerUtils.getLocalHostName(),
-					System.currentTimeMillis());
-			domainStore.getPersistenceEvents()
-					.addDomainTransformPersistenceListener(this);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public void stopService() {
-		if (domainStore == DomainStore.writableStore()) {
-			domainStore.getPersistenceEvents()
-					.removeDomainTransformPersistenceListener(this);
-		}
-	}
-
 	protected void publishRequests(
 			List<DomainTransformRequestPersistent> requests, State state) {
 		requests.forEach(request -> {
@@ -161,36 +174,23 @@ public class ClusterTransformListener
 		});
 	}
 
-	void handleClusterTransformRequest(ClusterTransformRequest request) {
-		logger.info("Received transform message: {} {}", request.id,
-				request.state);
-		DomainTransformPersistenceQueue queue = domainStore
-				.getPersistenceEvents().getQueue();
-		switch (request.state) {
-		case PRE_COMMIT:
-			queue.onRequestDataReceived(request.request, true);
-			logger.info("Post request data received: {} {}", request.id,
-					request.state);
-			CountDownLatch latch = preCommitLatches
-					.remove(request.request.getId());
-			if (latch != null) {
-				latch.countDown();
-				logger.info("Released latch: {} {}", request.id, request.state);
-			}
-			break;
-		case COMMIT:
-			try {
-				queue.onTransformRequestCommitted(request.id, false);
-			} catch (Throwable t) {
-				logger.warn(
-						"DEVEX::0 - Exception in handleClusterTransformRequest::commit - {}",
-						t);
-				t.printStackTrace();
-			}
-			break;
-		case ABORTED:
-			queue.onTransformRequestAborted(request.id);
-			break;
+	public void startService() {
+		try {
+			transformCommitLog.consumer(commitLogHost,
+					this::handleClusterTransformRequest,
+					EntityLayerUtils.getLocalHostName(),
+					System.currentTimeMillis());
+			domainStore.getPersistenceEvents()
+					.addDomainTransformPersistenceListener(this);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void stopService() {
+		if (domainStore == DomainStore.writableStore()) {
+			domainStore.getPersistenceEvents()
+					.removeDomainTransformPersistenceListener(this);
 		}
 	}
 }

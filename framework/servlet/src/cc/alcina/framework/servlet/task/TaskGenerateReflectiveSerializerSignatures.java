@@ -76,18 +76,6 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 
 	private transient List<String> ignorePackages;
 
-	@AlcinaTransient
-	public String getSignature() {
-		return this.signature;
-	}
-
-	@Override
-	public void run() throws Exception {
-		MethodContext.instance()
-				.withMetricKey("TaskGenerateReflectiveSerializerSignatures")
-				.run(this::performAction1);
-	}
-
 	private void addPropertyIssue(Property property) {
 		incorrectProperty.add(property);
 	}
@@ -185,6 +173,14 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 				});
 	}
 
+	boolean filter(Class clazz) {
+		if (!clazz.isInterface()
+				&& !Modifier.isAbstract(clazz.getModifiers())) {
+			return false;
+		}
+		return true;
+	}
+
 	private void generateSignature(Class clazz) {
 		CRC32 crc = new CRC32();
 		crc.update(clazz.getName().getBytes());
@@ -195,6 +191,11 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 				.forEach(name -> crc.update(name.getBytes()));
 		signatures.getClassNameDefaultSerializedForms().put(clazz.getName(),
 				String.valueOf(crc.getValue()));
+	}
+
+	@AlcinaTransient
+	public String getSignature() {
+		return this.signature;
 	}
 
 	private void performAction1() throws Exception {
@@ -264,17 +265,16 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 				signatures.classNameDefaultSerializedForms.size(), sha1);
 	}
 
-	boolean filter(Class clazz) {
-		if (!clazz.isInterface()
-				&& !Modifier.isAbstract(clazz.getModifiers())) {
-			return false;
-		}
-		return true;
-	}
-
 	boolean permitPackage(ClassMetadata metadata) {
 		return !ignorePackages.stream()
 				.anyMatch(p -> metadata.className.startsWith(p));
+	}
+
+	@Override
+	public void run() throws Exception {
+		MethodContext.instance()
+				.withMetricKey("TaskGenerateReflectiveSerializerSignatures")
+				.run(this::performAction1);
 	}
 
 	public static class ReflectiveSerializableSignatures {
@@ -295,6 +295,10 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 		protected ReflectiveScannerMetadata createMetadata(String className,
 				ClassMetadata found) {
 			return new ReflectiveScannerMetadata(className).fromUrl(found);
+		}
+
+		ClassMetadataCache<ReflectiveScannerMetadata> getOutgoingCache() {
+			return outgoingCache;
 		}
 
 		@Override
@@ -324,10 +328,6 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 				}
 			}
 			return out;
-		}
-
-		ClassMetadataCache<ReflectiveScannerMetadata> getOutgoingCache() {
-			return outgoingCache;
 		}
 
 		public static class ReflectiveScannerMetadata

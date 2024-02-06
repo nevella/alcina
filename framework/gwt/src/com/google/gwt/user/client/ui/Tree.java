@@ -130,6 +130,12 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		}
 	}
 
+	static native boolean shouldTreeDelegateFocusToElement(Element elem) /*-{
+    var name = elem.nodeName;
+    return ((name == "SELECT") || (name == "INPUT") || (name == "TEXTAREA")
+        || (name == "OPTION") || (name == "BUTTON") || (name == "LABEL"));
+	}-*/;
+
 	/**
 	 * Normalized key codes. Also switches KEY_RIGHT and KEY_LEFT in RTL
 	 * languages.
@@ -158,12 +164,6 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		}
 		return code;
 	}
-
-	static native boolean shouldTreeDelegateFocusToElement(Element elem) /*-{
-    var name = elem.nodeName;
-    return ((name == "SELECT") || (name == "INPUT") || (name == "TEXTAREA")
-        || (name == "OPTION") || (name == "BUTTON") || (name == "LABEL"));
-	}-*/;
 
 	/**
 	 * Map of TreeItem.widget -> TreeItem.
@@ -460,6 +460,12 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		ListenerWrapper.WrappedTreeListener.add(this, listener);
 	}
 
+	void adopt(Widget widget, TreeItem treeItem) {
+		assert (!childWidgets.containsKey(widget));
+		childWidgets.put(widget, treeItem);
+		widget.setParent(this);
+	}
+
 	/**
 	 * Clears all tree items from the current tree.
 	 */
@@ -469,6 +475,60 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		for (int i = size - 1; i >= 0; i--) {
 			root.getChild(i).remove();
 		}
+	}
+
+	/**
+	 * Collects parents going up the element tree, terminated at the tree root.
+	 */
+	private void collectElementChain(ArrayList<Element> chain, Element hRoot,
+			Element hElem) {
+		if ((hElem == null) || (hElem == hRoot)) {
+			return;
+		}
+		collectElementChain(chain, hRoot, DOM.getParent(hElem));
+		chain.add(hElem);
+	}
+
+	@Override
+	protected void doAttachChildren() {
+		try {
+			AttachDetachException.tryCommand(this,
+					AttachDetachException.attachCommand);
+		} finally {
+			DOM.setEventListener(focusable, this);
+		}
+	}
+
+	@Override
+	protected void doDetachChildren() {
+		try {
+			AttachDetachException.tryCommand(this,
+					AttachDetachException.detachCommand);
+		} finally {
+			DOM.setEventListener(focusable, null);
+		}
+	}
+
+	private boolean elementClicked(Element hElem) {
+		ArrayList<Element> chain = new ArrayList<Element>();
+		collectElementChain(chain, getElement(), hElem);
+		TreeItem item = findItemByChain(chain, 0, root);
+		if (item != null && item != root) {
+			if (item.getChildCount() > 0
+					&& DOM.isOrHasChild(item.getImageElement(), hElem)) {
+				item.setState(!item.getState(), true);
+				return true;
+			} else if (DOM.isOrHasChild(item.getElement(), hElem)) {
+				if (isToggleSelectionOnLabelClick() && item.isSelected()) {
+					Scheduler.get().scheduleFinally(
+							() -> item.setState(!item.getState(), true));
+				}
+				onSelection(item, true,
+						!shouldTreeDelegateFocusToElement(hElem));
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -484,6 +544,51 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 			parent.setState(true);
 			parent = parent.getParentItem();
 		}
+	}
+
+	private TreeItem findDeepestOpenChild(TreeItem item) {
+		if (!item.getState()) {
+			return item;
+		}
+		return findDeepestOpenChild(item.getChild(item.getChildCount() - 1));
+	}
+
+	private TreeItem findItemByChain(ArrayList<Element> chain, int idx,
+			TreeItem root) {
+		if (idx == chain.size()) {
+			return root;
+		}
+		Element hCurElem = chain.get(idx);
+		for (int i = 0, n = root.getChildCount(); i < n; ++i) {
+			TreeItem child = root.getChild(i);
+			if (!child.isUnrendered() && child.getElement() == hCurElem) {
+				TreeItem retItem = findItemByChain(chain, idx + 1, child);
+				if (retItem == null) {
+					return child;
+				}
+				return retItem;
+			}
+		}
+		return findItemByChain(chain, idx + 1, root);
+	}
+
+	void fireStateChanged(TreeItem item, boolean open) {
+		if (open) {
+			OpenEvent.fire(this, item);
+		} else {
+			CloseEvent.fire(this, item);
+		}
+	}
+
+	/*
+	 * This method exists solely to support unit tests.
+	 */
+	Map<Widget, TreeItem> getChildWidgets() {
+		return childWidgets;
+	}
+
+	ImageAdapter getImages() {
+		return images;
 	}
 
 	/**
@@ -518,6 +623,54 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	@Override
 	public int getTabIndex() {
 		return FocusPanel.impl.getTabIndex(focusable);
+	}
+
+	/**
+	 * Get the top parent above this {@link TreeItem} that is in closed state.
+	 * In other words, get the parent that is guaranteed to be visible.
+	 *
+	 * @param item
+	 * @return the closed parent, or null if all parents are opened
+	 */
+	private TreeItem getTopClosedParent(TreeItem item) {
+		TreeItem topClosedParent = null;
+		TreeItem parent = item.getParentItem();
+		while (parent != null && parent != root) {
+			if (!parent.getState()) {
+				topClosedParent = parent;
+			}
+			parent = parent.getParentItem();
+		}
+		return topClosedParent;
+	}
+
+	private void init(ImageAdapter images, boolean useLeafImages) {
+		setImages(images, useLeafImages);
+		setElement(DOM.createDiv());
+		DOM.setStyleAttribute(getElement(), "position", "relative");
+		// Fix rendering problem with relatively-positioned elements and their
+		// children by
+		// forcing the element that is positioned relatively to 'have layout'
+		DOM.setStyleAttribute(getElement(), "zoom", "1");
+		focusable = FocusPanel.impl.createFocusable().cast();
+		DOM.setStyleAttribute(focusable, "fontSize", "0");
+		DOM.setStyleAttribute(focusable, "position", "absolute");
+		// Hide focus outline in Mozilla/Webkit/Opera
+		DOM.setStyleAttribute(focusable, "outline", "0px");
+		// Hide focus outline in IE 6/7
+		DOM.setElementAttribute(focusable, "hideFocus", "true");
+		DOM.setIntStyleAttribute(focusable, "zIndex", -1);
+		DOM.appendChild(getElement(), focusable);
+		sinkEvents(Event.ONMOUSEDOWN | Event.ONCLICK | Event.KEYEVENTS);
+		DOM.sinkEvents(focusable, Event.FOCUSEVENTS);
+		// The 'root' item is invisible and serves only as a container
+		// for all top-level items.
+		root = new TreeItem(true);
+		root.setTree(this);
+		setStyleName("gwt-Tree");
+		// Add a11y role "tree"
+		Accessibility.setRole(getElement(), Accessibility.ROLE_TREE);
+		Accessibility.setRole(focusable, Accessibility.ROLE_TREEITEM);
 	}
 
 	/**
@@ -587,11 +740,206 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		return isAnimationEnabled;
 	}
 
+	/**
+	 * Indicates if keyboard navigation is enabled for the Tree and for a given
+	 * TreeItem. Subclasses of Tree can override this function to selectively
+	 * enable or disable keyboard navigation.
+	 *
+	 * @param currentItem
+	 *            the currently selected TreeItem
+	 * @return <code>true</code> if the Tree will response to arrow keys by
+	 *         changing the currently selected item
+	 */
+	protected boolean isKeyboardNavigationEnabled(TreeItem currentItem) {
+		return true;
+	}
+
+	protected boolean isToggleSelectionOnLabelClick() {
+		return false;
+	}
+
 	@Override
 	public Iterator<Widget> iterator() {
 		final Widget[] widgets = new Widget[childWidgets.size()];
 		childWidgets.keySet().toArray(widgets);
 		return WidgetIterators.createWidgetIterator(this, widgets);
+	}
+
+	private void keyboardNavigation(Event event) {
+		// Handle keyboard events if keyboard navigation is enabled
+		if (isKeyboardNavigationEnabled(curSelection)) {
+			int code = DOM.eventGetKeyCode(event);
+			switch (standardizeKeycode(code)) {
+			case KeyCodes.KEY_UP: {
+				moveSelectionUp(curSelection);
+				break;
+			}
+			case KeyCodes.KEY_DOWN: {
+				moveSelectionDown(curSelection, true);
+				break;
+			}
+			case KeyCodes.KEY_LEFT: {
+				maybeCollapseTreeItem();
+				break;
+			}
+			case KeyCodes.KEY_RIGHT: {
+				maybeExpandTreeItem();
+				break;
+			}
+			default: {
+				return;
+			}
+			}
+		}
+	}
+
+	private void maybeCollapseTreeItem() {
+		TreeItem topClosedParent = getTopClosedParent(curSelection);
+		if (topClosedParent != null) {
+			// Select the first visible parent if curSelection is hidden
+			setSelectedItem(topClosedParent);
+		} else if (curSelection.getState()) {
+			curSelection.setState(false);
+		} else {
+			TreeItem parent = curSelection.getParentItem();
+			if (parent != null) {
+				setSelectedItem(parent);
+			}
+		}
+	}
+
+	private void maybeExpandTreeItem() {
+		TreeItem topClosedParent = getTopClosedParent(curSelection);
+		if (topClosedParent != null) {
+			// Select the first visible parent if curSelection is hidden
+			setSelectedItem(topClosedParent);
+		} else if (!curSelection.getState()) {
+			curSelection.setState(true);
+		} else if (curSelection.getChildCount() > 0) {
+			setSelectedItem(curSelection.getChild(0));
+		}
+	}
+
+	void maybeUpdateSelection(TreeItem itemThatChangedState,
+			boolean isItemOpening) {
+		/**
+		 * If we just closed the item, let's check to see if this item is the
+		 * parent of the currently selected item. If so, we should make this
+		 * item the currently selected selected item.
+		 */
+		if (!isItemOpening) {
+			TreeItem tempItem = curSelection;
+			while (tempItem != null) {
+				if (tempItem == itemThatChangedState) {
+					setSelectedItem(itemThatChangedState);
+					return;
+				}
+				tempItem = tempItem.getParentItem();
+			}
+		}
+	}
+
+	/**
+	 * Move the tree focus to the specified selected item.
+	 */
+	private void moveFocus() {
+		Focusable focusableWidget = curSelection.getFocusable();
+		if (focusableWidget != null) {
+			focusableWidget.setFocus(true);
+			DOM.scrollIntoView(((Widget) focusableWidget).getElement());
+		} else {
+			// Get the location and size of the given item's content element
+			// relative
+			// to the tree.
+			Element selectedElem = curSelection.getContentElem();
+			int containerLeft = getAbsoluteLeft();
+			int containerTop = getAbsoluteTop();
+			int left = DOM.getAbsoluteLeft(selectedElem) - containerLeft;
+			int top = DOM.getAbsoluteTop(selectedElem) - containerTop;
+			int width = DOM.getElementPropertyInt(selectedElem, "offsetWidth");
+			int height = DOM.getElementPropertyInt(selectedElem,
+					"offsetHeight");
+			// If the item is not visible, quite here
+			if (width == 0 || height == 0) {
+				DOM.setIntStyleAttribute(focusable, "left", 0);
+				DOM.setIntStyleAttribute(focusable, "top", 0);
+				return;
+			}
+			// Set the focusable element's position and size to exactly underlap
+			// the
+			// item's content element.
+			DOM.setStyleAttribute(focusable, "left", left + "px");
+			DOM.setStyleAttribute(focusable, "top", top + "px");
+			DOM.setStyleAttribute(focusable, "width", width + "px");
+			DOM.setStyleAttribute(focusable, "height", height + "px");
+			// Scroll it into view.
+			DOM.scrollIntoView(focusable);
+			// Update ARIA attributes to reflect the information from the
+			// newly-selected item.
+			updateAriaAttributes();
+			// Ensure Focus is set, as focus may have been previously delegated
+			// by
+			// tree.
+			setFocus(true);
+		}
+	}
+
+	/**
+	 * Moves to the next item, going into children as if dig is enabled.
+	 */
+	private void moveSelectionDown(TreeItem sel, boolean dig) {
+		if (sel == root) {
+			return;
+		}
+		// Find a parent that is visible
+		TreeItem topClosedParent = getTopClosedParent(sel);
+		if (topClosedParent != null) {
+			moveSelectionDown(topClosedParent, false);
+			return;
+		}
+		TreeItem parent = sel.getParentItem();
+		if (parent == null) {
+			parent = root;
+		}
+		int idx = parent.getChildIndex(sel);
+		if (!dig || !sel.getState()) {
+			if (idx < parent.getChildCount() - 1) {
+				onSelection(parent.getChild(idx + 1), true, true);
+			} else {
+				moveSelectionDown(parent, false);
+			}
+		} else if (sel.getChildCount() > 0) {
+			onSelection(sel.getChild(0), true, true);
+		}
+	}
+
+	/**
+	 * Moves the selected item up one.
+	 */
+	private void moveSelectionUp(TreeItem sel) {
+		// Find a parent that is visible
+		TreeItem topClosedParent = getTopClosedParent(sel);
+		if (topClosedParent != null) {
+			onSelection(topClosedParent, true, true);
+			return;
+		}
+		TreeItem parent = sel.getParentItem();
+		if (parent == null) {
+			parent = root;
+		}
+		int idx = parent.getChildIndex(sel);
+		if (idx > 0) {
+			TreeItem sibling = parent.getChild(idx - 1);
+			onSelection(findDeepestOpenChild(sibling), true, true);
+		} else {
+			onSelection(parent, true, true);
+		}
+	}
+
+	@Override
+	protected void onAttach() {
+		root.updateStateRecursive();
+		super.onAttach();
 	}
 
 	@Override
@@ -688,6 +1036,64 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		}
 		// We must call super for all handlers.
 		super.onBrowserEvent(event);
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-root = The root {@link TreeItem}.</li>
+	 * </ul>
+	 *
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		root.ensureDebugId(baseID + "-root");
+	}
+
+	@Override
+	protected void onLoad() {
+	}
+
+	private void onSelection(TreeItem item, boolean fireEvents,
+			boolean moveFocus) {
+		// 'root' isn't a real item, so don't let it be selected
+		// (some cases in the keyboard handler will try to do this)
+		if (item == root) {
+			return;
+		}
+		if (curSelection != null) {
+			curSelection.setSelected(false);
+		}
+		curSelection = item;
+		if (curSelection != null) {
+			while ((item = item.getParentItem()) != root && item != null) {
+				if (!item.getState()) {
+					item.setState(true);
+				}
+			}
+			if (moveFocus) {
+				moveFocus();
+			}
+			// Select the item and fire the selection event.
+			curSelection.setSelected(true);
+			if (fireEvents) {
+				SelectionEvent.fire(this, curSelection);
+			}
+		}
+	}
+
+	void orphan(Widget widget) {
+		// Validation should already be done.
+		assert (widget.getParent() == this);
+		// Orphan.
+		try {
+			widget.setParent(null);
+		} finally {
+			// Logical detach.
+			childWidgets.remove(widget);
+		}
 	}
 
 	/**
@@ -806,6 +1212,19 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		}
 	}
 
+	private void setImages(ImageAdapter images, boolean useLeafImages) {
+		this.images = images;
+		this.useLeafImages = useLeafImages;
+		if (!useLeafImages) {
+			Image image = images.treeLeaf().createImage();
+			DOM.setStyleAttribute(image.getElement(), "visibility", "hidden");
+			RootPanel.get().add(image);
+			int size = image.getWidth() + TreeItem.IMAGE_PAD;
+			image.removeFromParent();
+			indentValue = (size) + "px";
+		}
+	}
+
 	/**
 	 * Selects a specified item.
 	 *
@@ -844,315 +1263,14 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	}
 
 	/**
-	 * Iterator of tree items.
+	 * Called only from {@link TreeItem}: Shows the closed image on that tree
+	 * item.
 	 *
-	 * @return the iterator
+	 * @param treeItem
+	 *            the tree item
 	 */
-	public Iterator<TreeItem> treeItemIterator() {
-		List<TreeItem> accum = new ArrayList<TreeItem>();
-		root.addTreeItems(accum);
-		return accum.iterator();
-	}
-
-	/**
-	 * Collects parents going up the element tree, terminated at the tree root.
-	 */
-	private void collectElementChain(ArrayList<Element> chain, Element hRoot,
-			Element hElem) {
-		if ((hElem == null) || (hElem == hRoot)) {
-			return;
-		}
-		collectElementChain(chain, hRoot, DOM.getParent(hElem));
-		chain.add(hElem);
-	}
-
-	private boolean elementClicked(Element hElem) {
-		ArrayList<Element> chain = new ArrayList<Element>();
-		collectElementChain(chain, getElement(), hElem);
-		TreeItem item = findItemByChain(chain, 0, root);
-		if (item != null && item != root) {
-			if (item.getChildCount() > 0
-					&& DOM.isOrHasChild(item.getImageElement(), hElem)) {
-				item.setState(!item.getState(), true);
-				return true;
-			} else if (DOM.isOrHasChild(item.getElement(), hElem)) {
-				if (isToggleSelectionOnLabelClick() && item.isSelected()) {
-					Scheduler.get().scheduleFinally(
-							() -> item.setState(!item.getState(), true));
-				}
-				onSelection(item, true,
-						!shouldTreeDelegateFocusToElement(hElem));
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private TreeItem findDeepestOpenChild(TreeItem item) {
-		if (!item.getState()) {
-			return item;
-		}
-		return findDeepestOpenChild(item.getChild(item.getChildCount() - 1));
-	}
-
-	private TreeItem findItemByChain(ArrayList<Element> chain, int idx,
-			TreeItem root) {
-		if (idx == chain.size()) {
-			return root;
-		}
-		Element hCurElem = chain.get(idx);
-		for (int i = 0, n = root.getChildCount(); i < n; ++i) {
-			TreeItem child = root.getChild(i);
-			if (!child.isUnrendered() && child.getElement() == hCurElem) {
-				TreeItem retItem = findItemByChain(chain, idx + 1, child);
-				if (retItem == null) {
-					return child;
-				}
-				return retItem;
-			}
-		}
-		return findItemByChain(chain, idx + 1, root);
-	}
-
-	/**
-	 * Get the top parent above this {@link TreeItem} that is in closed state.
-	 * In other words, get the parent that is guaranteed to be visible.
-	 *
-	 * @param item
-	 * @return the closed parent, or null if all parents are opened
-	 */
-	private TreeItem getTopClosedParent(TreeItem item) {
-		TreeItem topClosedParent = null;
-		TreeItem parent = item.getParentItem();
-		while (parent != null && parent != root) {
-			if (!parent.getState()) {
-				topClosedParent = parent;
-			}
-			parent = parent.getParentItem();
-		}
-		return topClosedParent;
-	}
-
-	private void init(ImageAdapter images, boolean useLeafImages) {
-		setImages(images, useLeafImages);
-		setElement(DOM.createDiv());
-		DOM.setStyleAttribute(getElement(), "position", "relative");
-		// Fix rendering problem with relatively-positioned elements and their
-		// children by
-		// forcing the element that is positioned relatively to 'have layout'
-		DOM.setStyleAttribute(getElement(), "zoom", "1");
-		focusable = FocusPanel.impl.createFocusable().cast();
-		DOM.setStyleAttribute(focusable, "fontSize", "0");
-		DOM.setStyleAttribute(focusable, "position", "absolute");
-		// Hide focus outline in Mozilla/Webkit/Opera
-		DOM.setStyleAttribute(focusable, "outline", "0px");
-		// Hide focus outline in IE 6/7
-		DOM.setElementAttribute(focusable, "hideFocus", "true");
-		DOM.setIntStyleAttribute(focusable, "zIndex", -1);
-		DOM.appendChild(getElement(), focusable);
-		sinkEvents(Event.ONMOUSEDOWN | Event.ONCLICK | Event.KEYEVENTS);
-		DOM.sinkEvents(focusable, Event.FOCUSEVENTS);
-		// The 'root' item is invisible and serves only as a container
-		// for all top-level items.
-		root = new TreeItem(true);
-		root.setTree(this);
-		setStyleName("gwt-Tree");
-		// Add a11y role "tree"
-		Accessibility.setRole(getElement(), Accessibility.ROLE_TREE);
-		Accessibility.setRole(focusable, Accessibility.ROLE_TREEITEM);
-	}
-
-	private void keyboardNavigation(Event event) {
-		// Handle keyboard events if keyboard navigation is enabled
-		if (isKeyboardNavigationEnabled(curSelection)) {
-			int code = DOM.eventGetKeyCode(event);
-			switch (standardizeKeycode(code)) {
-			case KeyCodes.KEY_UP: {
-				moveSelectionUp(curSelection);
-				break;
-			}
-			case KeyCodes.KEY_DOWN: {
-				moveSelectionDown(curSelection, true);
-				break;
-			}
-			case KeyCodes.KEY_LEFT: {
-				maybeCollapseTreeItem();
-				break;
-			}
-			case KeyCodes.KEY_RIGHT: {
-				maybeExpandTreeItem();
-				break;
-			}
-			default: {
-				return;
-			}
-			}
-		}
-	}
-
-	private void maybeCollapseTreeItem() {
-		TreeItem topClosedParent = getTopClosedParent(curSelection);
-		if (topClosedParent != null) {
-			// Select the first visible parent if curSelection is hidden
-			setSelectedItem(topClosedParent);
-		} else if (curSelection.getState()) {
-			curSelection.setState(false);
-		} else {
-			TreeItem parent = curSelection.getParentItem();
-			if (parent != null) {
-				setSelectedItem(parent);
-			}
-		}
-	}
-
-	private void maybeExpandTreeItem() {
-		TreeItem topClosedParent = getTopClosedParent(curSelection);
-		if (topClosedParent != null) {
-			// Select the first visible parent if curSelection is hidden
-			setSelectedItem(topClosedParent);
-		} else if (!curSelection.getState()) {
-			curSelection.setState(true);
-		} else if (curSelection.getChildCount() > 0) {
-			setSelectedItem(curSelection.getChild(0));
-		}
-	}
-
-	/**
-	 * Move the tree focus to the specified selected item.
-	 */
-	private void moveFocus() {
-		Focusable focusableWidget = curSelection.getFocusable();
-		if (focusableWidget != null) {
-			focusableWidget.setFocus(true);
-			DOM.scrollIntoView(((Widget) focusableWidget).getElement());
-		} else {
-			// Get the location and size of the given item's content element
-			// relative
-			// to the tree.
-			Element selectedElem = curSelection.getContentElem();
-			int containerLeft = getAbsoluteLeft();
-			int containerTop = getAbsoluteTop();
-			int left = DOM.getAbsoluteLeft(selectedElem) - containerLeft;
-			int top = DOM.getAbsoluteTop(selectedElem) - containerTop;
-			int width = DOM.getElementPropertyInt(selectedElem, "offsetWidth");
-			int height = DOM.getElementPropertyInt(selectedElem,
-					"offsetHeight");
-			// If the item is not visible, quite here
-			if (width == 0 || height == 0) {
-				DOM.setIntStyleAttribute(focusable, "left", 0);
-				DOM.setIntStyleAttribute(focusable, "top", 0);
-				return;
-			}
-			// Set the focusable element's position and size to exactly underlap
-			// the
-			// item's content element.
-			DOM.setStyleAttribute(focusable, "left", left + "px");
-			DOM.setStyleAttribute(focusable, "top", top + "px");
-			DOM.setStyleAttribute(focusable, "width", width + "px");
-			DOM.setStyleAttribute(focusable, "height", height + "px");
-			// Scroll it into view.
-			DOM.scrollIntoView(focusable);
-			// Update ARIA attributes to reflect the information from the
-			// newly-selected item.
-			updateAriaAttributes();
-			// Ensure Focus is set, as focus may have been previously delegated
-			// by
-			// tree.
-			setFocus(true);
-		}
-	}
-
-	/**
-	 * Moves to the next item, going into children as if dig is enabled.
-	 */
-	private void moveSelectionDown(TreeItem sel, boolean dig) {
-		if (sel == root) {
-			return;
-		}
-		// Find a parent that is visible
-		TreeItem topClosedParent = getTopClosedParent(sel);
-		if (topClosedParent != null) {
-			moveSelectionDown(topClosedParent, false);
-			return;
-		}
-		TreeItem parent = sel.getParentItem();
-		if (parent == null) {
-			parent = root;
-		}
-		int idx = parent.getChildIndex(sel);
-		if (!dig || !sel.getState()) {
-			if (idx < parent.getChildCount() - 1) {
-				onSelection(parent.getChild(idx + 1), true, true);
-			} else {
-				moveSelectionDown(parent, false);
-			}
-		} else if (sel.getChildCount() > 0) {
-			onSelection(sel.getChild(0), true, true);
-		}
-	}
-
-	/**
-	 * Moves the selected item up one.
-	 */
-	private void moveSelectionUp(TreeItem sel) {
-		// Find a parent that is visible
-		TreeItem topClosedParent = getTopClosedParent(sel);
-		if (topClosedParent != null) {
-			onSelection(topClosedParent, true, true);
-			return;
-		}
-		TreeItem parent = sel.getParentItem();
-		if (parent == null) {
-			parent = root;
-		}
-		int idx = parent.getChildIndex(sel);
-		if (idx > 0) {
-			TreeItem sibling = parent.getChild(idx - 1);
-			onSelection(findDeepestOpenChild(sibling), true, true);
-		} else {
-			onSelection(parent, true, true);
-		}
-	}
-
-	private void onSelection(TreeItem item, boolean fireEvents,
-			boolean moveFocus) {
-		// 'root' isn't a real item, so don't let it be selected
-		// (some cases in the keyboard handler will try to do this)
-		if (item == root) {
-			return;
-		}
-		if (curSelection != null) {
-			curSelection.setSelected(false);
-		}
-		curSelection = item;
-		if (curSelection != null) {
-			while ((item = item.getParentItem()) != root && item != null) {
-				if (!item.getState()) {
-					item.setState(true);
-				}
-			}
-			if (moveFocus) {
-				moveFocus();
-			}
-			// Select the item and fire the selection event.
-			curSelection.setSelected(true);
-			if (fireEvents) {
-				SelectionEvent.fire(this, curSelection);
-			}
-		}
-	}
-
-	private void setImages(ImageAdapter images, boolean useLeafImages) {
-		this.images = images;
-		this.useLeafImages = useLeafImages;
-		if (!useLeafImages) {
-			Image image = images.treeLeaf().createImage();
-			DOM.setStyleAttribute(image.getElement(), "visibility", "hidden");
-			RootPanel.get().add(image);
-			int size = image.getWidth() + TreeItem.IMAGE_PAD;
-			image.removeFromParent();
-			indentValue = (size) + "px";
-		}
+	void showClosedImage(TreeItem treeItem) {
+		showImage(treeItem, images.treeClosed(), "closed");
 	}
 
 	private void showImage(TreeItem treeItem, AbstractImagePrototype proto,
@@ -1179,6 +1297,45 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		}
 		child.setClassName(className);
 		treeItem.setCurrentImagePrototype(child, proto);
+	}
+
+	/**
+	 * Called only from {@link TreeItem}: Shows the leaf image on a tree item.
+	 *
+	 * @param treeItem
+	 *            the tree item
+	 */
+	void showLeafImage(TreeItem treeItem) {
+		if (useLeafImages || treeItem.isFullNode()) {
+			showImage(treeItem, images.treeLeaf(), "leaf");
+		} else if (LocaleInfo.getCurrentLocale().isRTL()) {
+			DOM.setStyleAttribute(treeItem.getElement(), "paddingRight",
+					indentValue);
+		} else {
+			DOM.setStyleAttribute(treeItem.getElement(), "paddingLeft",
+					indentValue);
+		}
+	}
+
+	/**
+	 * Called only from {@link TreeItem}: Shows the open image on a tree item.
+	 *
+	 * @param treeItem
+	 *            the tree item
+	 */
+	void showOpenImage(TreeItem treeItem) {
+		showImage(treeItem, images.treeOpen(), "open");
+	}
+
+	/**
+	 * Iterator of tree items.
+	 *
+	 * @return the iterator
+	 */
+	public Iterator<TreeItem> treeItemIterator() {
+		List<TreeItem> accum = new ArrayList<TreeItem>();
+		root.addTreeItems(accum);
+		return accum.iterator();
 	}
 
 	private void updateAriaAttributes() {
@@ -1243,188 +1400,8 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 				DOM.getElementAttribute(curSelectionContentElem, "id"));
 	}
 
-	@Override
-	protected void doAttachChildren() {
-		try {
-			AttachDetachException.tryCommand(this,
-					AttachDetachException.attachCommand);
-		} finally {
-			DOM.setEventListener(focusable, this);
-		}
-	}
-
-	@Override
-	protected void doDetachChildren() {
-		try {
-			AttachDetachException.tryCommand(this,
-					AttachDetachException.detachCommand);
-		} finally {
-			DOM.setEventListener(focusable, null);
-		}
-	}
-
-	/**
-	 * Indicates if keyboard navigation is enabled for the Tree and for a given
-	 * TreeItem. Subclasses of Tree can override this function to selectively
-	 * enable or disable keyboard navigation.
-	 *
-	 * @param currentItem
-	 *            the currently selected TreeItem
-	 * @return <code>true</code> if the Tree will response to arrow keys by
-	 *         changing the currently selected item
-	 */
-	protected boolean isKeyboardNavigationEnabled(TreeItem currentItem) {
-		return true;
-	}
-
-	protected boolean isToggleSelectionOnLabelClick() {
-		return false;
-	}
-
-	@Override
-	protected void onAttach() {
-		root.updateStateRecursive();
-		super.onAttach();
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-root = The root {@link TreeItem}.</li>
-	 * </ul>
-	 *
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		root.ensureDebugId(baseID + "-root");
-	}
-
-	@Override
-	protected void onLoad() {
-	}
-
 	protected boolean useCssTreeImages() {
 		return false;
-	}
-
-	void adopt(Widget widget, TreeItem treeItem) {
-		assert (!childWidgets.containsKey(widget));
-		childWidgets.put(widget, treeItem);
-		widget.setParent(this);
-	}
-
-	void fireStateChanged(TreeItem item, boolean open) {
-		if (open) {
-			OpenEvent.fire(this, item);
-		} else {
-			CloseEvent.fire(this, item);
-		}
-	}
-
-	/*
-	 * This method exists solely to support unit tests.
-	 */
-	Map<Widget, TreeItem> getChildWidgets() {
-		return childWidgets;
-	}
-
-	ImageAdapter getImages() {
-		return images;
-	}
-
-	void maybeUpdateSelection(TreeItem itemThatChangedState,
-			boolean isItemOpening) {
-		/**
-		 * If we just closed the item, let's check to see if this item is the
-		 * parent of the currently selected item. If so, we should make this
-		 * item the currently selected selected item.
-		 */
-		if (!isItemOpening) {
-			TreeItem tempItem = curSelection;
-			while (tempItem != null) {
-				if (tempItem == itemThatChangedState) {
-					setSelectedItem(itemThatChangedState);
-					return;
-				}
-				tempItem = tempItem.getParentItem();
-			}
-		}
-	}
-
-	void orphan(Widget widget) {
-		// Validation should already be done.
-		assert (widget.getParent() == this);
-		// Orphan.
-		try {
-			widget.setParent(null);
-		} finally {
-			// Logical detach.
-			childWidgets.remove(widget);
-		}
-	}
-
-	/**
-	 * Called only from {@link TreeItem}: Shows the closed image on that tree
-	 * item.
-	 *
-	 * @param treeItem
-	 *            the tree item
-	 */
-	void showClosedImage(TreeItem treeItem) {
-		showImage(treeItem, images.treeClosed(), "closed");
-	}
-
-	/**
-	 * Called only from {@link TreeItem}: Shows the leaf image on a tree item.
-	 *
-	 * @param treeItem
-	 *            the tree item
-	 */
-	void showLeafImage(TreeItem treeItem) {
-		if (useLeafImages || treeItem.isFullNode()) {
-			showImage(treeItem, images.treeLeaf(), "leaf");
-		} else if (LocaleInfo.getCurrentLocale().isRTL()) {
-			DOM.setStyleAttribute(treeItem.getElement(), "paddingRight",
-					indentValue);
-		} else {
-			DOM.setStyleAttribute(treeItem.getElement(), "paddingLeft",
-					indentValue);
-		}
-	}
-
-	/**
-	 * Called only from {@link TreeItem}: Shows the open image on a tree item.
-	 *
-	 * @param treeItem
-	 *            the tree item
-	 */
-	void showOpenImage(TreeItem treeItem) {
-		showImage(treeItem, images.treeOpen(), "open");
-	}
-
-	/**
-	 * A ClientBundle that provides images for this widget.
-	 */
-	public interface Resources extends ClientBundle {
-		/**
-		 * An image indicating a closed branch.
-		 */
-		ImageResource treeClosed();
-
-		/**
-		 * An image indicating a leaf.
-		 */
-		ImageResource treeLeaf();
-
-		/**
-		 * An image indicating an open branch.
-		 */
-		ImageResource treeOpen();
-		/**
-		 * An image indicating an open branch.
-		 */
 	}
 
 	class AbstractImagePrototypeCache {
@@ -1486,5 +1463,28 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		public AbstractImagePrototype treeOpen() {
 			return treeOpen;
 		}
+	}
+
+	/**
+	 * A ClientBundle that provides images for this widget.
+	 */
+	public interface Resources extends ClientBundle {
+		/**
+		 * An image indicating a closed branch.
+		 */
+		ImageResource treeClosed();
+
+		/**
+		 * An image indicating a leaf.
+		 */
+		ImageResource treeLeaf();
+
+		/**
+		 * An image indicating an open branch.
+		 */
+		ImageResource treeOpen();
+		/**
+		 * An image indicating an open branch.
+		 */
 	}
 }

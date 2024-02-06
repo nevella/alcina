@@ -39,46 +39,6 @@ class Page extends Model.All
 		implements TraversalEvents.SelectionSelected.Handler,
 		TraversalEvents.SelectionTypeSelected.Handler,
 		DomEvents.KeyDown.Handler {
-	class Header extends Model.All
-			implements DomEvents.Click.Handler, ModelEvents.Change.Handler {
-		// FIXME - cmp - scheduler
-		// @StringInput.FocusOnBind
-		StringInput filter = new StringInput();
-
-		String name = TraversalProcessView.Ui.get().getMainCaption();
-
-		Header() {
-			bindings().from(Page.this).on(Property.history)
-					.typed(ObservableHistory.class).map(this::computeName)
-					.accept(this::setName);
-		}
-
-		public void setName(String name) {
-			set("name", this.name, name, () -> this.name = name);
-		}
-
-		@Override
-		public void onClick(Click event) {
-			new TraversalPlace().go();
-		}
-
-		@Override
-		public void onChange(Change event) {
-			new TraversalPlace().withTextFilter((String) event.getModel()).go();
-		}
-
-		String computeName(ObservableHistory history) {
-			FormatBuilder format = new FormatBuilder().separator(" - ");
-			format.append(TraversalProcessView.Ui.get().getMainCaption());
-			format.appendIfNonNull(history, ObservableHistory::displayName);
-			return format.toString();
-		}
-	}
-
-	enum Property implements PropertyEnum {
-		history, place
-	}
-
 	// FIXME - traversal - resolver/descendant event
 	public static TraversalPlace traversalPlace() {
 		return Ui.get().page.place;
@@ -142,25 +102,14 @@ class Page extends Model.All
 				.addHandler(PlaceChangeEvent.TYPE, handler));
 	}
 
-	public void setPlace(TraversalPlace place) {
-		set("place", this.place, place, () -> this.place = place);
-	}
-
-	public void setInput(RenderedSelections input) {
-		set("input", this.input, input, () -> this.input = input);
-	}
-
-	public void setOutput(RenderedSelections output) {
-		set("output", this.output, output, () -> this.output = output);
-	}
-
-	public void setLayers(SelectionLayers layers) {
-		set("layers", this.layers, layers, () -> this.layers = layers);
-	}
-
-	public void setProperties(Properties properties) {
-		set("properties", this.properties, properties,
-				() -> this.properties = properties);
+	void goPreserveScrollPosition(TraversalPlace place) {
+		Element scrollableLayers = layers.provideElement().getChildElement(1);
+		scrollableLayers.async()
+				.getScrollTop(Async.<Integer> callbackBuilder().success(top -> {
+					place.go();
+					layers.provideElement().getChildElement(1).async()
+							.setScrollTop(Async.nullCallback(), top);
+				}).build());
 	}
 
 	@Override
@@ -171,11 +120,6 @@ class Page extends Model.All
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
-	}
-
-	@Override
-	public void onSelectionSelected(SelectionSelected event) {
-		goPreserveScrollPosition(place.copy().withSelection(event.getModel()));
 	}
 
 	// FIXME - not hooked up?
@@ -207,14 +151,9 @@ class Page extends Model.All
 		}
 	}
 
-	void goPreserveScrollPosition(TraversalPlace place) {
-		Element scrollableLayers = layers.provideElement().getChildElement(1);
-		scrollableLayers.async()
-				.getScrollTop(Async.<Integer> callbackBuilder().success(top -> {
-					place.go();
-					layers.provideElement().getChildElement(1).async()
-							.setScrollTop(Async.nullCallback(), top);
-				}).build());
+	@Override
+	public void onSelectionSelected(SelectionSelected event) {
+		goPreserveScrollPosition(place.copy().withSelection(event.getModel()));
 	}
 
 	@Override
@@ -228,5 +167,66 @@ class Page extends Model.All
 			RemoteComponentObservables<SelectionTraversal>.ObservableHistory history) {
 		set(Property.history, this.history, history,
 				() -> this.history = history);
+	}
+
+	public void setInput(RenderedSelections input) {
+		set("input", this.input, input, () -> this.input = input);
+	}
+
+	public void setLayers(SelectionLayers layers) {
+		set("layers", this.layers, layers, () -> this.layers = layers);
+	}
+
+	public void setOutput(RenderedSelections output) {
+		set("output", this.output, output, () -> this.output = output);
+	}
+
+	public void setPlace(TraversalPlace place) {
+		set("place", this.place, place, () -> this.place = place);
+	}
+
+	public void setProperties(Properties properties) {
+		set("properties", this.properties, properties,
+				() -> this.properties = properties);
+	}
+
+	class Header extends Model.All
+			implements DomEvents.Click.Handler, ModelEvents.Change.Handler {
+		// FIXME - cmp - scheduler
+		// @StringInput.FocusOnBind
+		StringInput filter = new StringInput();
+
+		String name = TraversalProcessView.Ui.get().getMainCaption();
+
+		Header() {
+			bindings().from(Page.this).on(Property.history)
+					.typed(ObservableHistory.class).map(this::computeName)
+					.accept(this::setName);
+		}
+
+		String computeName(ObservableHistory history) {
+			FormatBuilder format = new FormatBuilder().separator(" - ");
+			format.append(TraversalProcessView.Ui.get().getMainCaption());
+			format.appendIfNonNull(history, ObservableHistory::displayName);
+			return format.toString();
+		}
+
+		@Override
+		public void onChange(Change event) {
+			new TraversalPlace().withTextFilter((String) event.getModel()).go();
+		}
+
+		@Override
+		public void onClick(Click event) {
+			new TraversalPlace().go();
+		}
+
+		public void setName(String name) {
+			set("name", this.name, name, () -> this.name = name);
+		}
+	}
+
+	enum Property implements PropertyEnum {
+		history, place
 	}
 }

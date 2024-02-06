@@ -79,6 +79,18 @@ public class PotentialElement extends Element {
 	// @com.google.gwt.dom.client.Element::as(Lcom/google/gwt/core/client/JavaScriptObject;)(el);
 	// }-*/;
 
+	private static native JavaScriptObject
+			buildResolveCallback(UIObject resolver) /*-{
+													return function() {
+													this.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::cannotResolveTwice();
+													return resolver.@com.google.gwt.user.client.ui.UIObject::resolvePotentialElement()();
+													};
+													}-*/;
+
+	private static final native void cannotResolveTwice() /*-{
+															throw "A PotentialElement cannot be resolved twice.";
+															}-*/;
+
 	/**
 	 * Creates an {@link HtmlElementBuilder} instance inheriting all attributes
 	 * set for the given PotentialElement.
@@ -96,34 +108,6 @@ public class PotentialElement extends Element {
 		el.mergeInto(builder);
 		return builder;
 	}
-
-	public static boolean isPotential(com.google.gwt.dom.client.Element elem) {
-		return false;
-	}
-
-	/**
-	 * If given a PotentialElement, returns the real Element to be built from
-	 * it. Otherwise returns the given Element itself.
-	 * <p>
-	 * Note that a PotentialElement can only be resolved once. Making repeated
-	 * calls to this method with the same PotentialElement is an error.
-	 */
-	public static Element resolve(Element maybePotential) {
-		throw new UnsupportedOperationException();
-		// return maybePotential.<PotentialElement> cast().resolve();
-	}
-
-	private static native JavaScriptObject
-			buildResolveCallback(UIObject resolver) /*-{
-													return function() {
-													this.__gwt_resolve = @com.google.gwt.user.client.ui.PotentialElement::cannotResolveTwice();
-													return resolver.@com.google.gwt.user.client.ui.UIObject::resolvePotentialElement()();
-													};
-													}-*/;
-
-	private static final native void cannotResolveTwice() /*-{
-															throw "A PotentialElement cannot be resolved twice.";
-															}-*/;
 
 	private static final native void declareShim() /*-{
 													var shim = function() {
@@ -156,6 +140,10 @@ public class PotentialElement extends Element {
 													$wnd.GwtPotentialElementShim = shim;
 													}-*/;
 
+	public static boolean isPotential(com.google.gwt.dom.client.Element elem) {
+		return false;
+	}
+
 	/**
 	 * Tests whether a given {@link JavaScriptObject} represents a
 	 * PotentialElement.
@@ -171,6 +159,18 @@ public class PotentialElement extends Element {
 																	return false;
 																	}
 																	}-*/;
+
+	/**
+	 * If given a PotentialElement, returns the real Element to be built from
+	 * it. Otherwise returns the given Element itself.
+	 * <p>
+	 * Note that a PotentialElement can only be resolved once. Making repeated
+	 * calls to this method with the same PotentialElement is an error.
+	 */
+	public static Element resolve(Element maybePotential) {
+		throw new UnsupportedOperationException();
+		// return maybePotential.<PotentialElement> cast().resolve();
+	}
 
 	protected PotentialElement() {
 	}

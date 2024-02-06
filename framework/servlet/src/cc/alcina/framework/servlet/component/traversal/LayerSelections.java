@@ -29,6 +29,40 @@ class LayerSelections extends Model.All {
 	@Binding(type = Type.PROPERTY)
 	boolean empty;
 
+	NameArea nameArea;
+
+	SelectionsArea selectionsArea;
+
+	private Layer layer;
+
+	private SelectionLayers selectionLayers;
+
+	public LayerSelections(SelectionLayers selectionLayers, Layer layer) {
+		this.selectionLayers = selectionLayers;
+		this.layer = layer;
+		nameArea = new NameArea();
+		selectionsArea = new SelectionsArea();
+	}
+
+	String computeOutputs() {
+		int size = outputCount();
+		if (size != 0) {
+			return String.valueOf(size);
+		}
+		Layer firstLeaf = layer.firstLeaf();
+		int firstLeafSize = selectionLayers.traversal.getSelections(firstLeaf)
+				.size();
+		if (firstLeafSize != 0) {
+			return "-";
+		} else {
+			return "0";
+		}
+	}
+
+	int outputCount() {
+		return selectionLayers.traversal.getSelections(layer).size();
+	}
+
 	@Directed(className = "bordered-area")
 	class NameArea extends Model.All {
 		String key;
@@ -44,48 +78,7 @@ class LayerSelections extends Model.All {
 		}
 	}
 
-	static class Spacer extends Model {
-	}
-
 	class SelectionsArea extends Model.All {
-		@Directed(className = "bordered-area")
-		class SelectionArea extends Model.All
-				implements DomEvents.Click.Handler {
-			String pathSegment;
-
-			String type;
-
-			String text;
-
-			private Selection selection;
-
-			@Binding(type = Type.PROPERTY)
-			TraversalPlace.SelectionType selectionType;
-
-			SelectionArea(Selection selection) {
-				this.selection = selection;
-				View view = selection.view();
-				pathSegment = view.getPathSegment(selection);
-				text = view.getText(selection);
-				text = text == null ? "[gc]" : Ax.ntrim(Ax.trim(text, 100));
-				selectionType = Page.traversalPlace().selectionType(selection);
-			}
-
-			@Override
-			public void onClick(Click event) {
-				DomEvent domEvent = (DomEvent) event.getContext()
-						.getOriginatingGwtEvent();
-				NativeEvent nativeEvent = domEvent.getNativeEvent();
-				TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
-				SelectionPath selectionPath = new TraversalPlace.SelectionPath();
-				selectionPath.selection = selection;
-				selectionPath.path = selection.processNode().treePath();
-				selectionPath.type = selectionType;
-				event.reemitAs(this, TraversalEvents.SelectionSelected.class,
-						selectionPath);
-			}
-		}
-
 		List<Object> selections;
 
 		private boolean parallel;
@@ -123,39 +116,46 @@ class LayerSelections extends Model.All {
 				return Page.traversalPlace().test(selection);
 			}
 		}
-	}
 
-	NameArea nameArea;
+		@Directed(className = "bordered-area")
+		class SelectionArea extends Model.All
+				implements DomEvents.Click.Handler {
+			String pathSegment;
 
-	SelectionsArea selectionsArea;
+			String type;
 
-	private Layer layer;
+			String text;
 
-	private SelectionLayers selectionLayers;
+			private Selection selection;
 
-	public LayerSelections(SelectionLayers selectionLayers, Layer layer) {
-		this.selectionLayers = selectionLayers;
-		this.layer = layer;
-		nameArea = new NameArea();
-		selectionsArea = new SelectionsArea();
-	}
+			@Binding(type = Type.PROPERTY)
+			TraversalPlace.SelectionType selectionType;
 
-	String computeOutputs() {
-		int size = outputCount();
-		if (size != 0) {
-			return String.valueOf(size);
+			SelectionArea(Selection selection) {
+				this.selection = selection;
+				View view = selection.view();
+				pathSegment = view.getPathSegment(selection);
+				text = view.getText(selection);
+				text = text == null ? "[gc]" : Ax.ntrim(Ax.trim(text, 100));
+				selectionType = Page.traversalPlace().selectionType(selection);
+			}
+
+			@Override
+			public void onClick(Click event) {
+				DomEvent domEvent = (DomEvent) event.getContext()
+						.getOriginatingGwtEvent();
+				NativeEvent nativeEvent = domEvent.getNativeEvent();
+				TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
+				SelectionPath selectionPath = new TraversalPlace.SelectionPath();
+				selectionPath.selection = selection;
+				selectionPath.path = selection.processNode().treePath();
+				selectionPath.type = selectionType;
+				event.reemitAs(this, TraversalEvents.SelectionSelected.class,
+						selectionPath);
+			}
 		}
-		Layer firstLeaf = layer.firstLeaf();
-		int firstLeafSize = selectionLayers.traversal.getSelections(firstLeaf)
-				.size();
-		if (firstLeafSize != 0) {
-			return "-";
-		} else {
-			return "0";
-		}
 	}
 
-	int outputCount() {
-		return selectionLayers.traversal.getSelections(layer).size();
+	static class Spacer extends Model {
 	}
 }

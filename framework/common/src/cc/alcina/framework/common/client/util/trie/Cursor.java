@@ -25,6 +25,18 @@ import java.util.Map.Entry;
  */
 public interface Cursor<K, V> {
 	/**
+	 * Called for each {@link Entry} in the {@link Trie}. Return
+	 * {@link Decision#EXIT} to finish the {@link Trie} operation,
+	 * {@link Decision#CONTINUE} to go to the next {@link Entry},
+	 * {@link Decision#REMOVE} to remove the {@link Entry} and continue
+	 * iterating or {@link Decision#REMOVE_AND_EXIT} to remove the {@link Entry}
+	 * and stop iterating.
+	 * 
+	 * Note: Not all operations support {@link Decision#REMOVE}.
+	 */
+	public Decision select(Map.Entry<? extends K, ? extends V> entry);
+
+	/**
 	 * The {@link Decision} tells the {@link Cursor} what to do on each step
 	 * while traversing the {@link Trie}.
 	 * 
@@ -51,16 +63,4 @@ public interface Cursor<K, V> {
 		 */
 		REMOVE_AND_EXIT;
 	}
-
-	/**
-	 * Called for each {@link Entry} in the {@link Trie}. Return
-	 * {@link Decision#EXIT} to finish the {@link Trie} operation,
-	 * {@link Decision#CONTINUE} to go to the next {@link Entry},
-	 * {@link Decision#REMOVE} to remove the {@link Entry} and continue
-	 * iterating or {@link Decision#REMOVE_AND_EXIT} to remove the {@link Entry}
-	 * and stop iterating.
-	 * 
-	 * Note: Not all operations support {@link Decision#REMOVE}.
-	 */
-	public Decision select(Map.Entry<? extends K, ? extends V> entry);
 }

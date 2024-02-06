@@ -38,21 +38,6 @@ public interface IGroup
 				id);
 	}
 
-	@Override
-	public long getId();
-
-	public Set<? extends IGroup> getMemberGroups();
-
-	public Set<? extends IGroup> getMemberOfGroups();
-
-	public Set<? extends IUser> getMemberUsers();
-
-	public String getName();
-
-	public void setGroupName(String name);
-
-	public void setMemberUsers(Set<? extends IUser> memberUsers);
-
 	default <IG extends Entity & IGroup> void addMemberGroup(IG group) {
 		((Entity) this).domain().addToProperty("memberGroups", group);
 	}
@@ -101,6 +86,17 @@ public interface IGroup
 		return false;
 	}
 
+	@Override
+	public long getId();
+
+	public Set<? extends IGroup> getMemberGroups();
+
+	public Set<? extends IGroup> getMemberOfGroups();
+
+	public Set<? extends IUser> getMemberUsers();
+
+	public String getName();
+
 	default boolean provideIsMemberOf(IGroup otherGroup) {
 		return forAnyMemberGroup(group -> Objects.equals(group, otherGroup));
 	}
@@ -113,4 +109,8 @@ public interface IGroup
 	default <IU extends Entity & IUser> void removeMemberUser(IU user) {
 		((Entity) this).domain().removeFromProperty("memberUsers", user);
 	}
+
+	public void setGroupName(String name);
+
+	public void setMemberUsers(Set<? extends IUser> memberUsers);
 }

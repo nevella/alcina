@@ -63,18 +63,6 @@ public interface TreeSerializable extends Serializable {
 			return serialized;
 		}
 
-		public void onAfterTreeDeserialize() {
-		}
-
-		public void onAfterTreeSerialize() {
-		}
-
-		public void onBeforeTreeDeserialize() {
-		}
-
-		public void onBeforeTreeSerialize() {
-		}
-
 		private String mapKeys(String serialized,
 				TypeSerialization typeSerialization, boolean to) {
 			Map<String, String> mappings = new LinkedHashMap<>();
@@ -114,6 +102,18 @@ public interface TreeSerializable extends Serializable {
 			} else {
 				return serialized;
 			}
+		}
+
+		public void onAfterTreeDeserialize() {
+		}
+
+		public void onAfterTreeSerialize() {
+		}
+
+		public void onBeforeTreeDeserialize() {
+		}
+
+		public void onBeforeTreeSerialize() {
 		}
 	}
 

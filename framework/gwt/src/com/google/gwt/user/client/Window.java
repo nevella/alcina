@@ -79,6 +79,22 @@ public class Window {
 	}
 
 	/**
+	 * Adds this handler to the Window.
+	 *
+	 * @param <H>
+	 *            the type of handler to add
+	 * @param type
+	 *            the event type
+	 * @param handler
+	 *            the handler
+	 * @return {@link HandlerRegistration} used to remove the handler
+	 */
+	private static <H extends EventHandler> HandlerRegistration
+			addHandler(GwtEvent.Type<H> type, final H handler) {
+		return getHandlers().addHandler(type, handler);
+	}
+
+	/**
 	 * Adds a {@link ResizeEvent} handler.
 	 *
 	 * @param handler
@@ -192,6 +208,18 @@ public class Window {
 	}
 
 	/**
+	 * Fires an event.
+	 *
+	 * @param event
+	 *            the event
+	 */
+	private static void fireEvent(GwtEvent<?> event) {
+		if (handlers != null) {
+			handlers.fireEvent(event);
+		}
+	}
+
+	/**
 	 * Gets the height of the browser window's client area excluding the scroll
 	 * bar.
 	 *
@@ -209,6 +237,13 @@ public class Window {
 	 */
 	public static int getClientWidth() {
 		return Document.get().getClientWidth();
+	}
+
+	private static WindowHandlers getHandlers() {
+		if (handlers == null) {
+			handlers = new WindowHandlers();
+		}
+		return handlers;
 	}
 
 	/**
@@ -237,6 +272,27 @@ public class Window {
 	public static native String getTitle() /*-{
     return $doc.title;
 	}-*/;
+
+	private static void maybeInitializeCloseHandlers() {
+		if (GWT.isClient() && !closeHandlersInitialized) {
+			impl.initWindowCloseHandler();
+			closeHandlersInitialized = true;
+		}
+	}
+
+	private static void maybeInitializeResizeHandlers() {
+		if (GWT.isClient() && !resizeHandlersInitialized) {
+			impl.initWindowResizeHandler();
+			resizeHandlersInitialized = true;
+		}
+	}
+
+	private static void maybeInitializeScrollHandlers() {
+		if (GWT.isClient() && !scrollHandlersInitialized) {
+			impl.initWindowScrollHandler();
+			scrollHandlersInitialized = true;
+		}
+	}
 
 	/**
 	 * Moves a window's left and top edge to a specified number of pixels
@@ -272,6 +328,41 @@ public class Window {
 	public static native void moveTo(int x, int y) /*-{
     $wnd.moveTo(x, y);
 	}-*/;
+
+	static void onClosed() {
+		if (closeHandlersInitialized) {
+			CloseEvent.fire(getHandlers(), null);
+		}
+	}
+
+	static String onClosing() {
+		if (closeHandlersInitialized) {
+			Window.ClosingEvent event = new Window.ClosingEvent();
+			fireEvent(event);
+			return event.getMessage();
+		}
+		return null;
+	}
+
+	static void onResize() {
+		if (resizeHandlersInitialized) {
+			// On webkit and IE we sometimes get duplicate window resize events.
+			// Here, we manually filter them.
+			int width = getClientWidth();
+			int height = getClientHeight();
+			if (lastResizeWidth != width || lastResizeHeight != height) {
+				lastResizeWidth = width;
+				lastResizeHeight = height;
+				ResizeEvent.fire(getHandlers(), width, height);
+			}
+		}
+	}
+
+	static void onScroll() {
+		if (scrollHandlersInitialized) {
+			fireEvent(new Window.ScrollEvent(getScrollLeft(), getScrollTop()));
+		}
+	}
 
 	/**
 	 * Opens a new browser window. The "name" and "features" arguments are
@@ -402,6 +493,15 @@ public class Window {
 		scrollTo0(left, top, smooth);
 	}
 
+	private static native void scrollTo0(int left, int top, boolean smooth) /*-{
+    var args = {
+      'left' : left,
+      'top' : top,
+      'behavior' : smooth ? 'smooth' : 'auto'
+    };
+    $wnd.scrollTo(args);
+	}-*/;
+
 	/**
 	 * Sets the size of the margins used within the window's client area. It is
 	 * sometimes necessary to do this because some browsers, such as Internet
@@ -426,106 +526,6 @@ public class Window {
     $wnd.status = status;
 	}-*/;
 
-	/**
-	 * Adds this handler to the Window.
-	 *
-	 * @param <H>
-	 *            the type of handler to add
-	 * @param type
-	 *            the event type
-	 * @param handler
-	 *            the handler
-	 * @return {@link HandlerRegistration} used to remove the handler
-	 */
-	private static <H extends EventHandler> HandlerRegistration
-			addHandler(GwtEvent.Type<H> type, final H handler) {
-		return getHandlers().addHandler(type, handler);
-	}
-
-	/**
-	 * Fires an event.
-	 *
-	 * @param event
-	 *            the event
-	 */
-	private static void fireEvent(GwtEvent<?> event) {
-		if (handlers != null) {
-			handlers.fireEvent(event);
-		}
-	}
-
-	private static WindowHandlers getHandlers() {
-		if (handlers == null) {
-			handlers = new WindowHandlers();
-		}
-		return handlers;
-	}
-
-	private static void maybeInitializeCloseHandlers() {
-		if (GWT.isClient() && !closeHandlersInitialized) {
-			impl.initWindowCloseHandler();
-			closeHandlersInitialized = true;
-		}
-	}
-
-	private static void maybeInitializeResizeHandlers() {
-		if (GWT.isClient() && !resizeHandlersInitialized) {
-			impl.initWindowResizeHandler();
-			resizeHandlersInitialized = true;
-		}
-	}
-
-	private static void maybeInitializeScrollHandlers() {
-		if (GWT.isClient() && !scrollHandlersInitialized) {
-			impl.initWindowScrollHandler();
-			scrollHandlersInitialized = true;
-		}
-	}
-
-	private static native void scrollTo0(int left, int top, boolean smooth) /*-{
-    var args = {
-      'left' : left,
-      'top' : top,
-      'behavior' : smooth ? 'smooth' : 'auto'
-    };
-    $wnd.scrollTo(args);
-	}-*/;
-
-	static void onClosed() {
-		if (closeHandlersInitialized) {
-			CloseEvent.fire(getHandlers(), null);
-		}
-	}
-
-	static String onClosing() {
-		if (closeHandlersInitialized) {
-			Window.ClosingEvent event = new Window.ClosingEvent();
-			fireEvent(event);
-			return event.getMessage();
-		}
-		return null;
-	}
-
-	static void onResize() {
-		if (resizeHandlersInitialized) {
-			// On webkit and IE we sometimes get duplicate window resize events.
-			// Here, we manually filter them.
-			int width = getClientWidth();
-			int height = getClientHeight();
-			if (lastResizeWidth != width || lastResizeHeight != height) {
-				lastResizeWidth = width;
-				lastResizeHeight = height;
-				ResizeEvent.fire(getHandlers(), width, height);
-			}
-		}
-	}
-
-	static void onScroll() {
-		if (scrollHandlersInitialized) {
-			fireEvent(new Window.ScrollEvent(getScrollLeft(), getScrollTop()));
-		}
-	}
-
 	private Window() {
 	}
 
@@ -548,6 +548,11 @@ public class Window {
 		 * leave the page.
 		 */
 		private String message = null;
+
+		@Override
+		protected void dispatch(ClosingHandler handler) {
+			handler.onWindowClosing(this);
+		}
 
 		@Override
 		public final Type<ClosingHandler> getAssociatedType() {
@@ -576,11 +581,6 @@ public class Window {
 		 */
 		public void setMessage(String message) {
 			this.message = message;
-		}
-
-		@Override
-		protected void dispatch(ClosingHandler handler) {
-			handler.onWindowClosing(this);
 		}
 	}
 
@@ -618,6 +618,44 @@ public class Window {
 		}
 
 		/**
+		 * Builds the immutable map from String to List<String> that we'll
+		 * return in getParameterMap(). Package-protected for testing.
+		 *
+		 * @return a map from the
+		 */
+		static Map<String, List<String>> buildListParamMap(String queryString) {
+			Map<String, List<String>> out = new HashMap<String, List<String>>();
+			if (queryString != null && queryString.length() > 1) {
+				String qs = queryString.substring(1);
+				for (String kvPair : qs.split("&")) {
+					String[] kv = kvPair.split("=", 2);
+					String key = kv[0];
+					if (key.isEmpty()) {
+						continue;
+					}
+					String val = kv.length > 1 ? kv[1] : "";
+					try {
+						val = URL.decodeQueryString(val);
+					} catch (JavaScriptException e) {
+						GWT.log("Cannot decode a URL query string parameter="
+								+ key + " value=" + val, e);
+					}
+					List<String> values = out.get(key);
+					if (values == null) {
+						values = new ArrayList<String>();
+						out.put(key, values);
+					}
+					values.add(val);
+				}
+			}
+			for (Map.Entry<String, List<String>> entry : out.entrySet()) {
+				entry.setValue(Collections.unmodifiableList(entry.getValue()));
+			}
+			out = Collections.unmodifiableMap(out);
+			return out;
+		}
+
+		/**
 		 * Create a {@link UrlBuilder} based on this {@link Location}.
 		 *
 		 * @return the new builder
@@ -648,6 +686,10 @@ public class Window {
 						values.toArray(new String[values.size()]));
 			}
 			return builder;
+		}
+
+		static Location get() {
+			return contextProvider.contextFrame();
 		}
 
 		/**
@@ -785,48 +827,6 @@ public class Window {
 
 		public static Topic<String> topicHashChanged() {
 			return get().topicHashChanged;
-		}
-
-		/**
-		 * Builds the immutable map from String to List<String> that we'll
-		 * return in getParameterMap(). Package-protected for testing.
-		 *
-		 * @return a map from the
-		 */
-		static Map<String, List<String>> buildListParamMap(String queryString) {
-			Map<String, List<String>> out = new HashMap<String, List<String>>();
-			if (queryString != null && queryString.length() > 1) {
-				String qs = queryString.substring(1);
-				for (String kvPair : qs.split("&")) {
-					String[] kv = kvPair.split("=", 2);
-					String key = kv[0];
-					if (key.isEmpty()) {
-						continue;
-					}
-					String val = kv.length > 1 ? kv[1] : "";
-					try {
-						val = URL.decodeQueryString(val);
-					} catch (JavaScriptException e) {
-						GWT.log("Cannot decode a URL query string parameter="
-								+ key + " value=" + val, e);
-					}
-					List<String> values = out.get(key);
-					if (values == null) {
-						values = new ArrayList<String>();
-						out.put(key, values);
-					}
-					values.add(val);
-				}
-			}
-			for (Map.Entry<String, List<String>> entry : out.entrySet()) {
-				entry.setValue(Collections.unmodifiableList(entry.getValue()));
-			}
-			out = Collections.unmodifiableMap(out);
-			return out;
-		}
-
-		static Location get() {
-			return contextProvider.contextFrame();
 		}
 
 		private Topic<String> topicHashChanged = Topic.create();
@@ -1035,6 +1035,11 @@ public class Window {
 		}
 
 		@Override
+		protected void dispatch(ScrollHandler handler) {
+			handler.onWindowScroll(this);
+		}
+
+		@Override
 		public final Type<ScrollHandler> getAssociatedType() {
 			return TYPE;
 		}
@@ -1055,11 +1060,6 @@ public class Window {
 		 */
 		public int getScrollTop() {
 			return scrollTop;
-		}
-
-		@Override
-		protected void dispatch(ScrollHandler handler) {
-			handler.onWindowScroll(this);
 		}
 	}
 

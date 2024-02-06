@@ -125,6 +125,14 @@ public class WidgetUtils {
 		return widgets;
 	}
 
+	private static native void cancelPossibleIEShortcut() /*-{
+    try {
+      $wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
+    } catch (e) {
+
+    }
+	}-*/;
+
 	// REVISIT - Check all calls here either the cp implements haschildhandlers,
 	// or
 	// explain why t'hell not...(doesn't add handlers to the child widgets would
@@ -216,9 +224,26 @@ public class WidgetUtils {
 		}
 	}
 
+	private static native void copyTextToClipboard0(String text) /*-{
+    var textField = $doc.createElement('textarea');
+    textField.innerText = text;
+    $doc.body.appendChild(textField);
+    textField.select();
+    $doc.execCommand('copy');
+    textField.remove();
+	}-*/;
+
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
 				false, false);
+	}
+
+	private static void debugScroll(String message) {
+		if (debugScroll) {
+			ClientNotifications.get().log(Ax.format("scroll from: %s,%s",
+					Window.getScrollLeft(), Window.getScrollTop()));
+			ClientNotifications.get().log(message);
+		}
 	}
 
 	public static void disableTextBoxHelpers(Widget textBox) {
@@ -233,6 +258,14 @@ public class WidgetUtils {
 		return GWT.isClient() ? docHasFocus0() : true;
 	}
 
+	static native boolean docHasFocus0() /*-{
+    if (typeof $wnd.document.hasFocus !== "undefined") {
+      return $wnd.document.hasFocus();
+    } else {
+      return true;
+    }
+	}-*/;
+
 	public static native boolean docIsVisible() /*-{
     if (typeof $wnd.document.hidden !== "undefined") {
       return !$wnd.document.hidden;
@@ -240,6 +273,10 @@ public class WidgetUtils {
       return true;
     }
 	}-*/;
+
+	private static void ensureRemote(Element element) {
+		element.implAccess().ensureJsoRemote();
+	}
 
 	public static native boolean execCopy() /*-{
     return $wnd.document.execCommand("copy");
@@ -316,8 +353,42 @@ public class WidgetUtils {
 		return getBestOffsetHeight(e, false);
 	}
 
+	private static int getBestOffsetHeight(Element e, boolean parentPass) {
+		return getBestOffsetHeight(e, parentPass, true);
+	}
+
+	private static int getBestOffsetHeight(Element e, boolean parentPass,
+			boolean allowParentPass) {
+		int h = e.getPropertyInt("offsetHeight");
+		if (h != 0 || e.getParentElement() == null) {
+			return h;
+		}
+		if (e.getFirstChildElement() == null && !parentPass) {
+			return getBestOffsetHeight(e, true);
+		}
+		if (!allowParentPass) {
+			return 0;
+		}
+		return getBestOffsetHeight(
+				parentPass ? e.getParentElement() : e.getFirstChildElement(),
+				parentPass);
+	}
+
 	public static int getBestOffsetWidth(Element e) {
 		return getBestOffsetWidth(e, false);
+	}
+
+	private static int getBestOffsetWidth(Element e, boolean parentPass) {
+		int h = e.getPropertyInt("offsetWidth");
+		if (h != 0 || e.getParentElement() == null) {
+			return h;
+		}
+		if (e.getFirstChildElement() == null && !parentPass) {
+			return getBestOffsetWidth(e, true);
+		}
+		return getBestOffsetWidth(
+				parentPass ? e.getParentElement() : e.getFirstChildElement(),
+				parentPass);
 	}
 
 	public static native String getBoundingClientRect(Element elem) /*-{
@@ -598,12 +669,57 @@ public class WidgetUtils {
     return $wnd.document.queryCommandSupported("copy");
 	}-*/;
 
+	private static boolean isDirectionalLayoutPanel(Widget panel,
+			boolean horizontal) {
+		if (panel instanceof DockLayoutPanel) {
+			DockLayoutPanel dlp = (DockLayoutPanel) panel;
+			Iterator<Widget> itr = dlp.iterator();
+			for (Widget widget : dlp) {
+				Direction dir = dlp.getWidgetDirection(widget);
+				if (horizontal
+						&& (dir == Direction.NORTH || dir == Direction.SOUTH)) {
+					return false;
+				}
+				if (!horizontal
+						&& (dir == Direction.WEST || dir == Direction.EAST)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	static boolean isEditable(Element element) {
+		return element.hasTagName("input") || element.hasTagName("textarea")
+				|| Objects.equals(getComputedStyle(element, "contentEditable"),
+						"true");
+	}
+
 	public static boolean isLessThanXpixelsFrom(Element e, int hDistance,
 			int vDistance) {
 		Event currentEvent = Event.getCurrentEvent();
 		return isLessThanXpixelsFrom0(e, hDistance, vDistance,
 				currentEvent.getClientX(), currentEvent.getClientY());
 	}
+
+	private static native boolean isLessThanXpixelsFrom0(Element e,
+			int hDistance, int vDistance, int x, int y) /*-{
+    try {
+      var rects = e.getClientRects();
+      for (var idx = 0; idx < rects.length; idx++) {
+        var rect = rects[idx];
+        var hOk = rect.left - x < hDistance && x - rect.right < hDistance;
+        var vOk = rect.top - y < vDistance && y - rect.bottom < vDistance;
+        if (hOk && vOk) {
+          return true;
+        }
+      }
+      return false;
+    } catch (e2) {
+      return false;
+    }
+	}-*/;
 
 	public static boolean isNewTabModifier() {
 		Event event = Event.getCurrentEvent();
@@ -641,6 +757,12 @@ public class WidgetUtils {
 	public static boolean isVisibleAncestorChain(Widget w) {
 		return isVisibleAncestorChain(w.getElement());
 	}
+
+	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
+    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
+    return (remote.style.display != 'none' && remote.offsetParent != null);
+	}-*/;
 
 	public static boolean isVisibleWithOffsetParent(Widget w) {
 		return isVisibleWithOffsetParent(w.getElement());
@@ -693,6 +815,27 @@ public class WidgetUtils {
 				w, callback);
 		if (pp != null) {
 			pp.hide();
+		}
+	}
+
+	private static void morphSplitPanel(SplitLayoutPanel splitPanel,
+			Widget keepChild, boolean restore) {
+		final String zeroSize = "0px";
+		boolean hsp = isDirectionalLayoutPanel(splitPanel, true);
+		for (int index = 0; index < splitPanel.getWidgetCount(); index++) {
+			Widget w = splitPanel.getWidget(index);
+			if (CommonUtils.simpleClassName(w.getClass())
+					.contains("Splitter")) {
+				w.setVisible(restore);
+			} else {
+				Element container = splitPanel.getWidgetContainerElement(w);
+				container.getStyle()
+						.setDisplay(restore || keepChild == w ? Display.BLOCK
+								: Display.NONE);
+			}
+		}
+		if (!restore) {
+			morphedWidgets.add(splitPanel);
 		}
 	}
 
@@ -891,6 +1034,11 @@ public class WidgetUtils {
 		scrollTo(0, y);
 	}
 
+	private static void scrollElementIntoView(Element e) {
+		debugScroll(Ax.format("elt:%s", e));
+		e.scrollIntoView();
+	}
+
 	public static void scrollIntoView(Element e) {
 		scrollIntoView(e, 0);
 	}
@@ -1059,154 +1207,6 @@ public class WidgetUtils {
 		FlowPanel fp = new FlowPanel();
 		fp.add(widget);
 		return fp;
-	}
-
-	private static native void cancelPossibleIEShortcut() /*-{
-    try {
-      $wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
-    } catch (e) {
-
-    }
-	}-*/;
-
-	private static native void copyTextToClipboard0(String text) /*-{
-    var textField = $doc.createElement('textarea');
-    textField.innerText = text;
-    $doc.body.appendChild(textField);
-    textField.select();
-    $doc.execCommand('copy');
-    textField.remove();
-	}-*/;
-
-	private static void debugScroll(String message) {
-		if (debugScroll) {
-			ClientNotifications.get().log(Ax.format("scroll from: %s,%s",
-					Window.getScrollLeft(), Window.getScrollTop()));
-			ClientNotifications.get().log(message);
-		}
-	}
-
-	private static void ensureRemote(Element element) {
-		element.implAccess().ensureJsoRemote();
-	}
-
-	private static int getBestOffsetHeight(Element e, boolean parentPass) {
-		return getBestOffsetHeight(e, parentPass, true);
-	}
-
-	private static int getBestOffsetHeight(Element e, boolean parentPass,
-			boolean allowParentPass) {
-		int h = e.getPropertyInt("offsetHeight");
-		if (h != 0 || e.getParentElement() == null) {
-			return h;
-		}
-		if (e.getFirstChildElement() == null && !parentPass) {
-			return getBestOffsetHeight(e, true);
-		}
-		if (!allowParentPass) {
-			return 0;
-		}
-		return getBestOffsetHeight(
-				parentPass ? e.getParentElement() : e.getFirstChildElement(),
-				parentPass);
-	}
-
-	private static int getBestOffsetWidth(Element e, boolean parentPass) {
-		int h = e.getPropertyInt("offsetWidth");
-		if (h != 0 || e.getParentElement() == null) {
-			return h;
-		}
-		if (e.getFirstChildElement() == null && !parentPass) {
-			return getBestOffsetWidth(e, true);
-		}
-		return getBestOffsetWidth(
-				parentPass ? e.getParentElement() : e.getFirstChildElement(),
-				parentPass);
-	}
-
-	private static boolean isDirectionalLayoutPanel(Widget panel,
-			boolean horizontal) {
-		if (panel instanceof DockLayoutPanel) {
-			DockLayoutPanel dlp = (DockLayoutPanel) panel;
-			Iterator<Widget> itr = dlp.iterator();
-			for (Widget widget : dlp) {
-				Direction dir = dlp.getWidgetDirection(widget);
-				if (horizontal
-						&& (dir == Direction.NORTH || dir == Direction.SOUTH)) {
-					return false;
-				}
-				if (!horizontal
-						&& (dir == Direction.WEST || dir == Direction.EAST)) {
-					return false;
-				}
-			}
-			return true;
-		}
-		return false;
-	}
-
-	private static native boolean isLessThanXpixelsFrom0(Element e,
-			int hDistance, int vDistance, int x, int y) /*-{
-    try {
-      var rects = e.getClientRects();
-      for (var idx = 0; idx < rects.length; idx++) {
-        var rect = rects[idx];
-        var hOk = rect.left - x < hDistance && x - rect.right < hDistance;
-        var vOk = rect.top - y < vDistance && y - rect.bottom < vDistance;
-        if (hOk && vOk) {
-          return true;
-        }
-      }
-      return false;
-    } catch (e2) {
-      return false;
-    }
-	}-*/;
-
-	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
-    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
-    return (remote.style.display != 'none' && remote.offsetParent != null);
-	}-*/;
-
-	private static void morphSplitPanel(SplitLayoutPanel splitPanel,
-			Widget keepChild, boolean restore) {
-		final String zeroSize = "0px";
-		boolean hsp = isDirectionalLayoutPanel(splitPanel, true);
-		for (int index = 0; index < splitPanel.getWidgetCount(); index++) {
-			Widget w = splitPanel.getWidget(index);
-			if (CommonUtils.simpleClassName(w.getClass())
-					.contains("Splitter")) {
-				w.setVisible(restore);
-			} else {
-				Element container = splitPanel.getWidgetContainerElement(w);
-				container.getStyle()
-						.setDisplay(restore || keepChild == w ? Display.BLOCK
-								: Display.NONE);
-			}
-		}
-		if (!restore) {
-			morphedWidgets.add(splitPanel);
-		}
-	}
-
-	private static void scrollElementIntoView(Element e) {
-		debugScroll(Ax.format("elt:%s", e));
-		e.scrollIntoView();
-	}
-
-	static native boolean docHasFocus0() /*-{
-    if (typeof $wnd.document.hasFocus !== "undefined") {
-      return $wnd.document.hasFocus();
-    } else {
-      return true;
-    }
-	}-*/;
-
-	static boolean isEditable(Element element) {
-		return element.hasTagName("input") || element.hasTagName("textarea")
-				|| Objects.equals(getComputedStyle(element, "contentEditable"),
-						"true");
 	}
 
 	// those values might be needed for non-webkit

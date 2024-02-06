@@ -119,14 +119,6 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 	}
 
-	private InternetAddress toInternetAddress(String email) {
-		try {
-			return new InternetAddress(email);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	protected boolean isUseVerp() {
 		return false;
 	}
@@ -360,6 +352,14 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			deliveryModel.removeAttachment(pdfAttachment);
 		}
 		return "OK";
+	}
+
+	private InternetAddress toInternetAddress(String email) {
+		try {
+			return new InternetAddress(email);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static class MessageSizeUndeterminedException extends Exception {

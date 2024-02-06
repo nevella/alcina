@@ -151,27 +151,6 @@ public class DecoratedPopupPanel extends PopupPanel {
 	}
 
 	@Override
-	public Widget getWidget() {
-		return decPanel.getWidget();
-	}
-
-	@Override
-	public Iterator<Widget> iterator() {
-		return decPanel.iterator();
-	}
-
-	@Override
-	public boolean remove(Widget w) {
-		return decPanel.remove(w);
-	}
-
-	@Override
-	public void setWidget(Widget w) {
-		decPanel.setWidget(w);
-		maybeUpdateSize();
-	}
-
-	@Override
 	protected void doAttachChildren() {
 		// See comment in doDetachChildren for an explanation of this call
 		decPanel.onAttach();
@@ -204,5 +183,26 @@ public class DecoratedPopupPanel extends PopupPanel {
 	 */
 	protected Element getCellElement(int row, int cell) {
 		return DOM.asOld(decPanel.getCellElement(row, cell));
+	}
+
+	@Override
+	public Widget getWidget() {
+		return decPanel.getWidget();
+	}
+
+	@Override
+	public Iterator<Widget> iterator() {
+		return decPanel.iterator();
+	}
+
+	@Override
+	public boolean remove(Widget w) {
+		return decPanel.remove(w);
+	}
+
+	@Override
+	public void setWidget(Widget w) {
+		decPanel.setWidget(w);
+		maybeUpdateSize();
 	}
 }

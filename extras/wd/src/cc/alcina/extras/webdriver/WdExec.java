@@ -51,6 +51,8 @@ public class WdExec {
 
 	private boolean useScriptedClick;
 
+	Consumer<WebElement> theClick = WebElement::click;
+
 	public Actions actions() {
 		Actions actions = new Actions(driver);
 		java.util.logging.Logger.getLogger(Actions.class.getName())
@@ -115,8 +117,6 @@ public class WdExec {
 		return click(false);
 	}
 
-	Consumer<WebElement> theClick = WebElement::click;
-
 	public boolean click(boolean returnIfNotVisible) {
 		return performAction(returnIfNotVisible, theClick);
 	}
@@ -156,6 +156,22 @@ public class WdExec {
 		return this;
 	}
 
+	private By getBy() {
+		if (cssSelector != null) {
+			return By.cssSelector(cssSelector);
+		}
+		if (xpath != null) {
+			return By.xpath(xpath);
+		}
+		if (linkText != null) {
+			return By.linkText(linkText);
+		}
+		if (textMatchParent != null) {
+			return new ByTextMatchParent(textMatchParent);
+		}
+		return null;
+	}
+
 	public WebDriver getDriver() {
 		return driver;
 	}
@@ -191,10 +207,18 @@ public class WdExec {
 		return this;
 	}
 
-	public boolean immediateIsInteractable() {
-		try {
-			return immediate(this::click);
-		} catch (Exception e) {
+	private boolean ignoreSpuriousOtherElementWouldReceiveClickException(
+			WebElement elem, String message) {
+		/*
+		 * possible chrome driver/version issue
+		 */
+		Pattern p = Pattern.compile(
+				"(?s).+Element (<.+?>).* is not clickable at point.+?(<.+?>).*");
+		Matcher m = p.matcher(message);
+		if (m.matches() && m.group(1).equals(m.group(2))) {
+			WDUtils.executeScript(driver, elem, "arguments[0].click();");
+			return true;
+		} else {
 			return false;
 		}
 	}
@@ -217,6 +241,14 @@ public class WdExec {
 			LooseContext.pop();
 		}
 		return false;
+	}
+
+	public boolean immediateIsInteractable() {
+		try {
+			return immediate(this::click);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	public boolean immediateTest() {
@@ -414,6 +446,15 @@ public class WdExec {
 		return this;
 	}
 
+	/**
+	 * A workaround for shadow-dom click interceptions (by self)
+	 * 
+	 * @param useScriptedClick
+	 */
+	public void useScriptedClick(boolean useScriptedClick) {
+		this.useScriptedClick = useScriptedClick;
+	}
+
 	public void waitFor() {
 		for (int i = 0; i < timeoutSecs * 10; i++) {
 			if (immediateTest()) {
@@ -452,38 +493,6 @@ public class WdExec {
 		return this;
 	}
 
-	private By getBy() {
-		if (cssSelector != null) {
-			return By.cssSelector(cssSelector);
-		}
-		if (xpath != null) {
-			return By.xpath(xpath);
-		}
-		if (linkText != null) {
-			return By.linkText(linkText);
-		}
-		if (textMatchParent != null) {
-			return new ByTextMatchParent(textMatchParent);
-		}
-		return null;
-	}
-
-	private boolean ignoreSpuriousOtherElementWouldReceiveClickException(
-			WebElement elem, String message) {
-		/*
-		 * possible chrome driver/version issue
-		 */
-		Pattern p = Pattern.compile(
-				"(?s).+Element (<.+?>).* is not clickable at point.+?(<.+?>).*");
-		Matcher m = p.matcher(message);
-		if (m.matches() && m.group(1).equals(m.group(2))) {
-			WDUtils.executeScript(driver, elem, "arguments[0].click();");
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	class ByTextMatchParent extends By {
 		private String textMatchParent;
 
@@ -507,14 +516,5 @@ public class WdExec {
 			}
 			throw new TimedOutException();
 		}
-	}
-
-	/**
-	 * A workaround for shadow-dom click interceptions (by self)
-	 * 
-	 * @param useScriptedClick
-	 */
-	public void useScriptedClick(boolean useScriptedClick) {
-		this.useScriptedClick = useScriptedClick;
 	}
 }

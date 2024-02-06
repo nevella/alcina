@@ -47,6 +47,11 @@ public class JsCodeserverTcpClientJava extends BrowserChannel {
 		return this.lastMessage.getClass().getSimpleName();
 	}
 
+	@Override
+	protected DataOutputStream getStreamToOtherSide() {
+		return out;
+	}
+
 	public Message receiveMessage() throws Exception {
 		MessageType type = Message.readMessageType(getStreamFromOtherSide());
 		Message message = null;
@@ -90,11 +95,6 @@ public class JsCodeserverTcpClientJava extends BrowserChannel {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	@Override
-	protected DataOutputStream getStreamToOtherSide() {
-		return out;
 	}
 
 	private static class ClientObjectRefFactory implements ObjectRefFactory {

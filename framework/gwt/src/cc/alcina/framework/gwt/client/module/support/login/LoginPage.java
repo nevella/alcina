@@ -46,10 +46,17 @@ public abstract class LoginPage extends Model
 		connectStatusPanel();
 	}
 
+	protected void connectStatusPanel() {
+		processStatus.connectToTopics(loginConsort.topicCallingRemote,
+				loginConsort.topicMessage);
+	}
+
 	@Directed
 	public Object getContents() {
 		return this.contents;
 	}
+
+	protected abstract String getEnteredText();
 
 	@Directed
 	public HeadingArea getHeadingArea() {
@@ -58,6 +65,10 @@ public abstract class LoginPage extends Model
 
 	public LoginConsort getLoginConsort() {
 		return this.loginConsort;
+	}
+
+	protected String getMessage(ValidationException e) {
+		return e.getMessage();
 	}
 
 	@Directed
@@ -69,6 +80,10 @@ public abstract class LoginPage extends Model
 	public ProcessStatus getProcessStatus() {
 		return this.processStatus;
 	}
+
+	protected abstract String getSubtitleText();
+
+	protected abstract Validator getValidator();
 
 	@Override
 	public void onInput(Input event) {
@@ -90,25 +105,6 @@ public abstract class LoginPage extends Model
 		onNextValidated();
 	}
 
-	public void setContents(Object contents) {
-		this.contents = contents;
-	}
-
-	protected void connectStatusPanel() {
-		processStatus.connectToTopics(loginConsort.topicCallingRemote,
-				loginConsort.topicMessage);
-	}
-
-	protected abstract String getEnteredText();
-
-	protected String getMessage(ValidationException e) {
-		return e.getMessage();
-	}
-
-	protected abstract String getSubtitleText();
-
-	protected abstract Validator getValidator();
-
 	protected void onNextValidated() {
 		loginConsort.onClickNext();
 	}
@@ -119,6 +115,10 @@ public abstract class LoginPage extends Model
 		// FIXME - ui2 1x0 - definitely want progress here
 		// .withAsyncTopic(controller.topicCallingRemote);
 		navigation.put(defaultButton, NavArea.NEXT);
+	}
+
+	public void setContents(Object contents) {
+		this.contents = contents;
 	}
 
 	protected boolean validate() {

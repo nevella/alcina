@@ -6,10 +6,6 @@ public abstract class ModuleReflector {
 	public ModuleReflector() {
 	}
 
-	public void register() {
-		ClientReflections.register(this);
-	}
-
 	protected abstract Class forName(String className);
 
 	protected ClassReflector getClassReflector(Class clazz) {
@@ -17,6 +13,10 @@ public abstract class ModuleReflector {
 	}
 
 	protected abstract ClassReflector getClassReflector_(String className);
+
+	public void register() {
+		ClientReflections.register(this);
+	}
 
 	protected abstract void registerRegistrations();
 

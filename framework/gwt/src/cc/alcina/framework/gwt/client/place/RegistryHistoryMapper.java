@@ -47,6 +47,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		ensurePlaceLookup();
 	}
 
+	private String cleanGwtCodesvr(String token) {
+		return token.replaceFirst("[?&]gwt.codesvr=127.0.0.1:\\d+$", "");
+	}
+
 	public <T extends Place> T copyPlace(T place) {
 		String token = getToken(place);
 		try {
@@ -57,8 +61,39 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		}
 	}
 
+	private synchronized void ensurePlaceLookup() {
+		if (initialised) {
+			return;
+		}
+		initialised = true;
+		listTokenizers().forEach(tokenizer -> {
+			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
+			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
+			if (tokenizer.isCanonicalModelClassTokenizer()) {
+				if (tokenizer instanceof EntityPlaceTokenizer) {
+					tokenizersByModelClass.put(
+							((EntityPlaceTokenizer) tokenizer).getModelClass(),
+							tokenizer);
+				}
+				if (tokenizer instanceof BindablePlaceTokenizer) {
+					tokenizersByModelClass
+							.put(((BindablePlaceTokenizer) tokenizer)
+									.getModelClass(), tokenizer);
+				}
+			}
+			tokenizer.register(tokenizersByModelClass);
+		});
+		listPlaces().filter(p -> p instanceof SubPlace)
+				.forEach(place -> placesBySubPlace
+						.put(((SubPlace) place).getSub(), place));
+	}
+
 	public boolean equalPlaces(Place place1, Place place2) {
 		return getToken(place1).equals(getToken(place2));
+	}
+
+	protected String getAppPrefix() {
+		return "";
 	}
 
 	public Class<? extends Entity>
@@ -129,62 +164,6 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return getTokenizerByClass(place).mutableInstance();
 	}
 
-	public String removeAppPrefixAndLeadingSlashes(String tokenString) {
-		String appPrefix = getAppPrefix();
-		if (tokenString.startsWith("/")) {
-			tokenString = tokenString.substring(1);
-		}
-		if (appPrefix.length() > 0) {
-			String matchesPattern = Ax.format("/?%s(/.*|$)", appPrefix);
-			if (tokenString.matches(matchesPattern)) {
-				tokenString = tokenString.substring(appPrefix.length());
-			}
-		}
-		if (tokenString.startsWith("/")) {
-			tokenString = tokenString.substring(1);
-		}
-		return tokenString;
-	}
-
-	public void removeTokenizer(Predicate<BasePlaceTokenizer> matcher) {
-		tokenizersByModelClass.entrySet()
-				.removeIf(e -> matcher.test(e.getValue()));
-		tokenizersByPlace.entrySet().removeIf(e -> matcher.test(e.getValue()));
-		tokenizersByPrefix.values()
-				.forEach(l -> l.removeIf(tokenizer -> matcher.test(tokenizer)));
-	}
-
-	private String cleanGwtCodesvr(String token) {
-		return token.replaceFirst("[?&]gwt.codesvr=127.0.0.1:\\d+$", "");
-	}
-
-	private synchronized void ensurePlaceLookup() {
-		if (initialised) {
-			return;
-		}
-		initialised = true;
-		listTokenizers().forEach(tokenizer -> {
-			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
-			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
-			if (tokenizer.isCanonicalModelClassTokenizer()) {
-				if (tokenizer instanceof EntityPlaceTokenizer) {
-					tokenizersByModelClass.put(
-							((EntityPlaceTokenizer) tokenizer).getModelClass(),
-							tokenizer);
-				}
-				if (tokenizer instanceof BindablePlaceTokenizer) {
-					tokenizersByModelClass
-							.put(((BindablePlaceTokenizer) tokenizer)
-									.getModelClass(), tokenizer);
-				}
-			}
-			tokenizer.register(tokenizersByModelClass);
-		});
-		listPlaces().filter(p -> p instanceof SubPlace)
-				.forEach(place -> placesBySubPlace
-						.put(((SubPlace) place).getSub(), place));
-	}
-
 	private BasePlaceTokenizer getTokenizerByClass(Place place) {
 		Class<? extends Place> clazz = place.getClass();
 		{
@@ -201,10 +180,6 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			}
 		}
 		return null;
-	}
-
-	protected String getAppPrefix() {
-		return "";
 	}
 
 	protected Stream<BasePlace> listPlaces() {
@@ -254,5 +229,30 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			// lastPlace = place;
 		}
 		return place;
+	}
+
+	public String removeAppPrefixAndLeadingSlashes(String tokenString) {
+		String appPrefix = getAppPrefix();
+		if (tokenString.startsWith("/")) {
+			tokenString = tokenString.substring(1);
+		}
+		if (appPrefix.length() > 0) {
+			String matchesPattern = Ax.format("/?%s(/.*|$)", appPrefix);
+			if (tokenString.matches(matchesPattern)) {
+				tokenString = tokenString.substring(appPrefix.length());
+			}
+		}
+		if (tokenString.startsWith("/")) {
+			tokenString = tokenString.substring(1);
+		}
+		return tokenString;
+	}
+
+	public void removeTokenizer(Predicate<BasePlaceTokenizer> matcher) {
+		tokenizersByModelClass.entrySet()
+				.removeIf(e -> matcher.test(e.getValue()));
+		tokenizersByPlace.entrySet().removeIf(e -> matcher.test(e.getValue()));
+		tokenizersByPrefix.values()
+				.forEach(l -> l.removeIf(tokenizer -> matcher.test(tokenizer)));
 	}
 }

@@ -22,21 +22,6 @@ import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSection
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 
 public interface GroupedCellTableView<VM extends ViewModel> extends IsWidget {
-	public ColumnMapper
-			getGroupedColumnMapper(GroupingParameters typedGroupingParameters);
-
-	public GroupingSupport getGroupingSupport();
-
-	public VM getModel();
-
-	public AbstractCellTable<Row> groupedCellTable();
-
-	public void renderGroupedTable(GroupedResult value,
-			GroupingParameters<?> typedGroupingParameters,
-			GroupedDataChangeEvent event);
-
-	public Set<Long> selectedIds();
-
 	default void customizeExportDialog(ContentViewSectionsDialogBuilder builder,
 			GroupingParameters bean) {
 	}
@@ -62,10 +47,19 @@ public interface GroupedCellTableView<VM extends ViewModel> extends IsWidget {
 				.show();
 	}
 
+	public ColumnMapper
+			getGroupedColumnMapper(GroupingParameters typedGroupingParameters);
+
 	default Consumer<Row> getGroupedRowConsumer() {
 		return row -> {
 		};
 	}
+
+	public GroupingSupport getGroupingSupport();
+
+	public VM getModel();
+
+	public AbstractCellTable<Row> groupedCellTable();
 
 	default void notifyGroupedDataChange(GroupedDataChangeEvent event) {
 		if (event.getValue() != null) {
@@ -87,6 +81,12 @@ public interface GroupedCellTableView<VM extends ViewModel> extends IsWidget {
 		groupedCellTable().setStyleName("single-line",
 				getGroupingSupport().isMultiline());
 	}
+
+	public void renderGroupedTable(GroupedResult value,
+			GroupingParameters<?> typedGroupingParameters,
+			GroupedDataChangeEvent event);
+
+	public Set<Long> selectedIds();
 
 	default void setupGroupedTableSelectionHandler(Consumer<Row> handler) {
 		AbstractCellTable<Row> groupedTable = groupedCellTable();

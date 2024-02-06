@@ -37,26 +37,6 @@ public class ThreadedClientTransformManager
 	};
 
 	@Override
-	public boolean isIgnorePropertyChanges() {
-		return ignorePropertyChanges.get();
-	}
-
-	@Override
-	public boolean isReplayingRemoteEvent() {
-		return replayingRemoteEvent.get();
-	}
-
-	@Override
-	public void setIgnorePropertyChanges(boolean _ignorePropertyChanges) {
-		ignorePropertyChanges.set(_ignorePropertyChanges);
-	}
-
-	@Override
-	public void setReplayingRemoteEvent(boolean _replayingRemoteEvent) {
-		replayingRemoteEvent.set(_replayingRemoteEvent);
-	}
-
-	@Override
 	protected Set<DomainTransformEvent> createTransformSet() {
 		// not sure why synchronized (git blame anyone?), but it shouldn't be a
 		// performance issue since assuming non-contested
@@ -74,8 +54,28 @@ public class ThreadedClientTransformManager
 	}
 
 	@Override
+	public boolean isIgnorePropertyChanges() {
+		return ignorePropertyChanges.get();
+	}
+
+	@Override
+	public boolean isReplayingRemoteEvent() {
+		return replayingRemoteEvent.get();
+	}
+
+	@Override
 	protected void removePerThreadContext0() {
 		ignorePropertyChanges.remove();
 		replayingRemoteEvent.remove();
+	}
+
+	@Override
+	public void setIgnorePropertyChanges(boolean _ignorePropertyChanges) {
+		ignorePropertyChanges.set(_ignorePropertyChanges);
+	}
+
+	@Override
+	public void setReplayingRemoteEvent(boolean _replayingRemoteEvent) {
+		replayingRemoteEvent.set(_replayingRemoteEvent);
 	}
 }

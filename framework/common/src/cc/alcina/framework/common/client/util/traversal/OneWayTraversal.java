@@ -89,6 +89,10 @@ public class OneWayTraversal<T extends Traversable>
 		return result;
 	}
 
+	private void prepareNext() {
+		next = entered.next();
+	}
+
 	@Override
 	public String toString() {
 		if (next == null) {
@@ -96,10 +100,6 @@ public class OneWayTraversal<T extends Traversable>
 		} else {
 			return next.toString();
 		}
-	}
-
-	private void prepareNext() {
-		next = entered.next();
 	}
 
 	// so named because often T is named Node

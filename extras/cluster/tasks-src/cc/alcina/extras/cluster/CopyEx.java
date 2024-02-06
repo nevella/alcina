@@ -30,13 +30,6 @@ public class CopyEx extends Copy {
 	}
 
 	@Override
-	public void execute() throws BuildException {
-		setOverwrite(true);
-		setIncludeEmptyDirs(false);
-		super.execute();
-	}
-
-	@Override
 	protected void buildMap(File fromDir, File toDir, String[] names,
 			FileNameMapper mapper, Hashtable map) {
 		Map<String, FileSet> uniqueOrderedFilesets = new LinkedHashMap<>();
@@ -119,6 +112,13 @@ public class CopyEx extends Copy {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void execute() throws BuildException {
+		setOverwrite(true);
+		setIncludeEmptyDirs(false);
+		super.execute();
 	}
 
 	String getCanonicalPath(File file) {

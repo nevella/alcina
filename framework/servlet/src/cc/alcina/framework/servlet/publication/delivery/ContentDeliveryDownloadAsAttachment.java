@@ -30,10 +30,6 @@ public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 				getFileName(deliveryModel), hfc.getFileExtension());
 	}
 
-	private String getFileName(DeliveryModel deliveryModel) {
-		return deliveryModel.getSuggestedFileName().replaceAll("[:/]", "_");
-	}
-
 	protected String deliverViaServlet(InputStream stream, String mimeType,
 			String suggestedFileName, String suffix) throws Exception {
 		suggestedFileName = CommonUtils.trimToWsChars(suggestedFileName, 200,
@@ -48,6 +44,10 @@ public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 		DownloadItem item = new DownloadServlet.DownloadItem(mimeType,
 				suggestedFileName, file.getPath());
 		return DownloadServlet.add(item);
+	}
+
+	private String getFileName(DeliveryModel deliveryModel) {
+		return deliveryModel.getSuggestedFileName().replaceAll("[:/]", "_");
 	}
 
 	@Override

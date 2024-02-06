@@ -29,6 +29,12 @@ public class NamedCache {
 
 	private static Map<String, Map> caches = new LinkedHashMap<String, Map>();
 
+	private static synchronized void checkMap(String mapName) {
+		if (!caches.containsKey(mapName)) {
+			caches.put(mapName, new LRUMap(cacheSize));
+		}
+	}
+
 	public static boolean containsKey(String mapName, Object key) {
 		return get(mapName, key) != null;
 	}
@@ -66,12 +72,6 @@ public class NamedCache {
 				checkMap(mapName);
 				caches.get(mapName).put(key, value);
 			}
-		}
-	}
-
-	private static synchronized void checkMap(String mapName) {
-		if (!caches.containsKey(mapName)) {
-			caches.put(mapName, new LRUMap(cacheSize));
 		}
 	}
 }

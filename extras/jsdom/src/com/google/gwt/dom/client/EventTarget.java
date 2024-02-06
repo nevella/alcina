@@ -82,6 +82,13 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		throw new FixmeUnsupportedOperationException();
 	}
 
+	void ensurePathrefTarget() {
+		if (pathrefTarget == null && pathref != null
+				&& Document.get().remoteType == RemoteType.PATHREF) {
+			pathrefTarget = pathref.node();
+		}
+	}
+
 	public boolean is(Class<? extends JavascriptObjectEquivalent> clazz) {
 		if (clazz == Element.class && ElementJso.is(nativeTarget)) {
 			return true;
@@ -101,12 +108,5 @@ public class EventTarget implements JavascriptObjectEquivalent {
 	@Override
 	public String toString() {
 		return super.toString() + ":" + nativeTarget;
-	}
-
-	void ensurePathrefTarget() {
-		if (pathrefTarget == null && pathref != null
-				&& Document.get().remoteType == RemoteType.PATHREF) {
-			pathrefTarget = pathref.node();
-		}
 	}
 }

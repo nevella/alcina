@@ -299,6 +299,30 @@ public class WDUtils {
 		return forceTimeout;
 	}
 
+	private static TimedOutException logException(SearchContext context,
+			By by) {
+		if (LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
+			return new TimedOutException(
+					Ax.format("Wait for element [%s] timed out", by));
+		}
+		byte[] bytes = ((RemoteWebDriver) context)
+				.getScreenshotAs(OutputType.BYTES);
+		try {
+			File dataFile = File.createTempFile("webdriver-err-", ".png");
+			Io.write().bytes(bytes).toFile(dataFile);
+			WDToken token = WDManager.contextToken();
+			if (token != null) {
+				token.getWriter().write(
+						String.format("Screenshot:\n%s\n", dataFile.getPath()),
+						0);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return new TimedOutException(
+				Ax.format("Wait for element [%s] timed out", by));
+	}
+
 	public static void maximize(WebDriver driver, WebDriverType type) {
 		switch (type) {
 		case CHROME:
@@ -328,6 +352,17 @@ public class WDUtils {
 			driver.manage().window().setSize(dim);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private static int maybeOverrideTimeout(double timeout) {
+		if (LooseContext.has(CONTEXT_OVERRIDE_TIMEOUT)
+				&& !LooseContext.has(CONTEXT_IGNORE_OVERRIDE_TIMEOUT)) {
+			Integer override = LooseContext
+					.getInteger(CONTEXT_OVERRIDE_TIMEOUT);
+			return (int) (override > timeout ? override : timeout);
+		} else {
+			return (int) timeout;
 		}
 	}
 
@@ -431,6 +466,13 @@ public class WDUtils {
 			Thread.sleep(ms);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private static void throwAfterTimeout(RuntimeException e) {
+		boolean tryAgain = false;
+		if (!tryAgain) {
+			throw e;
 		}
 	}
 
@@ -568,48 +610,6 @@ public class WDUtils {
 		}
 		throw new TimedOutException(
 				Ax.format("Wait for textlength [%s] timed out", minLength));
-	}
-
-	private static TimedOutException logException(SearchContext context,
-			By by) {
-		if (LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
-			return new TimedOutException(
-					Ax.format("Wait for element [%s] timed out", by));
-		}
-		byte[] bytes = ((RemoteWebDriver) context)
-				.getScreenshotAs(OutputType.BYTES);
-		try {
-			File dataFile = File.createTempFile("webdriver-err-", ".png");
-			Io.write().bytes(bytes).toFile(dataFile);
-			WDToken token = WDManager.contextToken();
-			if (token != null) {
-				token.getWriter().write(
-						String.format("Screenshot:\n%s\n", dataFile.getPath()),
-						0);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return new TimedOutException(
-				Ax.format("Wait for element [%s] timed out", by));
-	}
-
-	private static int maybeOverrideTimeout(double timeout) {
-		if (LooseContext.has(CONTEXT_OVERRIDE_TIMEOUT)
-				&& !LooseContext.has(CONTEXT_IGNORE_OVERRIDE_TIMEOUT)) {
-			Integer override = LooseContext
-					.getInteger(CONTEXT_OVERRIDE_TIMEOUT);
-			return (int) (override > timeout ? override : timeout);
-		} else {
-			return (int) timeout;
-		}
-	}
-
-	private static void throwAfterTimeout(RuntimeException e) {
-		boolean tryAgain = false;
-		if (!tryAgain) {
-			throw e;
-		}
 	}
 
 	/*

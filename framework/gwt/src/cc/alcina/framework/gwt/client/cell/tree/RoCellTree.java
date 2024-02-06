@@ -64,17 +64,6 @@ public class RoCellTree<T> extends Composite {
 	protected void maybeSort(ArrayList<T> list) {
 	}
 
-	public static class VisibleNodeInfo<T> extends DefaultNodeInfo<T> {
-		ListDataProvider<T> dataProviderPkg;
-
-		public VisibleNodeInfo(ListDataProvider<T> dataProvider, Cell<T> cell,
-				SelectionModel<? super T> selectionModel,
-				ValueUpdater<T> valueUpdater) {
-			super(dataProvider, cell, selectionModel, valueUpdater);
-			this.dataProviderPkg = dataProvider;
-		}
-	}
-
 	private final class CellListWithStyles extends CellList<T> {
 		private RoCellTreeRes.ListStyle style2;
 
@@ -138,5 +127,16 @@ public class RoCellTree<T> extends Composite {
 		@Template("<div onclick=\"\" __idx=\"{0}\" class=\"{1}\" style=\"{2}\" >{3}</div>")
 		SafeHtml div(int idx, String classes, SafeStyles paddingLeft,
 				SafeHtml cellContents);
+	}
+
+	public static class VisibleNodeInfo<T> extends DefaultNodeInfo<T> {
+		ListDataProvider<T> dataProviderPkg;
+
+		public VisibleNodeInfo(ListDataProvider<T> dataProvider, Cell<T> cell,
+				SelectionModel<? super T> selectionModel,
+				ValueUpdater<T> valueUpdater) {
+			super(dataProvider, cell, selectionModel, valueUpdater);
+			this.dataProviderPkg = dataProvider;
+		}
 	}
 }

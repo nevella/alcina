@@ -19,8 +19,21 @@ public class CodeBuilder extends FormatBuilder {
 
 	private boolean statement;
 
+	protected void complete() {
+		if (isStatement()) {
+			append(";");
+		}
+	}
+
 	public boolean isStatement() {
 		return this.statement;
+	}
+
+	private void maybeComplete() {
+		if (!completed) {
+			completed = true;
+			complete();
+		}
 	}
 
 	public void setStatement(boolean statement) {
@@ -31,19 +44,6 @@ public class CodeBuilder extends FormatBuilder {
 	public String toString() {
 		maybeComplete();
 		return super.toString();
-	}
-
-	private void maybeComplete() {
-		if (!completed) {
-			completed = true;
-			complete();
-		}
-	}
-
-	protected void complete() {
-		if (isStatement()) {
-			append(";");
-		}
 	}
 
 	public static class AnnotationDeclaration extends CodeBuilder {
@@ -95,6 +95,12 @@ public class CodeBuilder extends FormatBuilder {
 			separator("");
 		}
 
+		@Override
+		protected void complete() {
+			append(")");
+			super.complete();
+		}
+
 		private boolean isDefaultValue(String name, Object o) {
 			try {
 				Object defaultValue = annotationType
@@ -105,30 +111,12 @@ public class CodeBuilder extends FormatBuilder {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-
-		@Override
-		protected void complete() {
-			append(")");
-			super.complete();
-		}
 	}
 
 	public static class ArrayBuilder extends CodeBuilder {
 		public ArrayBuilder() {
 			separator("");
 			append("{");
-		}
-
-		@Override
-		public ArrayBuilder separator(String separator) {
-			return (ArrayBuilder) super.separator(separator);
-		}
-
-		@Override
-		protected void complete() {
-			separator("");
-			append("}");
-			super.complete();
 		}
 
 		void add(Object object) {
@@ -138,6 +126,18 @@ public class CodeBuilder extends FormatBuilder {
 				throw new UnsupportedOperationException();
 			}
 			separator(",");
+		}
+
+		@Override
+		protected void complete() {
+			separator("");
+			append("}");
+			super.complete();
+		}
+
+		@Override
+		public ArrayBuilder separator(String separator) {
+			return (ArrayBuilder) super.separator(separator);
 		}
 	}
 }

@@ -364,34 +364,6 @@ public class ColumnsBuilder<T> {
 			this.style = style;
 		}
 
-		public ColumnBuilder
-				sortFunction(Function<T, ? extends Comparable> sortFunction) {
-			this.sortFunction = (Function<T, Comparable>) sortFunction;
-			sortable = true;
-			return this;
-		}
-
-		public ColumnBuilder style(String style) {
-			this.style = style;
-			return this;
-		}
-
-		public ColumnBuilder styleFunction(Function<T, String> styleFunction) {
-			this.styleFunction = styleFunction;
-			return this;
-		}
-
-		public ColumnBuilder titleFunction(Function<T, String> titleFunction) {
-			this.titleFunction = titleFunction;
-			return this;
-		}
-
-		public ColumnBuilder width(double width, Unit unit) {
-			this.width = width;
-			this.unit = unit;
-			return this;
-		}
-
 		protected void setupEditInfo(EditInfo editInfo) {
 			Field field = null;
 			if (editableCell != null) {
@@ -427,6 +399,59 @@ public class ColumnsBuilder<T> {
 					: new PropertyFieldUpdater(editablePropertyName, field,
 							clazz);
 			function = new PropertyFieldGetter(editablePropertyName, clazz);
+		}
+
+		public ColumnBuilder
+				sortFunction(Function<T, ? extends Comparable> sortFunction) {
+			this.sortFunction = (Function<T, Comparable>) sortFunction;
+			sortable = true;
+			return this;
+		}
+
+		public ColumnBuilder style(String style) {
+			this.style = style;
+			return this;
+		}
+
+		public ColumnBuilder styleFunction(Function<T, String> styleFunction) {
+			this.styleFunction = styleFunction;
+			return this;
+		}
+
+		public ColumnBuilder titleFunction(Function<T, String> titleFunction) {
+			this.titleFunction = titleFunction;
+			return this;
+		}
+
+		public ColumnBuilder width(double width, Unit unit) {
+			this.width = width;
+			this.unit = unit;
+			return this;
+		}
+	}
+
+	class ColumnsBuilderNameFilter implements Predicate<ColumnBuilder> {
+		private List<String> validNames;
+
+		public ColumnsBuilderNameFilter(List<String> validNames) {
+			this.validNames = validNames;
+		}
+
+		@Override
+		public boolean test(ColumnBuilder columnBuilder) {
+			return validNames.contains(columnBuilder.name.toLowerCase());
+		}
+	}
+
+	static class EditInfo {
+		public FieldUpdater fieldUpdater;
+
+		public String propertyName;
+
+		public Cell cell = new TextCell();
+
+		public boolean isEditable() {
+			return propertyName != null;
 		}
 	}
 
@@ -553,31 +578,6 @@ public class ColumnsBuilder<T> {
 		@Override
 		public String toString() {
 			return Ax.format("[%s]", name);
-		}
-	}
-
-	class ColumnsBuilderNameFilter implements Predicate<ColumnBuilder> {
-		private List<String> validNames;
-
-		public ColumnsBuilderNameFilter(List<String> validNames) {
-			this.validNames = validNames;
-		}
-
-		@Override
-		public boolean test(ColumnBuilder columnBuilder) {
-			return validNames.contains(columnBuilder.name.toLowerCase());
-		}
-	}
-
-	static class EditInfo {
-		public FieldUpdater fieldUpdater;
-
-		public String propertyName;
-
-		public Cell cell = new TextCell();
-
-		public boolean isEditable() {
-			return propertyName != null;
 		}
 	}
 }

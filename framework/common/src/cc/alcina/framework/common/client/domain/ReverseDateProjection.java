@@ -16,6 +16,22 @@ public abstract class ReverseDateProjection<T extends Entity>
 		super(initialType, secondaryTypes);
 	}
 
+	@Override
+	protected MultikeyMap<T> createLookup() {
+		return new BaseProjectionLookupBuilder(this)
+				.withMapCreators(new CollectionCreators.MapCreator[] { Registry
+						.impl(CollectionCreators.TreeMapRevCreator.class)
+						.withTypes(types) })
+				.createMultikeyMap();
+	}
+
+	protected abstract Date getDate(T t);
+
+	@Override
+	protected int getDepth() {
+		return 1;
+	}
+
 	public List<T> getSince(Date date) {
 		List<T> result = new ArrayList<>();
 		Set<Date> keys = (Set) getLookup().keySet();
@@ -36,22 +52,6 @@ public abstract class ReverseDateProjection<T extends Entity>
 	@Override
 	public boolean isCommitOnly() {
 		return true;
-	}
-
-	@Override
-	protected MultikeyMap<T> createLookup() {
-		return new BaseProjectionLookupBuilder(this)
-				.withMapCreators(new CollectionCreators.MapCreator[] { Registry
-						.impl(CollectionCreators.TreeMapRevCreator.class)
-						.withTypes(types) })
-				.createMultikeyMap();
-	}
-
-	protected abstract Date getDate(T t);
-
-	@Override
-	protected int getDepth() {
-		return 1;
 	}
 
 	@Override

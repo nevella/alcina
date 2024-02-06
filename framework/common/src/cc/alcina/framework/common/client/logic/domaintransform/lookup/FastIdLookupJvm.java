@@ -25,6 +25,13 @@ public class FastIdLookupJvm implements FastIdLookup {
 		this.values = new FastIdLookupDevValues();
 	}
 
+	@Override
+	public void changeMapping(Entity entity, long id, long localId) {
+		remove(id, false);
+		remove(localId, true);
+		localIdToPromoted.put(localId, entity);
+	}
+
 	public void checkId(long id) {
 		if (GWT.isClient() && id > LongWrapperHash.MAX) {
 			throw new RuntimeException("losing higher bits from long");
@@ -43,6 +50,12 @@ public class FastIdLookupJvm implements FastIdLookup {
 		} else {
 			return idLookup.get(id);
 		}
+	}
+
+	long getApplicableId(Entity entity, boolean local) {
+		long id = local ? entity.getLocalId() : entity.getId();
+		checkId(id);
+		return id;
 	}
 
 	@Override
@@ -83,12 +96,6 @@ public class FastIdLookupJvm implements FastIdLookup {
 		return values;
 	}
 
-	long getApplicableId(Entity entity, boolean local) {
-		long id = local ? entity.getLocalId() : entity.getId();
-		checkId(id);
-		return id;
-	}
-
 	class FastIdLookupDevValues extends AbstractCollection<Entity> {
 		@Override
 		public boolean contains(Object o) {
@@ -119,12 +126,5 @@ public class FastIdLookupJvm implements FastIdLookup {
 		public String toString() {
 			return "[" + CommonUtils.join(this, ", ") + "]";
 		}
-	}
-
-	@Override
-	public void changeMapping(Entity entity, long id, long localId) {
-		remove(id, false);
-		remove(localId, true);
-		localIdToPromoted.put(localId, entity);
 	}
 }

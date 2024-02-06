@@ -91,6 +91,29 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		db.transaction(dropCallback);
 	}
 
+	private void ensureTable() {
+		TransactionCallback createCallback = new TransactionCallback() {
+			@Override
+			public void onTransactionFailure(SQLError error) {
+				onFailure(postInitCallback, error);
+			}
+
+			@Override
+			public void onTransactionStart(SQLTransaction tx) {
+				String sql = Ax.format("CREATE TABLE IF NOT EXISTS " + "%s"
+						+ " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+						+ " key_ TEXT, value_ TEXT)  ", tableName);
+				tx.executeSql(sql, null);
+			}
+
+			@Override
+			public void onTransactionSuccess() {
+				postInitCallback.onSuccess(null);
+			}
+		};
+		db.transaction(createCallback);
+	}
+
 	public void executeSql(final String sql, final AsyncCallback callback) {
 		final StatementCallback<GenericRow> cb = new StatementCallback<GenericRow>() {
 			@Override
@@ -165,6 +188,11 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		return this.tableName;
 	}
 
+	protected void onFailure(AsyncCallback callback, SQLError error) {
+		callback.onFailure(new Exception(
+				Ax.format("%s: %s", error.getCode(), error.getMessage())));
+	}
+
 	@Override
 	public void put(int id, String value, AsyncCallback<Void> idCallback) {
 		new PutHandler().put(StringMap.property(null, value),
@@ -202,34 +230,6 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 			AsyncCallback<Void> completedCallback) {
 		new RemoveRangeHandler().removeRange(range.i1, range.i2,
 				completedCallback);
-	}
-
-	private void ensureTable() {
-		TransactionCallback createCallback = new TransactionCallback() {
-			@Override
-			public void onTransactionFailure(SQLError error) {
-				onFailure(postInitCallback, error);
-			}
-
-			@Override
-			public void onTransactionStart(SQLTransaction tx) {
-				String sql = Ax.format("CREATE TABLE IF NOT EXISTS " + "%s"
-						+ " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
-						+ " key_ TEXT, value_ TEXT)  ", tableName);
-				tx.executeSql(sql, null);
-			}
-
-			@Override
-			public void onTransactionSuccess() {
-				postInitCallback.onSuccess(null);
-			}
-		};
-		db.transaction(createCallback);
-	}
-
-	protected void onFailure(AsyncCallback callback, SQLError error) {
-		callback.onFailure(new Exception(
-				Ax.format("%s: %s", error.getCode(), error.getMessage())));
 	}
 
 	class GetHandler {
@@ -520,23 +520,6 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		private StringMap kvs;
 
-		public void put(StringMap kvs, AsyncCallback<Integer> idCallback,
-				boolean add, Integer id) {
-			this.kvs = kvs;
-			this.kvsIterator = kvs.entrySet().iterator();
-			this.idCallback = idCallback;
-			this.add = add;
-			this.id = id;
-			db.transaction(getCallback);
-		}
-
-		private void update() {
-			String sql = Ax.format("update %s set  value_=? where id=?",
-					tableName);
-			tx.executeSql(sql, new String[] { kv.getValue(), id.toString() },
-					afterInsertCallback);
-		}
-
 		void add() {
 			String sql = Ax.format("insert into %s (key_,value_) values(?,?)",
 					tableName);
@@ -560,6 +543,23 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 					}
 				}
 			}
+		}
+
+		public void put(StringMap kvs, AsyncCallback<Integer> idCallback,
+				boolean add, Integer id) {
+			this.kvs = kvs;
+			this.kvsIterator = kvs.entrySet().iterator();
+			this.idCallback = idCallback;
+			this.add = add;
+			this.id = id;
+			db.transaction(getCallback);
+		}
+
+		private void update() {
+			String sql = Ax.format("update %s set  value_=? where id=?",
+					tableName);
+			tx.executeSql(sql, new String[] { kv.getValue(), id.toString() },
+					afterInsertCallback);
 		}
 	}
 
@@ -625,17 +625,17 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		private List<String> keys;
 
+		private void remove() {
+			String sql = Ax.format("delete from %s  where id in (%s)",
+					tableName, CommonUtils.join(ids, ", "));
+			tx.executeSql(sql, new String[0], doneCallback);
+		}
+
 		public void remove(List<String> keys,
 				AsyncCallback<Integer> idCallback) {
 			this.keys = keys;
 			this.idCallback = idCallback;
 			db.transaction(getCallback);
-		}
-
-		private void remove() {
-			String sql = Ax.format("delete from %s  where id in (%s)",
-					tableName, CommonUtils.join(ids, ", "));
-			tx.executeSql(sql, new String[0], doneCallback);
 		}
 	}
 

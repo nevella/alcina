@@ -81,6 +81,16 @@ public class CollectionProviderNode extends ContainerNode
 	}
 
 	@Override
+	protected String imageItemHTML(AbstractImagePrototype imageProto,
+			String title) {
+		if (((DataTree) getTree()).isUseNodeImages()) {
+			return imageProto.getHTML() + " " + title;
+		} else {
+			return title;
+		}
+	}
+
+	@Override
 	public void onDetach() {
 		if (support != null) {
 			support.onDetach();
@@ -102,15 +112,5 @@ public class CollectionProviderNode extends ContainerNode
 	public void setCollectionProvider(CollectionProvider collectionProvider) {
 		support = new CollectionRenderingSupport(this);
 		support.setCollectionProvider(collectionProvider);
-	}
-
-	@Override
-	protected String imageItemHTML(AbstractImagePrototype imageProto,
-			String title) {
-		if (((DataTree) getTree()).isUseNodeImages()) {
-			return imageProto.getHTML() + " " + title;
-		} else {
-			return title;
-		}
 	}
 }

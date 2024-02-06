@@ -54,87 +54,6 @@ public class RemoteMutations {
 				applyToRemote);
 	}
 
-	public boolean hadExceptions() {
-		return history.hadExceptions() || hadExceptions;
-	}
-
-	public boolean isEnabled() {
-		return this.enabled;
-	}
-
-	public boolean isHadExceptions() {
-		return this.hadExceptions;
-	}
-
-	public boolean isObserverConnected() {
-		return this.observerConnected;
-	}
-
-	public List<MutationRecord> nodeAsMutations(Node node) {
-		List<MutationRecord> records = new ArrayList<>();
-		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
-				node,
-				n -> n.getChildNodes().stream().collect(Collectors.toList()));
-		traversal.forEach(
-				n -> MutationRecord.generateInsertMutations(n, records));
-		return records;
-	}
-
-	public MutationRecord nodeAsRemoveMutation(Node parent, Node oldChild) {
-		return MutationRecord.generateRemoveMutation(parent, oldChild);
-	}
-
-	public String serializeHistory() {
-		return history.serialize();
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	public void setHadExceptions(boolean hadExceptions) {
-		this.hadExceptions = hadExceptions;
-	}
-
-	public void setObserverConnected(boolean observerConnected) {
-		this.observerConnected = observerConnected;
-	}
-
-	public void startObserving() {
-		if (!this.enabled) {
-			return;
-		}
-		if (this.observer == null) {
-			setupObserver();
-			MutationHistory.Event.publish(Type.INIT, new ArrayList<>());
-		}
-		if (!observerConnected) {
-			connectObserver();
-			observerConnected = true;
-		} else {
-			throw new IllegalStateException();
-		}
-	}
-
-	public void syncMutationsAndStopObserving() {
-		if (!this.enabled) {
-			return;
-		}
-		if (this.observer == null) {
-			return;
-		}
-		disconnectObserver();
-		try {
-			checkReceivedRecords();
-		} catch (RuntimeException e) {
-			LocalDom.onRelatedException(e);
-		}
-	}
-
-	public void verifyDomEquivalence() {
-		history.verifyDomEquivalence();
-	}
-
 	private native void checkReceivedRecords() /*-{
     if (this.@RemoteMutations::records.length == 0) {
       return;
@@ -190,6 +109,56 @@ public class RemoteMutations {
     //this.@RemoteMutations::log(Ljava/lang/String;Z)("Mutation observer :: disconnected ",false);
 	}-*/;
 
+	public boolean hadExceptions() {
+		return history.hadExceptions() || hadExceptions;
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public boolean isHadExceptions() {
+		return this.hadExceptions;
+	}
+
+	public boolean isObserverConnected() {
+		return this.observerConnected;
+	}
+
+	void log(String message, boolean error) {
+		LocalDom.log(error ? Level.WARNING : Level.INFO, message);
+	}
+
+	public List<MutationRecord> nodeAsMutations(Node node) {
+		List<MutationRecord> records = new ArrayList<>();
+		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
+				node,
+				n -> n.getChildNodes().stream().collect(Collectors.toList()));
+		traversal.forEach(
+				n -> MutationRecord.generateInsertMutations(n, records));
+		return records;
+	}
+
+	public MutationRecord nodeAsRemoveMutation(Node parent, Node oldChild) {
+		return MutationRecord.generateRemoveMutation(parent, oldChild);
+	}
+
+	public String serializeHistory() {
+		return history.serialize();
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void setHadExceptions(boolean hadExceptions) {
+		this.hadExceptions = hadExceptions;
+	}
+
+	public void setObserverConnected(boolean observerConnected) {
+		this.observerConnected = observerConnected;
+	}
+
 	private native void setupObserver() /*-{
     this.@RemoteMutations::enabled = this.@RemoteMutations::enabled
         && !(typeof MutationObserver == "undefined");
@@ -212,17 +181,20 @@ public class RemoteMutations {
     this.@RemoteMutations::log(Ljava/lang/String;Z)(message,false);
 	}-*/;
 
-	private void syncMutations0(JsArray<MutationRecordJso> records) {
-		SyncMutations syncMutations = new SyncMutations(mutationsAccess);
-		history.currentMutations = syncMutations;
-		syncMutations.sync(records);
-		hadExceptions |= syncMutations.hadException;
-		log(Ax.format("%s records", records.length()), false);
-		history.currentMutations = null;
-	}
-
-	void log(String message, boolean error) {
-		LocalDom.log(error ? Level.WARNING : Level.INFO, message);
+	public void startObserving() {
+		if (!this.enabled) {
+			return;
+		}
+		if (this.observer == null) {
+			setupObserver();
+			MutationHistory.Event.publish(Type.INIT, new ArrayList<>());
+		}
+		if (!observerConnected) {
+			connectObserver();
+			observerConnected = true;
+		} else {
+			throw new IllegalStateException();
+		}
 	}
 
 	// this is called at a tricky place in the GWT event loop, so make sure we
@@ -236,6 +208,34 @@ public class RemoteMutations {
 			throw e;
 		}
 		topicMutationOccurred.signal();
+	}
+
+	private void syncMutations0(JsArray<MutationRecordJso> records) {
+		SyncMutations syncMutations = new SyncMutations(mutationsAccess);
+		history.currentMutations = syncMutations;
+		syncMutations.sync(records);
+		hadExceptions |= syncMutations.hadException;
+		log(Ax.format("%s records", records.length()), false);
+		history.currentMutations = null;
+	}
+
+	public void syncMutationsAndStopObserving() {
+		if (!this.enabled) {
+			return;
+		}
+		if (this.observer == null) {
+			return;
+		}
+		disconnectObserver();
+		try {
+			checkReceivedRecords();
+		} catch (RuntimeException e) {
+			LocalDom.onRelatedException(e);
+		}
+	}
+
+	public void verifyDomEquivalence() {
+		history.verifyDomEquivalence();
 	}
 
 	public static class LoggingConfiguration {

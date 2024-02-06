@@ -132,31 +132,6 @@ public class HtmlParser {
 
 	private int lineNumber;
 
-	public boolean isEmitBrowserCompatibleDom() {
-		return this.emitBrowserCompatibleDom;
-	}
-
-	public Element parse(ClientDomElement root, Element replaceContents,
-			boolean emitHtmlHeadBodyTags) {
-		return parse(root.getOuterHtml(), replaceContents,
-				emitHtmlHeadBodyTags);
-	}
-
-	public Element parse(String html, Element replaceContents,
-			boolean emitHtmlHeadBodyTags) {
-		RemoteType preParse = Document.get().remoteType;
-		try {
-			Document.get().remoteType = RemoteType.NONE;
-			return parse0(html, replaceContents, emitHtmlHeadBodyTags);
-		} finally {
-			Document.get().remoteType = preParse;
-		}
-	}
-
-	public void setEmitBrowserCompatibleDom(boolean emitBrowserCompatibleDom) {
-		this.emitBrowserCompatibleDom = emitBrowserCompatibleDom;
-	}
-
 	private void emitAttribute() {
 		attributes.put(attrName, decodeEntities(attrValue));
 	}
@@ -296,6 +271,27 @@ public class HtmlParser {
 
 	private void emitText(String string) {
 		appendTextNodes(Document.get(), cursor, string);
+	}
+
+	public boolean isEmitBrowserCompatibleDom() {
+		return this.emitBrowserCompatibleDom;
+	}
+
+	public Element parse(ClientDomElement root, Element replaceContents,
+			boolean emitHtmlHeadBodyTags) {
+		return parse(root.getOuterHtml(), replaceContents,
+				emitHtmlHeadBodyTags);
+	}
+
+	public Element parse(String html, Element replaceContents,
+			boolean emitHtmlHeadBodyTags) {
+		RemoteType preParse = Document.get().remoteType;
+		try {
+			Document.get().remoteType = RemoteType.NONE;
+			return parse0(html, replaceContents, emitHtmlHeadBodyTags);
+		} finally {
+			Document.get().remoteType = preParse;
+		}
 	}
 
 	private Element parse0(String html, Element replaceContents,
@@ -511,6 +507,10 @@ public class HtmlParser {
 		return rootResult;
 	}
 
+	void resetBuilder() {
+		builder.setLength(0);
+	}
+
 	private void setCursor(Element element, String tag, int delta) {
 		if (syntheticElements.contains(cursor) && delta == -1) {
 			syntheticElements.remove(cursor);
@@ -539,8 +539,8 @@ public class HtmlParser {
 		cursor = element;
 	}
 
-	void resetBuilder() {
-		builder.setLength(0);
+	public void setEmitBrowserCompatibleDom(boolean emitBrowserCompatibleDom) {
+		this.emitBrowserCompatibleDom = emitBrowserCompatibleDom;
 	}
 
 	enum TokenState {

@@ -180,11 +180,50 @@ public class Io {
 			return DomDocument.from(asXmlDocument());
 		}
 
+		private DOMParser createDOMParser() {
+			DOMParser parser = new DOMParser(new HTMLConfiguration());
+			try {
+				parser.setFeature(
+						"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
+						true);
+				parser.setFeature(
+						"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
+						true);
+				if (!uppercaseTags) {
+					parser.setProperty(
+							"http://cyberneko.org/html/properties/names/elems",
+							"lower");
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			return parser;
+		}
+
 		public boolean exists() {
 			try (InputStream stream = resource.getStream()) {
 				return stream != null;
 			} catch (IOException e) {
 				return false;
+			}
+		}
+
+		private Document loadDocument() {
+			try {
+				InputStream stream = resource.getStream();
+				InputSource isrc = null;
+				if (charset == null) {
+					isrc = new InputSource(new InputStreamReader(stream,
+							StandardCharsets.UTF_8));
+				} else {
+					isrc = new InputSource(
+							new InputStreamReader(stream, charset));
+				}
+				DOMParser parser = createDOMParser();
+				parser.parse(isrc);
+				return (Document) parser.getDocument();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
 			}
 		}
 
@@ -222,45 +261,6 @@ public class Io {
 			}
 		}
 
-		private DOMParser createDOMParser() {
-			DOMParser parser = new DOMParser(new HTMLConfiguration());
-			try {
-				parser.setFeature(
-						"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
-						true);
-				parser.setFeature(
-						"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
-						true);
-				if (!uppercaseTags) {
-					parser.setProperty(
-							"http://cyberneko.org/html/properties/names/elems",
-							"lower");
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			return parser;
-		}
-
-		private Document loadDocument() {
-			try {
-				InputStream stream = resource.getStream();
-				InputSource isrc = null;
-				if (charset == null) {
-					isrc = new InputSource(new InputStreamReader(stream,
-							StandardCharsets.UTF_8));
-				} else {
-					isrc = new InputSource(
-							new InputStreamReader(stream, charset));
-				}
-				DOMParser parser = createDOMParser();
-				parser.parse(isrc);
-				return (Document) parser.getDocument();
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
-			}
-		}
-
 		public enum MapType {
 			EXISTENCE, KEYLINE_VALUELINE, PROPERTY
 		}
@@ -285,6 +285,12 @@ public class Io {
 				return ReadOp.this;
 			}
 
+			private void ensureFile() {
+				if (path != null) {
+					file = new File(path);
+				}
+			}
+
 			public ReadOp file(File file) {
 				this.file = file;
 				return ReadOp.this;
@@ -293,6 +299,37 @@ public class Io {
 			public ReadOp fromStream(InputStream stream) {
 				this.stream = stream;
 				return ReadOp.this;
+			}
+
+			private InputStream getStream() throws IOException {
+				ensureFile();
+				boolean decompress = ReadOp.this.decompress;
+				if (file != null) {
+					stream = new FileInputStream(file);
+					decompress |= decompressIfDotGz
+							&& file.getName().endsWith(".gz");
+				} else if (classpathRelative != null) {
+					stream = classpathRelative
+							.getResourceAsStream(classpathResource);
+					if (stream == null) {
+						stream = Thread.currentThread().getContextClassLoader()
+								.getResourceAsStream(classpathResource);
+					}
+				} else if (url != null) {
+					if (url.startsWith("http")) {
+						stream = new ByteArrayInputStream(
+								new SimpleHttp(url).asBytes());
+					} else {
+						stream = new URL(url).openStream();
+					}
+				} else if (bytes != null) {
+					stream = new ByteArrayInputStream(bytes);
+				}
+				stream = Io.Streams.maybeWrapInBufferedStream(stream);
+				if (decompress) {
+					stream = new GZIPInputStream(stream);
+				}
+				return stream;
 			}
 
 			public ReadOp path(String path) {
@@ -328,43 +365,6 @@ public class Io {
 			public ReadOp url(String url) {
 				this.url = url;
 				return ReadOp.this;
-			}
-
-			private void ensureFile() {
-				if (path != null) {
-					file = new File(path);
-				}
-			}
-
-			private InputStream getStream() throws IOException {
-				ensureFile();
-				boolean decompress = ReadOp.this.decompress;
-				if (file != null) {
-					stream = new FileInputStream(file);
-					decompress |= decompressIfDotGz
-							&& file.getName().endsWith(".gz");
-				} else if (classpathRelative != null) {
-					stream = classpathRelative
-							.getResourceAsStream(classpathResource);
-					if (stream == null) {
-						stream = Thread.currentThread().getContextClassLoader()
-								.getResourceAsStream(classpathResource);
-					}
-				} else if (url != null) {
-					if (url.startsWith("http")) {
-						stream = new ByteArrayInputStream(
-								new SimpleHttp(url).asBytes());
-					} else {
-						stream = new URL(url).openStream();
-					}
-				} else if (bytes != null) {
-					stream = new ByteArrayInputStream(bytes);
-				}
-				stream = Io.Streams.maybeWrapInBufferedStream(stream);
-				if (decompress) {
-					stream = new GZIPInputStream(stream);
-				}
-				return stream;
 			}
 		}
 	}
@@ -478,6 +478,14 @@ public class Io {
 				return WriteOp.this.resource;
 			}
 
+			private InputStream getStream() {
+				if (inputStream == null) {
+					inputStream = new ByteArrayInputStream(bytes != null ? bytes
+							: string.getBytes(StandardCharsets.UTF_8));
+				}
+				return inputStream;
+			}
+
 			public Resource object(Object object) {
 				try {
 					ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(
@@ -497,14 +505,6 @@ public class Io {
 				this.string = string;
 				return WriteOp.this.resource;
 			}
-
-			private InputStream getStream() {
-				if (inputStream == null) {
-					inputStream = new ByteArrayInputStream(bytes != null ? bytes
-							: string.getBytes(StandardCharsets.UTF_8));
-				}
-				return inputStream;
-			}
 		}
 
 		public class Resource {
@@ -513,6 +513,24 @@ public class Io {
 			private File file;
 
 			private OutputStream stream;
+
+			private void ensureFile() {
+				if (path != null) {
+					file = new File(path);
+				}
+			}
+
+			private OutputStream getStream() throws IOException {
+				ensureFile();
+				if (stream == null) {
+					stream = new BufferedOutputStream(
+							new FileOutputStream(file));
+				}
+				if (compress) {
+					stream = new GZIPOutputStream(stream);
+				}
+				return stream;
+			}
 
 			public String toBase64String() {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -550,24 +568,6 @@ public class Io {
 			public Resource withNoUpdate(boolean noUpdate) {
 				WriteOp.this.noUpdate = noUpdate;
 				return this;
-			}
-
-			private void ensureFile() {
-				if (path != null) {
-					file = new File(path);
-				}
-			}
-
-			private OutputStream getStream() throws IOException {
-				ensureFile();
-				if (stream == null) {
-					stream = new BufferedOutputStream(
-							new FileOutputStream(file));
-				}
-				if (compress) {
-					stream = new GZIPOutputStream(stream);
-				}
-				return stream;
 			}
 		}
 	}

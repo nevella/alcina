@@ -24,6 +24,22 @@ public class LoadObjectsHelloPlayer extends
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 	}
 
+	protected boolean allowAnonymousObjectLoad() {
+		return true;
+	}
+
+	protected void handleLoginResponse(LoginResponse loginResponse) {
+		signal(loginResponse.isOk() || allowAnonymousObjectLoad());
+	}
+
+	protected void hello() {
+		Registry.impl(CommonRemoteServiceAsync.class).hello(this);
+	}
+
+	protected LoadObjectDataState helloOkState() {
+		return LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE;
+	}
+
 	@Override
 	public void onFailure(Throwable caught) {
 		if (ClientUtils.maybeOffline(caught)) {
@@ -53,22 +69,6 @@ public class LoadObjectsHelloPlayer extends
 		} else {
 			handleLoginResponse(existingLoginResponse);
 		}
-	}
-
-	protected boolean allowAnonymousObjectLoad() {
-		return true;
-	}
-
-	protected void handleLoginResponse(LoginResponse loginResponse) {
-		signal(loginResponse.isOk() || allowAnonymousObjectLoad());
-	}
-
-	protected void hello() {
-		Registry.impl(CommonRemoteServiceAsync.class).hello(this);
-	}
-
-	protected LoadObjectDataState helloOkState() {
-		return LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE;
 	}
 
 	/*

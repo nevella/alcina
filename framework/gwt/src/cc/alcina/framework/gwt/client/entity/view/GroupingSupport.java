@@ -79,22 +79,6 @@ public class GroupingSupport<GP extends GroupingParameters> {
 				exportContentDefinition, groupedCellTableView.selectedIds());
 	}
 
-	public GP getExportDefinition() {
-		return parametersSupplier.get();
-	}
-
-	public void updateLink(GroupedResult groupedResult) {
-		if (groupingLink == null) {
-			return;
-		}
-		if (groupedResult == null) {
-			groupingLink.setText("Grouping");
-		} else {
-			groupingLink.setText(
-					Ax.format("Grouping: %s", groupedResult.getName()));
-		}
-	}
-
 	private void editGrouping(GP re) {
 		groupedCellTableView.editGrouping(re);
 	}
@@ -137,7 +121,23 @@ public class GroupingSupport<GP extends GroupingParameters> {
 		exportDefinition.addPropertyChangeListener(exportDefinitionListener);
 	}
 
+	public GP getExportDefinition() {
+		return parametersSupplier.get();
+	}
+
 	boolean isMultiline() {
 		return multilineLink != null && multilineLink.getSelectedIndex() == 1;
+	}
+
+	public void updateLink(GroupedResult groupedResult) {
+		if (groupingLink == null) {
+			return;
+		}
+		if (groupedResult == null) {
+			groupingLink.setText("Grouping");
+		} else {
+			groupingLink.setText(
+					Ax.format("Grouping: %s", groupedResult.getName()));
+		}
 	}
 }

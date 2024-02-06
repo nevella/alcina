@@ -17,14 +17,14 @@ public class RemoteConsoleClientImpl extends Client {
 	private RemoteConsoleModels models = new RemoteConsoleModels();
 
 	@Override
+	protected void createPlaceController() {
+		placeController = new PlaceController(eventBus);
+	}
+
+	@Override
 	public void setupPlaceMapping() {
 		historyHandler = new PlaceHistoryHandler(RegistryHistoryMapper.get());
 		historyHandler.register(placeController, eventBus,
 				() -> new ConsolePlace());
-	}
-
-	@Override
-	protected void createPlaceController() {
-		placeController = new PlaceController(eventBus);
 	}
 }

@@ -144,14 +144,6 @@ public class HueSaturationValue {
 				^ ((int) this.getValue() * 256);
 	}
 
-	public String toString() {
-		return "hsv: " + this.hue + ", " + this.saturation + ", " + this.value;
-	}
-
-	protected int toInteger(final float floatValue) {
-		return (int) (floatValue * Constants.COLOUR_COMPONENT_VALUE);
-	}
-
 	void setHue(final float hue) {
 		Checker.between("parameter:hue", hue, 0, 1.01f);
 		this.hue = hue;
@@ -165,5 +157,13 @@ public class HueSaturationValue {
 	void setValue(final float value) {
 		Checker.between("parameter:value", value, 0, 1.01f);
 		this.value = value;
+	}
+
+	protected int toInteger(final float floatValue) {
+		return (int) (floatValue * Constants.COLOUR_COMPONENT_VALUE);
+	}
+
+	public String toString() {
+		return "hsv: " + this.hue + ", " + this.saturation + ", " + this.value;
 	}
 }

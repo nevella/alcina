@@ -104,6 +104,37 @@ public class RangeImpl implements Range {
 		fDetach = false;
 	}
 
+	void checkIndex(Node refNode, int offset) throws DOMException {
+		if (offset < 0) {
+			throw new DOMException(DOMException.INDEX_SIZE_ERR,
+					DOMMessageFormatter.formatMessage(
+							DOMMessageFormatter.DOM_DOMAIN, "INDEX_SIZE_ERR",
+							null));
+		}
+		int type = refNode.getNodeType();
+		// If the node contains text, ensure that the
+		// offset of the range is <= to the length of the text
+		if (type == Node.TEXT_NODE || type == Node.CDATA_SECTION_NODE
+				|| type == Node.COMMENT_NODE
+				|| type == Node.PROCESSING_INSTRUCTION_NODE) {
+			if (offset > refNode.getNodeValue().length()) {
+				throw new DOMException(DOMException.INDEX_SIZE_ERR,
+						DOMMessageFormatter.formatMessage(
+								DOMMessageFormatter.DOM_DOMAIN,
+								"INDEX_SIZE_ERR", null));
+			}
+		} else {
+			// Since the node is not text, ensure that the offset
+			// is valid with respect to the number of child nodes
+			if (offset > refNode.getChildNodes().getLength()) {
+				throw new DOMException(DOMException.INDEX_SIZE_ERR,
+						DOMMessageFormatter.formatMessage(
+								DOMMessageFormatter.DOM_DOMAIN,
+								"INDEX_SIZE_ERR", null));
+			}
+		}
+	}
+
 	@Override
 	public DocumentFragment cloneContents() throws DOMException {
 		return traverseContents(CLONE_CONTENTS);
@@ -262,6 +293,16 @@ public class RangeImpl implements Range {
 		traverseContents(DELETE_CONTENTS);
 	}
 
+	/**
+	 * This function inserts text into a Node and invokes a method to fix-up all
+	 * other Ranges.
+	 */
+	void deleteData(CharacterData node, int offset, int count) {
+		fDeleteNode = node;
+		node.deleteData(offset, count);
+		fDeleteNode = null;
+	}
+
 	@Override
 	public void detach() {
 		if (fDetach) {
@@ -345,6 +386,53 @@ public class RangeImpl implements Range {
 		return fEndOffset;
 	}
 
+	/**
+	 * Given a node, calculate what the Range's root container for that node
+	 * would be.
+	 */
+	private Node getRootContainer(Node node) {
+		if (node == null)
+			return null;
+		while (node.getParentNode() != null)
+			node = node.getParentNode();
+		return node;
+	}
+
+	/**
+	 * Utility method to retrieve a child node by index. This method assumes the
+	 * caller is trying to find out which node is selected by the given index.
+	 * Note that if the index is greater than the number of children, this
+	 * implies that the first node selected is the parent node itself.
+	 *
+	 * @param container
+	 *            A container node
+	 *
+	 * @param offset
+	 *            An offset within the container for which a selected node
+	 *            should be computed. If the offset is less than zero, or if the
+	 *            offset is greater than the number of children, the container
+	 *            is returned.
+	 *
+	 * @return Returns either a child node of the container or the container
+	 *         itself.
+	 */
+	private Node getSelectedNode(Node container, int offset) {
+		if (container.getNodeType() == Node.TEXT_NODE)
+			return container;
+		// This case is an important convenience for
+		// traverseRightBoundary()
+		if (offset < 0)
+			return container;
+		Node child = container.getFirstChild();
+		while (child != null && offset > 0) {
+			--offset;
+			child = child.getNextSibling();
+		}
+		if (child != null)
+			return child;
+		return container;
+	}
+
 	@Override
 	public Node getStartContainer() {
 		if (fDetach) {
@@ -365,6 +453,54 @@ public class RangeImpl implements Range {
 							null));
 		}
 		return fStartOffset;
+	}
+
+	/**
+	 * Finds the root container for the given node and determines if that root
+	 * container is legal with respect to the DOM 2 specification. At present,
+	 * that means the root container must be either an attribute, a document, or
+	 * a document fragment.
+	 */
+	private boolean hasLegalRootContainer(Node node) {
+		if (node == null)
+			return false;
+		Node rootContainer = getRootContainer(node);
+		switch (rootContainer.getNodeType()) {
+		case Node.ATTRIBUTE_NODE:
+		case Node.DOCUMENT_NODE:
+		case Node.DOCUMENT_FRAGMENT_NODE:
+			return true;
+		}
+		return false;
+	}
+
+	/** what is the index of the child in the parent */
+	int indexOf(Node child, Node parent) {
+		if (child.getParentNode() != parent)
+			return -1;
+		int i = 0;
+		Map<Node, IndexLookup> map = indexLookup.get();
+		if (map != null && parent.getChildNodes().getLength() > 100) {
+			if (!map.containsKey(parent)) {
+				map.put(parent, new IndexLookup());
+			}
+			return map.get(parent).getIndex(child);
+		}
+		for (Node node = parent.getFirstChild(); node != child; node = node
+				.getNextSibling()) {
+			i++;
+		}
+		return i;
+	}
+
+	/**
+	 * This function inserts text into a Node and invokes a method to fix-up all
+	 * other Ranges.
+	 */
+	void insertData(CharacterData node, int index, String insert) {
+		fInsertNode = node;
+		node.insertData(index, insert);
+		fInsertNode = null;
 	}
 
 	/**
@@ -493,6 +629,211 @@ public class RangeImpl implements Range {
 		}
 		fInsertedFromRange = false;
 	}
+
+	/** is a an ancestor of b ? */
+	boolean isAncestorOf(Node a, Node b) {
+		for (Node node = b; node != null; node = node.getParentNode()) {
+			if (node == a)
+				return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Returns true IFF the given node can be contained by a range.
+	 */
+	private boolean isLegalContainedNode(Node node) {
+		if (node == null)
+			return false;
+		switch (node.getNodeType()) {
+		case Node.DOCUMENT_NODE:
+		case Node.DOCUMENT_FRAGMENT_NODE:
+		case Node.ATTRIBUTE_NODE:
+		case Node.ENTITY_NODE:
+		case Node.NOTATION_NODE:
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Returns true IFF the given node can serve as a container for a range's
+	 * boundary points.
+	 */
+	private boolean isLegalContainer(Node node) {
+		if (node == null)
+			return false;
+		while (node != null) {
+			switch (node.getNodeType()) {
+			case Node.ENTITY_NODE:
+			case Node.NOTATION_NODE:
+			case Node.DOCUMENT_TYPE_NODE:
+				return false;
+			}
+			node = node.getParentNode();
+		}
+		return true;
+	}
+
+	Node nextNode(Node node, boolean visitChildren) {
+		if (node == null)
+			return null;
+		Node result;
+		if (visitChildren) {
+			result = node.getFirstChild();
+			if (result != null) {
+				return result;
+			}
+		}
+		// if hasSibling, return sibling
+		result = node.getNextSibling();
+		if (result != null) {
+			return result;
+		}
+		// return parent's 1st sibling.
+		Node parent = node.getParentNode();
+		while (parent != null && parent != fDocument) {
+			result = parent.getNextSibling();
+			if (result != null) {
+				return result;
+			} else {
+				parent = parent.getParentNode();
+			}
+		} // while (parent != null && parent != fRoot) {
+			// end of list, return null
+		return null;
+	}
+
+	/**
+	 * This function is called from DOM. The text has already beeen inserted.
+	 * Fix-up any offsets.
+	 */
+	void receiveDeletedText(CharacterDataImpl node, int offset, int count) {
+		if (node == null)
+			return;
+		if (fDeleteNode == node)
+			return;
+		if (node == fStartContainer) {
+			if (fStartOffset > offset + count) {
+				fStartOffset = offset + (fStartOffset - (offset + count));
+			} else if (fStartOffset > offset) {
+				fStartOffset = offset;
+			}
+		}
+		if (node == fEndContainer) {
+			if (fEndOffset > offset + count) {
+				fEndOffset = offset + (fEndOffset - (offset + count));
+			} else if (fEndOffset > offset) {
+				fEndOffset = offset;
+			}
+		}
+	}
+
+	/**
+	 * This function is called from DOM. The text has already beeen inserted.
+	 * Fix-up any offsets.
+	 */
+	void receiveInsertedText(CharacterDataImpl node, int index, int len) {
+		if (node == null)
+			return;
+		if (fInsertNode == node)
+			return;
+		if (node == fStartContainer) {
+			if (index < fStartOffset) {
+				fStartOffset = fStartOffset + len;
+			}
+		}
+		if (node == fEndContainer) {
+			if (index < fEndOffset) {
+				fEndOffset = fEndOffset + len;
+			}
+		}
+	}
+
+	/**
+	 * This function is called from DOM. The text has already beeen replaced.
+	 * Fix-up any offsets.
+	 */
+	void receiveReplacedText(CharacterDataImpl node) {
+		if (node == null)
+			return;
+		if (node == fStartContainer) {
+			fStartOffset = 0;
+		}
+		if (node == fEndContainer) {
+			fEndOffset = 0;
+		}
+	}
+
+	/**
+	 * Fix up this Range if another Range has split a Text Node into 2 Nodes.
+	 */
+	void receiveSplitData(Node node, Node newNode, int offset) {
+		if (node == null || newNode == null)
+			return;
+		if (fSplitNode == node)
+			return;
+		if (node == fStartContainer
+				&& fStartContainer.getNodeType() == Node.TEXT_NODE) {
+			if (fStartOffset > offset) {
+				fStartOffset = fStartOffset - offset;
+				fStartContainer = newNode;
+			}
+		}
+		if (node == fEndContainer
+				&& fEndContainer.getNodeType() == Node.TEXT_NODE) {
+			if (fEndOffset > offset) {
+				fEndOffset = fEndOffset - offset;
+				fEndContainer = newNode;
+			}
+		}
+	}
+
+	Node removeChild(Node parent, Node child) {
+		fRemoveChild = child;
+		Node n = parent.removeChild(child);
+		fRemoveChild = null;
+		return n;
+	}
+
+	/**
+	 * This function must be called by the DOM _BEFORE_ a node is deleted,
+	 * because at that time it is connected in the DOM tree, which we depend on.
+	 */
+	void removeNode(Node node) {
+		if (node == null)
+			return;
+		if (fRemoveChild == node)
+			return;
+		Node parent = node.getParentNode();
+		if (parent == fStartContainer) {
+			int index = indexOf(node, fStartContainer);
+			if (index < fStartOffset) {
+				fStartOffset--;
+			}
+		}
+		if (parent == fEndContainer) {
+			int index = indexOf(node, fEndContainer);
+			if (index < fEndOffset) {
+				fEndOffset--;
+			}
+		}
+		// startContainer or endContainer or both is/are the ancestor(s) of the
+		// Node to be deleted
+		if (parent != fStartContainer || parent != fEndContainer) {
+			if (isAncestorOf(node, fStartContainer)) {
+				fStartContainer = parent;
+				fStartOffset = indexOf(node, parent);
+			}
+			if (isAncestorOf(node, fEndContainer)) {
+				fEndContainer = parent;
+				fEndOffset = indexOf(node, parent);
+			}
+		}
+	}
+	//
+	// Utility functions.
+	//
 
 	@Override
 	public void selectNode(Node refNode) throws RangeException {
@@ -824,6 +1165,20 @@ public class RangeImpl implements Range {
 		}
 	}
 
+	//
+	// Mutation functions
+	//
+	/**
+	 * Signal other Ranges to update their start/end containers/offsets. The
+	 * data has already been split into the two Nodes.
+	 */
+	void signalSplitData(Node node, Node newNode, int offset) {
+		fSplitNode = node;
+		// notify document
+		fDocument.splitData(node, newNode, offset);
+		fSplitNode = null;
+	}
+
 	@Override
 	public void surroundContents(Node newParent)
 			throws DOMException, RangeException {
@@ -928,108 +1283,6 @@ public class RangeImpl implements Range {
 			sb.append(fEndContainer.getNodeValue().substring(0, fEndOffset));
 		}
 		return sb.toString();
-	}
-
-	/**
-	 * Given a node, calculate what the Range's root container for that node
-	 * would be.
-	 */
-	private Node getRootContainer(Node node) {
-		if (node == null)
-			return null;
-		while (node.getParentNode() != null)
-			node = node.getParentNode();
-		return node;
-	}
-
-	/**
-	 * Utility method to retrieve a child node by index. This method assumes the
-	 * caller is trying to find out which node is selected by the given index.
-	 * Note that if the index is greater than the number of children, this
-	 * implies that the first node selected is the parent node itself.
-	 *
-	 * @param container
-	 *            A container node
-	 *
-	 * @param offset
-	 *            An offset within the container for which a selected node
-	 *            should be computed. If the offset is less than zero, or if the
-	 *            offset is greater than the number of children, the container
-	 *            is returned.
-	 *
-	 * @return Returns either a child node of the container or the container
-	 *         itself.
-	 */
-	private Node getSelectedNode(Node container, int offset) {
-		if (container.getNodeType() == Node.TEXT_NODE)
-			return container;
-		// This case is an important convenience for
-		// traverseRightBoundary()
-		if (offset < 0)
-			return container;
-		Node child = container.getFirstChild();
-		while (child != null && offset > 0) {
-			--offset;
-			child = child.getNextSibling();
-		}
-		if (child != null)
-			return child;
-		return container;
-	}
-
-	/**
-	 * Finds the root container for the given node and determines if that root
-	 * container is legal with respect to the DOM 2 specification. At present,
-	 * that means the root container must be either an attribute, a document, or
-	 * a document fragment.
-	 */
-	private boolean hasLegalRootContainer(Node node) {
-		if (node == null)
-			return false;
-		Node rootContainer = getRootContainer(node);
-		switch (rootContainer.getNodeType()) {
-		case Node.ATTRIBUTE_NODE:
-		case Node.DOCUMENT_NODE:
-		case Node.DOCUMENT_FRAGMENT_NODE:
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Returns true IFF the given node can be contained by a range.
-	 */
-	private boolean isLegalContainedNode(Node node) {
-		if (node == null)
-			return false;
-		switch (node.getNodeType()) {
-		case Node.DOCUMENT_NODE:
-		case Node.DOCUMENT_FRAGMENT_NODE:
-		case Node.ATTRIBUTE_NODE:
-		case Node.ENTITY_NODE:
-		case Node.NOTATION_NODE:
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Returns true IFF the given node can serve as a container for a range's
-	 * boundary points.
-	 */
-	private boolean isLegalContainer(Node node) {
-		if (node == null)
-			return false;
-		while (node != null) {
-			switch (node.getNodeType()) {
-			case Node.ENTITY_NODE:
-			case Node.NOTATION_NODE:
-			case Node.DOCUMENT_TYPE_NODE:
-				return false;
-			}
-			node = node.getParentNode();
-		}
-		return true;
 	}
 
 	/**
@@ -1778,265 +2031,21 @@ public class RangeImpl implements Range {
 		return frag;
 	}
 
-	void checkIndex(Node refNode, int offset) throws DOMException {
-		if (offset < 0) {
-			throw new DOMException(DOMException.INDEX_SIZE_ERR,
-					DOMMessageFormatter.formatMessage(
-							DOMMessageFormatter.DOM_DOMAIN, "INDEX_SIZE_ERR",
-							null));
-		}
-		int type = refNode.getNodeType();
-		// If the node contains text, ensure that the
-		// offset of the range is <= to the length of the text
-		if (type == Node.TEXT_NODE || type == Node.CDATA_SECTION_NODE
-				|| type == Node.COMMENT_NODE
-				|| type == Node.PROCESSING_INSTRUCTION_NODE) {
-			if (offset > refNode.getNodeValue().length()) {
-				throw new DOMException(DOMException.INDEX_SIZE_ERR,
-						DOMMessageFormatter.formatMessage(
-								DOMMessageFormatter.DOM_DOMAIN,
-								"INDEX_SIZE_ERR", null));
-			}
-		} else {
-			// Since the node is not text, ensure that the offset
-			// is valid with respect to the number of child nodes
-			if (offset > refNode.getChildNodes().getLength()) {
-				throw new DOMException(DOMException.INDEX_SIZE_ERR,
-						DOMMessageFormatter.formatMessage(
-								DOMMessageFormatter.DOM_DOMAIN,
-								"INDEX_SIZE_ERR", null));
-			}
-		}
-	}
-
-	/**
-	 * This function inserts text into a Node and invokes a method to fix-up all
-	 * other Ranges.
-	 */
-	void deleteData(CharacterData node, int offset, int count) {
-		fDeleteNode = node;
-		node.deleteData(offset, count);
-		fDeleteNode = null;
-	}
-
-	/** what is the index of the child in the parent */
-	int indexOf(Node child, Node parent) {
-		if (child.getParentNode() != parent)
-			return -1;
-		int i = 0;
-		Map<Node, IndexLookup> map = indexLookup.get();
-		if (map != null && parent.getChildNodes().getLength() > 100) {
-			if (!map.containsKey(parent)) {
-				map.put(parent, new IndexLookup());
-			}
-			return map.get(parent).getIndex(child);
-		}
-		for (Node node = parent.getFirstChild(); node != child; node = node
-				.getNextSibling()) {
-			i++;
-		}
-		return i;
-	}
-
-	/**
-	 * This function inserts text into a Node and invokes a method to fix-up all
-	 * other Ranges.
-	 */
-	void insertData(CharacterData node, int index, String insert) {
-		fInsertNode = node;
-		node.insertData(index, insert);
-		fInsertNode = null;
-	}
-
-	/** is a an ancestor of b ? */
-	boolean isAncestorOf(Node a, Node b) {
-		for (Node node = b; node != null; node = node.getParentNode()) {
-			if (node == a)
-				return true;
-		}
-		return false;
-	}
-
-	Node nextNode(Node node, boolean visitChildren) {
-		if (node == null)
-			return null;
-		Node result;
-		if (visitChildren) {
-			result = node.getFirstChild();
-			if (result != null) {
-				return result;
-			}
-		}
-		// if hasSibling, return sibling
-		result = node.getNextSibling();
-		if (result != null) {
-			return result;
-		}
-		// return parent's 1st sibling.
-		Node parent = node.getParentNode();
-		while (parent != null && parent != fDocument) {
-			result = parent.getNextSibling();
-			if (result != null) {
-				return result;
-			} else {
-				parent = parent.getParentNode();
-			}
-		} // while (parent != null && parent != fRoot) {
-			// end of list, return null
-		return null;
-	}
-
-	/**
-	 * This function is called from DOM. The text has already beeen inserted.
-	 * Fix-up any offsets.
-	 */
-	void receiveDeletedText(CharacterDataImpl node, int offset, int count) {
-		if (node == null)
-			return;
-		if (fDeleteNode == node)
-			return;
-		if (node == fStartContainer) {
-			if (fStartOffset > offset + count) {
-				fStartOffset = offset + (fStartOffset - (offset + count));
-			} else if (fStartOffset > offset) {
-				fStartOffset = offset;
-			}
-		}
-		if (node == fEndContainer) {
-			if (fEndOffset > offset + count) {
-				fEndOffset = offset + (fEndOffset - (offset + count));
-			} else if (fEndOffset > offset) {
-				fEndOffset = offset;
-			}
-		}
-	}
-
-	/**
-	 * This function is called from DOM. The text has already beeen inserted.
-	 * Fix-up any offsets.
-	 */
-	void receiveInsertedText(CharacterDataImpl node, int index, int len) {
-		if (node == null)
-			return;
-		if (fInsertNode == node)
-			return;
-		if (node == fStartContainer) {
-			if (index < fStartOffset) {
-				fStartOffset = fStartOffset + len;
-			}
-		}
-		if (node == fEndContainer) {
-			if (index < fEndOffset) {
-				fEndOffset = fEndOffset + len;
-			}
-		}
-	}
-
-	/**
-	 * This function is called from DOM. The text has already beeen replaced.
-	 * Fix-up any offsets.
-	 */
-	void receiveReplacedText(CharacterDataImpl node) {
-		if (node == null)
-			return;
-		if (node == fStartContainer) {
-			fStartOffset = 0;
-		}
-		if (node == fEndContainer) {
-			fEndOffset = 0;
-		}
-	}
-
-	/**
-	 * Fix up this Range if another Range has split a Text Node into 2 Nodes.
-	 */
-	void receiveSplitData(Node node, Node newNode, int offset) {
-		if (node == null || newNode == null)
-			return;
-		if (fSplitNode == node)
-			return;
-		if (node == fStartContainer
-				&& fStartContainer.getNodeType() == Node.TEXT_NODE) {
-			if (fStartOffset > offset) {
-				fStartOffset = fStartOffset - offset;
-				fStartContainer = newNode;
-			}
-		}
-		if (node == fEndContainer
-				&& fEndContainer.getNodeType() == Node.TEXT_NODE) {
-			if (fEndOffset > offset) {
-				fEndOffset = fEndOffset - offset;
-				fEndContainer = newNode;
-			}
-		}
-	}
-
-	Node removeChild(Node parent, Node child) {
-		fRemoveChild = child;
-		Node n = parent.removeChild(child);
-		fRemoveChild = null;
-		return n;
-	}
-
-	/**
-	 * This function must be called by the DOM _BEFORE_ a node is deleted,
-	 * because at that time it is connected in the DOM tree, which we depend on.
-	 */
-	void removeNode(Node node) {
-		if (node == null)
-			return;
-		if (fRemoveChild == node)
-			return;
-		Node parent = node.getParentNode();
-		if (parent == fStartContainer) {
-			int index = indexOf(node, fStartContainer);
-			if (index < fStartOffset) {
-				fStartOffset--;
-			}
-		}
-		if (parent == fEndContainer) {
-			int index = indexOf(node, fEndContainer);
-			if (index < fEndOffset) {
-				fEndOffset--;
-			}
-		}
-		// startContainer or endContainer or both is/are the ancestor(s) of the
-		// Node to be deleted
-		if (parent != fStartContainer || parent != fEndContainer) {
-			if (isAncestorOf(node, fStartContainer)) {
-				fStartContainer = parent;
-				fStartOffset = indexOf(node, parent);
-			}
-			if (isAncestorOf(node, fEndContainer)) {
-				fEndContainer = parent;
-				fEndOffset = indexOf(node, parent);
-			}
-		}
-	}
-	//
-	// Utility functions.
-	//
-
-	//
-	// Mutation functions
-	//
-	/**
-	 * Signal other Ranges to update their start/end containers/offsets. The
-	 * data has already been split into the two Nodes.
-	 */
-	void signalSplitData(Node node, Node newNode, int offset) {
-		fSplitNode = node;
-		// notify document
-		fDocument.splitData(node, newNode, offset);
-		fSplitNode = null;
-	}
-
 	private static class IndexLookup {
 		private NodeListCache lastFNodeListCache;
 
 		private Map<Node, Integer> index = new HashMap<>();
 
 		public IndexLookup() {
+		}
+
+		private void generateIndex(Node parent) {
+			int idx = 0;
+			Node cursor = parent.getFirstChild();
+			while (cursor != null) {
+				index.put(cursor, idx++);
+				cursor = cursor.getNextSibling();
+			}
 		}
 
 		public int getIndex(Node child) {
@@ -2052,15 +2061,6 @@ public class RangeImpl implements Range {
 				generateIndex(parentNode);
 			}
 			return index.get(child);
-		}
-
-		private void generateIndex(Node parent) {
-			int idx = 0;
-			Node cursor = parent.getFirstChild();
-			while (cursor != null) {
-				index.put(cursor, idx++);
-				cursor = cursor.getNextSibling();
-			}
 		}
 	}
 }

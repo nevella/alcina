@@ -36,16 +36,6 @@ public class DomainTransformResponse implements Serializable {
 
 	private List<DomainTransformEvent> eventsToUseForClientUpdate = new ArrayList<DomainTransformEvent>();
 
-	public void setEventsToUseForClientUpdate(
-			List<DomainTransformEvent> eventsToUseForClientUpdate) {
-		this.eventsToUseForClientUpdate = eventsToUseForClientUpdate;
-	}
-
-	public void setTransformExceptions(
-			List<DomainTransformException> transformExceptions) {
-		this.transformExceptions = transformExceptions;
-	}
-
 	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
 
 	private String logOffset;
@@ -85,6 +75,11 @@ public class DomainTransformResponse implements Serializable {
 		return this.transformsProcessed;
 	}
 
+	public void setEventsToUseForClientUpdate(
+			List<DomainTransformEvent> eventsToUseForClientUpdate) {
+		this.eventsToUseForClientUpdate = eventsToUseForClientUpdate;
+	}
+
 	public void setLogOffset(String logOffset) {
 		this.logOffset = logOffset;
 	}
@@ -103,6 +98,11 @@ public class DomainTransformResponse implements Serializable {
 
 	public void setResult(DomainTransformResponseResult result) {
 		this.result = result;
+	}
+
+	public void setTransformExceptions(
+			List<DomainTransformException> transformExceptions) {
+		this.transformExceptions = transformExceptions;
 	}
 
 	public void setTransformsProcessed(int transformsProcessed) {

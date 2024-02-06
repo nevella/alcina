@@ -76,73 +76,6 @@ public class TextUtils {
 				CommonUtils.nullToEmpty(key).toLowerCase());
 	}
 
-	public static String normalizeWhitespace(String input) {
-		return input == null ? null
-				: GWT.isScript() ? WS_PATTERN.replace(input, " ")
-						: normaliseWhitespaceOpt(input);
-	}
-
-	public static String normalizeSpaces(String input) {
-		return input == null ? null
-				: GWT.isScript() ? WS_PATTERN_NON_MULTIPLE.replace(input, " ")
-						: normaliseWhitespaceOptNonMultiple(input);
-	}
-
-	public static String normalizeWhitespaceAndTrim(String text) {
-		return text == null ? null : normalizeWhitespace(text).trim();
-	}
-
-	public static String removeWhitespace(String text) {
-		return normalizeWhitespace(text).replace(" ", "");
-	}
-
-	public static String trim(String key) {
-		return CommonUtils.nullToEmpty(key).trim();
-	}
-
-	public static String trimOrNull(String key) {
-		if (key == null) {
-			return null;
-		}
-		return key.trim();
-	}
-
-	private static String normaliseWhitespaceOptNonMultiple(String input) {
-		StringBuilder out = null;
-		int len = input.length();
-		boolean inWhitespace = false;
-		boolean inWhitespacePrior = false;
-		boolean ensureBuilder = false;
-		for (int idx = 0; idx < len; idx++) {
-			char c = input.charAt(idx);
-			switch (c) {
-			case '\u0009':
-			case '\n':
-			case '\u000B':
-			case '\u000C':
-			case '\r':
-			case '\u00A0':
-			case '\u0085':
-			case '\u2000':
-			case '\u2001':
-			case '\u2002':
-			case '\u2003':
-				if (out == null) {
-					out = new StringBuilder();
-					out.append(input, 0, idx);
-				}
-				out.append(' ');
-				break;
-			default:
-				if (out != null) {
-					out.append(c);
-				}
-				break;
-			}
-		}
-		return out == null ? input : out.toString();
-	}
-
 	private static String normaliseWhitespaceOpt(String input) {
 		StringBuilder out = null;
 		int len = input.length();
@@ -196,6 +129,73 @@ public class TextUtils {
 			}
 		}
 		return out != null ? out.toString() : input;
+	}
+
+	private static String normaliseWhitespaceOptNonMultiple(String input) {
+		StringBuilder out = null;
+		int len = input.length();
+		boolean inWhitespace = false;
+		boolean inWhitespacePrior = false;
+		boolean ensureBuilder = false;
+		for (int idx = 0; idx < len; idx++) {
+			char c = input.charAt(idx);
+			switch (c) {
+			case '\u0009':
+			case '\n':
+			case '\u000B':
+			case '\u000C':
+			case '\r':
+			case '\u00A0':
+			case '\u0085':
+			case '\u2000':
+			case '\u2001':
+			case '\u2002':
+			case '\u2003':
+				if (out == null) {
+					out = new StringBuilder();
+					out.append(input, 0, idx);
+				}
+				out.append(' ');
+				break;
+			default:
+				if (out != null) {
+					out.append(c);
+				}
+				break;
+			}
+		}
+		return out == null ? input : out.toString();
+	}
+
+	public static String normalizeSpaces(String input) {
+		return input == null ? null
+				: GWT.isScript() ? WS_PATTERN_NON_MULTIPLE.replace(input, " ")
+						: normaliseWhitespaceOptNonMultiple(input);
+	}
+
+	public static String normalizeWhitespace(String input) {
+		return input == null ? null
+				: GWT.isScript() ? WS_PATTERN.replace(input, " ")
+						: normaliseWhitespaceOpt(input);
+	}
+
+	public static String normalizeWhitespaceAndTrim(String text) {
+		return text == null ? null : normalizeWhitespace(text).trim();
+	}
+
+	public static String removeWhitespace(String text) {
+		return normalizeWhitespace(text).replace(" ", "");
+	}
+
+	public static String trim(String key) {
+		return CommonUtils.nullToEmpty(key).trim();
+	}
+
+	public static String trimOrNull(String key) {
+		if (key == null) {
+			return null;
+		}
+		return key.trim();
 	}
 
 	public static class Encoder {

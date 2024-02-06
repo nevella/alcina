@@ -50,6 +50,23 @@ public abstract class ByteArrayKeyAnalyzer extends AbstractKeyAnalyzer<byte[]>
 		return new Constant(maxLength);
 	}
 
+	/**
+	 * Returns a bit mask where the given bit is set
+	 */
+	private static int mask(int bit) {
+		return MSB >>> bit;
+	}
+
+	/**
+	 * Returns the {@code byte} value at the given index.
+	 */
+	private static byte valueAt(byte[] values, int index) {
+		if (index >= 0 && index < values.length) {
+			return values[index];
+		}
+		return 0;
+	}
+
 	@Override
 	public int compare(byte[] o1, byte[] o2) {
 		if (o1 == null) {
@@ -70,11 +87,6 @@ public abstract class ByteArrayKeyAnalyzer extends AbstractKeyAnalyzer<byte[]>
 	}
 
 	@Override
-	public int lengthInBits(byte[] key) {
-		return key.length * Byte.SIZE;
-	}
-
-	@Override
 	public boolean isPrefix(byte[] key, byte[] prefix) {
 		if (key.length < prefix.length) {
 			return false;
@@ -87,63 +99,9 @@ public abstract class ByteArrayKeyAnalyzer extends AbstractKeyAnalyzer<byte[]>
 		return true;
 	}
 
-	/**
-	 * Returns a bit mask where the given bit is set
-	 */
-	private static int mask(int bit) {
-		return MSB >>> bit;
-	}
-
-	/**
-	 * Returns the {@code byte} value at the given index.
-	 */
-	private static byte valueAt(byte[] values, int index) {
-		if (index >= 0 && index < values.length) {
-			return values[index];
-		}
-		return 0;
-	}
-
-	/**
-	 * A {@link ByteArrayKeyAnalyzer} for variable length {@code byte[]}.
-	 */
-	private static class Variable extends ByteArrayKeyAnalyzer {
-		private static final long serialVersionUID = 5360165640553653434L;
-
-		@Override
-		public boolean isBitSet(byte[] key, int bitIndex) {
-			if (bitIndex >= lengthInBits(key)) {
-				return false;
-			}
-			int index = (int) (bitIndex / Byte.SIZE);
-			int bit = (int) (bitIndex % Byte.SIZE);
-			return (key[index] & mask(bit)) != 0;
-		}
-
-		@Override
-		public int bitIndex(byte[] key, byte[] otherKey) {
-			int length = Math.max(key.length, otherKey.length);
-			boolean allNull = true;
-			for (int i = 0; i < length; i++) {
-				byte b1 = valueAt(key, i);
-				byte b2 = valueAt(otherKey, i);
-				if (b1 != b2) {
-					int xor = b1 ^ b2;
-					for (int j = 0; j < Byte.SIZE; j++) {
-						if ((xor & mask(j)) != 0) {
-							return (i * Byte.SIZE) + j;
-						}
-					}
-				}
-				if (b1 != 0) {
-					allNull = false;
-				}
-			}
-			if (allNull) {
-				return KeyAnalyzer.NULL_BIT_KEY;
-			}
-			return KeyAnalyzer.EQUAL_BIT_KEY;
-		}
+	@Override
+	public int lengthInBits(byte[] key) {
+		return key.length * Byte.SIZE;
 	}
 
 	/**
@@ -162,22 +120,6 @@ public abstract class ByteArrayKeyAnalyzer extends AbstractKeyAnalyzer<byte[]>
 
 		public Constant(int maxLength) {
 			this.maxLength = maxLength;
-		}
-
-		@Override
-		public boolean isBitSet(byte[] key, int bitIndex) {
-			if (maxLength < key.length) {
-				throw new IllegalArgumentException();
-			}
-			int lengthInBits = lengthInBits(key);
-			int prefix = (maxLength * Byte.SIZE) - lengthInBits;
-			int keyBitIndex = bitIndex - prefix;
-			if (keyBitIndex >= lengthInBits || keyBitIndex < 0) {
-				return false;
-			}
-			int index = (int) (keyBitIndex / Byte.SIZE);
-			int bit = (int) (keyBitIndex % Byte.SIZE);
-			return (key[index] & mask(bit)) != 0;
 		}
 
 		@Override
@@ -211,6 +153,64 @@ public abstract class ByteArrayKeyAnalyzer extends AbstractKeyAnalyzer<byte[]>
 				return KeyAnalyzer.NULL_BIT_KEY;
 			}
 			return KeyAnalyzer.EQUAL_BIT_KEY;
+		}
+
+		@Override
+		public boolean isBitSet(byte[] key, int bitIndex) {
+			if (maxLength < key.length) {
+				throw new IllegalArgumentException();
+			}
+			int lengthInBits = lengthInBits(key);
+			int prefix = (maxLength * Byte.SIZE) - lengthInBits;
+			int keyBitIndex = bitIndex - prefix;
+			if (keyBitIndex >= lengthInBits || keyBitIndex < 0) {
+				return false;
+			}
+			int index = (int) (keyBitIndex / Byte.SIZE);
+			int bit = (int) (keyBitIndex % Byte.SIZE);
+			return (key[index] & mask(bit)) != 0;
+		}
+	}
+
+	/**
+	 * A {@link ByteArrayKeyAnalyzer} for variable length {@code byte[]}.
+	 */
+	private static class Variable extends ByteArrayKeyAnalyzer {
+		private static final long serialVersionUID = 5360165640553653434L;
+
+		@Override
+		public int bitIndex(byte[] key, byte[] otherKey) {
+			int length = Math.max(key.length, otherKey.length);
+			boolean allNull = true;
+			for (int i = 0; i < length; i++) {
+				byte b1 = valueAt(key, i);
+				byte b2 = valueAt(otherKey, i);
+				if (b1 != b2) {
+					int xor = b1 ^ b2;
+					for (int j = 0; j < Byte.SIZE; j++) {
+						if ((xor & mask(j)) != 0) {
+							return (i * Byte.SIZE) + j;
+						}
+					}
+				}
+				if (b1 != 0) {
+					allNull = false;
+				}
+			}
+			if (allNull) {
+				return KeyAnalyzer.NULL_BIT_KEY;
+			}
+			return KeyAnalyzer.EQUAL_BIT_KEY;
+		}
+
+		@Override
+		public boolean isBitSet(byte[] key, int bitIndex) {
+			if (bitIndex >= lengthInBits(key)) {
+				return false;
+			}
+			int index = (int) (bitIndex / Byte.SIZE);
+			int bit = (int) (bitIndex % Byte.SIZE);
+			return (key[index] & mask(bit)) != 0;
 		}
 	}
 }

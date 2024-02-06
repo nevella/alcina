@@ -63,37 +63,6 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 	private static final String FAIL_IF_SCRIPT_TAG_PROPERTY = "xsiframe.failIfScriptTag";
 
 	@Override
-	public String getDescription() {
-		return "Cross-Site-Iframe";
-	}
-
-	private void writeMagicComments(DefaultTextOutput out,
-			LinkerContext context, int fragmentId, String strongName) {
-		String sourceMapUrl = getSourceMapUrl(context, strongName, fragmentId);
-		if (sourceMapUrl != null) {
-			// This magic comment determines where a browser debugger looks for
-			// a sourcemap,
-			// except that it may be overridden by a "SourceMap" header in the
-			// HTTP response when
-			// loading the JavaScript.
-			// (Note: even if you're using the HTTP header, you still have to
-			// set this to an arbitrary
-			// value, or Chrome won't enable sourcemaps.)
-			out.print("\n//# sourceMappingURL=" + sourceMapUrl + " ");
-		}
-		// This magic comment determines the name of the JavaScript fragment in
-		// a browser debugger.
-		// (In Chrome it typically shows up under "(no domain)".)
-		// We need to set it explicitly because the JavaScript code may be
-		// installed via an "eval"
-		// statement and even if we're not using an eval, the filename contains
-		// the strongname which
-		// isn't stable across recompiles.
-		out.print("\n//# sourceURL=" + context.getModuleName() + "-"
-				+ fragmentId + ".js\n");
-	}
-
-	@Override
 	protected String fillSelectionScriptTemplate(StringBuffer ss,
 			TreeLogger logger, LinkerContext context, ArtifactSet artifacts,
 			CompilationResult result) throws UnableToCompleteException {
@@ -233,6 +202,11 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 				context.isOutputCompact());
 		writeMagicComments(out, context, fragment, strongName);
 		return out.toString();
+	}
+
+	@Override
+	public String getDescription() {
+		return "Cross-Site-Iframe";
 	}
 
 	@Override
@@ -820,5 +794,31 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 			out.append("}\n");
 		}
 		return out.toString();
+	}
+
+	private void writeMagicComments(DefaultTextOutput out,
+			LinkerContext context, int fragmentId, String strongName) {
+		String sourceMapUrl = getSourceMapUrl(context, strongName, fragmentId);
+		if (sourceMapUrl != null) {
+			// This magic comment determines where a browser debugger looks for
+			// a sourcemap,
+			// except that it may be overridden by a "SourceMap" header in the
+			// HTTP response when
+			// loading the JavaScript.
+			// (Note: even if you're using the HTTP header, you still have to
+			// set this to an arbitrary
+			// value, or Chrome won't enable sourcemaps.)
+			out.print("\n//# sourceMappingURL=" + sourceMapUrl + " ");
+		}
+		// This magic comment determines the name of the JavaScript fragment in
+		// a browser debugger.
+		// (In Chrome it typically shows up under "(no domain)".)
+		// We need to set it explicitly because the JavaScript code may be
+		// installed via an "eval"
+		// statement and even if we're not using an eval, the filename contains
+		// the strongname which
+		// isn't stable across recompiles.
+		out.print("\n//# sourceURL=" + context.getModuleName() + "-"
+				+ fragmentId + ".js\n");
 	}
 }

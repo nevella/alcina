@@ -51,21 +51,6 @@ public class TransformCache implements DomainTransformPersistenceListener {
 		}
 	}
 
-	public void
-			putPerUserTransforms(List<DomainTransformEventPersistent> events) {
-		for (DomainTransformEventPersistent event : events) {
-			putPerUserEvent(event);
-		}
-	}
-
-	public void
-			putSharedTransforms(List<DomainTransformEventPersistent> events) {
-		for (DomainTransformEventPersistent event : events) {
-			putSharedEvent(event);
-		}
-		this.cacheValidFrom = CommonUtils.last(events).getId();
-	}
-
 	private void putPerUserEvent(DomainTransformEventPersistent event) {
 		long userId = event.getUser().getId();
 		if (!perUserLookup.containsKey(userId)) {
@@ -76,9 +61,24 @@ public class TransformCache implements DomainTransformPersistenceListener {
 		perUserLookup.get(userId).put(event.getId(), nonPersistentEvent);
 	}
 
+	public void
+			putPerUserTransforms(List<DomainTransformEventPersistent> events) {
+		for (DomainTransformEventPersistent event : events) {
+			putPerUserEvent(event);
+		}
+	}
+
 	private void putSharedEvent(DomainTransformEventPersistent event) {
 		DomainTransformEvent nonPersistentEvent = event
 				.toNonPersistentEvent(true);
 		sharedLookup.put(event.getId(), nonPersistentEvent);
+	}
+
+	public void
+			putSharedTransforms(List<DomainTransformEventPersistent> events) {
+		for (DomainTransformEventPersistent event : events) {
+			putSharedEvent(event);
+		}
+		this.cacheValidFrom = CommonUtils.last(events).getId();
 	}
 }

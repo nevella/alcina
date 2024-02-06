@@ -61,17 +61,17 @@ public class RangeFooter extends Header<String> {
 		return this.searchReturnsLastResults;
 	}
 
+	private void refresh(LoadingState loadingState) {
+		loading = loadingState != LoadingState.LOADED;
+		neverLoading &= !loading;
+		Scheduler.get().scheduleDeferred(() -> table.redrawFooters());
+	}
+
 	public void setNoSearchRun(boolean noSearchRun) {
 		this.noSearchRun = noSearchRun;
 	}
 
 	public void setSearchReturnsLastResults(boolean searchReturnsLastResults) {
 		this.searchReturnsLastResults = searchReturnsLastResults;
-	}
-
-	private void refresh(LoadingState loadingState) {
-		loading = loadingState != LoadingState.LOADED;
-		neverLoading &= !loading;
-		Scheduler.get().scheduleDeferred(() -> table.redrawFooters());
 	}
 }

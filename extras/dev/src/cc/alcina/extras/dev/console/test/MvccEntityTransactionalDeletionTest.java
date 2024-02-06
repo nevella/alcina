@@ -41,6 +41,25 @@ public class MvccEntityTransactionalDeletionTest<IU extends Entity & IUser, IG e
 
 	private transient IU createdUser;
 
+	@Override
+	protected void run1() throws Exception {
+		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
+		initialSize = Domain.stream(userClass).count();
+		Ax.err("Initial size: %s", initialSize);
+		createdUser = Domain.create(userClass);
+		createdUser.setUserName(username);
+		Transaction.commit();
+		// wait for vacuum
+		Thread.sleep(100);
+		txLatch = new CountDownLatch(2);
+		tx1Latch1 = new CountDownLatch(1);
+		tx1Latch2 = new CountDownLatch(1);
+		tx2Latch1 = new CountDownLatch(1);
+		startTx1();
+		startTx2();
+		txLatch.await();
+	}
+
 	private void startTx1() {
 		new Thread("test-mvcc-1") {
 			@Override
@@ -92,24 +111,5 @@ public class MvccEntityTransactionalDeletionTest<IU extends Entity & IUser, IG e
 				}
 			}
 		}.start();
-	}
-
-	@Override
-	protected void run1() throws Exception {
-		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
-		initialSize = Domain.stream(userClass).count();
-		Ax.err("Initial size: %s", initialSize);
-		createdUser = Domain.create(userClass);
-		createdUser.setUserName(username);
-		Transaction.commit();
-		// wait for vacuum
-		Thread.sleep(100);
-		txLatch = new CountDownLatch(2);
-		tx1Latch1 = new CountDownLatch(1);
-		tx1Latch2 = new CountDownLatch(1);
-		tx2Latch1 = new CountDownLatch(1);
-		startTx1();
-		startTx2();
-		txLatch.await();
 	}
 }

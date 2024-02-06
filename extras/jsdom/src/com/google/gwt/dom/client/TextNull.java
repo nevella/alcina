@@ -6,6 +6,10 @@ public class TextNull extends NodeLocalNull implements ClientDomText {
 	TextNull() {
 	}
 
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public Node cloneNode(boolean deep) {
 		throw new UnsupportedOperationException();
@@ -70,9 +74,5 @@ public class TextNull extends NodeLocalNull implements ClientDomText {
 	public Text splitText(int offset) {
 		// noop
 		return null;
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
-		throw new UnsupportedOperationException();
 	}
 }

@@ -79,20 +79,6 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		}
 	}
 
-	private final class ReflectionVisibilityAll
-			implements ReflectionVisibility {
-		@Override
-		public boolean isVisibleAnnotation(
-				Class<? extends Annotation> annotationType) {
-			return true;
-		}
-
-		@Override
-		public boolean isVisibleType(JType type) {
-			return true;
-		}
-	}
-
 	static class MethodAnnotationProvider implements AnnotationProvider {
 		@SuppressWarnings("unused")
 		private Class clazz;
@@ -136,6 +122,20 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+	}
+
+	private final class ReflectionVisibilityAll
+			implements ReflectionVisibility {
+		@Override
+		public boolean isVisibleAnnotation(
+				Class<? extends Annotation> annotationType) {
+			return true;
+		}
+
+		@Override
+		public boolean isVisibleType(JType type) {
+			return true;
 		}
 	}
 }

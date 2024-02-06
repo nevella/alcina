@@ -63,6 +63,11 @@ public class XmlTokenContext implements Cloneable {
 		return this;
 	}
 
+	protected XmlTokenContext empty() {
+		this.empty = true;
+		return this;
+	}
+
 	public String get(String key) {
 		return properties.get(key);
 	}
@@ -152,11 +157,6 @@ public class XmlTokenContext implements Cloneable {
 	public XmlTokenContext withOnOpenHandler(
 			BiConsumer<XmlTokenOutput, XmlStructuralJoin> onOpenHandler) {
 		this.onOpenHandler = onOpenHandler;
-		return this;
-	}
-
-	protected XmlTokenContext empty() {
-		this.empty = true;
 		return this;
 	}
 }

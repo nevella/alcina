@@ -15,12 +15,12 @@ public class TransactionalSet<E extends Entity>
 
 	private Transaction baseTransaction;
 
-	public TransactionalSet(Class<E> entityClass) {
-		this.entityClass = entityClass;
-	}
-
 	// for copying
 	TransactionalSet() {
+	}
+
+	public TransactionalSet(Class<E> entityClass) {
+		this.entityClass = entityClass;
 	}
 
 	@Override

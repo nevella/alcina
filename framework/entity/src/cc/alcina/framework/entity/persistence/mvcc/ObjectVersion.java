@@ -15,6 +15,10 @@ class ObjectVersion<T> {
 	public ObjectVersion() {
 	}
 
+	void debugObjectHash() {
+		Ax.out("\t debug object hash: %s", System.identityHashCode(object));
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof ObjectVersion) {
@@ -49,9 +53,5 @@ class ObjectVersion<T> {
 			return Ax.format("(%s) - %s - %s", writeable,
 					object.getClass().getSimpleName(), object);
 		}
-	}
-
-	void debugObjectHash() {
-		Ax.out("\t debug object hash: %s", System.identityHashCode(object));
 	}
 }

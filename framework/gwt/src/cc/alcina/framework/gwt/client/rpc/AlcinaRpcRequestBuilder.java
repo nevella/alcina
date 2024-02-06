@@ -75,23 +75,6 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		Registry.impl(ApplicationHeaders.class).addHeaders(requestBuilder);
 	}
 
-	public String getRpcResult() {
-		return response == null ? null : response.getText();
-	}
-
-	public boolean isRecordResult() {
-		return recordResult;
-	}
-
-	public void setRecordResult(boolean recordResult) {
-		this.recordResult = recordResult;
-	}
-
-	public AlcinaRpcRequestBuilder setResponsePayload(String payload) {
-		this.payload = payload;
-		return this;
-	}
-
 	@Override
 	protected RequestBuilder doCreate(String serviceEntryPoint) {
 		if (payload != null) {
@@ -112,6 +95,23 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	protected void doSetCallback(RequestBuilder rb, RequestCallback callback) {
 		callback = new WrappingCallback(callback);
 		super.doSetCallback(rb, callback);
+	}
+
+	public String getRpcResult() {
+		return response == null ? null : response.getText();
+	}
+
+	public boolean isRecordResult() {
+		return recordResult;
+	}
+
+	public void setRecordResult(boolean recordResult) {
+		this.recordResult = recordResult;
+	}
+
+	public AlcinaRpcRequestBuilder setResponsePayload(String payload) {
+		this.payload = payload;
+		return this;
 	}
 
 	public static class AlcinaRpcRequestBuilderCreationOneOffReplayableListener

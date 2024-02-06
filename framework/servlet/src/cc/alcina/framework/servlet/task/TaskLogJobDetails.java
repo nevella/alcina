@@ -38,6 +38,68 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	private boolean details;
 
+	private DomNodeHtmlTableCellBuilder
+			date(DomNodeHtmlTableCellBuilder builder) {
+		DomNode lastNode = builder.previousElement();
+		lastNode.setClassName("date");
+		return builder;
+	}
+
+	protected void descendantAndSubsequentJobs(Job top, DomNode body) {
+		body.builder().tag("h2").text("Child/Subsequent jobs").append();
+		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
+		builder.row().cell("Id").accept(this::numeric).cell("Name")
+				.accept(Utils::large).cell("State").cell("Result")
+				.cell("Started").accept(this::date).cell("Finished")
+				.accept(this::date).cell("Performer").accept(Utils::instance)
+				.cell("Link").accept(Utils::links);
+		Stream<Job> relatedProcessing = top.provideDescendantsAndSubsequents()
+				.filter(j -> j.getState() == JobState.PROCESSING)
+				.sorted(EntityComparator.INSTANCE).limit(50);
+		Stream<Job> relatedNonProcessing = top
+				.provideDescendantsAndSubsequents()
+				.filter(j -> j.getState() != JobState.PROCESSING)
+				.sorted(EntityComparator.INSTANCE).limit(50);
+		Stream.concat(relatedProcessing, relatedNonProcessing).forEach(job -> {
+			DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+					.cell(String.valueOf(job.getId())).cell(job.provideName())
+					.accept(Utils::large).cell(job.getState())
+					.cell(job.getResultType())
+					.cell(timestamp(job.getStartTime()))
+					.cell(timestamp(job.getEndTime())).cell(job.getPerformer())
+					.accept(Utils::instance);
+			DomNode td = cellBuilder.append();
+			String href = JobServlet.createTaskUrl(
+					new TaskLogJobDetails().withJobId(job.getId()));
+			td.html().addLink("Details", href, "_blank");
+		});
+		body.builder().tag("hr").append();
+	}
+
+	protected void fields(Job job, DomNode body)
+			throws IllegalAccessException, InvocationTargetException {
+		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
+		builder.row().cell("Field").cell("Value");
+		List<PropertyDescriptor> pds = SEUtilities
+				.getPropertyDescriptorsSortedByField(job.entityClass());
+		pds.removeIf(pd -> pd.getName().matches(
+				"largeResult|largeResultSerialized|result|resultSerialized|"
+						+ "processStateSerialized|processSerialized|cachedDisplayName"));
+		for (PropertyDescriptor pd : pds) {
+			DomNodeHtmlTableRowBuilder row = builder.row();
+			Object fieldValue = pd.getReadMethod().invoke(job, new Object[0]);
+			String fieldText = null;
+			if (fieldValue == null) {
+			} else if (fieldValue instanceof Collection) {
+				fieldText = CommonUtils.toLimitedCollectionString(
+						(Collection<?>) fieldValue, 50);
+			} else {
+				fieldText = fieldValue.toString();
+			}
+			row.cell(pd.getName()).cell(fieldText).style("whitespace:pre-wrap");
+		}
+	}
+
 	public long getJobId() {
 		return this.jobId;
 	}
@@ -46,12 +108,73 @@ public class TaskLogJobDetails extends PerformerTask {
 		return this.details;
 	}
 
+	private DomNodeHtmlTableCellBuilder
+			numeric(DomNodeHtmlTableCellBuilder builder) {
+		DomNode lastNode = builder.previousElement();
+		lastNode.setClassName("numeric");
+		return builder;
+	}
+
 	public TaskLogJobDetails
 			populateFromParameters(Map<String, String[]> parameterMap) {
 		StringMap map = StringMap.flatten(parameterMap);
 		jobId = Long.parseLong(map.get("id"));
 		details = map.is("details");
 		return this;
+	}
+
+	protected void processData(List<Job> threadData, DomNode body) {
+		body.builder().tag("h2").text("Process state").append();
+		body.builder().tag("div")
+				.text("%s %s", threadData.size(),
+						CommonUtils.pluralise("active job", threadData))
+				.append();
+		body.builder().tag("hr").append();
+		for (Job active : threadData) {
+			ProcessState processState = active.getProcessState();
+			ProcessState messageState = active.getStateMessages().stream()
+					.sorted(EntityComparator.REVERSED_INSTANCE).findFirst()
+					.map(m -> ((JobStateMessage) m.domain().ensurePopulated())
+							.getProcessState())
+					.orElse(null);
+			DomNode threadDiv = body.builder().tag("div")
+					.className("thread-data").append();
+			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
+			DomNode td = builder.row().cell("Job").append();
+			String href = JobServlet.createTaskUrl(
+					new TaskLogJobDetails().withJobId(active.getId()));
+			td.html().addLink(active.toDisplayName(), href, "_blank");
+			td.builder().text("\u00a0-\u00a0").append();
+			String cancelHref = JobServlet.createTaskUrl(
+					new TaskCancelJob().withJobId(active.getId()));
+			td.html().addLink("Cancel", cancelHref, "_blank");
+			if (messageState == null) {
+				builder.row().cell("Response").cell("(No state response)");
+			} else {
+				Optional<String> logHref = Registry
+						.optional(JobThreadLogUrlProvider.class)
+						.map(p -> p.getLogUrl(active, messageState));
+				DomNode threadTd = builder.row().cell("Thread").append();
+				if (logHref.isPresent()) {
+					threadTd.html().addLink(messageState.getThreadName(),
+							logHref.get(), "_top");
+				} else {
+					threadTd.setText(messageState.getThreadName());
+				}
+				builder.row().cell("Allocator thread")
+						.cell(messageState.getAllocatorThreadName());
+				DomNode resourcesTd = builder.row().cell("Resources").append();
+				resourcesTd.setClassName("resources");
+				if (processState != null) {
+					processState.getResources().stream().map(Object::toString)
+							.forEach(t -> resourcesTd.builder().tag("div")
+									.text(t).append());
+				}
+				builder.row().cell("Stack").className("stack-trace")
+						.cell(messageState.getStackTrace());
+			}
+			body.builder().tag("hr").append();
+		}
 	}
 
 	@Override
@@ -111,23 +234,8 @@ public class TaskLogJobDetails extends PerformerTask {
 		this.jobId = jobId;
 	}
 
-	public TaskLogJobDetails withJobId(long jobId) {
-		this.jobId = jobId;
-		return this;
-	}
-
-	private DomNodeHtmlTableCellBuilder
-			date(DomNodeHtmlTableCellBuilder builder) {
-		DomNode lastNode = builder.previousElement();
-		lastNode.setClassName("date");
-		return builder;
-	}
-
-	private DomNodeHtmlTableCellBuilder
-			numeric(DomNodeHtmlTableCellBuilder builder) {
-		DomNode lastNode = builder.previousElement();
-		lastNode.setClassName("numeric");
-		return builder;
+	String timestamp(Date date) {
+		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP_HUMAN);
 	}
 
 	private TaskLogJobDetails withDetails(boolean details) {
@@ -135,117 +243,9 @@ public class TaskLogJobDetails extends PerformerTask {
 		return this;
 	}
 
-	protected void descendantAndSubsequentJobs(Job top, DomNode body) {
-		body.builder().tag("h2").text("Child/Subsequent jobs").append();
-		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
-		builder.row().cell("Id").accept(this::numeric).cell("Name")
-				.accept(Utils::large).cell("State").cell("Result")
-				.cell("Started").accept(this::date).cell("Finished")
-				.accept(this::date).cell("Performer").accept(Utils::instance)
-				.cell("Link").accept(Utils::links);
-		Stream<Job> relatedProcessing = top.provideDescendantsAndSubsequents()
-				.filter(j -> j.getState() == JobState.PROCESSING)
-				.sorted(EntityComparator.INSTANCE).limit(50);
-		Stream<Job> relatedNonProcessing = top
-				.provideDescendantsAndSubsequents()
-				.filter(j -> j.getState() != JobState.PROCESSING)
-				.sorted(EntityComparator.INSTANCE).limit(50);
-		Stream.concat(relatedProcessing, relatedNonProcessing).forEach(job -> {
-			DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-					.cell(String.valueOf(job.getId())).cell(job.provideName())
-					.accept(Utils::large).cell(job.getState())
-					.cell(job.getResultType())
-					.cell(timestamp(job.getStartTime()))
-					.cell(timestamp(job.getEndTime())).cell(job.getPerformer())
-					.accept(Utils::instance);
-			DomNode td = cellBuilder.append();
-			String href = JobServlet.createTaskUrl(
-					new TaskLogJobDetails().withJobId(job.getId()));
-			td.html().addLink("Details", href, "_blank");
-		});
-		body.builder().tag("hr").append();
-	}
-
-	protected void fields(Job job, DomNode body)
-			throws IllegalAccessException, InvocationTargetException {
-		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
-		builder.row().cell("Field").cell("Value");
-		List<PropertyDescriptor> pds = SEUtilities
-				.getPropertyDescriptorsSortedByField(job.entityClass());
-		pds.removeIf(pd -> pd.getName().matches(
-				"largeResult|largeResultSerialized|result|resultSerialized|"
-						+ "processStateSerialized|processSerialized|cachedDisplayName"));
-		for (PropertyDescriptor pd : pds) {
-			DomNodeHtmlTableRowBuilder row = builder.row();
-			Object fieldValue = pd.getReadMethod().invoke(job, new Object[0]);
-			String fieldText = null;
-			if (fieldValue == null) {
-			} else if (fieldValue instanceof Collection) {
-				fieldText = CommonUtils.toLimitedCollectionString(
-						(Collection<?>) fieldValue, 50);
-			} else {
-				fieldText = fieldValue.toString();
-			}
-			row.cell(pd.getName()).cell(fieldText).style("whitespace:pre-wrap");
-		}
-	}
-
-	protected void processData(List<Job> threadData, DomNode body) {
-		body.builder().tag("h2").text("Process state").append();
-		body.builder().tag("div")
-				.text("%s %s", threadData.size(),
-						CommonUtils.pluralise("active job", threadData))
-				.append();
-		body.builder().tag("hr").append();
-		for (Job active : threadData) {
-			ProcessState processState = active.getProcessState();
-			ProcessState messageState = active.getStateMessages().stream()
-					.sorted(EntityComparator.REVERSED_INSTANCE).findFirst()
-					.map(m -> ((JobStateMessage) m.domain().ensurePopulated())
-							.getProcessState())
-					.orElse(null);
-			DomNode threadDiv = body.builder().tag("div")
-					.className("thread-data").append();
-			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
-			DomNode td = builder.row().cell("Job").append();
-			String href = JobServlet.createTaskUrl(
-					new TaskLogJobDetails().withJobId(active.getId()));
-			td.html().addLink(active.toDisplayName(), href, "_blank");
-			td.builder().text("\u00a0-\u00a0").append();
-			String cancelHref = JobServlet.createTaskUrl(
-					new TaskCancelJob().withJobId(active.getId()));
-			td.html().addLink("Cancel", cancelHref, "_blank");
-			if (messageState == null) {
-				builder.row().cell("Response").cell("(No state response)");
-			} else {
-				Optional<String> logHref = Registry
-						.optional(JobThreadLogUrlProvider.class)
-						.map(p -> p.getLogUrl(active, messageState));
-				DomNode threadTd = builder.row().cell("Thread").append();
-				if (logHref.isPresent()) {
-					threadTd.html().addLink(messageState.getThreadName(),
-							logHref.get(), "_top");
-				} else {
-					threadTd.setText(messageState.getThreadName());
-				}
-				builder.row().cell("Allocator thread")
-						.cell(messageState.getAllocatorThreadName());
-				DomNode resourcesTd = builder.row().cell("Resources").append();
-				resourcesTd.setClassName("resources");
-				if (processState != null) {
-					processState.getResources().stream().map(Object::toString)
-							.forEach(t -> resourcesTd.builder().tag("div")
-									.text(t).append());
-				}
-				builder.row().cell("Stack").className("stack-trace")
-						.cell(messageState.getStackTrace());
-			}
-			body.builder().tag("hr").append();
-		}
-	}
-
-	String timestamp(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP_HUMAN);
+	public TaskLogJobDetails withJobId(long jobId) {
+		this.jobId = jobId;
+		return this;
 	}
 
 	public static interface JobThreadLogUrlProvider {

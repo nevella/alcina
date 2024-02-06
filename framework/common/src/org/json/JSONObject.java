@@ -1177,6 +1177,45 @@ public class JSONObject {
 		return o != null ? o.toString() : defaultValue;
 	}
 
+	private void populateMap(Object bean) {
+		Class klass = bean.getClass();
+		// If klass is a System class then set includeSuperClass to false.
+		boolean includeSuperClass = klass.getClassLoader() != null;
+		Method[] methods = (includeSuperClass) ? klass.getMethods()
+				: klass.getDeclaredMethods();
+		for (int i = 0; i < methods.length; i += 1) {
+			try {
+				Method method = methods[i];
+				if (Modifier.isPublic(method.getModifiers())) {
+					String name = method.getName();
+					String key = "";
+					if (name.startsWith("get")) {
+						if (name.equals("getClass")
+								|| name.equals("getDeclaringClass")) {
+							key = "";
+						} else {
+							key = name.substring(3);
+						}
+					} else if (name.startsWith("is")) {
+						key = name.substring(2);
+					}
+					if (key.length() > 0 && Character.isUpperCase(key.charAt(0))
+							&& method.getParameterTypes().length == 0) {
+						if (key.length() == 1) {
+							key = key.toLowerCase();
+						} else if (!Character.isUpperCase(key.charAt(1))) {
+							key = key.substring(0, 1).toLowerCase()
+									+ key.substring(1);
+						}
+						Object result = method.invoke(bean, (Object[]) null);
+						map.put(key, wrap(result));
+					}
+				}
+			} catch (Exception ignore) {
+			}
+		}
+	}
+
 	/**
 	 * Put a key/boolean pair in the JSONObject.
 	 *
@@ -1442,83 +1481,6 @@ public class JSONObject {
 	}
 
 	/**
-	 * Write the contents of the JSONObject as JSON text to a writer. For
-	 * compactness, no whitespace is added.
-	 * <p>
-	 * Warning: This method assumes that the data structure is acyclical.
-	 *
-	 * @return The writer.
-	 * @throws JSONException
-	 */
-	public Writer write(Writer writer) throws JSONException {
-		try {
-			boolean b = false;
-			Iterator keys = keys();
-			writer.write('{');
-			while (keys.hasNext()) {
-				if (b) {
-					writer.write(',');
-				}
-				Object k = keys.next();
-				writer.write(quote(k.toString()));
-				writer.write(':');
-				Object v = this.map.get(k);
-				if (v instanceof JSONObject) {
-					((JSONObject) v).write(writer);
-				} else if (v instanceof JSONArray) {
-					((JSONArray) v).write(writer);
-				} else {
-					writer.write(valueToString(v));
-				}
-				b = true;
-			}
-			writer.write('}');
-			return writer;
-		} catch (IOException exception) {
-			throw new JSONException(exception);
-		}
-	}
-
-	private void populateMap(Object bean) {
-		Class klass = bean.getClass();
-		// If klass is a System class then set includeSuperClass to false.
-		boolean includeSuperClass = klass.getClassLoader() != null;
-		Method[] methods = (includeSuperClass) ? klass.getMethods()
-				: klass.getDeclaredMethods();
-		for (int i = 0; i < methods.length; i += 1) {
-			try {
-				Method method = methods[i];
-				if (Modifier.isPublic(method.getModifiers())) {
-					String name = method.getName();
-					String key = "";
-					if (name.startsWith("get")) {
-						if (name.equals("getClass")
-								|| name.equals("getDeclaringClass")) {
-							key = "";
-						} else {
-							key = name.substring(3);
-						}
-					} else if (name.startsWith("is")) {
-						key = name.substring(2);
-					}
-					if (key.length() > 0 && Character.isUpperCase(key.charAt(0))
-							&& method.getParameterTypes().length == 0) {
-						if (key.length() == 1) {
-							key = key.toLowerCase();
-						} else if (!Character.isUpperCase(key.charAt(1))) {
-							key = key.substring(0, 1).toLowerCase()
-									+ key.substring(1);
-						}
-						Object result = method.invoke(bean, (Object[]) null);
-						map.put(key, wrap(result));
-					}
-				}
-			} catch (Exception ignore) {
-			}
-		}
-	}
-
-	/**
 	 * Make a prettyprinted JSON text of this JSONObject.
 	 * <p>
 	 * Warning: This method assumes that the data structure is acyclical.
@@ -1579,11 +1541,59 @@ public class JSONObject {
 	}
 
 	/**
+	 * Write the contents of the JSONObject as JSON text to a writer. For
+	 * compactness, no whitespace is added.
+	 * <p>
+	 * Warning: This method assumes that the data structure is acyclical.
+	 *
+	 * @return The writer.
+	 * @throws JSONException
+	 */
+	public Writer write(Writer writer) throws JSONException {
+		try {
+			boolean b = false;
+			Iterator keys = keys();
+			writer.write('{');
+			while (keys.hasNext()) {
+				if (b) {
+					writer.write(',');
+				}
+				Object k = keys.next();
+				writer.write(quote(k.toString()));
+				writer.write(':');
+				Object v = this.map.get(k);
+				if (v instanceof JSONObject) {
+					((JSONObject) v).write(writer);
+				} else if (v instanceof JSONArray) {
+					((JSONArray) v).write(writer);
+				} else {
+					writer.write(valueToString(v));
+				}
+				b = true;
+			}
+			writer.write('}');
+			return writer;
+		} catch (IOException exception) {
+			throw new JSONException(exception);
+		}
+	}
+
+	/**
 	 * JSONObject.NULL is equivalent to the value that JavaScript calls null,
 	 * whilst Java's null is equivalent to the value that JavaScript calls
 	 * undefined.
 	 */
 	private static final class Null {
+		/**
+		 * There is only intended to be a single instance of the NULL object, so
+		 * the clone method returns itself.
+		 * 
+		 * @return NULL.
+		 */
+		protected final Object clone() {
+			return this;
+		}
+
 		/**
 		 * A Null object is equal to the null value and to itself.
 		 * 
@@ -1603,16 +1613,6 @@ public class JSONObject {
 		 */
 		public String toString() {
 			return "null";
-		}
-
-		/**
-		 * There is only intended to be a single instance of the NULL object, so
-		 * the clone method returns itself.
-		 * 
-		 * @return NULL.
-		 */
-		protected final Object clone() {
-			return this;
 		}
 	}
 }

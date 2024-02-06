@@ -40,12 +40,42 @@ public class LooseContextInstance {
 		addProperties(sm);
 	}
 
+	protected void allowUnbalancedFrameRemoval(Class clazz,
+			String pushMethodName) {
+	}
+
 	public void clearProperties() {
 		properties.clear();
 	}
 
+	void clearStack() {
+		while (!stack.isEmpty()) {
+			pop();
+		}
+	}
+
+	protected void cloneToSnapshot(LooseContextInstance cloned) {
+		cloned.properties = new HashMap<String, Object>(properties);
+	}
+
 	public boolean containsKey(String key) {
 		return properties.containsKey(key);
+	}
+
+	private void createFrame() {
+		Frame current = frame;
+		frame = new Frame();
+		// FIXME - dirndl 1x1g - uniquemap (for script) - but need to also
+		// support copy constructor in push()
+		if (current == null) {
+			frame.properties = CollectionCreators.Bootstrap.getHashMapCreator()
+					.create();
+		} else {
+			frame.properties = CollectionCreators.Bootstrap.getHashMapCreator()
+					.copy(current.properties);
+		}
+		frame.depth = stack.size();
+		properties = frame.properties;
 	}
 
 	public int depth() {
@@ -153,36 +183,6 @@ public class LooseContextInstance {
 			}
 		}
 		return sm.toPropertyString();
-	}
-
-	private void createFrame() {
-		Frame current = frame;
-		frame = new Frame();
-		// FIXME - dirndl 1x1g - uniquemap (for script) - but need to also
-		// support copy constructor in push()
-		if (current == null) {
-			frame.properties = CollectionCreators.Bootstrap.getHashMapCreator()
-					.create();
-		} else {
-			frame.properties = CollectionCreators.Bootstrap.getHashMapCreator()
-					.copy(current.properties);
-		}
-		frame.depth = stack.size();
-		properties = frame.properties;
-	}
-
-	protected void allowUnbalancedFrameRemoval(Class clazz,
-			String pushMethodName) {
-	}
-
-	protected void cloneToSnapshot(LooseContextInstance cloned) {
-		cloned.properties = new HashMap<String, Object>(properties);
-	}
-
-	void clearStack() {
-		while (!stack.isEmpty()) {
-			pop();
-		}
 	}
 
 	public class Frame {

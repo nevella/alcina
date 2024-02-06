@@ -89,6 +89,10 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 				editable, actionListener, autoSave, false);
 	}
 
+	protected WorkspaceVisualiser createVisualiser() {
+		return new SimpleWorkspaceVisualiser(visualModel, this);
+	}
+
 	public void fireVetoableActionEvent(PermissibleActionEvent event) {
 		this.vetoableActionSupport.fireVetoableActionEvent(event);
 	}
@@ -142,6 +146,37 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 
 	public WSVisualModel getVisualModel() {
 		return this.visualModel;
+	}
+
+	protected void handleHasOrderValue(Object node, Entity newObj) {
+		if (node instanceof DomainNode
+				&& !(node instanceof ProvidesParenting)) {
+			DomainNode dn = (DomainNode) node;
+			node = dn.getParentItem();
+		}
+		if (node instanceof ProvidesParenting
+				&& newObj instanceof HasOrderValue) {
+			Collection siblings = null;
+			ProvidesParenting pp = (ProvidesParenting) node;
+			PropertyCollectionProvider pcp = (PropertyCollectionProvider) pp
+					.getPropertyCollectionProvider();
+			if (pcp == null) {
+				if (node instanceof HasVisibleCollection) {
+					siblings = ((HasVisibleCollection) node)
+							.getVisibleCollection();
+				}
+			} else {
+				Object obj = pcp.getProperty().get(pcp.getDomainObject());
+				if (obj instanceof Collection) {
+					siblings = (Collection) obj;
+				}
+			}
+			if (siblings != null) {
+				int maxOrderValue = HasOrderValueHelper.maxValue(siblings,
+						newObj);
+				((HasOrderValue) newObj).setOrderValue(maxOrderValue + 10);
+			}
+		}
 	}
 
 	public void handleParentLinks(Object node, Entity newObj) {
@@ -283,41 +318,6 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		}
 		this.visualiser = createVisualiser();
 		container.add(visualiser);
-	}
-
-	protected WorkspaceVisualiser createVisualiser() {
-		return new SimpleWorkspaceVisualiser(visualModel, this);
-	}
-
-	protected void handleHasOrderValue(Object node, Entity newObj) {
-		if (node instanceof DomainNode
-				&& !(node instanceof ProvidesParenting)) {
-			DomainNode dn = (DomainNode) node;
-			node = dn.getParentItem();
-		}
-		if (node instanceof ProvidesParenting
-				&& newObj instanceof HasOrderValue) {
-			Collection siblings = null;
-			ProvidesParenting pp = (ProvidesParenting) node;
-			PropertyCollectionProvider pcp = (PropertyCollectionProvider) pp
-					.getPropertyCollectionProvider();
-			if (pcp == null) {
-				if (node instanceof HasVisibleCollection) {
-					siblings = ((HasVisibleCollection) node)
-							.getVisibleCollection();
-				}
-			} else {
-				Object obj = pcp.getProperty().get(pcp.getDomainObject());
-				if (obj instanceof Collection) {
-					siblings = (Collection) obj;
-				}
-			}
-			if (siblings != null) {
-				int maxOrderValue = HasOrderValueHelper.maxValue(siblings,
-						newObj);
-				((HasOrderValue) newObj).setOrderValue(maxOrderValue + 10);
-			}
-		}
 	}
 
 	public static class WSVisualModel {

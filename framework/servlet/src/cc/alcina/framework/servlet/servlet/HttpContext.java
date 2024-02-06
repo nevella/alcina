@@ -18,24 +18,16 @@ public class HttpContext implements AuthenticationTokenStore {
 	public HttpContext() {
 	}
 
-	@Registration.Singleton
-	public static class HttpContextLifecycle {
-		public static HttpContext.HttpContextLifecycle get() {
-			return Registry.impl(HttpContext.HttpContextLifecycle.class);
-		}
-
-		public void onContextCreation(HttpContext httpContext) {
-		}
-
-		public void onContextDestruction(HttpContext httpContext) {
-		}
-	}
-
 	public HttpContext(HttpServletRequest request,
 			HttpServletResponse response) {
 		this.request = request;
 		this.response = response;
 		HttpContextLifecycle.get().onContextCreation(this);
+	}
+
+	@Override
+	public void addHeader(String name, String value) {
+		response.addHeader(name, value);
 	}
 
 	void endContext() {
@@ -48,8 +40,28 @@ public class HttpContext implements AuthenticationTokenStore {
 	}
 
 	@Override
-	public void addHeader(String name, String value) {
-		response.addHeader(name, value);
+	public String getHeaderValue(String headerName) {
+		return request.getHeader(headerName);
+	}
+
+	@Override
+	public String getReferrer() {
+		return getHeaderValue("referer");
+	}
+
+	@Override
+	public String getRemoteAddress() {
+		return ServletLayerUtils.robustGetRemoteAddress(request);
+	}
+
+	@Override
+	public String getUrl() {
+		return request.getRequestURL().toString();
+	}
+
+	@Override
+	public String getUserAgent() {
+		return CommonRemoteServiceServlet.getUserAgent(request);
 	}
 
 	@Override
@@ -62,28 +74,16 @@ public class HttpContext implements AuthenticationTokenStore {
 		CookieUtils.addToRequestAndResponse(request, response, cookie);
 	}
 
-	@Override
-	public String getUserAgent() {
-		return CommonRemoteServiceServlet.getUserAgent(request);
-	}
+	@Registration.Singleton
+	public static class HttpContextLifecycle {
+		public static HttpContext.HttpContextLifecycle get() {
+			return Registry.impl(HttpContext.HttpContextLifecycle.class);
+		}
 
-	@Override
-	public String getRemoteAddress() {
-		return ServletLayerUtils.robustGetRemoteAddress(request);
-	}
+		public void onContextCreation(HttpContext httpContext) {
+		}
 
-	@Override
-	public String getHeaderValue(String headerName) {
-		return request.getHeader(headerName);
-	}
-
-	@Override
-	public String getUrl() {
-		return request.getRequestURL().toString();
-	}
-
-	@Override
-	public String getReferrer() {
-		return getHeaderValue("referer");
+		public void onContextDestruction(HttpContext httpContext) {
+		}
 	}
 }

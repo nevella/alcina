@@ -42,6 +42,10 @@ public abstract class DomainDescriptor {
 		this.storePropertyResolver = storePropertyResolver;
 	}
 
+	protected DomainClassDescriptor<?> addClass(Class clazz) {
+		return perClass.put(clazz, new DomainClassDescriptor(clazz));
+	}
+
 	public <T extends Entity> DomainClassDescriptor<T>
 			addClassDescriptor(Class<T> clazz, String... indexProperties) {
 		DomainClassDescriptor classDescriptor = new DomainClassDescriptor(clazz,
@@ -55,6 +59,12 @@ public abstract class DomainDescriptor {
 				!perClass.containsKey(classDescriptor.clazz),
 				classDescriptor.toString());
 		perClass.put(classDescriptor.clazz, classDescriptor);
+	}
+
+	protected void addClasses(Class[] classes) {
+		for (Class clazz : classes) {
+			addClass(clazz);
+		}
 	}
 
 	public void addComplexFilter(ComplexFilter complexFilter) {
@@ -87,33 +97,17 @@ public abstract class DomainDescriptor {
 		postLoadTasks.stream().forEach(task -> task.registerStore(domainStore));
 	}
 
-	protected DomainClassDescriptor<?> addClass(Class clazz) {
-		return perClass.put(clazz, new DomainClassDescriptor(clazz));
-	}
-
-	protected void addClasses(Class[] classes) {
-		for (Class clazz : classes) {
-			addClass(clazz);
-		}
-	}
-
 	public static interface DomainStoreTask {
+		default void registerStore(IDomainStore domainStore) {
+		}
+
 		/**
 		 * @return the lock object, if any
 		 */
 		public void run() throws Exception;
-
-		default void registerStore(IDomainStore domainStore) {
-		}
 	}
 
 	public static interface PreProvideTask<T> {
-		/**
-		 * @return true if cached data was modified
-		 */
-		public void run(Class clazz, Collection<T> objects, boolean topLevel)
-				throws Exception;
-
 		default boolean filter(T t) {
 			return true;
 		}
@@ -122,6 +116,12 @@ public abstract class DomainDescriptor {
 
 		default void registerStore(IDomainStore domainStore) {
 		}
+
+		/**
+		 * @return true if cached data was modified
+		 */
+		public void run(Class clazz, Collection<T> objects, boolean topLevel)
+				throws Exception;
 
 		Stream<T> wrap(Stream<T> stream);
 	}

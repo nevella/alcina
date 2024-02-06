@@ -74,6 +74,21 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 	}
 
 	@Override
+	protected DelegateMapCreator ensureDelegateMapCreator() {
+		if (this.delegateMapCreator == null) {
+			this.delegateMapCreator = new SortedMapCreator();
+		}
+		return this.delegateMapCreator;
+	}
+
+	@GwtIncompatible
+	private void readObject(ObjectInputStream in)
+			throws IOException, ClassNotFoundException {
+		in.defaultReadObject();
+		ensureDelegateMapCreator();
+	}
+
+	@Override
 	public <T> Collection<T> reverseKeys(Object... objects) {
 		NavigableMap nm = (NavigableMap) asMapEnsureDelegate(false, objects);
 		return nm == null ? new ArrayList<>() : nm.descendingKeySet();
@@ -85,21 +100,6 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		// SortedMap m = (SortedMap) asMapEnsureDelegate(false, objects);
 		// NavigableMap nm=navigableMap(m);
 		// return nm == null ? null : nm.descendingMap().keySet();
-	}
-
-	@GwtIncompatible
-	private void readObject(ObjectInputStream in)
-			throws IOException, ClassNotFoundException {
-		in.defaultReadObject();
-		ensureDelegateMapCreator();
-	}
-
-	@Override
-	protected DelegateMapCreator ensureDelegateMapCreator() {
-		if (this.delegateMapCreator == null) {
-			this.delegateMapCreator = new SortedMapCreator();
-		}
-		return this.delegateMapCreator;
 	}
 
 	public static class SortedMapCreator implements DelegateMapCreator {

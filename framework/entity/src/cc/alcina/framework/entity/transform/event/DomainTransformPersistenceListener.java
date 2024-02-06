@@ -1,9 +1,6 @@
 package cc.alcina.framework.entity.transform.event;
 
 public interface DomainTransformPersistenceListener {
-	public void onDomainTransformRequestPersistence(
-			DomainTransformPersistenceEvent event);
-
 	default boolean isAllVmEventsListener() {
 		return false;
 	}
@@ -15,6 +12,9 @@ public interface DomainTransformPersistenceListener {
 	default boolean isPreBarrierListener() {
 		return false;
 	}
+
+	public void onDomainTransformRequestPersistence(
+			DomainTransformPersistenceEvent event);
 
 	public interface Has {
 		void addDomainTransformPersistenceListener(

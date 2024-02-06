@@ -29,6 +29,10 @@ public abstract class BaseRelatedLinkCustomiser<T, R>
 
 	public abstract BiFunction<T, R, String> getMapper();
 
+	public int getMaxRelatedObjects() {
+		return 10;
+	}
+
 	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom params) {
@@ -70,9 +74,5 @@ public abstract class BaseRelatedLinkCustomiser<T, R>
 			return Ax.format(template, token, relationshipsString).replace("\n",
 					"<br>\n");
 		}
-	}
-
-	public int getMaxRelatedObjects() {
-		return 10;
 	}
 }

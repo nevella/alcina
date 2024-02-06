@@ -81,8 +81,33 @@ public class DomainStoreTransformSequencer
 				new Timestamp(0));
 	}
 
+	private Connection getConnection() throws SQLException {
+		if (connection == null) {
+			connection = loaderDatabase.dataSource.getConnection();
+			connection.setAutoCommit(false);
+			xminStatement = connection.createStatement();
+		}
+		return connection;
+	}
+
+	private boolean isEnabled() {
+		return loaderDatabase.domainDescriptor.isUsesCommitSequencer();
+	}
+
 	public boolean isInitialised() {
 		return this.initialised;
+	}
+
+	void markHighestVisibleTransformList(Connection conn) throws SQLException {
+		if (!isEnabled()) {
+			highestVisiblePosition = new DomainTransformCommitPosition(0L,
+					new Timestamp(0L));
+			return;
+		}
+		refreshPositions0(conn, -1);
+		logger.debug("Marked highest visible position - {}",
+				highestVisiblePosition);
+		unpublishedPositions.clear();
 	}
 
 	@Override
@@ -110,33 +135,6 @@ public class DomainStoreTransformSequencer
 		pendingRequestIds.put(requestId, System.currentTimeMillis());
 	}
 
-	@Override
-	public void refresh() {
-		refreshPositions(-1, System.currentTimeMillis());
-	}
-
-	public void setInitialised(boolean initialised) {
-		this.initialised = initialised;
-	}
-
-	@Override
-	public void vacuumTables() {
-		runWithConnection("vacuum", this::vacuumTables0);
-	}
-
-	private Connection getConnection() throws SQLException {
-		if (connection == null) {
-			connection = loaderDatabase.dataSource.getConnection();
-			connection.setAutoCommit(false);
-			xminStatement = connection.createStatement();
-		}
-		return connection;
-	}
-
-	private boolean isEnabled() {
-		return loaderDatabase.domainDescriptor.isUsesCommitSequencer();
-	}
-
 	private synchronized void publishUnpublishedPositions(
 			List<DomainTransformCommitPosition> positions) {
 		positions.removeIf(
@@ -156,6 +154,11 @@ public class DomainStoreTransformSequencer
 		synchronized (unpublishedPositions) {
 			unpublishedPositions.notifyAll();
 		}
+	}
+
+	@Override
+	public void refresh() {
+		refreshPositions(-1, System.currentTimeMillis());
 	}
 
 	private void refreshPositions(long ignoreIfSeenRequestId,
@@ -277,11 +280,20 @@ public class DomainStoreTransformSequencer
 		}
 	}
 
+	public void setInitialised(boolean initialised) {
+		this.initialised = initialised;
+	}
+
 	private String tableName() {
 		Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
 				.getDomainTransformRequestPersistentClass();
 		String tableName = persistentClass.getAnnotation(Table.class).name();
 		return tableName;
+	}
+
+	@Override
+	public void vacuumTables() {
+		runWithConnection("vacuum", this::vacuumTables0);
 	}
 
 	private int vacuumTables0(Connection conn) throws SQLException {
@@ -296,6 +308,14 @@ public class DomainStoreTransformSequencer
 			throw sqlex;
 		}
 		return 0;
+	}
+
+	void waitForWritableTransactionsToTerminate() throws SQLException {
+		if (!isEnabled()) {
+			return;
+		}
+		runWithConnection("ensureTimestamps",
+				this::waitForWritableTransactionsToTerminate0);
 	}
 
 	private long waitForWritableTransactionsToTerminate0(Connection conn)
@@ -333,25 +353,5 @@ public class DomainStoreTransformSequencer
 			Thread.sleep(1000);
 		}
 		return System.currentTimeMillis() - start;
-	}
-
-	void markHighestVisibleTransformList(Connection conn) throws SQLException {
-		if (!isEnabled()) {
-			highestVisiblePosition = new DomainTransformCommitPosition(0L,
-					new Timestamp(0L));
-			return;
-		}
-		refreshPositions0(conn, -1);
-		logger.debug("Marked highest visible position - {}",
-				highestVisiblePosition);
-		unpublishedPositions.clear();
-	}
-
-	void waitForWritableTransactionsToTerminate() throws SQLException {
-		if (!isEnabled()) {
-			return;
-		}
-		runWithConnection("ensureTimestamps",
-				this::waitForWritableTransactionsToTerminate0);
 	}
 }

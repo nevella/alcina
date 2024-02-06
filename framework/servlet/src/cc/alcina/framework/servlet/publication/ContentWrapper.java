@@ -110,6 +110,10 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	public InputStream stream;
 
+	protected WrapperModel createWrapperModel() {
+		return new WrapperModel();
+	}
+
 	public Long getUserPublicationId() {
 		return wrapper.footerModel.publicationLongId;
 	}
@@ -123,12 +127,40 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		return this.wrappedContent;
 	}
 
+	protected Class getWrapperTransformClass() {
+		return getClass();
+	}
+
+	protected void marshallToDoc() throws Exception {
+		Set<Class> jaxbClasses = Registry.query(JaxbContextRegistration.class)
+				.untypedRegistrations().collect(Collectors.toSet());
+		JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
+		Marshaller m = jc.createMarshaller();
+		m.marshal(wrapper, wrappingDoc);
+	}
+
+	protected abstract void prepareWrapper(long publicationId,
+			long publicationUserId) throws Exception;
+
 	public void setWrappedBytes(byte[] wrappedBytes) {
 		this.wrappedBytes = wrappedBytes;
 	}
 
 	public void setWrappedContent(String wrappedContent) {
 		this.wrappedContent = wrappedContent;
+	}
+
+	protected void transform(String xslPath, boolean formatRequiresXml)
+			throws Exception {
+		InputStream trans = getWrapperTransformClass()
+				.getResourceAsStream(xslPath);
+		String marker = getWrapperTransformClass().getName() + "/" + xslPath
+				+ "-" + formatRequiresXml;
+		if (!Configuration.is("cacheTransforms")) {
+			marker += Math.random();
+		}
+		wrappedContent = transform(trans, wrappingDoc, marker,
+				formatRequiresXml);
 	}
 
 	public void wrapContent(D contentDefinition, M publicationContent,
@@ -148,38 +180,6 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		boolean formatRequiresXml = deliveryModel.provideTargetFormat()
 				.requiresXml();
 		transform(xslPath, formatRequiresXml);
-	}
-
-	protected WrapperModel createWrapperModel() {
-		return new WrapperModel();
-	}
-
-	protected Class getWrapperTransformClass() {
-		return getClass();
-	}
-
-	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = Registry.query(JaxbContextRegistration.class)
-				.untypedRegistrations().collect(Collectors.toSet());
-		JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
-		Marshaller m = jc.createMarshaller();
-		m.marshal(wrapper, wrappingDoc);
-	}
-
-	protected abstract void prepareWrapper(long publicationId,
-			long publicationUserId) throws Exception;
-
-	protected void transform(String xslPath, boolean formatRequiresXml)
-			throws Exception {
-		InputStream trans = getWrapperTransformClass()
-				.getResourceAsStream(xslPath);
-		String marker = getWrapperTransformClass().getName() + "/" + xslPath
-				+ "-" + formatRequiresXml;
-		if (!Configuration.is("cacheTransforms")) {
-			marker += Math.random();
-		}
-		wrappedContent = transform(trans, wrappingDoc, marker,
-				formatRequiresXml);
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -203,6 +203,12 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 	public static class Passthrough<D extends ContentDefinition, M extends PublicationContent, V extends DeliveryModel>
 			extends ContentWrapper<D, M, V> {
 		@Override
+		protected void prepareWrapper(long publicationId,
+				long publicationUserId) throws Exception {
+			wrapper.rendererResults = rendererResults;
+		}
+
+		@Override
 		public void wrapContent(ContentDefinition contentDefinition,
 				PublicationContent publicationContent,
 				DeliveryModel deliveryModel,
@@ -218,12 +224,6 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 			}
 			wrappedBytes = rendererResults.bytes;
 			wrappedContent = rendererResults.htmlContent;
-		}
-
-		@Override
-		protected void prepareWrapper(long publicationId,
-				long publicationUserId) throws Exception {
-			wrapper.rendererResults = rendererResults;
 		}
 	}
 

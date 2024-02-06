@@ -117,6 +117,12 @@ public abstract class BoundTypedHtml<T> extends AbstractBoundWidget<T>
 		return retValue;
 	}
 
+	private void init(String text) {
+		base = text == null ? new com.google.gwt.user.client.ui.HTML()
+				: new com.google.gwt.user.client.ui.HTML(text);
+		super.initWidget(base);
+	}
+
 	@Override
 	public boolean isMultiline() {
 		return true;
@@ -201,16 +207,10 @@ public abstract class BoundTypedHtml<T> extends AbstractBoundWidget<T>
 		this.base.sinkEvents(eventBitsToAdd);
 	}
 
+	protected abstract String toHtml();
+
 	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
 	}
-
-	private void init(String text) {
-		base = text == null ? new com.google.gwt.user.client.ui.HTML()
-				: new com.google.gwt.user.client.ui.HTML(text);
-		super.initWidget(base);
-	}
-
-	protected abstract String toHtml();
 }

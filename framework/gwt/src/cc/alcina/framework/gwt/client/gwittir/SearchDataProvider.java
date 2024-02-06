@@ -76,15 +76,6 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 		runSort(true, 0, table);
 	}
 
-	@Override
-	public void sortOnProperty(HasChunks table, String propertyName,
-			boolean ascending) {
-		def.setOrderDirection(
-				ascending ? Direction.ASCENDING : Direction.DESCENDING);
-		def.setOrderPropertyName(propertyName);
-		runSort(true, 0, table);
-	}
-
 	protected void runSort(final boolean callBackInit, int pageNumber,
 			final HasChunks table) {
 		if (runningCallback != null) {
@@ -127,6 +118,15 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 	}
 
 	protected abstract void search(int pageNumber, SearchCallback callback);
+
+	@Override
+	public void sortOnProperty(HasChunks table, String propertyName,
+			boolean ascending) {
+		def.setOrderDirection(
+				ascending ? Direction.ASCENDING : Direction.DESCENDING);
+		def.setOrderPropertyName(propertyName);
+		runSort(true, 0, table);
+	}
 
 	public abstract static class SearchCallback
 			extends CancellableAsyncCallback<SearchResultsBase> {

@@ -55,6 +55,17 @@ public class Base64Utils {
 		}
 	}
 
+	private static boolean base64Append(StringBuilder sb, int digit,
+			boolean haveNonZero) {
+		if (digit > 0) {
+			haveNonZero = true;
+		}
+		if (haveNonZero) {
+			sb.append(base64Chars[digit]);
+		}
+		return haveNonZero;
+	}
+
 	/**
 	 * Decode a base64 string into a byte array.
 	 * 
@@ -101,6 +112,20 @@ public class Base64Utils {
 			bytes[oidx++] = (byte) c24;
 		}
 		return bytes;
+	}
+
+	public static boolean isBase64(String value) {
+		Set<Character> lookup = new LinkedHashSet<>();
+		for (char c : base64Chars) {
+			lookup.add(c);
+		}
+		for (int idx = 0; idx < value.length(); idx++) {
+			char c = value.charAt(idx);
+			if (!lookup.contains(c) && c != '=') {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -182,30 +207,5 @@ public class Base64Utils {
 		base64Append(sb, (low >> 6) & 0x3f, haveNonZero);
 		base64Append(sb, low & 0x3f, true);
 		return sb.toString();
-	}
-
-	private static boolean base64Append(StringBuilder sb, int digit,
-			boolean haveNonZero) {
-		if (digit > 0) {
-			haveNonZero = true;
-		}
-		if (haveNonZero) {
-			sb.append(base64Chars[digit]);
-		}
-		return haveNonZero;
-	}
-
-	public static boolean isBase64(String value) {
-		Set<Character> lookup = new LinkedHashSet<>();
-		for (char c : base64Chars) {
-			lookup.add(c);
-		}
-		for (int idx = 0; idx < value.length(); idx++) {
-			char c = value.charAt(idx);
-			if (!lookup.contains(c) && c != '=') {
-				return false;
-			}
-		}
-		return true;
 	}
 }

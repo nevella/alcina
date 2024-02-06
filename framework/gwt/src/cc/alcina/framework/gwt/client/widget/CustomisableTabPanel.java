@@ -149,6 +149,17 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 	}
 
 	/**
+	 * Create a {@link SimplePanel} that will wrap the contents in a tab.
+	 * Subclasses can use this method to wrap tabs in decorator panels.
+	 * 
+	 * @return a {@link SimplePanel} to wrap the tab contents, or null to leave
+	 *         tabs unwrapped
+	 */
+	protected SimplePanel createTabTextWrapper() {
+		return null;
+	}
+
+	/**
 	 * Gets the deck panel within this tab panel. Adding or removing Widgets
 	 * from the DeckPanel is not supported and will throw
 	 * UnsupportedOperationExceptions.
@@ -265,6 +276,25 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 		return event == null || !event.isCanceled();
 	}
 
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-bar = The tab bar.</li>
+	 * <li>-bar-tab# = The element containing the content of the tab itself.
+	 * </li>
+	 * <li>-bar-tab-wrapper# = The cell containing the tab at the index.</li>
+	 * <li>-bottom = The panel beneath the tab bar.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		tabBar.ensureDebugId(baseID + "-bar");
+		deck.ensureDebugId(baseID + "-bottom");
+	}
+
 	public void onSelection(SelectionEvent<Integer> event) {
 		int tabIndex = event.getSelectedItem();
 		deck.showWidget(tabIndex);
@@ -326,36 +356,6 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 		super.setWidth(width);
 	}
 
-	/**
-	 * Create a {@link SimplePanel} that will wrap the contents in a tab.
-	 * Subclasses can use this method to wrap tabs in decorator panels.
-	 * 
-	 * @return a {@link SimplePanel} to wrap the tab contents, or null to leave
-	 *         tabs unwrapped
-	 */
-	protected SimplePanel createTabTextWrapper() {
-		return null;
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-bar = The tab bar.</li>
-	 * <li>-bar-tab# = The element containing the content of the tab itself.
-	 * </li>
-	 * <li>-bar-tab-wrapper# = The cell containing the tab at the index.</li>
-	 * <li>-bottom = The panel beneath the tab bar.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		tabBar.ensureDebugId(baseID + "-bar");
-		deck.ensureDebugId(baseID + "-bottom");
-	}
-
 	public static class ResizableDeckPanel extends DeckPanel
 			implements HasLayoutInfo {
 		public LayoutInfo getLayoutInfo() {
@@ -409,18 +409,6 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 					"Use TabPanel.insert() to alter the DeckPanel");
 		}
 
-		@Override
-		public boolean remove(Widget w) {
-			// Removal of items from the TabBar is delegated to the DeckPanel
-			// to ensure consistency
-			int idx = getWidgetIndex(w);
-			if (idx != -1) {
-				tabBar.removeTabProtected(idx);
-				return super.remove(w);
-			}
-			return false;
-		}
-
 		protected void insertProtected(Widget w, String tabText, boolean asHTML,
 				int beforeIndex) {
 			// Check to see if the TabPanel already contains the Widget. If so,
@@ -450,6 +438,18 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 			tabBar.insertTabProtected(tabWidget, beforeIndex);
 			super.insert(w, beforeIndex);
 		}
+
+		@Override
+		public boolean remove(Widget w) {
+			// Removal of items from the TabBar is delegated to the DeckPanel
+			// to ensure consistency
+			int idx = getWidgetIndex(w);
+			if (idx != -1) {
+				tabBar.removeTabProtected(idx);
+				return super.remove(w);
+			}
+			return false;
+		}
 	}
 
 	/**
@@ -459,6 +459,11 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 	private class UnmodifiableTabBar extends FlowTabBar {
 		public UnmodifiableTabBar() {
 			super();
+		}
+
+		@Override
+		protected SimplePanel createTabTextWrapper() {
+			return CustomisableTabPanel.this.createTabTextWrapper();
 		}
 
 		@Override
@@ -494,11 +499,6 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 
 		public void removeTabProtected(int index) {
 			super.removeTab(index);
-		}
-
-		@Override
-		protected SimplePanel createTabTextWrapper() {
-			return CustomisableTabPanel.this.createTabTextWrapper();
 		}
 	}
 }

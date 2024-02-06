@@ -19,6 +19,12 @@ public abstract class SortedIdentityProjection<T extends Entity>
 		this.listenedClass = listenedClass;
 	}
 
+	protected SortedMap<T, T> createSortedMap() {
+		return new TreeMap<>(getComparator());
+	}
+
+	protected abstract Comparator<T> getComparator();
+
 	@Override
 	public Class<T> getListenedClass() {
 		return listenedClass;
@@ -40,6 +46,10 @@ public abstract class SortedIdentityProjection<T extends Entity>
 		return enabled;
 	}
 
+	protected boolean isIndexable(T o) {
+		return true;
+	}
+
 	@Override
 	public void remove(T o) {
 		if (isIndexable(o)) {
@@ -50,15 +60,5 @@ public abstract class SortedIdentityProjection<T extends Entity>
 	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	protected SortedMap<T, T> createSortedMap() {
-		return new TreeMap<>(getComparator());
-	}
-
-	protected abstract Comparator<T> getComparator();
-
-	protected boolean isIndexable(T o) {
-		return true;
 	}
 }

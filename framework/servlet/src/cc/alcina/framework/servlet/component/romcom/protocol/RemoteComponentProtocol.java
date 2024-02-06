@@ -97,20 +97,13 @@ public class RemoteComponentProtocol {
 		}
 
 		/*
-		 * An album by Beck. Amazing.
+		 * A dirndl UI example
 		 */
-		public static class Mutations extends Message {
-			public static Mutations ofLocation() {
-				Mutations result = new Mutations();
-				result.locationMutation = LocationMutation.ofWindow();
-				return result;
-			}
-
-			public List<MutationRecord> domMutations = new ArrayList<>();
-
-			public List<EventSystemMutation> eventMutations = new ArrayList<>();
-
-			public LocationMutation locationMutation;
+		@Bean(PropertySource.FIELDS)
+		@Directed
+		static class HelloBeans1x5 {
+			@Directed
+			String world = "World!";
 		}
 
 		public static class Invoke extends Message {
@@ -133,6 +126,23 @@ public class RemoteComponentProtocol {
 			public Object response;
 
 			public Exception exception;
+		}
+
+		/*
+		 * An album by Beck. Amazing.
+		 */
+		public static class Mutations extends Message {
+			public static Mutations ofLocation() {
+				Mutations result = new Mutations();
+				result.locationMutation = LocationMutation.ofWindow();
+				return result;
+			}
+
+			public List<MutationRecord> domMutations = new ArrayList<>();
+
+			public List<EventSystemMutation> eventMutations = new ArrayList<>();
+
+			public LocationMutation locationMutation;
 		}
 
 		/*
@@ -179,16 +189,6 @@ public class RemoteComponentProtocol {
 			public List<MutationRecord> domMutations = new ArrayList<>();
 
 			public int maxCharsPerTextNode;
-		}
-
-		/*
-		 * A dirndl UI example
-		 */
-		@Bean(PropertySource.FIELDS)
-		@Directed
-		static class HelloBeans1x5 {
-			@Directed
-			String world = "World!";
 		}
 	}
 

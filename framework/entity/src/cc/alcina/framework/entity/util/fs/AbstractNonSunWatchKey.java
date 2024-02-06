@@ -48,15 +48,8 @@ abstract class AbstractNonSunWatchKey implements WatchKey {
 	static final Event<Object> OVERFLOW_EVENT = new Event<Object>(
 			StandardWatchEventKinds.OVERFLOW, null);
 
-	/**
-	 * Possible key states
-	 */
-	private static enum State {
-		READY, SIGNALLED
-	};
-
 	// reference to watcher
-	private final AbstractNonSunWatchService watcher;
+	private final AbstractNonSunWatchService watcher;;
 
 	// reference to the original directory
 	private final Path dir;
@@ -80,16 +73,29 @@ abstract class AbstractNonSunWatchKey implements WatchKey {
 		this.lastModifyEvents = new HashMap<>();
 	}
 
-	final AbstractNonSunWatchService watcher() {
-		return watcher;
+	@Override
+	public final List<WatchEvent<?>> pollEvents() {
+		synchronized (this) {
+			List<WatchEvent<?>> result = events;
+			events = new ArrayList<>();
+			lastModifyEvents.clear();
+			return result;
+		}
 	}
 
-	/**
-	 * Return the original watchable (Path)
-	 */
 	@Override
-	public Path watchable() {
-		return dir;
+	public final boolean reset() {
+		synchronized (this) {
+			if (state == State.SIGNALLED && isValid()) {
+				if (events.isEmpty()) {
+					state = State.READY;
+				} else {
+					// pending events so re-queue key
+					watcher.enqueueKey(this);
+				}
+			}
+			return isValid();
+		}
 	}
 
 	/**
@@ -162,29 +168,16 @@ abstract class AbstractNonSunWatchKey implements WatchKey {
 		}
 	}
 
+	/**
+	 * Return the original watchable (Path)
+	 */
 	@Override
-	public final List<WatchEvent<?>> pollEvents() {
-		synchronized (this) {
-			List<WatchEvent<?>> result = events;
-			events = new ArrayList<>();
-			lastModifyEvents.clear();
-			return result;
-		}
+	public Path watchable() {
+		return dir;
 	}
 
-	@Override
-	public final boolean reset() {
-		synchronized (this) {
-			if (state == State.SIGNALLED && isValid()) {
-				if (events.isEmpty()) {
-					state = State.READY;
-				} else {
-					// pending events so re-queue key
-					watcher.enqueueKey(this);
-				}
-			}
-			return isValid();
-		}
+	final AbstractNonSunWatchService watcher() {
+		return watcher;
 	}
 
 	/**
@@ -205,11 +198,6 @@ abstract class AbstractNonSunWatchKey implements WatchKey {
 		}
 
 		@Override
-		public WatchEvent.Kind<T> kind() {
-			return kind;
-		}
-
-		@Override
 		public T context() {
 			return context;
 		}
@@ -223,5 +211,17 @@ abstract class AbstractNonSunWatchKey implements WatchKey {
 		void increment() {
 			count++;
 		}
+
+		@Override
+		public WatchEvent.Kind<T> kind() {
+			return kind;
+		}
+	}
+
+	/**
+	 * Possible key states
+	 */
+	private static enum State {
+		READY, SIGNALLED
 	}
 }

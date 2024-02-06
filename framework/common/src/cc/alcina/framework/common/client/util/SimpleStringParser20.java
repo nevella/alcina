@@ -39,19 +39,13 @@ public class SimpleStringParser20 {
 		return parts[0] + "/" + parts[1];
 	}
 
-	public static long toLong(String str) {
-		int idx = str.indexOf("/");
-		if (idx == -1) {
-			return Long.parseLong(str);
-		} else {
-			double d1 = Double.parseDouble(str.substring(0, idx));
-			double d2 = Double.parseDouble(str.substring(idx + 1));
-			if (GWT.isScript()) {
-				return readLong0(d1, d2);
-			} else {
-				return (long) d1 + (long) d2;
-			}
+	protected static double[] makeLongComponents(int highBits, int lowBits) {
+		double high = highBits * TWO_PWR_32_DBL;
+		double low = lowBits;
+		if (lowBits < 0) {
+			low += TWO_PWR_32_DBL;
 		}
+		return new double[] { low, high };
 	}
 
 	@UnsafeNativeLong
@@ -65,13 +59,19 @@ public class SimpleStringParser20 {
     return [ low, high ];
 	}-*/;
 
-	protected static double[] makeLongComponents(int highBits, int lowBits) {
-		double high = highBits * TWO_PWR_32_DBL;
-		double low = lowBits;
-		if (lowBits < 0) {
-			low += TWO_PWR_32_DBL;
+	public static long toLong(String str) {
+		int idx = str.indexOf("/");
+		if (idx == -1) {
+			return Long.parseLong(str);
+		} else {
+			double d1 = Double.parseDouble(str.substring(0, idx));
+			double d2 = Double.parseDouble(str.substring(idx + 1));
+			if (GWT.isScript()) {
+				return readLong0(d1, d2);
+			} else {
+				return (long) d1 + (long) d2;
+			}
 		}
-		return new double[] { low, high };
 	}
 
 	private final String s;

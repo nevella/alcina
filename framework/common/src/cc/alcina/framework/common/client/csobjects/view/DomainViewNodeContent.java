@@ -43,6 +43,29 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 
 	private transient Exception exception;
 
+	private String comparatorString() {
+		if (__comparatorString == null) {
+			__comparatorString = comparatorString0();
+			if (__comparatorString != null) {
+				__comparatorString = __comparatorString.toLowerCase();
+			}
+		}
+		return __comparatorString;
+	}
+
+	protected String comparatorString0() {
+		if (title != null) {
+			return title;
+		}
+		if (name != null) {
+			return name;
+		}
+		if (publicationText != null) {
+			return publicationText;
+		}
+		return null;
+	}
+
 	@Override
 	public int compareTo(DomainViewNodeContent o) {
 		int stringCmp = comparatorString().compareTo(o.comparatorString());
@@ -56,6 +79,10 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 		if (entity != null && o.entity != null) {
 			return EntityComparator.INSTANCE.compare(entity, o.getEntity());
 		}
+		return 0;
+	}
+
+	protected int compareTo1(DomainViewNodeContent o) {
 		return 0;
 	}
 
@@ -129,33 +156,6 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 	public <DV extends DomainViewNodeContent<E>> DV withEntity(E entity) {
 		setEntity(entity);
 		return (DV) this;
-	}
-
-	private String comparatorString() {
-		if (__comparatorString == null) {
-			__comparatorString = comparatorString0();
-			if (__comparatorString != null) {
-				__comparatorString = __comparatorString.toLowerCase();
-			}
-		}
-		return __comparatorString;
-	}
-
-	protected String comparatorString0() {
-		if (title != null) {
-			return title;
-		}
-		if (name != null) {
-			return name;
-		}
-		if (publicationText != null) {
-			return publicationText;
-		}
-		return null;
-	}
-
-	protected int compareTo1(DomainViewNodeContent o) {
-		return 0;
 	}
 
 	@Reflected

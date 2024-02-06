@@ -40,6 +40,24 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	public SearchOrders() {
 	}
 
+	Map<SearchOrder<T, ?>, Boolean> _getCmps() {
+		// direct access ok
+		if (cmps.isEmpty() && serializableSearchOrders.size() > 0) {
+			cmps = (Map) serializableSearchOrders.stream()
+					.collect(AlcinaCollectors.toLinkedHashMap(sso -> {
+						if (sso.getKey().contains(".")) {
+							Class clazz = Reflections.forName(sso.getKey());
+							return (SearchOrder) Reflections.newInstance(clazz);
+						} else {
+							DisplaySearchOrder displaySearchOrder = new DisplaySearchOrder();
+							displaySearchOrder.setFieldName(sso.getKey());
+							return displaySearchOrder;
+						}
+					}, sso -> sso.isAscending()));
+		}
+		return cmps;
+	}
+
 	public SearchOrders<T> addEntityDescOrder() {
 		addOrder(new IdOrder(), false);
 		return this;
@@ -63,6 +81,11 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	public void clear() {
 		_getCmps().clear();
 		refreshSerializable();
+	}
+
+	private String cmpMapper(Entry<SearchOrder<T, ?>, Boolean> entry) {
+		return Ax.format("%s %s", entry.getKey(),
+				!entry.getValue() ? "desc" : "asc");
 	}
 
 	@Override
@@ -142,6 +165,13 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		});
 	}
 
+	private void refreshSerializable() {
+		// direct access ok
+		serializableSearchOrders = cmps.entrySet().stream()
+				.map(e -> new SerializableSearchOrder(e.getKey(), e.getValue()))
+				.collect(Collectors.toList());
+	}
+
 	public boolean removeOrder(Class<SearchOrder> clazz) {
 		int size = _getCmps().size();
 		boolean result = _getCmps().keySet()
@@ -173,36 +203,6 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 						.appendIfNotBlank(_getCmps().entrySet().stream()
 								.map(this::cmpMapper))
 						.toString();
-	}
-
-	private String cmpMapper(Entry<SearchOrder<T, ?>, Boolean> entry) {
-		return Ax.format("%s %s", entry.getKey(),
-				!entry.getValue() ? "desc" : "asc");
-	}
-
-	private void refreshSerializable() {
-		// direct access ok
-		serializableSearchOrders = cmps.entrySet().stream()
-				.map(e -> new SerializableSearchOrder(e.getKey(), e.getValue()))
-				.collect(Collectors.toList());
-	}
-
-	Map<SearchOrder<T, ?>, Boolean> _getCmps() {
-		// direct access ok
-		if (cmps.isEmpty() && serializableSearchOrders.size() > 0) {
-			cmps = (Map) serializableSearchOrders.stream()
-					.collect(AlcinaCollectors.toLinkedHashMap(sso -> {
-						if (sso.getKey().contains(".")) {
-							Class clazz = Reflections.forName(sso.getKey());
-							return (SearchOrder) Reflections.newInstance(clazz);
-						} else {
-							DisplaySearchOrder displaySearchOrder = new DisplaySearchOrder();
-							displaySearchOrder.setFieldName(sso.getKey());
-							return displaySearchOrder;
-						}
-					}, sso -> sso.isAscending()));
-		}
-		return cmps;
 	}
 
 	@Bean

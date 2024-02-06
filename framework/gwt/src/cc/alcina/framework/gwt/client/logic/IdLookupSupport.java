@@ -38,18 +38,18 @@ public class IdLookupSupport<V extends HasId> {
 		this.alwaysRefresh = alwaysRefresh;
 	}
 
+	private void createLookup() {
+		lookup = new HashMap<Long, V>();
+		for (V v : colln) {
+			lookup.put(v.getId(), v);
+		}
+	}
+
 	public V lookup(Collection<V> colln, Long id) {
 		if (this.colln == null || alwaysRefresh) {
 			this.colln = colln;
 			createLookup();
 		}
 		return lookup.get(id);
-	}
-
-	private void createLookup() {
-		lookup = new HashMap<Long, V>();
-		for (V v : colln) {
-			lookup.put(v.getId(), v);
-		}
 	}
 }

@@ -49,6 +49,19 @@ public class TagEditor extends Model implements Suggestor.Editor,
 		throw new UnsupportedOperationException();
 	}
 
+	private StringAsk computeAsk() {
+		StringAsk ask = new StringAsk();
+		ask.setValue(askTransformer.apply(computeTextContent()));
+		return ask;
+	}
+
+	private String computeTextContent() {
+		String textContent = inputContainer.streamChildren()
+				.filter(n -> n.getNodeType() == Node.TEXT_NODE)
+				.map(Node::getTextContent).collect(Collectors.joining());
+		return textContent;
+	}
+
 	@Override
 	public void copyInputFrom(Editor editor) {
 		throw new UnsupportedOperationException();
@@ -89,18 +102,5 @@ public class TagEditor extends Model implements Suggestor.Editor,
 
 	@Override
 	public void withSuggestor(Suggestor suggestor) {
-	}
-
-	private StringAsk computeAsk() {
-		StringAsk ask = new StringAsk();
-		ask.setValue(askTransformer.apply(computeTextContent()));
-		return ask;
-	}
-
-	private String computeTextContent() {
-		String textContent = inputContainer.streamChildren()
-				.filter(n -> n.getNodeType() == Node.TEXT_NODE)
-				.map(Node::getTextContent).collect(Collectors.joining());
-		return textContent;
 	}
 }

@@ -20,6 +20,11 @@ public class AppViewModel {
 	public AppViewModel() {
 	}
 
+	protected <T extends VersionableEntity> DomainStoreDataProvider<T>
+			createProvider(Class<T> clazz) {
+		return new DomainStoreDataProvider<>(clazz);
+	}
+
 	public <T extends VersionableEntity> DomainStoreDataProvider<T>
 			getDataProvider(Class<T> clazz) {
 		if (!providers.containsKey(clazz)) {
@@ -30,10 +35,5 @@ public class AppViewModel {
 
 	public void resetProviderFor(Class<? extends VersionableEntity> clazz) {
 		getDataProvider(clazz).invalidate();
-	}
-
-	protected <T extends VersionableEntity> DomainStoreDataProvider<T>
-			createProvider(Class<T> clazz) {
-		return new DomainStoreDataProvider<>(clazz);
 	}
 }

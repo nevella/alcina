@@ -42,16 +42,6 @@ public class ShortKeyAnalyzer extends AbstractKeyAnalyzer<Short>
 	}
 
 	@Override
-	public int lengthInBits(Short key) {
-		return Byte.SIZE;
-	}
-
-	@Override
-	public boolean isBitSet(Short key, int bitIndex) {
-		return (key & mask(bitIndex)) != 0;
-	}
-
-	@Override
 	public int bitIndex(Short key, Short otherKey) {
 		short keyValue = key.shortValue();
 		if (keyValue == 0) {
@@ -70,7 +60,17 @@ public class ShortKeyAnalyzer extends AbstractKeyAnalyzer<Short>
 	}
 
 	@Override
+	public boolean isBitSet(Short key, int bitIndex) {
+		return (key & mask(bitIndex)) != 0;
+	}
+
+	@Override
 	public boolean isPrefix(Short key, Short prefix) {
 		return key.equals(prefix);
+	}
+
+	@Override
+	public int lengthInBits(Short key) {
+		return Byte.SIZE;
 	}
 }

@@ -31,8 +31,59 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 		super(parserState);
 	}
 
+	@Override
+	protected MatchResult matchText(LocationMatcher locationMatcher,
+			CharSequence text) {
+		return new MatchResultImpl(locationMatcher, text);
+	}
+
+	public TrieOptions options(BranchToken token, MatchCondition condition) {
+		return new TrieOptions(token, condition);
+	}
+
+	public interface Disambiguator<V> {
+		V getBestMatch(Set<V> set);
+
+		public static class Simple<V> implements Disambiguator<V> {
+			@Override
+			public V getBestMatch(Set<V> set) {
+				return set.size() == 1 ? set.iterator().next() : null;
+			}
+		}
+	}
+
+	public interface InputMapper {
+		String mapInput(CharSequence input);
+
+		public static class ToLowerCase implements InputMapper {
+			@Override
+			public String mapInput(CharSequence input) {
+				return input.toString().replace('\u00a0', ' ').toLowerCase();
+			}
+		}
+
+		public static class ToString implements InputMapper {
+			@Override
+			public String mapInput(CharSequence input) {
+				return input.toString().replace('\u00a0', ' ');
+			}
+		}
+	}
+
 	public static class MatchCondition {
 		Trie<String, Set> trie;
+
+		StartBoundaryTest startBoundaryTest = new WordCharacter();
+
+		MatchTest matchTest = new TrieTest();
+
+		public Disambiguator disambiguator = new Disambiguator.Simple();
+
+		public MatchTest.Result lastMatch;
+
+		public InputMapper inputMapper = new InputMapper.ToString();
+
+		public boolean tryToExtend = false;
 
 		public MatchCondition(Trie<String, Set> trie) {
 			this.trie = trie;
@@ -48,42 +99,74 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 			}
 		}
 
-		StartBoundaryTest startBoundaryTest = new WordCharacter();
-
-		MatchTest matchTest = new TrieTest();
-
-		public Disambiguator disambiguator = new Disambiguator.Simple();
-
 		public MatchTest.Result getLongestMatch(CharSequence sequence) {
 			return matchTest.getLongestMatch(sequence, this);
 		}
-
-		public MatchTest.Result lastMatch;
-
-		public InputMapper inputMapper = new InputMapper.ToString();
-
-		public boolean tryToExtend = false;
 	}
 
-	public interface InputMapper {
-		String mapInput(CharSequence input);
+	class MatchResultImpl implements MatchResult {
+		int start = 0;
 
-		public static class ToString implements InputMapper {
-			@Override
-			public String mapInput(CharSequence input) {
-				return input.toString().replace('\u00a0', ' ');
+		int end;
+
+		CharSequence text;
+
+		MatchTest.Result longestMatch;
+
+		// this could be better expressed - but the trie can match at the start
+		// of the string, or after a non-word char ('(', space etc ). if not,
+		// it'll be in state canStart=false
+		public MatchResultImpl(LocationMatcher locationMatcher,
+				CharSequence text) {
+			int idx = 0;
+			MatchCondition condition = locationMatcher.options.condition;
+			int length = text.length();
+			boolean canStart = true;
+			for (; idx < length; idx++) {
+				char c = text.charAt(idx);
+				if (condition.startBoundaryTest.isNonStart(c)) {
+					canStart = true;
+					continue;
+				}
+				if (canStart) {
+					longestMatch = condition
+							.getLongestMatch(text.subSequence(idx, length));
+					canStart = false;
+				}
+				if (longestMatch != null) {
+					start = idx;
+					end = idx + longestMatch.key.length();
+					return;
+				}
 			}
+			start = -1;
 		}
 
-		public static class ToLowerCase implements InputMapper {
-			@Override
-			public String mapInput(CharSequence input) {
-				return input.toString().replace('\u00a0', ' ').toLowerCase();
-			}
+		@Override
+		public int end() {
+			return end;
+		}
+
+		@Override
+		public boolean found() {
+			return start != -1;
+		}
+
+		@Override
+		public void populateMeasureData(Measure match) {
+			match.setData(longestMatch.value);
+		}
+
+		@Override
+		public int start() {
+			return start;
 		}
 	}
 
 	public interface MatchTest {
+		MatchTest.Result getLongestMatch(CharSequence sequence,
+				MatchCondition matchCondition);
+
 		public static class Result {
 			public String key;
 
@@ -95,29 +178,7 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 			}
 		}
 
-		MatchTest.Result getLongestMatch(CharSequence sequence,
-				MatchCondition matchCondition);
-
 		public static class TrieTest implements MatchTest {
-			static String removeTrailingPunctuation(String key) {
-				if (key.length() == 0) {
-					return key;
-				}
-				char c = key.charAt(key.length() - 1);
-				switch (c) {
-				case '.':
-				case ',':
-				case ';':
-				case ':':
-				case '-':
-				case '\u2013':
-				case '\u2014':
-					return key.substring(0, key.length() - 1);
-				default:
-					return key;
-				}
-			}
-
 			public static String closestCommonContainedInTrie(
 					Trie<String, ?> trie, String key) {
 				key = removeTrailingPunctuation(key);
@@ -144,6 +205,25 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 					}
 				}
 				return null;
+			}
+
+			static String removeTrailingPunctuation(String key) {
+				if (key.length() == 0) {
+					return key;
+				}
+				char c = key.charAt(key.length() - 1);
+				switch (c) {
+				case '.':
+				case ',':
+				case ';':
+				case ':':
+				case '-':
+				case '\u2013':
+				case '\u2014':
+					return key.substring(0, key.length() - 1);
+				default:
+					return key;
+				}
 			}
 
 			@Override
@@ -185,23 +265,6 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 		}
 	}
 
-	public interface Disambiguator<V> {
-		V getBestMatch(Set<V> set);
-
-		public static class Simple<V> implements Disambiguator<V> {
-			@Override
-			public V getBestMatch(Set<V> set) {
-				return set.size() == 1 ? set.iterator().next() : null;
-			}
-		}
-	}
-
-	public class TrieOptions extends Options {
-		TrieOptions(BranchToken token, MatchCondition condition) {
-			super(token, condition);
-		}
-	}
-
 	public interface StartBoundaryTest {
 		boolean isNonStart(char c);
 
@@ -222,72 +285,9 @@ public class TrieMatcher extends LookaheadMatcher<MatchCondition> {
 		}
 	}
 
-	class MatchResultImpl implements MatchResult {
-		int start = 0;
-
-		int end;
-
-		CharSequence text;
-
-		MatchTest.Result longestMatch;
-
-		@Override
-		public void populateMeasureData(Measure match) {
-			match.setData(longestMatch.value);
+	public class TrieOptions extends Options {
+		TrieOptions(BranchToken token, MatchCondition condition) {
+			super(token, condition);
 		}
-
-		// this could be better expressed - but the trie can match at the start
-		// of the string, or after a non-word char ('(', space etc ). if not,
-		// it'll be in state canStart=false
-		public MatchResultImpl(LocationMatcher locationMatcher,
-				CharSequence text) {
-			int idx = 0;
-			MatchCondition condition = locationMatcher.options.condition;
-			int length = text.length();
-			boolean canStart = true;
-			for (; idx < length; idx++) {
-				char c = text.charAt(idx);
-				if (condition.startBoundaryTest.isNonStart(c)) {
-					canStart = true;
-					continue;
-				}
-				if (canStart) {
-					longestMatch = condition
-							.getLongestMatch(text.subSequence(idx, length));
-					canStart = false;
-				}
-				if (longestMatch != null) {
-					start = idx;
-					end = idx + longestMatch.key.length();
-					return;
-				}
-			}
-			start = -1;
-		}
-
-		@Override
-		public boolean found() {
-			return start != -1;
-		}
-
-		@Override
-		public int start() {
-			return start;
-		}
-
-		@Override
-		public int end() {
-			return end;
-		}
-	}
-
-	@Override
-	protected MatchResult matchText(LocationMatcher locationMatcher,
-			CharSequence text) {
-		return new MatchResultImpl(locationMatcher, text);
-	}
-
-	public TrieOptions options(BranchToken token, MatchCondition condition) {
-		return new TrieOptions(token, condition);
 	}
 }

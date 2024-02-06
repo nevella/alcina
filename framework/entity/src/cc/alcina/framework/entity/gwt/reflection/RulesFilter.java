@@ -35,16 +35,6 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 		return match.map(Rule::reason);
 	}
 
-	@Override
-	public boolean permit(Type type) {
-		Optional<Rule> match = getMatch(type);
-		if (match.isPresent()) {
-			return match.get().action() == Action.INCLUDE;
-		}
-		// default to true
-		return true;
-	}
-
 	private Optional<Rule> getMatch(Type type) {
 		TypeHierarchy hierarchy = reflectableTypes.byType.get(type);
 		for (RuleFilter filter : rules) {
@@ -56,12 +46,6 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 		return Optional.empty();
 	}
 
-	private void populateRulesList() {
-		Rules rules = getClass().getAnnotation(Rules.class);
-		Arrays.stream(rules.value()).map(RuleFilter::new)
-				.forEach(this.rules::add);
-	}
-
 	@Override
 	protected boolean hasExplicitTypePermission(Type type) {
 		return getMatch(type).isPresent();
@@ -71,6 +55,22 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 	protected void init(AppReflectableTypes reflectableTypes) {
 		this.reflectableTypes = reflectableTypes;
 		populateRulesList();
+	}
+
+	@Override
+	public boolean permit(Type type) {
+		Optional<Rule> match = getMatch(type);
+		if (match.isPresent()) {
+			return match.get().action() == Action.INCLUDE;
+		}
+		// default to true
+		return true;
+	}
+
+	private void populateRulesList() {
+		Rules rules = getClass().getAnnotation(Rules.class);
+		Arrays.stream(rules.value()).map(RuleFilter::new)
+				.forEach(this.rules::add);
 	}
 
 	/**

@@ -28,6 +28,9 @@ public class DomainFilter {
 
 	private FilterOperator filterOperator;
 
+	protected DomainFilter() {
+	}
+
 	public DomainFilter(Predicate predicate) {
 		this.predicate = predicate;
 	}
@@ -48,9 +51,6 @@ public class DomainFilter {
 		this.filterOperator = operator;
 	}
 
-	protected DomainFilter() {
-	}
-
 	public Predicate asPredicate() {
 		Predicate predicate0 = asPredicate0();
 		if (testingPredicate == null) {
@@ -58,6 +58,20 @@ public class DomainFilter {
 		} else {
 			return new TestingPredicate(testingPredicate.debugTest, predicate0);
 		}
+	}
+
+	private Predicate asPredicate0() {
+		return predicate != null ? new Predicate() {
+			@Override
+			public boolean test(Object o) {
+				return predicate.test(o);
+			}
+
+			@Override
+			public String toString() {
+				return DomainFilter.this.toString();
+			}
+		} : new PropertyPathFilter(propertyPath, propertyValue, filterOperator);
 	}
 
 	public boolean canFlatten() {
@@ -111,20 +125,6 @@ public class DomainFilter {
 		}
 		return Ax.format("DomainFilter: %s %s %s", propertyPath,
 				filterOperator.operationText(), propertyValue);
-	}
-
-	private Predicate asPredicate0() {
-		return predicate != null ? new Predicate() {
-			@Override
-			public boolean test(Object o) {
-				return predicate.test(o);
-			}
-
-			@Override
-			public String toString() {
-				return DomainFilter.this.toString();
-			}
-		} : new PropertyPathFilter(propertyPath, propertyValue, filterOperator);
 	}
 
 	public static class TestingPredicate implements Predicate {

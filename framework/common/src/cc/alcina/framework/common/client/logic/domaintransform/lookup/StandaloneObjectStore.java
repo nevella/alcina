@@ -74,6 +74,10 @@ public abstract class StandaloneObjectStore implements ObjectStore {
 		}
 	}
 
+	protected FastIdLookup ensureLookup(Class c) {
+		return perClassLookups.ensureLookup(c);
+	}
+
 	@Override
 	public <T> Collection<T> getCollection(Class<T> clazz) {
 		return (Collection<T>) ensureLookup(clazz).values();
@@ -129,10 +133,6 @@ public abstract class StandaloneObjectStore implements ObjectStore {
 		return (Collection<T>) ensureLookup(clazz).values();
 	}
 
-	protected FastIdLookup ensureLookup(Class c) {
-		return perClassLookups.ensureLookup(c);
-	}
-
 	class PerClassLookup {
 		Map<Class<? extends Entity>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends Entity>, FastIdLookup>(
 				100);
@@ -140,20 +140,6 @@ public abstract class StandaloneObjectStore implements ObjectStore {
 		public boolean contains(Entity obj) {
 			FastIdLookup lookup = ensureLookup(obj.getClass());
 			return lookup.values().contains(obj);
-		}
-
-		public Map<Class<? extends Entity>, Collection<Entity>> getCollnMap() {
-			Map<Class<? extends Entity>, Collection<Entity>> result = new LinkedHashMap<Class<? extends Entity>, Collection<Entity>>();
-			for (Entry<Class<? extends Entity>, FastIdLookup> entry : lookups
-					.entrySet()) {
-				result.put(entry.getKey(), entry.getValue().values());
-			}
-			return result;
-		}
-
-		public void put(Entity obj) {
-			FastIdLookup lookup = ensureLookup(obj.getClass());
-			lookup.put(obj, obj.getId() == 0);
 		}
 
 		FastIdLookup ensureLookup(Class c) {
@@ -165,8 +151,22 @@ public abstract class StandaloneObjectStore implements ObjectStore {
 			return lookup;
 		}
 
+		public Map<Class<? extends Entity>, Collection<Entity>> getCollnMap() {
+			Map<Class<? extends Entity>, Collection<Entity>> result = new LinkedHashMap<Class<? extends Entity>, Collection<Entity>>();
+			for (Entry<Class<? extends Entity>, FastIdLookup> entry : lookups
+					.entrySet()) {
+				result.put(entry.getKey(), entry.getValue().values());
+			}
+			return result;
+		}
+
 		FastIdLookup getLookup(Class c) {
 			return lookups.get(c);
+		}
+
+		public void put(Entity obj) {
+			FastIdLookup lookup = ensureLookup(obj.getClass());
+			lookup.put(obj, obj.getId() == 0);
 		}
 	}
 }

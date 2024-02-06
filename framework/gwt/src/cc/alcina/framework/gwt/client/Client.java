@@ -72,10 +72,6 @@ public abstract class Client implements ContextFrame {
 		CommitToStorageTransformListener.flushAndRun(runnable);
 	}
 
-	public static boolean has() {
-		return contextProvider != null;
-	}
-
 	public static Client get() {
 		return contextProvider.contextFrame();
 	}
@@ -84,6 +80,10 @@ public abstract class Client implements ContextFrame {
 	public static void goTo(Place place) {
 		Runnable runnable = () -> get().placeController.goTo(place);
 		CommitToStorageTransformListener.flushAndRun(runnable);
+	}
+
+	public static boolean has() {
+		return contextProvider != null;
 	}
 
 	public static boolean isCurrentPlace(Place place) {
@@ -126,6 +126,8 @@ public abstract class Client implements ContextFrame {
 		createPlaceController();
 	}
 
+	protected abstract void createPlaceController();
+
 	public PlaceController getPlaceController() {
 		return this.placeController;
 	}
@@ -143,8 +145,6 @@ public abstract class Client implements ContextFrame {
 				Registry.impl(RegistryHistoryMapper.class));
 		uiController = new UiController();
 	}
-
-	protected abstract void createPlaceController();
 
 	public static class Init {
 		public static long startTime;

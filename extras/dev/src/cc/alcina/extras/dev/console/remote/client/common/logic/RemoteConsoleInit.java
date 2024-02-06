@@ -27,24 +27,6 @@ import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderG
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class RemoteConsoleInit {
-	public void init() {
-		Registry.register().singleton(TimerWrapperProvider.class,
-				new TimerWrapperProviderGwt());
-		Registry.register().singleton(ClientNotifications.class,
-				new ClientNotificationsImpl());
-		Registry.register().add(AlcinaBeanSerializerC.class.getName(),
-				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
-				Registration.Implementation.INSTANCE,
-				Registration.Priority.APP);
-		loadCss();
-		addDevCssListener();
-		RemoteConsoleModule.get();
-		RemoteConsoleRequest request = RemoteConsoleRequest.create();
-		request.setType(RemoteConsoleRequestType.STARTUP);
-		RemoteConsoleClientUtils.submitRequest(request,
-				this::handleStartupResponse);
-	}
-
 	private void addDevCssListener() {
 		NativePreviewHandler handler = new NativePreviewHandler() {
 			@Override
@@ -85,13 +67,31 @@ public class RemoteConsoleInit {
 		Event.addNativePreviewHandler(handler);
 	}
 
-	private void loadCss() {
-	}
-
 	void handleStartupResponse(RemoteConsoleResponse response) {
 		RemoteConsoleClientImpl.models()
 				.setStartupModel(response.getStartupModel());
 		Document.get().setTitle(Ax.format("DevConsole - %s",
 				response.getStartupModel().getAppName()));
+	}
+
+	public void init() {
+		Registry.register().singleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderGwt());
+		Registry.register().singleton(ClientNotifications.class,
+				new ClientNotificationsImpl());
+		Registry.register().add(AlcinaBeanSerializerC.class.getName(),
+				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
+				Registration.Implementation.INSTANCE,
+				Registration.Priority.APP);
+		loadCss();
+		addDevCssListener();
+		RemoteConsoleModule.get();
+		RemoteConsoleRequest request = RemoteConsoleRequest.create();
+		request.setType(RemoteConsoleRequestType.STARTUP);
+		RemoteConsoleClientUtils.submitRequest(request,
+				this::handleStartupResponse);
+	}
+
+	private void loadCss() {
 	}
 }

@@ -53,31 +53,6 @@ public class CharacterKeyAnalyzer extends AbstractKeyAnalyzer<Character>
 		this.msb = msb;
 	}
 
-	/**
-	 * Returns a bit mask where the given bit is set
-	 */
-	private int mask(int bit) {
-		return msb >>> bit;
-	}
-
-	private char valueOf(Character ch) {
-		char value = ch.charValue();
-		if (size == Byte.SIZE) {
-			value &= 0xFF;
-		}
-		return value;
-	}
-
-	@Override
-	public int lengthInBits(Character key) {
-		return size;
-	}
-
-	@Override
-	public boolean isBitSet(Character key, int bitIndex) {
-		return (key & mask(bitIndex)) != 0;
-	}
-
 	@Override
 	public int bitIndex(Character key, Character otherKey) {
 		char ch1 = valueOf(key);
@@ -97,7 +72,32 @@ public class CharacterKeyAnalyzer extends AbstractKeyAnalyzer<Character>
 	}
 
 	@Override
+	public boolean isBitSet(Character key, int bitIndex) {
+		return (key & mask(bitIndex)) != 0;
+	}
+
+	@Override
 	public boolean isPrefix(Character key, Character prefix) {
 		return key.equals(prefix);
+	}
+
+	@Override
+	public int lengthInBits(Character key) {
+		return size;
+	}
+
+	/**
+	 * Returns a bit mask where the given bit is set
+	 */
+	private int mask(int bit) {
+		return msb >>> bit;
+	}
+
+	private char valueOf(Character ch) {
+		char value = ch.charValue();
+		if (size == Byte.SIZE) {
+			value &= 0xFF;
+		}
+		return value;
 	}
 }

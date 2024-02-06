@@ -108,6 +108,11 @@ public class DataTree extends FilterableTree
 		return result;
 	}
 
+	@Override
+	protected boolean isToggleSelectionOnLabelClick() {
+		return true;
+	}
+
 	public boolean isUseNodeImages() {
 		return useNodeImages;
 	}
@@ -138,6 +143,16 @@ public class DataTree extends FilterableTree
 	}
 
 	@Override
+	protected void onDetach() {
+		super.onDetach();
+		for (int i = 0; i < getItemCount(); i++) {
+			TreeItem child = getItem(i);
+			if (child instanceof DetachListener)
+				((DetachListener) child).onDetach();
+		}
+	}
+
+	@Override
 	public void removeExtraTreeEventListener(ExtraTreeEventListener listener) {
 		this.extraTreeEventSupport.removeExtraTreeEventListener(listener);
 	}
@@ -158,21 +173,6 @@ public class DataTree extends FilterableTree
 			ensureSelectedItemVisible();
 		}
 		return result;
-	}
-
-	@Override
-	protected boolean isToggleSelectionOnLabelClick() {
-		return true;
-	}
-
-	@Override
-	protected void onDetach() {
-		super.onDetach();
-		for (int i = 0; i < getItemCount(); i++) {
-			TreeItem child = getItem(i);
-			if (child instanceof DetachListener)
-				((DetachListener) child).onDetach();
-		}
 	}
 
 	@Override

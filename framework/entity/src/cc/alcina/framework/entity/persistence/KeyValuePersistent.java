@@ -81,6 +81,16 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 		return Ax.format("%s/%s", clazz.getName(), key);
 	}
 
+	private static Class<? extends KeyValuePersistent> implementation() {
+		return PersistentImpl.getImplementation(KeyValuePersistent.class);
+	}
+
+	private static void persist() {
+		if (!LooseContext.is(CONTEXT_NO_COMMIT)) {
+			Transaction.commit();
+		}
+	}
+
 	public static void persist(String key, String value) {
 		persist(key, value, null);
 	}
@@ -122,16 +132,6 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 		byte[] bytes = KryoUtils.serializeToByteArray(object);
 		byte[] zipped = ZipUtil.gzipBytes(bytes);
 		return Base64.getEncoder().encodeToString(zipped);
-	}
-
-	private static Class<? extends KeyValuePersistent> implementation() {
-		return PersistentImpl.getImplementation(KeyValuePersistent.class);
-	}
-
-	private static void persist() {
-		if (!LooseContext.is(CONTEXT_NO_COMMIT)) {
-			Transaction.commit();
-		}
 	}
 
 	private String key;

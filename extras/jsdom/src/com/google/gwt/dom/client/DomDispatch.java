@@ -142,6 +142,10 @@ public class DomDispatch implements DomDispatchContract {
 		jsoImpl().dispatchEvent(target.jsoRemote(), evt);
 	}
 
+	private DomDispatchJso dispatchJso() {
+		return (DomDispatchJso) remote();
+	}
+
 	public boolean eventGetAltKey(NativeEventJso evt) {
 		return jsoImpl().eventGetAltKey(evt);
 	}
@@ -345,6 +349,38 @@ public class DomDispatch implements DomDispatchContract {
 		throw new RemoteOnlyException();
 	}
 
+	private DOMImpl jsoImpl() {
+		return dispatchJso().domImpl;
+	}
+
+	DomDispatchContract local() {
+		switch (Document.get().remoteType) {
+		case NONE:
+		case JSO:
+			return local;
+		case PATHREF:
+			return new DomDispatchLocal();
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	DomDispatchContract remote() {
+		switch (Document.get().remoteType) {
+		case NONE:
+		case JSO:
+			return remote;
+		case PATHREF:
+			return new DomDispatchLocal();
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	private void resolveAllPending() {
+		LocalDom.flush();
+	}
+
 	public void scrollIntoView(Element elem) {
 		resolveAllPending();
 		jsoImpl().scrollIntoView(elem.jsoRemote());
@@ -447,42 +483,6 @@ public class DomDispatch implements DomDispatchContract {
 
 	public EventTarget touchGetTarget(Touch touch) {
 		return jsoImpl().touchGetTarget(touch);
-	}
-
-	private DomDispatchJso dispatchJso() {
-		return (DomDispatchJso) remote();
-	}
-
-	private DOMImpl jsoImpl() {
-		return dispatchJso().domImpl;
-	}
-
-	private void resolveAllPending() {
-		LocalDom.flush();
-	}
-
-	DomDispatchContract local() {
-		switch (Document.get().remoteType) {
-		case NONE:
-		case JSO:
-			return local;
-		case PATHREF:
-			return new DomDispatchLocal();
-		default:
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	DomDispatchContract remote() {
-		switch (Document.get().remoteType) {
-		case NONE:
-		case JSO:
-			return remote;
-		case PATHREF:
-			return new DomDispatchLocal();
-		default:
-			throw new UnsupportedOperationException();
-		}
 	}
 
 	public static class RemoteOnlyException

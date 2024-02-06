@@ -25,12 +25,12 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
  * @author Nick Reddel
  */
 public interface SearchRemoteServiceAsync {
-	public void suggest(BoundSuggestOracleRequest request,
-			AsyncCallback<Response> asyncCallback);
-
 	void getForClass(String className, long objectId,
 			AsyncCallback<ModelSearchResults> callback);
 
 	void searchModel(BindableSearchDefinition def,
 			AsyncCallback<ModelSearchResults> callback);
+
+	public void suggest(BoundSuggestOracleRequest request,
+			AsyncCallback<Response> asyncCallback);
 }

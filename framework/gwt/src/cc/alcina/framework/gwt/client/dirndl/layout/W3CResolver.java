@@ -34,15 +34,6 @@ public class W3CResolver extends ContextResolver {
 		layoutNode.rendered = new RenderedW3cNode(domNode.w3cNode());
 	}
 
-	@Override
-	public void renderText(Node layoutNode, String contents) {
-		if (layoutNode.rendered != null) {
-			return;
-		}
-		Text text = document.domDoc().createTextNode(contents);
-		layoutNode.rendered = new RenderedW3cNode(text);
-	}
-
 	public void renderNode(DirectedLayout.Node layoutNode, DomNodeType nodeType,
 			String tagName, String contents) {
 		if (layoutNode.rendered != null) {
@@ -57,6 +48,15 @@ public class W3CResolver extends ContextResolver {
 		default:
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	@Override
+	public void renderText(Node layoutNode, String contents) {
+		if (layoutNode.rendered != null) {
+			return;
+		}
+		Text text = document.domDoc().createTextNode(contents);
+		layoutNode.rendered = new RenderedW3cNode(text);
 	}
 
 	public static class Linking extends W3CResolver {

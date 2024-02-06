@@ -37,26 +37,6 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  */
 public class ActivityManager
 		implements PlaceChangeEvent.Handler, PlaceChangeRequestEvent.Handler {
-	/**
-	 * Wraps our real display to prevent an Activity from taking it over if it
-	 * is not the currentActivity.
-	 */
-	private class ProtectedDisplay implements AcceptsOneWidget {
-		private final Activity activity;
-
-		ProtectedDisplay(Activity activity) {
-			this.activity = activity;
-		}
-
-		@Override
-		public void setWidget(IsWidget view) {
-			if (this.activity == ActivityManager.this.currentActivity) {
-				startingNext = false;
-				showWidget(view);
-			}
-		}
-	}
-
 	public static final Activity NULL_ACTIVITY = new AbstractActivity() {
 		@Override
 		public void start(AcceptsOneWidget panel,
@@ -98,10 +78,6 @@ public class ActivityManager
 		this.stopperedEventBus = new ResettableEventBus(eventBus);
 	}
 
-	public void reset() {
-		currentActivity = NULL_ACTIVITY;
-	}
-
 	/**
 	 * Returns an event bus which is in use by the currently running activity.
 	 * <p>
@@ -116,6 +92,18 @@ public class ActivityManager
 
 	public Activity getCurrentActivity() {
 		return this.currentActivity;
+	}
+
+	private Activity getNextActivity(PlaceChangeEvent event) {
+		if (display == null) {
+			/*
+			 * Display may have been nulled during PlaceChangeEvent dispatch.
+			 * Don't bother the mapper, just return a null to ensure we shut
+			 * down the current activity
+			 */
+			return null;
+		}
+		return mapper.getActivity(event.getNewPlace());
 	}
 
 	/**
@@ -219,6 +207,13 @@ public class ActivityManager
 		event.setWarning(currentActivity.mayStop());
 	}
 
+	protected void onStart() {
+	}
+
+	public void reset() {
+		currentActivity = NULL_ACTIVITY;
+	}
+
 	/**
 	 * Sets the display for the receiver, and has the side effect of starting or
 	 * stopping its monitoring the event bus for place change events.
@@ -237,21 +232,6 @@ public class ActivityManager
 		if (wasActive != willBeActive) {
 			updateHandlers(willBeActive);
 		}
-	}
-
-	protected void onStart() {
-	}
-
-	private Activity getNextActivity(PlaceChangeEvent event) {
-		if (display == null) {
-			/*
-			 * Display may have been nulled during PlaceChangeEvent dispatch.
-			 * Don't bother the mapper, just return a null to ensure we shut
-			 * down the current activity
-			 */
-			return null;
-		}
-		return mapper.getActivity(event.getNewPlace());
 	}
 
 	private void showWidget(IsWidget view) {
@@ -314,6 +294,26 @@ public class ActivityManager
 			if (handlerRegistration != null) {
 				handlerRegistration.removeHandler();
 				handlerRegistration = null;
+			}
+		}
+	}
+
+	/**
+	 * Wraps our real display to prevent an Activity from taking it over if it
+	 * is not the currentActivity.
+	 */
+	private class ProtectedDisplay implements AcceptsOneWidget {
+		private final Activity activity;
+
+		ProtectedDisplay(Activity activity) {
+			this.activity = activity;
+		}
+
+		@Override
+		public void setWidget(IsWidget view) {
+			if (this.activity == ActivityManager.this.currentActivity) {
+				startingNext = false;
+				showWidget(view);
 			}
 		}
 	}

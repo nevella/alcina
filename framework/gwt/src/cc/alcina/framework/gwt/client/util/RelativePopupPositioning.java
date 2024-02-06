@@ -109,6 +109,33 @@ public class RelativePopupPositioning {
 		RenderContext.get().set(RENDER_CONTEXT_BOUNDING_PARENT, boundingParent);
 	}
 
+	private static RelativePopupPanel showPopup(
+			final Element relativeToElement0, final Widget widgetToShow,
+			final Widget boundingWidget,
+			final RelativePopupPositioningParams positioningParams,
+			Widget relativeContainer, final RelativePopupPanel rpp,
+			final int shiftX, final int shiftY) {
+		final Widget positioningWidget = relativeContainer;
+		Element relativeToElement = WidgetUtils
+				.getElementForAroundPositioning(relativeToElement0);
+		if (!LooseContext.getContext()
+				.getBoolean(CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
+			if (!BrowserMod.isIEpre9()) {
+				Style style = positioningWidget.getElement().getStyle();
+				style.clearProperty("clip");
+			} // ie<9 doesn't like zat
+		}
+		if (widgetToShow != null) {
+			rpp.setWidget(widgetToShow);
+		}
+		ComplexPanel cp = WidgetUtils.complexChildOrSelf(positioningWidget);
+		rpp.setPositioningContainer(cp);
+		rpp.setPopupPositionAndShow(new RelativePositioningCallback(rpp,
+				relativeToElement, shiftX, shiftY, boundingWidget,
+				positioningParams, positioningWidget));
+		return rpp;
+	}
+
 	public static RelativePopupPanel showPopup(
 			RelativePopupPositioningParams params, RelativePopupPanel rpp) {
 		return showPopup(params.relativeToElement, params.widgetToShow,
@@ -182,33 +209,6 @@ public class RelativePopupPositioning {
 		return showPopup(elementContainer.getElement(), widgetToShow,
 				boundingWidget, positioningParams, relativeContainer, rpp,
 				shiftX, shiftY);
-	}
-
-	private static RelativePopupPanel showPopup(
-			final Element relativeToElement0, final Widget widgetToShow,
-			final Widget boundingWidget,
-			final RelativePopupPositioningParams positioningParams,
-			Widget relativeContainer, final RelativePopupPanel rpp,
-			final int shiftX, final int shiftY) {
-		final Widget positioningWidget = relativeContainer;
-		Element relativeToElement = WidgetUtils
-				.getElementForAroundPositioning(relativeToElement0);
-		if (!LooseContext.getContext()
-				.getBoolean(CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
-			if (!BrowserMod.isIEpre9()) {
-				Style style = positioningWidget.getElement().getStyle();
-				style.clearProperty("clip");
-			} // ie<9 doesn't like zat
-		}
-		if (widgetToShow != null) {
-			rpp.setWidget(widgetToShow);
-		}
-		ComplexPanel cp = WidgetUtils.complexChildOrSelf(positioningWidget);
-		rpp.setPositioningContainer(cp);
-		rpp.setPopupPositionAndShow(new RelativePositioningCallback(rpp,
-				relativeToElement, shiftX, shiftY, boundingWidget,
-				positioningParams, positioningWidget));
-		return rpp;
 	}
 
 	public enum AxisCoordinate {
@@ -347,6 +347,10 @@ public class RelativePopupPositioning {
 		abstract boolean isVertical();
 	}
 
+	enum AxisType {
+		NEG, CENTER, POS
+	}
+
 	public enum OtherPositioningStrategy {
 		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP,
 		BELOW_CENTER, ABOVE_CENTER, BELOW_RIGHT, ABOVE_RIGHT, TOP_CENTER,
@@ -430,10 +434,6 @@ public class RelativePopupPositioning {
 		public void show(RelativePopupPanel panel) {
 			RelativePopupPositioning.showPopup(this, panel);
 		}
-	}
-
-	enum AxisType {
-		NEG, CENTER, POS
 	}
 
 	static class RelativePositioningCallback implements PositionCallback {

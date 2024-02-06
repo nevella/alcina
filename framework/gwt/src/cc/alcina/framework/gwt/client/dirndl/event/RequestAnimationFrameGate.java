@@ -8,15 +8,6 @@ public class RequestAnimationFrameGate {
 	private Map<Class, Boolean> scheduled = CollectionCreators.Bootstrap
 			.createConcurrentClassMap();
 
-	public void schedule(Runnable runnable) {
-		Class<? extends Runnable> clazz = runnable.getClass();
-		if (!scheduled.containsKey(clazz)) {
-			scheduled.put(clazz, true);
-			runInRequestAnimationFrame(runnable);
-		} else {
-		}
-	}
-
 	private void clearScheduled(Runnable runnable) {
 		Class<? extends Runnable> clazz = runnable.getClass();
 		scheduled.remove(clazz);
@@ -34,4 +25,13 @@ public class RequestAnimationFrameGate {
         }));
 
 	}-*/;
+
+	public void schedule(Runnable runnable) {
+		Class<? extends Runnable> clazz = runnable.getClass();
+		if (!scheduled.containsKey(clazz)) {
+			scheduled.put(clazz, true);
+			runInRequestAnimationFrame(runnable);
+		} else {
+		}
+	}
 }

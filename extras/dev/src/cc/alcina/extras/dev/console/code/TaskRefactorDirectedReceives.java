@@ -48,31 +48,6 @@ public class TaskRefactorDirectedReceives extends PerformerTask {
 
 	public boolean test;
 
-	@Override
-	public void run() throws Exception {
-		StringMap classPaths = StringMap.fromStringList(classPathList);
-		SingletonCache<CompilationUnits> cache = FsObjectCache
-				.singletonCache(CompilationUnits.class, getClass())
-				.asSingletonCache();
-		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
-				DeclarationVisitor::new, refresh);
-		compUnits.declarations.values().stream().filter(dec -> dec.hasFlags())
-				.forEach(type -> {
-					switch (action) {
-					case LIST_INTERESTING: {
-						Ax.out("%s - %s", type.clazz().getSimpleName(),
-								type.typeFlags);
-						break;
-					}
-					case MANIFEST: {
-						remove(type);
-						break;
-					}
-					}
-				});
-		compUnits.writeDirty(test);
-	}
-
 	void remove(UnitType type) {
 		Ax.out("Removing receives: %s", NestedName.get(type.clazz()));
 		type.dirty();
@@ -132,6 +107,31 @@ public class TaskRefactorDirectedReceives extends PerformerTask {
 		}
 	}
 
+	@Override
+	public void run() throws Exception {
+		StringMap classPaths = StringMap.fromStringList(classPathList);
+		SingletonCache<CompilationUnits> cache = FsObjectCache
+				.singletonCache(CompilationUnits.class, getClass())
+				.asSingletonCache();
+		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
+				DeclarationVisitor::new, refresh);
+		compUnits.declarations.values().stream().filter(dec -> dec.hasFlags())
+				.forEach(type -> {
+					switch (action) {
+					case LIST_INTERESTING: {
+						Ax.out("%s - %s", type.clazz().getSimpleName(),
+								type.typeFlags);
+						break;
+					}
+					case MANIFEST: {
+						remove(type);
+						break;
+					}
+					}
+				});
+		compUnits.writeDirty(test);
+	}
+
 	public enum Action {
 		LIST_INTERESTING, MANIFEST;
 	}
@@ -140,6 +140,22 @@ public class TaskRefactorDirectedReceives extends PerformerTask {
 		public DeclarationVisitor(CompilationUnits units,
 				CompilationUnitWrapper compUnit) {
 			super(units, compUnit);
+		}
+
+		boolean hasDirectedReceives(AnnotationExpr expr) {
+			if (expr.getNameAsString().equals("Directed")) {
+				if (expr instanceof NormalAnnotationExpr) {
+					NormalAnnotationExpr expr2 = (NormalAnnotationExpr) expr;
+					Optional<MemberValuePair> receivesPair = expr2
+							.getPairs().stream().filter(mv -> mv
+									.getNameAsString().equals("receives"))
+							.findFirst();
+					if (receivesPair.isPresent()) {
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		@Override
@@ -164,22 +180,6 @@ public class TaskRefactorDirectedReceives extends PerformerTask {
 		@Override
 		public void visit(SingleMemberAnnotationExpr n, Void arg) {
 			visitAnnotationExpr(n);
-		}
-
-		boolean hasDirectedReceives(AnnotationExpr expr) {
-			if (expr.getNameAsString().equals("Directed")) {
-				if (expr instanceof NormalAnnotationExpr) {
-					NormalAnnotationExpr expr2 = (NormalAnnotationExpr) expr;
-					Optional<MemberValuePair> receivesPair = expr2
-							.getPairs().stream().filter(mv -> mv
-									.getNameAsString().equals("receives"))
-							.findFirst();
-					if (receivesPair.isPresent()) {
-						return true;
-					}
-				}
-			}
-			return false;
 		}
 
 		void visit0(ClassOrInterfaceDeclaration node, Void arg) {

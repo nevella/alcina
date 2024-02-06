@@ -23,6 +23,23 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 @Reflected
 public abstract class AbstractMergeStrategy<A extends Annotation>
 		implements MergeStrategy<A> {
+	protected abstract List<A> atClass(Class<A> annotationClass,
+			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector,
+			Resolver resolver);
+
+	protected abstract List<A> atProperty(Class<A> annotationClass,
+			Property property, Resolver resolver);
+
+	boolean permitPackages(Class clazz) {
+		switch (Reflections.getPackageName(clazz)) {
+		// FIXME - reflection - typemodel - remove? generalise?
+		case "javax.swing":
+			return false;
+		default:
+			return true;
+		}
+	}
+
 	@Override
 	public List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
 			List<Inheritance> inheritance, Resolver resolver) {
@@ -92,23 +109,6 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			cursor = cursor.getSuperclass();
 		}
 		return result;
-	}
-
-	protected abstract List<A> atClass(Class<A> annotationClass,
-			ClassReflector<?> reflector, ClassReflector<?> resolvingReflector,
-			Resolver resolver);
-
-	protected abstract List<A> atProperty(Class<A> annotationClass,
-			Property property, Resolver resolver);
-
-	boolean permitPackages(Class clazz) {
-		switch (Reflections.getPackageName(clazz)) {
-		// FIXME - reflection - typemodel - remove? generalise?
-		case "javax.swing":
-			return false;
-		default:
-			return true;
-		}
 	}
 
 	public static abstract class AdditiveMergeStrategy<A extends Annotation>

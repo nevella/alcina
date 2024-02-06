@@ -43,6 +43,12 @@ class RenderedW3cNode implements Rendered {
 	}
 
 	@Override
+	public org.w3c.dom.Element asW3cElement() {
+		return node instanceof org.w3c.dom.Element ? (org.w3c.dom.Element) node
+				: null;
+	}
+
+	@Override
 	public int getChildCount() {
 		return node.getChildNodes().getLength();
 	}
@@ -98,11 +104,5 @@ class RenderedW3cNode implements Rendered {
 		public UnstructuredChild(Element element) {
 			setElement(element);
 		}
-	}
-
-	@Override
-	public org.w3c.dom.Element asW3cElement() {
-		return node instanceof org.w3c.dom.Element ? (org.w3c.dom.Element) node
-				: null;
 	}
 }

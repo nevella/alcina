@@ -49,6 +49,11 @@ public class RecipeParser {
 		traversal.setRootLayer(rootLayer);
 	}
 
+	private void parse(String text) {
+		initialiseTraversal(text);
+		traversal.traverse();
+	}
+
 	public void test(String text) {
 		parse(text);
 		traversal.throwExceptions();
@@ -63,11 +68,6 @@ public class RecipeParser {
 		ingredients.forEach(
 				i -> Ax.out("==========================================\n%s\n",
 						i.getBranch().toResult().toStructuredString()));
-	}
-
-	private void parse(String text) {
-		initialiseTraversal(text);
-		traversal.traverse();
 	}
 
 	static class RecipeText extends InitialTextSelection

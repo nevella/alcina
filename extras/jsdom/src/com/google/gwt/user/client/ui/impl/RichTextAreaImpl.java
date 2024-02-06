@@ -44,6 +44,10 @@ public class RichTextAreaImpl {
 		elem = elemDelegating.implAccess().ensureJsoRemote();
 	}
 
+	protected Element createElement() {
+		return DOM.createTextArea();
+	}
+
 	public Element getElement() {
 		return elemDelegating;
 	}
@@ -56,12 +60,24 @@ public class RichTextAreaImpl {
 		return elem.getPropertyString("value");
 	}
 
+	protected void hookEvents() {
+		DOM.sinkEvents(elemDelegating, Event.MOUSEEVENTS | Event.KEYEVENTS
+				| Event.ONCHANGE | Event.ONCLICK | Event.FOCUSEVENTS);
+	}
+
 	public void initElement() {
 		onElementInitialized();
 	}
 
 	public boolean isEnabled() {
 		return !elem.getPropertyBoolean("disabled");
+	}
+
+	protected void onElementInitialized() {
+		hookEvents();
+		if (owner != null) {
+			InitializeEvent.fire(owner);
+		}
 	}
 
 	public void setEnabled(boolean enabled) {
@@ -99,21 +115,5 @@ public class RichTextAreaImpl {
 	}
 
 	public void uninitElement() {
-	}
-
-	protected Element createElement() {
-		return DOM.createTextArea();
-	}
-
-	protected void hookEvents() {
-		DOM.sinkEvents(elemDelegating, Event.MOUSEEVENTS | Event.KEYEVENTS
-				| Event.ONCHANGE | Event.ONCLICK | Event.FOCUSEVENTS);
-	}
-
-	protected void onElementInitialized() {
-		hookEvents();
-		if (owner != null) {
-			InitializeEvent.fire(owner);
-		}
 	}
 }

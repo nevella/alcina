@@ -22,6 +22,11 @@ public class KnownJob extends KnownNode {
 		super(parent, name);
 	}
 
+	private long getTime() {
+		return end == null || start == null ? 0L
+				: end.getTime() - start.getTime();
+	}
+
 	public void jobError(Exception e) {
 		log = log + "\n" + SEUtilities.getFullExceptionMessage(e);
 		if (JobContext.has()) {
@@ -54,6 +59,12 @@ public class KnownJob extends KnownNode {
 		persist();
 	}
 
+	private void logProcessTime() {
+		end = new Date();
+		String path = path();
+		JobContext.info("job {} - time {}", path, getTime());
+	}
+
 	@Override
 	public void persist() {
 		// zk nodesize 1mb, allow for some unicode
@@ -70,16 +81,5 @@ public class KnownJob extends KnownNode {
 		status = OpStatus.IN_PROGRESS;
 		log = "";
 		persist();
-	}
-
-	private long getTime() {
-		return end == null || start == null ? 0L
-				: end.getTime() - start.getTime();
-	}
-
-	private void logProcessTime() {
-		end = new Date();
-		String path = path();
-		JobContext.info("job {} - time {}", path, getTime());
 	}
 }

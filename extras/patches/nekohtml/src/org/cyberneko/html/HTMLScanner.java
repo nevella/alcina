@@ -304,6 +304,15 @@ public class HTMLScanner
 	/** Synthesized event info item. */
 	protected static final HTMLEventInfo SYNTHESIZED_ITEM = new HTMLEventInfo.SynthesizedItem();
 
+	//
+	// Protected static methods
+	//
+	/** Returns true if the name is a built-in XML general entity reference. */
+	protected static boolean builtinXmlRef(String name) {
+		return name.equals("amp") || name.equals("lt") || name.equals("gt")
+				|| name.equals("quot") || name.equals("apos");
+	} // builtinXmlRef(String):boolean
+
 	/**
 	 * Expands a system id and returns the system id as a URI, if it can be
 	 * expanded. A return value of null means that the identifier is already
@@ -383,15 +392,6 @@ public class HTMLScanner
 		}
 		return uri.toString();
 	} // expandSystemId(String,String):String
-
-	//
-	// Protected static methods
-	//
-	/** Returns true if the name is a built-in XML general entity reference. */
-	protected static boolean builtinXmlRef(String name) {
-		return name.equals("amp") || name.equals("lt") || name.equals("gt")
-				|| name.equals("quot") || name.equals("apos");
-	} // builtinXmlRef(String):boolean
 
 	/**
 	 * Fixes a platform dependent filename to standard URI form.
@@ -697,6 +697,53 @@ public class HTMLScanner
 	} // cleanup(boolean)
 
 	/**
+	 * Indicates if the end comment --> is available, loading further data if
+	 * needed, without to reset the buffer
+	 */
+	private boolean endCommentAvailable() throws IOException {
+		int nbCaret = 0;
+		final int originalOffset = fCurrentEntity.offset;
+		final int originalColumnNumber = fCurrentEntity.columnNumber;
+		while (true) {
+			// read() should not clear the buffer
+			if (fCurrentEntity.offset == fCurrentEntity.length) {
+				if (fCurrentEntity.length == fCurrentEntity.buffer.length) {
+					load(fCurrentEntity.buffer.length);
+				} else { // everything was already loaded
+					fCurrentEntity.offset = originalOffset;
+					fCurrentEntity.columnNumber = originalColumnNumber;
+					return false;
+				}
+			}
+			int c = read();
+			if (c == -1) {
+				fCurrentEntity.offset = originalOffset;
+				fCurrentEntity.columnNumber = originalColumnNumber;
+				return false;
+			} else if (c == '>' && nbCaret >= 2) {
+				fCurrentEntity.offset = originalOffset;
+				fCurrentEntity.columnNumber = originalColumnNumber;
+				return true;
+			} else if (c == '-') {
+				nbCaret++;
+			} else {
+				nbCaret = 0;
+			}
+		}
+	}
+
+	private boolean endsWith(final XMLStringBuffer buffer,
+			final String string) {
+		final int l = string.length();
+		if (buffer.length < l) {
+			return false;
+		} else {
+			final String s = new String(buffer.ch, buffer.length - l, l);
+			return string.equals(s);
+		}
+	}
+
+	/**
 	 * Immediately evaluates an input source and add the new content (e.g. the
 	 * output written by an embedded script).
 	 * 
@@ -729,6 +776,68 @@ public class HTMLScanner
 		setScannerState(previousScannerState);
 		fCurrentEntity = previousEntity;
 	} // evaluateInputSource(XMLInputSource)
+
+	/**
+	 * Fixes Microsoft Windows&reg; specific characters.
+	 * <p>
+	 * Details about this common problem can be found at
+	 * <a href= 'http://www.cs.tut.fi/~jkorpela/www/windows-chars.html'>http://
+	 * www.cs.tut.fi/~jkorpela/www/windows-chars.html</a >
+	 */
+	protected int fixWindowsCharacter(int origChar) {
+		/* PATCH: Asgeir Asgeirsson */
+		switch (origChar) {
+		case 130:
+			return 8218;
+		case 131:
+			return 402;
+		case 132:
+			return 8222;
+		case 133:
+			return 8230;
+		case 134:
+			return 8224;
+		case 135:
+			return 8225;
+		case 136:
+			return 710;
+		case 137:
+			return 8240;
+		case 138:
+			return 352;
+		case 139:
+			return 8249;
+		case 140:
+			return 338;
+		case 145:
+			return 8216;
+		case 146:
+			return 8217;
+		case 147:
+			return 8220;
+		case 148:
+			return 8221;
+		case 149:
+			return 8226;
+		case 150:
+			return 8211;
+		case 151:
+			return 8212;
+		case 152:
+			return 732;
+		case 153:
+			return 8482;
+		case 154:
+			return 353;
+		case 155:
+			return 8250;
+		case 156:
+			return 339;
+		case 159:
+			return 376;
+		}
+		return origChar;
+	} // fixWindowsCharacter(int):int
 
 	/** Returns the base system identifier. */
 	@Override
@@ -818,6 +927,20 @@ public class HTMLScanner
 		return fCurrentEntity != null ? fCurrentEntity.publicId : null;
 	} // getPublicId():String
 
+	private Reader getReader(final XMLInputSource inputSource) {
+		Reader reader = inputSource.getCharacterStream();
+		if (reader == null) {
+			try {
+				return new InputStreamReader(inputSource.getByteStream(),
+						fJavaEncoding);
+			} catch (final UnsupportedEncodingException e) {
+				// should not happen as this encoding is already used to parse
+				// the "main" source
+			}
+		}
+		return reader;
+	}
+
 	//
 	// XMLComponent methods
 	//
@@ -839,379 +962,24 @@ public class HTMLScanner
 		return fCurrentEntity != null ? fCurrentEntity.version : null;
 	} // getXMLVersion():String
 
-	//
-	// Public methods
-	//
 	/**
-	 * Pushes an input source onto the current entity stack. This enables the
-	 * scanner to transparently scan new content (e.g. the output written by an
-	 * embedded script). At the end of the current entity, the scanner returns
-	 * where it left off at the time this entity source was pushed.
-	 * <p>
-	 * <strong>Note:</strong> This functionality is experimental at this time
-	 * and is subject to change in future releases of NekoHTML.
-	 * 
-	 * @param inputSource
-	 *            The new input source to start scanning.
-	 * @see #evaluateInputSource(XMLInputSource)
+	 * To detect if 2 encoding are compatible, both must be able to read the
+	 * meta tag specifying the new encoding. This means that the byte
+	 * representation of some minimal html markup must be the same in both
+	 * encodings
 	 */
-	public void pushInputSource(XMLInputSource inputSource) {
-		final Reader reader = getReader(inputSource);
-		fCurrentEntityStack.push(fCurrentEntity);
-		String encoding = inputSource.getEncoding();
-		String publicId = inputSource.getPublicId();
-		String baseSystemId = inputSource.getBaseSystemId();
-		String literalSystemId = inputSource.getSystemId();
-		String expandedSystemId = expandSystemId(literalSystemId, baseSystemId);
-		fCurrentEntity = new CurrentEntity(reader, encoding, publicId,
-				baseSystemId, literalSystemId, expandedSystemId);
-	} // pushInputSource(XMLInputSource)
-
-	/** Resets the component. */
-	@Override
-	public void reset(XMLComponentManager manager)
-			throws XMLConfigurationException {
-		// get features
-		fAugmentations = manager.getFeature(AUGMENTATIONS);
-		fReportErrors = manager.getFeature(REPORT_ERRORS);
-		fNotifyCharRefs = manager.getFeature(NOTIFY_CHAR_REFS);
-		fNotifyXmlBuiltinRefs = manager.getFeature(NOTIFY_XML_BUILTIN_REFS);
-		fNotifyHtmlBuiltinRefs = manager.getFeature(NOTIFY_HTML_BUILTIN_REFS);
-		fFixWindowsCharRefs = manager.getFeature(FIX_MSWINDOWS_REFS);
-		fScriptStripCDATADelims = manager.getFeature(SCRIPT_STRIP_CDATA_DELIMS);
-		fScriptStripCommentDelims = manager
-				.getFeature(SCRIPT_STRIP_COMMENT_DELIMS);
-		fStyleStripCDATADelims = manager.getFeature(STYLE_STRIP_CDATA_DELIMS);
-		fStyleStripCommentDelims = manager
-				.getFeature(STYLE_STRIP_COMMENT_DELIMS);
-		fIgnoreSpecifiedCharset = manager.getFeature(IGNORE_SPECIFIED_CHARSET);
-		fCDATASections = manager.getFeature(CDATA_SECTIONS);
-		fOverrideDoctype = manager.getFeature(OVERRIDE_DOCTYPE);
-		fInsertDoctype = manager.getFeature(INSERT_DOCTYPE);
-		fNormalizeAttributes = manager.getFeature(NORMALIZE_ATTRIBUTES);
-		fParseNoScriptContent = manager.getFeature(PARSE_NOSCRIPT_CONTENT);
-		// get properties
-		fNamesElems = getNamesValue(
-				String.valueOf(manager.getProperty(NAMES_ELEMS)));
-		fNamesAttrs = getNamesValue(
-				String.valueOf(manager.getProperty(NAMES_ATTRS)));
-		fDefaultIANAEncoding = String
-				.valueOf(manager.getProperty(DEFAULT_ENCODING));
-		fErrorReporter = (HTMLErrorReporter) manager
-				.getProperty(ERROR_REPORTER);
-		fDoctypePubid = String.valueOf(manager.getProperty(DOCTYPE_PUBID));
-		fDoctypeSysid = String.valueOf(manager.getProperty(DOCTYPE_SYSID));
-	} // reset(XMLComponentManager)
-
-	/** Scans the document. */
-	@Override
-	public boolean scanDocument(boolean complete)
-			throws XNIException, IOException {
-		do {
-			if (!fScanner.scan(complete)) {
-				return false;
-			}
-		} while (complete);
-		return true;
-	} // scanDocument(boolean):boolean
-
-	/** Sets the document handler. */
-	@Override
-	public void setDocumentHandler(XMLDocumentHandler handler) {
-		fDocumentHandler = handler;
-	} // setDocumentHandler(XMLDocumentHandler)
-
-	/** Sets a feature. */
-	@Override
-	public void setFeature(String featureId, boolean state)
-			throws XMLConfigurationException {
-		if (featureId.equals(AUGMENTATIONS)) {
-			fAugmentations = state;
-		} else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) {
-			fIgnoreSpecifiedCharset = state;
-		} else if (featureId.equals(NOTIFY_CHAR_REFS)) {
-			fNotifyCharRefs = state;
-		} else if (featureId.equals(NOTIFY_XML_BUILTIN_REFS)) {
-			fNotifyXmlBuiltinRefs = state;
-		} else if (featureId.equals(NOTIFY_HTML_BUILTIN_REFS)) {
-			fNotifyHtmlBuiltinRefs = state;
-		} else if (featureId.equals(FIX_MSWINDOWS_REFS)) {
-			fFixWindowsCharRefs = state;
-		} else if (featureId.equals(SCRIPT_STRIP_CDATA_DELIMS)) {
-			fScriptStripCDATADelims = state;
-		} else if (featureId.equals(SCRIPT_STRIP_COMMENT_DELIMS)) {
-			fScriptStripCommentDelims = state;
-		} else if (featureId.equals(STYLE_STRIP_CDATA_DELIMS)) {
-			fStyleStripCDATADelims = state;
-		} else if (featureId.equals(STYLE_STRIP_COMMENT_DELIMS)) {
-			fStyleStripCommentDelims = state;
-		} else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) {
-			fIgnoreSpecifiedCharset = state;
-		} else if (featureId.equals(PARSE_NOSCRIPT_CONTENT)) {
-			fParseNoScriptContent = state;
-		}
-	} // setFeature(String,boolean)
-
-	//
-	// XMLDocumentScanner methods
-	//
-	/** Sets the input source. */
-	@Override
-	public void setInputSource(XMLInputSource source) throws IOException {
-		// reset state
-		fElementCount = 0;
-		fElementDepth = -1;
-		fByteStream = null;
-		fCurrentEntityStack.removeAllElements();
-		fBeginLineNumber = 1;
-		fBeginColumnNumber = 1;
-		fEndLineNumber = fBeginLineNumber;
-		fEndColumnNumber = fBeginColumnNumber;
-		// reset encoding information
-		fIANAEncoding = fDefaultIANAEncoding;
-		fJavaEncoding = fIANAEncoding;
-		// get location information
-		String encoding = source.getEncoding();
-		String publicId = source.getPublicId();
-		String baseSystemId = source.getBaseSystemId();
-		String literalSystemId = source.getSystemId();
-		String expandedSystemId = expandSystemId(literalSystemId, baseSystemId);
-		// open stream
-		Reader reader = source.getCharacterStream();
-		if (reader == null) {
-			InputStream inputStream = source.getByteStream();
-			if (inputStream == null) {
-				URL url = new URL(expandedSystemId);
-				inputStream = url.openStream();
-			}
-			fByteStream = new PlaybackInputStream(inputStream);
-			String[] encodings = new String[2];
-			if (encoding == null) {
-				fByteStream.detectEncoding(encodings);
-			} else {
-				encodings[0] = encoding;
-			}
-			if (encodings[0] == null) {
-				encodings[0] = fDefaultIANAEncoding;
-				if (fReportErrors) {
-					fErrorReporter.reportWarning("HTML1000", null);
-				}
-			}
-			if (encodings[1] == null) {
-				encodings[1] = EncodingMap
-						.getIANA2JavaMapping(encodings[0].toUpperCase());
-				if (encodings[1] == null) {
-					encodings[1] = encodings[0];
-					if (fReportErrors) {
-						fErrorReporter.reportWarning("HTML1001",
-								new Object[] { encodings[0] });
-					}
-				}
-			}
-			fIANAEncoding = encodings[0];
-			fJavaEncoding = encodings[1];
-			/* PATCH: Asgeir Asgeirsson */
-			fIso8859Encoding = fIANAEncoding == null
-					|| fIANAEncoding.toUpperCase().startsWith("ISO-8859")
-					|| fIANAEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
-			encoding = fIANAEncoding;
-			reader = new InputStreamReader(fByteStream, fJavaEncoding);
-		}
-		fCurrentEntity = new CurrentEntity(reader, encoding, publicId,
-				baseSystemId, literalSystemId, expandedSystemId);
-		// set scanner and state
-		setScanner(fContentScanner);
-		setScannerState(STATE_START_DOCUMENT);
-	} // setInputSource(XMLInputSource)
-
-	/** Sets a property. */
-	@Override
-	public void setProperty(String propertyId, Object value)
-			throws XMLConfigurationException {
-		if (propertyId.equals(NAMES_ELEMS)) {
-			fNamesElems = getNamesValue(String.valueOf(value));
-			return;
-		}
-		if (propertyId.equals(NAMES_ATTRS)) {
-			fNamesAttrs = getNamesValue(String.valueOf(value));
-			return;
-		}
-		if (propertyId.equals(DEFAULT_ENCODING)) {
-			fDefaultIANAEncoding = String.valueOf(value);
-			return;
-		}
-	} // setProperty(String,Object)
-
-	/**
-	 * Indicates if the end comment --> is available, loading further data if
-	 * needed, without to reset the buffer
-	 */
-	private boolean endCommentAvailable() throws IOException {
-		int nbCaret = 0;
-		final int originalOffset = fCurrentEntity.offset;
-		final int originalColumnNumber = fCurrentEntity.columnNumber;
-		while (true) {
-			// read() should not clear the buffer
-			if (fCurrentEntity.offset == fCurrentEntity.length) {
-				if (fCurrentEntity.length == fCurrentEntity.buffer.length) {
-					load(fCurrentEntity.buffer.length);
-				} else { // everything was already loaded
-					fCurrentEntity.offset = originalOffset;
-					fCurrentEntity.columnNumber = originalColumnNumber;
-					return false;
-				}
-			}
-			int c = read();
-			if (c == -1) {
-				fCurrentEntity.offset = originalOffset;
-				fCurrentEntity.columnNumber = originalColumnNumber;
-				return false;
-			} else if (c == '>' && nbCaret >= 2) {
-				fCurrentEntity.offset = originalOffset;
-				fCurrentEntity.columnNumber = originalColumnNumber;
-				return true;
-			} else if (c == '-') {
-				nbCaret++;
-			} else {
-				nbCaret = 0;
-			}
-		}
-	}
-
-	private boolean endsWith(final XMLStringBuffer buffer,
-			final String string) {
-		final int l = string.length();
-		if (buffer.length < l) {
+	boolean isEncodingCompatible(final String encoding1,
+			final String encoding2) {
+		final String reference = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=";
+		try {
+			final byte[] bytesEncoding1 = reference.getBytes(encoding1);
+			final String referenceWithEncoding2 = new String(bytesEncoding1,
+					encoding2);
+			return reference.equals(referenceWithEncoding2);
+		} catch (final UnsupportedEncodingException e) {
 			return false;
-		} else {
-			final String s = new String(buffer.ch, buffer.length - l, l);
-			return string.equals(s);
 		}
 	}
-
-	private Reader getReader(final XMLInputSource inputSource) {
-		Reader reader = inputSource.getCharacterStream();
-		if (reader == null) {
-			try {
-				return new InputStreamReader(inputSource.getByteStream(),
-						fJavaEncoding);
-			} catch (final UnsupportedEncodingException e) {
-				// should not happen as this encoding is already used to parse
-				// the "main" source
-			}
-		}
-		return reader;
-	}
-
-	//
-	// Private methods
-	//
-	/** Prints the contents of the character buffer to standard out. */
-	private void printBuffer() {
-		if (DEBUG_BUFFER) {
-			System.out.print('[');
-			System.out.print(fCurrentEntity.length);
-			System.out.print(' ');
-			System.out.print(fCurrentEntity.offset);
-			if (fCurrentEntity.length > 0) {
-				System.out.print(" \"");
-				for (int i = 0; i < fCurrentEntity.length; i++) {
-					if (i == fCurrentEntity.offset) {
-						System.out.print('^');
-					}
-					char c = fCurrentEntity.buffer[i];
-					switch (c) {
-					case '\r': {
-						System.out.print("\\r");
-						break;
-					}
-					case '\n': {
-						System.out.print("\\n");
-						break;
-					}
-					case '\t': {
-						System.out.print("\\t");
-						break;
-					}
-					case '"': {
-						System.out.print("\\\"");
-						break;
-					}
-					default: {
-						System.out.print(c);
-					}
-					}
-				}
-				if (fCurrentEntity.offset == fCurrentEntity.length) {
-					System.out.print('^');
-				}
-				System.out.print('"');
-			}
-			System.out.print(']');
-		}
-	} // printBuffer()
-
-	/**
-	 * Fixes Microsoft Windows&reg; specific characters.
-	 * <p>
-	 * Details about this common problem can be found at
-	 * <a href= 'http://www.cs.tut.fi/~jkorpela/www/windows-chars.html'>http://
-	 * www.cs.tut.fi/~jkorpela/www/windows-chars.html</a >
-	 */
-	protected int fixWindowsCharacter(int origChar) {
-		/* PATCH: Asgeir Asgeirsson */
-		switch (origChar) {
-		case 130:
-			return 8218;
-		case 131:
-			return 402;
-		case 132:
-			return 8222;
-		case 133:
-			return 8230;
-		case 134:
-			return 8224;
-		case 135:
-			return 8225;
-		case 136:
-			return 710;
-		case 137:
-			return 8240;
-		case 138:
-			return 352;
-		case 139:
-			return 8249;
-		case 140:
-			return 338;
-		case 145:
-			return 8216;
-		case 146:
-			return 8217;
-		case 147:
-			return 8220;
-		case 148:
-			return 8221;
-		case 149:
-			return 8226;
-		case 150:
-			return 8211;
-		case 151:
-			return 8212;
-		case 152:
-			return 732;
-		case 153:
-			return 8482;
-		case 154:
-			return 353;
-		case 155:
-			return 8250;
-		case 156:
-			return 339;
-		case 159:
-			return 376;
-		}
-		return origChar;
-	} // fixWindowsCharacter(int):int
 
 	/**
 	 * Loads a new chunk of data into the buffer and returns the number of
@@ -1264,6 +1032,82 @@ public class HTMLScanner
 	} // locationAugs():Augmentations
 
 	//
+	// Private methods
+	//
+	/** Prints the contents of the character buffer to standard out. */
+	private void printBuffer() {
+		if (DEBUG_BUFFER) {
+			System.out.print('[');
+			System.out.print(fCurrentEntity.length);
+			System.out.print(' ');
+			System.out.print(fCurrentEntity.offset);
+			if (fCurrentEntity.length > 0) {
+				System.out.print(" \"");
+				for (int i = 0; i < fCurrentEntity.length; i++) {
+					if (i == fCurrentEntity.offset) {
+						System.out.print('^');
+					}
+					char c = fCurrentEntity.buffer[i];
+					switch (c) {
+					case '\r': {
+						System.out.print("\\r");
+						break;
+					}
+					case '\n': {
+						System.out.print("\\n");
+						break;
+					}
+					case '\t': {
+						System.out.print("\\t");
+						break;
+					}
+					case '"': {
+						System.out.print("\\\"");
+						break;
+					}
+					default: {
+						System.out.print(c);
+					}
+					}
+				}
+				if (fCurrentEntity.offset == fCurrentEntity.length) {
+					System.out.print('^');
+				}
+				System.out.print('"');
+			}
+			System.out.print(']');
+		}
+	} // printBuffer()
+
+	//
+	// Public methods
+	//
+	/**
+	 * Pushes an input source onto the current entity stack. This enables the
+	 * scanner to transparently scan new content (e.g. the output written by an
+	 * embedded script). At the end of the current entity, the scanner returns
+	 * where it left off at the time this entity source was pushed.
+	 * <p>
+	 * <strong>Note:</strong> This functionality is experimental at this time
+	 * and is subject to change in future releases of NekoHTML.
+	 * 
+	 * @param inputSource
+	 *            The new input source to start scanning.
+	 * @see #evaluateInputSource(XMLInputSource)
+	 */
+	public void pushInputSource(XMLInputSource inputSource) {
+		final Reader reader = getReader(inputSource);
+		fCurrentEntityStack.push(fCurrentEntity);
+		String encoding = inputSource.getEncoding();
+		String publicId = inputSource.getPublicId();
+		String baseSystemId = inputSource.getBaseSystemId();
+		String literalSystemId = inputSource.getSystemId();
+		String expandedSystemId = expandSystemId(literalSystemId, baseSystemId);
+		fCurrentEntity = new CurrentEntity(reader, encoding, publicId,
+				baseSystemId, literalSystemId, expandedSystemId);
+	} // pushInputSource(XMLInputSource)
+
+	//
 	// Protected methods
 	//
 	// i/o
@@ -1293,6 +1137,42 @@ public class HTMLScanner
 		}
 		return c;
 	} // read():int
+
+	/** Resets the component. */
+	@Override
+	public void reset(XMLComponentManager manager)
+			throws XMLConfigurationException {
+		// get features
+		fAugmentations = manager.getFeature(AUGMENTATIONS);
+		fReportErrors = manager.getFeature(REPORT_ERRORS);
+		fNotifyCharRefs = manager.getFeature(NOTIFY_CHAR_REFS);
+		fNotifyXmlBuiltinRefs = manager.getFeature(NOTIFY_XML_BUILTIN_REFS);
+		fNotifyHtmlBuiltinRefs = manager.getFeature(NOTIFY_HTML_BUILTIN_REFS);
+		fFixWindowsCharRefs = manager.getFeature(FIX_MSWINDOWS_REFS);
+		fScriptStripCDATADelims = manager.getFeature(SCRIPT_STRIP_CDATA_DELIMS);
+		fScriptStripCommentDelims = manager
+				.getFeature(SCRIPT_STRIP_COMMENT_DELIMS);
+		fStyleStripCDATADelims = manager.getFeature(STYLE_STRIP_CDATA_DELIMS);
+		fStyleStripCommentDelims = manager
+				.getFeature(STYLE_STRIP_COMMENT_DELIMS);
+		fIgnoreSpecifiedCharset = manager.getFeature(IGNORE_SPECIFIED_CHARSET);
+		fCDATASections = manager.getFeature(CDATA_SECTIONS);
+		fOverrideDoctype = manager.getFeature(OVERRIDE_DOCTYPE);
+		fInsertDoctype = manager.getFeature(INSERT_DOCTYPE);
+		fNormalizeAttributes = manager.getFeature(NORMALIZE_ATTRIBUTES);
+		fParseNoScriptContent = manager.getFeature(PARSE_NOSCRIPT_CONTENT);
+		// get properties
+		fNamesElems = getNamesValue(
+				String.valueOf(manager.getProperty(NAMES_ELEMS)));
+		fNamesAttrs = getNamesValue(
+				String.valueOf(manager.getProperty(NAMES_ATTRS)));
+		fDefaultIANAEncoding = String
+				.valueOf(manager.getProperty(DEFAULT_ENCODING));
+		fErrorReporter = (HTMLErrorReporter) manager
+				.getProperty(ERROR_REPORTER);
+		fDoctypePubid = String.valueOf(manager.getProperty(DOCTYPE_PUBID));
+		fDoctypeSysid = String.valueOf(manager.getProperty(DOCTYPE_SYSID));
+	} // reset(XMLComponentManager)
 
 	/** Returns an empty resource identifier. */
 	protected final XMLResourceIdentifier resourceId() {
@@ -1359,6 +1239,18 @@ public class HTMLScanner
 			fDocumentHandler.doctypeDecl(root, pubid, sysid, locationAugs());
 		}
 	} // scanDoctype()
+
+	/** Scans the document. */
+	@Override
+	public boolean scanDocument(boolean complete)
+			throws XNIException, IOException {
+		do {
+			if (!fScanner.scan(complete)) {
+				return false;
+			}
+		} while (complete);
+		return true;
+	} // scanDocument(boolean):boolean
 
 	/** Scans an entity reference. */
 	protected int scanEntityRef(XMLStringBuffer str, boolean content)
@@ -1580,6 +1472,133 @@ public class HTMLScanner
 		}
 		return name;
 	} // scanName():String
+
+	/** Sets the document handler. */
+	@Override
+	public void setDocumentHandler(XMLDocumentHandler handler) {
+		fDocumentHandler = handler;
+	} // setDocumentHandler(XMLDocumentHandler)
+
+	/** Sets a feature. */
+	@Override
+	public void setFeature(String featureId, boolean state)
+			throws XMLConfigurationException {
+		if (featureId.equals(AUGMENTATIONS)) {
+			fAugmentations = state;
+		} else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) {
+			fIgnoreSpecifiedCharset = state;
+		} else if (featureId.equals(NOTIFY_CHAR_REFS)) {
+			fNotifyCharRefs = state;
+		} else if (featureId.equals(NOTIFY_XML_BUILTIN_REFS)) {
+			fNotifyXmlBuiltinRefs = state;
+		} else if (featureId.equals(NOTIFY_HTML_BUILTIN_REFS)) {
+			fNotifyHtmlBuiltinRefs = state;
+		} else if (featureId.equals(FIX_MSWINDOWS_REFS)) {
+			fFixWindowsCharRefs = state;
+		} else if (featureId.equals(SCRIPT_STRIP_CDATA_DELIMS)) {
+			fScriptStripCDATADelims = state;
+		} else if (featureId.equals(SCRIPT_STRIP_COMMENT_DELIMS)) {
+			fScriptStripCommentDelims = state;
+		} else if (featureId.equals(STYLE_STRIP_CDATA_DELIMS)) {
+			fStyleStripCDATADelims = state;
+		} else if (featureId.equals(STYLE_STRIP_COMMENT_DELIMS)) {
+			fStyleStripCommentDelims = state;
+		} else if (featureId.equals(IGNORE_SPECIFIED_CHARSET)) {
+			fIgnoreSpecifiedCharset = state;
+		} else if (featureId.equals(PARSE_NOSCRIPT_CONTENT)) {
+			fParseNoScriptContent = state;
+		}
+	} // setFeature(String,boolean)
+
+	//
+	// XMLDocumentScanner methods
+	//
+	/** Sets the input source. */
+	@Override
+	public void setInputSource(XMLInputSource source) throws IOException {
+		// reset state
+		fElementCount = 0;
+		fElementDepth = -1;
+		fByteStream = null;
+		fCurrentEntityStack.removeAllElements();
+		fBeginLineNumber = 1;
+		fBeginColumnNumber = 1;
+		fEndLineNumber = fBeginLineNumber;
+		fEndColumnNumber = fBeginColumnNumber;
+		// reset encoding information
+		fIANAEncoding = fDefaultIANAEncoding;
+		fJavaEncoding = fIANAEncoding;
+		// get location information
+		String encoding = source.getEncoding();
+		String publicId = source.getPublicId();
+		String baseSystemId = source.getBaseSystemId();
+		String literalSystemId = source.getSystemId();
+		String expandedSystemId = expandSystemId(literalSystemId, baseSystemId);
+		// open stream
+		Reader reader = source.getCharacterStream();
+		if (reader == null) {
+			InputStream inputStream = source.getByteStream();
+			if (inputStream == null) {
+				URL url = new URL(expandedSystemId);
+				inputStream = url.openStream();
+			}
+			fByteStream = new PlaybackInputStream(inputStream);
+			String[] encodings = new String[2];
+			if (encoding == null) {
+				fByteStream.detectEncoding(encodings);
+			} else {
+				encodings[0] = encoding;
+			}
+			if (encodings[0] == null) {
+				encodings[0] = fDefaultIANAEncoding;
+				if (fReportErrors) {
+					fErrorReporter.reportWarning("HTML1000", null);
+				}
+			}
+			if (encodings[1] == null) {
+				encodings[1] = EncodingMap
+						.getIANA2JavaMapping(encodings[0].toUpperCase());
+				if (encodings[1] == null) {
+					encodings[1] = encodings[0];
+					if (fReportErrors) {
+						fErrorReporter.reportWarning("HTML1001",
+								new Object[] { encodings[0] });
+					}
+				}
+			}
+			fIANAEncoding = encodings[0];
+			fJavaEncoding = encodings[1];
+			/* PATCH: Asgeir Asgeirsson */
+			fIso8859Encoding = fIANAEncoding == null
+					|| fIANAEncoding.toUpperCase().startsWith("ISO-8859")
+					|| fIANAEncoding.equalsIgnoreCase(fDefaultIANAEncoding);
+			encoding = fIANAEncoding;
+			reader = new InputStreamReader(fByteStream, fJavaEncoding);
+		}
+		fCurrentEntity = new CurrentEntity(reader, encoding, publicId,
+				baseSystemId, literalSystemId, expandedSystemId);
+		// set scanner and state
+		setScanner(fContentScanner);
+		setScannerState(STATE_START_DOCUMENT);
+	} // setInputSource(XMLInputSource)
+
+	/** Sets a property. */
+	@Override
+	public void setProperty(String propertyId, Object value)
+			throws XMLConfigurationException {
+		if (propertyId.equals(NAMES_ELEMS)) {
+			fNamesElems = getNamesValue(String.valueOf(value));
+			return;
+		}
+		if (propertyId.equals(NAMES_ATTRS)) {
+			fNamesAttrs = getNamesValue(String.valueOf(value));
+			return;
+		}
+		if (propertyId.equals(DEFAULT_ENCODING)) {
+			fDefaultIANAEncoding = String.valueOf(value);
+			return;
+		}
+	} // setProperty(String,Object)
 
 	// debugging
 	/** Sets the scanner. */
@@ -1822,25 +1841,6 @@ public class HTMLScanner
 	} // synthesizedAugs():Augmentations
 
 	/**
-	 * To detect if 2 encoding are compatible, both must be able to read the
-	 * meta tag specifying the new encoding. This means that the byte
-	 * representation of some minimal html markup must be the same in both
-	 * encodings
-	 */
-	boolean isEncodingCompatible(final String encoding1,
-			final String encoding2) {
-		final String reference = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html;charset=";
-		try {
-			final byte[] bytesEncoding1 = reference.getBytes(encoding1);
-			final String referenceWithEncoding2 = new String(bytesEncoding1,
-					encoding2);
-			return reference.equals(referenceWithEncoding2);
-		} catch (final UnsupportedEncodingException e) {
-			return false;
-		}
-	}
-
-	/**
 	 * The primary HTML document scanner.
 	 * 
 	 * @author Andy Clark
@@ -1855,6 +1855,65 @@ public class HTMLScanner
 
 		/** Attributes. */
 		private final XMLAttributesImpl fAttributes = new XMLAttributesImpl();
+
+		/** Adds location augmentations to the specified attribute. */
+		protected void addLocationItem(XMLAttributes attributes, int index) {
+			fEndLineNumber = fCurrentEntity.lineNumber;
+			fEndColumnNumber = fCurrentEntity.columnNumber;
+			LocationItem locationItem = new LocationItem();
+			locationItem.setValues(fBeginLineNumber, fBeginColumnNumber,
+					fEndLineNumber, fEndColumnNumber);
+			Augmentations augs = attributes.getAugmentations(index);
+			augs.putItem(AUGMENTATIONS, locationItem);
+		} // addLocationItem(XMLAttributes,int)
+
+		//
+		// Private methods
+		//
+		/**
+		 * Returns true if the given element has an end-tag.
+		 */
+		private boolean isEnded(String ename) {
+			String content = new String(fCurrentEntity.buffer,
+					fCurrentEntity.offset,
+					fCurrentEntity.length - fCurrentEntity.offset);
+			return content.toLowerCase()
+					.indexOf("</" + ename.toLowerCase() + ">") != -1;
+		}
+
+		/**
+		 * Reads the next characters WITHOUT impacting the buffer content up to
+		 * current offset.
+		 * 
+		 * @param len
+		 *            the number of characters to read
+		 * @return the read string (length may be smaller if EOF is encountered)
+		 */
+		private String nextContent(int len) throws IOException {
+			final int originalOffset = fCurrentEntity.offset;
+			final int originalColumnNumber = fCurrentEntity.columnNumber;
+			char[] buff = new char[len];
+			int nbRead = 0;
+			for (nbRead = 0; nbRead < len; ++nbRead) {
+				// read() should not clear the buffer
+				if (fCurrentEntity.offset == fCurrentEntity.length) {
+					if (fCurrentEntity.length == fCurrentEntity.buffer.length) {
+						load(fCurrentEntity.buffer.length);
+					} else { // everything was already loaded
+						break;
+					}
+				}
+				int c = read();
+				if (c == -1) {
+					break;
+				} else {
+					buff[nbRead] = (char) c;
+				}
+			}
+			fCurrentEntity.offset = originalOffset;
+			fCurrentEntity.columnNumber = originalColumnNumber;
+			return new String(buff, 0, nbRead);
+		}
 
 		//
 		// Scanner methods
@@ -1999,158 +2058,6 @@ public class HTMLScanner
 			} while (next || complete);
 			return true;
 		} // scan(boolean):boolean
-
-		//
-		// Private methods
-		//
-		/**
-		 * Returns true if the given element has an end-tag.
-		 */
-		private boolean isEnded(String ename) {
-			String content = new String(fCurrentEntity.buffer,
-					fCurrentEntity.offset,
-					fCurrentEntity.length - fCurrentEntity.offset);
-			return content.toLowerCase()
-					.indexOf("</" + ename.toLowerCase() + ">") != -1;
-		}
-
-		/**
-		 * Reads the next characters WITHOUT impacting the buffer content up to
-		 * current offset.
-		 * 
-		 * @param len
-		 *            the number of characters to read
-		 * @return the read string (length may be smaller if EOF is encountered)
-		 */
-		private String nextContent(int len) throws IOException {
-			final int originalOffset = fCurrentEntity.offset;
-			final int originalColumnNumber = fCurrentEntity.columnNumber;
-			char[] buff = new char[len];
-			int nbRead = 0;
-			for (nbRead = 0; nbRead < len; ++nbRead) {
-				// read() should not clear the buffer
-				if (fCurrentEntity.offset == fCurrentEntity.length) {
-					if (fCurrentEntity.length == fCurrentEntity.buffer.length) {
-						load(fCurrentEntity.buffer.length);
-					} else { // everything was already loaded
-						break;
-					}
-				}
-				int c = read();
-				if (c == -1) {
-					break;
-				} else {
-					buff[nbRead] = (char) c;
-				}
-			}
-			fCurrentEntity.offset = originalOffset;
-			fCurrentEntity.columnNumber = originalColumnNumber;
-			return new String(buff, 0, nbRead);
-		}
-
-		/**
-		 * Scans the content of <noscript>: it doesn't get parsed but is
-		 * considered as plain text when feature
-		 * {@link HTMLScanner#PARSE_NOSCRIPT_CONTENT} is set to false.
-		 * 
-		 * @throws IOException
-		 */
-		private void scanNoScriptContent() throws IOException {
-			final XMLStringBuffer buffer = new XMLStringBuffer();
-			while (true) {
-				int c = read();
-				if (c == -1) {
-					break;
-				}
-				if (c == '<') {
-					final String next = nextContent(10) + " ";
-					if (next.length() >= 10
-							&& "/noscript"
-									.equalsIgnoreCase(next.substring(0, 9))
-							&& ('>' == next.charAt(9) || Character
-									.isWhitespace(next.charAt(9)))) {
-						fCurrentEntity.offset--;
-						fCurrentEntity.columnNumber--;
-						break;
-					}
-				}
-				if (c == '\r' || c == '\n') {
-					fCurrentEntity.offset--;
-					fCurrentEntity.columnNumber--;
-					int newlines = skipNewlines();
-					for (int i = 0; i < newlines; i++) {
-						buffer.append('\n');
-					}
-				} else {
-					buffer.append((char) c);
-				}
-			}
-			if (buffer.length > 0 && fDocumentHandler != null) {
-				fEndLineNumber = fCurrentEntity.lineNumber;
-				fEndColumnNumber = fCurrentEntity.columnNumber;
-				fDocumentHandler.characters(buffer, locationAugs());
-			}
-		}
-
-		private void scanScriptContent() throws IOException {
-			final XMLStringBuffer buffer = new XMLStringBuffer();
-			boolean waitForEndComment = false;
-			while (true) {
-				int c = read();
-				if (c == -1) {
-					break;
-				} else if (c == '-' && endsWith(buffer, "<!-")) {
-					waitForEndComment = endCommentAvailable();
-				} else if (!waitForEndComment && c == '<') {
-					final String next = nextContent(8) + " ";
-					if (next.length() >= 8
-							&& "/script".equalsIgnoreCase(next.substring(0, 7))
-							&& ('>' == next.charAt(7) || Character
-									.isWhitespace(next.charAt(7)))) {
-						fCurrentEntity.offset--;
-						fCurrentEntity.columnNumber--;
-						break;
-					}
-				} else if (c == '>' && endsWith(buffer, "--")) {
-					waitForEndComment = false;
-				}
-				if (c == '\r' || c == '\n') {
-					fCurrentEntity.offset--;
-					fCurrentEntity.columnNumber--;
-					int newlines = skipNewlines();
-					for (int i = 0; i < newlines; i++) {
-						buffer.append('\n');
-					}
-				} else {
-					buffer.append((char) c);
-				}
-			}
-			if (fScriptStripCommentDelims) {
-				reduceToContent(buffer, "<!--", "-->");
-			} else if (fScriptStripCDATADelims) {
-				reduceToContent(buffer, "<![CDATA[", "]]>");
-			}
-			if (buffer.length > 0 && fDocumentHandler != null
-					&& fElementCount >= fElementDepth) {
-				if (DEBUG_CALLBACKS) {
-					System.out.println("characters(" + buffer + ")");
-				}
-				fEndLineNumber = fCurrentEntity.lineNumber;
-				fEndColumnNumber = fCurrentEntity.columnNumber;
-				fDocumentHandler.characters(buffer, locationAugs());
-			}
-		}
-
-		/** Adds location augmentations to the specified attribute. */
-		protected void addLocationItem(XMLAttributes attributes, int index) {
-			fEndLineNumber = fCurrentEntity.lineNumber;
-			fEndColumnNumber = fCurrentEntity.columnNumber;
-			LocationItem locationItem = new LocationItem();
-			locationItem.setValues(fBeginLineNumber, fBeginColumnNumber,
-					fEndLineNumber, fEndColumnNumber);
-			Augmentations augs = attributes.getAugmentations(index);
-			augs.putItem(AUGMENTATIONS, locationItem);
-		} // addLocationItem(XMLAttributes,int)
 
 		/**
 		 * Scans a real attribute.
@@ -2601,6 +2508,50 @@ public class HTMLScanner
 			return c == -1;
 		} // scanMarkupContent(XMLStringBuffer,char):boolean
 
+		/**
+		 * Scans the content of <noscript>: it doesn't get parsed but is
+		 * considered as plain text when feature
+		 * {@link HTMLScanner#PARSE_NOSCRIPT_CONTENT} is set to false.
+		 * 
+		 * @throws IOException
+		 */
+		private void scanNoScriptContent() throws IOException {
+			final XMLStringBuffer buffer = new XMLStringBuffer();
+			while (true) {
+				int c = read();
+				if (c == -1) {
+					break;
+				}
+				if (c == '<') {
+					final String next = nextContent(10) + " ";
+					if (next.length() >= 10
+							&& "/noscript"
+									.equalsIgnoreCase(next.substring(0, 9))
+							&& ('>' == next.charAt(9) || Character
+									.isWhitespace(next.charAt(9)))) {
+						fCurrentEntity.offset--;
+						fCurrentEntity.columnNumber--;
+						break;
+					}
+				}
+				if (c == '\r' || c == '\n') {
+					fCurrentEntity.offset--;
+					fCurrentEntity.columnNumber--;
+					int newlines = skipNewlines();
+					for (int i = 0; i < newlines; i++) {
+						buffer.append('\n');
+					}
+				} else {
+					buffer.append((char) c);
+				}
+			}
+			if (buffer.length > 0 && fDocumentHandler != null) {
+				fEndLineNumber = fCurrentEntity.lineNumber;
+				fEndColumnNumber = fCurrentEntity.columnNumber;
+				fDocumentHandler.characters(buffer, locationAugs());
+			}
+		}
+
 		/** Scans a processing instruction. */
 		protected void scanPI() throws IOException {
 			if (DEBUG_BUFFER) {
@@ -2716,6 +2667,55 @@ public class HTMLScanner
 				throws IOException {
 			return scanAttribute(attributes, fSingleBoolean, '?');
 		} // scanPseudoAttribute(XMLAttributesImpl):boolean
+
+		private void scanScriptContent() throws IOException {
+			final XMLStringBuffer buffer = new XMLStringBuffer();
+			boolean waitForEndComment = false;
+			while (true) {
+				int c = read();
+				if (c == -1) {
+					break;
+				} else if (c == '-' && endsWith(buffer, "<!-")) {
+					waitForEndComment = endCommentAvailable();
+				} else if (!waitForEndComment && c == '<') {
+					final String next = nextContent(8) + " ";
+					if (next.length() >= 8
+							&& "/script".equalsIgnoreCase(next.substring(0, 7))
+							&& ('>' == next.charAt(7) || Character
+									.isWhitespace(next.charAt(7)))) {
+						fCurrentEntity.offset--;
+						fCurrentEntity.columnNumber--;
+						break;
+					}
+				} else if (c == '>' && endsWith(buffer, "--")) {
+					waitForEndComment = false;
+				}
+				if (c == '\r' || c == '\n') {
+					fCurrentEntity.offset--;
+					fCurrentEntity.columnNumber--;
+					int newlines = skipNewlines();
+					for (int i = 0; i < newlines; i++) {
+						buffer.append('\n');
+					}
+				} else {
+					buffer.append((char) c);
+				}
+			}
+			if (fScriptStripCommentDelims) {
+				reduceToContent(buffer, "<!--", "-->");
+			} else if (fScriptStripCDATADelims) {
+				reduceToContent(buffer, "<![CDATA[", "]]>");
+			}
+			if (buffer.length > 0 && fDocumentHandler != null
+					&& fElementCount >= fElementDepth) {
+				if (DEBUG_CALLBACKS) {
+					System.out.println("characters(" + buffer + ")");
+				}
+				fEndLineNumber = fCurrentEntity.lineNumber;
+				fEndColumnNumber = fCurrentEntity.columnNumber;
+				fDocumentHandler.characters(buffer, locationAugs());
+			}
+		}
 
 		/**
 		 * Scans a start element.
@@ -2940,6 +2940,92 @@ public class HTMLScanner
 			this.expandedSystemId = expandedSystemId;
 		} // <init>(Reader,String,String,String,String)
 	} // class CurrentEntity
+
+	/**
+	 * Location infoset item.
+	 * 
+	 * @author Andy Clark
+	 */
+	protected static class LocationItem implements HTMLEventInfo {
+		//
+		// Data
+		//
+		/** Beginning line number. */
+		protected int fBeginLineNumber;
+
+		/** Beginning column number. */
+		protected int fBeginColumnNumber;
+
+		/** Ending line number. */
+		protected int fEndLineNumber;
+
+		/** Ending column number. */
+		protected int fEndColumnNumber;
+
+		/** Returns the column number of the beginning of this event. */
+		@Override
+		public int getBeginColumnNumber() {
+			return fBeginColumnNumber;
+		} // getBeginColumnNumber():int
+
+		//
+		// HTMLEventInfo methods
+		//
+		// location information
+		/** Returns the line number of the beginning of this event. */
+		@Override
+		public int getBeginLineNumber() {
+			return fBeginLineNumber;
+		} // getBeginLineNumber():int
+
+		/** Returns the column number of the end of this event. */
+		@Override
+		public int getEndColumnNumber() {
+			return fEndColumnNumber;
+		} // getEndColumnNumber():int
+
+		/** Returns the line number of the end of this event. */
+		@Override
+		public int getEndLineNumber() {
+			return fEndLineNumber;
+		} // getEndLineNumber():int
+
+		// other information
+		/** Returns true if this corresponding event was synthesized. */
+		@Override
+		public boolean isSynthesized() {
+			return false;
+		} // isSynthesize():boolean
+
+		//
+		// Public methods
+		//
+		/** Sets the values of this item. */
+		public void setValues(int beginLine, int beginColumn, int endLine,
+				int endColumn) {
+			fBeginLineNumber = beginLine;
+			fBeginColumnNumber = beginColumn;
+			fEndLineNumber = endLine;
+			fEndColumnNumber = endColumn;
+		} // setValues(int,int,int,int)
+
+		//
+		// Object methods
+		//
+		/** Returns a string representation of this object. */
+		@Override
+		public String toString() {
+			StringBuffer str = new StringBuffer();
+			str.append(fBeginLineNumber);
+			str.append(':');
+			str.append(fBeginColumnNumber);
+			str.append(':');
+			str.append(fEndLineNumber);
+			str.append(':');
+			str.append(fEndColumnNumber);
+			return str.toString();
+		} // toString():String
+	} // class LocationItem
 
 	/**
 	 * A playback input stream. This class has the ability to save the bytes
@@ -3371,18 +3457,6 @@ public class HTMLScanner
 		} // scan(boolean):boolean
 
 		//
-		// Public methods
-		//
-		/** Sets the element name. */
-		public Scanner setElementName(String ename) {
-			fElementName = ename;
-			fStyle = fElementName.equalsIgnoreCase("STYLE");
-			fTextarea = fElementName.equalsIgnoreCase("TEXTAREA");
-			fTitle = fElementName.equalsIgnoreCase("TITLE");
-			return this;
-		} // setElementName(String):Scanner
-
-		//
 		// Protected methods
 		//
 		/** Scan characters. */
@@ -3453,91 +3527,17 @@ public class HTMLScanner
 				System.out.println();
 			}
 		} // scanCharacters(StringBuffer)
-	} // class SpecialScanner
-
-	/**
-	 * Location infoset item.
-	 * 
-	 * @author Andy Clark
-	 */
-	protected static class LocationItem implements HTMLEventInfo {
-		//
-		// Data
-		//
-		/** Beginning line number. */
-		protected int fBeginLineNumber;
-
-		/** Beginning column number. */
-		protected int fBeginColumnNumber;
-
-		/** Ending line number. */
-		protected int fEndLineNumber;
-
-		/** Ending column number. */
-		protected int fEndColumnNumber;
-
-		/** Returns the column number of the beginning of this event. */
-		@Override
-		public int getBeginColumnNumber() {
-			return fBeginColumnNumber;
-		} // getBeginColumnNumber():int
-
-		//
-		// HTMLEventInfo methods
-		//
-		// location information
-		/** Returns the line number of the beginning of this event. */
-		@Override
-		public int getBeginLineNumber() {
-			return fBeginLineNumber;
-		} // getBeginLineNumber():int
-
-		/** Returns the column number of the end of this event. */
-		@Override
-		public int getEndColumnNumber() {
-			return fEndColumnNumber;
-		} // getEndColumnNumber():int
-
-		/** Returns the line number of the end of this event. */
-		@Override
-		public int getEndLineNumber() {
-			return fEndLineNumber;
-		} // getEndLineNumber():int
-
-		// other information
-		/** Returns true if this corresponding event was synthesized. */
-		@Override
-		public boolean isSynthesized() {
-			return false;
-		} // isSynthesize():boolean
 
 		//
 		// Public methods
 		//
-		/** Sets the values of this item. */
-		public void setValues(int beginLine, int beginColumn, int endLine,
-				int endColumn) {
-			fBeginLineNumber = beginLine;
-			fBeginColumnNumber = beginColumn;
-			fEndLineNumber = endLine;
-			fEndColumnNumber = endColumn;
-		} // setValues(int,int,int,int)
-
-		//
-		// Object methods
-		//
-		/** Returns a string representation of this object. */
-		@Override
-		public String toString() {
-			StringBuffer str = new StringBuffer();
-			str.append(fBeginLineNumber);
-			str.append(':');
-			str.append(fBeginColumnNumber);
-			str.append(':');
-			str.append(fEndLineNumber);
-			str.append(':');
-			str.append(fEndColumnNumber);
-			return str.toString();
-		} // toString():String
-	} // class LocationItem
+		/** Sets the element name. */
+		public Scanner setElementName(String ename) {
+			fElementName = ename;
+			fStyle = fElementName.equalsIgnoreCase("STYLE");
+			fTextarea = fElementName.equalsIgnoreCase("TEXTAREA");
+			fTitle = fElementName.equalsIgnoreCase("TITLE");
+			return this;
+		} // setElementName(String):Scanner
+	} // class SpecialScanner
 } // class HTMLScanner

@@ -15,39 +15,6 @@ import java.util.regex.Pattern;
 public class JvmSerializationPolicyBuildHelper {
 	private static final String nocachejs = ".nocache.js";
 
-	public static void main(String[] args) throws Exception {
-		if (args.length != 2) {
-			System.err.println(
-					"You must provide the build path and the module base");
-		}
-		retrieveSerializationPolicies(args[0], args[1]);
-	}
-
-	public static void retrieveSerializationPolicies(String buildPath,
-			String moduleBase) {
-		String moduleNoCacheJs = moduleBase + nocachejs;
-		String moduleBuildPath = buildPath + File.separator + moduleBase;
-		List<String> guessAllGwtPolicyName = guessAllGwtPolicyName(
-				moduleBuildPath, moduleNoCacheJs);
-		String policyNames = "<html><head/>";
-		for (String policyName : guessAllGwtPolicyName) {
-			policyNames += policyName + ",";
-		}
-		policyNames += "</html>";
-		writeTextFile(policyNames,
-				moduleBuildPath + File.separator + "policyNames.html");
-	}
-
-	public static void writeTextFile(String text, String filePath) {
-		try {
-			BufferedWriter out = new BufferedWriter(new FileWriter(filePath));
-			out.write(text);
-			out.close();
-		} catch (IOException ex) {
-			System.out.println(ex.toString());
-		}
-	}
-
 	private static List<String> findGwtNames(String responseText) {
 		List<String> result = new ArrayList<String>();
 		// 32 chars surrounded by apostrophe
@@ -81,6 +48,14 @@ public class JvmSerializationPolicyBuildHelper {
 		return gwtRpcValidatedList;
 	}
 
+	public static void main(String[] args) throws Exception {
+		if (args.length != 2) {
+			System.err.println(
+					"You must provide the build path and the module base");
+		}
+		retrieveSerializationPolicies(args[0], args[1]);
+	}
+
 	static private String readTextFile(File aFile) {
 		StringBuilder contents = new StringBuilder();
 		try {
@@ -106,5 +81,30 @@ public class JvmSerializationPolicyBuildHelper {
 			System.out.println(ex.toString());
 		}
 		return contents.toString();
+	}
+
+	public static void retrieveSerializationPolicies(String buildPath,
+			String moduleBase) {
+		String moduleNoCacheJs = moduleBase + nocachejs;
+		String moduleBuildPath = buildPath + File.separator + moduleBase;
+		List<String> guessAllGwtPolicyName = guessAllGwtPolicyName(
+				moduleBuildPath, moduleNoCacheJs);
+		String policyNames = "<html><head/>";
+		for (String policyName : guessAllGwtPolicyName) {
+			policyNames += policyName + ",";
+		}
+		policyNames += "</html>";
+		writeTextFile(policyNames,
+				moduleBuildPath + File.separator + "policyNames.html");
+	}
+
+	public static void writeTextFile(String text, String filePath) {
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(filePath));
+			out.write(text);
+			out.close();
+		} catch (IOException ex) {
+			System.out.println(ex.toString());
+		}
 	}
 }

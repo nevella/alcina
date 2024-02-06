@@ -147,13 +147,19 @@ public class DomainObjectSuggestCustomiser
 		return this;
 	}
 
+	public DomainObjectSuggestCustomiser withCssClassName(String cssClassName) {
+		this.cssClassName = cssClassName;
+		return this;
+	}
+
 	public DomainObjectSuggestCustomiser withHint(String hint) {
 		this.hintValue = hint;
 		return this;
 	}
 
-	public DomainObjectSuggestCustomiser withCssClassName(String cssClassName) {
-		this.cssClassName = cssClassName;
+	public DomainObjectSuggestCustomiser
+			withRendererClassName(Class rendererClassValue) {
+		this.rendererClassValue = rendererClassValue;
 		return this;
 	}
 
@@ -165,12 +171,6 @@ public class DomainObjectSuggestCustomiser
 	public DomainObjectSuggestCustomiser
 			withSuggestBoxCssClassName(String suggestBoxCssClassName) {
 		this.suggestBoxCssClassName = suggestBoxCssClassName;
-		return this;
-	}
-
-	public DomainObjectSuggestCustomiser
-			withRendererClassName(Class rendererClassValue) {
-		this.rendererClassValue = rendererClassValue;
 		return this;
 	}
 

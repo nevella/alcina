@@ -8,27 +8,17 @@ public class Lzw {
 		return checkRoundtrip0(encoder, data);
 	}
 
-	public String compress(String data) {
-		JavaScriptObject encoder = createEncoder();
-		String encoded = encode(encoder, data);
-		return encoded;
-	}
-
-	public String decompress(String data) {
-		JavaScriptObject encoder = createEncoder();
-		String decoded = decode(encoder, data);
-		return decoded;
-	}
-
-	private native String encode(JavaScriptObject encoder, String data) /*-{
-																		return encoder.compressToUtf16Str(data);
-																		}-*/;
-
 	native boolean checkRoundtrip0(JavaScriptObject encoder, String data) /*-{
 							var arr = encoder.compress(data);
 							var s2 = encoder.decompress(arr);
 							return data == s2;
 							}-*/;
+
+	public String compress(String data) {
+		JavaScriptObject encoder = createEncoder();
+		String encoded = encode(encoder, data);
+		return encoded;
+	}
 
 	/**
 	 * Could have done something fancy with utf8 - but given target string is
@@ -160,4 +150,14 @@ public class Lzw {
 	native String decode(JavaScriptObject encoder, String data) /*-{
 																return encoder.decompressUtf16Str(data);
 																}-*/;
+
+	public String decompress(String data) {
+		JavaScriptObject encoder = createEncoder();
+		String decoded = decode(encoder, data);
+		return decoded;
+	}
+
+	private native String encode(JavaScriptObject encoder, String data) /*-{
+																		return encoder.compressToUtf16Str(data);
+																		}-*/;
 }

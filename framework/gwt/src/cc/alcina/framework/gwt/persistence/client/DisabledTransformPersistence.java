@@ -13,6 +13,10 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 public class DisabledTransformPersistence extends LocalTransformPersistence {
 	@Override
+	protected void clearAllPersisted(AsyncCallback callback) {
+	}
+
+	@Override
 	public void clearPersistedClient(ClientInstance exceptFor, int exceptForId,
 			AsyncCallback callback, boolean clearDeltaStore) {
 	}
@@ -32,23 +36,6 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 	}
 
 	@Override
-	public void init(DTESerializationPolicy dteSerializationPolicy,
-			CommitToStorageTransformListener commitToServerTransformListener,
-			AsyncCallback<Void> callback) {
-		super.init(dteSerializationPolicy, commitToServerTransformListener,
-				callback);
-	}
-
-	@Override
-	public void reparentToClientInstance(DeltaApplicationRecord wrapper,
-			ClientInstance clientInstance, AsyncCallback callback) {
-	}
-
-	@Override
-	protected void clearAllPersisted(AsyncCallback callback) {
-	}
-
-	@Override
 	protected void getTransforms(DeltaApplicationFilters filters,
 			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 	}
@@ -59,8 +46,21 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 	}
 
 	@Override
+	public void init(DTESerializationPolicy dteSerializationPolicy,
+			CommitToStorageTransformListener commitToServerTransformListener,
+			AsyncCallback<Void> callback) {
+		super.init(dteSerializationPolicy, commitToServerTransformListener,
+				callback);
+	}
+
+	@Override
 	protected void persistFromFrontOfQueue(DeltaApplicationRecord wrapper,
 			AsyncCallback callback) {
+	}
+
+	@Override
+	public void reparentToClientInstance(DeltaApplicationRecord wrapper,
+			ClientInstance clientInstance, AsyncCallback callback) {
 	}
 
 	@Override

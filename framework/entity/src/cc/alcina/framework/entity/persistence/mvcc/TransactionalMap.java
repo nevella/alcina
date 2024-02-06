@@ -93,6 +93,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		nonConcurrent = createNonConcurrentMap();
 	}
 
+	protected boolean applyToBase(Transaction currentTransaction) {
+		return !pureTransactional && currentTransaction.isBaseTransaction();
+	}
+
 	@Override
 	public boolean containsKey(Object key) {
 		if (concurrent != null) {
@@ -103,6 +107,25 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 		return nonConcurrent.containsKey(key);
+	}
+
+	protected Map createConcurrentMap() {
+		return new ConcurrentHashMap<>();
+	}
+
+	protected Map<K, V> createNonConcurrentMap() {
+		if (keyClass == Long.class) {
+			if (valueClass == Boolean.class) {
+				return (Map<K, V>) new Long2BooleanLinkedOpenHashMap(
+						Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
+			} else {
+				return (Map<K, V>) new Long2ObjectLinkedOpenHashMap<>(
+						Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
+			}
+		} else {
+			return (Map<K, V>) new Object2ObjectLinkedOpenHashMap<>(
+					Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
+		}
 	}
 
 	public Spliterator createSpliterator(Iterator iterator, int size) {
@@ -137,6 +160,34 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				} else {
 					logger.info(
 							"debugNotFound - concurrent - txValue.resolve == null");
+				}
+			}
+		}
+	}
+
+	void ensureConcurrent(Transaction currentTransaction) {
+		if (concurrent == null) {
+			synchronized (this) {
+				if (concurrent == null) {
+					sizeMetadata = new SizeMetadata(
+							new AtomicInteger(nonConcurrent.size()),
+							currentTransaction);
+					concurrent = createConcurrentMap();
+				}
+			}
+		}
+		// the below *looks* questionable but works and, I think, fixed a race
+		// bug. There may be a better way to do it (exit of the preceding sync
+		// block should ensure both sizeMetadata and concurrent are non null,
+		// IMO) - the following block is harmless in any event
+		if (sizeMetadata == null) {
+			synchronized (this) {
+				// force wait for other sync block (this is needed because
+				// instructions in the 'if (concurrent == null) {' block may be
+				// out of order - wanted to avoid volatile access since that
+				// affects performance
+				if (sizeMetadata == null) {
+					throw new RuntimeException("Should not be null");
 				}
 			}
 		}
@@ -243,6 +294,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		return existing;
 	}
 
+	/*
+	 * Allow single-valued txsets to degenerate to txmaps
+	 */
+	protected void putInBaseLayer(Transaction baseTransaction, K key, V value) {
+		nonConcurrent.put(key, value);
+	}
+
 	@Override
 	public V remove(Object key) {
 		if (!containsKey(key)) {
@@ -305,6 +363,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				entrySet().size());
 	}
 
+	private K unwrapTransactionalKey(Object key) {
+		return key == NULL_KEY_MARKER ? null : (K) key;
+	}
+
 	@Override
 	public Collection<V> values() {
 		if (Entity.class.isAssignableFrom(valueClass)) {
@@ -314,75 +376,25 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	private K unwrapTransactionalKey(Object key) {
-		return key == NULL_KEY_MARKER ? null : (K) key;
-	}
-
-	protected boolean applyToBase(Transaction currentTransaction) {
-		return !pureTransactional && currentTransaction.isBaseTransaction();
-	}
-
-	protected Map createConcurrentMap() {
-		return new ConcurrentHashMap<>();
-	}
-
-	protected Map<K, V> createNonConcurrentMap() {
-		if (keyClass == Long.class) {
-			if (valueClass == Boolean.class) {
-				return (Map<K, V>) new Long2BooleanLinkedOpenHashMap(
-						Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
-			} else {
-				return (Map<K, V>) new Long2ObjectLinkedOpenHashMap<>(
-						Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
-			}
-		} else {
-			return (Map<K, V>) new Object2ObjectLinkedOpenHashMap<>(
-					Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
-		}
-	}
-
-	/*
-	 * Allow single-valued txsets to degenerate to txmaps
-	 */
-	protected void putInBaseLayer(Transaction baseTransaction, K key, V value) {
-		nonConcurrent.put(key, value);
-	}
-
 	protected Object wrapTransactionalKey(Object key) {
 		return key == null ? NULL_KEY_MARKER : key;
-	}
-
-	void ensureConcurrent(Transaction currentTransaction) {
-		if (concurrent == null) {
-			synchronized (this) {
-				if (concurrent == null) {
-					sizeMetadata = new SizeMetadata(
-							new AtomicInteger(nonConcurrent.size()),
-							currentTransaction);
-					concurrent = createConcurrentMap();
-				}
-			}
-		}
-		// the below *looks* questionable but works and, I think, fixed a race
-		// bug. There may be a better way to do it (exit of the preceding sync
-		// block should ensure both sizeMetadata and concurrent are non null,
-		// IMO) - the following block is harmless in any event
-		if (sizeMetadata == null) {
-			synchronized (this) {
-				// force wait for other sync block (this is needed because
-				// instructions in the 'if (concurrent == null) {' block may be
-				// out of order - wanted to avoid volatile access since that
-				// affects performance
-				if (sizeMetadata == null) {
-					throw new RuntimeException("Should not be null");
-				}
-			}
-		}
 	}
 
 	public static class EntityIdMap extends TransactionalMap<Long, Entity> {
 		public EntityIdMap(Class<Long> keyClass, Class<Entity> valueClass) {
 			super(keyClass, valueClass);
+		}
+
+		private void checkLegal(Long key, Entity value) {
+			boolean illegal = value.getId() != 0
+					&& (key.longValue() != value.getId());
+			illegal |= value.getId() == 0
+					&& (key.longValue() != value.getLocalId());
+			if (illegal) {
+				throw new IllegalArgumentException(
+						Ax.format("Inserting with incorrect id: %s %s", key,
+								value.toLocator()));
+			}
 		}
 
 		public void ensureVersion(Long key) {
@@ -412,121 +424,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return super.put(key, value);
 		}
 
-		private void checkLegal(Long key, Entity value) {
-			boolean illegal = value.getId() != 0
-					&& (key.longValue() != value.getId());
-			illegal |= value.getId() == 0
-					&& (key.longValue() != value.getLocalId());
-			if (illegal) {
-				throw new IllegalArgumentException(
-						Ax.format("Inserting with incorrect id: %s %s", key,
-								value.toLocator()));
-			}
-		}
-
 		@Override
 		protected void putInBaseLayer(Transaction baseTransaction, Long key,
 				Entity value) {
 			checkLegal(key, value);
 			super.putInBaseLayer(baseTransaction, key, value);
-		}
-	}
-
-	private class KeySet extends AbstractSet<K> {
-		private Set<Entry<K, V>> entrySet;
-
-		public KeySet() {
-			this.entrySet = entrySet();
-		}
-
-		@Override
-		public void clear() {
-			entrySet.clear();
-		}
-
-		@Override
-		public boolean contains(Object o) {
-			return entrySet.contains(o);
-		}
-
-		@Override
-		public Iterator<K> iterator() {
-			return new MappingIterator<Entry<K, V>, K>(entrySet.iterator(),
-					e -> e.getKey());
-		}
-
-		@Override
-		public int size() {
-			return entrySet.size();
-		}
-
-		@Override
-		public Spliterator<K> spliterator() {
-			return createSpliterator(iterator(), size());
-		}
-	}
-
-	private static class NullKeyMarker {
-	}
-
-	private static class RemovedValueMarker {
-	}
-
-	private class ValuesCollection extends AbstractCollection<V> {
-		private Set<Entry<K, V>> entrySet;
-
-		public ValuesCollection() {
-			this.entrySet = entrySet();
-		}
-
-		@Override
-		public Iterator<V> iterator() {
-			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
-					e -> e.getValue());
-		}
-
-		@Override
-		public int size() {
-			return entrySet.size();
-		}
-
-		@Override
-		public Spliterator<V> spliterator() {
-			return createSpliterator(iterator(), size());
-		}
-	}
-
-	private class ValuesSet extends AbstractSet<V> {
-		private Set<Entry<K, V>> entrySet;
-
-		public ValuesSet() {
-			this.entrySet = entrySet();
-		}
-
-		@Override
-		public Iterator<V> iterator() {
-			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
-					e -> {
-						V value = e.getValue();
-						if (value instanceof Entity) {
-							if (((Entity) value).getId() < 0) {
-								logger.warn(
-										"Entity with negative id in iterated tx map:: {}",
-										value);
-							}
-						}
-						return value;
-					});
-		}
-
-		@Override
-		public int size() {
-			return entrySet.size();
-		}
-
-		@Override
-		public Spliterator<V> spliterator() {
-			return createSpliterator(iterator(), size());
 		}
 	}
 
@@ -551,6 +453,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		@Override
 		public boolean contains(Object o) {
 			return containsKey(o);
+		}
+
+		private int estimateSize() {
+			return TransactionalMap.this.size();
 		}
 
 		@Override
@@ -631,10 +537,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return createSpliterator(iterator(), estimateSize());
 		}
 
-		private int estimateSize() {
-			return TransactionalMap.this.size();
-		}
-
 		class TransactionalEntrySetEntry implements Entry<K, V> {
 			public Entry entry;
 
@@ -677,6 +579,46 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
+	private class KeySet extends AbstractSet<K> {
+		private Set<Entry<K, V>> entrySet;
+
+		public KeySet() {
+			this.entrySet = entrySet();
+		}
+
+		@Override
+		public void clear() {
+			entrySet.clear();
+		}
+
+		@Override
+		public boolean contains(Object o) {
+			return entrySet.contains(o);
+		}
+
+		@Override
+		public Iterator<K> iterator() {
+			return new MappingIterator<Entry<K, V>, K>(entrySet.iterator(),
+					e -> e.getKey());
+		}
+
+		@Override
+		public int size() {
+			return entrySet.size();
+		}
+
+		@Override
+		public Spliterator<K> spliterator() {
+			return createSpliterator(iterator(), size());
+		}
+	}
+
+	private static class NullKeyMarker {
+	}
+
+	private static class RemovedValueMarker {
+	}
+
 	/*
 	 * From memory. access to version.value is tx-safe (so we could use an
 	 * integer, not atomicinteger), but atomicinteger is a convenient container
@@ -685,10 +627,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	class SizeMetadata extends MvccObjectVersions<AtomicInteger> {
 		SizeMetadata(AtomicInteger t, Transaction initialTransaction) {
 			super(t, initialTransaction, pureTransactional, null);
-		}
-
-		public int delta(int delta) {
-			return resolve(true).addAndGet(delta);
 		}
 
 		@Override
@@ -700,6 +638,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		protected void copyObject(AtomicInteger fromObject,
 				AtomicInteger baseObject) {
 			baseObject.set(fromObject.get());
+		}
+
+		public int delta(int delta) {
+			return resolve(true).addAndGet(delta);
 		}
 
 		@Override
@@ -726,6 +668,16 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			this.key = key;
 		}
 
+		@Override
+		protected Ref copyObject(Ref mostRecentObject) {
+			return Ref.of(mostRecentObject.get());
+		}
+
+		@Override
+		protected void copyObject(Ref fromObject, Ref baseObject) {
+			baseObject.set(fromObject.get());
+		}
+
 		public void ensureVersion() {
 			if (get(key) != null) {
 				return;
@@ -733,6 +685,26 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			// won't be vacuumed (since tx is live) so no need to synchronize
 			V value = getAnyTransaction();
 			put(value);
+		}
+
+		/*
+		 * synchronized: must block vacuum() calls
+		 */
+		synchronized V getAnyTransaction() {
+			Ref baseObject = visibleAllTransactions;
+			if (notRemovedValueMarker(baseObject)) {
+				return (V) baseObject.get();
+			}
+			Optional<ObjectVersion<Ref>> version = versions().values().stream()
+					.filter(objectVersion -> notRemovedValueMarker(
+							objectVersion.object))
+					.findFirst();
+			if (version.isEmpty()) {
+				throw new IllegalStateException(Ax.format(
+						"getAnyTransaction - no non-removed value (vacuum race?): %s",
+						key));
+			}
+			return (V) version.get().object.get();
 		}
 
 		public V getValue() {
@@ -760,42 +732,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return super.hashCode();
 		}
 
-		public boolean isNotRemoved() {
-			Ref o = resolve(false);
-			if (o == null) {
-				/*
-				 * No visible transaction
-				 */
-				return nonConcurrent.containsKey(key);
-			}
-			return notRemovedValueMarker(o);
-		}
-
-		/**
-		 * return true if changed
-		 */
-		public boolean remove() {
-			Ref resolved = resolve(true);
-			if (notRemovedValueMarker(resolved)) {
-				resolved.set(REMOVED_VALUE_MARKER);
-				return true;
-			} else {
-				// Note that this shouldn't normally happen
-				// FIXME - mvcc.4 - log
-				return false;
-			}
-		}
-
-		@Override
-		protected Ref copyObject(Ref mostRecentObject) {
-			return Ref.of(mostRecentObject.get());
-		}
-
-		@Override
-		protected void copyObject(Ref fromObject, Ref baseObject) {
-			baseObject.set(fromObject.get());
-		}
-
 		@Override
 		protected Ref initialAllTransactionsValueFor(Ref t, Object context,
 				boolean baseTransaction) {
@@ -819,9 +755,56 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 
+		public boolean isNotRemoved() {
+			Ref o = resolve(false);
+			if (o == null) {
+				/*
+				 * No visible transaction
+				 */
+				return nonConcurrent.containsKey(key);
+			}
+			return notRemovedValueMarker(o);
+		}
+
+		boolean isRemoved() {
+			return !isNotRemoved();
+		}
+
+		boolean isRemovedValueMarker(Ref o) {
+			return o.get() == REMOVED_VALUE_MARKER;
+		}
+
 		@Override
 		protected boolean mayBeReachableFromPreCreationTransactions() {
 			return true;
+		}
+
+		boolean notRemovedValueMarker(Ref o) {
+			return !isRemovedValueMarker(o);
+		}
+
+		synchronized boolean put(V value) {
+			if (concurrent.get(wrapTransactionalKey(key)) == null) {
+				// vacuumed
+				return false;
+			}
+			resolve(true).set(value);
+			return true;
+		}
+
+		/**
+		 * return true if changed
+		 */
+		public boolean remove() {
+			Ref resolved = resolve(true);
+			if (notRemovedValueMarker(resolved)) {
+				resolved.set(REMOVED_VALUE_MARKER);
+				return true;
+			} else {
+				// Note that this shouldn't normally happen
+				// FIXME - mvcc.4 - log
+				return false;
+			}
 		}
 
 		@Override
@@ -838,47 +821,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 					concurrent.remove(wrapTransactionalKey(key));
 				}
 			}
-		}
-
-		/*
-		 * synchronized: must block vacuum() calls
-		 */
-		synchronized V getAnyTransaction() {
-			Ref baseObject = visibleAllTransactions;
-			if (notRemovedValueMarker(baseObject)) {
-				return (V) baseObject.get();
-			}
-			Optional<ObjectVersion<Ref>> version = versions().values().stream()
-					.filter(objectVersion -> notRemovedValueMarker(
-							objectVersion.object))
-					.findFirst();
-			if (version.isEmpty()) {
-				throw new IllegalStateException(Ax.format(
-						"getAnyTransaction - no non-removed value (vacuum race?): %s",
-						key));
-			}
-			return (V) version.get().object.get();
-		}
-
-		boolean isRemoved() {
-			return !isNotRemoved();
-		}
-
-		boolean isRemovedValueMarker(Ref o) {
-			return o.get() == REMOVED_VALUE_MARKER;
-		}
-
-		boolean notRemovedValueMarker(Ref o) {
-			return !isRemovedValueMarker(o);
-		}
-
-		synchronized boolean put(V value) {
-			if (concurrent.get(wrapTransactionalKey(key)) == null) {
-				// vacuumed
-				return false;
-			}
-			resolve(true).set(value);
-			return true;
 		}
 	}
 
@@ -931,6 +873,64 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				}
 			}
 			return comparator.compare((K) o1, (K) o2);
+		}
+	}
+
+	private class ValuesCollection extends AbstractCollection<V> {
+		private Set<Entry<K, V>> entrySet;
+
+		public ValuesCollection() {
+			this.entrySet = entrySet();
+		}
+
+		@Override
+		public Iterator<V> iterator() {
+			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
+					e -> e.getValue());
+		}
+
+		@Override
+		public int size() {
+			return entrySet.size();
+		}
+
+		@Override
+		public Spliterator<V> spliterator() {
+			return createSpliterator(iterator(), size());
+		}
+	}
+
+	private class ValuesSet extends AbstractSet<V> {
+		private Set<Entry<K, V>> entrySet;
+
+		public ValuesSet() {
+			this.entrySet = entrySet();
+		}
+
+		@Override
+		public Iterator<V> iterator() {
+			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
+					e -> {
+						V value = e.getValue();
+						if (value instanceof Entity) {
+							if (((Entity) value).getId() < 0) {
+								logger.warn(
+										"Entity with negative id in iterated tx map:: {}",
+										value);
+							}
+						}
+						return value;
+					});
+		}
+
+		@Override
+		public int size() {
+			return entrySet.size();
+		}
+
+		@Override
+		public Spliterator<V> spliterator() {
+			return createSpliterator(iterator(), size());
 		}
 	}
 }

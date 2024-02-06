@@ -69,31 +69,6 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	public ClassrefScanner noPersistence() {
-		persistent = false;
-		return this;
-	}
-
-	public ClassrefScanner noReachabilityCheck() {
-		reachabilityCheck = false;
-		return this;
-	}
-
-	public void scan(ClassMetadataCache cache, EntityManager entityManager)
-			throws Exception {
-		String cachePath = getHomeDir().getPath() + File.separator
-				+ "classref-scanner-cache.ser";
-		persistableClasses = new LinkedHashSet<Class>();
-		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class,
-				Double.class, Float.class, Integer.class, Short.class,
-				String.class, Date.class, Boolean.class }));
-		scan(cache, cachePath);
-		commit(entityManager);
-		if (reachabilityCheck) {
-			checkReachability();
-		}
-	}
-
 	private void checkReachability() {
 		Set<ClassRef> all = ClassRef.all();
 		Set<String> errClassRef = new TreeSet<String>();
@@ -278,6 +253,16 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 		return new ClassrefScannerMetadata(className).fromUrl(found);
 	}
 
+	public ClassrefScanner noPersistence() {
+		persistent = false;
+		return this;
+	}
+
+	public ClassrefScanner noReachabilityCheck() {
+		reachabilityCheck = false;
+		return this;
+	}
+
 	@Override
 	protected ClassrefScannerMetadata process(Class clazz, String className,
 			ClassMetadata found) {
@@ -307,6 +292,21 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			}
 		}
 		return out;
+	}
+
+	public void scan(ClassMetadataCache cache, EntityManager entityManager)
+			throws Exception {
+		String cachePath = getHomeDir().getPath() + File.separator
+				+ "classref-scanner-cache.ser";
+		persistableClasses = new LinkedHashSet<Class>();
+		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class,
+				Double.class, Float.class, Integer.class, Short.class,
+				String.class, Date.class, Boolean.class }));
+		scan(cache, cachePath);
+		commit(entityManager);
+		if (reachabilityCheck) {
+			checkReachability();
+		}
 	}
 
 	public static class ClassrefScannerMetadata

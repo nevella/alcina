@@ -414,6 +414,30 @@ public class TransformCommit {
 		}
 	}
 
+	private static int commitTransforms(boolean asRoot) {
+		int pendingTransformCount = TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
+		if (pendingTransformCount == 0) {
+			return 0;
+		}
+		if (AppPersistenceBase.isTest()
+				&& !TransformCommit.isTestTransformCascade()) {
+			if (!LooseContext
+					.is(TransformCommit.CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
+				TransformManager.get().clearTransforms();
+			}
+			return pendingTransformCount;
+		}
+		DomainTransformLayerWrapper layerWrapper = commitTransforms(null,
+				asRoot, true);
+		if (layerWrapper.response != null
+				&& layerWrapper.response.getTransformExceptions().size() > 0) {
+			throw WrappedRuntimeException.wrap(
+					layerWrapper.response.getTransformExceptions().get(0));
+		}
+		return pendingTransformCount;
+	}
+
 	public static DomainTransformLayerWrapper commitTransforms(String tag,
 			boolean asRoot, boolean returnResponse) {
 		int cleared = TransformManager.get().removeCreateDeleteTransforms();
@@ -580,192 +604,9 @@ public class TransformCommit {
 				.collect(Collectors.toList());
 	}
 
-	private static int commitTransforms(boolean asRoot) {
-		int pendingTransformCount = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
-		if (pendingTransformCount == 0) {
-			return 0;
-		}
-		if (AppPersistenceBase.isTest()
-				&& !TransformCommit.isTestTransformCascade()) {
-			if (!LooseContext
-					.is(TransformCommit.CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
-				TransformManager.get().clearTransforms();
-			}
-			return pendingTransformCount;
-		}
-		DomainTransformLayerWrapper layerWrapper = commitTransforms(null,
-				asRoot, true);
-		if (layerWrapper.response != null
-				&& layerWrapper.response.getTransformExceptions().size() > 0) {
-			throw WrappedRuntimeException.wrap(
-					layerWrapper.response.getTransformExceptions().get(0));
-		}
-		return pendingTransformCount;
-	}
-
 	private Map<Long, EntityLocatorMap> clientInstanceLocatorMap = new ConcurrentHashMap<>();
 
 	private AtomicInteger transformRequestCounter = new AtomicInteger(0);
-
-	public void enqueueBackendTransform(Runnable runnable) {
-		enqueueBackendTransform(runnable, null);
-	}
-
-	public void enqueueBackendTransform(Runnable runnable, String queueName) {
-		BackendTransformQueue.get().enqueue(runnable, queueName);
-	}
-
-	public EntityLocatorMap getLocatorMapForClient(
-			ClientInstance clientInstance, boolean forceRefresh) {
-		if (clientInstance == EntityLayerObjects.get()
-				.getServerAsClientInstance()) {
-			return EntityLayerObjects.get()
-					.getServerAsClientInstanceEntityLocatorMap();
-		}
-		Long clientInstanceId = clientInstance.getId();
-		if (!clientInstanceLocatorMap.containsKey(clientInstanceId)
-				|| forceRefresh) {
-			/*
-			 * Note that synchronisation in DomainStore.ensureEntity means there
-			 * will only be one visible clientInstance with id x *at any one
-			 * time*, but that doesn't mean the clientInstance object instance
-			 * won't change (since the object is potentially lazy loaded and
-			 * thus vacuumed). So - to avoid confusion - use the id (guaranteed
-			 * non-zero)
-			 *
-			 */
-			// synchronized (clientInstance) {
-			synchronized (LockUtils.obtainClassIdLock(clientInstance)) {
-				if (!clientInstanceLocatorMap.containsKey(clientInstanceId)
-						|| forceRefresh) {
-					EntityLocatorMap locatorMap = CommonPersistenceProvider
-							.get().getCommonPersistence()
-							.getLocatorMap(clientInstanceId);
-					clientInstanceLocatorMap.put(clientInstanceId, locatorMap);
-				}
-			}
-		}
-		EntityLocatorMap locatorMap = clientInstanceLocatorMap
-				.get(clientInstanceId);
-		return locatorMap;
-	}
-
-	public EntityLocatorMap
-			getLocatorMapForClient(DomainTransformRequest request) {
-		return getLocatorMapForClient(
-				request.getClientInstance().domain().domainVersion(), false);
-	}
-
-	public int nextTransformRequestId() {
-		return transformRequestCounter.incrementAndGet();
-	}
-
-	public void setBackendTransformQueueMaxDelay(String queueName,
-			long delayMs) {
-		BackendTransformQueue.get().createBackendQueue(queueName, delayMs);
-	}
-
-	/**
-	 * synchronizing implies serialized transforms per clientInstance
-	 */
-	public DomainTransformLayerWrapper transform(DomainTransformRequest request,
-			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
-			boolean blockUntilAllListenersNotified)
-			throws DomainTransformRequestException {
-		EntityLocatorMap locatorMap = getLocatorMapForClient(request);
-		try {
-			ExternalTransformLocks.get().lock(true,
-					request.getClientInstance());
-			synchronized (locatorMap) {
-				Transaction.endAndBeginNew();
-				TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-						request, locatorMap,
-						request.getClientInstance() != ClientInstance.self(),
-						ignoreClientAuthMismatch, forOfflineTransforms, logger,
-						blockUntilAllListenersNotified);
-				boolean hasUnprocessedRequests = CommonPersistenceProvider.get()
-						.getCommonPersistence()
-						.removeProcessedRequests(persistenceToken);
-				if (hasUnprocessedRequests) {
-					DomainTransformLayerWrapper result = submitAndHandleTransforms(
-							persistenceToken);
-					if (result.response == null) {
-						Preconditions.checkState(request.getEvents().isEmpty());
-						result.response = new DomainTransformResponse();
-						// empty request, empty response
-						result.response
-								.setResult(DomainTransformResponseResult.OK);
-					}
-					return result;
-				} else {
-					/*
-					 * perfectly plausible, if request [5, prior=[4]] arrives
-					 * before request [4] - which depends on the network
-					 */
-					DomainTransformLayerWrapper result = new DomainTransformLayerWrapper();
-					result.response = new DomainTransformResponse();
-					result.response.setResult(DomainTransformResponseResult.OK);
-					logger.info("Request {} - {} already processed",
-							request.toStringForError(),
-							request.getChunkUuidString());
-					return result;
-				}
-			}
-		} finally {
-			ExternalTransformLocks.get().lock(false,
-					request.getClientInstance());
-		}
-	}
-
-	public DomainTransformLayerWrapper transformFromServletLayer(
-			Collection<DomainTransformEvent> transforms, String tag)
-			throws DomainTransformRequestException {
-		int requestId = nextTransformRequestId();
-		EntityLocatorMap map = EntityLayerObjects.get()
-				.getServerAsClientInstanceEntityLocatorMap();
-		ClientInstance clientInstance = EntityLayerObjects.get()
-				.getServerAsClientInstance();
-		DomainTransformRequest request = DomainTransformRequest
-				.createPersistableRequest(requestId, clientInstance.getId());
-		request.setClientInstance(clientInstance);
-		if (tag == null && Configuration.is("tagTransformsWithThreadName")) {
-			tag = Thread.currentThread().getName();
-		}
-		if (tag == null) {
-			tag = DomainTransformRequestTagProvider.get().getTag();
-		}
-		request.setTag(tag);
-		request.setRequestId(requestId);
-		for (DomainTransformEvent dte : transforms) {
-			dte.setCommitType(CommitType.TO_STORAGE);
-		}
-		request.getEvents().addAll(transforms);
-		try {
-			ThreadedPermissionsManager.cast().pushSystemUser();
-			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, map, false, false, false, logger, true);
-			CommitClientInstanceContext clientInstanceContext = LooseContext
-					.get(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT);
-			persistenceToken.setOriginatingUserId(clientInstanceContext.userId);
-			return submitAndHandleTransforms(persistenceToken);
-		} finally {
-			ThreadedPermissionsManager.cast().popSystemUser();
-		}
-	}
-
-	public DomainTransformLayerWrapper transformFromServletLayer(String tag)
-			throws DomainTransformRequestException {
-		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		if (pendingTransforms.isEmpty()) {
-			return null;
-		}
-		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
-				pendingTransforms);
-		TransformManager.get().clearTransforms();
-		return transformFromServletLayer(items, tag);
-	}
 
 	private void commitLocalTranformInChunks0(int maxTransformChunkSize)
 			throws Exception {
@@ -828,29 +669,6 @@ public class TransformCommit {
 		commitDeltaApplicationRecord(dar, maxTransformChunkSize);
 	}
 
-	private void logTransformException(DomainTransformResponse response) {
-		logger.warn(String.format(
-				"domain transform problem - clientInstance: %s - rqId: %s - user ",
-				response.getRequest().getClientInstance().getId(),
-				response.getRequestId(),
-				PermissionsManager.get().getUserName()));
-		List<DomainTransformException> transformExceptions = response
-				.getTransformExceptions();
-		for (DomainTransformException ex : transformExceptions) {
-			logger.warn("Per-event error: " + ex.getMessage());
-			if (ex.getEvent() != null) {
-				logger.warn("Event: " + ex.getEvent().toDebugString());
-			}
-		}
-		File file = DataFolderProvider.get().getChildFile(
-				Ax.format("%s/%s.txt", DTR_EXCEPTION, LocalDateTime.now()
-						.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-		file.getParentFile().mkdirs();
-		Io.write().string(response.getRequest().toString()).toFile(file);
-		logger.warn(
-				Ax.format("Request with exceptions written to: \n\t%s", file));
-	}
-
 	protected DomainTransformLayerWrapper doPersistTransforms(String tag,
 			boolean asRoot) {
 		// for debugging
@@ -878,6 +696,87 @@ public class TransformCommit {
 					TransformManager.get().getTransforms().size() == 0);
 			MetricLogging.get().setMuted(muted);
 		}
+	}
+
+	public void enqueueBackendTransform(Runnable runnable) {
+		enqueueBackendTransform(runnable, null);
+	}
+
+	public void enqueueBackendTransform(Runnable runnable, String queueName) {
+		BackendTransformQueue.get().enqueue(runnable, queueName);
+	}
+
+	public EntityLocatorMap getLocatorMapForClient(
+			ClientInstance clientInstance, boolean forceRefresh) {
+		if (clientInstance == EntityLayerObjects.get()
+				.getServerAsClientInstance()) {
+			return EntityLayerObjects.get()
+					.getServerAsClientInstanceEntityLocatorMap();
+		}
+		Long clientInstanceId = clientInstance.getId();
+		if (!clientInstanceLocatorMap.containsKey(clientInstanceId)
+				|| forceRefresh) {
+			/*
+			 * Note that synchronisation in DomainStore.ensureEntity means there
+			 * will only be one visible clientInstance with id x *at any one
+			 * time*, but that doesn't mean the clientInstance object instance
+			 * won't change (since the object is potentially lazy loaded and
+			 * thus vacuumed). So - to avoid confusion - use the id (guaranteed
+			 * non-zero)
+			 *
+			 */
+			// synchronized (clientInstance) {
+			synchronized (LockUtils.obtainClassIdLock(clientInstance)) {
+				if (!clientInstanceLocatorMap.containsKey(clientInstanceId)
+						|| forceRefresh) {
+					EntityLocatorMap locatorMap = CommonPersistenceProvider
+							.get().getCommonPersistence()
+							.getLocatorMap(clientInstanceId);
+					clientInstanceLocatorMap.put(clientInstanceId, locatorMap);
+				}
+			}
+		}
+		EntityLocatorMap locatorMap = clientInstanceLocatorMap
+				.get(clientInstanceId);
+		return locatorMap;
+	}
+
+	public EntityLocatorMap
+			getLocatorMapForClient(DomainTransformRequest request) {
+		return getLocatorMapForClient(
+				request.getClientInstance().domain().domainVersion(), false);
+	}
+
+	private void logTransformException(DomainTransformResponse response) {
+		logger.warn(String.format(
+				"domain transform problem - clientInstance: %s - rqId: %s - user ",
+				response.getRequest().getClientInstance().getId(),
+				response.getRequestId(),
+				PermissionsManager.get().getUserName()));
+		List<DomainTransformException> transformExceptions = response
+				.getTransformExceptions();
+		for (DomainTransformException ex : transformExceptions) {
+			logger.warn("Per-event error: " + ex.getMessage());
+			if (ex.getEvent() != null) {
+				logger.warn("Event: " + ex.getEvent().toDebugString());
+			}
+		}
+		File file = DataFolderProvider.get().getChildFile(
+				Ax.format("%s/%s.txt", DTR_EXCEPTION, LocalDateTime.now()
+						.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+		file.getParentFile().mkdirs();
+		Io.write().string(response.getRequest().toString()).toFile(file);
+		logger.warn(
+				Ax.format("Request with exceptions written to: \n\t%s", file));
+	}
+
+	public int nextTransformRequestId() {
+		return transformRequestCounter.incrementAndGet();
+	}
+
+	public void setBackendTransformQueueMaxDelay(String queueName,
+			long delayMs) {
+		BackendTransformQueue.get().createBackendQueue(queueName, delayMs);
 	}
 
 	protected DomainTransformLayerWrapper submitAndHandleTransforms(
@@ -1013,6 +912,123 @@ public class TransformCommit {
 		}
 	}
 
+	/**
+	 * synchronizing implies serialized transforms per clientInstance
+	 */
+	public DomainTransformLayerWrapper transform(DomainTransformRequest request,
+			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
+			boolean blockUntilAllListenersNotified)
+			throws DomainTransformRequestException {
+		EntityLocatorMap locatorMap = getLocatorMapForClient(request);
+		try {
+			ExternalTransformLocks.get().lock(true,
+					request.getClientInstance());
+			synchronized (locatorMap) {
+				Transaction.endAndBeginNew();
+				TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+						request, locatorMap,
+						request.getClientInstance() != ClientInstance.self(),
+						ignoreClientAuthMismatch, forOfflineTransforms, logger,
+						blockUntilAllListenersNotified);
+				boolean hasUnprocessedRequests = CommonPersistenceProvider.get()
+						.getCommonPersistence()
+						.removeProcessedRequests(persistenceToken);
+				if (hasUnprocessedRequests) {
+					DomainTransformLayerWrapper result = submitAndHandleTransforms(
+							persistenceToken);
+					if (result.response == null) {
+						Preconditions.checkState(request.getEvents().isEmpty());
+						result.response = new DomainTransformResponse();
+						// empty request, empty response
+						result.response
+								.setResult(DomainTransformResponseResult.OK);
+					}
+					return result;
+				} else {
+					/*
+					 * perfectly plausible, if request [5, prior=[4]] arrives
+					 * before request [4] - which depends on the network
+					 */
+					DomainTransformLayerWrapper result = new DomainTransformLayerWrapper();
+					result.response = new DomainTransformResponse();
+					result.response.setResult(DomainTransformResponseResult.OK);
+					logger.info("Request {} - {} already processed",
+							request.toStringForError(),
+							request.getChunkUuidString());
+					return result;
+				}
+			}
+		} finally {
+			ExternalTransformLocks.get().lock(false,
+					request.getClientInstance());
+		}
+	}
+
+	public DomainTransformLayerWrapper transformFromServletLayer(
+			Collection<DomainTransformEvent> transforms, String tag)
+			throws DomainTransformRequestException {
+		int requestId = nextTransformRequestId();
+		EntityLocatorMap map = EntityLayerObjects.get()
+				.getServerAsClientInstanceEntityLocatorMap();
+		ClientInstance clientInstance = EntityLayerObjects.get()
+				.getServerAsClientInstance();
+		DomainTransformRequest request = DomainTransformRequest
+				.createPersistableRequest(requestId, clientInstance.getId());
+		request.setClientInstance(clientInstance);
+		if (tag == null && Configuration.is("tagTransformsWithThreadName")) {
+			tag = Thread.currentThread().getName();
+		}
+		if (tag == null) {
+			tag = DomainTransformRequestTagProvider.get().getTag();
+		}
+		request.setTag(tag);
+		request.setRequestId(requestId);
+		for (DomainTransformEvent dte : transforms) {
+			dte.setCommitType(CommitType.TO_STORAGE);
+		}
+		request.getEvents().addAll(transforms);
+		try {
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+					request, map, false, false, false, logger, true);
+			CommitClientInstanceContext clientInstanceContext = LooseContext
+					.get(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT);
+			persistenceToken.setOriginatingUserId(clientInstanceContext.userId);
+			return submitAndHandleTransforms(persistenceToken);
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+		}
+	}
+
+	public DomainTransformLayerWrapper transformFromServletLayer(String tag)
+			throws DomainTransformRequestException {
+		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		if (pendingTransforms.isEmpty()) {
+			return null;
+		}
+		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
+				pendingTransforms);
+		TransformManager.get().clearTransforms();
+		return transformFromServletLayer(items, tag);
+	}
+
+	// FIXME - sessioncontext - this should all probably go there
+	private static class CommitClientInstanceContext {
+		private long clientInstanceId;
+
+		private String committerIpAddress;
+
+		private long userId;
+
+		public CommitClientInstanceContext(long clientInstanceId, long userId,
+				String committerIpAddress) {
+			this.clientInstanceId = clientInstanceId;
+			this.userId = userId;
+			this.committerIpAddress = committerIpAddress;
+		}
+	}
+
 	@Registration.Singleton
 	public static class ExternalTransformLocks {
 		public static TransformCommit.ExternalTransformLocks get() {
@@ -1042,21 +1058,5 @@ public class TransformCommit {
 
 	public static class ReuseIUserHolder {
 		public IUser iUser;
-	}
-
-	// FIXME - sessioncontext - this should all probably go there
-	private static class CommitClientInstanceContext {
-		private long clientInstanceId;
-
-		private String committerIpAddress;
-
-		private long userId;
-
-		public CommitClientInstanceContext(long clientInstanceId, long userId,
-				String committerIpAddress) {
-			this.clientInstanceId = clientInstanceId;
-			this.userId = userId;
-			this.committerIpAddress = committerIpAddress;
-		}
 	}
 }

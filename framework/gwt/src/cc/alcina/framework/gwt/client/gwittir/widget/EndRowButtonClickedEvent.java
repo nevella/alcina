@@ -70,6 +70,11 @@ public class EndRowButtonClickedEvent
 		this.rowObject = rowObject;
 	}
 
+	@Override
+	protected void dispatch(EndRowButtonClickedHandler handler) {
+		handler.onCollapse(this);
+	}
+
 	// The instance knows its of type T, but the TYPE
 	// field itself does not, so we have to do an unsafe cast here.
 	@Override
@@ -83,11 +88,6 @@ public class EndRowButtonClickedEvent
 
 	public Object getRowObject() {
 		return this.rowObject;
-	}
-
-	@Override
-	protected void dispatch(EndRowButtonClickedHandler handler) {
-		handler.onCollapse(this);
 	}
 
 	/**

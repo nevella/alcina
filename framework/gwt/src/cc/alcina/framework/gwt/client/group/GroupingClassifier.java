@@ -47,8 +47,6 @@ public interface GroupingClassifier<V, T extends Comparable>
 		};
 	}
 
-	public T classify(V v);
-
 	default List<T> allKeys(List<V> values) {
 		return values.stream().map(this::classify).distinct().sorted()
 				.collect(Collectors.toList());
@@ -65,6 +63,8 @@ public interface GroupingClassifier<V, T extends Comparable>
 		// columnbuilder
 		throw new UnsupportedOperationException();
 	}
+
+	public T classify(V v);
 
 	default GroupKey groupKey(T t) {
 		return null;

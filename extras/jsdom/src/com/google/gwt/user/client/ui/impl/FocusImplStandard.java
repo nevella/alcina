@@ -68,11 +68,6 @@ public class FocusImplStandard extends FocusImpl {
 		// return createFocusable0(ensureFocusHandler());
 	}
 
-	@Override
-	public native void setAccessKey(Element elem, char key) /*-{
-															elem.firstChild.accessKey = String.fromCharCode(key);
-															}-*/;
-
 	/**
 	 * Use an isolated method call to create the handler to avoid creating
 	 * memory leaks via handler-closures-element.
@@ -96,4 +91,9 @@ public class FocusImplStandard extends FocusImpl {
 		return focusHandler != null ? focusHandler
 				: (focusHandler = createFocusHandler());
 	}
+
+	@Override
+	public native void setAccessKey(Element elem, char key) /*-{
+															elem.firstChild.accessKey = String.fromCharCode(key);
+															}-*/;
 }

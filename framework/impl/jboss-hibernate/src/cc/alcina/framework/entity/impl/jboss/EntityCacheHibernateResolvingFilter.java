@@ -65,6 +65,34 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	}
 
 	@Override
+	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
+			GraphProjection graphProjection) throws Exception {
+		Set hs = jpaImplementation.createPersistentSetProjection(context);
+		if (getWasInitialized(ps)) {
+			Iterator itr = ps.iterator();
+			Object value;
+			for (; itr.hasNext();) {
+				value = itr.next();
+				Object projected = null;
+				if (value instanceof HibernateProxy) {
+					LazyInitializer lazy = ((HibernateProxy) value)
+							.getHibernateLazyInitializer();
+					Object impl = ((HibernateProxy) value)
+							.getHibernateLazyInitializer().getImplementation();
+					projected = graphProjection.project(impl, value, context);
+					getCache().put((Entity) projected);
+				} else {
+					projected = graphProjection.project(value, context);
+				}
+				if (value == null || projected != null) {
+					hs.add(projected);
+				}
+			}
+		}
+		return hs;
+	}
+
+	@Override
 	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {
 		if (value instanceof Entity) {
@@ -180,33 +208,5 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 
 	public void setUseRawDomainStore(boolean useRawDomainStore) {
 		this.useRawDomainStore = useRawDomainStore;
-	}
-
-	@Override
-	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
-			GraphProjection graphProjection) throws Exception {
-		Set hs = jpaImplementation.createPersistentSetProjection(context);
-		if (getWasInitialized(ps)) {
-			Iterator itr = ps.iterator();
-			Object value;
-			for (; itr.hasNext();) {
-				value = itr.next();
-				Object projected = null;
-				if (value instanceof HibernateProxy) {
-					LazyInitializer lazy = ((HibernateProxy) value)
-							.getHibernateLazyInitializer();
-					Object impl = ((HibernateProxy) value)
-							.getHibernateLazyInitializer().getImplementation();
-					projected = graphProjection.project(impl, value, context);
-					getCache().put((Entity) projected);
-				} else {
-					projected = graphProjection.project(value, context);
-				}
-				if (value == null || projected != null) {
-					hs.add(projected);
-				}
-			}
-		}
-		return hs;
 	}
 }

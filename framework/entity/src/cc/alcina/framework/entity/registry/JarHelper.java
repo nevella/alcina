@@ -15,6 +15,31 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.Io;
 
 public class JarHelper {
+	void listPaths(URL jarFileUrl) {
+		ZipFile inZip = null;
+		String jarPath = jarFileUrl.toString().replaceFirst("jar:file:(.+?)!.+",
+				"$1");
+		try {
+			inZip = new ZipFile(jarPath);
+			Enumeration<? extends ZipEntry> enumeration = inZip.entries();
+			for (ZipEntry in; enumeration.hasMoreElements();) {
+				in = enumeration.nextElement();
+				ZipEntry outEntry;
+				InputStream source;
+				String name = in.getName();
+				System.out.println(name);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				inZip.close();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	public InputStream openStream(URL url) {
 		return new ByteArrayInputStream(read(url));
 	}
@@ -88,31 +113,6 @@ public class JarHelper {
 				Io.write().bytes(out.toByteArray()).toFile(tmpOut);
 				new File(jarPath).delete();
 				tmpOut.renameTo(new File(jarPath));
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	void listPaths(URL jarFileUrl) {
-		ZipFile inZip = null;
-		String jarPath = jarFileUrl.toString().replaceFirst("jar:file:(.+?)!.+",
-				"$1");
-		try {
-			inZip = new ZipFile(jarPath);
-			Enumeration<? extends ZipEntry> enumeration = inZip.entries();
-			for (ZipEntry in; enumeration.hasMoreElements();) {
-				in = enumeration.nextElement();
-				ZipEntry outEntry;
-				InputStream source;
-				String name = in.getName();
-				System.out.println(name);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				inZip.close();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

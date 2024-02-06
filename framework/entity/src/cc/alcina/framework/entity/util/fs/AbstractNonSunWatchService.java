@@ -16,12 +16,12 @@ abstract class AbstractNonSunWatchService implements WatchService {
 	// special key to indicate that watch service is closed
 	private final WatchKey CLOSE_KEY = new AbstractNonSunWatchKey(null, null) {
 		@Override
-		public boolean isValid() {
-			return true;
+		public void cancel() {
 		}
 
 		@Override
-		public void cancel() {
+		public boolean isValid() {
+			return true;
 		}
 	};
 
@@ -34,14 +34,15 @@ abstract class AbstractNonSunWatchService implements WatchService {
 	}
 
 	/**
-	 * Register the given object with this watch service
+	 * Checks the key isn't the special CLOSE_KEY used to unblock threads when
+	 * the watch service is closed.
 	 */
-	abstract WatchKey register(Path path, WatchEvent.Kind<?>[] events,
-			WatchEvent.Modifier... modifers) throws IOException;
-
-	// used by AbstractWatchKey to enqueue key
-	final void enqueueKey(WatchKey key) {
-		pendingKeys.offer(key);
+	private void checkKey(WatchKey key) {
+		if (key == CLOSE_KEY) {
+			// re-queue in case there are other threads blocked in take/poll
+			enqueueKey(key);
+		}
+		checkOpen();
 	}
 
 	/**
@@ -52,16 +53,44 @@ abstract class AbstractNonSunWatchService implements WatchService {
 			throw new ClosedWatchServiceException();
 	}
 
-	/**
-	 * Checks the key isn't the special CLOSE_KEY used to unblock threads when
-	 * the watch service is closed.
-	 */
-	private void checkKey(WatchKey key) {
-		if (key == CLOSE_KEY) {
-			// re-queue in case there are other threads blocked in take/poll
-			enqueueKey(key);
+	@Override
+	public final void close() throws IOException {
+		synchronized (closeLock) {
+			// nothing to do if already closed
+			if (closed)
+				return;
+			closed = true;
+			implClose();
+			// clear pending keys and queue special key to ensure that any
+			// threads blocked in take/poll wakeup
+			pendingKeys.clear();
+			pendingKeys.offer(CLOSE_KEY);
 		}
-		checkOpen();
+	}
+
+	/**
+	 * Retrieves the object upon which the close method synchronizes.
+	 */
+	final Object closeLock() {
+		return closeLock;
+	}
+
+	// used by AbstractWatchKey to enqueue key
+	final void enqueueKey(WatchKey key) {
+		pendingKeys.offer(key);
+	}
+
+	/**
+	 * Closes this watch service. This method is invoked by the close method to
+	 * perform the actual work of closing the watch service.
+	 */
+	abstract void implClose() throws IOException;
+
+	/**
+	 * Tells whether or not this watch service is open.
+	 */
+	final boolean isOpen() {
+		return !closed;
 	}
 
 	@Override
@@ -81,46 +110,17 @@ abstract class AbstractNonSunWatchService implements WatchService {
 		return key;
 	}
 
+	/**
+	 * Register the given object with this watch service
+	 */
+	abstract WatchKey register(Path path, WatchEvent.Kind<?>[] events,
+			WatchEvent.Modifier... modifers) throws IOException;
+
 	@Override
 	public final WatchKey take() throws InterruptedException {
 		checkOpen();
 		WatchKey key = pendingKeys.take();
 		checkKey(key);
 		return key;
-	}
-
-	/**
-	 * Tells whether or not this watch service is open.
-	 */
-	final boolean isOpen() {
-		return !closed;
-	}
-
-	/**
-	 * Retrieves the object upon which the close method synchronizes.
-	 */
-	final Object closeLock() {
-		return closeLock;
-	}
-
-	/**
-	 * Closes this watch service. This method is invoked by the close method to
-	 * perform the actual work of closing the watch service.
-	 */
-	abstract void implClose() throws IOException;
-
-	@Override
-	public final void close() throws IOException {
-		synchronized (closeLock) {
-			// nothing to do if already closed
-			if (closed)
-				return;
-			closed = true;
-			implClose();
-			// clear pending keys and queue special key to ensure that any
-			// threads blocked in take/poll wakeup
-			pendingKeys.clear();
-			pendingKeys.offer(CLOSE_KEY);
-		}
 	}
 }

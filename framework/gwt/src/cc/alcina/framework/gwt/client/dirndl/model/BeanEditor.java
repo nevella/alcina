@@ -40,36 +40,6 @@ public class BeanEditor extends Model {
 		return this.bindable;
 	}
 
-	/**
-	 * this indirection allows (requires) an app to define its own bean viewer
-	 * implementations
-	 */
-	@Reflected
-	public static class FormTransform extends
-			AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable> {
-		private Impl delegate;
-
-		public FormTransform() {
-			delegate = Registry.impl(Impl.class);
-		}
-
-		@Registration(Impl.class)
-		public abstract static class Impl extends
-				AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable> {
-		}
-
-		@Override
-		public AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable>
-				withContextNode(Node node) {
-			return delegate.withContextNode(node);
-		}
-
-		@Override
-		public Bindable apply(BaseSourcesPropertyChangeEvents t) {
-			return delegate.apply(t);
-		}
-	}
-
 	@Binding(type = Type.CLASS_PROPERTY)
 	public String getClassName() {
 		return this.className;
@@ -133,6 +103,36 @@ public class BeanEditor extends Model {
 		grid, wide, horizontal_validation, vertical_validation, vertical
 	}
 
+	/**
+	 * this indirection allows (requires) an app to define its own bean viewer
+	 * implementations
+	 */
+	@Reflected
+	public static class FormTransform extends
+			AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable> {
+		private Impl delegate;
+
+		public FormTransform() {
+			delegate = Registry.impl(Impl.class);
+		}
+
+		@Override
+		public Bindable apply(BaseSourcesPropertyChangeEvents t) {
+			return delegate.apply(t);
+		}
+
+		@Override
+		public AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable>
+				withContextNode(Node node) {
+			return delegate.withContextNode(node);
+		}
+
+		@Registration(Impl.class)
+		public abstract static class Impl extends
+				AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable> {
+		}
+	}
+
 	public static class NonAdjunct extends BeanEditor {
 		@Override
 		@BeanViewModifiers(adjunct = false)
@@ -144,15 +144,15 @@ public class BeanEditor extends Model {
 	public static class Viewer extends BeanEditor
 			implements ModelTransform<Bindable, Viewer> {
 		@Override
-		@BeanViewModifiers(editable = false, nodeEditors = true)
-		public Bindable getBindable() {
-			return super.getBindable();
-		}
-
-		@Override
 		public Viewer apply(Bindable t) {
 			setBindable(t);
 			return this;
+		}
+
+		@Override
+		@BeanViewModifiers(editable = false, nodeEditors = true)
+		public Bindable getBindable() {
+			return super.getBindable();
 		}
 	}
 }

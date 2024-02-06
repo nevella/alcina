@@ -72,13 +72,6 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 		setMultipleSelect(true);
 	}
 
-	public void setModel(Object model) {
-		this.criteriaGroup = (C) model;
-		addPropertyChangeListener("value", pcl);
-		setOptions();
-		updateValues();
-	}
-
 	protected abstract O getSearchCriterionDisplayObject(SC searchCriterion);
 
 	/**
@@ -96,6 +89,13 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 	protected void onUnload() {
 		criteriaGroup.removePropertyChangeListener("criteria", cgListener);
 		super.onUnload();
+	}
+
+	public void setModel(Object model) {
+		this.criteriaGroup = (C) model;
+		addPropertyChangeListener("value", pcl);
+		setOptions();
+		updateValues();
 	}
 
 	protected void setOptions() {

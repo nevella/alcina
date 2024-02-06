@@ -120,6 +120,43 @@ public class FormModel extends Model
 	public FormModel() {
 	}
 
+	private void bind(Bind event) {
+		if (event.isBound()) {
+			getState().formBinding.bind();
+		} else {
+			getState().formBinding.unbind();
+		}
+	}
+
+	private void checkDirty(Bind event) {
+		if (event.isBound()) {
+			registrations.put(this, Client.eventBus()
+					.addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
+		} else {
+			// if we're navigating away, and dirty
+			if (unAttachConfirmsTransformClear) {
+				TransformManager.get().clearTransforms();
+			}
+			HandlerRegistration registration = registrations.remove(this);
+			if (registration != null) {
+				registration.removeHandler();
+			}
+		}
+	}
+
+	private void focus(Bind event) {
+		Optional<FormElement> focus = getElements().stream()
+				.filter(FormElement::isFocusOnAttach).findFirst();
+		if (focus.isPresent()) {
+			Node childWithModel = event.getContext().node
+					.childWithModel(m -> m != null && m instanceof ValueModel
+							&& m == focus.get().provideValueModel());
+			((Focusable) childWithModel.getRendered()).setFocus(true);
+		}
+		// FIXME - dirndl 1x2 - this should be an annotation on the field,
+		//
+	}
+
 	public List<Link> getActions() {
 		return this.actions;
 	}
@@ -292,6 +329,13 @@ public class FormModel extends Model
 		submit(event);
 	}
 
+	void onValidationStateChange(ModelEvent event,
+			FormValidation formValidation, FormValidation.State state) {
+		Data data = new FormEvents.BeanValidationChange.Data(event, state,
+				formValidation.beanValidationExceptionMessage);
+		emitEvent(FormEvents.BeanValidationChange.class, data);
+	}
+
 	public void setFormValidationResult(Model formValidationResult) {
 		set("formValidationResult", this.formValidationResult,
 				formValidationResult,
@@ -300,50 +344,6 @@ public class FormModel extends Model
 
 	public void setSubmitTextBoxesOnEnter(boolean submitTextBoxesOnEnter) {
 		this.submitTextBoxesOnEnter = submitTextBoxesOnEnter;
-	}
-
-	private void bind(Bind event) {
-		if (event.isBound()) {
-			getState().formBinding.bind();
-		} else {
-			getState().formBinding.unbind();
-		}
-	}
-
-	private void checkDirty(Bind event) {
-		if (event.isBound()) {
-			registrations.put(this, Client.eventBus()
-					.addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
-		} else {
-			// if we're navigating away, and dirty
-			if (unAttachConfirmsTransformClear) {
-				TransformManager.get().clearTransforms();
-			}
-			HandlerRegistration registration = registrations.remove(this);
-			if (registration != null) {
-				registration.removeHandler();
-			}
-		}
-	}
-
-	private void focus(Bind event) {
-		Optional<FormElement> focus = getElements().stream()
-				.filter(FormElement::isFocusOnAttach).findFirst();
-		if (focus.isPresent()) {
-			Node childWithModel = event.getContext().node
-					.childWithModel(m -> m != null && m instanceof ValueModel
-							&& m == focus.get().provideValueModel());
-			((Focusable) childWithModel.getRendered()).setFocus(true);
-		}
-		// FIXME - dirndl 1x2 - this should be an annotation on the field,
-		//
-	}
-
-	void onValidationStateChange(ModelEvent event,
-			FormValidation formValidation, FormValidation.State state) {
-		Data data = new FormEvents.BeanValidationChange.Data(event, state,
-				formValidation.beanValidationExceptionMessage);
-		emitEvent(FormEvents.BeanValidationChange.class, data);
 	}
 
 	/*
@@ -832,6 +832,25 @@ public class FormModel extends Model
 		}
 	}
 
+	public static class TransformRegistrationBinding
+			implements ListenerBinding {
+		Entity entity;
+
+		public TransformRegistrationBinding(Entity entity) {
+			this.entity = entity;
+		}
+
+		@Override
+		public void bind() {
+			TransformManager.get().registerDomainObject(entity);
+		}
+
+		@Override
+		public void unbind() {
+			TransformManager.get().deregisterDomainObject(entity);
+		}
+	}
+
 	public static class ValidationFeedbackProvider
 			implements ValidationFeedback.Provider {
 		@Override
@@ -853,24 +872,5 @@ public class FormModel extends Model
 	 *
 	 */
 	public interface Viewer {
-	}
-
-	public static class TransformRegistrationBinding
-			implements ListenerBinding {
-		Entity entity;
-
-		public TransformRegistrationBinding(Entity entity) {
-			this.entity = entity;
-		}
-
-		@Override
-		public void bind() {
-			TransformManager.get().registerDomainObject(entity);
-		}
-
-		@Override
-		public void unbind() {
-			TransformManager.get().deregisterDomainObject(entity);
-		}
 	}
 }

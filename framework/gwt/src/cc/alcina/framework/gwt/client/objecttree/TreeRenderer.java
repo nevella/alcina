@@ -45,8 +45,6 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public Collection<? extends TreeRenderer> childRenderers();
 
-	public Predicate predicate();
-
 	public CollectionProvider collectionProvider();
 
 	public String emptyChildText();
@@ -54,6 +52,8 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	public AbstractBoundWidget getBoundWidget();
 
 	public RenderContext getContext();
+
+	TreeRenderer getParentRenderer();
 
 	public T getRenderable();
 
@@ -66,6 +66,11 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	}
 
 	public boolean isSingleLineCustomiser();
+
+	default void parentBinding(Binding binding) {
+	}
+
+	public Predicate predicate();
 
 	public Collection<? extends TreeRenderable> renderableChildren();
 
@@ -96,11 +101,6 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	public void setRenderable(T renderable);
 
 	public String title();
-
-	TreeRenderer getParentRenderer();
-
-	default void parentBinding(Binding binding) {
-	}
 
 	public enum RenderInstruction {
 		AS_WIDGET, AS_TITLE, AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD,

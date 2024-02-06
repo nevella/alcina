@@ -101,6 +101,14 @@ public class SimpleWorkspaceVisualiser extends Composite
 		resetHsbPos();
 	}
 
+	protected void createContentContainer(SplitLayoutPanel hsp) {
+		this.contentContainer = new ScrollPanel();
+		contentContainer.setStyleName("alcina-WorkspaceContent");
+		setContentWidget(model.getContentWidget());
+		contentContainer.setHeight("100%");
+		hsp.add(contentContainer);
+	}
+
 	@Override
 	public void focusVisibleView() {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
@@ -127,6 +135,11 @@ public class SimpleWorkspaceVisualiser extends Composite
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override
+			public void afterLayout() {
+				resetHsbPos();
+			}
+
+			@Override
 			public Iterator<Widget> getLayoutWidgets() {
 				return Arrays.asList(new Widget[] { verticalPanel }).iterator();
 			}
@@ -136,16 +149,15 @@ public class SimpleWorkspaceVisualiser extends Composite
 				return (Iterator) Collections.singleton(getVerticalPanel())
 						.iterator();
 			}
-
-			@Override
-			public void afterLayout() {
-				resetHsbPos();
-			}
 		};
 	}
 
 	public WSVisualModel getModel() {
 		return this.model;
+	}
+
+	protected int getSplitterSize() {
+		return defaultSplitterSize;
 	}
 
 	public VerticalPanel getVerticalPanel() {
@@ -154,6 +166,20 @@ public class SimpleWorkspaceVisualiser extends Composite
 
 	public StackPanel100pcHeight getViewHolder() {
 		return this.viewHolder;
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+	}
+
+	@Override
+	public void redraw() {
+		resetHsbPos();
+	}
+
+	void resetHsbPos() {
+		hsp.setWidgetSize(viewHolder, defaultSplitterPosition);
 	}
 
 	@Override
@@ -185,25 +211,9 @@ public class SimpleWorkspaceVisualiser extends Composite
 		((SimplePanel) contentContainer).setWidget(w);
 	}
 
-	protected void createContentContainer(SplitLayoutPanel hsp) {
-		this.contentContainer = new ScrollPanel();
-		contentContainer.setStyleName("alcina-WorkspaceContent");
-		setContentWidget(model.getContentWidget());
-		contentContainer.setHeight("100%");
-		hsp.add(contentContainer);
-	}
-
-	protected int getSplitterSize() {
-		return defaultSplitterSize;
-	}
-
 	@Override
-	protected void onDetach() {
-		super.onDetach();
-	}
-
-	void resetHsbPos() {
-		hsp.setWidgetSize(viewHolder, defaultSplitterPosition);
+	public void showView(WorkspaceView view) {
+		viewHolder.showStack(viewHolder.getWidgetIndex(view));
 	}
 
 	private class Resize100Vp extends VerticalPanel implements HasLayoutInfo {
@@ -231,15 +241,5 @@ public class SimpleWorkspaceVisualiser extends Composite
 			int hsph = h - toolbar.getOffsetHeight();
 			SimpleWorkspaceVisualiser.this.hsp.setHeight(hsph + "px");
 		}
-	}
-
-	@Override
-	public void showView(WorkspaceView view) {
-		viewHolder.showStack(viewHolder.getWidgetIndex(view));
-	}
-
-	@Override
-	public void redraw() {
-		resetHsbPos();
 	}
 }

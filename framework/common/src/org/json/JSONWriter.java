@@ -102,6 +102,37 @@ public class JSONWriter {
 	}
 
 	/**
+	 * Append a value.
+	 * 
+	 * @param s
+	 *            A string value.
+	 * @return this
+	 * @throws JSONException
+	 *             If the value is out of sequence.
+	 */
+	private JSONWriter append(String s) throws JSONException {
+		if (s == null) {
+			throw new JSONException("Null pointer");
+		}
+		if (this.mode == 'o' || this.mode == 'a') {
+			try {
+				if (this.comma && this.mode == 'a') {
+					this.writer.write(',');
+				}
+				this.writer.write(s);
+			} catch (IOException e) {
+				throw new JSONException(e);
+			}
+			if (this.mode == 'o') {
+				this.mode = 'k';
+			}
+			this.comma = true;
+			return this;
+		}
+		throw new JSONException("Value out of sequence.");
+	}
+
+	/**
 	 * Begin appending a new array. All values until the balancing
 	 * <code>endArray</code> will be appended to this array. The
 	 * <code>endArray</code> method must be called to mark the array's end.
@@ -120,6 +151,32 @@ public class JSONWriter {
 			return this;
 		}
 		throw new JSONException("Misplaced array.");
+	}
+
+	/**
+	 * End something.
+	 * 
+	 * @param m
+	 *            Mode
+	 * @param c
+	 *            Closing character
+	 * @return this
+	 * @throws JSONException
+	 *             If unbalanced.
+	 */
+	private JSONWriter end(char m, char c) throws JSONException {
+		if (this.mode != m) {
+			throw new JSONException(
+					m == 'o' ? "Misplaced endObject." : "Misplaced endArray.");
+		}
+		this.pop(m);
+		try {
+			this.writer.write(c);
+		} catch (IOException e) {
+			throw new JSONException(e);
+		}
+		this.comma = true;
+		return this;
 	}
 
 	/**
@@ -204,6 +261,44 @@ public class JSONWriter {
 	}
 
 	/**
+	 * Pop an array or object scope.
+	 * 
+	 * @param c
+	 *            The scope to close.
+	 * @throws JSONException
+	 *             If nesting is wrong.
+	 */
+	private void pop(char c) throws JSONException {
+		if (this.top <= 0) {
+			throw new JSONException("Nesting error.");
+		}
+		char m = this.stack[this.top - 1] == null ? 'a' : 'k';
+		if (m != c) {
+			throw new JSONException("Nesting error.");
+		}
+		this.top -= 1;
+		this.mode = this.top == 0 ? 'd'
+				: this.stack[this.top - 1] == null ? 'a' : 'k';
+	}
+
+	/**
+	 * Push an array or object scope.
+	 * 
+	 * @param c
+	 *            The scope to open.
+	 * @throws JSONException
+	 *             If nesting is too deep.
+	 */
+	private void push(JSONObject jo) throws JSONException {
+		if (this.top >= maxdepth) {
+			throw new JSONException("Nesting too deep.");
+		}
+		this.stack[this.top] = jo;
+		this.mode = jo == null ? 'a' : 'k';
+		this.top += 1;
+	}
+
+	/**
 	 * Append either the value <code>true</code> or the value <code>false</code>
 	 * .
 	 * 
@@ -254,100 +349,5 @@ public class JSONWriter {
 	 */
 	public JSONWriter value(Object o) throws JSONException {
 		return this.append(JSONObject.valueToString(o));
-	}
-
-	/**
-	 * Append a value.
-	 * 
-	 * @param s
-	 *            A string value.
-	 * @return this
-	 * @throws JSONException
-	 *             If the value is out of sequence.
-	 */
-	private JSONWriter append(String s) throws JSONException {
-		if (s == null) {
-			throw new JSONException("Null pointer");
-		}
-		if (this.mode == 'o' || this.mode == 'a') {
-			try {
-				if (this.comma && this.mode == 'a') {
-					this.writer.write(',');
-				}
-				this.writer.write(s);
-			} catch (IOException e) {
-				throw new JSONException(e);
-			}
-			if (this.mode == 'o') {
-				this.mode = 'k';
-			}
-			this.comma = true;
-			return this;
-		}
-		throw new JSONException("Value out of sequence.");
-	}
-
-	/**
-	 * End something.
-	 * 
-	 * @param m
-	 *            Mode
-	 * @param c
-	 *            Closing character
-	 * @return this
-	 * @throws JSONException
-	 *             If unbalanced.
-	 */
-	private JSONWriter end(char m, char c) throws JSONException {
-		if (this.mode != m) {
-			throw new JSONException(
-					m == 'o' ? "Misplaced endObject." : "Misplaced endArray.");
-		}
-		this.pop(m);
-		try {
-			this.writer.write(c);
-		} catch (IOException e) {
-			throw new JSONException(e);
-		}
-		this.comma = true;
-		return this;
-	}
-
-	/**
-	 * Pop an array or object scope.
-	 * 
-	 * @param c
-	 *            The scope to close.
-	 * @throws JSONException
-	 *             If nesting is wrong.
-	 */
-	private void pop(char c) throws JSONException {
-		if (this.top <= 0) {
-			throw new JSONException("Nesting error.");
-		}
-		char m = this.stack[this.top - 1] == null ? 'a' : 'k';
-		if (m != c) {
-			throw new JSONException("Nesting error.");
-		}
-		this.top -= 1;
-		this.mode = this.top == 0 ? 'd'
-				: this.stack[this.top - 1] == null ? 'a' : 'k';
-	}
-
-	/**
-	 * Push an array or object scope.
-	 * 
-	 * @param c
-	 *            The scope to open.
-	 * @throws JSONException
-	 *             If nesting is too deep.
-	 */
-	private void push(JSONObject jo) throws JSONException {
-		if (this.top >= maxdepth) {
-			throw new JSONException("Nesting too deep.");
-		}
-		this.stack[this.top] = jo;
-		this.mode = jo == null ? 'a' : 'k';
-		this.top += 1;
 	}
 }

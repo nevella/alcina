@@ -49,6 +49,12 @@ public class AlcinaParallel {
 		maybeShutdownExecutor();
 	}
 
+	private void maybeShutdownExecutor() {
+		if (parameters.executor == null) {
+			executor.shutdown();
+		}
+	}
+
 	public AlcinaParallelResults run() {
 		try {
 			jobChecker = Registry.impl(AlcinaParallelJobChecker.class);
@@ -106,12 +112,6 @@ public class AlcinaParallel {
 			}
 			maybeShutdownExecutor();
 			return new AlcinaParallelResults();
-		}
-	}
-
-	private void maybeShutdownExecutor() {
-		if (parameters.executor == null) {
-			executor.shutdown();
 		}
 	}
 

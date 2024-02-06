@@ -25,12 +25,6 @@ public class RemoteObjectModelComponentClient implements EntryPoint {
     }
 	}-*/;
 
-	@Override
-	public void onModuleLoad() {
-		Client.Init.init();
-		Scheduler.get().scheduleDeferred(() -> init0());
-	}
-
 	private void init0() {
 		GWT.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
 			@Override
@@ -40,5 +34,11 @@ public class RemoteObjectModelComponentClient implements EntryPoint {
 			}
 		});
 		new RemoteComponentInit().init();
+	}
+
+	@Override
+	public void onModuleLoad() {
+		Client.Init.init();
+		Scheduler.get().scheduleDeferred(() -> init0());
 	}
 }

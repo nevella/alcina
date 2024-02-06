@@ -75,14 +75,14 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 			Registration.EnumDiscriminator<RemoteConsoleRequestType> {
 		public abstract RemoteConsoleRequestType getType();
 
+		protected abstract RemoteConsoleResponse handle(
+				RemoteConsoleRequest consoleRequest,
+				DevConsoleProtocolHandler devConsoleProtocolHandler);
+
 		@Override
 		public RemoteConsoleRequestType provideEnumDiscriminator() {
 			return getType();
 		}
-
-		protected abstract RemoteConsoleResponse handle(
-				RemoteConsoleRequest consoleRequest,
-				DevConsoleProtocolHandler devConsoleProtocolHandler);
 	}
 
 	public static class MethodHandler_ARROW_DOWN extends MethodHandler {

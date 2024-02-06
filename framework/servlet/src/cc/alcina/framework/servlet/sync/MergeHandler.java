@@ -44,13 +44,12 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 
 	protected List<SyncMerger> syncMergers = new ArrayList<SyncMerger>();
 
-	public int getSyncMergerCount() {
-		return syncMergers.size();
-	}
-
 	public D deltaModel;
 
 	public FlatDeltaPersisterResult persisterResult;
+
+	protected void beforePersistence() {
+	}
 
 	public String getName() {
 		String simpleName = getClass().getSimpleName();
@@ -60,6 +59,14 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 		} else {
 			return simpleName;
 		}
+	}
+
+	public int getSyncMergerCount() {
+		return syncMergers.size();
+	}
+
+	protected boolean isDisallowDirectDomainTransforms() {
+		return true;
 	}
 
 	/**
@@ -109,13 +116,6 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 		} else {
 			logger.info(Ax.format("Not persisting:\n\t%s", deltaModel));
 		}
-	}
-
-	protected boolean isDisallowDirectDomainTransforms() {
-		return true;
-	}
-
-	protected void beforePersistence() {
 	}
 
 	protected boolean shouldPersist() {

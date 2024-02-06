@@ -37,20 +37,20 @@ public class MemoryStat {
 		child.objectMemory = objectMemory;
 	}
 
-	public Query query() {
-		return new Query(this);
-	}
-
-	public void setObjectMemory(ObjectMemory objectMemory) {
-		this.objectMemory = objectMemory;
-	}
-
 	int depth() {
 		return parent == null ? 0 : parent.depth() + 1;
 	}
 
 	boolean hasChildren() {
 		return children.size() > 0;
+	}
+
+	public Query query() {
+		return new Query(this);
+	}
+
+	public void setObjectMemory(ObjectMemory objectMemory) {
+		this.objectMemory = objectMemory;
 	}
 
 	public static class Counter {

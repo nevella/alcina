@@ -35,6 +35,10 @@ public class DOMImplHeadless extends DOMImpl {
 	}
 
 	@Override
+	protected void initEventSystem() {
+	}
+
+	@Override
 	public void insertChild(Element parent, Element child, int index) {
 	}
 
@@ -56,9 +60,5 @@ public class DOMImplHeadless extends DOMImpl {
 	public void sinkEvents(Element elem, int eventBits) {
 		ClientDomElement remote = elem.implAccess().remote();
 		elem.implAccess().emitSinkEvents(eventBits);
-	}
-
-	@Override
-	protected void initEventSystem() {
 	}
 }

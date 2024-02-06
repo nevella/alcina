@@ -15,6 +15,11 @@ public class SimpleClusteredMap<K, V> {
 		this.data = data;
 	}
 
+	private synchronized void addAndPlay(Instruction instruction) {
+		instructions.add(instruction);
+		instruction.play();
+	}
+
 	public void clearInstructions() {
 		instructions.clear();
 	}
@@ -41,11 +46,6 @@ public class SimpleClusteredMap<K, V> {
 		}
 	}
 
-	private synchronized void addAndPlay(Instruction instruction) {
-		instructions.add(instruction);
-		instruction.play();
-	}
-
 	class Instruction {
 		V value;
 
@@ -59,11 +59,6 @@ public class SimpleClusteredMap<K, V> {
 			this.type = type;
 		}
 
-		@Override
-		public String toString() {
-			return String.format("Instruction: %s %s\n", type, key);
-		}
-
 		void play() {
 			switch (type) {
 			case DELETE:
@@ -73,6 +68,11 @@ public class SimpleClusteredMap<K, V> {
 				data.put(key, value);
 				break;
 			}
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Instruction: %s %s\n", type, key);
 		}
 	}
 

@@ -130,6 +130,37 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 	/** Synthesized event info item. */
 	protected static final HTMLEventInfo SYNTHESIZED_ITEM = new HTMLEventInfo.SynthesizedItem();
 
+	/**
+	 * Converts HTML names string value to constant value.
+	 * 
+	 * @see #NAMES_NO_CHANGE
+	 * @see #NAMES_LOWERCASE
+	 * @see #NAMES_UPPERCASE
+	 */
+	protected static final short getNamesValue(String value) {
+		if (value.equals("lower")) {
+			return NAMES_LOWERCASE;
+		}
+		if (value.equals("upper")) {
+			return NAMES_UPPERCASE;
+		}
+		return NAMES_NO_CHANGE;
+	} // getNamesValue(String):short
+
+	//
+	// Protected static methods
+	//
+	/** Modifies the given name based on the specified mode. */
+	protected static final String modifyName(String name, short mode) {
+		switch (mode) {
+		case NAMES_UPPERCASE:
+			return name.toUpperCase();
+		case NAMES_LOWERCASE:
+			return name.toLowerCase();
+		}
+		return name;
+	} // modifyName(String,short):String
+
 	//
 	// Data
 	//
@@ -213,141 +244,82 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 
 	protected HTMLTagBalancingListener tagBalancingListener;
 
-	//
-	// HTMLComponent methods
-	//
-	/** Returns the default state for a feature. */
-	public Boolean getFeatureDefault(String featureId) {
-		int length = RECOGNIZED_FEATURES != null ? RECOGNIZED_FEATURES.length
-				: 0;
-		for (int i = 0; i < length; i++) {
-			if (RECOGNIZED_FEATURES[i].equals(featureId)) {
-				return RECOGNIZED_FEATURES_DEFAULTS[i];
-			}
-		}
-		return null;
-	} // getFeatureDefault(String):Boolean
-
-	/** Returns the default state for a property. */
-	public Object getPropertyDefault(String propertyId) {
-		int length = RECOGNIZED_PROPERTIES != null
-				? RECOGNIZED_PROPERTIES.length
-				: 0;
-		for (int i = 0; i < length; i++) {
-			if (RECOGNIZED_PROPERTIES[i].equals(propertyId)) {
-				return RECOGNIZED_PROPERTIES_DEFAULTS[i];
-			}
-		}
-		return null;
-	} // getPropertyDefault(String):Object
-
-	//
-	// XMLComponent methods
-	//
-	/** Returns recognized features. */
-	public String[] getRecognizedFeatures() {
-		return RECOGNIZED_FEATURES;
-	} // getRecognizedFeatures():String[]
-
-	/** Returns recognized properties. */
-	public String[] getRecognizedProperties() {
-		return RECOGNIZED_PROPERTIES;
-	} // getRecognizedProperties():String[]
-
-	/** Resets the component. */
-	public void reset(XMLComponentManager manager)
-			throws XMLConfigurationException {
-		// get features
-		fNamespaces = manager.getFeature(NAMESPACES);
-		fAugmentations = manager.getFeature(AUGMENTATIONS);
-		fReportErrors = manager.getFeature(REPORT_ERRORS);
-		fDocumentFragment = manager.getFeature(DOCUMENT_FRAGMENT)
-				|| manager.getFeature(DOCUMENT_FRAGMENT_DEPRECATED);
-		fIgnoreOutsideContent = manager.getFeature(IGNORE_OUTSIDE_CONTENT);
-		// get properties
-		fNamesElems = getNamesValue(
-				String.valueOf(manager.getProperty(NAMES_ELEMS)));
-		fNamesAttrs = getNamesValue(
-				String.valueOf(manager.getProperty(NAMES_ATTRS)));
-		fErrorReporter = (HTMLErrorReporter) manager
-				.getProperty(ERROR_REPORTER);
-	} // reset(XMLComponentManager)
-
-	/** Sets a feature. */
-	public void setFeature(String featureId, boolean state)
-			throws XMLConfigurationException {
-		if (featureId.equals(AUGMENTATIONS)) {
-			fAugmentations = state;
-			return;
-		}
-		if (featureId.equals(REPORT_ERRORS)) {
-			fReportErrors = state;
-			return;
-		}
-		if (featureId.equals(IGNORE_OUTSIDE_CONTENT)) {
-			fIgnoreOutsideContent = state;
-			return;
-		}
-	} // setFeature(String,boolean)
-
-	/** Sets a property. */
-	public void setProperty(String propertyId, Object value)
-			throws XMLConfigurationException {
-		if (propertyId.equals(NAMES_ELEMS)) {
-			fNamesElems = getNamesValue(String.valueOf(value));
-			return;
-		}
-		if (propertyId.equals(NAMES_ATTRS)) {
-			fNamesAttrs = getNamesValue(String.valueOf(value));
-			return;
-		}
-	} // setProperty(String,Object)
-
-	//
-	// XMLDocumentSource methods
-	//
-	/** Sets the document handler. */
-	public void setDocumentHandler(XMLDocumentHandler handler) {
-		fDocumentHandler = handler;
-	} // setDocumentHandler(XMLDocumentHandler)
-
-	// @since Xerces 2.1.0
-	/** Returns the document handler. */
-	public XMLDocumentHandler getDocumentHandler() {
-		return fDocumentHandler;
-	} // getDocumentHandler():XMLDocumentHandler
-
-	//
-	// XMLDocumentHandler methods
-	//
-	// since Xerces-J 2.2.0
-	/** Start document. */
-	public void startDocument(XMLLocator locator, String encoding,
-			NamespaceContext nscontext, Augmentations augs)
+	/** Call document handler end element. */
+	protected final void callEndElement(QName element, Augmentations augs)
 			throws XNIException {
-		// reset state
-		fElementStack.top = 0;
-		fSeenAnything = false;
-		fSeenDoctype = false;
-		fSeenRootElement = false;
-		fSeenRootElementEnd = false;
-		fSeenHeadElement = false;
-		fSeenBodyElement = false;
-		// pass on event
-		if (fDocumentHandler != null) {
-			XercesBridge.getInstance().XMLDocumentHandler_startDocument(
-					fDocumentHandler, locator, encoding, nscontext, augs);
-		}
-	} // startDocument(XMLLocator,String,Augmentations)
+		fDocumentHandler.endElement(element, augs);
+	} // callEndElement(QName,Augmentations)
 
-	// old methods
-	/** XML declaration. */
-	public void xmlDecl(String version, String encoding, String standalone,
+	/** Call document handler start element. */
+	protected final void callStartElement(QName element, XMLAttributes attrs,
 			Augmentations augs) throws XNIException {
-		if (!fSeenAnything && fDocumentHandler != null) {
-			fDocumentHandler.xmlDecl(version, encoding, standalone, augs);
+		fDocumentHandler.startElement(element, attrs, augs);
+	} // callStartElement(QName,XMLAttributes,Augmentations)
+
+	/** Characters. */
+	public void characters(XMLString text, Augmentations augs)
+			throws XNIException {
+		// check for end of document
+		if (fSeenRootElementEnd) {
+			return;
 		}
-	} // xmlDecl(String,String,String,Augmentations)
+		// is this text whitespace?
+		boolean whitespace = true;
+		for (int i = 0; i < text.length; i++) {
+			if (!Character.isWhitespace(text.ch[text.offset + i])) {
+				whitespace = false;
+				break;
+			}
+		}
+		if (!fDocumentFragment) {
+			// handle bare characters
+			if (!fSeenRootElement) {
+				if (whitespace) {
+					return;
+				}
+				String ename = modifyName("body", fNamesElems);
+				fQName.setValues(null, ename, ename, null);
+				if (fReportErrors) {
+					fErrorReporter.reportWarning("HTML2006",
+							new Object[] { ename });
+				}
+				startElement(fQName, null, synthesizedAugs());
+			}
+			// handle character content in head
+			// NOTE: This fequently happens when the document looks like:
+			// <title>Title</title>
+			// And here's some text.
+			else if (!whitespace) {
+				Info info = fElementStack.peek();
+				if (info.element.code == HTMLElements.HEAD
+						|| info.element.code == HTMLElements.HTML) {
+					String hname = modifyName("head", fNamesElems);
+					String bname = modifyName("body", fNamesElems);
+					if (fReportErrors) {
+						fErrorReporter.reportWarning("HTML2009",
+								new Object[] { hname, bname });
+					}
+					fQName.setValues(null, hname, hname, null);
+					endElement(fQName, synthesizedAugs());
+					fQName.setValues(null, bname, bname, null);
+					startElement(fQName, null, synthesizedAugs());
+				}
+			}
+		}
+		// call handler
+		if (fDocumentHandler != null) {
+			fDocumentHandler.characters(text, augs);
+		}
+	} // characters(XMLString,Augmentations)
+
+	/** Comment. */
+	public void comment(XMLString text, Augmentations augs)
+			throws XNIException {
+		fSeenAnything = true;
+		if (fDocumentHandler != null) {
+			fDocumentHandler.comment(text, augs);
+		}
+	} // comment(XMLString,Augmentations)
 
 	/** Doctype declaration. */
 	public void doctypeDecl(String rootElementName, String publicId,
@@ -368,6 +340,36 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 			}
 		}
 	} // doctypeDecl(String,String,String,Augmentations)
+
+	/** Returns a set of empty attributes. */
+	protected final XMLAttributes emptyAttributes() {
+		fEmptyAttrs.removeAllAttributes();
+		return fEmptyAttrs;
+	} // emptyAttributes():XMLAttributes
+
+	/** Empty element. */
+	public void emptyElement(final QName element, XMLAttributes attrs,
+			Augmentations augs) throws XNIException {
+		startElement(element, attrs, augs);
+		// browser ignore the closing indication for non empty tags like <form
+		// .../> but not for unknown element
+		final HTMLElements.Element elem = getElement(element.rawname);
+		if (elem.isEmpty() || elem.code == HTMLElements.UNKNOWN) {
+			endElement(element, augs);
+		}
+	} // emptyElement(QName,XMLAttributes,Augmentations)
+
+	/** End CDATA section. */
+	public void endCDATA(Augmentations augs) throws XNIException {
+		// check for end of document
+		if (fSeenRootElementEnd) {
+			return;
+		}
+		// call handler
+		if (fDocumentHandler != null) {
+			fDocumentHandler.endCDATA(augs);
+		}
+	} // endCDATA(Augmentations)
 
 	/** End document. */
 	public void endDocument(Augmentations augs) throws XNIException {
@@ -404,14 +406,251 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 		}
 	} // endDocument(Augmentations)
 
-	/** Comment. */
-	public void comment(XMLString text, Augmentations augs)
+	/** End element. */
+	public void endElement(final QName element, final Augmentations augs)
 			throws XNIException {
-		fSeenAnything = true;
-		if (fDocumentHandler != null) {
-			fDocumentHandler.comment(text, augs);
+		// is there anything to do?
+		if (fSeenRootElementEnd) {
+			notifyDiscardedEndElement(element, augs);
+			return;
 		}
-	} // comment(XMLString,Augmentations)
+		// get element information
+		HTMLElements.Element elem = getElement(element.rawname);
+		// do we ignore outside content?
+		if (!fIgnoreOutsideContent && (elem.code == HTMLElements.BODY
+				|| elem.code == HTMLElements.HTML)) {
+			notifyDiscardedEndElement(element, augs);
+			return;
+		}
+		// check for end of document
+		if (elem.code == HTMLElements.HTML) {
+			fSeenRootElementEnd = true;
+		} else if (elem.code == HTMLElements.FORM) {
+			fOpenedForm = false;
+		}
+		// empty element
+		int depth = getElementDepth(elem);
+		if (depth == -1) {
+			if (elem.code == HTMLElements.P) {
+				startElement(element, emptyAttributes(), synthesizedAugs());
+				endElement(element, augs);
+			} else if (!elem.isEmpty()) {
+				notifyDiscardedEndElement(element, augs);
+			}
+			return;
+		}
+		// find unbalanced inline elements
+		if (depth > 1 && elem.isInline()) {
+			final int size = fElementStack.top;
+			fInlineStack.top = 0;
+			for (int i = 0; i < depth - 1; i++) {
+				final Info info = fElementStack.data[size - i - 1];
+				final HTMLElements.Element pelem = info.element;
+				if (pelem.isInline() || pelem.code == HTMLElements.FONT) { // TODO:
+																			// investigate
+																			// if
+																			// only
+																			// FONT
+					// NOTE: I don't have to make a copy of the info because
+					// it will just be popped off of the element stack
+					// as soon as we close it, anyway.
+					fInlineStack.push(info);
+				}
+			}
+		}
+		// close children up to appropriate element
+		for (int i = 0; i < depth; i++) {
+			Info info = fElementStack.pop();
+			if (fReportErrors && i < depth - 1) {
+				String ename = modifyName(element.rawname, fNamesElems);
+				String iname = info.qname.rawname;
+				fErrorReporter.reportWarning("HTML2007",
+						new Object[] { ename, iname });
+			}
+			if (fDocumentHandler != null) {
+				callEndElement(info.qname,
+						i < depth - 1 ? synthesizedAugs() : augs);
+			}
+		}
+		// re-open inline elements
+		if (depth > 1) {
+			int size = fInlineStack.top;
+			for (int i = 0; i < size; i++) {
+				Info info = (Info) fInlineStack.pop();
+				XMLAttributes attributes = info.attributes;
+				if (fReportErrors) {
+					String iname = info.qname.rawname;
+					fErrorReporter.reportWarning("HTML2008",
+							new Object[] { iname });
+				}
+				startElement(info.qname, attributes, synthesizedAugs());
+			}
+		}
+	} // endElement(QName,Augmentations)
+
+	/** End entity. */
+	public void endGeneralEntity(String name, Augmentations augs)
+			throws XNIException {
+		// check for end of document
+		if (fSeenRootElementEnd) {
+			return;
+		}
+		// call handler
+		if (fDocumentHandler != null) {
+			fDocumentHandler.endGeneralEntity(name, augs);
+		}
+	} // endGeneralEntity(String,Augmentations)
+
+	/** End prefix mapping. */
+	public void endPrefixMapping(String prefix, Augmentations augs)
+			throws XNIException {
+		// check for end of document
+		if (fSeenRootElementEnd) {
+			return;
+		}
+		// call handler
+		if (fDocumentHandler != null) {
+			XercesBridge.getInstance().XMLDocumentHandler_endPrefixMapping(
+					fDocumentHandler, prefix, augs);
+		}
+	} // endPrefixMapping(String,Augmentations)
+
+	// @since Xerces 2.1.0
+	/** Returns the document handler. */
+	public XMLDocumentHandler getDocumentHandler() {
+		return fDocumentHandler;
+	} // getDocumentHandler():XMLDocumentHandler
+
+	/** Returns the document source. */
+	public XMLDocumentSource getDocumentSource() {
+		return fDocumentSource;
+	} // getDocumentSource():XMLDocumentSource
+
+	//
+	// Protected methods
+	//
+	/** Returns an HTML element. */
+	protected HTMLElements.Element getElement(String name) {
+		if (fNamespaces) {
+			int index = name.indexOf(':');
+			if (index != -1) {
+				name = name.substring(index + 1);
+			}
+		}
+		return HTMLElements.getElement(name);
+	} // getElement(String):HTMLElements.Element
+
+	/**
+	 * Returns the depth of the open tag associated with the specified element
+	 * name or -1 if no matching element is found.
+	 * 
+	 * @param element
+	 *            The element.
+	 */
+	protected final int getElementDepth(HTMLElements.Element element) {
+		final boolean container = element.isContainer();
+		int depth = -1;
+		for (int i = fElementStack.top - 1; i >= 0; i--) {
+			Info info = fElementStack.data[i];
+			if (info.element.code == element.code) {
+				depth = fElementStack.top - i;
+				break;
+			}
+			if (!container && info.element.isBlock()) {
+				break;
+			}
+		}
+		return depth;
+	} // getElementDepth(HTMLElements.Element)
+
+	//
+	// HTMLComponent methods
+	//
+	/** Returns the default state for a feature. */
+	public Boolean getFeatureDefault(String featureId) {
+		int length = RECOGNIZED_FEATURES != null ? RECOGNIZED_FEATURES.length
+				: 0;
+		for (int i = 0; i < length; i++) {
+			if (RECOGNIZED_FEATURES[i].equals(featureId)) {
+				return RECOGNIZED_FEATURES_DEFAULTS[i];
+			}
+		}
+		return null;
+	} // getFeatureDefault(String):Boolean
+
+	/**
+	 * Returns the depth of the open tag associated with the specified element
+	 * parent names or -1 if no matching element is found.
+	 * 
+	 * @param parents
+	 *            The parent elements.
+	 */
+	protected int getParentDepth(HTMLElements.Element[] parents, short bounds) {
+		if (parents != null) {
+			for (int i = fElementStack.top - 1; i >= 0; i--) {
+				Info info = fElementStack.data[i];
+				if (info.element.code == bounds) {
+					break;
+				}
+				for (int j = 0; j < parents.length; j++) {
+					if (info.element.code == parents[j].code) {
+						return fElementStack.top - i;
+					}
+				}
+			}
+		}
+		return -1;
+	} // getParentDepth(HTMLElements.Element[],short):int
+
+	/** Returns the default state for a property. */
+	public Object getPropertyDefault(String propertyId) {
+		int length = RECOGNIZED_PROPERTIES != null
+				? RECOGNIZED_PROPERTIES.length
+				: 0;
+		for (int i = 0; i < length; i++) {
+			if (RECOGNIZED_PROPERTIES[i].equals(propertyId)) {
+				return RECOGNIZED_PROPERTIES_DEFAULTS[i];
+			}
+		}
+		return null;
+	} // getPropertyDefault(String):Object
+
+	//
+	// XMLComponent methods
+	//
+	/** Returns recognized features. */
+	public String[] getRecognizedFeatures() {
+		return RECOGNIZED_FEATURES;
+	} // getRecognizedFeatures():String[]
+
+	/** Returns recognized properties. */
+	public String[] getRecognizedProperties() {
+		return RECOGNIZED_PROPERTIES;
+	} // getRecognizedProperties():String[]
+
+	/** Ignorable whitespace. */
+	public void ignorableWhitespace(XMLString text, Augmentations augs)
+			throws XNIException {
+		characters(text, augs);
+	} // ignorableWhitespace(XMLString,Augmentations)
+
+	/**
+	 * Notifies the tagBalancingListener (if any) of an ignored end element
+	 */
+	private void notifyDiscardedEndElement(final QName element,
+			final Augmentations augs) {
+		if (tagBalancingListener != null)
+			tagBalancingListener.ignoredEndElement(element, augs);
+	}
+
+	/**
+	 * Notifies the tagBalancingListener (if any) of an ignored start element
+	 */
+	private void notifyDiscardedStartElement(final QName elem,
+			final XMLAttributes attrs, final Augmentations augs) {
+		if (tagBalancingListener != null)
+			tagBalancingListener.ignoredStartElement(elem, attrs, augs);
+	}
 
 	/** Processing instruction. */
 	public void processingInstruction(String target, XMLString data,
@@ -421,6 +660,117 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 			fDocumentHandler.processingInstruction(target, data, augs);
 		}
 	} // processingInstruction(String,XMLString,Augmentations)
+
+	/** Resets the component. */
+	public void reset(XMLComponentManager manager)
+			throws XMLConfigurationException {
+		// get features
+		fNamespaces = manager.getFeature(NAMESPACES);
+		fAugmentations = manager.getFeature(AUGMENTATIONS);
+		fReportErrors = manager.getFeature(REPORT_ERRORS);
+		fDocumentFragment = manager.getFeature(DOCUMENT_FRAGMENT)
+				|| manager.getFeature(DOCUMENT_FRAGMENT_DEPRECATED);
+		fIgnoreOutsideContent = manager.getFeature(IGNORE_OUTSIDE_CONTENT);
+		// get properties
+		fNamesElems = getNamesValue(
+				String.valueOf(manager.getProperty(NAMES_ELEMS)));
+		fNamesAttrs = getNamesValue(
+				String.valueOf(manager.getProperty(NAMES_ATTRS)));
+		fErrorReporter = (HTMLErrorReporter) manager
+				.getProperty(ERROR_REPORTER);
+	} // reset(XMLComponentManager)
+
+	//
+	// XMLDocumentSource methods
+	//
+	/** Sets the document handler. */
+	public void setDocumentHandler(XMLDocumentHandler handler) {
+		fDocumentHandler = handler;
+	} // setDocumentHandler(XMLDocumentHandler)
+
+	// @since Xerces 2.1.0
+	/** Sets the document source. */
+	public void setDocumentSource(XMLDocumentSource source) {
+		fDocumentSource = source;
+	} // setDocumentSource(XMLDocumentSource)
+
+	/** Sets a feature. */
+	public void setFeature(String featureId, boolean state)
+			throws XMLConfigurationException {
+		if (featureId.equals(AUGMENTATIONS)) {
+			fAugmentations = state;
+			return;
+		}
+		if (featureId.equals(REPORT_ERRORS)) {
+			fReportErrors = state;
+			return;
+		}
+		if (featureId.equals(IGNORE_OUTSIDE_CONTENT)) {
+			fIgnoreOutsideContent = state;
+			return;
+		}
+	} // setFeature(String,boolean)
+
+	/** Sets a property. */
+	public void setProperty(String propertyId, Object value)
+			throws XMLConfigurationException {
+		if (propertyId.equals(NAMES_ELEMS)) {
+			fNamesElems = getNamesValue(String.valueOf(value));
+			return;
+		}
+		if (propertyId.equals(NAMES_ATTRS)) {
+			fNamesAttrs = getNamesValue(String.valueOf(value));
+			return;
+		}
+	} // setProperty(String,Object)
+
+	void setTagBalancingListener(
+			final HTMLTagBalancingListener tagBalancingListener) {
+		this.tagBalancingListener = tagBalancingListener;
+	}
+
+	/** Start CDATA section. */
+	public void startCDATA(Augmentations augs) throws XNIException {
+		fSeenAnything = true;
+		// check for end of document
+		if (fSeenRootElementEnd) {
+			return;
+		}
+		// call handler
+		if (fDocumentHandler != null) {
+			fDocumentHandler.startCDATA(augs);
+		}
+	} // startCDATA(Augmentations)
+
+	// removed since Xerces-J 2.3.0
+	/** Start document. */
+	public void startDocument(XMLLocator locator, String encoding,
+			Augmentations augs) throws XNIException {
+		startDocument(locator, encoding, null, augs);
+	} // startDocument(XMLLocator,String,Augmentations)
+
+	//
+	// XMLDocumentHandler methods
+	//
+	// since Xerces-J 2.2.0
+	/** Start document. */
+	public void startDocument(XMLLocator locator, String encoding,
+			NamespaceContext nscontext, Augmentations augs)
+			throws XNIException {
+		// reset state
+		fElementStack.top = 0;
+		fSeenAnything = false;
+		fSeenDoctype = false;
+		fSeenRootElement = false;
+		fSeenRootElementEnd = false;
+		fSeenHeadElement = false;
+		fSeenBodyElement = false;
+		// pass on event
+		if (fDocumentHandler != null) {
+			XercesBridge.getInstance().XMLDocumentHandler_startDocument(
+					fDocumentHandler, locator, encoding, nscontext, augs);
+		}
+	} // startDocument(XMLLocator,String,Augmentations)
 
 	/** Start element. */
 	public void startElement(final QName elem, XMLAttributes attrs,
@@ -603,18 +953,6 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 		}
 	} // startElement(QName,XMLAttributes,Augmentations)
 
-	/** Empty element. */
-	public void emptyElement(final QName element, XMLAttributes attrs,
-			Augmentations augs) throws XNIException {
-		startElement(element, attrs, augs);
-		// browser ignore the closing indication for non empty tags like <form
-		// .../> but not for unknown element
-		final HTMLElements.Element elem = getElement(element.rawname);
-		if (elem.isEmpty() || elem.code == HTMLElements.UNKNOWN) {
-			endElement(element, augs);
-		}
-	} // emptyElement(QName,XMLAttributes,Augmentations)
-
 	/** Start entity. */
 	public void startGeneralEntity(String name, XMLResourceIdentifier id,
 			String encoding, Augmentations augs) throws XNIException {
@@ -657,220 +995,6 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 		}
 	} // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
 
-	/** Text declaration. */
-	public void textDecl(String version, String encoding, Augmentations augs)
-			throws XNIException {
-		fSeenAnything = true;
-		// check for end of document
-		if (fSeenRootElementEnd) {
-			return;
-		}
-		// call handler
-		if (fDocumentHandler != null) {
-			fDocumentHandler.textDecl(version, encoding, augs);
-		}
-	} // textDecl(String,String,Augmentations)
-
-	/** End entity. */
-	public void endGeneralEntity(String name, Augmentations augs)
-			throws XNIException {
-		// check for end of document
-		if (fSeenRootElementEnd) {
-			return;
-		}
-		// call handler
-		if (fDocumentHandler != null) {
-			fDocumentHandler.endGeneralEntity(name, augs);
-		}
-	} // endGeneralEntity(String,Augmentations)
-
-	/** Start CDATA section. */
-	public void startCDATA(Augmentations augs) throws XNIException {
-		fSeenAnything = true;
-		// check for end of document
-		if (fSeenRootElementEnd) {
-			return;
-		}
-		// call handler
-		if (fDocumentHandler != null) {
-			fDocumentHandler.startCDATA(augs);
-		}
-	} // startCDATA(Augmentations)
-
-	/** End CDATA section. */
-	public void endCDATA(Augmentations augs) throws XNIException {
-		// check for end of document
-		if (fSeenRootElementEnd) {
-			return;
-		}
-		// call handler
-		if (fDocumentHandler != null) {
-			fDocumentHandler.endCDATA(augs);
-		}
-	} // endCDATA(Augmentations)
-
-	/** Characters. */
-	public void characters(XMLString text, Augmentations augs)
-			throws XNIException {
-		// check for end of document
-		if (fSeenRootElementEnd) {
-			return;
-		}
-		// is this text whitespace?
-		boolean whitespace = true;
-		for (int i = 0; i < text.length; i++) {
-			if (!Character.isWhitespace(text.ch[text.offset + i])) {
-				whitespace = false;
-				break;
-			}
-		}
-		if (!fDocumentFragment) {
-			// handle bare characters
-			if (!fSeenRootElement) {
-				if (whitespace) {
-					return;
-				}
-				String ename = modifyName("body", fNamesElems);
-				fQName.setValues(null, ename, ename, null);
-				if (fReportErrors) {
-					fErrorReporter.reportWarning("HTML2006",
-							new Object[] { ename });
-				}
-				startElement(fQName, null, synthesizedAugs());
-			}
-			// handle character content in head
-			// NOTE: This fequently happens when the document looks like:
-			// <title>Title</title>
-			// And here's some text.
-			else if (!whitespace) {
-				Info info = fElementStack.peek();
-				if (info.element.code == HTMLElements.HEAD
-						|| info.element.code == HTMLElements.HTML) {
-					String hname = modifyName("head", fNamesElems);
-					String bname = modifyName("body", fNamesElems);
-					if (fReportErrors) {
-						fErrorReporter.reportWarning("HTML2009",
-								new Object[] { hname, bname });
-					}
-					fQName.setValues(null, hname, hname, null);
-					endElement(fQName, synthesizedAugs());
-					fQName.setValues(null, bname, bname, null);
-					startElement(fQName, null, synthesizedAugs());
-				}
-			}
-		}
-		// call handler
-		if (fDocumentHandler != null) {
-			fDocumentHandler.characters(text, augs);
-		}
-	} // characters(XMLString,Augmentations)
-
-	/** Ignorable whitespace. */
-	public void ignorableWhitespace(XMLString text, Augmentations augs)
-			throws XNIException {
-		characters(text, augs);
-	} // ignorableWhitespace(XMLString,Augmentations)
-
-	/** End element. */
-	public void endElement(final QName element, final Augmentations augs)
-			throws XNIException {
-		// is there anything to do?
-		if (fSeenRootElementEnd) {
-			notifyDiscardedEndElement(element, augs);
-			return;
-		}
-		// get element information
-		HTMLElements.Element elem = getElement(element.rawname);
-		// do we ignore outside content?
-		if (!fIgnoreOutsideContent && (elem.code == HTMLElements.BODY
-				|| elem.code == HTMLElements.HTML)) {
-			notifyDiscardedEndElement(element, augs);
-			return;
-		}
-		// check for end of document
-		if (elem.code == HTMLElements.HTML) {
-			fSeenRootElementEnd = true;
-		} else if (elem.code == HTMLElements.FORM) {
-			fOpenedForm = false;
-		}
-		// empty element
-		int depth = getElementDepth(elem);
-		if (depth == -1) {
-			if (elem.code == HTMLElements.P) {
-				startElement(element, emptyAttributes(), synthesizedAugs());
-				endElement(element, augs);
-			} else if (!elem.isEmpty()) {
-				notifyDiscardedEndElement(element, augs);
-			}
-			return;
-		}
-		// find unbalanced inline elements
-		if (depth > 1 && elem.isInline()) {
-			final int size = fElementStack.top;
-			fInlineStack.top = 0;
-			for (int i = 0; i < depth - 1; i++) {
-				final Info info = fElementStack.data[size - i - 1];
-				final HTMLElements.Element pelem = info.element;
-				if (pelem.isInline() || pelem.code == HTMLElements.FONT) { // TODO:
-																			// investigate
-																			// if
-																			// only
-																			// FONT
-					// NOTE: I don't have to make a copy of the info because
-					// it will just be popped off of the element stack
-					// as soon as we close it, anyway.
-					fInlineStack.push(info);
-				}
-			}
-		}
-		// close children up to appropriate element
-		for (int i = 0; i < depth; i++) {
-			Info info = fElementStack.pop();
-			if (fReportErrors && i < depth - 1) {
-				String ename = modifyName(element.rawname, fNamesElems);
-				String iname = info.qname.rawname;
-				fErrorReporter.reportWarning("HTML2007",
-						new Object[] { ename, iname });
-			}
-			if (fDocumentHandler != null) {
-				callEndElement(info.qname,
-						i < depth - 1 ? synthesizedAugs() : augs);
-			}
-		}
-		// re-open inline elements
-		if (depth > 1) {
-			int size = fInlineStack.top;
-			for (int i = 0; i < size; i++) {
-				Info info = (Info) fInlineStack.pop();
-				XMLAttributes attributes = info.attributes;
-				if (fReportErrors) {
-					String iname = info.qname.rawname;
-					fErrorReporter.reportWarning("HTML2008",
-							new Object[] { iname });
-				}
-				startElement(info.qname, attributes, synthesizedAugs());
-			}
-		}
-	} // endElement(QName,Augmentations)
-
-	// @since Xerces 2.1.0
-	/** Sets the document source. */
-	public void setDocumentSource(XMLDocumentSource source) {
-		fDocumentSource = source;
-	} // setDocumentSource(XMLDocumentSource)
-
-	/** Returns the document source. */
-	public XMLDocumentSource getDocumentSource() {
-		return fDocumentSource;
-	} // getDocumentSource():XMLDocumentSource
-
-	// removed since Xerces-J 2.3.0
-	/** Start document. */
-	public void startDocument(XMLLocator locator, String encoding,
-			Augmentations augs) throws XNIException {
-		startDocument(locator, encoding, null, augs);
-	} // startDocument(XMLLocator,String,Augmentations)
-
 	/** Start prefix mapping. */
 	public void startPrefixMapping(String prefix, String uri,
 			Augmentations augs) throws XNIException {
@@ -885,99 +1009,6 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 		}
 	} // startPrefixMapping(String,String,Augmentations)
 
-	/** End prefix mapping. */
-	public void endPrefixMapping(String prefix, Augmentations augs)
-			throws XNIException {
-		// check for end of document
-		if (fSeenRootElementEnd) {
-			return;
-		}
-		// call handler
-		if (fDocumentHandler != null) {
-			XercesBridge.getInstance().XMLDocumentHandler_endPrefixMapping(
-					fDocumentHandler, prefix, augs);
-		}
-	} // endPrefixMapping(String,Augmentations)
-
-	//
-	// Protected methods
-	//
-	/** Returns an HTML element. */
-	protected HTMLElements.Element getElement(String name) {
-		if (fNamespaces) {
-			int index = name.indexOf(':');
-			if (index != -1) {
-				name = name.substring(index + 1);
-			}
-		}
-		return HTMLElements.getElement(name);
-	} // getElement(String):HTMLElements.Element
-
-	/** Call document handler start element. */
-	protected final void callStartElement(QName element, XMLAttributes attrs,
-			Augmentations augs) throws XNIException {
-		fDocumentHandler.startElement(element, attrs, augs);
-	} // callStartElement(QName,XMLAttributes,Augmentations)
-
-	/** Call document handler end element. */
-	protected final void callEndElement(QName element, Augmentations augs)
-			throws XNIException {
-		fDocumentHandler.endElement(element, augs);
-	} // callEndElement(QName,Augmentations)
-
-	/**
-	 * Returns the depth of the open tag associated with the specified element
-	 * name or -1 if no matching element is found.
-	 * 
-	 * @param element
-	 *            The element.
-	 */
-	protected final int getElementDepth(HTMLElements.Element element) {
-		final boolean container = element.isContainer();
-		int depth = -1;
-		for (int i = fElementStack.top - 1; i >= 0; i--) {
-			Info info = fElementStack.data[i];
-			if (info.element.code == element.code) {
-				depth = fElementStack.top - i;
-				break;
-			}
-			if (!container && info.element.isBlock()) {
-				break;
-			}
-		}
-		return depth;
-	} // getElementDepth(HTMLElements.Element)
-
-	/**
-	 * Returns the depth of the open tag associated with the specified element
-	 * parent names or -1 if no matching element is found.
-	 * 
-	 * @param parents
-	 *            The parent elements.
-	 */
-	protected int getParentDepth(HTMLElements.Element[] parents, short bounds) {
-		if (parents != null) {
-			for (int i = fElementStack.top - 1; i >= 0; i--) {
-				Info info = fElementStack.data[i];
-				if (info.element.code == bounds) {
-					break;
-				}
-				for (int j = 0; j < parents.length; j++) {
-					if (info.element.code == parents[j].code) {
-						return fElementStack.top - i;
-					}
-				}
-			}
-		}
-		return -1;
-	} // getParentDepth(HTMLElements.Element[],short):int
-
-	/** Returns a set of empty attributes. */
-	protected final XMLAttributes emptyAttributes() {
-		fEmptyAttrs.removeAllAttributes();
-		return fEmptyAttrs;
-	} // emptyAttributes():XMLAttributes
-
 	/** Returns an augmentations object with a synthesized item added. */
 	protected final Augmentations synthesizedAugs() {
 		HTMLAugmentations augs = null;
@@ -989,36 +1020,28 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 		return augs;
 	} // synthesizedAugs():Augmentations
 
-	//
-	// Protected static methods
-	//
-	/** Modifies the given name based on the specified mode. */
-	protected static final String modifyName(String name, short mode) {
-		switch (mode) {
-		case NAMES_UPPERCASE:
-			return name.toUpperCase();
-		case NAMES_LOWERCASE:
-			return name.toLowerCase();
+	/** Text declaration. */
+	public void textDecl(String version, String encoding, Augmentations augs)
+			throws XNIException {
+		fSeenAnything = true;
+		// check for end of document
+		if (fSeenRootElementEnd) {
+			return;
 		}
-		return name;
-	} // modifyName(String,short):String
+		// call handler
+		if (fDocumentHandler != null) {
+			fDocumentHandler.textDecl(version, encoding, augs);
+		}
+	} // textDecl(String,String,Augmentations)
 
-	/**
-	 * Converts HTML names string value to constant value.
-	 * 
-	 * @see #NAMES_NO_CHANGE
-	 * @see #NAMES_LOWERCASE
-	 * @see #NAMES_UPPERCASE
-	 */
-	protected static final short getNamesValue(String value) {
-		if (value.equals("lower")) {
-			return NAMES_LOWERCASE;
+	// old methods
+	/** XML declaration. */
+	public void xmlDecl(String version, String encoding, String standalone,
+			Augmentations augs) throws XNIException {
+		if (!fSeenAnything && fDocumentHandler != null) {
+			fDocumentHandler.xmlDecl(version, encoding, standalone, augs);
 		}
-		if (value.equals("upper")) {
-			return NAMES_UPPERCASE;
-		}
-		return NAMES_NO_CHANGE;
-	} // getNamesValue(String):short
+	} // xmlDecl(String,String,String,Augmentations)
 
 	//
 	// Classes
@@ -1122,6 +1145,16 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 		/** The stack data. */
 		public Info[] data = new Info[10];
 
+		/** Peeks at the top of the stack. */
+		public Info peek() {
+			return data[top - 1];
+		} // peek():Info
+
+		/** Pops the top item off of the stack. */
+		public Info pop() {
+			return data[--top];
+		} // pop():Info
+
 		//
 		// Public methods
 		//
@@ -1134,16 +1167,6 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 			}
 			data[top++] = info;
 		} // push(Info)
-
-		/** Peeks at the top of the stack. */
-		public Info peek() {
-			return data[top - 1];
-		} // peek():Info
-
-		/** Pops the top item off of the stack. */
-		public Info pop() {
-			return data[--top];
-		} // pop():Info
 
 		/**
 		 * Simple representation to make debugging easier
@@ -1159,27 +1182,4 @@ public class HTMLTagBalancer implements XMLDocumentFilter, HTMLComponent {
 			return sb.toString();
 		}
 	} // class InfoStack
-
-	void setTagBalancingListener(
-			final HTMLTagBalancingListener tagBalancingListener) {
-		this.tagBalancingListener = tagBalancingListener;
-	}
-
-	/**
-	 * Notifies the tagBalancingListener (if any) of an ignored start element
-	 */
-	private void notifyDiscardedStartElement(final QName elem,
-			final XMLAttributes attrs, final Augmentations augs) {
-		if (tagBalancingListener != null)
-			tagBalancingListener.ignoredStartElement(elem, attrs, augs);
-	}
-
-	/**
-	 * Notifies the tagBalancingListener (if any) of an ignored end element
-	 */
-	private void notifyDiscardedEndElement(final QName element,
-			final Augmentations augs) {
-		if (tagBalancingListener != null)
-			tagBalancingListener.ignoredEndElement(element, augs);
-	}
 } // class HTMLTagBalancer

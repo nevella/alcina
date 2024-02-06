@@ -67,6 +67,30 @@ public class JBoss7Support {
 		}
 	}
 
+	static class SourceFinderVfs implements SourceFinder {
+		@Override
+		public String findSource0(Class clazz) {
+			try {
+				CodeSource codeSource = clazz.getProtectionDomain()
+						.getCodeSource();
+				URL classFileLocation = codeSource.getLocation();
+				if (classFileLocation.toString().startsWith("vfs:")) {
+					VirtualFile root = VFS.getChild(classFileLocation.toURI());
+					String childPath = Ax.format("%s.java",
+							clazz.getName().replace(".", "/"));
+					VirtualFile child = root.getChild(childPath);
+					if (child.exists()) {
+						return Io.read().fromStream(child.openStream())
+								.asString();
+					}
+				}
+				return null;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	public static class VFSClasspathVisitor extends ClasspathVisitor {
 		public VFSClasspathVisitor(ClasspathScanner scanner) {
 			super(scanner);
@@ -97,30 +121,6 @@ public class JBoss7Support {
 			return url.getProtocol().equals(PROTOCOL_VFS)
 					|| url.getProtocol().equals(PROTOCOL_VFSZIP)
 					|| url.getProtocol().equals(PROTOCOL_VFSFILE);
-		}
-	}
-
-	static class SourceFinderVfs implements SourceFinder {
-		@Override
-		public String findSource0(Class clazz) {
-			try {
-				CodeSource codeSource = clazz.getProtectionDomain()
-						.getCodeSource();
-				URL classFileLocation = codeSource.getLocation();
-				if (classFileLocation.toString().startsWith("vfs:")) {
-					VirtualFile root = VFS.getChild(classFileLocation.toURI());
-					String childPath = Ax.format("%s.java",
-							clazz.getName().replace(".", "/"));
-					VirtualFile child = root.getChild(childPath);
-					if (child.exists()) {
-						return Io.read().fromStream(child.openStream())
-								.asString();
-					}
-				}
-				return null;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
 		}
 	}
 }

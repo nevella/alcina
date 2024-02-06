@@ -26,19 +26,19 @@ public class DataProviderDisplayAttach implements Handler {
 		}
 	}
 
+	private void detach() {
+		if (attachedToProvider) {
+			dataProvider.removeDataDisplay(hasData);
+			attachedToProvider = false;
+		}
+	}
+
 	@Override
 	public void onAttachOrDetach(AttachEvent event) {
 		if (event.isAttached()) {
 			attach();
 		} else {
 			detach();
-		}
-	}
-
-	private void detach() {
-		if (attachedToProvider) {
-			dataProvider.removeDataDisplay(hasData);
-			attachedToProvider = false;
 		}
 	}
 }

@@ -29,6 +29,10 @@ import cc.alcina.framework.common.client.util.StringMap;
  * @author Nick Reddel
  */
 public interface DeliveryModel extends TreeSerializable {
+	default void addAttachment(MailAttachment attachment) {
+		provideAttachments().add(attachment);
+	}
+
 	public String getAttachmentMessage();
 
 	public String getAttachmentMessageForRequestor();
@@ -55,6 +59,10 @@ public interface DeliveryModel extends TreeSerializable {
 
 	public Map<String, String> getProperties();
 
+	default String getPublicationUid() {
+		return null;
+	}
+
 	public RepositoryConnection getRepositoryConnection();
 
 	/**
@@ -67,6 +75,10 @@ public interface DeliveryModel extends TreeSerializable {
 	public String getSuggestedFileName();
 
 	public String getSystemEmailAddressOfRequestor();
+
+	default boolean hasProperty(String keyS) {
+		throw new UnsupportedOperationException();
+	}
 
 	public boolean isCoverPage();
 
@@ -88,23 +100,11 @@ public interface DeliveryModel extends TreeSerializable {
 
 	public List<MailInlineImage> provideImages();
 
-	public FormatConversionTarget provideTargetFormat();
-
-	default void addAttachment(MailAttachment attachment) {
-		provideAttachments().add(attachment);
-	}
-
-	default String getPublicationUid() {
-		return null;
-	}
-
-	default boolean hasProperty(String keyS) {
-		throw new UnsupportedOperationException();
-	}
-
 	default String providePropertyValue(String key) {
 		throw new UnsupportedOperationException();
 	}
+
+	public FormatConversionTarget provideTargetFormat();
 
 	default void removeAttachment(MailAttachment attachment) {
 		provideAttachments().remove(attachment);

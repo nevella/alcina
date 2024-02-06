@@ -102,6 +102,16 @@ public class NodeIteratorImpl implements NodeIterator {
 		fEntityReferenceExpansion = entityReferenceExpansion;
 	}
 
+	/** The node is accepted if it passes the whatToShow and the filter. */
+	boolean acceptNode(Node node) {
+		if (fNodeFilter == null) {
+			return (fWhatToShow & (1 << node.getNodeType() - 1)) != 0;
+		} else {
+			return ((fWhatToShow & (1 << node.getNodeType() - 1)) != 0)
+					&& fNodeFilter.acceptNode(node) == NodeFilter.FILTER_ACCEPT;
+		}
+	}
+
 	public void detach() {
 		fDetach = true;
 		fDocument.removeNodeIterator(this);
@@ -129,6 +139,22 @@ public class NodeIteratorImpl implements NodeIterator {
 	/** Return the whatToShow value */
 	public int getWhatToShow() {
 		return fWhatToShow;
+	}
+
+	/** Return node, if matches or any parent if matches. */
+	Node matchNodeOrParent(Node node) {
+		// Additions and removals in the underlying data structure may occur
+		// before any iterations, and in this case the reference_node is null.
+		if (fCurrentNode == null)
+			return null;
+		// check if the removed node is an _ancestor_ of the
+		// reference node
+		for (Node n = fCurrentNode; n != fRoot
+				&& n != null; n = n.getParentNode()) {
+			if (node == n)
+				return n;
+		}
+		return null;
 	}
 
 	/**
@@ -181,6 +207,46 @@ public class NodeIteratorImpl implements NodeIterator {
 	}
 
 	/**
+	 * The method nextNode(Node, boolean) returns the next node from the actual
+	 * DOM tree.
+	 * 
+	 * The boolean visitChildren determines whether to visit the children. The
+	 * result is the nextNode.
+	 */
+	Node nextNode(Node node, boolean visitChildren) {
+		if (node == null)
+			return fRoot;
+		Node result;
+		// only check children if we visit children.
+		if (visitChildren) {
+			// if hasChildren, return 1st child.
+			if (node.hasChildNodes()) {
+				result = node.getFirstChild();
+				return result;
+			}
+		}
+		if (node == fRoot) { // if Root has no kids
+			return null;
+		}
+		// if hasSibling, return sibling
+		result = node.getNextSibling();
+		if (result != null)
+			return result;
+		// return parent's 1st sibling.
+		Node parent = node.getParentNode();
+		while (parent != null && parent != fRoot) {
+			result = parent.getNextSibling();
+			if (result != null) {
+				return result;
+			} else {
+				parent = parent.getParentNode();
+			}
+		} // while (parent != null && parent != fRoot) {
+			// end of list, return null
+		return null;
+	}
+
+	/**
 	 * Return the previous Node in the Iterator. The node is the next node in
 	 * _backwards_ depth-first order which also passes the filter, and
 	 * whatToShow.
@@ -225,6 +291,33 @@ public class NodeIteratorImpl implements NodeIterator {
 	}
 
 	/**
+	 * The method previousNode(Node) returns the previous node from the actual
+	 * DOM tree.
+	 */
+	Node previousNode(Node node) {
+		Node result;
+		// if we're at the root, return null.
+		if (node == fRoot)
+			return null;
+		// get sibling
+		result = node.getPreviousSibling();
+		if (result == null) {
+			// if 1st sibling, return parent
+			result = node.getParentNode();
+			return result;
+		}
+		// if sibling has children, keep getting last child of child.
+		if (result.hasChildNodes() && !(!fEntityReferenceExpansion
+				&& result != null
+				&& result.getNodeType() == Node.ENTITY_REFERENCE_NODE)) {
+			while (result.hasChildNodes()) {
+				result = result.getLastChild();
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Fix-up the iterator on a remove. Called by DOM or otherwise, before an
 	 * actual DOM remove.
 	 */
@@ -253,98 +346,5 @@ public class NodeIteratorImpl implements NodeIterator {
 				fForward = true;
 			}
 		}
-	}
-
-	/** The node is accepted if it passes the whatToShow and the filter. */
-	boolean acceptNode(Node node) {
-		if (fNodeFilter == null) {
-			return (fWhatToShow & (1 << node.getNodeType() - 1)) != 0;
-		} else {
-			return ((fWhatToShow & (1 << node.getNodeType() - 1)) != 0)
-					&& fNodeFilter.acceptNode(node) == NodeFilter.FILTER_ACCEPT;
-		}
-	}
-
-	/** Return node, if matches or any parent if matches. */
-	Node matchNodeOrParent(Node node) {
-		// Additions and removals in the underlying data structure may occur
-		// before any iterations, and in this case the reference_node is null.
-		if (fCurrentNode == null)
-			return null;
-		// check if the removed node is an _ancestor_ of the
-		// reference node
-		for (Node n = fCurrentNode; n != fRoot
-				&& n != null; n = n.getParentNode()) {
-			if (node == n)
-				return n;
-		}
-		return null;
-	}
-
-	/**
-	 * The method nextNode(Node, boolean) returns the next node from the actual
-	 * DOM tree.
-	 * 
-	 * The boolean visitChildren determines whether to visit the children. The
-	 * result is the nextNode.
-	 */
-	Node nextNode(Node node, boolean visitChildren) {
-		if (node == null)
-			return fRoot;
-		Node result;
-		// only check children if we visit children.
-		if (visitChildren) {
-			// if hasChildren, return 1st child.
-			if (node.hasChildNodes()) {
-				result = node.getFirstChild();
-				return result;
-			}
-		}
-		if (node == fRoot) { // if Root has no kids
-			return null;
-		}
-		// if hasSibling, return sibling
-		result = node.getNextSibling();
-		if (result != null)
-			return result;
-		// return parent's 1st sibling.
-		Node parent = node.getParentNode();
-		while (parent != null && parent != fRoot) {
-			result = parent.getNextSibling();
-			if (result != null) {
-				return result;
-			} else {
-				parent = parent.getParentNode();
-			}
-		} // while (parent != null && parent != fRoot) {
-			// end of list, return null
-		return null;
-	}
-
-	/**
-	 * The method previousNode(Node) returns the previous node from the actual
-	 * DOM tree.
-	 */
-	Node previousNode(Node node) {
-		Node result;
-		// if we're at the root, return null.
-		if (node == fRoot)
-			return null;
-		// get sibling
-		result = node.getPreviousSibling();
-		if (result == null) {
-			// if 1st sibling, return parent
-			result = node.getParentNode();
-			return result;
-		}
-		// if sibling has children, keep getting last child of child.
-		if (result.hasChildNodes() && !(!fEntityReferenceExpansion
-				&& result != null
-				&& result.getNodeType() == Node.ENTITY_REFERENCE_NODE)) {
-			while (result.hasChildNodes()) {
-				result = result.getLastChild();
-			}
-		}
-		return result;
 	}
 }

@@ -9,36 +9,6 @@ public class TextJso extends NodeJso implements ClientDomText {
 		this.deleteData0(offset, length);
 	}
 
-	@Override
-	public final String getData() {
-		return getData0();
-	}
-
-	@Override
-	public final int getLength() {
-		return getLength0();
-	}
-
-	@Override
-	public final void insertData(int offset, String data) {
-		insertData0(offset, data);
-	}
-
-	@Override
-	public final void replaceData(int offset, int length, String data) {
-		replaceData0(offset, length, data);
-	}
-
-	@Override
-	public final void setData(String data) {
-		setData0(data);
-	}
-
-	@Override
-	public final Text splitText(int offset) {
-		return nodeFor(splitText0(offset));
-	}
-
 	/**
 	 * Deletes data at the given [offset, length] range.
 	 */
@@ -47,6 +17,11 @@ public class TextJso extends NodeJso implements ClientDomText {
     this.deleteData(offset, length);
 	}-*/;
 
+	@Override
+	public final String getData() {
+		return getData0();
+	}
+
 	/**
 	 * The character data of this text node.
 	 */
@@ -54,12 +29,22 @@ public class TextJso extends NodeJso implements ClientDomText {
     return this.data;
 	}-*/;
 
+	@Override
+	public final int getLength() {
+		return getLength0();
+	}
+
 	/**
 	 * The number of characters available through the data property.
 	 */
 	private final native int getLength0() /*-{
     return this.length;
 	}-*/;
+
+	@Override
+	public final void insertData(int offset, String data) {
+		insertData0(offset, data);
+	}
 
 	/**
 	 * Inserts character data at the given offset.
@@ -69,6 +54,11 @@ public class TextJso extends NodeJso implements ClientDomText {
     this.insertData(offset, data);
 	}-*/;
 
+	@Override
+	public final void replaceData(int offset, int length, String data) {
+		replaceData0(offset, length, data);
+	}
+
 	/**
 	 * Replaces data at the given [offset, length] range with the given string.
 	 */
@@ -77,6 +67,11 @@ public class TextJso extends NodeJso implements ClientDomText {
     this.replaceData(offset, length, data);
 	}-*/;
 
+	@Override
+	public final void setData(String data) {
+		setData0(data);
+	}
+
 	/**
 	 * The character data of this text node.
 	 */
@@ -84,6 +79,11 @@ public class TextJso extends NodeJso implements ClientDomText {
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.data = data;
 	}-*/;
+
+	@Override
+	public final Text splitText(int offset) {
+		return nodeFor(splitText0(offset));
+	}
 
 	/**
 	 * Splits the data in this node into two separate text nodes. The text

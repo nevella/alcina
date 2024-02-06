@@ -26,6 +26,20 @@ public abstract class SessionValidityChecker<A extends AuthenticationSession> {
 
 	/**
 	 * <p>
+	 * Check the session validity, calling external services if needed
+	 * </p>
+	 * <p>
+	 * Results are cached temporarily
+	 * </p>
+	 * 
+	 * @param session
+	 *            AuthenticationSession
+	 * @return Session validity
+	 */
+	protected abstract boolean checkValidity(A session);
+
+	/**
+	 * <p>
 	 * Check session is valid
 	 * </p>
 	 * <p>
@@ -39,20 +53,6 @@ public abstract class SessionValidityChecker<A extends AuthenticationSession> {
 	public boolean isValid(A session) {
 		return checks.computeIfAbsent(session, StateCheck::new).checkValid();
 	}
-
-	/**
-	 * <p>
-	 * Check the session validity, calling external services if needed
-	 * </p>
-	 * <p>
-	 * Results are cached temporarily
-	 * </p>
-	 * 
-	 * @param session
-	 *            AuthenticationSession
-	 * @return Session validity
-	 */
-	protected abstract boolean checkValidity(A session);
 
 	/**
 	 * Validity state cached entry

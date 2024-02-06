@@ -52,15 +52,8 @@ public class EnterAsClickKeyboardListener
 		this.inputButton = inputButton;
 	}
 
-	@Override
-	public void onKeyDown(KeyDownEvent event) {
-		if (listenToDown) {
-			handleEvent(event);
-		}
-	}
-
-	public void onKeyPress(KeyPressEvent event) {
-		handleEvent(event);
+	protected boolean checkCanClick() {
+		return tb.getText().length() != 0;
 	}
 
 	private void handleEvent(KeyEvent event) {
@@ -84,7 +77,14 @@ public class EnterAsClickKeyboardListener
 		}
 	}
 
-	protected boolean checkCanClick() {
-		return tb.getText().length() != 0;
+	@Override
+	public void onKeyDown(KeyDownEvent event) {
+		if (listenToDown) {
+			handleEvent(event);
+		}
+	}
+
+	public void onKeyPress(KeyPressEvent event) {
+		handleEvent(event);
 	}
 }

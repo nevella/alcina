@@ -142,41 +142,6 @@ public class MainTabPanel extends TabPanel {
 		return scrollHeight;
 	}
 
-	public int getAdjustHeight() {
-		int selectedTab = getTabBar().getSelectedTab();
-		boolean fullTab = selectedTab != -1 && getDeckPanel()
-				.getWidget(selectedTab) instanceof TabDisplaysAsFullHeight;
-		return fullTab ? 0 : 50;
-	}
-
-	public SimplePanel getNoTabContentHolder() {
-		return this.noTabContentHolder;
-	}
-
-	public int getTabBarHeight() {
-		VerticalPanel vp = (VerticalPanel) getWidget();
-		Widget w = vp.getWidget(0);
-		return w.getOffsetHeight();
-	};
-
-	public FlowPanel getToolbarHolder() {
-		return this.toolbarHolder;
-	}
-
-	@Override
-	public Widget getWidget() {
-		return super.getWidget();
-	}
-
-	public SimplePanel setNotabContent(Widget w) {
-		noTabContentHolder.setWidget(w);
-		return noTabContentHolder;
-	}
-
-	public void setToolbarHolder(FlowPanel toolbarHolder) {
-		this.toolbarHolder = toolbarHolder;
-	}
-
 	private HorizontalPanel createButtonsPanel() {
 		HorizontalPanel hp = new HorizontalPanel();
 		hp.setStyleName("alcina-MainMenuRight");
@@ -190,6 +155,52 @@ public class MainTabPanel extends TabPanel {
 			hp.add(new BarSep());
 		}
 		return hp;
+	}
+
+	protected void customizeDock() {
+		// subclassing
+	}
+
+	public int getAdjustHeight() {
+		int selectedTab = getTabBar().getSelectedTab();
+		boolean fullTab = selectedTab != -1 && getDeckPanel()
+				.getWidget(selectedTab) instanceof TabDisplaysAsFullHeight;
+		return fullTab ? 0 : 50;
+	};
+
+	public SimplePanel getNoTabContentHolder() {
+		return this.noTabContentHolder;
+	}
+
+	public int getTabBarHeight() {
+		VerticalPanel vp = (VerticalPanel) getWidget();
+		Widget w = vp.getWidget(0);
+		return w.getOffsetHeight();
+	}
+
+	public FlowPanel getToolbarHolder() {
+		return this.toolbarHolder;
+	}
+
+	@Override
+	public Widget getWidget() {
+		return super.getWidget();
+	}
+
+	protected boolean isWrapCenterContainer() {
+		return false;
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		PermissionsManager.topicLoginState().delta(visListener, true);
+	}
+
+	@Override
+	protected void onDetach() {
+		PermissionsManager.topicLoginState().delta(visListener, false);
+		super.onDetach();
 	}
 
 	private void refreshButtonPanelVis() {
@@ -216,24 +227,21 @@ public class MainTabPanel extends TabPanel {
 		}
 	}
 
-	protected void customizeDock() {
-		// subclassing
+	public SimplePanel setNotabContent(Widget w) {
+		noTabContentHolder.setWidget(w);
+		return noTabContentHolder;
 	}
 
-	protected boolean isWrapCenterContainer() {
-		return false;
+	public void setToolbarHolder(FlowPanel toolbarHolder) {
+		this.toolbarHolder = toolbarHolder;
 	}
 
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		PermissionsManager.topicLoginState().delta(visListener, true);
-	}
-
-	@Override
-	protected void onDetach() {
-		PermissionsManager.topicLoginState().delta(visListener, false);
-		super.onDetach();
+	class BarSep extends Label {
+		BarSep() {
+			super();
+			setText(" | ");
+			setVisible(false);
+		}
 	}
 
 	public static class SimplePanel100pcHeight extends SimplePanel
@@ -251,14 +259,6 @@ public class MainTabPanel extends TabPanel {
 					return true;
 				}
 			};
-		}
-	}
-
-	class BarSep extends Label {
-		BarSep() {
-			super();
-			setText(" | ");
-			setVisible(false);
 		}
 	}
 }

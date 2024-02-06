@@ -163,6 +163,40 @@ public final class MutationNode {
 		}
 	}
 
+	void ensureChildNodes() {
+		if (childNodes == null) {
+			childNodes = new ArrayList<>();
+			Preconditions.checkState(remoteNode != null);
+			// avoid wrap-in-LD-node if remote
+			List<NodeJso> list = access.streamChildren(remoteNode)
+					.collect(Collectors.toList());
+			int length = list.size();
+			MutationNode lastChild = null;
+			for (int idx = 0; idx < length; idx++) {
+				ClientDomNode item = list.get(idx);
+				MutationNode child = sync.mutationNode((NodeJso) item);
+				// key - the only place child.parent is set is here (first time
+				// children are accessed during reverse playback). Ensures we're
+				// building a correct inverse tree
+				child.parent = this;
+				if (lastChild != null) {
+					child.previousSibling = lastChild;
+					lastChild.nextSibling = child;
+				}
+				lastChild = child;
+				childNodes.add(child);
+			}
+		}
+	}
+
+	String getNodeName() {
+		return nodeName;
+	}
+
+	boolean hasRecords() {
+		return records.size() > 0;
+	}
+
 	public void insertAfter(MutationNode predecessor, MutationNode newChild,
 			ApplyTo applyTo) {
 		switch (applyTo) {
@@ -193,6 +227,14 @@ public final class MutationNode {
 			break;
 		}
 		}
+	}
+
+	Node node() {
+		return node != null ? node : remoteNode.node();
+	}
+
+	boolean provideParentModified() {
+		return this.parentModified;
 	}
 
 	public String putAttributeData(ApplyTo applyTo, String attributeName,
@@ -289,6 +331,15 @@ public final class MutationNode {
 		}
 	}
 
+	EquivalenceTest testEquivalence(MutationNode other) {
+		EquivalenceTest equivalenceTest = new EquivalenceTest();
+		equivalenceTest.left = this;
+		equivalenceTest.right = other;
+		equivalenceTest.test();
+		return equivalenceTest.equivalent() ? equivalenceTest
+				: equivalenceTest.firstInequivalent;
+	}
+
 	@Override
 	public String toString() {
 		FormatBuilder format = new FormatBuilder().separator(" ");
@@ -306,57 +357,6 @@ public final class MutationNode {
 		return w3cNode;
 	}
 
-	void ensureChildNodes() {
-		if (childNodes == null) {
-			childNodes = new ArrayList<>();
-			Preconditions.checkState(remoteNode != null);
-			// avoid wrap-in-LD-node if remote
-			List<NodeJso> list = access.streamChildren(remoteNode)
-					.collect(Collectors.toList());
-			int length = list.size();
-			MutationNode lastChild = null;
-			for (int idx = 0; idx < length; idx++) {
-				ClientDomNode item = list.get(idx);
-				MutationNode child = sync.mutationNode((NodeJso) item);
-				// key - the only place child.parent is set is here (first time
-				// children are accessed during reverse playback). Ensures we're
-				// building a correct inverse tree
-				child.parent = this;
-				if (lastChild != null) {
-					child.previousSibling = lastChild;
-					lastChild.nextSibling = child;
-				}
-				lastChild = child;
-				childNodes.add(child);
-			}
-		}
-	}
-
-	String getNodeName() {
-		return nodeName;
-	}
-
-	boolean hasRecords() {
-		return records.size() > 0;
-	}
-
-	Node node() {
-		return node != null ? node : remoteNode.node();
-	}
-
-	boolean provideParentModified() {
-		return this.parentModified;
-	}
-
-	EquivalenceTest testEquivalence(MutationNode other) {
-		EquivalenceTest equivalenceTest = new EquivalenceTest();
-		equivalenceTest.left = this;
-		equivalenceTest.right = other;
-		equivalenceTest.test();
-		return equivalenceTest.equivalent() ? equivalenceTest
-				: equivalenceTest.firstInequivalent;
-	}
-
 	static class EquivalenceTest {
 		public MutationNode left;
 
@@ -367,65 +367,6 @@ public final class MutationNode {
 		String inequivalenceReason;
 
 		private EquivalenceTest parent;
-
-		public void test() {
-			Stack<EquivalenceTest> stack = new Stack<>();
-			stack.push(this);
-			// breadth-first
-			while (!stack.isEmpty()) {
-				EquivalenceTest cursor = stack.pop();
-				if (cursor.shallowInequivalent()) {
-					cursor.firstInequivalent = cursor;
-					firstInequivalent = cursor;
-					break;
-				} else {
-					int length = cursor.left.childNodes.size();
-					// reverse order, want to test in iteration order
-					for (int idx = length - 1; idx >= 0; idx--) {
-						EquivalenceTest child = new EquivalenceTest();
-						child.parent = cursor;
-						child.left = cursor.left.childNodes.get(idx);
-						child.right = cursor.right.childNodes.get(idx);
-						boolean ignoreChecks = false;
-						ignoreChecks |= child.left.nodeName
-								.equalsIgnoreCase("title")
-								&& cursor.left.nodeName
-										.equalsIgnoreCase("head");
-						// totally rando
-						ignoreChecks |= child.left.nodeName
-								.equalsIgnoreCase("script");
-						// ditto...ish. Non UI in any case
-						ignoreChecks |= child.left.nodeName
-								.equalsIgnoreCase("style");
-						// we care about structure, not value
-						ignoreChecks |= child.left.nodeName
-								.equalsIgnoreCase("input");
-						// we care about structure, not value
-						ignoreChecks |= child.left.nodeName
-								.equalsIgnoreCase("textarea");
-						if (!ignoreChecks) {
-							stack.push(child);
-						}
-					}
-				}
-			}
-		}
-
-		@Override
-		public String toString() {
-			FormatBuilder format = new FormatBuilder().separator("\n");
-			if (firstInequivalent == null) {
-				format.appendKeyValues("left", left, "right", right,
-						"equivalent", true);
-			} else {
-				format.appendKeyValues("left", left, "right", right,
-						"equivalent", false, "inequivalenceReason",
-						firstInequivalent.inequivalenceReason,
-						"inequivalencePath", firstInequivalent.left.path,
-						"parent", firstInequivalent.parent.left);
-			}
-			return format.toString();
-		}
 
 		private String debugInequivalentValues(String v1, String v2) {
 			int lineCount = 0;
@@ -463,6 +404,10 @@ public final class MutationNode {
 				format.append("No mismatched chars, just unequal lengths");
 			}
 			return format.toString();
+		}
+
+		boolean equivalent() {
+			return firstInequivalent == null;
 		}
 
 		private boolean shallowInequivalent() {
@@ -539,8 +484,63 @@ public final class MutationNode {
 			return false;
 		}
 
-		boolean equivalent() {
-			return firstInequivalent == null;
+		public void test() {
+			Stack<EquivalenceTest> stack = new Stack<>();
+			stack.push(this);
+			// breadth-first
+			while (!stack.isEmpty()) {
+				EquivalenceTest cursor = stack.pop();
+				if (cursor.shallowInequivalent()) {
+					cursor.firstInequivalent = cursor;
+					firstInequivalent = cursor;
+					break;
+				} else {
+					int length = cursor.left.childNodes.size();
+					// reverse order, want to test in iteration order
+					for (int idx = length - 1; idx >= 0; idx--) {
+						EquivalenceTest child = new EquivalenceTest();
+						child.parent = cursor;
+						child.left = cursor.left.childNodes.get(idx);
+						child.right = cursor.right.childNodes.get(idx);
+						boolean ignoreChecks = false;
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("title")
+								&& cursor.left.nodeName
+										.equalsIgnoreCase("head");
+						// totally rando
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("script");
+						// ditto...ish. Non UI in any case
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("style");
+						// we care about structure, not value
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("input");
+						// we care about structure, not value
+						ignoreChecks |= child.left.nodeName
+								.equalsIgnoreCase("textarea");
+						if (!ignoreChecks) {
+							stack.push(child);
+						}
+					}
+				}
+			}
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder format = new FormatBuilder().separator("\n");
+			if (firstInequivalent == null) {
+				format.appendKeyValues("left", left, "right", right,
+						"equivalent", true);
+			} else {
+				format.appendKeyValues("left", left, "right", right,
+						"equivalent", false, "inequivalenceReason",
+						firstInequivalent.inequivalenceReason,
+						"inequivalencePath", firstInequivalent.left.path,
+						"parent", firstInequivalent.parent.left);
+			}
+			return format.toString();
 		}
 	}
 }

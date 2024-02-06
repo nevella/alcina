@@ -15,31 +15,30 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 public class DocumentMatcher {
 	private ParserState parserState;
 
+	Map<Token, QueryMatcher> matchers = AlcinaCollections.newLinkedHashMap();
+
 	public DocumentMatcher(ParserState parserState) {
 		this.parserState = parserState;
 	}
 
-	Map<Token, QueryMatcher> matchers = AlcinaCollections.newLinkedHashMap();
+	public Measure match(Token token,
+			Function<DomNode, Optional<DomNode>> matcher) {
+		QueryMatcher queryMatcher = matchers
+				.computeIfAbsent(token, QueryMatcher::new).withMatcher(matcher);
+		return queryMatcher.match();
+	}
 
 	class QueryMatcher {
 		Token token;
 
 		Function<DomNode, Optional<DomNode>> matcher;
 
-		QueryMatcher(Token token) {
-			this.token = token;
-		}
-
 		Optional<DomNode> matchedNode;
 
 		Location matchedLocation;
 
-		QueryMatcher withMatcher(Function<DomNode, Optional<DomNode>> matcher) {
-			Preconditions.checkState(
-					this.matcher == null || this.matcher == matcher,
-					"matcher must be invariant");
-			this.matcher = matcher;
-			return this;
+		QueryMatcher(Token token) {
+			this.token = token;
 		}
 
 		Measure match() {
@@ -57,12 +56,13 @@ public class DocumentMatcher {
 				return null;
 			}
 		}
-	}
 
-	public Measure match(Token token,
-			Function<DomNode, Optional<DomNode>> matcher) {
-		QueryMatcher queryMatcher = matchers
-				.computeIfAbsent(token, QueryMatcher::new).withMatcher(matcher);
-		return queryMatcher.match();
+		QueryMatcher withMatcher(Function<DomNode, Optional<DomNode>> matcher) {
+			Preconditions.checkState(
+					this.matcher == null || this.matcher == matcher,
+					"matcher must be invariant");
+			this.matcher = matcher;
+			return this;
+		}
 	}
 }

@@ -65,56 +65,6 @@ public class Parser {
 		this.nf = nf;
 	}
 
-	/*
-	 * Build a parse tree from the given TokenStream.
-	 * 
-	 * @param ts the TokenStream to parse
-	 * 
-	 * @return an Object representing the parsed program. If the parse fails,
-	 * null will be returned. (The parse failure will result in a call to the
-	 * current Context's ErrorReporter.)
-	 */
-	public Object parse(TokenStream ts) throws IOException {
-		this.ok = true;
-		sourceTop = 0;
-		functionNumber = 0;
-		int tt; // last token from getToken();
-		int baseLineno = ts.getLineno(); // line number where source starts
-		/*
-		 * so we have something to add nodes to until we've collected all the
-		 * source
-		 */
-		Object tempBlock = nf.createLeaf(TokenStream.BLOCK);
-		((Node) tempBlock).setIsSyntheticBlock(true);
-		while (true) {
-			ts.flags |= ts.TSF_REGEXP;
-			tt = ts.getToken();
-			ts.flags &= ~ts.TSF_REGEXP;
-			if (tt <= ts.EOF) {
-				break;
-			}
-			if (tt == ts.FUNCTION) {
-				try {
-					nf.addChildToBack(tempBlock, function(ts, false));
-				} catch (JavaScriptException e) {
-					this.ok = false;
-					break;
-				}
-			} else {
-				ts.ungetToken(tt);
-				nf.addChildToBack(tempBlock, statement(ts));
-			}
-		}
-		if (!this.ok) {
-			// XXX ts.clearPushback() call here?
-			return null;
-		}
-		Object pn = nf.createScript(tempBlock, ts.getSourceName(), baseLineno,
-				ts.getLineno(), sourceToString(0));
-		((Node) pn).setIsSyntheticBlock(true);
-		return pn;
-	}
-
 	private Object addExpr(TokenStream ts)
 			throws IOException, JavaScriptException {
 		int tt;
@@ -494,6 +444,56 @@ public class Parser {
 			sourceAdd((char) ts.OR);
 			pn = nf.createBinary(ts.OR, pn, orExpr(ts, inForInit));
 		}
+		return pn;
+	}
+
+	/*
+	 * Build a parse tree from the given TokenStream.
+	 * 
+	 * @param ts the TokenStream to parse
+	 * 
+	 * @return an Object representing the parsed program. If the parse fails,
+	 * null will be returned. (The parse failure will result in a call to the
+	 * current Context's ErrorReporter.)
+	 */
+	public Object parse(TokenStream ts) throws IOException {
+		this.ok = true;
+		sourceTop = 0;
+		functionNumber = 0;
+		int tt; // last token from getToken();
+		int baseLineno = ts.getLineno(); // line number where source starts
+		/*
+		 * so we have something to add nodes to until we've collected all the
+		 * source
+		 */
+		Object tempBlock = nf.createLeaf(TokenStream.BLOCK);
+		((Node) tempBlock).setIsSyntheticBlock(true);
+		while (true) {
+			ts.flags |= ts.TSF_REGEXP;
+			tt = ts.getToken();
+			ts.flags &= ~ts.TSF_REGEXP;
+			if (tt <= ts.EOF) {
+				break;
+			}
+			if (tt == ts.FUNCTION) {
+				try {
+					nf.addChildToBack(tempBlock, function(ts, false));
+				} catch (JavaScriptException e) {
+					this.ok = false;
+					break;
+				}
+			} else {
+				ts.ungetToken(tt);
+				nf.addChildToBack(tempBlock, statement(ts));
+			}
+		}
+		if (!this.ok) {
+			// XXX ts.clearPushback() call here?
+			return null;
+		}
+		Object pn = nf.createScript(tempBlock, ts.getSourceName(), baseLineno,
+				ts.getLineno(), sourceToString(0));
+		((Node) pn).setIsSyntheticBlock(true);
 		return pn;
 	}
 

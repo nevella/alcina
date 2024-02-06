@@ -18,25 +18,6 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 	int negativeIdPutWarningCount = 0;
 
 	@Override
-	public void debugNotFound(EntityLocator objectLocator) {
-		TransactionalMap txMap = (TransactionalMap) domain
-				.get(objectLocator.getClazz());
-		txMap.debugNotFound(objectLocator.getId());
-	}
-
-	public void ensureVersion(Entity entity) {
-		getDomainMap(entity.entityClass()).ensureVersion(entity.getId());
-	}
-
-	@Override
-	/*
-	 * Don't use outside of transitional, backend bulk jobs
-	 */
-	public void invalidate(Class clazz) {
-		super.invalidate(clazz);
-	}
-
-	@Override
 	protected void checkNegativeIdPut(Entity entity) {
 		if (Transaction.current().isToDomainCommitting()) {
 			if (negativeIdPutWarningCount++ < 100) {
@@ -66,19 +47,20 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 	}
 
 	@Override
+	public void debugNotFound(EntityLocator objectLocator) {
+		TransactionalMap txMap = (TransactionalMap) domain
+				.get(objectLocator.getClazz());
+		txMap.debugNotFound(objectLocator.getId());
+	}
+
+	@Override
 	protected void ensureMap(Class clazz) {
 		// noop - prevent possibly concurrent writes by forcing map creation at
 		// domainstore init time
 	}
 
-	@Override
-	protected <T> T getLocal(Class<T> clazz, long localId) {
-		return super.getLocal(clazz, localId);
-	}
-
-	@Override
-	protected boolean isExternalCreate() {
-		return ThreadlocalTransformManager.cast().isExternalCreate();
+	public void ensureVersion(Entity entity) {
+		getDomainMap(entity.entityClass()).ensureVersion(entity.getId());
 	}
 
 	Entity getAnyTransaction(Class<? extends Entity> clazz, long id) {
@@ -89,8 +71,26 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 		return (EntityIdMap) domain.get(clazz);
 	}
 
+	@Override
+	protected <T> T getLocal(Class<T> clazz, long localId) {
+		return super.getLocal(clazz, localId);
+	}
+
 	void initialiseMap(Class clazz) {
 		super.ensureMap(clazz);
+	}
+
+	@Override
+	/*
+	 * Don't use outside of transitional, backend bulk jobs
+	 */
+	public void invalidate(Class clazz) {
+		super.invalidate(clazz);
+	}
+
+	@Override
+	protected boolean isExternalCreate() {
+		return ThreadlocalTransformManager.cast().isExternalCreate();
 	}
 
 	void putExternalLocal(Entity instance) {

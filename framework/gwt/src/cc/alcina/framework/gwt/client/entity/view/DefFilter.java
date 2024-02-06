@@ -57,6 +57,19 @@ public class DefFilter extends Composite implements
 		return addHandler(handler, ValueChangeEvent.getType());
 	}
 
+	private void attachPce(boolean attached) {
+		if (attached && attachedDef != searchDefinition
+				&& searchDefinition != null) {
+			searchDefinition.globalPropertyChangeListener(this, attached);
+			attachedDef = searchDefinition;
+		}
+		if (!attached && searchDefinition != null) {
+			searchDefinition.globalPropertyChangeListener(this, attached);
+			attachedDef = null;
+		}
+		EntityClientUtils.topicToggleFilter.delta(toggleListener, attached);
+	}
+
 	public FlatSearchDefinitionEditor getFlatEditor() {
 		return this.flatEditor;
 	}
@@ -79,6 +92,21 @@ public class DefFilter extends Composite implements
 		}
 	}
 
+	private void maybeRender() {
+		if (isVisible() && searchDefinition != null) {
+			render();
+		}
+	}
+
+	protected void populateFilterFromSearch() {
+		TextCriterion txtCriterion = searchDefinition
+				.firstCriterion(TextCriterion.class);
+		if (txtCriterion != null
+				&& !txtCriterion.equivalentTo(ignoreCriterion)) {
+			simpleFilter.setValue(txtCriterion.getValue());
+		}
+	}
+
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (!LooseContext.is(FlatSearchRow.CONTEXT_CHANGING_SEARCHABLE)) {
@@ -97,6 +125,25 @@ public class DefFilter extends Composite implements
 				}
 			}
 			ValueChangeEvent.fire(DefFilter.this, searchDefinition);
+		}
+	}
+
+	private void render() {
+		if (flatEditor != null) {
+			fp.clear();
+			fp.add(flatEditor);
+			flatEditor.setModel(searchDefinition);
+		} else {
+			try {
+				RenderContext renderContext = RenderContext.branch();
+				ObjectTreeGridRenderer treeRenderer = new ObjectTreeGridRenderer();
+				ComplexPanel beanView = treeRenderer.render(searchDefinition,
+						renderContext);
+				fp.clear();
+				fp.add(beanView);
+			} finally {
+				RenderContext.merge();
+			}
 		}
 	}
 
@@ -146,53 +193,6 @@ public class DefFilter extends Composite implements
 		super.setVisible(visible);
 		if (visible) {
 			maybeRender();
-		}
-	}
-
-	private void attachPce(boolean attached) {
-		if (attached && attachedDef != searchDefinition
-				&& searchDefinition != null) {
-			searchDefinition.globalPropertyChangeListener(this, attached);
-			attachedDef = searchDefinition;
-		}
-		if (!attached && searchDefinition != null) {
-			searchDefinition.globalPropertyChangeListener(this, attached);
-			attachedDef = null;
-		}
-		EntityClientUtils.topicToggleFilter.delta(toggleListener, attached);
-	}
-
-	private void maybeRender() {
-		if (isVisible() && searchDefinition != null) {
-			render();
-		}
-	}
-
-	private void render() {
-		if (flatEditor != null) {
-			fp.clear();
-			fp.add(flatEditor);
-			flatEditor.setModel(searchDefinition);
-		} else {
-			try {
-				RenderContext renderContext = RenderContext.branch();
-				ObjectTreeGridRenderer treeRenderer = new ObjectTreeGridRenderer();
-				ComplexPanel beanView = treeRenderer.render(searchDefinition,
-						renderContext);
-				fp.clear();
-				fp.add(beanView);
-			} finally {
-				RenderContext.merge();
-			}
-		}
-	}
-
-	protected void populateFilterFromSearch() {
-		TextCriterion txtCriterion = searchDefinition
-				.firstCriterion(TextCriterion.class);
-		if (txtCriterion != null
-				&& !txtCriterion.equivalentTo(ignoreCriterion)) {
-			simpleFilter.setValue(txtCriterion.getValue());
 		}
 	}
 }

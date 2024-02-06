@@ -88,18 +88,19 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		}
 	}
 
-	public AlcinaBeanSerializerS pretty() {
-		this.pretty = true;
-		return this;
-	}
-
-	@Override
-	public String serialize(Object bean) {
-		try {
-			JSONObject jsonObject = serializeObject(bean);
-			return pretty ? jsonObject.toString(3) : jsonObject.toString();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+	protected void deserializeCollection(Object o, Collection c)
+			throws JSONException, Exception {
+		if (o instanceof JSONArray) {
+			JSONArray array = (JSONArray) o;
+			int size = array.length();
+			for (int i = 0; i < size; i++) {
+				Object jv = array.get(i);
+				if (jv == JSONObject.NULL) {
+					c.add(null);
+				} else {
+					c.add(deserializeObject((JSONObject) jv));
+				}
+			}
 		}
 	}
 
@@ -187,6 +188,32 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		return deserializeObject((JSONObject) o);
 	}
 
+	protected Object deserializeMap(Object o, Map m)
+			throws JSONException, Exception {
+		JSONArray array = (JSONArray) o;
+		int size = array.length();
+		for (int i = 0; i < size; i += 2) {
+			JSONObject jv = (JSONObject) array.get(i);
+			JSONObject jv2 = (JSONObject) array.get(i + 1);
+			m.put(deserializeObject(jv), deserializeObject(jv2));
+		}
+		return m;
+	}
+
+	protected Object deserializeMultimap(Object o, Multimap m)
+			throws JSONException, Exception {
+		JSONArray array = (JSONArray) o;
+		int size = array.length();
+		for (int i = 0; i < size; i += 2) {
+			JSONObject jv = (JSONObject) array.get(i);
+			Object o2 = array.get(i + 1);
+			ArrayList c = new ArrayList();
+			deserializeCollection(o2, c);
+			m.put(deserializeObject(jv), c);
+		}
+		return m;
+	}
+
 	private Object deserializeObject(JSONObject jsonObj) throws Exception {
 		if (jsonObj == null) {
 			return null;
@@ -248,8 +275,67 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		return object;
 	}
 
+	@Override
+	protected Class getClassMaybeAbbreviated(String className) {
+		try {
+			Class clazz = null;
+			if (abbrevLookup.containsKey(className)) {
+				return abbrevLookup.get(className);
+			} else {
+				Class resolved = resolvedClassLookup.get(className);
+				if (resolved == null) {
+					clazz = ClassReflector.stdAndPrimitivesMap.get(className);
+					if (clazz == null) {
+						className = classNameTranslator.translate(className);
+						if (GWT.isClient()) {
+							Reflections.forName(className);
+							// throw if not reflectively accessible
+						}
+						try {
+							clazz = classLoader.loadClass(className);
+						} catch (Exception e) {
+							clazz = Reflections.forName(className);
+						}
+					}
+					resolvedClassLookup.put(className, clazz);
+					return clazz;
+				} else {
+					return resolved;
+				}
+			}
+		} catch (Exception e) {
+			Ax.simpleExceptionOut(e);
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	private String getPropertyFieldName(JSONObject jsonObj) {
 		return jsonObj.has(PROPERTIES_SHORT) ? PROPERTIES_SHORT : PROPERTIES;
+	}
+
+	public AlcinaBeanSerializerS pretty() {
+		this.pretty = true;
+		return this;
+	}
+
+	@Override
+	public String serialize(Object bean) {
+		try {
+			JSONObject jsonObject = serializeObject(bean);
+			return pretty ? jsonObject.toString(3) : jsonObject.toString();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	protected Object serializeCollection(Collection c)
+			throws JSONException, Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : c) {
+			arr.put(i++, serializeObject(o));
+		}
+		return arr;
 	}
 
 	/**
@@ -312,6 +398,29 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			return ((BasePlace) value).toTokenString();
 		}
 		return serializeObject(value);
+	}
+
+	protected Object serializeMap(Map m) throws JSONException, Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : m.entrySet()) {
+			Entry e = (Entry) o;
+			arr.put(i++, serializeObject(e.getKey()));
+			arr.put(i++, serializeObject(e.getValue()));
+		}
+		return arr;
+	}
+
+	protected Object serializeMultimap(Multimap m)
+			throws JSONException, Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : m.entrySet()) {
+			Entry e = (Entry) o;
+			arr.put(i++, serializeObject(e.getKey()));
+			arr.put(i++, serializeCollection((Collection) e.getValue()));
+		}
+		return arr;
 	}
 
 	private JSONObject serializeObject(Object object) throws Exception {
@@ -379,115 +488,6 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			}
 		}
 		return jo;
-	}
-
-	protected void deserializeCollection(Object o, Collection c)
-			throws JSONException, Exception {
-		if (o instanceof JSONArray) {
-			JSONArray array = (JSONArray) o;
-			int size = array.length();
-			for (int i = 0; i < size; i++) {
-				Object jv = array.get(i);
-				if (jv == JSONObject.NULL) {
-					c.add(null);
-				} else {
-					c.add(deserializeObject((JSONObject) jv));
-				}
-			}
-		}
-	}
-
-	protected Object deserializeMap(Object o, Map m)
-			throws JSONException, Exception {
-		JSONArray array = (JSONArray) o;
-		int size = array.length();
-		for (int i = 0; i < size; i += 2) {
-			JSONObject jv = (JSONObject) array.get(i);
-			JSONObject jv2 = (JSONObject) array.get(i + 1);
-			m.put(deserializeObject(jv), deserializeObject(jv2));
-		}
-		return m;
-	}
-
-	protected Object deserializeMultimap(Object o, Multimap m)
-			throws JSONException, Exception {
-		JSONArray array = (JSONArray) o;
-		int size = array.length();
-		for (int i = 0; i < size; i += 2) {
-			JSONObject jv = (JSONObject) array.get(i);
-			Object o2 = array.get(i + 1);
-			ArrayList c = new ArrayList();
-			deserializeCollection(o2, c);
-			m.put(deserializeObject(jv), c);
-		}
-		return m;
-	}
-
-	@Override
-	protected Class getClassMaybeAbbreviated(String className) {
-		try {
-			Class clazz = null;
-			if (abbrevLookup.containsKey(className)) {
-				return abbrevLookup.get(className);
-			} else {
-				Class resolved = resolvedClassLookup.get(className);
-				if (resolved == null) {
-					clazz = ClassReflector.stdAndPrimitivesMap.get(className);
-					if (clazz == null) {
-						className = classNameTranslator.translate(className);
-						if (GWT.isClient()) {
-							Reflections.forName(className);
-							// throw if not reflectively accessible
-						}
-						try {
-							clazz = classLoader.loadClass(className);
-						} catch (Exception e) {
-							clazz = Reflections.forName(className);
-						}
-					}
-					resolvedClassLookup.put(className, clazz);
-					return clazz;
-				} else {
-					return resolved;
-				}
-			}
-		} catch (Exception e) {
-			Ax.simpleExceptionOut(e);
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	protected Object serializeCollection(Collection c)
-			throws JSONException, Exception {
-		JSONArray arr = new JSONArray();
-		int i = 0;
-		for (Object o : c) {
-			arr.put(i++, serializeObject(o));
-		}
-		return arr;
-	}
-
-	protected Object serializeMap(Map m) throws JSONException, Exception {
-		JSONArray arr = new JSONArray();
-		int i = 0;
-		for (Object o : m.entrySet()) {
-			Entry e = (Entry) o;
-			arr.put(i++, serializeObject(e.getKey()));
-			arr.put(i++, serializeObject(e.getValue()));
-		}
-		return arr;
-	}
-
-	protected Object serializeMultimap(Multimap m)
-			throws JSONException, Exception {
-		JSONArray arr = new JSONArray();
-		int i = 0;
-		for (Object o : m.entrySet()) {
-			Entry e = (Entry) o;
-			arr.put(i++, serializeObject(e.getKey()));
-			arr.put(i++, serializeCollection((Collection) e.getValue()));
-		}
-		return arr;
 	}
 
 	@Reflected

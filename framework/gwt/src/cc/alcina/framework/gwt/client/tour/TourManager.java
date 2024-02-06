@@ -96,8 +96,33 @@ public abstract class TourManager {
 		return new ConditionEvaluationContext(currentTour);
 	}
 
+	protected void exitTour(String message) {
+		UIRenderer.get().exitTour(message);
+	}
+
 	public Tour.Step getStep() {
 		return this.step;
+	}
+
+	protected void log(String template, Object... args) {
+		if (GWT.isClient() && !GWT.isScript()) {
+			ClientNotifications.get().log(template, args);
+		}
+	}
+
+	protected void onNext() {
+	}
+
+	protected void refreshTourView() {
+		if (consort != null) {
+			consort.cancel();
+		}
+		consort = new DisplayStepConsort(null);
+		consort.start();
+	}
+
+	protected boolean shouldRetry(DisplayStepPhase state) {
+		return true;
 	}
 
 	public void startTour(Tour tour) {
@@ -127,31 +152,6 @@ public abstract class TourManager {
 		refreshTourView();
 	}
 
-	protected void exitTour(String message) {
-		UIRenderer.get().exitTour(message);
-	}
-
-	protected void log(String template, Object... args) {
-		if (GWT.isClient() && !GWT.isScript()) {
-			ClientNotifications.get().log(template, args);
-		}
-	}
-
-	protected void onNext() {
-	}
-
-	protected void refreshTourView() {
-		if (consort != null) {
-			consort.cancel();
-		}
-		consort = new DisplayStepConsort(null);
-		consort.start();
-	}
-
-	protected boolean shouldRetry(DisplayStepPhase state) {
-		return true;
-	}
-
 	public static class AfterActionPerformed extends Step.Observable {
 		public AfterActionPerformed(Step step) {
 			super(step);
@@ -176,44 +176,6 @@ public abstract class TourManager {
 		}
 	}
 
-	public static enum DisplayStepPhase {
-		SETUP, WAIT_FOR, IGNORE_IF, SHOW_POPUPS, PERFORM_ACTION
-	}
-
-	public static abstract class UIRenderer {
-		public static TourManager.UIRenderer get() {
-			return Registry.impl(TourManager.UIRenderer.class);
-		}
-
-		protected TourManager tourManager;
-
-		public void setTourManager(TourManager tourManager) {
-			this.tourManager = tourManager;
-		}
-
-		protected abstract void afterStepListenerAction();
-
-		protected abstract void clearPopups(int delay);
-
-		protected Step currentStep() {
-			return tourManager.currentTour.getCurrentStep();
-		}
-
-		protected abstract void exitTour(String message);
-
-		protected abstract boolean hasElement(List<String> selectors);
-
-		protected abstract boolean performAction(Step step);
-
-		protected abstract void publishNext();
-
-		protected abstract void render(Step step);
-
-		protected abstract boolean showStepPopups();
-
-		protected abstract void startTour(TourManager tourManager);
-	}
-
 	class DisplayStepConsort extends AllStatesConsort<DisplayStepPhase> {
 		private TopicListener exitListener = new TopicListener() {
 			@Override
@@ -230,85 +192,6 @@ public abstract class TourManager {
 			this.timeout = 20000;
 			exitListenerDelta(exitListener, false, true);
 			Ax.out(currentTour.getCurrentStep());
-		}
-
-		@Override
-		public void finished() {
-			super.finished();
-			if (autoplay && currentTour.hasNext()) {
-				UIRenderer.get().publishNext();
-			}
-			if (completionCallback != null && autoplay
-					&& !currentTour.hasNext()) {
-				completionCallback.onSuccess(null);
-			}
-		}
-
-		@Override
-		public void onFailure(Throwable throwable) {
-			super.onFailure(throwable);
-			finished();
-			if (completionCallback != null) {
-				completionCallback.onFailure(throwable);
-			}
-		}
-
-		@Override
-		public void retry(
-				AllStatesConsort<DisplayStepPhase>.AllStatesPlayer allStatesPlayer,
-				DisplayStepPhase state, int delay) {
-			if (shouldRetry(state)) {
-				super.retry(allStatesPlayer, state, delay);
-			} else {
-				cancel();
-			}
-		}
-
-		@Override
-		public void runPlayer(AllStatesPlayer player, DisplayStepPhase next) {
-			if (!isRunning()) {
-				return;
-			}
-			switch (next) {
-			case SETUP:
-				render();
-				wasPlayed(player);
-				break;
-			case WAIT_FOR:
-				if (waitFor()) {
-					wasPlayed(player);
-				} else {
-					retry(player, next, 200);
-				}
-				break;
-			case IGNORE_IF:
-				if (checkIgnore()) {
-					finished();
-					if (currentTour.hasNext()) {
-						stepListener.topicPublished(Action.NEXT);
-					}
-				} else {
-					wasPlayed(player);
-				}
-				break;
-			case SHOW_POPUPS:
-				if (showStepPopups()) {
-					wasPlayed(player);
-				} else {
-					retry(player, next, 200);
-				}
-				break;
-			case PERFORM_ACTION:
-				if (checkIgnoreAction() || performAction()) {
-					wasPlayed(player);
-					if (step.provideTarget() == null && currentTour.hasNext()) {
-						stepListener.topicPublished(Action.NEXT);
-					}
-				} else {
-					retry(player, next, 200);
-				}
-				break;
-			}
 		}
 
 		/*
@@ -377,24 +260,16 @@ public abstract class TourManager {
 			}
 		}
 
-		private boolean performAction() {
-			return UIRenderer.get().performAction(step);
-		}
-
-		private void render() {
-			step = currentTour.getCurrentStep();
-			UIRenderer.get().render(step);
-		}
-
-		/*
-		 * return false if we need to keep waiting
-		 */
-		private boolean waitFor() {
-			Tour.Condition waitFor = step.getWaitFor();
-			if (waitFor != null) {
-				return evaluateCondition(waitFor);
+		@Override
+		public void finished() {
+			super.finished();
+			if (autoplay && currentTour.hasNext()) {
+				UIRenderer.get().publishNext();
 			}
-			return true;
+			if (completionCallback != null && autoplay
+					&& !currentTour.hasNext()) {
+				completionCallback.onSuccess(null);
+			}
 		}
 
 		@Override
@@ -430,6 +305,82 @@ public abstract class TourManager {
 			}
 		}
 
+		@Override
+		public void onFailure(Throwable throwable) {
+			super.onFailure(throwable);
+			finished();
+			if (completionCallback != null) {
+				completionCallback.onFailure(throwable);
+			}
+		}
+
+		private boolean performAction() {
+			return UIRenderer.get().performAction(step);
+		}
+
+		private void render() {
+			step = currentTour.getCurrentStep();
+			UIRenderer.get().render(step);
+		}
+
+		@Override
+		public void retry(
+				AllStatesConsort<DisplayStepPhase>.AllStatesPlayer allStatesPlayer,
+				DisplayStepPhase state, int delay) {
+			if (shouldRetry(state)) {
+				super.retry(allStatesPlayer, state, delay);
+			} else {
+				cancel();
+			}
+		}
+
+		@Override
+		public void runPlayer(AllStatesPlayer player, DisplayStepPhase next) {
+			if (!isRunning()) {
+				return;
+			}
+			switch (next) {
+			case SETUP:
+				render();
+				wasPlayed(player);
+				break;
+			case WAIT_FOR:
+				if (waitFor()) {
+					wasPlayed(player);
+				} else {
+					retry(player, next, 200);
+				}
+				break;
+			case IGNORE_IF:
+				if (checkIgnore()) {
+					finished();
+					if (currentTour.hasNext()) {
+						stepListener.topicPublished(Action.NEXT);
+					}
+				} else {
+					wasPlayed(player);
+				}
+				break;
+			case SHOW_POPUPS:
+				if (showStepPopups()) {
+					wasPlayed(player);
+				} else {
+					retry(player, next, 200);
+				}
+				break;
+			case PERFORM_ACTION:
+				if (checkIgnoreAction() || performAction()) {
+					wasPlayed(player);
+					if (step.provideTarget() == null && currentTour.hasNext()) {
+						stepListener.topicPublished(Action.NEXT);
+					}
+				} else {
+					retry(player, next, 200);
+				}
+				break;
+			}
+		}
+
 		protected boolean showStepPopups() {
 			return UIRenderer.get().showStepPopups();
 		}
@@ -441,5 +392,54 @@ public abstract class TourManager {
 					currentTour.getCurrentStep(), state));
 			super.timedOut(allStatesPlayer, state);
 		}
+
+		/*
+		 * return false if we need to keep waiting
+		 */
+		private boolean waitFor() {
+			Tour.Condition waitFor = step.getWaitFor();
+			if (waitFor != null) {
+				return evaluateCondition(waitFor);
+			}
+			return true;
+		}
+	}
+
+	public static enum DisplayStepPhase {
+		SETUP, WAIT_FOR, IGNORE_IF, SHOW_POPUPS, PERFORM_ACTION
+	}
+
+	public static abstract class UIRenderer {
+		public static TourManager.UIRenderer get() {
+			return Registry.impl(TourManager.UIRenderer.class);
+		}
+
+		protected TourManager tourManager;
+
+		protected abstract void afterStepListenerAction();
+
+		protected abstract void clearPopups(int delay);
+
+		protected Step currentStep() {
+			return tourManager.currentTour.getCurrentStep();
+		}
+
+		protected abstract void exitTour(String message);
+
+		protected abstract boolean hasElement(List<String> selectors);
+
+		protected abstract boolean performAction(Step step);
+
+		protected abstract void publishNext();
+
+		protected abstract void render(Step step);
+
+		public void setTourManager(TourManager tourManager) {
+			this.tourManager = tourManager;
+		}
+
+		protected abstract boolean showStepPopups();
+
+		protected abstract void startTour(TourManager tourManager);
 	}
 }

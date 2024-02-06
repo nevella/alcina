@@ -298,6 +298,10 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	int orSunkEventsOfAllChildren(int sunk) {
+		throw new UnsupportedOperationException();
+	}
+
 	public void putElement(Element element) {
 	}
 
@@ -419,9 +423,5 @@ public class ElementNull extends NodeLocalNull
 	@Override
 	public String toString() {
 		return super.toString() + "\n\t" + getTagName();
-	}
-
-	int orSunkEventsOfAllChildren(int sunk) {
-		throw new UnsupportedOperationException();
 	}
 }

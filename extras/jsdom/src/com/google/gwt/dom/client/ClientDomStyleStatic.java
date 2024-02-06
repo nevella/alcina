@@ -30,10 +30,6 @@ import com.google.gwt.safehtml.shared.annotations.IsSafeUri;
 import cc.alcina.framework.common.client.util.Ax;
 
 class ClientDomStyleStatic {
-	public static void clearProperty(ClientDomStyle domStyle, String name) {
-		domStyle.setProperty(name, "");
-	}
-
 	/**
 	 * Assert that the specified property does not contain a hyphen.
 	 *
@@ -306,6 +302,10 @@ class ClientDomStyleStatic {
 	 */
 	static void clearPosition(ClientDomStyle domStyle) {
 		domStyle.clearProperty(STYLE_POSITION);
+	}
+
+	public static void clearProperty(ClientDomStyle domStyle, String name) {
+		domStyle.setProperty(name, "");
 	}
 
 	/**

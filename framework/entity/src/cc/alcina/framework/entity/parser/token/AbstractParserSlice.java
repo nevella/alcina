@@ -40,6 +40,10 @@ public class AbstractParserSlice<T extends ParserToken> {
 
 	private String overrideText;
 
+	// for projection
+	protected AbstractParserSlice() {
+	}
+
 	public AbstractParserSlice(Node node, T token) {
 		this.start = new XmlUtils.DOMLocation(node, 0, 0);
 		if (node.getNodeType() == Node.TEXT_NODE) {
@@ -58,10 +62,6 @@ public class AbstractParserSlice<T extends ParserToken> {
 		this.end = end;
 		this.token = token;
 		this.startOffsetInRun = startOffsetInRun;
-	}
-
-	// for projection
-	protected AbstractParserSlice() {
 	}
 
 	public String cleanedContents() {
@@ -199,6 +199,10 @@ public class AbstractParserSlice<T extends ParserToken> {
 		}
 	}
 
+	protected boolean useObjectHashAndEquality() {
+		return true;
+	}
+
 	public void walkToHighestNodeAtOffset() {
 		if (start.characterOffset != 0) {
 			return;
@@ -220,9 +224,5 @@ public class AbstractParserSlice<T extends ParserToken> {
 			}
 			start = new DOMLocation(n, start.characterOffset, start.nodeIndex);
 		}
-	}
-
-	protected boolean useObjectHashAndEquality() {
-		return true;
 	}
 }

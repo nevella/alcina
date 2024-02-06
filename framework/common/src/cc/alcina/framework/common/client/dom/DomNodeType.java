@@ -16,31 +16,19 @@ public enum DomNodeType {
 	NOTATION(12);
 	//@formatter:on
 
+	public static DomNodeType fromW3cNode(org.w3c.dom.Node node) {
+		return values()[node.getNodeType() - 1];
+	}
+
 	private int id;
-
-	public static interface NodeNames {
-		public static final String TEXT = "#text";
-
-		public static final String CDATA_SECTION = "#cdata-section";
-
-		public static final String COMMENT = "#comment";
-
-		public static final String DOCUMENT = "#document";
-
-		public static final String DOCUMENT_FRAGMENT = "#document-fragment";
-	}
-
-	public int getId() {
-		return id;
-	}
 
 	//@formatter:on
 	private DomNodeType(int id) {
 		this.id = id;
 	}
 
-	public static DomNodeType fromW3cNode(org.w3c.dom.Node node) {
-		return values()[node.getNodeType() - 1];
+	public int getId() {
+		return id;
 	}
 
 	public boolean hasVariantName() {
@@ -62,5 +50,17 @@ public enum DomNodeType {
 		default:
 			return null;
 		}
+	}
+
+	public static interface NodeNames {
+		public static final String TEXT = "#text";
+
+		public static final String CDATA_SECTION = "#cdata-section";
+
+		public static final String COMMENT = "#comment";
+
+		public static final String DOCUMENT = "#document";
+
+		public static final String DOCUMENT_FRAGMENT = "#document-fragment";
 	}
 }

@@ -165,6 +165,14 @@ public class GraphProjection {
 		}
 	}
 
+	static GraphProjection fieldwiseEqualityProjection() {
+		if (fieldwiseEqualityProjection == null) {
+			fieldwiseEqualityProjection = new GraphProjection(
+					new AllFieldsFilter(), null);
+		}
+		return fieldwiseEqualityProjection;
+	}
+
 	public static String fieldwiseToString(Object obj) {
 		return fieldwiseToString(obj, false, false, 999);
 	}
@@ -327,6 +335,22 @@ public class GraphProjection {
 		return genericTypeLookup.get(field);
 	}
 
+	static PropertyPermissions getPropertyPermission(Field field) {
+		if (!propertyPermissionLookup.containsKey(field)) {
+			try {
+				Method method = field.getDeclaringClass().getMethod(
+						SEUtilities.getAccessorName(field), new Class[0]);
+				propertyPermissionLookup.put(field,
+						method.getAnnotation(PropertyPermissions.class));
+			} catch (NoSuchMethodException nsme) {
+				propertyPermissionLookup.put(field, null);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		return propertyPermissionLookup.get(field);
+	}
+
 	public static boolean isGenericEntityType(Field field) {
 		if (!genericEntityTypeLookup.containsKey(field)) {
 			Type pt = getGenericType(field);
@@ -428,30 +452,6 @@ public class GraphProjection {
 		return projections.project(original);
 	}
 
-	static GraphProjection fieldwiseEqualityProjection() {
-		if (fieldwiseEqualityProjection == null) {
-			fieldwiseEqualityProjection = new GraphProjection(
-					new AllFieldsFilter(), null);
-		}
-		return fieldwiseEqualityProjection;
-	}
-
-	static PropertyPermissions getPropertyPermission(Field field) {
-		if (!propertyPermissionLookup.containsKey(field)) {
-			try {
-				Method method = field.getDeclaringClass().getMethod(
-						SEUtilities.getAccessorName(field), new Class[0]);
-				propertyPermissionLookup.put(field,
-						method.getAnnotation(PropertyPermissions.class));
-			} catch (NoSuchMethodException nsme) {
-				propertyPermissionLookup.put(field, null);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		return propertyPermissionLookup.get(field);
-	}
-
 	private GraphProjectionDataFilter dataFilter;
 
 	private GraphProjectionFieldFilter fieldFilter;
@@ -525,6 +525,84 @@ public class GraphProjection {
 		setFilters(fieldFilter, dataFilter);
 	}
 
+	protected boolean checkObjectPermissions(Object source) {
+		if (source instanceof HasReadPermission
+				&& !dataFilter.ignoreObjectHasReadPermissionCheck()) {
+			return ((HasReadPermission) source).canRead();
+		}
+		Class<? extends Object> sourceClass = source.getClass();
+		if (!perObjectPermissionClasses.containsKey(sourceClass)) {
+			Boolean result = fieldFilter == null ? Boolean.TRUE
+					: fieldFilter.permitClass(sourceClass);
+			perObjectPermissionClasses.put(sourceClass, result);
+		}
+		if (disablePerObjectPermissions) {
+			return true;
+		}
+		Boolean valid = perObjectPermissionClasses.get(sourceClass);
+		if (valid == null) {
+			// per-objected
+			Permission permission = ensurePerClassReadPermission(sourceClass);
+			if (permission == null) {
+				return true;
+			} else {
+				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
+				return PermissionsManager.get().isPermitted(source, ap);
+			}
+		}
+		return valid;
+	}
+
+	private boolean checkReachable(Object source) {
+		if (!collectionReachedCheck
+				&& (source instanceof Collection || source instanceof Map)) {
+			return false;
+		}
+		return true;
+	}
+
+	private List<Field> ensureDeclaredNonStaticFields(Class c) {
+		if (!perClassDeclaredFields.containsKey(c)) {
+			Field[] fields = c.getDeclaredFields();
+			List<Field> nonStatic = new ArrayList<Field>();
+			for (Field field : fields) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				boolean open = c.getModule().isOpen(c.getPackageName());
+				if (!attemptToProjectModuleFields && !open) {
+					continue;
+				} else {
+					if (!open) {
+						try {
+							field.setAccessible(true);
+							nonStatic.add(field);
+						} catch (Exception e) {
+							Ax.out("Not accessible: %s.%s", c.getSimpleName(),
+									field.getName());
+						}
+					} else {
+						field.setAccessible(true);
+						nonStatic.add(field);
+					}
+				}
+			}
+			perClassDeclaredFields.put(c, nonStatic);
+		}
+		return perClassDeclaredFields.get(c);
+	}
+
+	private Permission
+			ensurePerClassReadPermission(Class<? extends Object> sourceClass) {
+		if (!perClassReadPermission.containsKey(sourceClass)) {
+			ObjectPermissions annotation = sourceClass
+					.getAnnotation(ObjectPermissions.class);
+			perClassReadPermission.put(sourceClass,
+					annotation == null ? null : annotation.read());
+		}
+		return perClassReadPermission.get(sourceClass);
+	}
+
 	public List<Field> getFieldsForClass(Class clazz) throws Exception {
 		return getFieldsForClass(clazz, true);
 	}
@@ -591,6 +669,26 @@ public class GraphProjection {
 		return result;
 	}
 
+	private Object getFieldValue(Field field, Object source) throws Exception {
+		// Trying hard to avoid the first case (it's very much not optimal)
+		if (source instanceof MvccObject
+				&& ((MvccObject) source).__getMvccVersions__() != null) {
+			try {
+				return SEUtilities.getPropertyValue(source, field.getName());
+			} catch (Exception e) {
+				// possibly dev rpc
+				if (EntityLayerUtils.isTestOrTestServer()) {
+					e.printStackTrace();
+					return null;
+				} else {
+					throw e;
+				}
+			}
+		} else {
+			return field.get(source);
+		}
+	}
+
 	public List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
 			throws Exception {
 		List<Field> result = projectableNonPrimitiveOrDataFields.get(clazz);
@@ -599,6 +697,18 @@ public class GraphProjection {
 					.filter(f -> !isPrimitiveOrDataClass(f.getType()))
 					.collect(Collectors.toList());
 			projectableNonPrimitiveOrDataFields.put(clazz, result);
+		}
+		return result;
+	}
+
+	private List<Field> getPrimitiveOrDataFieldsForClass(Class clazz)
+			throws Exception {
+		List<Field> result = projectablePrimitiveOrDataFields.get(clazz);
+		if (result == null) {
+			result = getFieldsForClass(clazz).stream()
+					.filter(f -> isPrimitiveOrDataClass(f.getType()))
+					.collect(Collectors.toList());
+			projectablePrimitiveOrDataFields.put(clazz, result);
 		}
 		return result;
 	}
@@ -617,6 +727,58 @@ public class GraphProjection {
 
 	public boolean isCollectionReachedCheck() {
 		return this.collectionReachedCheck;
+	}
+
+	protected <T> T newInstance(Class sourceClass,
+			GraphProjectionContext context) throws Exception {
+		if (constructorMethodsLookup.containsKey(sourceClass)) {
+			return (T) constructorMethodsLookup.get(sourceClass).newInstance();
+		}
+		if (!constructorLookup.containsKey(sourceClass)) {
+			try {
+				if (sourceClass.getName().equals(
+						"java.util.Collections$UnmodifiableRandomAccessList")) {
+					return (T) new ArrayList();
+				}
+				Constructor ctor = null;
+				Class cursor = sourceClass;
+				while (cursor != Object.class) {
+					Optional<Constructor> zeroArgs = Arrays
+							.stream(cursor.getDeclaredConstructors())
+							.filter(c -> c.getParameterCount() == 0)
+							.findFirst();
+					if (zeroArgs.isPresent()) {
+						ctor = zeroArgs.get();
+						break;
+					}
+					cursor = cursor.getSuperclass();
+				}
+				ctor.setAccessible(true);
+				constructorLookup.put(sourceClass, ctor);
+				if (dumpProjectionStats) {
+					System.out.println("missing constructor - " + sourceClass);
+				}
+			} catch (Exception e) {
+				Ax.sysLogHigh("missing no-args constructor:\n\t%s\n\t%s  ",
+						sourceClass, context);
+				throw e;
+			}
+		}
+		return (T) constructorLookup.get(sourceClass)
+				.newInstance(new Object[] {});
+	}
+
+	private boolean omit(Object value, GraphProjectionContext context) {
+		return dataFilter.omit(value, context);
+	}
+
+	private boolean permitField(Field field, Object source) throws Exception {
+		PropertyPermissions pp = perFieldPermission.get(field);
+		if (pp != null) {
+			AnnotatedPermissible ap = new AnnotatedPermissible(pp.read());
+			return PermissionsManager.get().isPermitted(source, ap);
+		}
+		return false;
 	}
 
 	public <T> T project(T source, GraphProjectionContext context)
@@ -919,6 +1081,21 @@ public class GraphProjection {
 		return c;
 	}
 
+	/*
+	 * Optimisation to avoid adding unnecessarily to reached lookup
+	 */
+	boolean reachableBySinglePath(Class clazz) {
+		if (Set.class.isAssignableFrom(clazz)
+				|| List.class.isAssignableFrom(clazz)
+				|| Map.class.isAssignableFrom(clazz) || clazz == Multimap.class
+				|| clazz == UnsortedMultikeyMap.class
+				|| clazz == SortedMultikeyMap.class) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public <E> E registerProjected(E source, E projected) {
 		return (E) reached.put(source, projected);
 	}
@@ -944,183 +1121,6 @@ public class GraphProjection {
 
 	public void setReplaceMap(LinkedHashMap<Entity, Entity> replaceMap) {
 		this.replaceMap = replaceMap;
-	}
-
-	private boolean checkReachable(Object source) {
-		if (!collectionReachedCheck
-				&& (source instanceof Collection || source instanceof Map)) {
-			return false;
-		}
-		return true;
-	}
-
-	private List<Field> ensureDeclaredNonStaticFields(Class c) {
-		if (!perClassDeclaredFields.containsKey(c)) {
-			Field[] fields = c.getDeclaredFields();
-			List<Field> nonStatic = new ArrayList<Field>();
-			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())) {
-					continue;
-				}
-				boolean open = c.getModule().isOpen(c.getPackageName());
-				if (!attemptToProjectModuleFields && !open) {
-					continue;
-				} else {
-					if (!open) {
-						try {
-							field.setAccessible(true);
-							nonStatic.add(field);
-						} catch (Exception e) {
-							Ax.out("Not accessible: %s.%s", c.getSimpleName(),
-									field.getName());
-						}
-					} else {
-						field.setAccessible(true);
-						nonStatic.add(field);
-					}
-				}
-			}
-			perClassDeclaredFields.put(c, nonStatic);
-		}
-		return perClassDeclaredFields.get(c);
-	}
-
-	private Permission
-			ensurePerClassReadPermission(Class<? extends Object> sourceClass) {
-		if (!perClassReadPermission.containsKey(sourceClass)) {
-			ObjectPermissions annotation = sourceClass
-					.getAnnotation(ObjectPermissions.class);
-			perClassReadPermission.put(sourceClass,
-					annotation == null ? null : annotation.read());
-		}
-		return perClassReadPermission.get(sourceClass);
-	}
-
-	private Object getFieldValue(Field field, Object source) throws Exception {
-		// Trying hard to avoid the first case (it's very much not optimal)
-		if (source instanceof MvccObject
-				&& ((MvccObject) source).__getMvccVersions__() != null) {
-			try {
-				return SEUtilities.getPropertyValue(source, field.getName());
-			} catch (Exception e) {
-				// possibly dev rpc
-				if (EntityLayerUtils.isTestOrTestServer()) {
-					e.printStackTrace();
-					return null;
-				} else {
-					throw e;
-				}
-			}
-		} else {
-			return field.get(source);
-		}
-	}
-
-	private List<Field> getPrimitiveOrDataFieldsForClass(Class clazz)
-			throws Exception {
-		List<Field> result = projectablePrimitiveOrDataFields.get(clazz);
-		if (result == null) {
-			result = getFieldsForClass(clazz).stream()
-					.filter(f -> isPrimitiveOrDataClass(f.getType()))
-					.collect(Collectors.toList());
-			projectablePrimitiveOrDataFields.put(clazz, result);
-		}
-		return result;
-	}
-
-	private boolean omit(Object value, GraphProjectionContext context) {
-		return dataFilter.omit(value, context);
-	}
-
-	private boolean permitField(Field field, Object source) throws Exception {
-		PropertyPermissions pp = perFieldPermission.get(field);
-		if (pp != null) {
-			AnnotatedPermissible ap = new AnnotatedPermissible(pp.read());
-			return PermissionsManager.get().isPermitted(source, ap);
-		}
-		return false;
-	}
-
-	protected boolean checkObjectPermissions(Object source) {
-		if (source instanceof HasReadPermission
-				&& !dataFilter.ignoreObjectHasReadPermissionCheck()) {
-			return ((HasReadPermission) source).canRead();
-		}
-		Class<? extends Object> sourceClass = source.getClass();
-		if (!perObjectPermissionClasses.containsKey(sourceClass)) {
-			Boolean result = fieldFilter == null ? Boolean.TRUE
-					: fieldFilter.permitClass(sourceClass);
-			perObjectPermissionClasses.put(sourceClass, result);
-		}
-		if (disablePerObjectPermissions) {
-			return true;
-		}
-		Boolean valid = perObjectPermissionClasses.get(sourceClass);
-		if (valid == null) {
-			// per-objected
-			Permission permission = ensurePerClassReadPermission(sourceClass);
-			if (permission == null) {
-				return true;
-			} else {
-				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
-				return PermissionsManager.get().isPermitted(source, ap);
-			}
-		}
-		return valid;
-	}
-
-	protected <T> T newInstance(Class sourceClass,
-			GraphProjectionContext context) throws Exception {
-		if (constructorMethodsLookup.containsKey(sourceClass)) {
-			return (T) constructorMethodsLookup.get(sourceClass).newInstance();
-		}
-		if (!constructorLookup.containsKey(sourceClass)) {
-			try {
-				if (sourceClass.getName().equals(
-						"java.util.Collections$UnmodifiableRandomAccessList")) {
-					return (T) new ArrayList();
-				}
-				Constructor ctor = null;
-				Class cursor = sourceClass;
-				while (cursor != Object.class) {
-					Optional<Constructor> zeroArgs = Arrays
-							.stream(cursor.getDeclaredConstructors())
-							.filter(c -> c.getParameterCount() == 0)
-							.findFirst();
-					if (zeroArgs.isPresent()) {
-						ctor = zeroArgs.get();
-						break;
-					}
-					cursor = cursor.getSuperclass();
-				}
-				ctor.setAccessible(true);
-				constructorLookup.put(sourceClass, ctor);
-				if (dumpProjectionStats) {
-					System.out.println("missing constructor - " + sourceClass);
-				}
-			} catch (Exception e) {
-				Ax.sysLogHigh("missing no-args constructor:\n\t%s\n\t%s  ",
-						sourceClass, context);
-				throw e;
-			}
-		}
-		return (T) constructorLookup.get(sourceClass)
-				.newInstance(new Object[] {});
-	}
-
-	/*
-	 * Optimisation to avoid adding unnecessarily to reached lookup
-	 */
-	boolean reachableBySinglePath(Class clazz) {
-		if (Set.class.isAssignableFrom(clazz)
-				|| List.class.isAssignableFrom(clazz)
-				|| Map.class.isAssignableFrom(clazz) || clazz == Multimap.class
-				|| clazz == UnsortedMultikeyMap.class
-				|| clazz == SortedMultikeyMap.class) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	public static interface ConstructorMethod<T> {

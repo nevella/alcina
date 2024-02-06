@@ -170,6 +170,10 @@ public class ClientLogRecord implements Serializable {
 			return this.logRecords;
 		}
 
+		private void incrementSize(ClientLogRecord logRecord) {
+			size += 70 + logRecord.message.length();
+		}
+
 		public void recalcSize() {
 			size = 0;
 			for (ClientLogRecord logRecord : logRecords) {
@@ -186,10 +190,6 @@ public class ClientLogRecord implements Serializable {
 			return Ax.format("ClientLogRecords: size - %s\t records - %s\n%s",
 					size, logRecords.size(),
 					CommonUtils.join(logRecords, "\n"));
-		}
-
-		private void incrementSize(ClientLogRecord logRecord) {
-			size += 70 + logRecord.message.length();
 		}
 	}
 }

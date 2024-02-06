@@ -45,6 +45,38 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		ensureVisible(false);
 	}
 
+	void ensureVisible(boolean ensure) {
+		if (visible == ensure) {
+			return;
+		}
+		NodeEvent.Context.fromNode(suggestor.provideNode())
+				.dispatch(SuggestorEvents.SuggestionsVisible.class, ensure);
+		if (ensure) {
+			visible = true;
+			if (useOverlay()) {
+				Builder builder = Overlay.builder();
+				builder.dropdown(suggestor.builder.getSuggestionXAlign(),
+						suggestor.provideElement().getBoundingClientRect(),
+						suggestor, contents).withLogicalAncestors(
+								suggestor.builder.getLogicalAncestors());
+				overlay = builder.build();
+				overlay.open();
+			} else {
+				suggestor.setNonOverlaySuggestionResults(contents);
+			}
+		} else {
+			Scheduler.get().scheduleDeferred(() -> {
+				if (useOverlay()) {
+					overlay.close(null, false);
+					overlay = null;
+				} else {
+					suggestor.setNonOverlaySuggestionResults(null);
+				}
+			});
+			visible = false;
+		}
+	}
+
 	@Override
 	public void onAnswers(Answers answers) {
 		if (!visible) {
@@ -131,38 +163,6 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 				}
 			}.schedule(suggestor.builder.showSpinnerDelay);
 			break;
-		}
-	}
-
-	void ensureVisible(boolean ensure) {
-		if (visible == ensure) {
-			return;
-		}
-		NodeEvent.Context.fromNode(suggestor.provideNode())
-				.dispatch(SuggestorEvents.SuggestionsVisible.class, ensure);
-		if (ensure) {
-			visible = true;
-			if (useOverlay()) {
-				Builder builder = Overlay.builder();
-				builder.dropdown(suggestor.builder.getSuggestionXAlign(),
-						suggestor.provideElement().getBoundingClientRect(),
-						suggestor, contents).withLogicalAncestors(
-								suggestor.builder.getLogicalAncestors());
-				overlay = builder.build();
-				overlay.open();
-			} else {
-				suggestor.setNonOverlaySuggestionResults(contents);
-			}
-		} else {
-			Scheduler.get().scheduleDeferred(() -> {
-				if (useOverlay()) {
-					overlay.close(null, false);
-					overlay = null;
-				} else {
-					suggestor.setNonOverlaySuggestionResults(null);
-				}
-			});
-			visible = false;
 		}
 	}
 

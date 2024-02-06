@@ -28,13 +28,13 @@ public interface TokenParserPeer<T extends ParserToken, S extends AbstractParser
 
 	List<T> getTokens();
 
-	boolean ignoreTokensInBlock(String content);
-
 	boolean ignoreNode(Node n);
 
 	default boolean ignorePrecedingExceptions() {
 		return false;
 	}
+
+	boolean ignoreTokensInBlock(String content);
 
 	boolean isBold(Node n);
 

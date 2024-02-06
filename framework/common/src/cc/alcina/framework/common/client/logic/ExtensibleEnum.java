@@ -142,6 +142,10 @@ public abstract class ExtensibleEnum {
 
 	private String[] tags;
 
+	protected ExtensibleEnum() {
+		this(null);
+	}
+
 	public ExtensibleEnum(String key) {
 		synchronized (ExtensibleEnum.class) {
 			this.key = key;
@@ -165,8 +169,8 @@ public abstract class ExtensibleEnum {
 		}
 	}
 
-	protected ExtensibleEnum() {
-		this(null);
+	private Class<? extends ExtensibleEnum> getRegistryPoint() {
+		return registryPoint(getClass());
 	}
 
 	public String[] getTags() {
@@ -188,10 +192,6 @@ public abstract class ExtensibleEnum {
 	@Override
 	public String toString() {
 		return serializedForm();
-	}
-
-	private Class<? extends ExtensibleEnum> getRegistryPoint() {
-		return registryPoint(getClass());
 	}
 
 	public static class FromSerializedFormConverter

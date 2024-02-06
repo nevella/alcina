@@ -54,56 +54,18 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
-			int maxSelectedItems, Renderer renderer, String hint) {
-		super(selectionObjectClass, filter, maxSelectedItems, renderer, false,
-				() -> TransformManager.get()
-						.getCollection(selectionObjectClass),
-				null, hint);
-	}
-
-	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems, Function renderer, boolean useCellList,
 			Supplier<Collection> supplier, String noResultsMessage) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer,
 				useCellList, supplier, noResultsMessage, null);
 	}
 
-	@Override
-	public void redrawGrid() {
-		container.clear();
-		cfp = new FlowPanelClickable();
-		this.grid = new Grid(2, 1);
-		grid.setCellPadding(0);
-		grid.setCellSpacing(0);
-		grid.setWidget(0, 0, resultsWidget);
-		grid.setWidget(1, 0, searchWidget);
-		grid.setStyleName("alcina-SelectorFrame minimal");
-		cfp.add(grid);
-		cfp.setStyleName("alcina-SelectorContainer");
-		if (maybeFocusResultsHandler == null) {
-			maybeFocusResultsHandler = new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent event) {
-					Element elt = Element
-							.as(event.getNativeEvent().getEventTarget());
-					Element stop = cfp.getElement();
-					Element resultsTop = resultsWidget.getElement();
-					while (true) {
-						if (elt.getTagName().equalsIgnoreCase("A")
-								|| elt == stop) {
-							return;
-						}
-						if (elt == resultsTop) {
-							Scheduler.get().scheduleDeferred(() -> search
-									.getFilter().getTextBox().setFocus(true));
-						}
-						elt = elt.getParentElement();
-					}
-				}
-			};
-		}
-		cfp.addClickHandler(maybeFocusResultsHandler);
-		container.add(cfp);
+	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
+			int maxSelectedItems, Renderer renderer, String hint) {
+		super(selectionObjectClass, filter, maxSelectedItems, renderer, false,
+				() -> TransformManager.get()
+						.getCollection(selectionObjectClass),
+				null, hint);
 	}
 
 	@Override
@@ -160,6 +122,44 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	@Override
+	public void redrawGrid() {
+		container.clear();
+		cfp = new FlowPanelClickable();
+		this.grid = new Grid(2, 1);
+		grid.setCellPadding(0);
+		grid.setCellSpacing(0);
+		grid.setWidget(0, 0, resultsWidget);
+		grid.setWidget(1, 0, searchWidget);
+		grid.setStyleName("alcina-SelectorFrame minimal");
+		cfp.add(grid);
+		cfp.setStyleName("alcina-SelectorContainer");
+		if (maybeFocusResultsHandler == null) {
+			maybeFocusResultsHandler = new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					Element elt = Element
+							.as(event.getNativeEvent().getEventTarget());
+					Element stop = cfp.getElement();
+					Element resultsTop = resultsWidget.getElement();
+					while (true) {
+						if (elt.getTagName().equalsIgnoreCase("A")
+								|| elt == stop) {
+							return;
+						}
+						if (elt == resultsTop) {
+							Scheduler.get().scheduleDeferred(() -> search
+									.getFilter().getTextBox().setFocus(true));
+						}
+						elt = elt.getParentElement();
+					}
+				}
+			};
+		}
+		cfp.addClickHandler(maybeFocusResultsHandler);
+		container.add(cfp);
+	}
+
+	@Override
 	protected boolean shouldHideResultFilter() {
 		return true;
 	}
@@ -192,11 +192,6 @@ public class BoundSelectorMinimal extends BoundSelector {
 	private class LazyDataMinimal implements LazyDataProvider {
 		private boolean called = false;
 
-		@Override
-		public void getData(AsyncCallback callback) {
-			callback.onSuccess(dataRequired());
-		}
-
 		private LazyData dataRequired() {
 			if (!called) {
 				LazyData lazyData = new LazyData();
@@ -207,6 +202,11 @@ public class BoundSelectorMinimal extends BoundSelector {
 				return lazyData;
 			}
 			return null;
+		}
+
+		@Override
+		public void getData(AsyncCallback callback) {
+			callback.onSuccess(dataRequired());
 		}
 	}
 }

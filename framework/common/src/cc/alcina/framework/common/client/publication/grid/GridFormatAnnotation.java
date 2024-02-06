@@ -34,9 +34,9 @@ public @interface GridFormatAnnotation {
 
 	int order() default DEFAULT_ORDER_POS;
 
+	Class rendererClass() default Void.class;
+
 	String styleId() default "";
 
 	ExcelDatatype type() default ExcelDatatype.String;
-
-	Class rendererClass() default Void.class;
 }

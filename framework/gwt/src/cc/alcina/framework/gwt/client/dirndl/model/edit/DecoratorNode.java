@@ -67,6 +67,10 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 	@Binding(type = Type.INNER_TEXT)
 	public String content = "";
 
+	protected Class<E> entityClass() {
+		return Reflections.at(this).getGenericBounds().bounds.get(0);
+	}
+
 	public abstract Descriptor<E> getDescriptor();
 
 	@Binding(
@@ -77,6 +81,49 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		return this.entityLocator;
 	}
 
+	void handleGetPersistentLocators(Map<EntityLocator, EntityLocator> map) {
+		EntityLocator result = map.values().iterator().next();
+		if (result != null) {
+			setEntityLocator(result);
+		}
+	}
+
+	boolean isValid() {
+		// FIXME - DN server shd validate entity on update. and other
+		// validations (e.g. not contained in a decorator)
+		return entityLocator != null;
+	}
+
+	void positionCursorPostEntitySelection() {
+		LocalDom.flush();
+		LocalDom.flushLocalMutations();
+		FragmentNode.TextNode textNode = (TextNode) children().findFirst()
+				.get();
+		// TODO - position cursor at the end of the mention, then allow the
+		// 'cursor validator' to move it to a correct location
+		// try positioning cursor immediately after the decorator
+		// guaranteed non-null (due to zws insertion)
+		FragmentNode.TextNode cursorTarget = textNode.fragmentTree()
+				.nextTextNode(true).get();
+		Node cursorNode = cursorTarget.domNode().gwtNode();
+		SelectionJso selection = Document.get().jsoRemote().getSelection();
+		cursorNode.implAccess().ensureRemote();
+		NodeJso remote = cursorNode.implAccess().jsoRemote();
+		NodeJso rr1 = remote.getParentNodeJso();
+		selection.collapse(remote, 1);// after zws
+	}
+
+	public void putEntity(Entity entity) {
+		setEntityLocator(entity.toLocator());
+		String text = getDescriptor().triggerSequence()
+				+ ((Function) getDescriptor().itemRenderer()).apply(entity);
+		setContent(text);
+	}
+
+	public void setContent(String content) {
+		set("content", this.content, content, () -> this.content = content);
+	}
+
 	public void setContentEditable(boolean contentEditable) {
 		set("contentEditable", this.contentEditable, contentEditable,
 				() -> this.contentEditable = contentEditable);
@@ -85,6 +132,17 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 	public void setEntityLocator(EntityLocator entityLocator) {
 		set("entityLocator", this.entityLocator, entityLocator,
 				() -> this.entityLocator = entityLocator);
+	}
+
+	void stripIfInvalid() {
+		if (!isValid()) {
+			strip();
+			/*
+			 * FIXME - dn - tree change listener (FragmentModel?) should
+			 * probably merge adjacent FragmentNode.Text children if any result
+			 * from the strip
+			 */
+		}
 	}
 
 	public void toNonEditable() {
@@ -113,60 +171,6 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 			}
 		}
 		validateLocator();
-	}
-
-	protected Class<E> entityClass() {
-		return Reflections.at(this).getGenericBounds().bounds.get(0);
-	}
-
-	void handleGetPersistentLocators(Map<EntityLocator, EntityLocator> map) {
-		EntityLocator result = map.values().iterator().next();
-		if (result != null) {
-			setEntityLocator(result);
-		}
-	}
-
-	boolean isValid() {
-		// FIXME - DN server shd validate entity on update. and other
-		// validations (e.g. not contained in a decorator)
-		return entityLocator != null;
-	}
-
-	public void putEntity(Entity entity) {
-		setEntityLocator(entity.toLocator());
-		String text = getDescriptor().triggerSequence()
-				+ ((Function) getDescriptor().itemRenderer()).apply(entity);
-		setContent(text);
-	}
-
-	void positionCursorPostEntitySelection() {
-		LocalDom.flush();
-		LocalDom.flushLocalMutations();
-		FragmentNode.TextNode textNode = (TextNode) children().findFirst()
-				.get();
-		// TODO - position cursor at the end of the mention, then allow the
-		// 'cursor validator' to move it to a correct location
-		// try positioning cursor immediately after the decorator
-		// guaranteed non-null (due to zws insertion)
-		FragmentNode.TextNode cursorTarget = textNode.fragmentTree()
-				.nextTextNode(true).get();
-		Node cursorNode = cursorTarget.domNode().gwtNode();
-		SelectionJso selection = Document.get().jsoRemote().getSelection();
-		cursorNode.implAccess().ensureRemote();
-		NodeJso remote = cursorNode.implAccess().jsoRemote();
-		NodeJso rr1 = remote.getParentNodeJso();
-		selection.collapse(remote, 1);// after zws
-	}
-
-	void stripIfInvalid() {
-		if (!isValid()) {
-			strip();
-			/*
-			 * FIXME - dn - tree change listener (FragmentModel?) should
-			 * probably merge adjacent FragmentNode.Text children if any result
-			 * from the strip
-			 */
-		}
 	}
 
 	void validateLocator() {
@@ -235,8 +239,6 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		@Override
 		public abstract void onCommit(Commit event);
 
-		public abstract String triggerSequence();
-
 		DecoratorNode splitAndWrap(RelativeInputModel relativeInput,
 				FragmentModel fragmentModel) {
 			SplitResult splits = relativeInput.splitAt(-1, 0);
@@ -256,6 +258,8 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 					text.getLength());
 			return created;
 		}
+
+		public abstract String triggerSequence();
 	}
 
 	@Directed(tag = "span", className = "cursor-target")
@@ -264,9 +268,5 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 		// nope, require a distinct dirndl node
 		@Directed
 		public TextNode text = new TextNode("\u200B");
-	}
-
-	public void setContent(String content) {
-		set("content", this.content, content, () -> this.content = content);
 	}
 }

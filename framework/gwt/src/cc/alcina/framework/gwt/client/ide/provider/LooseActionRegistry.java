@@ -47,6 +47,15 @@ public class LooseActionRegistry {
 		return handler;
 	}
 
+	void loadFromRegistry() {
+		// FIXME - reflection - cleanup - remove? Why register with strings
+		// rather than keys?
+		Registry.query(LooseActionHandler.class).implementations()
+				.forEach(handler -> {
+					registerHandler(handler);
+				});
+	}
+
 	public void performForTargetActionAndObject(PermissibleAction action,
 			Object target) {
 		// FIXME - reflection - cleanup - 'typedInstance' in this case better
@@ -60,14 +69,5 @@ public class LooseActionRegistry {
 
 	public void registerHandler(LooseActionHandler wp) {
 		actionHandlers.put(wp.getName(), wp);
-	}
-
-	void loadFromRegistry() {
-		// FIXME - reflection - cleanup - remove? Why register with strings
-		// rather than keys?
-		Registry.query(LooseActionHandler.class).implementations()
-				.forEach(handler -> {
-					registerHandler(handler);
-				});
 	}
 }

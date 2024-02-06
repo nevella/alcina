@@ -32,17 +32,18 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 		return currentIteratorIndex;
 	}
 
+	protected void onBeforeIteratorIndexChange(int currentIteratorIndex) {
+		// For subclasses
+	}
+
 	@Override
-	public void remove() {
-		if (allowRemove) {
-			Iterator<E> itr = getCurrentIterator();
-			if (itr == null) {
-				throw new NoSuchElementException();
-			}
-			itr.remove();
-			return;
+	protected E peekNext() {
+		if (comparator == null) {
+			peekNonSorted();
+		} else {
+			peekSorted();
 		}
-		throw new IllegalArgumentException("Remove not permitted");
+		return next;
 	}
 
 	private void peekNonSorted() {
@@ -81,18 +82,17 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 		next = min;
 	}
 
-	protected void onBeforeIteratorIndexChange(int currentIteratorIndex) {
-		// For subclasses
-	}
-
 	@Override
-	protected E peekNext() {
-		if (comparator == null) {
-			peekNonSorted();
-		} else {
-			peekSorted();
+	public void remove() {
+		if (allowRemove) {
+			Iterator<E> itr = getCurrentIterator();
+			if (itr == null) {
+				throw new NoSuchElementException();
+			}
+			itr.remove();
+			return;
 		}
-		return next;
+		throw new IllegalArgumentException("Remove not permitted");
 	}
 
 	@Override

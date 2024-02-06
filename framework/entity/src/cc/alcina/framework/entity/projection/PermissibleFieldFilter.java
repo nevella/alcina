@@ -44,6 +44,46 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 				.get();
 	}
 
+	protected Boolean permit(Class clazz, Permission permission, Field field) {
+		if (permission != null) {
+			AnnotatedPermissible ap = new AnnotatedPermissible(permission);
+			if (disablePerObjectPermissions) {
+				return true;
+				// only in app startup/warmup
+			}
+			if (disabledPerThreadPerObjectPermissionsInstance) {
+				return true;
+				// optimisation for clustered transform commit
+			}
+			if (PermissionsManager.get().isPermitted(null, ap, true)) {
+				return true;
+			}
+			if (ap.accessLevel() == AccessLevel.GROUP) {
+				return null;
+			}
+			if (ap.accessLevel().ordinal() < AccessLevel.GROUP.ordinal()) {
+				return false;
+			}
+			if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
+				if (ap.rule().length() > 0) {
+					return null;
+				}
+				if (!PermissionsManager.get().isLoggedIn()) {
+					return false;
+				}
+				if (!HasOwner.class.isAssignableFrom(clazz)) {
+					return false;
+				}
+				return null;
+			}
+			return ap.rule().isEmpty() ? false : null;
+		}
+		return true;
+		// TODO: 3.2 - replace with a call to tltm (should
+		// really be tlpm) that checks obj read perms
+		// that'll catch find-object stuff as well
+	}
+
 	@Override
 	public Boolean permitClass(Class clazz) {
 		ObjectPermissions op = objectPermissionLookup.get(clazz);
@@ -95,46 +135,6 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 	@Override
 	public boolean permitTransient(Field field) {
 		return false;
-	}
-
-	protected Boolean permit(Class clazz, Permission permission, Field field) {
-		if (permission != null) {
-			AnnotatedPermissible ap = new AnnotatedPermissible(permission);
-			if (disablePerObjectPermissions) {
-				return true;
-				// only in app startup/warmup
-			}
-			if (disabledPerThreadPerObjectPermissionsInstance) {
-				return true;
-				// optimisation for clustered transform commit
-			}
-			if (PermissionsManager.get().isPermitted(null, ap, true)) {
-				return true;
-			}
-			if (ap.accessLevel() == AccessLevel.GROUP) {
-				return null;
-			}
-			if (ap.accessLevel().ordinal() < AccessLevel.GROUP.ordinal()) {
-				return false;
-			}
-			if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
-				if (ap.rule().length() > 0) {
-					return null;
-				}
-				if (!PermissionsManager.get().isLoggedIn()) {
-					return false;
-				}
-				if (!HasOwner.class.isAssignableFrom(clazz)) {
-					return false;
-				}
-				return null;
-			}
-			return ap.rule().isEmpty() ? false : null;
-		}
-		return true;
-		// TODO: 3.2 - replace with a call to tltm (should
-		// really be tlpm) that checks obj read perms
-		// that'll catch find-object stuff as well
 	}
 
 	protected boolean shallow(Class<?> type) {

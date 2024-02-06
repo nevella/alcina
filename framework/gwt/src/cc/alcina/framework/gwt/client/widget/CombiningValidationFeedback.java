@@ -59,6 +59,10 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 
 		private String caption = "Please correct the following";
 
+		void addException(Object source, ValidationException exception) {
+			exceptions.put(source, exception);
+		}
+
 		public void clear() {
 			exceptions.clear();
 		}
@@ -104,10 +108,6 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 
 		protected void showFeedbackPanel(FlowPanel fp) {
 			Registry.impl(ClientNotifications.class).showMessage(fp);
-		}
-
-		void addException(Object source, ValidationException exception) {
-			exceptions.put(source, exception);
 		}
 	}
 

@@ -61,13 +61,6 @@ public class TowardsAMoreDesirableSituation {
 		this.scheduler = scheduler;
 	}
 
-	public Stream<? extends Job> getActiveJobs() {
-		// thread-safe copy
-		synchronized (activeJobs) {
-			return activeJobs.stream().collect(Collectors.toList()).stream();
-		}
-	}
-
 	private void addSchedulerEvent() {
 		events.add(new Event(Type.SCHEDULER_EVENT));
 	}
@@ -113,6 +106,13 @@ public class TowardsAMoreDesirableSituation {
 				job, job.provideConsistencyPriority(), currentPriorityCount,
 				JobDomain.get().getFutureConsistencyJobsCount(), entryPosition,
 				exitPosition);
+	}
+
+	public Stream<? extends Job> getActiveJobs() {
+		// thread-safe copy
+		synchronized (activeJobs) {
+			return activeJobs.stream().collect(Collectors.toList()).stream();
+		}
 	}
 
 	void start() {
@@ -175,6 +175,14 @@ public class TowardsAMoreDesirableSituation {
 		}
 	}
 
+	static class Event {
+		Type type;
+
+		public Event(Type type) {
+			this.type = type;
+		}
+	}
+
 	public class ProcessorThread extends Thread {
 		@Override
 		public void run() {
@@ -204,14 +212,6 @@ public class TowardsAMoreDesirableSituation {
 					}
 				}
 			}
-		}
-	}
-
-	static class Event {
-		Type type;
-
-		public Event(Type type) {
-			this.type = type;
 		}
 	}
 

@@ -98,6 +98,9 @@ public class Notification extends Model {
 
 		Model model;
 
+		protected Builder() {
+		}
+
 		public Builder(Model model) {
 			this.model = model;
 			variantStyle = VariantStyle.model;
@@ -105,9 +108,6 @@ public class Notification extends Model {
 
 		public Builder(String message) {
 			this.message = message;
-		}
-
-		protected Builder() {
 		}
 
 		public B addClassName(Object className) {
@@ -122,6 +122,11 @@ public class Notification extends Model {
 			notification.className = getClassName();
 			notification.variantStyle = variantStyle;
 			return notification;
+		}
+
+		protected String getClassName() {
+			return classNames.isEmpty() ? null
+					: classNames.stream().collect(Collectors.joining(" "));
 		}
 
 		public Notification show() {
@@ -143,11 +148,6 @@ public class Notification extends Model {
 		public B withModel(Model model) {
 			this.model = model;
 			return (B) this;
-		}
-
-		protected String getClassName() {
-			return classNames.isEmpty() ? null
-					: classNames.stream().collect(Collectors.joining(" "));
 		}
 
 		public static class ThrowableBuilder extends Builder<ThrowableBuilder> {

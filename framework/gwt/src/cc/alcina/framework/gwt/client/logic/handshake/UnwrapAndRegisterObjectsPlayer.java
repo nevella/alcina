@@ -68,6 +68,10 @@ public class UnwrapAndRegisterObjectsPlayer
 				CommonUtils.join(Phase.values(), ", "));
 	}
 
+	protected boolean isBypassInitialObjectsRegistration() {
+		return false;
+	}
+
 	@Override
 	public void loop() {
 		try {
@@ -75,35 +79,6 @@ public class UnwrapAndRegisterObjectsPlayer
 		} catch (Exception e) {
 			onFailure(e);
 		}
-	}
-
-	@Override
-	public void onFailure(Throwable caught) {
-		caught.printStackTrace();
-		if (CommonUtils.hasCauseOfClass(caught, SerializationException.class)) {
-			consort.wasPlayed(this, Collections.singletonList(
-					HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
-		} else {
-			// code failure in post-ok handler
-			consort.onFailure(caught);
-		}
-	}
-
-	@Override
-	public void onSuccess(Void result) {
-		consort.replay(this);
-	}
-
-	@Override
-	public void run() {
-		if (HandshakeConsortModel.get().getLoadObjectsResponse() == null
-				&& isBypassInitialObjectsRegistration()) {
-			consort.wasPlayed(this, Collections.singletonList(
-					HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED));
-			return;
-		}
-		HandshakeConsortModel.get().prepareInitialPlaySequence();
-		loop();
 	}
 
 	private void loop0() {
@@ -166,24 +141,6 @@ public class UnwrapAndRegisterObjectsPlayer
 		consort.replay(this);
 	}
 
-	private boolean maybeRegisterDomainModelObjects() {
-		if (currentDelta.getDomainModelObject() != null) {
-			Registry.impl(DomainModelObjectsRegistrar.class)
-					.registerAsync(currentDelta.getDomainModelObject(), this);
-			return true;
-		}
-		return false;
-	}
-
-	private void registerUnlinked() {
-		TransformManager.get().registerDomainObjectsAsync(
-				(Collection) currentDelta.getUnlinkedObjects(), this);
-	}
-
-	protected boolean isBypassInitialObjectsRegistration() {
-		return false;
-	}
-
 	protected boolean maybeRegisterDomainModelHolder() {
 		// we can expect the first delta to have a domainmodelholder -
 		// apps which allow "always offline" should create a model holder if the
@@ -202,6 +159,32 @@ public class UnwrapAndRegisterObjectsPlayer
 		return false;
 	}
 
+	private boolean maybeRegisterDomainModelObjects() {
+		if (currentDelta.getDomainModelObject() != null) {
+			Registry.impl(DomainModelObjectsRegistrar.class)
+					.registerAsync(currentDelta.getDomainModelObject(), this);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void onFailure(Throwable caught) {
+		caught.printStackTrace();
+		if (CommonUtils.hasCauseOfClass(caught, SerializationException.class)) {
+			consort.wasPlayed(this, Collections.singletonList(
+					HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
+		} else {
+			// code failure in post-ok handler
+			consort.onFailure(caught);
+		}
+	}
+
+	@Override
+	public void onSuccess(Void result) {
+		consort.replay(this);
+	}
+
 	protected void
 			registerDomainModelHolder(DomainModelHolder domainModelHolder) {
 		domainModelHolder.registerSelfAsProvider();
@@ -213,6 +196,11 @@ public class UnwrapAndRegisterObjectsPlayer
 				domainModelHolder.getConfigurationPropertiesSerialized());
 		TransformManager.get()
 				.registerDomainObjectsInHolderAsync(domainModelHolder, this);
+	}
+
+	private void registerUnlinked() {
+		TransformManager.get().registerDomainObjectsAsync(
+				(Collection) currentDelta.getUnlinkedObjects(), this);
 	}
 
 	protected void replayTransforms() {
@@ -232,6 +220,18 @@ public class UnwrapAndRegisterObjectsPlayer
 					Math.max(requestId + 1, (int) tl.getLocalRequestId()));
 		}
 		Scheduler.get().scheduleIncremental(replayer);
+	}
+
+	@Override
+	public void run() {
+		if (HandshakeConsortModel.get().getLoadObjectsResponse() == null
+				&& isBypassInitialObjectsRegistration()) {
+			consort.wasPlayed(this, Collections.singletonList(
+					HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED));
+			return;
+		}
+		HandshakeConsortModel.get().prepareInitialPlaySequence();
+		loop();
 	}
 
 	enum Phase {

@@ -92,31 +92,6 @@ public class ConvertToProxiesPerformer
 					ObjectCreationExpr.class, BinaryExpr.class, UnaryExpr.class,
 					IfStmt.class);
 
-	@Override
-	public void performAction(TaskConvertToProxies task) throws Exception {
-		this.task = task;
-		scanForClassesToInstrument();
-		ensureProxies();
-		instrumentClasses();
-	}
-
-	public void write(CompilationUnit unit,
-			ClassOrInterfaceDeclaration declaration, String to) {
-		to = task.dryRun ? Ax.format("/tmp/%s", getClass().getSimpleName())
-				: to;
-		String packagePath = Ax.format("%s/%s", to, unit.getPackageDeclaration()
-				.get().getNameAsString().replace(".", "/"));
-		File packageFolder = new File(packagePath);
-		packageFolder.mkdirs();
-		File outFile = SEUtilities.getChildFile(packageFolder,
-				declaration.getNameAsString() + ".java");
-		try {
-			Io.write().string(unit.toString()).toFile(outFile);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	private void ensureProxies() throws Exception {
 		Set<String> nextDelta = new LinkedHashSet<>();
 		Pattern p = Pattern.compile(task.importMatcherRegex);
@@ -186,6 +161,13 @@ public class ConvertToProxiesPerformer
 		}
 	}
 
+	void instrumentClass(CompilationUnitWrapper unit) {
+		for (UnitType decl : unit.declarations) {
+			RedirectVisitor visitor = new RedirectVisitor(unit);
+			decl.getDeclaration().accept(visitor, null);
+		}
+	}
+
 	private void instrumentClasses() throws Exception {
 		StringMap classPaths = StringMap.fromStringList(
 				task.pathsToScan.stream().collect(Collectors.joining("\n")));
@@ -196,6 +178,14 @@ public class ConvertToProxiesPerformer
 				DeclarationVisitor::new, task.refreshCompilationUnits);
 		compUnits.units.forEach(this::instrumentClass);
 		compUnits.writeDirty(task.isDryRun());
+	}
+
+	@Override
+	public void performAction(TaskConvertToProxies task) throws Exception {
+		this.task = task;
+		scanForClassesToInstrument();
+		ensureProxies();
+		instrumentClasses();
 	}
 
 	private void scanForClassesToInstrument() {
@@ -235,10 +225,49 @@ public class ConvertToProxiesPerformer
 				toInstrument.size(), javaFileCount.get());
 	}
 
-	void instrumentClass(CompilationUnitWrapper unit) {
-		for (UnitType decl : unit.declarations) {
-			RedirectVisitor visitor = new RedirectVisitor(unit);
-			decl.getDeclaration().accept(visitor, null);
+	public void write(CompilationUnit unit,
+			ClassOrInterfaceDeclaration declaration, String to) {
+		to = task.dryRun ? Ax.format("/tmp/%s", getClass().getSimpleName())
+				: to;
+		String packagePath = Ax.format("%s/%s", to, unit.getPackageDeclaration()
+				.get().getNameAsString().replace(".", "/"));
+		File packageFolder = new File(packagePath);
+		packageFolder.mkdirs();
+		File outFile = SEUtilities.getChildFile(packageFolder,
+				declaration.getNameAsString() + ".java");
+		try {
+			Io.write().string(unit.toString()).toFile(outFile);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
+		public DeclarationVisitor(CompilationUnits units,
+				CompilationUnitWrapper compUnit) {
+			super(units, compUnit);
+		}
+
+		@Override
+		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
+			try {
+				visit0(node, arg);
+			} catch (VerifyError ve) {
+				Ax.out("Verify error: %s", node.getName());
+			}
+		}
+
+		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
+			if (!node.isInterface()) {
+				UnitType type = new UnitType(unit, node);
+				if (type.invalid) {
+					Ax.err("Invalid decl: %s", unit.getFile().getName());
+					return;
+				}
+				type.setDeclaration(node);
+				unit.declarations.add(type);
+			}
+			super.visit(node, arg);
 		}
 	}
 
@@ -259,14 +288,6 @@ public class ConvertToProxiesPerformer
 			Preconditions.checkState(
 					!simpleClassNames.containsKey(clazz.getSimpleName()));
 			simpleClassNames.put(clazz.getSimpleName(), clazz);
-		}
-
-		public Class getProxyClass() {
-			try {
-				return Class.forName(proxyFqn());
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
 		}
 
 		private void addConstructor() {
@@ -427,14 +448,6 @@ public class ConvertToProxiesPerformer
 			return task.outputPackage + "." + clazz.getPackage().getName();
 		}
 
-		private String proxyClassName() {
-			return clazz.getSimpleName() + "_";
-		}
-
-		private String proxyFqn() {
-			return Ax.format("%s.%s", fullOutputPackage(), proxyClassName());
-		}
-
 		void generate() {
 			String fullOutputPackage = fullOutputPackage();
 			String java = Ax.format(
@@ -458,6 +471,22 @@ public class ConvertToProxiesPerformer
 			addMethods();
 			addConstructor();
 			write(unit, declaration, task.outputPackagePath);
+		}
+
+		public Class getProxyClass() {
+			try {
+				return Class.forName(proxyFqn());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		private String proxyClassName() {
+			return clazz.getSimpleName() + "_";
+		}
+
+		private String proxyFqn() {
+			return Ax.format("%s.%s", fullOutputPackage(), proxyClassName());
 		}
 	}
 
@@ -513,35 +542,6 @@ public class ConvertToProxiesPerformer
 				}
 			}
 			super.visit(expr, arg);
-		}
-	}
-
-	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {
-		public DeclarationVisitor(CompilationUnits units,
-				CompilationUnitWrapper compUnit) {
-			super(units, compUnit);
-		}
-
-		@Override
-		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
-			try {
-				visit0(node, arg);
-			} catch (VerifyError ve) {
-				Ax.out("Verify error: %s", node.getName());
-			}
-		}
-
-		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
-			if (!node.isInterface()) {
-				UnitType type = new UnitType(unit, node);
-				if (type.invalid) {
-					Ax.err("Invalid decl: %s", unit.getFile().getName());
-					return;
-				}
-				type.setDeclaration(node);
-				unit.declarations.add(type);
-			}
-			super.visit(node, arg);
 		}
 	}
 }

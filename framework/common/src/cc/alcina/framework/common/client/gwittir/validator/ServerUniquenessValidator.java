@@ -89,8 +89,25 @@ public class ServerUniquenessValidator extends ServerValidator {
 		return this.valueTemplate;
 	}
 
+	@Override
+	protected void handleServerValidationException(ServerValidator sv) {
+		super.handleServerValidationException(sv);
+		if (sv instanceof ServerUniquenessValidator) {
+			ServerUniquenessValidator suv = (ServerUniquenessValidator) sv;
+			setSuggestedValue(suv.getSuggestedValue());
+		}
+	}
+
+	// this is for hard-coded property-defined subclasses
+	protected void initProperties() {
+	}
+
 	public boolean isCaseInsensitive() {
 		return caseInsensitive;
+	}
+
+	protected boolean nullAlwaysValid() {
+		return true;
 	}
 
 	public void setCaseInsensitive(boolean caseInsensitive) {
@@ -160,22 +177,5 @@ public class ServerUniquenessValidator extends ServerValidator {
 		}
 		setValue(value == null ? null : value.toString());
 		return super.validate(value);
-	}
-
-	@Override
-	protected void handleServerValidationException(ServerValidator sv) {
-		super.handleServerValidationException(sv);
-		if (sv instanceof ServerUniquenessValidator) {
-			ServerUniquenessValidator suv = (ServerUniquenessValidator) sv;
-			setSuggestedValue(suv.getSuggestedValue());
-		}
-	}
-
-	// this is for hard-coded property-defined subclasses
-	protected void initProperties() {
-	}
-
-	protected boolean nullAlwaysValid() {
-		return true;
 	}
 }

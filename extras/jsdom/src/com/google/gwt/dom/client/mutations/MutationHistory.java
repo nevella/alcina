@@ -78,30 +78,6 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		this.events = events;
 	}
 
-	@Override
-	public void topicPublished(MutationHistory.Event event) {
-		if (mutations.loggingConfiguration.logEvents) {
-			LocalDom.log(Level.INFO,
-					"mutation event %s - %s - received - %s mutations",
-					events.size(), event.type, event.records.size());
-		}
-		events.add(event);
-		if (mutations.loggingConfiguration.logDoms && !hadExceptions()) {
-			if (events.size() > RETAIN_AT_MOST_DOM_COUNT) {
-				// always retain dom0
-				events.get(events.size() - RETAIN_AT_MOST_DOM_COUNT)
-						.clearDoms();
-			}
-			testEquivalence(event);
-		}
-		totalRecordCount += event.records.size();
-		while (totalRecordCount > RETAIN_AT_MOST_EVENT_COUNT) {
-			Event cursor = events.get(++clearedEventsIdx);
-			totalRecordCount -= cursor.getRecords().size();
-			cursor.getRecords().clear();
-		}
-	}
-
 	boolean testEquivalence(MutationHistory.Event event) {
 		long start = System.currentTimeMillis();
 		try {
@@ -152,6 +128,30 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		}
 	}
 
+	@Override
+	public void topicPublished(MutationHistory.Event event) {
+		if (mutations.loggingConfiguration.logEvents) {
+			LocalDom.log(Level.INFO,
+					"mutation event %s - %s - received - %s mutations",
+					events.size(), event.type, event.records.size());
+		}
+		events.add(event);
+		if (mutations.loggingConfiguration.logDoms && !hadExceptions()) {
+			if (events.size() > RETAIN_AT_MOST_DOM_COUNT) {
+				// always retain dom0
+				events.get(events.size() - RETAIN_AT_MOST_DOM_COUNT)
+						.clearDoms();
+			}
+			testEquivalence(event);
+		}
+		totalRecordCount += event.records.size();
+		while (totalRecordCount > RETAIN_AT_MOST_EVENT_COUNT) {
+			Event cursor = events.get(++clearedEventsIdx);
+			totalRecordCount -= cursor.getRecords().size();
+			cursor.getRecords().clear();
+		}
+	}
+
 	void verifyDomEquivalence() {
 		Event event = new Event(Type.TEST, new ArrayList<>());
 		Preconditions.checkState(testEquivalence(event));
@@ -184,6 +184,12 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 		public Event(Event.Type type, List<MutationRecord> records) {
 			this.type = type;
 			this.records = records;
+		}
+
+		void clearDoms() {
+			localDom = null;
+			remoteDom = null;
+			records = null;
 		}
 
 		public String getEquivalenceTest() {
@@ -232,12 +238,6 @@ public class MutationHistory implements ProcessObserver<MutationHistory.Event> {
 
 		public void setType(Type type) {
 			this.type = type;
-		}
-
-		void clearDoms() {
-			localDom = null;
-			remoteDom = null;
-			records = null;
 		}
 
 		@Reflected

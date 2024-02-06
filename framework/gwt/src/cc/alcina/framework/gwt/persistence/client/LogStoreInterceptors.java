@@ -61,86 +61,16 @@ public class LogStoreInterceptors {
 
 	private HandlerRegistration windowClosingHandlerRegistration;
 
+	boolean areStatsMuted() {
+		return statsMuteCounter > 0;
+	}
+
 	public void handleNativeEvent(Event nativeEvent, boolean click,
 			boolean blur, boolean focus) {
 		try {
 			handleNativeEvent0(nativeEvent, click, blur, focus);
 		} catch (RuntimeException e) {
 			LocalDom.onRelatedException(e);
-		}
-	}
-
-	public void installStats() {
-		AlcinaTopics.muteStatisticsLogging.add(muteListener);
-		installStats0();
-	}
-
-	public void interceptClientLog() {
-		AlcinaTopics.categorisedLogMessage
-				.add(LogStore.get().getStringPairListener());
-	}
-
-	public boolean isLogStatPaused() {
-		return this.logStatPaused;
-	}
-
-	public boolean isNumberedElements() {
-		return this.numberedElements;
-	}
-
-	public void logClicksAndChanges() {
-		nativePreviewHandlerRegistration = Event
-				.addNativePreviewHandler(new NativePreviewHandler() {
-					@Override
-					public void onPreviewNativeEvent(NativePreviewEvent event) {
-						previewNativeEvent(event);
-					}
-				});
-	}
-
-	public void logHistoryEvents() {
-		this.historyHandlerRegistration = History
-				.addValueChangeHandler(historyListener);
-		windowClosingHandlerRegistration = Window.addWindowClosingHandler(
-				evt -> AlcinaTopics.categorisedLogMessage.publish(
-						new StringPair(AlcinaTopics.LOG_CATEGORY_HISTORY,
-								"window closing")));
-	}
-
-	public void logStat(String stat) {
-		if (logStatPaused) {
-			stats.add(stat);
-			return;
-		}
-		ClientNotifications.get().log(stat);
-		AlcinaTopics.categorisedLogMessage
-				.publish(new StringPair(AlcinaTopics.LOG_CATEGORY_STAT, stat));
-	}
-
-	public void setLogStatPaused(boolean logStatPaused) {
-		this.logStatPaused = logStatPaused;
-		if (!logStatPaused) {
-			stats.forEach(s -> logStat(s));
-			stats.clear();
-		}
-	}
-
-	public void setNumberedElements(boolean numberedElements) {
-		this.numberedElements = numberedElements;
-	}
-
-	public void unload() {
-		AlcinaTopics.categorisedLogMessage
-				.remove(LogStore.get().getStringPairListener());
-		AlcinaTopics.muteStatisticsLogging.remove(muteListener);
-		if (historyHandlerRegistration != null) {
-			historyHandlerRegistration.removeHandler();
-		}
-		if (nativePreviewHandlerRegistration != null) {
-			nativePreviewHandlerRegistration.removeHandler();
-		}
-		if (windowClosingHandlerRegistration != null) {
-			windowClosingHandlerRegistration.removeHandler();
 		}
 	}
 
@@ -244,27 +174,9 @@ public class LogStoreInterceptors {
 		}
 	}
 
-	protected void previewNativeEvent(NativePreviewEvent event) {
-		Event nativeEvent = Event.as(event.getNativeEvent());
-		String type = null;
-		try {
-			type = nativeEvent.getType();
-		} catch (Exception e1) {
-			// FF22 throwing some permissions exceptions, gawd knows why
-			return;
-		}
-		boolean click = BrowserEvents.CLICK.equals(type);
-		boolean blur = BrowserEvents.BLUR.equals(type)
-				|| BrowserEvents.FOCUSOUT.equals(type);
-		boolean focus = BrowserEvents.FOCUS.equals(type)
-				|| BrowserEvents.FOCUSIN.equals(type);
-		if (click || blur || focus) {
-			handleNativeEvent(nativeEvent, click, blur, focus);
-		}
-	}
-
-	boolean areStatsMuted() {
-		return statsMuteCounter > 0;
+	public void installStats() {
+		AlcinaTopics.muteStatisticsLogging.add(muteListener);
+		installStats0();
 	}
 
 	native void installStats0()/*-{
@@ -337,4 +249,92 @@ public class LogStoreInterceptors {
     }
 
 	}-*/;
+
+	public void interceptClientLog() {
+		AlcinaTopics.categorisedLogMessage
+				.add(LogStore.get().getStringPairListener());
+	}
+
+	public boolean isLogStatPaused() {
+		return this.logStatPaused;
+	}
+
+	public boolean isNumberedElements() {
+		return this.numberedElements;
+	}
+
+	public void logClicksAndChanges() {
+		nativePreviewHandlerRegistration = Event
+				.addNativePreviewHandler(new NativePreviewHandler() {
+					@Override
+					public void onPreviewNativeEvent(NativePreviewEvent event) {
+						previewNativeEvent(event);
+					}
+				});
+	}
+
+	public void logHistoryEvents() {
+		this.historyHandlerRegistration = History
+				.addValueChangeHandler(historyListener);
+		windowClosingHandlerRegistration = Window.addWindowClosingHandler(
+				evt -> AlcinaTopics.categorisedLogMessage.publish(
+						new StringPair(AlcinaTopics.LOG_CATEGORY_HISTORY,
+								"window closing")));
+	}
+
+	public void logStat(String stat) {
+		if (logStatPaused) {
+			stats.add(stat);
+			return;
+		}
+		ClientNotifications.get().log(stat);
+		AlcinaTopics.categorisedLogMessage
+				.publish(new StringPair(AlcinaTopics.LOG_CATEGORY_STAT, stat));
+	}
+
+	protected void previewNativeEvent(NativePreviewEvent event) {
+		Event nativeEvent = Event.as(event.getNativeEvent());
+		String type = null;
+		try {
+			type = nativeEvent.getType();
+		} catch (Exception e1) {
+			// FF22 throwing some permissions exceptions, gawd knows why
+			return;
+		}
+		boolean click = BrowserEvents.CLICK.equals(type);
+		boolean blur = BrowserEvents.BLUR.equals(type)
+				|| BrowserEvents.FOCUSOUT.equals(type);
+		boolean focus = BrowserEvents.FOCUS.equals(type)
+				|| BrowserEvents.FOCUSIN.equals(type);
+		if (click || blur || focus) {
+			handleNativeEvent(nativeEvent, click, blur, focus);
+		}
+	}
+
+	public void setLogStatPaused(boolean logStatPaused) {
+		this.logStatPaused = logStatPaused;
+		if (!logStatPaused) {
+			stats.forEach(s -> logStat(s));
+			stats.clear();
+		}
+	}
+
+	public void setNumberedElements(boolean numberedElements) {
+		this.numberedElements = numberedElements;
+	}
+
+	public void unload() {
+		AlcinaTopics.categorisedLogMessage
+				.remove(LogStore.get().getStringPairListener());
+		AlcinaTopics.muteStatisticsLogging.remove(muteListener);
+		if (historyHandlerRegistration != null) {
+			historyHandlerRegistration.removeHandler();
+		}
+		if (nativePreviewHandlerRegistration != null) {
+			nativePreviewHandlerRegistration.removeHandler();
+		}
+		if (windowClosingHandlerRegistration != null) {
+			windowClosingHandlerRegistration.removeHandler();
+		}
+	}
 }

@@ -13,6 +13,20 @@ public class CDATASectionLocal extends NodeLocal implements ClientDomCDATASectio
 	}
 
 	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		builder.appendEscapedNoQuotes(text);
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		builder.append(getData());
+	}
+
+	void appendUnescaped(UnsafeHtmlBuilder builder) {
+		builder.appendUnsafeHtml(text);
+	}
+
+	@Override
 	public Node cloneNode(boolean deep) {
 		return getOwnerDocument().createCDATASection(getData());
 	}
@@ -57,6 +71,10 @@ public class CDATASectionLocal extends NodeLocal implements ClientDomCDATASectio
 		return textNode;
 	}
 
+	void putCDATASection(CDATASection textNode) {
+		this.textNode = textNode;
+	}
+
 	@Override
 	public void replaceData(int offset, int length, String data) {
 		throw new UnsupportedOperationException();
@@ -80,23 +98,5 @@ public class CDATASectionLocal extends NodeLocal implements ClientDomCDATASectio
 	@Override
 	public String toString() {
 		return Ax.format("#cdata-section[%s]", getData());
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscapedNoQuotes(text);
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		builder.append(getData());
-	}
-
-	void appendUnescaped(UnsafeHtmlBuilder builder) {
-		builder.appendUnsafeHtml(text);
-	}
-
-	void putCDATASection(CDATASection textNode) {
-		this.textNode = textNode;
 	}
 }

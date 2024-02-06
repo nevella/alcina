@@ -22,6 +22,10 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 
 public class AlcinaCollectors {
+	private static <I, R> Function<I, R> castingIdentity() {
+		return i -> (R) i;
+	}
+
 	public static Collector<String, ?, String> commaAndList() {
 		return new CommaAndListCollector();
 	}
@@ -98,10 +102,6 @@ public class AlcinaCollectors {
 	public static <K, T> Collector<K, ?, Map<K, T>>
 			toValueMap(Function<? super K, ? extends T> valueMapper) {
 		return new ToValueMapCollector(valueMapper, LinkedHashMap::new);
-	}
-
-	private static <I, R> Function<I, R> castingIdentity() {
-		return i -> (R) i;
 	}
 
 	private static class CommaAndListCollector implements

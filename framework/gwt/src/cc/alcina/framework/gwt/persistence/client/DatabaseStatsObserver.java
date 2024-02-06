@@ -88,6 +88,15 @@ public class DatabaseStatsObserver {
 	public DatabaseStatsObserver() {
 	}
 
+	protected void checkMax() {
+		if (current.greaterSizeThan(max)
+				|| max.getVersion() < PERSISTENCE_VERSION) {
+			max = current;
+			max.setVersion(PERSISTENCE_VERSION);
+			persistMax();
+		}
+	}
+
 	public String getReport() {
 		if (max == null) {
 			max = current;
@@ -107,6 +116,11 @@ public class DatabaseStatsObserver {
 		LogStore.topicDeleted.add(logStoreDeletedListener);
 	}
 
+	protected void persistMax() {
+		String ser = Registry.impl(AlcinaBeanSerializer.class).serialize(max);
+		KeyValueStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
+	}
+
 	public void recalcWithListener(AsyncCallback postRecalcCallback) {
 		currentCallback.wrapped = postRecalcCallback;
 		refreshCurrent();
@@ -118,19 +132,5 @@ public class DatabaseStatsObserver {
 			refreshing = true;
 			new DatabaseStatsCollector().run(currentCallback);
 		}
-	}
-
-	protected void checkMax() {
-		if (current.greaterSizeThan(max)
-				|| max.getVersion() < PERSISTENCE_VERSION) {
-			max = current;
-			max.setVersion(PERSISTENCE_VERSION);
-			persistMax();
-		}
-	}
-
-	protected void persistMax() {
-		String ser = Registry.impl(AlcinaBeanSerializer.class).serialize(max);
-		KeyValueStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
 	}
 }

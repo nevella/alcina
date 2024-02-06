@@ -90,6 +90,33 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 
 	private BreadcrumbBarEditableWidgetsButton editableToggleButton;
 
+	// for subclasses
+	protected int addTableMasks(int mask) {
+		return mask;
+	}
+
+	private Widget createCaption(PermissibleAction action) {
+		List<SimpleHistoryEventInfo> history = Arrays
+				.asList(new SimpleHistoryEventInfo[] {
+						new SimpleHistoryEventInfo("Action"),
+						new SimpleHistoryEventInfo(action.getDisplayName()) });
+		ArrayList<Widget> maxButtonArr = BreadcrumbBar.maxButton(vp);
+		if (isWithLinkedChanges()) {
+			linkButton = new BreadcrumbBarLinkChangesButton();
+			maxButtonArr.add(0, linkButton);
+		}
+		if (isEditableToggle()) {
+			editableToggleButton = new BreadcrumbBarEditableWidgetsButton();
+			maxButtonArr.add(0, editableToggleButton);
+		}
+		BreadcrumbBar bar = new BreadcrumbBar(null, history, maxButtonArr);
+		bar.addStyleName("tlr-borders");
+		return bar;
+	}
+
+	protected abstract SearchDataProvider createSearchDataProvider(
+			AsyncCallback completionCallback, SingleTableSearchDefinition def);
+
 	public LocalActionWithParameters<SingleTableSearchDefinition> getAction() {
 		return this.action;
 	}
@@ -100,6 +127,10 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 
 	public SearchPanel getSearchPanel() {
 		return this.searchPanel;
+	}
+
+	protected List<PermissibleAction> getTableActions() {
+		return null;
 	}
 
 	@Override
@@ -186,35 +217,23 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 		this.withoutParameters = withoutParameters;
 	}
 
-	private Widget createCaption(PermissibleAction action) {
-		List<SimpleHistoryEventInfo> history = Arrays
-				.asList(new SimpleHistoryEventInfo[] {
-						new SimpleHistoryEventInfo("Action"),
-						new SimpleHistoryEventInfo(action.getDisplayName()) });
-		ArrayList<Widget> maxButtonArr = BreadcrumbBar.maxButton(vp);
-		if (isWithLinkedChanges()) {
-			linkButton = new BreadcrumbBarLinkChangesButton();
-			maxButtonArr.add(0, linkButton);
+	class BreadcrumbBarEditableWidgetsButton extends BreadcrumbBarButton
+			implements ClickHandler {
+		public BreadcrumbBarEditableWidgetsButton() {
+			super();
+			addClickHandler(this);
+			updateText();
 		}
-		if (isEditableToggle()) {
-			editableToggleButton = new BreadcrumbBarEditableWidgetsButton();
-			maxButtonArr.add(0, editableToggleButton);
+
+		@Override
+		public void onClick(ClickEvent event) {
+			editableWidgets = !editableWidgets;
+			searchPanel.search();
 		}
-		BreadcrumbBar bar = new BreadcrumbBar(null, history, maxButtonArr);
-		bar.addStyleName("tlr-borders");
-		return bar;
-	}
 
-	// for subclasses
-	protected int addTableMasks(int mask) {
-		return mask;
-	}
-
-	protected abstract SearchDataProvider createSearchDataProvider(
-			AsyncCallback completionCallback, SingleTableSearchDefinition def);
-
-	protected List<PermissibleAction> getTableActions() {
-		return null;
+		private void updateText() {
+			setText(editableWidgets ? "View" : "Edit");
+		}
 	}
 
 	public class SearchPanel extends FlowPanel implements ClickHandler {
@@ -292,6 +311,11 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			beanView.addStyleName("no-bottom");
 			resultsHolder.clear();
 			AsyncCallback completionCallback = new AsyncCallback() {
+				private void cleanup() {
+					runningLabel.setVisible(false);
+					button.setEnabled(true);
+				}
+
 				@Override
 				public void onFailure(Throwable caught) {
 					cleanup();
@@ -301,11 +325,6 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 				@Override
 				public void onSuccess(Object result) {
 					cleanup();
-				}
-
-				private void cleanup() {
-					runningLabel.setVisible(false);
-					button.setEnabled(true);
 				}
 			};
 			if (beanView != null && !isWithoutParameters()) {
@@ -357,25 +376,6 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 				SingleTableSearchDefinition def) {
 			return new SearchDataProviderCommon(def, completionCallback,
 					converter);
-		}
-	}
-
-	class BreadcrumbBarEditableWidgetsButton extends BreadcrumbBarButton
-			implements ClickHandler {
-		public BreadcrumbBarEditableWidgetsButton() {
-			super();
-			addClickHandler(this);
-			updateText();
-		}
-
-		@Override
-		public void onClick(ClickEvent event) {
-			editableWidgets = !editableWidgets;
-			searchPanel.search();
-		}
-
-		private void updateText() {
-			setText(editableWidgets ? "View" : "Edit");
 		}
 	}
 }

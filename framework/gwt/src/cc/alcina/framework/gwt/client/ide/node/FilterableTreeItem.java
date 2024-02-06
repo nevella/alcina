@@ -29,19 +29,8 @@ public abstract class FilterableTreeItem extends TreeItem implements
 	public FilterableTreeItem() {
 	}
 
-	protected abstract void renderHtml();
-
-	@Override
-	protected void maybeLazilyRender() {
-		renderHtml();
-	}
-
 	public FilterableTreeItem(NodeFactory nodeFactory) {
 		this.nodeFactory = nodeFactory;
-	}
-
-	public boolean filter(String filterText) {
-		return filter(filterText, false);
 	}
 
 	@Override
@@ -50,6 +39,10 @@ public abstract class FilterableTreeItem extends TreeItem implements
 			return;
 		}
 		super.ensureElements(isRoot);
+	}
+
+	public boolean filter(String filterText) {
+		return filter(filterText, false);
 	}
 
 	public boolean filter(String filterText, boolean enforceVisible) {
@@ -89,6 +82,13 @@ public abstract class FilterableTreeItem extends TreeItem implements
 	}
 
 	protected abstract String getText0();
+
+	@Override
+	protected void maybeLazilyRender() {
+		renderHtml();
+	}
+
+	protected abstract void renderHtml();
 
 	protected boolean satisfiesFilter(String filterText) {
 		return getText().toLowerCase().contains(filterText);

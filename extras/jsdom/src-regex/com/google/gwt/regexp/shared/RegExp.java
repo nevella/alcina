@@ -48,6 +48,18 @@ public class RegExp {
 				: RegExp_Jvm.compile(pattern, flags);
 	}
 
+	static RegExp construct(IRegExp impl) {
+		return new RegExp(impl);
+	}
+
+	private static boolean isScript() {
+		if (isScript == null) {
+			// cache
+			isScript = GWT.isScript();
+		}
+		return isScript;
+	}
+
 	/**
 	 * Returns a literal pattern <code>String</code> for the specified
 	 * <code>String</code>.
@@ -66,18 +78,6 @@ public class RegExp {
 	 */
 	public static String quote(String input) {
 		return RegExp_Jso.quote(input);
-	}
-
-	private static boolean isScript() {
-		if (isScript == null) {
-			// cache
-			isScript = GWT.isScript();
-		}
-		return isScript;
-	}
-
-	static RegExp construct(IRegExp impl) {
-		return new RegExp(impl);
 	}
 
 	private IRegExp impl;

@@ -148,6 +148,10 @@ public class ValueBoxBase<T> extends FocusWidget implements HasChangeHandlers,
 		return autoDirHandler.getDirectionEstimator();
 	}
 
+	protected TextBoxImpl getImpl() {
+		return impl;
+	}
+
 	@Override
 	public String getName() {
 		return getElement().getPropertyString("name");
@@ -235,6 +239,12 @@ public class ValueBoxBase<T> extends FocusWidget implements HasChangeHandlers,
 			// Handles Focus and Click events.
 			super.onBrowserEvent(event);
 		}
+	}
+
+	@Override
+	protected void onLoad() {
+		super.onLoad();
+		autoDirHandler.refreshDirection();
 	}
 
 	/**
@@ -394,16 +404,6 @@ public class ValueBoxBase<T> extends FocusWidget implements HasChangeHandlers,
 			T newValue = getValue();
 			ValueChangeEvent.fireIfNotEqual(this, oldValue, newValue);
 		}
-	}
-
-	protected TextBoxImpl getImpl() {
-		return impl;
-	}
-
-	@Override
-	protected void onLoad() {
-		super.onLoad();
-		autoDirHandler.refreshDirection();
 	}
 
 	/**

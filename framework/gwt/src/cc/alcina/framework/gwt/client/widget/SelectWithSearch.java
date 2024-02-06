@@ -251,6 +251,14 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	public SelectWithSearch() {
 	}
 
+	protected void addDefaultSeparator(HasWidgets itemHolder) {
+		itemHolder.add(new InlineHTML(" "));
+	}
+
+	protected void addGroupHeading(HasWidgets itemHolder, Label l) {
+		itemHolder.add(l);
+	}
+
 	@Override
 	public HandlerRegistration addPopupShownHandler(PopupShownHandler handler) {
 		return handlerManager.addHandler(PopupShownEvent.getType(), handler);
@@ -264,6 +272,17 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public HandlerRegistration addWidgetClickHandler(ClickHandler handler) {
 		return ((HasClickHandlers) holder).addClickHandler(handler);
+	}
+
+	protected int adjustDropdownWidth(int minWidth) {
+		return minWidth;
+	}
+
+	protected void afterUpdateItems(boolean empty) {
+	}
+
+	protected void checkShowPopup() {
+		checkShowPopup(true);
 	}
 
 	public void checkShowPopup(final boolean filterTextBox) {
@@ -295,6 +314,25 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		getFilter().getTextBox().setText("");
 		selectableNavigation.clear();
 		filter("");
+	}
+
+	protected HasClickHandlers createItem(T item, boolean asHTML, int charWidth,
+			boolean itemsHaveLinefeeds, Label ownerLabel, String sep) {
+		HasClickHandlers hch = itemsHaveLinefeeds
+				? new SelectWithSearchItemDiv(item, false, charWidth,
+						itemsHaveLinefeeds, ownerLabel, sep, itemFilter)
+				: new SelectWithSearchItem(item, false, charWidth,
+						itemsHaveLinefeeds, ownerLabel, sep);
+		return hch;
+	}
+
+	protected void createItemHolder() {
+		FlowPanelClickable panel = new FlowPanelClickable();
+		panel.setStyleName("select-item-container");
+		if (popdown) {
+			panel.addMouseDownHandler(checkIgnoreHandler);
+		}
+		itemHolder = panel;
 	}
 
 	public Widget createWidget(Map<G, List<T>> itemMap,
@@ -421,6 +459,15 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			lazyProvider.getData(callback);
 		}
 		return holder;
+	}
+
+	private DecoratedRelativePopupPanel ensurePanelForPopup() {
+		if (panelForPopup == null) {
+			panelForPopup = new DecoratedRelativePopupPanel(true);
+			setPanelForPopupUI(panelForPopup);
+			panelForPopup.add(scroller);
+		}
+		return panelForPopup;
 	}
 
 	@Override
@@ -559,10 +606,32 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return topAdjust;
 	}
 
+	protected void handleFilterBlur() {
+		new Timer() {
+			@Override
+			public void run() {
+				// https://jira.barnet.com.au/browse/JAD-5053 - IE
+				// blur/scrollbar issue
+				if (BrowserMod.isInternetExplorer()) {
+					Element elt = WidgetUtils.getFocussedDocumentElement();
+					if (elt != null
+							&& elt.getClassName().contains("scroller")) {
+						return;
+					}
+				}
+				hidePopdown();
+			}
+		}.schedule(250);
+	}
+
 	public void hidePopdown() {
 		if (popdownHider != null) {
 			maybeClosePopdown(null);
 		}
+	}
+
+	protected boolean isAutoHolderHeight() {
+		return false;
 	}
 
 	public boolean isAutoselectFirst() {
@@ -618,8 +687,39 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return this.useCellList;
 	}
 
+	protected HasWidgets itemHolderAsHasWidgets() {
+		return (HasWidgets) itemHolder;
+	}
+
 	public IndexedPanel itemHolderAsIndexedPanel() {
 		return (IndexedPanel) itemHolder;
+	}
+
+	protected void itemSelected(T item) {
+		SelectionEvent.fire(this, item);
+	}
+
+	protected void maybeClosePopdown(ClickEvent event) {
+		if (event != null) {
+			try {
+				if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
+					event.preventDefault();
+					ignoreNextBlur = System.currentTimeMillis();
+					// otherwise popup will be closed by blur
+					return;
+				}
+			} catch (Exception e) {
+				// probably a synth click
+			}
+		}
+		closingOnClick = true;
+		if (relativePopupPanel != null) {
+			onPopdownShowing(relativePopupPanel, false);
+			relativePopupPanel.removeFromParent();
+			relativePopupPanel = null;
+		}
+		lastClosingClickMillis = System.currentTimeMillis();
+		closingOnClick = false;
 	}
 
 	public void maybeRepositionPopdown() {
@@ -631,6 +731,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 					RootPanel.get(), ensurePanelForPopup(), getShiftX(),
 					shiftY());
 		}
+	}
+
+	protected boolean maybeShowDepdendentOnFilter() {
+		return true;
 	}
 
 	@Override
@@ -646,6 +750,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				filter.getTextBox().setFocus(true);
 			}
 		});
+	}
+
+	protected void onPopdownShowing(RelativePopupPanel popup, boolean show) {
+		PopupShownEvent.fire(this, show);
 	}
 
 	public String provideFilterBoxText() {
@@ -751,6 +859,14 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.matchWidthToSource = matchWidthToSource;
 	}
 
+	protected void
+			setPanelForPopupUI(DecoratedRelativePopupPanel panelForPopup) {
+		panelForPopup.setStyleName("dropdown-popup");
+		panelForPopup.addStyleName("alcina-Selector");
+		panelForPopup.getElement().getStyle().setProperty("maxHeight",
+				holderHeight);
+	}
+
 	public void setPopdown(boolean popdown) {
 		this.popdown = popdown;
 	}
@@ -818,6 +934,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void setUseCellList(boolean useCellList) {
 		this.useCellList = useCellList;
+	}
+
+	protected int shiftY() {
+		return getShiftY();
 	}
 
 	public void showPopupWithData(boolean filterTextBox) {
@@ -892,174 +1012,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		afterUpdateItems(emptyItems);
 	}
 
-	private DecoratedRelativePopupPanel ensurePanelForPopup() {
-		if (panelForPopup == null) {
-			panelForPopup = new DecoratedRelativePopupPanel(true);
-			setPanelForPopupUI(panelForPopup);
-			panelForPopup.add(scroller);
-		}
-		return panelForPopup;
-	}
-
-	private void updateItemsCellList(String filterText, HasWidgets itemHolder) {
-		emptyItems = true;
-		Cell<T> cell = new AbstractCell<T>() {
-			@Override
-			public void render(com.google.gwt.cell.client.Cell.Context context,
-					T value, SafeHtmlBuilder sb) {
-				sb.appendEscaped((String) renderer.apply(value));
-			}
-		};
-		CellList<T> cellList = new CellList<T>(cell);
-		cellList.setPageSize(9999);
-		cellList.setKeyboardPagingPolicy(KeyboardPagingPolicy.INCREASE_RANGE);
-		cellList.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
-		// Add a selection model so we can select cells.
-		final SingleSelectionModel<T> selectionModel = new SingleSelectionModel<T>(
-				new SimpleKeyProvider<T>());
-		cellList.setSelectionModel(selectionModel);
-		selectionModel
-				.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-					@Override
-					public void onSelectionChange(SelectionChangeEvent event) {
-						itemSelected(selectionModel.getSelectedObject());
-					}
-				});
-		List<T> items = new ArrayList<>();
-		for (G c : keys) {
-			if (!itemMap.containsKey(c)) {
-				continue;
-			}
-			for (T item : itemMap.get(c)) {
-				String filterable = CommonUtils
-						.nullToEmpty(((String) renderer.apply(item)))
-						.toLowerCase();
-				if (itemFilter.test(item, filterable, filterText)
-						&& !selectedItems.contains(item)) {
-					items.add(item);
-				}
-			}
-		}
-		ListDataProvider<T> dataProvider = new ListDataProvider<T>();
-		dataProvider.getList().addAll(items);
-		dataProvider.addDataDisplay(cellList);
-		emptyItems = items.isEmpty();
-		itemHolder.clear();
-		itemHolder.add(cellList);
-		afterUpdateItems(emptyItems);
-	}
-
-	protected void addDefaultSeparator(HasWidgets itemHolder) {
-		itemHolder.add(new InlineHTML(" "));
-	}
-
-	protected void addGroupHeading(HasWidgets itemHolder, Label l) {
-		itemHolder.add(l);
-	}
-
-	protected int adjustDropdownWidth(int minWidth) {
-		return minWidth;
-	}
-
-	protected void afterUpdateItems(boolean empty) {
-	}
-
-	protected void checkShowPopup() {
-		checkShowPopup(true);
-	}
-
-	protected HasClickHandlers createItem(T item, boolean asHTML, int charWidth,
-			boolean itemsHaveLinefeeds, Label ownerLabel, String sep) {
-		HasClickHandlers hch = itemsHaveLinefeeds
-				? new SelectWithSearchItemDiv(item, false, charWidth,
-						itemsHaveLinefeeds, ownerLabel, sep, itemFilter)
-				: new SelectWithSearchItem(item, false, charWidth,
-						itemsHaveLinefeeds, ownerLabel, sep);
-		return hch;
-	}
-
-	protected void createItemHolder() {
-		FlowPanelClickable panel = new FlowPanelClickable();
-		panel.setStyleName("select-item-container");
-		if (popdown) {
-			panel.addMouseDownHandler(checkIgnoreHandler);
-		}
-		itemHolder = panel;
-	}
-
-	protected void handleFilterBlur() {
-		new Timer() {
-			@Override
-			public void run() {
-				// https://jira.barnet.com.au/browse/JAD-5053 - IE
-				// blur/scrollbar issue
-				if (BrowserMod.isInternetExplorer()) {
-					Element elt = WidgetUtils.getFocussedDocumentElement();
-					if (elt != null
-							&& elt.getClassName().contains("scroller")) {
-						return;
-					}
-				}
-				hidePopdown();
-			}
-		}.schedule(250);
-	}
-
-	protected boolean isAutoHolderHeight() {
-		return false;
-	}
-
-	protected HasWidgets itemHolderAsHasWidgets() {
-		return (HasWidgets) itemHolder;
-	}
-
-	protected void itemSelected(T item) {
-		SelectionEvent.fire(this, item);
-	}
-
-	protected void maybeClosePopdown(ClickEvent event) {
-		if (event != null) {
-			try {
-				if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
-					event.preventDefault();
-					ignoreNextBlur = System.currentTimeMillis();
-					// otherwise popup will be closed by blur
-					return;
-				}
-			} catch (Exception e) {
-				// probably a synth click
-			}
-		}
-		closingOnClick = true;
-		if (relativePopupPanel != null) {
-			onPopdownShowing(relativePopupPanel, false);
-			relativePopupPanel.removeFromParent();
-			relativePopupPanel = null;
-		}
-		lastClosingClickMillis = System.currentTimeMillis();
-		closingOnClick = false;
-	}
-
-	protected boolean maybeShowDepdendentOnFilter() {
-		return true;
-	}
-
-	protected void onPopdownShowing(RelativePopupPanel popup, boolean show) {
-		PopupShownEvent.fire(this, show);
-	}
-
-	protected void
-			setPanelForPopupUI(DecoratedRelativePopupPanel panelForPopup) {
-		panelForPopup.setStyleName("dropdown-popup");
-		panelForPopup.addStyleName("alcina-Selector");
-		panelForPopup.getElement().getStyle().setProperty("maxHeight",
-				holderHeight);
-	}
-
-	protected int shiftY() {
-		return getShiftY();
-	}
-
 	protected void updateItems() {
 		boolean recreateItemHolder = isRecreateItemHolderOnRefresh()
 				&& itemHolder.getParent() != null;
@@ -1120,6 +1072,54 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		afterUpdateItems(emptyItems);
 	}
 
+	private void updateItemsCellList(String filterText, HasWidgets itemHolder) {
+		emptyItems = true;
+		Cell<T> cell = new AbstractCell<T>() {
+			@Override
+			public void render(com.google.gwt.cell.client.Cell.Context context,
+					T value, SafeHtmlBuilder sb) {
+				sb.appendEscaped((String) renderer.apply(value));
+			}
+		};
+		CellList<T> cellList = new CellList<T>(cell);
+		cellList.setPageSize(9999);
+		cellList.setKeyboardPagingPolicy(KeyboardPagingPolicy.INCREASE_RANGE);
+		cellList.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
+		// Add a selection model so we can select cells.
+		final SingleSelectionModel<T> selectionModel = new SingleSelectionModel<T>(
+				new SimpleKeyProvider<T>());
+		cellList.setSelectionModel(selectionModel);
+		selectionModel
+				.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+					@Override
+					public void onSelectionChange(SelectionChangeEvent event) {
+						itemSelected(selectionModel.getSelectedObject());
+					}
+				});
+		List<T> items = new ArrayList<>();
+		for (G c : keys) {
+			if (!itemMap.containsKey(c)) {
+				continue;
+			}
+			for (T item : itemMap.get(c)) {
+				String filterable = CommonUtils
+						.nullToEmpty(((String) renderer.apply(item)))
+						.toLowerCase();
+				if (itemFilter.test(item, filterable, filterText)
+						&& !selectedItems.contains(item)) {
+					items.add(item);
+				}
+			}
+		}
+		ListDataProvider<T> dataProvider = new ListDataProvider<T>();
+		dataProvider.getList().addAll(items);
+		dataProvider.addDataDisplay(cellList);
+		emptyItems = items.isEmpty();
+		itemHolder.clear();
+		itemHolder.add(cellList);
+		afterUpdateItems(emptyItems);
+	}
+
 	public static interface HasItem<T> {
 		public T getItem();
 	}
@@ -1157,6 +1157,128 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public interface LazyDataProvider<G, T> {
 		void getData(AsyncCallback<LazyData> callback);
+	}
+
+	class SelectableNavigation implements KeyUpHandler, KeyDownHandler {
+		private int selectedIndex = -1;
+
+		private Widget lastSelected = null;
+
+		private ClickHandler wrappedEnterListener;
+
+		public void clear() {
+			selectedIndex = -1;
+			updateSelection();
+		}
+
+		private Widget getSelectedWidget() {
+			int visibleIndex = -1;
+			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
+			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
+				Widget widget = itemHolder.getWidget(i);
+				if (widget instanceof VisualFilterable && widget.isVisible()) {
+					visibleIndex++;
+					if (selectedIndex == visibleIndex) {
+						return widget;
+					}
+				}
+			}
+			return null;
+		}
+
+		private int getVisibleFilterableCount() {
+			int visibleIndex = -1;
+			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
+			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
+				Widget widget = itemHolder.getWidget(i);
+				if (widget instanceof VisualFilterable && widget.isVisible()) {
+					visibleIndex++;
+				}
+			}
+			return visibleIndex;
+		}
+
+		public ClickHandler getWrappedEnterListener() {
+			return this.wrappedEnterListener;
+		}
+
+		@Override
+		public void onKeyDown(KeyDownEvent event) {
+			int keyCode = event.getNativeKeyCode();
+			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
+				WidgetUtils.squelchCurrentEvent();
+			}
+		}
+
+		@Override
+		public void onKeyUp(KeyUpEvent event) {
+			Widget sender = (Widget) event.getSource();
+			if (event.getNativeEvent() == null) {
+				// IE9 issue
+				return;
+			}
+			int keyCode = event.getNativeKeyCode();
+			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
+				WidgetUtils.squelchCurrentEvent();
+			}
+			if (keyCode == KeyCodes.KEY_UP) {
+				if (selectedIndex > 0) {
+					selectedIndex--;
+				}
+				updateSelection();
+			}
+			if (keyCode == KeyCodes.KEY_DOWN) {
+				selectedIndex++;
+				updateSelection();
+			}
+			boolean hidePopdown = false;
+			if (keyCode == KeyCodes.KEY_ENTER) {
+				if (selectedIndex != -1) {
+					DomEvent.fireNativeEvent(WidgetUtils.createZeroClick(),
+							getSelectedWidget());
+					hidePopdown = true;
+					selectedIndex = -1;
+				} else {
+					if (wrappedEnterListener != null) {
+						WidgetUtils.fireClickOnHandler(
+								(HasClickHandlers) event.getSource(),
+								wrappedEnterListener);
+						hidePopdown = true;
+					}
+				}
+			}
+			if (hidePopdown && popdown) {
+				maybeClosePopdown(null);
+			}
+		}
+
+		public void setWrappedEnterListener(ClickHandler enterListener) {
+			this.wrappedEnterListener = enterListener;
+		}
+
+		private void updateSelection() {
+			if (lastSelected != null) {
+				lastSelected.removeStyleName("selected");
+			}
+			lastSelected = null;
+			if (selectedIndex < -1) {
+				selectedIndex = -1;
+			}
+			if (selectedIndex != -1) {
+				Widget selectedWidget = getSelectedWidget();
+				if (selectedWidget != null) {
+					selectedWidget.addStyleName("selected");
+					DOM.scrollIntoView(selectedWidget.getElement());
+					lastSelected = selectedWidget;
+				} else {
+					int vfc = getVisibleFilterableCount();
+					if (selectedIndex > vfc) {
+						selectedIndex = vfc;
+						updateSelection();
+					}
+				}
+			}
+		}
 	}
 
 	public class SelectWithSearchItem extends Link implements VisualFilterable {
@@ -1303,128 +1425,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		public void registerHintWidget(Widget hintWidget) {
 			this.hintWidget = hintWidget;
-		}
-	}
-
-	class SelectableNavigation implements KeyUpHandler, KeyDownHandler {
-		private int selectedIndex = -1;
-
-		private Widget lastSelected = null;
-
-		private ClickHandler wrappedEnterListener;
-
-		public void clear() {
-			selectedIndex = -1;
-			updateSelection();
-		}
-
-		public ClickHandler getWrappedEnterListener() {
-			return this.wrappedEnterListener;
-		}
-
-		@Override
-		public void onKeyDown(KeyDownEvent event) {
-			int keyCode = event.getNativeKeyCode();
-			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
-				WidgetUtils.squelchCurrentEvent();
-			}
-		}
-
-		@Override
-		public void onKeyUp(KeyUpEvent event) {
-			Widget sender = (Widget) event.getSource();
-			if (event.getNativeEvent() == null) {
-				// IE9 issue
-				return;
-			}
-			int keyCode = event.getNativeKeyCode();
-			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
-				WidgetUtils.squelchCurrentEvent();
-			}
-			if (keyCode == KeyCodes.KEY_UP) {
-				if (selectedIndex > 0) {
-					selectedIndex--;
-				}
-				updateSelection();
-			}
-			if (keyCode == KeyCodes.KEY_DOWN) {
-				selectedIndex++;
-				updateSelection();
-			}
-			boolean hidePopdown = false;
-			if (keyCode == KeyCodes.KEY_ENTER) {
-				if (selectedIndex != -1) {
-					DomEvent.fireNativeEvent(WidgetUtils.createZeroClick(),
-							getSelectedWidget());
-					hidePopdown = true;
-					selectedIndex = -1;
-				} else {
-					if (wrappedEnterListener != null) {
-						WidgetUtils.fireClickOnHandler(
-								(HasClickHandlers) event.getSource(),
-								wrappedEnterListener);
-						hidePopdown = true;
-					}
-				}
-			}
-			if (hidePopdown && popdown) {
-				maybeClosePopdown(null);
-			}
-		}
-
-		public void setWrappedEnterListener(ClickHandler enterListener) {
-			this.wrappedEnterListener = enterListener;
-		}
-
-		private Widget getSelectedWidget() {
-			int visibleIndex = -1;
-			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
-			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
-				Widget widget = itemHolder.getWidget(i);
-				if (widget instanceof VisualFilterable && widget.isVisible()) {
-					visibleIndex++;
-					if (selectedIndex == visibleIndex) {
-						return widget;
-					}
-				}
-			}
-			return null;
-		}
-
-		private int getVisibleFilterableCount() {
-			int visibleIndex = -1;
-			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
-			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
-				Widget widget = itemHolder.getWidget(i);
-				if (widget instanceof VisualFilterable && widget.isVisible()) {
-					visibleIndex++;
-				}
-			}
-			return visibleIndex;
-		}
-
-		private void updateSelection() {
-			if (lastSelected != null) {
-				lastSelected.removeStyleName("selected");
-			}
-			lastSelected = null;
-			if (selectedIndex < -1) {
-				selectedIndex = -1;
-			}
-			if (selectedIndex != -1) {
-				Widget selectedWidget = getSelectedWidget();
-				if (selectedWidget != null) {
-					selectedWidget.addStyleName("selected");
-					DOM.scrollIntoView(selectedWidget.getElement());
-					lastSelected = selectedWidget;
-				} else {
-					int vfc = getVisibleFilterableCount();
-					if (selectedIndex > vfc) {
-						selectedIndex = vfc;
-						updateSelection();
-					}
-				}
-			}
 		}
 	}
 }

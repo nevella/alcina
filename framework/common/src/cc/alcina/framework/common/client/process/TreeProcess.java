@@ -52,46 +52,6 @@ public class TreeProcess {
 
 	boolean logAsLevelledPosition;
 
-	static class TypePathSegments {
-		Map<Class, String> typePrefix = CollectionCreators.Bootstrap
-				.createConcurrentClassMap();
-
-		Map<String, IdCounter> prefixCounters = CollectionCreators.Bootstrap
-				.createConcurrentStringMap();
-
-		IdCounter counter = new IdCounter();
-
-		String createUniqueCounterSegment(Class<? extends Object> clazz) {
-			return String.valueOf(counter.nextId());
-		}
-
-		String createUniqueTypeSegment(Class<? extends Object> clazz) {
-			String prefix = typePrefix.get(clazz);
-			if (prefix == null) {
-				synchronized (typePrefix) {
-					prefix = typePrefix.get(clazz);
-					if (prefix == null) {
-						String canonicalName = clazz.getCanonicalName();
-						List<String> parts = List
-								.of(canonicalName.split("\\."));
-						for (int idx = parts.size() - 1; idx >= 0; idx--) {
-							String test = parts.stream().skip(idx)
-									.collect(Collectors.joining("."));
-							if (!prefixCounters.containsKey(test)) {
-								prefix = test;
-								typePrefix.put(clazz, prefix);
-								prefixCounters.put(prefix, new IdCounter());
-								break;
-							}
-						}
-					}
-				}
-			}
-			return Ax.format("%s-%s", prefix,
-					prefixCounters.get(prefix).nextId());
-		}
-	}
-
 	TypePathSegments typePathSegments;
 
 	public TreeProcess(Object owner) {
@@ -100,6 +60,34 @@ public class TreeProcess {
 		typePathSegments = new TypePathSegments();
 		onEvent(Event.node_added, root, null);
 		onEvent(Event.node_selected, root, null);
+	}
+
+	public String createUniqueSegment(Object object) {
+		return typePathSegments.createUniqueCounterSegment(object.getClass());
+	}
+
+	private String flatPosition(Node node) {
+		FormatBuilder position = new FormatBuilder().separator(" > ");
+		List<Node> selectionPath = node.asNodePath();
+		position.appendWithoutSeparator("Generation: ");
+		Node first = CommonUtils.first(selectionPath);
+		Node last = CommonUtils.last(selectionPath);
+		if (first != last) {
+			position.appendWithoutSeparator("top: ");
+			IntPair pair = new IntPair(first.indexInLevel(),
+					levelSizes.get(first.depth()));
+			position.append(pair);
+			position.separator(" :: ");
+			position.append(first.displayName());
+		}
+		position.format("[%s/%s]", last.depth(), levelSizes.size());
+		IntPair pair = new IntPair(last.indexInLevel(),
+				levelSizes.get(last.depth()));
+		position.append(pair);
+		position.separator(" :: ");
+		position.append(last.displayName());
+		String positionMessage = position.toString();
+		return positionMessage;
 	}
 
 	public String getCurrentPositionMessage() {
@@ -128,6 +116,25 @@ public class TreeProcess {
 			levelSizes.add(0);
 		}
 		return levelSizes.get(depth);
+	}
+
+	String levlledPosition(Node node) {
+		FormatBuilder position = new FormatBuilder().separator(" > ");
+		List<Node> selectionPath = node.asNodePath();
+		selectionPath.stream().
+		// skip root
+				skip(1)
+				//
+				.forEach(n -> {
+					IntPair pair = new IntPair(n.indexInLevel(),
+							levelSizes.get(n.depth()));
+					position.append(pair);
+				});
+		position.appendWithoutSeparator(" :: ");
+		selectionPath.stream().skip(1)
+				.forEach(n -> position.append(n.displayName()));
+		String positionMessage = position.toString();
+		return positionMessage;
 	}
 
 	public void onEvent(Event event, Node node,
@@ -168,49 +175,6 @@ public class TreeProcess {
 		this.logAsLevelledPosition = logAsLevelledPosition;
 	}
 
-	private String flatPosition(Node node) {
-		FormatBuilder position = new FormatBuilder().separator(" > ");
-		List<Node> selectionPath = node.asNodePath();
-		position.appendWithoutSeparator("Generation: ");
-		Node first = CommonUtils.first(selectionPath);
-		Node last = CommonUtils.last(selectionPath);
-		if (first != last) {
-			position.appendWithoutSeparator("top: ");
-			IntPair pair = new IntPair(first.indexInLevel(),
-					levelSizes.get(first.depth()));
-			position.append(pair);
-			position.separator(" :: ");
-			position.append(first.displayName());
-		}
-		position.format("[%s/%s]", last.depth(), levelSizes.size());
-		IntPair pair = new IntPair(last.indexInLevel(),
-				levelSizes.get(last.depth()));
-		position.append(pair);
-		position.separator(" :: ");
-		position.append(last.displayName());
-		String positionMessage = position.toString();
-		return positionMessage;
-	}
-
-	String levlledPosition(Node node) {
-		FormatBuilder position = new FormatBuilder().separator(" > ");
-		List<Node> selectionPath = node.asNodePath();
-		selectionPath.stream().
-		// skip root
-				skip(1)
-				//
-				.forEach(n -> {
-					IntPair pair = new IntPair(n.indexInLevel(),
-							levelSizes.get(n.depth()));
-					position.append(pair);
-				});
-		position.appendWithoutSeparator(" :: ");
-		selectionPath.stream().skip(1)
-				.forEach(n -> position.append(n.displayName()));
-		String positionMessage = position.toString();
-		return positionMessage;
-	}
-
 	public class Cursor {
 		public List<Integer> indicies() {
 			return selected.asNodeIndicies();
@@ -221,9 +185,11 @@ public class TreeProcess {
 		}
 	}
 
-	public interface HasProcessNode<T> {
-		public Node processNode();
+	enum Event {
+		node_added, node_selected
+	}
 
+	public interface HasProcessNode<T> {
 		default <V> V processAncestorValue(Class<V> clazz) {
 			Node cursor = processNode().getParent();
 			while (cursor != null) {
@@ -235,6 +201,8 @@ public class TreeProcess {
 			}
 			return null;
 		}
+
+		public Node processNode();
 
 		default T processValue() {
 			return (T) this;
@@ -328,8 +296,6 @@ public class TreeProcess {
 			tree().logger.info(template, args);
 		}
 
-		String treePath();
-
 		// depth first traversal (this structure supports *either* level
 		// traversal or depth-frst)
 		default Node next() {
@@ -352,19 +318,14 @@ public class TreeProcess {
 			}
 		}
 
-		default Node nodeForValue(Object value) {
-			return stream().filter(c -> c.getValue() == value).findFirst()
-					.get();
-		}
-
-		default Stream<Node> stream() {
-			return new DepthFirstTraversal<>(this, Node::getChildren, false)
-					.stream();
-		}
-
 		default Optional<Node> nodeForTreePath(String treePath) {
 			return stream().filter(c -> c.treePath().equals(treePath))
 					.findFirst();
+		}
+
+		default Node nodeForValue(Object value) {
+			return stream().filter(c -> c.getValue() == value).findFirst()
+					.get();
 		}
 
 		default void onException(Exception exception) {
@@ -403,17 +364,20 @@ public class TreeProcess {
 
 		void setSelfComplete(boolean selfComplete);
 
+		default Stream<Node> stream() {
+			return new DepthFirstTraversal<>(this, Node::getChildren, false)
+					.stream();
+		}
+
 		default TreeProcess tree() {
 			return root().tree();
 		}
 
+		String treePath();
+
 		default <T> T typedValue() {
 			return (T) getValue();
 		}
-	}
-
-	public String createUniqueSegment(Object object) {
-		return typePathSegments.createUniqueCounterSegment(object.getClass());
 	}
 
 	public static class NodeException extends Exception {
@@ -429,22 +393,10 @@ public class TreeProcess {
 		}
 	}
 
-	enum Event {
-		node_added, node_selected
-	}
-
 	static class NodeImpl implements Node {
 		private Node parent;
 
 		String treePath = null;
-
-		public String treePath() {
-			if (treePath == null) {
-				treePath = asNodeIndicies().stream().map(Object::toString)
-						.collect(Collectors.joining("."));
-			}
-			return treePath;
-		}
 
 		private List<Node> children = new ArrayList<>();
 
@@ -549,6 +501,54 @@ public class TreeProcess {
 		@Override
 		public TreeProcess tree() {
 			return tree != null ? tree : Node.super.tree();
+		}
+
+		public String treePath() {
+			if (treePath == null) {
+				treePath = asNodeIndicies().stream().map(Object::toString)
+						.collect(Collectors.joining("."));
+			}
+			return treePath;
+		}
+	}
+
+	static class TypePathSegments {
+		Map<Class, String> typePrefix = CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
+
+		Map<String, IdCounter> prefixCounters = CollectionCreators.Bootstrap
+				.createConcurrentStringMap();
+
+		IdCounter counter = new IdCounter();
+
+		String createUniqueCounterSegment(Class<? extends Object> clazz) {
+			return String.valueOf(counter.nextId());
+		}
+
+		String createUniqueTypeSegment(Class<? extends Object> clazz) {
+			String prefix = typePrefix.get(clazz);
+			if (prefix == null) {
+				synchronized (typePrefix) {
+					prefix = typePrefix.get(clazz);
+					if (prefix == null) {
+						String canonicalName = clazz.getCanonicalName();
+						List<String> parts = List
+								.of(canonicalName.split("\\."));
+						for (int idx = parts.size() - 1; idx >= 0; idx--) {
+							String test = parts.stream().skip(idx)
+									.collect(Collectors.joining("."));
+							if (!prefixCounters.containsKey(test)) {
+								prefix = test;
+								typePrefix.put(clazz, prefix);
+								prefixCounters.put(prefix, new IdCounter());
+								break;
+							}
+						}
+					}
+				}
+			}
+			return Ax.format("%s-%s", prefix,
+					prefixCounters.get(prefix).nextId());
 		}
 	}
 }

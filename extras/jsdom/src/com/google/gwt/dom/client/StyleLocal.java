@@ -285,6 +285,11 @@ public class StyleLocal implements ClientDomStyle {
 		ClientDomStyleStatic.clearZIndex(this);
 	}
 
+	void cloneStyleFrom(ClientDomStyle other, Style to) {
+		StyleLocal clone = new StyleLocal(to);
+		clone.properties.putAll(properties);
+	}
+
 	@Override
 	public String getBackgroundColor() {
 		return ClientDomStyleStatic.getBackgroundColor(this);
@@ -538,6 +543,14 @@ public class StyleLocal implements ClientDomStyle {
 	@Override
 	public String getZIndex() {
 		return ClientDomStyleStatic.getZIndex(this);
+	}
+
+	boolean isEmpty() {
+		return properties.isEmpty();
+	}
+
+	void removeProperty(String key) {
+		properties.remove(key);
 	}
 
 	@Override
@@ -818,18 +831,5 @@ public class StyleLocal implements ClientDomStyle {
 	@Override
 	public Style styleObject() {
 		return styleObject;
-	}
-
-	void cloneStyleFrom(ClientDomStyle other, Style to) {
-		StyleLocal clone = new StyleLocal(to);
-		clone.properties.putAll(properties);
-	}
-
-	boolean isEmpty() {
-		return properties.isEmpty();
-	}
-
-	void removeProperty(String key) {
-		properties.remove(key);
 	}
 }

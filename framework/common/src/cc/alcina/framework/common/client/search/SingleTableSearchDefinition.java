@@ -57,19 +57,11 @@ public abstract class SingleTableSearchDefinition<R extends SearchResult>
 
 	public abstract Class<? extends R> getResultClass();
 
+	protected abstract void init();
+
 	public boolean isOrderable() {
 		return true;
 	}
-
-	public void setOrderDirection(Direction orderDirection) {
-		this.orderDirection = orderDirection;
-	}
-
-	public void setOrderPropertyName(String orderPropertyName) {
-		this.orderPropertyName = orderPropertyName;
-	}
-
-	protected abstract void init();
 
 	@Override
 	protected String orderEql() {
@@ -135,5 +127,13 @@ public abstract class SingleTableSearchDefinition<R extends SearchResult>
 	Property provideProperty() {
 		return Reflections.at(eqlEntityClass())
 				.property(orderPropertyName.replaceFirst(".+\\.(.+)", "$1"));
+	}
+
+	public void setOrderDirection(Direction orderDirection) {
+		this.orderDirection = orderDirection;
+	}
+
+	public void setOrderPropertyName(String orderPropertyName) {
+		this.orderPropertyName = orderPropertyName;
 	}
 }

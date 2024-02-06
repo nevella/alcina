@@ -117,6 +117,25 @@ public class GraphProjections {
 		}
 	}
 
+	class PermissibleFieldFilterH extends PermissibleFieldFilter {
+		@Override
+		public Boolean permitClass(Class clazz) {
+			if (!Entity.class.isAssignableFrom(clazz)) {
+				return true;
+			}
+			clazz = Mvcc.resolveEntityClass(clazz);
+			if (permittedClasses.size() > 0
+					&& !permittedClasses.contains(clazz)) {
+				return false;
+			}
+			if (forbiddenClasses.size() > 0
+					&& forbiddenClasses.contains(clazz)) {
+				return false;
+			}
+			return super.permitClass(clazz);
+		}
+	}
+
 	public class StrictAllowForbid implements GraphProjectionFieldFilter {
 		@Override
 		public Boolean permitClass(Class clazz) {
@@ -144,25 +163,6 @@ public class GraphProjections {
 		@Override
 		public boolean permitTransient(Field field) {
 			return false;
-		}
-	}
-
-	class PermissibleFieldFilterH extends PermissibleFieldFilter {
-		@Override
-		public Boolean permitClass(Class clazz) {
-			if (!Entity.class.isAssignableFrom(clazz)) {
-				return true;
-			}
-			clazz = Mvcc.resolveEntityClass(clazz);
-			if (permittedClasses.size() > 0
-					&& !permittedClasses.contains(clazz)) {
-				return false;
-			}
-			if (forbiddenClasses.size() > 0
-					&& forbiddenClasses.contains(clazz)) {
-				return false;
-			}
-			return super.permitClass(clazz);
 		}
 	}
 }

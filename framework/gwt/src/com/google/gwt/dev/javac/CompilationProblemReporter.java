@@ -44,6 +44,51 @@ import com.google.gwt.thirdparty.guava.common.collect.Lists;
  * console.
  */
 public class CompilationProblemReporter {
+	private static void addUnitToVisit(
+			CompilationErrorsIndex compilationErrorsIndex,
+			String typeSourceName, Queue<String> toVisit, Set<String> visited) {
+		if (compilationErrorsIndex.hasCompileErrors(typeSourceName)) {
+			if (!visited.contains(typeSourceName)) {
+				toVisit.add(typeSourceName);
+				visited.add(typeSourceName);
+			}
+		}
+	}
+
+	/**
+	 * Returns readable compilation error messages for a compilation unit.
+	 * <p>
+	 * Should only be run on CompilationUnits that actually have problems.
+	 */
+	private static List<String> formatErrors(CompilationUnit unit) {
+		CategorizedProblem[] problems = unit.getProblems();
+		assert problems != null && problems.length > 0;
+		List<String> errorMessages = Lists.newArrayList();
+		for (CategorizedProblem problem : problems) {
+			if (!problem.isError()) {
+				continue;
+			}
+			errorMessages.add(toMessageWithLineNumber(problem));
+		}
+		return errorMessages;
+	}
+
+	private static boolean hasWarnings(CompilationUnit unit) {
+		CategorizedProblem[] problems = unit.getProblems();
+		if (problems == null || problems.length == 0) {
+			return false;
+		}
+		for (CategorizedProblem problem : problems) {
+			if (problem.isWarning() && problem instanceof GWTProblem) {
+				if (problem.toString().contains("Referencing deprecated")) {
+					continue;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Traverses a set of compilation units to record enough information to
 	 * enable accurate and detailed compilation error cause traces.
@@ -121,6 +166,43 @@ public class CompilationProblemReporter {
 		}
 	}
 
+	private static boolean logErrorChain(TreeLogger logger, Type logLevel,
+			String typeSourceName,
+			CompilationErrorsIndex compilationErrorsIndex) {
+		final Set<String> visited = new HashSet<String>();
+		final Queue<String> toVisit = new LinkedList<String>();
+		/*
+		 * Traverses CompilationUnits enqueued in toVisit(), calling {@link
+		 * #addUnitsToVisit(String)} as it encounters dependencies on the node.
+		 * Each CompilationUnit is visited only once, and only if it is
+		 * reachable via the {@link Dependencies} graph.
+		 */
+		addUnitToVisit(compilationErrorsIndex, typeSourceName, toVisit,
+				visited);
+		while (!toVisit.isEmpty()) {
+			String dependentTypeSourceName = toVisit.remove();
+			Set<String> compileErrors = compilationErrorsIndex
+					.getCompileErrors(dependentTypeSourceName);
+			TreeLogger branch = logger.branch(logLevel,
+					"Errors in '" + compilationErrorsIndex
+							.getFileName(dependentTypeSourceName) + "'");
+			for (String compileError : compileErrors) {
+				branch.log(logLevel, compileError);
+			}
+			Set<String> typeReferences = compilationErrorsIndex
+					.getTypeReferences(dependentTypeSourceName);
+			if (typeReferences != null) {
+				for (String typeReference : typeReferences) {
+					addUnitToVisit(compilationErrorsIndex, typeReference,
+							toVisit, visited);
+				}
+			}
+		}
+		logger.log(TreeLogger.DEBUG,
+				"Checked " + visited.size() + " dependencies for errors.");
+		return visited.size() > 1;
+	}
+
 	/**
 	 * Provides meaningful error messages and hints for types that failed to
 	 * compile or are otherwise missing.
@@ -164,6 +246,55 @@ public class CompilationProblemReporter {
 		}
 	}
 
+	private static void logHints(TreeLogger logger, String typeSourceName) {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		URL sourceURL = Util.findSourceInClassPath(cl, typeSourceName);
+		if (sourceURL != null) {
+			if (typeSourceName.indexOf(".client.") != -1) {
+				Messages.HINT_CHECK_MODULE_INHERITANCE.log(logger, null);
+			} else {
+				Messages.HINT_CHECK_MODULE_NONCLIENT_SOURCE_DECL.log(logger,
+						null);
+			}
+		} else if (!typeSourceName.equals("java.lang.Object")) {
+			Messages.HINT_CHECK_TYPENAME.log(logger, typeSourceName, null);
+			Messages.HINT_CHECK_CLASSPATH_SOURCE_ENTRIES.log(logger, null);
+		}
+		/*
+		 * For missing JRE emulated classes (e.g. Object), or the main GWT
+		 * libraries, there are special warnings.
+		 */
+		if (typeSourceName.indexOf("java.lang.") == 0
+				|| typeSourceName.indexOf("com.google.gwt.core.") == 0) {
+			Messages.HINT_CHECK_INHERIT_CORE.log(logger, null);
+		} else if (typeSourceName.indexOf("com.google.gwt.user.") == 0) {
+			Messages.HINT_CHECK_INHERIT_USER.log(logger, null);
+		}
+	}
+
+	private static boolean logWarnings(TreeLogger logger,
+			TreeLogger.Type logLevel, CompilationUnit unit) {
+		if (!hasWarnings(unit)) {
+			return false;
+		}
+		TreeLogger branch = logger.branch(logLevel,
+				"Warnings in '" + unit.getResourceLocation() + "'", null);
+		for (CategorizedProblem problem : unit.getProblems()) {
+			if (!problem.isWarning() || !(problem instanceof GWTProblem)) {
+				continue;
+			}
+			branch.log(logLevel, toMessageWithLineNumber(problem), null,
+					((GWTProblem) problem).getHelpInfo());
+		}
+		if (branch.isLoggable(TreeLogger.INFO)
+				&& unit instanceof GeneratedCompilationUnit) {
+			CompilationProblemReporter.maybeDumpSource(branch,
+					((GeneratedCompilationUnit) unit).getSource(),
+					unit.getTypeName());
+		}
+		return true;
+	}
+
 	public static int logWarnings(TreeLogger logger, Type logLevelForWarnings,
 			List<CompilationUnit> units) {
 		int warningCount = 0;
@@ -174,6 +305,31 @@ public class CompilationProblemReporter {
 			}
 		}
 		return warningCount++;
+	}
+
+	/**
+	 * Give the developer a chance to see the in-memory source that failed.
+	 */
+	private static void maybeDumpSource(TreeLogger logger, String source,
+			String typeName) {
+		File tmpSrc;
+		Throwable caught = null;
+		try {
+			// The tempFile prefix must be at least 3 characters
+			while (typeName.length() < 3) {
+				typeName = "_" + typeName;
+			}
+			tmpSrc = File.createTempFile(typeName, ".java");
+			Util.writeStringAsFile(tmpSrc, source);
+			String dumpPath = tmpSrc.getAbsolutePath();
+			if (logger.isLoggable(TreeLogger.INFO)) {
+				logger.log(TreeLogger.INFO, "See snapshot: " + dumpPath, null);
+			}
+			return;
+		} catch (IOException e) {
+			caught = e;
+		}
+		logger.log(TreeLogger.INFO, "Unable to dump source to disk", caught);
 	}
 
 	/**
@@ -244,162 +400,6 @@ public class CompilationProblemReporter {
 			}
 		}
 		return branch != null;
-	}
-
-	private static void addUnitToVisit(
-			CompilationErrorsIndex compilationErrorsIndex,
-			String typeSourceName, Queue<String> toVisit, Set<String> visited) {
-		if (compilationErrorsIndex.hasCompileErrors(typeSourceName)) {
-			if (!visited.contains(typeSourceName)) {
-				toVisit.add(typeSourceName);
-				visited.add(typeSourceName);
-			}
-		}
-	}
-
-	/**
-	 * Returns readable compilation error messages for a compilation unit.
-	 * <p>
-	 * Should only be run on CompilationUnits that actually have problems.
-	 */
-	private static List<String> formatErrors(CompilationUnit unit) {
-		CategorizedProblem[] problems = unit.getProblems();
-		assert problems != null && problems.length > 0;
-		List<String> errorMessages = Lists.newArrayList();
-		for (CategorizedProblem problem : problems) {
-			if (!problem.isError()) {
-				continue;
-			}
-			errorMessages.add(toMessageWithLineNumber(problem));
-		}
-		return errorMessages;
-	}
-
-	private static boolean hasWarnings(CompilationUnit unit) {
-		CategorizedProblem[] problems = unit.getProblems();
-		if (problems == null || problems.length == 0) {
-			return false;
-		}
-		for (CategorizedProblem problem : problems) {
-			if (problem.isWarning() && problem instanceof GWTProblem) {
-				if (problem.toString().contains("Referencing deprecated")) {
-					continue;
-				}
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static boolean logErrorChain(TreeLogger logger, Type logLevel,
-			String typeSourceName,
-			CompilationErrorsIndex compilationErrorsIndex) {
-		final Set<String> visited = new HashSet<String>();
-		final Queue<String> toVisit = new LinkedList<String>();
-		/*
-		 * Traverses CompilationUnits enqueued in toVisit(), calling {@link
-		 * #addUnitsToVisit(String)} as it encounters dependencies on the node.
-		 * Each CompilationUnit is visited only once, and only if it is
-		 * reachable via the {@link Dependencies} graph.
-		 */
-		addUnitToVisit(compilationErrorsIndex, typeSourceName, toVisit,
-				visited);
-		while (!toVisit.isEmpty()) {
-			String dependentTypeSourceName = toVisit.remove();
-			Set<String> compileErrors = compilationErrorsIndex
-					.getCompileErrors(dependentTypeSourceName);
-			TreeLogger branch = logger.branch(logLevel,
-					"Errors in '" + compilationErrorsIndex
-							.getFileName(dependentTypeSourceName) + "'");
-			for (String compileError : compileErrors) {
-				branch.log(logLevel, compileError);
-			}
-			Set<String> typeReferences = compilationErrorsIndex
-					.getTypeReferences(dependentTypeSourceName);
-			if (typeReferences != null) {
-				for (String typeReference : typeReferences) {
-					addUnitToVisit(compilationErrorsIndex, typeReference,
-							toVisit, visited);
-				}
-			}
-		}
-		logger.log(TreeLogger.DEBUG,
-				"Checked " + visited.size() + " dependencies for errors.");
-		return visited.size() > 1;
-	}
-
-	private static void logHints(TreeLogger logger, String typeSourceName) {
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		URL sourceURL = Util.findSourceInClassPath(cl, typeSourceName);
-		if (sourceURL != null) {
-			if (typeSourceName.indexOf(".client.") != -1) {
-				Messages.HINT_CHECK_MODULE_INHERITANCE.log(logger, null);
-			} else {
-				Messages.HINT_CHECK_MODULE_NONCLIENT_SOURCE_DECL.log(logger,
-						null);
-			}
-		} else if (!typeSourceName.equals("java.lang.Object")) {
-			Messages.HINT_CHECK_TYPENAME.log(logger, typeSourceName, null);
-			Messages.HINT_CHECK_CLASSPATH_SOURCE_ENTRIES.log(logger, null);
-		}
-		/*
-		 * For missing JRE emulated classes (e.g. Object), or the main GWT
-		 * libraries, there are special warnings.
-		 */
-		if (typeSourceName.indexOf("java.lang.") == 0
-				|| typeSourceName.indexOf("com.google.gwt.core.") == 0) {
-			Messages.HINT_CHECK_INHERIT_CORE.log(logger, null);
-		} else if (typeSourceName.indexOf("com.google.gwt.user.") == 0) {
-			Messages.HINT_CHECK_INHERIT_USER.log(logger, null);
-		}
-	}
-
-	private static boolean logWarnings(TreeLogger logger,
-			TreeLogger.Type logLevel, CompilationUnit unit) {
-		if (!hasWarnings(unit)) {
-			return false;
-		}
-		TreeLogger branch = logger.branch(logLevel,
-				"Warnings in '" + unit.getResourceLocation() + "'", null);
-		for (CategorizedProblem problem : unit.getProblems()) {
-			if (!problem.isWarning() || !(problem instanceof GWTProblem)) {
-				continue;
-			}
-			branch.log(logLevel, toMessageWithLineNumber(problem), null,
-					((GWTProblem) problem).getHelpInfo());
-		}
-		if (branch.isLoggable(TreeLogger.INFO)
-				&& unit instanceof GeneratedCompilationUnit) {
-			CompilationProblemReporter.maybeDumpSource(branch,
-					((GeneratedCompilationUnit) unit).getSource(),
-					unit.getTypeName());
-		}
-		return true;
-	}
-
-	/**
-	 * Give the developer a chance to see the in-memory source that failed.
-	 */
-	private static void maybeDumpSource(TreeLogger logger, String source,
-			String typeName) {
-		File tmpSrc;
-		Throwable caught = null;
-		try {
-			// The tempFile prefix must be at least 3 characters
-			while (typeName.length() < 3) {
-				typeName = "_" + typeName;
-			}
-			tmpSrc = File.createTempFile(typeName, ".java");
-			Util.writeStringAsFile(tmpSrc, source);
-			String dumpPath = tmpSrc.getAbsolutePath();
-			if (logger.isLoggable(TreeLogger.INFO)) {
-				logger.log(TreeLogger.INFO, "See snapshot: " + dumpPath, null);
-			}
-			return;
-		} catch (IOException e) {
-			caught = e;
-		}
-		logger.log(TreeLogger.INFO, "Unable to dump source to disk", caught);
 	}
 
 	private static String toMessageWithLineNumber(CategorizedProblem problem) {

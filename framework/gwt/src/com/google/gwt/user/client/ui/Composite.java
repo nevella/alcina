@@ -45,6 +45,15 @@ public abstract class Composite extends Widget implements IsRenderable {
 
 	private Element elementToWrap;
 
+	/**
+	 * Check if the composite is initialized.
+	 */
+	private void checkInit() {
+		if (widget == null) {
+			throw new IllegalStateException("initWidget() is not called yet");
+		}
+	}
+
 	@Override
 	public void claimElement(Element element) {
 		if (renderable != null) {
@@ -52,63 +61,6 @@ public abstract class Composite extends Widget implements IsRenderable {
 			setElement(widget.getElement());
 		} else {
 			this.elementToWrap = element;
-		}
-	}
-
-	@Override
-	public void initializeClaimedElement() {
-		if (renderable != null) {
-			renderable.initializeClaimedElement();
-		} else {
-			elementToWrap.getParentNode().replaceChild(widget.getElement(),
-					elementToWrap);
-		}
-	}
-
-	@Override
-	public boolean isAttached() {
-		if (widget != null) {
-			return widget.isAttached();
-		}
-		return false;
-	}
-
-	@Override
-	public void onBrowserEvent(Event event) {
-		// Fire any handler added to the composite itself.
-		super.onBrowserEvent(event);
-		// Delegate events to the widget.
-		widget.onBrowserEvent(event);
-	}
-
-	@Override
-	public SafeHtml render(RenderableStamper stamper) {
-		if (renderable != null) {
-			return renderable.render(stamper);
-		} else {
-			checkInit();
-			HtmlSpanBuilder spanBuilder = HtmlBuilderFactory.get()
-					.createSpanBuilder();
-			stamper.stamp(spanBuilder).end();
-			return spanBuilder.asSafeHtml();
-		}
-	}
-
-	@Override
-	public void render(RenderableStamper stamper, SafeHtmlBuilder builder) {
-		if (renderable != null) {
-			renderable.render(stamper, builder);
-		} else {
-			builder.append(render(stamper));
-		}
-	}
-
-	/**
-	 * Check if the composite is initialized.
-	 */
-	private void checkInit() {
-		if (widget == null) {
-			throw new IllegalStateException("initWidget() is not called yet");
 		}
 	}
 
@@ -120,6 +72,16 @@ public abstract class Composite extends Widget implements IsRenderable {
 	 */
 	protected Widget getWidget() {
 		return widget;
+	}
+
+	@Override
+	public void initializeClaimedElement() {
+		if (renderable != null) {
+			renderable.initializeClaimedElement();
+		} else {
+			elementToWrap.getParentNode().replaceChild(widget.getElement(),
+					elementToWrap);
+		}
 	}
 
 	/**
@@ -161,6 +123,14 @@ public abstract class Composite extends Widget implements IsRenderable {
 	}
 
 	@Override
+	public boolean isAttached() {
+		if (widget != null) {
+			return widget.isAttached();
+		}
+		return false;
+	}
+
+	@Override
 	protected void onAttach() {
 		checkInit();
 		widget.onAttach();
@@ -180,6 +150,14 @@ public abstract class Composite extends Widget implements IsRenderable {
 	}
 
 	@Override
+	public void onBrowserEvent(Event event) {
+		// Fire any handler added to the composite itself.
+		super.onBrowserEvent(event);
+		// Delegate events to the widget.
+		widget.onBrowserEvent(event);
+	}
+
+	@Override
 	protected void onDetach() {
 		try {
 			onUnload();
@@ -191,6 +169,28 @@ public abstract class Composite extends Widget implements IsRenderable {
 			// super implementation (or event listeners won't get cleaned up and
 			// the attached flag will be wrong).
 			widget.onDetach();
+		}
+	}
+
+	@Override
+	public SafeHtml render(RenderableStamper stamper) {
+		if (renderable != null) {
+			return renderable.render(stamper);
+		} else {
+			checkInit();
+			HtmlSpanBuilder spanBuilder = HtmlBuilderFactory.get()
+					.createSpanBuilder();
+			stamper.stamp(spanBuilder).end();
+			return spanBuilder.asSafeHtml();
+		}
+	}
+
+	@Override
+	public void render(RenderableStamper stamper, SafeHtmlBuilder builder) {
+		if (renderable != null) {
+			renderable.render(stamper, builder);
+		} else {
+			builder.append(render(stamper));
 		}
 	}
 

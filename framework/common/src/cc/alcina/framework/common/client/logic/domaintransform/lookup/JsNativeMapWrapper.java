@@ -72,6 +72,72 @@ public class JsNativeMapWrapper<K, V> extends AbstractMap<K, V> {
 		return this.map.size();
 	}
 
+	class EntrySet extends AbstractSet<Map.Entry<K, V>> {
+		@Override
+		public void clear() {
+			JsNativeMapWrapper.this.clear();
+		}
+
+		@Override
+		public Iterator<Map.Entry<K, V>> iterator() {
+			return new TypedEntryIterator();
+		}
+
+		@Override
+		public int size() {
+			return JsNativeMapWrapper.this.size();
+		}
+	}
+
+	class KeyIterator implements Iterator {
+		JavascriptJavaObjectArray keysSnapshot;
+
+		int idx = -1;
+
+		int itrModCount;
+
+		boolean nextCalled = false;
+
+		Object key;
+
+		public KeyIterator() {
+			keysSnapshot = map.keys();
+			this.itrModCount = modCount();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return idx + 1 < keysSnapshot.length();
+		}
+
+		private int modCount() {
+			// FIXME - implement (and check in removal as well)
+			return 0;
+		}
+
+		@Override
+		public Object next() {
+			if (idx + 1 == keysSnapshot.length()) {
+				throw new NoSuchElementException();
+			}
+			if (itrModCount != modCount()) {
+				throw new ConcurrentModificationException();
+			}
+			nextCalled = true;
+			key = keysSnapshot.get(++idx);
+			return key;
+		}
+
+		@Override
+		public void remove() {
+			if (!nextCalled) {
+				throw new UnsupportedOperationException();
+			}
+			JsNativeMapWrapper.this.remove(key);
+			nextCalled = false;
+		}
+	}
+
 	public class TypedEntryIterator implements Iterator<Map.Entry<K, V>> {
 		private KeyIterator keyIterator;
 
@@ -121,72 +187,6 @@ public class JsNativeMapWrapper<K, V> extends AbstractMap<K, V> {
 				this.value = value;
 				return old;
 			}
-		}
-	}
-
-	class EntrySet extends AbstractSet<Map.Entry<K, V>> {
-		@Override
-		public void clear() {
-			JsNativeMapWrapper.this.clear();
-		}
-
-		@Override
-		public Iterator<Map.Entry<K, V>> iterator() {
-			return new TypedEntryIterator();
-		}
-
-		@Override
-		public int size() {
-			return JsNativeMapWrapper.this.size();
-		}
-	}
-
-	class KeyIterator implements Iterator {
-		JavascriptJavaObjectArray keysSnapshot;
-
-		int idx = -1;
-
-		int itrModCount;
-
-		boolean nextCalled = false;
-
-		Object key;
-
-		public KeyIterator() {
-			keysSnapshot = map.keys();
-			this.itrModCount = modCount();
-		}
-
-		@Override
-		public boolean hasNext() {
-			return idx + 1 < keysSnapshot.length();
-		}
-
-		@Override
-		public Object next() {
-			if (idx + 1 == keysSnapshot.length()) {
-				throw new NoSuchElementException();
-			}
-			if (itrModCount != modCount()) {
-				throw new ConcurrentModificationException();
-			}
-			nextCalled = true;
-			key = keysSnapshot.get(++idx);
-			return key;
-		}
-
-		@Override
-		public void remove() {
-			if (!nextCalled) {
-				throw new UnsupportedOperationException();
-			}
-			JsNativeMapWrapper.this.remove(key);
-			nextCalled = false;
-		}
-
-		private int modCount() {
-			// FIXME - implement (and check in removal as well)
-			return 0;
 		}
 	}
 }

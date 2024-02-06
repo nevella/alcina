@@ -68,6 +68,18 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		setValue(value);
 	}
 
+	protected void createFragmentModel() {
+		fragmentModel = new FragmentModel(this);
+	}
+
+	private String elementValue() {
+		if (!provideIsShowingPlaceholder()) {
+			return provideElement().getInnerHTML();
+		} else {
+			return null;
+		}
+	}
+
 	public String getCurrentValue() {
 		if (currentValue == null) {
 			currentValue = elementValue();
@@ -78,6 +90,10 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 	@Override
 	public boolean isFocusOnBind() {
 		return focusOnBind;
+	}
+
+	DomNode node() {
+		return provideElement().asDomNode();
 	}
 
 	// @Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
@@ -138,6 +154,12 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		return this.fragmentModel;
 	}
 
+	private boolean provideIsShowingPlaceholder() {
+		// TODO - disallow placeholder in normalisation
+		DomNode firstNode = node().children.firstNode();
+		return firstNode != null && firstNode.tagIs("placeholder");
+	}
+
 	@Override
 	public String provideTag() {
 		return tag;
@@ -147,27 +169,5 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		String old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
-	}
-
-	private String elementValue() {
-		if (!provideIsShowingPlaceholder()) {
-			return provideElement().getInnerHTML();
-		} else {
-			return null;
-		}
-	}
-
-	private boolean provideIsShowingPlaceholder() {
-		// TODO - disallow placeholder in normalisation
-		DomNode firstNode = node().children.firstNode();
-		return firstNode != null && firstNode.tagIs("placeholder");
-	}
-
-	protected void createFragmentModel() {
-		fragmentModel = new FragmentModel(this);
-	}
-
-	DomNode node() {
-		return provideElement().asDomNode();
 	}
 }

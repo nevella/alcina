@@ -71,26 +71,20 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 		}
 
 		@Override
-		public TreeSerializable.Customiser treeSerializationCustomiser() {
-			return new Customiser(this);
-		}
-
-		@Override
 		public boolean provideIsDefaultSortOrder() {
 			return getSearchOrders().isEmpty()
 					|| getSearchOrders().provideIsIdAscDisplayOrder();
+		}
+
+		@Override
+		public TreeSerializable.Customiser treeSerializationCustomiser() {
+			return new Customiser(this);
 		}
 
 		protected static class Customiser<D extends EntitySearchDefinition.DefaultIdOrder>
 				extends SearchDefinition.Customiser<D> {
 			public Customiser(D serializable) {
 				super(serializable);
-			}
-
-			@Override
-			public void onBeforeTreeDeserialize() {
-				super.onBeforeTreeDeserialize();
-				serializable.getSearchOrders().clear();
 			}
 
 			@Override
@@ -103,20 +97,26 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 			}
 
 			@Override
-			public void onBeforeTreeSerialize() {
-				super.onBeforeTreeSerialize();
-				if (serializable.getSearchOrders()
-						.provideIsIdAscDisplayOrder()) {
-					serializable.getSearchOrders().clear();
-				}
-			}
-
-			@Override
 			public void onAfterTreeSerialize() {
 				super.onAfterTreeSerialize();
 				if (serializable.getSearchOrders().isEmpty()) {
 					serializable.getSearchOrders()
 							.addOrder(new DisplaySearchOrder("id"), true);
+				}
+			}
+
+			@Override
+			public void onBeforeTreeDeserialize() {
+				super.onBeforeTreeDeserialize();
+				serializable.getSearchOrders().clear();
+			}
+
+			@Override
+			public void onBeforeTreeSerialize() {
+				super.onBeforeTreeSerialize();
+				if (serializable.getSearchOrders()
+						.provideIsIdAscDisplayOrder()) {
+					serializable.getSearchOrders().clear();
 				}
 			}
 		}

@@ -45,6 +45,11 @@ public class StyledAWidget<O> extends Link {
 	}
 
 	@Override
+	protected Element getStyleElement() {
+		return anchorElem;
+	}
+
+	@Override
 	public String getTarget() {
 		return DOM.getElementProperty(anchorElem, "target");
 	}
@@ -62,10 +67,5 @@ public class StyledAWidget<O> extends Link {
 	@Override
 	public void setText(String text) {
 		DOM.setInnerText(spanElem, text);
-	}
-
-	@Override
-	protected Element getStyleElement() {
-		return anchorElem;
 	}
 }

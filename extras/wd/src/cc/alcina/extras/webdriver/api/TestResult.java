@@ -48,6 +48,14 @@ public class TestResult {
 		return rt;
 	}
 
+	long getAdminTime() {
+		long result = noTimePayload ? endTime - startTime : 0;
+		for (TestResult tr : getChildren()) {
+			result += tr.getAdminTime();
+		}
+		return result;
+	}
+
 	public List<TestResult> getChildren() {
 		return children;
 	}
@@ -170,13 +178,5 @@ public class TestResult {
 			s += "\n - - " + new Date();
 		}
 		return s + "\n";
-	}
-
-	long getAdminTime() {
-		long result = noTimePayload ? endTime - startTime : 0;
-		for (TestResult tr : getChildren()) {
-			result += tr.getAdminTime();
-		}
-		return result;
 	}
 }

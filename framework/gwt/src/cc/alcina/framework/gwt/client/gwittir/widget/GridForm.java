@@ -222,42 +222,24 @@ public class GridForm extends AbstractTableWidget
 	}
 
 	@Override
-	public void set() {
-		this.binding.setLeft();
-	}
-
-	public void setAutofocusField(Field autofocusField) {
-		this.autofocusField = autofocusField;
-	}
-
-	public void setDirectSetModelDisabled(boolean directSetModelDisabled) {
-		this.directSetModelDisabled = directSetModelDisabled;
-	}
-
-	public void setFocusOnDetachIfEditorFocussed(
-			Focusable focusOnDetachIfEditorFocussed) {
-		this.focusOnDetachIfEditorFocussed = focusOnDetachIfEditorFocussed;
+	protected void onLoad() {
+		super.onLoad();
+		if (autofocusWidget instanceof Focusable && !RenderContext.get()
+				.getBoolean(RenderContext.CONTEXT_IGNORE_AUTOFOCUS)) {
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					((Focusable) autofocusWidget).setFocus(true);
+				}
+			});
+		}
 	}
 
 	@Override
-	public void setModel(Object model) {
-		setModel(model, true);
-	}
-
-	public void setRowVisibility(int row, boolean visible) {
-		cellRenderer.setRowVisibility(row, visible);
-	}
-
-	@Override
-	public void setValue(Object value) {
-		Object old = this.getModel();
-		this.setModel(value, false);
-		this.changes.firePropertyChange("value", old, value);
-	}
-
-	@Override
-	public void unbind() {
-		this.binding.unbind();
+	protected void onUnload() {
+		if (focussedWidget != null && focusOnDetachIfEditorFocussed != null) {
+			focusOnDetachIfEditorFocussed.setFocus(true);
+		}
 	}
 
 	private void render() {
@@ -294,6 +276,29 @@ public class GridForm extends AbstractTableWidget
 		}
 	}
 
+	@Override
+	public void set() {
+		this.binding.setLeft();
+	}
+
+	public void setAutofocusField(Field autofocusField) {
+		this.autofocusField = autofocusField;
+	}
+
+	public void setDirectSetModelDisabled(boolean directSetModelDisabled) {
+		this.directSetModelDisabled = directSetModelDisabled;
+	}
+
+	public void setFocusOnDetachIfEditorFocussed(
+			Focusable focusOnDetachIfEditorFocussed) {
+		this.focusOnDetachIfEditorFocussed = focusOnDetachIfEditorFocussed;
+	}
+
+	@Override
+	public void setModel(Object model) {
+		setModel(model, true);
+	}
+
 	private void setModel(Object model, boolean direct) {
 		if (direct && directSetModelDisabled) {
 			return;
@@ -302,24 +307,19 @@ public class GridForm extends AbstractTableWidget
 		this.render();
 	}
 
-	@Override
-	protected void onLoad() {
-		super.onLoad();
-		if (autofocusWidget instanceof Focusable && !RenderContext.get()
-				.getBoolean(RenderContext.CONTEXT_IGNORE_AUTOFOCUS)) {
-			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-				@Override
-				public void execute() {
-					((Focusable) autofocusWidget).setFocus(true);
-				}
-			});
-		}
+	public void setRowVisibility(int row, boolean visible) {
+		cellRenderer.setRowVisibility(row, visible);
 	}
 
 	@Override
-	protected void onUnload() {
-		if (focussedWidget != null && focusOnDetachIfEditorFocussed != null) {
-			focusOnDetachIfEditorFocussed.setFocus(true);
-		}
+	public void setValue(Object value) {
+		Object old = this.getModel();
+		this.setModel(value, false);
+		this.changes.firePropertyChange("value", old, value);
+	}
+
+	@Override
+	public void unbind() {
+		this.binding.unbind();
 	}
 }

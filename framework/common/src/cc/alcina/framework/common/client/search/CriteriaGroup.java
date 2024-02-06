@@ -94,6 +94,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		criteria.clear();
 	}
 
+	protected String combinatorString() {
+		return combinator.toString().toLowerCase();
+	}
+
 	public <S extends SearchCriterion> S ensureCriterion(S criterion) {
 		for (SC sc : getCriteria()) {
 			if (sc.getClass() == criterion.getClass()) {
@@ -189,6 +193,14 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		}
 	}
 
+	protected String provideDisplayNamePrefix(boolean withGroupName) {
+		return CommonUtils.isNullOrEmpty(getDisplayName()) || !withGroupName
+				? ""
+				: CommonUtils.pluralise(
+						CommonUtils.capitaliseFirst(getDisplayName()), criteria)
+						+ ": ";
+	}
+
 	public boolean provideIsEmpty() {
 		for (SearchCriterion criterion : getCriteria()) {
 			if (criterion instanceof HasValue
@@ -246,17 +258,5 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 			return null;
 		}
 		return DefaultValidation.validatePermissions(this, getCriteria());
-	}
-
-	protected String combinatorString() {
-		return combinator.toString().toLowerCase();
-	}
-
-	protected String provideDisplayNamePrefix(boolean withGroupName) {
-		return CommonUtils.isNullOrEmpty(getDisplayName()) || !withGroupName
-				? ""
-				: CommonUtils.pluralise(
-						CommonUtils.capitaliseFirst(getDisplayName()), criteria)
-						+ ": ";
 	}
 }

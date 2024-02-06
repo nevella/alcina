@@ -61,25 +61,6 @@ public class LuxModule {
 		StyleInjector.inject(css);
 	}
 
-	public void setVariables(String themeProperties) {
-		RegExp re = RegExp.compile("\\s*(-.+):\\s*(.+);", "g");
-		MatchResult result;
-		while ((result = re.exec(themeProperties)) != null) {
-			variableDefs.put(result.getGroup(1), result.getGroup(2) + " ");
-		}
-		boolean needsInterpolation = true;
-		while (needsInterpolation) {
-			needsInterpolation = false;
-			for (Entry<String, String> e : variableDefs.entrySet()) {
-				if (e.getValue().contains("var(")) {
-					needsInterpolation = true;
-					e.setValue(interpolate(e.getValue()));
-				}
-			}
-		}
-		interpolateAndInject(resources.luxStyles());
-	}
-
 	/*
 	 * Edge 14 issue
 	 */
@@ -97,5 +78,24 @@ public class LuxModule {
 			idx = idxTo + from.length();
 		}
 		return result.toString();
+	}
+
+	public void setVariables(String themeProperties) {
+		RegExp re = RegExp.compile("\\s*(-.+):\\s*(.+);", "g");
+		MatchResult result;
+		while ((result = re.exec(themeProperties)) != null) {
+			variableDefs.put(result.getGroup(1), result.getGroup(2) + " ");
+		}
+		boolean needsInterpolation = true;
+		while (needsInterpolation) {
+			needsInterpolation = false;
+			for (Entry<String, String> e : variableDefs.entrySet()) {
+				if (e.getValue().contains("var(")) {
+					needsInterpolation = true;
+					e.setValue(interpolate(e.getValue()));
+				}
+			}
+		}
+		interpolateAndInject(resources.luxStyles());
 	}
 }

@@ -47,10 +47,6 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 		return useExpandableWidgets;
 	}
 
-	public void setUseExpandableWidgets(boolean useExpandableWidgets) {
-		this.useExpandableWidgets = useExpandableWidgets;
-	}
-
 	@Override
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
 			int depth, boolean soleChild, RenderContext renderContext,
@@ -110,46 +106,8 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 		return;
 	}
 
-	public static class HalfBindableDisplayer extends Composite
-			implements PropertyChangeListener {
-		private Label label;
-
-		private final TreeRenderer renderer;
-
-		public HalfBindableDisplayer(TreeRenderer renderer) {
-			this.renderer = renderer;
-			this.label = new Label();
-			initWidget(label);
-		}
-
-		public void propertyChange(PropertyChangeEvent evt) {
-			updateText();
-		}
-
-		private void updateText() {
-			String text = renderer.renderableText();
-			boolean empty = CommonUtils.isNullOrEmpty(text);
-			if (empty) {
-				text = renderer.emptyChildText();
-				label.addStyleName("italic");
-			} else {
-				label.removeStyleName("italic");
-			}
-			label.setText(text);
-		}
-
-		@Override
-		protected void onAttach() {
-			updateText();
-			renderer.getRenderable().addPropertyChangeListener(this);
-			super.onAttach();
-		}
-
-		@Override
-		protected void onDetach() {
-			renderer.getRenderable().removePropertyChangeListener(this);
-			super.onDetach();
-		}
+	public void setUseExpandableWidgets(boolean useExpandableWidgets) {
+		this.useExpandableWidgets = useExpandableWidgets;
 	}
 
 	class ExpandableWidgetWithRendererWrapper extends Composite {
@@ -179,6 +137,48 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 			level1ContentWidget.setVisible(b);
 			bindableDisplayer.setVisible(!b);
 			bindableDisplayer.updateText();
+		}
+	}
+
+	public static class HalfBindableDisplayer extends Composite
+			implements PropertyChangeListener {
+		private Label label;
+
+		private final TreeRenderer renderer;
+
+		public HalfBindableDisplayer(TreeRenderer renderer) {
+			this.renderer = renderer;
+			this.label = new Label();
+			initWidget(label);
+		}
+
+		@Override
+		protected void onAttach() {
+			updateText();
+			renderer.getRenderable().addPropertyChangeListener(this);
+			super.onAttach();
+		}
+
+		@Override
+		protected void onDetach() {
+			renderer.getRenderable().removePropertyChangeListener(this);
+			super.onDetach();
+		}
+
+		public void propertyChange(PropertyChangeEvent evt) {
+			updateText();
+		}
+
+		private void updateText() {
+			String text = renderer.renderableText();
+			boolean empty = CommonUtils.isNullOrEmpty(text);
+			if (empty) {
+				text = renderer.emptyChildText();
+				label.addStyleName("italic");
+			} else {
+				label.removeStyleName("italic");
+			}
+			label.setText(text);
 		}
 	}
 }

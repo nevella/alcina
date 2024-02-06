@@ -225,10 +225,6 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	CountDownLatch currentCommandLatch;
 
-	protected String getLogFilePrefix() {
-		return getClass().getSimpleName().toLowerCase();
-	}
-
 	public DevConsole(String[] args) {
 		if (args.length == 0) {
 			String propertyArgs = System.getProperty("DevConsole.args");
@@ -320,6 +316,21 @@ public abstract class DevConsole implements ClipboardOwner {
 		}
 	}
 
+	protected abstract void createDevHelper();
+
+	private <T> T deserializeProperties(T newInstance, File file)
+			throws Exception {
+		if (file.exists()) {
+			try {
+				return (T) new ObjectMapper().enableDefaultTyping()
+						.readValue(file, newInstance.getClass());
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
+		}
+		return newInstance;
+	}
+
 	public void disablePathLinks(boolean disable) {
 		Runnable r = () -> Configuration.properties.set(
 				"MethodHandler_GET_RECORDS.disablePathLinks",
@@ -384,6 +395,10 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	public abstract void ensureDomainStore() throws Exception;
 
+	protected boolean filterCommand(DevConsoleCommand command) {
+		return true;
+	}
+
 	/**
 	 * Get the String residing on the clipboard.
 	 *
@@ -445,6 +460,10 @@ public abstract class DevConsole implements ClipboardOwner {
 		return devHelper;
 	}
 
+	protected String getLogFilePrefix() {
+		return getClass().getSimpleName().toLowerCase();
+	}
+
 	public String getMultilineInput(String prompt) {
 		return getMultilineInput(prompt, 10, 40);
 	}
@@ -465,6 +484,85 @@ public abstract class DevConsole implements ClipboardOwner {
 		return style;
 	}
 
+	@SuppressWarnings("resource")
+	protected void init() throws Exception {
+		instance = this;
+		Registry.Internals
+				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
+		JvmReflections.configureBootstrapJvmServices();
+		Registry.register().singleton(DevConsole.class, this);
+		long statStartInit = System.currentTimeMillis();
+		JvmReflections.init();
+		Reflections.init();
+		createDevHelper();
+		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
+		devHelper.doParallelEarlyClassInit();
+		devHelper.copyTemplates();
+		devHelper.loadConfig();
+		devHelper.initLightweightServices();
+		long statEndInitLightweightServices = System.currentTimeMillis();
+		devHelper.getTestLogger();
+		loadCommandMap();
+		System.setProperty("awt.useSystemAAFontSettings", "gasp");
+		System.setProperty("swing.aatext", "true");
+		System.setProperty(
+				"com.sun.xml.internal.bind.v2.runtime.JAXBContextImpl.fastBoot",
+				"true");
+		System.setProperty(
+				"com.sun.xml.internal.bind.v2.bytecode.ClassTailor.noOptimize",
+				"true");
+		// need to be before ui init, cos window height is a preference
+		initFiles();
+		loadConfig();
+		// initJaxb();
+		// triggered by first publication
+		long statEndInitJaxbServices = System.currentTimeMillis();
+		initState();
+		remote = DevConsoleRemote.get();
+		remote.setOverridePort(launchConfiguration.httpPort);
+		remote.setDevConsole(this);
+		if (launchConfiguration.noHttpServer) {
+			Ax.out("STARTUP\t no-http: not serving console over http");
+			this.headless = true;
+		} else {
+			remote.start();
+			this.headless = remote.isHasRemote();
+			devOut.s1 = new PrintStream(
+					new WriterOutputStream(remote.getOutWriter()));
+			devErr.s1 = new PrintStream(
+					new WriterOutputStream(remote.getErrWriter()));
+		}
+		if (!headless) {
+			throw new UnsupportedOperationException();
+		}
+		clear();
+		MetricLogging.get().setStart("init-console", statStartInit);
+		MetricLogging.get().end("init-console");
+		this.logProvider = new ConsoleStatLogProvider();
+		new StatCategory_Console.Start().emit(startupTime);
+		new InitLightweightServices().emit(statEndInitLightweightServices);
+		new InitJaxbServices().emit(statEndInitJaxbServices);
+		devHelper.initPostObjectServices();
+		devHelper.initLifecycleServices();
+		devHelper.initAppDebug();
+		new InitPostObjectServices().emit(System.currentTimeMillis());
+		new InitConsole().emit(System.currentTimeMillis());
+		initialised = true;
+		if (launchConfiguration.hasCommandString()) {
+			performCommand(launchConfiguration.getCommandString());
+		} else if (!props.lastCommand.matches("|q|re|restart")
+				&& !launchConfiguration.noRerunLastCommand) {
+			runningLastCommand = true;
+			performCommand(props.lastCommand);
+		} else {
+			ok("Enter 'h' for help\n\n");
+		}
+		if (launchConfiguration.noHttpServer
+				&& !launchConfiguration.exitAfterCommand) {
+			startReadlineCommandLoop();
+		}
+	}
+
 	public void initClassrefScanner() throws Exception {
 		// ClassMetadataCache cache = new CachingClasspathScanner("*", true,
 		// false,
@@ -482,6 +580,36 @@ public abstract class DevConsole implements ClipboardOwner {
 						.collect(Collectors.toList()));
 	}
 
+	void initFiles() {
+		devFolder = devHelper.getDevFolder();
+		setsFolder = getDevFile("sets");
+		setsFolder.mkdirs();
+		profileFolder = getDevFile("profiles");
+		profileFolder.mkdir();
+		consolePropertiesFile = getDevFile("console-properties");
+		consoleHistoryFile = getDevFile("console-history");
+		consoleStringsFile = getDevFile("console-strings");
+	}
+
+	protected final void initState() {
+		state = new DevConsoleState();
+		try {
+			state = getDevHelper().readObject(getState());
+		} catch (Exception e) {
+			DevConsole.stdSysOut();
+			FileNotFoundException fnfe = CommonUtils.extractCauseOfClass(e,
+					FileNotFoundException.class);
+			if (fnfe == null) {
+				e.printStackTrace();
+			}
+			serializeState();
+		}
+	}
+
+	protected boolean isConsoleInstanceCommand(DevConsoleCommand c) {
+		return false;
+	}
+
 	public boolean isHeadless() {
 		return this.headless;
 	}
@@ -490,9 +618,36 @@ public abstract class DevConsole implements ClipboardOwner {
 		return this.initialised;
 	}
 
+	private boolean isOsX() {
+		String osName = System.getProperty("os.name").toLowerCase();
+		return osName.indexOf("mac") >= 0;
+	}
+
 	public boolean isSingleCommand() {
 		return launchConfiguration.noHttpServer
 				&& launchConfiguration.exitAfterCommand;
+	}
+
+	private void loadCommandMap() {
+		synchronized (commandsById) {
+			commandsById.clear();
+			try {
+				List<Class<?>> list = Registry.query(DevConsoleCommand.class)
+						.untypedRegistrations().collect(Collectors.toList());
+				Registry.query(DevConsoleCommand.class).implementations()
+						.filter(this::filterCommand).forEach(cmd -> {
+							if (cmd.getShellClass() != shells.peek()) {
+								return;
+							}
+							cmd.setEnvironment(this);
+							for (String s : cmd.getCommandIds()) {
+								commandsById.put(s, cmd);
+							}
+						});
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 	}
 
 	public void loadConfig() throws Exception {
@@ -536,10 +691,22 @@ public abstract class DevConsole implements ClipboardOwner {
 	public void lostOwnership(Clipboard clipboard, Transferable contents) {
 	}
 
+	protected DevConsoleProperties newConsoleProperties() {
+		return new DevConsoleProperties();
+	}
+
 	public void ok(String string) {
 		setStyle(DevConsoleStyle.OK);
 		Ax.out(string);
 		setStyle(DevConsoleStyle.NORMAL);
+	}
+
+	protected void onAddDomainStore() {
+		// EntityLayerLogging.setLevel(
+		// AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
+		DomainStore.stores().writableStore().getPersistenceEvents()
+				.addDomainTransformPersistenceListener(
+						new SerializationSignatureListener());
 	}
 
 	public String padLeft(String str, int tabCount, int charCount) {
@@ -634,6 +801,62 @@ public abstract class DevConsole implements ClipboardOwner {
 							.callNewThread(runnable);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	protected void performCommandInThread(List<String> args,
+			DevConsoleCommand c, boolean topLevel) {
+		try {
+			LooseContext.push();
+			PermissionsManager.get().pushUser(DevHelper.getDefaultUser(),
+					LoginState.LOGGED_IN);
+			runningJobs.add(c);
+			history.addCommand(lastCommand);
+			if (!c.silent()) {
+				System.out.format("%s...\n", lastCommand);
+			}
+			long l1 = System.currentTimeMillis();
+			c.configure();
+			if (c.clsBeforeRun()) {
+				clear();
+			}
+			String msg = c
+					.run((String[]) args.toArray(new String[args.size()]));
+			c.cleanup();
+			long l2 = System.currentTimeMillis();
+			if (msg != null) {
+				ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
+			}
+			if (topLevel && !c.ignoreForCommandHistory()) {
+				String modCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
+						: "";
+				if (!Objects.equals(modCommand, props.lastCommand)) {
+					props.lastCommand = modCommand;
+					serializeObject(props, consolePropertiesFile);
+				}
+				serializeObject(history, consoleHistoryFile);
+			}
+		} catch (Exception e) {
+			if (!(e instanceof CancelledException)) {
+				e.printStackTrace();
+			}
+		} finally {
+			runningLastCommand = false;
+			// txs just to allow propertychangelistener removal from user
+			Transaction.ensureBegun();
+			PermissionsManager.get().popUser();
+			Transaction.end();
+			LooseContext.pop();
+			runningJobs.remove(c);
+			if (launchConfiguration.exitAfterCommand) {
+				// delay to ensure props etc written?
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				System.exit(0);
+			}
 		}
 	}
 
@@ -762,6 +985,21 @@ public abstract class DevConsole implements ClipboardOwner {
 		serializeObject(strings, consoleStringsFile);
 	}
 
+	private void serializeObject(Object object, File file) {
+		new Thread(Ax.format("console-serialize-%s", file.getName())) {
+			@Override
+			public void run() {
+				try {
+					new ObjectMapper().enableDefaultTyping()
+							.writerWithDefaultPrettyPrinter()
+							.writeValue(file, object);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}.start();
+	}
+
 	public void serializeState() {
 		devHelper.writeObject(state);
 	}
@@ -811,77 +1049,8 @@ public abstract class DevConsole implements ClipboardOwner {
 		this.style = style;
 	}
 
-	public void startRecordingSysout(boolean mute) {
-		oldS2 = out.s2;
-		PrintStream s2 = out.s2;
-		recordOut = new ByteArrayOutputStream();
-		PrintStream outStream = new PrintStream(recordOut);
-		if (mute) {
-			out.s2 = outStream;
-			ByteArrayOutputStream nullOut = new ByteArrayOutputStream();
-			out.s1 = new PrintStream(nullOut);
-		} else {
-			BiPrintStream s2repl = new BiPrintStream(
-					new ByteArrayOutputStream());
-			s2repl.s1 = s2;
-			s2repl.s2 = outStream;
-			out.s2 = s2repl;
-		}
-	}
-
-	private <T> T deserializeProperties(T newInstance, File file)
-			throws Exception {
-		if (file.exists()) {
-			try {
-				return (T) new ObjectMapper().enableDefaultTyping()
-						.readValue(file, newInstance.getClass());
-			} catch (Exception e) {
-				Ax.simpleExceptionOut(e);
-			}
-		}
-		return newInstance;
-	}
-
-	private boolean isOsX() {
-		String osName = System.getProperty("os.name").toLowerCase();
-		return osName.indexOf("mac") >= 0;
-	}
-
-	private void loadCommandMap() {
-		synchronized (commandsById) {
-			commandsById.clear();
-			try {
-				List<Class<?>> list = Registry.query(DevConsoleCommand.class)
-						.untypedRegistrations().collect(Collectors.toList());
-				Registry.query(DevConsoleCommand.class).implementations()
-						.filter(this::filterCommand).forEach(cmd -> {
-							if (cmd.getShellClass() != shells.peek()) {
-								return;
-							}
-							cmd.setEnvironment(this);
-							for (String s : cmd.getCommandIds()) {
-								commandsById.put(s, cmd);
-							}
-						});
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	private void serializeObject(Object object, File file) {
-		new Thread(Ax.format("console-serialize-%s", file.getName())) {
-			@Override
-			public void run() {
-				try {
-					new ObjectMapper().enableDefaultTyping()
-							.writerWithDefaultPrettyPrinter()
-							.writeValue(file, object);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}.start();
+	protected String[] splitFile(String str) {
+		return str.split("\n");
 	}
 
 	private void startReadlineCommandLoop() {
@@ -902,205 +1071,26 @@ public abstract class DevConsole implements ClipboardOwner {
 		}
 	}
 
-	protected abstract void createDevHelper();
-
-	protected boolean filterCommand(DevConsoleCommand command) {
-		return true;
-	}
-
-	@SuppressWarnings("resource")
-	protected void init() throws Exception {
-		instance = this;
-		Registry.Internals
-				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
-		JvmReflections.configureBootstrapJvmServices();
-		Registry.register().singleton(DevConsole.class, this);
-		long statStartInit = System.currentTimeMillis();
-		JvmReflections.init();
-		Reflections.init();
-		createDevHelper();
-		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
-		devHelper.doParallelEarlyClassInit();
-		devHelper.copyTemplates();
-		devHelper.loadConfig();
-		devHelper.initLightweightServices();
-		long statEndInitLightweightServices = System.currentTimeMillis();
-		devHelper.getTestLogger();
-		loadCommandMap();
-		System.setProperty("awt.useSystemAAFontSettings", "gasp");
-		System.setProperty("swing.aatext", "true");
-		System.setProperty(
-				"com.sun.xml.internal.bind.v2.runtime.JAXBContextImpl.fastBoot",
-				"true");
-		System.setProperty(
-				"com.sun.xml.internal.bind.v2.bytecode.ClassTailor.noOptimize",
-				"true");
-		// need to be before ui init, cos window height is a preference
-		initFiles();
-		loadConfig();
-		// initJaxb();
-		// triggered by first publication
-		long statEndInitJaxbServices = System.currentTimeMillis();
-		initState();
-		remote = DevConsoleRemote.get();
-		remote.setOverridePort(launchConfiguration.httpPort);
-		remote.setDevConsole(this);
-		if (launchConfiguration.noHttpServer) {
-			Ax.out("STARTUP\t no-http: not serving console over http");
-			this.headless = true;
+	public void startRecordingSysout(boolean mute) {
+		oldS2 = out.s2;
+		PrintStream s2 = out.s2;
+		recordOut = new ByteArrayOutputStream();
+		PrintStream outStream = new PrintStream(recordOut);
+		if (mute) {
+			out.s2 = outStream;
+			ByteArrayOutputStream nullOut = new ByteArrayOutputStream();
+			out.s1 = new PrintStream(nullOut);
 		} else {
-			remote.start();
-			this.headless = remote.isHasRemote();
-			devOut.s1 = new PrintStream(
-					new WriterOutputStream(remote.getOutWriter()));
-			devErr.s1 = new PrintStream(
-					new WriterOutputStream(remote.getErrWriter()));
+			BiPrintStream s2repl = new BiPrintStream(
+					new ByteArrayOutputStream());
+			s2repl.s1 = s2;
+			s2repl.s2 = outStream;
+			out.s2 = s2repl;
 		}
-		if (!headless) {
-			throw new UnsupportedOperationException();
-		}
-		clear();
-		MetricLogging.get().setStart("init-console", statStartInit);
-		MetricLogging.get().end("init-console");
-		this.logProvider = new ConsoleStatLogProvider();
-		new StatCategory_Console.Start().emit(startupTime);
-		new InitLightweightServices().emit(statEndInitLightweightServices);
-		new InitJaxbServices().emit(statEndInitJaxbServices);
-		devHelper.initPostObjectServices();
-		devHelper.initLifecycleServices();
-		devHelper.initAppDebug();
-		new InitPostObjectServices().emit(System.currentTimeMillis());
-		new InitConsole().emit(System.currentTimeMillis());
-		initialised = true;
-		if (launchConfiguration.hasCommandString()) {
-			performCommand(launchConfiguration.getCommandString());
-		} else if (!props.lastCommand.matches("|q|re|restart")
-				&& !launchConfiguration.noRerunLastCommand) {
-			runningLastCommand = true;
-			performCommand(props.lastCommand);
-		} else {
-			ok("Enter 'h' for help\n\n");
-		}
-		if (launchConfiguration.noHttpServer
-				&& !launchConfiguration.exitAfterCommand) {
-			startReadlineCommandLoop();
-		}
-	}
-
-	protected final void initState() {
-		state = new DevConsoleState();
-		try {
-			state = getDevHelper().readObject(getState());
-		} catch (Exception e) {
-			DevConsole.stdSysOut();
-			FileNotFoundException fnfe = CommonUtils.extractCauseOfClass(e,
-					FileNotFoundException.class);
-			if (fnfe == null) {
-				e.printStackTrace();
-			}
-			serializeState();
-		}
-	}
-
-	protected boolean isConsoleInstanceCommand(DevConsoleCommand c) {
-		return false;
-	}
-
-	protected DevConsoleProperties newConsoleProperties() {
-		return new DevConsoleProperties();
-	}
-
-	protected void onAddDomainStore() {
-		// EntityLayerLogging.setLevel(
-		// AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
-		DomainStore.stores().writableStore().getPersistenceEvents()
-				.addDomainTransformPersistenceListener(
-						new SerializationSignatureListener());
-	}
-
-	protected void performCommandInThread(List<String> args,
-			DevConsoleCommand c, boolean topLevel) {
-		try {
-			LooseContext.push();
-			PermissionsManager.get().pushUser(DevHelper.getDefaultUser(),
-					LoginState.LOGGED_IN);
-			runningJobs.add(c);
-			history.addCommand(lastCommand);
-			if (!c.silent()) {
-				System.out.format("%s...\n", lastCommand);
-			}
-			long l1 = System.currentTimeMillis();
-			c.configure();
-			if (c.clsBeforeRun()) {
-				clear();
-			}
-			String msg = c
-					.run((String[]) args.toArray(new String[args.size()]));
-			c.cleanup();
-			long l2 = System.currentTimeMillis();
-			if (msg != null) {
-				ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
-			}
-			if (topLevel && !c.ignoreForCommandHistory()) {
-				String modCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
-						: "";
-				if (!Objects.equals(modCommand, props.lastCommand)) {
-					props.lastCommand = modCommand;
-					serializeObject(props, consolePropertiesFile);
-				}
-				serializeObject(history, consoleHistoryFile);
-			}
-		} catch (Exception e) {
-			if (!(e instanceof CancelledException)) {
-				e.printStackTrace();
-			}
-		} finally {
-			runningLastCommand = false;
-			// txs just to allow propertychangelistener removal from user
-			Transaction.ensureBegun();
-			PermissionsManager.get().popUser();
-			Transaction.end();
-			LooseContext.pop();
-			runningJobs.remove(c);
-			if (launchConfiguration.exitAfterCommand) {
-				// delay to ensure props etc written?
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				System.exit(0);
-			}
-		}
-	}
-
-	protected String[] splitFile(String str) {
-		return str.split("\n");
-	}
-
-	void initFiles() {
-		devFolder = devHelper.getDevFolder();
-		setsFolder = getDevFile("sets");
-		setsFolder.mkdirs();
-		profileFolder = getDevFile("profiles");
-		profileFolder.mkdir();
-		consolePropertiesFile = getDevFile("console-properties");
-		consoleHistoryFile = getDevFile("console-history");
-		consoleStringsFile = getDevFile("console-strings");
 	}
 
 	public enum DevConsoleStyle {
 		NORMAL, OK, ERR, COMMAND
-	}
-
-	@Registration.Singleton(
-		value = LogMuter.class,
-		priority = Registration.Priority.PREFERRED_LIBRARY)
-	public static class LogMuter_DevConsole extends LogMuter {
-		@Override
-		public void muteAllLogging(boolean muteAll) {
-			instance.setConsoleOuputMuted(muteAll);
-		}
 	}
 
 	static class LaunchConfiguration {
@@ -1127,12 +1117,22 @@ public abstract class DevConsole implements ClipboardOwner {
 			}
 		}
 
+		String getCommandString() {
+			return parser.asCommandString();
+		}
+
 		public boolean hasCommandString() {
 			return parser.asCommandString().length() > 0;
 		}
+	}
 
-		String getCommandString() {
-			return parser.asCommandString();
+	@Registration.Singleton(
+		value = LogMuter.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class LogMuter_DevConsole extends LogMuter {
+		@Override
+		public void muteAllLogging(boolean muteAll) {
+			instance.setConsoleOuputMuted(muteAll);
 		}
 	}
 }

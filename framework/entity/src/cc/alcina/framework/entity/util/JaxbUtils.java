@@ -88,6 +88,17 @@ public class JaxbUtils {
 		return get().getContext0(classes);
 	}
 
+	protected static <T> List<Class> getContextClasses(Class<T> clazz) {
+		List<Class> classes = null;
+		if (!LooseContext.containsKey(JaxbUtils.CONTEXT_CLASSES)) {
+			classes = ensureJaxbSubclasses(clazz);
+		} else {
+			classes = new ArrayList<>(
+					(List) LooseContext.get(JaxbUtils.CONTEXT_CLASSES));
+		}
+		return classes;
+	}
+
 	public static synchronized void withoutRegistry() {
 		jaxbSubclasses = new ArrayList<>();
 	}
@@ -143,17 +154,6 @@ public class JaxbUtils {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	protected static <T> List<Class> getContextClasses(Class<T> clazz) {
-		List<Class> classes = null;
-		if (!LooseContext.containsKey(JaxbUtils.CONTEXT_CLASSES)) {
-			classes = ensureJaxbSubclasses(clazz);
-		} else {
-			classes = new ArrayList<>(
-					(List) LooseContext.get(JaxbUtils.CONTEXT_CLASSES));
-		}
-		return classes;
 	}
 
 	private JAXBContext jc = null;

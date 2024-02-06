@@ -35,6 +35,24 @@ import org.objectweb.asm.Type;
  * enough to rewrite methods on subtypes.
  */
 public class UseMirroredClasses extends ClassVisitor {
+	private String className;
+
+	public UseMirroredClasses(ClassVisitor cv, String className) {
+		super(Opcodes.ASM7, cv);
+		this.className = className;
+	}
+
+	@Override
+	public MethodVisitor visitMethod(int access, String name, String desc,
+			String signature, String[] exceptions) {
+		MethodVisitor mv = super.visitMethod(access, name, desc, signature,
+				exceptions);
+		if (mv == null) {
+			return null;
+		}
+		return new MethodInterceptor(mv, className);
+	}
+
 	private static class MethodInterceptor extends MethodVisitor {
 		private static HashMap<String, HashMap<String, String>> mirrorMap;
 		static {
@@ -127,23 +145,5 @@ public class UseMirroredClasses extends ClassVisitor {
 					mirrorMethod, newDesc, dintf);
 			return;
 		}
-	}
-
-	private String className;
-
-	public UseMirroredClasses(ClassVisitor cv, String className) {
-		super(Opcodes.ASM7, cv);
-		this.className = className;
-	}
-
-	@Override
-	public MethodVisitor visitMethod(int access, String name, String desc,
-			String signature, String[] exceptions) {
-		MethodVisitor mv = super.visitMethod(access, name, desc, signature,
-				exceptions);
-		if (mv == null) {
-			return null;
-		}
-		return new MethodInterceptor(mv, className);
 	}
 }

@@ -55,6 +55,29 @@ public abstract class DecoratorChooser extends Model.Fields
 		init();
 	}
 
+	protected Suggestor.Builder createSuggestorBuilder() {
+		Suggestor.Builder builder = Suggestor.builder();
+		builder.withFocusOnBind(true);
+		builder.withSuggestionXAlign(Position.END);
+		builder.withSuggestOnBind(true);
+		builder.withEditorSupplier(() -> tagEditor);
+		return builder;
+	}
+
+	protected TagEditor createTagEditor() {
+		return new TagEditor((Element) this.decoratorNode.w3cElement(),
+				ask -> ask.replaceFirst(
+						"^" + contentDecorator.descriptor.triggerSequence(),
+						""));
+	}
+
+	protected void init() {
+		tagEditor = createTagEditor();
+		suggestor = createSuggestorBuilder().build();
+		bindings().addListener(
+				() -> this.contentDecorator.topicInput.add(tagEditor::onInput));
+	}
+
 	@Override
 	public void onBeforeClosed(BeforeClosed event) {
 		event.reemitAs(this, BeforeChooserClosed.class);
@@ -80,29 +103,6 @@ public abstract class DecoratorChooser extends Model.Fields
 		 * When an element is selected (in the suggestor), close
 		 */
 		event.reemitAs(this, ModelEvents.Close.class);
-	}
-
-	protected Suggestor.Builder createSuggestorBuilder() {
-		Suggestor.Builder builder = Suggestor.builder();
-		builder.withFocusOnBind(true);
-		builder.withSuggestionXAlign(Position.END);
-		builder.withSuggestOnBind(true);
-		builder.withEditorSupplier(() -> tagEditor);
-		return builder;
-	}
-
-	protected TagEditor createTagEditor() {
-		return new TagEditor((Element) this.decoratorNode.w3cElement(),
-				ask -> ask.replaceFirst(
-						"^" + contentDecorator.descriptor.triggerSequence(),
-						""));
-	}
-
-	protected void init() {
-		tagEditor = createTagEditor();
-		suggestor = createSuggestorBuilder().build();
-		bindings().addListener(
-				() -> this.contentDecorator.topicInput.add(tagEditor::onInput));
 	}
 
 	public static class BeforeChooserClosed

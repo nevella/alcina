@@ -275,6 +275,59 @@ public class SuggestBox extends Composite
 		ListenerWrapper.WrappedOldSuggestionHandler.add(this, handler);
 	}
 
+	private void addEventsToTextBox() {
+		class TextBoxEvents implements KeyDownHandler, KeyUpHandler,
+				ValueChangeHandler<String> {
+			boolean wasSetNewSuggestion;
+
+			@Override
+			public void onKeyDown(KeyDownEvent event) {
+				wasSetNewSuggestion = false;
+				switch (event.getNativeKeyCode()) {
+				case KeyCodes.KEY_DOWN:
+					display.moveSelectionDown();
+					if (isSuggestionListShowing()) {
+						event.preventDefault();
+					}
+					break;
+				case KeyCodes.KEY_UP:
+					display.moveSelectionUp();
+					if (isSuggestionListShowing()) {
+						event.preventDefault();
+					}
+					break;
+				case KeyCodes.KEY_ENTER:
+				case KeyCodes.KEY_TAB:
+					Suggestion suggestion = display.getCurrentSelection();
+					if (suggestion == null) {
+						display.hideSuggestions();
+					} else {
+						setNewSelection(suggestion);
+						wasSetNewSuggestion = true;
+					}
+					break;
+				}
+			}
+
+			@Override
+			public void onKeyUp(KeyUpEvent event) {
+				// After every user key input, refresh the popup's suggestions.
+				if (!wasSetNewSuggestion) {
+					refreshSuggestions();
+				}
+			}
+
+			@Override
+			public void onValueChange(ValueChangeEvent<String> event) {
+				delegateEvent(SuggestBox.this, event);
+			}
+		}
+		TextBoxEvents events = new TextBoxEvents();
+		box.addKeyDownHandler(events);
+		box.addKeyUpHandler(events);
+		box.addValueChangeHandler(events);
+	}
+
 	/**
 	 * Adds a listener to receive focus events on the SuggestBox's text box. The
 	 * source Widget for these events will be the SuggestBox.
@@ -338,6 +391,10 @@ public class SuggestBox extends Composite
 			editor = TakesValueEditor.of(this);
 		}
 		return editor;
+	}
+
+	private void fireSuggestionEvent(Suggestion selectedSuggestion) {
+		SelectionEvent.fire(this, selectedSuggestion);
 	}
 
 	/**
@@ -469,6 +526,12 @@ public class SuggestBox extends Composite
 		return display.isSuggestionListShowing();
 	}
 
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		display.onEnsureDebugId(baseID);
+	}
+
 	/**
 	 * Refreshes the current list of suggestions.
 	 */
@@ -476,6 +539,17 @@ public class SuggestBox extends Composite
 		if (isAttached()) {
 			refreshSuggestions();
 		}
+	}
+
+	private void refreshSuggestions() {
+		// Get the raw text.
+		String text = getText();
+		if (text.equals(currentText)) {
+			return;
+		} else {
+			currentText = text;
+		}
+		showSuggestions(text);
 	}
 
 	/**
@@ -595,6 +669,30 @@ public class SuggestBox extends Composite
 	}
 
 	/**
+	 * Set the new suggestion in the text box.
+	 *
+	 * @param curSuggestion
+	 *            the new suggestion
+	 */
+	private void setNewSelection(Suggestion curSuggestion) {
+		assert curSuggestion != null : "suggestion cannot be null";
+		currentText = curSuggestion.getReplacementString();
+		setText(currentText);
+		display.hideSuggestions();
+		fireSuggestionEvent(curSuggestion);
+	}
+
+	/**
+	 * Sets the suggestion oracle used to create suggestions.
+	 *
+	 * @param oracle
+	 *            the oracle
+	 */
+	private void setOracle(SuggestOracle oracle) {
+		this.oracle = oracle;
+	}
+
+	/**
 	 * Sets the style name of the suggestion popup in the
 	 * {@link DefaultSuggestionDisplay}. Note that this method is a no-op unless
 	 * the {@link DefaultSuggestionDisplay} is used.
@@ -648,104 +746,6 @@ public class SuggestBox extends Composite
 		} else {
 			oracle.requestSuggestions(new Request(query, limit), callback);
 		}
-	}
-
-	private void addEventsToTextBox() {
-		class TextBoxEvents implements KeyDownHandler, KeyUpHandler,
-				ValueChangeHandler<String> {
-			boolean wasSetNewSuggestion;
-
-			@Override
-			public void onKeyDown(KeyDownEvent event) {
-				wasSetNewSuggestion = false;
-				switch (event.getNativeKeyCode()) {
-				case KeyCodes.KEY_DOWN:
-					display.moveSelectionDown();
-					if (isSuggestionListShowing()) {
-						event.preventDefault();
-					}
-					break;
-				case KeyCodes.KEY_UP:
-					display.moveSelectionUp();
-					if (isSuggestionListShowing()) {
-						event.preventDefault();
-					}
-					break;
-				case KeyCodes.KEY_ENTER:
-				case KeyCodes.KEY_TAB:
-					Suggestion suggestion = display.getCurrentSelection();
-					if (suggestion == null) {
-						display.hideSuggestions();
-					} else {
-						setNewSelection(suggestion);
-						wasSetNewSuggestion = true;
-					}
-					break;
-				}
-			}
-
-			@Override
-			public void onKeyUp(KeyUpEvent event) {
-				// After every user key input, refresh the popup's suggestions.
-				if (!wasSetNewSuggestion) {
-					refreshSuggestions();
-				}
-			}
-
-			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				delegateEvent(SuggestBox.this, event);
-			}
-		}
-		TextBoxEvents events = new TextBoxEvents();
-		box.addKeyDownHandler(events);
-		box.addKeyUpHandler(events);
-		box.addValueChangeHandler(events);
-	}
-
-	private void fireSuggestionEvent(Suggestion selectedSuggestion) {
-		SelectionEvent.fire(this, selectedSuggestion);
-	}
-
-	private void refreshSuggestions() {
-		// Get the raw text.
-		String text = getText();
-		if (text.equals(currentText)) {
-			return;
-		} else {
-			currentText = text;
-		}
-		showSuggestions(text);
-	}
-
-	/**
-	 * Set the new suggestion in the text box.
-	 *
-	 * @param curSuggestion
-	 *            the new suggestion
-	 */
-	private void setNewSelection(Suggestion curSuggestion) {
-		assert curSuggestion != null : "suggestion cannot be null";
-		currentText = curSuggestion.getReplacementString();
-		setText(currentText);
-		display.hideSuggestions();
-		fireSuggestionEvent(curSuggestion);
-	}
-
-	/**
-	 * Sets the suggestion oracle used to create suggestions.
-	 *
-	 * @param oracle
-	 *            the oracle
-	 */
-	private void setOracle(SuggestOracle oracle) {
-		this.oracle = oracle;
-	}
-
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		display.onEnsureDebugId(baseID);
 	}
 
 	/**
@@ -839,91 +839,6 @@ public class SuggestBox extends Composite
 			init();
 		}
 
-		public int getMatchTextBoxAdjust() {
-			return this.matchTextBoxAdjust;
-		}
-
-		@Override
-		public void hideSuggestions() {
-			suggestionPopup.hide();
-		}
-
-		@Override
-		public boolean isAnimationEnabled() {
-			return suggestionPopup.isAnimationEnabled();
-		}
-
-		public boolean isMatchTextBoxWidth() {
-			return this.matchTextBoxWidth;
-		}
-
-		/**
-		 * Check whether or not the suggestion list is hidden when there are no
-		 * suggestions to display.
-		 *
-		 * @return true if hidden when empty, false if not
-		 */
-		public boolean isSuggestionListHiddenWhenEmpty() {
-			return hideWhenEmpty;
-		}
-
-		@Override
-		public boolean isSuggestionListShowing() {
-			return suggestionPopup.isShowing();
-		}
-
-		@Override
-		public void setAnimationEnabled(boolean enable) {
-			suggestionPopup.setAnimationEnabled(enable);
-		}
-
-		public void setMatchTextBoxAdjust(int matchTextBoxAdjust) {
-			this.matchTextBoxAdjust = matchTextBoxAdjust;
-		}
-
-		public void setMatchTextBoxWidth(boolean matchTextBoxWidth) {
-			this.matchTextBoxWidth = matchTextBoxWidth;
-		}
-
-		/**
-		 * Sets the style name of the suggestion popup.
-		 *
-		 * @param style
-		 *            the new primary style name
-		 * @see UIObject#setStyleName(String)
-		 */
-		public void setPopupStyleName(String style) {
-			suggestionPopup.setStyleName(style);
-		}
-
-		/**
-		 * Sets the UI object where the suggestion display should appear next
-		 * to.
-		 *
-		 * @param uiObject
-		 *            the uiObject used for positioning, or null to position
-		 *            relative to the suggest box
-		 */
-		public void setPositionRelativeTo(UIObject uiObject) {
-			positionRelativeTo = uiObject;
-		}
-
-		/**
-		 * Set whether or not the suggestion list should be hidden when there
-		 * are no suggestions to display. Defaults to true.
-		 *
-		 * @param hideWhenEmpty
-		 *            true to hide when empty, false not to
-		 */
-		public void setSuggestionListHiddenWhenEmpty(boolean hideWhenEmpty) {
-			this.hideWhenEmpty = hideWhenEmpty;
-		}
-
-		private void recreateMenu() {
-			createSuggestionMenu();
-			suggestionPopup.setWidget(decorateSuggestionList(suggestionMenu));
-		}
-
 		/**
 		 * Create the PopupPanel that will hold the list of suggestions.
 		 *
@@ -964,6 +879,10 @@ public class SuggestBox extends Composite
 					: ((SuggestionMenuItem) item).getSuggestion();
 		}
 
+		public int getMatchTextBoxAdjust() {
+			return this.matchTextBoxAdjust;
+		}
+
 		/**
 		 * Get the {@link PopupPanel} used to display suggestions.
 		 *
@@ -982,9 +901,43 @@ public class SuggestBox extends Composite
 			return suggestionMenu;
 		}
 
+		@Override
+		public void hideSuggestions() {
+			suggestionPopup.hide();
+		}
+
 		protected void init() {
 			suggestionPopup = createPopup();
 			recreateMenu();
+		}
+
+		@Override
+		public boolean isAnimationEnabled() {
+			return suggestionPopup.isAnimationEnabled();
+		}
+
+		@Override
+		boolean isAnimationEnabledImpl() {
+			return isAnimationEnabled();
+		}
+
+		public boolean isMatchTextBoxWidth() {
+			return this.matchTextBoxWidth;
+		}
+
+		/**
+		 * Check whether or not the suggestion list is hidden when there are no
+		 * suggestions to display.
+		 *
+		 * @return true if hidden when empty, false if not
+		 */
+		public boolean isSuggestionListHiddenWhenEmpty() {
+			return hideWhenEmpty;
+		}
+
+		@Override
+		public boolean isSuggestionListShowing() {
+			return suggestionPopup.isShowing();
 		}
 
 		@Override
@@ -1038,6 +991,68 @@ public class SuggestBox extends Composite
 		protected void onEnsureDebugId(String baseID) {
 			suggestionPopup.ensureDebugId(baseID + "-popup");
 			suggestionMenu.setMenuItemDebugIds(baseID);
+		}
+
+		private void recreateMenu() {
+			createSuggestionMenu();
+			suggestionPopup.setWidget(decorateSuggestionList(suggestionMenu));
+		}
+
+		@Override
+		public void setAnimationEnabled(boolean enable) {
+			suggestionPopup.setAnimationEnabled(enable);
+		}
+
+		@Override
+		void setAnimationEnabledImpl(boolean enable) {
+			setAnimationEnabled(enable);
+		}
+
+		public void setMatchTextBoxAdjust(int matchTextBoxAdjust) {
+			this.matchTextBoxAdjust = matchTextBoxAdjust;
+		}
+
+		public void setMatchTextBoxWidth(boolean matchTextBoxWidth) {
+			this.matchTextBoxWidth = matchTextBoxWidth;
+		}
+
+		/**
+		 * Sets the style name of the suggestion popup.
+		 *
+		 * @param style
+		 *            the new primary style name
+		 * @see UIObject#setStyleName(String)
+		 */
+		public void setPopupStyleName(String style) {
+			suggestionPopup.setStyleName(style);
+		}
+
+		@Override
+		void setPopupStyleNameImpl(String style) {
+			setPopupStyleName(style);
+		}
+
+		/**
+		 * Sets the UI object where the suggestion display should appear next
+		 * to.
+		 *
+		 * @param uiObject
+		 *            the uiObject used for positioning, or null to position
+		 *            relative to the suggest box
+		 */
+		public void setPositionRelativeTo(UIObject uiObject) {
+			positionRelativeTo = uiObject;
+		}
+
+		/**
+		 * Set whether or not the suggestion list should be hidden when there
+		 * are no suggestions to display. Defaults to true.
+		 *
+		 * @param hideWhenEmpty
+		 *            true to hide when empty, false not to
+		 */
+		public void setSuggestionListHiddenWhenEmpty(boolean hideWhenEmpty) {
+			this.hideWhenEmpty = hideWhenEmpty;
 		}
 
 		@Override
@@ -1107,21 +1122,6 @@ public class SuggestBox extends Composite
 				}
 			});
 		}
-
-		@Override
-		boolean isAnimationEnabledImpl() {
-			return isAnimationEnabled();
-		}
-
-		@Override
-		void setAnimationEnabledImpl(boolean enable) {
-			setAnimationEnabled(enable);
-		}
-
-		@Override
-		void setPopupStyleNameImpl(String style) {
-			setPopupStyleName(style);
-		}
 	}
 
 	/**
@@ -1136,15 +1136,6 @@ public class SuggestBox extends Composite
 	 */
 	public abstract static class SuggestionDisplay {
 		/**
-		 * Check whether or not the list of suggestions is being shown.
-		 *
-		 * @return true if the suggestions are visible, false if not
-		 */
-		public boolean isSuggestionListShowing() {
-			return false;
-		}
-
-		/**
 		 * Get the currently selected {@link Suggestion} in the display.
 		 *
 		 * @return the current suggestion, or null if none selected
@@ -1155,6 +1146,26 @@ public class SuggestBox extends Composite
 		 * Hide the list of suggestions from view.
 		 */
 		protected abstract void hideSuggestions();
+
+		/**
+		 * This is here for legacy reasons. It is intentionally not visible.
+		 *
+		 * @deprecated implemented in DefaultSuggestionDisplay
+		 */
+		@Deprecated
+		boolean isAnimationEnabledImpl() {
+			// Implemented in DefaultSuggestionDisplay.
+			return false;
+		}
+
+		/**
+		 * Check whether or not the list of suggestions is being shown.
+		 *
+		 * @return true if the suggestions are visible, false if not
+		 */
+		public boolean isSuggestionListShowing() {
+			return false;
+		}
 
 		/**
 		 * Highlight the suggestion directly below the current selection in the
@@ -1179,6 +1190,19 @@ public class SuggestBox extends Composite
 		}
 
 		/**
+		 * This is here for legacy reasons. It is intentionally not visible.
+		 *
+		 * @param enable
+		 *            true to enable animation
+		 *
+		 * @deprecated implemented in DefaultSuggestionDisplay
+		 */
+		@Deprecated
+		void setAnimationEnabledImpl(boolean enable) {
+			// Implemented in DefaultSuggestionDisplay.
+		}
+
+		/**
 		 * Accepts information about whether there were more suggestions
 		 * matching than were provided to {@link #showSuggestions}.
 		 *
@@ -1191,6 +1215,19 @@ public class SuggestBox extends Composite
 		protected void setMoreSuggestions(boolean hasMoreSuggestions,
 				int numMoreSuggestions) {
 			// Subclasses may optionally implement.
+		}
+
+		/**
+		 * This is here for legacy reasons. It is intentionally not visible.
+		 *
+		 * @param style
+		 *            the style name
+		 *
+		 * @deprecated implemented in DefaultSuggestionDisplay
+		 */
+		@Deprecated
+		void setPopupStyleNameImpl(String style) {
+			// Implemented in DefaultSuggestionDisplay.
 		}
 
 		/**
@@ -1214,43 +1251,6 @@ public class SuggestBox extends Composite
 				Collection<? extends Suggestion> suggestions,
 				boolean isDisplayStringHTML, boolean isAutoSelectEnabled,
 				SuggestionCallback callback);
-
-		/**
-		 * This is here for legacy reasons. It is intentionally not visible.
-		 *
-		 * @deprecated implemented in DefaultSuggestionDisplay
-		 */
-		@Deprecated
-		boolean isAnimationEnabledImpl() {
-			// Implemented in DefaultSuggestionDisplay.
-			return false;
-		}
-
-		/**
-		 * This is here for legacy reasons. It is intentionally not visible.
-		 *
-		 * @param enable
-		 *            true to enable animation
-		 *
-		 * @deprecated implemented in DefaultSuggestionDisplay
-		 */
-		@Deprecated
-		void setAnimationEnabledImpl(boolean enable) {
-			// Implemented in DefaultSuggestionDisplay.
-		}
-
-		/**
-		 * This is here for legacy reasons. It is intentionally not visible.
-		 *
-		 * @param style
-		 *            the style name
-		 *
-		 * @deprecated implemented in DefaultSuggestionDisplay
-		 */
-		@Deprecated
-		void setPopupStyleNameImpl(String style) {
-			// Implemented in DefaultSuggestionDisplay.
-		}
 	}
 
 	/**

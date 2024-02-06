@@ -101,63 +101,6 @@ public class ReflectionReachabilityLinker extends Linker {
 
 	private File typesReasonsFile;
 
-	@Override
-	public String getDescription() {
-		return "Calculates reachable reflective classes";
-	}
-
-	@Override
-	public ArtifactSet link(TreeLogger logger, LinkerContext context,
-			ArtifactSet artifacts, boolean onePermutation) {
-		if (ReachabilityData.dataFolder == null) {
-			// ClientReflectionGenerator not invoked, exit
-			return artifacts;
-		}
-		this.logger = logger;
-		SortedSet<StandardCompilationResult> compilationResults = artifacts
-				.find(StandardCompilationResult.class);
-		// if obf, ignore for reachability filtering
-		// TODO - 2022 - obf probably elides because of the getNames()
-		// computation - check
-		if (compilationResults.size() > 0 && onePermutation
-				&& !((StandardLinkerContext) context).isOutputCompact()) {
-			idToName = new FragmentIdToName(artifacts);
-			Multiset<Integer, Set<String>> reachedClassOrConstantNames = getNames(
-					compilationResults);
-			typesFile = ReachabilityData
-					.getReachabilityFile("reachability.json");
-			typesReasonsFile = ReachabilityData
-					.getReachabilityFile("reachability-reasons.json");
-			moduleTypes = ReachabilityData.deserialize(ModuleTypes.class,
-					typesFile);
-			appRegistrations = AppImplRegistrations.fromArtifact(artifacts);
-			reflectableTypes = AppReflectableTypes.fromArtifact(artifacts);
-			legacyModuleAssignments = LegacyModuleAssignments
-					.fromArtifact(artifacts);
-			reflectableTypes.buildLookup();
-			this.peer = ReachabilityData
-					.newInstance(ReachabilityData.linkerPeerClass);
-			this.peer.init(reflectableTypes);
-			boolean delta = false;
-			com.google.gwt.dev.Compiler.recompile = false;
-			List<Integer> fragmentIds = idToName.getKeysInDependencyOrder();
-			typesReasons = new TypesReasons();
-			for (Integer fragmentId : fragmentIds) {
-				// can be null if no symbols (e.g. leftover fragment for single
-				// split point program)
-				Set<String> typesVisibleFromSymbolNames = reachedClassOrConstantNames
-						.getAndEnsure(fragmentId);
-				String moduleName = idToName.idToName(fragmentId);
-				delta |= applyReachedNames(moduleName,
-						typesVisibleFromSymbolNames);
-			}
-			if (delta) {
-				recordChangesAndCheckNextPass();
-			}
-		}
-		return artifacts;
-	}
-
 	/**
 	 * @param typeReasons
 	 *
@@ -167,6 +110,11 @@ public class ReflectionReachabilityLinker extends Linker {
 		ModuleReachabilityComputation computeData = new ModuleReachabilityComputation(
 				moduleName, typesVisibleFromSymbolNames);
 		return computeData.computeReachability();
+	}
+
+	@Override
+	public String getDescription() {
+		return "Calculates reachable reflective classes";
 	}
 
 	/*
@@ -228,6 +176,58 @@ public class ReflectionReachabilityLinker extends Linker {
 		return reachedClassOrConstantNames;
 	}
 
+	@Override
+	public ArtifactSet link(TreeLogger logger, LinkerContext context,
+			ArtifactSet artifacts, boolean onePermutation) {
+		if (ReachabilityData.dataFolder == null) {
+			// ClientReflectionGenerator not invoked, exit
+			return artifacts;
+		}
+		this.logger = logger;
+		SortedSet<StandardCompilationResult> compilationResults = artifacts
+				.find(StandardCompilationResult.class);
+		// if obf, ignore for reachability filtering
+		// TODO - 2022 - obf probably elides because of the getNames()
+		// computation - check
+		if (compilationResults.size() > 0 && onePermutation
+				&& !((StandardLinkerContext) context).isOutputCompact()) {
+			idToName = new FragmentIdToName(artifacts);
+			Multiset<Integer, Set<String>> reachedClassOrConstantNames = getNames(
+					compilationResults);
+			typesFile = ReachabilityData
+					.getReachabilityFile("reachability.json");
+			typesReasonsFile = ReachabilityData
+					.getReachabilityFile("reachability-reasons.json");
+			moduleTypes = ReachabilityData.deserialize(ModuleTypes.class,
+					typesFile);
+			appRegistrations = AppImplRegistrations.fromArtifact(artifacts);
+			reflectableTypes = AppReflectableTypes.fromArtifact(artifacts);
+			legacyModuleAssignments = LegacyModuleAssignments
+					.fromArtifact(artifacts);
+			reflectableTypes.buildLookup();
+			this.peer = ReachabilityData
+					.newInstance(ReachabilityData.linkerPeerClass);
+			this.peer.init(reflectableTypes);
+			boolean delta = false;
+			com.google.gwt.dev.Compiler.recompile = false;
+			List<Integer> fragmentIds = idToName.getKeysInDependencyOrder();
+			typesReasons = new TypesReasons();
+			for (Integer fragmentId : fragmentIds) {
+				// can be null if no symbols (e.g. leftover fragment for single
+				// split point program)
+				Set<String> typesVisibleFromSymbolNames = reachedClassOrConstantNames
+						.getAndEnsure(fragmentId);
+				String moduleName = idToName.idToName(fragmentId);
+				delta |= applyReachedNames(moduleName,
+						typesVisibleFromSymbolNames);
+			}
+			if (delta) {
+				recordChangesAndCheckNextPass();
+			}
+		}
+		return artifacts;
+	}
+
 	protected void recordChangesAndCheckNextPass() {
 		int maxPass = Integer.getInteger("reachability.pass", 25);
 		if (maxPass > 0) {
@@ -243,13 +243,6 @@ public class ReflectionReachabilityLinker extends Linker {
 						"Recompile - reflection changes - pass %s", pass));
 				com.google.gwt.dev.Compiler.recompile = true;
 			}
-		}
-	}
-
-	public static class ReachabilityArtifact extends SyntheticArtifact {
-		public ReachabilityArtifact(String log) {
-			super(ReflectionReachabilityLinker.class, "reachabilityData",
-					log.getBytes(StandardCharsets.UTF_8));
 		}
 	}
 
@@ -375,56 +368,6 @@ public class ReflectionReachabilityLinker extends Linker {
 					.collect(Collectors.toSet());
 		}
 
-		private void addWithReason(Category category, Type type) {
-			addWithReason(category, type, peer.explain(type).orElse(null),
-					false);
-		}
-
-		private void addWithReason(Category category, Type type,
-				String reasonMessage, boolean required) {
-			if (dependencyModuleTypes.contains(type)) {
-				// already in a loaded module
-				return;
-			}
-			if (reflectedTypes.contains(type)) {
-				return;
-			}
-			boolean permit = peer.permit(type);
-			if (!permit && required) {
-				logger.log(TreeLogger.Type.WARN, Ax.format(
-						"Should be explicitly permitted (excluded but required): %s",
-						type));
-			}
-			String assignToModuleName = permit ? moduleName
-					: ReflectionModule.EXCLUDED;
-			Reason reason = new Reason(idToName.fragmentId(assignToModuleName),
-					assignToModuleName, category, reasonMessage);
-			if (permit) {
-				reflectedTypes.add(type);
-			}
-			typesReasons.add(reason, type);
-		}
-
-		private boolean logAndComputeDelta() {
-			ThreeWaySetResult<Type> split = CommonUtils
-					.threeWaySplit(previousPassReflectedTypes, reflectedTypes);
-			typeList.types = reflectedTypes.stream().sorted()
-					.collect(Collectors.toList());
-			logger.log(TreeLogger.Type.INFO, Ax.format(
-					"Reachability [%s] - :: %s", moduleName, split.toSizes()));
-			/*
-			 * Reasoning for addition to reflective/reachable set is recorded in
-			 * the generated reachability-snapshot...reasons.json file. End goal
-			 * is to justify those inclusions via declarative rules so that code
-			 * size is minimised.
-			 */
-			boolean unknownAssignmentChanged = moduleTypes
-					.unknownToNotReached();
-			boolean delta = split.firstOnly.size() > 0
-					|| split.secondOnly.size() > 0 || unknownAssignmentChanged;
-			return delta;
-		}
-
 		/*
 		 * Only add the return value hierarchy - arguments we pass must be
 		 * directly reachable from code, so will have reflection data injected
@@ -515,6 +458,36 @@ public class ReflectionReachabilityLinker extends Linker {
 					});
 		}
 
+		private void addWithReason(Category category, Type type) {
+			addWithReason(category, type, peer.explain(type).orElse(null),
+					false);
+		}
+
+		private void addWithReason(Category category, Type type,
+				String reasonMessage, boolean required) {
+			if (dependencyModuleTypes.contains(type)) {
+				// already in a loaded module
+				return;
+			}
+			if (reflectedTypes.contains(type)) {
+				return;
+			}
+			boolean permit = peer.permit(type);
+			if (!permit && required) {
+				logger.log(TreeLogger.Type.WARN, Ax.format(
+						"Should be explicitly permitted (excluded but required): %s",
+						type));
+			}
+			String assignToModuleName = permit ? moduleName
+					: ReflectionModule.EXCLUDED;
+			Reason reason = new Reason(idToName.fragmentId(assignToModuleName),
+					assignToModuleName, category, reasonMessage);
+			if (permit) {
+				reflectedTypes.add(type);
+			}
+			typesReasons.add(reason, type);
+		}
+
 		boolean computeReachability() {
 			/*
 			 * Realising the goal - 10 or so years on - a type is reachable (for
@@ -557,6 +530,33 @@ public class ReflectionReachabilityLinker extends Linker {
 			}
 			boolean delta = logAndComputeDelta();
 			return delta;
+		}
+
+		private boolean logAndComputeDelta() {
+			ThreeWaySetResult<Type> split = CommonUtils
+					.threeWaySplit(previousPassReflectedTypes, reflectedTypes);
+			typeList.types = reflectedTypes.stream().sorted()
+					.collect(Collectors.toList());
+			logger.log(TreeLogger.Type.INFO, Ax.format(
+					"Reachability [%s] - :: %s", moduleName, split.toSizes()));
+			/*
+			 * Reasoning for addition to reflective/reachable set is recorded in
+			 * the generated reachability-snapshot...reasons.json file. End goal
+			 * is to justify those inclusions via declarative rules so that code
+			 * size is minimised.
+			 */
+			boolean unknownAssignmentChanged = moduleTypes
+					.unknownToNotReached();
+			boolean delta = split.firstOnly.size() > 0
+					|| split.secondOnly.size() > 0 || unknownAssignmentChanged;
+			return delta;
+		}
+	}
+
+	public static class ReachabilityArtifact extends SyntheticArtifact {
+		public ReachabilityArtifact(String log) {
+			super(ReflectionReachabilityLinker.class, "reachabilityData",
+					log.getBytes(StandardCharsets.UTF_8));
 		}
 	}
 }

@@ -84,55 +84,6 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 
 	public transient List<String> warnings = new ArrayList<>();
 
-	@Override
-	public void run() throws Exception {
-		StringMap classPaths = StringMap.fromStringList(classPathList);
-		SingletonCache<CompilationUnits> cache = FsObjectCache
-				.singletonCache(CompilationUnits.class, getClass())
-				.asSingletonCache();
-		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
-				DeclarationVisitor::new, refresh);
-		compUnits.declarations.values().stream().filter(dec -> dec.hasFlags())
-				.filter(this::filter).forEach(type -> {
-					switch (action) {
-					case LIST_INTERESTING: {
-						Ax.out("%s - %s", type.clazz().getSimpleName(),
-								type.typeFlags);
-						break;
-					}
-					case ACCESS_TO_PACKAGE: {
-						accessToPackage(type);
-						break;
-					}
-					case MANIFEST: {
-						if (type.name.contains("Left")) {
-							int debug = 3;
-						}
-						accessToPackage(type);
-						modelToModelFields(type);
-						removeDefaultPropertyMethods(type);
-						updatePropertySetters(type);
-						break;
-					}
-					case TRANSFORM_TO_TRANSFORM_ELEMENTS: {
-						transformToTransformElements(type);
-						break;
-					}
-					}
-				});
-		compUnits.writeDirty(test);
-		Ax.out("\n\n");
-		Ax.err(warnings.stream().collect(Collectors.joining("\n")));
-	}
-
-	private void warn(UnitType type, String template, Object... args) {
-		String message = Ax.format(template, args);
-		message = Ax.format("%s :: %s", type.getDeclaration().getNameAsString(),
-				message);
-		Ax.err(message);
-		warnings.add(message);
-	}
-
 	void accessToPackage(UnitType type) {
 		// TODO:
 		// verify that class has no public fields
@@ -268,6 +219,47 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 		warns.forEach(s -> warn(type, "  %s", s));
 	}
 
+	@Override
+	public void run() throws Exception {
+		StringMap classPaths = StringMap.fromStringList(classPathList);
+		SingletonCache<CompilationUnits> cache = FsObjectCache
+				.singletonCache(CompilationUnits.class, getClass())
+				.asSingletonCache();
+		compUnits = CompilationUnits.load(cache, classPaths.keySet(),
+				DeclarationVisitor::new, refresh);
+		compUnits.declarations.values().stream().filter(dec -> dec.hasFlags())
+				.filter(this::filter).forEach(type -> {
+					switch (action) {
+					case LIST_INTERESTING: {
+						Ax.out("%s - %s", type.clazz().getSimpleName(),
+								type.typeFlags);
+						break;
+					}
+					case ACCESS_TO_PACKAGE: {
+						accessToPackage(type);
+						break;
+					}
+					case MANIFEST: {
+						if (type.name.contains("Left")) {
+							int debug = 3;
+						}
+						accessToPackage(type);
+						modelToModelFields(type);
+						removeDefaultPropertyMethods(type);
+						updatePropertySetters(type);
+						break;
+					}
+					case TRANSFORM_TO_TRANSFORM_ELEMENTS: {
+						transformToTransformElements(type);
+						break;
+					}
+					}
+				});
+		compUnits.writeDirty(test);
+		Ax.out("\n\n");
+		Ax.err(warnings.stream().collect(Collectors.joining("\n")));
+	}
+
 	void transformToTransformElements(UnitType type) {
 		if (type.hasFlag(Type.HasBeanAnnotation)
 				|| type.hasFlag(Type.HasPropertyMethods)) {
@@ -342,6 +334,14 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 		warns.forEach(s -> Ax.out("  %s", s));
 	}
 
+	private void warn(UnitType type, String template, Object... args) {
+		String message = Ax.format(template, args);
+		message = Ax.format("%s :: %s", type.getDeclaration().getNameAsString(),
+				message);
+		Ax.err(message);
+		warnings.add(message);
+	}
+
 	public enum Action {
 		LIST_INTERESTING, MANIFEST, ACCESS_TO_PACKAGE,
 		TRANSFORM_TO_TRANSFORM_ELEMENTS;
@@ -351,15 +351,6 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 		public DeclarationVisitor(CompilationUnits units,
 				CompilationUnitWrapper compUnit) {
 			super(units, compUnit);
-		}
-
-		@Override
-		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
-			try {
-				visit0(node, arg);
-			} catch (VerifyError ve) {
-				Ax.out("Verify error: %s", node.getName());
-			}
 		}
 
 		boolean hasBeanAnnotation(UnitType type) {
@@ -378,6 +369,15 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 			Class clazz = type.clazz();
 			return TreeSerializable.class.isAssignableFrom(clazz)
 					|| ReflectiveSerializable.class.isAssignableFrom(clazz);
+		}
+
+		@Override
+		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
+			try {
+				visit0(node, arg);
+			} catch (VerifyError ve) {
+				Ax.out("Verify error: %s", node.getName());
+			}
 		}
 
 		void visit0(ClassOrInterfaceDeclaration node, Void arg) {

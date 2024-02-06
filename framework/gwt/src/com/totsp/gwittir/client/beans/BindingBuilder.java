@@ -35,19 +35,6 @@ public class BindingBuilder
 		SetBindingOptionsLeft, SetPropertyLeft, SetValidationFeedbackLeft,
 		SetValidationFeedbackRight, SetValidatorRight, SetValidateOrRight,
 		SetBindingOptionsRight, SetPropertyRight {
-	private Binding workBinding = new Binding();
-
-	private BindingInstance left;
-
-	private BindingInstance right;
-
-	private Object temp;
-
-	private Binding parent;
-
-	private BindingBuilder() {
-	}
-
 	public static SetLeft appendChildToBinding(Binding parent) {
 		BindingBuilder builder = new BindingBuilder();
 		parent.getChildren().add(builder.workBinding);
@@ -64,6 +51,29 @@ public class BindingBuilder
 	public static SetPropertyLeft
 			bindOnPropertyChangeEvents(SourcesPropertyChangeEvents object) {
 		return bind(object);
+	}
+
+	private Binding workBinding = new Binding();
+
+	private BindingInstance left;
+
+	private BindingInstance right;
+
+	private Object temp;
+
+	private Binding parent;
+
+	private BindingBuilder() {
+	}
+
+	@Override
+	public SetLeft and() {
+		if (parent == null) {
+			parent = this.toBinding(); // first one, so save it.
+		} else {
+			this.toBinding(); // this was appended, so lets just finalize it.
+		}
+		return BindingBuilder.appendChildToBinding(this.parent);
 	}
 
 	@Override
@@ -137,16 +147,6 @@ public class BindingBuilder
 		assert right.property != null : "Right property null";
 		assert right.listener != null : "Right listener null";
 		return this.parent == null ? this.workBinding : this.parent;
-	}
-
-	@Override
-	public SetLeft and() {
-		if (parent == null) {
-			parent = this.toBinding(); // first one, so save it.
-		} else {
-			this.toBinding(); // this was appended, so lets just finalize it.
-		}
-		return BindingBuilder.appendChildToBinding(this.parent);
 	}
 
 	@Override

@@ -93,26 +93,6 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T>
 		});
 	}
 
-	public ScrollPanel getBodyScrollPanel() {
-		return (ScrollPanel) tableData.getParent();
-	}
-
-	public boolean isExpandToFitScreen() {
-		return this.expandToFitScreen;
-	}
-
-	@Override
-	public void onLoadingStateChanged(LoadingState state) {
-		if (state == LoadingState.LOADING && getRowCount() > 0) {
-			return;
-		}
-		super.onLoadingStateChanged(state);
-	}
-
-	public void setExpandToFitScreen(boolean expandToFitScreen) {
-		this.expandToFitScreen = expandToFitScreen;
-	}
-
 	private void forceReflow() {
 		// -webkit-transform: translate3d(0,0,0);
 		if (isExpandToFitScreen()) {
@@ -125,8 +105,28 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T>
 				"translate3d(0,0,0)");
 	}
 
+	public ScrollPanel getBodyScrollPanel() {
+		return (ScrollPanel) tableData.getParent();
+	}
+
+	public boolean isExpandToFitScreen() {
+		return this.expandToFitScreen;
+	}
+
 	@Override
 	protected void onAttach() {
 		super.onAttach();
+	}
+
+	@Override
+	public void onLoadingStateChanged(LoadingState state) {
+		if (state == LoadingState.LOADING && getRowCount() > 0) {
+			return;
+		}
+		super.onLoadingStateChanged(state);
+	}
+
+	public void setExpandToFitScreen(boolean expandToFitScreen) {
+		this.expandToFitScreen = expandToFitScreen;
 	}
 }

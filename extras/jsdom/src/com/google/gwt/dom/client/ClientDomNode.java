@@ -11,11 +11,11 @@ package com.google.gwt.dom.client;
  *
  */
 public interface ClientDomNode {
-	public Node cloneNode(boolean deep);
-
 	<T extends Node> T appendChild(T newChild);
 
 	void callMethod(String methodName);
+
+	public Node cloneNode(boolean deep);
 
 	/**
 	 * Gets the child node at the given index.

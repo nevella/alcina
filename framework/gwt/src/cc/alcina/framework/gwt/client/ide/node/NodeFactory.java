@@ -64,6 +64,15 @@ public class NodeFactory {
 		super();
 	}
 
+	protected DomainNode
+			createDomainNode(SourcesPropertyChangeEvents domainObject) {
+		Class clazz = domainObject.getClass();
+		if (lastDomainObjectClass != clazz) {
+			nodeCreator = Registry.impl(NodeCreator.class, clazz);
+		}
+		return nodeCreator.createDomainNode(domainObject, this);
+	}
+
 	public DomainNode
 			getNodeForDomainObject(SourcesPropertyChangeEvents domainObject) {
 		DomainNode dn = createDomainNode(domainObject);
@@ -140,15 +149,6 @@ public class NodeFactory {
 	private UmbrellaProviderNode
 			getNodeForUmbrella(LazyCollectionProvider providerChild) {
 		return new UmbrellaProviderNode(providerChild, null, null, this);
-	}
-
-	protected DomainNode
-			createDomainNode(SourcesPropertyChangeEvents domainObject) {
-		Class clazz = domainObject.getClass();
-		if (lastDomainObjectClass != clazz) {
-			nodeCreator = Registry.impl(NodeCreator.class, clazz);
-		}
-		return nodeCreator.createDomainNode(domainObject, this);
 	}
 
 	@Reflected

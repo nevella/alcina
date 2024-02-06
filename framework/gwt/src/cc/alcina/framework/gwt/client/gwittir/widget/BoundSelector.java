@@ -116,6 +116,81 @@ public class BoundSelector extends AbstractBoundWidget
 		redrawGrid();
 	}
 
+	protected void addItems(Collection<?> toAdd) {
+		toAdd = toAdd.stream().filter(Objects::nonNull)
+				.collect(Collectors.toList());
+		if (toAdd.isEmpty()) {
+			return;
+		}
+		Set<?> selectedItems = search.getSelectedItems();
+		boolean hadDelta = selectedItems.addAll((Collection) toAdd);
+		if (hadDelta) {
+			List<?> list = (List) results.getItemMap().get("");
+			// o(n) add, ensuring no repetitions and preserving order
+			Set<?> delta = selectedItems.stream()
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			list.forEach(elem -> delta.remove(elem));
+			list.addAll((Set) delta);
+			results.setItemMap(results.getItemMap());
+			search.getFilter().saveLastText();
+			search.getFilter().clear();
+		}
+	}
+
+	private void clearItems() {
+		search.getSelectedItems().clear();
+		((List) results.getItemMap().get("")).clear();
+		results.setItemMap(results.getItemMap());
+	}
+
+	private Widget createHeader(String text, String secondaryStyle) {
+		Label widget = new Label(text);
+		widget.setStyleName("header");
+		widget.addStyleName(secondaryStyle);
+		return widget;
+	}
+
+	protected Map createObjectMap() {
+		Map result = new HashMap();
+		if (supplier instanceof RequiresContextBindable) {
+			((RequiresContextBindable) supplier)
+					.setBindable((SourcesPropertyChangeEvents) getModel());
+		}
+		result.put("", filterAvailableObjects(supplier.get()));
+		return result;
+	}
+
+	protected void createResults() {
+		this.results = new SelectWithSearch();
+	}
+
+	protected void createSearch() {
+		this.search = new SelectWithSearch();
+	}
+
+	protected void customiseLeftWidget() {
+	}
+
+	protected void customiseRightWidget() {
+	}
+
+	protected List filterAvailableObjects(Collection collection) {
+		ArrayList l = new ArrayList();
+		if (filter == null) {
+			l.addAll(collection);
+			return l;
+		}
+		Iterator itr = collection.iterator();
+		while (itr.hasNext()) {
+			Object obj = itr.next();
+			if (!filter.test(obj)) {
+				continue;
+			}
+			l.add(obj);
+		}
+		return l;
+	}
+
 	public String getHint() {
 		return this.hint;
 	}
@@ -132,9 +207,37 @@ public class BoundSelector extends AbstractBoundWidget
 		return new HashSet(items);
 	}
 
+	private void initContainer() {
+		container = new FlowPanel();
+		initWidget(container);
+	}
+
+	protected void initValues() {
+		search.setItemMap(createObjectMap());
+	}
+
 	@Override
 	public boolean isMultiline() {
 		return true;
+	}
+
+	protected boolean isMultipleSelect() {
+		return maxSelectedItems != 1;
+	}
+
+	protected void itemSelected(Object item) {
+		if (maxSelectedItems != 0
+				&& search.getSelectedItems().size() >= maxSelectedItems) {
+			removeItem(search.getSelectedItems().iterator().next());
+		}
+		Set old = new HashSet(search.getSelectedItems());
+		addItems(Collections.singleton(item));
+		update(old);
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
 	}
 
 	@Override
@@ -161,6 +264,13 @@ public class BoundSelector extends AbstractBoundWidget
 		grid.setWidget(1, 1, resultsWidget);
 		grid.setStyleName("alcina-SelectorFrame");
 		container.add(grid);
+	}
+
+	protected void removeItem(Object item) {
+		if (search.getSelectedItems().remove(item)) {
+			((List) results.getItemMap().get("")).remove(item);
+			results.setItemMap(results.getItemMap());
+		}
 	}
 
 	public void renderSelects() {
@@ -201,6 +311,13 @@ public class BoundSelector extends AbstractBoundWidget
 		customiseRightWidget();
 		searchWidget.setStyleName("alcina-Selector available");
 		resultsWidget.setStyleName("alcina-Selector selected");
+	}
+
+	protected void resultItemSelected(Object item) {
+		Set old = new HashSet(search.getSelectedItems());
+		removeItem(item);
+		update(old);
+		search.filter(null);
 	}
 
 	public void setHint(String hint) {
@@ -247,123 +364,6 @@ public class BoundSelector extends AbstractBoundWidget
 			initValues();
 		}
 		update(old);
-	}
-
-	private void clearItems() {
-		search.getSelectedItems().clear();
-		((List) results.getItemMap().get("")).clear();
-		results.setItemMap(results.getItemMap());
-	}
-
-	private Widget createHeader(String text, String secondaryStyle) {
-		Label widget = new Label(text);
-		widget.setStyleName("header");
-		widget.addStyleName(secondaryStyle);
-		return widget;
-	}
-
-	private void initContainer() {
-		container = new FlowPanel();
-		initWidget(container);
-	}
-
-	protected void addItems(Collection<?> toAdd) {
-		toAdd = toAdd.stream().filter(Objects::nonNull)
-				.collect(Collectors.toList());
-		if (toAdd.isEmpty()) {
-			return;
-		}
-		Set<?> selectedItems = search.getSelectedItems();
-		boolean hadDelta = selectedItems.addAll((Collection) toAdd);
-		if (hadDelta) {
-			List<?> list = (List) results.getItemMap().get("");
-			// o(n) add, ensuring no repetitions and preserving order
-			Set<?> delta = selectedItems.stream()
-					.collect(AlcinaCollectors.toLinkedHashSet());
-			list.forEach(elem -> delta.remove(elem));
-			list.addAll((Set) delta);
-			results.setItemMap(results.getItemMap());
-			search.getFilter().saveLastText();
-			search.getFilter().clear();
-		}
-	}
-
-	protected Map createObjectMap() {
-		Map result = new HashMap();
-		if (supplier instanceof RequiresContextBindable) {
-			((RequiresContextBindable) supplier)
-					.setBindable((SourcesPropertyChangeEvents) getModel());
-		}
-		result.put("", filterAvailableObjects(supplier.get()));
-		return result;
-	}
-
-	protected void createResults() {
-		this.results = new SelectWithSearch();
-	}
-
-	protected void createSearch() {
-		this.search = new SelectWithSearch();
-	}
-
-	protected void customiseLeftWidget() {
-	}
-
-	protected void customiseRightWidget() {
-	}
-
-	protected List filterAvailableObjects(Collection collection) {
-		ArrayList l = new ArrayList();
-		if (filter == null) {
-			l.addAll(collection);
-			return l;
-		}
-		Iterator itr = collection.iterator();
-		while (itr.hasNext()) {
-			Object obj = itr.next();
-			if (!filter.test(obj)) {
-				continue;
-			}
-			l.add(obj);
-		}
-		return l;
-	}
-
-	protected void initValues() {
-		search.setItemMap(createObjectMap());
-	}
-
-	protected boolean isMultipleSelect() {
-		return maxSelectedItems != 1;
-	}
-
-	protected void itemSelected(Object item) {
-		if (maxSelectedItems != 0
-				&& search.getSelectedItems().size() >= maxSelectedItems) {
-			removeItem(search.getSelectedItems().iterator().next());
-		}
-		Set old = new HashSet(search.getSelectedItems());
-		addItems(Collections.singleton(item));
-		update(old);
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-	}
-
-	protected void removeItem(Object item) {
-		if (search.getSelectedItems().remove(item)) {
-			((List) results.getItemMap().get("")).remove(item);
-			results.setItemMap(results.getItemMap());
-		}
-	}
-
-	protected void resultItemSelected(Object item) {
-		Set old = new HashSet(search.getSelectedItems());
-		removeItem(item);
-		update(old);
-		search.filter(null);
 	}
 
 	protected boolean shouldHideResultFilter() {

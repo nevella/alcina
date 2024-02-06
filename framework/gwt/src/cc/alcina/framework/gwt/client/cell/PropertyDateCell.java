@@ -208,26 +208,6 @@ public class PropertyDateCell extends AbstractEditableCell<Date, Date> {
 	}
 
 	@Override
-	public void render(Context context, Date value, SafeHtmlBuilder sb) {
-		// Get the view data.
-		Object key = context.getKey();
-		Date viewData = getViewData(key);
-		if (viewData != null && viewData.equals(value)) {
-			clearViewData(key);
-			viewData = null;
-		}
-		String s = null;
-		if (viewData != null) {
-			s = format.format(viewData);
-		} else if (value != null) {
-			s = format.format(value);
-		}
-		if (s != null) {
-			sb.append(renderer.render(s));
-		}
-	}
-
-	@Override
 	protected void onEnterKeyDown(Context context, Element parent, Date value,
 			NativeEvent event, ValueUpdater<Date> valueUpdater) {
 		this.lastKey = context.getKey();
@@ -249,5 +229,25 @@ public class PropertyDateCell extends AbstractEditableCell<Date, Date> {
 						lastParent.getAbsoluteTop() + offsetY);
 			}
 		});
+	}
+
+	@Override
+	public void render(Context context, Date value, SafeHtmlBuilder sb) {
+		// Get the view data.
+		Object key = context.getKey();
+		Date viewData = getViewData(key);
+		if (viewData != null && viewData.equals(value)) {
+			clearViewData(key);
+			viewData = null;
+		}
+		String s = null;
+		if (viewData != null) {
+			s = format.format(viewData);
+		} else if (value != null) {
+			s = format.format(value);
+		}
+		if (s != null) {
+			sb.append(renderer.render(s));
+		}
 	}
 }

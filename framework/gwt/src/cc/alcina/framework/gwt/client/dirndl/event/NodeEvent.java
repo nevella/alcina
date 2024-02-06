@@ -77,6 +77,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		this.model = model;
 	}
 
+	public Object sourceModel() {
+		return context.getPrevious().node.getModel();
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("%s : %s", getClass().getSimpleName(), model);
@@ -163,23 +167,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return previous;
 		}
 
-		public boolean hasPrevious(Class<? extends NodeEvent> eventClass) {
-			return getPreviousEvent(eventClass) != null;
-		}
-
-		public void setNodeEvent(NodeEvent nodeEvent) {
-			Preconditions.checkState(this.nodeEvent == null);
-			this.nodeEvent = nodeEvent;
-			nodeEvent.context = this;
-		}
-
-		void reemit() {
-			Context newContext = fromContext(this, node);
-			newContext.reemission = node;
-			ModelEvent modelEvent = (ModelEvent) nodeEvent;
-			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
-		}
-
 		public <E extends NodeEvent> E getPreviousEvent(Class<E> eventClass) {
 			Context cursor = this;
 			while (cursor != null) {
@@ -189,6 +176,23 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 				cursor = cursor.getPrevious();
 			}
 			return null;
+		}
+
+		public boolean hasPrevious(Class<? extends NodeEvent> eventClass) {
+			return getPreviousEvent(eventClass) != null;
+		}
+
+		void reemit() {
+			Context newContext = fromContext(this, node);
+			newContext.reemission = node;
+			ModelEvent modelEvent = (ModelEvent) nodeEvent;
+			newContext.dispatch(modelEvent.getClass(), modelEvent.getModel());
+		}
+
+		public void setNodeEvent(NodeEvent nodeEvent) {
+			Preconditions.checkState(this.nodeEvent == null);
+			this.nodeEvent = nodeEvent;
+			nodeEvent.context = this;
 		}
 	}
 
@@ -214,9 +218,5 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 	// Marker interface - otherwise a Registry-supplied DomBinding is expected
 	public interface WithoutDomBinding {
-	}
-
-	public Object sourceModel() {
-		return context.getPrevious().node.getModel();
 	}
 }

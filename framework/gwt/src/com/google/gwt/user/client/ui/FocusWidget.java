@@ -325,6 +325,23 @@ public abstract class FocusWidget extends Widget
 		return !getElement().getPropertyBoolean("disabled");
 	}
 
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		// Accessibility: setting tab index to be 0 by default, ensuring element
+		// appears in tab sequence. We must ensure that the element doesn't
+		// already
+		// have a tabIndex set. This is not a problem for normal widgets, but
+		// when
+		// a widget is used to wrap an existing static element, it can already
+		// have
+		// a tabIndex.
+		int tabIndex = getTabIndex();
+		if (-1 == tabIndex) {
+			setTabIndex(0);
+		}
+	}
+
 	/**
 	 * @deprecated Use the {@link HandlerRegistration#removeHandler} method on
 	 *             the object returned by {@link #addClickHandler} instead
@@ -403,22 +420,5 @@ public abstract class FocusWidget extends Widget
 	@Override
 	public void setTabIndex(int index) {
 		impl.setTabIndex(getElement(), index);
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		// Accessibility: setting tab index to be 0 by default, ensuring element
-		// appears in tab sequence. We must ensure that the element doesn't
-		// already
-		// have a tabIndex set. This is not a problem for normal widgets, but
-		// when
-		// a widget is used to wrap an existing static element, it can already
-		// have
-		// a tabIndex.
-		int tabIndex = getTabIndex();
-		if (-1 == tabIndex) {
-			setTabIndex(0);
-		}
 	}
 }

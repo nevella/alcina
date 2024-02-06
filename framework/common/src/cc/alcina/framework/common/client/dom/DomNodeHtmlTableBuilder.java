@@ -60,6 +60,14 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 		tag("table");
 	}
 
+	private DomNode ensureBuilt() {
+		if (built) {
+			return builtNode();
+		} else {
+			return append();
+		}
+	}
+
 	public DomNodeHtmlTableRowBuilder row() {
 		DomNode tableNode = ensureBuilt();
 		return new DomNodeHtmlTableRowBuilder(tableNode);
@@ -67,14 +75,6 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 
 	public void rowClassName(String rowClassName) {
 		this.rowClassName = rowClassName;
-	}
-
-	private DomNode ensureBuilt() {
-		if (built) {
-			return builtNode();
-		} else {
-			return append();
-		}
 	}
 
 	public class DomNodeHtmlTableCellBuilder extends DomNodeBuilder {

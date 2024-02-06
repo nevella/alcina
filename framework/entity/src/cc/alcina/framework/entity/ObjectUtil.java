@@ -141,6 +141,54 @@ public class ObjectUtil {
 		}
 	}
 
+	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
+			boolean withTransients, Set<String> ignoreFieldNames) {
+		List<Field> result = new ArrayList<>();
+		Class c = t.getClass();
+		while (c != Object.class) {
+			Field[] fields = c.getDeclaredFields();
+			for (Field field : fields) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isFinal(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isTransient(field.getModifiers())
+						&& !withTransients) {
+					continue;
+				}
+				if (ignoreFieldNames != null
+						&& ignoreFieldNames.contains(field.getName())) {
+					continue;
+				}
+				field.setAccessible(true);
+				result.add(field);
+			}
+			c = c.getSuperclass();
+		}
+		return result;
+	}
+
+	static <T> T newInstanceForCopy(T t)
+			throws NoSuchMethodException, InstantiationException,
+			IllegalAccessException, InvocationTargetException {
+		if (t instanceof LiSet) {
+			return (T) ((LiSet) t).clone();
+		}
+		Constructor<T> constructor = null;
+		try {
+			constructor = (Constructor<T>) t.getClass()
+					.getConstructor(new Class[0]);
+		} catch (NoSuchMethodException e) {
+			constructor = (Constructor<T>) t.getClass()
+					.getDeclaredConstructor(new Class[0]);
+		}
+		constructor.setAccessible(true);
+		T instance = constructor.newInstance();
+		return instance;
+	}
+
 	public static String objectOrPrimitiveToString(Object object) {
 		if (object == null) {
 			return null;
@@ -195,53 +243,5 @@ public class ObjectUtil {
 				field.set(cursor, newValue);
 			}
 		}
-	}
-
-	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
-			boolean withTransients, Set<String> ignoreFieldNames) {
-		List<Field> result = new ArrayList<>();
-		Class c = t.getClass();
-		while (c != Object.class) {
-			Field[] fields = c.getDeclaredFields();
-			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isFinal(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isTransient(field.getModifiers())
-						&& !withTransients) {
-					continue;
-				}
-				if (ignoreFieldNames != null
-						&& ignoreFieldNames.contains(field.getName())) {
-					continue;
-				}
-				field.setAccessible(true);
-				result.add(field);
-			}
-			c = c.getSuperclass();
-		}
-		return result;
-	}
-
-	static <T> T newInstanceForCopy(T t)
-			throws NoSuchMethodException, InstantiationException,
-			IllegalAccessException, InvocationTargetException {
-		if (t instanceof LiSet) {
-			return (T) ((LiSet) t).clone();
-		}
-		Constructor<T> constructor = null;
-		try {
-			constructor = (Constructor<T>) t.getClass()
-					.getConstructor(new Class[0]);
-		} catch (NoSuchMethodException e) {
-			constructor = (Constructor<T>) t.getClass()
-					.getDeclaredConstructor(new Class[0]);
-		}
-		constructor.setAccessible(true);
-		T instance = constructor.newInstance();
-		return instance;
 	}
 }

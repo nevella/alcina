@@ -37,10 +37,6 @@ public class GroupedDataChangeEvent<T extends GroupedResult>
 
 	private EntitySearchDefinition def;
 
-	public EntitySearchDefinition getDef() {
-		return this.def;
-	}
-
 	/**
 	 * @param def
 	 */
@@ -50,17 +46,21 @@ public class GroupedDataChangeEvent<T extends GroupedResult>
 	}
 
 	@Override
+	protected void dispatch(Handler handler) {
+		handler.onGroupedDataChange(this);
+	}
+
+	@Override
 	public Type<Handler> getAssociatedType() {
 		return TYPE;
 	}
 
-	public T getValue() {
-		return this.value;
+	public EntitySearchDefinition getDef() {
+		return this.def;
 	}
 
-	@Override
-	protected void dispatch(Handler handler) {
-		handler.onGroupedDataChange(this);
+	public T getValue() {
+		return this.value;
 	}
 
 	public interface Handler extends EventHandler {

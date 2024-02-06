@@ -17,6 +17,10 @@ public abstract class ProcessLogFolder {
 
 	public abstract String getFolder();
 
+	protected long maxAge() {
+		return TimeConstants.ONE_DAY_MS;
+	}
+
 	public void reap() {
 		File file = DataFolderProvider.get().getChildFile(getFolder());
 		file.mkdirs();
@@ -30,9 +34,5 @@ public abstract class ProcessLogFolder {
 					counter.modified();
 				});
 		logger.info("Reaped {} - {}", getFolder(), counter);
-	}
-
-	protected long maxAge() {
-		return TimeConstants.ONE_DAY_MS;
 	}
 }

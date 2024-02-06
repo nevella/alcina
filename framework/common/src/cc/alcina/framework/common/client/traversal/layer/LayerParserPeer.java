@@ -33,13 +33,13 @@ public class LayerParserPeer {
 		Arrays.stream(tokens).forEach(this.tokens::add);
 	}
 
-	public void onSequenceComplete(ParserState inputState) {
+	public boolean confirmSentenceBranch(Branch branch) {
+		return true;
 	}
 
 	public void onSentenceMatched(Branch bestMatch) {
 	}
 
-	public boolean confirmSentenceBranch(Branch branch) {
-		return true;
+	public void onSequenceComplete(ParserState inputState) {
 	}
 }

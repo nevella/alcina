@@ -23,12 +23,12 @@ public abstract class BaseLinkCustomiser<T>
 		return this;
 	}
 
-	public void postSetValue(BaseLink<T> baseLink) {
-	}
-
 	protected abstract Function<T, String> getTextFunction();
 
 	protected abstract Function<T, String> getTokenFunction();
+
+	public void postSetValue(BaseLink<T> baseLink) {
+	}
 
 	public static class BaseLink<T> extends BoundLink<T> {
 		private BaseLinkCustomiser<T> customiser;

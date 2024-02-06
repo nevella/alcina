@@ -221,6 +221,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
 
+	protected void afterAlcinaServletContextInitialisation() {
+		// for subclasses
+	}
+
 	@Override
 	public String callRpc(String encodedRpcPayload) {
 		try {
@@ -255,6 +259,147 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	private void configureProcessObserver(HttpServletRequest threadLocalRequest,
+			Object[] parameters, boolean start) {
+		if (threadLocalRequest == null) {
+			return;
+		}
+		String metricRpcId = threadLocalRequest
+				.getHeader(ProcessMetrics.HEADER_RPC_METRIC_ID);
+		if (metricRpcId == null) {
+			return;
+		}
+		if (start) {
+			String requestId = ProcessMetric.getContextName();
+			if (Objects.equals(requestId, "callRpc")) {
+				// minor performance hit, but consistent and only in metrics
+				// context
+				ReflectiveRemoteServicePayload rpcPayload = ReflectiveSerializer
+						.deserialize((String) parameters[0]);
+				requestId = rpcPayload.getMethodName();
+			}
+			requestId += "." + metricRpcId;
+			ProcessMetric.setContextName(requestId);
+			Observer observer = new ProcessMetric.Observer();
+			observer.setSequenceId(metricRpcId);
+			LooseContext.set(CONTEXT_METRIC_OBSERVER, observer);
+			ProcessObservers.observe(observer, start);
+		} else {
+			Observer observer = LooseContext.get(CONTEXT_METRIC_OBSERVER);
+			ProcessObservers.observe(observer, start);
+			OutOfBandMessages.get().addMessage(observer);
+		}
+	}
+
+	protected <T> T defaultProjection(T t) {
+		return GraphProjections.defaultProjections().project(t);
+	}
+
+	protected String describeRpcRequest(RPCRequest rpcRequest, String msg) {
+		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
+		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
+		msg += "Types: " + CommonUtils.joinWithNewlineTab(
+				Arrays.asList(rpcRequest.getMethod().getParameters()));
+		msg += "\nParameters: \n";
+		Object[] parameters = rpcRequest.getParameters();
+		// Check for the ObfuscateOnLog annotation and
+		// get parameter indicies to obfuscate if present
+		List<Integer> parametersToObfuscate = new ArrayList<>();
+		try {
+			Method rpcMethod = this.getClass().getMethod(
+					rpcRequest.getMethod().getName(),
+					rpcRequest.getMethod().getParameterTypes());
+			ObfuscateOnLog obfuscationAnnotation = rpcMethod
+					.getAnnotation(ObfuscateOnLog.class);
+			if (obfuscationAnnotation != null) {
+				parametersToObfuscate = Arrays
+						.stream(obfuscationAnnotation
+								.parameterIndiciesToRemove())
+						.boxed().collect(Collectors.toList());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (rpcRequest.getMethod().getName().equals("transform")) {
+		} else {
+			for (int idx = 0; idx < parameters.length; idx++) {
+				try {
+					Object requestParamterValue = parameters[idx];
+					String serializedParameter = null;
+					// If the given parameter index is in the parameters to
+					// obfuscate,
+					// don't print it
+					if (parametersToObfuscate.contains(idx)) {
+						serializedParameter = "<obfuscated>";
+					} else {
+						Object projectedParameterValue = GraphProjections
+								.defaultProjections()
+								.fieldFilter(
+										new ObfuscateParametersFieldFilter())
+								.project(requestParamterValue);
+						serializedParameter = new JacksonJsonObjectSerializer()
+								.withIdRefs()
+								.serializeNoThrow(projectedParameterValue);
+					}
+					msg += Ax.format("%s: %s\n", idx, serializedParameter);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return msg;
+	}
+
+	@Override
+	protected void doUnexpectedFailure(Throwable e) {
+		if (e.getClass().getName()
+				.equals("org.apache.catalina.connector.ClientAbortException")) {
+			getLogger().debug("Client RPC call aborted by client");
+			return;
+		}
+		if (e instanceof ReadOnlyException) {
+			try {
+				HttpServletResponse response = getThreadLocalResponse();
+				/*
+				 * don't reset - want to emit headers (and there's nothing salty
+				 * in the response)
+				 */
+				// response.reset();
+				ServletContext servletContext = getServletContext();
+				response.setContentType("text/plain");
+				response.setStatus(
+						HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				response.getOutputStream()
+						.write(e.toString().getBytes("UTF-8"));
+			} catch (Exception e2) {
+				throw new WrappedRuntimeException(e2);
+			}
+		} else {
+			e.printStackTrace();
+			try {
+				getThreadLocalResponse().reset();
+				StringMap cachedForUnexpectedException = (StringMap) getThreadLocalRequest()
+						.getAttribute(
+								CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
+				cachedForUnexpectedException.forEach(
+						(k, v) -> getThreadLocalResponse().setHeader(k, v));
+			} catch (IllegalStateException ex) {
+				/*
+				 * If we can't reset the request, the only way to signal that
+				 * something has gone wrong is to throw an exception from here.
+				 * It should be the case that we call the user's implementation
+				 * code before emitting data into the response, so the only time
+				 * that gets tripped is if the object serialization code blows
+				 * up.
+				 */
+				throw new RuntimeException("Unable to report failure", e);
+			}
+			ServletContext servletContext = getServletContext();
+			RPCServletUtils.writeResponseForUnexpectedFailure(servletContext,
+					getThreadLocalResponse(), e);
+		}
+	}
+
 	@Override
 	@WebMethod(
 		readonlyPermitted = true,
@@ -266,6 +411,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						|| IUser.current() == job.getUser(),
 				"Illegal access to job " + jobId);
 		return job.getLog();
+	}
+
+	protected Logger getLogger() {
+		return logger;
 	}
 
 	@Override
@@ -280,6 +429,68 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getPersistentLocators(Set<EntityLocator> locators) {
 		// FIXME - low - permissions (although honestly almost totally harmless)
 		return new GetPersistentLocatorsHandler().handle(locators);
+	}
+
+	protected String getRemoteAddress() {
+		return getThreadLocalRequest() == null ? null
+				: getThreadLocalRequest().getRemoteAddr();
+	}
+
+	protected String getRpcHandlerThreadNameSuffix(RPCRequest rpcRequest) {
+		try {
+			Method method = this.getClass().getMethod(
+					rpcRequest.getMethod().getName(),
+					rpcRequest.getMethod().getParameterTypes());
+			if (method.isAnnotationPresent(WebMethod.class)) {
+				WebMethod webMethod = method.getAnnotation(WebMethod.class);
+				return webMethod.rpcHandlerThreadNameSuffix();
+			}
+			return "";
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	protected HttpSession getSession() {
+		return getSession(getThreadLocalRequest());
+	}
+
+	protected HttpSession getSession(HttpServletRequest request) {
+		return getSession(request, getThreadLocalResponse());
+	}
+
+	protected HttpSession getSession(HttpServletRequest request,
+			HttpServletResponse response) {
+		return Registry.impl(SessionProvider.class).getSession(request,
+				response);
+	}
+
+	protected RPCRequest getThreadRpcRequest() {
+		return getThreadLocalRequest() == null ? null
+				: (RPCRequest) getThreadLocalRequest()
+						.getAttribute(THRD_LOCAL_RPC_RQ);
+	}
+
+	protected String getUserAgent() {
+		return getUserAgent(getThreadLocalRequest());
+	}
+
+	protected void handleOom(String payload, OutOfMemoryError e) {
+		if (DUMP_STACK_TRACE_ON_OOM) {
+			System.out.println("Payload:");
+			System.out.println(payload);
+			e.printStackTrace();
+			SEUtilities.dumpAllThreads();
+		}
+	}
+
+	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
+			throws SerializationException {
+		return RpcRequestRouter.get().invokeAndEncodeResponse(this, rpcRequest);
+	}
+
+	protected boolean isPersistOfflineTransforms() {
+		return true;
 	}
 
 	@Override
@@ -397,6 +608,27 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	protected int nextTransformRequestId() {
+		return Registry.impl(TransformCommit.class).nextTransformRequestId();
+	}
+
+	protected void onAfterAlcinaAuthentication(String methodName) {
+	}
+
+	@Override
+	protected void onAfterResponseSerialized(String serializedResponse) {
+		LooseContext.confirmDepth(looseContextDepth.get());
+		PermissionsManager.get().setUser(null);
+		super.onAfterResponseSerialized(serializedResponse);
+	}
+
+	@Override
+	protected void onBeforeRequestDeserialized(String serializedRequest) {
+		super.onBeforeRequestDeserialized(serializedRequest);
+		looseContextDepth.set(LooseContext.depth());
+		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
 	}
 
 	/**
@@ -632,10 +864,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return cr.publish();
 	}
 
+	private void sanitiseClrString(ClientLogRecord clr) {
+		clr.setMessage(
+				CommonUtils.nullToEmpty(clr.getMessage()).replace('\0', ' '));
+	}
+
 	@Override
 	public SearchResultsBase search(SearchDefinition def) {
 		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().search(def);
+	}
+
+	protected void setLogger(Logger logger) {
+		this.logger = logger;
 	}
 
 	public EntityLocator submitPublication(
@@ -725,247 +966,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 		return new TransformCollector().waitForTransforms(position,
 				clientInstanceId);
-	}
-
-	private void configureProcessObserver(HttpServletRequest threadLocalRequest,
-			Object[] parameters, boolean start) {
-		if (threadLocalRequest == null) {
-			return;
-		}
-		String metricRpcId = threadLocalRequest
-				.getHeader(ProcessMetrics.HEADER_RPC_METRIC_ID);
-		if (metricRpcId == null) {
-			return;
-		}
-		if (start) {
-			String requestId = ProcessMetric.getContextName();
-			if (Objects.equals(requestId, "callRpc")) {
-				// minor performance hit, but consistent and only in metrics
-				// context
-				ReflectiveRemoteServicePayload rpcPayload = ReflectiveSerializer
-						.deserialize((String) parameters[0]);
-				requestId = rpcPayload.getMethodName();
-			}
-			requestId += "." + metricRpcId;
-			ProcessMetric.setContextName(requestId);
-			Observer observer = new ProcessMetric.Observer();
-			observer.setSequenceId(metricRpcId);
-			LooseContext.set(CONTEXT_METRIC_OBSERVER, observer);
-			ProcessObservers.observe(observer, start);
-		} else {
-			Observer observer = LooseContext.get(CONTEXT_METRIC_OBSERVER);
-			ProcessObservers.observe(observer, start);
-			OutOfBandMessages.get().addMessage(observer);
-		}
-	}
-
-	private void sanitiseClrString(ClientLogRecord clr) {
-		clr.setMessage(
-				CommonUtils.nullToEmpty(clr.getMessage()).replace('\0', ' '));
-	}
-
-	protected void afterAlcinaServletContextInitialisation() {
-		// for subclasses
-	}
-
-	protected <T> T defaultProjection(T t) {
-		return GraphProjections.defaultProjections().project(t);
-	}
-
-	protected String describeRpcRequest(RPCRequest rpcRequest, String msg) {
-		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
-		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
-		msg += "Types: " + CommonUtils.joinWithNewlineTab(
-				Arrays.asList(rpcRequest.getMethod().getParameters()));
-		msg += "\nParameters: \n";
-		Object[] parameters = rpcRequest.getParameters();
-		// Check for the ObfuscateOnLog annotation and
-		// get parameter indicies to obfuscate if present
-		List<Integer> parametersToObfuscate = new ArrayList<>();
-		try {
-			Method rpcMethod = this.getClass().getMethod(
-					rpcRequest.getMethod().getName(),
-					rpcRequest.getMethod().getParameterTypes());
-			ObfuscateOnLog obfuscationAnnotation = rpcMethod
-					.getAnnotation(ObfuscateOnLog.class);
-			if (obfuscationAnnotation != null) {
-				parametersToObfuscate = Arrays
-						.stream(obfuscationAnnotation
-								.parameterIndiciesToRemove())
-						.boxed().collect(Collectors.toList());
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		if (rpcRequest.getMethod().getName().equals("transform")) {
-		} else {
-			for (int idx = 0; idx < parameters.length; idx++) {
-				try {
-					Object requestParamterValue = parameters[idx];
-					String serializedParameter = null;
-					// If the given parameter index is in the parameters to
-					// obfuscate,
-					// don't print it
-					if (parametersToObfuscate.contains(idx)) {
-						serializedParameter = "<obfuscated>";
-					} else {
-						Object projectedParameterValue = GraphProjections
-								.defaultProjections()
-								.fieldFilter(
-										new ObfuscateParametersFieldFilter())
-								.project(requestParamterValue);
-						serializedParameter = new JacksonJsonObjectSerializer()
-								.withIdRefs()
-								.serializeNoThrow(projectedParameterValue);
-					}
-					msg += Ax.format("%s: %s\n", idx, serializedParameter);
-				} catch (Throwable e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return msg;
-	}
-
-	@Override
-	protected void doUnexpectedFailure(Throwable e) {
-		if (e.getClass().getName()
-				.equals("org.apache.catalina.connector.ClientAbortException")) {
-			getLogger().debug("Client RPC call aborted by client");
-			return;
-		}
-		if (e instanceof ReadOnlyException) {
-			try {
-				HttpServletResponse response = getThreadLocalResponse();
-				/*
-				 * don't reset - want to emit headers (and there's nothing salty
-				 * in the response)
-				 */
-				// response.reset();
-				ServletContext servletContext = getServletContext();
-				response.setContentType("text/plain");
-				response.setStatus(
-						HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				response.getOutputStream()
-						.write(e.toString().getBytes("UTF-8"));
-			} catch (Exception e2) {
-				throw new WrappedRuntimeException(e2);
-			}
-		} else {
-			e.printStackTrace();
-			try {
-				getThreadLocalResponse().reset();
-				StringMap cachedForUnexpectedException = (StringMap) getThreadLocalRequest()
-						.getAttribute(
-								CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
-				cachedForUnexpectedException.forEach(
-						(k, v) -> getThreadLocalResponse().setHeader(k, v));
-			} catch (IllegalStateException ex) {
-				/*
-				 * If we can't reset the request, the only way to signal that
-				 * something has gone wrong is to throw an exception from here.
-				 * It should be the case that we call the user's implementation
-				 * code before emitting data into the response, so the only time
-				 * that gets tripped is if the object serialization code blows
-				 * up.
-				 */
-				throw new RuntimeException("Unable to report failure", e);
-			}
-			ServletContext servletContext = getServletContext();
-			RPCServletUtils.writeResponseForUnexpectedFailure(servletContext,
-					getThreadLocalResponse(), e);
-		}
-	}
-
-	protected Logger getLogger() {
-		return logger;
-	}
-
-	protected String getRemoteAddress() {
-		return getThreadLocalRequest() == null ? null
-				: getThreadLocalRequest().getRemoteAddr();
-	}
-
-	protected String getRpcHandlerThreadNameSuffix(RPCRequest rpcRequest) {
-		try {
-			Method method = this.getClass().getMethod(
-					rpcRequest.getMethod().getName(),
-					rpcRequest.getMethod().getParameterTypes());
-			if (method.isAnnotationPresent(WebMethod.class)) {
-				WebMethod webMethod = method.getAnnotation(WebMethod.class);
-				return webMethod.rpcHandlerThreadNameSuffix();
-			}
-			return "";
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	protected HttpSession getSession() {
-		return getSession(getThreadLocalRequest());
-	}
-
-	protected HttpSession getSession(HttpServletRequest request) {
-		return getSession(request, getThreadLocalResponse());
-	}
-
-	protected HttpSession getSession(HttpServletRequest request,
-			HttpServletResponse response) {
-		return Registry.impl(SessionProvider.class).getSession(request,
-				response);
-	}
-
-	protected RPCRequest getThreadRpcRequest() {
-		return getThreadLocalRequest() == null ? null
-				: (RPCRequest) getThreadLocalRequest()
-						.getAttribute(THRD_LOCAL_RPC_RQ);
-	}
-
-	protected String getUserAgent() {
-		return getUserAgent(getThreadLocalRequest());
-	}
-
-	protected void handleOom(String payload, OutOfMemoryError e) {
-		if (DUMP_STACK_TRACE_ON_OOM) {
-			System.out.println("Payload:");
-			System.out.println(payload);
-			e.printStackTrace();
-			SEUtilities.dumpAllThreads();
-		}
-	}
-
-	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
-			throws SerializationException {
-		return RpcRequestRouter.get().invokeAndEncodeResponse(this, rpcRequest);
-	}
-
-	protected boolean isPersistOfflineTransforms() {
-		return true;
-	}
-
-	protected int nextTransformRequestId() {
-		return Registry.impl(TransformCommit.class).nextTransformRequestId();
-	}
-
-	protected void onAfterAlcinaAuthentication(String methodName) {
-	}
-
-	@Override
-	protected void onAfterResponseSerialized(String serializedResponse) {
-		LooseContext.confirmDepth(looseContextDepth.get());
-		PermissionsManager.get().setUser(null);
-		super.onAfterResponseSerialized(serializedResponse);
-	}
-
-	@Override
-	protected void onBeforeRequestDeserialized(String serializedRequest) {
-		super.onBeforeRequestDeserialized(serializedRequest);
-		looseContextDepth.set(LooseContext.depth());
-		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
-	}
-
-	protected void setLogger(Logger logger) {
-		this.logger = logger;
 	}
 
 	protected boolean waitForTransformsEnabled() {

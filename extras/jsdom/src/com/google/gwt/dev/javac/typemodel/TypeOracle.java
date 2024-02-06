@@ -103,27 +103,33 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 
 	private static final String JSO_CLASS = "com.google.gwt.core.client.JavaScriptObject";
 
-	/**
-	 * Convenience method to sort class types in a consistent way. Note that the
-	 * order is subject to change and is intended to generate an "aesthetically
-	 * pleasing" order rather than a computationally reliable order.
-	 */
-	public static void sort(JClassType[] types) {
-		Arrays.sort(types, new Comparator<JClassType>() {
-			@Override
-			public int compare(JClassType type1, JClassType type2) {
-				String name1 = type1.getQualifiedSourceName();
-				String name2 = type2.getQualifiedSourceName();
-				return name1.compareTo(name2);
-			}
-		});
-	}
-
 	private static JClassType[]
 			cast(com.google.gwt.core.ext.typeinfo.JClassType[] extTypeArgs) {
 		JClassType[] result = new JClassType[extTypeArgs.length];
 		System.arraycopy(extTypeArgs, 0, result, 0, extTypeArgs.length);
 		return result;
+	}
+
+	static String[] modifierBitsToNamesForField(int bits) {
+		List<String> strings = modifierBitsToNamesForMethodsAndFields(bits);
+		if (0 != (bits & MOD_VOLATILE)) {
+			strings.add("volatile");
+		}
+		if (0 != (bits & MOD_TRANSIENT)) {
+			strings.add("transient");
+		}
+		return strings.toArray(NO_STRINGS);
+	}
+
+	static String[] modifierBitsToNamesForMethod(int bits) {
+		List<String> strings = modifierBitsToNamesForMethodsAndFields(bits);
+		if (0 != (bits & MOD_ABSTRACT)) {
+			strings.add("abstract");
+		}
+		if (0 != (bits & MOD_NATIVE)) {
+			strings.add("native");
+		}
+		return strings.toArray(NO_STRINGS);
 	}
 
 	/**
@@ -158,26 +164,20 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 		return strings;
 	}
 
-	static String[] modifierBitsToNamesForField(int bits) {
-		List<String> strings = modifierBitsToNamesForMethodsAndFields(bits);
-		if (0 != (bits & MOD_VOLATILE)) {
-			strings.add("volatile");
-		}
-		if (0 != (bits & MOD_TRANSIENT)) {
-			strings.add("transient");
-		}
-		return strings.toArray(NO_STRINGS);
-	}
-
-	static String[] modifierBitsToNamesForMethod(int bits) {
-		List<String> strings = modifierBitsToNamesForMethodsAndFields(bits);
-		if (0 != (bits & MOD_ABSTRACT)) {
-			strings.add("abstract");
-		}
-		if (0 != (bits & MOD_NATIVE)) {
-			strings.add("native");
-		}
-		return strings.toArray(NO_STRINGS);
+	/**
+	 * Convenience method to sort class types in a consistent way. Note that the
+	 * order is subject to change and is intended to generate an "aesthetically
+	 * pleasing" order rather than a computationally reliable order.
+	 */
+	public static void sort(JClassType[] types) {
+		Arrays.sort(types, new Comparator<JClassType>() {
+			@Override
+			public int compare(JClassType type1, JClassType type2) {
+				String name1 = type1.getQualifiedSourceName();
+				String name2 = type2.getQualifiedSourceName();
+				return name1.compareTo(name2);
+			}
+		});
 	}
 
 	/**
@@ -253,6 +253,181 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 		recentTypes.add(newType);
 	}
 
+	private List<JClassType> classChain(JClassType cls) {
+		LinkedList<JClassType> chain = new LinkedList<JClassType>();
+		while (cls != null) {
+			chain.addFirst(cls);
+			cls = cls.getSuperclass();
+		}
+		return chain;
+	}
+
+	/**
+	 * Determines whether the given class fully implements an interface (either
+	 * directly or via inherited methods).
+	 */
+	private boolean classFullyImplements(JClassType cls, JClassType intf) {
+		// If the interface has at least 1 method, then the class must at
+		// least nominally implement the interface.
+		if ((intf.getMethods().length > 0) && !intf.isAssignableFrom(cls)) {
+			return false;
+		}
+		// Check to see whether it implements all the interfaces methods.
+		for (JMethod meth : intf.getInheritableMethods()) {
+			if (!classImplementsMethod(cls, meth)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean classImplementsMethod(JClassType clazz, JMethod meth) {
+		JClassType cls = clazz;
+		while (cls != null) {
+			JMethod found = cls.findMethod(meth.getName(),
+					meth.getParameterTypes());
+			if ((found != null) && !found.isAbstract()) {
+				return true;
+			}
+			cls = cls.getSuperclass();
+		}
+		return false;
+	}
+
+	private void computeDualJsoImplData() {
+		JClassType jsoType = findType(JSO_CLASS);
+		if (jsoType == null) {
+			return;
+		}
+		// Examine all single JSO interfaces.
+		for (JClassType jsoInterface : jsoSingleImpls.keySet()) {
+			// Look at all implementors of the interface.
+			for (JClassType subtype : jsoInterface.getSubtypes()) {
+				// If one of them is not a JSO.
+				if (!jsoType.isAssignableFrom(subtype)) {
+					// Log the interface as a dual jso impl and stop looking at
+					// subtypes of this interface.
+					jsoDualImpls.add(jsoInterface);
+					break;
+				}
+			}
+		}
+	}
+
+	private void computeHierarchyRelationships() {
+		// For each type, walk up its hierarchy chain and tell each supertype
+		// about its subtype.
+		for (JClassType recentType : recentTypes) {
+			recentType.notifySuperTypes();
+		}
+	}
+
+	/**
+	 * Updates the list of jsoSingleImpl types from recently-added types.
+	 */
+	private void computeSingleJsoImplData() {
+		JClassType jsoType = findType(JSO_CLASS);
+		if (jsoType == null) {
+			return;
+		}
+		for (JClassType recentType : recentTypes) {
+			if (!jsoType.isAssignableFrom(recentType)) {
+				continue;
+			}
+			for (JClassType intf : JClassType
+					.getFlattenedSuperTypeHierarchy(recentType)) {
+				// If intf refers to a JParameterizedType, we need to use its
+				// generic
+				// base type instead.
+				if (intf instanceof JParameterizedType) {
+					intf = ((JParameterizedType) intf).getBaseType();
+				}
+				if (intf.isInterface() == null) {
+					// Not an interface
+					continue;
+				}
+				if (intf.getOverridableMethods().length == 0) {
+					/*
+					 * Record a tag interface as being implemented by JSO, since
+					 * they don't actually have any methods and we want to avoid
+					 * spurious messages about multiple JSO types implementing a
+					 * common interface.
+					 */
+					jsoSingleImpls.put(intf, jsoType);
+					continue;
+				}
+				/*
+				 * If the previously-registered implementation type for a
+				 * SingleJsoImpl interface is a subtype of the type we're
+				 * currently looking at, we want to choose the least-derived
+				 * class.
+				 */
+				JClassType previousType = jsoSingleImpls.get(intf);
+				if (previousType == null) {
+					jsoSingleImpls.put(intf, recentType);
+				} else if (recentType.isAssignableFrom(previousType)) {
+					jsoSingleImpls.put(intf, recentType);
+				} else if (recentType.isAssignableTo(previousType)) {
+					// Do nothing
+				} else {
+					// Special case: If two JSOs implement the same interface,
+					// but they
+					// share a common base class that fully implements that
+					// interface,
+					// then choose that base class.
+					JClassType impl = findFullyImplementingBase(intf,
+							recentType, previousType);
+					if (impl != null) {
+						jsoSingleImpls.put(intf, impl);
+					} else {
+						throw new InternalCompilerException(
+								"Already seen an implementing JSO subtype ("
+										+ previousType.getName()
+										+ ") for interface (" + intf.getName()
+										+ ") while examining newly-added type ("
+										+ recentType.getName()
+										+ "). This is a bug in "
+										+ "JSORestrictionsChecker.");
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Determines whether both classes A and B share a common superclass which
+	 * fully implements the given interface.
+	 */
+	private JClassType findFullyImplementingBase(JClassType intf, JClassType a,
+			JClassType b) {
+		JClassType common = findNearestCommonBase(a, b);
+		if (classFullyImplements(common, intf)) {
+			return common;
+		}
+		return null;
+	}
+
+	/**
+	 * Finds the nearest common base class of the given classes.
+	 */
+	private JClassType findNearestCommonBase(JClassType a, JClassType b) {
+		List<JClassType> as = classChain(a);
+		List<JClassType> bs = classChain(b);
+		JClassType match = null;
+		Iterator<JClassType> ait = as.iterator();
+		Iterator<JClassType> bit = bs.iterator();
+		while (ait.hasNext() && bit.hasNext()) {
+			a = ait.next();
+			b = bit.next();
+			if (a.equals(b)) {
+				match = a;
+			} else {
+				break;
+			}
+		}
+		return match;
+	}
+
 	/**
 	 * Attempts to find a package by name. All requests for the same package
 	 * return the same package object.
@@ -298,6 +473,16 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Called after a block of new types are added.
+	 */
+	void finish() {
+		computeHierarchyRelationships();
+		computeSingleJsoImplData();
+		computeDualJsoImplData();
+		recentTypes.clear();
 	}
 
 	/**
@@ -352,6 +537,10 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 			assert javaScriptObject != null;
 		}
 		return javaScriptObject;
+	}
+
+	JavaSourceParser getJavaSourceParser() {
+		return javaSourceParser;
 	}
 
 	/**
@@ -628,181 +817,6 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 		return parseImpl(type);
 	}
 
-	private List<JClassType> classChain(JClassType cls) {
-		LinkedList<JClassType> chain = new LinkedList<JClassType>();
-		while (cls != null) {
-			chain.addFirst(cls);
-			cls = cls.getSuperclass();
-		}
-		return chain;
-	}
-
-	/**
-	 * Determines whether the given class fully implements an interface (either
-	 * directly or via inherited methods).
-	 */
-	private boolean classFullyImplements(JClassType cls, JClassType intf) {
-		// If the interface has at least 1 method, then the class must at
-		// least nominally implement the interface.
-		if ((intf.getMethods().length > 0) && !intf.isAssignableFrom(cls)) {
-			return false;
-		}
-		// Check to see whether it implements all the interfaces methods.
-		for (JMethod meth : intf.getInheritableMethods()) {
-			if (!classImplementsMethod(cls, meth)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private boolean classImplementsMethod(JClassType clazz, JMethod meth) {
-		JClassType cls = clazz;
-		while (cls != null) {
-			JMethod found = cls.findMethod(meth.getName(),
-					meth.getParameterTypes());
-			if ((found != null) && !found.isAbstract()) {
-				return true;
-			}
-			cls = cls.getSuperclass();
-		}
-		return false;
-	}
-
-	private void computeDualJsoImplData() {
-		JClassType jsoType = findType(JSO_CLASS);
-		if (jsoType == null) {
-			return;
-		}
-		// Examine all single JSO interfaces.
-		for (JClassType jsoInterface : jsoSingleImpls.keySet()) {
-			// Look at all implementors of the interface.
-			for (JClassType subtype : jsoInterface.getSubtypes()) {
-				// If one of them is not a JSO.
-				if (!jsoType.isAssignableFrom(subtype)) {
-					// Log the interface as a dual jso impl and stop looking at
-					// subtypes of this interface.
-					jsoDualImpls.add(jsoInterface);
-					break;
-				}
-			}
-		}
-	}
-
-	private void computeHierarchyRelationships() {
-		// For each type, walk up its hierarchy chain and tell each supertype
-		// about its subtype.
-		for (JClassType recentType : recentTypes) {
-			recentType.notifySuperTypes();
-		}
-	}
-
-	/**
-	 * Updates the list of jsoSingleImpl types from recently-added types.
-	 */
-	private void computeSingleJsoImplData() {
-		JClassType jsoType = findType(JSO_CLASS);
-		if (jsoType == null) {
-			return;
-		}
-		for (JClassType recentType : recentTypes) {
-			if (!jsoType.isAssignableFrom(recentType)) {
-				continue;
-			}
-			for (JClassType intf : JClassType
-					.getFlattenedSuperTypeHierarchy(recentType)) {
-				// If intf refers to a JParameterizedType, we need to use its
-				// generic
-				// base type instead.
-				if (intf instanceof JParameterizedType) {
-					intf = ((JParameterizedType) intf).getBaseType();
-				}
-				if (intf.isInterface() == null) {
-					// Not an interface
-					continue;
-				}
-				if (intf.getOverridableMethods().length == 0) {
-					/*
-					 * Record a tag interface as being implemented by JSO, since
-					 * they don't actually have any methods and we want to avoid
-					 * spurious messages about multiple JSO types implementing a
-					 * common interface.
-					 */
-					jsoSingleImpls.put(intf, jsoType);
-					continue;
-				}
-				/*
-				 * If the previously-registered implementation type for a
-				 * SingleJsoImpl interface is a subtype of the type we're
-				 * currently looking at, we want to choose the least-derived
-				 * class.
-				 */
-				JClassType previousType = jsoSingleImpls.get(intf);
-				if (previousType == null) {
-					jsoSingleImpls.put(intf, recentType);
-				} else if (recentType.isAssignableFrom(previousType)) {
-					jsoSingleImpls.put(intf, recentType);
-				} else if (recentType.isAssignableTo(previousType)) {
-					// Do nothing
-				} else {
-					// Special case: If two JSOs implement the same interface,
-					// but they
-					// share a common base class that fully implements that
-					// interface,
-					// then choose that base class.
-					JClassType impl = findFullyImplementingBase(intf,
-							recentType, previousType);
-					if (impl != null) {
-						jsoSingleImpls.put(intf, impl);
-					} else {
-						throw new InternalCompilerException(
-								"Already seen an implementing JSO subtype ("
-										+ previousType.getName()
-										+ ") for interface (" + intf.getName()
-										+ ") while examining newly-added type ("
-										+ recentType.getName()
-										+ "). This is a bug in "
-										+ "JSORestrictionsChecker.");
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Determines whether both classes A and B share a common superclass which
-	 * fully implements the given interface.
-	 */
-	private JClassType findFullyImplementingBase(JClassType intf, JClassType a,
-			JClassType b) {
-		JClassType common = findNearestCommonBase(a, b);
-		if (classFullyImplements(common, intf)) {
-			return common;
-		}
-		return null;
-	}
-
-	/**
-	 * Finds the nearest common base class of the given classes.
-	 */
-	private JClassType findNearestCommonBase(JClassType a, JClassType b) {
-		List<JClassType> as = classChain(a);
-		List<JClassType> bs = classChain(b);
-		JClassType match = null;
-		Iterator<JClassType> ait = as.iterator();
-		Iterator<JClassType> bit = bs.iterator();
-		while (ait.hasNext() && bit.hasNext()) {
-			a = ait.next();
-			b = bit.next();
-			if (a.equals(b)) {
-				match = a;
-			} else {
-				break;
-			}
-		}
-		return match;
-	}
-
 	private JType parseImpl(String type)
 			throws NotFoundException, ParseException, BadTypeArgsException {
 		if (type.endsWith("[]")) {
@@ -918,20 +932,6 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 		JClassType[] typeArgs = typeArgList
 				.toArray(new JClassType[typeArgList.size()]);
 		return typeArgs;
-	}
-
-	/**
-	 * Called after a block of new types are added.
-	 */
-	void finish() {
-		computeHierarchyRelationships();
-		computeSingleJsoImplData();
-		computeDualJsoImplData();
-		recentTypes.clear();
-	}
-
-	JavaSourceParser getJavaSourceParser() {
-		return javaSourceParser;
 	}
 
 	private static class ParameterizedTypeKey {

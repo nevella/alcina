@@ -82,6 +82,9 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return result;
 	}
 
+	protected void checkNegativeIdPut(Entity entity) {
+	}
+
 	public void clear() {
 		domain.clear();
 		local.clear();
@@ -108,12 +111,37 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		}
 	}
 
+	protected Map<Class, Map<Long, Entity>> createClientInstanceClassMap() {
+		return new LinkedHashMap<>();
+	}
+
+	protected Map<Long, Entity> createIdEntityMap(Class clazz) {
+		return new TreeMap<>();
+	}
+
+	protected void createTopMaps() {
+		domain = new LinkedHashMap<>();
+		local = new LinkedHashMap<>();
+		createdLocals = new LinkedHashMap<>();
+	}
+
 	public void debugNotFound(EntityLocator objectLocator) {
 		throw new UnsupportedOperationException();
 	}
 
 	public Set<Entry<Class, Map<Long, Entity>>> domainClassEntries() {
 		return domain.entrySet();
+	}
+
+	protected void ensureMap(Class clazz) {
+		if (!domain.containsKey(clazz)) {
+			synchronized (domain) {
+				if (!domain.containsKey(clazz)) {
+					domain.put(clazz, createIdEntityMap(clazz));
+					local(clazz, true);
+				}
+			}
+		}
 	}
 
 	public void evictCreatedLocal(Entity e) {
@@ -153,9 +181,29 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return this.domain;
 	}
 
+	protected <T> T getLocal(Class<T> clazz, long localId) {
+		if (!domain.containsKey(clazz)) {
+			return null;
+		}
+		T t = (T) local(clazz, false).get(localId);
+		return t;
+	}
+
 	public Map<Long, Entity> getMap(Class clazz) {
 		ensureMap(clazz);
 		return this.domain.get(clazz);
+	}
+
+	private <T> T getUnboxed(Class<T> clazz, long id) {
+		Map<Long, Entity> map = domain.get(clazz);
+		if (map == null) {
+			return null;
+		}
+		if (map instanceof UnboxedLongMap) {
+			return (T) ((UnboxedLongMap) map).get(id);
+		} else {
+			return (T) map.get(id);
+		}
 	}
 
 	public boolean hasLocals(Class<?> clazz) {
@@ -172,6 +220,10 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return stream(clazz).count() == 0;
 	}
 
+	protected boolean isExternalCreate() {
+		return false;
+	}
+
 	public boolean isThrowOnExisting() {
 		return this.throwOnExisting;
 	}
@@ -179,6 +231,19 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public Set<Long> keys(Class clazz) {
 		ensureMap(clazz);
 		return domain.get(clazz).keySet();
+	}
+
+	private Map<Long, Entity> local(Class clazz, boolean ensure) {
+		Map<Class, Map<Long, Entity>> perClass = local;
+		if (!perClass.containsKey(clazz)) {
+			if (!ensure) {
+				return Collections.emptyMap();
+			}
+			if (!perClass.containsKey(clazz)) {
+				perClass.put(clazz, createIdEntityMap(clazz));
+			}
+		}
+		return perClass.get(clazz);
 	}
 
 	public List<Long> notContained(Collection<Long> ids, Class clazz) {
@@ -196,6 +261,51 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 	public void put(Entity entity) {
 		put0(entity, false);
+	}
+
+	protected void put0(Entity entity, boolean external) {
+		Class<? extends Entity> clazz = entity.entityClass();
+		ensureMap(clazz);
+		long id = entity.getId();
+		long localId = entity.getLocalId();
+		if (id == 0 && localId == 0) {
+			throw new RuntimeException("indexing entity with zero id/localid");
+		}
+		if (id < 0) {
+			checkNegativeIdPut(entity);
+		}
+		if (id != 0) {
+			if (throwOnExisting) {
+				if (domain.get(clazz).containsKey(id)) {
+					throw Ax.runtimeException("Double-put: %s", entity);
+				}
+			}
+			domain.get(clazz).put(id, entity);
+		} else {
+			Map<Long, Entity> localPerClass = local(clazz, true);
+			if (throwOnExisting) {
+				if (localPerClass.containsKey(id)) {
+					throw Ax.runtimeException("Double-put: %s", entity);
+				}
+			}
+			localPerClass.put(localId, entity);
+			external |= isExternalCreate();
+			if (!external) {
+				Entity existing = createdLocals.get(localId);
+				if (existing != null && existing != entity) {
+					RuntimeException exception = Ax.runtimeException(
+							"DEVEX::1 - Created local collision (!!) - %s %s - existing %s",
+							localId, entity, existing);
+					if (existing == entity) {
+						Ax.out(exception);
+						exception.printStackTrace();
+					} else {
+						throw exception;
+					}
+				}
+				createdLocals.put(localId, entity);
+			}
+		}
 	}
 
 	public void putAll(Class clazz, Collection<? extends Entity> values) {
@@ -259,116 +369,6 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	@Override
 	public String toString() {
 		return Ax.format("Cache [%s domain classes]", domain.size());
-	}
-
-	private <T> T getUnboxed(Class<T> clazz, long id) {
-		Map<Long, Entity> map = domain.get(clazz);
-		if (map == null) {
-			return null;
-		}
-		if (map instanceof UnboxedLongMap) {
-			return (T) ((UnboxedLongMap) map).get(id);
-		} else {
-			return (T) map.get(id);
-		}
-	}
-
-	private Map<Long, Entity> local(Class clazz, boolean ensure) {
-		Map<Class, Map<Long, Entity>> perClass = local;
-		if (!perClass.containsKey(clazz)) {
-			if (!ensure) {
-				return Collections.emptyMap();
-			}
-			if (!perClass.containsKey(clazz)) {
-				perClass.put(clazz, createIdEntityMap(clazz));
-			}
-		}
-		return perClass.get(clazz);
-	}
-
-	protected void checkNegativeIdPut(Entity entity) {
-	}
-
-	protected Map<Class, Map<Long, Entity>> createClientInstanceClassMap() {
-		return new LinkedHashMap<>();
-	}
-
-	protected Map<Long, Entity> createIdEntityMap(Class clazz) {
-		return new TreeMap<>();
-	}
-
-	protected void createTopMaps() {
-		domain = new LinkedHashMap<>();
-		local = new LinkedHashMap<>();
-		createdLocals = new LinkedHashMap<>();
-	}
-
-	protected void ensureMap(Class clazz) {
-		if (!domain.containsKey(clazz)) {
-			synchronized (domain) {
-				if (!domain.containsKey(clazz)) {
-					domain.put(clazz, createIdEntityMap(clazz));
-					local(clazz, true);
-				}
-			}
-		}
-	}
-
-	protected <T> T getLocal(Class<T> clazz, long localId) {
-		if (!domain.containsKey(clazz)) {
-			return null;
-		}
-		T t = (T) local(clazz, false).get(localId);
-		return t;
-	}
-
-	protected boolean isExternalCreate() {
-		return false;
-	}
-
-	protected void put0(Entity entity, boolean external) {
-		Class<? extends Entity> clazz = entity.entityClass();
-		ensureMap(clazz);
-		long id = entity.getId();
-		long localId = entity.getLocalId();
-		if (id == 0 && localId == 0) {
-			throw new RuntimeException("indexing entity with zero id/localid");
-		}
-		if (id < 0) {
-			checkNegativeIdPut(entity);
-		}
-		if (id != 0) {
-			if (throwOnExisting) {
-				if (domain.get(clazz).containsKey(id)) {
-					throw Ax.runtimeException("Double-put: %s", entity);
-				}
-			}
-			domain.get(clazz).put(id, entity);
-		} else {
-			Map<Long, Entity> localPerClass = local(clazz, true);
-			if (throwOnExisting) {
-				if (localPerClass.containsKey(id)) {
-					throw Ax.runtimeException("Double-put: %s", entity);
-				}
-			}
-			localPerClass.put(localId, entity);
-			external |= isExternalCreate();
-			if (!external) {
-				Entity existing = createdLocals.get(localId);
-				if (existing != null && existing != entity) {
-					RuntimeException exception = Ax.runtimeException(
-							"DEVEX::1 - Created local collision (!!) - %s %s - existing %s",
-							localId, entity, existing);
-					if (existing == entity) {
-						Ax.out(exception);
-						exception.printStackTrace();
-					} else {
-						throw exception;
-					}
-				}
-				createdLocals.put(localId, entity);
-			}
-		}
 	}
 
 	public static interface CreatedLocalDebug {

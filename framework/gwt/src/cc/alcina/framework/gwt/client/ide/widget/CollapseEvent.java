@@ -95,6 +95,11 @@ public class CollapseEvent<T> extends GwtEvent<CollapseHandler<T>> {
 		this.target = target;
 	}
 
+	@Override
+	protected void dispatch(CollapseHandler<T> handler) {
+		handler.onCollapse(this);
+	}
+
 	// The instance knows its of type T, but the TYPE
 	// field itself does not, so we have to do an unsafe cast here.
 	@Override
@@ -117,11 +122,6 @@ public class CollapseEvent<T> extends GwtEvent<CollapseHandler<T>> {
 	 */
 	public boolean isCollapsed() {
 		return collapsed;
-	}
-
-	@Override
-	protected void dispatch(CollapseHandler<T> handler) {
-		handler.onCollapse(this);
 	}
 
 	/**

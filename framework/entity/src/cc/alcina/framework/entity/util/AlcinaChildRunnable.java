@@ -147,6 +147,10 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		return this;
 	}
 
+	protected RunContext getRunContext() {
+		return runContext;
+	}
+
 	public AlcinaChildRunnable logExceptions() {
 		getRunContext().logExceptions = true;
 		return this;
@@ -197,6 +201,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		}
 	}
 
+	protected abstract void run0() throws Exception;
+
 	public Thread startInNewThread() {
 		Thread thread = new Thread(this);
 		thread.start();
@@ -217,12 +223,6 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		runAsRoot = true;
 		return this;
 	}
-
-	protected RunContext getRunContext() {
-		return runContext;
-	}
-
-	protected abstract void run0() throws Exception;
 
 	public static class AlcinaChildContextRunner extends AlcinaChildRunnable {
 		ThreadLocal<RunContext> contexts = new ThreadLocal<AlcinaChildRunnable.RunContext>() {

@@ -48,6 +48,18 @@ public class CompositeValidationFeedback extends AbstractValidationFeedback {
 		return this;
 	}
 
+	private void addAll(ValidationFeedback[] feedbackToAdd) {
+		this.feedbacks.addAll(Arrays.asList(feedbackToAdd));
+		for (ValidationFeedback validationFeedback : feedbackToAdd) {
+			if (validationFeedback instanceof AbstractValidationFeedback) {
+				getMappings().putAll(
+						((AbstractValidationFeedback) validationFeedback)
+								.getMappings());
+			}
+		}
+		pushMappings();
+	}
+
 	@Override
 	public AbstractValidationFeedback addMessage(Class validationExceptionClass,
 			String message) {
@@ -62,24 +74,6 @@ public class CompositeValidationFeedback extends AbstractValidationFeedback {
 		}
 	}
 
-	public void resolve(Object source) {
-		for (Iterator it = feedbacks.iterator(); it.hasNext();) {
-			((ValidationFeedback) it.next()).resolve(source);
-		}
-	}
-
-	private void addAll(ValidationFeedback[] feedbackToAdd) {
-		this.feedbacks.addAll(Arrays.asList(feedbackToAdd));
-		for (ValidationFeedback validationFeedback : feedbackToAdd) {
-			if (validationFeedback instanceof AbstractValidationFeedback) {
-				getMappings().putAll(
-						((AbstractValidationFeedback) validationFeedback)
-								.getMappings());
-			}
-		}
-		pushMappings();
-	}
-
 	protected void pushMappings() {
 		for (ValidationFeedback validationFeedback : feedbacks) {
 			if (validationFeedback instanceof AbstractValidationFeedback) {
@@ -89,6 +83,12 @@ public class CompositeValidationFeedback extends AbstractValidationFeedback {
 							.addMessage(entry.getKey(), entry.getValue());
 				}
 			}
+		}
+	}
+
+	public void resolve(Object source) {
+		for (Iterator it = feedbacks.iterator(); it.hasNext();) {
+			((ValidationFeedback) it.next()).resolve(source);
 		}
 	}
 }

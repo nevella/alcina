@@ -27,6 +27,24 @@ import javax.servlet.http.Part;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class HttpServletRequestShell implements HttpServletRequest {
+	public StringMap parameters = new StringMap();
+
+	@Override
+	public boolean authenticate(HttpServletResponse arg0)
+			throws IOException, ServletException {
+		return false;
+	}
+
+	@Override
+	public String changeSessionId() {
+		return null;
+	}
+
+	@Override
+	public AsyncContext getAsyncContext() {
+		return null;
+	}
+
 	@Override
 	public Object getAttribute(String arg0) {
 		return null;
@@ -34,6 +52,11 @@ public class HttpServletRequestShell implements HttpServletRequest {
 
 	@Override
 	public Enumeration getAttributeNames() {
+		return null;
+	}
+
+	@Override
+	public String getAuthType() {
 		return null;
 	}
 
@@ -48,12 +71,62 @@ public class HttpServletRequestShell implements HttpServletRequest {
 	}
 
 	@Override
+	public long getContentLengthLong() {
+		return 0;
+	}
+
+	@Override
 	public String getContentType() {
 		return null;
 	}
 
 	@Override
+	public String getContextPath() {
+		return null;
+	}
+
+	@Override
+	public Cookie[] getCookies() {
+		return null;
+	}
+
+	@Override
+	public long getDateHeader(String arg0) {
+		return 0;
+	}
+
+	@Override
+	public DispatcherType getDispatcherType() {
+		return null;
+	}
+
+	@Override
+	public String getHeader(String arg0) {
+		return null;
+	}
+
+	@Override
+	public Enumeration getHeaderNames() {
+		return null;
+	}
+
+	@Override
+	public Enumeration getHeaders(String arg0) {
+		return null;
+	}
+
+	@Override
 	public ServletInputStream getInputStream() throws IOException {
+		return null;
+	}
+
+	@Override
+	public int getIntHeader(String arg0) {
+		return 0;
+	}
+
+	@Override
+	public String getLocalAddr() {
 		return null;
 	}
 
@@ -67,7 +140,20 @@ public class HttpServletRequestShell implements HttpServletRequest {
 		return null;
 	}
 
-	public StringMap parameters = new StringMap();
+	@Override
+	public String getLocalName() {
+		return null;
+	}
+
+	@Override
+	public int getLocalPort() {
+		return 0;
+	}
+
+	@Override
+	public String getMethod() {
+		return null;
+	}
 
 	@Override
 	public String getParameter(String arg0) {
@@ -90,7 +176,32 @@ public class HttpServletRequestShell implements HttpServletRequest {
 	}
 
 	@Override
+	public Part getPart(String arg0) throws IOException, ServletException {
+		return null;
+	}
+
+	@Override
+	public Collection<Part> getParts() throws IOException, ServletException {
+		return null;
+	}
+
+	@Override
+	public String getPathInfo() {
+		return null;
+	}
+
+	@Override
+	public String getPathTranslated() {
+		return null;
+	}
+
+	@Override
 	public String getProtocol() {
+		return null;
+	}
+
+	@Override
+	public String getQueryString() {
 		return null;
 	}
 
@@ -115,7 +226,32 @@ public class HttpServletRequestShell implements HttpServletRequest {
 	}
 
 	@Override
+	public int getRemotePort() {
+		return 0;
+	}
+
+	@Override
+	public String getRemoteUser() {
+		return null;
+	}
+
+	@Override
 	public RequestDispatcher getRequestDispatcher(String arg0) {
+		return null;
+	}
+
+	@Override
+	public String getRequestedSessionId() {
+		return null;
+	}
+
+	@Override
+	public String getRequestURI() {
+		return null;
+	}
+
+	@Override
+	public StringBuffer getRequestURL() {
 		return null;
 	}
 
@@ -135,100 +271,7 @@ public class HttpServletRequestShell implements HttpServletRequest {
 	}
 
 	@Override
-	public boolean isSecure() {
-		return false;
-	}
-
-	@Override
-	public void removeAttribute(String arg0) {
-	}
-
-	@Override
-	public void setAttribute(String arg0, Object arg1) {
-	}
-
-	@Override
-	public void setCharacterEncoding(String arg0)
-			throws UnsupportedEncodingException {
-	}
-
-	@Override
-	public String getAuthType() {
-		return null;
-	}
-
-	@Override
-	public String getContextPath() {
-		return null;
-	}
-
-	@Override
-	public Cookie[] getCookies() {
-		return null;
-	}
-
-	@Override
-	public long getDateHeader(String arg0) {
-		return 0;
-	}
-
-	@Override
-	public String getHeader(String arg0) {
-		return null;
-	}
-
-	@Override
-	public Enumeration getHeaderNames() {
-		return null;
-	}
-
-	@Override
-	public Enumeration getHeaders(String arg0) {
-		return null;
-	}
-
-	@Override
-	public int getIntHeader(String arg0) {
-		return 0;
-	}
-
-	@Override
-	public String getMethod() {
-		return null;
-	}
-
-	@Override
-	public String getPathInfo() {
-		return null;
-	}
-
-	@Override
-	public String getPathTranslated() {
-		return null;
-	}
-
-	@Override
-	public String getQueryString() {
-		return null;
-	}
-
-	@Override
-	public String getRemoteUser() {
-		return null;
-	}
-
-	@Override
-	public String getRequestURI() {
-		return null;
-	}
-
-	@Override
-	public StringBuffer getRequestURL() {
-		return null;
-	}
-
-	@Override
-	public String getRequestedSessionId() {
+	public ServletContext getServletContext() {
 		return null;
 	}
 
@@ -253,12 +296,17 @@ public class HttpServletRequestShell implements HttpServletRequest {
 	}
 
 	@Override
-	public boolean isRequestedSessionIdFromCookie() {
+	public boolean isAsyncStarted() {
 		return false;
 	}
 
 	@Override
-	public boolean isRequestedSessionIdFromURL() {
+	public boolean isAsyncSupported() {
+		return false;
+	}
+
+	@Override
+	public boolean isRequestedSessionIdFromCookie() {
 		return false;
 	}
 
@@ -268,7 +316,17 @@ public class HttpServletRequestShell implements HttpServletRequest {
 	}
 
 	@Override
+	public boolean isRequestedSessionIdFromURL() {
+		return false;
+	}
+
+	@Override
 	public boolean isRequestedSessionIdValid() {
+		return false;
+	}
+
+	@Override
+	public boolean isSecure() {
 		return false;
 	}
 
@@ -278,53 +336,24 @@ public class HttpServletRequestShell implements HttpServletRequest {
 	}
 
 	@Override
-	public AsyncContext getAsyncContext() {
-		return null;
+	public void login(String arg0, String arg1) throws ServletException {
 	}
 
 	@Override
-	public long getContentLengthLong() {
-		return 0;
+	public void logout() throws ServletException {
 	}
 
 	@Override
-	public DispatcherType getDispatcherType() {
-		return null;
+	public void removeAttribute(String arg0) {
 	}
 
 	@Override
-	public String getLocalAddr() {
-		return null;
+	public void setAttribute(String arg0, Object arg1) {
 	}
 
 	@Override
-	public String getLocalName() {
-		return null;
-	}
-
-	@Override
-	public int getLocalPort() {
-		return 0;
-	}
-
-	@Override
-	public int getRemotePort() {
-		return 0;
-	}
-
-	@Override
-	public ServletContext getServletContext() {
-		return null;
-	}
-
-	@Override
-	public boolean isAsyncStarted() {
-		return false;
-	}
-
-	@Override
-	public boolean isAsyncSupported() {
-		return false;
+	public void setCharacterEncoding(String arg0)
+			throws UnsupportedEncodingException {
 	}
 
 	@Override
@@ -336,35 +365,6 @@ public class HttpServletRequestShell implements HttpServletRequest {
 	public AsyncContext startAsync(ServletRequest arg0, ServletResponse arg1)
 			throws IllegalStateException {
 		return null;
-	}
-
-	@Override
-	public boolean authenticate(HttpServletResponse arg0)
-			throws IOException, ServletException {
-		return false;
-	}
-
-	@Override
-	public String changeSessionId() {
-		return null;
-	}
-
-	@Override
-	public Part getPart(String arg0) throws IOException, ServletException {
-		return null;
-	}
-
-	@Override
-	public Collection<Part> getParts() throws IOException, ServletException {
-		return null;
-	}
-
-	@Override
-	public void login(String arg0, String arg1) throws ServletException {
-	}
-
-	@Override
-	public void logout() throws ServletException {
 	}
 
 	@Override

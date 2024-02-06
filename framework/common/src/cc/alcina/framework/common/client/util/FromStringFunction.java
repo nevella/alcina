@@ -15,8 +15,6 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-
 /**
  *
  * @author Nick Reddel

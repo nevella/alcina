@@ -149,6 +149,15 @@ public class EntityLayerLogging {
 		setLevel(LoggerFactory.getLogger(key), level);
 	}
 
+	private static void setLevel0(String key, Level level) {
+		Logger logger = Logger.getLogger(key);
+		if (Ax.isTest()) {
+			setStandardConsoleAppender(key);
+			logger.setAdditivity(false);
+		}
+		logger.setLevel(level);
+	}
+
 	public static void setLogLevelsFromCustomProperties() {
 		Properties properties = Configuration.properties;
 		properties.keys().sorted().forEach(k -> {
@@ -158,15 +167,6 @@ public class EntityLayerLogging {
 				setLevel(loggerClass, Level.toLevel(sArg));
 			}
 		});
-	}
-
-	private static void setLevel0(String key, Level level) {
-		Logger logger = Logger.getLogger(key);
-		if (Ax.isTest()) {
-			setStandardConsoleAppender(key);
-			logger.setAdditivity(false);
-		}
-		logger.setLevel(level);
 	}
 
 	private static void setStandardConsoleAppender(String key) {

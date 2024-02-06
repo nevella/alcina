@@ -378,6 +378,10 @@ public abstract class SearchDefinition extends Bindable
 		return result.toString();
 	}
 
+	protected String orderEql() {
+		return "";
+	}
+
 	public <C extends OrderGroup> C orderGroup(Class<C> clazz) {
 		return (C) orderGroups.stream().filter(cg -> cg.getClass() == clazz)
 				.findFirst().orElse(null);
@@ -400,6 +404,15 @@ public abstract class SearchDefinition extends Bindable
 		return propertyName;
 	}
 
+	private void propertyChangeDelta(SourcesPropertyChangeEvents o,
+			PropertyChangeListener listener, boolean add) {
+		if (add) {
+			o.addPropertyChangeListener(listener);
+		} else {
+			o.removePropertyChangeListener(listener);
+		}
+	}
+
 	public boolean provideHasUndefinedDisplayText() {
 		return allCriteria().stream().anyMatch(c -> {
 			if (c instanceof TruncatedObjectCriterion) {
@@ -414,6 +427,14 @@ public abstract class SearchDefinition extends Bindable
 	 */
 	public Object provideResultsType() {
 		return null;
+	}
+
+	protected void putCriteriaGroup(CriteriaGroup cg) {
+		criteriaGroups.add(cg);
+	}
+
+	protected void putOrderGroup(OrderGroup og) {
+		orderGroups.add(og);
 	}
 
 	public void removeCriterion(SearchCriterion sc,
@@ -509,27 +530,6 @@ public abstract class SearchDefinition extends Bindable
 	public SearchDefinition withCriterion(SearchCriterion sc) {
 		addCriterionToSoleCriteriaGroup(sc, false);
 		return this;
-	}
-
-	private void propertyChangeDelta(SourcesPropertyChangeEvents o,
-			PropertyChangeListener listener, boolean add) {
-		if (add) {
-			o.addPropertyChangeListener(listener);
-		} else {
-			o.removePropertyChangeListener(listener);
-		}
-	}
-
-	protected String orderEql() {
-		return "";
-	}
-
-	protected void putCriteriaGroup(CriteriaGroup cg) {
-		criteriaGroups.add(cg);
-	}
-
-	protected void putOrderGroup(OrderGroup og) {
-		orderGroups.add(og);
 	}
 
 	protected static class Customiser<S extends SearchDefinition>

@@ -68,6 +68,16 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 
 	private int protocolVersion = -1;
 
+	// @VisibleForTesting
+	BrowserChannelServer(TreeLogger initialLogger, InputStream inputStream,
+			OutputStream outputStream, SessionHandlerServer handler,
+			boolean ignoreRemoteDeath) {
+		super(inputStream, outputStream, new ServerObjectRefFactory());
+		this.handler = handler;
+		this.ignoreRemoteDeath = ignoreRemoteDeath;
+		init(initialLogger);
+	}
+
 	/**
 	 * Create a code server for the supplied socket.
 	 *
@@ -86,14 +96,125 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 		init(initialLogger);
 	}
 
-	// @VisibleForTesting
-	BrowserChannelServer(TreeLogger initialLogger, InputStream inputStream,
-			OutputStream outputStream, SessionHandlerServer handler,
-			boolean ignoreRemoteDeath) {
-		super(inputStream, outputStream, new ServerObjectRefFactory());
-		this.handler = handler;
-		this.ignoreRemoteDeath = ignoreRemoteDeath;
-		init(initialLogger);
+	/**
+	 * Convert a JsValue into a BrowserChannel Value.
+	 *
+	 * @param localObjects
+	 *            lookup table for local objects -- may be null if jsval is
+	 *            known to be a primitive (including String).
+	 * @param jsval
+	 *            value to convert
+	 * @return jsval as a Value object.
+	 */
+	Value convertFromJsValue(ServerObjectsTable localObjects,
+			JsValueOOPHM jsval) {
+		Value value = new Value();
+		if (jsval.isNull()) {
+			value.setNull();
+		} else if (jsval.isUndefined()) {
+			value.setUndefined();
+		} else if (jsval.isBoolean()) {
+			value.setBoolean(jsval.getBoolean());
+		} else if (jsval.isInt()) {
+			value.setInt(jsval.getInt());
+		} else if (jsval.isNumber()) {
+			value.setDouble(jsval.getNumber());
+		} else if (jsval.isString()) {
+			value.setString(jsval.getString());
+		} else if (jsval.isJavaScriptObject()) {
+			value.setJsObject(jsval.getJavascriptObject());
+		} else if (jsval.isWrappedJavaObject()) {
+			assert localObjects != null;
+			DispatchObject javaObj = jsval.getJavaObjectWrapper();
+			value.setJavaObject(new JavaObjectRef(localObjects.add(javaObj)));
+		} else if (jsval.isWrappedJavaFunction()) {
+			assert localObjects != null;
+			value.setJavaObject(new JavaObjectRef(
+					localObjects.add(jsval.getWrappedJavaFunction())));
+		} else {
+			throw new RuntimeException("Unknown JsValue type " + jsval);
+		}
+		return value;
+	}
+
+	/**
+	 * Convert a BrowserChannel Value into a JsValue.
+	 *
+	 * @param ccl
+	 *            Compiling class loader, may be null if val is known to not be
+	 *            a Java object or exception.
+	 * @param localObjects
+	 *            table of Java objects, may be null as above.
+	 * @param val
+	 *            Value to convert
+	 * @param jsval
+	 *            JsValue object to receive converted value.
+	 */
+	void convertToJsValue(CompilingClassLoader ccl,
+			ServerObjectsTable localObjects, Value val, JsValueOOPHM jsval) {
+		switch (val.getType()) {
+		case NULL:
+			jsval.setNull();
+			break;
+		case BOOLEAN:
+			jsval.setBoolean(val.getBoolean());
+			break;
+		case BYTE:
+			jsval.setByte(val.getByte());
+			break;
+		case CHAR:
+			jsval.setChar(val.getChar());
+			break;
+		case DOUBLE:
+			jsval.setDouble(val.getDouble());
+			break;
+		case INT:
+			jsval.setInt(val.getInt());
+			break;
+		case SHORT:
+			jsval.setShort(val.getShort());
+			break;
+		case STRING:
+			jsval.setString(val.getString());
+			break;
+		case UNDEFINED:
+			jsval.setUndefined();
+			break;
+		case JS_OBJECT:
+			jsval.setJavascriptObject(val.getJsObject());
+			break;
+		case JAVA_OBJECT:
+			assert ccl != null && localObjects != null;
+			jsval.setWrappedJavaObject(ccl,
+					localObjects.get(val.getJavaObject().getRefid()));
+			break;
+		}
+	}
+
+	/**
+	 * Creates the {@code DevModeSession} that represents the current browser
+	 * connection, sets it as the "default" session for the current thread, and
+	 * notifies a GWT Dashboard.
+	 */
+	private void createDevModeSession() {
+		devModeSession = new DevModeSession(moduleName, userAgent);
+		DevModeSession.setSessionForCurrentThread(devModeSession);
+		getDashboardNotifier().devModeSessionBegin(devModeSession);
+	}
+
+	/**
+	 * Create the requested transport and return the appropriate information so
+	 * the client can connect to the same transport.
+	 *
+	 * @param transport
+	 *            transport name to create
+	 * @return transport-specific arguments for the client to use in attaching
+	 *         to this transport
+	 */
+	private String createTransport(String transport) {
+		// TODO(jat): implement support for additional transports
+		throw new UnsupportedOperationException(
+				"No alternate transports supported");
 	}
 
 	/**
@@ -111,6 +232,15 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 			throw new HostedModeException(
 					"I/O error communicating with client");
 		}
+	}
+
+	/**
+	 * Returns the {@code DashboardNotifier} used to send notices to a dashboard
+	 * service.
+	 */
+	// @VisibleForTesting
+	DashboardNotifier getDashboardNotifier() {
+		return DashboardNotifierFactory.getNotifier();
 	}
 
 	/**
@@ -132,6 +262,40 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 	 */
 	public int getProtocolVersion() {
 		return protocolVersion;
+	}
+
+	private void handleInvokeSpecial(SessionHandlerServer handler)
+			throws IOException, BrowserChannelException {
+		final InvokeSpecialMessage ismsg = InvokeSpecialMessage.receive(this);
+		Value[] args = ismsg.getArgs();
+		ExceptionOrReturnValue retExc = null;
+		switch (ismsg.getDispatchId()) {
+		case GetProperty:
+			assert args.length == 2;
+			retExc = handler.getProperty(this, args[0].getInt(),
+					args[1].getInt());
+			break;
+		case SetProperty:
+			assert args.length == 3;
+			retExc = handler.setProperty(this, args[0].getInt(),
+					args[1].getInt(), args[2]);
+			break;
+		default:
+			throw new HostedModeException(
+					"Unexpected InvokeSpecial method " + ismsg.getDispatchId());
+		}
+		ReturnMessage.send(this, retExc);
+	}
+
+	private void init(TreeLogger initialLogger) {
+		this.logger = initialLogger;
+		ThreadGroup threadGroup = new ThreadGroup(
+				Ax.format("Code server isolated thread group #%s",
+						threadGroupCounter.getAndIncrement()));
+		Thread thread = new Thread(threadGroup, this);
+		thread.setDaemon(true);
+		thread.setName("Code server (initializing)");
+		thread.start();
 	}
 
 	public ReturnMessage invoke(String methodName, Value vthis, Value[] vargs,
@@ -223,201 +387,6 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 		} catch (IOException e) {
 			throw new RemoteDeathError(e);
 		}
-	}
-
-	/**
-	 * React to messages from the other side, where no return value is expected.
-	 *
-	 * @param handler
-	 * @throws RemoteDeathError
-	 */
-	public void reactToMessages(SessionHandlerServer handler) {
-		do {
-			try {
-				getStreamToOtherSide().flush();
-				MessageType messageType = Message
-						.readMessageType(getStreamFromOtherSide());
-				switch (messageType) {
-				case FREE_VALUE:
-					final FreeMessage freeMsg = FreeMessage.receive(this);
-					handler.freeValue(this, freeMsg.getIds());
-					break;
-				case INVOKE:
-					InvokeOnServerMessage imsg = InvokeOnServerMessage
-							.receive(this);
-					ExceptionOrReturnValue result = handler.invoke(this,
-							imsg.getThis(), imsg.getMethodDispatchId(),
-							imsg.getArgs());
-					sendFreedValues();
-					ReturnMessage.send(this, result);
-					break;
-				case INVOKE_SPECIAL:
-					handleInvokeSpecial(handler);
-					break;
-				case QUIT:
-					return;
-				default:
-					throw new RemoteDeathError(new BrowserChannelException(
-							"Invalid message type " + messageType));
-				}
-			} catch (IOException e) {
-				throw new RemoteDeathError(e);
-			} catch (BrowserChannelException e) {
-				throw new RemoteDeathError(e);
-			}
-		} while (true);
-	}
-
-	/**
-	 * React to messages from the other side, where a return value is expected.
-	 *
-	 * @param handler
-	 * @throws BrowserChannelException
-	 * @throws RemoteDeathError
-	 */
-	public ReturnMessage
-			reactToMessagesWhileWaitingForReturn(SessionHandlerServer handler)
-					throws BrowserChannelException, RemoteDeathError {
-		do {
-			try {
-				getStreamToOtherSide().flush();
-				MessageType messageType = Message
-						.readMessageType(getStreamFromOtherSide());
-				switch (messageType) {
-				case FREE_VALUE:
-					final FreeMessage freeMsg = FreeMessage.receive(this);
-					handler.freeValue(this, freeMsg.getIds());
-					break;
-				case RETURN:
-					return ReturnMessage.receive(this);
-				case INVOKE:
-					InvokeOnServerMessage imsg = InvokeOnServerMessage
-							.receive(this);
-					ExceptionOrReturnValue result = handler.invoke(this,
-							imsg.getThis(), imsg.getMethodDispatchId(),
-							imsg.getArgs());
-					sendFreedValues();
-					ReturnMessage.send(this, result);
-					break;
-				case INVOKE_SPECIAL:
-					handleInvokeSpecial(handler);
-					break;
-				case QUIT:
-					// if we got an unexpected QUIT here, the remote plugin
-					// probably
-					// realized it was dying and had time to close the socket
-					// properly.
-					throw new RemoteDeathError(null);
-				default:
-					throw new BrowserChannelException("Invalid message type "
-							+ messageType + " received waiting for return.");
-				}
-			} catch (IOException e) {
-				throw new RemoteDeathError(e);
-			} catch (BrowserChannelException e) {
-				throw new RemoteDeathError(e);
-			}
-		} while (true);
-	}
-
-	@Override
-	public void run() {
-		try {
-			processConnection();
-		} catch (IOException e) {
-			logger.log(TreeLogger.WARN, "Client connection lost", e);
-		} catch (BrowserChannelException e) {
-			logger.log(TreeLogger.ERROR,
-					"Unrecognized command for client; closing connection", e);
-		} finally {
-			try {
-				shutdown();
-			} catch (IOException ignored) {
-			}
-			endSession();
-		}
-	}
-
-	/**
-	 * Close the connection to the browser.
-	 *
-	 * @throws IOException
-	 */
-	public void shutdown() throws IOException {
-		getDashboardNotifier().devModeSessionEnd(devModeSession);
-		QuitMessage.send(this);
-	}
-
-	/**
-	 * Creates the {@code DevModeSession} that represents the current browser
-	 * connection, sets it as the "default" session for the current thread, and
-	 * notifies a GWT Dashboard.
-	 */
-	private void createDevModeSession() {
-		devModeSession = new DevModeSession(moduleName, userAgent);
-		DevModeSession.setSessionForCurrentThread(devModeSession);
-		getDashboardNotifier().devModeSessionBegin(devModeSession);
-	}
-
-	/**
-	 * Create the requested transport and return the appropriate information so
-	 * the client can connect to the same transport.
-	 *
-	 * @param transport
-	 *            transport name to create
-	 * @return transport-specific arguments for the client to use in attaching
-	 *         to this transport
-	 */
-	private String createTransport(String transport) {
-		// TODO(jat): implement support for additional transports
-		throw new UnsupportedOperationException(
-				"No alternate transports supported");
-	}
-
-	private void handleInvokeSpecial(SessionHandlerServer handler)
-			throws IOException, BrowserChannelException {
-		final InvokeSpecialMessage ismsg = InvokeSpecialMessage.receive(this);
-		Value[] args = ismsg.getArgs();
-		ExceptionOrReturnValue retExc = null;
-		switch (ismsg.getDispatchId()) {
-		case GetProperty:
-			assert args.length == 2;
-			retExc = handler.getProperty(this, args[0].getInt(),
-					args[1].getInt());
-			break;
-		case SetProperty:
-			assert args.length == 3;
-			retExc = handler.setProperty(this, args[0].getInt(),
-					args[1].getInt(), args[2]);
-			break;
-		default:
-			throw new HostedModeException(
-					"Unexpected InvokeSpecial method " + ismsg.getDispatchId());
-		}
-		ReturnMessage.send(this, retExc);
-	}
-
-	private void init(TreeLogger initialLogger) {
-		this.logger = initialLogger;
-		ThreadGroup threadGroup = new ThreadGroup(
-				Ax.format("Code server isolated thread group #%s",
-						threadGroupCounter.getAndIncrement()));
-		Thread thread = new Thread(threadGroup, this);
-		thread.setDaemon(true);
-		thread.setName("Code server (initializing)");
-		thread.start();
-	}
-
-	/**
-	 * Select a transport from those provided by the client.
-	 *
-	 * @param transports
-	 *            array of supported transports
-	 * @return null to continue in-band, or a transport type
-	 */
-	private String selectTransport(String[] transports) {
-		// TODO(jat): add support for shared memory, others
-		return null;
 	}
 
 	// @VisibleForTesting
@@ -594,107 +563,166 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 	}
 
 	/**
-	 * Convert a JsValue into a BrowserChannel Value.
+	 * React to messages from the other side, where no return value is expected.
 	 *
-	 * @param localObjects
-	 *            lookup table for local objects -- may be null if jsval is
-	 *            known to be a primitive (including String).
-	 * @param jsval
-	 *            value to convert
-	 * @return jsval as a Value object.
+	 * @param handler
+	 * @throws RemoteDeathError
 	 */
-	Value convertFromJsValue(ServerObjectsTable localObjects,
-			JsValueOOPHM jsval) {
-		Value value = new Value();
-		if (jsval.isNull()) {
-			value.setNull();
-		} else if (jsval.isUndefined()) {
-			value.setUndefined();
-		} else if (jsval.isBoolean()) {
-			value.setBoolean(jsval.getBoolean());
-		} else if (jsval.isInt()) {
-			value.setInt(jsval.getInt());
-		} else if (jsval.isNumber()) {
-			value.setDouble(jsval.getNumber());
-		} else if (jsval.isString()) {
-			value.setString(jsval.getString());
-		} else if (jsval.isJavaScriptObject()) {
-			value.setJsObject(jsval.getJavascriptObject());
-		} else if (jsval.isWrappedJavaObject()) {
-			assert localObjects != null;
-			DispatchObject javaObj = jsval.getJavaObjectWrapper();
-			value.setJavaObject(new JavaObjectRef(localObjects.add(javaObj)));
-		} else if (jsval.isWrappedJavaFunction()) {
-			assert localObjects != null;
-			value.setJavaObject(new JavaObjectRef(
-					localObjects.add(jsval.getWrappedJavaFunction())));
-		} else {
-			throw new RuntimeException("Unknown JsValue type " + jsval);
-		}
-		return value;
+	public void reactToMessages(SessionHandlerServer handler) {
+		do {
+			try {
+				getStreamToOtherSide().flush();
+				MessageType messageType = Message
+						.readMessageType(getStreamFromOtherSide());
+				switch (messageType) {
+				case FREE_VALUE:
+					final FreeMessage freeMsg = FreeMessage.receive(this);
+					handler.freeValue(this, freeMsg.getIds());
+					break;
+				case INVOKE:
+					InvokeOnServerMessage imsg = InvokeOnServerMessage
+							.receive(this);
+					ExceptionOrReturnValue result = handler.invoke(this,
+							imsg.getThis(), imsg.getMethodDispatchId(),
+							imsg.getArgs());
+					sendFreedValues();
+					ReturnMessage.send(this, result);
+					break;
+				case INVOKE_SPECIAL:
+					handleInvokeSpecial(handler);
+					break;
+				case QUIT:
+					return;
+				default:
+					throw new RemoteDeathError(new BrowserChannelException(
+							"Invalid message type " + messageType));
+				}
+			} catch (IOException e) {
+				throw new RemoteDeathError(e);
+			} catch (BrowserChannelException e) {
+				throw new RemoteDeathError(e);
+			}
+		} while (true);
 	}
 
 	/**
-	 * Convert a BrowserChannel Value into a JsValue.
+	 * React to messages from the other side, where a return value is expected.
 	 *
-	 * @param ccl
-	 *            Compiling class loader, may be null if val is known to not be
-	 *            a Java object or exception.
-	 * @param localObjects
-	 *            table of Java objects, may be null as above.
-	 * @param val
-	 *            Value to convert
-	 * @param jsval
-	 *            JsValue object to receive converted value.
+	 * @param handler
+	 * @throws BrowserChannelException
+	 * @throws RemoteDeathError
 	 */
-	void convertToJsValue(CompilingClassLoader ccl,
-			ServerObjectsTable localObjects, Value val, JsValueOOPHM jsval) {
-		switch (val.getType()) {
-		case NULL:
-			jsval.setNull();
-			break;
-		case BOOLEAN:
-			jsval.setBoolean(val.getBoolean());
-			break;
-		case BYTE:
-			jsval.setByte(val.getByte());
-			break;
-		case CHAR:
-			jsval.setChar(val.getChar());
-			break;
-		case DOUBLE:
-			jsval.setDouble(val.getDouble());
-			break;
-		case INT:
-			jsval.setInt(val.getInt());
-			break;
-		case SHORT:
-			jsval.setShort(val.getShort());
-			break;
-		case STRING:
-			jsval.setString(val.getString());
-			break;
-		case UNDEFINED:
-			jsval.setUndefined();
-			break;
-		case JS_OBJECT:
-			jsval.setJavascriptObject(val.getJsObject());
-			break;
-		case JAVA_OBJECT:
-			assert ccl != null && localObjects != null;
-			jsval.setWrappedJavaObject(ccl,
-					localObjects.get(val.getJavaObject().getRefid()));
-			break;
+	public ReturnMessage
+			reactToMessagesWhileWaitingForReturn(SessionHandlerServer handler)
+					throws BrowserChannelException, RemoteDeathError {
+		do {
+			try {
+				getStreamToOtherSide().flush();
+				MessageType messageType = Message
+						.readMessageType(getStreamFromOtherSide());
+				switch (messageType) {
+				case FREE_VALUE:
+					final FreeMessage freeMsg = FreeMessage.receive(this);
+					handler.freeValue(this, freeMsg.getIds());
+					break;
+				case RETURN:
+					return ReturnMessage.receive(this);
+				case INVOKE:
+					InvokeOnServerMessage imsg = InvokeOnServerMessage
+							.receive(this);
+					ExceptionOrReturnValue result = handler.invoke(this,
+							imsg.getThis(), imsg.getMethodDispatchId(),
+							imsg.getArgs());
+					sendFreedValues();
+					ReturnMessage.send(this, result);
+					break;
+				case INVOKE_SPECIAL:
+					handleInvokeSpecial(handler);
+					break;
+				case QUIT:
+					// if we got an unexpected QUIT here, the remote plugin
+					// probably
+					// realized it was dying and had time to close the socket
+					// properly.
+					throw new RemoteDeathError(null);
+				default:
+					throw new BrowserChannelException("Invalid message type "
+							+ messageType + " received waiting for return.");
+				}
+			} catch (IOException e) {
+				throw new RemoteDeathError(e);
+			} catch (BrowserChannelException e) {
+				throw new RemoteDeathError(e);
+			}
+		} while (true);
+	}
+
+	@Override
+	public void run() {
+		try {
+			processConnection();
+		} catch (IOException e) {
+			logger.log(TreeLogger.WARN, "Client connection lost", e);
+		} catch (BrowserChannelException e) {
+			logger.log(TreeLogger.ERROR,
+					"Unrecognized command for client; closing connection", e);
+		} finally {
+			try {
+				shutdown();
+			} catch (IOException ignored) {
+			}
+			endSession();
 		}
 	}
 
 	/**
-	 * Returns the {@code DashboardNotifier} used to send notices to a dashboard
-	 * service.
+	 * Select a transport from those provided by the client.
+	 *
+	 * @param transports
+	 *            array of supported transports
+	 * @return null to continue in-band, or a transport type
 	 */
-	// @VisibleForTesting
-	DashboardNotifier getDashboardNotifier() {
-		return DashboardNotifierFactory.getNotifier();
+	private String selectTransport(String[] transports) {
+		// TODO(jat): add support for shared memory, others
+		return null;
+	}
+
+	/**
+	 * Close the connection to the browser.
+	 *
+	 * @throws IOException
+	 */
+	public void shutdown() throws IOException {
+		getDashboardNotifier().devModeSessionEnd(devModeSession);
+		QuitMessage.send(this);
+	}
+
+	private static class ServerObjectRefFactory implements ObjectRefFactory {
+		private final RemoteObjectTable<JsObjectRef> remoteObjectTable;
+
+		public ServerObjectRefFactory() {
+			remoteObjectTable = new RemoteObjectTable<JsObjectRef>();
+		}
+
+		@Override
+		public JavaObjectRef getJavaObjectRef(int refId) {
+			return new JavaObjectRef(refId);
+		}
+
+		@Override
+		public JsObjectRef getJsObjectRef(int refId) {
+			JsObjectRef objectRef = remoteObjectTable.getRemoteObjectRef(refId);
+			if (objectRef == null) {
+				objectRef = new JsObjectRef(refId);
+				remoteObjectTable.putRemoteObjectRef(refId, objectRef);
+			}
+			return objectRef;
+		}
+
+		@Override
+		public Set<Integer> getRefIdsForCleanup() {
+			return remoteObjectTable.getRefIdsForCleanup();
+		}
 	}
 
 	/**
@@ -739,33 +767,5 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 
 		public abstract void unloadModule(BrowserChannelServer channel,
 				String moduleName);
-	}
-
-	private static class ServerObjectRefFactory implements ObjectRefFactory {
-		private final RemoteObjectTable<JsObjectRef> remoteObjectTable;
-
-		public ServerObjectRefFactory() {
-			remoteObjectTable = new RemoteObjectTable<JsObjectRef>();
-		}
-
-		@Override
-		public JavaObjectRef getJavaObjectRef(int refId) {
-			return new JavaObjectRef(refId);
-		}
-
-		@Override
-		public JsObjectRef getJsObjectRef(int refId) {
-			JsObjectRef objectRef = remoteObjectTable.getRemoteObjectRef(refId);
-			if (objectRef == null) {
-				objectRef = new JsObjectRef(refId);
-				remoteObjectTable.putRemoteObjectRef(refId, objectRef);
-			}
-			return objectRef;
-		}
-
-		@Override
-		public Set<Integer> getRefIdsForCleanup() {
-			return remoteObjectTable.getRefIdsForCleanup();
-		}
 	}
 }

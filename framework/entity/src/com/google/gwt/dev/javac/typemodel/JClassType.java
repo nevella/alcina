@@ -33,6 +33,24 @@ import com.google.gwt.dev.util.collect.HashSet;
  */
 public abstract class JClassType
 		implements com.google.gwt.core.ext.typeinfo.JClassType {
+	/**
+	 * Returns all of the superclasses and superinterfaces for a given type
+	 * including the type itself. The returned set maintains an internal
+	 * breadth-first ordering of the type, followed by its interfaces (and their
+	 * super-interfaces), then the supertype and its interfaces, and so on.
+	 */
+	protected static Set<JClassType>
+			getFlattenedSuperTypeHierarchy(JClassType type) {
+		Set<JClassType> flattened = type.flattenedSupertypes;
+		if (flattened == null) {
+			flattened = new LinkedHashSet<JClassType>();
+			getFlattenedSuperTypeHierarchyRecursive(type, flattened);
+			// flattened.size() > 1 for all types other than Object
+			type.flattenedSupertypes = Collections.unmodifiableSet(flattened);
+		}
+		return flattened;
+	}
+
 	private static void getFlattenedSuperTypeHierarchyRecursive(JClassType type,
 			Set<JClassType> typesSeen) {
 		if (typesSeen.contains(type)) {
@@ -52,24 +70,6 @@ public abstract class JClassType
 	}
 
 	/**
-	 * Returns all of the superclasses and superinterfaces for a given type
-	 * including the type itself. The returned set maintains an internal
-	 * breadth-first ordering of the type, followed by its interfaces (and their
-	 * super-interfaces), then the supertype and its interfaces, and so on.
-	 */
-	protected static Set<JClassType>
-			getFlattenedSuperTypeHierarchy(JClassType type) {
-		Set<JClassType> flattened = type.flattenedSupertypes;
-		if (flattened == null) {
-			flattened = new LinkedHashSet<JClassType>();
-			getFlattenedSuperTypeHierarchyRecursive(type, flattened);
-			// flattened.size() > 1 for all types other than Object
-			type.flattenedSupertypes = Collections.unmodifiableSet(flattened);
-		}
-		return flattened;
-	}
-
-	/**
 	 * Cached set of supertypes for this type (including itself). If null, the
 	 * set has not been calculated yet.
 	 */
@@ -82,6 +82,20 @@ public abstract class JClassType
 	 * the class will be enhanced.
 	 */
 	private boolean isEnhanced = false;
+
+	protected abstract void acceptSubtype(JClassType me);
+
+	abstract void addConstructor(JConstructor ctor);
+
+	abstract void addField(JField field);
+
+	abstract void addImplementedInterface(JClassType intf);
+
+	abstract void addMethod(JMethod method);
+
+	abstract void addModifierBits(int bits);
+
+	abstract void addNestedType(JClassType type);
 
 	@Override
 	public JParameterizedType asParameterizationOf(
@@ -173,6 +187,8 @@ public abstract class JClassType
 	@Override
 	public abstract JClassType findNestedType(String typeName);
 
+	abstract JClassType findNestedTypeImpl(String[] typeName, int index);
+
 	@Override
 	public abstract <T extends Annotation> T
 			getAnnotation(Class<T> annotationClass);
@@ -233,6 +249,21 @@ public abstract class JClassType
 	@Override
 	public abstract JMethod[] getInheritableMethods();
 
+	protected abstract void getInheritableMethodsOnSuperclassesAndThisClass(
+			Map<String, JMethod> methodsBySignature);
+
+	/**
+	 * Gets the methods declared in interfaces that this type extends. If this
+	 * type is a class, its own methods are not added. If this type is an
+	 * interface, its own methods are added. Used internally by
+	 * {@link #getOverridableMethods()}.
+	 *
+	 * @param methodsBySignature
+	 */
+	protected abstract void
+			getInheritableMethodsOnSuperinterfacesAndMaybeThisInterface(
+					Map<String, JMethod> methodsBySignature);
+
 	@Override
 	public abstract String getJNISignature();
 
@@ -251,6 +282,8 @@ public abstract class JClassType
 	 */
 	@Override
 	public abstract JMethod[] getMethods();
+
+	protected abstract int getModifierBits();
 
 	@Override
 	public abstract String getName();
@@ -308,6 +341,17 @@ public abstract class JClassType
 
 	@Override
 	public abstract String getSimpleSourceName();
+
+	/**
+	 * Returns either the substitution of this type based on the parameterized
+	 * type or this instance.
+	 *
+	 * @param parameterizedType
+	 * @return either the substitution of this type based on the parameterized
+	 *         type or this instance
+	 */
+	abstract JClassType
+			getSubstitutedType(JParameterizedType parameterizedType);
 
 	/**
 	 * Returns all subtypes for this type. This means various things:
@@ -470,6 +514,10 @@ public abstract class JClassType
 	@Override
 	public abstract JClassType isInterface();
 
+	protected JMaybeParameterizedType isMaybeParameterizedType() {
+		return null;
+	}
+
 	/**
 	 * Tests if this type is contained within another type.
 	 *
@@ -514,6 +562,20 @@ public abstract class JClassType
 	@Override
 	public abstract JWildcardType isWildcard();
 
+	abstract void notifySuperTypes();
+
+	/**
+	 * Tells this type's superclasses and superinterfaces about it.
+	 */
+	protected abstract void notifySuperTypesOf(JClassType me);
+
+	/**
+	 * Removes references to this instance from all of its super types.
+	 */
+	abstract void removeFromSupertypes();
+
+	protected abstract void removeSubtype(JClassType me);
+
 	/**
 	 * Indicates that the type may be enhanced on the server to contain extra
 	 * fields that are unknown to client code.
@@ -525,72 +587,10 @@ public abstract class JClassType
 		this.isEnhanced = true;
 	}
 
+	abstract void setSuperclass(JClassType type);
+
 	@Override
 	public String toString() {
 		return this.getQualifiedSourceName();
 	}
-
-	protected abstract void acceptSubtype(JClassType me);
-
-	protected abstract void getInheritableMethodsOnSuperclassesAndThisClass(
-			Map<String, JMethod> methodsBySignature);
-
-	/**
-	 * Gets the methods declared in interfaces that this type extends. If this
-	 * type is a class, its own methods are not added. If this type is an
-	 * interface, its own methods are added. Used internally by
-	 * {@link #getOverridableMethods()}.
-	 *
-	 * @param methodsBySignature
-	 */
-	protected abstract void
-			getInheritableMethodsOnSuperinterfacesAndMaybeThisInterface(
-					Map<String, JMethod> methodsBySignature);
-
-	protected abstract int getModifierBits();
-
-	protected JMaybeParameterizedType isMaybeParameterizedType() {
-		return null;
-	}
-
-	/**
-	 * Tells this type's superclasses and superinterfaces about it.
-	 */
-	protected abstract void notifySuperTypesOf(JClassType me);
-
-	protected abstract void removeSubtype(JClassType me);
-
-	abstract void addConstructor(JConstructor ctor);
-
-	abstract void addField(JField field);
-
-	abstract void addImplementedInterface(JClassType intf);
-
-	abstract void addMethod(JMethod method);
-
-	abstract void addModifierBits(int bits);
-
-	abstract void addNestedType(JClassType type);
-
-	abstract JClassType findNestedTypeImpl(String[] typeName, int index);
-
-	/**
-	 * Returns either the substitution of this type based on the parameterized
-	 * type or this instance.
-	 *
-	 * @param parameterizedType
-	 * @return either the substitution of this type based on the parameterized
-	 *         type or this instance
-	 */
-	abstract JClassType
-			getSubstitutedType(JParameterizedType parameterizedType);
-
-	abstract void notifySuperTypes();
-
-	/**
-	 * Removes references to this instance from all of its super types.
-	 */
-	abstract void removeFromSupertypes();
-
-	abstract void setSuperclass(JClassType type);
 }

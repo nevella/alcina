@@ -37,11 +37,6 @@ import javax.servlet.http.HttpServletResponse;
 public class ApplicationCacheManifestServlet extends HttpServlet {
 	private static final long serialVersionUID = 6970120146736639472L;
 
-	@Override
-	public void log(String msg) {
-		// super.log(msg);
-	}
-
 	protected String getCacheManifest(HttpServletRequest req,
 			HttpServletResponse resp) throws ServletException {
 		String cacheManifest = null;
@@ -70,6 +65,11 @@ public class ApplicationCacheManifestServlet extends HttpServlet {
 					e);
 		}
 		return cacheManifest;
+	}
+
+	@Override
+	public void log(String msg) {
+		// super.log(msg);
 	}
 
 	@Override

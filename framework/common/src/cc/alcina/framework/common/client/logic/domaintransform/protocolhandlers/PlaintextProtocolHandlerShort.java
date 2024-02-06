@@ -22,6 +22,12 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 
 	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\ndte:";
 
+	private static String escape(String str) {
+		return str == null
+				|| (str.indexOf("\n") == -1 && str.indexOf("\\") == -1) ? str
+						: str.replace("\\", "\\\\").replace("\n", "\\n");
+	}
+
 	public static String unescape(String str) {
 		if (str == null) {
 			return null;
@@ -45,12 +51,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		return sb.toString();
 	}
 
-	private static String escape(String str) {
-		return str == null
-				|| (str.indexOf("\n") == -1 && str.indexOf("\\") == -1) ? str
-						: str.replace("\\", "\\\\").replace("\n", "\\n");
-	}
-
 	private SimpleStringParser asyncParser = null;
 
 	private StringBuilder stringLookupBuilder;
@@ -58,6 +58,14 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 	private LinkedHashMap<String, String> stringLookup0;
 
 	private LinkedHashMap<String, String> reverseStringLookup;
+
+	private void appendString(String string, StringBuffer sb) {
+		LinkedHashMap<String, String> stringLookup = ensureStringLookup();
+		if (!stringLookup.containsKey(string)) {
+			stringLookup.put(string, String.valueOf(stringLookup.size()));
+		}
+		sb.append(stringLookup.get(string));
+	}
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
@@ -126,6 +134,17 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		return s;
 	}
 
+	private LinkedHashMap<String, String> ensureStringLookup() {
+		if (stringLookup0 == null) {
+			stringLookupBuilder = new StringBuilder();
+			stringLookupBuilder.append(START_OF_STRING_TABLE);
+			stringLookup0 = new LinkedHashMap<String, String>();
+			stringLookup0.put(null, String.valueOf(0));
+			stringLookup0.put("", String.valueOf(1));
+		}
+		return stringLookup0;
+	}
+
 	@Override
 	public StringBuffer finishSerialization(StringBuffer sb) {
 		// table
@@ -141,67 +160,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		sb1.append("\n");
 		sb1.append(sb);
 		return sb1;
-	}
-
-	public String getDomainTransformEventMarker() {
-		return DOMAIN_TRANSFORM_EVENT_MARKER;
-	}
-
-	public int getOffset() {
-		return asyncParser == null ? 0 : asyncParser.getOffset();
-	}
-
-	public String handlesVersion() {
-		return VERSION;
-	}
-
-	public void maybeDeserializeStringLookup(SimpleStringParser p) {
-		String s;
-		if (reverseStringLookup == null) {
-			s = p.read(START_OF_STRING_TABLE, "\n\n");
-			reverseStringLookup = new LinkedHashMap<String, String>();
-			int idx = 0;
-			reverseStringLookup.put(String.valueOf(idx++), null);
-			reverseStringLookup.put(String.valueOf(idx++), "");
-			for (String value : s.split("\n")) {
-				reverseStringLookup
-						.put(String.valueOf(reverseStringLookup.size()), value);
-			}
-		}
-	}
-
-	public String serialize(List<DomainTransformEvent> events) {
-		StringBuffer sb2 = new StringBuffer();
-		StringBuffer sb1 = new StringBuffer();
-		int i = 0;
-		for (DomainTransformEvent dte : events) {
-			if (++i % 200 == 0) {
-				sb2.append(sb1.toString());
-				sb1 = new StringBuffer();
-			}
-			appendTo(dte, sb1);
-		}
-		sb2.append(sb1.toString());
-		return finishSerialization(sb2).toString();
-	}
-
-	private void appendString(String string, StringBuffer sb) {
-		LinkedHashMap<String, String> stringLookup = ensureStringLookup();
-		if (!stringLookup.containsKey(string)) {
-			stringLookup.put(string, String.valueOf(stringLookup.size()));
-		}
-		sb.append(stringLookup.get(string));
-	}
-
-	private LinkedHashMap<String, String> ensureStringLookup() {
-		if (stringLookup0 == null) {
-			stringLookupBuilder = new StringBuilder();
-			stringLookupBuilder.append(START_OF_STRING_TABLE);
-			stringLookup0 = new LinkedHashMap<String, String>();
-			stringLookup0.put(null, String.valueOf(0));
-			stringLookup0.put("", String.valueOf(1));
-		}
-		return stringLookup0;
 	}
 
 	/*
@@ -245,7 +203,49 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		return dte;
 	}
 
+	public String getDomainTransformEventMarker() {
+		return DOMAIN_TRANSFORM_EVENT_MARKER;
+	}
+
+	public int getOffset() {
+		return asyncParser == null ? 0 : asyncParser.getOffset();
+	}
+
 	private String getString(String key) {
 		return reverseStringLookup.get(key);
+	}
+
+	public String handlesVersion() {
+		return VERSION;
+	}
+
+	public void maybeDeserializeStringLookup(SimpleStringParser p) {
+		String s;
+		if (reverseStringLookup == null) {
+			s = p.read(START_OF_STRING_TABLE, "\n\n");
+			reverseStringLookup = new LinkedHashMap<String, String>();
+			int idx = 0;
+			reverseStringLookup.put(String.valueOf(idx++), null);
+			reverseStringLookup.put(String.valueOf(idx++), "");
+			for (String value : s.split("\n")) {
+				reverseStringLookup
+						.put(String.valueOf(reverseStringLookup.size()), value);
+			}
+		}
+	}
+
+	public String serialize(List<DomainTransformEvent> events) {
+		StringBuffer sb2 = new StringBuffer();
+		StringBuffer sb1 = new StringBuffer();
+		int i = 0;
+		for (DomainTransformEvent dte : events) {
+			if (++i % 200 == 0) {
+				sb2.append(sb1.toString());
+				sb1 = new StringBuffer();
+			}
+			appendTo(dte, sb1);
+		}
+		sb2.append(sb1.toString());
+		return finishSerialization(sb2).toString();
 	}
 }

@@ -90,6 +90,14 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 
 	private Class onlyAssignableFrom;
 
+	boolean assignableFrom(UnitType type) {
+		if (onlyAssignableFrom != null) {
+			return onlyAssignableFrom.isAssignableFrom(type.clazz());
+		} else {
+			return true;
+		}
+	}
+
 	public Action getAction() {
 		return this.action;
 	}
@@ -112,6 +120,59 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 
 	public boolean isTest() {
 		return this.test;
+	}
+
+	private void removeFilter0FilterMethod(UnitType unitType, Type... types) {
+		ClassOrInterfaceDeclaration decl = unitType.getDeclaration();
+		List<MethodDeclaration> methods = decl.getMethods();
+		for (MethodDeclaration method : methods) {
+			for (Type type : types) {
+				switch (type) {
+				case DomainCriterionHandler:
+					if (method.getNameAsString().equals("getFilter")
+							&& method.getType().toString()
+									.contains("DomainFilter")
+							&& method.toString()
+									.contains("return getFilter0(sc);")) {
+						unitType.dirty();
+						method.remove();
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
+	}
+
+	private void removeHandlesMethod(UnitType unitType, Type... types) {
+		ClassOrInterfaceDeclaration decl = unitType.getDeclaration();
+		List<MethodDeclaration> methods = decl.getMethods();
+		for (MethodDeclaration method : methods) {
+			for (Type type : types) {
+				switch (type) {
+				case DomainCriterionHandler:
+					if (method.getNameAsString()
+							.equals("handlesSearchCriterion")
+							&& !method.isFinal() && !decl.getNameAsString()
+									.equals("DomainCriterionHandler")) {
+						unitType.dirty();
+						method.remove();
+					}
+					break;
+				case BasePlaceTokenizer:
+					if (method.getNameAsString().equals("getTokenizedClass")
+							&& !decl.getNameAsString().matches(
+									"(BasePlaceTokenizer|BindablePlaceTokenizer)")) {
+						unitType.dirty();
+						method.remove();
+					}
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
 	}
 
 	@Override
@@ -192,72 +253,11 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		this.test = test;
 	}
 
-	private void removeFilter0FilterMethod(UnitType unitType, Type... types) {
-		ClassOrInterfaceDeclaration decl = unitType.getDeclaration();
-		List<MethodDeclaration> methods = decl.getMethods();
-		for (MethodDeclaration method : methods) {
-			for (Type type : types) {
-				switch (type) {
-				case DomainCriterionHandler:
-					if (method.getNameAsString().equals("getFilter")
-							&& method.getType().toString()
-									.contains("DomainFilter")
-							&& method.toString()
-									.contains("return getFilter0(sc);")) {
-						unitType.dirty();
-						method.remove();
-					}
-					break;
-				default:
-					throw new UnsupportedOperationException();
-				}
-			}
-		}
-	}
-
-	private void removeHandlesMethod(UnitType unitType, Type... types) {
-		ClassOrInterfaceDeclaration decl = unitType.getDeclaration();
-		List<MethodDeclaration> methods = decl.getMethods();
-		for (MethodDeclaration method : methods) {
-			for (Type type : types) {
-				switch (type) {
-				case DomainCriterionHandler:
-					if (method.getNameAsString()
-							.equals("handlesSearchCriterion")
-							&& !method.isFinal() && !decl.getNameAsString()
-									.equals("DomainCriterionHandler")) {
-						unitType.dirty();
-						method.remove();
-					}
-					break;
-				case BasePlaceTokenizer:
-					if (method.getNameAsString().equals("getTokenizedClass")
-							&& !decl.getNameAsString().matches(
-									"(BasePlaceTokenizer|BindablePlaceTokenizer)")) {
-						unitType.dirty();
-						method.remove();
-					}
-					break;
-				default:
-					throw new UnsupportedOperationException();
-				}
-			}
-		}
-	}
-
 	private void updateTwoKeyAnnotations() {
 		compUnits.declarations.values().stream()
 				.filter(dec -> dec.hasFlag(Type.TwoKeyRegistration))
 				.filter(this::assignableFrom).forEach(dec -> SourceMods
 						.removeRedundantRegistrationAnnotation(dec));
-	}
-
-	boolean assignableFrom(UnitType type) {
-		if (onlyAssignableFrom != null) {
-			return onlyAssignableFrom.isAssignableFrom(type.clazz());
-		} else {
-			return true;
-		}
 	}
 
 	public enum Action {
@@ -269,52 +269,6 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 		public DeclarationVisitor(CompilationUnits units,
 				CompilationUnitWrapper compUnit) {
 			super(units, compUnit);
-		}
-
-		@Override
-		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
-			try {
-				visit0(node, arg);
-			} catch (VerifyError ve) {
-				Ax.out("Verify error: %s", node.getName());
-			}
-		}
-
-		private boolean isBasePlaceTokenizer(UnitType type) {
-			try {
-				return type.isAssignableFrom(BasePlaceTokenizer.class);
-			} catch (Exception e) {
-				Ax.simpleExceptionOut(e);
-				return false;
-			}
-		}
-
-		private boolean isDomainStoreHandler(UnitType type) {
-			try {
-				return type.isAssignableFrom(DomainCriterionHandler.class);
-			} catch (Exception e) {
-				Ax.simpleExceptionOut(e);
-				return false;
-			}
-		}
-
-		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
-			if (!node.isInterface()) {
-				UnitType type = new UnitType(unit, node);
-				String nameAsString = type.getDeclaration().getNameAsString();
-				type.setDeclaration(node);
-				unit.declarations.add(type);
-				if (hasTwoKeyAnnotation(node)) {
-					type.setFlag(Type.TwoKeyRegistration);
-				}
-				if (isDomainStoreHandler(type)) {
-					type.setFlag(Type.DomainCriterionHandler);
-				}
-				if (isBasePlaceTokenizer(type)) {
-					type.setFlag(Type.BasePlaceTokenizer);
-				}
-			}
-			super.visit(node, arg);
 		}
 
 		boolean hasTwoKeyAnnotation(NodeWithAnnotations<?> decl) {
@@ -340,6 +294,52 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				}
 			}
 			return false;
+		}
+
+		private boolean isBasePlaceTokenizer(UnitType type) {
+			try {
+				return type.isAssignableFrom(BasePlaceTokenizer.class);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+				return false;
+			}
+		}
+
+		private boolean isDomainStoreHandler(UnitType type) {
+			try {
+				return type.isAssignableFrom(DomainCriterionHandler.class);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+				return false;
+			}
+		}
+
+		@Override
+		public void visit(ClassOrInterfaceDeclaration node, Void arg) {
+			try {
+				visit0(node, arg);
+			} catch (VerifyError ve) {
+				Ax.out("Verify error: %s", node.getName());
+			}
+		}
+
+		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
+			if (!node.isInterface()) {
+				UnitType type = new UnitType(unit, node);
+				String nameAsString = type.getDeclaration().getNameAsString();
+				type.setDeclaration(node);
+				unit.declarations.add(type);
+				if (hasTwoKeyAnnotation(node)) {
+					type.setFlag(Type.TwoKeyRegistration);
+				}
+				if (isDomainStoreHandler(type)) {
+					type.setFlag(Type.DomainCriterionHandler);
+				}
+				if (isBasePlaceTokenizer(type)) {
+					type.setFlag(Type.BasePlaceTokenizer);
+				}
+			}
+			super.visit(node, arg);
 		}
 	}
 

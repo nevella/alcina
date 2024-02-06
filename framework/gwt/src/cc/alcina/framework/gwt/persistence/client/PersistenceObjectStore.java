@@ -12,10 +12,16 @@ public interface PersistenceObjectStore {
 	public abstract void add(String key, String value,
 			AsyncCallback<Integer> idCallback);
 
+	void clear(AsyncCallback<Void> AsyncCallback);
+
+	void drop(AsyncCallback<Void> AsyncCallback);
+
 	public abstract void get(List<String> keys,
 			AsyncCallback<StringMap> valueCallback);
 
 	public abstract void get(String key, AsyncCallback<String> valueCallback);
+
+	void getIdRange(AsyncCallback<IntPair> completedCallback);
 
 	public abstract void getKeysPrefixedBy(String keyPrefix,
 			AsyncCallback<List<String>> completedCallback);
@@ -38,12 +44,6 @@ public interface PersistenceObjectStore {
 
 	public abstract void remove(String key,
 			AsyncCallback<Integer> valueCallback);
-
-	void clear(AsyncCallback<Void> AsyncCallback);
-
-	void drop(AsyncCallback<Void> AsyncCallback);
-
-	void getIdRange(AsyncCallback<IntPair> completedCallback);
 
 	void removeIdRange(IntPair range, AsyncCallback<Void> completedCallback);
 }

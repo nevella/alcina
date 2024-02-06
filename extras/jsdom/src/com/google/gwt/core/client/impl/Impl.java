@@ -61,6 +61,43 @@ public final class Impl {
 
 	private static boolean firstTimeClient = true;
 
+	private static native Object apply(Object jsFunction, Object thisObj,
+			Object args) /*-{
+    if (@com.google.gwt.core.client.GWT::isScript()()) {
+      return jsFunction.apply(thisObj, args);
+    } else {
+      var _ = jsFunction.apply(thisObj, args);
+      if (_ != null) {
+        // Wrap for Development Mode (unwrapped in #entry())
+        _ = {
+          val : _
+        };
+      }
+      return _;
+    }
+	}-*/;
+
+	/**
+	 * Called by ModuleSpace in Development Mode when running onModuleLoads.
+	 */
+	private static boolean enter() {
+		assert entryDepth >= 0 : "Negative entryDepth value at entry "
+				+ entryDepth;
+		if (GWT.isScript() && entryDepth != 0) {
+			double now = Duration.currentTimeMillis();
+			if (now - watchdogEntryDepthLastScheduled > WATCHDOG_ENTRY_DEPTH_CHECK_INTERVAL_MS) {
+				watchdogEntryDepthLastScheduled = now;
+				watchdogEntryDepthTimerId = watchdogEntryDepthSchedule();
+			}
+		}
+		// We want to disable some actions in the reentrant case
+		if (entryDepth++ == 0) {
+			SchedulerImpl.INSTANCE.flushEntryCommands();
+			return true;
+		}
+		return false;
+	}
+
 	/**
 	 * This method should be used whenever GWT code is entered from a JS context
 	 * and there is no GWT code in the same module on the call stack. Examples
@@ -97,6 +134,80 @@ public final class Impl {
       }
     };
 	}-*/;
+
+	/**
+	 * Implements {@link #entry(JavaScriptObject)}.
+	 */
+	private static Object entry0(Object jsFunction, Object thisObj, Object args)
+			throws Throwable {
+		boolean initialEntry = enter();
+		try {
+			if (initialEntry) {
+				boolean stopObserving = true;
+				if (firstTimeClient) {
+					if (GWT.isScript()) {
+						LocalDom.initalize();
+						stopObserving = false;
+					}
+					firstTimeClient = false;
+				}
+				if (stopObserving) {
+					LocalDom.getRemoteMutations()
+							.syncMutationsAndStopObserving();
+				}
+			}
+			/*
+			 * Always invoke the UCE if we have one so that the exception never
+			 * percolates up to the browser's event loop, even in a reentrant
+			 * situation.
+			 */
+			if (GWT.getUncaughtExceptionHandler() != null) {
+				/*
+				 * This try block is guarded by the if statement so that we
+				 * don't molest the exception object traveling up the stack
+				 * unless we're capable of doing something useful with it.
+				 */
+				try {
+					return apply(jsFunction, thisObj, args);
+				} catch (Throwable t) {
+					reportUncaughtException(t);
+					return undefined();
+				}
+			} else {
+				// Can't handle any exceptions, let them percolate normally
+				return apply(jsFunction, thisObj, args);
+			}
+			/*
+			 * DO NOT ADD catch(Throwable t) here, it would always wrap the
+			 * thrown value. Instead, entry() has a general catch-all block.
+			 */
+		} finally {
+			exit(initialEntry);
+			if (initialEntry) {
+				LocalDom.getRemoteMutations().startObserving();
+			}
+		}
+	}
+
+	/**
+	 * Called by ModuleSpace in Development Mode when running onModuleLoads.
+	 */
+	private static void exit(boolean initialEntry) {
+		if (initialEntry) {
+			SchedulerImpl.INSTANCE.flushFinallyCommands();
+		}
+		// Decrement after we call flush
+		entryDepth--;
+		assert entryDepth >= 0 : "Negative entryDepth value at exit "
+				+ entryDepth;
+		if (initialEntry) {
+			assert entryDepth == 0 : "Depth not 0" + entryDepth;
+			if (GWT.isScript() && watchdogEntryDepthTimerId != -1) {
+				watchdogEntryDepthCancel(watchdogEntryDepthTimerId);
+				watchdogEntryDepthTimerId = -1;
+			}
+		}
+	}
 
 	public static native String getHostPageBaseURL() /*-{
     var s = $doc.location.href;
@@ -199,6 +310,18 @@ public final class Impl {
   }
   }-*/;
 
+	private static native void reportToBrowser(Object e) /*-{
+    $wnd.setTimeout(function() {
+      throw e;
+    }, 0);
+	}-*/;
+
+	private static void reportToBrowser(Throwable e) {
+		reportToBrowser(e instanceof JavaScriptException
+				? ((JavaScriptException) e).getThrown()
+				: e);
+	}
+
 	public static void reportUncaughtException(Throwable e) {
 		if (Impl.uncaughtExceptionHandlerForTest != null) {
 			Impl.uncaughtExceptionHandlerForTest.onUncaughtException(e);
@@ -238,129 +361,6 @@ public final class Impl {
 	public static void setUncaughtExceptionHandlerForTest(
 			UncaughtExceptionHandler handler) {
 		uncaughtExceptionHandlerForTest = handler;
-	}
-
-	private static native Object apply(Object jsFunction, Object thisObj,
-			Object args) /*-{
-    if (@com.google.gwt.core.client.GWT::isScript()()) {
-      return jsFunction.apply(thisObj, args);
-    } else {
-      var _ = jsFunction.apply(thisObj, args);
-      if (_ != null) {
-        // Wrap for Development Mode (unwrapped in #entry())
-        _ = {
-          val : _
-        };
-      }
-      return _;
-    }
-	}-*/;
-
-	/**
-	 * Called by ModuleSpace in Development Mode when running onModuleLoads.
-	 */
-	private static boolean enter() {
-		assert entryDepth >= 0 : "Negative entryDepth value at entry "
-				+ entryDepth;
-		if (GWT.isScript() && entryDepth != 0) {
-			double now = Duration.currentTimeMillis();
-			if (now - watchdogEntryDepthLastScheduled > WATCHDOG_ENTRY_DEPTH_CHECK_INTERVAL_MS) {
-				watchdogEntryDepthLastScheduled = now;
-				watchdogEntryDepthTimerId = watchdogEntryDepthSchedule();
-			}
-		}
-		// We want to disable some actions in the reentrant case
-		if (entryDepth++ == 0) {
-			SchedulerImpl.INSTANCE.flushEntryCommands();
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Implements {@link #entry(JavaScriptObject)}.
-	 */
-	private static Object entry0(Object jsFunction, Object thisObj, Object args)
-			throws Throwable {
-		boolean initialEntry = enter();
-		try {
-			if (initialEntry) {
-				boolean stopObserving = true;
-				if (firstTimeClient) {
-					if (GWT.isScript()) {
-						LocalDom.initalize();
-						stopObserving = false;
-					}
-					firstTimeClient = false;
-				}
-				if (stopObserving) {
-					LocalDom.getRemoteMutations()
-							.syncMutationsAndStopObserving();
-				}
-			}
-			/*
-			 * Always invoke the UCE if we have one so that the exception never
-			 * percolates up to the browser's event loop, even in a reentrant
-			 * situation.
-			 */
-			if (GWT.getUncaughtExceptionHandler() != null) {
-				/*
-				 * This try block is guarded by the if statement so that we
-				 * don't molest the exception object traveling up the stack
-				 * unless we're capable of doing something useful with it.
-				 */
-				try {
-					return apply(jsFunction, thisObj, args);
-				} catch (Throwable t) {
-					reportUncaughtException(t);
-					return undefined();
-				}
-			} else {
-				// Can't handle any exceptions, let them percolate normally
-				return apply(jsFunction, thisObj, args);
-			}
-			/*
-			 * DO NOT ADD catch(Throwable t) here, it would always wrap the
-			 * thrown value. Instead, entry() has a general catch-all block.
-			 */
-		} finally {
-			exit(initialEntry);
-			if (initialEntry) {
-				LocalDom.getRemoteMutations().startObserving();
-			}
-		}
-	}
-
-	/**
-	 * Called by ModuleSpace in Development Mode when running onModuleLoads.
-	 */
-	private static void exit(boolean initialEntry) {
-		if (initialEntry) {
-			SchedulerImpl.INSTANCE.flushFinallyCommands();
-		}
-		// Decrement after we call flush
-		entryDepth--;
-		assert entryDepth >= 0 : "Negative entryDepth value at exit "
-				+ entryDepth;
-		if (initialEntry) {
-			assert entryDepth == 0 : "Depth not 0" + entryDepth;
-			if (GWT.isScript() && watchdogEntryDepthTimerId != -1) {
-				watchdogEntryDepthCancel(watchdogEntryDepthTimerId);
-				watchdogEntryDepthTimerId = -1;
-			}
-		}
-	}
-
-	private static native void reportToBrowser(Object e) /*-{
-    $wnd.setTimeout(function() {
-      throw e;
-    }, 0);
-	}-*/;
-
-	private static void reportToBrowser(Throwable e) {
-		reportToBrowser(e instanceof JavaScriptException
-				? ((JavaScriptException) e).getThrown()
-				: e);
 	}
 
 	private static native Object undefined() /*-{

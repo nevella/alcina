@@ -96,6 +96,14 @@ public class Multiset<K, V extends Set> implements Serializable {
 		return this.map.containsKey(key);
 	}
 
+	protected Set createSet() {
+		return DomainCollections.get().createLightSet();
+	}
+
+	protected void createTopMap() {
+		map = DomainCollections.get().createUnsortedMap();
+	}
+
 	public Set<Entry<K, V>> entrySet() {
 		return this.map.entrySet();
 	}
@@ -154,13 +162,5 @@ public class Multiset<K, V extends Set> implements Serializable {
 
 	public Collection<V> values() {
 		return this.map.values();
-	}
-
-	protected Set createSet() {
-		return DomainCollections.get().createLightSet();
-	}
-
-	protected void createTopMap() {
-		map = DomainCollections.get().createUnsortedMap();
 	}
 }

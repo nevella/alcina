@@ -12,17 +12,6 @@ import com.google.gwt.user.client.Event.NativePreviewHandler;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class GlobalKeyboardShortcuts implements NativePreviewHandler {
-	private List<GlobalKeyboardShortcuts.Handler> handlers = new ArrayList<>();
-
-	public void deltaHandler(GlobalKeyboardShortcuts.Handler handler,
-			boolean add) {
-		if (add) {
-			handlers.add(handler);
-		} else {
-			handlers.remove(handler);
-		}
-	}
-
 	public static boolean eventFiredFromInputish(EventTarget eventTarget) {
 		try {
 			Element elem = Element.as(eventTarget);
@@ -47,6 +36,17 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 			Ax.simpleExceptionOut(e);
 		}
 		return false;
+	}
+
+	private List<GlobalKeyboardShortcuts.Handler> handlers = new ArrayList<>();
+
+	public void deltaHandler(GlobalKeyboardShortcuts.Handler handler,
+			boolean add) {
+		if (add) {
+			handlers.add(handler);
+		} else {
+			handlers.remove(handler);
+		}
 	}
 
 	@Override

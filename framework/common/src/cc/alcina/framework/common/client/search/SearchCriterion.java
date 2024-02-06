@@ -141,6 +141,14 @@ public abstract class SearchCriterion extends Bindable
 		this.targetPropertyName = propertyName;
 	}
 
+	protected String targetPropertyNameWithTable() {
+		String targetPropertyName = getTargetPropertyName();
+		if (targetPropertyName == null || targetPropertyName.contains(".")) {
+			return targetPropertyName;
+		}
+		return "t." + targetPropertyName;
+	}
+
 	public String toHtml() {
 		return toString();
 	}
@@ -148,14 +156,6 @@ public abstract class SearchCriterion extends Bindable
 	public SearchCriterion withOperator(StandardSearchOperator operator) {
 		setOperator(operator);
 		return this;
-	}
-
-	protected String targetPropertyNameWithTable() {
-		String targetPropertyName = getTargetPropertyName();
-		if (targetPropertyName == null || targetPropertyName.contains(".")) {
-			return targetPropertyName;
-		}
-		return "t." + targetPropertyName;
 	}
 
 	/**

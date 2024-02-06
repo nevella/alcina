@@ -74,10 +74,6 @@ public class RemoteLogPersister {
 		}
 	}
 
-	private enum State {
-		CHECKED_ONLINE, GOT_LOG_RECORD_RANGE, ADDED_RECORDS, PUSHED, DELETED
-	}
-
 	class RemoteLogPersisterConsort extends Consort<State> {
 		IntPair logRecordRange = null;
 
@@ -303,5 +299,9 @@ public class RemoteLogPersister {
 				}
 			}
 		}
+	}
+
+	private enum State {
+		CHECKED_ONLINE, GOT_LOG_RECORD_RANGE, ADDED_RECORDS, PUSHED, DELETED
 	}
 }

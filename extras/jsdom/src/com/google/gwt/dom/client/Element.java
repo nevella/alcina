@@ -247,9 +247,25 @@ public class Element extends Node implements ClientDomElement,
 		UIObject.setStyleName(this, cssClass, true);
 	}
 
+	public ElementPathref.Async async() {
+		return pathrefRemote().async();
+	}
+
 	@Override
 	public void blur() {
 		runIfWithRemote(false, () -> remote().blur());
+	}
+
+	private <T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
+			T defaultValue) {
+		if (!linkedToRemote() && flush) {
+			ensureJsoRemote();
+		}
+		if (linkedToRemote()) {
+			return supplier.get();
+		} else {
+			return defaultValue;
+		}
 	}
 
 	@Override
@@ -282,9 +298,65 @@ public class Element extends Node implements ClientDomElement,
 		return stringBuilder.toString();
 	}
 
+	private void dumpLocal0(int depth, String prefix, boolean linkToRemote,
+			StringBuilder stringBuilder) {
+		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
+		String paadedPrefix = CommonUtils.padStringRight(prefix, 30, ' ');
+		if (!linkedToRemote() && linkToRemote) {
+			implAccess().ensureJsoRemote();
+		}
+		String code = !linkedToRemote() ? "f" : "t";
+		if (linkedToRemote()) {
+			if (local().getChildren().size() != jsoRemote().getChildNodes0()
+					.getLength()) {
+				code = "x";
+			}
+		}
+		String message = Ax.format("%s%s%s [%s]: ", prefix, indent,
+				getTagName(), code);
+		stringBuilder.append(message);
+		stringBuilder.append("\n");
+		int idx = 0;
+		for (Node node : getChildNodes()) {
+			switch (node.getNodeType()) {
+			case Node.TEXT_NODE:
+				message = Ax
+						.format("%s%s%s [t]: %s", prefix, indent, getNodeName(),
+								CommonUtils.trimToWsChars(
+										TextUtils.normalizeWhitespace(
+												node.getNodeValue()),
+										50, true));
+				stringBuilder.append(message);
+				stringBuilder.append("\n");
+				Ax.out(stringBuilder);
+				break;
+			case Node.ELEMENT_NODE:
+				((Element) node).dumpLocal0(depth + 1, prefix + "." + (idx++),
+						linkToRemote, stringBuilder);
+				break;
+			}
+		}
+	}
+
 	@Override
 	public Element elementFor() {
 		return node();
+	}
+
+	/**
+	 * Ensures the existence of the handler manager.
+	 *
+	 * @return the handler manager
+	 */
+	HandlerManager ensureHandlers() {
+		/*
+		 * *Either* the widget or the element is a handler/event hookup, not
+		 * both
+		 */
+		Preconditions.checkState(!(uiObject instanceof EventListener));
+		return handlerManager == null
+				? handlerManager = new HandlerManager(this)
+				: handlerManager;
 	}
 
 	@Override
@@ -292,6 +364,12 @@ public class Element extends Node implements ClientDomElement,
 		if (!linkedToRemote()) {
 			local().ensureId();
 		}
+	}
+
+	protected ElementJso ensureJsoRemote() {
+		LocalDom.flush();
+		LocalDom.ensureRemote(this);
+		return jsoRemote();
 	}
 
 	@Override
@@ -379,10 +457,6 @@ public class Element extends Node implements ClientDomElement,
 		async().getBoundingClientRect(callback);
 	}
 
-	public ElementPathref.Async async() {
-		return pathrefRemote().async();
-	}
-
 	@Override
 	public Node getChild(int index) {
 		return super.getChild(index);
@@ -415,6 +489,27 @@ public class Element extends Node implements ClientDomElement,
 			return local().getClassName();
 		}
 	}
+
+	final native String getClassNameSvg() /*-{
+    var elem = this.@com.google.gwt.dom.client.Element::jsoRemote()();
+    var cn = elem.className;
+    //note - someone says IE DOM objects don't support - hence try/catch
+    try {
+      if (cn.hasOwnProperty("baseVal")) {
+        cn = cn.baseVal;
+      }
+      if ((typeof cn).toLowerCase() != "string") {
+        if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
+          cn = 'svg-string';
+        } else {
+          debugger;
+        }
+      }
+    } catch (e) {
+      return "";
+    }
+    return cn;
+	}-*/;
 
 	@Override
 	public int getClientHeight() {
@@ -666,6 +761,50 @@ public class Element extends Node implements ClientDomElement,
 		return new ElementImplAccess();
 	}
 
+	private ClientDomElement implForPropertyName(String name) {
+		switch (name) {
+		case "clientWidth":
+		case "offsetWidth":
+			// TODO - warn maybe? non optimal. SliderBar one major cause
+			return ensureJsoRemote();
+		}
+		if (!wasSynced()) {
+			return local();
+		}
+		ensureRemoteCheck();
+		if (linkedToRemote()) {
+			return remote();
+		} else {
+			return local();
+		}
+		// may need to make more conservative
+		// return ensureRemote();
+	}
+
+	@Override
+	protected boolean isPendingSync() {
+		return this.pendingSync;
+	}
+
+	@Override
+	protected ElementJso jsoRemote() {
+		return (ElementJso) remote();
+	}
+
+	private boolean linkedAndNotPending() {
+		return linkedToRemote() && !isPendingSync();
+	}
+
+	@Override
+	protected boolean linkedToRemote() {
+		return remote() != ElementNull.INSTANCE;
+	}
+
+	@Override
+	protected ElementLocal local() {
+		return local;
+	}
+
 	public List<String> localBitlessEventsSunk() {
 		return local().bitlessEvents;
 	}
@@ -677,6 +816,31 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public Element node() {
 		return this;
+	}
+
+	/*
+	 * See Widget.onAttach. Functionality moved from Widget to here
+	 *
+	 * Note that element attach/detach is always called before Widget
+	 * attach/detach
+	 */
+	protected void onAttach() {
+		// Event hookup code
+		if (this.eventListener == null) {
+			this.eventListener = uiObject instanceof EventListener
+					? (EventListener) uiObject
+					: this;
+		}
+		DOM.setEventListener(this, eventListener);
+		List<String> localBitlessEventsSunk = localBitlessEventsSunk();
+		if (localBitlessEventsSunk != null) {
+			localBitlessEventsSunk.forEach(eventTypeName -> {
+				DOM.sinkBitlessEvent(this, eventTypeName);
+			});
+			localBitlessEventsSunk = null;
+		}
+		streamChildren().filter(Node::provideIsElement)
+				.forEach(n -> ((Element) n).setAttached(true));
 	}
 
 	@Override
@@ -705,12 +869,77 @@ public class Element extends Node implements ClientDomElement,
 		DomEvent.fireNativeEvent(event, this, this);
 	}
 
+	/*
+	 * See Widget.onDetach. Functionality moved from Widget to here
+	 *
+	 * Note that element attach/detach is always called before Widget
+	 * attach/detach
+	 */
+	protected void onDetach() {
+		/*
+		 * Note that this doesn't use the same ordering as Widget (assumes no
+		 * fails - and note that no events/side-effects are produced, this code
+		 * is just concerned with listener attach/detach)
+		 */
+		DOM.setEventListener(this, null);
+		streamChildren().filter(Node::provideIsElement)
+				.forEach(n -> ((Element) n).setAttached(false));
+	}
+
+	protected ElementPathref pathrefRemote() {
+		return (ElementPathref) remote();
+	}
+
+	void pendingSync() {
+		this.pendingSync = true;
+	}
+
 	public boolean provideIsAncestorOf(Element potentialChild,
 			boolean includeSelf) {
 		return potentialChild
 				.firstInAncestry(
 						e -> e == this && (e != potentialChild || includeSelf))
 				.isPresent();
+	}
+
+	Element putLocal(ElementLocal local) {
+		Preconditions.checkState(this.local == null);
+		this.local = local;
+		local.putElement(this);
+		this.remote = ElementNull.INSTANCE;
+		return this;
+	}
+
+	@Override
+	protected void putRemote(ClientDomNode remote, boolean synced) {
+		if (!GWT.isScript() && GWT.isClient()) {
+			// hosted mode (dev) check
+			String nodeName = remote.getNodeName();
+			Preconditions
+					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
+		}
+		Preconditions.checkState(wasSynced() == synced);
+		Preconditions.checkState(
+				this.remote == ElementNull.INSTANCE || remote == this.remote);
+		Preconditions.checkState(remote != null);
+		if (this.remote == ElementNull.INSTANCE) {
+			this.remote = (ClientDomElement) remote;
+			if (remote != null) {
+				if (local() != null && local().getEventBits() != 0) {
+					int existingBits = DOM.getEventsSunk(this);
+					DOM.sinkEvents(this, existingBits | local().getEventBits());
+				}
+			}
+		}
+	}
+
+	@Override
+	protected ClientDomElement remote() {
+		if (getOwnerDocument().remoteType.hasRemote()) {
+			return remote;
+		} else {
+			return ElementNull.INSTANCE;
+		}
 	}
 
 	@Override
@@ -753,6 +982,24 @@ public class Element extends Node implements ClientDomElement,
 		sync(() -> remote().replaceClassName(oldClassName, newClassName));
 	}
 
+	void replaceRemote(ElementJso remote) {
+		ElementJso parentRemote = jsoRemote().getParentElementJso();
+		if (parentRemote != null) {
+			parentRemote.insertBefore0(remote, jsoRemote());
+			jsoRemote().removeFromParent0();
+		}
+		Preconditions.checkState(remote != null);
+		this.remote = remote;
+	}
+
+	@Override
+	protected void resetRemote0() {
+		this.remote = ElementNull.INSTANCE;
+		if (this.hasStyle()) {
+			this.style.resetRemote();
+		}
+	}
+
 	public void resolvePendingSync() {
 		pendingSync = false;
 	}
@@ -778,9 +1025,30 @@ public class Element extends Node implements ClientDomElement,
 		}
 	}
 
+	private void runIfWithRemote(boolean flush, Runnable runnable) {
+		if (!linkedToRemote() && flush) {
+			ensureJsoRemote();
+		}
+		if (linkedToRemote()) {
+			runnable.run();
+		}
+	}
+
 	@Override
 	public void scrollIntoView() {
 		runIfWithRemote(true, () -> remote().scrollIntoView());
+	}
+
+	void setAttached(boolean attached) {
+		if (attached == this.attached) {
+			return;
+		}
+		this.attached = attached;
+		if (attached) {
+			onAttach();
+		} else {
+			onDetach();
+		}
 	}
 
 	@Override
@@ -898,6 +1166,26 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void setInnerSafeHtml(SafeHtml html) {
 		setInnerSafeHtml(html, true);
+	}
+
+	protected void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
+		ensureRemoteCheck();
+		clearSynced();
+		List<Node> oldChildren = getChildNodes().stream()
+				.collect(Collectors.toList());
+		if (withPreRemove) {
+			removeAllChildren();
+		} else {
+			local().getChildren().clear();
+		}
+		if (linkedAndNotPending()) {
+			remote().setInnerSafeHtml(html);
+			String remoteHtml = jsoRemote().getInnerHTML0();
+			local().setInnerHTML(remoteHtml);
+			LocalDom.wasSynced(this);
+		} else {
+			local().setInnerSafeHtml(html);
+		}
 	}
 
 	@Override
@@ -1067,294 +1355,6 @@ public class Element extends Node implements ClientDomElement,
 			}
 		}
 		return fb.toString();
-	}
-
-	private <T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
-			T defaultValue) {
-		if (!linkedToRemote() && flush) {
-			ensureJsoRemote();
-		}
-		if (linkedToRemote()) {
-			return supplier.get();
-		} else {
-			return defaultValue;
-		}
-	}
-
-	private void dumpLocal0(int depth, String prefix, boolean linkToRemote,
-			StringBuilder stringBuilder) {
-		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
-		String paadedPrefix = CommonUtils.padStringRight(prefix, 30, ' ');
-		if (!linkedToRemote() && linkToRemote) {
-			implAccess().ensureJsoRemote();
-		}
-		String code = !linkedToRemote() ? "f" : "t";
-		if (linkedToRemote()) {
-			if (local().getChildren().size() != jsoRemote().getChildNodes0()
-					.getLength()) {
-				code = "x";
-			}
-		}
-		String message = Ax.format("%s%s%s [%s]: ", prefix, indent,
-				getTagName(), code);
-		stringBuilder.append(message);
-		stringBuilder.append("\n");
-		int idx = 0;
-		for (Node node : getChildNodes()) {
-			switch (node.getNodeType()) {
-			case Node.TEXT_NODE:
-				message = Ax
-						.format("%s%s%s [t]: %s", prefix, indent, getNodeName(),
-								CommonUtils.trimToWsChars(
-										TextUtils.normalizeWhitespace(
-												node.getNodeValue()),
-										50, true));
-				stringBuilder.append(message);
-				stringBuilder.append("\n");
-				Ax.out(stringBuilder);
-				break;
-			case Node.ELEMENT_NODE:
-				((Element) node).dumpLocal0(depth + 1, prefix + "." + (idx++),
-						linkToRemote, stringBuilder);
-				break;
-			}
-		}
-	}
-
-	private ClientDomElement implForPropertyName(String name) {
-		switch (name) {
-		case "clientWidth":
-		case "offsetWidth":
-			// TODO - warn maybe? non optimal. SliderBar one major cause
-			return ensureJsoRemote();
-		}
-		if (!wasSynced()) {
-			return local();
-		}
-		ensureRemoteCheck();
-		if (linkedToRemote()) {
-			return remote();
-		} else {
-			return local();
-		}
-		// may need to make more conservative
-		// return ensureRemote();
-	}
-
-	private boolean linkedAndNotPending() {
-		return linkedToRemote() && !isPendingSync();
-	}
-
-	private void runIfWithRemote(boolean flush, Runnable runnable) {
-		if (!linkedToRemote() && flush) {
-			ensureJsoRemote();
-		}
-		if (linkedToRemote()) {
-			runnable.run();
-		}
-	}
-
-	protected ElementJso ensureJsoRemote() {
-		LocalDom.flush();
-		LocalDom.ensureRemote(this);
-		return jsoRemote();
-	}
-
-	@Override
-	protected boolean isPendingSync() {
-		return this.pendingSync;
-	}
-
-	@Override
-	protected ElementJso jsoRemote() {
-		return (ElementJso) remote();
-	}
-
-	@Override
-	protected boolean linkedToRemote() {
-		return remote() != ElementNull.INSTANCE;
-	}
-
-	@Override
-	protected ElementLocal local() {
-		return local;
-	}
-
-	/*
-	 * See Widget.onAttach. Functionality moved from Widget to here
-	 *
-	 * Note that element attach/detach is always called before Widget
-	 * attach/detach
-	 */
-	protected void onAttach() {
-		// Event hookup code
-		if (this.eventListener == null) {
-			this.eventListener = uiObject instanceof EventListener
-					? (EventListener) uiObject
-					: this;
-		}
-		DOM.setEventListener(this, eventListener);
-		List<String> localBitlessEventsSunk = localBitlessEventsSunk();
-		if (localBitlessEventsSunk != null) {
-			localBitlessEventsSunk.forEach(eventTypeName -> {
-				DOM.sinkBitlessEvent(this, eventTypeName);
-			});
-			localBitlessEventsSunk = null;
-		}
-		streamChildren().filter(Node::provideIsElement)
-				.forEach(n -> ((Element) n).setAttached(true));
-	}
-
-	/*
-	 * See Widget.onDetach. Functionality moved from Widget to here
-	 *
-	 * Note that element attach/detach is always called before Widget
-	 * attach/detach
-	 */
-	protected void onDetach() {
-		/*
-		 * Note that this doesn't use the same ordering as Widget (assumes no
-		 * fails - and note that no events/side-effects are produced, this code
-		 * is just concerned with listener attach/detach)
-		 */
-		DOM.setEventListener(this, null);
-		streamChildren().filter(Node::provideIsElement)
-				.forEach(n -> ((Element) n).setAttached(false));
-	}
-
-	protected ElementPathref pathrefRemote() {
-		return (ElementPathref) remote();
-	}
-
-	@Override
-	protected void putRemote(ClientDomNode remote, boolean synced) {
-		if (!GWT.isScript() && GWT.isClient()) {
-			// hosted mode (dev) check
-			String nodeName = remote.getNodeName();
-			Preconditions
-					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
-		}
-		Preconditions.checkState(wasSynced() == synced);
-		Preconditions.checkState(
-				this.remote == ElementNull.INSTANCE || remote == this.remote);
-		Preconditions.checkState(remote != null);
-		if (this.remote == ElementNull.INSTANCE) {
-			this.remote = (ClientDomElement) remote;
-			if (remote != null) {
-				if (local() != null && local().getEventBits() != 0) {
-					int existingBits = DOM.getEventsSunk(this);
-					DOM.sinkEvents(this, existingBits | local().getEventBits());
-				}
-			}
-		}
-	}
-
-	@Override
-	protected ClientDomElement remote() {
-		if (getOwnerDocument().remoteType.hasRemote()) {
-			return remote;
-		} else {
-			return ElementNull.INSTANCE;
-		}
-	}
-
-	@Override
-	protected void resetRemote0() {
-		this.remote = ElementNull.INSTANCE;
-		if (this.hasStyle()) {
-			this.style.resetRemote();
-		}
-	}
-
-	protected void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
-		ensureRemoteCheck();
-		clearSynced();
-		List<Node> oldChildren = getChildNodes().stream()
-				.collect(Collectors.toList());
-		if (withPreRemove) {
-			removeAllChildren();
-		} else {
-			local().getChildren().clear();
-		}
-		if (linkedAndNotPending()) {
-			remote().setInnerSafeHtml(html);
-			String remoteHtml = jsoRemote().getInnerHTML0();
-			local().setInnerHTML(remoteHtml);
-			LocalDom.wasSynced(this);
-		} else {
-			local().setInnerSafeHtml(html);
-		}
-	}
-
-	/**
-	 * Ensures the existence of the handler manager.
-	 *
-	 * @return the handler manager
-	 */
-	HandlerManager ensureHandlers() {
-		/*
-		 * *Either* the widget or the element is a handler/event hookup, not
-		 * both
-		 */
-		Preconditions.checkState(!(uiObject instanceof EventListener));
-		return handlerManager == null
-				? handlerManager = new HandlerManager(this)
-				: handlerManager;
-	}
-
-	final native String getClassNameSvg() /*-{
-    var elem = this.@com.google.gwt.dom.client.Element::jsoRemote()();
-    var cn = elem.className;
-    //note - someone says IE DOM objects don't support - hence try/catch
-    try {
-      if (cn.hasOwnProperty("baseVal")) {
-        cn = cn.baseVal;
-      }
-      if ((typeof cn).toLowerCase() != "string") {
-        if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
-          cn = 'svg-string';
-        } else {
-          debugger;
-        }
-      }
-    } catch (e) {
-      return "";
-    }
-    return cn;
-	}-*/;
-
-	void pendingSync() {
-		this.pendingSync = true;
-	}
-
-	Element putLocal(ElementLocal local) {
-		Preconditions.checkState(this.local == null);
-		this.local = local;
-		local.putElement(this);
-		this.remote = ElementNull.INSTANCE;
-		return this;
-	}
-
-	void replaceRemote(ElementJso remote) {
-		ElementJso parentRemote = jsoRemote().getParentElementJso();
-		if (parentRemote != null) {
-			parentRemote.insertBefore0(remote, jsoRemote());
-			jsoRemote().removeFromParent0();
-		}
-		Preconditions.checkState(remote != null);
-		this.remote = remote;
-	}
-
-	void setAttached(boolean attached) {
-		if (attached == this.attached) {
-			return;
-		}
-		this.attached = attached;
-		if (attached) {
-			onAttach();
-		} else {
-			onDetach();
-		}
 	}
 
 	/**

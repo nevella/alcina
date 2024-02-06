@@ -43,14 +43,6 @@ public class ElementQuery {
 				.withXpath(xpath);
 	}
 
-	public interface DriverProvider {
-		public static DriverProvider get() {
-			return Registry.impl(DriverProvider.class);
-		}
-
-		WebDriver getDriver();
-	}
-
 	final SearchContext context;
 
 	String xpath;
@@ -72,6 +64,13 @@ public class ElementQuery {
 			WebDriver driver = (WebDriver) context;
 			drivers.set(driver);
 		}
+	}
+
+	/*
+	 * returns a new selector with the same context as this query
+	 */
+	public ElementQuery appendXpath(String append) {
+		return new ElementQuery(context).withXpath(xpath + append);
 	}
 
 	public void await() {
@@ -102,8 +101,34 @@ public class ElementQuery {
 				String.format("Element not removed :: %s", this));
 	}
 
+	public void clear() {
+		getElement().clear();
+	}
+
+	public void clearAndEnterText(String searchString) {
+		clear();
+		click();
+		sendKeys(searchString);
+	}
+
+	void clearLocatorFields() {
+		this.css = null;
+		this.id = null;
+		this.xpath = null;
+	}
+
 	public void click() {
 		withElement(WebElement::click);
+	}
+
+	public ElementQuery clone() {
+		ElementQuery copy = from(context);
+		copy.predicate = predicate;
+		copy.required = required;
+		copy.timeout = timeout;
+		copy.xpath = xpath;
+		copy.id = id;
+		return copy;
 	}
 
 	public ElementQuery descendant(String descendantXpath) {
@@ -127,6 +152,69 @@ public class ElementQuery {
 		Ref<List<WebElement>> receiver = new Ref<>();
 		withElements(receiver::set);
 		return receiver.get();
+	}
+
+	public WebElement getSelectOption(String optionText) {
+		WebElement webElement = new Select(getElement()).getOptions().stream()
+				.filter(o -> o.getText().equals(optionText)).findFirst()
+				.orElse(null);
+		return webElement;
+	}
+
+	public boolean isPresent() {
+		return withTimeout(0).withRequired(false).getElement() != null;
+	}
+
+	public boolean isSelected(String optionText) {
+		return getSelectOption(optionText).isSelected();
+	}
+
+	By locator() {
+		if (xpath != null) {
+			return By.xpath(xpath);
+		} else if (id != null) {
+			return By.id(id);
+		} else if (css != null) {
+			return By.cssSelector(css);
+		} else {
+			throw new IllegalStateException("No locator parameter set");
+		}
+	}
+
+	public String outerHtml() {
+		return (String) ((org.openqa.selenium.JavascriptExecutor) drivers.get())
+				.executeScript("return arguments[0].outerHTML;", getElement());
+	}
+
+	public void selectOption(String optionText) {
+		setSelected(optionText, true);
+	}
+
+	public void sendKeys(String text) {
+		getElement().sendKeys(text);
+	}
+
+	public void setSelected(String optionText, boolean selected) {
+		WebElement webElement = getSelectOption(optionText);
+		if (webElement.isSelected() ^ selected) {
+			webElement.click();
+		}
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Query %s : %s", context, locator());
+	}
+
+	public WebElement waitlessGetElement() {
+		return isPresent() ? getElement() : null;
+	}
+
+	public ElementQuery withCss(String css) {
+		ElementQuery clone = clone();
+		clone.clearLocatorFields();
+		clone.css = css;
+		return clone;
 	}
 
 	void withElement(Consumer<WebElement> consumer) {
@@ -174,68 +262,11 @@ public class ElementQuery {
 		}
 	}
 
-	By locator() {
-		if (xpath != null) {
-			return By.xpath(xpath);
-		} else if (id != null) {
-			return By.id(id);
-		} else if (css != null) {
-			return By.cssSelector(css);
-		} else {
-			throw new IllegalStateException("No locator parameter set");
-		}
-	}
-
-	class RequiredElementNotFoundException extends RuntimeException {
-		RequiredElementNotFoundException() {
-			super(String.format("Timed out - %s", ElementQuery.this));
-		}
-	}
-
-	public boolean isPresent() {
-		return withTimeout(0).withRequired(false).getElement() != null;
-	}
-
-	public ElementQuery clone() {
-		ElementQuery copy = from(context);
-		copy.predicate = predicate;
-		copy.required = required;
-		copy.timeout = timeout;
-		copy.xpath = xpath;
-		copy.id = id;
-		return copy;
-	}
-
-	public String outerHtml() {
-		return (String) ((org.openqa.selenium.JavascriptExecutor) drivers.get())
-				.executeScript("return arguments[0].outerHTML;", getElement());
-	}
-
-	public void selectOption(String optionText) {
-		setSelected(optionText, true);
-	}
-
-	public void sendKeys(String text) {
-		getElement().sendKeys(text);
-	}
-
-	public void setSelected(String optionText, boolean selected) {
-		WebElement webElement = getSelectOption(optionText);
-		if (webElement.isSelected() ^ selected) {
-			webElement.click();
-		}
-	}
-
-	public WebElement getSelectOption(String optionText) {
-		WebElement webElement = new Select(getElement()).getOptions().stream()
-				.filter(o -> o.getText().equals(optionText)).findFirst()
-				.orElse(null);
-		return webElement;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("Query %s : %s", context, locator());
+	public ElementQuery withId(String id) {
+		ElementQuery clone = clone();
+		clone.clearLocatorFields();
+		clone.id = id;
+		return clone;
 	}
 
 	public ElementQuery withPredicate(Predicate<WebElement> predicate) {
@@ -263,48 +294,17 @@ public class ElementQuery {
 		return clone;
 	}
 
-	public boolean isSelected(String optionText) {
-		return getSelectOption(optionText).isSelected();
+	public interface DriverProvider {
+		public static DriverProvider get() {
+			return Registry.impl(DriverProvider.class);
+		}
+
+		WebDriver getDriver();
 	}
 
-	public void clear() {
-		getElement().clear();
-	}
-
-	/*
-	 * returns a new selector with the same context as this query
-	 */
-	public ElementQuery appendXpath(String append) {
-		return new ElementQuery(context).withXpath(xpath + append);
-	}
-
-	public WebElement waitlessGetElement() {
-		return isPresent() ? getElement() : null;
-	}
-
-	public ElementQuery withId(String id) {
-		ElementQuery clone = clone();
-		clone.clearLocatorFields();
-		clone.id = id;
-		return clone;
-	}
-
-	public void clearAndEnterText(String searchString) {
-		clear();
-		click();
-		sendKeys(searchString);
-	}
-
-	public ElementQuery withCss(String css) {
-		ElementQuery clone = clone();
-		clone.clearLocatorFields();
-		clone.css = css;
-		return clone;
-	}
-
-	void clearLocatorFields() {
-		this.css = null;
-		this.id = null;
-		this.xpath = null;
+	class RequiredElementNotFoundException extends RuntimeException {
+		RequiredElementNotFoundException() {
+			super(String.format("Timed out - %s", ElementQuery.this));
+		}
 	}
 }

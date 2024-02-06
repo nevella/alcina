@@ -47,6 +47,17 @@ public class LocalSearchViewProvider implements ViewProvider {
 
 	private List<String> ignoreProperties;
 
+	// for subclasses
+	protected int addTableMasks(int mask) {
+		return mask;
+	}
+
+	private Widget createCaption(String actionDisplayName) {
+		BreadcrumbBar bar = new BreadcrumbBar(actionDisplayName);
+		bar.addStyleName("tlr-borders");
+		return bar;
+	}
+
 	public List<String> getIgnoreProperties() {
 		return ignoreProperties;
 	}
@@ -86,17 +97,6 @@ public class LocalSearchViewProvider implements ViewProvider {
 
 	public void setWithoutParameters(boolean withoutParameters) {
 		this.withoutParameters = withoutParameters;
-	}
-
-	private Widget createCaption(String actionDisplayName) {
-		BreadcrumbBar bar = new BreadcrumbBar(actionDisplayName);
-		bar.addStyleName("tlr-borders");
-		return bar;
-	}
-
-	// for subclasses
-	protected int addTableMasks(int mask) {
-		return mask;
 	}
 
 	private class SearchPanel extends FlowPanel implements ClickHandler {

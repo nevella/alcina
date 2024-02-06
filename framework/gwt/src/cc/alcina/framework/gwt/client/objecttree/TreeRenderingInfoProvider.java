@@ -29,6 +29,13 @@ public class TreeRenderingInfoProvider {
 		return Registry.impl(TreeRenderingInfoProvider.class);
 	}
 
+	protected Class<? extends TreeRenderer> getClassForRenderable(
+			TreeRenderable renderable, TreeRenderer parent,
+			RenderContext context) {
+		return Registry.query(TreeRenderer.class).addKeys(renderable.getClass())
+				.registration();
+	}
+
 	public TreeRenderer getForRenderable(TreeRenderable renderable,
 			TreeRenderer parent, RenderContext context) {
 		Class<? extends TreeRenderer> rendererClass = getClassForRenderable(
@@ -37,12 +44,5 @@ public class TreeRenderingInfoProvider {
 		renderer.setRenderable(renderable);
 		renderer.setContext(context);
 		return renderer;
-	}
-
-	protected Class<? extends TreeRenderer> getClassForRenderable(
-			TreeRenderable renderable, TreeRenderer parent,
-			RenderContext context) {
-		return Registry.query(TreeRenderer.class).addKeys(renderable.getClass())
-				.registration();
 	}
 }

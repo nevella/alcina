@@ -13,20 +13,6 @@ public class BaseMultilineGridEditor<T extends Entity>
 	BaseMultilineEditorCustomiser<T> customiser;
 
 	@Override
-	public String getCreateActionDisplayName() {
-		return customiser.getCreateActionDisplayName();
-	}
-
-	public List<T> provideSelected() {
-		return table.getSelected();
-	}
-
-	@Override
-	public void setCustomiser(BaseMultilineEditorCustomiser<T> customiser) {
-		this.customiser = customiser;
-	}
-
-	@Override
 	protected List<Link> createPerRowEditActions(T rowValue) {
 		List<Link> actions = super.createPerRowEditActions(rowValue);
 		actions = customiser.customisePerRowEditActions(actions, rowValue,
@@ -60,13 +46,27 @@ public class BaseMultilineGridEditor<T extends Entity>
 	}
 
 	@Override
+	public String getCreateActionDisplayName() {
+		return customiser.getCreateActionDisplayName();
+	}
+
+	BaseMultilineEditorCustomiser<T> getCustomiser() {
+		return null;
+	}
+
+	@Override
 	protected boolean handleCustomAction(MultilineGridEditor editor,
 			PermissibleAction action) {
 		return customiser.handleCustomAction(this, action);
 	}
 
-	BaseMultilineEditorCustomiser<T> getCustomiser() {
-		return null;
+	public List<T> provideSelected() {
+		return table.getSelected();
+	}
+
+	@Override
+	public void setCustomiser(BaseMultilineEditorCustomiser<T> customiser) {
+		this.customiser = customiser;
 	}
 
 	@Override

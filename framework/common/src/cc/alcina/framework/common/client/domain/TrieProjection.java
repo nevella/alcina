@@ -37,6 +37,10 @@ public class TrieProjection<K, E extends Entity>
 		trie.dumpDensity();
 	}
 
+	protected List<K> extractSubKeys(K key) {
+		return Collections.emptyList();
+	}
+
 	@Override
 	public Class<E> getListenedClass() {
 		return entityClass;
@@ -71,6 +75,10 @@ public class TrieProjection<K, E extends Entity>
 		return this.trie.isLoadingOnly();
 	}
 
+	protected K normalise(K key) {
+		return key;
+	}
+
 	@Override
 	public void remove(E o) {
 		keyMapper.apply(o).forEach(key -> {
@@ -88,13 +96,5 @@ public class TrieProjection<K, E extends Entity>
 
 	public void setLoadingOnly(boolean loadingOnly) {
 		this.trie.setLoadingOnly(loadingOnly);
-	}
-
-	protected List<K> extractSubKeys(K key) {
-		return Collections.emptyList();
-	}
-
-	protected K normalise(K key) {
-		return key;
 	}
 }

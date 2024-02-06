@@ -93,6 +93,11 @@ public abstract class AuthenticationSession
 		return this.startTime;
 	}
 
+	public void markInvalid(String reason) {
+		setEndReason(reason);
+		setEndTime(new Date());
+	}
+
 	public boolean provideIsExpired() {
 		return endTime != null;
 	}
@@ -165,10 +170,5 @@ public abstract class AuthenticationSession
 				"%s :: {id: %s - user: %s - start: %s - type: %s - end reason: %s",
 				toStringEntity(), sessionId, getUser(), startTime,
 				authenticationType, endReason);
-	}
-
-	public void markInvalid(String reason) {
-		setEndReason(reason);
-		setEndTime(new Date());
 	}
 }

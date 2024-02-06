@@ -132,32 +132,6 @@ public class Dropdown extends Model
 		}
 	}
 
-	public Dropdown withLogicalAncestors(
-			List<Class<? extends Model>> logicalAncestors) {
-		return withLogicalAncestorsSupplier(() -> logicalAncestors);
-	}
-
-	public Dropdown withLogicalAncestorsSupplier(
-			Supplier<List<Class<? extends Model>>> logicalAncestorsSupplier) {
-		this.logicalAncestorsSupplier = logicalAncestorsSupplier;
-		return this;
-	}
-
-	/*
-	 * Rare - when you want a dropdown overlay to stay visible , and the
-	 * originating dropdown may disappear due to a rerender, set this somewhere
-	 * higher in the node/model ancestor chain
-	 */
-	public Dropdown withLogicalParent(Model logicalParent) {
-		this.logicalParent = logicalParent;
-		return this;
-	}
-
-	public Dropdown withXalign(OverlayPosition.Position xalign) {
-		this.xalign = xalign;
-		return this;
-	}
-
 	private void showDropdown(boolean show) {
 		if (show) {
 			if (dropdownSupplier != null && dropdownStack.size() == 1) {
@@ -184,5 +158,31 @@ public class Dropdown extends Model
 				dropdown = dropdownStack.get(dropdownStack.size() - 1);
 			}
 		}
+	}
+
+	public Dropdown withLogicalAncestors(
+			List<Class<? extends Model>> logicalAncestors) {
+		return withLogicalAncestorsSupplier(() -> logicalAncestors);
+	}
+
+	public Dropdown withLogicalAncestorsSupplier(
+			Supplier<List<Class<? extends Model>>> logicalAncestorsSupplier) {
+		this.logicalAncestorsSupplier = logicalAncestorsSupplier;
+		return this;
+	}
+
+	/*
+	 * Rare - when you want a dropdown overlay to stay visible , and the
+	 * originating dropdown may disappear due to a rerender, set this somewhere
+	 * higher in the node/model ancestor chain
+	 */
+	public Dropdown withLogicalParent(Model logicalParent) {
+		this.logicalParent = logicalParent;
+		return this;
+	}
+
+	public Dropdown withXalign(OverlayPosition.Position xalign) {
+		this.xalign = xalign;
+		return this;
 	}
 }

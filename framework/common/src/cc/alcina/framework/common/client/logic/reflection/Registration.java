@@ -132,24 +132,23 @@ public @interface Registration {
 	 */
 	public static class MergeStrategy
 			extends AdditiveMergeStrategy<Registration> {
-		@Override
-		public void finish(List<Registration> merged) {
-			merged.removeIf(r -> r.priority() == Priority.REMOVE);
-		}
-
-		@Override
-		public List<Registration> merge(List<Registration> lessSpecific,
-				List<Registration> moreSpecific) {
-			/*
-			 * NonGenericSubtypeWrapper is overridden by lower @Registration etc
-			 */
-			if (lessSpecific.stream()
-					.allMatch(r -> r instanceof NonGenericSubtypeWrapper)
-					&& !moreSpecific.isEmpty()) {
-				return moreSpecific;
+		Optional<Registration> applicableNonGeneric(ClassReflector<?> reflector,
+				ClassReflector<?> resolvingReflector,
+				NonGenericSubtypes nonGenericSubtypes) {
+			if (resolvingReflector.isAbstract()) {
+				return Optional.empty();
 			}
-			return Shared.merge(lessSpecific, moreSpecific,
-					(t1, t2) -> Reflections.isAssignableFrom(t1, t2));
+			List<Class> bounds = resolvingReflector.getGenericBounds().bounds;
+			if (bounds.size() != nonGenericSubtypes.size()) {
+				return Optional.empty();
+			}
+			Class firstBound = bounds.get(nonGenericSubtypes.index());
+			if (firstBound == Object.class) {
+				return Optional.empty();
+			}
+			return Optional
+					.of(new NonGenericSubtypeWrapper(nonGenericSubtypes.value(),
+							firstBound, reflector.getReflectedClass()));
 		}
 
 		@Override
@@ -191,23 +190,24 @@ public @interface Registration {
 			throw new UnsupportedOperationException();
 		}
 
-		Optional<Registration> applicableNonGeneric(ClassReflector<?> reflector,
-				ClassReflector<?> resolvingReflector,
-				NonGenericSubtypes nonGenericSubtypes) {
-			if (resolvingReflector.isAbstract()) {
-				return Optional.empty();
+		@Override
+		public void finish(List<Registration> merged) {
+			merged.removeIf(r -> r.priority() == Priority.REMOVE);
+		}
+
+		@Override
+		public List<Registration> merge(List<Registration> lessSpecific,
+				List<Registration> moreSpecific) {
+			/*
+			 * NonGenericSubtypeWrapper is overridden by lower @Registration etc
+			 */
+			if (lessSpecific.stream()
+					.allMatch(r -> r instanceof NonGenericSubtypeWrapper)
+					&& !moreSpecific.isEmpty()) {
+				return moreSpecific;
 			}
-			List<Class> bounds = resolvingReflector.getGenericBounds().bounds;
-			if (bounds.size() != nonGenericSubtypes.size()) {
-				return Optional.empty();
-			}
-			Class firstBound = bounds.get(nonGenericSubtypes.index());
-			if (firstBound == Object.class) {
-				return Optional.empty();
-			}
-			return Optional
-					.of(new NonGenericSubtypeWrapper(nonGenericSubtypes.value(),
-							firstBound, reflector.getReflectedClass()));
+			return Shared.merge(lessSpecific, moreSpecific,
+					(t1, t2) -> Reflections.isAssignableFrom(t1, t2));
 		}
 
 		public static class NonGenericSubtypeWrapper implements Registration {
@@ -270,6 +270,44 @@ public @interface Registration {
 		}
 
 		public static class Shared {
+			private static boolean containsDescendant(
+					List<Registration> lessSpecificList,
+					Registration moreSpecificRegistration,
+					BiPredicate<Class, Class> assignableFrom) {
+				return lessSpecificList.stream()
+						.anyMatch(lessSpecificRegistration -> {
+							Class[] lessSpecific = lessSpecificRegistration
+									.value();
+							Class[] moreSpecific = moreSpecificRegistration
+									.value();
+							if (lessSpecific[0] != moreSpecific[0]) {
+								return false;
+							}
+							if (lessSpecific.length < moreSpecific.length) {
+								throw new IllegalArgumentException(
+										"Registrations with the same initial key must have >= length (in a subtype chain)");
+							}
+							if (lessSpecific.length == 1) {
+								return true;
+							}
+							for (int idx = 1; idx < lessSpecific.length
+									- 1; idx++) {
+								if (idx == moreSpecific.length) {
+									return true;
+								}
+								if (lessSpecific[idx] != moreSpecific[idx]) {
+									return false;
+								}
+							}
+							if (lessSpecific.length > moreSpecific.length) {
+								return true;
+							}
+							return assignableFrom.test(
+									moreSpecific[lessSpecific.length - 1],
+									lessSpecific[lessSpecific.length - 1]);
+						});
+			}
+
 			public static List<Registration> merge(
 					List<Registration> lessSpecific,
 					List<Registration> moreSpecific,
@@ -316,44 +354,6 @@ public @interface Registration {
 								assignableFrom))
 						.forEach(merged::add);
 				return merged;
-			}
-
-			private static boolean containsDescendant(
-					List<Registration> lessSpecificList,
-					Registration moreSpecificRegistration,
-					BiPredicate<Class, Class> assignableFrom) {
-				return lessSpecificList.stream()
-						.anyMatch(lessSpecificRegistration -> {
-							Class[] lessSpecific = lessSpecificRegistration
-									.value();
-							Class[] moreSpecific = moreSpecificRegistration
-									.value();
-							if (lessSpecific[0] != moreSpecific[0]) {
-								return false;
-							}
-							if (lessSpecific.length < moreSpecific.length) {
-								throw new IllegalArgumentException(
-										"Registrations with the same initial key must have >= length (in a subtype chain)");
-							}
-							if (lessSpecific.length == 1) {
-								return true;
-							}
-							for (int idx = 1; idx < lessSpecific.length
-									- 1; idx++) {
-								if (idx == moreSpecific.length) {
-									return true;
-								}
-								if (lessSpecific[idx] != moreSpecific[idx]) {
-									return false;
-								}
-							}
-							if (lessSpecific.length > moreSpecific.length) {
-								return true;
-							}
-							return assignableFrom.test(
-									moreSpecific[lessSpecific.length - 1],
-									lessSpecific[lessSpecific.length - 1]);
-						});
 			}
 		}
 

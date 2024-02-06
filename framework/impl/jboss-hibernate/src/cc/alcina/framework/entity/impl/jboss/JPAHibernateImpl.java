@@ -368,49 +368,6 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return ((Entity) o).toLocator();
 	}
 
-	@Registration.Singleton
-	public static class PersistenSetProjectionCreator {
-		public Set
-				createPersistentSetProjection(GraphProjectionContext context) {
-			return new HashSet();
-		}
-	}
-
-	public static class UseEntityIdGenerator implements IdentifierGenerator {
-		@Override
-		public Serializable generate(SessionImplementor session, Object object)
-				throws HibernateException {
-			return ((Entity) object).getId();
-		}
-	}
-
-	private final class EntityClassResolverImpl extends EntityClassResolver {
-		@Override
-		public Class<? extends Entity> entityClass(Entity e) {
-			if (e instanceof HibernateProxy) {
-				return ((HibernateProxy) e).getHibernateLazyInitializer()
-						.getPersistentClass();
-			}
-			return super.entityClass(e);
-		}
-	}
-
-	private static class SavedId {
-		private final IdentifierProperty ip;
-
-		private final IdentifierValue backupUnsavedValue;
-
-		private final IdentifierGenerator identifierGenerator;
-
-		public SavedId(IdentifierProperty ip,
-				IdentifierValue backupUnsavedValue,
-				IdentifierGenerator identifierGenerator) {
-			this.ip = ip;
-			this.backupUnsavedValue = backupUnsavedValue;
-			this.identifierGenerator = identifierGenerator;
-		}
-	}
-
 	static class DomainStoreJoinHandler_ElementCollection
 			implements DomainStoreJoinHandler {
 		private ElementCollection elementCollection;
@@ -445,6 +402,49 @@ public class JPAHibernateImpl implements JPAImplementation {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+	}
+
+	private final class EntityClassResolverImpl extends EntityClassResolver {
+		@Override
+		public Class<? extends Entity> entityClass(Entity e) {
+			if (e instanceof HibernateProxy) {
+				return ((HibernateProxy) e).getHibernateLazyInitializer()
+						.getPersistentClass();
+			}
+			return super.entityClass(e);
+		}
+	}
+
+	@Registration.Singleton
+	public static class PersistenSetProjectionCreator {
+		public Set
+				createPersistentSetProjection(GraphProjectionContext context) {
+			return new HashSet();
+		}
+	}
+
+	private static class SavedId {
+		private final IdentifierProperty ip;
+
+		private final IdentifierValue backupUnsavedValue;
+
+		private final IdentifierGenerator identifierGenerator;
+
+		public SavedId(IdentifierProperty ip,
+				IdentifierValue backupUnsavedValue,
+				IdentifierGenerator identifierGenerator) {
+			this.ip = ip;
+			this.backupUnsavedValue = backupUnsavedValue;
+			this.identifierGenerator = identifierGenerator;
+		}
+	}
+
+	public static class UseEntityIdGenerator implements IdentifierGenerator {
+		@Override
+		public Serializable generate(SessionImplementor session, Object object)
+				throws HibernateException {
+			return ((Entity) object).getId();
 		}
 	}
 }

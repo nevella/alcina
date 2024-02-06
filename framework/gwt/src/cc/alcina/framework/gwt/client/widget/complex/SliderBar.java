@@ -243,12 +243,187 @@ public class SliderBar extends FocusPanel
 	}
 
 	/**
+	 * Draw the knob where it is supposed to be relative to the line.
+	 */
+	private void drawKnob() {
+		// Abort if not attached
+		if (!isAttached()) {
+			return;
+		}
+		// Move the knob to the correct position
+		Element knobElement = knobImage.getElement();
+		int lineMajorDimension = getLineMajorDimension();
+		int knobMajorDimension = getKnobMajorDimension();
+		int knobPreOffset = (int) (linePreOffset
+				+ (getKnobPercent() * lineMajorDimension)
+				- (knobMajorDimension / 2));
+		knobPreOffset = Math.min(knobPreOffset, linePreOffset
+				+ lineMajorDimension - (knobMajorDimension / 2) - 1);
+		DOM.setStyleAttribute(knobElement, getMajorCssPreProperty(),
+				knobPreOffset + "px");
+	}
+
+	/**
+	 * Draw the labels along the line. not dimension-sensitive yet
+	 */
+	private void drawLabels() {
+		// Abort if not attached
+		if (!isAttached()) {
+			return;
+		}
+		// Draw the labels
+		int lineMajorDimension = getLineMajorDimension();
+		if (numLabels > 0) {
+			// Create the labels or make them visible
+			for (int i = 0; i <= numLabels; i++) {
+				Element label = null;
+				if (i < labelElements.size()) {
+					label = labelElements.get(i);
+				} else { // Create the new label
+					label = DOM.createDiv();
+					DOM.setStyleAttribute(label, "position", "absolute");
+					DOM.setStyleAttribute(label, "display", "none");
+					if (enabled) {
+						DOM.setElementProperty(label, "className",
+								"gwt-SliderBar-label");
+					} else {
+						DOM.setElementProperty(label, "className",
+								"gwt-SliderBar-label-disabled");
+					}
+					DOM.appendChild(getElement(), label);
+					labelElements.add(label);
+				}
+				// Set the label text
+				double value = minValue + (getTotalRange() * i / numLabels);
+				DOM.setStyleAttribute(label, "visibility", "hidden");
+				DOM.setStyleAttribute(label, "display", "");
+				DOM.setElementProperty(label, "innerHTML", formatLabel(value));
+				// Move to the left so the label width is not clipped by the
+				// shell
+				DOM.setStyleAttribute(label, "left", "0px");
+				// Position the label and make it visible
+				int labelWidth = DOM.getElementPropertyInt(label,
+						"offsetWidth");
+				int labelLeftOffset = linePreOffset
+						+ (lineMajorDimension * i / numLabels)
+						- (labelWidth / 2);
+				labelLeftOffset = Math.min(labelLeftOffset,
+						linePreOffset + lineMajorDimension - labelWidth);
+				labelLeftOffset = Math.max(labelLeftOffset, linePreOffset);
+				DOM.setStyleAttribute(label, "left", labelLeftOffset + "px");
+				DOM.setStyleAttribute(label, "visibility", "visible");
+			}
+			// Hide unused labels
+			for (int i = (numLabels + 1); i < labelElements.size(); i++) {
+				DOM.setStyleAttribute(labelElements.get(i), "display", "none");
+			}
+		} else { // Hide all labels
+			for (Element elem : labelElements) {
+				DOM.setStyleAttribute(elem, "display", "none");
+			}
+		}
+	}
+
+	/**
+	 * Draw the tick along the line.
+	 */
+	private void drawTicks() {
+		// Abort if not attached
+		if (!isAttached()) {
+			return;
+		}
+		// Draw the ticks
+		int lineMajorDimension = getLineMajorDimension();
+		if (numTicks > 0) {
+			// Create the ticks or make them visible
+			for (int i = 0; i <= numTicks; i++) {
+				Element tick = null;
+				if (i < tickElements.size()) {
+					tick = tickElements.get(i);
+				} else { // Create the new tick
+					tick = DOM.createDiv();
+					DOM.setStyleAttribute(tick, "position", "absolute");
+					DOM.setStyleAttribute(tick, "display", "none");
+					DOM.appendChild(getElement(), tick);
+					tickElements.add(tick);
+				}
+				if (enabled) {
+					DOM.setElementProperty(tick, "className",
+							"gwt-SliderBar-tick");
+				} else {
+					DOM.setElementProperty(tick, "className",
+							"gwt-SliderBar-tick gwt-SliderBar-tick-disabled");
+				}
+				// Position the tick and make it visible
+				DOM.setStyleAttribute(tick, "visibility", "hidden");
+				DOM.setStyleAttribute(tick, "display", "");
+				int tickWidth = DOM.getElementPropertyInt(tick, "offsetWidth");
+				int tickLeftOffset = linePreOffset
+						+ (lineMajorDimension * i / numTicks) - (tickWidth / 2);
+				tickLeftOffset = Math.min(tickLeftOffset,
+						linePreOffset + lineMajorDimension - tickWidth);
+				DOM.setStyleAttribute(tick, "left", tickLeftOffset + "px");
+				DOM.setStyleAttribute(tick, "visibility", "visible");
+			}
+			// Hide unused ticks
+			for (int i = (numTicks + 1); i < tickElements.size(); i++) {
+				DOM.setStyleAttribute(tickElements.get(i), "display", "none");
+			}
+		} else { // Hide all ticks
+			for (Element elem : tickElements) {
+				DOM.setStyleAttribute(elem, "display", "none");
+			}
+		}
+		knobImage.getElement().removeFromParent();
+		DOM.appendChild(getElement(), knobImage.getElement());
+	}
+
+	/**
+	 * Format the label to display above the ticks
+	 *
+	 * Override this method in a subclass to customize the format. By default,
+	 * this method returns the integer portion of the value.
+	 *
+	 * @param value
+	 *            the value at the label
+	 * @return the text to put in the label
+	 */
+	protected String formatLabel(double value) {
+		if (labelFormatter != null) {
+			return labelFormatter.formatLabel(this, value);
+		} else {
+			return (int) (10 * value) / 10.0 + "";
+		}
+	}
+
+	/**
 	 * Return the current value.
 	 *
 	 * @return the current value
 	 */
 	public double getCurrentValue() {
 		return curValue;
+	}
+
+	private int getKnobMajorDimension() {
+		return DOM.getElementPropertyInt(knobImage.getElement(),
+				vertical ? "offsetHeight" : "offsetWidth");
+	}
+
+	/**
+	 * Get the percentage of the knob's position relative to the size of the
+	 * line. The return value will be between 0.0 and 1.0.
+	 *
+	 * @return the current percent complete
+	 */
+	protected double getKnobPercent() {
+		// If we have no range
+		if (maxValue <= minValue) {
+			return 0;
+		}
+		// Calculate the relative progress
+		double percent = (curValue - minValue) / (maxValue - minValue);
+		return Math.max(0.0, Math.min(1.0, percent));
 	}
 
 	/**
@@ -260,9 +435,22 @@ public class SliderBar extends FocusPanel
 		return labelFormatter;
 	}
 
+	private int getLineMajorDimension() {
+		return DOM.getElementPropertyInt(lineElement,
+				vertical ? "offsetHeight" : "offsetWidth");
+	}
+
 	public void getLinePreOffset(int width, int lineMajorDimension) {
 		linePreOffset = lineAlignedPre ? 0
 				: (width / 2) - (lineMajorDimension / 2);
+	}
+
+	private String getMajorCssPreProperty() {
+		return vertical ? "top" : "left";
+	}
+
+	private int getMajorDimension(int width, int height) {
+		return vertical ? height : width;
 	}
 
 	/**
@@ -301,6 +489,10 @@ public class SliderBar extends FocusPanel
 		return numTicks;
 	}
 
+	private String getPositioning() {
+		return absolutePositioning ? "absolute" : "relative";
+	}
+
 	/**
 	 * Return the step size.
 	 *
@@ -321,6 +513,14 @@ public class SliderBar extends FocusPanel
 		} else {
 			return maxValue - minValue;
 		}
+	}
+
+	/**
+	 * Highlight this widget.
+	 */
+	private void highlight() {
+		String styleName = getStylePrimaryName();
+		setStyleName(styleName + "-focused", true);
 	}
 
 	public boolean isAbsolutePositioning() {
@@ -457,6 +657,17 @@ public class SliderBar extends FocusPanel
 	}
 
 	/**
+	 * This method is called immediately after a widget becomes attached to the
+	 * browser's document.
+	 */
+	@Override
+	protected void onLoad() {
+		// Reset the position attribute of the parent element
+		DOM.setStyleAttribute(getElement(), "position", getPositioning());
+		redraw();
+	}
+
+	/**
 	 * This method is called when the dimensions of the parent element change.
 	 * Subclasses should override this method as needed.
 	 *
@@ -477,6 +688,10 @@ public class SliderBar extends FocusPanel
 		drawKnob();
 	}
 
+	@Override
+	protected void onUnload() {
+	}
+
 	/**
 	 * Redraw the progress bar when something changes the layout.
 	 */
@@ -487,6 +702,14 @@ public class SliderBar extends FocusPanel
 					"clientHeight");
 			onResize(width, height);
 		}
+	}
+
+	/**
+	 * Reset the progress to constrain the progress to the current range and
+	 * redraw the knob as needed.
+	 */
+	private void resetCurrentValue() {
+		setCurrentValue(getCurrentValue());
 	}
 
 	public void setAbsolutePositioning(boolean absolutePositioning) {
@@ -674,180 +897,6 @@ public class SliderBar extends FocusPanel
 	}
 
 	/**
-	 * Draw the knob where it is supposed to be relative to the line.
-	 */
-	private void drawKnob() {
-		// Abort if not attached
-		if (!isAttached()) {
-			return;
-		}
-		// Move the knob to the correct position
-		Element knobElement = knobImage.getElement();
-		int lineMajorDimension = getLineMajorDimension();
-		int knobMajorDimension = getKnobMajorDimension();
-		int knobPreOffset = (int) (linePreOffset
-				+ (getKnobPercent() * lineMajorDimension)
-				- (knobMajorDimension / 2));
-		knobPreOffset = Math.min(knobPreOffset, linePreOffset
-				+ lineMajorDimension - (knobMajorDimension / 2) - 1);
-		DOM.setStyleAttribute(knobElement, getMajorCssPreProperty(),
-				knobPreOffset + "px");
-	}
-
-	/**
-	 * Draw the labels along the line. not dimension-sensitive yet
-	 */
-	private void drawLabels() {
-		// Abort if not attached
-		if (!isAttached()) {
-			return;
-		}
-		// Draw the labels
-		int lineMajorDimension = getLineMajorDimension();
-		if (numLabels > 0) {
-			// Create the labels or make them visible
-			for (int i = 0; i <= numLabels; i++) {
-				Element label = null;
-				if (i < labelElements.size()) {
-					label = labelElements.get(i);
-				} else { // Create the new label
-					label = DOM.createDiv();
-					DOM.setStyleAttribute(label, "position", "absolute");
-					DOM.setStyleAttribute(label, "display", "none");
-					if (enabled) {
-						DOM.setElementProperty(label, "className",
-								"gwt-SliderBar-label");
-					} else {
-						DOM.setElementProperty(label, "className",
-								"gwt-SliderBar-label-disabled");
-					}
-					DOM.appendChild(getElement(), label);
-					labelElements.add(label);
-				}
-				// Set the label text
-				double value = minValue + (getTotalRange() * i / numLabels);
-				DOM.setStyleAttribute(label, "visibility", "hidden");
-				DOM.setStyleAttribute(label, "display", "");
-				DOM.setElementProperty(label, "innerHTML", formatLabel(value));
-				// Move to the left so the label width is not clipped by the
-				// shell
-				DOM.setStyleAttribute(label, "left", "0px");
-				// Position the label and make it visible
-				int labelWidth = DOM.getElementPropertyInt(label,
-						"offsetWidth");
-				int labelLeftOffset = linePreOffset
-						+ (lineMajorDimension * i / numLabels)
-						- (labelWidth / 2);
-				labelLeftOffset = Math.min(labelLeftOffset,
-						linePreOffset + lineMajorDimension - labelWidth);
-				labelLeftOffset = Math.max(labelLeftOffset, linePreOffset);
-				DOM.setStyleAttribute(label, "left", labelLeftOffset + "px");
-				DOM.setStyleAttribute(label, "visibility", "visible");
-			}
-			// Hide unused labels
-			for (int i = (numLabels + 1); i < labelElements.size(); i++) {
-				DOM.setStyleAttribute(labelElements.get(i), "display", "none");
-			}
-		} else { // Hide all labels
-			for (Element elem : labelElements) {
-				DOM.setStyleAttribute(elem, "display", "none");
-			}
-		}
-	}
-
-	/**
-	 * Draw the tick along the line.
-	 */
-	private void drawTicks() {
-		// Abort if not attached
-		if (!isAttached()) {
-			return;
-		}
-		// Draw the ticks
-		int lineMajorDimension = getLineMajorDimension();
-		if (numTicks > 0) {
-			// Create the ticks or make them visible
-			for (int i = 0; i <= numTicks; i++) {
-				Element tick = null;
-				if (i < tickElements.size()) {
-					tick = tickElements.get(i);
-				} else { // Create the new tick
-					tick = DOM.createDiv();
-					DOM.setStyleAttribute(tick, "position", "absolute");
-					DOM.setStyleAttribute(tick, "display", "none");
-					DOM.appendChild(getElement(), tick);
-					tickElements.add(tick);
-				}
-				if (enabled) {
-					DOM.setElementProperty(tick, "className",
-							"gwt-SliderBar-tick");
-				} else {
-					DOM.setElementProperty(tick, "className",
-							"gwt-SliderBar-tick gwt-SliderBar-tick-disabled");
-				}
-				// Position the tick and make it visible
-				DOM.setStyleAttribute(tick, "visibility", "hidden");
-				DOM.setStyleAttribute(tick, "display", "");
-				int tickWidth = DOM.getElementPropertyInt(tick, "offsetWidth");
-				int tickLeftOffset = linePreOffset
-						+ (lineMajorDimension * i / numTicks) - (tickWidth / 2);
-				tickLeftOffset = Math.min(tickLeftOffset,
-						linePreOffset + lineMajorDimension - tickWidth);
-				DOM.setStyleAttribute(tick, "left", tickLeftOffset + "px");
-				DOM.setStyleAttribute(tick, "visibility", "visible");
-			}
-			// Hide unused ticks
-			for (int i = (numTicks + 1); i < tickElements.size(); i++) {
-				DOM.setStyleAttribute(tickElements.get(i), "display", "none");
-			}
-		} else { // Hide all ticks
-			for (Element elem : tickElements) {
-				DOM.setStyleAttribute(elem, "display", "none");
-			}
-		}
-		knobImage.getElement().removeFromParent();
-		DOM.appendChild(getElement(), knobImage.getElement());
-	}
-
-	private int getKnobMajorDimension() {
-		return DOM.getElementPropertyInt(knobImage.getElement(),
-				vertical ? "offsetHeight" : "offsetWidth");
-	}
-
-	private int getLineMajorDimension() {
-		return DOM.getElementPropertyInt(lineElement,
-				vertical ? "offsetHeight" : "offsetWidth");
-	}
-
-	private String getMajorCssPreProperty() {
-		return vertical ? "top" : "left";
-	}
-
-	private int getMajorDimension(int width, int height) {
-		return vertical ? height : width;
-	}
-
-	private String getPositioning() {
-		return absolutePositioning ? "absolute" : "relative";
-	}
-
-	/**
-	 * Highlight this widget.
-	 */
-	private void highlight() {
-		String styleName = getStylePrimaryName();
-		setStyleName(styleName + "-focused", true);
-	}
-
-	/**
-	 * Reset the progress to constrain the progress to the current range and
-	 * redraw the knob as needed.
-	 */
-	private void resetCurrentValue() {
-		setCurrentValue(getCurrentValue());
-	}
-
-	/**
 	 * Slide the knob to a new location.
 	 *
 	 * @param event
@@ -908,100 +957,6 @@ public class SliderBar extends FocusPanel
 	 */
 	private void unhighlight() {
 		setStyleName(getStylePrimaryName() + "-focused", false);
-	}
-
-	/**
-	 * Format the label to display above the ticks
-	 *
-	 * Override this method in a subclass to customize the format. By default,
-	 * this method returns the integer portion of the value.
-	 *
-	 * @param value
-	 *            the value at the label
-	 * @return the text to put in the label
-	 */
-	protected String formatLabel(double value) {
-		if (labelFormatter != null) {
-			return labelFormatter.formatLabel(this, value);
-		} else {
-			return (int) (10 * value) / 10.0 + "";
-		}
-	}
-
-	/**
-	 * Get the percentage of the knob's position relative to the size of the
-	 * line. The return value will be between 0.0 and 1.0.
-	 *
-	 * @return the current percent complete
-	 */
-	protected double getKnobPercent() {
-		// If we have no range
-		if (maxValue <= minValue) {
-			return 0;
-		}
-		// Calculate the relative progress
-		double percent = (curValue - minValue) / (maxValue - minValue);
-		return Math.max(0.0, Math.min(1.0, percent));
-	}
-
-	/**
-	 * This method is called immediately after a widget becomes attached to the
-	 * browser's document.
-	 */
-	@Override
-	protected void onLoad() {
-		// Reset the position attribute of the parent element
-		DOM.setStyleAttribute(getElement(), "position", getPositioning());
-		redraw();
-	}
-
-	@Override
-	protected void onUnload() {
-	}
-
-	/**
-	 * A formatter used to format the labels displayed in the widget.
-	 */
-	public static interface LabelFormatter {
-		/**
-		 * Generate the text to display in each label based on the label's
-		 * value.
-		 *
-		 * Override this method to change the text displayed within the
-		 * SliderBar.
-		 *
-		 * @param slider
-		 *            the Slider bar
-		 * @param value
-		 *            the value the label displays
-		 * @return the text to display for the label
-		 */
-		String formatLabel(SliderBar slider, double value);
-	}
-
-	/**
-	 */
-	public static interface SliderBarImages extends ClientBundle {
-		/**
-		 * An image used for the sliding knob.
-		 *
-		 * @return a prototype of this image
-		 */
-		ImageResource slider();
-
-		/**
-		 * An image used for the sliding knob.
-		 *
-		 * @return a prototype of this image
-		 */
-		ImageResource sliderDisabled();
-
-		/**
-		 * An image used for the sliding knob while sliding.
-		 *
-		 * @return a prototype of this image
-		 */
-		ImageResource sliderSliding();
 	}
 
 	/**
@@ -1069,5 +1024,50 @@ public class SliderBar extends FocusPanel
 			this.multiplier = multiplier;
 			super.schedule(delayMillis);
 		}
+	}
+
+	/**
+	 * A formatter used to format the labels displayed in the widget.
+	 */
+	public static interface LabelFormatter {
+		/**
+		 * Generate the text to display in each label based on the label's
+		 * value.
+		 *
+		 * Override this method to change the text displayed within the
+		 * SliderBar.
+		 *
+		 * @param slider
+		 *            the Slider bar
+		 * @param value
+		 *            the value the label displays
+		 * @return the text to display for the label
+		 */
+		String formatLabel(SliderBar slider, double value);
+	}
+
+	/**
+	 */
+	public static interface SliderBarImages extends ClientBundle {
+		/**
+		 * An image used for the sliding knob.
+		 *
+		 * @return a prototype of this image
+		 */
+		ImageResource slider();
+
+		/**
+		 * An image used for the sliding knob.
+		 *
+		 * @return a prototype of this image
+		 */
+		ImageResource sliderDisabled();
+
+		/**
+		 * An image used for the sliding knob while sliding.
+		 *
+		 * @return a prototype of this image
+		 */
+		ImageResource sliderSliding();
 	}
 }

@@ -42,6 +42,26 @@ import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetada
 public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 	public boolean commitAfterScan = true;
 
+	private void commit() {
+		for (RegistryScannerMetadata metadata : outgoingCache.classData
+				.values()) {
+			if (!metadata.invalid) {
+				for (RegistryScannerLazyRegistration registration : metadata.registrations) {
+					Registry.register().add(
+							registration.registeringClassClassName,
+							registration.keys, registration.implementation,
+							registration.priority);
+				}
+			}
+		}
+	}
+
+	@Override
+	protected RegistryScannerMetadata createMetadata(String className,
+			ClassMetadata found) {
+		return new RegistryScannerMetadata(className).fromUrl(found);
+	}
+
 	/**
 	 * Load cached registry data directly (when generated at build- rather than
 	 * run-time)
@@ -63,41 +83,6 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 				}
 			}
 		}
-	}
-
-	public void scan(ClassMetadataCache<ClassMetadata> classDataCache,
-			String ignoreClassnameRegex, String registryName) throws Exception {
-		String cachePath = Ax.format("%s/%s-registry-cache.ser",
-				getHomeDir().getPath(), registryName);
-		if (!Ax.isTest() && !Boolean.getBoolean("RegistryScanner.useCache")
-				&& !GWT.isClient()) {
-			new File(cachePath).delete();
-		}
-		this.ignoreClassnameRegex = ignoreClassnameRegex;
-		scan(classDataCache, cachePath);
-		if (commitAfterScan) {
-			commit();
-		}
-	}
-
-	private void commit() {
-		for (RegistryScannerMetadata metadata : outgoingCache.classData
-				.values()) {
-			if (!metadata.invalid) {
-				for (RegistryScannerLazyRegistration registration : metadata.registrations) {
-					Registry.register().add(
-							registration.registeringClassClassName,
-							registration.keys, registration.implementation,
-							registration.priority);
-				}
-			}
-		}
-	}
-
-	@Override
-	protected RegistryScannerMetadata createMetadata(String className,
-			ClassMetadata found) {
-		return new RegistryScannerMetadata(className).fromUrl(found);
 	}
 
 	protected Class maybeNormaliseClass(Class c) {
@@ -131,6 +116,21 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 			}
 		}
 		return out;
+	}
+
+	public void scan(ClassMetadataCache<ClassMetadata> classDataCache,
+			String ignoreClassnameRegex, String registryName) throws Exception {
+		String cachePath = Ax.format("%s/%s-registry-cache.ser",
+				getHomeDir().getPath(), registryName);
+		if (!Ax.isTest() && !Boolean.getBoolean("RegistryScanner.useCache")
+				&& !GWT.isClient()) {
+			new File(cachePath).delete();
+		}
+		this.ignoreClassnameRegex = ignoreClassnameRegex;
+		scan(classDataCache, cachePath);
+		if (commitAfterScan) {
+			commit();
+		}
 	}
 
 	public static class RegistryScannerLazyRegistration

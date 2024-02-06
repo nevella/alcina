@@ -46,9 +46,14 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  * @author Nick Reddel
  */
 public interface CommonRemoteService extends RemoteService {
+	String getJobLog(long jobId);
+
 	@WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
 	public List<JobTracker> getLogsForAction(RemoteAction action,
 			Integer count);
+
+	Map<EntityLocator, EntityLocator>
+			getPersistentLocators(Set<EntityLocator> locators);
 
 	public LoginResponse hello();
 
@@ -77,6 +82,8 @@ public interface CommonRemoteService extends RemoteService {
 
 	public void ping();
 
+	JobTracker.Response pollJobStatus(JobTracker.Request request);
+
 	@WebMethod()
 	public JobTracker pollJobStatus(String id, boolean cancel);
 
@@ -92,11 +99,4 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod
 	public DomainUpdate waitForTransforms(
 			DomainTransformCommitPosition position) throws PermissionsException;
-
-	String getJobLog(long jobId);
-
-	Map<EntityLocator, EntityLocator>
-			getPersistentLocators(Set<EntityLocator> locators);
-
-	JobTracker.Response pollJobStatus(JobTracker.Request request);
 }

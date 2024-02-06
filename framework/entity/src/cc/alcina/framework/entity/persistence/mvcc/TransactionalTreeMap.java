@@ -46,6 +46,26 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 	}
 
 	@Override
+	protected Map createConcurrentMap() {
+		return new ConcurrentSkipListMap(keyComparator);
+	}
+
+	@Override
+	protected Map<K, V> createNonConcurrentMap() {
+		if (keyClass == Long.class) {
+			if (valueClass == Boolean.class) {
+				return (Map<K, V>) new Long2BooleanAVLTreeMap(
+						(Comparator<? super Long>) keyComparator);
+			} else {
+				return (Map<K, V>) new Long2ObjectAVLTreeMap<>(
+						(Comparator<? super Long>) keyComparator);
+			}
+		} else {
+			return (Map<K, V>) new Object2ObjectAVLTreeMap<>(keyComparator);
+		}
+	}
+
+	@Override
 	public NavigableSet<K> descendingKeySet() {
 		throw new UnsupportedOperationException();
 	}
@@ -160,25 +180,5 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 			withPureTransactional(boolean pureTransactional) {
 		this.pureTransactional = pureTransactional;
 		return this;
-	}
-
-	@Override
-	protected Map createConcurrentMap() {
-		return new ConcurrentSkipListMap(keyComparator);
-	}
-
-	@Override
-	protected Map<K, V> createNonConcurrentMap() {
-		if (keyClass == Long.class) {
-			if (valueClass == Boolean.class) {
-				return (Map<K, V>) new Long2BooleanAVLTreeMap(
-						(Comparator<? super Long>) keyComparator);
-			} else {
-				return (Map<K, V>) new Long2ObjectAVLTreeMap<>(
-						(Comparator<? super Long>) keyComparator);
-			}
-		} else {
-			return (Map<K, V>) new Object2ObjectAVLTreeMap<>(keyComparator);
-		}
 	}
 }

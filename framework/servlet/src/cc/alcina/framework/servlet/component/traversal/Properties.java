@@ -31,6 +31,27 @@ class Properties extends Model.Fields {
 	@Directed.Transform(SelectionArea.class)
 	Selection selection;
 
+	Page page;
+
+	Properties(Page page) {
+		this.page = page;
+		this.filter = new Choices.Single<>(
+				TraversalPlace.SelectionType.values());
+		bindings().from(page).on(Page.Property.place)
+				.typed(TraversalPlace.class)
+				.map(p -> p.provideSelection(SelectionType.VIEW))
+				.accept(this::setSelection);
+		bindings().from(page).on(Page.Property.place)
+				.typed(TraversalPlace.class)
+				.map(TraversalPlace::firstSelectionType)
+				.accept(filter::setSelectedValue);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+	}
+
 	public void setSelection(Selection selection) {
 		set("selection", this.selection, selection,
 				() -> this.selection = selection);
@@ -70,26 +91,5 @@ class Properties extends Model.Fields {
 			markup = view.getMarkup(selection);
 			return this;
 		}
-	}
-
-	Page page;
-
-	Properties(Page page) {
-		this.page = page;
-		this.filter = new Choices.Single<>(
-				TraversalPlace.SelectionType.values());
-		bindings().from(page).on(Page.Property.place)
-				.typed(TraversalPlace.class)
-				.map(p -> p.provideSelection(SelectionType.VIEW))
-				.accept(this::setSelection);
-		bindings().from(page).on(Page.Property.place)
-				.typed(TraversalPlace.class)
-				.map(TraversalPlace::firstSelectionType)
-				.accept(filter::setSelectedValue);
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
 	}
 }

@@ -228,6 +228,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		}
 	}
 
+	protected abstract InstantiateImplCallback createUserAndGroupInstantiator();
+
 	@Override
 	public <T> T ensure(Class<T> clazz, String key, Object value) {
 		String eql = Ax.format("from %s where %s = ?1", clazz.getSimpleName(),
@@ -507,6 +509,50 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		}
 	}
 
+	protected Collection<Class> getPerUserTransformClasses() {
+		return new ArrayList<Class>();
+	}
+
+	protected List<DomainTransformEventPersistent> getRecentTransforms(
+			Collection<Class> sourceObjectClasses, int maxTransforms,
+			long sinceId) {
+		Set<Long> classRefIds = new HashSet<Long>();
+		for (Class clazz : sourceObjectClasses) {
+			ClassRef classRef = ClassRef.forClass(clazz);
+			classRefIds.add(classRef.getId());
+		}
+		String eql = String.format(
+				"select dtep from %s dtep "
+						+ "where  dtep.id>?1 and dtep.objectClassRef.id in %s "
+						+ "order by dtep.id desc",
+				getImplementationSimpleClassName(
+						DomainTransformEventPersistent.class),
+				EntityPersistenceHelper.toInClause(classRefIds));
+		Query query = getEntityManager().createQuery(eql).setParameter(1,
+				sinceId);
+		if (sinceId == 0) {
+			query.setMaxResults(maxTransforms);
+		}
+		// unused, would just require a little tweak of the eql (removed as part
+		// of EntityPersistenceHelper cleanup) to instantiate the classrefs
+		throw new UnsupportedOperationException();
+		// return new EntityPersistenceHelper().detachedClone(
+		// query.getResultList(), Registry.impl(JPAImplementation.class)
+		// .getClassrefInstantiator());
+	}
+
+	protected Collection<Class> getSharedTransformClasses() {
+		return new ArrayList<Class>();
+	}
+
+	/**
+	 * This is deliberately low - for big initial objects size, 1000 is quite
+	 * reasonable (i.e. client load will be much faster)
+	 */
+	protected int getSharedTransformWarmupSize() {
+		return 100;
+	}
+
 	@Override
 	public List<Long> listRecentClientInstanceIds(String iidKey) {
 		Class<? extends ClientInstance> clientInstanceImpl = (Class<? extends ClientInstance>) getImplementation(
@@ -568,6 +614,11 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 					.getResultList();
 			Ax.out(list.get(0));
 		});
+	}
+
+	protected SearchResultsBase
+			projectSearchResults(SearchResultsBase results) {
+		return DomainLinker.linkToDomain(results);
 	}
 
 	@Override
@@ -637,6 +688,26 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		return wrapper;
 	}
 
+	private void tryAddSourceObjectName(
+			DomainTransformException transformException) {
+		if (transformException.getEvent() == null) {
+			return;
+		}
+		try {
+			Entity object = TransformManager.get()
+					.getObject(transformException.getEvent(), true);
+			if (object != null) {
+				transformException.setSourceObjectName(
+						HasDisplayName.displayName(object));
+			}
+		} catch (Exception e) {
+			System.out.println("Unable to add source object name - reason: "
+					+ e.getMessage());
+			// we tried
+			// e.printStackTrace();
+		}
+	}
+
 	@Override
 	public void updatePublicationMimeMessageId(Long publicationId,
 			String mimeMessageId) {
@@ -671,77 +742,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			result.invalid = true;
 		}
 		return result;
-	}
-
-	private void tryAddSourceObjectName(
-			DomainTransformException transformException) {
-		if (transformException.getEvent() == null) {
-			return;
-		}
-		try {
-			Entity object = TransformManager.get()
-					.getObject(transformException.getEvent(), true);
-			if (object != null) {
-				transformException.setSourceObjectName(
-						HasDisplayName.displayName(object));
-			}
-		} catch (Exception e) {
-			System.out.println("Unable to add source object name - reason: "
-					+ e.getMessage());
-			// we tried
-			// e.printStackTrace();
-		}
-	}
-
-	protected abstract InstantiateImplCallback createUserAndGroupInstantiator();
-
-	protected Collection<Class> getPerUserTransformClasses() {
-		return new ArrayList<Class>();
-	}
-
-	protected List<DomainTransformEventPersistent> getRecentTransforms(
-			Collection<Class> sourceObjectClasses, int maxTransforms,
-			long sinceId) {
-		Set<Long> classRefIds = new HashSet<Long>();
-		for (Class clazz : sourceObjectClasses) {
-			ClassRef classRef = ClassRef.forClass(clazz);
-			classRefIds.add(classRef.getId());
-		}
-		String eql = String.format(
-				"select dtep from %s dtep "
-						+ "where  dtep.id>?1 and dtep.objectClassRef.id in %s "
-						+ "order by dtep.id desc",
-				getImplementationSimpleClassName(
-						DomainTransformEventPersistent.class),
-				EntityPersistenceHelper.toInClause(classRefIds));
-		Query query = getEntityManager().createQuery(eql).setParameter(1,
-				sinceId);
-		if (sinceId == 0) {
-			query.setMaxResults(maxTransforms);
-		}
-		// unused, would just require a little tweak of the eql (removed as part
-		// of EntityPersistenceHelper cleanup) to instantiate the classrefs
-		throw new UnsupportedOperationException();
-		// return new EntityPersistenceHelper().detachedClone(
-		// query.getResultList(), Registry.impl(JPAImplementation.class)
-		// .getClassrefInstantiator());
-	}
-
-	protected Collection<Class> getSharedTransformClasses() {
-		return new ArrayList<Class>();
-	}
-
-	/**
-	 * This is deliberately low - for big initial objects size, 1000 is quite
-	 * reasonable (i.e. client load will be much faster)
-	 */
-	protected int getSharedTransformWarmupSize() {
-		return 100;
-	}
-
-	protected SearchResultsBase
-			projectSearchResults(SearchResultsBase results) {
-		return DomainLinker.linkToDomain(results);
 	}
 
 	@Registration(CommonPersistenceConnectionProvider.class)

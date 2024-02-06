@@ -28,12 +28,6 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 				.getPlaceByModelClass(clazz);
 	}
 
-	@Override
-	public void updateFrom(BasePlace other) {
-		Preconditions.checkArgument(other.getClass() == getClass());
-		entity = ((EntityPlace) other).entity;
-	}
-
 	public static EntityPlace forClassAndId(Class clazz, long id) {
 		return (EntityPlace) forClass(clazz).withId(id);
 	}
@@ -83,12 +77,12 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 				: (E) Domain.find(provideEntityClass(), id);
 	}
 
-	public boolean provideHasEntity() {
-		return entity != null;
-	}
-
 	public Class<? extends Entity> provideEntityClass() {
 		return RegistryHistoryMapper.get().getEntityClass(getClass());
+	}
+
+	public boolean provideHasEntity() {
+		return entity != null;
 	}
 
 	@Override
@@ -143,6 +137,12 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 			}
 		}
 		return provideCategoryString();
+	}
+
+	@Override
+	public void updateFrom(BasePlace other) {
+		Preconditions.checkArgument(other.getClass() == getClass());
+		entity = ((EntityPlace) other).entity;
 	}
 
 	public <EP extends EntityPlace> EP withAction(EntityAction action) {

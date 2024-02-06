@@ -79,6 +79,21 @@ public class MenuItem extends UIObject
 		this(html.asString(), true, cmd);
 	}
 
+	protected MenuItem(@IsSafeHtml
+	String text, boolean asHTML) {
+		setElement(DOM.createTD());
+		setSelectionStyle(false);
+		if (asHTML) {
+			setHTML(text);
+		} else {
+			setText(text);
+		}
+		setStyleName("gwt-MenuItem");
+		getElement().setAttribute("id", DOM.createUniqueId());
+		// Add a11y role "menuitem"
+		Roles.getMenuitemRole().set(getElement());
+	}
+
 	/**
 	 * Constructs a new menu item that cascades to a sub-menu when it is
 	 * selected.
@@ -139,21 +154,6 @@ public class MenuItem extends UIObject
 	public MenuItem(String text, ScheduledCommand cmd) {
 		this(text, false);
 		setScheduledCommand(cmd);
-	}
-
-	protected MenuItem(@IsSafeHtml
-	String text, boolean asHTML) {
-		setElement(DOM.createTD());
-		setSelectionStyle(false);
-		if (asHTML) {
-			setHTML(text);
-		} else {
-			setText(text);
-		}
-		setStyleName("gwt-MenuItem");
-		getElement().setAttribute("id", DOM.createUniqueId());
-		// Add a11y role "menuitem"
-		Roles.getMenuitemRole().set(getElement());
 	}
 
 	/**
@@ -228,6 +228,20 @@ public class MenuItem extends UIObject
 	}
 
 	/**
+	 * Also sets the Debug IDs of MenuItems in the submenu of this
+	 * {@link MenuItem} if a submenu exists.
+	 *
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+		if (subMenu != null) {
+			subMenu.setMenuItemDebugIds(baseID);
+		}
+	}
+
+	/**
 	 * Sets the command associated with this item.
 	 *
 	 * @param cmd
@@ -260,6 +274,10 @@ public class MenuItem extends UIObject
 		getElement().setInnerHTML(html);
 	}
 
+	void setParentMenu(MenuBar parentMenu) {
+		this.parentMenu = parentMenu;
+	}
+
 	/**
 	 * Sets the scheduled command associated with this item.
 	 *
@@ -268,6 +286,14 @@ public class MenuItem extends UIObject
 	 */
 	public void setScheduledCommand(ScheduledCommand cmd) {
 		command = cmd;
+	}
+
+	protected void setSelectionStyle(boolean selected) {
+		if (selected) {
+			addStyleDependentName(DEPENDENT_STYLENAME_SELECTED_ITEM);
+		} else {
+			removeStyleDependentName(DEPENDENT_STYLENAME_SELECTED_ITEM);
+		}
 	}
 
 	/**
@@ -298,31 +324,5 @@ public class MenuItem extends UIObject
 	@Override
 	public void setText(String text) {
 		getElement().setInnerText(text);
-	}
-
-	/**
-	 * Also sets the Debug IDs of MenuItems in the submenu of this
-	 * {@link MenuItem} if a submenu exists.
-	 *
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
-		if (subMenu != null) {
-			subMenu.setMenuItemDebugIds(baseID);
-		}
-	}
-
-	protected void setSelectionStyle(boolean selected) {
-		if (selected) {
-			addStyleDependentName(DEPENDENT_STYLENAME_SELECTED_ITEM);
-		} else {
-			removeStyleDependentName(DEPENDENT_STYLENAME_SELECTED_ITEM);
-		}
-	}
-
-	void setParentMenu(MenuBar parentMenu) {
-		this.parentMenu = parentMenu;
 	}
 }

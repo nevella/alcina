@@ -57,14 +57,6 @@ public final class AppCache extends JavaScriptObject {
 														return $wnd.applicationCache;
 														}-*/;
 
-	/**
-	 * Returns <code>true</code> if the Application Cache API is supported on
-	 * the running platform.
-	 */
-	public static native boolean isSupported() /*-{
-												return typeof $wnd.applicationCache != "undefined";
-												}-*/;
-
 	private static void handleCacheEvents(EventListener listener, Event event) {
 		UncaughtExceptionHandler ueh = GWT.getUncaughtExceptionHandler();
 		if (ueh != null) {
@@ -77,6 +69,14 @@ public final class AppCache extends JavaScriptObject {
 			listener.onBrowserEvent(event);
 		}
 	}
+
+	/**
+	 * Returns <code>true</code> if the Application Cache API is supported on
+	 * the running platform.
+	 */
+	public static native boolean isSupported() /*-{
+												return typeof $wnd.applicationCache != "undefined";
+												}-*/;
 
 	protected AppCache() {
 	}

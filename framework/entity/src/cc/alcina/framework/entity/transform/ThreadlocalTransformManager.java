@@ -270,9 +270,114 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected void beforeDirectCollectionModification(Entity obj,
+			String propertyName, Object newTargetValue,
+			CollectionModificationType collectionModificationType) {
+		Transactions.resolve(obj, ResolvedVersionState.WRITE, false);
+	}
+
+	@Override
 	public boolean checkForExistingLocallyCreatedObjects() {
 		// if in db-commit mode, we want a nice crisp fresh untouched instance
 		return getEntityManager() == null;
+	}
+
+	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
+		return entity.getId() != 0
+				|| (localIdToEntityMap.get(entity.getLocalId()) != null)
+				|| (entity instanceof SourcesPropertyChangeEvents && listeningTo
+						.containsKey((SourcesPropertyChangeEvents) entity))
+				|| LooseContext
+						.is(CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS);
+	}
+
+	@Override
+	protected boolean checkPermissions(Entity entity, DomainTransformEvent evt,
+			String propertyName, Entity change) {
+		return checkPermissions(entity, evt, propertyName, change, false);
+	}
+
+	private boolean checkPermissions(Entity entity, DomainTransformEvent evt,
+			String propertyName, Entity<?> entityChange, boolean muteLogging) {
+		if (isIgnoreTransformPermissions()) {
+			return true;
+		}
+		if (explicitlyPermitted(evt)) {
+			return true;
+		}
+		try {
+			if (entity == null) {
+				entity = (Entity) Reflections.at(evt.getObjectClass())
+						.templateInstance();
+			} else {
+				entity = ensureNonProxy(entity);
+				entity = resolveForPermissionsChecks(entity);
+			}
+			Class<? extends Entity> objectClass = entity.entityClass();
+			ObjectPermissions op = objectClass
+					.getAnnotation(ObjectPermissions.class);
+			op = op == null
+					? PermissionsManager.get().getDefaultObjectPermissions()
+					: op;
+			ObjectPermissions oph = null;
+			AssignmentPermission aph = propertyName == null ? null
+					: Reflections.at(objectClass).property(propertyName)
+							.annotation(AssignmentPermission.class);
+			if (entityChange != null) {
+				oph = entityChange.entityClass()
+						.getAnnotation(ObjectPermissions.class);
+				oph = oph == null
+						? PermissionsManager.get().getDefaultObjectPermissions()
+						: oph;
+			}
+			switch (evt.getTransformType()) {
+			case ADD_REF_TO_COLLECTION:
+			case REMOVE_REF_FROM_COLLECTION:
+				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
+						oph, aph, evt);
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
+				break;
+			case CHANGE_PROPERTY_REF:
+				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
+						oph, aph, evt);
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
+				break;
+			// deliberate fall-through
+			case NULL_PROPERTY_REF:
+			case CHANGE_PROPERTY_SIMPLE_VALUE:
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
+				break;
+			case CREATE_OBJECT:
+				if (!PermissionsManager.get().isPermitted(entity,
+						op.create())) {
+					throw new DomainTransformException(new PermissionsException(
+							"Permission denied : create - object " + evt));
+				}
+				break;
+			case DELETE_OBJECT:
+				if (!PermissionsManager.get().isPermitted(entity,
+						op.delete())) {
+					throw new DomainTransformException(new PermissionsException(
+							"Permission denied : delete - object " + evt));
+				}
+				break;
+			}
+			// TODO:3.2, check r/w access for bean for add/remove ref
+			// check r/w access for bean for all
+		} catch (Exception e) {
+			if (e instanceof DomainTransformException) {
+				DomainTransformException dtex = (DomainTransformException) e;
+				dtex.setEvent(evt);
+				evt.setSource(entity);
+				evt.setPropertyName(propertyName);
+			}
+			if (!muteLogging) {
+				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
+						"Domain transform permissions exception", e);
+			}
+			throw new WrappedRuntimeException(e);
+		}
+		return true;
 	}
 
 	public boolean checkPropertyAccess(Entity<?> entity, String propertyName,
@@ -298,6 +403,52 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return true;
 	}
 
+	private void checkPropertyReadAccessAndThrow(Entity entity,
+			String propertyName, DomainTransformEvent evt)
+			throws DomainTransformException, IntrospectionException {
+		if (!checkPropertyAccess(entity, propertyName, true)) {
+			throw new DomainTransformException(new PermissionsException(
+					"Permission denied : read - object/property " + evt));
+		}
+	}
+
+	private boolean checkPropertyWriteAccessAndThrow(Entity<?> entity,
+			String propertyName, DomainTransformEvent evt)
+			throws DomainTransformException, IntrospectionException {
+		if (!checkPropertyAccess(entity, propertyName, false)) {
+			DomainProperty ann = Reflections.at(entity.entityClass())
+					.property(propertyName).annotation(DomainProperty.class);
+			throw new DomainTransformException(new PermissionsException(
+					"Permission denied : write - object/property " + evt));
+		}
+		return true;
+	}
+
+	private void checkTargetReadAndAssignmentAccessAndThrow(Entity assigningTo,
+			Entity assigning, ObjectPermissions oph, AssignmentPermission aph,
+			DomainTransformEvent evt) throws DomainTransformException {
+		if (assigning == null) {
+			return;
+		}
+		if (!PermissionsManager.get().isPermitted(assigning, oph.read())) {
+			throw new DomainTransformException(new PermissionsException(
+					"Permission denied : read - target object " + evt));
+		}
+		if (aph != null && !PermissionsManager.get().isPermitted(assigning,
+				assigningTo, new AnnotatedPermissible(aph.value()), false)) {
+			throw new DomainTransformException(new PermissionsException(
+					"Permission denied : assign - target object " + evt));
+		}
+	}
+
+	@Override
+	protected void checkVersion(Entity obj, DomainTransformEvent event)
+			throws DomainTransformException {
+		if (exceptionPolicy != null) {
+			exceptionPolicy.checkVersion(obj, event);
+		}
+	}
+
 	@Override
 	public DomainTransformEvent delete(Entity entity) {
 		if (entity == null) {
@@ -317,6 +468,53 @@ public class ThreadlocalTransformManager extends TransformManager {
 		listeningTo.remove(entity);
 		entity.removePropertyChangeListener(this);
 		super.deregisterDomainObject(entity);
+	}
+
+	@Override
+	protected void doubleCheckAddition(Collection collection, Object tgt) {
+		if (entityManager != null) {
+			JPAImplementation jpaImplementation = Registry
+					.impl(JPAImplementation.class);
+			tgt = jpaImplementation.getInstantiatedObject(tgt);
+			for (Iterator itr = collection.iterator(); itr.hasNext();) {
+				Object next = itr.next();
+				if (jpaImplementation
+						.areEquivalentIgnoreInstantiationState(next, tgt)) {
+					return;
+				}
+			}
+		}
+		collection.add(tgt);
+	}
+
+	@Override
+	protected void doubleCheckRemoval(Collection collection, Object tgt) {
+		JPAImplementation jpaImplementation = Registry
+				.impl(JPAImplementation.class);
+		tgt = jpaImplementation.getInstantiatedObject(tgt);
+		for (Iterator itr = collection.iterator(); itr.hasNext();) {
+			Object next = itr.next();
+			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,
+					tgt)) {
+				itr.remove();
+				break;
+			}
+		}
+	}
+
+	@Override
+	protected Entity ensureEndpointWriteable(Entity targetObject) {
+		return Transactions.resolve(targetObject, ResolvedVersionState.WRITE,
+				false);
+	}
+
+	protected <T extends Entity> T ensureNonProxy(T entity) {
+		if (entity != null && entity.getId() != 0
+				&& getEntityManager() != null) {
+			entity = Registry.impl(JPAImplementation.class)
+					.getInstantiatedObject(entity);
+		}
+		return entity;
 	}
 
 	/*
@@ -352,12 +550,22 @@ public class ThreadlocalTransformManager extends TransformManager {
 		});
 	}
 
+	private boolean explicitlyPermitted(DomainTransformEvent evt) {
+		return explicitlyPermittedTransforms.contains(evt);
+	}
+
 	public void flush() {
 		flush(new ArrayList<>());
 	}
 
 	public void flush(List<DomainTransformEventPersistent> dtreps) {
 		entityManager.flush();
+	}
+
+	@Override
+	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
+		return Ax.isTest()
+				|| !DomainStore.writableStore().isCached(entity.entityClass());
 	}
 
 	public ClientInstance getClientInstance() {
@@ -370,6 +578,15 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	public DetachedEntityCache getDetachedEntityCache() {
 		return this.detachedEntityCache;
+	}
+
+	@Override
+	protected Entity getEntityForCreate(DomainTransformEvent event) {
+		if (getEntityManager() == null) {
+			return super.getEntityForCreate(event);
+		} else {
+			return null;
+		}
 	}
 
 	public EntityManager getEntityManager() {
@@ -407,6 +624,16 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return store.handlesAssociationsFor(clazz);
 	}
 
+	@Override
+	protected void initObjectStore() {
+		setObjectStore(new ObjectStoreImpl());
+	}
+
+	@Override
+	protected boolean isAddToDomainObjects() {
+		return entityManager == null;
+	}
+
 	public boolean isApplyingExternalTransforms() {
 		return this.applyingExternalTransforms;
 	}
@@ -429,6 +656,16 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return listeningTo.containsKey(spce);
 	}
 
+	@Override
+	protected boolean isPerformDirectAssociationUpdates(Entity entity) {
+		/*
+		 * if ==1, only the transform manager listens to property changes. So
+		 * synthesising collection updates will have equal effect to
+		 * clone/modify
+		 */
+		return entity.propertyChangeListeners().length == 1;
+	}
+
 	public boolean isTransformsExplicitlyPermitted() {
 		return this.transformsExplicitlyPermitted;
 	}
@@ -438,6 +675,33 @@ public class ThreadlocalTransformManager extends TransformManager {
 	 */
 	public boolean isUseObjectCreationId() {
 		return useObjectCreationId;
+	}
+
+	private void listenTo(Entity entity) {
+		if (!listeningTo.containsKey(entity)) {
+			Transaction current = Transaction.current();
+			if (current.isReadOnly() && LooseContext
+					.is(CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS)) {
+				// edge-case for lazy-external-dev-load
+			} else {
+				Preconditions.checkState(!current.isReadOnly());
+				TransactionId transactionId = current.getId();
+				if (listeningToTransactionId == null) {
+					listeningToTransactionId = transactionId;
+				} else {
+					if (!Objects.equals(listeningToTransactionId,
+							transactionId)) {
+						logger.warn(
+								"DEVEX:0 - Listening to object from wrong tx: {} - current : {} - incoming : {}",
+								entity.toStringEntity(),
+								listeningToTransactionId, current);
+						throw new IllegalStateException();
+					}
+				}
+				listeningTo.put(entity, entity);
+				entity.addPropertyChangeListener(this);
+			}
+		}
 	}
 
 	public void markFlushTransforms() {
@@ -483,14 +747,153 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return newInstance(clazz, id, localId, false);
 	}
 
+	protected <E extends Entity> E newInstance(Class<E> clazz, long id,
+			long localId, boolean externalLocal) {
+		try {
+			if (Entity.class.isAssignableFrom(clazz)) {
+				Preconditions.checkState(Transaction.current().isWriteable());
+				Entity newInstance = null;
+				if (entityManager == null) {
+					DomainStore store = DomainStore.stores().storeFor(clazz);
+					newInstance = Transaction.current().create((Class) clazz,
+							store, id, localId);
+					if (id == 0L) {
+						// created ex-store
+						if (externalLocal) {
+						} else {
+							store.getCache().put(newInstance);
+						}
+					}
+				} else {
+					newInstance = Reflections.newInstance(clazz);
+					newInstance.setLocalId(localId);
+				}
+				if (entityManager != null) {
+					if (isUseObjectCreationId() && id != 0) {
+						newInstance.setId(id);
+						Object fromBefore = Registry
+								.impl(JPAImplementation.class)
+								.beforeSpecificSetId(entityManager,
+										newInstance);
+						entityManager.persist(newInstance);
+						Registry.impl(JPAImplementation.class)
+								.afterSpecificSetId(fromBefore);
+					} else {
+						/*
+						 * TransformInPersistenceContext does this at the end of
+						 * transform application (before transform event
+						 * persistence) so that inserts can be batched
+						 */
+						// entityManager.persist(newInstance);
+					}
+				}
+				//
+				// FIXME - alcina.doc -
+				//
+				// why maintain localIdToEntityMap (reason: cross-cutting
+				// concern to domainstore - it's from pov of the ClientInstance
+				// - which may have persisted local objects unknown to this VM's
+				// store)
+				//
+				// localIdToEntityMap needs to be distinct from
+				// clientInstanceEntityMap for applying transforms from other
+				// servers (don't want to store localids if we don't have to)
+				//
+				// createdObjectLocators *could* be replaced with a collation,
+				// but perf would be worse and layering too - so leave (and
+				// explain) - they're only used in (entityManager != null)
+				// contexts, but code is cleaner this way
+				//
+				EntityLocator entityLocator = newInstance.toLocator();
+				localIdToEntityMap.put(localId, newInstance);
+				createdObjectLocators.add(entityLocator);
+				if (!isApplyingExternalTransforms()) {
+					if (clientInstanceEntityMap != null) {
+						clientInstanceEntityMap.putToLookups(entityLocator);
+					}
+				}
+				return (E) newInstance;
+			}
+			throw new Exception("only construct entities here");
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	@Override
 	public synchronized long nextLocalIdCounter() {
 		return useTlIdGenerator ? tlIdGenerator.incrementAndGet()
 				: localIdGenerator.incrementAndGet();
 	}
 
+	@Override
+	protected void objectModified(Entity entity, DomainTransformEvent evt,
+			boolean targetObject) {
+		boolean addToResults = false;
+		if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
+			addToResults = true;
+		}
+		// TODO - think about handling this as a postpersist entity listener?
+		// that way we ensure correct version numbers
+		if (entity instanceof HasVersionNumber
+				&& !modifiedObjects.contains(entity)) {
+			addToResults = true;
+			modifiedObjects.add(entity);
+			HasVersionNumber hv = (HasVersionNumber) entity;
+			if (targetObject) {
+				evt.setValueVersionNumber(hv.getVersionNumber() + 1);
+				if (evt.getValueId() == 0) {
+					evt.setValueId(entity.getId());
+				}
+			} else {
+				evt.setObjectVersionNumber(hv.getVersionNumber() + 1);
+				if (evt.getObjectId() == 0) {
+					evt.setObjectId(entity.getId());
+				}
+			}
+		}
+		if (addToResults) {
+			modificationEvents.add(evt);
+		}
+	}
+
+	@Override
+	protected /*
+				 * if in 'entityManager' mode (i.e. in a db transaction), let
+				 * the entityManager handle it - otherwise
+				 *
+				 * FIXME - mvcc.adjunct - maybe non-em instances should have a
+				 * 'domainobjects' (i.e. domain store?)
+				 *
+				 * In fact...yes. THere's quite a bit of confusion between
+				 * object lookup, object store and TM (particularly TLTM).
+				 *
+				 * Write it down (presumably get rid of object lookup) - i feel
+				 * that object store should delegate to domainstore server-side,
+				 * but need to make the interface cleaner. Also, how does this
+				 * play with PostTransactionEntityResolver...and AdjunctTm?
+				 */
+	void performDeleteObject(Entity entity) {
+		if (entityManager != null) {
+			entityManager.remove(entity);
+		} else {
+			if (handlesAssociationsFor(entity.entityClass())) {
+				entity = getObject(entity);
+				// will be deregistered with resetTltm, and not wanted if the
+				// version is not writeable
+				// deregisterDomainObject(entity);
+				DomainStore.stores().storeFor(entity.entityClass())
+						.remove(entity);
+			}
+		}
+	}
+
 	public void persist(Object object) {
 		entityManager.persist(object);
+	}
+
+	protected void propertyChangeSuper(PropertyChangeEvent evt) {
+		super.propertyChange(evt);
 	}
 
 	public boolean provideIsMarkedFlushTransform(DomainTransformEvent event) {
@@ -595,6 +998,11 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return entity;
 	}
 
+	@Override
+	protected void removePerThreadContext0() {
+		threadLocalInstance.remove();
+	}
+
 	public void resetLocalIdCounterForCurrentThread() {
 		resetLocalIdCounterForCurrentThread(new AtomicLong(0));
 	}
@@ -620,226 +1028,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 		resetTltm(locatorMap, exceptionPolicy,
 				keepExplicitlyPermittedAndFlushAfterTransforms, false,
 				emitWarnings);
-	}
-
-	public void resetTltmNonCommitalTx() {
-		resetTltm(null, null, false, false);
-	}
-
-	public void
-			setApplyingExternalTransforms(boolean applyingExternalTransforms) {
-		this.applyingExternalTransforms = applyingExternalTransforms;
-	}
-
-	public void setClientInstance(ClientInstance clientInstance) {
-		this.clientInstance = clientInstance;
-	}
-
-	public void setClientInstanceEntityMap(
-			EntityLocatorMap clientInstanceEntityMap) {
-		this.clientInstanceEntityMap = clientInstanceEntityMap;
-	}
-
-	public void
-			setDetachedEntityCache(DetachedEntityCache detachedEntityCache) {
-		this.detachedEntityCache = detachedEntityCache;
-	}
-
-	public void setEntityManager(EntityManager entityManager) {
-		this.entityManager = entityManager;
-	}
-
-	public void
-			setIgnoreTransformPermissions(boolean ignoreTransformPermissions) {
-		this.ignoreTransformPermissions = ignoreTransformPermissions;
-	}
-
-	public void setTransformsExplicitlyPermitted(
-			boolean transformsExplicitlyPermitted) {
-		this.transformsExplicitlyPermitted = transformsExplicitlyPermitted;
-	}
-
-	public void setUseObjectCreationId(boolean useObjectCreationId) {
-		this.useObjectCreationId = useObjectCreationId;
-	}
-
-	public boolean testPermissions(Entity entity, DomainTransformEvent evt,
-			String propertyName, Entity change, boolean read) {
-		if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
-			throw new DomainTransformRuntimeException("test property not set");
-		}
-		if (read) {
-			try {
-				checkPropertyReadAccessAndThrow(entity, propertyName, evt);
-				return true;
-			} catch (Exception e) {
-				PermissionsException permissionsException = CommonUtils
-						.extractCauseOfClass(e, PermissionsException.class);
-				if (permissionsException == null) {
-					throw new RuntimeException(e);
-				} else {
-					return false;
-				}
-			}
-		} else {
-			return checkPermissions(entity, evt, propertyName, change, true);
-		}
-	}
-
-	public void useGlobalLocalIdCounter() {
-		useTlIdGenerator = false;
-	}
-
-	private boolean checkPermissions(Entity entity, DomainTransformEvent evt,
-			String propertyName, Entity<?> entityChange, boolean muteLogging) {
-		if (isIgnoreTransformPermissions()) {
-			return true;
-		}
-		if (explicitlyPermitted(evt)) {
-			return true;
-		}
-		try {
-			if (entity == null) {
-				entity = (Entity) Reflections.at(evt.getObjectClass())
-						.templateInstance();
-			} else {
-				entity = ensureNonProxy(entity);
-				entity = resolveForPermissionsChecks(entity);
-			}
-			Class<? extends Entity> objectClass = entity.entityClass();
-			ObjectPermissions op = objectClass
-					.getAnnotation(ObjectPermissions.class);
-			op = op == null
-					? PermissionsManager.get().getDefaultObjectPermissions()
-					: op;
-			ObjectPermissions oph = null;
-			AssignmentPermission aph = propertyName == null ? null
-					: Reflections.at(objectClass).property(propertyName)
-							.annotation(AssignmentPermission.class);
-			if (entityChange != null) {
-				oph = entityChange.entityClass()
-						.getAnnotation(ObjectPermissions.class);
-				oph = oph == null
-						? PermissionsManager.get().getDefaultObjectPermissions()
-						: oph;
-			}
-			switch (evt.getTransformType()) {
-			case ADD_REF_TO_COLLECTION:
-			case REMOVE_REF_FROM_COLLECTION:
-				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
-						oph, aph, evt);
-				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
-				break;
-			case CHANGE_PROPERTY_REF:
-				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
-						oph, aph, evt);
-				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
-				break;
-			// deliberate fall-through
-			case NULL_PROPERTY_REF:
-			case CHANGE_PROPERTY_SIMPLE_VALUE:
-				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
-				break;
-			case CREATE_OBJECT:
-				if (!PermissionsManager.get().isPermitted(entity,
-						op.create())) {
-					throw new DomainTransformException(new PermissionsException(
-							"Permission denied : create - object " + evt));
-				}
-				break;
-			case DELETE_OBJECT:
-				if (!PermissionsManager.get().isPermitted(entity,
-						op.delete())) {
-					throw new DomainTransformException(new PermissionsException(
-							"Permission denied : delete - object " + evt));
-				}
-				break;
-			}
-			// TODO:3.2, check r/w access for bean for add/remove ref
-			// check r/w access for bean for all
-		} catch (Exception e) {
-			if (e instanceof DomainTransformException) {
-				DomainTransformException dtex = (DomainTransformException) e;
-				dtex.setEvent(evt);
-				evt.setSource(entity);
-				evt.setPropertyName(propertyName);
-			}
-			if (!muteLogging) {
-				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
-						"Domain transform permissions exception", e);
-			}
-			throw new WrappedRuntimeException(e);
-		}
-		return true;
-	}
-
-	private void checkPropertyReadAccessAndThrow(Entity entity,
-			String propertyName, DomainTransformEvent evt)
-			throws DomainTransformException, IntrospectionException {
-		if (!checkPropertyAccess(entity, propertyName, true)) {
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : read - object/property " + evt));
-		}
-	}
-
-	private boolean checkPropertyWriteAccessAndThrow(Entity<?> entity,
-			String propertyName, DomainTransformEvent evt)
-			throws DomainTransformException, IntrospectionException {
-		if (!checkPropertyAccess(entity, propertyName, false)) {
-			DomainProperty ann = Reflections.at(entity.entityClass())
-					.property(propertyName).annotation(DomainProperty.class);
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : write - object/property " + evt));
-		}
-		return true;
-	}
-
-	private void checkTargetReadAndAssignmentAccessAndThrow(Entity assigningTo,
-			Entity assigning, ObjectPermissions oph, AssignmentPermission aph,
-			DomainTransformEvent evt) throws DomainTransformException {
-		if (assigning == null) {
-			return;
-		}
-		if (!PermissionsManager.get().isPermitted(assigning, oph.read())) {
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : read - target object " + evt));
-		}
-		if (aph != null && !PermissionsManager.get().isPermitted(assigning,
-				assigningTo, new AnnotatedPermissible(aph.value()), false)) {
-			throw new DomainTransformException(new PermissionsException(
-					"Permission denied : assign - target object " + evt));
-		}
-	}
-
-	private boolean explicitlyPermitted(DomainTransformEvent evt) {
-		return explicitlyPermittedTransforms.contains(evt);
-	}
-
-	private void listenTo(Entity entity) {
-		if (!listeningTo.containsKey(entity)) {
-			Transaction current = Transaction.current();
-			if (current.isReadOnly() && LooseContext
-					.is(CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS)) {
-				// edge-case for lazy-external-dev-load
-			} else {
-				Preconditions.checkState(!current.isReadOnly());
-				TransactionId transactionId = current.getId();
-				if (listeningToTransactionId == null) {
-					listeningToTransactionId = transactionId;
-				} else {
-					if (!Objects.equals(listeningToTransactionId,
-							transactionId)) {
-						logger.warn(
-								"DEVEX:0 - Listening to object from wrong tx: {} - current : {} - incoming : {}",
-								entity.toStringEntity(),
-								listeningToTransactionId, current);
-						throw new IllegalStateException();
-					}
-				}
-				listeningTo.put(entity, entity);
-				entity.addPropertyChangeListener(this);
-			}
-		}
 	}
 
 	private void resetTltm(EntityLocatorMap locatorMap,
@@ -911,260 +1099,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 		}
 	}
 
-	@Override
-	protected void beforeDirectCollectionModification(Entity obj,
-			String propertyName, Object newTargetValue,
-			CollectionModificationType collectionModificationType) {
-		Transactions.resolve(obj, ResolvedVersionState.WRITE, false);
-	}
-
-	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
-		return entity.getId() != 0
-				|| (localIdToEntityMap.get(entity.getLocalId()) != null)
-				|| (entity instanceof SourcesPropertyChangeEvents && listeningTo
-						.containsKey((SourcesPropertyChangeEvents) entity))
-				|| LooseContext
-						.is(CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS);
-	}
-
-	@Override
-	protected boolean checkPermissions(Entity entity, DomainTransformEvent evt,
-			String propertyName, Entity change) {
-		return checkPermissions(entity, evt, propertyName, change, false);
-	}
-
-	@Override
-	protected void checkVersion(Entity obj, DomainTransformEvent event)
-			throws DomainTransformException {
-		if (exceptionPolicy != null) {
-			exceptionPolicy.checkVersion(obj, event);
-		}
-	}
-
-	@Override
-	protected void doubleCheckAddition(Collection collection, Object tgt) {
-		if (entityManager != null) {
-			JPAImplementation jpaImplementation = Registry
-					.impl(JPAImplementation.class);
-			tgt = jpaImplementation.getInstantiatedObject(tgt);
-			for (Iterator itr = collection.iterator(); itr.hasNext();) {
-				Object next = itr.next();
-				if (jpaImplementation
-						.areEquivalentIgnoreInstantiationState(next, tgt)) {
-					return;
-				}
-			}
-		}
-		collection.add(tgt);
-	}
-
-	@Override
-	protected void doubleCheckRemoval(Collection collection, Object tgt) {
-		JPAImplementation jpaImplementation = Registry
-				.impl(JPAImplementation.class);
-		tgt = jpaImplementation.getInstantiatedObject(tgt);
-		for (Iterator itr = collection.iterator(); itr.hasNext();) {
-			Object next = itr.next();
-			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,
-					tgt)) {
-				itr.remove();
-				break;
-			}
-		}
-	}
-
-	@Override
-	protected Entity ensureEndpointWriteable(Entity targetObject) {
-		return Transactions.resolve(targetObject, ResolvedVersionState.WRITE,
-				false);
-	}
-
-	protected <T extends Entity> T ensureNonProxy(T entity) {
-		if (entity != null && entity.getId() != 0
-				&& getEntityManager() != null) {
-			entity = Registry.impl(JPAImplementation.class)
-					.getInstantiatedObject(entity);
-		}
-		return entity;
-	}
-
-	@Override
-	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
-		return Ax.isTest()
-				|| !DomainStore.writableStore().isCached(entity.entityClass());
-	}
-
-	@Override
-	protected Entity getEntityForCreate(DomainTransformEvent event) {
-		if (getEntityManager() == null) {
-			return super.getEntityForCreate(event);
-		} else {
-			return null;
-		}
-	}
-
-	@Override
-	protected void initObjectStore() {
-		setObjectStore(new ObjectStoreImpl());
-	}
-
-	@Override
-	protected boolean isAddToDomainObjects() {
-		return entityManager == null;
-	}
-
-	@Override
-	protected boolean isPerformDirectAssociationUpdates(Entity entity) {
-		/*
-		 * if ==1, only the transform manager listens to property changes. So
-		 * synthesising collection updates will have equal effect to
-		 * clone/modify
-		 */
-		return entity.propertyChangeListeners().length == 1;
-	}
-
-	protected <E extends Entity> E newInstance(Class<E> clazz, long id,
-			long localId, boolean externalLocal) {
-		try {
-			if (Entity.class.isAssignableFrom(clazz)) {
-				Preconditions.checkState(Transaction.current().isWriteable());
-				Entity newInstance = null;
-				if (entityManager == null) {
-					DomainStore store = DomainStore.stores().storeFor(clazz);
-					newInstance = Transaction.current().create((Class) clazz,
-							store, id, localId);
-					if (id == 0L) {
-						// created ex-store
-						if (externalLocal) {
-						} else {
-							store.getCache().put(newInstance);
-						}
-					}
-				} else {
-					newInstance = Reflections.newInstance(clazz);
-					newInstance.setLocalId(localId);
-				}
-				if (entityManager != null) {
-					if (isUseObjectCreationId() && id != 0) {
-						newInstance.setId(id);
-						Object fromBefore = Registry
-								.impl(JPAImplementation.class)
-								.beforeSpecificSetId(entityManager,
-										newInstance);
-						entityManager.persist(newInstance);
-						Registry.impl(JPAImplementation.class)
-								.afterSpecificSetId(fromBefore);
-					} else {
-						/*
-						 * TransformInPersistenceContext does this at the end of
-						 * transform application (before transform event
-						 * persistence) so that inserts can be batched
-						 */
-						// entityManager.persist(newInstance);
-					}
-				}
-				//
-				// FIXME - alcina.doc -
-				//
-				// why maintain localIdToEntityMap (reason: cross-cutting
-				// concern to domainstore - it's from pov of the ClientInstance
-				// - which may have persisted local objects unknown to this VM's
-				// store)
-				//
-				// localIdToEntityMap needs to be distinct from
-				// clientInstanceEntityMap for applying transforms from other
-				// servers (don't want to store localids if we don't have to)
-				//
-				// createdObjectLocators *could* be replaced with a collation,
-				// but perf would be worse and layering too - so leave (and
-				// explain) - they're only used in (entityManager != null)
-				// contexts, but code is cleaner this way
-				//
-				EntityLocator entityLocator = newInstance.toLocator();
-				localIdToEntityMap.put(localId, newInstance);
-				createdObjectLocators.add(entityLocator);
-				if (!isApplyingExternalTransforms()) {
-					if (clientInstanceEntityMap != null) {
-						clientInstanceEntityMap.putToLookups(entityLocator);
-					}
-				}
-				return (E) newInstance;
-			}
-			throw new Exception("only construct entities here");
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@Override
-	protected void objectModified(Entity entity, DomainTransformEvent evt,
-			boolean targetObject) {
-		boolean addToResults = false;
-		if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
-			addToResults = true;
-		}
-		// TODO - think about handling this as a postpersist entity listener?
-		// that way we ensure correct version numbers
-		if (entity instanceof HasVersionNumber
-				&& !modifiedObjects.contains(entity)) {
-			addToResults = true;
-			modifiedObjects.add(entity);
-			HasVersionNumber hv = (HasVersionNumber) entity;
-			if (targetObject) {
-				evt.setValueVersionNumber(hv.getVersionNumber() + 1);
-				if (evt.getValueId() == 0) {
-					evt.setValueId(entity.getId());
-				}
-			} else {
-				evt.setObjectVersionNumber(hv.getVersionNumber() + 1);
-				if (evt.getObjectId() == 0) {
-					evt.setObjectId(entity.getId());
-				}
-			}
-		}
-		if (addToResults) {
-			modificationEvents.add(evt);
-		}
-	}
-
-	@Override
-	protected /*
-				 * if in 'entityManager' mode (i.e. in a db transaction), let
-				 * the entityManager handle it - otherwise
-				 *
-				 * FIXME - mvcc.adjunct - maybe non-em instances should have a
-				 * 'domainobjects' (i.e. domain store?)
-				 *
-				 * In fact...yes. THere's quite a bit of confusion between
-				 * object lookup, object store and TM (particularly TLTM).
-				 *
-				 * Write it down (presumably get rid of object lookup) - i feel
-				 * that object store should delegate to domainstore server-side,
-				 * but need to make the interface cleaner. Also, how does this
-				 * play with PostTransactionEntityResolver...and AdjunctTm?
-				 */
-	void performDeleteObject(Entity entity) {
-		if (entityManager != null) {
-			entityManager.remove(entity);
-		} else {
-			if (handlesAssociationsFor(entity.entityClass())) {
-				entity = getObject(entity);
-				// will be deregistered with resetTltm, and not wanted if the
-				// version is not writeable
-				// deregisterDomainObject(entity);
-				DomainStore.stores().storeFor(entity.entityClass())
-						.remove(entity);
-			}
-		}
-	}
-
-	protected void propertyChangeSuper(PropertyChangeEvent evt) {
-		super.propertyChange(evt);
-	}
-
-	@Override
-	protected void removePerThreadContext0() {
-		threadLocalInstance.remove();
+	public void resetTltmNonCommitalTx() {
+		resetTltm(null, null, false, false);
 	}
 
 	protected Entity resolveForPermissionsChecks(Entity entity) {
@@ -1180,6 +1116,43 @@ public class ThreadlocalTransformManager extends TransformManager {
 					"Attempting to alter property of non-persistent entity: "
 							+ entity);
 		}
+	}
+
+	public void
+			setApplyingExternalTransforms(boolean applyingExternalTransforms) {
+		this.applyingExternalTransforms = applyingExternalTransforms;
+	}
+
+	public void setClientInstance(ClientInstance clientInstance) {
+		this.clientInstance = clientInstance;
+	}
+
+	public void setClientInstanceEntityMap(
+			EntityLocatorMap clientInstanceEntityMap) {
+		this.clientInstanceEntityMap = clientInstanceEntityMap;
+	}
+
+	public void
+			setDetachedEntityCache(DetachedEntityCache detachedEntityCache) {
+		this.detachedEntityCache = detachedEntityCache;
+	}
+
+	public void setEntityManager(EntityManager entityManager) {
+		this.entityManager = entityManager;
+	}
+
+	public void
+			setIgnoreTransformPermissions(boolean ignoreTransformPermissions) {
+		this.ignoreTransformPermissions = ignoreTransformPermissions;
+	}
+
+	public void setTransformsExplicitlyPermitted(
+			boolean transformsExplicitlyPermitted) {
+		this.transformsExplicitlyPermitted = transformsExplicitlyPermitted;
+	}
+
+	public void setUseObjectCreationId(boolean useObjectCreationId) {
+		this.useObjectCreationId = useObjectCreationId;
 	}
 
 	@Override
@@ -1205,13 +1178,31 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return true;
 	}
 
-	public static class ThreadlocalTransformManagerFactory {
-		public ThreadlocalTransformManager create() {
-			return new ThreadlocalTransformManager();
+	public boolean testPermissions(Entity entity, DomainTransformEvent evt,
+			String propertyName, Entity change, boolean read) {
+		if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
+			throw new DomainTransformRuntimeException("test property not set");
+		}
+		if (read) {
+			try {
+				checkPropertyReadAccessAndThrow(entity, propertyName, evt);
+				return true;
+			} catch (Exception e) {
+				PermissionsException permissionsException = CommonUtils
+						.extractCauseOfClass(e, PermissionsException.class);
+				if (permissionsException == null) {
+					throw new RuntimeException(e);
+				} else {
+					return false;
+				}
+			}
+		} else {
+			return checkPermissions(entity, evt, propertyName, change, true);
 		}
 	}
 
-	public static class UncomittedTransformsException extends Exception {
+	public void useGlobalLocalIdCounter() {
+		useTlIdGenerator = false;
 	}
 
 	private class ObjectStoreImpl implements ObjectStore {
@@ -1329,5 +1320,14 @@ public class ThreadlocalTransformManager extends TransformManager {
 		public void removeListeners() {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public static class ThreadlocalTransformManagerFactory {
+		public ThreadlocalTransformManager create() {
+			return new ThreadlocalTransformManager();
+		}
+	}
+
+	public static class UncomittedTransformsException extends Exception {
 	}
 }

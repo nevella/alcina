@@ -23,12 +23,32 @@ public class ClientNodeIterator {
 		this.masks = masks;
 	}
 
+	private boolean checkFilter() {
+		if (current == null) {
+			return false;
+		}
+		switch (current.getNodeType()) {
+		case Node.ELEMENT_NODE:
+			return (masks & SHOW_ELEMENT) != 0;
+		case Node.TEXT_NODE:
+			return (masks & SHOW_TEXT) != 0;
+		}
+		return false;
+	}
+
 	public Node getCurrentNode() {
 		return this.current;
 	}
 
 	public Node getRoot() {
 		return root;
+	}
+
+	private Node lastChildOf(Node node) {
+		if (!node.hasChildNodes()) {
+			return node;
+		}
+		return lastChildOf(node.getLastChild());
 	}
 
 	public <T extends Node> T nextNode() {
@@ -94,25 +114,5 @@ public class ClientNodeIterator {
 			current = current.getParentNode();
 		}
 		previousNode();
-	}
-
-	private boolean checkFilter() {
-		if (current == null) {
-			return false;
-		}
-		switch (current.getNodeType()) {
-		case Node.ELEMENT_NODE:
-			return (masks & SHOW_ELEMENT) != 0;
-		case Node.TEXT_NODE:
-			return (masks & SHOW_TEXT) != 0;
-		}
-		return false;
-	}
-
-	private Node lastChildOf(Node node) {
-		if (!node.hasChildNodes()) {
-			return node;
-		}
-		return lastChildOf(node.getLastChild());
 	}
 }

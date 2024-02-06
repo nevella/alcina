@@ -27,6 +27,26 @@ public class StackDebug {
 		debugLines = 25;
 	}
 
+	private StackTraceElement[] filterTraces(StackTraceElement[] traces) {
+		boolean seenFilter = false;
+		int idx = 0;
+		for (; idx < traces.length; idx++) {
+			String s = traces[idx].toString();
+			boolean filter = s.contains(stackFilter);
+			if (filter) {
+				seenFilter = true;
+			} else {
+				if (seenFilter) {
+					StackTraceElement[] dest = new StackTraceElement[traces.length
+							- idx];
+					System.arraycopy(traces, idx, dest, 0, traces.length - idx);
+					return dest;
+				}
+			}
+		}
+		return traces;
+	}
+
 	public void maybeDebugStack(Stack stack, boolean push) {
 		if (debugLines > 0) {
 			synchronized (this) {
@@ -78,25 +98,5 @@ public class StackDebug {
 				}
 			}
 		}
-	}
-
-	private StackTraceElement[] filterTraces(StackTraceElement[] traces) {
-		boolean seenFilter = false;
-		int idx = 0;
-		for (; idx < traces.length; idx++) {
-			String s = traces[idx].toString();
-			boolean filter = s.contains(stackFilter);
-			if (filter) {
-				seenFilter = true;
-			} else {
-				if (seenFilter) {
-					StackTraceElement[] dest = new StackTraceElement[traces.length
-							- idx];
-					System.arraycopy(traces, idx, dest, 0, traces.length - idx);
-					return dest;
-				}
-			}
-		}
-		return traces;
 	}
 }

@@ -98,69 +98,6 @@ public class AuthenticationManager {
 		return session;
 	}
 
-	public ClientInstance createNonHttpClientInstance(String format,
-			IUser user) {
-		return null;
-	}
-
-	public Optional<AuthenticationSession> getAuthenticationSession() {
-		return Optional.ofNullable(ensureContext().session);
-	}
-
-	public Optional<ClientInstance> getContextClientInstance() {
-		return Optional.ofNullable(ensureContext().clientInstance);
-	}
-
-	public Long getContextClientInstanceId() {
-		return getContextClientInstance().map(ClientInstance::getId)
-				.orElse(null);
-	}
-
-	public String getExternalAuthorizationUrl(Permission requiredPermission) {
-		return ensureContext().localAuthenticator
-				.getExternalAuthorizationUrl(requiredPermission);
-	}
-
-	public LoginResponse hello() {
-		AuthenticationContext context = ensureContext();
-		LoginResponse response = new LoginResponse();
-		response.setOk(true);
-		createClientInstance(context);
-		Transaction.commit();
-		response.setClientInstance(context.clientInstance);
-		response.setUser(
-				context.clientInstance.getAuthenticationSession().getUser());
-		return response;
-	}
-
-	public void initialiseContext(AuthenticationTokenStore tokenStore) {
-		AuthenticationContext context = ensureContext();
-		context.tokenStore = tokenStore;
-		IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
-		PermissionsManager.get().setUser(anonymousUser);
-		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
-		ensureIid(context);
-		ensureAuthenticationSession(context);
-		setupClientInstanceFromHeaders(context);
-		if (context.session != null
-				&& context.session.getUser() != anonymousUser) {
-			PermissionsManager.get().setUser(context.session.getUser());
-			PermissionsManager.get().setLoginState(LoginState.LOGGED_IN);
-		}
-		if (context.clientInstance != null) {
-			persistence.wasAccessed(context.clientInstance);
-			PermissionsManager.get().setClientInstance(context.clientInstance);
-		}
-		// all auth objects persisted as root
-		Transaction.commit();
-	}
-
-	public void invalidateSession(AuthenticationSession session,
-			String reason) {
-		session.markInvalid(reason);
-		ensureContext().localAuthenticator.invalidateSession(session);
-	}
-
 	private void createClientInstance(AuthenticationContext context) {
 		String userAgent = context.tokenStore.getUserAgent();
 		context.clientInstance = persistence.createClientInstance(
@@ -169,6 +106,11 @@ public class AuthenticationManager {
 				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
 		context.localAuthenticator
 				.postCreateClientInstance(context.clientInstance);
+	}
+
+	public ClientInstance createNonHttpClientInstance(String format,
+			IUser user) {
+		return null;
 	}
 
 	private void ensureAuthenticationSession(AuthenticationContext context) {
@@ -288,6 +230,24 @@ public class AuthenticationManager {
 		}
 	}
 
+	public Optional<AuthenticationSession> getAuthenticationSession() {
+		return Optional.ofNullable(ensureContext().session);
+	}
+
+	public Optional<ClientInstance> getContextClientInstance() {
+		return Optional.ofNullable(ensureContext().clientInstance);
+	}
+
+	public Long getContextClientInstanceId() {
+		return getContextClientInstance().map(ClientInstance::getId)
+				.orElse(null);
+	}
+
+	public String getExternalAuthorizationUrl(Permission requiredPermission) {
+		return ensureContext().localAuthenticator
+				.getExternalAuthorizationUrl(requiredPermission);
+	}
+
 	// although unvalidated, the header client-instance id itself must be
 	// validated
 	private AuthenticationSession getUnvalidatedClientInstanceFromHeaders(
@@ -311,6 +271,64 @@ public class AuthenticationManager {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	String getValidatedHeaderId(AuthenticationContext context) {
+		String headerId = context.tokenStore.getHeaderValue(
+				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY);
+		String headerAuth = context.tokenStore.getHeaderValue(
+				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY);
+		if (Ax.matches(headerId, "\\d+") && Ax.matches(headerAuth, "\\d+")) {
+			ClientInstance instance = persistence
+					.getClientInstance(Long.parseLong(headerId));
+			if (instance != null) {
+				if (instance.getAuth().intValue() == Integer
+						.parseInt(headerAuth)) {
+					return headerId;
+				}
+			}
+		}
+		return null;
+	}
+
+	public LoginResponse hello() {
+		AuthenticationContext context = ensureContext();
+		LoginResponse response = new LoginResponse();
+		response.setOk(true);
+		createClientInstance(context);
+		Transaction.commit();
+		response.setClientInstance(context.clientInstance);
+		response.setUser(
+				context.clientInstance.getAuthenticationSession().getUser());
+		return response;
+	}
+
+	public void initialiseContext(AuthenticationTokenStore tokenStore) {
+		AuthenticationContext context = ensureContext();
+		context.tokenStore = tokenStore;
+		IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
+		PermissionsManager.get().setUser(anonymousUser);
+		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
+		ensureIid(context);
+		ensureAuthenticationSession(context);
+		setupClientInstanceFromHeaders(context);
+		if (context.session != null
+				&& context.session.getUser() != anonymousUser) {
+			PermissionsManager.get().setUser(context.session.getUser());
+			PermissionsManager.get().setLoginState(LoginState.LOGGED_IN);
+		}
+		if (context.clientInstance != null) {
+			persistence.wasAccessed(context.clientInstance);
+			PermissionsManager.get().setClientInstance(context.clientInstance);
+		}
+		// all auth objects persisted as root
+		Transaction.commit();
+	}
+
+	public void invalidateSession(AuthenticationSession session,
+			String reason) {
+		session.markInvalid(reason);
+		ensureContext().localAuthenticator.invalidateSession(session);
 	}
 
 	private boolean isExpired(AuthenticationSession session) {
@@ -367,31 +385,6 @@ public class AuthenticationManager {
 		return Ax.matches(uid, "server:.+") ? null : uid;
 	}
 
-	String getValidatedHeaderId(AuthenticationContext context) {
-		String headerId = context.tokenStore.getHeaderValue(
-				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY);
-		String headerAuth = context.tokenStore.getHeaderValue(
-				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY);
-		if (Ax.matches(headerId, "\\d+") && Ax.matches(headerAuth, "\\d+")) {
-			ClientInstance instance = persistence
-					.getClientInstance(Long.parseLong(headerId));
-			if (instance != null) {
-				if (instance.getAuth().intValue() == Integer
-						.parseInt(headerAuth)) {
-					return headerId;
-				}
-			}
-		}
-		return null;
-	}
-
-	public static class ExpiredClientInstanceException
-			extends RuntimeException {
-		public ExpiredClientInstanceException() {
-			super("Not authorized - client instance expired");
-		}
-	}
-
 	static class AuthenticationContext {
 		Iid iid;
 
@@ -408,6 +401,13 @@ public class AuthenticationManager {
 
 		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
 			return (Authenticator<U>) localAuthenticator;
+		}
+	}
+
+	public static class ExpiredClientInstanceException
+			extends RuntimeException {
+		public ExpiredClientInstanceException() {
+			super("Not authorized - client instance expired");
 		}
 	}
 }

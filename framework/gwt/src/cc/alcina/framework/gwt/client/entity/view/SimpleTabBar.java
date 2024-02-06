@@ -23,6 +23,12 @@ public abstract class SimpleTabBar<T extends HasDisplayName> extends Composite {
 		addAttachHandler(evt -> refresh());
 	}
 
+	protected T getCurrent() {
+		return selected;
+	}
+
+	protected abstract String getHref(T value);
+
 	public void refresh() {
 		fp.clear();
 		T current = getCurrent();
@@ -34,12 +40,6 @@ public abstract class SimpleTabBar<T extends HasDisplayName> extends Composite {
 			fp.add(link);
 		}
 	}
-
-	protected T getCurrent() {
-		return selected;
-	}
-
-	protected abstract String getHref(T value);
 
 	protected abstract List<T> values();
 

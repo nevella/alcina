@@ -158,6 +158,11 @@ public class RenderingHtml<T> extends AbstractBoundWidget<T> {
 		return retValue;
 	}
 
+	private void init() {
+		base = new com.google.gwt.user.client.ui.HTML();
+		super.initWidget(base);
+	}
+
 	@Override
 	public boolean isVisible() {
 		boolean retValue;
@@ -270,10 +275,5 @@ public class RenderingHtml<T> extends AbstractBoundWidget<T> {
 	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	private void init() {
-		base = new com.google.gwt.user.client.ui.HTML();
-		super.initWidget(base);
 	}
 }

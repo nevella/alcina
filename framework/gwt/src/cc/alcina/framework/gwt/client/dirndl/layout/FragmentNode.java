@@ -68,21 +68,6 @@ public abstract class FragmentNode extends Model.Fields
 		implements FragmentNodeOps {
 	protected FragmentModel fragmentModel;
 
-	@Property.Not
-	public StringMap getDirectedPropertyBindingValues() {
-		StringMap result = new StringMap();
-		Element w3cElement = provideNode().rendered.asW3cElement();
-		if (w3cElement != null) {
-			NamedNodeMap map = w3cElement.getAttributes();
-			int length = map.getLength();
-			for (int idx = 0; idx < length; idx++) {
-				Attr attr = (Attr) map.item(idx);
-				result.put(attr.getName(), attr.getValue());
-			}
-		}
-		return result;
-	}
-
 	public <N extends FragmentNode> Optional<N> ancestor(Class<N> clazz) {
 		return (Optional<N>) (Optional<?>) ancestors().stream()
 				.filter(n -> n.getClass() == clazz).findFirst();
@@ -90,20 +75,6 @@ public abstract class FragmentNode extends Model.Fields
 
 	public Ancestors ancestors() {
 		return new Ancestors();
-	}
-
-	public void ensureComputedNodes() {
-		fragmentModel().ensureComputedNodes(this);
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (event.isBound()) {
-			// FIXME - use bindings() in constructor
-			provideNode().ensureChildren().topicNotifications
-					.add(this::onNotification);
-		}
 	}
 
 	@Override
@@ -115,8 +86,15 @@ public abstract class FragmentNode extends Model.Fields
 						.map(Node::getModel);
 	}
 
+	public void copyFromExternal(FragmentNode external) {
+	}
+
 	public DomNode domNode() {
 		return provideNode().getRendered().asDomNode();
+	}
+
+	public void ensureComputedNodes() {
+		fragmentModel().ensureComputedNodes(this);
 	}
 
 	public FragmentModel fragmentModel() {
@@ -147,8 +125,49 @@ public abstract class FragmentNode extends Model.Fields
 		return new FragmentTree(true);
 	}
 
+	@Property.Not
+	public StringMap getDirectedPropertyBindingValues() {
+		StringMap result = new StringMap();
+		Element w3cElement = provideNode().rendered.asW3cElement();
+		if (w3cElement != null) {
+			NamedNodeMap map = w3cElement.getAttributes();
+			int length = map.getLength();
+			for (int idx = 0; idx < length; idx++) {
+				Attr attr = (Attr) map.item(idx);
+				result.put(attr.getName(), attr.getValue());
+			}
+		}
+		return result;
+	}
+
+	@Property.Not
+	public boolean isDetached() {
+		return !provideIsBound();
+	}
+
 	public Nodes nodes() {
 		return new Nodes();
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			// FIXME - use bindings() in constructor
+			provideNode().ensureChildren().topicNotifications
+					.add(this::onNotification);
+		}
+	}
+
+	/**
+	 * Allow subclasses to populate children *in a node context*. This is the
+	 * way that fragment nodes should construct their own subtrees
+	 */
+	public void onFragmentRegistration() {
+	}
+
+	void onNotification(NotifyingList.Notification notification) {
+		fragmentModel().onChildNodesNotification(this, notification);
 	}
 
 	public FragmentNode parent() {
@@ -259,13 +278,6 @@ public abstract class FragmentNode extends Model.Fields
 			this.rootModel = rootModel;
 		}
 
-		@Override
-		public Stream<? extends FragmentNode> children() {
-			return (Stream<? extends FragmentNode>) (Stream<?>) rootModel
-					.provideNode().ensureChildren().stream().map(n -> n.model)
-					.filter(m -> m instanceof FragmentNode);
-		}
-
 		public void addNotificationHandler(
 				TopicListener<NotifyingList.Notification> notificationListener) {
 			Topic<NotifyingList.Notification> top = (Topic) rootModel
@@ -273,15 +285,22 @@ public abstract class FragmentNode extends Model.Fields
 			top.add(notificationListener);
 		}
 
-		@Override
-		public void ensureComputedNodes() {
-			// noop
-		}
-
 		public void append(FragmentNode child) {
 			FragmentModel
 					.withMutating(() -> rootModel.provideNode().append(child));
 			fragmentModel.register(child);
+		}
+
+		@Override
+		public Stream<? extends FragmentNode> children() {
+			return (Stream<? extends FragmentNode>) (Stream<?>) rootModel
+					.provideNode().ensureChildren().stream().map(n -> n.model)
+					.filter(m -> m instanceof FragmentNode);
+		}
+
+		@Override
+		public void ensureComputedNodes() {
+			// noop
 		}
 	}
 
@@ -293,6 +312,16 @@ public abstract class FragmentNode extends Model.Fields
 			this.tree = fromRoot ? fragmentModel.rootDomNode().tree()
 					: domNode().tree();
 			tree.setCurrentNode(domNode());
+		}
+
+		@Override
+		public boolean hasNext() {
+			return tree.hasNext();
+		}
+
+		@Override
+		public FragmentNode next() {
+			return fragmentModel.getFragmentNode(tree.next());
 		}
 
 		public Optional<FragmentNode.TextNode>
@@ -310,16 +339,13 @@ public abstract class FragmentNode extends Model.Fields
 		public Stream<FragmentNode> stream() {
 			return tree.stream().map(fragmentModel::getFragmentNode);
 		}
+	}
 
-		@Override
-		public boolean hasNext() {
-			return tree.hasNext();
-		}
-
-		@Override
-		public FragmentNode next() {
-			return fragmentModel.getFragmentNode(tree.next());
-		}
+	/**
+	 * Output not yet implemented
+	 */
+	@Transformer(NodeTransformer.GenericComment.class)
+	public static class GenericComment extends FragmentNode implements Leaf {
 	}
 
 	/*
@@ -355,11 +381,8 @@ public abstract class FragmentNode extends Model.Fields
 			implements Leaf {
 	}
 
-	/**
-	 * Output not yet implemented
-	 */
-	@Transformer(NodeTransformer.GenericComment.class)
-	public static class GenericComment extends FragmentNode implements Leaf {
+	// childless DOM structure - anything except ELEMENT
+	public interface Leaf {
 	}
 
 	public class Nodes {
@@ -375,27 +398,15 @@ public abstract class FragmentNode extends Model.Fields
 			fragmentModel().register(fragmentNode);
 		}
 
-		public void insertBeforeThis(FragmentNode fragmentNode) {
-			withMutating(() -> provideParentNode().insertBefore(fragmentNode,
-					FragmentNode.this));
-			fragmentModel().register(fragmentNode);
-		}
-
-		public void replaceWith(FragmentNode other) {
-			// get a ref before removing
-			FragmentModel modelRef = fragmentModel();
-			withMutating(() -> provideParentNode()
-					.replaceChild(FragmentNode.this, other));
-			modelRef.register(other);
-		}
-
 		public void insertAsFirstChild(FragmentNode child) {
 			withMutating(() -> provideNode().insertAsFirstChild(child));
 			fragmentModel().register(child);
 		}
 
-		public void strip() {
-			withMutating(() -> provideNode().strip());
+		public void insertBeforeThis(FragmentNode fragmentNode) {
+			withMutating(() -> provideParentNode().insertBefore(fragmentNode,
+					FragmentNode.this));
+			fragmentModel().register(fragmentNode);
 		}
 
 		public FragmentNode previousSibling() {
@@ -409,10 +420,18 @@ public abstract class FragmentNode extends Model.Fields
 			withMutating(() -> provideParentNode()
 					.removeChildNode(FragmentNode.this));
 		}
-	}
 
-	// childless DOM structure - anything except ELEMENT
-	public interface Leaf {
+		public void replaceWith(FragmentNode other) {
+			// get a ref before removing
+			FragmentModel modelRef = fragmentModel();
+			withMutating(() -> provideParentNode()
+					.replaceChild(FragmentNode.this, other));
+			modelRef.register(other);
+		}
+
+		public void strip() {
+			withMutating(() -> provideNode().strip());
+		}
 	}
 
 	// text DOM structure
@@ -456,24 +475,5 @@ public abstract class FragmentNode extends Model.Fields
 	@Target({ ElementType.TYPE })
 	public @interface Transformer {
 		Class<? extends NodeTransformer> value();
-	}
-
-	public void copyFromExternal(FragmentNode external) {
-	}
-
-	void onNotification(NotifyingList.Notification notification) {
-		fragmentModel().onChildNodesNotification(this, notification);
-	}
-
-	@Property.Not
-	public boolean isDetached() {
-		return !provideIsBound();
-	}
-
-	/**
-	 * Allow subclasses to populate children *in a node context*. This is the
-	 * way that fragment nodes should construct their own subtrees
-	 */
-	public void onFragmentRegistration() {
 	}
 }

@@ -52,6 +52,10 @@ public class Reflections {
 		return get().forName.computeIfAbsent(fqn, ForName::forName);
 	}
 
+	private static Reflections get() {
+		return theInstance;
+	}
+
 	public static String getApplicationName() {
 		return get().applicationName;
 	}
@@ -93,10 +97,6 @@ public class Reflections {
 
 	public static void setApplicationName(String applicationName) {
 		get().applicationName = applicationName;
-	}
-
-	private static Reflections get() {
-		return theInstance;
 	}
 
 	private Map<Class, ClassReflector> reflectors = CollectionCreators.Bootstrap

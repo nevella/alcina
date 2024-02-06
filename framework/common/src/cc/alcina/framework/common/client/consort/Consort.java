@@ -143,6 +143,11 @@ public class Consort<D> implements AlcinaProcess {
 		return player;
 	}
 
+	protected void addState(D state) {
+		// only do on startup - no logging
+		modifyStates(Collections.singletonList(state), true);
+	}
+
 	public StateListenerWrapper addStateListener(TopicListener listener,
 			D state) {
 		StateListenerWrapper wrapper = new StateListenerWrapper(listener,
@@ -150,6 +155,17 @@ public class Consort<D> implements AlcinaProcess {
 		topics.listenerDelta(TopicChannel.STATES, wrapper, true);
 		wrapper.fireIfExisting();
 		return wrapper;
+	}
+
+	protected void addStates(Collection<D> states) {
+		logger.info(Ax.format("%s add:[%s]",
+				CommonUtils.padStringLeft("", depth(), '\t'),
+				CommonUtils.join(states, ", ")));
+		modifyStates(states, true);
+	}
+
+	boolean canAddPlayers() {
+		return playing.isEmpty() || parallelArbiter != null;
 	}
 
 	public void cancel() {
@@ -180,6 +196,43 @@ public class Consort<D> implements AlcinaProcess {
 		removeStates(new ArrayList<D>(reachedStates));
 	}
 
+	protected void consumeQueue() {
+		try {
+			consumeQueue0();
+		} catch (Throwable e) {
+			onFailure(e);
+		}
+	}
+
+	private void consumeQueue0() {
+		if (!canAddPlayers() || consumingQueue || !running) {
+			return;
+		}
+		consumingQueue = true;
+		// this means that synchronous players will be dispatched sequentially
+		// within the while loop, but async tasks will be dispatched by
+		// (non-recursive) consumeQueue/wasPlayed calls
+		// also allow shortcut for looping tasks
+		while (canAddPlayers() && running) {
+			boolean replaying = replayPlayer != null;
+			Player<D> player = replaying ? replayPlayer : nextPlayer();
+			replayPlayer = null;
+			if (player != null) {
+				maybeRemovePlayersFromQueue(player);
+				if (!playing.contains(player)) {
+					playing.add(player);
+				}
+				executePlayer(player, replaying);
+			} else {
+				break;
+			}
+		}
+		consumingQueue = false;
+		if (playing.isEmpty() && running) {
+			topics.publish(TopicChannel.NO_ACTIVE_PLAYERS, null);
+		}
+	}
+
 	public boolean containsState(D state) {
 		return reachedStates.contains(state);
 	}
@@ -197,11 +250,53 @@ public class Consort<D> implements AlcinaProcess {
 				});
 	}
 
+	protected int depth() {
+		Consort cursor = this;
+		int depth = 0;
+		while (cursor.getParentConsort() != null) {
+			depth++;
+			cursor = cursor.getParentConsort();
+		}
+		return depth;
+	}
+
 	public void doOrDefer(TopicListener topicListener, D state) {
 		if (containsState(state)) {
 			topicListener.topicPublished(state);
 		} else {
 			addStateListener(topicListener, state);
+		}
+	}
+
+	protected void executePlayer(Player<D> player, boolean replaying) {
+		String message = Ax.format("%s%s%s -> %s",
+				(playing.size() == 1 ? "    "
+						: Ax.format("[%s] ", playing.size())),
+				CommonUtils.padStringLeft("", depth(), "    "),
+				getClass().getSimpleName(), player.provideNameForTransitions());
+		if (!CommonUtils.equalsWithNullEmptyEquality(message,
+				lastInfoLogMessage)) {
+			logger.info(message);
+			lastInfoLogMessage = message;
+		}
+		if (player instanceof ConsortPlayer) {
+			Consort stateConsort = ((ConsortPlayer) player).getStateConsort();
+			if (stateConsort != null) {
+				passLoggersAndFlagsToChild(stateConsort);
+			}
+		}
+		if (isSimulate()) {
+			if (player instanceof ConsortPlayer) {
+				Consort stateConsort = ((ConsortPlayer) player)
+						.getStateConsort();
+				if (stateConsort != null) {
+					((ConsortPlayer) player).getStateConsort().start();
+				}
+			}
+			wasPlayed(player);
+		} else {
+			publishTopicWithBubble(TopicChannel.BEFORE_PLAY, player);
+			player.play(replaying);
 		}
 	}
 
@@ -239,9 +334,21 @@ public class Consort<D> implements AlcinaProcess {
 		return this.parentConsort;
 	}
 
+	protected Set<D> getReachedStates() {
+		return this.reachedStates;
+	}
+
+	protected int getRelativePriority(Player<D> player1, Player<D> player2) {
+		return player1.getPriority() - player2.getPriority();
+	}
+
 	public <P extends Player> List<P> getTasksForClass(Class<P> clazz) {
 		return (List) players.stream().filter(new IsInstanceFilter(clazz))
 				.collect(Collectors.toList());
+	}
+
+	private boolean isActive(Player<D> player) {
+		return reachedStates.containsAll(player.getPreconditions());
 	}
 
 	public boolean isRunning() {
@@ -263,165 +370,6 @@ public class Consort<D> implements AlcinaProcess {
 	public void listenerDelta(TopicChannel channel, TopicListener listener,
 			boolean add) {
 		topics.listenerDelta(channel, listener, add);
-	}
-
-	public void nudge() {
-		running = true;
-		consumeQueue();
-	}
-
-	public void onFailure(Throwable throwable) {
-		running = false;
-		Ax.simpleExceptionOut(throwable);
-		exitChannel = TopicChannel.ERROR;
-		topics.publish(TopicChannel.ERROR, throwable);
-		throw new WrappedRuntimeException(throwable);
-	}
-
-	public void passLoggersAndFlagsToChild(Consort child) {
-		child.metricLogger = metricLogger;
-		child.logger = logger;
-		child.setSimulate(isSimulate());
-	}
-
-	public void removeStates(Collection<D> states) {
-		if (states.isEmpty()) {
-			return;
-		}
-		logger.info(Ax.format("%s rmv:[%s]",
-				CommonUtils.padStringLeft("", depth(), '\t'),
-				CommonUtils.join(states, ", ")));
-		modifyStates(states, false);
-	}
-
-	public void replay(Player player) {
-		assert player instanceof LoopingPlayer;
-		replayPlayer = player;
-		playing.clear();
-		if (consumingQueue) {
-		} else {
-			consumeQueue();
-		}
-	}
-
-	public void restart() {
-		clearReachedStates();
-		players.addAll(removed);
-		removed.clear();
-		playing.clear();
-		replayPlayer = null;
-		start();
-	}
-
-	public void runWhenFinished(AsyncCallback finishedCallback) {
-		if (!running) {
-			finishedCallback.onSuccess(null);
-		} else {
-			addOneTimeFinishedCallback(finishedCallback);
-		}
-	}
-
-	public void setParentConsort(Consort parent) {
-		this.parentConsort = parent;
-	}
-
-	public void setSimulate(boolean simulate) {
-		this.simulate = simulate;
-	}
-
-	public void setSynchronous(boolean synchronous) {
-		this.synchronous = synchronous;
-	}
-
-	public void setThrowOnUnableToResolveDependencies(
-			boolean throwOnUnableToResolveDependencies) {
-		this.throwOnUnableToResolveDependencies = throwOnUnableToResolveDependencies;
-	}
-
-	public void start() {
-		logger.info("{}Starting consort - {}",
-				CommonUtils.padStringLeft("", depth(), "    "), this);
-		running = true;
-		playedCount = 0;
-		consumeQueue();
-	}
-
-	// note - listener must be actually TopicListener<StatesDelta> - but GWT
-	// doesn't like that for Consort subclasses
-	public void statesListenerDelta(TopicListener listener, boolean add) {
-		topics.listenerDelta(TopicChannel.STATES, listener, add);
-	}
-
-	public void wasPlayed(Player<D> player) {
-		wasPlayed(player, player.getProvides());
-	}
-
-	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
-		wasPlayed(player, resultantStates, true);
-	}
-
-	// FIXME - consort - applifecycle.consort - cleanup - this works - unless we
-	// want some
-	// sort of threaded
-	// queue/consumer model - but it ain't so pretty
-	//
-	public void wasPlayed(Player<D> player, Collection<D> resultantStates,
-			boolean keepGoing) {
-		if (!isRunning()) {
-			return;
-		}
-		if (!playing.contains(player)) {
-			if (LooseContext.is(IGNORE_PLAYED_STATES_IF_NOT_CONTAINED)) {
-				return;
-			}
-		}
-		playedCount++;
-		assert playing.contains(player);
-		playing.remove(player);
-		// FIXME - consort - applifecycle.consort - warn if resultantstates >1
-		// and a non-parallel consort?
-		modifyStates(resultantStates, true);
-		metricLogger.debug(Ax.format("%s     %s: %s ms",
-				CommonUtils.padStringLeft("", depth(), '\t'),
-				player.shortName(),
-				System.currentTimeMillis() - player.getStart()));
-		publishTopicWithBubble(TopicChannel.AFTER_PLAY, player);
-		if (keepGoing) {
-			consumeQueue();
-		}
-	}
-
-	private void consumeQueue0() {
-		if (!canAddPlayers() || consumingQueue || !running) {
-			return;
-		}
-		consumingQueue = true;
-		// this means that synchronous players will be dispatched sequentially
-		// within the while loop, but async tasks will be dispatched by
-		// (non-recursive) consumeQueue/wasPlayed calls
-		// also allow shortcut for looping tasks
-		while (canAddPlayers() && running) {
-			boolean replaying = replayPlayer != null;
-			Player<D> player = replaying ? replayPlayer : nextPlayer();
-			replayPlayer = null;
-			if (player != null) {
-				maybeRemovePlayersFromQueue(player);
-				if (!playing.contains(player)) {
-					playing.add(player);
-				}
-				executePlayer(player, replaying);
-			} else {
-				break;
-			}
-		}
-		consumingQueue = false;
-		if (playing.isEmpty() && running) {
-			topics.publish(TopicChannel.NO_ACTIVE_PLAYERS, null);
-		}
-	}
-
-	private boolean isActive(Player<D> player) {
-		return reachedStates.containsAll(player.getPreconditions());
 	}
 
 	private void maybeRemovePlayersFromQueue(Player<D> player) {
@@ -537,6 +485,70 @@ public class Consort<D> implements AlcinaProcess {
 		return result;
 	}
 
+	public void nudge() {
+		running = true;
+		consumeQueue();
+	}
+
+	public void onFailure(Throwable throwable) {
+		running = false;
+		Ax.simpleExceptionOut(throwable);
+		exitChannel = TopicChannel.ERROR;
+		topics.publish(TopicChannel.ERROR, throwable);
+		throw new WrappedRuntimeException(throwable);
+	}
+
+	public void passLoggersAndFlagsToChild(Consort child) {
+		child.metricLogger = metricLogger;
+		child.logger = logger;
+		child.setSimulate(isSimulate());
+	}
+
+	protected void publishTopicWithBubble(TopicChannel channel,
+			Object message) {
+		topics.publish(channel, message);
+		if (parentConsort != null) {
+			parentConsort.publishTopicWithBubble(channel, message);
+		}
+	}
+
+	public void removeStates(Collection<D> states) {
+		if (states.isEmpty()) {
+			return;
+		}
+		logger.info(Ax.format("%s rmv:[%s]",
+				CommonUtils.padStringLeft("", depth(), '\t'),
+				CommonUtils.join(states, ", ")));
+		modifyStates(states, false);
+	}
+
+	public void replay(Player player) {
+		assert player instanceof LoopingPlayer;
+		replayPlayer = player;
+		playing.clear();
+		if (consumingQueue) {
+		} else {
+			consumeQueue();
+		}
+	}
+
+	public void restart() {
+		clearReachedStates();
+		players.addAll(removed);
+		removed.clear();
+		playing.clear();
+		replayPlayer = null;
+		start();
+	}
+
+	public void runWhenFinished(AsyncCallback finishedCallback) {
+		if (!running) {
+			finishedCallback.onSuccess(null);
+		} else {
+			addOneTimeFinishedCallback(finishedCallback);
+		}
+	}
+
 	/*
 	 * In first pass, just go for immediately satisfied, non-state-provider
 	 * players
@@ -563,86 +575,74 @@ public class Consort<D> implements AlcinaProcess {
 						providerDependencies).size() > 0;
 	}
 
-	protected void addState(D state) {
-		// only do on startup - no logging
-		modifyStates(Collections.singletonList(state), true);
+	public void setParentConsort(Consort parent) {
+		this.parentConsort = parent;
 	}
 
-	protected void addStates(Collection<D> states) {
-		logger.info(Ax.format("%s add:[%s]",
+	public void setSimulate(boolean simulate) {
+		this.simulate = simulate;
+	}
+
+	public void setSynchronous(boolean synchronous) {
+		this.synchronous = synchronous;
+	}
+
+	public void setThrowOnUnableToResolveDependencies(
+			boolean throwOnUnableToResolveDependencies) {
+		this.throwOnUnableToResolveDependencies = throwOnUnableToResolveDependencies;
+	}
+
+	public void start() {
+		logger.info("{}Starting consort - {}",
+				CommonUtils.padStringLeft("", depth(), "    "), this);
+		running = true;
+		playedCount = 0;
+		consumeQueue();
+	}
+
+	// note - listener must be actually TopicListener<StatesDelta> - but GWT
+	// doesn't like that for Consort subclasses
+	public void statesListenerDelta(TopicListener listener, boolean add) {
+		topics.listenerDelta(TopicChannel.STATES, listener, add);
+	}
+
+	public void wasPlayed(Player<D> player) {
+		wasPlayed(player, player.getProvides());
+	}
+
+	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
+		wasPlayed(player, resultantStates, true);
+	}
+
+	// FIXME - consort - applifecycle.consort - cleanup - this works - unless we
+	// want some
+	// sort of threaded
+	// queue/consumer model - but it ain't so pretty
+	//
+	public void wasPlayed(Player<D> player, Collection<D> resultantStates,
+			boolean keepGoing) {
+		if (!isRunning()) {
+			return;
+		}
+		if (!playing.contains(player)) {
+			if (LooseContext.is(IGNORE_PLAYED_STATES_IF_NOT_CONTAINED)) {
+				return;
+			}
+		}
+		playedCount++;
+		assert playing.contains(player);
+		playing.remove(player);
+		// FIXME - consort - applifecycle.consort - warn if resultantstates >1
+		// and a non-parallel consort?
+		modifyStates(resultantStates, true);
+		metricLogger.debug(Ax.format("%s     %s: %s ms",
 				CommonUtils.padStringLeft("", depth(), '\t'),
-				CommonUtils.join(states, ", ")));
-		modifyStates(states, true);
-	}
-
-	protected void consumeQueue() {
-		try {
-			consumeQueue0();
-		} catch (Throwable e) {
-			onFailure(e);
+				player.shortName(),
+				System.currentTimeMillis() - player.getStart()));
+		publishTopicWithBubble(TopicChannel.AFTER_PLAY, player);
+		if (keepGoing) {
+			consumeQueue();
 		}
-	}
-
-	protected int depth() {
-		Consort cursor = this;
-		int depth = 0;
-		while (cursor.getParentConsort() != null) {
-			depth++;
-			cursor = cursor.getParentConsort();
-		}
-		return depth;
-	}
-
-	protected void executePlayer(Player<D> player, boolean replaying) {
-		String message = Ax.format("%s%s%s -> %s",
-				(playing.size() == 1 ? "    "
-						: Ax.format("[%s] ", playing.size())),
-				CommonUtils.padStringLeft("", depth(), "    "),
-				getClass().getSimpleName(), player.provideNameForTransitions());
-		if (!CommonUtils.equalsWithNullEmptyEquality(message,
-				lastInfoLogMessage)) {
-			logger.info(message);
-			lastInfoLogMessage = message;
-		}
-		if (player instanceof ConsortPlayer) {
-			Consort stateConsort = ((ConsortPlayer) player).getStateConsort();
-			if (stateConsort != null) {
-				passLoggersAndFlagsToChild(stateConsort);
-			}
-		}
-		if (isSimulate()) {
-			if (player instanceof ConsortPlayer) {
-				Consort stateConsort = ((ConsortPlayer) player)
-						.getStateConsort();
-				if (stateConsort != null) {
-					((ConsortPlayer) player).getStateConsort().start();
-				}
-			}
-			wasPlayed(player);
-		} else {
-			publishTopicWithBubble(TopicChannel.BEFORE_PLAY, player);
-			player.play(replaying);
-		}
-	}
-
-	protected Set<D> getReachedStates() {
-		return this.reachedStates;
-	}
-
-	protected int getRelativePriority(Player<D> player1, Player<D> player2) {
-		return player1.getPriority() - player2.getPriority();
-	}
-
-	protected void publishTopicWithBubble(TopicChannel channel,
-			Object message) {
-		topics.publish(channel, message);
-		if (parentConsort != null) {
-			parentConsort.publishTopicWithBubble(channel, message);
-		}
-	}
-
-	boolean canAddPlayers() {
-		return playing.isEmpty() || parallelArbiter != null;
 	}
 
 	public class OneTimeFinishedAsyncCallbackAdapter implements TopicListener {
@@ -697,30 +697,6 @@ public class Consort<D> implements AlcinaProcess {
 		}
 	}
 
-	public class StatesDelta {
-		public Set<D> oldValue;
-
-		public Set<D> newValue;
-
-		public StatesDelta(Set<D> oldValue, Set<D> newValue) {
-			this.oldValue = oldValue;
-			this.newValue = newValue;
-		}
-
-		public boolean wasStateAdded(D value) {
-			return !oldValue.contains(value) && newValue.contains(value);
-		}
-
-		public boolean wasStateRemoved(D value) {
-			return oldValue.contains(value) && !newValue.contains(value);
-		}
-	}
-
-	public enum TopicChannel {
-		BEFORE_PLAY, AFTER_PLAY, STATES, ERROR, FINISHED, CANCELLED,
-		NO_ACTIVE_PLAYERS
-	}
-
 	class StateListenerWrapper implements TopicListener<StatesDelta> {
 		private TopicListener delegate;
 
@@ -749,5 +725,29 @@ public class Consort<D> implements AlcinaProcess {
 				delegate.topicPublished(state);
 			}
 		}
+	}
+
+	public class StatesDelta {
+		public Set<D> oldValue;
+
+		public Set<D> newValue;
+
+		public StatesDelta(Set<D> oldValue, Set<D> newValue) {
+			this.oldValue = oldValue;
+			this.newValue = newValue;
+		}
+
+		public boolean wasStateAdded(D value) {
+			return !oldValue.contains(value) && newValue.contains(value);
+		}
+
+		public boolean wasStateRemoved(D value) {
+			return oldValue.contains(value) && !newValue.contains(value);
+		}
+	}
+
+	public enum TopicChannel {
+		BEFORE_PLAY, AFTER_PLAY, STATES, ERROR, FINISHED, CANCELLED,
+		NO_ACTIVE_PLAYERS
 	}
 }

@@ -67,6 +67,28 @@ public class SheetAccessor {
 		BatchUpdateSpreadsheetResponse response = update.execute();
 	}
 
+	void ensureSheets() {
+		if (service != null) {
+			return;
+		}
+		try {
+			// final NetHttpTransport httpTransport = GoogleNetHttpTransport
+			// .newTrustedTransport();
+			// override GoogleNetHttpTransport - use default truststore
+			final NetHttpTransport httpTransport = new NetHttpTransport.Builder()
+					// .trustCertificates(GoogleUtils.getCertificateTrustStore())
+					.build();
+			// final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport
+			// .newTrustedTransport();
+			service = new Sheets.Builder(httpTransport, JSON_FACTORY,
+					getCredentials(httpTransport))
+							.setApplicationName(sheetAccess.applicationName)
+							.build();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public void ensureSpreadsheet() {
 		if (spreadsheet != null) {
 			return;
@@ -78,6 +100,25 @@ public class SheetAccessor {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private Credential getCredentials(NetHttpTransport transport)
+			throws IOException {
+		// Load client secrets.
+		InputStream in = new FileInputStream(sheetAccess.credentialsPath);
+		GoogleClientSecrets clientSecrets = GoogleClientSecrets
+				.load(JSON_FACTORY, new InputStreamReader(in));
+		// Build flow and trigger user authorization request.
+		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+				transport, JSON_FACTORY, clientSecrets, sheetAccess.scopes)
+						.setDataStoreFactory(
+								new FileDataStoreFactory(new java.io.File(
+										sheetAccess.credentialsStorageLocalPath)))
+						.setAccessType("offline").build();
+		LocalServerReceiver receiver = new LocalServerReceiver.Builder()
+				.setPort(8888).build();
+		return new AuthorizationCodeInstalledApp(flow, receiver)
+				.authorize("user");
 	}
 
 	public List<RowData> getRowData(int sheetIdx) {
@@ -120,47 +161,6 @@ public class SheetAccessor {
 	public SheetAccessor withSheetAccess(SheetAccess sheetAccess) {
 		this.sheetAccess = sheetAccess;
 		return this;
-	}
-
-	private Credential getCredentials(NetHttpTransport transport)
-			throws IOException {
-		// Load client secrets.
-		InputStream in = new FileInputStream(sheetAccess.credentialsPath);
-		GoogleClientSecrets clientSecrets = GoogleClientSecrets
-				.load(JSON_FACTORY, new InputStreamReader(in));
-		// Build flow and trigger user authorization request.
-		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-				transport, JSON_FACTORY, clientSecrets, sheetAccess.scopes)
-						.setDataStoreFactory(
-								new FileDataStoreFactory(new java.io.File(
-										sheetAccess.credentialsStorageLocalPath)))
-						.setAccessType("offline").build();
-		LocalServerReceiver receiver = new LocalServerReceiver.Builder()
-				.setPort(8888).build();
-		return new AuthorizationCodeInstalledApp(flow, receiver)
-				.authorize("user");
-	}
-
-	void ensureSheets() {
-		if (service != null) {
-			return;
-		}
-		try {
-			// final NetHttpTransport httpTransport = GoogleNetHttpTransport
-			// .newTrustedTransport();
-			// override GoogleNetHttpTransport - use default truststore
-			final NetHttpTransport httpTransport = new NetHttpTransport.Builder()
-					// .trustCertificates(GoogleUtils.getCertificateTrustStore())
-					.build();
-			// final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport
-			// .newTrustedTransport();
-			service = new Sheets.Builder(httpTransport, JSON_FACTORY,
-					getCredentials(httpTransport))
-							.setApplicationName(sheetAccess.applicationName)
-							.build();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	public static class SheetAccess {

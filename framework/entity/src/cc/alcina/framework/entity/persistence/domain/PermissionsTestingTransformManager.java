@@ -23,16 +23,16 @@ public class PermissionsTestingTransformManager
 	}
 
 	@Override
-	public <T extends Entity> void loadObject(Class<? extends T> c, long id,
-			long localId) {
-		T t = Domain.detachedVersion(c, id);
-		store.mapObject(t);
-	}
-
-	@Override
 	protected void initObjectStore() {
 		store = new DetachedCacheObjectStore(new DetachedEntityCache());
 		store.setLazyObjectLoader(this);
 		setObjectStore(store);
+	}
+
+	@Override
+	public <T extends Entity> void loadObject(Class<? extends T> c, long id,
+			long localId) {
+		T t = Domain.detachedVersion(c, id);
+		store.mapObject(t);
 	}
 }

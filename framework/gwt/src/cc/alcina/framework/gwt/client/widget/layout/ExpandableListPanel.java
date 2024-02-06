@@ -68,18 +68,6 @@ public class ExpandableListPanel extends Composite {
 		return this.separator;
 	}
 
-	public void setAllCaption(String allCaption) {
-		this.allCaption = allCaption;
-	}
-
-	public void setExtraText(String extraText) {
-		this.extraText = extraText;
-	}
-
-	public void setSeparator(String separator) {
-		this.separator = separator;
-	}
-
 	private void maybeAddToFlowPanel(Widget widget) {
 		if (showingAll || fp.getWidgetCount() < maxItems) {
 			if (separator != null && fp.getWidgetCount() > 0) {
@@ -104,5 +92,17 @@ public class ExpandableListPanel extends Composite {
 					(allCaption == null ? "Show all " : allCaption),
 					widgets.size(), itemNamePlural));
 		}
+	}
+
+	public void setAllCaption(String allCaption) {
+		this.allCaption = allCaption;
+	}
+
+	public void setExtraText(String extraText) {
+		this.extraText = extraText;
+	}
+
+	public void setSeparator(String separator) {
+		this.separator = separator;
 	}
 }

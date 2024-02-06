@@ -77,16 +77,16 @@ public class ArgParser {
 	public class Parameter {
 		String value;
 
+		public Optional<Boolean> booleanValue() {
+			return stringValue().map(Boolean::parseBoolean);
+		}
+
 		public Optional<Integer> intValue() {
 			return stringValue().map(Integer::parseInt);
 		}
 
 		public Optional<String> stringValue() {
 			return Optional.ofNullable(value);
-		}
-
-		public Optional<Boolean> booleanValue() {
-			return stringValue().map(Boolean::parseBoolean);
 		}
 	}
 }

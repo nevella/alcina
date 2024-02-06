@@ -33,6 +33,10 @@ public class FlowPanel100pcHeight extends FlowPanel
 		return addDomHandler(handler, ClickEvent.getType());
 	}
 
+	protected int getClientAdjustHeightFp() {
+		return 0;
+	}
+
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override
@@ -49,9 +53,5 @@ public class FlowPanel100pcHeight extends FlowPanel
 				return true;
 			}
 		};
-	}
-
-	protected int getClientAdjustHeightFp() {
-		return 0;
 	}
 }

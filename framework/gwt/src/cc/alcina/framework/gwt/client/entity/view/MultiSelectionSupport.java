@@ -50,8 +50,25 @@ public abstract class MultiSelectionSupport<T extends HasId> {
 		}
 	}
 
+	protected abstract OrderedMultiSelectionModel<T>
+			createOrderedSelectionModel();
+
+	private Handler<T> createSelectionEventManager() {
+		return DefaultSelectionEventManager.createCustomManager(
+				new SuppressHyperlinkAndHandleNewTabModClickEventTranslator());
+	}
+
+	protected abstract SingleSelectionModel<T> createSingleSelectionModel();
+
 	public AbstractCellTable<T> getTable() {
 		return cellTableView.table();
+	}
+
+	protected abstract void handleSingleSelectionChange();
+
+	protected boolean isEditing() {
+		return ((EntitySubPlace) view.getModel().getPlace())
+				.getAction() == EntityAction.EDIT;
 	}
 
 	public Set<Long> provideSelectedIds() {
@@ -93,23 +110,6 @@ public abstract class MultiSelectionSupport<T extends HasId> {
 						}
 					});
 		}
-	}
-
-	private Handler<T> createSelectionEventManager() {
-		return DefaultSelectionEventManager.createCustomManager(
-				new SuppressHyperlinkAndHandleNewTabModClickEventTranslator());
-	}
-
-	protected abstract OrderedMultiSelectionModel<T>
-			createOrderedSelectionModel();
-
-	protected abstract SingleSelectionModel<T> createSingleSelectionModel();
-
-	protected abstract void handleSingleSelectionChange();
-
-	protected boolean isEditing() {
-		return ((EntitySubPlace) view.getModel().getPlace())
-				.getAction() == EntityAction.EDIT;
 	}
 
 	public class SuppressHyperlinkAndHandleNewTabModClickEventTranslator<E>

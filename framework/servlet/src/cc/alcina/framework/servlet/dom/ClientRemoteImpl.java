@@ -11,13 +11,13 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @Registration(ClientRemoteImpl.class)
 public class ClientRemoteImpl extends Client {
 	@Override
-	public void setupPlaceMapping() {
-		historyHandler = new PlaceHistoryHandler(RegistryHistoryMapper.get());
-		historyHandler.register(placeController, eventBus, () -> Place.NOWHERE);
+	protected void createPlaceController() {
+		placeController = new PlaceController(eventBus);
 	}
 
 	@Override
-	protected void createPlaceController() {
-		placeController = new PlaceController(eventBus);
+	public void setupPlaceMapping() {
+		historyHandler = new PlaceHistoryHandler(RegistryHistoryMapper.get());
+		historyHandler.register(placeController, eventBus, () -> Place.NOWHERE);
 	}
 }

@@ -29,6 +29,11 @@ import com.google.code.gwt.database.rebind.DataServiceGenerator;
  */
 public class DataServiceUtils {
 	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, AbstractSequentialList<?> array) {
+		return addParameter(sql, params, offset, (Iterable<?>) array);
+	}
+
+	public static int addParameter(StringBuilder sql, Object[] params,
 			int offset, boolean[] array) {
 		for (int i = 0; i < array.length; i++) {
 			if (i > 0)
@@ -51,51 +56,7 @@ public class DataServiceUtils {
 	}
 
 	public static int addParameter(StringBuilder sql, Object[] params,
-			int offset, short[] array) {
-		for (int i = 0; i < array.length; i++) {
-			if (i > 0)
-				sql.append(",");
-			sql.append("?");
-			params[offset++] = array[i];
-		}
-		return offset;
-	}
-
-	public static int addParameter(StringBuilder sql, Object[] params,
 			int offset, char[] array) {
-		for (int i = 0; i < array.length; i++) {
-			if (i > 0)
-				sql.append(",");
-			sql.append("?");
-			params[offset++] = array[i];
-		}
-		return offset;
-	}
-
-	public static int addParameter(StringBuilder sql, Object[] params,
-			int offset, int[] array) {
-		for (int i = 0; i < array.length; i++) {
-			if (i > 0)
-				sql.append(",");
-			sql.append("?");
-			params[offset++] = array[i];
-		}
-		return offset;
-	}
-
-	public static int addParameter(StringBuilder sql, Object[] params,
-			int offset, long[] array) {
-		for (int i = 0; i < array.length; i++) {
-			if (i > 0)
-				sql.append(",");
-			sql.append("?");
-			params[offset++] = array[i];
-		}
-		return offset;
-	}
-
-	public static int addParameter(StringBuilder sql, Object[] params,
-			int offset, float[] array) {
 		for (int i = 0; i < array.length; i++) {
 			if (i > 0)
 				sql.append(",");
@@ -117,7 +78,7 @@ public class DataServiceUtils {
 	}
 
 	public static int addParameter(StringBuilder sql, Object[] params,
-			int offset, Object[] array) {
+			int offset, float[] array) {
 		for (int i = 0; i < array.length; i++) {
 			if (i > 0)
 				sql.append(",");
@@ -128,17 +89,12 @@ public class DataServiceUtils {
 	}
 
 	public static int addParameter(StringBuilder sql, Object[] params,
-			int offset, AbstractSequentialList<?> array) {
-		return addParameter(sql, params, offset, (Iterable<?>) array);
-	}
-
-	public static int addParameter(StringBuilder sql, Object[] params,
-			int offset, List<?> array) {
-		for (int i = 0; i < array.size(); i++) {
+			int offset, int[] array) {
+		for (int i = 0; i < array.length; i++) {
 			if (i > 0)
 				sql.append(",");
 			sql.append("?");
-			params[offset++] = array.get(i);
+			params[offset++] = array[i];
 		}
 		return offset;
 	}
@@ -153,6 +109,50 @@ public class DataServiceUtils {
 			params[i++] = object;
 		}
 		return i;
+	}
+
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, List<?> array) {
+		for (int i = 0; i < array.size(); i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array.get(i);
+		}
+		return offset;
+	}
+
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, long[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
+
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, Object[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
+
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, short[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
 	}
 
 	public static int getSize(Iterable<?> array) {

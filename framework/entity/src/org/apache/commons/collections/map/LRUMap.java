@@ -186,87 +186,6 @@ public class LRUMap extends AbstractLinkedMap
 		putAll(map);
 	}
 
-	// -----------------------------------------------------------------------
-	/**
-	 * Clones the map without cloning the keys or values.
-	 *
-	 * @return a shallow clone
-	 */
-	@Override
-	public Object clone() {
-		return super.clone();
-	}
-
-	// -----------------------------------------------------------------------
-	/**
-	 * Gets the value mapped to the key specified.
-	 * <p>
-	 * This operation changes the position of the key in the map to the most
-	 * recently used position (first).
-	 *
-	 * @param key
-	 *            the key
-	 * @return the mapped value, null if no match
-	 */
-	@Override
-	public Object get(Object key) {
-		LinkEntry entry = (LinkEntry) getEntry(key);
-		if (entry == null) {
-			return null;
-		}
-		moveToMRU(entry);
-		return entry.getValue();
-	}
-
-	// -----------------------------------------------------------------------
-	/**
-	 * Returns true if this map is full and no new mappings can be added.
-	 *
-	 * @return <code>true</code> if the map is full
-	 */
-	@Override
-	public boolean isFull() {
-		return (size >= maxSize);
-	}
-
-	/**
-	 * Whether this LRUMap will scan until a removable entry is found when the
-	 * map is full.
-	 *
-	 * @return true if this map scans
-	 * @since Commons Collections 3.1
-	 */
-	public boolean isScanUntilRemovable() {
-		return scanUntilRemovable;
-	}
-
-	/**
-	 * Gets the maximum size of the map (the bound).
-	 *
-	 * @return the maximum number of elements the map can hold
-	 */
-	@Override
-	public int maxSize() {
-		return maxSize;
-	}
-
-	/**
-	 * Read the map in using a custom routine.
-	 */
-	private void readObject(ObjectInputStream in)
-			throws IOException, ClassNotFoundException {
-		in.defaultReadObject();
-		doReadObject(in);
-	}
-
-	/**
-	 * Write the map out using a custom routine.
-	 */
-	private void writeObject(ObjectOutputStream out) throws IOException {
-		out.defaultWriteObject();
-		doWriteObject(out);
-	}
-
 	/**
 	 * Adds a new key-value mapping into this map.
 	 * <p>
@@ -330,6 +249,17 @@ public class LRUMap extends AbstractLinkedMap
 		}
 	}
 
+	// -----------------------------------------------------------------------
+	/**
+	 * Clones the map without cloning the keys or values.
+	 *
+	 * @return a shallow clone
+	 */
+	@Override
+	public Object clone() {
+		return super.clone();
+	}
+
 	/**
 	 * Reads the data necessary for <code>put()</code> to work in the
 	 * superclass.
@@ -349,6 +279,59 @@ public class LRUMap extends AbstractLinkedMap
 	protected void doWriteObject(ObjectOutputStream out) throws IOException {
 		out.writeInt(maxSize);
 		super.doWriteObject(out);
+	}
+
+	// -----------------------------------------------------------------------
+	/**
+	 * Gets the value mapped to the key specified.
+	 * <p>
+	 * This operation changes the position of the key in the map to the most
+	 * recently used position (first).
+	 *
+	 * @param key
+	 *            the key
+	 * @return the mapped value, null if no match
+	 */
+	@Override
+	public Object get(Object key) {
+		LinkEntry entry = (LinkEntry) getEntry(key);
+		if (entry == null) {
+			return null;
+		}
+		moveToMRU(entry);
+		return entry.getValue();
+	}
+
+	// -----------------------------------------------------------------------
+	/**
+	 * Returns true if this map is full and no new mappings can be added.
+	 *
+	 * @return <code>true</code> if the map is full
+	 */
+	@Override
+	public boolean isFull() {
+		return (size >= maxSize);
+	}
+
+	/**
+	 * Whether this LRUMap will scan until a removable entry is found when the
+	 * map is full.
+	 *
+	 * @return true if this map scans
+	 * @since Commons Collections 3.1
+	 */
+	public boolean isScanUntilRemovable() {
+		return scanUntilRemovable;
+	}
+
+	/**
+	 * Gets the maximum size of the map (the bound).
+	 *
+	 * @return the maximum number of elements the map can hold
+	 */
+	@Override
+	public int maxSize() {
+		return maxSize;
 	}
 
 	// -----------------------------------------------------------------------
@@ -375,6 +358,15 @@ public class LRUMap extends AbstractLinkedMap
 			throw new IllegalStateException("Can't move header to MRU"
 					+ " (please report this to commons-dev@jakarta.apache.org)");
 		}
+	}
+
+	/**
+	 * Read the map in using a custom routine.
+	 */
+	private void readObject(ObjectInputStream in)
+			throws IOException, ClassNotFoundException {
+		in.defaultReadObject();
+		doReadObject(in);
 	}
 
 	/**
@@ -492,5 +484,13 @@ public class LRUMap extends AbstractLinkedMap
 	protected void updateEntry(HashEntry entry, Object newValue) {
 		moveToMRU((LinkEntry) entry); // handles modCount
 		entry.setValue(newValue);
+	}
+
+	/**
+	 * Write the map out using a custom routine.
+	 */
+	private void writeObject(ObjectOutputStream out) throws IOException {
+		out.defaultWriteObject();
+		doWriteObject(out);
 	}
 }

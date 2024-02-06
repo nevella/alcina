@@ -121,22 +121,6 @@ public class BackupFiles extends Task {
 		return this.flatten;
 	}
 
-	public void setBackupPath(String backupPath) {
-		this.backupPath = backupPath;
-	}
-
-	public void setFlatten(boolean flatten) {
-		this.flatten = flatten;
-	}
-
-	public void setMaxBackups(int maxBackups) {
-		this.maxBackups = maxBackups;
-	}
-
-	public void setMaxDays(int maxDays) {
-		this.maxDays = maxDays;
-	}
-
 	protected void rotate(File folder) {
 		final Pattern np = Pattern.compile("(.+)(\\.\\d+)");
 		ArrayList<File> backups = new ArrayList<File>(
@@ -167,5 +151,21 @@ public class BackupFiles extends Task {
 						+ "." + (i + 2)));
 			}
 		}
+	}
+
+	public void setBackupPath(String backupPath) {
+		this.backupPath = backupPath;
+	}
+
+	public void setFlatten(boolean flatten) {
+		this.flatten = flatten;
+	}
+
+	public void setMaxBackups(int maxBackups) {
+		this.maxBackups = maxBackups;
+	}
+
+	public void setMaxDays(int maxDays) {
+		this.maxDays = maxDays;
 	}
 }

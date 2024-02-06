@@ -80,6 +80,10 @@ public abstract class CellPanel extends ComplexPanel {
 		setElement(table);
 	}
 
+	protected Element getBody() {
+		return DOM.asOld(body);
+	}
+
 	/**
 	 * Gets the amount of spacing between this panel's cells.
 	 * 
@@ -87,6 +91,17 @@ public abstract class CellPanel extends ComplexPanel {
 	 */
 	public int getSpacing() {
 		return spacing;
+	}
+
+	protected Element getTable() {
+		return DOM.asOld(table);
+	}
+
+	Element getWidgetTd(Widget w) {
+		if (w.getParent() != this) {
+			return null;
+		}
+		return DOM.getParent(w.getElement());
 	}
 
 	/**
@@ -126,6 +141,11 @@ public abstract class CellPanel extends ComplexPanel {
 		}
 	}
 
+	protected void setCellHorizontalAlignment(Element td,
+			HorizontalAlignmentConstant align) {
+		td.setPropertyString("align", align.getTextAlignString());
+	}
+
 	/**
 	 * Overloaded version for IsWidget.
 	 * 
@@ -151,6 +171,12 @@ public abstract class CellPanel extends ComplexPanel {
 		if (td != null) {
 			setCellHorizontalAlignment(td, align);
 		}
+	}
+
+	protected void setCellVerticalAlignment(Element td,
+			VerticalAlignmentConstant align) {
+		td.getStyle().setProperty("verticalAlign",
+				align.getVerticalAlignString());
 	}
 
 	/**
@@ -214,31 +240,5 @@ public abstract class CellPanel extends ComplexPanel {
 	public void setSpacing(int spacing) {
 		this.spacing = spacing;
 		table.setPropertyInt("cellSpacing", spacing);
-	}
-
-	protected Element getBody() {
-		return DOM.asOld(body);
-	}
-
-	protected Element getTable() {
-		return DOM.asOld(table);
-	}
-
-	protected void setCellHorizontalAlignment(Element td,
-			HorizontalAlignmentConstant align) {
-		td.setPropertyString("align", align.getTextAlignString());
-	}
-
-	protected void setCellVerticalAlignment(Element td,
-			VerticalAlignmentConstant align) {
-		td.getStyle().setProperty("verticalAlign",
-				align.getVerticalAlignString());
-	}
-
-	Element getWidgetTd(Widget w) {
-		if (w.getParent() != this) {
-			return null;
-		}
-		return DOM.getParent(w.getElement());
 	}
 }

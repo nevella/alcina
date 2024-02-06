@@ -22,29 +22,6 @@ import cc.alcina.framework.common.client.util.Ax;
 public class ElementPathref extends NodePathref implements ClientDomElement {
 	String valueProperty;
 
-	public class Async {
-		public void getBoundingClientRect(AsyncCallback<DomRect> callback) {
-			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
-					ElementPathref.this, "getBoundingClientRect", null, null,
-					callback);
-		}
-
-		public void getScrollTop(AsyncCallback<Integer> callback) {
-			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
-					ElementPathref.this, "getScrollTop", null, null, callback);
-		}
-
-		public void setScrollTop(AsyncCallback<Void> callback, int top) {
-			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
-					ElementPathref.this, "setScrollTop", List.of(Integer.class),
-					List.of(top), callback);
-		}
-	}
-
-	Async async() {
-		return new Async();
-	}
-
 	ElementPathref(Node node) {
 		super(node);
 	}
@@ -53,6 +30,10 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	public final boolean addClassName(String className) {
 		mirrorClassName();
 		return false;
+	}
+
+	Async async() {
+		return new Async();
 	}
 
 	@Override
@@ -339,6 +320,17 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 		throw new UnsupportedOperationException();
 	}
 
+	void mirrorClassName() {
+		/*
+		 * mirror from local, since there's no other copy of the remote value
+		 */
+		setClassName(getClassName());
+	}
+
+	int orSunkEventsOfAllChildren(int sunk) {
+		throw new UnsupportedOperationException();
+	}
+
 	public void putElement(Element element) {
 	}
 
@@ -498,14 +490,22 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 		return super.toString() + "\n\t" + getTagName();
 	}
 
-	void mirrorClassName() {
-		/*
-		 * mirror from local, since there's no other copy of the remote value
-		 */
-		setClassName(getClassName());
-	}
+	public class Async {
+		public void getBoundingClientRect(AsyncCallback<DomRect> callback) {
+			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
+					ElementPathref.this, "getBoundingClientRect", null, null,
+					callback);
+		}
 
-	int orSunkEventsOfAllChildren(int sunk) {
-		throw new UnsupportedOperationException();
+		public void getScrollTop(AsyncCallback<Integer> callback) {
+			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
+					ElementPathref.this, "getScrollTop", null, null, callback);
+		}
+
+		public void setScrollTop(AsyncCallback<Void> callback, int top) {
+			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
+					ElementPathref.this, "setScrollTop", List.of(Integer.class),
+					List.of(top), callback);
+		}
 	}
 }

@@ -34,11 +34,6 @@ public class IndexedPlaceHolderReplacer extends PlaceHolderReplacer {
 		return super.execute(text);
 	}
 
-	public void setValues(final Object[] values) {
-		Checker.notNull("parameter:values", values);
-		this.values = values;
-	}
-
 	@Override
 	protected String getValue(final String placeHolder) {
 		try {
@@ -54,5 +49,10 @@ public class IndexedPlaceHolderReplacer extends PlaceHolderReplacer {
 	protected Object[] getValues() {
 		Checker.notNull("field:values", values);
 		return this.values;
+	}
+
+	public void setValues(final Object[] values) {
+		Checker.notNull("parameter:values", values);
+		this.values = values;
 	}
 }

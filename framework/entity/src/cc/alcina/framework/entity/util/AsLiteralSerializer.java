@@ -174,61 +174,6 @@ public class AsLiteralSerializer {
 		return stringWriter.toString();
 	}
 
-	public OutputInstantiation traverse(Object source,
-			GraphProjectionContext context) throws Exception {
-		if (source == null) {
-			return null;
-		}
-		if (reached.containsKey(source)) {
-			return reached.get(source);
-		}
-		OutputInstantiation instance = new OutputInstantiation(idCounter++,
-				source);
-		reached.put(source, instance);
-		Class c = source.getClass();
-		reachedClasses.add(c);
-		reachedClasses.add(getEnumExt(c));
-		if (source instanceof Class) {
-			reachedClasses.add((Class) source);
-			reachedClasses.add(getEnumExt((Class) source));
-		}
-		if (isSimple(source)) {
-			return instance;
-		}
-		PropertyDescriptor[] propertyDescriptors = getPropertyDescriptorsForClassProperties(
-				source);
-		Object template = source.getClass().getDeclaredConstructor()
-				.newInstance();
-		for (PropertyDescriptor pd : propertyDescriptors) {
-			Object tgt = pd.getReadMethod().invoke(source,
-					CommonUtils.EMPTY_OBJECT_ARRAY);
-			Object templateTgt = pd.getReadMethod().invoke(template,
-					CommonUtils.EMPTY_OBJECT_ARRAY);
-			if (tgt != templateTgt) {
-				assignments.add(new OutputAssignment(instance, pd,
-						traverse(tgt, null)));
-			}
-		}
-		if (source instanceof Collection) {
-			Collection colln = (Collection) source;
-			ArrayList<OutputInstantiation> elts = new ArrayList<OutputInstantiation>();
-			addToCollnMap.put(instance, elts);
-			for (Object object : colln) {
-				elts.add(traverse(object, null));
-			}
-		}
-		if (source instanceof Map) {
-			Map map = (Map) source;
-			ArrayList<OutputInstantiation> elts = new ArrayList<OutputInstantiation>();
-			addToMapMap.put(instance, elts);
-			for (Object object : map.keySet()) {
-				elts.add(traverse(object, null));
-				elts.add(traverse(map.get(object), null));
-			}
-		}
-		return instance;
-	}
-
 	private String getClassName(Class<? extends Object> clazz) {
 		if (isEnumSubClass(clazz)) {
 			clazz = clazz.getSuperclass();
@@ -331,6 +276,61 @@ public class AsLiteralSerializer {
 		sw.indent();
 		mainCall.append(String.format("new Generate_%s().run();", callCounter));
 		methodLengthCounter = 0;
+	}
+
+	public OutputInstantiation traverse(Object source,
+			GraphProjectionContext context) throws Exception {
+		if (source == null) {
+			return null;
+		}
+		if (reached.containsKey(source)) {
+			return reached.get(source);
+		}
+		OutputInstantiation instance = new OutputInstantiation(idCounter++,
+				source);
+		reached.put(source, instance);
+		Class c = source.getClass();
+		reachedClasses.add(c);
+		reachedClasses.add(getEnumExt(c));
+		if (source instanceof Class) {
+			reachedClasses.add((Class) source);
+			reachedClasses.add(getEnumExt((Class) source));
+		}
+		if (isSimple(source)) {
+			return instance;
+		}
+		PropertyDescriptor[] propertyDescriptors = getPropertyDescriptorsForClassProperties(
+				source);
+		Object template = source.getClass().getDeclaredConstructor()
+				.newInstance();
+		for (PropertyDescriptor pd : propertyDescriptors) {
+			Object tgt = pd.getReadMethod().invoke(source,
+					CommonUtils.EMPTY_OBJECT_ARRAY);
+			Object templateTgt = pd.getReadMethod().invoke(template,
+					CommonUtils.EMPTY_OBJECT_ARRAY);
+			if (tgt != templateTgt) {
+				assignments.add(new OutputAssignment(instance, pd,
+						traverse(tgt, null)));
+			}
+		}
+		if (source instanceof Collection) {
+			Collection colln = (Collection) source;
+			ArrayList<OutputInstantiation> elts = new ArrayList<OutputInstantiation>();
+			addToCollnMap.put(instance, elts);
+			for (Object object : colln) {
+				elts.add(traverse(object, null));
+			}
+		}
+		if (source instanceof Map) {
+			Map map = (Map) source;
+			ArrayList<OutputInstantiation> elts = new ArrayList<OutputInstantiation>();
+			addToMapMap.put(instance, elts);
+			for (Object object : map.keySet()) {
+				elts.add(traverse(object, null));
+				elts.add(traverse(map.get(object), null));
+			}
+		}
+		return instance;
 	}
 
 	private static class OutputAssignment {

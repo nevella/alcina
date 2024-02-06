@@ -63,10 +63,6 @@ public class SelectionFilter extends Bindable.Fields
 
 	public static class SelectionClassEntry extends Bindable.Fields
 			implements TreeSerializable {
-		public Class<? extends Selection> _selectionClass() {
-			return selectionClass;
-		}
-
 		public String filterRegex;
 
 		private transient RegExp regexp;
@@ -84,6 +80,10 @@ public class SelectionFilter extends Bindable.Fields
 				String filterRegex) {
 			this.selectionClass = selectionClass;
 			this.filterRegex = filterRegex;
+		}
+
+		public Class<? extends Selection> _selectionClass() {
+			return selectionClass;
 		}
 
 		public boolean matches(List<String> list) {
@@ -104,14 +104,14 @@ public class SelectionFilter extends Bindable.Fields
 			return result;
 		}
 
+		void prepareToFilter() {
+			this.regexp = RegExp.compile(filterRegex);
+		}
+
 		@Override
 		public String toString() {
 			return Ax.format("Filter entry :: %s :: %s",
 					NestedName.get(selectionClass), filterRegex);
-		}
-
-		void prepareToFilter() {
-			this.regexp = RegExp.compile(filterRegex);
 		}
 	}
 }

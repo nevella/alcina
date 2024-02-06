@@ -23,11 +23,11 @@ public interface RemoteComponent {
 		return session;
 	}
 
+	String getPath();
+
 	default RemoteUi getUiInstance() {
 		return Reflections.newInstance(getUiType());
 	}
-
-	String getPath();
 
 	Class<? extends RemoteUi> getUiType();
 }

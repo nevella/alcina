@@ -37,6 +37,10 @@ public class FsStringCache {
 		return Io.read().file(cacheFile).asString();
 	}
 
+	private File getCacheFile(String path) {
+		return new File(Ax.format("%s/%s.dat", root.getPath(), path));
+	}
+
 	public void invalidate(String path) {
 		getCacheFile(path).delete();
 	}
@@ -44,9 +48,5 @@ public class FsStringCache {
 	public void invalidateAll() {
 		Arrays.asList(getCacheFile("0").getParentFile().listFiles()).stream()
 				.filter(File::isFile).forEach(File::delete);
-	}
-
-	private File getCacheFile(String path) {
-		return new File(Ax.format("%s/%s.dat", root.getPath(), path));
 	}
 }

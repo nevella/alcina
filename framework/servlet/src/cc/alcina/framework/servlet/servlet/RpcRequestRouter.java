@@ -26,6 +26,38 @@ public class RpcRequestRouter {
 		return Registry.impl(RpcRequestRouter.class);
 	}
 
+	protected boolean forceServerHandler(RPCRequest rpcRequest) {
+		if (rpcRequest.getMethod().getName()
+				.matches("performAction|performAdminAction")) {
+			RemoteAction action = (RemoteAction) rpcRequest.getParameters()[0];
+			if (action.getClass() == ServerControlAction.class) {
+				return true;
+			}
+		}
+		/*
+		 * For the moment, avoid requests which modify the cookie state
+		 */
+		if (rpcRequest.getMethod().getName().matches("hello|login|logout")) {
+			return true;
+		}
+		/*
+		 * For the moment, avoid requests which modify the cookie state
+		 * (reflective rpc)
+		 */
+		if (rpcRequest.getMethod().getName().matches("callRpc")
+				&& rpcRequest.getParameters()[0].toString()
+						.contains("\"methodName\":\"login\"")) {
+			return true;
+		}
+		/*
+		 * Just because the from-server response would include ClassRefImpl
+		 */
+		if (rpcRequest.getMethod().getName().matches("transform")) {
+			return true;
+		}
+		return false;
+	}
+
 	public String invokeAndEncodeResponse(Object target, RPCRequest rpcRequest)
 			throws SerializationException {
 		String requestHandlerUrl = Configuration.get("requestHandlerUrl");
@@ -64,37 +96,5 @@ public class RpcRequestRouter {
 			}
 		}
 		throw new UnsupportedOperationException();
-	}
-
-	protected boolean forceServerHandler(RPCRequest rpcRequest) {
-		if (rpcRequest.getMethod().getName()
-				.matches("performAction|performAdminAction")) {
-			RemoteAction action = (RemoteAction) rpcRequest.getParameters()[0];
-			if (action.getClass() == ServerControlAction.class) {
-				return true;
-			}
-		}
-		/*
-		 * For the moment, avoid requests which modify the cookie state
-		 */
-		if (rpcRequest.getMethod().getName().matches("hello|login|logout")) {
-			return true;
-		}
-		/*
-		 * For the moment, avoid requests which modify the cookie state
-		 * (reflective rpc)
-		 */
-		if (rpcRequest.getMethod().getName().matches("callRpc")
-				&& rpcRequest.getParameters()[0].toString()
-						.contains("\"methodName\":\"login\"")) {
-			return true;
-		}
-		/*
-		 * Just because the from-server response would include ClassRefImpl
-		 */
-		if (rpcRequest.getMethod().getName().matches("transform")) {
-			return true;
-		}
-		return false;
 	}
 }

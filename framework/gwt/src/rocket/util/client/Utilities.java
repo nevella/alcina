@@ -552,6 +552,10 @@ public class Utilities {
 		return toCssPropertyName0(propertyName);
 	}
 
+	native private static String toCssPropertyName0(final String propertyName)/*-{
+															return propertyName.replace(/([A-Z])/g, "-$1" ).toLowerCase()
+															}-*/;
+
 	/**
 	 * Useful method that only trims whitespace from the left or beginning of
 	 * the given string
@@ -629,8 +633,4 @@ public class Utilities {
 		}
 		return decoded.toString();
 	}
-
-	native private static String toCssPropertyName0(final String propertyName)/*-{
-															return propertyName.replace(/([A-Z])/g, "-$1" ).toLowerCase()
-															}-*/;
 }
