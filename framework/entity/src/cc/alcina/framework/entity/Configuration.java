@@ -414,10 +414,6 @@ public class Configuration {
 					.collect(Collectors.joining("\n"));
 		}
 
-		public void clearCustom() {
-			// TODO Auto-generated method stub
-		}
-
 		public void dump() {
 			Ax.out(asString(true));
 		}

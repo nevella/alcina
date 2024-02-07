@@ -368,6 +368,8 @@ public class Location implements Comparable<Location> {
 
 		private transient String textContent;
 
+		private transient String normalisedTextContent;
+
 		public Range(Location start, Location end) {
 			if (start.isAfter(end)) {
 				Location tmp = start;
@@ -461,7 +463,11 @@ public class Location implements Comparable<Location> {
 		}
 
 		public String ntc() {
-			return Ax.ntrim(textContent);
+			if (normalisedTextContent == null
+					&& start.locationContext != null) {
+				normalisedTextContent = Ax.ntrim(text());
+			}
+			return normalisedTextContent;
 		}
 
 		public boolean provideIsPoint() {
