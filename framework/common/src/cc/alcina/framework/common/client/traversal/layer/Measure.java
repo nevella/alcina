@@ -200,6 +200,14 @@ public class Measure extends Location.Range {
 		return Ax.format("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
 	}
 
+	public String toTokenTextString() {
+		String tokenString = token.toString();
+		if (tokenString.contains(token.getClass().getName())) {
+			tokenString = token.getClass().getSimpleName();
+		}
+		return Ax.format("%s :: %s", tokenString, Ax.trimForLogging(text()));
+	}
+
 	public <T> T typedData() {
 		return (T) getData();
 	}

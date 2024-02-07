@@ -528,8 +528,8 @@ public class BranchingParser {
 
 		void onTokenMatched(Measure match) {
 			this.match = match;
-			conditionalLogger.debug("Matched: {}{}",
-					() -> new Object[] { group.negated ? "!" : "", match });
+			conditionalLogger.debug("Matched: {}{}", () -> new Object[] {
+					group.negated ? "!" : "", match.toTokenTextString() });
 			parent.onChildSatisfied(this);
 		}
 
