@@ -779,7 +779,8 @@ public abstract class DevConsole implements ClipboardOwner {
 					.getDeclaredConstructor().newInstance();
 			prepareCommand(c);
 			for (DevConsoleCommand c2 : runningJobs) {
-				if (c2.getClass() == c.getClass()) {
+				if (c2.getClass() == c.getClass()
+						&& !c.isAllowParallelExecution()) {
 					System.err.format("Command '%s' already running\n",
 							c2.getClass().getSimpleName());
 					return;

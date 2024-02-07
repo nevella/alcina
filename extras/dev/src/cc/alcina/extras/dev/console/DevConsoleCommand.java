@@ -1539,4 +1539,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public enum TestResultFolder {
 		CURRENT, OK
 	}
+
+	public boolean isAllowParallelExecution() {
+		return false;
+	}
 }
