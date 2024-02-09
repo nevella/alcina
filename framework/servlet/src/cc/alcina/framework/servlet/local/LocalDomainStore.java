@@ -133,28 +133,32 @@ public class LocalDomainStore {
 		collation.allEntityCollations()
 				.filter(ec -> ec.getTransforms().size() > 0).forEach(ec -> {
 					/*
-					 * LocalDomainStores don't allow deletion
-					 */
-					Preconditions.checkArgument(!ec.isDeleted());
-					/*
 					 * only de-index if created prior to this request
 					 */
 					if (!ec.isCreated()) {
-						List<DomainTransformEvent> transforms = ec
-								.getTransforms();
-						TransformManager.get().replayLocalEvents(transforms,
-								true);
-						index(ec.getEntity(), false, ec, true);
-						TransformManager.get().replayLocalEvents(transforms,
-								false);
-						TransformManager.get().setIgnorePropertyChanges(false);
+						try {
+							TransformManager
+									.get().allowApplyTransformsToDeletedEntities = true;
+							List<DomainTransformEvent> transforms = ec
+									.getTransforms();
+							TransformManager.get().replayLocalEvents(transforms,
+									true);
+							index(ec.getEntity(), false, ec, true);
+							TransformManager.get().replayLocalEvents(transforms,
+									false);
+							TransformManager.get()
+									.setIgnorePropertyChanges(false);
+						} finally {
+							TransformManager
+									.get().allowApplyTransformsToDeletedEntities = false;
+						}
 					}
 				});
 		/*
 		 * Index
 		 */
 		collation.allEntityCollations()
-				.filter(ec -> ec.getTransforms().size() > 0)
+				.filter(ec -> ec.getTransforms().size() > 0 && !ec.isDeleted())
 				.forEach(ec -> index(ec.getEntity(), true, ec, true));
 	}
 
@@ -192,84 +196,8 @@ public class LocalDomainStore {
 		});
 	}
 
-	public class PersistenceEvents
-			implements DomainTransformPersistenceListener.Has {
-		List<DomainTransformPersistenceListener> listeners = new ArrayList<>();
-
-		private EntityLocatorMap locatorMap = new EntityLocatorMap();
-
-		@Override
-		public void addDomainTransformPersistenceListener(
-				DomainTransformPersistenceListener listener) {
-			listeners.add(listener);
-		}
-
-		public void publish(DomainTransformRequestPersistent request) {
-			try {
-				committingRequest = true;
-				TransformPersistenceToken token = new TransformPersistenceToken(
-						request, locatorMap, false, true, false, logger, true);
-				DomainTransformLayerWrapper layerWrapper = new DomainTransformLayerWrapper(
-						token);
-				DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
-						token, layerWrapper,
-						DomainTransformPersistenceEventType.PREPARE_COMMIT,
-						true);
-				/*
-				 * Update date fields
-				 */
-				AdjunctTransformCollation collation = persistenceEvent
-						.getTransformPersistenceToken().getTransformCollation();
-				Date time = new Date();
-				collation.allEntityCollations().forEach(ec -> {
-					Entity entity = ec.getEntity();
-					if (entity instanceof VersionableEntity) {
-						VersionableEntity versionable = (VersionableEntity) entity;
-						if (ec.isCreated()) {
-							versionable.setCreationDate(time);
-						}
-						versionable.setLastModificationDate(time);
-					}
-				});
-				for (DomainTransformPersistenceListener listener : listeners) {
-					listener.onDomainTransformRequestPersistence(
-							persistenceEvent);
-				}
-				persistenceEvent = new DomainTransformPersistenceEvent(token,
-						layerWrapper,
-						DomainTransformPersistenceEventType.COMMIT_OK, true);
-				for (DomainTransformPersistenceListener listener : listeners) {
-					listener.onDomainTransformRequestPersistence(
-							persistenceEvent);
-				}
-			} finally {
-				committingRequest = false;
-			}
-		}
-	}
-
-	public interface PersistenceImplementations {
-		Class<? extends DomainTransformEventPersistent>
-				getPersistentEventClass();
-
-		Class<? extends DomainTransformRequestPersistent>
-				getPersistentRequestClass();
-	}
-
 	class CommitToStorageTransformListenerNoRemote
 			extends CommitToStorageTransformListener {
-		@Override
-		public void domainTransform(DomainTransformEvent event) {
-			LocalDomainQueue.checkOnDomainThread();
-			super.domainTransform(event);
-		}
-
-		@Override
-		public boolean isQueueCommitTimerDisabled() {
-			// only explicit commits supported
-			return true;
-		}
-
 		/*
 		 * A simplified version of the superclass methods (which just pushes the
 		 * grouped transforms as a 'persistent' request)
@@ -301,12 +229,24 @@ public class LocalDomainStore {
 			 */
 		}
 
+		@Override
+		public void domainTransform(DomainTransformEvent event) {
+			LocalDomainQueue.checkOnDomainThread();
+			super.domainTransform(event);
+		}
+
 		long getCurrentRequestId() {
 			return localRequestId;
 		}
 
 		boolean isEmptyCommitQueue() {
 			return transformQueue.isEmpty();
+		}
+
+		@Override
+		public boolean isQueueCommitTimerDisabled() {
+			// only explicit commits supported
+			return true;
 		}
 	}
 
@@ -429,6 +369,70 @@ public class LocalDomainStore {
 		}
 	}
 
+	public class PersistenceEvents
+			implements DomainTransformPersistenceListener.Has {
+		List<DomainTransformPersistenceListener> listeners = new ArrayList<>();
+
+		private EntityLocatorMap locatorMap = new EntityLocatorMap();
+
+		@Override
+		public void addDomainTransformPersistenceListener(
+				DomainTransformPersistenceListener listener) {
+			listeners.add(listener);
+		}
+
+		public void publish(DomainTransformRequestPersistent request) {
+			try {
+				committingRequest = true;
+				TransformPersistenceToken token = new TransformPersistenceToken(
+						request, locatorMap, false, true, false, logger, true);
+				DomainTransformLayerWrapper layerWrapper = new DomainTransformLayerWrapper(
+						token);
+				DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
+						token, layerWrapper,
+						DomainTransformPersistenceEventType.PREPARE_COMMIT,
+						true);
+				/*
+				 * Update date fields
+				 */
+				AdjunctTransformCollation collation = persistenceEvent
+						.getTransformPersistenceToken().getTransformCollation();
+				Date time = new Date();
+				collation.allEntityCollations().forEach(ec -> {
+					Entity entity = ec.getEntity();
+					if (entity instanceof VersionableEntity) {
+						VersionableEntity versionable = (VersionableEntity) entity;
+						if (ec.isCreated()) {
+							versionable.setCreationDate(time);
+						}
+						versionable.setLastModificationDate(time);
+					}
+				});
+				for (DomainTransformPersistenceListener listener : listeners) {
+					listener.onDomainTransformRequestPersistence(
+							persistenceEvent);
+				}
+				persistenceEvent = new DomainTransformPersistenceEvent(token,
+						layerWrapper,
+						DomainTransformPersistenceEventType.COMMIT_OK, true);
+				for (DomainTransformPersistenceListener listener : listeners) {
+					listener.onDomainTransformRequestPersistence(
+							persistenceEvent);
+				}
+			} finally {
+				committingRequest = false;
+			}
+		}
+	}
+
+	public interface PersistenceImplementations {
+		Class<? extends DomainTransformEventPersistent>
+				getPersistentEventClass();
+
+		Class<? extends DomainTransformRequestPersistent>
+				getPersistentRequestClass();
+	}
+
 	class SingleThreadedTransformManager extends ClientTransformManagerCommon {
 		@Override
 		public void fireCollectionModificationEvent(
@@ -437,14 +441,14 @@ public class LocalDomainStore {
 		}
 
 		@Override
-		public boolean isIgnoreUnrecognizedDomainClassException() {
-			// does not use classrefs
-			return true;
+		protected void initObjectStore() {
+			setObjectStore(objectStore);
 		}
 
 		@Override
-		protected void initObjectStore() {
-			setObjectStore(objectStore);
+		public boolean isIgnoreUnrecognizedDomainClassException() {
+			// does not use classrefs
+			return true;
 		}
 
 		@Override

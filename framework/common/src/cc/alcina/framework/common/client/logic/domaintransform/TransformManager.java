@@ -353,6 +353,18 @@ public abstract class TransformManager
 				clazz, s -> Serializer.get().deserialize(serialized, clazz));
 	}
 
+	private static <V> V resolveMaybeDeserialize(V existing, String serialized,
+			V defaultValue, Class<V> clazz, Function<String, V> deserializer) {
+		if (existing != null) {
+			return existing;
+		}
+		if (serialized == null
+				|| (serialized.isEmpty() && defaultValue != null)) {
+			return defaultValue;
+		}
+		return deserializer.apply(serialized);
+	}
+
 	public static String serialize(Object object) {
 		return serialize(object, false);
 	}
@@ -424,17 +436,7 @@ public abstract class TransformManager
 		});
 	}
 
-	private static <V> V resolveMaybeDeserialize(V existing, String serialized,
-			V defaultValue, Class<V> clazz, Function<String, V> deserializer) {
-		if (existing != null) {
-			return existing;
-		}
-		if (serialized == null
-				|| (serialized.isEmpty() && defaultValue != null)) {
-			return defaultValue;
-		}
-		return deserializer.apply(serialized);
-	}
+	public boolean allowApplyTransformsToDeletedEntities = false;
 
 	private boolean useCreatedLocals = true;
 
@@ -521,6 +523,25 @@ public abstract class TransformManager
 		}
 	}
 
+	protected void addTransformsFromPropertyChange(
+			List<DomainTransformEvent> transforms) {
+		for (DomainTransformEvent transform : transforms) {
+			transform.setInImmediatePropertyChangeCommit(true);
+		}
+		addTransforms(transforms, true);
+		for (DomainTransformEvent transform : transforms) {
+			transform.setInImmediatePropertyChangeCommit(false);
+		}
+	}
+
+	protected boolean allowUnregisteredEntityTargetObject() {
+		return false;
+	}
+
+	protected boolean alwaysFireObjectOwnerCollectionModifications() {
+		return false;
+	}
+
 	public void apply(DomainTransformEvent event)
 			throws DomainTransformException {
 		currentEvent = event;
@@ -537,8 +558,10 @@ public abstract class TransformManager
 		if (markedForDeletion.contains(token.object)
 				|| markedForDeletion.contains(token.newTargetEntity)
 				|| markedForDeletion.contains(token.existingTargetEntity)) {
-			throw new DomainTransformException(
-					"Modifying object marked for deletion");
+			if (!allowApplyTransformsToDeletedEntities) {
+				throw new DomainTransformException(
+						"Modifying object marked for deletion");
+			}
 		}
 		getUndoManager().prepareUndo(event);
 		checkVersion(token.object, event);
@@ -625,7 +648,7 @@ public abstract class TransformManager
 			break;
 		}
 		case DELETE_OBJECT:
-			performDeleteObject((Entity) token.object);
+			performDeleteObject(token.object);
 			break;
 		case CREATE_OBJECT:
 			// various possibilities:
@@ -688,12 +711,39 @@ public abstract class TransformManager
 		factoryInstance = null;
 	}
 
+	protected void beforeDirectCollectionModification(Entity obj,
+			String propertyName, Object newTargetValue,
+			CollectionModificationType collectionModificationType) {
+		// for clients to force collection modifications to publish as property
+		// changes (when replaying remote events). mvcc, force a tx-writeable
+		// version of the object
+	}
+
 	public boolean checkForExistingLocallyCreatedObjects() {
 		return true;
 	}
 
 	public void checkNoPendingTransforms() {
 		Preconditions.checkState(getTransforms().size() == 0);
+	}
+
+	/**
+	 * For subclasses Transform manager (client) explicitly doesn't check -
+	 * that's handled by (what's) the presented UI note - problems are mostly
+	 * thrown as exceptions, exception being
+	 * DomainPropertyInfo.silentFailOnIllegalWrites
+	 *
+	 * @param propertyName
+	 * @param tgt
+	 * @return true if OK
+	 */
+	protected boolean checkPermissions(Entity eventTarget,
+			DomainTransformEvent evt, String propertyName, Entity change) {
+		return true;
+	}
+
+	protected void checkVersion(Entity obj, DomainTransformEvent event)
+			throws DomainTransformException {
 	}
 
 	public void clearTransforms() {
@@ -717,6 +767,11 @@ public abstract class TransformManager
 		Entity obj = getObjectStore().getObject(dte.getObjectClass(),
 				dte.getObjectId(), dte.getObjectLocalId());
 		return obj != null;
+	}
+
+	ApplyToken createApplyToken(DomainTransformEvent event)
+			throws DomainTransformException {
+		return new ApplyToken(event);
 	}
 
 	public <T extends Entity> T createDomainObject(Class<T> objectClass) {
@@ -752,6 +807,11 @@ public abstract class TransformManager
 		transform.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 		maybeAddVersionNumbers(transform, entity, event.getNewValue());
 		return transform;
+	}
+
+	// underlying set must be ordered
+	protected Set<DomainTransformEvent> createTransformSet() {
+		return new LinkedHashSet<>();
 	}
 
 	public boolean currentTransformIsDuringCreationRequest() {
@@ -838,10 +898,44 @@ public abstract class TransformManager
 		return false;
 	}
 
+	protected void doubleCheckAddition(Collection collection, Object tgt) {
+		collection.add(tgt);
+	}
+
+	protected void doubleCheckRemoval(Collection collection, Object tgt) {
+		collection.remove(tgt);
+	}
+
+	protected Object ensureEndpointInTransformGraph(Object object) {
+		return object;
+	}
+
+	protected Entity ensureEndpointWriteable(Entity targetObject) {
+		return (Entity) ensureEndpointInTransformGraph(targetObject);
+	}
+
 	public void
 			fireCollectionModificationEvent(CollectionModificationEvent event) {
 		this.collectionModificationSupport
 				.fireCollectionModificationEvent(event);
+	}
+
+	protected void fireCreateObjectEvent(Class clazz, long id, long localId) {
+		DomainTransformEvent dte = createTransformEvent();
+		dte.setSource(null);
+		dte.setObjectId(id);
+		dte.setObjectLocalId(localId);
+		dte.setObjectClass(clazz);
+		dte.setTransformType(TransformType.CREATE_OBJECT);
+		addTransform(dte);
+		try {
+			fireDomainTransform(dte);
+		} catch (DomainTransformException e) {
+			DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
+					e.getMessage());
+			dtre.setEvent(e.getEvent());
+			throw dtre;
+		}
 	}
 
 	public synchronized void fireDomainTransform(DomainTransformEvent event)
@@ -853,8 +947,16 @@ public abstract class TransformManager
 		}
 	}
 
+	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
+		return false;
+	}
+
 	public <T> Collection<T> getCollection(Class<T> clazz) {
 		return getObjectStore().getCollection(clazz);
+	}
+
+	protected Entity getEntityForCreate(DomainTransformEvent event) {
+		return getObject(event);
 	}
 
 	/**
@@ -902,6 +1004,10 @@ public abstract class TransformManager
 
 	public ObjectStore getObjectStore() {
 		return this.objectStore;
+	}
+
+	protected Collection getProvisionalObjects() {
+		return provisionalObjects.keySet();
 	}
 
 	public TransformManager getT() {
@@ -997,6 +1103,72 @@ public abstract class TransformManager
 		return undoManager;
 	}
 
+	/**
+	 * @return true if transform should not be persisted
+	 */
+	protected boolean
+			handleCascadedSerializationChange(PropertyChangeEvent event) {
+		Property property = Reflections
+				.at(Domain.resolveEntityClass(event.getSource().getClass()))
+				.property(event.getPropertyName());
+		SerializablePropertyGroup serializablePropertyGroup = new SerializablePropertyGroup(
+				property);
+		Entity entity = (Entity) event.getSource();
+		/*
+		 * If the serialized version is being changed, null the toSerialize
+		 * version *unless* this is called from setToSerialize (to preserve
+		 * object refs)
+		 */
+		switch (serializablePropertyGroup.type) {
+		case NOT:
+			break;
+		// property xxxSerialized has changed
+		case SERIALIZED: {
+			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
+				// setting this serialized value from a non-serialized setter
+				// call -
+				// store the transform but do not propagate to the corresponding
+				// property xxx
+			} else {
+				try {
+					LooseContext.pushWithTrue(
+							CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
+					serializablePropertyGroup.serializable.set(entity, null);
+				} finally {
+					LooseContext.pop();
+				}
+			}
+			break;
+		}
+		// property xxx has changed
+		case SERIALIZABLE: {
+			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
+				// property xxx was set to null (by the preceding switch case)
+				// to force a refresh - do not
+				// propagate
+				return true;
+			}
+			try {
+				LooseContext.pushWithTrue(
+						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
+				boolean hasClassNameProperty = serializablePropertyGroup.className != null;
+				serializablePropertyGroup.serialized.set(entity,
+						serialize(event.getNewValue(), hasClassNameProperty));
+				if (hasClassNameProperty) {
+					serializablePropertyGroup.className.set(entity,
+							event.getNewValue() == null ? null
+									: event.getNewValue().getClass().getName());
+				}
+				// do not persist as a transform
+				return true;
+			} finally {
+				LooseContext.pop();
+			}
+		}
+		}
+		return false;
+	}
+
 	public boolean handlesAssociationsFor(Class clazz) {
 		return !associationPropagationDisabled;
 	}
@@ -1017,6 +1189,31 @@ public abstract class TransformManager
 		return false;
 	}
 
+	protected boolean ignorePropertyForObjectsToDtes(Class objectType,
+			Class propertyType, String propertyName) {
+		return ignorePropertiesForCaching.contains(propertyName)
+				|| !PermissionsManager.get().checkReadable(objectType,
+						propertyName, null)
+				|| (Reflections.at(objectType).property(propertyName)
+						.has(AlcinaTransient.class)
+						&& AlcinaTransient.Support.isTransient(Reflections
+								.at(objectType).property(propertyName)
+								.annotation(AlcinaTransient.class)));
+	}
+
+	protected void initCollections() {
+		provisionalObjects = new IdentityHashMap<>();
+	}
+
+	protected void initObjectStore() {
+		// FIXME - dirndl 1x2 - to client tm
+		setObjectStore(new StandaloneObjectStoreClient(this));
+	}
+
+	protected boolean isAddToDomainObjects() {
+		return true;
+	}
+
 	public boolean isIgnoreProperty(String propertyName) {
 		return ignorePropertiesForCaching.contains(propertyName);
 	}
@@ -1030,6 +1227,10 @@ public abstract class TransformManager
 	}
 
 	public boolean isInCreationRequest(Entity hasOwner) {
+		return false;
+	}
+
+	protected boolean isPerformDirectAssociationUpdates(Entity targetObject) {
 		return false;
 	}
 
@@ -1055,6 +1256,27 @@ public abstract class TransformManager
 
 	public boolean isUseCreatedLocals() {
 		return this.useCreatedLocals;
+	}
+
+	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
+		return false;
+	}
+
+	protected void maybeAddVersionNumbers(DomainTransformEvent evt, Entity obj,
+			Object tgt) {
+		if (obj instanceof HasVersionNumber) {
+			evt.setObjectVersionNumber(
+					((HasVersionNumber) obj).getVersionNumber());
+		}
+		if (tgt instanceof HasVersionNumber) {
+			evt.setValueVersionNumber(
+					((HasVersionNumber) tgt).getVersionNumber());
+		}
+	}
+
+	protected void maybeFireCollectionModificationEvent(
+			Class<? extends Object> collectionClass,
+			boolean fromPropertyChange) {
 	}
 
 	public void modifyCollectionProperty(Object objectWithCollection,
@@ -1092,6 +1314,14 @@ public abstract class TransformManager
 		property.set(objectWithCollection, c);
 	}
 
+	protected <E extends Entity> E newInstance(Class<E> entityClass, long id,
+			long localId) {
+		E entity = Reflections.newInstance(entityClass);
+		entity.setId(id);
+		entity.setLocalId(localId);
+		return entity;
+	}
+
 	public synchronized long nextLocalIdCounter() {
 		return localIdGenerator.incrementAndGet();
 	}
@@ -1100,6 +1330,16 @@ public abstract class TransformManager
 		return getTransforms().stream().anyMatch(
 				transform -> transform.toObjectLocator().matches(entity)
 						|| transform.toValueLocator().matches(entity));
+	}
+
+	/**
+	 * for subclasses to handle version increments
+	 *
+	 * @param entity
+	 * @param evt
+	 */
+	protected void objectModified(Entity entity, DomainTransformEvent evt,
+			boolean targetObject) {
 	}
 
 	public List<DomainTransformEvent> objectsToDtes(Collection objects,
@@ -1224,6 +1464,41 @@ public abstract class TransformManager
 		return dtes;
 	}
 
+	protected void performDeleteObject(Entity entity) {
+		if (getObjectStore() != null) {
+			getObjectStore().deregister(entity);
+			maybeFireCollectionModificationEvent(entity.entityClass(), false);
+		}
+	}
+
+	protected void performDirectAssociationUpdate(Entity objectWithCollection,
+			String propertyName, Collection coll, Entity collectionMember,
+			boolean remove) {
+		boolean contains = coll.contains(collectionMember);
+		if (contains ^ remove) {
+			// NOOP
+			return;
+		}
+		if (remove) {
+			coll.remove(collectionMember);
+		} else {
+			coll.add(collectionMember);
+		}
+		DomainTransformEvent event = createTransformEvent();
+		event.setSource(objectWithCollection);
+		event.setPropertyName(propertyName);
+		event.setObjectId(objectWithCollection.getId());
+		event.setObjectLocalId(objectWithCollection.getLocalId());
+		event.setObjectClass(objectWithCollection.entityClass());
+		event.setTransformType(remove ? TransformType.REMOVE_REF_FROM_COLLECTION
+				: TransformType.ADD_REF_TO_COLLECTION);
+		event.setValueId(collectionMember.getId());
+		event.setValueLocalId(collectionMember.getLocalId());
+		event.setValueClass(collectionMember.entityClass());
+		maybeAddVersionNumbers(event, objectWithCollection, collectionMember);
+		addTransformsFromPropertyChange(Collections.singletonList(event));
+	}
+
 	public void persistSerializables(Entity<?> entity) {
 		Reflections.at(entity.entityClass()).properties().stream()
 				.filter(property -> property.has(DomainProperty.class)
@@ -1235,6 +1510,75 @@ public abstract class TransformManager
 					property.set(entity, copy);
 				});
 		;
+	}
+
+	protected void promoteToDomain(Collection objects, boolean deregister) {
+		try {
+			CollectionModificationSupport.queue(true);
+			for (Object o : objects) {
+				if (o instanceof Entity
+						&& getObjectStore().getObject((Entity) o) == null) {
+					Entity entity = (Entity) o;
+					// if this is a new object, we want to register a blank
+					// object,
+					// so
+					// property changes are played back properly against it
+					// Entity newInstance = (Entity)
+					// GWTDomainReflector
+					// .get().newInstance(o.getClass(), 0);
+					// newInstance.setLocalId(((Entity)
+					// o).getLocalId());
+					// TransformManager.get().registerObject(newInstance);
+					// actually, this should ALL be done by event - consume
+					// note 2. it could be. but creation of provisional objects
+					// doesn't generate a "create" event...no, in fact current
+					// way
+					// is better. so ignore all this. it works, it's fine
+					// (come adjunct TM this all ggoes away)
+					Entity newInstance = (Entity) Reflections
+							.newInstance(o.getClass());
+					newInstance.setLocalId(entity.getLocalId());
+					TransformManager.get().registerDomainObject(newInstance);
+					fireCreateObjectEvent(entity.entityClass(), 0,
+							entity.getLocalId());
+				}
+			}
+			Collection<DomainTransformEvent> trs = getTransformsByCommitType(
+					CommitType.TO_LOCAL_BEAN);
+			trs = (Set) ((LinkedHashSet) trs).clone();
+			deregisterProvisionalObjects(objects);
+			for (DomainTransformEvent event : trs) {
+				if (objects.contains(event.getSource())) {
+					try {
+						ApplyToken token = createApplyToken(event);
+						switch (event.getTransformType()) {
+						case ADD_REF_TO_COLLECTION:
+							modifyCollectionProperty(token.object,
+									event.getPropertyName(),
+									token.newTargetObject,
+									CollectionModificationType.ADD);
+							break;
+						case REMOVE_REF_FROM_COLLECTION:
+							modifyCollectionProperty(token.object,
+									event.getPropertyName(),
+									token.newTargetObject,
+									CollectionModificationType.REMOVE);
+							break;
+						default:
+							apply(event);
+							break;
+						}
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			}
+		} finally {
+			if (!deregister) {
+				registerProvisionalObject(objects);
+			}
+			CollectionModificationSupport.queue(false);
+		}
 	}
 
 	/**
@@ -1276,6 +1620,10 @@ public abstract class TransformManager
 			return (T) getObject((Entity) o);
 		}
 		return null;
+	}
+
+	protected Property property(Class clazz, String propertyName) {
+		return Reflections.at(clazz).property(propertyName);
 	}
 
 	@Override
@@ -1544,6 +1892,12 @@ public abstract class TransformManager
 		this.transformListenerSupport.removeDomainTransformListener(listener);
 	}
 
+	/*
+	 * Overridden by threaded subclasses
+	 */
+	protected void removePerThreadContext0() {
+	}
+
 	public DomainTransformEvent
 			removeTransform(DomainTransformEvent transform) {
 		transforms.remove(transform);
@@ -1604,6 +1958,10 @@ public abstract class TransformManager
 		return isReplayingRemoteEvent();
 	}
 
+	protected void set(Property property, Entity object, Object value) {
+		property.set(object, value);
+	}
+
 	public void setAssociationPropagationDisabled(
 			boolean associationPropagationDisabled) {
 		this.associationPropagationDisabled = associationPropagationDisabled;
@@ -1616,6 +1974,10 @@ public abstract class TransformManager
 	public void setIgnoreUnrecognizedDomainClassException(
 			boolean ignoreUnrecognizedDomainClassException) {
 		this.ignoreUnrecognizedDomainClassException = ignoreUnrecognizedDomainClassException;
+	}
+
+	protected void setObjectStore(ObjectStore domainObjects) {
+		this.objectStore = domainObjects;
 	}
 
 	public void setReplayingRemoteEvent(boolean replayingRemoteEvent) {
@@ -1637,6 +1999,11 @@ public abstract class TransformManager
 		this.useCreatedLocals = useCreatedLocals;
 	}
 
+	protected boolean
+			shouldApplyCollectionModification(DomainTransformEvent event) {
+		return true;
+	}
+
 	public String toIdList(Collection<? extends Entity> entities) {
 		StringBuffer sb = new StringBuffer();
 		for (Entity entity : entities) {
@@ -1646,364 +2013,6 @@ public abstract class TransformManager
 			sb.append(entity.getId());
 		}
 		return sb.toString();
-	}
-
-	protected void addTransformsFromPropertyChange(
-			List<DomainTransformEvent> transforms) {
-		for (DomainTransformEvent transform : transforms) {
-			transform.setInImmediatePropertyChangeCommit(true);
-		}
-		addTransforms(transforms, true);
-		for (DomainTransformEvent transform : transforms) {
-			transform.setInImmediatePropertyChangeCommit(false);
-		}
-	}
-
-	protected boolean allowUnregisteredEntityTargetObject() {
-		return false;
-	}
-
-	protected boolean alwaysFireObjectOwnerCollectionModifications() {
-		return false;
-	}
-
-	protected void beforeDirectCollectionModification(Entity obj,
-			String propertyName, Object newTargetValue,
-			CollectionModificationType collectionModificationType) {
-		// for clients to force collection modifications to publish as property
-		// changes (when replaying remote events). mvcc, force a tx-writeable
-		// version of the object
-	}
-
-	/**
-	 * For subclasses Transform manager (client) explicitly doesn't check -
-	 * that's handled by (what's) the presented UI note - problems are mostly
-	 * thrown as exceptions, exception being
-	 * DomainPropertyInfo.silentFailOnIllegalWrites
-	 *
-	 * @param propertyName
-	 * @param tgt
-	 * @return true if OK
-	 */
-	protected boolean checkPermissions(Entity eventTarget,
-			DomainTransformEvent evt, String propertyName, Entity change) {
-		return true;
-	}
-
-	protected void checkVersion(Entity obj, DomainTransformEvent event)
-			throws DomainTransformException {
-	}
-
-	// underlying set must be ordered
-	protected Set<DomainTransformEvent> createTransformSet() {
-		return new LinkedHashSet<>();
-	}
-
-	protected void doubleCheckAddition(Collection collection, Object tgt) {
-		collection.add(tgt);
-	}
-
-	protected void doubleCheckRemoval(Collection collection, Object tgt) {
-		collection.remove(tgt);
-	}
-
-	protected Object ensureEndpointInTransformGraph(Object object) {
-		return object;
-	}
-
-	protected Entity ensureEndpointWriteable(Entity targetObject) {
-		return (Entity) ensureEndpointInTransformGraph(targetObject);
-	}
-
-	protected void fireCreateObjectEvent(Class clazz, long id, long localId) {
-		DomainTransformEvent dte = createTransformEvent();
-		dte.setSource(null);
-		dte.setObjectId(id);
-		dte.setObjectLocalId(localId);
-		dte.setObjectClass(clazz);
-		dte.setTransformType(TransformType.CREATE_OBJECT);
-		addTransform(dte);
-		try {
-			fireDomainTransform(dte);
-		} catch (DomainTransformException e) {
-			DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
-					e.getMessage());
-			dtre.setEvent(e.getEvent());
-			throw dtre;
-		}
-	}
-
-	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
-		return false;
-	}
-
-	protected Entity getEntityForCreate(DomainTransformEvent event) {
-		return getObject(event);
-	}
-
-	protected Collection getProvisionalObjects() {
-		return provisionalObjects.keySet();
-	}
-
-	/**
-	 * @return true if transform should not be persisted
-	 */
-	protected boolean
-			handleCascadedSerializationChange(PropertyChangeEvent event) {
-		Property property = Reflections
-				.at(Domain.resolveEntityClass(event.getSource().getClass()))
-				.property(event.getPropertyName());
-		SerializablePropertyGroup serializablePropertyGroup = new SerializablePropertyGroup(
-				property);
-		Entity entity = (Entity) event.getSource();
-		/*
-		 * If the serialized version is being changed, null the toSerialize
-		 * version *unless* this is called from setToSerialize (to preserve
-		 * object refs)
-		 */
-		switch (serializablePropertyGroup.type) {
-		case NOT:
-			break;
-		// property xxxSerialized has changed
-		case SERIALIZED: {
-			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
-				// setting this serialized value from a non-serialized setter
-				// call -
-				// store the transform but do not propagate to the corresponding
-				// property xxx
-			} else {
-				try {
-					LooseContext.pushWithTrue(
-							CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
-					serializablePropertyGroup.serializable.set(entity, null);
-				} finally {
-					LooseContext.pop();
-				}
-			}
-			break;
-		}
-		// property xxx has changed
-		case SERIALIZABLE: {
-			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
-				// property xxx was set to null (by the preceding switch case)
-				// to force a refresh - do not
-				// propagate
-				return true;
-			}
-			try {
-				LooseContext.pushWithTrue(
-						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
-				boolean hasClassNameProperty = serializablePropertyGroup.className != null;
-				serializablePropertyGroup.serialized.set(entity,
-						serialize(event.getNewValue(), hasClassNameProperty));
-				if (hasClassNameProperty) {
-					serializablePropertyGroup.className.set(entity,
-							event.getNewValue() == null ? null
-									: event.getNewValue().getClass().getName());
-				}
-				// do not persist as a transform
-				return true;
-			} finally {
-				LooseContext.pop();
-			}
-		}
-		}
-		return false;
-	}
-
-	protected boolean ignorePropertyForObjectsToDtes(Class objectType,
-			Class propertyType, String propertyName) {
-		return ignorePropertiesForCaching.contains(propertyName)
-				|| !PermissionsManager.get().checkReadable(objectType,
-						propertyName, null)
-				|| (Reflections.at(objectType).property(propertyName)
-						.has(AlcinaTransient.class)
-						&& AlcinaTransient.Support.isTransient(Reflections
-								.at(objectType).property(propertyName)
-								.annotation(AlcinaTransient.class)));
-	}
-
-	protected void initCollections() {
-		provisionalObjects = new IdentityHashMap<>();
-	}
-
-	protected void initObjectStore() {
-		// FIXME - dirndl 1x2 - to client tm
-		setObjectStore(new StandaloneObjectStoreClient(this));
-	}
-
-	protected boolean isAddToDomainObjects() {
-		return true;
-	}
-
-	protected boolean isPerformDirectAssociationUpdates(Entity targetObject) {
-		return false;
-	}
-
-	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
-		return false;
-	}
-
-	protected void maybeAddVersionNumbers(DomainTransformEvent evt, Entity obj,
-			Object tgt) {
-		if (obj instanceof HasVersionNumber) {
-			evt.setObjectVersionNumber(
-					((HasVersionNumber) obj).getVersionNumber());
-		}
-		if (tgt instanceof HasVersionNumber) {
-			evt.setValueVersionNumber(
-					((HasVersionNumber) tgt).getVersionNumber());
-		}
-	}
-
-	protected void maybeFireCollectionModificationEvent(
-			Class<? extends Object> collectionClass,
-			boolean fromPropertyChange) {
-	}
-
-	protected <E extends Entity> E newInstance(Class<E> entityClass, long id,
-			long localId) {
-		E entity = Reflections.newInstance(entityClass);
-		entity.setId(id);
-		entity.setLocalId(localId);
-		return entity;
-	}
-
-	/**
-	 * for subclasses to handle version increments
-	 *
-	 * @param entity
-	 * @param evt
-	 */
-	protected void objectModified(Entity entity, DomainTransformEvent evt,
-			boolean targetObject) {
-	}
-
-	protected void performDeleteObject(Entity entity) {
-		if (getObjectStore() != null) {
-			getObjectStore().deregister(entity);
-			maybeFireCollectionModificationEvent(entity.entityClass(), false);
-		}
-	}
-
-	protected void performDirectAssociationUpdate(Entity objectWithCollection,
-			String propertyName, Collection coll, Entity collectionMember,
-			boolean remove) {
-		boolean contains = coll.contains(collectionMember);
-		if (contains ^ remove) {
-			// NOOP
-			return;
-		}
-		if (remove) {
-			coll.remove(collectionMember);
-		} else {
-			coll.add(collectionMember);
-		}
-		DomainTransformEvent event = createTransformEvent();
-		event.setSource(objectWithCollection);
-		event.setPropertyName(propertyName);
-		event.setObjectId(objectWithCollection.getId());
-		event.setObjectLocalId(objectWithCollection.getLocalId());
-		event.setObjectClass(objectWithCollection.entityClass());
-		event.setTransformType(remove ? TransformType.REMOVE_REF_FROM_COLLECTION
-				: TransformType.ADD_REF_TO_COLLECTION);
-		event.setValueId(collectionMember.getId());
-		event.setValueLocalId(collectionMember.getLocalId());
-		event.setValueClass(collectionMember.entityClass());
-		maybeAddVersionNumbers(event, objectWithCollection, collectionMember);
-		addTransformsFromPropertyChange(Collections.singletonList(event));
-	}
-
-	protected void promoteToDomain(Collection objects, boolean deregister) {
-		try {
-			CollectionModificationSupport.queue(true);
-			for (Object o : objects) {
-				if (o instanceof Entity
-						&& getObjectStore().getObject((Entity) o) == null) {
-					Entity entity = (Entity) o;
-					// if this is a new object, we want to register a blank
-					// object,
-					// so
-					// property changes are played back properly against it
-					// Entity newInstance = (Entity)
-					// GWTDomainReflector
-					// .get().newInstance(o.getClass(), 0);
-					// newInstance.setLocalId(((Entity)
-					// o).getLocalId());
-					// TransformManager.get().registerObject(newInstance);
-					// actually, this should ALL be done by event - consume
-					// note 2. it could be. but creation of provisional objects
-					// doesn't generate a "create" event...no, in fact current
-					// way
-					// is better. so ignore all this. it works, it's fine
-					// (come adjunct TM this all ggoes away)
-					Entity newInstance = (Entity) Reflections
-							.newInstance(o.getClass());
-					newInstance.setLocalId(entity.getLocalId());
-					TransformManager.get().registerDomainObject(newInstance);
-					fireCreateObjectEvent(entity.entityClass(), 0,
-							entity.getLocalId());
-				}
-			}
-			Collection<DomainTransformEvent> trs = getTransformsByCommitType(
-					CommitType.TO_LOCAL_BEAN);
-			trs = (Set) ((LinkedHashSet) trs).clone();
-			deregisterProvisionalObjects(objects);
-			for (DomainTransformEvent event : trs) {
-				if (objects.contains(event.getSource())) {
-					try {
-						ApplyToken token = createApplyToken(event);
-						switch (event.getTransformType()) {
-						case ADD_REF_TO_COLLECTION:
-							modifyCollectionProperty(token.object,
-									event.getPropertyName(),
-									token.newTargetObject,
-									CollectionModificationType.ADD);
-							break;
-						case REMOVE_REF_FROM_COLLECTION:
-							modifyCollectionProperty(token.object,
-									event.getPropertyName(),
-									token.newTargetObject,
-									CollectionModificationType.REMOVE);
-							break;
-						default:
-							apply(event);
-							break;
-						}
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			}
-		} finally {
-			if (!deregister) {
-				registerProvisionalObject(objects);
-			}
-			CollectionModificationSupport.queue(false);
-		}
-	}
-
-	protected Property property(Class clazz, String propertyName) {
-		return Reflections.at(clazz).property(propertyName);
-	}
-
-	/*
-	 * Overridden by threaded subclasses
-	 */
-	protected void removePerThreadContext0() {
-	}
-
-	protected void set(Property property, Entity object, Object value) {
-		property.set(object, value);
-	}
-
-	protected void setObjectStore(ObjectStore domainObjects) {
-		this.objectStore = domainObjects;
-	}
-
-	protected boolean
-			shouldApplyCollectionModification(DomainTransformEvent event) {
-		return true;
 	}
 
 	protected void updateAssociation(String propertyName, Entity<?> delta,
@@ -2025,7 +2034,7 @@ public abstract class TransformManager
 		if (associated.domain().wasRemoved()) {
 			return;
 		}
-		associated = (Entity) ensureEndpointWriteable(associated);
+		associated = ensureEndpointWriteable(associated);
 		Property associatedProperty = Reflections.at(associated)
 				.property(association.propertyName());
 		Object associatedExistingValue = associatedProperty.get(associated);
@@ -2082,99 +2091,6 @@ public abstract class TransformManager
 			// "probably" means "at the moment we don't fire - i.e. don't mark
 			// the target object as updated"
 			objectModified(associated, event, true);
-		}
-	}
-
-	ApplyToken createApplyToken(DomainTransformEvent event)
-			throws DomainTransformException {
-		return new ApplyToken(event);
-	}
-
-	public enum CollectionModificationType {
-		ADD, REMOVE
-	}
-
-	public static class CommitToLocalDomainTransformListener
-			implements DomainTransformListener {
-		AssociationPropagationTransformListener associationPropagation = new AssociationPropagationTransformListener(
-				CommitType.TO_LOCAL_GRAPH);
-
-		/**
-		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
-		 * were not in the case
-		 *
-		 * I think that's in error - but checking. Basically, the transforms
-		 * will be ignored if they're a double-dip (the property won't change)
-		 */
-		@Override
-		public void domainTransform(DomainTransformEvent evt) {
-			if (evt.getCommitType() == CommitType.TO_LOCAL_GRAPH) {
-				TransformManager tm = TransformManager.get();
-				try {
-					associationPropagation.domainTransform(evt);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-				tm.setTransformCommitType(evt, CommitType.TO_STORAGE);
-			}
-		}
-	}
-
-	public static class RecordTransformListener
-			implements DomainTransformListener {
-		@Override
-		public void domainTransform(DomainTransformEvent evt) {
-			if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
-				TransformManager tm = TransformManager.get();
-				if (tm.isProvisionalObject(evt.getSource())) {
-					return;
-				}
-				tm.setTransformCommitType(evt, CommitType.TO_LOCAL_GRAPH);
-				return;
-			}
-		}
-	}
-
-	@Reflected
-	@Registration.Singleton
-	public static class Serializer {
-		// must be stateless
-		private static Serializer instance;
-
-		public static TransformManager.Serializer get() {
-			if (instance == null) {
-				instance = Registry.impl(TransformManager.Serializer.class);
-			}
-			return instance;
-		}
-
-		public <T> T copy(T object) {
-			return deserialize(serialize(object, false));
-		}
-
-		public <V> V deserialize(String serialized) {
-			return deserialize(serialized, null);
-		}
-
-		public <V> V deserialize(String serialized, Class<V> clazz) {
-			if (serialized == null) {
-				return null;
-			}
-			if (serialized.startsWith("{")) {
-				return AlcinaBeanSerializer.deserializeHolder(serialized);
-			} else {
-				return ReflectiveSerializer.deserialize(serialized);
-			}
-		}
-
-		// subclass support for refactoring, would require calls from
-		// FlatTreeSerializer, ReflectiveSerializer, AlcinaBeanSerializer
-		public String mapMissingPropertyName(Class type, String propertyName) {
-			return null;
-		}
-
-		public String serialize(Object object, boolean hasClassNameProperty) {
-			return ReflectiveSerializer.serialize(object);
 		}
 	}
 
@@ -2279,6 +2195,51 @@ public abstract class TransformManager
 		}
 	}
 
+	public enum CollectionModificationType {
+		ADD, REMOVE
+	}
+
+	public static class CommitToLocalDomainTransformListener
+			implements DomainTransformListener {
+		AssociationPropagationTransformListener associationPropagation = new AssociationPropagationTransformListener(
+				CommitType.TO_LOCAL_GRAPH);
+
+		/**
+		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
+		 * were not in the case
+		 *
+		 * I think that's in error - but checking. Basically, the transforms
+		 * will be ignored if they're a double-dip (the property won't change)
+		 */
+		@Override
+		public void domainTransform(DomainTransformEvent evt) {
+			if (evt.getCommitType() == CommitType.TO_LOCAL_GRAPH) {
+				TransformManager tm = TransformManager.get();
+				try {
+					associationPropagation.domainTransform(evt);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+				tm.setTransformCommitType(evt, CommitType.TO_STORAGE);
+			}
+		}
+	}
+
+	public static class RecordTransformListener
+			implements DomainTransformListener {
+		@Override
+		public void domainTransform(DomainTransformEvent evt) {
+			if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
+				TransformManager tm = TransformManager.get();
+				if (tm.isProvisionalObject(evt.getSource())) {
+					return;
+				}
+				tm.setTransformCommitType(evt, CommitType.TO_LOCAL_GRAPH);
+				return;
+			}
+		}
+	}
+
 	static class SerializablePropertyGroup {
 		// property 'xxx'
 		Property serializable;
@@ -2333,6 +2294,49 @@ public abstract class TransformManager
 
 		enum Type {
 			NOT, SERIALIZED, SERIALIZABLE;
+		}
+	}
+
+	@Reflected
+	@Registration.Singleton
+	public static class Serializer {
+		// must be stateless
+		private static Serializer instance;
+
+		public static TransformManager.Serializer get() {
+			if (instance == null) {
+				instance = Registry.impl(TransformManager.Serializer.class);
+			}
+			return instance;
+		}
+
+		public <T> T copy(T object) {
+			return deserialize(serialize(object, false));
+		}
+
+		public <V> V deserialize(String serialized) {
+			return deserialize(serialized, null);
+		}
+
+		public <V> V deserialize(String serialized, Class<V> clazz) {
+			if (serialized == null) {
+				return null;
+			}
+			if (serialized.startsWith("{")) {
+				return AlcinaBeanSerializer.deserializeHolder(serialized);
+			} else {
+				return ReflectiveSerializer.deserialize(serialized);
+			}
+		}
+
+		// subclass support for refactoring, would require calls from
+		// FlatTreeSerializer, ReflectiveSerializer, AlcinaBeanSerializer
+		public String mapMissingPropertyName(Class type, String propertyName) {
+			return null;
+		}
+
+		public String serialize(Object object, boolean hasClassNameProperty) {
+			return ReflectiveSerializer.serialize(object);
 		}
 	}
 }
