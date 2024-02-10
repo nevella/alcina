@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -125,8 +126,14 @@ public class ModelBinding<T> {
 	}
 
 	public ModelBinding<T> filter(Predicate<T> predicate) {
+		Preconditions.checkState(predicate == null,
+				"Cannot set multiple predicates");
 		this.predicate = predicate;
 		return this;
+	}
+
+	public ModelBinding<T> nonNull() {
+		return filter(Objects::nonNull);
 	}
 
 	/**
