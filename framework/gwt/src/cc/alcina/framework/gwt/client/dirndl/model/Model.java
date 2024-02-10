@@ -4,7 +4,6 @@ import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -13,7 +12,6 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Binding.DefinesProperties;
 import com.totsp.gwittir.client.beans.BindingBuilder;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -31,9 +29,6 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
-import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Topic;
@@ -220,10 +215,6 @@ public abstract class Model extends Bindable implements
 	}
 
 	/*
-	 * This class supports 'fieldless' mode, where the property values are
-	 * stored in the values map
-	 *
-	 * TODO - make that a subclass,since rare
 	 * 
 	 * FIXME - dirndl - simplify to just from(SPCE/TOPIC) and
 	 * add(listenerbinding)
@@ -231,22 +222,7 @@ public abstract class Model extends Bindable implements
 	public class Bindings {
 		private Binding binding = new Binding();
 
-		private Map<String, Object> values = AlcinaCollections.newUnqiueMap();
-
 		private ListenerBindings listenerBindings = new ListenerBindings();
-
-		/*
-		 * keep the fieldless propertychange contract mostly separate/clean
-		 *
-		 */
-		private PropertyChangeSource propertyChangeSource = new PropertyChangeSource();
-
-		/*
-		 * model has no field-backed properties, instead all values are stored
-		 * in the values array (and getters call
-		 * BoundValues.value(propertyName))
-		 */
-		private boolean fieldless;
 
 		private boolean bound;
 
@@ -423,21 +399,11 @@ public abstract class Model extends Bindable implements
 		}
 
 		private SourcesPropertyChangeEvents getSource() {
-			SourcesPropertyChangeEvents left = fieldless ? propertyChangeSource
-					: Model.this;
-			return left;
-		}
-
-		public boolean isFieldless() {
-			return this.fieldless;
+			return Model.this;
 		}
 
 		Model model() {
 			return Model.this;
-		}
-
-		public void setFieldless(boolean fieldless) {
-			this.fieldless = fieldless;
 		}
 
 		public void setLeft() {
@@ -451,40 +417,6 @@ public abstract class Model extends Bindable implements
 			listenerBindings.unbind();
 			binding.unbind();
 			bound = false;
-		}
-
-		public <T> T value(Object propertyName) {
-			String propertyNameString = PropertyEnum
-					.asPropertyName(propertyName);
-			return (T) values.get(propertyNameString);
-		}
-
-		public class MapBackedProperty extends Property {
-			public MapBackedProperty(Property property) {
-				super(property);
-			}
-
-			@Override
-			public Object get(Object bean) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public void set(Object bean, Object newValue) {
-				Object oldValue = value(getName());
-				values.put(getName(), newValue);
-				Model.this.firePropertyChange(getName(), oldValue, newValue);
-			}
-		}
-
-		class PropertyChangeSource extends BaseSourcesPropertyChangeEvents
-				implements DefinesProperties {
-			@Override
-			public Property provideProperty(String propertyName) {
-				Property property = Reflections.at(Model.this)
-						.property(propertyName);
-				return new MapBackedProperty(property);
-			}
 		}
 	}
 

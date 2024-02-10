@@ -804,7 +804,10 @@ public class DirectedLayout implements AlcinaProcess {
 
 		NodeEventBinding getEventBinding(Class<? extends NodeEvent> type) {
 			return eventBindings.stream().filter(eb -> eb.type == type)
-					.findFirst().get();
+					.findFirst()
+					.orElseThrow(() -> new IllegalStateException(Ax.format(
+							"Type %s does not implement the %s Emitter",
+							NestedName.get(this.model), NestedName.get(type))));
 		}
 
 		public <T> T getModel() {

@@ -6,13 +6,17 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
@@ -94,6 +98,9 @@ public class ModelBinding<T> {
 		if (predicate != null && !((Predicate) predicate).test(o2)) {
 			return;
 		}
+		Preconditions.checkState(consumer != null,
+				"No consumer - possibly you forgot to call bind(), "
+						+ "or  onewWay()/bidi() if this is a property binding");
 		((Consumer) consumer).accept(o2);
 	}
 
@@ -126,7 +133,7 @@ public class ModelBinding<T> {
 	}
 
 	public ModelBinding<T> filter(Predicate<T> predicate) {
-		Preconditions.checkState(predicate == null,
+		Preconditions.checkState(this.predicate == null,
 				"Cannot set multiple predicates");
 		this.predicate = predicate;
 		return this;
@@ -179,14 +186,22 @@ public class ModelBinding<T> {
 	}
 
 	void prepare() {
-		if (setOnInitialise) {
-			if (fromPropertyChangeSource != null) {
-				acceptStreamElement(resolvePropertyChangeValue());
-			} else if (fromTopic != null) {
-				fromTopic.fireIfPublished((Consumer) consumer);
-			} else {
-				throw new UnsupportedOperationException();
+		try {
+			if (setOnInitialise) {
+				if (fromPropertyChangeSource != null) {
+					acceptStreamElement(resolvePropertyChangeValue());
+				} else if (fromTopic != null) {
+					fromTopic.fireIfPublished((Consumer) consumer);
+				} else {
+					throw new UnsupportedOperationException();
+				}
 			}
+		} catch (Exception e) {
+			LoggerFactory.getLogger(getClass()).warn(
+					"Exception preparing model binding on {} from {} :: {}",
+					NestedName.get(bindings.model()),
+					NestedName.get(fromPropertyChangeSource), on);
+			throw WrappedRuntimeException.wrap(e);
 		}
 	}
 
@@ -266,9 +281,19 @@ public class ModelBinding<T> {
 			this.to = to;
 		}
 
-		private void acceptLeftToRight() {
-			accept(newValue -> Reflections.at(to).property(on).set(to,
-					newValue));
+		void acceptLeftToRight() {
+			accept(newValue -> {
+				try {
+					Reflections.at(to).property(on).set(to, newValue);
+				} catch (Exception e) {
+					LoggerFactory.getLogger(getClass()).warn(
+							"Exception executing model binding on {} to {} :: {}",
+							NestedName.get(bindings.model()),
+							NestedName.get(to), on);
+					e.printStackTrace();
+					throw WrappedRuntimeException.wrap(e);
+				}
+			});
 		}
 
 		public <T2> ModelBinding<T2> bidi() {

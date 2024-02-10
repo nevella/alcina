@@ -259,13 +259,7 @@ public class Binding {
 		}
 		instance.object = object;
 		try {
-			if (object instanceof DefinesProperties) {
-				instance.property = ((DefinesProperties) object)
-						.provideProperty(propertyName);
-			} else {
-				instance.property = Reflections.at(object)
-						.property(propertyName);
-			}
+			instance.property = Reflections.at(object).property(propertyName);
 			if (instance.property == null) {
 				throw new NullPointerException("Property Not Found.");
 			}
@@ -672,10 +666,6 @@ public class Binding {
 		public String toString() {
 			return "[Listener on : " + this.instance.object + " ] ";
 		}
-	}
-
-	public interface DefinesProperties {
-		public Property provideProperty(String propertyName);
 	}
 
 	private class NestedPropertyChangeListener

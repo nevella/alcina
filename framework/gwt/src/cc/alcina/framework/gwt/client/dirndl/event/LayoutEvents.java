@@ -83,6 +83,14 @@ public class LayoutEvents {
 			 */
 			void onBind(Bind event);
 		}
+
+		public static Bind exTreeUnbindEvent() {
+			return new Bind(null, false);
+		}
+
+		public static Bind exTreeBindEvent() {
+			return new Bind(null, true);
+		}
 	}
 
 	/**

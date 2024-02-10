@@ -342,6 +342,14 @@ public class CommonUtils {
 		return o2 == null ? 1 : o1.compareTo(o2);
 	}
 
+	public static <T> int compareWithNullMinusOne(T o1, T o2,
+			Comparator<T> comparator) {
+		if (o1 == null) {
+			return o2 == null ? 0 : -1;
+		}
+		return o2 == null ? 1 : comparator.compare(o1, o2);
+	}
+
 	public static boolean containsAny(Collection container,
 			Collection containees) {
 		for (Iterator itr = containees.iterator(); itr.hasNext();) {
