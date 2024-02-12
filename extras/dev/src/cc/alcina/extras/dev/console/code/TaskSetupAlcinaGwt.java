@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
@@ -11,6 +12,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
+@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 public class TaskSetupAlcinaGwt extends PerformerTask {
 	public String path;
 
