@@ -29,6 +29,12 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 		return new Csv(csv);
 	}
 
+	public static Csv blankWithKeys(Class<? extends Enum> columnType) {
+		Csv csv = new Csv(List.of());
+		Arrays.stream(columnType.getEnumConstants()).forEach(csv::addColumn);
+		return csv;
+	}
+
 	public static Csv parseTsv(String tsv) {
 		return new Csv(CsvUtils.parseCsv(tsv, true));
 	}
