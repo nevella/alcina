@@ -1480,6 +1480,15 @@ public class DomNode {
 			styles.put(key, value);
 			setAttr("style", toStyleAttribute(styles));
 		}
+
+		public Set<String> getClassNames() {
+			String className = getClassName();
+			if (Ax.isBlank(className)) {
+				return Set.of();
+			} else {
+				return Set.of(className.split(" "));
+			}
+		}
 	}
 
 	public class DomNodeText {
