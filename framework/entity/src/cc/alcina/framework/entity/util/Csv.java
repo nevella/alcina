@@ -47,8 +47,8 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 
 	List<List<String>> grid;
 
-	public Csv(List<List<String>> grid) {
-		this.grid = new ArrayList<>(grid);
+	public Csv(List<List<String>> gridParam) {
+		this.grid = new ArrayList<>(gridParam);
 		if (grid.size() == 0) {
 			grid.add(new ArrayList<>());
 		}
