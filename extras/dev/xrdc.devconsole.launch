@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="com.gwtplugins.gdt.eclipse.suite.webapp">
     <stringAttribute key="bad_container_name" value="/opsol_server"/>
-    <booleanAttribute key="com.gwtplugins.gdt.eclipse.core.RUN_SERVER" value="false"/>
+    <booleanAttribute key="com.gwtplugins.gdt.eclipse.core.AUTO_PORT_SELECTION" value="true"/>
     <stringAttribute key="com.gwtplugins.gdt.eclipse.suiteMainTypeProcessor.PREVIOUSLY_SET_MAIN_TYPE_NAME" value="com.google.gwt.dev.DevMode"/>
     <listAttribute key="com.gwtplugins.gwt.eclipse.core.ENTRY_POINT_MODULES">
+        <listEntry value="cc.alcina.extras.dev.console.remote.RemoteConsoleClient"/>
         <listEntry value="cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient"/>
     </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
@@ -61,7 +62,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.google.gwt.dev.DevMode"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="opsol_client"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-noserver -logLevel INFO -war /apdm/build/gwt.dev -gen /apdm/build/gen -remoteUI &quot;${gwt_remote_ui_server_port}:${unique_id}&quot; -codeServerPort 9997 -sourceLevel 11 cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-logLevel INFO -port auto -war /apdm/build/gwt.dev -gen /apdm/build/gen -remoteUI &quot;${gwt_remote_ui_server_port}:${unique_id}&quot; -codeServerPort 9997 -sourceLevel 11 cc.alcina.extras.dev.console.remote.RemoteConsoleClient cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="alcina"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx1g -Xmx2500m -XX:ReservedCodeCacheSize=500m --add-opens java.logging/java.util.logging=ALL-UNNAMED --add-opens java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED"/>
 </launchConfiguration>

@@ -719,7 +719,8 @@ public class JobRegistry {
 						CancelledException.class) != null) {
 				} else {
 					logger.warn(Ax.format("Job exception in job %s", job), t);
-					if (!Ax.isTest()) {
+					if (!Ax.isTest()
+							&& Configuration.is("persistentLoggingEnabled")) {
 						EntityLayerLogging.persistentLog(
 								LogMessageType.TASK_EXCEPTION, e);
 					}
