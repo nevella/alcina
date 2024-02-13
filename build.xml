@@ -72,18 +72,6 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 
-		<mkdir dir="${extras.misc.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${extras.misc.build.dir}">
-			<classpath>
-				<path refid="framework.common.lib.path" />
-				<pathelement path="${framework.entity.build.dir}" />
-			</classpath>
-			<src path="${extras.misc.src.dir}" />
-			<include name="cc/alcina/extras/misc/ie/client/**" />
-			<include name="cc/alcina/extras/misc/ie/client/**" />
-			<include name="cc/alcina/framework/extras/history/**" />
-			<compilerarg value="${alcina.compiler.args}" />
-		</javac>
 		<mkdir dir="${extras.cluster.tasks.build.dir}" />
 		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${extras.cluster.tasks.build.dir}">
 			<classpath>
@@ -125,7 +113,7 @@
 		</javac>
 		<copy tofile="${framework.clientreflectorjvm.build.dir}/registry.properties" file="${framework.clientreflectorjvm.src.dir}/registry.properties" />
 		<mkdir dir="${extras.dev.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on"  destdir="${extras.dev.build.dir}">
+		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${extras.dev.build.dir}">
 			<src path="${extras.dev.src.dir}" />
 			<src path="${framework.jscodeserver.src.dir}" />
 			<classpath>
@@ -280,15 +268,6 @@
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
-		<jar update="${alcina.update-jars}" destfile="${extras.dist.dir}/${ant.project.name}-extras-misc.jar">
-			<fileset dir="${extras.misc.build.dir}">
-				<include name="**/*.*" />
-			</fileset>
-			<fileset dir="${extras.misc.src.dir}">
-				<include name="**/*.*" />
-				<exclude name="**/*.class" />
-			</fileset>
-		</jar>
 
 		<jar update="${alcina.update-jars}" destfile="${framework.dist.dir}/${ant.project.name}-jvmclient.jar">
 			<metainf dir="${framework.jvmclient.dir}/META-INF" />
@@ -306,8 +285,8 @@
 		</condition>
 		<property name="framework.impl.base.dir" value="value" />
 		<fail unless="framework.impl.base.dir">
-		...
-	You must set a valid JPA implementation value in local.ant.properties
+			...
+			You must set a valid JPA implementation value in local.ant.properties
 		</fail>
 		<delete file="${framework.dist.dir}/${ant.project.name}-entity-impl.jar" if:true="${alcina.delete-before-jars}" />
 
