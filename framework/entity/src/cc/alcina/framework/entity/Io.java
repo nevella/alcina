@@ -435,6 +435,8 @@ public class Io {
 
 		private boolean compress;
 
+		public boolean ensureParents;
+
 		public void toFile(File file) {
 		}
 
@@ -454,6 +456,9 @@ public class Io {
 						contents.inputStream = new ByteArrayInputStream(
 								outputBytes);
 					}
+				}
+				if (ensureParents) {
+					resource.file.getParentFile().mkdirs();
 				}
 				Io.Streams.copy(contents.getStream(), resource.getStream());
 			} catch (Exception e) {
@@ -567,6 +572,11 @@ public class Io {
 
 			public Resource withNoUpdate(boolean noUpdate) {
 				WriteOp.this.noUpdate = noUpdate;
+				return this;
+			}
+
+			public Resource withEnsureParents(boolean ensureParents) {
+				WriteOp.this.ensureParents = ensureParents;
 				return this;
 			}
 		}
