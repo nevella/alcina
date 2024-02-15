@@ -21,8 +21,12 @@ public class Expandable extends Model.Fields
 	Overlay overlay;
 
 	public Expandable(String string) {
+		this(string, 80);
+	}
+
+	public Expandable(String string, int trimTo) {
 		this.string = string;
-		contracted = Ax.trim(Ax.firstLine(string), 80);
+		contracted = Ax.trim(Ax.firstLine(string), trimTo);
 	}
 
 	@Override
