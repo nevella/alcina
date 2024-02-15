@@ -330,5 +330,8 @@ public class Measure extends Location.Range {
 				}
 			}
 		}
+
+		public interface IgnoreEmptyText {
+		}
 	}
 }
