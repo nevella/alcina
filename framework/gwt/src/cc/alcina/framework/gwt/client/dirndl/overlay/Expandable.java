@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -25,6 +26,7 @@ public class Expandable extends Model.Fields
 
 	Overlay overlay;
 
+	@Property.Not
 	Consumer<AsyncCallback<String>> fullSupplier;
 
 	public Expandable(String string) {
@@ -60,11 +62,11 @@ public class Expandable extends Model.Fields
 		String string;
 
 		public void setString(String string) {
-			this.string = string;
+			set("string", this.string, string, () -> this.string = string);
 		}
 
 		Log(String string) {
-			set("string", this.string, string, () -> this.string = string);
+			this.string = string;
 		}
 	}
 

@@ -42,7 +42,6 @@ import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.EntityLocatorMap;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
-import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 
 public abstract class RemoteInvocationServlet extends HttpServlet {
@@ -71,6 +70,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					TransformPersisterInPersistenceContext.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
 			LooseContext.setTrue(KryoUtils.CONTEXT_BYPASS_POOL);
 			LooseContext.setTrue(KryoSupport.CONTEXT_FORCE_ENTITY_SERIALIZER);
+			LooseContext.setTrue(
+					ThreadlocalTransformManager.CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS);
 			Transaction.begin();
 			maybeToReadonlyTransaction();
 			LooseContext
@@ -98,11 +99,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			HttpServletResponse response) throws Exception {
 		String encodedParams = request
 				.getParameter(REMOTE_INVOCATION_PARAMETERS);
-		RemoteInvocationParameters params = MethodContext.instance()
-				.withContextTrue(
-						ThreadlocalTransformManager.CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS)
-				.call(() -> KryoUtils.deserializeFromBase64(encodedParams,
-						RemoteInvocationParameters.class));
+		RemoteInvocationParameters params = KryoUtils.deserializeFromBase64(
+				encodedParams, RemoteInvocationParameters.class);
 		String remoteAddress = request.getRemoteAddr();
 		String permittedAddressPattern = Configuration.get(
 				RemoteInvocationServlet.class,

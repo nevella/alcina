@@ -132,6 +132,10 @@ public class Dropdown extends Model
 		}
 	}
 
+	public void toggleOpen() {
+		setOpen(!open);
+	}
+
 	private void showDropdown(boolean show) {
 		if (show) {
 			if (dropdownSupplier != null && dropdownStack.size() == 1) {

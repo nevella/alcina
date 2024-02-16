@@ -1,0 +1,70 @@
+@use '../../theme/theme'  
+@use '../../theme/color'
+@use '../../dirndl/cmp/context-menu'
+
+$box-shadow-bottom: theme.$app-suggestor-box-shadow-bottom
+
+@mixin contents
+   app-suggestor   
+    display: block  
+    color: theme.$dark-color  
+    position: relative  
+    overflow-x: visible  
+    top: 1em
+    border: solid 1px theme.$app-suggestor-unfocussed-border-color
+    border-radius: 4px
+    width: 38em 
+    font-family: theme.$app-suggestor-font-family
+    background-color: color.$white
+
+    &:focus-within
+      border-color: theme.$app-suggestor-border-color
+      border-width: 2px
+
+    > editor > input   
+      padding: .5rem .75rem
+      border: none
+      min-width: 95%
+      font-size: 1rem
+      line-height: 1.5rem
+      outline: none  
+      font-family: Arial
+      color: theme.$app-suggestor-input-color
+
+      &::placeholder
+        opacity: 0.6
+        
+    > results
+      display: block
+
+      > choice
+        @include context-menu.dropdown-list-item
+        display: block
+
+        > suggestion > app-suggestion
+          text-align: left  
+          display: grid  
+          grid-template-columns: 1fr 10px  
+          gap: 1em
+          width: 100%  
+          color: #555
+          line-height: 1.5em
+          padding: 0.2em 0
+          
+          > contents
+            > first,
+            > second   
+              display: inline-block
+            
+            > first
+              font-weight: bold
+
+            > second   
+              color: #777 
+              padding-left: 1em
+
+            > options
+            display: block
+
+          > options
+            display: block
