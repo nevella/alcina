@@ -3,11 +3,8 @@
 *.DS_Store
 /local.ant.properties
 /bin
-/dist-extras
 /build
 /tmp
-/bin2
-/dist-tasks
 /.gwt-tmp
 /extras/jsdom/build*
 /extras/rpc/client/build
