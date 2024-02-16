@@ -535,6 +535,11 @@ public class Suggestor extends Model
 			public boolean isMatch() {
 				return match;
 			}
+
+			@Override
+			public String toString() {
+				return model.toString();
+			}
 		}
 	}
 

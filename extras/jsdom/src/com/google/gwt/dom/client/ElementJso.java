@@ -1102,8 +1102,15 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		setPropertyString0(jsoPropertyName(name), value);
 	}
 
+	/*
+	 * This is a hack - rather than relying on knowledge of
+	 * "is this a property or an attribute", set both
+	 * 
+	 * but attr first
+	 */
 	final native void setPropertyString0(String name, String value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
+	this.setAttribute(name,value);
     this[name] = value;
 	}-*/;
 
