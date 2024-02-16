@@ -25,7 +25,7 @@ public class Expandable extends Model.Fields
 
 	Overlay overlay;
 
-	Consumer<AsyncCallback<String>> fullSupplier;
+	transient Consumer<AsyncCallback<String>> fullSupplier;
 
 	public Expandable(String string) {
 		this(string, 80, null);
