@@ -1540,7 +1540,12 @@ public class DirectedLayout implements AlcinaProcess {
 					String attributeName = binding.to().isEmpty()
 							? binding.from()
 							: binding.to();
-					element.getStyle().setProperty(attributeName, stringValue);
+					if (Ax.notBlank(stringValue)) {
+						element.getStyle().setProperty(attributeName,
+								stringValue);
+					} else {
+						element.getStyle().removeProperty(attributeName);
+					}
 					break;
 				default:
 					throw new UnsupportedOperationException();

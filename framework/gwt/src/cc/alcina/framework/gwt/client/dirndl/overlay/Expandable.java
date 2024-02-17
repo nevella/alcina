@@ -60,11 +60,11 @@ public class Expandable extends Model.Fields
 		String string;
 
 		public void setString(String string) {
-			this.string = string;
+			set("string", this.string, string, () -> this.string = string);
 		}
 
 		Log(String string) {
-			set("string", this.string, string, () -> this.string = string);
+			this.string = string;
 		}
 	}
 

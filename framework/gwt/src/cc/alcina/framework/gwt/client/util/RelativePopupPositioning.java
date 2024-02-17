@@ -646,7 +646,7 @@ public class RelativePopupPositioning {
 				switch (positioningParams.positioningStrategy) {
 				case ABSOLUTE_RIGHT:
 					rpp.getElement().getStyle().setTop(0, Unit.PX);
-					rpp.getElement().getStyle().removePropertyImpl("left");
+					rpp.getElement().getStyle().removeProperty("left");
 					rpp.getElement().getStyle()
 							.setRight(-positioningParams.shiftX, Unit.PX);
 					break;

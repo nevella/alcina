@@ -460,6 +460,10 @@ public class StyleLocal implements ClientDomStyle {
 		return ClientDomStyleStatic.getPositionTyped(this);
 	}
 
+	public boolean hasProperty(String propertyName) {
+		return properties.containsKey(propertyName);
+	}
+
 	@Override
 	public Map<String, String> getProperties() {
 		return properties;
