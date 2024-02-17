@@ -52,8 +52,8 @@ public class Suggestor extends Model
 		implements SuggestorEvents.EditorAsk.Handler,
 		ModelEvents.SelectionChanged.Handler, HasSelectedValue,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler {
-	public static Builder builder() {
-		return new Builder();
+	public static Attributes builder() {
+		return new Attributes();
 	}
 
 	protected Editor editor;
@@ -62,12 +62,12 @@ public class Suggestor extends Model
 
 	Object nonOverlaySuggestionResults;
 
-	Builder builder;
+	Attributes attributes;
 
 	private Object value;
 
-	private Suggestor(Builder builder) {
-		this.builder = builder;
+	private Suggestor(Attributes attributes) {
+		this.attributes = attributes;
 		initFields();
 	}
 
@@ -87,8 +87,8 @@ public class Suggestor extends Model
 		editor.focus();
 	}
 
-	public Builder getBuilder() {
-		return this.builder;
+	public Attributes getAttributes() {
+		return this.attributes;
 	}
 
 	@Directed(tag = "editor")
@@ -113,7 +113,7 @@ public class Suggestor extends Model
 	}
 
 	protected void initFields() {
-		editor = builder.editorSupplier.get();
+		editor = attributes.editorSupplier.get();
 		editor.withSuggestor(this);
 		suggestions = new SuggestionChoices(this);
 	}
@@ -133,7 +133,7 @@ public class Suggestor extends Model
 		if (!event.isBound()) {
 			suggestions.toState(State.UNBOUND);
 		} else {
-			if (builder.isSuggestOnBind()) {
+			if (attributes.isSuggestOnBind()) {
 				Client.eventBus().queued().lambda(() -> editor.emitAsk())
 						.dispatch();
 			}
@@ -153,7 +153,7 @@ public class Suggestor extends Model
 	@Override
 	public void onEditorAsk(EditorAsk event) {
 		suggestions.toState(State.LOADING);
-		builder.answer.ask(event.getModel(), this::onAnswers,
+		attributes.answer.ask(event.getModel(), this::onAnswers,
 				this::onAskException);
 	}
 
@@ -273,7 +273,7 @@ public class Suggestor extends Model
 		IntPair getResultRange();
 	}
 
-	public static class Builder {
+	public static class Attributes {
 		String inputPrompt;
 
 		List<Class<? extends Model>> logicalAncestors = List.of();
@@ -339,62 +339,62 @@ public class Suggestor extends Model
 			return this.suggestOnBind;
 		}
 
-		public Builder withAnswer(Answer answer) {
+		public Attributes withAnswer(Answer answer) {
 			this.answer = answer;
 			return this;
 		}
 
-		public Builder
+		public Attributes
 				withEditorSupplier(Supplier<? extends Editor> editorSupplier) {
 			this.editorSupplier = editorSupplier;
 			return this;
 		}
 
-		public Builder withFocusOnBind(boolean focusOnBind) {
+		public Attributes withFocusOnBind(boolean focusOnBind) {
 			this.focusOnBind = focusOnBind;
 			return this;
 		}
 
-		public Builder withInputEditorKeyboardNavigationEnabled(
+		public Attributes withInputEditorKeyboardNavigationEnabled(
 				boolean inputEditorKeyboardNavigationEnabled) {
 			this.inputEditorKeyboardNavigationEnabled = inputEditorKeyboardNavigationEnabled;
 			return this;
 		}
 
-		public Builder withInputPrompt(String inputPrompt) {
+		public Attributes withInputPrompt(String inputPrompt) {
 			this.inputPrompt = inputPrompt;
 			return this;
 		}
 
-		public Builder withLogicalAncestors(
+		public Attributes withLogicalAncestors(
 				List<Class<? extends Model>> logicalAncestors) {
 			this.logicalAncestors = logicalAncestors;
 			return this;
 		}
 
-		public Builder withNonOverlaySuggestionResults(
+		public Attributes withNonOverlaySuggestionResults(
 				boolean nonOverlaySuggestionResults) {
 			this.nonOverlaySuggestionResults = nonOverlaySuggestionResults;
 			return this;
 		}
 
-		public Builder withSelectAllOnFocus(boolean selectAllOnFocus) {
+		public Attributes withSelectAllOnFocus(boolean selectAllOnFocus) {
 			this.selectAllOnFocus = selectAllOnFocus;
 			return this;
 		}
 
-		public Builder withShowSpinnerDelay(int showSpinnerDelay) {
+		public Attributes withShowSpinnerDelay(int showSpinnerDelay) {
 			this.showSpinnerDelay = showSpinnerDelay;
 			return this;
 		}
 
-		public Builder withSuggestionXAlign(
+		public Attributes withSuggestionXAlign(
 				OverlayPosition.Position suggestionXAlign) {
 			this.suggestionXAlign = suggestionXAlign;
 			return this;
 		}
 
-		public Builder withSuggestOnBind(boolean suggestOnBind) {
+		public Attributes withSuggestOnBind(boolean suggestOnBind) {
 			this.suggestOnBind = suggestOnBind;
 			return this;
 		}

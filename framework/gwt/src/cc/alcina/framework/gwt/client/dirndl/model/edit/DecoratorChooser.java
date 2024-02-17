@@ -55,8 +55,8 @@ public abstract class DecoratorChooser extends Model.Fields
 		init();
 	}
 
-	protected Suggestor.Builder createSuggestorBuilder() {
-		Suggestor.Builder builder = Suggestor.builder();
+	protected Suggestor.Attributes createSuggestorBuilder() {
+		Suggestor.Attributes builder = Suggestor.builder();
 		builder.withFocusOnBind(true);
 		builder.withSuggestionXAlign(Position.END);
 		builder.withSuggestOnBind(true);

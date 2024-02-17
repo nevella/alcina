@@ -28,9 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.Edito
  * 
  *
  */
-@Directed(
-	
-emits = EditorAsk.class)
+@Directed(emits = EditorAsk.class)
 public class InputEditor extends Model implements Suggestor.Editor,
 		ModelEvents.Input.Handler, DomEvents.Focusin.Handler,
 		// routes keydown events to the keyboardNavigation and
@@ -116,7 +114,7 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	public void withSuggestor(Suggestor suggestor) {
 		this.suggestor = suggestor;
 		input = new StringInput();
-		Suggestor.Builder builder = suggestor.getBuilder();
+		Suggestor.Attributes builder = suggestor.getAttributes();
 		input.setPlaceholder(builder.getInputPrompt());
 		input.setFocusOnBind(builder.isFocusOnBind());
 		input.setSelectAllOnFocus(builder.isSelectAllOnFocus());

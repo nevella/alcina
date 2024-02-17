@@ -55,10 +55,10 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 			visible = true;
 			if (useOverlay()) {
 				Builder builder = Overlay.builder();
-				builder.dropdown(suggestor.builder.getSuggestionXAlign(),
+				builder.dropdown(suggestor.attributes.getSuggestionXAlign(),
 						suggestor.provideElement().getBoundingClientRect(),
 						suggestor, contents).withLogicalAncestors(
-								suggestor.builder.getLogicalAncestors());
+								suggestor.attributes.getLogicalAncestors());
 				overlay = builder.build();
 				overlay.open();
 			} else {
@@ -84,8 +84,8 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		}
 		choices = new Choices.Single.Delegating<>(answers.getSuggestions());
 		contents.setModel(choices);
-		if (choices.getValues().size() > 0
-				&& suggestor.builder.isInputEditorKeyboardNavigationEnabled()) {
+		if (choices.getValues().size() > 0 && suggestor.attributes
+				.isInputEditorKeyboardNavigationEnabled()) {
 			/*
 			 * keyboard-navigate to the first entry
 			 */
@@ -161,13 +161,13 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 						contents.setModel(Spinner.builder().generate());
 					}
 				}
-			}.schedule(suggestor.builder.showSpinnerDelay);
+			}.schedule(suggestor.attributes.showSpinnerDelay);
 			break;
 		}
 	}
 
 	boolean useOverlay() {
-		return !suggestor.builder.isNonOverlaySuggestionResults();
+		return !suggestor.attributes.isNonOverlaySuggestionResults();
 	}
 
 	@Directed
