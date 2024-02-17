@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
@@ -221,5 +222,11 @@ public abstract class Client implements ContextFrame {
 	 * Marker to indicate basic required support classes
 	 */
 	public static class SupportReachability {
+	}
+
+	public Place parsePlace(String strUrl) {
+		Url url = Url.parse(strUrl);
+		return RegistryHistoryMapper.get().getPlaceIfParseable(url.hash)
+				.orElse(null);
 	}
 }

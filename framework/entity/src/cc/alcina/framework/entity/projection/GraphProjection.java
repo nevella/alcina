@@ -314,6 +314,26 @@ public class GraphProjection {
 		return String.format(template, lineParts);
 	}
 
+	public static String generateFieldwiseToStringFormatBuilder(Class clazz)
+			throws Exception {
+		GraphProjection graphProjection = new GraphProjection(
+				new AllFieldsFilter(), null);
+		List<String> formatParts = new ArrayList<>();
+		for (Field field : graphProjection.getFieldsForClass(clazz)) {
+			String name = field.getName();
+			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+					.contains(name)) {
+				continue;
+			}
+			formatParts.add("\"" + name + "\"");
+			formatParts.add(name);
+		}
+		String template = "@Override\npublic String toString() {\n"
+				+ "return FormatBuilder.keyValues(%s);\n}";
+		return String.format(template,
+				formatParts.stream().collect(Collectors.joining(", ")));
+	}
+
 	public static <T> T getContextObject(String key, Supplier<T> supplier) {
 		Map ctx = LooseContext.get(CONTEXT_PROJECTION_CONTEXT);
 		if (ctx == null) {

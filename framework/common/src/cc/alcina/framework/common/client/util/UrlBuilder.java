@@ -7,6 +7,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 // yet another URL builder - but mine!
 public class UrlBuilder {
+	private String protocol;
+
 	private String host;
 
 	private String path;
@@ -15,11 +17,28 @@ public class UrlBuilder {
 
 	private String queryString;
 
+	private String hash;
+
+	private int port = -1;
+
 	public String build() {
 		StringBuilder sb = new StringBuilder();
+		if (protocol != null) {
+			sb.append(protocol);
+			sb.append("://");
+		}
 		if (host != null) {
 			sb.append(host);
 		}
+		if (port != -1) {
+			sb.append(":");
+			sb.append(port);
+		}
+		appendFromPath(sb);
+		return sb.toString();
+	}
+
+	void appendFromPath(StringBuilder sb) {
 		if (!path.startsWith("/")) {
 			sb.append("/");
 		}
@@ -46,7 +65,10 @@ public class UrlBuilder {
 			sb.append("?");
 			sb.append(queryString);
 		}
-		return sb.toString();
+		if (queryString != null) {
+			sb.append("#");
+			sb.append(hash);
+		}
 	}
 
 	public UrlBuilder host(String host) {
@@ -67,5 +89,52 @@ public class UrlBuilder {
 	public UrlBuilder queryString(String queryString) {
 		this.queryString = queryString;
 		return this;
+	}
+
+	public UrlBuilder hash(String hash) {
+		this.hash = hash;
+		return this;
+	}
+
+	public UrlBuilder port(int port) {
+		this.port = port;
+		return this;
+	}
+
+	public void populateFrom(Url url) {
+		if (url.protocol != null) {
+			this.protocol = url.protocol;
+		}
+		if (url.host != null) {
+			this.host = url.host;
+		}
+		if (url.port != -1) {
+			this.port = url.port;
+		}
+		if (url.path != null) {
+			this.path = url.path;
+		}
+		if (url.queryString != null) {
+			this.queryString = url.queryString;
+		}
+		if (url.hash != null) {
+			this.hash = url.hash;
+		}
+	}
+
+	public void clearFromPath() {
+		path = null;
+		queryString = null;
+		hash = null;
+	}
+
+	public Url asUrl() {
+		return new Url(protocol, host, port, path, queryString, hash, build());
+	}
+
+	public String fromPath() {
+		StringBuilder sb = new StringBuilder();
+		appendFromPath(sb);
+		return sb.toString();
 	}
 }

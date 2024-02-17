@@ -726,6 +726,11 @@ public class WidgetUtils {
 		return isNewTabModifier(event);
 	}
 
+	public static boolean isRightClick() {
+		Event event = Event.getCurrentEvent();
+		return event.getButton() == NativeEvent.BUTTON_RIGHT;
+	}
+
 	public static boolean isNewTabModifier(NativeEvent event) {
 		return BrowserMod.getOperatingSystem().equals("Macintosh")
 				? event.getMetaKey()
@@ -1156,11 +1161,15 @@ public class WidgetUtils {
 		}
 	}
 
+	public static void showInNewTab(String url) {
+		Window.open(url, "_blank", "");
+	}
+
 	public static void showInNewTabOrThisWindow(String url) {
 		Event currentEvent = Event.getCurrentEvent();
 		currentEvent.preventDefault();
 		if (WidgetUtils.isNewTabModifier(currentEvent)) {
-			Window.open(url, "_blank", "");
+			showInNewTab(url);
 		} else {
 			Window.Location.assign(url);
 		}

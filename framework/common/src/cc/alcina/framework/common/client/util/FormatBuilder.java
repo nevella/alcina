@@ -18,7 +18,7 @@ import com.google.common.base.Preconditions;
  */
 public class FormatBuilder {
 	public static String keyValues(Object... args) {
-		return new FormatBuilder().separator("; ").appendKeyValues(args)
+		return new FormatBuilder().separator("  ").appendKeyValues(args)
 				.toString();
 	}
 

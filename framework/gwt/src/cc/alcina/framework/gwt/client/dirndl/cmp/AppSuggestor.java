@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.SuggestOracle;
 
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestor.AnswerImpl.Invocation;
@@ -27,6 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 
 @Directed(renderer = DirectedRenderer.Delegating.class)
+@TypeSerialization(reflectiveSerializable = false)
 public class AppSuggestor extends Model.Fields
 		implements ModelEvents.SelectionChanged.Handler,
 		ModelEvents.Closed.Handler, ModelEvents.Opened.Handler {
@@ -109,6 +111,7 @@ public class AppSuggestor extends Model.Fields
 	}
 
 	@Directed(tag = "app-suggestion")
+	@TypeSerialization(reflectiveSerializable = false)
 	public static class AppSuggestionView extends Model.Fields {
 		private AppSuggestion suggestion;
 
