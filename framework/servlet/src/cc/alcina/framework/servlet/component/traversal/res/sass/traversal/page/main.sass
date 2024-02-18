@@ -3,6 +3,7 @@
 @use '../../dirndl/multi/form'
 @use '../cmp/layer-selections'
 @use '../cmp/properties'
+@use 'header'
 
 body
   margin: 0
@@ -37,24 +38,7 @@ body > page
       box-sizing: border-box
 
   > header
-    display: flex
-    background-color: hsl(350 100% 78% / 1)
-    color: white
-    align-items: center
-    justify-content: center
-    line-height: 100%
-    font-size: 120%
-    grid-area: header
-    gap: 4rem
-
-    > input
-      line-height: 24px
-      font-size: 16px
-      border-radius: 3px
-      border: solid 1px #ccc
-      padding: 4px 6px
-      color: #444
-      width: 15rem
+    @include header.contents
 
   > layers
     @include layer-selections.contents

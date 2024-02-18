@@ -1,0 +1,65 @@
+$header-height: 50px
+$font-family: Arial
+$background-color: hsl(350 100% 78% / 1)
+$color: white
+$hover-color: black
+$padding: 0.5rem 2rem
+$item-gap: 0.5rem
+
+@mixin contents
+  width: 100%
+  height: $header-height
+  font-family: $font-family
+  display: grid
+  align-items: center
+  grid-template-columns: 1fr 50ch 1fr
+  grid-template-areas: "left mid right"
+  box-sizing: border-box
+  justify-self: center
+  position: sticky
+  top: 0
+  z-index: 2
+  background-color: $background-color
+  color: $color
+  padding: $padding
+  justify-self: stretch
+  grid-column: 1 / -1
+  column-gap: 1rem
+
+  a:hover, button:hover
+    color:  $hover-color
+
+
+  >left, >right
+    flex: 1
+
+    display: flex
+
+    align-items: center
+    gap: $item-gap
+
+
+  >left
+    justify-content: flex-start
+    grid-area: left
+
+    > name
+      white-space: nowrap
+
+  > mid
+    grid-area: mid
+    display: flex
+    justify-content: center
+
+  >right
+    justify-content: flex-end
+    grid-area: right
+
+    > a
+      //FIXME - hardcoded
+      width: 20px
+      height: 20px
+      filter: invert(1)
+      display: inline-block
+      background-repeat: no-repeat
+      background-position: center

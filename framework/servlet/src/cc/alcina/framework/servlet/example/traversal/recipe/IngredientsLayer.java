@@ -9,6 +9,10 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
 import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 
+/**
+ * Transforms a Document into a set of RawIngredientSelections (corresponding to
+ * lines of the document)
+ */
 class IngredientsLayer extends Layer<DocumentLayer.Document> {
 	@Override
 	public void process(DocumentLayer.Document selection) throws Exception {
@@ -24,6 +28,11 @@ class IngredientsLayer extends Layer<DocumentLayer.Document> {
 		public ParserPeer(SelectionTraversal selectionTraversal) {
 			super(selectionTraversal);
 			add(BranchToken.Standard.LINE);
+		}
+
+		@Override
+		public boolean lookaheadMatcherIsNormalizeSpaces() {
+			return false;
 		}
 	}
 

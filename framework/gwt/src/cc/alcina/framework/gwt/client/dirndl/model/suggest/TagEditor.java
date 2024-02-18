@@ -103,4 +103,10 @@ public class TagEditor extends Model implements Suggestor.Editor,
 	@Override
 	public void withSuggestor(Suggestor suggestor) {
 	}
+
+	@Override
+	public void setFilterText(String filterText) {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'setFilterText'");
+	}
 }

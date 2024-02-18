@@ -8,25 +8,19 @@ import com.google.gwt.place.shared.PlaceChangeEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.util.Async;
 import cc.alcina.framework.gwt.client.util.GlobalKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
@@ -63,7 +57,7 @@ class Page extends Model.All
 	TraversalPlace place;
 
 	Page() {
-		header = new Header();
+		header = new Header(this);
 		/*
 		 * FIXME - bindings - all these below - should be the children that bind
 		 * to a PageContext event
@@ -86,8 +80,8 @@ class Page extends Model.All
 				.map(o -> new RenderedSelections(this, false))
 				.accept(this::setOutput);
 		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
-				.map(TraversalPlace::getTextFilter).to(header.filter)
-				.on("value").oneWay();
+				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
+				.on("filterText").oneWay();
 		PlaceChangeEvent.Handler handler = evt -> {
 			if (evt.getNewPlace() instanceof TraversalPlace) {
 				setPlace((TraversalPlace) evt.getNewPlace());
@@ -188,42 +182,6 @@ class Page extends Model.All
 	public void setProperties(Properties properties) {
 		set("properties", this.properties, properties,
 				() -> this.properties = properties);
-	}
-
-	class Header extends Model.All
-			implements DomEvents.Click.Handler, ModelEvents.Change.Handler {
-		// FIXME - cmp - scheduler
-		// @StringInput.FocusOnBind
-		StringInput filter = new StringInput();
-
-		String name = TraversalProcessView.Ui.get().getMainCaption();
-
-		Header() {
-			bindings().from(Page.this).on(Property.history)
-					.typed(ObservableHistory.class).map(this::computeName)
-					.accept(this::setName);
-		}
-
-		String computeName(ObservableHistory history) {
-			FormatBuilder format = new FormatBuilder().separator(" - ");
-			format.append(TraversalProcessView.Ui.get().getMainCaption());
-			format.appendIfNonNull(history, ObservableHistory::displayName);
-			return format.toString();
-		}
-
-		@Override
-		public void onChange(Change event) {
-			new TraversalPlace().withTextFilter((String) event.getModel()).go();
-		}
-
-		@Override
-		public void onClick(Click event) {
-			new TraversalPlace().go();
-		}
-
-		public void setName(String name) {
-			set("name", this.name, name, () -> this.name = name);
-		}
 	}
 
 	enum Property implements PropertyEnum {

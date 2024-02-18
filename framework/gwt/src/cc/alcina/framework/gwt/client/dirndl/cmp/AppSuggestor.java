@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.History;
-import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -86,6 +85,10 @@ public class AppSuggestor extends Model.Fields
 	public void onOpened(Opened event) {
 	}
 
+	public void setFilterText(String filterText) {
+		suggestor.getEditor().setFilterText(filterText);
+	}
+
 	@Override
 	public void onSelectionChanged(SelectionChanged event) {
 		AppSuggestionView suggestion = (AppSuggestionView) suggestor
@@ -98,16 +101,6 @@ public class AppSuggestor extends Model.Fields
 		suggestor.closeSuggestions();
 		suggestor.setValue(null);
 		event.reemitAs(this, SuggestionSelected.class);
-	}
-
-	public interface AppSuggestion extends SuggestOracle.Suggestion {
-		String provideFirst();
-
-		Class<? extends ModelEvent> modelEvent();
-
-		String url();
-
-		String secondary();
 	}
 
 	@Directed(tag = "app-suggestion")

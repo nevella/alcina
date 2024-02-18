@@ -14,6 +14,10 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
 import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 
+/**
+ * Transforms a RawIngredientSelection (a line of text) to a IngredientSelection
+ * (a structured token parse result breaking the line into qty, units, nane etc)
+ */
 class IngredientLayer extends Layer<IngredientsLayer.RawIngredientSelection> {
 	@Override
 	public void process(IngredientsLayer.RawIngredientSelection selection)

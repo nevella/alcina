@@ -42,4 +42,8 @@ public class LayerParserPeer {
 
 	public void onSequenceComplete(ParserState inputState) {
 	}
+
+	public boolean lookaheadMatcherIsNormalizeSpaces() {
+		return true;
+	}
 }

@@ -417,6 +417,8 @@ public class Suggestor extends Model
 		void focus();
 
 		void withSuggestor(Suggestor suggestor);
+
+		void setFilterText(String filterText);
 	}
 
 	public enum Property implements PropertyEnum {

@@ -453,5 +453,9 @@ public class LayerParser {
 				}
 			}
 		}
+
+		public LayerParserPeer peer() {
+			return parserPeer;
+		}
 	}
 }

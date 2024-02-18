@@ -122,4 +122,9 @@ public class InputEditor extends Model implements Suggestor.Editor,
 			keyboardNavigation = new KeyboardNavigation(this);
 		}
 	}
+
+	@Override
+	public void setFilterText(String filterText) {
+		input.setValue(filterText);
+	}
 }

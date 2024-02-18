@@ -194,7 +194,9 @@ public abstract class LookaheadMatcher<C> {
 				default:
 					throw new UnsupportedOperationException();
 				}
-				text = TextUtils.normalizeSpaces(text.toString());
+				if (parserState.peer().lookaheadMatcherIsNormalizeSpaces()) {
+					text = TextUtils.normalizeSpaces(text.toString());
+				}
 				if (options.matchesNormalisedToLowerCase) {
 					text = text.toLowerCase();
 				}
