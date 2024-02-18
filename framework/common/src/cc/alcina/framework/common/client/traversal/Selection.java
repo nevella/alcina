@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
@@ -80,6 +82,20 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return segments.stream().collect(Collectors.joining("/"));
 	}
 
+	/*
+	 * fullPath is hard to read for segments which contain slashes
+	 */
+	default String fullDebugPath() {
+		Selection cursor = this;
+		List<String> segments = new ArrayList<>();
+		while (cursor != null) {
+			segments.add(0, cursor.getPathSegment());
+			cursor = cursor.parentSelection();
+		}
+		return Ax.format("[\n%s\n]\n",
+				segments.stream().collect(Collectors.joining("\n")));
+	}
+
 	public T get();
 
 	default List<String> getFilterableSegments() {
@@ -129,6 +145,18 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	};
 
 	default void onDuplicatePathSelection(Layer layer, Selection selection) {
+		LoggerFactory.getLogger(Selection.class).warn(
+				"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}",
+				processNode().treePath(), selection.processNode().treePath());
+		/*
+		 * This wants a client/server-friendly config system
+		 */
+		boolean fullDebug = false;
+		if (fullDebug) {
+			LoggerFactory.getLogger(Selection.class).warn(
+					"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}",
+					selection.fullDebugPath(), selection.fullDebugPath());
+		}
 		throw new IllegalArgumentException(
 				Ax.format("Duplicate selection path: %s :: %s",
 						selection.getPathSegment(), layer));
