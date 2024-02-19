@@ -5,8 +5,7 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TimerWrapper;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 
 /*
  * Collects events and triggers an action after a specified delay
@@ -63,7 +62,7 @@ public class EventCollator<T> {
 
 	private final Consumer<EventCollator<T>> action;
 
-	private final TimerWrapperProvider timerWrapperProvider;
+	private final Timer.Provider timerProvider;
 
 	// the delay before the (first) collation action call from the first event
 	// received by this collator
@@ -73,7 +72,7 @@ public class EventCollator<T> {
 	// in the current collation. defaults to maxDelayFromFirstEvent
 	private long maxDelayFromFirstCollatedEvent;
 
-	private TimerWrapper timer = null;
+	private Timer timer = null;
 
 	private boolean finished = false;
 
@@ -83,21 +82,19 @@ public class EventCollator<T> {
 
 	public EventCollator(long waitToPerformAction,
 			Consumer<EventCollator<T>> action) {
-		this(waitToPerformAction, action,
-				Registry.impl(TimerWrapperProvider.class));
+		this(waitToPerformAction, action, Registry.impl(Timer.Provider.class));
 	}
 
 	public EventCollator(long waitToPerformAction,
-			Consumer<EventCollator<T>> action,
-			TimerWrapperProvider timerWrapperProvider) {
+			Consumer<EventCollator<T>> action, Timer.Provider timerProvider) {
 		this.waitToPerformAction = waitToPerformAction;
 		this.action = action;
-		this.timerWrapperProvider = timerWrapperProvider;
+		this.timerProvider = timerProvider;
 	}
 
 	public EventCollator(long waitToPerformAction, Runnable runnable) {
 		this(waitToPerformAction, collator -> runnable.run(),
-				Registry.impl(TimerWrapperProvider.class));
+				Registry.impl(Timer.Provider.class));
 	}
 
 	public void cancel() {
@@ -122,8 +119,8 @@ public class EventCollator<T> {
 			if (runOnCurrentThread) {
 				checkCallback.run();
 			} else {
-				if (timer == null && timerWrapperProvider != null) {
-					timer = timerWrapperProvider.getTimer(checkCallback);
+				if (timer == null && timerProvider != null) {
+					timer = timerProvider.getTimer(checkCallback);
 					timer.scheduleRepeating(waitToPerformAction / 2);
 				}
 			}

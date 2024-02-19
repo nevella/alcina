@@ -18,8 +18,8 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TimerWrapper;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
+import cc.alcina.framework.common.client.util.Timer.Provider;
 import cc.alcina.framework.gwt.client.Client;
 
 @Reflected
@@ -37,11 +37,10 @@ public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
 
 	@Override
 	public void onFailure(Throwable caught) {
-		TimerWrapper timer = Registry.impl(TimerWrapperProvider.class)
-				.getTimer(() -> {
-					waitForTransforms();
-				});
-		timer.scheduleSingle(5000);
+		Timer timer = Registry.impl(Timer.Provider.class).getTimer(() -> {
+			waitForTransforms();
+		});
+		timer.schedule(5000);
 		throw new WrappedRuntimeException(caught);
 	}
 

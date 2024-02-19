@@ -51,5 +51,29 @@
  * </pre>
  *
  * (implementation - see FIXME - romcom )
+ * 
+ * *
+ * <h3>Eventing and eventing gotchas</h3>
+ * 
+ * <pre>
+ 
+  onInput - 20240219 - does not work (but onKeyDown does)
+
+  Event sink (browser) happens here:
+ com.google.gwt.user.client.impl.DOMImplStandard.sinkEvents(Element elem, int bits)
+
+ Basically, it wasn't hooked up in the same way at bitted events - added to :
+ com.google.gwt.dom.client.Element.putRemote(ClientDomNode remote, boolean synced)
+
+ Even so, event hookup is -still- unclear and multi-pathed (obviously, the
+  double hookup of local/patheref/browserlocal/jso is complicated) - it definitely needs a 
+  "one path for all". There - possibly a simplification of GWT DOM/DOMImpl would make sense 
+  (since there's now basically just one DOM - webkit/blink/gecko - are all similar enough )
+ * 
+ * 
+ * 
+ * 
+ * 
+ * </pre>
  */
 package cc.alcina.framework.servlet.dom;

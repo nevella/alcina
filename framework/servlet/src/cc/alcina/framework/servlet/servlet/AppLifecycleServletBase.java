@@ -55,6 +55,7 @@ import cc.alcina.framework.entity.Configuration.Properties;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -482,6 +483,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			EntityLayerObjects.get()
 					.setServletLayerRegistry(servletLayerRegistry);
 			Document.initialiseContextProvider(null);
+			SchedulerFrame.initialiseContextProvider(true);
 			LocalDom.initalize();
 		} catch (Exception e) {
 			logger.warn("", e);

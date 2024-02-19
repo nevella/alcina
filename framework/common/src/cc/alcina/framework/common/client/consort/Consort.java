@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -239,15 +239,14 @@ public class Consort<D> implements AlcinaProcess {
 
 	public void deferredRemove(List<TopicChannel> channels,
 			final TopicListener listener) {
-		Registry.impl(TimerWrapperProvider.class)
-				.scheduleDeferred(new Runnable() {
-					@Override
-					public void run() {
-						for (TopicChannel channel : channels) {
-							listenerDelta(channel, listener, false);
-						}
-					}
-				});
+		Registry.impl(Timer.Provider.class).getTimer(new Runnable() {
+			@Override
+			public void run() {
+				for (TopicChannel channel : channels) {
+					listenerDelta(channel, listener, false);
+				}
+			}
+		}).scheduleDeferred();
 	}
 
 	protected int depth() {
@@ -708,15 +707,14 @@ public class Consort<D> implements AlcinaProcess {
 		}
 
 		public void fireIfExisting() {
-			Registry.impl(TimerWrapperProvider.class)
-					.scheduleDeferred(new Runnable() {
-						@Override
-						public void run() {
-							StatesDelta delta = new StatesDelta(
-									Collections.EMPTY_SET, reachedStates);
-							topicPublished(delta);
-						}
-					});
+			Registry.impl(Timer.Provider.class).getTimer(new Runnable() {
+				@Override
+				public void run() {
+					StatesDelta delta = new StatesDelta(Collections.EMPTY_SET,
+							reachedStates);
+					topicPublished(delta);
+				}
+			}).scheduleDeferred();
 		}
 
 		@Override

@@ -6,7 +6,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 
 public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 	protected Object lastCallbackResult;
@@ -52,8 +52,7 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 				}
 			}
 		};
-		Registry.impl(TimerWrapperProvider.class).getTimer(replayer)
-				.scheduleSingle(delay);
+		Registry.impl(Timer.Provider.class).getTimer(replayer).schedule(delay);
 	}
 
 	public abstract void runPlayer(AllStatesPlayer allStatesPlayer, E next);

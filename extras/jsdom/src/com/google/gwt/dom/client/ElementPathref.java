@@ -504,8 +504,16 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 		public void setScrollTop(AsyncCallback<Void> callback, int top) {
 			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
-					ElementPathref.this, "setScrollTop", List.of(Integer.class),
+					ElementPathref.this, "setScrollTop", List.of(int.class),
 					List.of(top), callback);
+		}
+
+		public void setSelectionRange(AsyncCallback<Void> callback, int pos,
+				int length) {
+			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
+					ElementPathref.this, "setSelectionRange",
+					List.of(int.class, int.class), List.of(pos, length),
+					callback);
 		}
 	}
 }

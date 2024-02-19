@@ -3,8 +3,10 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -807,6 +809,12 @@ public class LocalDom implements ContextFrame {
 		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
 		bits |= DOM.getEventsSunk(element);
 		DOM.sinkEvents(element, bits);
+		Set<String> bitlessEventsSunk = new LinkedHashSet<>();
+		((ElementLocal) local)
+				.orSunkBitlessEventsOfAllChildren(bitlessEventsSunk);
+		bitlessEventsSunk.forEach(eventTypeName -> {
+			DOM.sinkBitlessEvent(element, eventTypeName);
+		});
 		pendingSync.remove(element);
 		element.resolvePendingSync();
 		wasSynced0(element);

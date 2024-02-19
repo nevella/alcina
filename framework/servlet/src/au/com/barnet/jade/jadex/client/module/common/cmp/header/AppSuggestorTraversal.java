@@ -50,6 +50,8 @@ public class AppSuggestorTraversal extends AppSuggestor {
 		Suggestor.Attributes attributes = super.createSuggestorAttributes();
 		attributes.withInputPrompt("Filter selections");
 		attributes.withNonOverlaySuggestionResults(true);
+		// FIXME - romcom - back to true, but will require
+		attributes.withSelectAllOnFocus(false);
 		return attributes;
 	}
 }

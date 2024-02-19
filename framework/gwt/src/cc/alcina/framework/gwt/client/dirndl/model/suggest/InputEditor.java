@@ -10,6 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
@@ -34,7 +35,10 @@ public class InputEditor extends Model implements Suggestor.Editor,
 		// routes keydown events to the keyboardNavigation and
 		DomEvents.KeyDown.Handler,
 		// routes keyboardNavigation events to suggestor
-		KeyboardNavigation.Navigation.Handler {
+		KeyboardNavigation.Navigation.Handler,
+		// intercept stringinput change events (just to prevent them from
+		// propagating)
+		ModelEvents.Change.Handler {
 	StringInput input;
 
 	KeyboardNavigation keyboardNavigation;
@@ -42,24 +46,19 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	Suggestor suggestor;
 
 	@Override
-	public void clear() {
-		input.clear();
+	public void onChange(Change event) {
+		// intercept
 	}
 
-	private StringAsk computeAsk() {
-		StringAsk ask = new StringAsk();
-		ask.setValue(input.getCurrentValue());
-		return ask;
+	@Override
+	public void clear() {
+		input.clear();
 	}
 
 	@Override
 	public void copyInputFrom(Editor editor) {
 		input.copyStateFrom(((InputEditor) editor).input);
 		deferEmitAsk();
-	}
-
-	void deferEmitAsk() {
-		Client.eventBus().queued().lambda(this::emitAsk).distinct().dispatch();
 	}
 
 	@Override
@@ -114,11 +113,11 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	public void withSuggestor(Suggestor suggestor) {
 		this.suggestor = suggestor;
 		input = new StringInput();
-		Suggestor.Attributes builder = suggestor.getAttributes();
-		input.setPlaceholder(builder.getInputPrompt());
-		input.setFocusOnBind(builder.isFocusOnBind());
-		input.setSelectAllOnFocus(builder.isSelectAllOnFocus());
-		if (builder.isInputEditorKeyboardNavigationEnabled()) {
+		Suggestor.Attributes attributes = suggestor.getAttributes();
+		input.setPlaceholder(attributes.getInputPrompt());
+		input.setFocusOnBind(attributes.isFocusOnBind());
+		input.setSelectAllOnFocus(attributes.isSelectAllOnFocus());
+		if (attributes.isInputEditorKeyboardNavigationEnabled()) {
 			keyboardNavigation = new KeyboardNavigation(this);
 		}
 	}
@@ -126,5 +125,15 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	@Override
 	public void setFilterText(String filterText) {
 		input.setValue(filterText);
+	}
+
+	void deferEmitAsk() {
+		Client.eventBus().queued().lambda(this::emitAsk).distinct().dispatch();
+	}
+
+	private StringAsk computeAsk() {
+		StringAsk ask = new StringAsk();
+		ask.setValue(input.getCurrentValue());
+		return ask;
 	}
 }

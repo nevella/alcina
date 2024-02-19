@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWTBridge;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.i18n.client.BidiPolicy.BidiPolicyImpl;
 import com.google.gwt.i18n.client.impl.CldrImpl;
 import com.google.gwt.i18n.client.impl.LocaleInfoImpl;
@@ -26,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.util.Async;
 
 public class GWTBridgeHeadless extends GWTBridge {
 	private Set<Class> notImplemented = new LinkedHashSet<>();
@@ -303,6 +305,11 @@ public class GWTBridgeHeadless extends GWTBridge {
 	public static class TextBoxImplHeadless extends TextBoxImpl {
 		public TextBoxImplHeadless() {
 			super();
+		}
+
+		@Override
+		public void setSelectionRange(Element elem, int pos, int length) {
+			elem.async().setSelectionRange(Async.nullCallback(), pos, length);
 		}
 	}
 

@@ -63,14 +63,4 @@ public class TextBoxImpl {
 	public void setSelectionRange(Element elem_multi, int pos, int length) {
 		setTextBoxSelectionRange(elem_multi, pos, length);
 	}
-	// public native void setSelectionRange(Element elem_multi, int pos,
-	// int length) /*-{
-	//
-	// var elem = elem_multi.@com.google.gwt.dom.client.Element::remote()();
-	// try {
-	// elem.setSelectionRange(pos, pos + length);
-	// } catch (e) {
-	// // Firefox throws exception if TextBox is not visible, even if attached
-	// }
-	// }-*/;
 }

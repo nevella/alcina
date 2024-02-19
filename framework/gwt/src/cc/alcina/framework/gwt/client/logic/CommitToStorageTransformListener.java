@@ -47,8 +47,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TimerWrapper;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
@@ -143,7 +142,7 @@ public class CommitToStorageTransformListener
 
 	protected List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<>();
 
-	protected TimerWrapper queueingFinishedTimer;
+	protected Timer queueingFinishedTimer;
 
 	protected long lastQueueAddMillis;
 
@@ -315,8 +314,7 @@ public class CommitToStorageTransformListener
 			lastQueueAddMillis = System.currentTimeMillis();
 			if (queueingFinishedTimer == null
 					&& !isQueueCommitTimerDisabled()) {
-				queueingFinishedTimer = Registry
-						.impl(TimerWrapperProvider.class)
+				queueingFinishedTimer = Registry.impl(Timer.Provider.class)
 						.getTimer(getCommitLoopRunnable());
 				queueingFinishedTimer.scheduleRepeating(DELAY_MS);
 			}

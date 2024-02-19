@@ -20,10 +20,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl;
-import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
+import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class RemoteConsoleInit {
@@ -75,8 +75,8 @@ public class RemoteConsoleInit {
 	}
 
 	public void init() {
-		Registry.register().singleton(TimerWrapperProvider.class,
-				new TimerWrapperProviderGwt());
+		Registry.register().singleton(Timer.Provider.class,
+				new TimerGwt.Provider());
 		Registry.register().singleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
 		Registry.register().add(AlcinaBeanSerializerC.class.getName(),

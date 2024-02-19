@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.w3c.dom.DOMException;
@@ -544,6 +545,20 @@ public class ElementLocal extends NodeLocal
 		}
 		sunk |= eventBits;
 		return sunk;
+	}
+
+	void orSunkBitlessEventsOfAllChildren(Set<String> sunk) {
+		for (NodeLocal child : getChildren()) {
+			if (child instanceof ElementLocal) {
+				((ElementLocal) child).orSunkBitlessEventsOfAllChildren(sunk);
+			}
+		}
+		if (tagName.equals("input")) {
+			int debug = 3;
+		}
+		if (bitlessEvents != null) {
+			sunk.addAll(bitlessEvents);
+		}
 	}
 
 	public void putElement(Element element) {

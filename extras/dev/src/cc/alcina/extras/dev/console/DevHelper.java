@@ -56,7 +56,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
@@ -64,6 +64,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
+import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -77,7 +78,7 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
-import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
+import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
@@ -85,6 +86,7 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import elemental.json.impl.JsonUtil;
 
@@ -393,6 +395,7 @@ public abstract class DevHelper {
 		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
 		scanRegistry();
 		Document.initialiseContextProvider(null);
+		SchedulerFrame.initialiseContextProvider(true);
 		LocalDom.initalize();
 		initDummyServices();
 		TransformManager.register(createTransformManager());
@@ -401,8 +404,8 @@ public abstract class DevHelper {
 		XmlUtils.noTransformerCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.devWarning.add(devWarningListener);
-		Registry.register().singleton(TimerWrapperProvider.class,
-				new TimerWrapperProviderJvm());
+		Registry.register().singleton(Timer.Provider.class,
+				new Environment.TimerProvider());
 		PermissionsManager.register(new ThreadedPermissionsManager());
 		JsonUtil.FAST_STRINGIFY = true;
 		try {

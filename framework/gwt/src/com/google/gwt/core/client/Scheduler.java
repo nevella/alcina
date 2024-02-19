@@ -15,6 +15,8 @@
  */
 package com.google.gwt.core.client;
 
+import java.util.function.Supplier;
+
 import com.google.gwt.core.client.impl.SchedulerImpl;
 
 /**
@@ -33,13 +35,19 @@ import com.google.gwt.core.client.impl.SchedulerImpl;
 public abstract class Scheduler {
 	public static Scheduler INSTANCE;
 
+	public static Supplier<Scheduler> supplier;
+
 	/**
 	 * Returns the default implementation of the Scheduler API.
 	 */
 	public static Scheduler get() {
-		if (INSTANCE == null) {
-			INSTANCE = SchedulerImpl.INSTANCE;
+		if (INSTANCE != null) {
+			return INSTANCE;
 		}
+		if (supplier != null) {
+			return supplier.get();
+		}
+		INSTANCE = SchedulerImpl.INSTANCE;
 		return INSTANCE;
 	}
 
@@ -147,10 +155,13 @@ public abstract class Scheduler {
 	 */
 	public abstract void scheduleIncremental(RepeatingCommand cmd);
 
+	public interface Command {
+	}
+
 	/**
 	 * General-purpose Command interface for tasks that repeat.
 	 */
-	public interface RepeatingCommand {
+	public interface RepeatingCommand extends Command {
 		/**
 		 * Returns true if the RepeatingCommand should be invoked again.
 		 */
@@ -160,7 +171,7 @@ public abstract class Scheduler {
 	/**
 	 * General-purpose Command interface.
 	 */
-	public interface ScheduledCommand {
+	public interface ScheduledCommand extends Command {
 		/**
 		 * Invokes the command.
 		 */

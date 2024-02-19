@@ -44,6 +44,7 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.UIObject;
+import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -370,6 +371,12 @@ public class Element extends Node implements ClientDomElement,
 		LocalDom.flush();
 		LocalDom.ensureRemote(this);
 		return jsoRemote();
+	}
+
+	protected ElementPathref ensurePathrefRemote() {
+		LocalDom.flush();
+		LocalDom.ensureRemote(this);
+		return pathrefRemote();
 	}
 
 	@Override
@@ -832,13 +839,6 @@ public class Element extends Node implements ClientDomElement,
 					: this;
 		}
 		DOM.setEventListener(this, eventListener);
-		List<String> localBitlessEventsSunk = localBitlessEventsSunk();
-		if (localBitlessEventsSunk != null) {
-			localBitlessEventsSunk.forEach(eventTypeName -> {
-				DOM.sinkBitlessEvent(this, eventTypeName);
-			});
-			localBitlessEventsSunk = null;
-		}
 		streamChildren().filter(Node::provideIsElement)
 				.forEach(n -> ((Element) n).setAttached(true));
 	}
@@ -925,9 +925,16 @@ public class Element extends Node implements ClientDomElement,
 		if (this.remote == ElementNull.INSTANCE) {
 			this.remote = (ClientDomElement) remote;
 			if (remote != null) {
-				if (local() != null && local().getEventBits() != 0) {
-					int existingBits = DOM.getEventsSunk(this);
-					DOM.sinkEvents(this, existingBits | local().getEventBits());
+				if (local() != null) {
+					if (local().getEventBits() != 0) {
+						int existingBits = DOM.getEventsSunk(this);
+						DOM.sinkEvents(this,
+								existingBits | local().getEventBits());
+					}
+					if (local().bitlessEvents != null) {
+						local().bitlessEvents.forEach(eventTypeName -> DOM
+								.sinkBitlessEvent(this, eventTypeName));
+					}
 				}
 			}
 		}
@@ -1328,7 +1335,7 @@ public class Element extends Node implements ClientDomElement,
 	 * When it's quicker to redraw the whole DOM. Tree filtering springs to mind
 	 */
 	public void syncedToPending() {
-		implAccess().sycnedToPending();
+		implAccess().syncedToPending();
 	}
 
 	@Override
@@ -1387,6 +1394,10 @@ public class Element extends Node implements ClientDomElement,
 			return Element.this.ensureJsoRemote();
 		}
 
+		public ElementPathref ensurePathrefRemote() {
+			return Element.this.ensurePathrefRemote();
+		}
+
 		public NodeJso jsoChild(int index) {
 			return ensureJsoRemote().getChildNodes0().getItem0(index);
 		}
@@ -1436,7 +1447,7 @@ public class Element extends Node implements ClientDomElement,
 			return Element.this.remote();
 		}
 
-		public void sycnedToPending() {
+		public void syncedToPending() {
 			if (linkedToRemote()) {
 				ElementJso oldRemote = jsoRemote();
 				sync(() -> oldRemote.removeAllChildren0());
@@ -1450,5 +1461,10 @@ public class Element extends Node implements ClientDomElement,
 		public boolean wasSynced() {
 			return Element.this.wasSynced();
 		}
+	}
+
+	public void setSelectionRange(int pos, int length) {
+		((TextBoxImpl) GWT.create(TextBoxImpl.class)).setSelectionRange(this,
+				pos, length);
 	}
 }

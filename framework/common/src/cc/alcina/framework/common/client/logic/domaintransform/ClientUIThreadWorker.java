@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 /**
@@ -77,12 +77,12 @@ public abstract class ClientUIThreadWorker {
 				.log(Ax.format("Itr [%s] [x%s] - %s ms",
 						CommonUtils.simpleClassName(getClass()),
 						lastPassIterationsPerformed, timeTaken));
-		Registry.impl(TimerWrapperProvider.class).getTimer(new Runnable() {
+		Registry.impl(Timer.Provider.class).getTimer(new Runnable() {
 			@Override
 			public void run() {
 				iterate();
 			}
-		}).scheduleSingle((int) timeTaken * allocateToNonWorkerFactor + 1);
+		}).schedule((int) timeTaken * allocateToNonWorkerFactor + 1);
 	}
 
 	protected abstract void onComplete();

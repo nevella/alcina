@@ -4,7 +4,7 @@ import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 
 public class RepeatingCommandWithPostCompletionCallback
 		implements RepeatingCommand {
@@ -29,22 +29,20 @@ public class RepeatingCommandWithPostCompletionCallback
 		try {
 			shouldContinue = delegate.execute();
 		} catch (final Exception e) {
-			Registry.impl(TimerWrapperProvider.class)
-					.scheduleDeferredIfOnUIThread(new Runnable() {
-						@Override
-						public void run() {
-							postCompletionCallback.onFailure(e);
-						}
-					});
+			Registry.impl(Timer.Provider.class).getTimer(new Runnable() {
+				@Override
+				public void run() {
+					postCompletionCallback.onFailure(e);
+				}
+			}).scheduleDeferredIfOnUIThread();
 		}
 		if (!shouldContinue) {
-			Registry.impl(TimerWrapperProvider.class)
-					.scheduleDeferredIfOnUIThread(new Runnable() {
-						@Override
-						public void run() {
-							postCompletionCallback.onSuccess(null);
-						}
-					});
+			Registry.impl(Timer.Provider.class).getTimer(new Runnable() {
+				@Override
+				public void run() {
+					postCompletionCallback.onSuccess(null);
+				}
+			}).scheduleDeferredIfOnUIThread();
 		}
 		return shouldContinue;
 	}

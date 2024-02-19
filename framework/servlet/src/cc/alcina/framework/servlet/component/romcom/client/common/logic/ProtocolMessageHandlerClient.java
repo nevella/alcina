@@ -91,6 +91,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				// just send the lowest event receiver - things will bubble from
 				// here
 				DomEventMessage message = new Message.DomEventMessage();
+				Ax.err(event.getType());
 				message.data = new DomEventData();
 				message.data.event = event.serializableForm();
 				message.data.firstReceiver = Pathref.forNode(elem);

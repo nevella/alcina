@@ -16,14 +16,14 @@ import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.res.AlcinaResources;
-import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
+import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 public class ClientConfiguration {
@@ -51,8 +51,8 @@ public class ClientConfiguration {
 				.addDomainTransformListener(PermissionsManager.get());
 		Registry.register().singleton(CommitToStorageTransformListener.class,
 				createStorageTransformListener());
-		Registry.register().singleton(TimerWrapperProvider.class,
-				new TimerWrapperProviderGwt());
+		Registry.register().singleton(Timer.Provider.class,
+				new TimerGwt.Provider());
 		registerExtraTransformListenersPreStorage();
 		TransformManager.get().addDomainTransformListener(
 				Registry.impl(CommitToStorageTransformListener.class));

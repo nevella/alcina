@@ -2,10 +2,10 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.user.client.Timer;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
@@ -154,14 +154,12 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		}
 		switch (state) {
 		case LOADING:
-			new Timer() {
-				@Override
-				public void run() {
-					if (SuggestionChoices.this.state == State.LOADING) {
-						contents.setModel(Spinner.builder().generate());
-					}
+			Timer timer = Timer.Provider.get().getTimer(() -> {
+				if (SuggestionChoices.this.state == State.LOADING) {
+					contents.setModel(Spinner.builder().generate());
 				}
-			}.schedule(suggestor.attributes.showSpinnerDelay);
+			});
+			timer.schedule(suggestor.attributes.showSpinnerDelay);
 			break;
 		}
 	}

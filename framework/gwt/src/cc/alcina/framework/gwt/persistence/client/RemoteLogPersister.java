@@ -15,8 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.TimerWrapper;
-import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -47,14 +46,14 @@ public class RemoteLogPersister {
 			consort.clear();
 			consort = null;
 			if ((pushCount > 0 || pushAgain) && !maybeOffline) {
-				TimerWrapper timer = Registry.impl(TimerWrapperProvider.class)
+				Timer timer = Registry.impl(Timer.Provider.class)
 						.getTimer(new Runnable() {
 							@Override
 							public void run() {
 								push();
 							}
 						});
-				timer.scheduleSingle(waitTime);
+				timer.schedule(waitTime);
 			}
 		}
 	};
