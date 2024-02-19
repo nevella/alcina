@@ -313,11 +313,20 @@ public class Environment {
 				runnable.run();
 			} finally {
 				scheduler.pump(false);
-				scheduler.scheduleNextTimedTask();
+				scheduler.scheduleNextEntry(() -> runInClientFrame(new Noop()));
 			}
 		} catch (RuntimeException e) {
+			e.printStackTrace();
 			// TODO - allow exception catch (uncaught exception handler) here
 			throw e;
+		}
+	}
+
+	class Noop implements Runnable {
+		@Override
+		public void run() {
+			// used to trigger a timed schedule event within the main event pump
+			// loop
 		}
 	}
 

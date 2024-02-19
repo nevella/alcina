@@ -66,7 +66,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 		public boolean isFuture() {
 			return scheduledFor == 0
-					|| scheduledFor <= System.currentTimeMillis();
+					|| scheduledFor > System.currentTimeMillis();
 		}
 	}
 
@@ -225,9 +225,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 		@Override
 		public void cancel() {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'cancel'");
+			cancelled = true;
 		}
 
 		@Override
@@ -255,14 +253,13 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		}
 	}
 
-	public void scheduleNextTimedTask() {
+	public void scheduleNextEntry(Runnable entry) {
 		long nextScheduledTaskTime = getNextScheduledTaskTime();
 		if (nextScheduledTaskTime == 0) {
 			return;
 		}
 		long now = System.currentTimeMillis();
 		long delayMillis = Math.max(nextScheduledTaskTime - now, 0);
-		new TimerJvm.Provider().getTimer(() -> pump(true))
-				.schedule(delayMillis);
+		new TimerJvm.Provider().getTimer(entry).schedule(delayMillis);
 	}
 }

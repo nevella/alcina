@@ -431,10 +431,10 @@ public abstract class Model extends Bindable implements
 			if (event.isBound() && isFocusOnBind()) {
 				// definitely deferred (not finally), since the dom can be
 				// mutated in finally blocks
-				Scheduler.get().scheduleDeferred(() -> {
-					FocusImpl.getFocusImplForWidget().focus(
-							event.getContext().node.getRendered().asElement());
-				});
+				// Scheduler.get().scheduleDeferred(() -> {
+				// FocusImpl.getFocusImplForWidget().focus(
+				// event.getContext().node.getRendered().asElement());
+				// });
 			}
 		}
 	}
