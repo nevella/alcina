@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.util.TimerJvm;
-import cc.alcina.framework.servlet.dom.Environment;
 
 /*
  * Models a server-side version of the GWT scheduler/event pump, which itself

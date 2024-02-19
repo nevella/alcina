@@ -26,7 +26,7 @@ public class TimerGwt implements Timer {
 	}
 
 	public void scheduleRepeating(int periodMillis) {
-		gwtTimer.scheduleRepeating(periodMillis);
+		gwtTimer().scheduleRepeating(periodMillis);
 	}
 
 	private Runnable runnable;

@@ -1,5 +1,6 @@
 package cc.alcina.extras.webdriver;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -133,6 +134,7 @@ public class WdExec {
 
 	public WdExec driver(WebDriver driver) {
 		this.driver = driver;
+		driver.manage().timeouts().implicitlyWait(Duration.ZERO);
 		return this;
 	}
 
