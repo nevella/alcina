@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.XmlUtils;
 
@@ -52,11 +53,13 @@ public class NodeChain {
 					: kidIndex == 0;
 			boolean cloneParent = result.splitNotIncluding.length() > 0
 					|| !atEdgeClosestToDirection;
+			DomNode dn = DomNode.from(current);
 			if (cloneParent) {
 				// splitNotIncluding is always a node ahead of the iteration
 				// (we need the parent)
 				if (idx > 0) {
 					Node clonedParent = parent.cloneNode(false);
+					result.addPair(parent, clonedParent);
 					// implies !atEdgeClosestToDirection
 					if (after) {
 						if (result.splitNotIncluding.length() > 0) {
@@ -222,6 +225,23 @@ public class NodeChain {
 		boolean notIncludingIsBeforeIncluding;
 
 		void insertChain(NodeChain newChain) {
+		}
+
+		public List<Pair> pairs = new ArrayList<>();
+
+		public void addPair(Node from, Node to) {
+			pairs.add(new Pair(DomNode.from(from), DomNode.from(to)));
+		}
+
+		public static class Pair {
+			public DomNode from;
+
+			public Pair(DomNode from, DomNode to) {
+				this.from = from;
+				this.to = to;
+			}
+
+			public DomNode to;
 		}
 	}
 }
