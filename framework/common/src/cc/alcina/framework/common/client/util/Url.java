@@ -74,6 +74,17 @@ public class Url {
 	public String strUrlStartingAtPath() {
 		UrlBuilder builder = new UrlBuilder();
 		builder.populateFrom(this);
-		return builder.fromPath();
+		return builder.toStringStartingAtPath();
+	}
+
+	public String strUrlEndingAtPath() {
+		UrlBuilder builder = new UrlBuilder();
+		builder.populateFrom(this);
+		return builder.toStringEndingAtPath();
+	}
+
+	public Url replaceWithHostFrom(Url hostFrom) {
+		String strUrl = hostFrom.strUrlEndingAtPath() + strUrlStartingAtPath();
+		return parse(strUrl);
 	}
 }

@@ -23,6 +23,12 @@ public class UrlBuilder {
 
 	public String build() {
 		StringBuilder sb = new StringBuilder();
+		appendToPath(sb);
+		appendFromPath(sb);
+		return sb.toString();
+	}
+
+	void appendToPath(StringBuilder sb) {
 		if (protocol != null) {
 			sb.append(protocol);
 			sb.append("://");
@@ -34,11 +40,12 @@ public class UrlBuilder {
 			sb.append(":");
 			sb.append(port);
 		}
-		appendFromPath(sb);
-		return sb.toString();
 	}
 
 	void appendFromPath(StringBuilder sb) {
+		if (path == null) {
+			path = "";
+		}
 		if (!path.startsWith("/")) {
 			sb.append("/");
 		}
@@ -132,9 +139,15 @@ public class UrlBuilder {
 		return new Url(protocol, host, port, path, queryString, hash, build());
 	}
 
-	public String fromPath() {
+	public String toStringStartingAtPath() {
 		StringBuilder sb = new StringBuilder();
 		appendFromPath(sb);
+		return sb.toString();
+	}
+
+	public String toStringEndingAtPath() {
+		StringBuilder sb = new StringBuilder();
+		appendToPath(sb);
 		return sb.toString();
 	}
 }

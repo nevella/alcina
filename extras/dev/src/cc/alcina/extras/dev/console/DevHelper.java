@@ -78,7 +78,6 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
-import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
@@ -430,8 +429,12 @@ public abstract class DevHelper {
 			Io.read().path(configPath + ".template").write().toPath(configPath);
 		}
 		Configuration.properties.setUseSets(isUsesSets());
-		Configuration.properties.load(() -> Configuration.properties
-				.register(Io.read().path(configPath).asString()));
+		Configuration.properties.load(() -> {
+			// reload, since these will have been cleared
+			loadDefaultLoggingProperties();
+			Configuration.properties
+					.register(Io.read().path(configPath).asString());
+		});
 	}
 
 	public abstract void loadDefaultLoggingProperties();
