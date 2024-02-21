@@ -499,7 +499,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 		public void focus(AsyncCallback<Void> callback) {
 			getOwnerDocument().implAccess().pathrefRemote().invokeProxy
-					.invoke(ElementPathref.this, "focs", null, null, callback);
+					.invoke(ElementPathref.this, "focus", null, null, callback);
 		}
 
 		public void getScrollTop(AsyncCallback<Integer> callback) {

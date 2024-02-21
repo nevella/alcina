@@ -9,12 +9,16 @@ import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 public class RemoteComponentProtocol {
@@ -125,7 +129,30 @@ public class RemoteComponentProtocol {
 
 			public Object response;
 
-			public Exception exception;
+			public ExceptionTransport exception;
+		}
+
+		public static class ExceptionTransport extends Bindable.Fields {
+			public String className;
+
+			public String nestedClassName;
+
+			public String stackTrace;
+
+			public ExceptionTransport() {
+			}
+
+			public ExceptionTransport(Throwable throwable) {
+				stackTrace = CommonUtils.getFullExceptionMessage(throwable);
+				className = throwable.getClass().getName();
+				nestedClassName = NestedName.get(throwable);
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s :: %s", NestedName.get(this),
+						nestedClassName);
+			}
 		}
 
 		/*

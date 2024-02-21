@@ -15,10 +15,12 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
 /*
@@ -50,9 +52,10 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 						message.methodName, message.argumentTypes,
 						message.arguments);
 				responseMessage.response = result;
-			} catch (Exception e) {
+			} catch (Throwable e) {
+				Window.alert(CommonUtils.toSimpleExceptionMessage(e));
 				e.printStackTrace();
-				responseMessage.exception = e;
+				responseMessage.exception = new ExceptionTransport(e);
 			}
 			ClientRpc.send(responseMessage);
 		}

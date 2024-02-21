@@ -201,22 +201,24 @@ public class ClassReflector<T> implements HasAnnotations {
 			Optional<TypeInvoker> invoker = Registry.optional(TypeInvoker.class,
 					bean.getClass());
 			if (invoker.isPresent()) {
-				invoker.get().invoke(bean, methodName, argumentTypes,
+				return invoker.get().invoke(bean, methodName, argumentTypes,
 						arguments);
 			} else {
 				throw new IllegalArgumentException(
 						Ax.format("Not bean method format: %s", methodName));
 			}
-		}
-		boolean get = !matchResult.getGroup(1).equals("set");
-		String propertyName = Ax.format("%s%s",
-				matchResult.getGroup(2).toLowerCase(), matchResult.getGroup(3));
-		Property property = property(propertyName);
-		if (get) {
-			return property.get(bean);
 		} else {
-			property.set(bean, arguments.get(0));
-			return null;
+			boolean get = !matchResult.getGroup(1).equals("set");
+			String propertyName = Ax.format("%s%s",
+					matchResult.getGroup(2).toLowerCase(),
+					matchResult.getGroup(3));
+			Property property = property(propertyName);
+			if (get) {
+				return property.get(bean);
+			} else {
+				property.set(bean, arguments.get(0));
+				return null;
+			}
 		}
 	}
 

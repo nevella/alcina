@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2573,5 +2575,13 @@ public class CommonUtils {
 
 	public static interface YearResolver {
 		int getYear(Date d);
+	}
+
+	public static String getFullExceptionMessage(Throwable t) {
+		StringWriter sw = new StringWriter();
+		sw.write(t.getClass().getName() + "\n");
+		sw.write(t.getMessage() + "\n");
+		t.printStackTrace(new PrintWriter(sw));
+		return sw.toString();
 	}
 }
