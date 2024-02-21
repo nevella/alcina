@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.util.TimerJvm;
 
@@ -31,9 +32,18 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 	public static ContextProvider<Void, SchedulerFrame> contextProvider;
 
 	static class Task implements Comparable<Task> {
+		static IdCounter counter = new IdCounter();
+
 		ScheduledCommand scheduledCommand;
 
 		RepeatingCommand repeatingCommand;
+
+		long id = counter.nextId();
+
+		@Override
+		public String toString() {
+			return Ax.format("%s - %s", id, command());
+		}
 
 		Task(ScheduledCommand scheduledCommand) {
 			this.scheduledCommand = scheduledCommand;
@@ -64,8 +74,8 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		}
 
 		public boolean isFuture() {
-			return scheduledFor == 0
-					|| scheduledFor > System.currentTimeMillis();
+			return scheduledFor != 0
+					&& scheduledFor > System.currentTimeMillis();
 		}
 	}
 
@@ -101,6 +111,11 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 	Queue _finally = new Queue.Unsorted();
 
+	/*
+	 * Because all client-side execution is async, this queue is just treated as
+	 * "after _finally" rather than "timed with delay 1ms" (the latter is the
+	 * client implementation)
+	 */
 	Queue deferred = new Queue.Unsorted();
 
 	Queue timed = new Queue.Sorted();

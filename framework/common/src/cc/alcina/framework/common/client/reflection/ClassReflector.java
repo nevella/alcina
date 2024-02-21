@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -23,6 +24,7 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 
@@ -196,8 +198,15 @@ public class ClassReflector<T> implements HasAnnotations {
 		RegExp regExp = RegExp.compile(beanRegex);
 		MatchResult matchResult = regExp.exec(methodName);
 		if (matchResult == null) {
-			throw new IllegalArgumentException(
-					Ax.format("Not bean method format: %s", methodName));
+			Optional<TypeInvoker> invoker = Registry.optional(TypeInvoker.class,
+					bean.getClass());
+			if (invoker.isPresent()) {
+				invoker.get().invoke(bean, methodName, argumentTypes,
+						arguments);
+			} else {
+				throw new IllegalArgumentException(
+						Ax.format("Not bean method format: %s", methodName));
+			}
 		}
 		boolean get = !matchResult.getGroup(1).equals("set");
 		String propertyName = Ax.format("%s%s",
@@ -209,6 +218,11 @@ public class ClassReflector<T> implements HasAnnotations {
 			property.set(bean, arguments.get(0));
 			return null;
 		}
+	}
+
+	public interface TypeInvoker<T> {
+		Object invoke(T bean, String methodName, List<Class> argumentTypes,
+				List<?> arguments);
 	}
 
 	public boolean isAbstract() {

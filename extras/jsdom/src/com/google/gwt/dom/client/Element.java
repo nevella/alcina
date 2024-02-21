@@ -46,6 +46,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -401,7 +403,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void focus() {
-		ensureJsoRemote().focus();
+		((ClientDomElement) implAccess().ensureRemote()).focus();
 	}
 
 	@Override
@@ -1466,5 +1468,23 @@ public class Element extends Node implements ClientDomElement,
 	public void setSelectionRange(int pos, int length) {
 		((TextBoxImpl) GWT.create(TextBoxImpl.class)).setSelectionRange(this,
 				pos, length);
+	}
+
+	@Registration({ TypeInvoker.class, Element.class })
+	public static class TypeInvokerImpl implements TypeInvoker<Element> {
+		@Override
+		public Object invoke(Element bean, String methodName,
+				List<Class> argumentTypes, List<?> arguments) {
+			switch (methodName) {
+			case "focus":
+				Preconditions.checkArgument(argumentTypes.isEmpty());
+				bean.focus();
+				return null;
+			default:
+				throw new IllegalArgumentException(
+						Ax.format("Not bean method format and not handled: %s",
+								methodName));
+			}
+		}
 	}
 }

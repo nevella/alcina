@@ -431,10 +431,16 @@ public abstract class Model extends Bindable implements
 			if (event.isBound() && isFocusOnBind()) {
 				// definitely deferred (not finally), since the dom can be
 				// mutated in finally blocks
-				// Scheduler.get().scheduleDeferred(() -> {
-				// FocusImpl.getFocusImplForWidget().focus(
-				// event.getContext().node.getRendered().asElement());
-				// });
+				//
+				// REVISIT - with a more formal queueing system. Why is the
+				// above true? (I mean, it is - but applies amywhere)
+				//
+				// Essentially, the DOM of the input needs to exist before
+				// execution
+				Scheduler.get().scheduleDeferred(() -> {
+					FocusImpl.getFocusImplForWidget().focus(
+							event.getContext().node.getRendered().asElement());
+				});
 			}
 		}
 	}

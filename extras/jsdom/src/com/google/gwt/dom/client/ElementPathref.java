@@ -73,7 +73,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public void focus() {
-		throw new UnsupportedOperationException();
+		async().focus(cc.alcina.framework.gwt.client.util.Async.nullCallback());
 	}
 
 	@Override
@@ -495,6 +495,11 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
 					ElementPathref.this, "getBoundingClientRect", null, null,
 					callback);
+		}
+
+		public void focus(AsyncCallback<Void> callback) {
+			getOwnerDocument().implAccess().pathrefRemote().invokeProxy
+					.invoke(ElementPathref.this, "focs", null, null, callback);
 		}
 
 		public void getScrollTop(AsyncCallback<Integer> callback) {
