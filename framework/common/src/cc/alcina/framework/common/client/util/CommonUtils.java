@@ -13,8 +13,8 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2578,10 +2578,16 @@ public class CommonUtils {
 	}
 
 	public static String getFullExceptionMessage(Throwable t) {
-		StringWriter sw = new StringWriter();
-		sw.write(t.getClass().getName() + "\n");
-		sw.write(t.getMessage() + "\n");
-		t.printStackTrace(new PrintWriter(sw));
-		return sw.toString();
+		// stream not writer for gwt compat
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		PrintStream printStream = new PrintStream(baos);
+		printStream.println(t.getClass().getName() + "\n");
+		printStream.println(t.getMessage() + "\n");
+		t.printStackTrace(printStream);
+		try {
+			return new String(baos.toByteArray(), "UTF-8");
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 }

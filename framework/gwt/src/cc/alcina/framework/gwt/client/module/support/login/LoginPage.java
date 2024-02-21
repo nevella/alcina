@@ -10,8 +10,8 @@ import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.InputEnterCommit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Next;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
@@ -23,8 +23,8 @@ import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 @Directed(className = "login-page")
 @TypeSerialization(reflectiveSerializable = false)
 public abstract class LoginPage extends Model
-		implements ModelEvents.Next.Handler,
-		InferredDomEvents.InputEnterCommit.Handler, ModelEvents.Input.Handler {
+		implements ModelEvents.Next.Handler, ModelEvents.Input.Handler,
+		ModelEvents.Commit.Handler {
 	protected LoginConsort loginConsort;
 
 	private final HeadingArea headingArea;
@@ -51,7 +51,11 @@ public abstract class LoginPage extends Model
 				loginConsort.topicMessage);
 	}
 
-	@Directed
+	// reemit an enter on a form field as a Commit. Equivalent to "next" since
+	// single-input
+	@Directed(
+		reemits = { InferredDomEvents.InputEnterCommit.class,
+				ModelEvents.Commit.class })
 	public Object getContents() {
 		return this.contents;
 	}
@@ -91,7 +95,7 @@ public abstract class LoginPage extends Model
 	}
 
 	@Override
-	public void onInputEnterCommit(InputEnterCommit event) {
+	public void onCommit(Commit event) {
 		// caused by an enter on a form field. Equivalent to "next" since
 		// single-input
 		onNext(null);

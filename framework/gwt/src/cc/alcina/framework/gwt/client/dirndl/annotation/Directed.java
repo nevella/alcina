@@ -414,6 +414,11 @@ public @interface Directed {
 			return this;
 		}
 
+		public Impl withReemits(Class[] reemits) {
+			this.reemits = reemits;
+			return this;
+		}
+
 		public Impl withBindToModel(boolean bindToModel) {
 			this.bindToModel = bindToModel;
 			return this;

@@ -129,7 +129,8 @@ class NodeEventBinding {
 			Preconditions.checkState(Reflections
 					.isAssignableFrom(NodeEvent.WithoutDomBinding.class, type));
 			if (isDescendantBinding(type)) {
-				//find emitter attached to a parent node which emits events of Type type
+				// find emitter attached to a parent node which emits events of
+				// Type type
 				ModelEvent.Emitter emitter = node.findEmitter(type);
 				if (emitter != null) {
 					((Model) emitter).provideNode().getEventBinding(type)
