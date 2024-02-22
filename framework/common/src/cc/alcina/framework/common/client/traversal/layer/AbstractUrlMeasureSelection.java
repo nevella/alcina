@@ -10,7 +10,7 @@ public abstract class AbstractUrlMeasureSelection extends AbstractUrlSelection
 
 	public AbstractUrlMeasureSelection(Selection parent, Measure measure,
 			String url) {
-		super(parent, url, url);
+		super(parent, url);
 		this.measure = measure;
 	}
 
