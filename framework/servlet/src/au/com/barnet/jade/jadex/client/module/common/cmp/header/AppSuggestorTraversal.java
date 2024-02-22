@@ -6,7 +6,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestionBase;
+import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestionEntry;
 import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestor.AnswerImpl.Invocation;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
@@ -39,7 +39,7 @@ public class AppSuggestorTraversal extends AppSuggestor {
 			// request.populateContext();
 			// ReflectiveOmniRemoteServiceAsync.get().omniRequest(request,
 			// runningCallback);
-			AppSuggestionBase suggestion = new AppSuggestionBase();
+			AppSuggestionEntry suggestion = new AppSuggestionEntry();
 			suggestion.match = "Filter: " + invocation.ask.getValue();
 			processResults(invocation, List.of(suggestion));
 		}

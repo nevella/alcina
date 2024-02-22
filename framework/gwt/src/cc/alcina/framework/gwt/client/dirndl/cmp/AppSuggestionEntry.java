@@ -6,7 +6,8 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 
 @Bean(PropertySource.FIELDS)
-public class AppSuggestionBase implements AppSuggestion {
+public class AppSuggestionEntry<C extends AppSuggestionCategory>
+		implements AppSuggestion {
 	public String url;
 
 	public String match;
@@ -14,6 +15,8 @@ public class AppSuggestionBase implements AppSuggestion {
 	public String secondary;
 
 	public Class<? extends ModelEvent> modelEvent;
+
+	public C category;
 
 	@Override
 	public String getDisplayString() {
