@@ -120,6 +120,15 @@ public class RemoteComponentProtocol {
 			public int id;
 
 			public List<Class> argumentTypes;
+
+			public String javascript;
+
+			public JsResponseType jsResponseType;
+
+			@Reflected
+			public enum JsResponseType {
+				_void, string, node_jso
+			}
 		}
 
 		// FIXME - doc this annotation

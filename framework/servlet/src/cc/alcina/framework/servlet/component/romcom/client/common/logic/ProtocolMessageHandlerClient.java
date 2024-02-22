@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.Pathref;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -21,6 +22,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
 /*
@@ -44,13 +46,23 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		@Override
 		public void handle(RemoteComponentResponse response,
 				Message.Invoke message) {
-			Element elem = (Element) message.path.node();
+			Pathref path = message.path;
+			Element elem = path == null ? null : (Element) path.node();
 			Message.InvokeResponse responseMessage = new Message.InvokeResponse();
 			responseMessage.id = message.id;
+			Object result = null;
 			try {
-				Object result = Reflections.at(elem).invoke(elem,
-						message.methodName, message.argumentTypes,
-						message.arguments);
+				if (message.methodName != null) {
+					result = Reflections.at(elem).invoke(elem,
+							message.methodName, message.argumentTypes,
+							message.arguments);
+				} else {
+					Result scriptResult = new Result();
+					String script = message.javascript;
+					invokeJs(scriptResult, message.jsResponseType.name(), elem,
+							script);
+					result = scriptResult.asObject();
+				}
 				responseMessage.response = result;
 			} catch (Throwable e) {
 				Window.alert(CommonUtils.toSimpleExceptionMessage(e));
@@ -59,6 +71,38 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			}
 			ClientRpc.send(responseMessage);
 		}
+
+		static class Result {
+			NodeJso node;
+
+			String string;
+
+			public Object asObject() {
+				if (node != null) {
+					return Pathref.forNode(node.node());
+				} else if (string != null) {
+					return string;
+				} else {
+					return null;
+				}
+			}
+		}
+
+		static final native void invokeJs(Result scriptResult,
+				String responseType, Element elem, String script) /*-{
+			var arg = elem;
+			var ret = eval(script);
+			switch(responseTypeName){
+				case "void":
+				break;
+				case "node_jso":
+				scriptResult.@cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.InvokeHandler.Result::node = ret;
+				break; 
+				case "string":
+				scriptResult.@cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.InvokeHandler.Result::string = ret;
+				break; 
+			}
+			}-*/;
 	}
 
 	public static class MutationsHandler
