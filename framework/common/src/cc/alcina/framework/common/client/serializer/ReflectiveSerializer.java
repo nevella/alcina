@@ -1186,6 +1186,12 @@ public class ReflectiveSerializer {
 				return fromJsonNumber(value);
 			case STRING:
 				return fromJsonString(clazz, value);
+			case ARRAY:
+				// FIXME - this occurs when the type/value pair has not been
+				// processed correctly (reading an interface property with an
+				// enum value)
+				JsonArray array = (JsonArray) value;
+				return fromJsonString(clazz, array.get(1));
 			default:
 				throw new UnsupportedOperationException();
 			}

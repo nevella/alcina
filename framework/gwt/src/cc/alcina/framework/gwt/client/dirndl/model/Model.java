@@ -455,4 +455,12 @@ public abstract class Model extends Bindable implements
 
 	public abstract static class Value<T> extends Model implements HasValue<T> {
 	}
+
+	/*
+	 * When a different model is returned from context resolution to the input,
+	 * it may also require completely different annotations. This marker
+	 * interface (on the model) specifies just that
+	 */
+	public interface ResetDirecteds {
+	}
 }

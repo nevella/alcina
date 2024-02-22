@@ -267,6 +267,24 @@ public class PermissionsManager implements DomainTransformListener {
 		return get().isPermitted(o, p, false);
 	}
 
+	/**
+	 * For checking permissions when the type of o may have an @Permission
+	 * annotation
+	 * 
+	 * @param o
+	 * @param ruleName
+	 * @return
+	 */
+	public static boolean isPermitted(Object o) {
+		Permission permission = Reflections.at(o.getClass())
+				.annotation(Permission.class);
+		if (permission == null) {
+			return true;
+		}
+		Permissible p = new AnnotatedPermissible(permission);
+		return get().isPermitted(o, p, false);
+	}
+
 	public static boolean isSystemUser() {
 		return Objects.equals(get().getSystemUser(), get().getUser());
 	}

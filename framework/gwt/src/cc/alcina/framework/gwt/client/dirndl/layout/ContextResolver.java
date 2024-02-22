@@ -279,14 +279,18 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	}
 
 	/**
+	 * <p>
 	 * Avoid this *if you can*, but at the end of the day this gives total
 	 * (albeit nastily imperative) control over the transformation. An example
 	 * of a reasonable usage would be "set the tag of each Link instance to
 	 * 'button'" - since there's no declarative (annotation modification) way to
 	 * change the tag of all links in a subtree
+	 * 
+	 * <p>
+	 * Or - forbid access to a model if it
 	 */
 	protected Object resolveModel(Object model) {
-		return model;
+		return parent == null ? model : parent.resolveModel(model);
 	}
 
 	// FIXME - dirndl 1x2 - remove

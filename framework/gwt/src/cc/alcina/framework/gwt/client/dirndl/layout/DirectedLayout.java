@@ -1836,7 +1836,6 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void beforeRender() {
-			this.model = resolver.resolveModel(model);
 			/*
 			 * This event is fired directly (as method calls), not via
 			 * bubbling/dispatch
@@ -1882,10 +1881,6 @@ public class DirectedLayout implements AlcinaProcess {
 		void init(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
-			if (model != null && model.getClass().getName()
-					.contains("DateWithJustYear")) {
-				int debug = 3;
-			}
 			DirectedContextResolver directedContextResolver = location
 					.getAnnotation(DirectedContextResolver.class);
 			if (directedContextResolver != null) {
@@ -1900,12 +1895,18 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			this.resolver = resolver;
 			this.model = resolver.resolveModel(model);
+			if (this.model != model) {
+				if (this.model instanceof Model.ResetDirecteds) {
+					location = new AnnotationLocation(model.getClass(), null,
+							resolver);
+				}
+			}
 			this.location = location;
 			this.parentNode = parentNode;
 			this.directeds = directeds != null ? directeds
 					: location.getAnnotations(Directed.class);
 			// generate the node (1-1 with input)
-			node = new Node(resolver, parentNode, location, model,
+			node = new Node(resolver, parentNode, location, this.model,
 					this.directeds.size() == 1);
 			// don't add to parents yet (out of order) - but once we have a
 			// better queue, do
