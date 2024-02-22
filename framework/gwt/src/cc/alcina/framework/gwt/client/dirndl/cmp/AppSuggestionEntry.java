@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.cmp;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 
@@ -16,6 +17,7 @@ public class AppSuggestionEntry<C extends AppSuggestionCategory>
 
 	public Class<? extends ModelEvent> modelEvent;
 
+	@ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 	public C category;
 
 	@Override

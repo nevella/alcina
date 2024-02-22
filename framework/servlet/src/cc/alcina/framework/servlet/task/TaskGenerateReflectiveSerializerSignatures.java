@@ -235,6 +235,11 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 									.collect(Collectors.toList()),
 							e.getKey().getName()));
 		}
+		if (incorrectProperty.size() > 0) {
+			Ax.sysLogHigh(
+					"TaskGenerateReflectiveSerializerSignatures :: problematic properties\n\n\t%s\n\n ",
+					CommonUtils.joinWithNewlineTab(incorrectProperty));
+		}
 		Preconditions.checkState(incorrectProperty.isEmpty(),
 				"Incorrect property serialization");
 		serializables.forEach(this::generateSignature);
