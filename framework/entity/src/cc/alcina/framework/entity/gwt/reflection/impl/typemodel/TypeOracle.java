@@ -150,7 +150,7 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
 	@Override
 	public synchronized JClassType getType(String name)
 			throws NotFoundException {
-		throw new UnsupportedOperationException();
+		return findType(name);
 	}
 
 	@Override
@@ -163,9 +163,19 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
 		return getType(jdkType, 0);
 	}
 
+	private TypeProvider typeProvider;
+
+	public void setTypeProvider(TypeProvider typeProvider) {
+		this.typeProvider = typeProvider;
+	}
+
+	public interface TypeProvider {
+		JClassType[] getTypes(TypeOracle typeOracle);
+	}
+
 	@Override
 	public synchronized JClassType[] getTypes() {
-		throw new UnsupportedOperationException();
+		return typeProvider.getTypes(this);
 	}
 
 	@Override
@@ -264,7 +274,11 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle
 				if (rank == 0) {
 					TypeVariable<?>[] typeVariables = clazz.getTypeParameters();
 					if (typeVariables.length == 0) {
-						type = new JRealClassType(this, clazz);
+						if (clazz.isAnnotation()) {
+							type = new JAnnotationType(this, clazz);
+						} else {
+							type = new JRealClassType(this, clazz);
+						}
 					} else {
 						type = ensureGenericType(clazz);
 					}

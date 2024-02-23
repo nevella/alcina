@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class Io {
@@ -100,6 +101,7 @@ public class Io {
 				}
 				return bytes;
 			} catch (Exception e) {
+				Ax.err("Stream not found: %s", resource);
 				throw WrappedRuntimeException.wrap(e);
 			}
 		}
@@ -334,6 +336,13 @@ public class Io {
 				if (path != null) {
 					file = new File(path);
 				}
+			}
+
+			@Override
+			public String toString() {
+				return FormatBuilder.keyValues("path", path, "url", url,
+						"classpathRelative", classpathRelative,
+						"classpathResource", classpathResource);
 			}
 
 			private InputStream getStream() throws IOException {

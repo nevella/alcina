@@ -23,8 +23,8 @@ public abstract class DataFolderProvider {
 	public File getClassDataFile(Object instance) {
 		// call with an instance, not its class
 		Preconditions.checkState(instance.getClass() != Class.class);
-		return getChildFile(Ax.format("class-data-file/%s.dat",
-				instance.getClass().getCanonicalName()));
+		return getSubFolderFile("class-data-file",
+				Ax.format("%s.dat", instance.getClass().getCanonicalName()));
 	}
 
 	public abstract File getDataFolder();

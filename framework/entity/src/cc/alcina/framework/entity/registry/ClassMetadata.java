@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.Io;
 
@@ -18,6 +19,10 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	public static boolean USE_MD5_CHANGE_CHECK;
+
+	public Class<?> toType() {
+		return Reflections.forName(className);
+	}
 
 	public static ClassMetadata fromRelativeSourcePath(String relativeClassPath,
 			URL url, InputStream inputStream, long modificationDate) {
@@ -53,6 +58,8 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 
 	// so small, a list is probably more efficient than set
 	public List<String> parents = new ArrayList<>();
+
+	public boolean hasCanonicalName;
 
 	public ClassMetadata() {
 	}
@@ -142,5 +149,9 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 			}
 		}
 		return url;
+	}
+
+	public String className() {
+		return className;
 	}
 }

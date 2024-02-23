@@ -77,7 +77,10 @@ public class AlcinaDevHelper extends DevHelper {
 	}
 
 	protected String getConsoleSourcePath() {
-		return "/g/alcina/extras/dev/src/cc/alcina/extras/dev/console/alcina";
+		return getClass().getProtectionDomain().getCodeSource().getLocation().toString()//
+				.replaceFirst("(file:)(.+)(/bin)",
+						"$2/src/")
+				+ getClass().getPackageName().replace(".", "/");
 	}
 
 	protected String getConsoleSourceRelativePath(String relativePath) {

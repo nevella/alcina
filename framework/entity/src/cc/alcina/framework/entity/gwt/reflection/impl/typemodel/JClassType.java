@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -266,7 +267,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JAnnotationType isAnnotation() {
-		return null;
+		if (this instanceof JAnnotationType) {
+			return (JAnnotationType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -277,7 +282,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JArrayType isArray() {
-		return null;
+		if (this instanceof JArrayType) {
+			return (JArrayType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -315,7 +324,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JEnumType isEnum() {
-		return null;
+		if (this instanceof JEnumType) {
+			return (JEnumType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -325,7 +338,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JGenericType isGenericType() {
-		return null;
+		if (this instanceof JGenericType) {
+			return (JGenericType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -351,7 +368,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JParameterizedType isParameterized() {
-		return null;
+		if (this instanceof JParameterizedType) {
+			return (JParameterizedType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -407,6 +428,10 @@ public abstract class JClassType<T extends Type>
 	@Override
 	public Class provideJavaType() {
 		return clazz;
+	}
+
+	JMethod createMethod(Method m) {
+		return new JMethod(typeOracle, m);
 	}
 
 	/*
@@ -590,7 +615,7 @@ public abstract class JClassType<T extends Type>
 				Collections.sort(fields, new ExternalOrderFieldComparator());
 			}
 			methods = Arrays.stream(clazz.getDeclaredMethods())
-					.map(m -> new JMethod(typeOracle, m))
+					.map(JClassType.this::createMethod)
 					.collect(Collectors.toList());
 			constructors = Arrays.stream(clazz.getDeclaredConstructors())
 					.map(c -> new JConstructor(typeOracle, c))

@@ -1,7 +1,6 @@
 package cc.alcina.appcreator;
 
 import java.io.File;
-import java.io.InputStream;
 import java.net.URL;
 
 import org.apache.tools.ant.BuildException;
@@ -10,10 +9,8 @@ import org.apache.tools.ant.taskdefs.Expand;
 import org.apache.tools.ant.taskdefs.Get;
 import org.apache.tools.ant.taskdefs.Mkdir;
 import org.apache.tools.ant.taskdefs.Move;
-import org.apache.tools.ant.taskdefs.Pack;
 import org.apache.tools.ant.types.PatternSet;
 import org.apache.tools.ant.types.PatternSet.NameEntry;
-import org.apache.tools.ant.util.FileUtils;
 
 public class DownloadLibs extends Task {
 	private DownloadableFileList downloadableFileList;

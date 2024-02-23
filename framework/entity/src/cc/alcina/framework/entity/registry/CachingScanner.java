@@ -118,6 +118,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 						out = process(clazz, className, meta);
 						out.ensureParents(clazz);
 						out.ensureMd5(this);
+						out.hasCanonicalName = clazz.getCanonicalName() != null;
 						invalidatedThisPass.add(className);
 						if (passIncomingCache.classData.size() > 0) {
 							if (loggedThisPass++ < 10) {

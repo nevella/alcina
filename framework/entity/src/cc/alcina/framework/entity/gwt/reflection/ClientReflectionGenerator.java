@@ -88,6 +88,12 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.ReflectionVisibility;
  *
  */
 public class ClientReflectionGenerator extends IncrementalGenerator {
+	public static final String DATA_FOLDER_CONFIGURATION_KEY = "ClientReflectionGenerator.ReachabilityData.folder";
+
+	public static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
+
+	public static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
+
 	/*
 	 * Force consistent ordering across generators
 	 */
@@ -113,12 +119,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	static final String REF_IMPL = "__refImpl";
 
 	static final String ANN_IMPL = "__annImpl";
-
-	static final String DATA_FOLDER_CONFIGURATION_KEY = "ClientReflectionGenerator.ReachabilityData.folder";
-
-	static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
-
-	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
 
 	static String accessSafeClassLiteral(JClassType type) {
 		return String.format("%s.%s.clazz", type.getPackage().getName(),
@@ -203,6 +203,15 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	JClassType registrationAllSubtypesClient;
 
+	/*
+	 * Initialisation properties, immutable once generating
+	 */
+	public static class Attributes {
+		public boolean guaranteedSinglePermutationBuild = false;
+	}
+
+	public Attributes attributes = new Attributes();
+
 	@Override
 	public RebindResult generateIncrementally(TreeLogger logger,
 			GeneratorContext context, String typeName)
@@ -259,9 +268,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		return GENERATOR_VERSION_ID;
 	}
 
-	private void checkSinglePermutationBuild(TreeLogger logger,
+	void checkSinglePermutationBuild(TreeLogger logger,
 			GeneratorContext context) throws BadPropertyValueException {
-		// TODO - jjs can access permutationlist (in precompile phase)
+		if (attributes.guaranteedSinglePermutationBuild) {
+			return;
+		}
 		Preconditions.checkArgument(
 				context.getPropertyOracle()
 						.getSelectionProperty(logger, "user.agent")
@@ -269,7 +280,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				"Only configured for single-permutation (safari) builds");
 	}
 
-	private void setupFilter() throws Exception {
+	void setupFilter() throws Exception {
 		ModuleReflectionFilter modulefilter = new ModuleReflectionFilter();
 		modulefilter.init(logger, context, module.value(),
 				reflectUnknownInInitialModule);
@@ -1125,7 +1136,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				computeAsyncSerializableTypes(
 						Multiset<JClassType, Set<JClassType>> subtypes) {
 			Multiset<JClassType, Set<JClassType>> result = new Multiset<JClassType, Set<JClassType>>();
-			subtypes.get(
+			subtypes.getAndEnsure(
 					getType(AsyncSerializableTypes.class.getCanonicalName()))
 					.forEach(t -> result.put(t,
 							computeAsyncSerializableArguments(t)));
