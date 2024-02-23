@@ -231,6 +231,8 @@ public class Environment {
 
 	Window.Location location;
 
+	Window.Navigator navigator;
+
 	final Credentials credentials;
 
 	SchedulerFrame scheduler;
@@ -254,6 +256,12 @@ public class Environment {
 				Window.Location.init(locationMutation.protocol,
 						locationMutation.host, locationMutation.port,
 						locationMutation.path, locationMutation.queryString);
+				Window.Navigator.init(locationMutation.navigator.appCodeName,
+						locationMutation.navigator.appName,
+						locationMutation.navigator.appVersion,
+						locationMutation.navigator.platform,
+						locationMutation.navigator.userAgent,
+						locationMutation.navigator.cookieEnabled);
 			}
 			String token = locationMutation.hash.startsWith("#")
 					? locationMutation.hash.substring(1)
@@ -284,6 +292,7 @@ public class Environment {
 			LooseContext.set(CONTEXT_ENVIRONMENT, this);
 			// the order - location, history, client, document - is necessary
 			location = Window.Location.contextProvider.createFrame(null);
+			navigator = Window.Navigator.contextProvider.createFrame(null);
 			history = History.contextProvider.createFrame(null);
 			History.addValueChangeHandler(this::onHistoryChange);
 			client = Client.contextProvider.createFrame(ui);
@@ -420,6 +429,7 @@ public class Environment {
 				Client.contextProvider.registerFrame(client);
 				History.contextProvider.registerFrame(history);
 				Window.Location.contextProvider.registerFrame(location);
+				Window.Navigator.contextProvider.registerFrame(navigator);
 				SchedulerFrame.contextProvider.registerFrame(scheduler);
 				Document.contextProvider.registerFrame(document);
 				Runnable cmd = () -> {

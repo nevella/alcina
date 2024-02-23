@@ -5,6 +5,7 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
+import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
@@ -14,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
@@ -96,6 +98,8 @@ class Page extends Model.All
 				.addHandler(PlaceChangeEvent.TYPE, handler));
 	}
 
+	GlobalKeyboardShortcuts shortcuts;
+
 	void goPreserveScrollPosition(TraversalPlace place) {
 		Element scrollableLayers = layers.provideElement().getChildElement(1);
 		scrollableLayers.async()
@@ -114,6 +118,19 @@ class Page extends Model.All
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
+		// FIXME - to a registration
+		bindKeyboardShortcuts(event.isBound());
+	}
+
+	private KeybindingsHandler keybindingsHandler = new KeybindingsHandler(
+			eventType -> provideNode().dispatch(eventType, null));
+
+	private void bindKeyboardShortcuts(boolean bound) {
+		if (bound) {
+			shortcuts = new GlobalKeyboardShortcuts();
+			Event.addNativePreviewHandler(shortcuts);
+		}
+		shortcuts.deltaHandler(keybindingsHandler, bound);
 	}
 
 	// FIXME - not hooked up?

@@ -545,6 +545,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		devHelper.initPostObjectServices();
 		devHelper.initLifecycleServices();
 		devHelper.initAppDebug();
+		devHelper.initTopics();
 		new InitPostObjectServices().emit(System.currentTimeMillis());
 		new InitConsole().emit(System.currentTimeMillis());
 		initialised = true;

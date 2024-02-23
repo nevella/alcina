@@ -85,6 +85,7 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import elemental.json.impl.JsonUtil;
@@ -658,5 +659,10 @@ public abstract class DevHelper {
 
 	public interface StringPrompter {
 		String getValue(String prompt);
+	}
+
+	public void initTopics() {
+		ServletLayerTopics.topicRestartConsole
+				.add(() -> DevConsole.getInstance().restart());
 	}
 }

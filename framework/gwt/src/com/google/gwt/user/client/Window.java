@@ -927,26 +927,76 @@ public class Window {
 		}
 	}
 
+	public static class Navigator implements ContextFrame {
+		public static ContextProvider<Void, Navigator> contextProvider;
+
+		private NavigatorImpl impl = GWT.create(NavigatorImpl.class);
+
+		static Navigator get() {
+			return contextProvider.contextFrame();
+		}
+
+		public static void init(String appCodeName, String appName,
+				String appVersion, String platform, String userAgent,
+				boolean cookieEnabled) {
+			get().impl.init(appCodeName, appName, appVersion, platform,
+					userAgent, cookieEnabled);
+		}
+
+		public static String getAppCodeName() {
+			return get().impl.getAppCodeName();
+		}
+
+		public static String getAppName() {
+			return get().impl.getAppName();
+		}
+
+		public static String getAppVersion() {
+			return get().impl.getAppVersion();
+		}
+
+		public static String getPlatform() {
+			return get().impl.getPlatform();
+		}
+
+		public static String getUserAgent() {
+			return get().impl.getUserAgent();
+		}
+
+		public static boolean isCookieEnabled() {
+			return get().impl.isCookieEnabled();
+		}
+
+		public static boolean isJavaEnabled() {
+			return get().impl.isJavaEnabled();
+		}
+	}
+
 	/**
 	 * This class provides access to the browser's navigator object. The
 	 * mimeTypes and plugins properties are not included.
 	 */
-	public static class Navigator {
+	public static class NavigatorImpl {
 		/**
 		 * Gets the navigator.appCodeName.
 		 *
 		 * @return the window's navigator.appCodeName.
 		 */
-		public static native String getAppCodeName() /*-{
+		public native String getAppCodeName() /*-{
       return $wnd.navigator.appCodeName;
 		}-*/;
+
+		public void init(String appCodeName, String appName, String appVersion,
+				String platform, String userAgent, boolean cookieEnabled) {
+			// NOOP (romcom only)
+		}
 
 		/**
 		 * Gets the navigator.appName.
 		 *
 		 * @return the window's navigator.appName.
 		 */
-		public static native String getAppName() /*-{
+		public native String getAppName() /*-{
       return $wnd.navigator.appName;
 		}-*/;
 
@@ -955,7 +1005,7 @@ public class Window {
 		 *
 		 * @return the window's navigator.appVersion.
 		 */
-		public static native String getAppVersion() /*-{
+		public native String getAppVersion() /*-{
       return $wnd.navigator.appVersion;
 		}-*/;
 
@@ -964,7 +1014,7 @@ public class Window {
 		 *
 		 * @return the window's navigator.platform.
 		 */
-		public static native String getPlatform() /*-{
+		public native String getPlatform() /*-{
       return $wnd.navigator.platform;
 		}-*/;
 
@@ -973,7 +1023,7 @@ public class Window {
 		 *
 		 * @return the window's navigator.userAgent.
 		 */
-		public static native String getUserAgent() /*-{
+		public native String getUserAgent() /*-{
       //see http://bugs.jquery.com/ticket/6450
       try {
         return $wnd.navigator.userAgent;
@@ -987,7 +1037,7 @@ public class Window {
 		 *
 		 * @return true if a cookie can be set, false if not
 		 */
-		public static boolean isCookieEnabled() {
+		public boolean isCookieEnabled() {
 			return Cookies.isCookieEnabled();
 		}
 
@@ -996,12 +1046,9 @@ public class Window {
 		 *
 		 * @return the window's navigator.javaEnabled.
 		 */
-		public static native boolean isJavaEnabled() /*-{
+		public native boolean isJavaEnabled() /*-{
       return $wnd.navigator.javaEnabled();
 		}-*/;
-
-		private Navigator() {
-		}
 	}
 
 	/**

@@ -46,6 +46,9 @@ public class PathrefDom {
 		Window.Location.contextProvider = ContextProvider.createProvider(
 				ctx -> new Window.Location(), null, null, Window.Location.class,
 				true);
+		Window.Navigator.contextProvider = ContextProvider.createProvider(
+				ctx -> new Window.Navigator(), null, null,
+				Window.Navigator.class, true);
 	}
 
 	public Environment getEnvironment(RemoteComponentProtocol.Session session) {

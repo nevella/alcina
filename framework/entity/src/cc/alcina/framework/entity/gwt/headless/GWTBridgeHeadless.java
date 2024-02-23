@@ -16,6 +16,7 @@ import com.google.gwt.user.client.History.HistoryTokenEncoder;
 import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Window.LocationImpl;
+import com.google.gwt.user.client.Window.NavigatorImpl;
 import com.google.gwt.user.client.impl.WindowImpl;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
@@ -30,37 +31,6 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.util.Async;
 
 public class GWTBridgeHeadless extends GWTBridge {
-	private Set<Class> notImplemented = new LinkedHashSet<>();
-
-	@Override
-	public <T> T create(Class<?> classLiteral) {
-		Optional<?> optional = Registry.optional(classLiteral);
-		if (!optional.isPresent() && notImplemented.add(classLiteral)) {
-			Ax.err("No GWT headless implementation: %s", classLiteral);
-		}
-		return (T) optional.get();
-	}
-
-	@Override
-	public String getVersion() {
-		return null;
-	}
-
-	@Override
-	public boolean isClient() {
-		return false;
-	}
-
-	@Override
-	public void log(String message, Throwable e) {
-		if (message != null) {
-			System.out.println(message);
-		}
-		if (e != null) {
-			e.printStackTrace();
-		}
-	}
-
 	@Registration(BidiPolicyImpl.class)
 	public static class BidiPolicyImplHeadless extends BidiPolicyImpl {
 		public BidiPolicyImplHeadless() {
@@ -183,6 +153,80 @@ public class GWTBridgeHeadless extends GWTBridge {
 	public static class LocaleInfoImplHeadless extends LocaleInfoImpl {
 		public LocaleInfoImplHeadless() {
 			super();
+		}
+	}
+
+	@Registration(NavigatorImpl.class)
+	public static class NavigatorImplHeadless extends NavigatorImpl {
+		private String appCodeName;
+
+		private String appName;
+
+		private String appVersion;
+
+		private String platform;
+
+		private String userAgent;
+
+		private boolean cookieEnabled;
+
+		public String getAppCodeName() {
+			return appCodeName;
+		}
+
+		public void setAppCodeName(String appCodeName) {
+			this.appCodeName = appCodeName;
+		}
+
+		public String getAppName() {
+			return appName;
+		}
+
+		public void setAppName(String appName) {
+			this.appName = appName;
+		}
+
+		public String getAppVersion() {
+			return appVersion;
+		}
+
+		public void setAppVersion(String appVersion) {
+			this.appVersion = appVersion;
+		}
+
+		public String getPlatform() {
+			return platform;
+		}
+
+		public void setPlatform(String platform) {
+			this.platform = platform;
+		}
+
+		public String getUserAgent() {
+			return userAgent;
+		}
+
+		public void setUserAgent(String userAgent) {
+			this.userAgent = userAgent;
+		}
+
+		public boolean isCookieEnabled() {
+			return cookieEnabled;
+		}
+
+		public void setCookieEnabled(boolean cookieEnabled) {
+			this.cookieEnabled = cookieEnabled;
+		}
+
+		@Override
+		public void init(String appCodeName, String appName, String appVersion,
+				String platform, String userAgent, boolean cookieEnabled) {
+			this.appCodeName = appCodeName;
+			this.appName = appName;
+			this.appVersion = appVersion;
+			this.platform = platform;
+			this.userAgent = userAgent;
+			this.cookieEnabled = cookieEnabled;
 		}
 	}
 
@@ -361,6 +405,37 @@ public class GWTBridgeHeadless extends GWTBridge {
 						TransformManager.get().getTransforms().isEmpty());
 			}
 			runnable.run();
+		}
+	}
+
+	private Set<Class> notImplemented = new LinkedHashSet<>();
+
+	@Override
+	public <T> T create(Class<?> classLiteral) {
+		Optional<?> optional = Registry.optional(classLiteral);
+		if (!optional.isPresent() && notImplemented.add(classLiteral)) {
+			Ax.err("No GWT headless implementation: %s", classLiteral);
+		}
+		return (T) optional.get();
+	}
+
+	@Override
+	public String getVersion() {
+		return null;
+	}
+
+	@Override
+	public boolean isClient() {
+		return false;
+	}
+
+	@Override
+	public void log(String message, Throwable e) {
+		if (message != null) {
+			System.out.println(message);
+		}
+		if (e != null) {
+			e.printStackTrace();
 		}
 	}
 }

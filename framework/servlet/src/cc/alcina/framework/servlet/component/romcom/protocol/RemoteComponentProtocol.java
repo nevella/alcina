@@ -170,7 +170,7 @@ public class RemoteComponentProtocol {
 		public static class Mutations extends Message {
 			public static Mutations ofLocation() {
 				Mutations result = new Mutations();
-				result.locationMutation = LocationMutation.ofWindow();
+				result.locationMutation = LocationMutation.ofWindow(false);
 				return result;
 			}
 
@@ -216,7 +216,7 @@ public class RemoteComponentProtocol {
 				result.maxCharsPerTextNode = LocalDom.maxCharsPerTextNode;
 				result.domMutations = LocalDom.pathRefRepresentations()
 						.domAsMutations();
-				result.locationMutation = LocationMutation.ofWindow();
+				result.locationMutation = LocationMutation.ofWindow(true);
 				return result;
 			}
 

@@ -106,6 +106,8 @@ public class TraversalProcessView {
 
 		@Override
 		public void init() {
+			// FIXME - st - implement
+			// Registry.impl(TopLevelCatchallHandler.class).register(this);
 		}
 
 		@Override
