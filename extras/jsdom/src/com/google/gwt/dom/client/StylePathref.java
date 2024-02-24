@@ -1,5 +1,6 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.dom.client.Style.BorderStyle;
@@ -24,8 +25,15 @@ import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 
+/*
+ * TODO - romcom - style setters should really be batched, collated and flushed
+ * as a multi-invoke
+ */
 public class StylePathref implements ClientDomStyle {
-	private StylePathref() {
+	ElementPathref element;
+
+	StylePathref(ElementPathref element) {
+		this.element = element;
 	}
 
 	@Override
@@ -610,7 +618,8 @@ public class StylePathref implements ClientDomStyle {
 
 	@Override
 	public void setLeft(double value, Unit unit) {
-		throw new UnsupportedOperationException();
+		element.invokeStyle("setLeft", List.of(double.class, Unit.class),
+				List.of(value, unit));
 	}
 
 	@Override
@@ -715,12 +724,15 @@ public class StylePathref implements ClientDomStyle {
 
 	@Override
 	public void setProperty(String name, double value, Unit unit) {
-		throw new UnsupportedOperationException();
+		element.invokeStyle("setProperty",
+				List.of(String.class, double.class, Unit.class),
+				List.of(name, value, unit));
 	}
 
 	@Override
 	public void setProperty(String name, String value) {
-		throw new UnsupportedOperationException();
+		element.invokeStyle("setProperty", List.of(String.class, double.class),
+				List.of(name, value));
 	}
 
 	@Override
@@ -775,7 +787,8 @@ public class StylePathref implements ClientDomStyle {
 
 	@Override
 	public void setTop(double value, Unit unit) {
-		throw new UnsupportedOperationException();
+		element.invokeStyle("setTop", List.of(double.class, Unit.class),
+				List.of(value, unit));
 	}
 
 	@Override

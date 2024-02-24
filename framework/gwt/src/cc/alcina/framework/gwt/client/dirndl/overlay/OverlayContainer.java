@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.overlay;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.user.client.Window;
@@ -66,12 +65,7 @@ public class OverlayContainer extends Model implements HasTag {
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
-			// FIXME - romcom
-			if (GWT.isClient()) {
-				Scheduler.get().scheduleFinally(this::position);
-			} else {
-				setVisible(true);
-			}
+			Scheduler.get().scheduleFinally(this::position);
 		}
 	}
 

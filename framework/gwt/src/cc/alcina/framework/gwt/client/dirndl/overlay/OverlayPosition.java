@@ -102,9 +102,9 @@ public class OverlayPosition {
 		private DoublePair line(DomRect rect) {
 			switch (direction) {
 			case X_AXIS:
-				return new DoublePair(rect.getLeft(), rect.getRight());
+				return new DoublePair(rect.left, rect.right);
 			case Y_AXIS:
-				return new DoublePair(rect.getTop(), rect.getBottom());
+				return new DoublePair(rect.top, rect.bottom);
 			default:
 				throw new UnsupportedOperationException();
 			}

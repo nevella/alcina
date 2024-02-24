@@ -51,6 +51,7 @@ public class TimerJvm implements Timer {
 			public void run() {
 				try {
 					runnable.run();
+					maybeFinish();
 				} catch (Throwable e) {
 					e.printStackTrace();
 					topicWrapperException.publish(e);
@@ -59,14 +60,23 @@ public class TimerJvm implements Timer {
 		};
 	}
 
+	private void maybeFinish() {
+		if (periodMillis == 0) {
+			timer.cancel();
+		}
+	}
+
 	@Override
 	public void cancel() {
 		task.cancel();
 		timer.cancel();
 	}
 
+	long periodMillis;
+
 	@Override
 	public void scheduleRepeating(long periodMillis) {
+		this.periodMillis = periodMillis;
 		timer.scheduleAtFixedRate(task, periodMillis, periodMillis);
 	}
 

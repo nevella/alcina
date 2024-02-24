@@ -22,7 +22,6 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
 /*
@@ -50,12 +49,15 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			Element elem = path == null ? null : (Element) path.node();
 			Message.InvokeResponse responseMessage = new Message.InvokeResponse();
 			responseMessage.id = message.id;
+			// if the server requested sync, return that in the response (since
+			// the protocol is stateless)
+			responseMessage.sync = message.sync;
 			Object result = null;
 			try {
 				if (message.methodName != null) {
 					result = Reflections.at(elem).invoke(elem,
 							message.methodName, message.argumentTypes,
-							message.arguments);
+							message.arguments, message.flags);
 				} else {
 					Result scriptResult = new Result();
 					String script = message.javascript;
@@ -105,6 +107,49 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			}-*/;
 	}
 
+	static void dispatchEventMessage(Event event, Element listenerElement,
+			boolean preview) {
+		// just send the lowest event receiver - things will bubble from
+		// here
+		DomEventMessage message = new Message.DomEventMessage();
+		message.data = new DomEventData();
+		message.data.event = event.serializableForm();
+		message.data.preview = preview;
+		message.data.firstReceiver = listenerElement == null ? null
+				: Pathref.forNode(listenerElement);
+		if (!preview) {
+			event.stopPropagation();
+		}
+		if (Element.is(event.getEventTarget())) {
+			Element elem = Element.as(event.getEventTarget());
+			String eventType = event.getType();
+			/*
+			 * Cancel a few events if they're in a form (assume form auto-submit
+			 * just not wanted)
+			 */
+			if (elem.asDomNode().ancestors().has("form")) {
+				if (eventType.equals("keydown") && event.getKeyCode() == 13) {
+					event.preventDefault();
+				}
+				if (eventType.equals("click")) {
+					if (!(elem.hasAttribute("href") && elem.hasTagName("a"))) {
+						event.preventDefault();
+					}
+				}
+			}
+			/*
+			 * Propagate value + inputValue property changes
+			 */
+			if (Objects.equals(eventType, "change")) {
+				message.data.value = elem.getPropertyString("value");
+			}
+			if (Objects.equals(eventType, "input")) {
+				message.data.inputValue = elem.getPropertyString("value");
+			}
+		}
+		ClientRpc.send(message, true);
+	}
+
 	public static class MutationsHandler
 			extends ProtocolMessageHandlerClient<Message.Mutations> {
 		@Override
@@ -135,41 +180,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 
 			@Override
 			public void onBrowserEvent(Event event) {
-				// just send the lowest event receiver - things will bubble from
-				// here
-				DomEventMessage message = new Message.DomEventMessage();
-				Ax.err(event.getType());
-				message.data = new DomEventData();
-				message.data.event = event.serializableForm();
-				message.data.firstReceiver = Pathref.forNode(elem);
-				event.stopPropagation();
-				if (Element.is(event.getEventTarget())) {
-					Element elem = Element.as(event.getEventTarget());
-					String eventType = event.getType();
-					/*
-					 * Cancel a few events if they're in a form (assume form
-					 * auto-submit just not wanted)
-					 */
-					if (elem.asDomNode().ancestors().has("form")) {
-						if (eventType.equals("keydown")
-								&& event.getKeyCode() == 13) {
-							event.preventDefault();
-						}
-						if (eventType.equals("click")) {
-							if (!(elem.hasAttribute("href")
-									&& elem.hasTagName("a"))) {
-								event.preventDefault();
-							}
-						}
-					}
-					/*
-					 * Propagate value property changes
-					 */
-					if (Objects.equals(eventType, "change")) {
-						message.data.value = elem.getPropertyString("value");
-					}
-				}
-				ClientRpc.send(message, true);
+				dispatchEventMessage(event, elem, false);
 			}
 		}
 	}

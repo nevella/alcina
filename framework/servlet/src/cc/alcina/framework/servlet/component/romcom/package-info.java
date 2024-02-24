@@ -14,7 +14,7 @@
  *
  * <p>
  * Server sends mutation or invoke events to client [dom-mutation,
- * listener-mutation, urlhash-mutation, jsinvoke??(last not implemented yet)]
+ * listener-mutation, urlhash-mutation, jsinvoke
  *
  * <p>
  * Client sends event-listener invokes to the server (receiver + event), as well
@@ -38,6 +38,10 @@
  * <li>history mutation works (both sides)
  * <li>event emission works (client)
  * <li>event handling/dom mutation works (server)
+ * </ul>
+ * <h4>The event loop + synchronisation</h4>
+ * <ul>
+ * <li>Client sends a POST containing a json-serialized RemoteComponentRequest
  * </ul>
  */
 package cc.alcina.framework.servlet.component.romcom;

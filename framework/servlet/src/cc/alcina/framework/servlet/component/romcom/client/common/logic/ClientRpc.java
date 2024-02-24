@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 import com.google.gwt.core.client.GWT;
@@ -17,6 +19,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -26,6 +30,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
 
 /*
  * Nice thing about statics is they *ensure* statelessness
+ * 
+ * TODO - romcom - handle network issue retry (client and server)
  */
 public class ClientRpc {
 	static RemoteComponentProtocol.Session session;
@@ -81,21 +87,59 @@ public class ClientRpc {
 	 *            probably not
 	 */
 	static void send(Message message, boolean block) {
-		RemoteComponentRequest request = createRequest();
-		request.protocolMessage = message;
-		submitRequest(request);
+		BrowserDispatchQueue queue = message instanceof AwaitRemote
+				? acceptorQueue
+				: submitQueue;
+		queue.submit(message);
 	}
+
+	static class BrowserDispatchQueue implements TopicListener<Void> {
+		List<RemoteComponentRequest> requestQueue = new ArrayList<>();
+
+		public void submit(Message message) {
+			RemoteComponentRequest request = createRequest();
+			request.protocolMessage = message;
+			if (message.sync) {
+				submitRequest(request, null, null);
+			} else {
+				requestQueue.add(request);
+				maybeDispatch();
+			}
+		}
+
+		RemoteComponentRequest inFlight = null;
+
+		void maybeDispatch() {
+			if (inFlight != null) {
+				return;
+			}
+			if (requestQueue.isEmpty()) {
+				return;
+			}
+			inFlight = requestQueue.remove(0);
+			Topic<Void> calledSignal = Topic.create();
+			calledSignal.add(this);
+			submitRequest(inFlight, null, calledSignal);
+		}
+
+		@Override
+		public void topicPublished(Void message) {
+			inFlight = null;
+			maybeDispatch();
+		}
+	}
+
+	static BrowserDispatchQueue submitQueue = new BrowserDispatchQueue();
+
+	static BrowserDispatchQueue acceptorQueue = new BrowserDispatchQueue();
 
 	static void sendAwaitRemoteMessage() {
 		send(new Message.AwaitRemote());
 	}
 
-	public static void submitRequest(RemoteComponentRequest request) {
-		submitRequest(request, null);
-	}
-
 	static void submitRequest(RemoteComponentRequest request,
-			BiConsumer<RemoteComponentRequest, Throwable> errorHandler) {
+			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
+			Topic<Void> calledSignal) {
 		String payload = ReflectiveSerializer.serialize(request);
 		String path = Window.Location.getPath();
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
@@ -103,6 +147,13 @@ public class ClientRpc {
 			@Override
 			public void onError(Request httpRequest, Throwable exception) {
 				new ExceptionHandler().accept(request, exception);
+				signalCalled();
+			}
+
+			void signalCalled() {
+				if (calledSignal != null) {
+					calledSignal.signal();
+				}
 			}
 
 			@Override
@@ -111,6 +162,7 @@ public class ClientRpc {
 				if (httpResponse.getStatusCode() == 0
 						|| httpResponse.getStatusCode() >= 400) {
 					onError(httpRequest, new StatusCodeException(httpResponse));
+					signalCalled();
 					return;
 				}
 				String text = httpResponse.getText();
@@ -138,6 +190,7 @@ public class ClientRpc {
 						// continue 'receive loop' with component server
 						sendAwaitRemoteMessage();
 					}
+					signalCalled();
 				}
 			}
 		};

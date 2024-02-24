@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -23,6 +22,7 @@ import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -193,38 +193,48 @@ public class ClassReflector<T> implements HasAnnotations {
 	}
 
 	public Object invoke(Object bean, String methodName,
-			List<Class> argumentTypes, List<?> arguments) {
-		String beanRegex = "(get|set|is)(.)(.+)";
-		RegExp regExp = RegExp.compile(beanRegex);
-		MatchResult matchResult = regExp.exec(methodName);
-		if (matchResult == null) {
-			Optional<TypeInvoker> invoker = Registry.optional(TypeInvoker.class,
-					bean.getClass());
-			if (invoker.isPresent()) {
-				return invoker.get().invoke(bean, methodName, argumentTypes,
-						arguments);
-			} else {
-				throw new IllegalArgumentException(
-						Ax.format("Not bean method format: %s", methodName));
-			}
-		} else {
-			boolean get = !matchResult.getGroup(1).equals("set");
-			String propertyName = Ax.format("%s%s",
-					matchResult.getGroup(2).toLowerCase(),
-					matchResult.getGroup(3));
-			Property property = property(propertyName);
-			if (get) {
-				return property.get(bean);
-			} else {
-				property.set(bean, arguments.get(0));
-				return null;
-			}
-		}
+			List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+		TypeInvoker invoker = Registry.impl(TypeInvoker.class, bean.getClass());
+		return invoker.invoke(bean, methodName, argumentTypes, arguments,
+				flags);
 	}
 
-	public interface TypeInvoker<T> {
-		Object invoke(T bean, String methodName, List<Class> argumentTypes,
-				List<?> arguments);
+	@Registration(TypeInvoker.class)
+	public static class TypeInvoker<T> {
+		public Object invoke(T bean, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+			return invokeReflective(bean, methodName, argumentTypes, arguments,
+					flags);
+		}
+
+		protected Object invokeReflective(Object bean, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+			String beanRegex = "(get|set|is)(.)(.+)";
+			RegExp regExp = RegExp.compile(beanRegex);
+			MatchResult matchResult = regExp.exec(methodName);
+			boolean reflective = matchResult != null;
+			if (!reflective) {
+				boolean get = !matchResult.getGroup(1).equals("set");
+				reflective &= get && argumentTypes.size() == 0;
+				reflective &= !get && argumentTypes.size() == 1;
+			}
+			if (!reflective) {
+				throw new IllegalArgumentException(
+						Ax.format("Not bean method format: %s", methodName));
+			} else {
+				boolean get = !matchResult.getGroup(1).equals("set");
+				String propertyName = Ax.format("%s%s",
+						matchResult.getGroup(2).toLowerCase(),
+						matchResult.getGroup(3));
+				Property property = Reflections.at(bean).property(propertyName);
+				if (get) {
+					return property.get(bean);
+				} else {
+					property.set(bean, arguments.get(0));
+					return null;
+				}
+			}
+		}
 	}
 
 	public boolean isAbstract() {

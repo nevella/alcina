@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.romcom.server;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -10,6 +11,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -34,6 +37,28 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
 public class RemoteComponentProtocolServer {
 	public static final transient String ROMCOM_SERIALIZED_SESSION_KEY = "__alc_romcom_session";
 
+	static Logger logger = LoggerFactory
+			.getLogger(RemoteComponentProtocolServer.class);
+
+	public static class MessageHandlingToken {
+		public final RemoteComponentRequest request;
+
+		public final RemoteComponentResponse response;
+
+		public final MessageHandlerServer messageHandler;
+
+		public final CountDownLatch latch;
+
+		public MessageHandlingToken(RemoteComponentRequest request,
+				RemoteComponentResponse response,
+				MessageHandlerServer messageHandler) {
+			this.request = request;
+			this.response = response;
+			this.messageHandler = messageHandler;
+			this.latch = new CountDownLatch(1);
+		}
+	}
+
 	@Registration.NonGenericSubtypes(MessageHandlerServer.class)
 	public static abstract class MessageHandlerServer<PM extends Message> {
 		public abstract void handle(RemoteComponentRequest request,
@@ -43,12 +68,10 @@ public class RemoteComponentProtocolServer {
 			return true;
 		}
 
-		/*
-		 * Most handlers block on the environment - AwaitRemoteHandler is one
-		 * that has more complex sync logic
-		 */
-		Object provideMonitor(Environment env) {
-			return env;
+		public void onAfterMessageHandled(PM message) {
+		}
+
+		public void onBeforeMessageHandled(PM message) {
 		}
 	}
 
@@ -190,6 +213,8 @@ public class RemoteComponentProtocolServer {
 					RemoteComponentResponse response = new RemoteComponentResponse();
 					response.requestId = request.requestId;
 					response.session = request.session;
+					logger.debug("received request #{} - {}", request.requestId,
+							NestedName.get(request.protocolMessage));
 					try {
 						Environment env = PathrefDom.get()
 								.getEnvironment(request.session);
@@ -197,13 +222,16 @@ public class RemoteComponentProtocolServer {
 							throw buildInvalidClientException(
 									request.session.componentClassName);
 						}
-						env.validateSession(request.session,
-								messageHandler.isValidateClientInstanceUid());
-						// FIXME - romcom - handle missed, out-of-order messages
-						synchronized (messageHandler.provideMonitor(env)) {
-							messageHandler.handle(request, response, env,
-									request.protocolMessage);
-						}
+						MessageHandlingToken token = new MessageHandlingToken(
+								request, response, messageHandler);
+						// http thread
+						messageHandler.onBeforeMessageHandled(
+								request.protocolMessage);
+						// unless sync, on the env thread
+						env.handleFromClientMessage(token);
+						// http thread
+						messageHandler
+								.onAfterMessageHandled(request.protocolMessage);
 					} catch (Exception e) {
 						if (e instanceof ProtocolException) {
 							boolean handled = false;
@@ -231,6 +259,9 @@ public class RemoteComponentProtocolServer {
 						}
 						response.protocolMessage = processingException;
 					}
+					logger.debug("dispatched response #{} - {}",
+							response.requestId,
+							NestedName.get(response.protocolMessage));
 					servletResponse.getWriter()
 							.write(ReflectiveSerializer.serialize(response));
 				}

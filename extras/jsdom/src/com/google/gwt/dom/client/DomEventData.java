@@ -13,4 +13,21 @@ public class DomEventData {
 
 	// But wait - is this serializable? Yes, it is!
 	public Event event;
+
+	public String inputValue;
+
+	public boolean preview;
+
+	/*
+	 * Used to avoid value/inputValue roundtrips
+	 */
+	public String eventValue() {
+		if (value != null) {
+			return value;
+		}
+		if (inputValue != null) {
+			return inputValue;
+		}
+		return null;
+	}
 }

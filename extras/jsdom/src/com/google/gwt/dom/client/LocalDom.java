@@ -1314,17 +1314,21 @@ public class LocalDom implements ContextFrame {
 	 */
 	public class PathRefRepresentations {
 		public void applyEvent(DomEventData eventData) {
-			Element elem = (Element) eventData.firstReceiver.node();
-			if (eventData.value != null) {
-				elem.implAccess().pathrefRemote().setPropertyString("value",
-						eventData.value);
+			if (eventData.preview) {
+				DOM.previewEvent(eventData.event);
+			} else {
+				Element elem = (Element) eventData.firstReceiver.node();
+				if (eventData.eventValue() != null) {
+					elem.implAccess().pathrefRemote().value = eventData
+							.eventValue();
+				}
+				// FIXME - romcom - attach probably not being called
+				if (elem.eventListener == null) {
+					elem.eventListener = elem;
+				}
+				// um, is it that easy?
+				DOM.dispatchEvent(eventData.event, elem, elem.eventListener);
 			}
-			// FIXME - romcom - attach probably not being called
-			if (elem.eventListener == null) {
-				elem.eventListener = elem;
-			}
-			// um, is it that easy?
-			DOM.dispatchEvent(eventData.event, elem, elem.eventListener);
 		}
 
 		public void applyMutations(List<MutationRecord> mutations,

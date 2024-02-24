@@ -17,10 +17,14 @@ package com.google.gwt.dom.client;
 
 import static com.google.gwt.dom.client.DomStyleConstants.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 
 /**
  * Provides programmatic access to properties of the style object.
@@ -620,7 +624,7 @@ public class Style implements ClientDomStyle {
 	protected ClientDomStyle remote() {
 		element.ensureRemoteCheck();
 		if (!linkedToRemote() && element.linkedToRemote()) {
-			remote = element.jsoRemote().getStyleRemote();
+			remote = element.ensureRemote().getStyleRemote();
 		}
 		return remote;
 	}
@@ -1992,5 +1996,39 @@ public class Style implements ClientDomStyle {
 
 		@Override
 		public abstract String getCssName();
+	}
+
+	@Registration({ TypeInvoker.class, Style.class })
+	public static class TypeInvokerImpl extends TypeInvoker<Style> {
+		@Override
+		public Object invoke(Style style, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+			switch (methodName) {
+			case "setLeft":
+				if (argumentTypes.size() == 2) {
+					style.setLeft((double) arguments.get(0),
+							(Unit) arguments.get(1));
+					return null;
+				}
+			case "setTop":
+				if (argumentTypes.size() == 2) {
+					style.setTop((double) arguments.get(0),
+							(Unit) arguments.get(1));
+					return null;
+				}
+			case "setProperty":
+				if (argumentTypes.size() == 2) {
+					style.setProperty((String) arguments.get(0),
+							(String) arguments.get(1));
+					return null;
+				} else if (argumentTypes.size() == 3) {
+					style.setProperty((String) arguments.get(0),
+							(double) arguments.get(1), (Unit) arguments.get(2));
+					return null;
+				}
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 }

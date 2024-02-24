@@ -3,17 +3,50 @@
 @use '../../dirndl/cmp/context-menu'
 
 $box-shadow-bottom: theme.$app-suggestor-box-shadow-bottom
+$suggestor-width: theme.$app-suggestor-width
+$first-weight: theme.$app-suggestor-first-weight
+
+@mixin results
+  display: block
+  > choice
+    @include context-menu.dropdown-list-item
+    display: block
+
+    > suggestion > app-suggestion
+      text-align: left  
+      display: grid  
+      grid-template-columns: 1fr 10px  
+      gap: 1em
+      width: 100%  
+      color: #555
+      line-height: 1.5em
+      padding: 0.2em 0
+      
+      > contents
+        > first,
+        > second   
+          display: inline-block
+        
+        > first
+          font-weight: $first-weight
+
+        > second   
+          color: #777 
+          padding-left: 1em
+
+        > options
+          display: block
 
 @mixin contents
-   app-suggestor   
+  app-suggestor   
     display: block  
     color: theme.$dark-color  
     position: relative  
     overflow-x: visible  
-    top: 1em
+    top: theme.$app-suggestor-top
     border: solid 1px theme.$app-suggestor-unfocussed-border-color
     border-radius: 4px
-    width: 38em 
+    width: $suggestor-width 
     font-family: theme.$app-suggestor-font-family
     background-color: color.$white
 
@@ -35,33 +68,11 @@ $box-shadow-bottom: theme.$app-suggestor-box-shadow-bottom
         opacity: 0.6
         
     > results
-      display: block
+      @include results
 
-      > choice
-        @include context-menu.dropdown-list-item
-        display: block
-
-        > suggestion > app-suggestion
-          text-align: left  
-          display: grid  
-          grid-template-columns: 1fr 10px  
-          gap: 1em
-          width: 100%  
-          color: #555
-          line-height: 1.5em
-          padding: 0.2em 0
-          
-          > contents
-            > first,
-            > second   
-              display: inline-block
-            
-            > first
-              font-weight: bold
-
-            > second   
-              color: #777 
-              padding-left: 1em
-
-            > options
-              display: block
+  overlay.app-suggestor > results 
+    @include results
+    width: $suggestor-width
+    border: solid 1px theme.$app-suggestor-unfocussed-border-color
+    background: white
+      

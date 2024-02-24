@@ -4,9 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.Consumer;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +15,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
+import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodePathref;
@@ -28,7 +27,6 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Ref;
@@ -41,7 +39,9 @@ import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
 import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
 
 /*
@@ -51,6 +51,9 @@ import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
  *
  * An exception is the eventCollator action - it occurs on a timer thread so is
  * responsible for its own sync
+ * 
+ * Environment affecting code is not run on a single thread but it is (where
+ * needed) synchronized
  */
 public class Environment {
 	public static class TimerProvider implements Timer.Provider {
@@ -69,67 +72,53 @@ public class Environment {
 		}
 	}
 
-	class ClientProtocolMessageQueue implements Runnable {
-		BlockingQueue<Message> queue = new LinkedBlockingQueue<>();
-
-		boolean finished = false;
-
-		Consumer<Message> consumer = null;
-
-		public void registerConsumer(Consumer<Message> consumer) {
-			this.consumer = consumer;
-			if (consumer != null) {
-				synchronized (this) {
-					notify();
-				}
-			}
-		}
-
-		@Override
-		public void run() {
-			while (!finished) {
-				while (consumer == null) {
-					synchronized (this) {
-						try {
-							wait();
-						} catch (InterruptedException e) {
-							Ax.simpleExceptionOut(e);
-						}
-					}
-				}
-				try {
-					Message message = queue.take();
-					consumer.accept(message);
-				} catch (Throwable e) {
-					logger.warn("Queue handler issue");
-					throw WrappedRuntimeException.wrap(e);
-				}
-			}
-		}
-
-		/*
-		 * Does not await receipt
-		 */
-		public void send(Message message) {
-			queue.add(message);
-		}
-
-		public <R extends Message> R sendAndReceive(Message message) {
-			throw new UnsupportedOperationException();
-		}
-	}
-
 	class InvokeProxyImpl implements DocumentPathref.InvokeProxy {
 		int invokeCounter = 0;
 
-		Map<Integer, AsyncCallback> callbacks = new LinkedHashMap<>();
+		class ResponseHandler {
+			InvokeResponse response;
+
+			AsyncCallback callback;
+
+			CountDownLatch latch;
+
+			ResponseHandler(AsyncCallback<?> callback) {
+				this.callback = callback;
+				if (callback == null) {
+					latch = new CountDownLatch(1);
+				}
+			}
+
+			public void handle(InvokeResponse response) {
+				this.response = response;
+				if (callback != null) {
+					if (response.exception == null) {
+						callback.onSuccess(response.response);
+					} else {
+						callback.onSuccess(response.exception);
+					}
+				} else {
+					latch.countDown();
+				}
+			}
+		}
+
+		Map<Integer, ResponseHandler> responseHandlers = new LinkedHashMap<>();
 
 		@Override
 		public void invoke(NodePathref node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
+				List<InvokeProxy.Flag> flags, AsyncCallback<?> callback) {
+			invoke0(node, methodName, argumentTypes, arguments, flags,
+					callback);
+		}
+
+		ResponseHandler invoke0(NodePathref node, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 				AsyncCallback<?> callback) {
 			// always emit mutations before proxy invoke
 			emitMutations();
+			ResponseHandler handler = new ResponseHandler(callback);
 			runInClientFrame(() -> {
 				Message.Invoke invoke = new Message.Invoke();
 				invoke.path = node == null ? null
@@ -139,18 +128,53 @@ public class Environment {
 				invoke.argumentTypes = argumentTypes == null ? List.of()
 						: argumentTypes;
 				invoke.arguments = arguments == null ? List.of() : arguments;
-				callbacks.put(invoke.id, callback);
+				invoke.flags = flags == null ? List.of() : flags;
+				invoke.sync = callback == null;
+				responseHandlers.put(invoke.id, handler);
 				queue.send(invoke);
 			});
+			return handler;
 		}
 
 		public void onInvokeResponse(InvokeResponse response) {
-			AsyncCallback callback = callbacks.remove(response.id);
-			if (response.exception == null) {
-				callback.onSuccess(response.response);
-			} else {
-				callback.onSuccess(response.exception);
+			ResponseHandler handler = responseHandlers.remove(response.id);
+			handler.handle(response);
+		}
+
+		/*
+		 * Unsurprisingly similar to the GWT devmode message send/await
+		 */
+		@Override
+		public <T> T invokeSync(NodePathref node, String methodName,
+				List<Class> argumentTypes, List<?> arguments,
+				List<InvokeProxy.Flag> flags) {
+			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
+					arguments, flags, null);
+			if (!clientStarted) {
+				return null;
 			}
+			/*
+			 * Special sauce - the queue will return the client's http call with
+			 * an 'invoke' message, and await the invokeResponse. Synchronous!
+			 * 2006 is back!
+			 */
+			queue.onInvokedSync();
+			try {
+				handler.latch.await();
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
+			if (handler.response.exception == null) {
+				return (T) handler.response.response;
+			} else {
+				throw new InvokeException(handler.response.exception);
+			}
+		}
+	}
+
+	static class InvokeException extends RuntimeException {
+		InvokeException(ExceptionTransport exception) {
+			super(exception.toExceptionString());
 		}
 	}
 
@@ -188,11 +212,23 @@ public class Environment {
 		}
 	}
 
+	class Noop implements Runnable {
+		@Override
+		public void run() {
+			// used to trigger a timed schedule event within the main event pump
+			// loop
+		}
+	}
+
 	private static final transient String CONTEXT_ENVIRONMENT = Environment.class
 			.getName() + ".CONTEXT_ENVIRONMENT";
 
 	public static Environment get() {
 		return LooseContext.get(CONTEXT_ENVIRONMENT);
+	}
+
+	static boolean has() {
+		return LooseContext.has(CONTEXT_ENVIRONMENT);
 	}
 
 	/*
@@ -204,7 +240,7 @@ public class Environment {
 
 	public final RemoteUi ui;
 
-	ClientProtocolMessageQueue queue;
+	ClientExecutionQueue queue;
 
 	/*
 	 * The uid of the most recent client to send a startup packet. All others
@@ -237,11 +273,18 @@ public class Environment {
 
 	SchedulerFrame scheduler;
 
+	boolean clientStarted;
+
+	public void clientStarted() {
+		clientStarted = true;
+	}
+
 	Environment(RemoteUi ui, Credentials credentials) {
 		this.ui = ui;
 		this.credentials = credentials;
 		this.uid = SEUtilities.generatePrettyUuid();
 		this.eventCollator = new EventCollator<Object>(5, this::emitMutations);
+		startQueue();
 	}
 
 	public void applyEvent(DomEventData eventData) {
@@ -284,9 +327,6 @@ public class Environment {
 	}
 
 	public void initialiseClient(RemoteComponentProtocol.Session session) {
-		if (queue == null) {
-			startQueue();
-		}
 		try {
 			LooseContext.push();
 			LooseContext.set(CONTEXT_ENVIRONMENT, this);
@@ -311,34 +351,6 @@ public class Environment {
 		}
 	}
 
-	/*
-	 * Corresponds to com.google.gwt.core.client.impl.Impl.entry0(Object
-	 * jsFunction, Object thisObj, Object args)
-	 */
-	void enter(Runnable runnable) {
-		try {
-			try {
-				scheduler.pump(true);
-				runnable.run();
-			} finally {
-				scheduler.pump(false);
-				scheduler.scheduleNextEntry(() -> runInClientFrame(new Noop()));
-			}
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-			// TODO - allow exception catch (uncaught exception handler) here
-			throw e;
-		}
-	}
-
-	class Noop implements Runnable {
-		@Override
-		public void run() {
-			// used to trigger a timed schedule event within the main event pump
-			// loop
-		}
-	}
-
 	public boolean isInitialised() {
 		return client != null;
 	}
@@ -357,12 +369,13 @@ public class Environment {
 	}
 
 	public void onInvokeResponse(InvokeResponse response) {
-		runInClientFrame(() -> invokeProxy.onInvokeResponse(response));
-	}
-
-	public synchronized void
-			registerRemoteMessageConsumer(Consumer<Message> consumer) {
-		queue.registerConsumer(consumer);
+		Runnable runnable = () -> invokeProxy.onInvokeResponse(response);
+		if (response.sync) {
+			// effectively reentering locked section on another thread
+			runnable.run();
+		} else {
+			runInClientFrame(runnable);
+		}
 	}
 
 	public void renderInitialUi() {
@@ -399,6 +412,26 @@ public class Environment {
 		}
 	}
 
+	/*
+	 * Corresponds to com.google.gwt.core.client.impl.Impl.entry0(Object
+	 * jsFunction, Object thisObj, Object args)
+	 */
+	void enter(Runnable runnable) {
+		try {
+			try {
+				scheduler.pump(true);
+				runnable.run();
+			} finally {
+				scheduler.pump(false);
+				scheduler.scheduleNextEntry(() -> runInClientFrame(new Noop()));
+			}
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			// TODO - allow exception catch (uncaught exception handler) here
+			throw e;
+		}
+	}
+
 	// see class doc re sync
 	synchronized void emitMutations() {
 		if (mutations != null) {
@@ -413,10 +446,6 @@ public class Environment {
 	void onHistoryChange(ValueChangeEvent<String> event) {
 		mutationProxy.onLocationMutation(
 				Message.Mutations.ofLocation().locationMutation);
-	}
-
-	static boolean has() {
-		return LooseContext.has(CONTEXT_ENVIRONMENT);
 	}
 
 	synchronized void runInClientFrame(Runnable runnable) {
@@ -445,10 +474,14 @@ public class Environment {
 	}
 
 	private void startQueue() {
-		queue = new ClientProtocolMessageQueue();
-		String threadName = Ax.format("remcom-env-%s", credentials.id);
-		Thread thread = new Thread(queue, threadName);
-		thread.setDaemon(true);
-		thread.start();
+		queue = new ClientExecutionQueue(this);
+		queue.start();
+	}
+
+	public void handleFromClientMessage(MessageHandlingToken token)
+			throws Exception {
+		validateSession(token.request.session,
+				token.messageHandler.isValidateClientInstanceUid());
+		queue.handleFromClientMessage(token);
 	}
 }

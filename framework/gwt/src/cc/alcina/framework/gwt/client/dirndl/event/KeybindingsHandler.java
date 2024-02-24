@@ -11,7 +11,6 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestorEvent;
@@ -40,7 +39,6 @@ public class KeybindingsHandler implements GlobalKeyboardShortcuts.Handler {
 			AppSuggestorCommand command = Reflections.at(clazz)
 					.annotation(AppSuggestorCommand.class);
 			if (command != null) {
-				Ax.out(clazz.getName());
 				Set<Class<? extends CommandContext>> commandContexts = Set
 						.of(AppSuggestorCommand.Support.contexts(command));
 				boolean excludedContext = CommonUtils

@@ -143,8 +143,8 @@ public class PropertyReflection extends ReflectionElement
 
 	private void updatePropertyType(JType type) {
 		JType erased = ClassReflection.erase(type);
-		if (this.propertyType != null
-				&& this.propertyType instanceof JClassType) {
+		if (this.propertyType != null && this.propertyType instanceof JClassType
+				&& erased instanceof JClassType) {
 			JClassType existingClassType = (JClassType) this.propertyType;
 			JClassType candidateClassType = (JClassType) erased;
 			if (candidateClassType.isAssignableFrom(existingClassType)) {

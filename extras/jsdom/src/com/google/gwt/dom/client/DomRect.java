@@ -1,40 +1,35 @@
 package com.google.gwt.dom.client;
 
-import com.google.gwt.core.client.JavaScriptObject;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 
-public class DomRect extends JavaScriptObject {
-	protected DomRect() {
+public class DomRect extends Bindable.Fields {
+	public double bottom;
+
+	public double height;
+
+	public double left;
+
+	public double right;
+
+	public double top;
+
+	public double width;
+
+	public double x;
+
+	public double y;
+
+	public DomRect() {
 	}
 
-	public final native double getBottom() /*-{
-    return this.bottom;
-	}-*/;
-
-	public final native double getHeight() /*-{
-    return this.height;
-	}-*/;
-
-	public final native double getLeft() /*-{
-    return this.left;
-	}-*/;
-
-	public final native double getRight() /*-{
-    return this.right;
-	}-*/;
-
-	public final native double getTop() /*-{
-    return this.top;
-	}-*/;
-
-	public final native double getWidth() /*-{
-    return this.width;
-	}-*/;
-
-	public final native double getX() /*-{
-    return this.x;
-	}-*/;
-
-	public final native double getY() /*-{
-    return this.y;
-	}-*/;
+	public DomRect(DomRectJso jso) {
+		bottom = jso.getBottom();
+		height = jso.getHeight();
+		left = jso.getLeft();
+		right = jso.getRight();
+		top = jso.getTop();
+		width = jso.getWidth();
+		x = jso.getX();
+		y = jso.getY();
+	}
 }

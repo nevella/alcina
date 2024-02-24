@@ -1,11 +1,10 @@
 package cc.alcina.framework.servlet.component.romcom.server;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
@@ -14,44 +13,45 @@ import cc.alcina.framework.servlet.dom.Environment;
 
 public class MessageHandlers {
 	public static class AwaitRemoteHandler extends
-			RemoteComponentProtocolServer.MessageHandlerServer<Message.AwaitRemote> {
-		private CountDownLatch latch;
+			RemoteComponentProtocolServer.MessageHandlerServer<Message.AwaitRemote>
+			implements FromClientMessageAcceptor {
+		CountDownLatch latch;
 
-		private Environment env;
+		RemoteComponentResponse response;
 
-		public Message message;
+		@Override
+		public void onBeforeMessageHandled(Message.AwaitRemote message) {
+			// required for reentrant handling of messages
+			message.sync = true;
+		}
 
 		@Override
 		public void handle(RemoteComponentRequest request,
 				RemoteComponentResponse response, Environment env,
 				AwaitRemote message) {
-			this.env = env;
-			this.latch = new CountDownLatch(1);
-			env.registerRemoteMessageConsumer(new MessageConsumer());
+			latch = new CountDownLatch(1);
+			this.response = response;
+			// NOOP (will be called-back once there's a message)
+		}
+
+		@Override
+		public void onAfterMessageHandled(Message.AwaitRemote message) {
 			try {
 				latch.await();
-				response.protocolMessage = this.message;
 			} catch (InterruptedException e) {
-				throw new WrappedRuntimeException(e);
+				Ax.simpleExceptionOut(e);// and exit, client will retry
 			}
 		}
 
 		@Override
-		Object provideMonitor(Environment env) {
-			return this;
+		public void accept(Message message) {
+			response.protocolMessage = message;
+			latch.countDown();
 		}
+	}
 
-		class MessageConsumer implements Consumer<Message> {
-			// will be called on a different thread to the parent instance
-			// handle
-			// method (the calling frame owns the env monitor)
-			@Override
-			public void accept(Message message) {
-				AwaitRemoteHandler.this.message = message;
-				env.registerRemoteMessageConsumer(null);
-				latch.countDown();
-			}
-		}
+	public interface FromClientMessageAcceptor {
+		void accept(Message message);
 	}
 
 	public static class DomEventMessageHandler extends
@@ -99,6 +99,7 @@ public class MessageHandlers {
 			 * will enqueue a mutations event in the to-client queue
 			 */
 			env.renderInitialUi();
+			env.clientStarted();
 			response.protocolMessage = new Message.BeginAwaitLoop();
 		}
 

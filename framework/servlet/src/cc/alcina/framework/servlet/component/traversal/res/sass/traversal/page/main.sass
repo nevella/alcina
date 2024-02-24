@@ -1,6 +1,7 @@
 @use '../../theme/theme'
 @use '../../dirndl/multi/base'
 @use '../../dirndl/multi/form'
+@use '../../dirndl/cmp/app-suggestor'
 @use '../cmp/layer-selections'
 @use '../cmp/properties'
 @use 'header'
@@ -61,7 +62,7 @@ body > page
     &.output
       grid-area: output
 
-
+@include app-suggestor.contents
 
 
 

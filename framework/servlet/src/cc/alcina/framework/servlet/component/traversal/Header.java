@@ -35,8 +35,6 @@ class Header extends Model.All
 	}
 
 	class Mid extends Model.All {
-		// FIXME - cmp - scheduler
-		// @StringInput.FocusOnBind
 		AppSuggestorTraversal suggestor;
 
 		Mid() {

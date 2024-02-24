@@ -41,7 +41,9 @@ public class AppSuggestorTraversal extends AppSuggestor {
 			// runningCallback);
 			AppSuggestionEntry suggestion = new AppSuggestionEntry();
 			suggestion.match = "Filter: " + invocation.ask.getValue();
-			processResults(invocation, List.of(suggestion));
+			AppSuggestionEntry suggestion2 = new AppSuggestionEntry();
+			suggestion2.match = "GFilter: " + invocation.ask.getValue();
+			processResults(invocation, List.of(suggestion, suggestion2));
 		}
 	}
 
@@ -49,7 +51,7 @@ public class AppSuggestorTraversal extends AppSuggestor {
 	protected Suggestor.Attributes createSuggestorAttributes() {
 		Suggestor.Attributes attributes = super.createSuggestorAttributes();
 		attributes.withInputPrompt("Filter selections");
-		attributes.withNonOverlaySuggestionResults(true);
+		attributes.withNonOverlaySuggestionResults(false);
 		// FIXME - romcom - back to true, but will require
 		attributes.withSelectAllOnFocus(false);
 		return attributes;

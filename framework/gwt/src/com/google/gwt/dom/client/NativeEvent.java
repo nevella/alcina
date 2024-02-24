@@ -80,7 +80,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return <code>true</code> if ALT was depressed when the event occurred
 	 */
 	public final boolean getAltKey() {
-		if (data.altKey == null) {
+		if (data.altKey == null && jso != null) {
 			data.altKey = DOMImpl.impl.eventGetAltKey(jso);
 		}
 		return data.altKey;
@@ -94,7 +94,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 *         {@link NativeEvent#BUTTON_RIGHT}
 	 */
 	public final int getButton() {
-		if (data.button == null) {
+		if (data.button == null && jso != null) {
 			data.button = DOMImpl.impl.eventGetButton(jso);
 		}
 		return data.button;
@@ -115,7 +115,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the Unicode codepoint.
 	 */
 	public final int getCharCode() {
-		if (data.charCode == null) {
+		if (data.charCode == null && jso != null) {
 			data.charCode = DOMImpl.impl.eventGetCharCode(jso);
 		}
 		return data.charCode;
@@ -127,7 +127,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the mouse x-position
 	 */
 	public final int getClientX() {
-		if (data.clientX == null) {
+		if (data.clientX == null && jso != null) {
 			data.clientX = DOMImpl.impl.eventGetClientX(jso);
 		}
 		return data.clientX;
@@ -139,7 +139,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the mouse y-position
 	 */
 	public final int getClientY() {
-		if (data.clientY == null) {
+		if (data.clientY == null && jso != null) {
 			data.clientY = DOMImpl.impl.eventGetClientY(jso);
 		}
 		return data.clientY;
@@ -151,7 +151,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return <code>true</code> if CTRL was depressed when the event occurred
 	 */
 	public final boolean getCtrlKey() {
-		if (data.ctrlKey == null) {
+		if (data.ctrlKey == null && jso != null) {
 			data.ctrlKey = DOMImpl.impl.eventGetCtrlKey(jso);
 		}
 		return data.ctrlKey;
@@ -164,7 +164,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the event's current target element
 	 */
 	public final EventTarget getCurrentEventTarget() {
-		if (data.currentEventTarget == null) {
+		if (data.currentEventTarget == null && jso != null) {
 			data.currentEventTarget = DOMImpl.impl.eventGetCurrentTarget(jso);
 		}
 		return data.currentEventTarget;
@@ -185,7 +185,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the target element
 	 */
 	public final EventTarget getEventTarget() {
-		if (data.eventTarget == null) {
+		if (data.eventTarget == null && jso != null) {
 			data.eventTarget = DOMImpl.impl.eventGetTarget(jso);
 		}
 		return data.eventTarget;
@@ -198,7 +198,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the key
 	 */
 	public final String getKey() {
-		if (data.key == null) {
+		if (data.key == null && jso != null) {
 			data.key = jso.getKey();
 		}
 		return data.key;
@@ -212,7 +212,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @see com.google.gwt.event.dom.client.KeyCodes
 	 */
 	public final int getKeyCode() {
-		if (data.keyCode == null) {
+		if (data.keyCode == null && jso != null) {
 			data.keyCode = DOMImpl.impl.eventGetKeyCode(jso);
 		}
 		return data.keyCode;
@@ -224,7 +224,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return <code>true</code> if META was depressed when the event occurred
 	 */
 	public final boolean getMetaKey() {
-		if (data.metaKey == null) {
+		if (data.metaKey == null && jso != null) {
 			data.metaKey = DOMImpl.impl.eventGetMetaKey(jso);
 		}
 		return data.metaKey;
@@ -266,7 +266,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return The velocity of the mouse wheel.
 	 */
 	public final int getMouseWheelVelocityY() {
-		if (data.mouseWheelVelocityY == null) {
+		if (data.mouseWheelVelocityY == null && jso != null) {
 			data.mouseWheelVelocityY = DOMImpl.impl
 					.eventGetMouseWheelVelocityY(jso);
 		}
@@ -283,7 +283,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the related target
 	 */
 	public final EventTarget getRelatedEventTarget() {
-		if (data.relatedEventTarget == null) {
+		if (data.relatedEventTarget == null && jso != null) {
 			data.relatedEventTarget = DOMImpl.impl.eventGetRelatedTarget(jso);
 		}
 		return data.relatedEventTarget;
@@ -296,7 +296,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the rotation in degrees since the gesture started
 	 */
 	public final double getRotation() {
-		if (data.rotation == null) {
+		if (data.rotation == null && jso != null) {
 			data.rotation = DOMImpl.impl.eventGetRotation(jso);
 		}
 		return data.rotation;
@@ -309,7 +309,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the amount scaled since the gesture started
 	 */
 	public final double getScale() {
-		if (data.scale == null) {
+		if (data.scale == null && jso != null) {
 			data.scale = DOMImpl.impl.eventGetScale(jso);
 		}
 		return data.scale;
@@ -321,7 +321,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the mouse x-position
 	 */
 	public final int getScreenX() {
-		if (data.screenX == null) {
+		if (data.screenX == null && jso != null) {
 			data.screenX = DOMImpl.impl.eventGetScreenX(jso);
 		}
 		return data.screenX;
@@ -333,7 +333,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the mouse y-position
 	 */
 	public final int getScreenY() {
-		if (data.screenY == null) {
+		if (data.screenY == null && jso != null) {
 			data.screenY = DOMImpl.impl.eventGetScreenY(jso);
 		}
 		return data.screenY;
@@ -345,7 +345,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return <code>true</code> if shift was depressed when the event occurred
 	 */
 	public final boolean getShiftKey() {
-		if (data.shiftKey == null) {
+		if (data.shiftKey == null && jso != null) {
 			data.shiftKey = DOMImpl.impl.eventGetShiftKey(jso);
 		}
 		return data.shiftKey;
@@ -360,7 +360,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the string representation of this event
 	 */
 	public final String getString() {
-		if (data.string == null) {
+		if (data.string == null && jso != null) {
 			data.string = DOMImpl.impl.eventToString(jso);
 		}
 		return data.string;
@@ -390,7 +390,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 	 * @return the event's enumerated type
 	 */
 	public final String getType() {
-		if (data.type == null) {
+		if (data.type == null && jso != null) {
 			data.type = DOMImpl.impl.eventGetType(jso);
 		}
 		return data.type;
@@ -418,6 +418,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		getClientY();
 		getCurrentEventTarget();
 		getEventTarget();
+		getKey();
 		getKeyCode();
 		getMetaKey();
 		getMouseWheelVelocityY();

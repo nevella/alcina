@@ -12,6 +12,8 @@ import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+
 public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	Document document;
 
@@ -746,9 +748,22 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	}
 
 	public interface InvokeProxy {
+		@Reflected
+		public enum Flag {
+			invoke_on_element_style
+		}
+
 		void invoke(NodePathref node, String methodName,
-				List<Class> argumentTypes, List<?> arguments,
+				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 				AsyncCallback<?> callback);
+
+		<T> T invokeSync(NodePathref node, String methodName,
+				List<Class> argumentTypes, List<?> arguments,
+				List<InvokeProxy.Flag> flags);
+
+		default <T> T invokeSync(NodePathref node, String methodName) {
+			return invokeSync(node, methodName, null, null, null);
+		}
 	}
 
 	public interface MutationProxy {

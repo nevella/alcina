@@ -9,17 +9,19 @@ import java.util.Objects;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
+import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
-public class ElementJso extends NodeJso implements ClientDomElement {
+public class ElementJso extends NodeJso implements ElementRemote {
 	/*
 	 * Non-private for access from bytecode generated (ElementJso$)
 	 */
@@ -327,7 +329,8 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 	}
 
 	public final native DomRect getBoundingClientRect()/*-{
-    return this.getBoundingClientRect();
+		var rect = this.getBoundingClientRect();
+		return @com.google.gwt.dom.client.DomRect::new(Lcom/google/gwt/dom/client/DomRectJso;)(rect);
 	}-*/;
 
 	/**
@@ -1275,5 +1278,11 @@ public class ElementJso extends NodeJso implements ClientDomElement {
 		boolean lastIsResult;
 
 		JavaScriptObject lastIs;
+	}
+
+	@Override
+	final public void setSelectionRange(int pos, int length) {
+		((TextBoxImpl) GWT.create(TextBoxImpl.class))
+				.setSelectionRange((Element) node(), pos, length);
 	}
 }

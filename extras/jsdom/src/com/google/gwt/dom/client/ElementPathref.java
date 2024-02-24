@@ -5,11 +5,11 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -19,9 +19,7 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  * That support could be generalised.
  */
-public class ElementPathref extends NodePathref implements ClientDomElement {
-	String valueProperty;
-
+public class ElementPathref extends NodePathref implements ElementRemote {
 	ElementPathref(Node node) {
 		super(node);
 	}
@@ -30,10 +28,6 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	public final boolean addClassName(String className) {
 		mirrorClassName();
 		return false;
-	}
-
-	Async async() {
-		return new Async();
 	}
 
 	@Override
@@ -73,7 +67,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public void focus() {
-		async().focus(cc.alcina.framework.gwt.client.util.Async.nullCallback());
+		invokeSync("focus");
 	}
 
 	@Override
@@ -244,12 +238,13 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	@Override
 	public String getPropertyString(String name) {
 		if (Objects.equals(name, "value")) {
-			if (valueProperty != null) {
-				return valueProperty;
-			} else {
-				// FIXME - romcom - probably won't work for <textarea>, etc
-				return ((ClientDomElement) node()).getAttribute("value");
+			// after the first get (if any), the property will be updated by
+			// events rather than server->client call
+			if (value == null) {
+				value = invokeSync("getPropertyString", List.of(String.class),
+						List.of(name));
 			}
+			return value;
 		} else {
 			return getAttribute(name);
 		}
@@ -440,10 +435,19 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 		throw new UnsupportedOperationException();
 	}
 
+	String value;
+
 	@Override
 	public void setPropertyString(String name, String value) {
-		if (Objects.equals(name, "value")) {
-			this.valueProperty = value;
+		if (Objects.equals(name, "value")
+				|| Objects.equals(name, "inputValue")) {
+			if (Objects.equals(value, this.value)) {
+			} else {
+			}
+			// local caching to prevent roundtrips (although those do work)
+			this.value = value;
+			invokeSync("setPropertyString", List.of(String.class, String.class),
+					List.of(name, value));
 		} else {
 			// almost all other properties are attributes
 			setAttribute(name, value);
@@ -480,6 +484,29 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 		throw new UnsupportedOperationException();
 	}
 
+	<T> T invokeSync(String methodName, List<Class> argumentTypes,
+			List<?> arguments) {
+		return getOwnerDocument().implAccess().pathrefRemote().invokeProxy
+				.invokeSync(ElementPathref.this, methodName, argumentTypes,
+						arguments, null);
+	}
+
+	<T> T invokeStyle(String methodName, List<Class> argumentTypes,
+			List<?> arguments) {
+		return getOwnerDocument().implAccess().pathrefRemote().invokeProxy
+				.invokeSync(ElementPathref.this, methodName, argumentTypes,
+						arguments,
+						List.of(InvokeProxy.Flag.invoke_on_element_style));
+	}
+
+	<T> T invokeSync(String methodName) {
+		return invokeSync(methodName, null, null);
+	}
+
+	public DomRect getBoundingClientRect() {
+		return invokeSync("getBoundingClientRect");
+	}
+
 	@Override
 	public final void toggleClassName(String className) {
 		throw new UnsupportedOperationException();
@@ -490,35 +517,14 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 		return super.toString() + "\n\t" + getTagName();
 	}
 
-	public class Async {
-		public void getBoundingClientRect(AsyncCallback<DomRect> callback) {
-			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
-					ElementPathref.this, "getBoundingClientRect", null, null,
-					callback);
-		}
+	@Override
+	public void setSelectionRange(int pos, int length) {
+		invokeSync("setSelectionRange", List.of(int.class, int.class),
+				List.of(pos, length));
+	}
 
-		public void focus(AsyncCallback<Void> callback) {
-			getOwnerDocument().implAccess().pathrefRemote().invokeProxy
-					.invoke(ElementPathref.this, "focus", null, null, callback);
-		}
-
-		public void getScrollTop(AsyncCallback<Integer> callback) {
-			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
-					ElementPathref.this, "getScrollTop", null, null, callback);
-		}
-
-		public void setScrollTop(AsyncCallback<Void> callback, int top) {
-			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
-					ElementPathref.this, "setScrollTop", List.of(int.class),
-					List.of(top), callback);
-		}
-
-		public void setSelectionRange(AsyncCallback<Void> callback, int pos,
-				int length) {
-			getOwnerDocument().implAccess().pathrefRemote().invokeProxy.invoke(
-					ElementPathref.this, "setSelectionRange",
-					List.of(int.class, int.class), List.of(pos, length),
-					callback);
-		}
+	@Override
+	public ClientDomStyle getStyleRemote() {
+		return new StylePathref(this);
 	}
 }

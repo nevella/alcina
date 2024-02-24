@@ -32,6 +32,8 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
+import com.google.gwt.dom.client.DocumentPathref.InvokeProxy.Flag;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -42,12 +44,11 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.UIObject;
-import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -250,13 +251,13 @@ public class Element extends Node implements ClientDomElement,
 		UIObject.setStyleName(this, cssClass, true);
 	}
 
-	public ElementPathref.Async async() {
-		return pathrefRemote().async();
-	}
-
 	@Override
 	public void blur() {
 		runIfWithRemote(false, () -> remote().blur());
+	}
+
+	ElementRemote ensureRemote() {
+		return implAccess().ensureRemote();
 	}
 
 	private <T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
@@ -458,12 +459,7 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	public DomRect getBoundingClientRect() {
-		return ensureJsoRemote().getBoundingClientRect();
-	}
-
-	// FIXME - dom - completablefuture
-	public void getBoundingClientRectAsync(AsyncCallback<DomRect> callback) {
-		async().getBoundingClientRect(callback);
+		return ensureRemote().getBoundingClientRect();
 	}
 
 	@Override
@@ -775,7 +771,7 @@ public class Element extends Node implements ClientDomElement,
 		case "clientWidth":
 		case "offsetWidth":
 			// TODO - warn maybe? non optimal. SliderBar one major cause
-			return ensureJsoRemote();
+			return ensureRemote();
 		}
 		if (!wasSynced()) {
 			return local();
@@ -1466,25 +1462,39 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	public void setSelectionRange(int pos, int length) {
-		((TextBoxImpl) GWT.create(TextBoxImpl.class)).setSelectionRange(this,
-				pos, length);
+		ensureRemote().setSelectionRange(pos, length);
 	}
 
 	@Registration({ TypeInvoker.class, Element.class })
-	public static class TypeInvokerImpl implements TypeInvoker<Element> {
+	public static class TypeInvokerImpl extends TypeInvoker<Element> {
 		@Override
 		public Object invoke(Element bean, String methodName,
-				List<Class> argumentTypes, List<?> arguments) {
+				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+			List<InvokeProxy.Flag> typedFlags = (List<Flag>) flags;
+			if (typedFlags.contains(InvokeProxy.Flag.invoke_on_element_style)) {
+				return Reflections.at(bean.getStyle()).invoke(bean.getStyle(),
+						methodName, argumentTypes, arguments, null);
+			}
 			switch (methodName) {
 			case "focus":
 				Preconditions.checkArgument(argumentTypes.isEmpty());
 				bean.focus();
 				return null;
+			case "getPropertyString":
+				if (argumentTypes.size() == 1) {
+					return bean.getPropertyString((String) arguments.get(0));
+				}
+			case "setPropertyString":
+				if (argumentTypes.size() == 2) {
+					bean.setPropertyString((String) arguments.get(0),
+							(String) arguments.get(1));
+					return null;
+				}
 			default:
-				throw new IllegalArgumentException(
-						Ax.format("Not bean method format and not handled: %s",
-								methodName));
+				break;
 			}
+			return invokeReflective(bean, methodName, argumentTypes, arguments,
+					flags);
 		}
 	}
 }

@@ -345,6 +345,10 @@ edit-value textarea {
   width: 100%;
 }
 
+/* copied from suggestor FIXME actions should be split out into buttons
+ *
+ *  TODO - move some/most to dropdown
+ * */
 body {
   margin: 0;
   font-family: "Helvetica Neue", Arial;
@@ -384,7 +388,7 @@ body > page > header {
   font-family: Arial;
   display: grid;
   align-items: center;
-  grid-template-columns: 1fr 50ch 1fr;
+  grid-template-columns: 1fr 38rem 1fr;
   grid-template-areas: "left mid right";
   box-sizing: border-box;
   justify-self: center;
@@ -536,4 +540,112 @@ body > page > selections.input {
 }
 body > page > selections.output {
   grid-area: output;
+}
+
+app-suggestor {
+  display: block;
+  color: #555;
+  position: relative;
+  overflow-x: visible;
+  top: -4px;
+  border: solid 1px #d0d0d0;
+  border-radius: 4px;
+  width: 38rem;
+  font-family: Arial;
+  background-color: #FFF;
+}
+app-suggestor:focus-within {
+  border-color: #bfbfbf;
+  border-width: 2px;
+}
+app-suggestor > editor > input {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  min-width: 95%;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  outline: none;
+  font-family: Arial;
+  color: #555;
+}
+app-suggestor > editor > input::placeholder {
+  opacity: 0.6;
+}
+app-suggestor > results {
+  display: block;
+}
+app-suggestor > results > choice {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+  display: block;
+}
+app-suggestor > results > choice:hover, app-suggestor > results > choice[index-selected] {
+  background-color: #00000010;
+}
+app-suggestor > results > choice > suggestion > app-suggestion {
+  text-align: left;
+  display: grid;
+  grid-template-columns: 1fr 10px;
+  gap: 1em;
+  width: 100%;
+  color: #555;
+  line-height: 1.5em;
+  padding: 0.2em 0;
+}
+app-suggestor > results > choice > suggestion > app-suggestion > contents > first,
+app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
+  display: inline-block;
+}
+app-suggestor > results > choice > suggestion > app-suggestion > contents > first {
+  font-weight: normal;
+}
+app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
+  color: #777;
+  padding-left: 1em;
+}
+app-suggestor > results > choice > suggestion > app-suggestion > contents > options {
+  display: block;
+}
+
+overlay.app-suggestor > results {
+  display: block;
+  width: 38rem;
+  border: solid 1px #d0d0d0;
+  background: white;
+}
+overlay.app-suggestor > results > choice {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+  display: block;
+}
+overlay.app-suggestor > results > choice:hover, overlay.app-suggestor > results > choice[index-selected] {
+  background-color: #00000010;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion {
+  text-align: left;
+  display: grid;
+  grid-template-columns: 1fr 10px;
+  gap: 1em;
+  width: 100%;
+  color: #555;
+  line-height: 1.5em;
+  padding: 0.2em 0;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > first,
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
+  display: inline-block;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > first {
+  font-weight: normal;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
+  color: #777;
+  padding-left: 1em;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > options {
+  display: block;
 }

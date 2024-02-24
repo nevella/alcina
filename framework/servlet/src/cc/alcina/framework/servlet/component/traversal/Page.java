@@ -20,7 +20,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.util.Async;
 import cc.alcina.framework.gwt.client.util.GlobalKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
@@ -102,12 +101,9 @@ class Page extends Model.All
 
 	void goPreserveScrollPosition(TraversalPlace place) {
 		Element scrollableLayers = layers.provideElement().getChildElement(1);
-		scrollableLayers.async()
-				.getScrollTop(Async.<Integer> callbackBuilder().success(top -> {
-					place.go();
-					layers.provideElement().getChildElement(1).async()
-							.setScrollTop(Async.nullCallback(), top);
-				}).build());
+		int top = scrollableLayers.getScrollTop();
+		place.go();
+		layers.provideElement().getChildElement(1).setScrollTop(top);
 	}
 
 	@Override

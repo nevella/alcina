@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.util.Async;
 
 public class GWTBridgeHeadless extends GWTBridge {
 	@Registration(BidiPolicyImpl.class)
@@ -353,7 +352,7 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		@Override
 		public void setSelectionRange(Element elem, int pos, int length) {
-			elem.async().setSelectionRange(Async.nullCallback(), pos, length);
+			elem.setSelectionRange(pos, length);
 		}
 	}
 

@@ -64,6 +64,13 @@ public class RemoteComponentProtocol {
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Message {
 		/*
+		 * The request/response (server->client) is marked as synchronous, the
+		 * server thread will not continue until the (possibly out-of-order)
+		 * response is processed
+		 */
+		public boolean sync;
+
+		/*
 		 * Sent by the client to allow the server to send it messages
 		 */
 		public static class AwaitRemote extends Message {
@@ -117,6 +124,8 @@ public class RemoteComponentProtocol {
 
 			public List<?> arguments;
 
+			public List<?> flags;
+
 			public int id;
 
 			public List<Class> argumentTypes;
@@ -161,6 +170,11 @@ public class RemoteComponentProtocol {
 			public String toString() {
 				return Ax.format("%s :: %s", NestedName.get(this),
 						nestedClassName);
+			}
+
+			public String toExceptionString() {
+				return Ax.format("%s :: %s\n\n%s", NestedName.get(this),
+						nestedClassName, stackTrace);
 			}
 		}
 

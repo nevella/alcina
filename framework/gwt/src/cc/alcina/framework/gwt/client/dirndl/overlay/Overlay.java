@@ -73,8 +73,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 @Directed(
 	emits = { ModelEvents.Closed.class, ModelEvents.Submit.class,
 			ModelEvents.Opened.class },
-	
-bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
+	bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
 public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
@@ -150,6 +149,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			return true;
 		}
 		open = false;
+		Node node = provideNode();
 		if (submit) {
 			// force commit of focussed element changes (textarea, input) if it
 			// is a child of this closing dialog.
@@ -158,17 +158,21 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 					&& provideElement().provideIsAncestorOf(focus, true)) {
 				WidgetUtils.clearFocussedDocumentElement();
 			}
-			NodeEvent.Context.fromEvent(from, provideNode())
+			NodeEvent.Context.fromEvent(from, node)
 					.dispatch(ModelEvents.Submit.class, null);
 		}
 		/*
 		 * Any re-emission of events, model triggers should happen in the
 		 * BeforeClosed handlers
 		 */
-		NodeEvent.Context.fromEvent(from, provideNode())
+		NodeEvent.Context.fromEvent(from, node)
 				.dispatch(ModelEvents.BeforeClosed.class, null);
 		OverlayPositions.get().hide(this);
-		NodeEvent.Context.fromEvent(from, provideNode())
+		/*
+		 * node will be removed from the layout at this point, but its parent
+		 * refs will still be valid - a little dodgy, but it works
+		 */
+		NodeEvent.Context.fromEvent(from, node)
 				.dispatch(ModelEvents.Closed.class, null);
 		return true;
 	}
@@ -253,19 +257,29 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		close(event, true);
 	}
 
+	boolean reemittingClose;
+
 	@Override
 	public void onClosed(Closed event) {
-		if (event.getContext().node != provideNode()) {
+		Node node = provideNode();
+		if (node != null && event.getContext().node != node) {
 			// child overlay
 			return;
 		}
-		if (event.checkReemitted(this)) {
+		// custom reemission because node will be detached from layout
+		if (reemittingClose) {
+			event.getContext().bubble();
 			return;
 		}
 		if (modalClosedHandler != null) {
 			modalClosedHandler.onClosed(event);
 		}
-		event.reemit();
+		try {
+			reemittingClose = true;
+			event.reemit();
+		} finally {
+			reemittingClose = false;
+		}
 	}
 
 	@Override

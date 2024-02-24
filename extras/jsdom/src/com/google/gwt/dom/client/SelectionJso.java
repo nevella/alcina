@@ -49,7 +49,8 @@ public class SelectionJso extends JavaScriptObject {
 	}-*/;
 
 	public final native DomRect getClientRect()/*-{
-    return this.getRangeAt(0).getBoundingClientRect();
+		var rect = this.getRangeAt(0).getBoundingClientRect();
+		 return @com.google.gwt.dom.client.DomRect::new(Lcom/google/gwt/dom/client/DomRectJso;)(rect);
 	}-*/;
 
 	public final native NodeJso getFocusNode() /*-{

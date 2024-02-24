@@ -21,10 +21,22 @@ public class RemoteComponentReflectionFilterPeer
 	}
 
 	@Override
+	public boolean isWhitelistReflectable(JClassType type) {
+		return type.getQualifiedSourceName()
+				.matches("com.google.gwt.dom.client.Style([$.].+)?");
+	}
+
+	@Override
 	public boolean isVisibleType(JType type) {
 		// allow invoke on element bean methods
 		if (type.getQualifiedSourceName()
 				.equals("com.google.gwt.dom.client.Element")) {
+			return true;
+		}
+		// and style
+		if (type.getQualifiedSourceName()
+				.matches("com.google.gwt.dom.client.Style([$.].+)?")) {
+			// and Style.Unit etc
 			return true;
 		}
 		return ClientReflectionFilterPeer.super.isVisibleType(type);
