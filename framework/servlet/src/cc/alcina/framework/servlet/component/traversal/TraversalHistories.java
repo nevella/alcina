@@ -2,8 +2,10 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
@@ -26,8 +28,18 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 	public TraversalHistories() {
 		observables = new RemoteComponentObservables<>(SelectionTraversal.class,
 				t -> {
-					return t.getRootLayer().getName();
+					Layer rootLayer = t.getRootLayer();
+					return Registry
+							.impl(RootLayerNamer.class, rootLayer.getClass())
+							.rootLayerName(rootLayer);
 				}, 1 * TimeConstants.ONE_MINUTE_MS);
+	}
+
+	@Registration(RootLayerNamer.class)
+	public static class RootLayerNamer<RL extends Layer> {
+		public String rootLayerName(RL layer) {
+			return NestedName.get(layer);
+		}
 	}
 
 	public void observe() {

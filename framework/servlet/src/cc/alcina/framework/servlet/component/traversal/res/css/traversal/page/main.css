@@ -294,10 +294,10 @@ body > page > * > heading {
   display: flex;
   padding-left: 1rem;
   align-items: center;
-  background: #e8e8e8;
-  border-bottom: solid 1px #aaa;
   width: 100%;
   box-sizing: border-box;
+  background: white;
+  color: #888;
 }
 body > page > header {
   width: 100%;
@@ -305,8 +305,9 @@ body > page > header {
   font-family: Arial;
   display: grid;
   align-items: center;
-  grid-template-columns: 1fr 38rem 1fr;
+  grid-template-columns: 1fr 28rem 1fr;
   grid-template-areas: "left mid right";
+  align-content: center;
   box-sizing: border-box;
   justify-self: center;
   position: sticky;
@@ -355,14 +356,15 @@ body > page > header > right > a {
 body > page > layers {
   display: block;
   grid-area: layers;
+  background: #f7f7f7;
 }
 body > page > layers > layers {
   display: grid;
   gap: 1rem;
   grid-template-columns: 18rem 1fr 1fr 1fr 1fr 1fr;
   overflow: scroll;
-  background: #f7f7f7;
   max-height: calc(100% - 2.2rem);
+  margin-top: 1rem;
 }
 body > page > layers > layers > layer-selections {
   display: contents;
@@ -464,10 +466,10 @@ app-suggestor {
   color: #555;
   position: relative;
   overflow-x: visible;
-  top: -4px;
+  top: 0;
   border: solid 1px #d0d0d0;
   border-radius: 4px;
-  width: 38rem;
+  width: 28rem;
   font-family: Arial;
   background-color: #FFF;
 }
@@ -476,7 +478,7 @@ app-suggestor:focus-within {
   border-width: 2px;
 }
 app-suggestor > editor > input {
-  padding: 0.5rem 0.75rem;
+  padding: 0.2rem 0.75rem;
   border: none;
   min-width: 95%;
   font-size: 1rem;
@@ -528,7 +530,7 @@ app-suggestor > results > choice > suggestion > app-suggestion > contents > opti
 
 overlay.app-suggestor > results {
   display: block;
-  width: 38rem;
+  width: 28rem;
   border: solid 1px #d0d0d0;
   background: white;
 }

@@ -3,19 +3,18 @@
 @mixin contents
   display: block
   grid-area: layers
+  background: #f7f7f7
 
   > layers
     display: grid
     gap: 1rem
     grid-template-columns: 18rem 1fr 1fr 1fr 1fr 1fr
     overflow: scroll
-    background: #f7f7f7
     max-height: calc(100% - 2.2rem)
+    margin-top: 1rem
 
     > layer-selections
       display: contents
-
-        
 
       .bordered-area
         
@@ -25,7 +24,6 @@
         text-overflow: ellipsis
         white-space: pre
         min-height: 3rem
-
         
       &[empty='true'] .bordered-area
         min-height: 1rem

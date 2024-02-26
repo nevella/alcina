@@ -27,6 +27,9 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
 
 /**
  * A remote component that models a SelectionTraversal's process tree
+ * 
+ * The name displayed (for the traversal) can be customised by registering a
+ * RootLayerNamer for the traversal's RootLayer
  *
  */
 @Feature.Ref(Feature_TraversalProcessView.class)
@@ -101,7 +104,7 @@ public class TraversalProcessView {
 		}
 
 		public String getMainCaption() {
-			return "traversal process";
+			return "Traversal process";
 		}
 
 		@Override
