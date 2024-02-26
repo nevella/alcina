@@ -1,0 +1,7 @@
+<project>
+	<!-- the initial pom. the framework dirs will be split into independent maven modules-->
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>cc.alcina</groupId>
+	<artifactId>common</artifactId>
+	<version>0.1</version>
+</project>
