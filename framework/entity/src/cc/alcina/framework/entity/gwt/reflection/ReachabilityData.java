@@ -19,6 +19,9 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,6 +67,9 @@ class ReachabilityData {
 
 	static Class<? extends ReachabilityLinkerPeer> linkerPeerClass;
 
+	transient static Logger logger = LoggerFactory
+			.getLogger(ReachabilityData.class);
+
 	public static <T> T newInstance(Class<? extends T> clazz) {
 		try {
 			return clazz.getConstructor().newInstance();
@@ -89,7 +95,7 @@ class ReachabilityData {
 		}
 		if (result.size() > 0
 				&& typeParametersLogged.add(typeParameter.toString())) {
-			Ax.out(" -- %s", typeParameter);
+			logger.debug(" -- %s", typeParameter);
 		}
 		return result;
 	}

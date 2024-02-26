@@ -195,7 +195,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	VisibleAnnotationFilterClient visibleAnnotationFilter;
 
-	ClassReflection.ProvidesTypeBounds providesJavacTypeBounds = new ProvidesJavacTypeBoundsImplementation();
+	public ClassReflection.ProvidesTypeBounds providesTypeBounds = new ProvidesTypeBoundsJavacImpl();
 
 	public JType voidJType;
 
@@ -456,7 +456,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
-	private final class ProvidesJavacTypeBoundsImplementation
+	private final class ProvidesTypeBoundsJavacImpl
 			implements ProvidesTypeBounds {
 		JavacTypeBounds.Computed computedTypeBounds = new JavacTypeBounds.Computed();
 
@@ -635,7 +635,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			super(type, classReflectorType, false);
 			this.reflection = new ClassReflection(type,
 					sourcesPropertyChangeEvents(), visibleAnnotationFilter,
-					providesJavacTypeBounds);
+					providesTypeBounds);
 		}
 
 		@Override
@@ -742,7 +742,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 								i.getQualifiedSourceName());
 					});
 			List<JClassType> bounds = reflection
-					.computeTypeBounds(providesJavacTypeBounds);
+					.computeTypeBounds(providesTypeBounds);
 			bounds.forEach(t -> {
 				sourceWriter.println("bounds.add(%s.class);",
 						t.getQualifiedSourceName());

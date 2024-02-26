@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.dev.util.log.PrintWriterTreeLogger;
 
@@ -19,7 +18,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityLinkerPeer;
 public class JdkReflectionGenerator {
 	Attributes attributes;
 
-	private GeneratorContext generatorContext;
+	GeneratorContextImpl generatorContext;
 
 	BuildtimeTypeProvider typeProvider;
 
@@ -34,6 +33,7 @@ public class JdkReflectionGenerator {
 		generatorContext = new GeneratorContextImpl(this);
 		ClientReflectionGenerator generator = new ClientReflectionGenerator();
 		generator.attributes.guaranteedSinglePermutationBuild = true;
+		generator.providesTypeBounds = generatorContext.typeOracle;
 		try {
 			generator.generate(logger, generatorContext,
 					attributes.generatingType.getName());

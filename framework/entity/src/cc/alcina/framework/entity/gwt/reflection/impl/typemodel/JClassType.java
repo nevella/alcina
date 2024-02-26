@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -53,6 +54,8 @@ public abstract class JClassType<T extends Type>
 	private JPackage jPackage;
 
 	private int modifierBits;
+
+	private Set<JClassType> flattenedSupertypes;
 
 	public JClassType(TypeOracle typeOracle, T type) {
 		this.typeOracle = typeOracle;
@@ -129,7 +132,7 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JClassType getEnclosingType() {
-		throw new UnsupportedOperationException();
+		return typeOracle.getType(clazz.getEnclosingClass());
 	}
 
 	@Override
@@ -148,7 +151,29 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public Set<? extends JClassType> getFlattenedSupertypeHierarchy() {
-		throw new UnsupportedOperationException();
+		if (flattenedSupertypes == null) {
+			flattenedSupertypes = new LinkedHashSet<>();
+			getFlattenedSuperTypeHierarchyRecursive(this, flattenedSupertypes);
+		}
+		return flattenedSupertypes;
+	}
+
+	private static void getFlattenedSuperTypeHierarchyRecursive(JClassType type,
+			Set<JClassType> typesSeen) {
+		if (typesSeen.contains(type)) {
+			return;
+		}
+		typesSeen.add(type);
+		// Check the interfaces
+		JClassType[] intfs = type.getImplementedInterfaces();
+		for (JClassType intf : intfs) {
+			typesSeen.addAll(intf.getFlattenedSupertypeHierarchy());
+		}
+		// Superclass
+		JClassType superclass = type.getSuperclass();
+		if (superclass != null) {
+			typesSeen.addAll(superclass.getFlattenedSupertypeHierarchy());
+		}
 	}
 
 	@Override
@@ -485,8 +510,25 @@ public abstract class JClassType<T extends Type>
 			try {
 				init();
 			} catch (Throwable e) {
-				throw e;
+				if (e instanceof VerifyError) {
+					// assume no reflection, native access issue
+					initBlank();
+				} else {
+					throw e;
+				}
 			}
+		}
+
+		void initBlank() {
+			fields = new ArrayList<>();
+			methods = new ArrayList<>();
+			inheritableMethods = new ArrayList<>();
+			inheritableFields = new ArrayList<>();
+			constructors = new ArrayList<>();
+			implementedInterfaces = new ArrayList<>();
+			resolvedSuperclassTypes = new ArrayList<>();
+			resolution = new TypeParameterResolution(JClassType.this);
+			typeBounds = new TypeBounds(List.of());
 		}
 
 		@Override
