@@ -21,7 +21,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	private int segmentCounter = -1;
 
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
-		if (!(this instanceof HasNullValue)) {
+		if (!(this instanceof AllowsNullValue)) {
 			Preconditions.checkNotNull(value);
 		}
 		this.value = value;
@@ -99,7 +99,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 				get() == null ? null : Ax.trim(contentsToString(), 150));
 	}
 
-	public interface HasNullValue {
+	public interface AllowsNullValue {
 	}
 
 	static class View implements Selection.View<AbstractSelection> {

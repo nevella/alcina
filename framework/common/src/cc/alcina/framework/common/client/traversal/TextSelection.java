@@ -7,6 +7,11 @@ public abstract class TextSelection extends AbstractSelection<String> {
 		super(parentSelection, value);
 	}
 
+	public TextSelection(Selection parentSelection, String value,
+			String pathSegment) {
+		super(parentSelection, value, pathSegment);
+	}
+
 	public TextSelection(TreeProcess.Node parentNode, String value,
 			String pathSegment) {
 		super(parentNode, value, pathSegment);

@@ -83,6 +83,11 @@ public class UrlBuilder {
 		return this;
 	}
 
+	public UrlBuilder protocol(String protocol) {
+		this.protocol = protocol;
+		return this;
+	}
+
 	public UrlBuilder path(String path) {
 		this.path = path;
 		return this;

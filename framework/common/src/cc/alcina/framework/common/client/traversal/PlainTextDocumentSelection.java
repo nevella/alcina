@@ -3,16 +3,31 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.traversal.AbstractSelection.AllowsNullValue;
 
 public class PlainTextDocumentSelection extends TextSelection
-		implements PlainTextSelection {
+		implements PlainTextSelection, AllowsNullValue {
 	protected String text;
 
 	protected Loader loader;
 
+	public void setLoader(Loader loader) {
+		this.loader = loader;
+	}
+
+	public PlainTextDocumentSelection(Selection parent) {
+		this(parent, null, null);
+	}
+
+	public PlainTextDocumentSelection(Selection parent,
+			PlainTextDocumentSelection.Loader loader) {
+		this(parent, loader, null);
+	}
+
 	public PlainTextDocumentSelection(Selection parent,
 			PlainTextDocumentSelection.Loader loader, String pathSegment) {
-		super(parent, null);
+		super(parent, null, pathSegment);
 		this.loader = loader;
 	}
 
@@ -34,7 +49,9 @@ public class PlainTextDocumentSelection extends TextSelection
 	public interface Loader<S extends Selection> {
 		String load(S selection) throws Exception;
 
-		Class<S> selectionClass();
+		default Class<S> selectionClass() {
+			return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+		}
 	}
 
 	public abstract static class TransformLayer<I extends Selection, O extends PlainTextDocumentSelection>

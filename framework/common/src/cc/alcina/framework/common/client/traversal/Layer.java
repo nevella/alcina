@@ -49,6 +49,17 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 		}
 	}
 
+	public <T> T ancestorLayerImplementing(Class<T> clazz) {
+		Layer cursor = this;
+		do {
+			if (Reflections.isAssignableFrom(clazz, cursor.getClass())) {
+				return (T) cursor;
+			}
+			cursor = cursor.parent;
+		} while (cursor.parent != null);
+		return null;
+	}
+
 	public void addChild(Layer child) {
 		child.ensureChildren();
 		child.parent = this;

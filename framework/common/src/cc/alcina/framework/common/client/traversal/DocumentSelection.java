@@ -5,13 +5,13 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.traversal.AbstractSelection.HasNullValue;
+import cc.alcina.framework.common.client.traversal.AbstractSelection.AllowsNullValue;
 import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class DocumentSelection extends MeasureSelection
-		implements HasNullValue {
+		implements AllowsNullValue {
 	protected DomDocument document;
 
 	protected Loader loader;
