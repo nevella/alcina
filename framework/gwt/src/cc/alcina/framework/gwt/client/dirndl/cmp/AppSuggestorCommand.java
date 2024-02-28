@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.gwt.client.dirndl.event.CommandContext;
 
 /**
  * Used to expose ModelEvent types in the app suggestor, depending on the

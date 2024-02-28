@@ -1,9 +1,10 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestorEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.KeyBinding;
+import cc.alcina.framework.gwt.client.dirndl.cmp.KeyBinding;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.servlet.ServletLayerTopics;
@@ -31,6 +32,7 @@ public abstract class TraversalCommands<T, H extends NodeEvent.Handler>
 		public static class HandlerImpl implements Handler, TopLevelHandler {
 			@Override
 			public void onReloadApp(ReloadApp event) {
+				Ax.sysLogHigh("Command - ReloadApp");
 				ServletLayerTopics.topicRestartConsole.signal();
 			}
 		}

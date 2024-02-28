@@ -1,9 +1,9 @@
-package cc.alcina.framework.gwt.client.dirndl.event;
+package cc.alcina.framework.gwt.client.dirndl.cmp;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.NativeEvent;
@@ -11,59 +11,68 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestorCommand;
-import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestorEvent;
-import cc.alcina.framework.gwt.client.dirndl.cmp.AppSuggestorRequest;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.cmp.KeyBinding.MatchData;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.util.GlobalKeyboardShortcuts;
 
 /**
  * FIXME - recompute on code module load (registry modification/listener)
+ * 
+ * <p>
+ * This class registers ModelEvent subtypes which have a {@link KeyBinding}
+ * annotation (detailing the binding). The applicable keybindings will be
+ * filtered at event time by the intersection of KeyBinding.context(s) and
+ * CommandContext.Provider.getContexts()
+ * 
+ * <p>
+ * The event must have non-empty contexts - either via its {@link KeyBinding}
+ * annotation or by a {@link AppSuggestorCommand} annotation on the type (those
+ * form a tree so are more ergonomic)
+ * 
+ * <p>
+ * The app must register a {@link CommandContext.Provider} implementation
  */
 public class KeybindingsHandler implements GlobalKeyboardShortcuts.Handler {
-	List<KeyBinding.MatchData> boundEvents;
+	List<MatchData> boundEvents;
 
 	EventDispatcher eventDispatcher;
+
+	CommandContext.Provider commandContextProvider;
 
 	@FunctionalInterface
 	public interface EventDispatcher {
 		void dispatch(Class<? extends ModelEvent> eventType);
 	}
 
-	public KeybindingsHandler(EventDispatcher eventDispatcher) {
+	public KeybindingsHandler(EventDispatcher eventDispatcher,
+			CommandContext.Provider commandContextProvider) {
 		this.eventDispatcher = eventDispatcher;
+		this.commandContextProvider = commandContextProvider;
 		AppSuggestorRequest suggestorRequest = new AppSuggestorRequest();
-		Set<Class<? extends CommandContext>> appExcludes = suggestorRequest
-				.appExcludes();
-		Predicate<Class<? extends ModelEvent>> visible = clazz -> {
-			AppSuggestorCommand command = Reflections.at(clazz)
-					.annotation(AppSuggestorCommand.class);
-			if (command != null) {
-				Set<Class<? extends CommandContext>> commandContexts = Set
-						.of(AppSuggestorCommand.Support.contexts(command));
-				boolean excludedContext = CommonUtils
-						.hasIntersection(appExcludes, commandContexts);
-				if (excludedContext) {
-					return false;
-				}
-			}
-			return true;
-		};
 		boundEvents = Registry.query(NodeEvent.class).registrations()
 				.filter(type -> Reflections.at(type).has(KeyBinding.class))
 				.map(clazz -> (Class<? extends ModelEvent>) clazz)
-				.filter(visible).map(KeyBinding.MatchData::new)
-				.collect(Collectors.toList());
+				.map(MatchData::new).collect(Collectors.toList());
+		List<String> invalid = boundEvents.stream().map(MatchData::checkInvalid)
+				.filter(Objects::nonNull).toList();
+		if (invalid.size() > 0) {
+			Ax.err(invalid);
+			throw new IllegalStateException();
+		}
 	}
 
 	@Override
 	public void checkShortcut(NativePreviewEvent event, NativeEvent nativeEvent,
 			String type, boolean altKey, boolean shiftKey, int keyCode) {
 		if (nativeEvent != null && type.equals("keydown")) {
+			Set<Class<? extends CommandContext>> contexts = commandContextProvider
+					.getContexts();
 			Optional<Class<? extends ModelEvent>> match = boundEvents.stream()
-					.filter(eventType -> KeyBinding.Support.matches(eventType,
-							nativeEvent))
-					.findFirst().map(KeyBinding.MatchData::getEventType);
+					.filter(eventType -> KeyBinding.Support.matches(contexts,
+							eventType, nativeEvent))
+					.findFirst().map(MatchData::getEventType);
 			if (match.isPresent()) {
 				Class<? extends ModelEvent> eventType = match.get();
 				AppSuggestorCommand command = Reflections.at(eventType)
