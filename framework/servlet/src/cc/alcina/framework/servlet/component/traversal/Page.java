@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
@@ -13,6 +16,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.cmp.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
@@ -118,8 +122,24 @@ class Page extends Model.All
 		bindKeyboardShortcuts(event.isBound());
 	}
 
+	// needs fix
 	private KeybindingsHandler keybindingsHandler = new KeybindingsHandler(
-			eventType -> provideNode().dispatch(eventType, null));
+			eventType -> provideNode().dispatch(eventType, null),
+			new CommandContextProviderImpl());
+
+	public static class CommandContextProviderImpl
+			implements CommandContext.Provider {
+		Class<? extends CommandContext> appContext() {
+			return TraversalContext.class;
+		}
+
+		@Override
+		public Set<Class<? extends CommandContext>> getContexts() {
+			Set<Class<? extends CommandContext>> commandContexts = new LinkedHashSet<>();
+			commandContexts.add(appContext());
+			return commandContexts;
+		}
+	}
 
 	private void bindKeyboardShortcuts(boolean bound) {
 		if (bound) {
