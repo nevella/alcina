@@ -197,6 +197,7 @@ public class Property implements HasAnnotations {
 
 	/**
 	 * *NOT* a property method or field
+	 * 
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited

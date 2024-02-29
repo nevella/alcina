@@ -46,7 +46,8 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  * Currently an annotation rather than an interface (no-params annotations are
  * basically equivalent) to allow descendants to declare themselves 'not a bean'
  * 
- * 
+ * <p>
+ * {@link cc.alcina.framework.common.client.reflection}
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -58,10 +59,10 @@ public @interface Bean {
 	PropertySource value() default PropertySource.BEAN_METHODS;
 
 	/**
-	 * See the 'Beans 1x5 Manifesto' the
-	 * {@link cc.alcina.framework.common.client.reflection reflection spec} for
-	 * the reasoning behind these options (rather than just the Java Beans spec
-	 * variant, BEAN_METHODS)
+	 * See the 'Beans 1x5 Manifesto' in
+	 * {@link cc.alcina.framework.common.client.reflection} for the reasoning
+	 * behind these options (rather than just the Java Beans spec variant,
+	 * BEAN_METHODS)
 	 * 
 	 * FIXME - beans1x5 - check transient attr on field is respected
 	 * 

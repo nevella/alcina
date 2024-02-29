@@ -27,4 +27,9 @@ public @interface BeanViewModifiers {
 	 * use node editors (dirndl) rather than abstractboundwidgets (gwittir)
 	 */
 	boolean nodeEditors() default false;
+
+	/*
+	 * render submit/cancel buttons
+	 */
+	boolean lifecycleControls() default true;
 }

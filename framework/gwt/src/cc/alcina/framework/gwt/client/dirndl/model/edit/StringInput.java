@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -396,6 +397,25 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 		 * The placeholder
 		 */
 		String value();
+
+		public static class Impl implements Placeholder {
+			private String value;
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Placeholder.class;
+			}
+
+			@Override
+			public String value() {
+				return value;
+			}
+
+			public Impl withValue(String value) {
+				this.value = value;
+				return this;
+			}
+		}
 	}
 
 	static class SelectionState {

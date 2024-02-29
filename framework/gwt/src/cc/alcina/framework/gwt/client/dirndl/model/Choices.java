@@ -1,5 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -7,13 +13,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.SelectElement;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -31,11 +41,13 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 
 @Directed(tag = "choices")
@@ -57,11 +69,13 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
  * FIXME - dirndl 1x1e - Now that overlay events are routed to logical parents,
  * it may be possible to cleanup event handling in this class
  */
-public abstract class Choices<T> extends Model
-		implements ModelEvents.Selected.Handler, HasSelectedValue {
+public abstract class Choices<T> extends Model implements
+		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has {
 	protected List<Choices.Choice<T>> choices;
 
 	private List<T> values;
+
+	public Class<? extends ModelTransform<T, ?>> valueTransformer;
 
 	public Choices() {
 		this(new ArrayList<>());
@@ -69,6 +83,41 @@ public abstract class Choices<T> extends Model
 
 	public Choices(List<T> values) {
 		setValues(values);
+	}
+
+	@Override
+	@Property.Not
+	public ContextResolver getContextResolver() {
+		if (valueTransformer == null) {
+			return null;
+		} else {
+			return new ValueTransformerResolver();
+		}
+	}
+
+	class ValueTransformerResolver extends ContextResolver {
+		Class<T> valueType;
+
+		ValueTransformerResolver() {
+			valueType = Reflections.at(valueTransformer)
+					.getGenericBounds().bounds.get(0);
+		}
+
+		@Override
+		protected <A extends Annotation> List<A> resolveAnnotations1(
+				Class<A> annotationClass, AnnotationLocation location) {
+			if (location.classLocation == valueType) {
+				if (annotationClass == Directed.class) {
+					// erase anything from the valueType
+					return (List<A>) List.of(Directed.Impl.DEFAULT_INSTANCE);
+				}
+				if (annotationClass == Directed.Transform.class) {
+					return (List<A>) List.of(new Directed.Transform.Impl()
+							.withValue(valueTransformer));
+				}
+			}
+			return null;
+		}
 	}
 
 	public Optional<Choice> find(Predicate<Choice> predicate) {
@@ -79,6 +128,38 @@ public abstract class Choices<T> extends Model
 	@Directed
 	public List<Choices.Choice<T>> getChoices() {
 		return this.choices;
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface Values {
+		/**
+		 * The values supplier
+		 */
+		Class<? extends Supplier<?>> value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface ValueTransformer {
+		/**
+		 * The values supplier
+		 */
+		Class<? extends ModelTransform<?, ?>> value();
+	}
+
+	@Override
+	public void onBeforeRender(BeforeRender event) {
+		event.node.optional(Values.class).ifPresent(ann -> setValues(
+				(List<T>) Reflections.newInstance(ann.value()).get()));
+		event.node.optional(ValueTransformer.class).ifPresent(
+				ann -> valueTransformer = (Class<? extends ModelTransform<T, ?>>) ann
+						.value());
+		super.onBeforeRender(event);
 	}
 
 	public List<T> getValues() {
@@ -302,7 +383,7 @@ public abstract class Choices<T> extends Model
 		emits = { ModelEvents.SelectionChanged.class,
 				ModelEvents.Selected.class })
 	public static class Single<T> extends Choices<T>
-			implements KeyboardNavigation.Navigation.Handler {
+			implements KeyboardNavigation.Navigation.Handler, HasValue<T> {
 		protected boolean deselectIfSelectedClicked = false;
 
 		/*
@@ -311,6 +392,13 @@ public abstract class Choices<T> extends Model
 		protected boolean changeOnSelectionEvent = true;
 
 		private T provisionalValue;
+
+		public static class To implements ModelTransform<Object, Single<?>> {
+			@Override
+			public Single<?> apply(Object t) {
+				return new Single<>();
+			}
+		}
 
 		/*
 		 * Use ModelEvents by preference - this allows ex-hierarchy observation
@@ -417,6 +505,8 @@ public abstract class Choices<T> extends Model
 			choices.forEach(c -> c.setSelected(c.value == value));
 			T newValue = getSelectedValue();
 			if (provideIsBound() && !Objects.equals(oldValue, newValue)) {
+				firePropertyChange("selectedValue", oldValue, newValue);
+				firePropertyChange("value", oldValue, newValue);
 				NodeEvent.Context.fromNode(provideNode()).dispatch(
 						ModelEvents.BeforeSelectionChangedDispatch.class,
 						newValue);
@@ -460,6 +550,16 @@ public abstract class Choices<T> extends Model
 			public List getItems() {
 				return choices;
 			}
+		}
+
+		@Override
+		public T getValue() {
+			return getSelectedValue();
+		}
+
+		@Override
+		public void setValue(T t) {
+			setSelectedValue(t);
 		}
 	}
 }

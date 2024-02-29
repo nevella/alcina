@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.ui.Widget;
@@ -10,11 +11,14 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Transform;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
@@ -199,19 +203,28 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			if (clazz == Directed.Transform.class) {
 				// assume this is not circular
 				if (reflector == valueLocation.property) {
-					/*
-					 * FUTURE - allow a Directed.Transform annotation on the
-					 * bean property (currently disallowed)
-					 * 
-					 * It will require another layer of resolution. For the
-					 * moment, redefine the bean (and transform in the bean
-					 * initialiser)
-					 */
-					Preconditions.checkState(contextAnnotation == null);
-					Directed.Transform.Impl impl = new Directed.Transform.Impl();
-					impl.withValue(RenderingModelTransform.class);
-					impl.withTransformsNull(true);
-					contextAnnotation = (A) impl;
+					if (contextAnnotation == null) {
+						Directed.Transform.Impl impl = new Directed.Transform.Impl();
+						impl.withValue(RenderingModelTransform.class);
+						impl.withTransformsNull(true);
+						contextAnnotation = (A) impl;
+					} else {
+						/*
+						 * The transform result must implement HasValue
+						 */
+						Directed.Transform transform = (Transform) contextAnnotation;
+						List<Class> bounds = Reflections.at(transform.value())
+								.getGenericBounds().bounds;
+						Preconditions.checkState(Reflections.isAssignableFrom(
+								HasValue.class, bounds.get(1)));
+						/*
+						 * Restate the annotation with transformsNull:=true
+						 */
+						Directed.Transform.Impl impl = new Directed.Transform.Impl();
+						impl.withValue(transform.value());
+						impl.withTransformsNull(true);
+						contextAnnotation = (A) impl;
+					}
 				}
 			}
 			/*
@@ -253,9 +266,11 @@ public class BridgingValueRenderer extends DirectedRenderer {
 				 */
 				ValueModel inputModel = (ValueModel) renderer.input.model;
 				/*
-				 * The rendered model
+				 * The rendered model. No need to verify it implements HasValue
+				 * (that's checked in
+				 * BridgingValueRenderer.ValueResolver.contextAnnotation above)
 				 */
-				Model.Value displayModel = (Model.Value) event.model;
+				Model displayModel = (Model) event.model;
 				/*
 				 *
 				 */

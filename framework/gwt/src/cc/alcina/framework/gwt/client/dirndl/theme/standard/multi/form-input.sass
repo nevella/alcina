@@ -1,0 +1,35 @@
+@mixin label-over
+  form-element 
+    position: relative
+    margin-bottom: 1rem
+
+    > label:has(+value>input) 
+      position: absolute
+      left: 6px
+      top: -5px
+      background-color: hsl(46.3, 57%, 99%)
+      color: #555
+      font-size: 65%
+      padding: 0 5px
+      line-height: 100%
+      z-index: 1
+
+    > label:has(+value>input:placeholder-shown) 
+      cursor: text
+      max-width: 66.66%
+      white-space: nowrap
+      overflow: hidden
+      text-overflow: ellipsis
+      transform-origin: left bottom
+      transform: translate(0px, 10px) scale(1.0)
+      white-space: nowrap
+      color: #999
+      padding-left: 1px
+
+    > label:not(:has(+value>input:placeholder-shown)), > label:has(+value>input:focus) 
+      transform: translate(0, 0) scale(1)
+      cursor: pointer
+
+    > label, > value>input 
+      transition: all 0.2s
+      touch-action: manipulation

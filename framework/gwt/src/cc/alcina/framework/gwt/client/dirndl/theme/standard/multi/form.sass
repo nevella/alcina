@@ -1,5 +1,6 @@
 @use '../../theme/theme'
 @use '../../theme/color'
+@use 'form-input'
 
 @mixin subtle-form 
   input,
@@ -59,13 +60,11 @@
         max-width: 30em
       */
 
-bean-editor 
+@mixin bean-editor
   padding: 1em 2em
   line-height: 2.0em
   padding-bottom: 1px
   display: block
-
-  
   
   &.vertical-validation
     line-height: 2.6rem
@@ -84,6 +83,9 @@ bean-editor
         left: 1rem
         white-space: nowrap
 
+  &.label-over
+    @include form-input.label-over
+    
   &.bordered 
     margin: 1em 0
     border-top: solid 1px #ccc
@@ -190,6 +192,7 @@ bean-editor
     &:not(:empty)
       margin-bottom: 1rem
 
+
   > form
     > section
       > form-element
@@ -197,7 +200,7 @@ bean-editor
         &[invalid]
           select, input
             border-color: color.$validation-error-color
-         
+          
         > value
           position: relative
 
@@ -234,6 +237,8 @@ bean-editor
       color: color.$validation-error-color
       margin-top: 2rem
 
+bean-editor
+  @include bean-editor
 
 /*
 will always have single-line bean-editor, pad label until we work out baseline alignment

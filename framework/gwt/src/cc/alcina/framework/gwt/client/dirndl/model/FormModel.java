@@ -376,6 +376,7 @@ public class FormModel extends Model
 				attributes.adjunct = args.adjunct();
 				attributes.nodeEditors = args.nodeEditors();
 				attributes.editable = args.editable();
+				attributes.lifecycleControls = args.lifecycleControls();
 			}
 			try {
 				LooseContext.push();
@@ -569,6 +570,8 @@ public class FormModel extends Model
 	}
 
 	public static class FormModelAttributes {
+		public boolean lifecycleControls;
+
 		public boolean nodeEditors;
 
 		public Bindable presentationModel;
@@ -594,10 +597,10 @@ public class FormModel extends Model
 	public static class FormModelTransformer extends
 			AbstractContextSensitiveModelTransform<FormModelAttributes, FormModel> {
 		@Override
-		public FormModel apply(FormModelAttributes state) {
+		public FormModel apply(FormModelAttributes attributes) {
 			FormModel formModel = Registry.impl(FormModel.class);
-			formModel.state = state;
-			if (state.model == null && state.expectsModel) {
+			formModel.state = attributes;
+			if (attributes.model == null && attributes.expectsModel) {
 				return formModel;
 			}
 			Args args = node.annotation(Args.class);
@@ -609,34 +612,35 @@ public class FormModel extends Model
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
 			ModalResolver resolver = ModalResolver.single(node,
-					!state.editable);
+					!attributes.editable);
 			resolver.setFormModel(formModel);
 			node.setResolver(resolver);
-			if (state.model != null) {
-				if (state.model instanceof UserProperty) {
-					state.presentationModel = (Bindable) ((UserProperty) state.model)
+			if (attributes.model != null) {
+				if (attributes.model instanceof UserProperty) {
+					attributes.presentationModel = (Bindable) ((UserProperty) attributes.model)
 							.ensureUserPropertySupport().getPersistable();
 				}
-				if (state.presentationModel == null) {
-					state.presentationModel = state.model;
+				if (attributes.presentationModel == null) {
+					attributes.presentationModel = attributes.model;
 				}
 			}
-			if (state.presentationModel != null) {
-				ValidationFeedback.Provider validationFeedbackProvider = state.nodeEditors
+			if (attributes.presentationModel != null) {
+				ValidationFeedback.Provider validationFeedbackProvider = attributes.nodeEditors
 						? new ValidationFeedbackProvider()
 						: null;
 				List<Field> fields = BeanFields.query()
-						.forBean(state.presentationModel).withResolver(resolver)
+						.forBean(attributes.presentationModel)
+						.withResolver(resolver)
 						.withValidationFeedbackProvider(
 								validationFeedbackProvider)
-						.asEditable(state.editable)
-						.asAdjunctEditor(state.adjunct).listFields();
+						.asEditable(attributes.editable)
+						.asAdjunctEditor(attributes.adjunct).listFields();
 				fields.stream()
 						.filter(field -> fieldModulator
-								.accept(state.presentationModel, field))
+								.accept(attributes.presentationModel, field))
 						.map(field -> {
 							FormElement e = new FormElement(field,
-									state.presentationModel);
+									attributes.presentationModel);
 							if (args != null && args.focusOnAttach()
 									.equals(field.getPropertyName())) {
 								e.setFocusOnAttach(true);
@@ -644,16 +648,16 @@ public class FormModel extends Model
 							return e;
 						}).forEach(formModel.elements::add);
 			}
-			if (state.adjunct) {
+			if (attributes.adjunct) {
 				new Link().withModelEvent(ModelEvents.Submit.class)
 						.withClassName(Link.PRIMARY_ACTION)
 						.withTextFromModelEvent().addTo(formModel.actions);
 				new Link().withModelEvent(ModelEvents.Cancel.class)
 						.withTextFromModelEvent().addTo(formModel.actions);
 			} else {
-				if (state.presentationModel != null) {
+				if (attributes.presentationModel != null) {
 					ObjectActions actions = Reflections
-							.at(state.presentationModel)
+							.at(attributes.presentationModel)
 							.annotation(ObjectActions.class);
 					if (actions != null) {
 						Arrays.stream(actions.value()).map(Action::actionClass)
@@ -677,6 +681,9 @@ public class FormModel extends Model
 				if (overrideLinkText != null) {
 					link.withText(overrideLinkText);
 				}
+			}
+			if (!attributes.lifecycleControls) {
+				formModel.actions.clear();
 			}
 			return formModel;
 		}

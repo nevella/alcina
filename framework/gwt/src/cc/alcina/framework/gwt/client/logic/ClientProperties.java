@@ -41,7 +41,7 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
  * </p>
  * <p>
  * Server configuration would set a configuration value to not show the in-dev
- * feature - in the Bundle.properties file in the Feature.class package:
+ * feature - in the configuration.properties file in the Feature.class package:
  * </p>
  * <code>
  * Feature.showFeature=false

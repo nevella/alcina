@@ -60,6 +60,9 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 	@Override
 	public boolean permit(Type type) {
 		Optional<Rule> match = getMatch(type);
+		if (type.nameContains("ShopxTopModel")) {
+			int debug = 3;
+		}
 		if (match.isPresent()) {
 			return match.get().action() == Action.INCLUDE;
 		}

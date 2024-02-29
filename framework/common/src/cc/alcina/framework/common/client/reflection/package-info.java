@@ -18,12 +18,12 @@
  * </ul>
  * <h3>'Beans 1x5 manifesto'</h3>
  * <p>
- * Make beans pretty again! Beans of the world unite, you have nothing to lose
- * except your crusty boilerplate! Hello Portland!
- * </p>
+ * Make beans pretty again. Beans of the world unite, you have nothing to lose
+ * except your crusty boilerplate. And so on
+ * 
  * <p>
  * TL;DR
- *
+ * 
  * <pre>
  * <code>
 
@@ -50,7 +50,7 @@ static class HelloBeans1x5 {
 	&#64;Directed
 	String world = "World!";
 }
-<code>
+</code>
  * </pre>
  * </p>
  * <ul>
@@ -74,14 +74,12 @@ static class HelloBeans1x5 {
  * </ul>
  *
  * </ul>
- * <p>
- * Stage 2 (WIP):
+ * <h4>Stage 2 (WIP):</h4>
  * <ul>
  * <li>No-args _serializable_ bean constructors not required
  * </ul>
  * <h4>From private to package</h4>
- * <p>
- * Notes
+ * <h4>Notes</h4>
  * <ul>
  * <li>Private signifies 'only classes in this nest can access the member', but
  * given top-level classes can contain a nested class structure of arbitrary
@@ -90,11 +88,14 @@ static class HelloBeans1x5 {
  * is package-by-default, with the requirement that members with non-obvious
  * access semantics should be javadoc-documented if they're intended to support
  * access from outside the exact owning class (not the nest).
- * <li>THe other benefit of private is that static analysis tools (e.g. the mvcc
+ * <li>The other benefit of private is that static analysis tools (e.g. the mvcc
  * ClassTransformer) can make guarantees about access (since in java a class
  * cannot be extended). Package access allows no such guarantees. For this
  * reason, {@link Entity} subclasses retain the JavaBeans 1.0 property style.
+ * </ul>
+ * <h4>Property Fields</h4>
  *
- * </p>
+ * Effectively, any non-private field not annotated with @Property.Not is an
+ * Alcina Property - a superset of Java Beans properties
  */
 package cc.alcina.framework.common.client.reflection;

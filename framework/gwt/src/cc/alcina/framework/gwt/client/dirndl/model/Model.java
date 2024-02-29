@@ -210,6 +210,9 @@ public abstract class Model extends Bindable implements
 		return node;
 	}
 
+	/**
+	 * All non-private fields will be rendered in the UI
+	 */
 	@Directed.AllProperties
 	public static abstract class All extends Fields {
 	}
@@ -420,6 +423,10 @@ public abstract class Model extends Bindable implements
 		}
 	}
 
+	/**
+	 * All property fields will be rendered in the UI if annotated with
+	 * an @Directed
+	 */
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Fields extends Model {
 	}
@@ -462,5 +469,8 @@ public abstract class Model extends Bindable implements
 	 * interface (on the model) specifies just that
 	 */
 	public interface ResetDirecteds {
+	}
+
+	public static class Blank extends Model {
 	}
 }

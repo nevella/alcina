@@ -627,6 +627,10 @@ class ReachabilityData {
 		public String toString() {
 			return qualifiedSourceName;
 		}
+
+		public boolean nameContains(String string) {
+			return qualifiedSourceName.contains(string);
+		}
 	}
 
 	static class TypeHierarchy {

@@ -230,10 +230,25 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	@Override
 	protected <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
+		// first try custom resolution (which allows parents to apply), then use
+		// the resolver
+		List<A> custom = resolveAnnotations1(annotationClass, location);
+		if (custom != null) {
+			return custom;
+		}
 		// route via default (strategy-based) resolver, not superclass (which
 		// does not use merge strategies)
 		return annotationResolver.resolveAnnotations0(annotationClass, location,
 				this::resolveLocationClass, this);
+	}
+
+	protected <A extends Annotation> List<A> resolveAnnotations1(
+			Class<A> annotationClass, AnnotationLocation location) {
+		if (parent == null) {
+			return null;
+		} else {
+			return parent.resolveAnnotations1(annotationClass, location);
+		}
 	}
 
 	/**
@@ -415,5 +430,14 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	@Inherited
 	public @interface ServiceRegistration {
 		Class<? extends ContextService> value();
+	}
+
+	public interface Has {
+		/*
+		 * Note - this needs to be reapplied on any implementation (resolution
+		 * currently occurs outside a resolution context )
+		 */
+		@Property.Not
+		ContextResolver getContextResolver();
 	}
 }

@@ -175,7 +175,8 @@ import cc.alcina.framework.gwt.client.util.ClassNames;
  *   1x1j overlay/preview events redux
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager (in fact - client transactions)
  *   1x2a Java Records! (done)
- *   1x2b Java Beans 2! Not public -- also consider removal of @Bean (but @ReflectionSerializable is required) (done) (note beans manifesto)
+ *   1x2b Java Beans 2! Not public -- also consider removal of @Bean (but @ReflectionSerializable is required) (done)
+ *  (note beans manifesto)
  *   1x2c Fragment Node fixes (FN)
  *   1x3 low priority fixmes
  *   1x3a consider consort rework
@@ -1881,11 +1882,23 @@ public class DirectedLayout implements AlcinaProcess {
 		void init(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
-			DirectedContextResolver directedContextResolver = location
-					.getAnnotation(DirectedContextResolver.class);
-			if (directedContextResolver != null) {
-				ContextResolver newResolver = Reflections
-						.newInstance(directedContextResolver.value());
+			/*
+			 * compute the new resolver, if any
+			 */
+			ContextResolver newResolver = null;
+			if (model != null && model instanceof ContextResolver.Has) {
+				newResolver = ((ContextResolver.Has) model)
+						.getContextResolver();
+			}
+			if (newResolver == null) {
+				DirectedContextResolver resolverAnnotation = location
+						.getAnnotation(DirectedContextResolver.class);
+				if (resolverAnnotation != null) {
+					newResolver = Reflections
+							.newInstance(resolverAnnotation.value());
+				}
+			}
+			if (newResolver != null) {
 				newResolver.init(resolver, resolver.layout, model);
 				resolver = newResolver;
 				// legal (modifying the location's resolver)! note that new
@@ -1894,6 +1907,9 @@ public class DirectedLayout implements AlcinaProcess {
 				location.setResolver(resolver);
 			}
 			this.resolver = resolver;
+			/*
+			 * Now compute other fields (using the resolver)
+			 */
 			this.model = resolver.resolveModel(model);
 			if (this.model != model) {
 				if (this.model instanceof Model.ResetDirecteds) {
@@ -1908,11 +1924,6 @@ public class DirectedLayout implements AlcinaProcess {
 			// generate the node (1-1 with input)
 			node = new Node(resolver, parentNode, location, this.model,
 					this.directeds.size() == 1);
-			// don't add to parents yet (out of order) - but once we have a
-			// better queue, do
-			// if (parentNode != null) {
-			// parentNode.children.add(node);
-			// }
 			node.directed = firstDirected();
 		}
 

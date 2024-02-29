@@ -91,7 +91,7 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	public static class EntityRenderer extends Text {
 		@Override
 		protected String getModelText(Object model) {
-			return "";
+			return HasDisplayName.displayName(model);
 		}
 	}
 
