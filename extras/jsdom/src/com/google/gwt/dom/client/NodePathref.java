@@ -51,11 +51,11 @@ public abstract class NodePathref implements ClientDomNode {
 	static void ensurePathrefRemote(Node child) {
 		if (!child.linkedToRemote()) {
 			child.putRemote(create(child), false);
-			child.streamChildren().forEach(NodePathref::ensurePathrefRemote);
 		}
+		child.streamChildren().forEach(NodePathref::ensurePathrefRemote);
 	}
 
-	private Node node;
+	protected Node node;
 
 	NodePathref(Node node) {
 		this.node = node;
@@ -79,6 +79,10 @@ public abstract class NodePathref implements ClientDomNode {
 	@Override
 	public Node cloneNode(boolean deep) {
 		throw new UnsupportedOperationException();
+	}
+
+	void emitMutation(MutationRecord mutation) {
+		getOwnerDocument().implAccess().pathrefRemote().emitMutation(mutation);
 	}
 
 	@Override
@@ -214,17 +218,12 @@ public abstract class NodePathref implements ClientDomNode {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public String toString() {
-		return Ax.format("%s: null::remote-placeholder",
-				getClass().getSimpleName());
-	}
-
-	void emitMutation(MutationRecord mutation) {
-		getOwnerDocument().implAccess().pathrefRemote().emitMutation(mutation);
-	}
-
 	void setParentNode(NodeLocalNull local) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s: %s", getClass().getSimpleName(), node);
 	}
 }

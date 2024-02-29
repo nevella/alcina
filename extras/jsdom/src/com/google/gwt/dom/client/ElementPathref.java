@@ -287,7 +287,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 
 	@Override
 	public String getTagName() {
-		throw new UnsupportedOperationException();
+		return ((Element) node).getTagName();
 	}
 
 	@Override
@@ -314,6 +314,17 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	public int indexInParentChildren() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	void mirrorClassName() {
+		/*
+		 * mirror from local, since there's no other copy of the remote value
+		 */
+		setClassName(getClassName());
+	}
+
+	int orSunkEventsOfAllChildren(int sunk) {
+		throw new UnsupportedOperationException();
 	}
 
 	public void putElement(Element element) {
@@ -469,16 +480,5 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	@Override
 	public String toString() {
 		return super.toString() + "\n\t" + getTagName();
-	}
-
-	void mirrorClassName() {
-		/*
-		 * mirror from local, since there's no other copy of the remote value
-		 */
-		setClassName(getClassName());
-	}
-
-	int orSunkEventsOfAllChildren(int sunk) {
-		throw new UnsupportedOperationException();
 	}
 }
