@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
@@ -73,8 +74,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 @Directed(
 	emits = { ModelEvents.Closed.class, ModelEvents.Submit.class,
 			ModelEvents.Opened.class },
-	
-bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
+	bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
 public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
@@ -153,10 +153,12 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		if (submit) {
 			// force commit of focussed element changes (textarea, input) if it
 			// is a child of this closing dialog.
-			Element focus = WidgetUtils.getFocussedDocumentElement();
-			if (focus != null
-					&& provideElement().provideIsAncestorOf(focus, true)) {
-				WidgetUtils.clearFocussedDocumentElement();
+			if (GWT.isClient()) {
+				Element focus = WidgetUtils.getFocussedDocumentElement();
+				if (focus != null
+						&& provideElement().provideIsAncestorOf(focus, true)) {
+					WidgetUtils.clearFocussedDocumentElement();
+				}
 			}
 			NodeEvent.Context.fromEvent(from, provideNode())
 					.dispatch(ModelEvents.Submit.class, null);
@@ -173,9 +175,36 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		return true;
 	}
 
+	/*
+	 * Compute the overlay class based on logical ancestors + contents
+	 */
+	void computeCssClass() {
+		// deliberately does not try to access @Directed(cssClass) - since
+		// overlay creation is imperative and the caller has essentially full
+		// control of the class selector (via logicalAncestors)...this is good
+		// enough, I think
+		//
+		// FIXME - dirndl 1x3 - actually, at least for contentdecorator it would
+		// be nice
+		Stream<String> derivedClasses = Stream
+				.concat(logicalAncestors.stream(),
+						Stream.of(logicalParent, this, contents))
+				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
+				.map(Class::getSimpleName);
+		String cssClass = Stream
+				.concat(derivedClasses, Stream.of(cssClassParameter))
+				.filter(Objects::nonNull).map(Ax::cssify)
+				.collect(Collectors.joining(" "));
+		setCssClass(cssClass);
+	}
+
 	@Directed
 	public Actions getActions() {
 		return this.actions;
+	}
+
+	protected Overlay getChildOverlay() {
+		return this.childOverlay;
 	}
 
 	@Directed
@@ -296,6 +325,21 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		return logicalParent;
 	}
 
+	private boolean selfOrDescendantOverlayContains(Element element) {
+		if (provideElement().provideIsAncestorOf(element, true)) {
+			return true;
+		}
+		if (childOverlay != null
+				&& childOverlay.selfOrDescendantOverlayContains(element)) {
+			return true;
+		}
+		return false;
+	}
+
+	protected void setChildOverlay(Overlay childOverlay) {
+		this.childOverlay = childOverlay;
+	}
+
 	public void setCssClass(String cssClass) {
 		String old_cssClass = this.cssClass;
 		this.cssClass = cssClass;
@@ -308,48 +352,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		return Ax.format(
 				"Overlay:\n\tcontents:     %s\n\tlogicalParent: %s\n\tchildOverlay: %s",
 				contents, logicalParent, childOverlay);
-	}
-
-	private boolean selfOrDescendantOverlayContains(Element element) {
-		if (provideElement().provideIsAncestorOf(element, true)) {
-			return true;
-		}
-		if (childOverlay != null
-				&& childOverlay.selfOrDescendantOverlayContains(element)) {
-			return true;
-		}
-		return false;
-	}
-
-	protected Overlay getChildOverlay() {
-		return this.childOverlay;
-	}
-
-	protected void setChildOverlay(Overlay childOverlay) {
-		this.childOverlay = childOverlay;
-	}
-
-	/*
-	 * Compute the overlay class based on logical ancestors + contents
-	 */
-	void computeCssClass() {
-		// deliberately does not try to access @Directed(cssClass) - since
-		// overlay creation is imperative and the caller has essentially full
-		// control of the class selector (via logicalAncestors)...this is good
-		// enough, I think
-		//
-		// FIXME - dirndl 1x3 - actually, at least for contentdecorator it would
-		// be nice
-		Stream<String> derivedClasses = Stream
-				.concat(logicalAncestors.stream(),
-						Stream.of(logicalParent, this, contents))
-				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
-				.map(Class::getSimpleName);
-		String cssClass = Stream
-				.concat(derivedClasses, Stream.of(cssClassParameter))
-				.filter(Objects::nonNull).map(Ax::cssify)
-				.collect(Collectors.joining(" "));
-		setCssClass(cssClass);
 	}
 
 	public static class Actions extends Model implements HasLinks {
