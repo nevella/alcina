@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.dev.util.log.PrintWriterTreeLogger;
@@ -117,7 +118,7 @@ public class JdkReflectionGenerator {
 				loadClassDirectoryPaths(Class<?>... classpathDefiningClasses) {
 			classDirectoryPaths = Arrays.stream(classpathDefiningClasses)
 					.map(ClassUtil::getRootClasspathElement).distinct()
-					.toList();
+					.collect(Collectors.toList());
 		}
 	}
 }

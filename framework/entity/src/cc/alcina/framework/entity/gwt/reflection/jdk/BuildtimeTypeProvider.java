@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.gwt.reflection.jdk;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -42,7 +43,8 @@ class BuildtimeTypeProvider implements TypeOracle.TypeProvider {
 				.addAll(CommonUtils.PRIMITIVE_WRAPPER_CLASS_NAMES);
 		List<JClassType> types = Stream
 				.concat(scannerClassNames, jdkReflectionClassNames.stream())
-				.filter(this::checkFilter).map(typeOracle::findType).toList();
+				.filter(this::checkFilter).map(typeOracle::findType)
+				.collect(Collectors.toList());
 		return types.toArray(new JClassType[types.size()]);
 	}
 
