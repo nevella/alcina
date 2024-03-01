@@ -45,6 +45,10 @@ public class JAbstractMethod
 	JAbstractMethod(TypeOracle typeOracle, Executable executable) {
 		this.typeOracle = typeOracle;
 		this.executable = executable;
+		if (executable.toString()
+				.contains("gwittir.client.ui.TextBox.setValue")) {
+			int debug = 3;
+		}
 		this.modifierBits = executable.getModifiers();
 		this.parameters = Arrays.stream(executable.getParameters())
 				.map(p -> new JParameter(typeOracle, this, p))

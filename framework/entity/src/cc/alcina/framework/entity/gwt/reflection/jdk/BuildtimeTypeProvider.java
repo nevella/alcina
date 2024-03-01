@@ -1,7 +1,10 @@
 package cc.alcina.framework.entity.gwt.reflection.jdk;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.TypeOracle;
@@ -19,6 +22,30 @@ class BuildtimeTypeProvider implements TypeOracle.TypeProvider {
 		this.jdkReflectionGenerator = jdkReflectionGenerator;
 	}
 
+	boolean checkFilter(String typeName) {
+		if (jdkReflectionGenerator.attributes.exclude != null) {
+			return !typeName.matches(jdkReflectionGenerator.attributes.exclude);
+		} else {
+			return true;
+		}
+	}
+
+	@Override
+	public JClassType[] getTypes(TypeOracle typeOracle) {
+		Stream<String> scannerClassNames = dataCache.classData.values().stream()
+				.filter(meta -> !meta.invalid && meta.hasCanonicalName)
+				.map(ClassMetadata::className);
+		List<String> jdkReflectionClassNames = new ArrayList<>();
+		jdkReflectionClassNames.addAll(CommonUtils.COLLECTION_CLASS_NAMES);
+		jdkReflectionClassNames.addAll(CommonUtils.CORE_CLASS_NAMES);
+		jdkReflectionClassNames
+				.addAll(CommonUtils.PRIMITIVE_WRAPPER_CLASS_NAMES);
+		List<JClassType> types = Stream
+				.concat(scannerClassNames, jdkReflectionClassNames.stream())
+				.filter(this::checkFilter).map(typeOracle::findType).toList();
+		return types.toArray(new JClassType[types.size()]);
+	}
+
 	void scan() throws Exception {
 		EntityLayerObjects.get().setDataFolder(
 				jdkReflectionGenerator.attributes.generationDataFolder());
@@ -28,14 +55,5 @@ class BuildtimeTypeProvider implements TypeOracle.TypeProvider {
 				"validity-scanner.dat");
 		dataCache = validityScanner
 				.scan(jdkReflectionGenerator.attributes.classDirectoryPaths);
-	}
-
-	@Override
-	public JClassType[] getTypes(TypeOracle typeOracle) {
-		List<JClassType> types = dataCache.classData.values().stream()
-				.filter(meta -> !meta.invalid && meta.hasCanonicalName)
-				.map(ClassMetadata::className).map(typeOracle::findType)
-				.toList();
-		return types.toArray(new JClassType[types.size()]);
 	}
 }

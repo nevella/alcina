@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JField;
 import com.google.gwt.core.ext.typeinfo.JMethod;
@@ -17,6 +18,7 @@ import cc.alcina.framework.common.client.reflection.Method;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JTypeParameter;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesTypeBounds;
 
@@ -26,6 +28,41 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.Provi
  */
 public class PropertyReflection extends ReflectionElement
 		implements Comparable<PropertyReflection> {
+	/*
+	 * return -1 is type1 is assignable from type2 (less specific), 1 if type1
+	 * is assignable to type2 (more specific), 0 otherwise
+	 */
+	static int computeSpecicifity(JType type1, JType type2) {
+		JClassType clazz1 = type1.isClassOrInterface();
+		JClassType clazz2 = type2.isClassOrInterface();
+		/*
+		 * only compare class types
+		 */
+		if (clazz1 == null || clazz2 == null) {
+			return 0;
+		}
+		if (clazz1 instanceof JTypeParameter) {
+			if (clazz2 instanceof JTypeParameter) {
+				return 0;
+			} else {
+				return -1;
+			}
+		}
+		if (clazz2 instanceof JTypeParameter) {
+			return 1;
+		}
+		if (clazz1 == clazz2) {
+			return 0;
+		}
+		if (clazz1.isAssignableFrom(clazz2)) {
+			return -1;
+		}
+		if (clazz2.isAssignableFrom(clazz1)) {
+			return 1;
+		}
+		return 0;
+	}
+
 	List<AnnotationReflection> annotationReflections = new ArrayList<>();
 
 	public final String name;
@@ -56,24 +93,24 @@ public class PropertyReflection extends ReflectionElement
 	}
 
 	/*
-	 * ignore methods (or field set/get) if they're overridden by existing
-	 * getter/setter
+	 * ignore methods (or field set/get) if they're contravariant to the
+	 * existing getter/setter (i.e. it existing has a more specific
+	 * parameter/return type )
 	 */
 	public void addMethod(PropertyAccessor method) {
 		if (method.getter) {
-			if (method.isOverriddenBy(getter)) {
+			if (method.isContravariantTo(getter)) {
 				return;
 			}
 			getter = method;
 			updatePropertyType(method.getPropertyType());
 		} else {
-			if (method.isOverriddenBy(setter)) {
+			if (method.isContravariantTo(setter)) {
 				return;
 			}
 			setter = method;
 			updatePropertyType(method.getPropertyType());
 		}
-		propertyType = ClassReflection.erase(propertyType);
 	}
 
 	public Property asProperty() {
@@ -141,8 +178,11 @@ public class PropertyReflection extends ReflectionElement
 				&& this.propertyType instanceof JClassType) {
 			JClassType existingClassType = (JClassType) this.propertyType;
 			JClassType candidateClassType = (JClassType) erased;
-			if (candidateClassType.isAssignableFrom(existingClassType)) {
-				return;// covariant, do not update
+			int specicifity = computeSpecicifity(existingClassType,
+					candidateClassType);
+			if (specicifity <= 0) {
+				return;// covariant, do not update. in particular type
+						// parameters are less specific than any real type
 			}
 		}
 		if (type instanceof JClassType) {
@@ -152,6 +192,22 @@ public class PropertyReflection extends ReflectionElement
 			jtypeBounds = List.of();
 		}
 		this.propertyType = erased;
+	}
+
+	class AnnotationProviderImpl implements AnnotationProvider {
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return getter == null ? null
+					: getter.getAnnotation(annotationClass);
+		}
+
+		@Override
+		public <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass) {
+			return getter == null ? List.of()
+					: (List<A>) getter.getAnnotations(annotationClass);
+		}
 	}
 
 	public static abstract class PropertyAccessor
@@ -169,7 +225,13 @@ public class PropertyReflection extends ReflectionElement
 			this.firePropertyChangeEvents = firePropertyChangeEvents;
 		}
 
+		protected abstract <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass);
+
 		public abstract Annotation[] getAnnotations();
+
+		protected abstract <A extends Annotation> List<A>
+				getAnnotations(Class<A> annotationClass);
 
 		public abstract JClassType getEnclosingType();
 
@@ -181,13 +243,7 @@ public class PropertyReflection extends ReflectionElement
 			return getAnnotation(annotationClass) != null;
 		}
 
-		protected abstract <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass);
-
-		protected abstract <A extends Annotation> List<A>
-				getAnnotations(Class<A> annotationClass);
-
-		protected abstract boolean isOverriddenBy(PropertyAccessor getter2);
+		protected abstract boolean isContravariantTo(PropertyAccessor getter2);
 
 		public static class Field extends PropertyAccessor {
 			JField field;
@@ -199,8 +255,20 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected <A extends Annotation> A
+					getAnnotation(Class<A> annotationClass) {
+				return field.getAnnotation(annotationClass);
+			}
+
+			@Override
 			public Annotation[] getAnnotations() {
 				return field.getAnnotations();
+			}
+
+			@Override
+			protected <A extends Annotation> List<A>
+					getAnnotations(Class<A> annotationClass) {
+				return field.getAnnotations(annotationClass);
 			}
 
 			@Override
@@ -219,28 +287,22 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected boolean isContravariantTo(PropertyAccessor test) {
+				/*
+				 * There should only be one Field accessor per type (the
+				 * precondition checks that) - the logic states 'any Method
+				 * accessor will override the Field accessor'
+				 */
+				Preconditions.checkState(!(test instanceof Field));
+				return test != null;
+			}
+
+			@Override
 			public cc.alcina.framework.common.client.reflection.Method
 					providePropertyMethod(boolean getter,
 							boolean firePropertyChangeEvents) {
 				return ((ProvidesPropertyMethod) field).providePropertyMethod(
 						getter, firePropertyChangeEvents);
-			}
-
-			@Override
-			protected <A extends Annotation> A
-					getAnnotation(Class<A> annotationClass) {
-				return field.getAnnotation(annotationClass);
-			}
-
-			@Override
-			protected <A extends Annotation> List<A>
-					getAnnotations(Class<A> annotationClass) {
-				return field.getAnnotations(annotationClass);
-			}
-
-			@Override
-			protected boolean isOverriddenBy(PropertyAccessor test) {
-				return test != null;
 			}
 		}
 
@@ -253,8 +315,20 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected <A extends Annotation> A
+					getAnnotation(Class<A> annotationClass) {
+				return method.getAnnotation(annotationClass);
+			}
+
+			@Override
 			public Annotation[] getAnnotations() {
 				return method.getAnnotations();
+			}
+
+			@Override
+			protected <A extends Annotation> List<A>
+					getAnnotations(Class<A> annotationClass) {
+				return method.getAnnotations(annotationClass);
 			}
 
 			@Override
@@ -277,6 +351,59 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
+			protected boolean isContravariantTo(PropertyAccessor test) {
+				// this test works for GWT typemodel but not JDK
+				// return test != null && getEnclosingType()
+				// .isAssignableFrom(test.getEnclosingType());
+				if (test == null) {
+					return false;
+				}
+				if (test instanceof Field) {
+					return false;
+				}
+				Method otherMethod = (Method) test;
+				/*
+				 * compare enclosing types, then return types, then parameter
+				 * types (last must be equal length arrays)
+				 */
+				int enclosingTypeSpecicifity = computeSpecicifity(
+						getEnclosingType(), otherMethod.getEnclosingType());
+				if (enclosingTypeSpecicifity != 0) {
+					if (enclosingTypeSpecicifity == -1) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+				int returnTypeSpecicifity = computeSpecicifity(
+						method.getReturnType(),
+						otherMethod.method.getReturnType());
+				if (returnTypeSpecicifity != 0) {
+					if (returnTypeSpecicifity == -1) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+				for (int idx = 0; idx < method.getParameters().length; idx++) {
+					int parameterSpecicifity = computeSpecicifity(
+							method.getParameters()[idx].getType(),
+							otherMethod.method.getParameters()[idx].getType());
+					if (parameterSpecicifity != 0) {
+						if (parameterSpecicifity == -1) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+				}
+				/*
+				 * Unable to determine which method wins (should never be hit)
+				 */
+				throw new IllegalArgumentException();
+			}
+
+			@Override
 			public cc.alcina.framework.common.client.reflection.Method
 					providePropertyMethod(boolean getter,
 							boolean firePropertyChangeEvents) {
@@ -285,21 +412,8 @@ public class PropertyReflection extends ReflectionElement
 			}
 
 			@Override
-			protected <A extends Annotation> A
-					getAnnotation(Class<A> annotationClass) {
-				return method.getAnnotation(annotationClass);
-			}
-
-			@Override
-			protected <A extends Annotation> List<A>
-					getAnnotations(Class<A> annotationClass) {
-				return method.getAnnotations(annotationClass);
-			}
-
-			@Override
-			protected boolean isOverriddenBy(PropertyAccessor test) {
-				return test != null && getEnclosingType()
-						.isAssignableFrom(test.getEnclosingType());
+			public String toString() {
+				return Ax.format("MethodAccessor: %s", method);
 			}
 		}
 	}
@@ -317,21 +431,5 @@ public class PropertyReflection extends ReflectionElement
 
 		Method providePropertyMethod(boolean getter,
 				boolean providePropertyMethod);
-	}
-
-	class AnnotationProviderImpl implements AnnotationProvider {
-		@Override
-		public <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass) {
-			return getter == null ? null
-					: getter.getAnnotation(annotationClass);
-		}
-
-		@Override
-		public <A extends Annotation> List<A>
-				getAnnotations(Class<A> annotationClass) {
-			return getter == null ? List.of()
-					: (List<A>) getter.getAnnotations(annotationClass);
-		}
 	}
 }

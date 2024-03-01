@@ -56,7 +56,13 @@ public class ClassReflection extends ReflectionElement {
 
 	public static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
-			return t.isParameterized().getBaseType().getErasedType();
+			if (t.isParameterized().getBaseType() == null) {
+				// e.g. an inner class of a parametrized type. possibly there's
+				// some more generic variant - but this works
+				return t.getErasedType();
+			} else {
+				return t.isParameterized().getBaseType().getErasedType();
+			}
 		} else {
 			return t.getErasedType();
 		}
@@ -119,6 +125,31 @@ public class ClassReflection extends ReflectionElement {
 		this.reflectionVisibility = reflectionVisibility;
 	}
 
+	void addFieldMethods(JField field) {
+		boolean hasMutableFields = typeAnnotationLocation
+				.hasAnnotation(Bean.class)
+				&& typeAnnotationLocation.getAnnotation(Bean.class)
+						.value() == PropertySource.FIELDS;
+		PropertyReflection propertyReflection = propertyReflections
+				.computeIfAbsent(field.getName(),
+						name -> new PropertyReflection(this, name,
+								reflectionVisibility, providesTypeBounds));
+		propertyReflection.addMethod(new PropertyAccessor.Field(field, true,
+				sourcesPropertyChanges));
+		if (hasMutableFields && !field.isFinal()) {
+			propertyReflection.addMethod(new PropertyAccessor.Field(field,
+					false, sourcesPropertyChanges));
+		}
+	}
+
+	void addPropertyMethod(PropertyAccessor m) {
+		PropertyReflection propertyReflection = propertyReflections
+				.computeIfAbsent(m.propertyName,
+						name -> new PropertyReflection(this, name,
+								reflectionVisibility, providesTypeBounds));
+		propertyReflection.addMethod(m);
+	}
+
 	public ClassReflector asReflector() {
 		List<Property> properties = sortedPropertyReflections.stream()
 				.map(PropertyReflection::asProperty)
@@ -152,6 +183,35 @@ public class ClassReflection extends ReflectionElement {
 				.provideTypeBounds(type);
 	}
 
+	List<JField> getAllVisibleFields() {
+		List<JField> propertyFields = new ArrayList<>();
+		JClassType cursor = type;
+		/*
+		 * The result of the loop is that fields are ordered (superclass before
+		 * subclass)(then field order in class)
+		 *
+		 */
+		while (cursor.getSuperclass() != null) {
+			JField[] fields = cursor.getFields();
+			int perClassIndex = 0;
+			for (int idx = 0; idx < fields.length; idx++) {
+				JField field = fields[idx];
+				/*
+				 * FIDME - reflection - this restriction shd be removed, by
+				 * reworking the GWT accessors (to call the superclass)
+				 */
+				if (!Objects.equals(cursor.getPackage(), type.getPackage())) {
+					if (!field.isPublic()) {
+						continue;
+					}
+				}
+				propertyFields.add(perClassIndex++, field);
+			}
+			cursor = cursor.getSuperclass();
+		}
+		return propertyFields;
+	}
+
 	public List<AnnotationReflection> getAnnotationReflections() {
 		return this.annotationReflections;
 	}
@@ -174,6 +234,25 @@ public class ClassReflection extends ReflectionElement {
 
 	public boolean isHasFinalModifier() {
 		return this.hasFinalModifier;
+	}
+
+	private String methodNamePartToPropertyName(String s) {
+		if (s.length() == 0) {
+			return s;
+		}
+		String first = s.substring(0, 1);
+		if (first.equals(first.toLowerCase())) {
+			return s;
+		}
+		if (s.length() > 1) {
+			String second = s.substring(1, 2);
+			if (second.equals(second.toUpperCase())
+					&& second.matches("[A-Z]")) {
+				// acronym
+				return s;
+			}
+		}
+		return first.toLowerCase() + s.substring(1);
 	}
 
 	@Override
@@ -215,79 +294,6 @@ public class ClassReflection extends ReflectionElement {
 		if (!hasAbstractModifier) {
 			prepareRegistrations();
 		}
-	}
-
-	private String methodNamePartToPropertyName(String s) {
-		if (s.length() == 0) {
-			return s;
-		}
-		String first = s.substring(0, 1);
-		if (first.equals(first.toLowerCase())) {
-			return s;
-		}
-		if (s.length() > 1) {
-			String second = s.substring(1, 2);
-			if (second.equals(second.toUpperCase())
-					&& second.matches("[A-Z]")) {
-				// acronym
-				return s;
-			}
-		}
-		return first.toLowerCase() + s.substring(1);
-	}
-
-	void addFieldMethods(JField field) {
-		boolean hasMutableFields = typeAnnotationLocation
-				.hasAnnotation(Bean.class)
-				&& typeAnnotationLocation.getAnnotation(Bean.class)
-						.value() == PropertySource.FIELDS;
-		PropertyReflection propertyReflection = propertyReflections
-				.computeIfAbsent(field.getName(),
-						name -> new PropertyReflection(this, name,
-								reflectionVisibility, providesTypeBounds));
-		propertyReflection.addMethod(new PropertyAccessor.Field(field, true,
-				sourcesPropertyChanges));
-		if (hasMutableFields && !field.isFinal()) {
-			propertyReflection.addMethod(new PropertyAccessor.Field(field,
-					false, sourcesPropertyChanges));
-		}
-	}
-
-	void addPropertyMethod(PropertyAccessor m) {
-		PropertyReflection propertyReflection = propertyReflections
-				.computeIfAbsent(m.propertyName,
-						name -> new PropertyReflection(this, name,
-								reflectionVisibility, providesTypeBounds));
-		propertyReflection.addMethod(m);
-	}
-
-	List<JField> getAllVisibleFields() {
-		List<JField> propertyFields = new ArrayList<>();
-		JClassType cursor = type;
-		/*
-		 * The result of the loop is that fields are ordered (superclass before
-		 * subclass)(then field order in class)
-		 *
-		 */
-		while (cursor.getSuperclass() != null) {
-			JField[] fields = cursor.getFields();
-			int perClassIndex = 0;
-			for (int idx = 0; idx < fields.length; idx++) {
-				JField field = fields[idx];
-				/*
-				 * FIDME - reflection - this restriction shd be removed, by
-				 * reworking the GWT accessors (to call the superclass)
-				 */
-				if (!Objects.equals(cursor.getPackage(), type.getPackage())) {
-					if (!field.isPublic()) {
-						continue;
-					}
-				}
-				propertyFields.add(perClassIndex++, field);
-			}
-			cursor = cursor.getSuperclass();
-		}
-		return propertyFields;
 	}
 
 	void prepareProperties() {
@@ -395,26 +401,6 @@ public class ClassReflection extends ReflectionElement {
 		void makeAccessible();
 	}
 
-	public interface JdkTypeModelMapper {
-		JClassType getType(Class jdkType);
-	}
-
-	public interface ProvidesAssignableTo {
-		Predicate<Class> provideAssignableTo();
-	}
-
-	public interface ProvidesInterfaces {
-		List<Class> provideInterfaces();
-	}
-
-	public interface ProvidesJavaType {
-		Class provideJavaType();
-	}
-
-	public interface ProvidesTypeBounds {
-		List<? extends JClassType> provideTypeBounds(JClassType type);
-	}
-
 	class AnnotationProviderImpl implements AnnotationProvider {
 		@Override
 		public <A extends Annotation> A
@@ -427,6 +413,10 @@ public class ClassReflection extends ReflectionElement {
 				getAnnotations(Class<A> annotationClass) {
 			return type.getAnnotations(annotationClass);
 		}
+	}
+
+	public interface JdkTypeModelMapper {
+		JClassType getType(Class jdkType);
 	}
 
 	/*
@@ -513,5 +503,21 @@ public class ClassReflection extends ReflectionElement {
 			}
 			return o1.getName().compareTo(o2.getName());
 		}
+	}
+
+	public interface ProvidesAssignableTo {
+		Predicate<Class> provideAssignableTo();
+	}
+
+	public interface ProvidesInterfaces {
+		List<Class> provideInterfaces();
+	}
+
+	public interface ProvidesJavaType {
+		Class provideJavaType();
+	}
+
+	public interface ProvidesTypeBounds {
+		List<? extends JClassType> provideTypeBounds(JClassType type);
 	}
 }

@@ -19,7 +19,8 @@ public class EntityLayerUtils {
 
 	public static String getLocalHostName() {
 		try {
-			String defined = Configuration.get("localHostName");
+			String defined = Configuration.get(EntityLayerUtils.class,
+					"localHostName");
 			if (Ax.isBlank(defined)) {
 				return java.net.InetAddress.getLocalHost().getHostName();
 			} else {
@@ -54,20 +55,20 @@ public class EntityLayerUtils {
 				|| EntityLayerUtils.isBotExtraUserAgent(userAgent);
 	}
 
-	public static boolean isTestOrTestServer() {
-		return Ax.isTest() || AppPersistenceBase.isTestServer();
-	}
-
-	public static boolean isTestServer() {
-		return AppPersistenceBase.isTestServer();
-	}
-
 	public static boolean isProduction() {
 		return !isTestOrTestServer();
 	}
 
 	public static boolean isTest() {
 		return AppPersistenceBase.isTest();
+	}
+
+	public static boolean isTestOrTestServer() {
+		return Ax.isTest() || AppPersistenceBase.isTestServer();
+	}
+
+	public static boolean isTestServer() {
+		return AppPersistenceBase.isTestServer();
 	}
 
 	public static void setTestServer(boolean testServer) {

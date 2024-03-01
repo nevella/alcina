@@ -34,7 +34,6 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JRawType;
@@ -203,14 +202,44 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	JClassType registrationAllSubtypesClient;
 
-	/*
-	 * Initialisation properties, immutable once generating
-	 */
-	public static class Attributes {
-		public boolean guaranteedSinglePermutationBuild = false;
+	public Attributes attributes = new Attributes();
+
+	void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
+		if (!type.isPrimitive()) {
+			factory.addImport(type.getCanonicalName().replace("[]", ""));
+		}
 	}
 
-	public Attributes attributes = new Attributes();
+	boolean checkSimpleFilter(JClassType type) {
+		if (attributes.simpleExcludes != null) {
+			return !type.getQualifiedSourceName()
+					.matches(attributes.simpleExcludes);
+		} else {
+			return true;
+		}
+	}
+
+	void checkSinglePermutationBuild(TreeLogger logger,
+			GeneratorContext context) throws BadPropertyValueException {
+		if (attributes.guaranteedSinglePermutationBuild) {
+			return;
+		}
+		Preconditions.checkArgument(
+				context.getPropertyOracle()
+						.getSelectionProperty(logger, "user.agent")
+						.getCurrentValue().equals("safari"),
+				"Only configured for single-permutation (safari) builds");
+	}
+
+	SourceWriter createWriter(ClassSourceFileComposerFactory factory,
+			PrintWriter contextWriter) {
+		PrintWriter writer = contextWriter;
+		return factory.createSourceWriter(writer);
+	}
+
+	String escapeClassName(JClassType type) {
+		return type.getQualifiedSourceName().replace(".", "_");
+	}
 
 	@Override
 	public RebindResult generateIncrementally(TreeLogger logger,
@@ -263,68 +292,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
-	@Override
-	public long getVersionId() {
-		return GENERATOR_VERSION_ID;
-	}
-
-	void checkSinglePermutationBuild(TreeLogger logger,
-			GeneratorContext context) throws BadPropertyValueException {
-		if (attributes.guaranteedSinglePermutationBuild) {
-			return;
-		}
-		Preconditions.checkArgument(
-				context.getPropertyOracle()
-						.getSelectionProperty(logger, "user.agent")
-						.getCurrentValue().equals("safari"),
-				"Only configured for single-permutation (safari) builds");
-	}
-
-	void setupFilter() throws Exception {
-		ModuleReflectionFilter modulefilter = new ModuleReflectionFilter();
-		modulefilter.init(logger, context, module.value(),
-				reflectUnknownInInitialModule);
-		filter = modulefilter;
-	}
-
-	protected boolean useCachedResult(TreeLogger logger,
-			GeneratorContext generatorContext) {
-		/*
-		 * Do a series of checks to see if we can use a previously cached
-		 * result, and if so, we can skip further execution and return
-		 * immediately.
-		 */
-		boolean useCache = false;
-		CachedGeneratorResult lastRebindResult = generatorContext
-				.getCachedGeneratorResult();
-		if (lastRebindResult != null
-				&& generatorContext.isGeneratorResultCachingEnabled()) {
-			IncrementalSupport incrementalSupport = (IncrementalSupport) lastRebindResult
-					.getClientData(CACHED_TYPE_INFORMATION);
-			if (incrementalSupport != null && incrementalSupport
-					.checkSourcesUnmodified(logger, this)) {
-				useCache = true;
-			}
-		}
-		return useCache;
-	}
-
-	void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
-		if (!type.isPrimitive()) {
-			factory.addImport(type.getCanonicalName().replace("[]", ""));
-		}
-	}
-
-	SourceWriter createWriter(ClassSourceFileComposerFactory factory,
-			PrintWriter contextWriter) {
-		PrintWriter writer = contextWriter;
-		return factory.createSourceWriter(writer);
-	}
-
-	String escapeClassName(JClassType type) {
-		return type.getQualifiedSourceName().replace(".", "_");
-	}
-
 	String getQualifiedSourceName(JType jType) {
 		if (jType.isTypeParameter() != null) {
 			return jType.isTypeParameter().getBaseType()
@@ -344,6 +311,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public long getVersionId() {
+		return GENERATOR_VERSION_ID;
 	}
 
 	<A extends Annotation> boolean has(JClassType t, Class<A> annotationClass) {
@@ -391,9 +363,38 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				getType(Object.class), getType(Object.class) };
 	}
 
+	void setupFilter() throws Exception {
+		ModuleReflectionFilter modulefilter = new ModuleReflectionFilter();
+		modulefilter.init(logger, context, module.value(),
+				reflectUnknownInInitialModule);
+		filter = modulefilter;
+	}
+
 	String stringLiteral(String value, boolean quoted) {
 		String escaped = value.replace("\\", "\\\\").replace("\n", "\\n");
 		return quoted ? escaped : String.format("\"%s\"", escaped);
+	}
+
+	protected boolean useCachedResult(TreeLogger logger,
+			GeneratorContext generatorContext) {
+		/*
+		 * Do a series of checks to see if we can use a previously cached
+		 * result, and if so, we can skip further execution and return
+		 * immediately.
+		 */
+		boolean useCache = false;
+		CachedGeneratorResult lastRebindResult = generatorContext
+				.getCachedGeneratorResult();
+		if (lastRebindResult != null
+				&& generatorContext.isGeneratorResultCachingEnabled()) {
+			IncrementalSupport incrementalSupport = (IncrementalSupport) lastRebindResult
+					.getClientData(CACHED_TYPE_INFORMATION);
+			if (incrementalSupport != null && incrementalSupport
+					.checkSourcesUnmodified(logger, this)) {
+				useCache = true;
+			}
+		}
+		return useCache;
 	}
 
 	void writeAnnotationValue(SourceWriter sourceWriter, Object value,
@@ -453,18 +454,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					value.toString());
 		} else {
 			sourceWriter.print(value.toString());
-		}
-	}
-
-	private final class ProvidesTypeBoundsJavacImpl
-			implements ProvidesTypeBounds {
-		JavacTypeBounds.Computed computedTypeBounds = new JavacTypeBounds.Computed();
-
-		@Override
-		public List<? extends JClassType> provideTypeBounds(JClassType type) {
-			return computedTypeBounds.get(
-					(com.google.gwt.dev.javac.typemodel.JClassType) type,
-					context.getTypeOracle().getJavaLangObject()).bounds;
 		}
 	}
 
@@ -627,6 +616,15 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
+	/*
+	 * Initialisation properties, immutable once generating
+	 */
+	public static class Attributes {
+		public boolean guaranteedSinglePermutationBuild = false;
+
+		public String simpleExcludes;
+	}
+
 	class ClassReflectorGenerator extends UnitGenerator
 			implements Comparable<ClassReflectorGenerator> {
 		private ClassReflection reflection;
@@ -645,13 +643,30 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		@Override
-		public String toString() {
-			return "reflector-generator: " + reflectedTypeFqBinaryName();
+		protected void prepare() {
+			reflection.prepare();
+		}
+
+		PropertyMethodGenerator
+				propertyMethodGenerator(PropertyAccessor accessor) {
+			if (accessor instanceof PropertyAccessor.Field) {
+				return new FieldSourced((PropertyAccessor.Field) accessor);
+			} else {
+				return new MethodSourced((PropertyAccessor.Method) accessor);
+			}
+		}
+
+		boolean sourcesPropertyChangeEvents() {
+			return Arrays.stream(reflectedType.getInheritableMethods())
+					.filter(m -> m.getName().equals("firePropertyChange"))
+					.filter(m -> m.getReturnType() == voidJType)
+					.anyMatch(m -> Arrays.equals(m.getParameterTypes(),
+							firePropertyChangeMethodJTypes));
 		}
 
 		@Override
-		protected void prepare() {
-			reflection.prepare();
+		public String toString() {
+			return "reflector-generator: " + reflectedTypeFqBinaryName();
 		}
 
 		@Override
@@ -737,6 +752,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.println(
 					"Predicate<Class> assignableTo = c -> ClientReflections.isAssignableFrom(c,clazz);");
 			Arrays.stream(reflection.type.getImplementedInterfaces())
+					.filter(ClientReflectionGenerator.this::checkSimpleFilter)
 					.forEach(i -> {
 						sourceWriter.println("interfaces.add(%s.class);",
 								i.getQualifiedSourceName());
@@ -759,31 +775,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.println("}");
 			closeClassBody();
 			return true;
-		}
-
-		PropertyMethodGenerator
-				propertyMethodGenerator(PropertyAccessor accessor) {
-			if (accessor instanceof PropertyAccessor.Field) {
-				return new FieldSourced((PropertyAccessor.Field) accessor);
-			} else {
-				return new MethodSourced((PropertyAccessor.Method) accessor);
-			}
-		}
-
-		boolean sourcesPropertyChangeEvents() {
-			if (reflectedType.getQualifiedSourceName().endsWith("Thaithala")) {
-				JMethod jMethod = Arrays
-						.stream(reflectedType.getInheritableMethods())
-						.filter(m -> m.getName()
-								.equals("propertyChangeListeners"))
-						.findFirst().get();
-				int debug = 3;
-			}
-			return Arrays.stream(reflectedType.getInheritableMethods())
-					.filter(m -> m.getName().equals("firePropertyChange"))
-					.filter(m -> m.getReturnType() == voidJType)
-					.anyMatch(m -> Arrays.equals(m.getParameterTypes(),
-							firePropertyChangeMethodJTypes));
 		}
 
 		void writeForNameCase(SourceWriter sourceWriter) {
@@ -838,7 +829,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				} else {
 					sourceWriter.println("@Override");
 					sourceWriter.println(
-							"public void set(Object bean,Object value){");
+							"public void set(Object bean, Object value){");
 					sourceWriter.indent();
 					if (reflection.sourcesPropertyChanges) {
 						/*
@@ -914,11 +905,12 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					sourceWriter.println(
 							"public void set(Object bean,Object value){");
 					sourceWriter.indent();
+					String qualifiedSourceName = accessor.getPropertyType()
+							.getQualifiedSourceName();
 					sourceWriter.print("  ((%s)bean).%s((%s)value);",
 							accessor.getEnclosingType()
 									.getQualifiedSourceName(),
-							accessor.getName(), accessor.getPropertyType()
-									.getQualifiedSourceName());
+							accessor.getName(), qualifiedSourceName);
 					sourceWriter.outdent();
 					sourceWriter.println("}");
 				}
@@ -936,6 +928,25 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			protected void prepare() {
 				// noop, all done by PropertyReflection
 				throw new UnsupportedOperationException();
+			}
+
+			void printMethodHoist(PropertyAccessor accessor) {
+				if (accessor == null) {
+					return;
+				}
+				PropertyMethodGenerator methodGenerator = propertyMethodGenerator(
+						accessor);
+				methodGenerator.printHoist();
+			}
+
+			void printMethodRef(PropertyAccessor method) {
+				if (method == null) {
+					sourceWriter.print("null;");
+					return;
+				} else {
+					sourceWriter.print("Method.EXISTS_REF;");
+					return;
+				}
 			}
 
 			@Override
@@ -983,25 +994,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sourceWriter.println("}");
 				sourceWriter.println("");
 				return true;
-			}
-
-			void printMethodHoist(PropertyAccessor accessor) {
-				if (accessor == null) {
-					return;
-				}
-				PropertyMethodGenerator methodGenerator = propertyMethodGenerator(
-						accessor);
-				methodGenerator.printHoist();
-			}
-
-			void printMethodRef(PropertyAccessor method) {
-				if (method == null) {
-					sourceWriter.print("null;");
-					return;
-				} else {
-					sourceWriter.print("Method.EXISTS_REF;");
-					return;
-				}
 			}
 		}
 
@@ -1079,43 +1071,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			visibleAnnotationFilter = new VisibleAnnotationFilterClient();
 		}
 
-		/*
-		 * Not all registrations! Only those for which Registry.impl() or
-		 * Registry.Query.forEnum() could return the registration.
-		 *
-		 * Note that where multiple classes have equal priority in the registry,
-		 * registration data for those classes will *not* be added to the
-		 * registry unless the class impelements Registration.EnumDiscriminator
-		 * or Registration.Ensure
-		 */
-		public AppImplRegistrations listImplementationRegistrations() {
-			AppImplRegistrations implRegistrations = new AppImplRegistrations();
-			List<Registration> allRegistrations = new ArrayList<>();
-			computeRegistryTypes().stream().forEach(t -> {
-				List<Registration> typeRegistrations = new AnnotationLocationTypeInfo(
-						t, annotationResolver)
-								.getAnnotations(Registration.class);
-				allRegistrations.addAll(typeRegistrations);
-				implRegistrations.add(t, typeRegistrations);
-			});
-			Predicate<Registration> permitEqualPriorityTest = r -> Registration.EnumDiscriminator.class
-					.isAssignableFrom(r.value()[0])
-					|| Registration.Ensure.class.isAssignableFrom(r.value()[0]);
-			Set<Registration> implementationRegistrations = Registry.Internals
-					.removeNonImplmentationRegistrations(allRegistrations,
-							permitEqualPriorityTest)
-					.stream().collect(Collectors.toSet());
-			implRegistrations.entries.removeIf(
-					e -> !e.retainRegistrations(implementationRegistrations));
-			return implRegistrations;
-		}
-
-		public AppReflectableTypes listReflectableTypes() {
-			AppReflectableTypes reflectableTypes = new AppReflectableTypes();
-			computeReflectableTypes().forEach(reflectableTypes::addType);
-			return reflectableTypes;
-		}
-
 		private Set<JClassType>
 				computeAsyncSerializableArguments(JClassType type) {
 			JClassType asyncCallbackType = getType(
@@ -1141,6 +1096,59 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.forEach(t -> result.put(t,
 							computeAsyncSerializableArguments(t)));
 			return result;
+		}
+
+		List<JClassType> computeReachableTypes() {
+			//either a generic or raw type will do - just omit duplicates based on qualifiedName uniqueness
+			Set<String> qualifiedNames=new LinkedHashSet<>();
+			return Arrays.stream(context.getTypeOracle().getTypes())
+					.filter(this::isReflectable)
+					.map(JClassType::getFlattenedSupertypeHierarchy)
+					.flatMap(Collection::stream).map(ClassReflection::erase)
+					.filter(t->qualifiedNames.add(t.getQualifiedSourceName()))
+					.distinct().filter(this::isProtectionVisible)
+					.filter(ClientReflectionGenerator.this::checkSimpleFilter)
+					.collect(Collectors.toList());
+		}
+
+		Stream<TypeHierarchy> computeReflectableTypes() {
+			subtypes = computeSubtypes();
+			Multiset<JClassType, Set<JClassType>> asyncSerializableTypes = computeAsyncSerializableTypes(
+					subtypes);
+			Multiset<JClassType, Set<JClassType>> settableTypes = computeSettableTypes();
+			return Arrays.stream(context.getTypeOracle().getTypes())
+					.filter(t -> isReflectable(t))
+					.map(JClassType::getFlattenedSupertypeHierarchy)
+					.flatMap(Collection::stream).map(ClassReflection::erase)
+					.distinct()
+					.filter(t -> !t.getQualifiedSourceName()
+							.equals(Object.class.getCanonicalName()))
+					.filter(t -> t.isPublic()).map(t -> new TypeHierarchy(t,
+							subtypes, asyncSerializableTypes, settableTypes));
+		}
+
+		List<JClassType> computeRegistryTypes() {
+			return Arrays.stream(context.getTypeOracle().getTypes())
+					.filter(t -> has(t, Registration.class))
+					.map(ClassReflection::erase).distinct()
+					/*
+					 *  see RegistryScanner.process
+					 */
+					
+					.filter(t -> {
+						
+						boolean registrable = t.isPublic()
+								&& !t.isAbstract()
+								&&t.isInterface()==null;
+						/*
+						 * note use of AllSubtypes.Client, not AllSubtypes
+						 */
+						registrable |=
+								t.isAssignableFrom(registrationAllSubtypesClient);
+
+						return registrable;
+					})
+					.collect(Collectors.toList());
 		}
 
 		private Multiset<JClassType, Set<JClassType>> computeSettableTypes() {
@@ -1181,6 +1189,16 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return result;
 		}
 
+		boolean isProtectionVisible(JClassType type){
+			if(type.isPrivate()){
+			return false;
+			}
+			if(type.isPublic()){
+				return true;
+			}
+			return !type.getQualifiedSourceName().startsWith("java");
+		}
+
 		private boolean isReflectable(JClassType t) {
 			return filter.isWhitelistReflectable(t) || has(t, Reflected.class)
 					|| has(t, Bean.class) || has(t, Registration.class)
@@ -1190,14 +1208,42 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					|| isReflectableJavaCollectionClass(t);
 		}
 
-		private void writeMethodDefinition(String accessModifier,
-				String returnType, String methodName, String methodArguments,
-				String methodIndex) {
-			sourceWriter.println("%s %s %s%s(%s){", accessModifier, returnType,
-					methodName, methodIndex, methodArguments);
-			sourceWriter.indent();
+		/*
+		 * Not all registrations! Only those for which Registry.impl() or
+		 * Registry.Query.forEnum() could return the registration.
+		 *
+		 * Note that where multiple classes have equal priority in the registry,
+		 * registration data for those classes will *not* be added to the
+		 * registry unless the class impelements Registration.EnumDiscriminator
+		 * or Registration.Ensure
+		 */
+		public AppImplRegistrations listImplementationRegistrations() {
+			AppImplRegistrations implRegistrations = new AppImplRegistrations();
+			List<Registration> allRegistrations = new ArrayList<>();
+			computeRegistryTypes().stream().forEach(t -> {
+				List<Registration> typeRegistrations = new AnnotationLocationTypeInfo(
+						t, annotationResolver)
+								.getAnnotations(Registration.class);
+				allRegistrations.addAll(typeRegistrations);
+				implRegistrations.add(t, typeRegistrations);
+			});
+			Predicate<Registration> permitEqualPriorityTest = r -> Registration.EnumDiscriminator.class
+					.isAssignableFrom(r.value()[0])
+					|| Registration.Ensure.class.isAssignableFrom(r.value()[0]);
+			Set<Registration> implementationRegistrations = Registry.Internals
+					.removeNonImplmentationRegistrations(allRegistrations,
+							permitEqualPriorityTest)
+					.stream().collect(Collectors.toSet());
+			implRegistrations.entries.removeIf(
+					e -> !e.retainRegistrations(implementationRegistrations));
+			return implRegistrations;
 		}
 
+		public AppReflectableTypes listReflectableTypes() {
+			AppReflectableTypes reflectableTypes = new AppReflectableTypes();
+			computeReflectableTypes().forEach(reflectableTypes::addType);
+			return reflectableTypes;
+		}
 		@Override
 		protected void prepare() {
 			prepareAnnotationImplementationGenerators();
@@ -1209,6 +1255,18 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			writeReflectors = classReflectors.values().stream()
 					.filter(r -> filter.emitType(r.reflection.type))
 					.collect(Collectors.toList());
+		}
+
+		void prepareAnnotationImplementationGenerators() {
+			Arrays.stream(context.getTypeOracle().getTypes())
+					.filter(t -> t.isAnnotationPresent(ClientVisible.class)
+							|| t.getQualifiedSourceName().equals(
+									Registration.class.getCanonicalName()))
+					.map(JClassType::isAnnotation)
+					.map(AnnotationImplementationGenerator::new).sorted()
+					.forEach(annotationImplementations::add);
+			annotationImplementations.stream()
+					.forEach(AnnotationImplementationGenerator::prepare);
 		}
 
 		@Override
@@ -1233,75 +1291,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			writeRegisterRegistrations();
 			closeClassBody();
 			return true;
-		}
-
-		List<JClassType> computeReachableTypes() {
-			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(this::isReflectable)
-					.map(JClassType::getFlattenedSupertypeHierarchy)
-					.flatMap(Collection::stream).map(ClassReflection::erase)
-					.distinct().filter(this::isProtectionVisible)
-					.collect(Collectors.toList());
-		}
-		Stream<TypeHierarchy> computeReflectableTypes() {
-			subtypes = computeSubtypes();
-			Multiset<JClassType, Set<JClassType>> asyncSerializableTypes = computeAsyncSerializableTypes(
-					subtypes);
-			Multiset<JClassType, Set<JClassType>> settableTypes = computeSettableTypes();
-			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> isReflectable(t))
-					.map(JClassType::getFlattenedSupertypeHierarchy)
-					.flatMap(Collection::stream).map(ClassReflection::erase)
-					.distinct()
-					.filter(t -> !t.getQualifiedSourceName()
-							.equals(Object.class.getCanonicalName()))
-					.filter(t -> t.isPublic()).map(t -> new TypeHierarchy(t,
-							subtypes, asyncSerializableTypes, settableTypes));
-		}
-
-		List<JClassType> computeRegistryTypes() {
-			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> has(t, Registration.class))
-					.map(ClassReflection::erase).distinct()
-					/*
-					 *  see RegistryScanner.process
-					 */
-
-					.filter(t -> {
-						boolean registrable = t.isPublic()
-								&& !t.isAbstract()
-								&&t.isInterface()==null;
-						/*
-						 * note use of AllSubtypes.Client, not AllSubtypes
-						 */
-						registrable |=
-								t.isAssignableFrom(registrationAllSubtypesClient);
-
-						return registrable;
-					})
-					.collect(Collectors.toList());
-		}
-
-		boolean isProtectionVisible(JClassType type){
-			if(type.isPrivate()){
-			return false;
-			}
-			if(type.isPublic()){
-				return true;
-			}
-			return !type.getQualifiedSourceName().startsWith("java");
-		}
-
-		void prepareAnnotationImplementationGenerators() {
-			Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> t.isAnnotationPresent(ClientVisible.class)
-							|| t.getQualifiedSourceName().equals(
-									Registration.class.getCanonicalName()))
-					.map(JClassType::isAnnotation)
-					.map(AnnotationImplementationGenerator::new).sorted()
-					.forEach(annotationImplementations::add);
-			annotationImplementations.stream()
-					.forEach(AnnotationImplementationGenerator::prepare);
 		}
 
 		void writeClassReflectors() {
@@ -1379,6 +1368,14 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					crg -> crg.writeForNameCase(sourceWriter));
 		}
 
+		private void writeMethodDefinition(String accessModifier,
+				String returnType, String methodName, String methodArguments,
+				String methodIndex) {
+			sourceWriter.println("%s %s %s%s(%s){", accessModifier, returnType,
+					methodName, methodIndex, methodArguments);
+			sourceWriter.indent();
+		}
+
 		void writeReflectorCases() {
 			writeForClassReflectors("getClassReflector_", "String className",
 					"ClassReflector",
@@ -1388,6 +1385,18 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		void writeRegisterRegistrations() {
 			writeForClassReflectors("registerRegistrations", "", "void",
 					crg -> crg.writeRegisterRegistrations(sourceWriter));
+		}
+	}
+
+	private final class ProvidesTypeBoundsJavacImpl
+			implements ProvidesTypeBounds {
+		JavacTypeBounds.Computed computedTypeBounds = new JavacTypeBounds.Computed();
+
+		@Override
+		public List<? extends JClassType> provideTypeBounds(JClassType type) {
+			return computedTypeBounds.get(
+					(com.google.gwt.dev.javac.typemodel.JClassType) type,
+					context.getTypeOracle().getJavaLangObject()).bounds;
 		}
 	}
 
@@ -1481,7 +1490,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return reflectedType.getQualifiedSourceName();
 		}
 	}
-
 	class VisibleAnnotationFilterClient implements ReflectionVisibility {
 		@Override
 		public boolean isVisibleAnnotation(

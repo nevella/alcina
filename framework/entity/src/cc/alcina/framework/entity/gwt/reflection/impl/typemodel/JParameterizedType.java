@@ -34,7 +34,11 @@ public class JParameterizedType extends JClassType<ParameterizedType>
 	@Override
 	public JGenericType getBaseType() {
 		Type rawType = type.getRawType();
-		return (JGenericType) typeOracle.getType(rawType);
+		if (rawType instanceof JGenericType) {
+			return (JGenericType) typeOracle.getType(rawType);
+		} else {
+			return null;
+		}
 	}
 
 	@Override

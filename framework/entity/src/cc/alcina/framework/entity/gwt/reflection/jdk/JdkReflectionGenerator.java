@@ -16,6 +16,10 @@ import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityLinkerPeer;
 
 public class JdkReflectionGenerator {
+	public static Attributes attributes() {
+		return new Attributes();
+	}
+
 	Attributes attributes;
 
 	GeneratorContextImpl generatorContext;
@@ -33,6 +37,7 @@ public class JdkReflectionGenerator {
 		generatorContext = new GeneratorContextImpl(this);
 		ClientReflectionGenerator generator = new ClientReflectionGenerator();
 		generator.attributes.guaranteedSinglePermutationBuild = true;
+		generator.attributes.simpleExcludes = attributes.exclude;
 		generator.providesTypeBounds = generatorContext.typeOracle;
 		try {
 			generator.generate(logger, generatorContext,
@@ -41,10 +46,6 @@ public class JdkReflectionGenerator {
 			SEUtilities.invokeDelayed(e::printStackTrace, 200);
 			throw e;
 		}
-	}
-
-	public static Attributes attributes() {
-		return new Attributes();
 	}
 
 	public static class Attributes {
@@ -65,18 +66,23 @@ public class JdkReflectionGenerator {
 
 		public Class<? extends ReachabilityLinkerPeer> linkerPeerClass = ReachabilityLinkerPeer.Default.class;
 
+		private File generationDataFolder;
+
+		private File generationSrcFolder;
+
+		private File dataFolder;
+
+		/*
+		 * Another (simple) filter atop filterPeerClass
+		 */
+		public String exclude;
+
 		Attributes() {
 		}
 
 		public JdkReflectionGenerator build() {
 			return new JdkReflectionGenerator(this);
 		}
-
-		private File generationDataFolder;
-
-		private File generationSrcFolder;
-
-		private File dataFolder;
 
 		File dataFolder() {
 			if (dataFolder == null) {

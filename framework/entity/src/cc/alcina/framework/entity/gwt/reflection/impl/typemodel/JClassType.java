@@ -43,6 +43,24 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.Provi
 public abstract class JClassType<T extends Type>
 		implements com.google.gwt.core.ext.typeinfo.JClassType,
 		ProvidesAssignableTo, ProvidesInterfaces, ProvidesJavaType {
+	private static void getFlattenedSuperTypeHierarchyRecursive(JClassType type,
+			Set<JClassType> typesSeen) {
+		if (typesSeen.contains(type)) {
+			return;
+		}
+		typesSeen.add(type);
+		// Check the interfaces
+		JClassType[] intfs = type.getImplementedInterfaces();
+		for (JClassType intf : intfs) {
+			typesSeen.addAll(intf.getFlattenedSupertypeHierarchy());
+		}
+		// Superclass
+		JClassType superclass = type.getSuperclass();
+		if (superclass != null) {
+			typesSeen.addAll(superclass.getFlattenedSupertypeHierarchy());
+		}
+	}
+
 	T type;
 
 	Class clazz;
@@ -75,6 +93,17 @@ public abstract class JClassType<T extends Type>
 	@Override
 	public JParameterizedType asParameterizationOf(JGenericType type) {
 		throw new UnsupportedOperationException();
+	}
+
+	JMethod createMethod(Method m) {
+		return new JMethod(typeOracle, m);
+	}
+
+	private Members ensureMembers() {
+		if (members == null) {
+			members = new Members();
+		}
+		return members;
 	}
 
 	@Override
@@ -156,24 +185,6 @@ public abstract class JClassType<T extends Type>
 			getFlattenedSuperTypeHierarchyRecursive(this, flattenedSupertypes);
 		}
 		return flattenedSupertypes;
-	}
-
-	private static void getFlattenedSuperTypeHierarchyRecursive(JClassType type,
-			Set<JClassType> typesSeen) {
-		if (typesSeen.contains(type)) {
-			return;
-		}
-		typesSeen.add(type);
-		// Check the interfaces
-		JClassType[] intfs = type.getImplementedInterfaces();
-		for (JClassType intf : intfs) {
-			typesSeen.addAll(intf.getFlattenedSupertypeHierarchy());
-		}
-		// Superclass
-		JClassType superclass = type.getSuperclass();
-		if (superclass != null) {
-			typesSeen.addAll(superclass.getFlattenedSupertypeHierarchy());
-		}
 	}
 
 	@Override
@@ -262,8 +273,12 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public String getQualifiedSourceName() {
-		String canonicalName = clazz.getCanonicalName();
-		return canonicalName != null ? canonicalName : clazz.getName();
+		return getQualifiedSourceName(clazz);
+	}
+
+	protected String getQualifiedSourceName(Class clazz0) {
+		String canonicalName = clazz0.getCanonicalName();
+		return canonicalName != null ? canonicalName : clazz0.getName();
 	}
 
 	@Override
@@ -455,10 +470,6 @@ public abstract class JClassType<T extends Type>
 		return clazz;
 	}
 
-	JMethod createMethod(Method m) {
-		return new JMethod(typeOracle, m);
-	}
-
 	/*
 	 * Initially, only simple (direct generic superclass) bounds for types
 	 */
@@ -478,13 +489,6 @@ public abstract class JClassType<T extends Type>
 	@Override
 	public String toString() {
 		return getQualifiedSourceName();
-	}
-
-	private Members ensureMembers() {
-		if (members == null) {
-			members = new Members();
-		}
-		return members;
 	}
 
 	class Members {
@@ -517,33 +521,6 @@ public abstract class JClassType<T extends Type>
 					throw e;
 				}
 			}
-		}
-
-		void initBlank() {
-			fields = new ArrayList<>();
-			methods = new ArrayList<>();
-			inheritableMethods = new ArrayList<>();
-			inheritableFields = new ArrayList<>();
-			constructors = new ArrayList<>();
-			implementedInterfaces = new ArrayList<>();
-			resolvedSuperclassTypes = new ArrayList<>();
-			resolution = new TypeParameterResolution(JClassType.this);
-			typeBounds = new TypeBounds(List.of());
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("Members: %s", JClassType.this.toString());
-		}
-
-		private List<JMethod>
-				getDirectInheritableMethods(List<JMethod> methods) {
-			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
-					.stream().filter(m -> !m.isPrivate())
-					.map(resolution::resolve).collect(AlcinaCollectors
-							.toKeyMultimap(NameCallingSignature::new));
-			return candidates.values().stream().map(this::findMostSpecific)
-					.collect(Collectors.toList());
 		}
 
 		boolean assignableComparable(JClassType o1, JClassType o2) {
@@ -647,6 +624,16 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
+		private List<JMethod>
+				getDirectInheritableMethods(List<JMethod> methods) {
+			Multimap<NameCallingSignature, List<JMethod>> candidates = methods
+					.stream().filter(m -> !m.isPrivate())
+					.map(resolution::resolve).collect(AlcinaCollectors
+							.toKeyMultimap(NameCallingSignature::new));
+			return candidates.values().stream().map(this::findMostSpecific)
+					.collect(Collectors.toList());
+		}
+
 		void init() {
 			resolution = new TypeParameterResolution(JClassType.this);
 			fields = Arrays.stream(clazz.getDeclaredFields())
@@ -662,7 +649,7 @@ public abstract class JClassType<T extends Type>
 			constructors = Arrays.stream(clazz.getDeclaredConstructors())
 					.map(c -> new JConstructor(typeOracle, c))
 					.collect(Collectors.toList());
-			implementedInterfaces = Arrays.stream(clazz.getInterfaces())
+			implementedInterfaces = Arrays.stream(clazz.getGenericInterfaces())
 					.map(typeOracle::getType).collect(Collectors.toList());
 			computeBounds();
 			/*
@@ -701,6 +688,18 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
+		void initBlank() {
+			fields = new ArrayList<>();
+			methods = new ArrayList<>();
+			inheritableMethods = new ArrayList<>();
+			inheritableFields = new ArrayList<>();
+			constructors = new ArrayList<>();
+			implementedInterfaces = new ArrayList<>();
+			resolvedSuperclassTypes = new ArrayList<>();
+			resolution = new TypeParameterResolution(JClassType.this);
+			typeBounds = new TypeBounds(List.of());
+		}
+
 		boolean sameCallingSignature(JMethod m1, JMethod m2) {
 			if (!Objects.equals(m1.getName(), m2.getName())) {
 				return false;
@@ -718,6 +717,11 @@ public abstract class JClassType<T extends Type>
 			}
 			// only allow exact (not covariant) matches
 			return m1.getReturnType() == m2.getReturnType();
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Members: %s", JClassType.this.toString());
 		}
 
 		class ExternalOrderFieldComparator implements Comparator<JField> {
@@ -844,41 +848,6 @@ public abstract class JClassType<T extends Type>
 			}
 		}
 
-		private JClassType resolve(JType jType) {
-			JClassType classType = (JClassType) jType;
-			Type cursor = ((JClassType) jType).type;
-			while (cursor instanceof TypeVariable) {
-				Type test = resolvedTypeParameters.get(cursor);
-				if (test != null) {
-					cursor = test;
-				} else {
-					break;
-				}
-			}
-			if (cursor != null) {
-				return jClassType.typeOracle.getType(cursor);
-			} else {
-				return classType;
-			}
-		}
-
-		private void resolveIfParameterized(Type possiblyParameterizedType) {
-			if (!(possiblyParameterizedType instanceof ParameterizedType)) {
-				return;
-			}
-			ParameterizedType parameterizedType = (ParameterizedType) possiblyParameterizedType;
-			Type[] actualTypeArguments = parameterizedType
-					.getActualTypeArguments();
-			Class rawType = (Class) parameterizedType.getRawType();
-			TypeVariable[] typeParameters = rawType.getTypeParameters();
-			Preconditions.checkState(
-					actualTypeArguments.length == typeParameters.length);
-			for (int idx = 0; idx < actualTypeArguments.length; idx++) {
-				resolvedTypeParameters.putIfAbsent(typeParameters[idx],
-						actualTypeArguments[idx]);
-			}
-		}
-
 		Class checkableClass(Type type) {
 			if (type instanceof Class) {
 				return (Class) type;
@@ -921,6 +890,41 @@ public abstract class JClassType<T extends Type>
 				return clone;
 			} else {
 				return method;
+			}
+		}
+
+		private JClassType resolve(JType jType) {
+			JClassType classType = (JClassType) jType;
+			Type cursor = ((JClassType) jType).type;
+			while (cursor instanceof TypeVariable) {
+				Type test = resolvedTypeParameters.get(cursor);
+				if (test != null) {
+					cursor = test;
+				} else {
+					break;
+				}
+			}
+			if (cursor != null) {
+				return jClassType.typeOracle.getType(cursor);
+			} else {
+				return classType;
+			}
+		}
+
+		private void resolveIfParameterized(Type possiblyParameterizedType) {
+			if (!(possiblyParameterizedType instanceof ParameterizedType)) {
+				return;
+			}
+			ParameterizedType parameterizedType = (ParameterizedType) possiblyParameterizedType;
+			Type[] actualTypeArguments = parameterizedType
+					.getActualTypeArguments();
+			Class rawType = (Class) parameterizedType.getRawType();
+			TypeVariable[] typeParameters = rawType.getTypeParameters();
+			Preconditions.checkState(
+					actualTypeArguments.length == typeParameters.length);
+			for (int idx = 0; idx < actualTypeArguments.length; idx++) {
+				resolvedTypeParameters.putIfAbsent(typeParameters[idx],
+						actualTypeArguments[idx]);
 			}
 		}
 	}

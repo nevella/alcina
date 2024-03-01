@@ -32,26 +32,5 @@ public class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
 		return ClientReflections.getClassReflector(clazz);
 	}
-	/*
-	 * copy of non-emul nested type
-	 */
-	@GwtScriptOnly
-	public static class ClassAnnotationProvider implements AnnotationProvider {
-		private Class clazz;
-
-		public ClassAnnotationProvider(Class clazz) {
-			this.clazz = clazz;
-		}
-
-		@Override
-		public <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass) {
-			throw new UnsupportedOperationException();
-		}
-		@Override
-		public <A extends Annotation> List<A>
-				getAnnotations(Class<A> annotationClass) {
-			throw new UnsupportedOperationException();
-		}
-	}
+	
 }
