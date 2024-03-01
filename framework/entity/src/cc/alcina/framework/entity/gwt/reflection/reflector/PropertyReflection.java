@@ -400,7 +400,8 @@ public class PropertyReflection extends ReflectionElement
 				/*
 				 * Unable to determine which method wins (should never be hit)
 				 */
-				throw new IllegalArgumentException();
+				// throw new IllegalArgumentException();
+				return false;
 			}
 
 			@Override
