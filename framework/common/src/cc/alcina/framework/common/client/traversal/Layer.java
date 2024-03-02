@@ -41,6 +41,10 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
+	public SelectionTraversal getTraversal() {
+		return state.getTraversal();
+	}
+
 	public Layer() {
 		List<Class> bounds = Reflections.at(getClass())
 				.getGenericBounds().bounds;

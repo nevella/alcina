@@ -683,6 +683,10 @@ public class SelectionTraversal
 		}
 	}
 
+	public <T> T context(Class<T> clazz) {
+		return (T) traversalContext;
+	}
+
 	/*
 	 * Note that Layer.State is reset each time the layer is processed, so
 	 * per-layer state that lasts the entire traversal lifetime is stored here
@@ -704,7 +708,7 @@ public class SelectionTraversal
 		Map<Layer, SelectionLayers.LayerSelections> selectionsByLayer = new LinkedHashMap<>();
 
 		public <T> T context(Class<T> clazz) {
-			return (T) traversalContext;
+			return SelectionTraversal.this.context(clazz);
 		}
 
 		public Layer findLayerHandlingInput(Selection value) {

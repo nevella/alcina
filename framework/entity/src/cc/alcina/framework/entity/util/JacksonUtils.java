@@ -12,6 +12,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.MissingNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -20,6 +22,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Io;
 
 public class JacksonUtils {
+	public static boolean isNullish(JsonNode node) {
+		return node == NullNode.instance || node == MissingNode.getInstance();
+	}
+
 	public static ObjectMapper defaultGraphMapper() {
 		return defaultSerializer().createObjectMapper();
 	}
@@ -63,8 +69,16 @@ public class JacksonUtils {
 	public static String prettyJson(String json) {
 		try {
 			JsonNode tree = new ObjectMapper().readTree(json);
+			return prettyJson(tree);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static String prettyJson(JsonNode node) {
+		try {
 			String pretty = new ObjectMapper().writerWithDefaultPrettyPrinter()
-					.writeValueAsString(tree);
+					.writeValueAsString(node);
 			return pretty;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -73,6 +87,10 @@ public class JacksonUtils {
 
 	public static void prettyPrintJson(String json) {
 		Ax.out(prettyJson(json));
+	}
+
+	public static void prettyPrintJson(JsonNode node) {
+		Ax.out(prettyJson(node));
 	}
 
 	public static String serialize(Object object) {
