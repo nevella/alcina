@@ -1,8 +1,12 @@
 package cc.alcina.framework.entity.gwt.reflection.jdk;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import com.google.gwt.core.ext.CachedGeneratorResult;
 import com.google.gwt.core.ext.GeneratorContext;
@@ -15,6 +19,7 @@ import com.google.gwt.dev.resource.ResourceOracle;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.TypeOracle;
 
@@ -24,6 +29,8 @@ class GeneratorContextImpl implements GeneratorContext {
 	TypeOracle typeOracle;
 
 	PropertyOracle propertyOracle;
+
+	Set<String> printWriterPaths = new LinkedHashSet<>();
 
 	GeneratorContextImpl(JdkReflectionGenerator jdkReflectionGenerator) {
 		this.generator = jdkReflectionGenerator;
@@ -100,8 +107,10 @@ class GeneratorContextImpl implements GeneratorContext {
 		packageFolder.mkdirs();
 		String unitFileName = Ax.format("%s.java", simpleName);
 		File unitFile = SEUtilities.getChildFile(packageFolder, unitFileName);
+		StringWriter stringWriter = new StringWriter();
 		try {
-			return new PrintWriter(unitFile);
+			printWriterPaths.add(unitFile.getCanonicalPath());
+			return new LazyPrintWriter(stringWriter, unitFile);
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}
@@ -120,5 +129,25 @@ class GeneratorContextImpl implements GeneratorContext {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'tryReuseTypeFromCache'");
+	}
+
+	class LazyPrintWriter extends PrintWriter {
+		private StringWriter stringWriter;
+
+		private File file;
+
+		public LazyPrintWriter(StringWriter stringWriter, File file)
+				throws FileNotFoundException {
+			super(stringWriter);
+			this.stringWriter = stringWriter;
+			this.file = file;
+		}
+
+		@Override
+		public void close() {
+			super.close();
+			String out = stringWriter.toString();
+			Io.write().string(out).withNoUpdateIdentical(true).toFile(file);
+		}
 	}
 }

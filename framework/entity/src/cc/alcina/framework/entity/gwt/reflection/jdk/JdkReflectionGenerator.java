@@ -6,9 +6,13 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.dev.util.log.PrintWriterTreeLogger;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
 import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.SEUtilities;
@@ -27,6 +31,8 @@ public class JdkReflectionGenerator {
 
 	BuildtimeTypeProvider typeProvider;
 
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	JdkReflectionGenerator(Attributes attributes) {
 		this.attributes = attributes;
 	}
@@ -34,19 +40,31 @@ public class JdkReflectionGenerator {
 	public void generate() throws Exception {
 		typeProvider = new BuildtimeTypeProvider(this);
 		typeProvider.scan();
-		TreeLogger logger = new PrintWriterTreeLogger();
+		TreeLogger treeLogger = new PrintWriterTreeLogger();
 		generatorContext = new GeneratorContextImpl(this);
 		ClientReflectionGenerator generator = new ClientReflectionGenerator();
 		generator.attributes.guaranteedSinglePermutationBuild = true;
 		generator.attributes.simpleExcludes = attributes.exclude;
 		generator.providesTypeBounds = generatorContext.typeOracle;
 		try {
-			generator.generate(logger, generatorContext,
+			generator.generate(treeLogger, generatorContext,
 					attributes.generatingType.getName());
 		} catch (Exception e) {
 			SEUtilities.invokeDelayed(e::printStackTrace, 200);
 			throw e;
 		}
+		List<File> inSourceFolder = SEUtilities.listFilesRecursive(
+				attributes.generationSrcFolder.getPath(), null, true);
+		List<File> toDelete = inSourceFolder.stream().filter(f -> {
+			try {
+				return !generatorContext.printWriterPaths
+						.contains(f.getCanonicalPath());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}).collect(Collectors.toList());
+		logger.info("Deleting {} removed source files", toDelete.size());
+		toDelete.forEach(File::delete);
 	}
 
 	public static class Attributes {
