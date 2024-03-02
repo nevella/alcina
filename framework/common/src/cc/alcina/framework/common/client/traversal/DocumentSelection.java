@@ -16,7 +16,7 @@ public abstract class DocumentSelection extends MeasureSelection
 
 	protected Loader loader;
 
-	public DocumentSelection(AbstractUrlSelection parent,
+	public DocumentSelection(Selection parent,
 			DocumentSelection.Loader loader) {
 		super(parent, null, Ax.format("url2doc:%s", parent.getPathSegment()));
 		this.loader = loader;
@@ -91,7 +91,7 @@ public abstract class DocumentSelection extends MeasureSelection
 
 	public abstract static class TransformLayer<I extends Selection, O extends DocumentSelection>
 			extends Layer<I> {
-		private Function<I, O> transform;
+		protected Function<I, O> transform;
 
 		/*
 		 * Only for subtypes that generate documents imperatively

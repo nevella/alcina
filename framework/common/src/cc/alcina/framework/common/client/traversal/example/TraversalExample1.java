@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
-import cc.alcina.framework.servlet.job.JobContext;
 
 public class TraversalExample1 {
 	public static class MySelection extends AbstractSelection<String> {
@@ -57,10 +56,10 @@ public class TraversalExample1 {
 
 	public void run() {
 		// create and execute a dummy traversal
+		TreeProcess process = new TreeProcess(this);
 		SelectionTraversal traversal = new SelectionTraversal(
 				new MyTraversalPeerSpecialisation1());
-		TreeProcess.Node parentNode = JobContext.get().getTreeProcess()
-				.getSelectedNode();
+		TreeProcess.Node parentNode = process.getSelectedNode();
 		traversal.select(new MySelection(parentNode, "bruh", "root"));
 		traversal.traverse();
 	}

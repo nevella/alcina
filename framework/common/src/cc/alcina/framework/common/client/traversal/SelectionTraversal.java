@@ -71,8 +71,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * <pre>
  * <code>
  public class TraversalExample1 {
-	public static class MySelection extends AbstractSelection {
-		public MySelection(Node parentNode, Object value, String pathSegment) {
+	public static class MySelection extends AbstractSelection<String> {
+		public MySelection(Node parentNode, String value, String pathSegment) {
 			super(parentNode, value, pathSegment);
 		}
 	}
@@ -80,6 +80,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 	// must be public, since Peer is
 	public static class Layer1 extends Layer<MySelection> {
 		public void process(MySelection selection) {
+			state.traversalContext(Layer1.Peer.Has.class).getLayer1Peer()
+					.checkSelection(selection);
 		}
 
 		public static class Peer {
@@ -93,13 +95,15 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 		}
 	}
 
-	public static class MyTraversalPeerBase implements Layer1.Peer.Has {
+	public static class MyTraversalPeerBase
+			implements TraversalContext, Layer1.Peer.Has {
 		public Layer1.Peer getLayer1Peer() {
 			return new Layer1.Peer();
 		}
 	}
 
-	public static class MyTraversalPeerSpecialisation1 extends MyTraversalPeerBase {
+	public static class MyTraversalPeerSpecialisation1
+			extends MyTraversalPeerBase {
 		public Layer1.Peer getLayer1Peer() {
 			return new PeerImpl();
 		}
@@ -111,6 +115,16 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 				}
 			}
 		}
+	}
+
+	public void run() {
+		// create and execute a dummy traversal
+		TreeProcess process = new TreeProcess(this);
+		SelectionTraversal traversal = new SelectionTraversal(
+				new MyTraversalPeerSpecialisation1());
+		TreeProcess.Node parentNode = process.getSelectedNode();
+		traversal.select(new MySelection(parentNode, "bruh", "root"));
+		traversal.traverse();
 	}
 }
 
