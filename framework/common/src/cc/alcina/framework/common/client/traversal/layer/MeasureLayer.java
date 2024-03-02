@@ -20,7 +20,7 @@ public abstract class MeasureLayer<S extends MeasureSelection>
 				.get(MeasureSelection.class, true).stream()
 				.filter(m -> !m.isOmit()
 						&& !(m instanceof MeasureSelection.IgnoreOverlaps));
-		Order order = state.context(Order.Has.class).getOrder();
+		Order order = state.traversalContext(Order.Has.class).getOrder();
 		List<MeasureSelection> measures = filteredSelections
 				.sorted(new MeasureTreeComparator(
 						// this will also remove overlapping text nodes, so we

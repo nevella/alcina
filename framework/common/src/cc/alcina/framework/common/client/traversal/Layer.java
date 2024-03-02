@@ -49,7 +49,19 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 		}
 	}
 
-	public <T> T ancestorLayerImplementing(Class<T> clazz) {
+	/**
+	 * Returns a (Layer) context object implementing class T, resolved by
+	 * ascending the layer tree until a layer implementing T is found. This
+	 * context object is logically tied to the implementing layer and its
+	 * sublayers, so more specific than a traversal context
+	 * 
+	 * @param <T>
+	 *            the type required, and returned
+	 * @param clazz
+	 *            the class used to query the layer tree
+	 * @return an instance
+	 */
+	public <T> T layerContext(Class<T> clazz) {
 		Layer cursor = this;
 		do {
 			if (Reflections.isAssignableFrom(clazz, cursor.getClass())) {
@@ -57,7 +69,9 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			}
 			cursor = cursor.parent;
 		} while (cursor.parent != null);
-		return null;
+		throw new IllegalArgumentException(Ax.format(
+				"No context object implementing %s found for layer %s",
+				NestedName.get(clazz), NestedName.get(this)));
 	}
 
 	public void addChild(Layer child) {
@@ -285,7 +299,18 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			this.traversalState = traversalState;
 		}
 
-		public <T> T context(Class<T> clazz) {
+		/**
+		 * Returns the traversal's traversalContext field, cast to T, requiring
+		 * that it implements the interface T.
+		 * 
+		 * @param <T>
+		 *            the type required, and returned
+		 * @param clazz
+		 *            the class used to query the layer tree
+		 * @return an instance of T (the SelectionTraversal.traversalContext
+		 *         field)
+		 */
+		public <T> T traversalContext(Class<T> clazz) {
 			return traversalState.context(clazz);
 		}
 

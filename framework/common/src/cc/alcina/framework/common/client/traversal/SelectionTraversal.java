@@ -58,10 +58,76 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *  }
  * </pre>
  * 
+ * <h3>Context and service support</h3>
  * <p>
- * An instance also exposes a traversal context, which can be cast to provide
- * whole-process context support by descendant objects such as layers
+ * An instance exposes a {@link TraversalContext} context object, which can be
+ * cast to provide whole-process context support to descendant objects such as
+ * layers and selections.
+ * <p>
+ * The current pattern is to have the TraversalContext instance - essentially a
+ * whole-process customiser - implement the service interface provider classes
+ * required by the process. As an example:
+ * 
+ * <pre>
+ * <code>
+ public class TraversalExample1 {
+	public static class MySelection extends AbstractSelection {
+		public MySelection(Node parentNode, Object value, String pathSegment) {
+			super(parentNode, value, pathSegment);
+		}
+	}
+
+	// must be public, since Peer is
+	public static class Layer1 extends Layer<MySelection> {
+		public void process(MySelection selection) {
+		}
+
+		public static class Peer {
+			void checkSelection(MySelection selection) {
+				// noop
+			}
+
+			public interface Has {
+				Peer getLayer1Peer();
+			}
+		}
+	}
+
+	public static class MyTraversalPeerBase implements Layer1.Peer.Has {
+		public Layer1.Peer getLayer1Peer() {
+			return new Layer1.Peer();
+		}
+	}
+
+	public static class MyTraversalPeerSpecialisation1 extends MyTraversalPeerBase {
+		public Layer1.Peer getLayer1Peer() {
+			return new PeerImpl();
+		}
+
+		static class PeerImpl extends Layer1.Peer {
+			void checkSelection(MySelection selection) {
+				if (selection.toString().contains("bruh")) {
+					throw new IllegalArgumentException("No bruh");
+				}
+			}
+		}
+	}
+}
+
+ * </code>
+ * </pre>
  *
+ * <p>
+ * Note that if a process checks for a traversalContext interface, the
+ * traversalContext must exist and implement that interface. Use noop default
+ * implementations here - it makes coding much easier
+ * <p>
+ * This design pattern - the process/peer pattern - makes composition much
+ * easier, and greatly reduces the use of subclasses in these processes.
+ * Subclassed <i>selection</i> types are very useful, but because traversals
+ * (and their layer trees) are themselves potentially deep and wide trees,
+ * customising via potentially subclassing the creation of each layer at layer
+ * tree creation time would be more cumbersome and more brittle
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
@@ -90,7 +156,7 @@ public class SelectionTraversal
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	public final TraversalContext traversalContext;
+	final TraversalContext traversalContext;
 
 	public String id;
 
