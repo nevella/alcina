@@ -267,6 +267,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 			populateFromParameters(Map<String, String[]> parameterMap) {
 		StringMap map = StringMap.flatten(parameterMap);
 		filterText = map.get("filter");
+		limit = map.getInt("limit");
 		listConsistencyJobs = map.is("listConsistencyJobs");
 		jobResultType = map.enumValue("jobResultType", JobResultType.class);
 		scheduled = map.containsKey("scheduled") ? map.is("scheduled") : null;
