@@ -242,6 +242,11 @@ public class ContextResolver extends AnnotationLocation.Resolver
 				this::resolveLocationClass, this);
 	}
 
+	/*
+	 * The interplay/balance between this and the method contextAnnotation is
+	 * complex - basically contextAnnotation is 'override during strategy', this
+	 * is 'override before strategy'
+	 */
 	protected <A extends Annotation> List<A> resolveAnnotations1(
 			Class<A> annotationClass, AnnotationLocation location) {
 		if (parent == null) {
@@ -438,6 +443,6 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		 * currently occurs outside a resolution context )
 		 */
 		@Property.Not
-		ContextResolver getContextResolver();
+		ContextResolver getContextResolver(AnnotationLocation location);
 	}
 }

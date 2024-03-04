@@ -7,4 +7,6 @@ public interface HasAnnotations {
 	<A extends Annotation> A annotation(Class<A> annotationClass);
 
 	<A extends Annotation> List<A> annotations(Class<A> annotationClass);
+
+	boolean isProperty(Class<?> owningType, String propertyName);
 }

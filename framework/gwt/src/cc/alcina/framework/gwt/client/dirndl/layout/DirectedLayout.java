@@ -1888,7 +1888,7 @@ public class DirectedLayout implements AlcinaProcess {
 			ContextResolver newResolver = null;
 			if (model != null && model instanceof ContextResolver.Has) {
 				newResolver = ((ContextResolver.Has) model)
-						.getContextResolver();
+						.getContextResolver(location);
 			}
 			if (newResolver == null) {
 				DirectedContextResolver resolverAnnotation = location

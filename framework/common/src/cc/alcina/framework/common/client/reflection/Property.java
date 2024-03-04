@@ -206,4 +206,10 @@ public class Property implements HasAnnotations {
 	@ClientVisible
 	public @interface Not {
 	}
+
+	@Override
+	public boolean isProperty(Class<?> owningType, String propertyName) {
+		return owningType == this.owningType
+				&& Objects.equals(name, propertyName);
+	}
 }

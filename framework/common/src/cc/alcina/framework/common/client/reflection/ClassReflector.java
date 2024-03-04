@@ -324,4 +324,9 @@ public class ClassReflector<T> implements HasAnnotations {
 	public String toString() {
 		return reflectedClass.toString();
 	}
+
+	@Override
+	public boolean isProperty(Class<?> owningType, String name) {
+		return false;
+	}
 }

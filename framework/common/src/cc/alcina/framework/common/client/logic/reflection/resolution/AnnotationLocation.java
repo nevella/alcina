@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
@@ -117,6 +118,11 @@ public class AnnotationLocation {
 		} else {
 			return null;
 		}
+	}
+
+	public <A extends Annotation> Optional<A>
+			optional(Class<A> annotationClass) {
+		return Optional.ofNullable(getAnnotation(annotationClass));
 	}
 
 	private <A extends Annotation> A getAnnotation0(Class<A> annotationClass) {

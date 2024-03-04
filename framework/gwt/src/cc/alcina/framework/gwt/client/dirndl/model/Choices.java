@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -87,7 +88,10 @@ public abstract class Choices<T> extends Model implements
 
 	@Override
 	@Property.Not
-	public ContextResolver getContextResolver() {
+	public ContextResolver getContextResolver(AnnotationLocation location) {
+		location.optional(ValueTransformer.class).ifPresent(
+				ann -> valueTransformer = (Class<? extends ModelTransform<T, ?>>) ann
+						.value());
 		if (valueTransformer == null) {
 			return null;
 		} else {
@@ -104,19 +108,15 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		@Override
-		protected <A extends Annotation> List<A> resolveAnnotations1(
-				Class<A> annotationClass, AnnotationLocation location) {
-			if (location.classLocation == valueType) {
-				if (annotationClass == Directed.class) {
-					// erase anything from the valueType
-					return (List<A>) List.of(Directed.Impl.DEFAULT_INSTANCE);
-				}
-				if (annotationClass == Directed.Transform.class) {
-					return (List<A>) List.of(new Directed.Transform.Impl()
-							.withValue(valueTransformer));
-				}
+		public <A extends Annotation> A contextAnnotation(
+				HasAnnotations reflector, Class<A> clazz,
+				ResolutionContext resolutionContext) {
+			if (reflector.isProperty(Choice.class, "value")
+					&& clazz == Directed.Transform.class) {
+				return (A) new Directed.Transform.Impl()
+						.withValue(valueTransformer);
 			}
-			return null;
+			return super.contextAnnotation(reflector, clazz, resolutionContext);
 		}
 	}
 
@@ -156,9 +156,6 @@ public abstract class Choices<T> extends Model implements
 	public void onBeforeRender(BeforeRender event) {
 		event.node.optional(Values.class).ifPresent(ann -> setValues(
 				(List<T>) Reflections.newInstance(ann.value()).get()));
-		event.node.optional(ValueTransformer.class).ifPresent(
-				ann -> valueTransformer = (Class<? extends ModelTransform<T, ?>>) ann
-						.value());
 		super.onBeforeRender(event);
 	}
 
