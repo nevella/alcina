@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.DomEventData;
@@ -118,6 +119,11 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		if (currentEventMessage == null) {
 			currentEventMessage = new Message.DomEventMessage();
 			Scheduler.get().scheduleDeferred(() -> {
+				Optional<DomEventData> first = currentEventMessage.events
+						.stream().filter(e -> e.event.getId() == 0).findFirst();
+				if (first.isPresent()) {
+					int debug = 3;
+				}
 				ClientRpc.send(currentEventMessage, true);
 				currentEventMessage = null;
 			});

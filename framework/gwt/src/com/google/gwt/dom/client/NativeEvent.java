@@ -18,6 +18,7 @@ package com.google.gwt.dom.client;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.user.client.Window;
@@ -408,6 +409,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		NativeEvent event = Reflections.newInstance(getClass());
 		event.jso = jso;
 		event.serializableForm0();
+		event.data.jsoId = getId();
 		return (NE) event;
 	}
 
@@ -456,9 +458,14 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 	static int jsoCounter;
 
+	public int getId() {
+		Preconditions.checkState(data.jsoId != 0);
+		return data.jsoId;
+	}
+
 	@Bean(PropertySource.FIELDS)
 	public static class Data {
-		public int jsoId;
+		int jsoId;
 
 		String type;
 

@@ -706,6 +706,6 @@ public class Event extends NativeEvent {
 	}
 
 	public boolean isIdenticalTo(Event event) {
-		return data.jsoId != 0 && data.jsoId == event.data.jsoId;
+		return getId() != 0 && getId() == event.getId();
 	}
 }
