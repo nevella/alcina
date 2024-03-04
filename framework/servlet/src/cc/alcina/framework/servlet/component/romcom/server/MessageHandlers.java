@@ -60,7 +60,7 @@ public class MessageHandlers {
 		public void handle(RemoteComponentRequest request,
 				RemoteComponentResponse response, Environment env,
 				Message.DomEventMessage message) {
-			env.applyEvent(message.data);
+			message.events.forEach(env::applyEvent);
 		}
 	}
 

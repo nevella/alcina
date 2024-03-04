@@ -47,7 +47,7 @@ public class InputEditor extends Model implements Suggestor.Editor,
 
 	@Override
 	public void onChange(Change event) {
-		// intercept
+		// intercept (prevent from propagating)
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	@Override
 	public void onFocusin(Focusin event) {
 		if (Ax.notBlank(input.getValue())) {
-			deferEmitAsk();
+			// deferEmitAsk();
 		}
 	}
 

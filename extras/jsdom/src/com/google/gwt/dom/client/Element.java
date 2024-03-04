@@ -45,6 +45,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.ui.UIObject;
+import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
@@ -1465,35 +1466,44 @@ public class Element extends Node implements ClientDomElement,
 		ensureRemote().setSelectionRange(pos, length);
 	}
 
+	/*
+	 * Invokes RPC messages on the browser client element
+	 */
 	@Registration({ TypeInvoker.class, Element.class })
 	public static class TypeInvokerImpl extends TypeInvoker<Element> {
 		@Override
-		public Object invoke(Element bean, String methodName,
+		public Object invoke(Element elem, String methodName,
 				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
 			List<InvokeProxy.Flag> typedFlags = (List<Flag>) flags;
 			if (typedFlags.contains(InvokeProxy.Flag.invoke_on_element_style)) {
-				return Reflections.at(bean.getStyle()).invoke(bean.getStyle(),
+				return Reflections.at(elem.getStyle()).invoke(elem.getStyle(),
 						methodName, argumentTypes, arguments, null);
 			}
 			switch (methodName) {
 			case "focus":
 				Preconditions.checkArgument(argumentTypes.isEmpty());
-				bean.focus();
+				elem.focus();
 				return null;
 			case "getPropertyString":
 				if (argumentTypes.size() == 1) {
-					return bean.getPropertyString((String) arguments.get(0));
+					return elem.getPropertyString((String) arguments.get(0));
 				}
 			case "setPropertyString":
 				if (argumentTypes.size() == 2) {
-					bean.setPropertyString((String) arguments.get(0),
+					elem.setPropertyString((String) arguments.get(0),
 							(String) arguments.get(1));
+					return null;
+				}
+			case "setSelectionRange":
+				if (argumentTypes.size() == 2) {
+					TextBoxImpl.setTextBoxSelectionRange(elem,
+							(int) arguments.get(0), (int) arguments.get(1));
 					return null;
 				}
 			default:
 				break;
 			}
-			return invokeReflective(bean, methodName, argumentTypes, arguments,
+			return invokeReflective(elem, methodName, argumentTypes, arguments,
 					flags);
 		}
 	}

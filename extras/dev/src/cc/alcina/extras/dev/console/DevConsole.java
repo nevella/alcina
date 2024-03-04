@@ -51,6 +51,8 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.Al.Context;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -487,6 +489,7 @@ public abstract class DevConsole implements ClipboardOwner {
 	@SuppressWarnings("resource")
 	protected void init() throws Exception {
 		instance = this;
+		Al.context = Context.console;
 		Registry.Internals
 				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		JvmReflections.configureBootstrapJvmServices();

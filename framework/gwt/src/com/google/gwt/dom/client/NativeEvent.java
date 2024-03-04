@@ -66,6 +66,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 	public NativeEvent(NativeEventJso jso) {
 		this.jso = jso;
+		data.jsoId = ++jsoCounter;
 	}
 
 	@Override
@@ -453,8 +454,12 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		return super.toString();
 	}
 
+	static int jsoCounter;
+
 	@Bean(PropertySource.FIELDS)
 	public static class Data {
+		public int jsoId;
+
 		String type;
 
 		String string;

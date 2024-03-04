@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.Objects;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
@@ -107,22 +108,29 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			}-*/;
 	}
 
+	static DomEventMessage currentEventMessage = null;
+
 	static void dispatchEventMessage(Event event, Element listenerElement,
 			boolean preview) {
-		// just send the lowest event receiver - things will bubble from
-		// here
-		DomEventMessage message = new Message.DomEventMessage();
-		message.data = new DomEventData();
-		message.data.event = event.serializableForm();
-		message.data.preview = preview;
-		message.data.firstReceiver = listenerElement == null ? null
-				: Pathref.forNode(listenerElement);
-		if (!preview) {
-			event.stopPropagation();
+		/*
+		 * FIXME - shouldn't need to dedpue
+		 */
+		if (currentEventMessage == null) {
+			currentEventMessage = new Message.DomEventMessage();
+			Scheduler.get().scheduleDeferred(() -> {
+				ClientRpc.send(currentEventMessage, true);
+				currentEventMessage = null;
+			});
 		}
+		DomEventData eventData = new DomEventData();
+		currentEventMessage.events.add(eventData);
+		eventData.event = event.serializableForm();
+		eventData.preview = preview;
+		eventData.firstReceiver = listenerElement == null ? null
+				: Pathref.forNode(listenerElement);
+		String eventType = event.getType();
 		if (Element.is(event.getEventTarget())) {
 			Element elem = Element.as(event.getEventTarget());
-			String eventType = event.getType();
 			/*
 			 * Cancel a few events if they're in a form (assume form auto-submit
 			 * just not wanted)
@@ -141,13 +149,12 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			 * Propagate value + inputValue property changes
 			 */
 			if (Objects.equals(eventType, "change")) {
-				message.data.value = elem.getPropertyString("value");
+				eventData.value = elem.getPropertyString("value");
 			}
 			if (Objects.equals(eventType, "input")) {
-				message.data.inputValue = elem.getPropertyString("value");
+				eventData.inputValue = elem.getPropertyString("value");
 			}
 		}
-		ClientRpc.send(message, true);
 	}
 
 	public static class MutationsHandler

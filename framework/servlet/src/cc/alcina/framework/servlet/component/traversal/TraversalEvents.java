@@ -19,6 +19,18 @@ public class TraversalEvents {
 		}
 	}
 
+	public static class FilterSelections
+			extends ModelEvent<String, FilterSelections.Handler> {
+		@Override
+		public void dispatch(FilterSelections.Handler handler) {
+			handler.onFilterSelections(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFilterSelections(FilterSelections event);
+		}
+	}
+
 	public static class SelectionTypeSelected extends
 			ModelEvent<Choices.Single<SelectionType>, SelectionTypeSelected.Handler> {
 		@Override

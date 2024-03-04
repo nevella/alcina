@@ -235,13 +235,12 @@ public class StringInput extends Model.Value<String> implements FocusOnBind,
 			Rendered rendered = event.getContext().node.getRendered();
 			Element elem = rendered.asElement();
 			String propertyString = elem.getPropertyString("value");
-			TextBoxImpl.setTextBoxSelectionRange(elem, 0,
-					propertyString.length());
+			elem.setSelectionRange(0, propertyString.length());
 		} else if (isMoveCaretToEndOnFocus()) {
 			Rendered rendered = event.getContext().node.getRendered();
 			Element elem = rendered.asElement();
 			String propertyString = elem.getPropertyString("value");
-			TextBoxImpl.setTextBoxSelectionRange(elem, propertyString.length(),
+			elem.setSelectionRange(propertyString.length(),
 					propertyString.length());
 		}
 	}

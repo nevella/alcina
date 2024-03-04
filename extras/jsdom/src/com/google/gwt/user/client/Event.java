@@ -704,4 +704,8 @@ public class Event extends NativeEvent {
 		 */
 		void onPreviewNativeEvent(NativePreviewEvent event);
 	}
+
+	public boolean isIdenticalTo(Event event) {
+		return data.jsoId != 0 && data.jsoId == event.data.jsoId;
+	}
 }

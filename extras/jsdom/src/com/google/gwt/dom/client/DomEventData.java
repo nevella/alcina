@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 
 @Bean(PropertySource.FIELDS)
-public class DomEventData {
+public final class DomEventData {
 	public Pathref firstReceiver;
 
 	public String value;

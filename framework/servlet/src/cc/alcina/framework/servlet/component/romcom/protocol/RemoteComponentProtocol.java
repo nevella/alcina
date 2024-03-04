@@ -86,7 +86,7 @@ public class RemoteComponentProtocol {
 		 * Not an album by Beck.
 		 */
 		public static class DomEventMessage extends Message {
-			public DomEventData data;
+			public List<DomEventData> events = new ArrayList<>();
 		}
 
 		/*

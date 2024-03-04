@@ -18,12 +18,8 @@ import cc.alcina.framework.gwt.client.logic.MessageManager;
 
 @Directed(bindings = @Binding(from = "className", type = Type.PROPERTY))
 public class Notification extends Model {
-	public static Builder builder(Model model) {
-		return new Builder(model);
-	}
-
-	public static Builder builder(String message) {
-		return new Builder(message);
+	public static Builder builder() {
+		return new Builder();
 	}
 
 	public static ThrowableBuilder caught(Throwable throwable) {
@@ -31,7 +27,7 @@ public class Notification extends Model {
 	}
 
 	public static Notification show(String string) {
-		return builder(string).show();
+		return builder().withMessage(string).show();
 	}
 
 	public static WarnBuilder warn(String message) {
@@ -101,15 +97,6 @@ public class Notification extends Model {
 		protected Builder() {
 		}
 
-		public Builder(Model model) {
-			this.model = model;
-			variantStyle = VariantStyle.model;
-		}
-
-		public Builder(String message) {
-			this.message = message;
-		}
-
 		public B addClassName(Object className) {
 			classNames.add(className.toString());
 			return (B) this;
@@ -147,6 +134,7 @@ public class Notification extends Model {
 
 		public B withModel(Model model) {
 			this.model = model;
+			variantStyle = VariantStyle.model;
 			return (B) this;
 		}
 
@@ -177,7 +165,8 @@ public class Notification extends Model {
 
 		public static class WarnBuilder extends Builder<WarnBuilder> {
 			public WarnBuilder(String message) {
-				super(message);
+				super();
+				withMessage(message);
 				addClassName(VariantStyle.warn);
 				variantStyle = VariantStyle.warn;
 			}
@@ -206,9 +195,7 @@ public class Notification extends Model {
 			return this.model;
 		}
 
-		@Directed(
-			
-		reemits = { DomEvents.Click.class, ModelEvents.Close.class })
+		@Directed(reemits = { DomEvents.Click.class, ModelEvents.Close.class })
 		public String getX() {
 			return this.x;
 		}

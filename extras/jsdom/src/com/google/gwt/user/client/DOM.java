@@ -499,8 +499,7 @@ public class DOM {
 		 * bubbling handling in the local dom so don't want/need the non-first
 		 * dom events
 		 */
-		if (elem.eventListener != null
-				&& dispatchInfo.wasDispatchedTo(elem)) {
+		if (elem.eventListener != null && dispatchInfo.wasDispatchedTo(elem)) {
 			return;
 		}
 		if (Element.is(eventTarget)) {
@@ -1768,7 +1767,7 @@ public class DOM {
 		}
 
 		public boolean isForEvent(Event event) {
-			return this.event.jso != null && this.event.jso == event.jso;
+			return event.isIdenticalTo(this.event);
 		}
 
 		public boolean wasDispatchedTo(Element element) {

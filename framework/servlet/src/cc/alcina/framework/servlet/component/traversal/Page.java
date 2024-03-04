@@ -16,8 +16,8 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.cmp.CommandContext;
-import cc.alcina.framework.gwt.client.dirndl.cmp.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
+import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.GlobalKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
@@ -37,7 +38,7 @@ import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.Sele
 class Page extends Model.All
 		implements TraversalEvents.SelectionSelected.Handler,
 		TraversalEvents.SelectionTypeSelected.Handler,
-		DomEvents.KeyDown.Handler {
+		TraversalEvents.FilterSelections.Handler, DomEvents.KeyDown.Handler {
 	// FIXME - traversal - resolver/descendant event
 	public static TraversalPlace traversalPlace() {
 		return Ui.get().page.place;
@@ -130,7 +131,7 @@ class Page extends Model.All
 	public static class CommandContextProviderImpl
 			implements CommandContext.Provider {
 		Class<? extends CommandContext> appContext() {
-			return TraversalContext.class;
+			return TraversalViewContext.class;
 		}
 
 		@Override
@@ -219,5 +220,10 @@ class Page extends Model.All
 
 	enum Property implements PropertyEnum {
 		history, place
+	}
+
+	@Override
+	public void onFilterSelections(FilterSelections event) {
+		place.copy().withTextFilter(event.getModel()).go();
 	}
 }

@@ -22,6 +22,41 @@ bean-editor.horizontal-validation > form > section > form-element > value > vali
   left: 1rem;
   white-space: nowrap;
 }
+bean-editor.label-over form-element {
+  position: relative;
+  margin-bottom: 1rem;
+}
+bean-editor.label-over form-element > label:has(+ value > input) {
+  position: absolute;
+  left: 6px;
+  top: -5px;
+  background-color: #fefdfb;
+  color: #555;
+  font-size: 65%;
+  padding: 0 5px;
+  line-height: 100%;
+  z-index: 1;
+}
+bean-editor.label-over form-element > label:has(+ value > input:placeholder-shown) {
+  cursor: text;
+  max-width: 66.66%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform-origin: left bottom;
+  transform: translate(0px, 10px) scale(1);
+  white-space: nowrap;
+  color: #999;
+  padding-left: 1px;
+}
+bean-editor.label-over form-element > label:not(:has(+ value > input:placeholder-shown)), bean-editor.label-over form-element > label:has(+ value > input:focus) {
+  transform: translate(0, 0) scale(1);
+  cursor: pointer;
+}
+bean-editor.label-over form-element > label, bean-editor.label-over form-element > value > input {
+  transition: all 0.2s;
+  touch-action: manipulation;
+}
 bean-editor.bordered {
   margin: 1em 0;
   border-top: solid 1px #ccc;
@@ -305,7 +340,7 @@ body > page > header {
   font-family: Arial;
   display: grid;
   align-items: center;
-  grid-template-columns: 1fr 28rem 1fr;
+  grid-template-columns: 1fr 34rem 1fr;
   grid-template-areas: "left mid right";
   align-content: center;
   box-sizing: border-box;
@@ -469,7 +504,7 @@ app-suggestor {
   top: 0;
   border: solid 1px #d0d0d0;
   border-radius: 4px;
-  width: 28rem;
+  width: 34rem;
   font-family: Arial;
   background-color: #FFF;
 }
@@ -530,7 +565,7 @@ app-suggestor > results > choice > suggestion > app-suggestion > contents > opti
 
 overlay.app-suggestor > results {
   display: block;
-  width: 28rem;
+  width: 34rem;
   border: solid 1px #d0d0d0;
   background: white;
 }

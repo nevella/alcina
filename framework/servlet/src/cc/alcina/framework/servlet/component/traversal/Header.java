@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.component.traversal;
 
-import au.com.barnet.jade.jadex.client.module.common.cmp.header.AppSuggestorTraversal;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;

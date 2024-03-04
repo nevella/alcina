@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -179,7 +180,19 @@ public class ClientRpc {
 						ProtocolMessageHandlerClient handler = Registry.impl(
 								ProtocolMessageHandlerClient.class,
 								message.getClass());
-						handler.handle(response, message);
+						try {
+							handler.handle(response, message);
+						} catch (Throwable e) {
+							/*
+							 * FIXME - devex - 0 this can range - but at least
+							 * initially includes invalid pathrefs (which are
+							 * basically fatal but continue during dev)
+							 * 
+							 * 
+							 */
+							Window.alert(
+									CommonUtils.toSimpleExceptionMessage(e));
+						}
 					} else {
 						Ax.out("Received no-message response for %s",
 								NestedName.get(messageClass));

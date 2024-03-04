@@ -53,7 +53,8 @@ import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
  * responsible for its own sync
  * 
  * Environment affecting code is not run on a single thread but it is (where
- * needed) synchronized
+ * needed) synchronized. This will probably change to 'yes, single-threaded' -
+ * on the ClientExecutionQueue loop/dispatch thread
  */
 public class Environment {
 	public static class TimerProvider implements Timer.Provider {
@@ -483,5 +484,9 @@ public class Environment {
 		validateSession(token.request.session,
 				token.messageHandler.isValidateClientInstanceUid());
 		queue.handleFromClientMessage(token);
+	}
+
+	public void flush() {
+		emitMutations();
 	}
 }
