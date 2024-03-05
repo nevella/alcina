@@ -57,6 +57,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	}
 
 	public void emitSinkEvents(int eventBits) {
+		Ax.out("emitSinkEvents: %s", getTagName());
 		getOwnerDocument().implAccess().pathrefRemote().emitSinkEvents(this,
 				eventBits);
 	}
