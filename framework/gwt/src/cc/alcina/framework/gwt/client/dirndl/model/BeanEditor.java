@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
@@ -132,6 +133,14 @@ public class BeanEditor extends Model {
 		public abstract static class Impl extends
 				AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable> {
 		}
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+	public @interface Actions {
+		Class<? extends ModelEvent>[] value();
 	}
 
 	public static class NonAdjunct extends BeanEditor {

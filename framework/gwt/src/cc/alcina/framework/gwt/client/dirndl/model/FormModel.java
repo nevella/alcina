@@ -98,7 +98,7 @@ public class FormModel extends Model
 
 	protected List<Link> actions = new ArrayList<>();
 
-	private FormModelAttributes state;
+	private FormModelState state;
 
 	private boolean unAttachConfirmsTransformClear = false;
 
@@ -109,7 +109,7 @@ public class FormModel extends Model
 	private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
 		CommitToStorageTransformListener.get().flush();
 		// FIXME - mvcc.adjunct - need to ask adjuncts
-		if (TransformManager.get()
+		if (TransformManager.has() && TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
 				.size() > 0) {
 			e.setWarning("Form has unsaved changes. Please confirm to close");
@@ -169,7 +169,7 @@ public class FormModel extends Model
 		return this.formValidationResult;
 	}
 
-	public FormModelAttributes getState() {
+	public FormModelState getState() {
 		return this.state;
 	}
 
@@ -362,7 +362,7 @@ public class FormModel extends Model
 			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
 		@Override
 		public FormModel apply(Bindable bindable) {
-			FormModelAttributes attributes = new FormModelAttributes();
+			FormModelState attributes = new FormModelState();
 			attributes.editable = true;
 			if (bindable instanceof Entity && attributes.editable) {
 				bindable = ClientTransformManager.cast()
@@ -406,7 +406,7 @@ public class FormModel extends Model
 		@Override
 		public FormModel apply(
 				DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
-			FormModelAttributes state = new FormModelAttributes();
+			FormModelState state = new FormModelState();
 			Entity entity = activity.getEntity();
 			state.editable = activity.getPlace().action.isEditable();
 			if (entity != null && state.editable) {
@@ -473,7 +473,8 @@ public class FormModel extends Model
 
 	@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 	public static class FormElement extends Model.Fields
-			implements FormEvents.PropertyValidationChange.Handler {
+			implements FormEvents.PropertyValidationChange.Handler,
+			ModelEvents.FormElementLabelClicked.Emitter {
 		public static transient String PREFIX = "";
 
 		private LabelModel label;
@@ -569,7 +570,7 @@ public class FormModel extends Model
 		}
 	}
 
-	public static class FormModelAttributes {
+	public static class FormModelState {
 		public boolean lifecycleControls;
 
 		public boolean nodeEditors;
@@ -595,13 +596,21 @@ public class FormModel extends Model
 
 	@Reflected
 	public static class FormModelTransformer extends
-			AbstractContextSensitiveModelTransform<FormModelAttributes, FormModel> {
+			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
-		public FormModel apply(FormModelAttributes attributes) {
+		public FormModel apply(FormModelState state) {
 			FormModel formModel = Registry.impl(FormModel.class);
-			formModel.state = attributes;
-			if (attributes.model == null && attributes.expectsModel) {
+			formModel.state = state;
+			if (state.model == null && state.expectsModel) {
 				return formModel;
+			}
+			{
+				BeanEditor.Actions actions = node
+						.annotation(BeanEditor.Actions.class);
+				if (actions != null) {
+					Arrays.stream(actions.value()).map(Link::of)
+							.forEach(formModel.actions::add);
+				}
 			}
 			Args args = node.annotation(Args.class);
 			// FIXME - dirndl - put these as methods on the Resolver
@@ -612,35 +621,34 @@ public class FormModel extends Model
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
 			ModalResolver resolver = ModalResolver.single(node,
-					!attributes.editable);
+					!state.editable);
 			resolver.setFormModel(formModel);
 			node.setResolver(resolver);
-			if (attributes.model != null) {
-				if (attributes.model instanceof UserProperty) {
-					attributes.presentationModel = (Bindable) ((UserProperty) attributes.model)
+			if (state.model != null) {
+				if (state.model instanceof UserProperty) {
+					state.presentationModel = (Bindable) ((UserProperty) state.model)
 							.ensureUserPropertySupport().getPersistable();
 				}
-				if (attributes.presentationModel == null) {
-					attributes.presentationModel = attributes.model;
+				if (state.presentationModel == null) {
+					state.presentationModel = state.model;
 				}
 			}
-			if (attributes.presentationModel != null) {
-				ValidationFeedback.Provider validationFeedbackProvider = attributes.nodeEditors
+			if (state.presentationModel != null) {
+				ValidationFeedback.Provider validationFeedbackProvider = state.nodeEditors
 						? new ValidationFeedbackProvider()
 						: null;
 				List<Field> fields = BeanFields.query()
-						.forBean(attributes.presentationModel)
-						.withResolver(resolver)
+						.forBean(state.presentationModel).withResolver(resolver)
 						.withValidationFeedbackProvider(
 								validationFeedbackProvider)
-						.asEditable(attributes.editable)
-						.asAdjunctEditor(attributes.adjunct).listFields();
+						.asEditable(state.editable)
+						.asAdjunctEditor(state.adjunct).listFields();
 				fields.stream()
 						.filter(field -> fieldModulator
-								.accept(attributes.presentationModel, field))
+								.accept(state.presentationModel, field))
 						.map(field -> {
 							FormElement e = new FormElement(field,
-									attributes.presentationModel);
+									state.presentationModel);
 							if (args != null && args.focusOnAttach()
 									.equals(field.getPropertyName())) {
 								e.setFocusOnAttach(true);
@@ -648,16 +656,16 @@ public class FormModel extends Model
 							return e;
 						}).forEach(formModel.elements::add);
 			}
-			if (attributes.adjunct) {
+			if (state.adjunct) {
 				new Link().withModelEvent(ModelEvents.Submit.class)
 						.withClassName(Link.PRIMARY_ACTION)
 						.withTextFromModelEvent().addTo(formModel.actions);
 				new Link().withModelEvent(ModelEvents.Cancel.class)
 						.withTextFromModelEvent().addTo(formModel.actions);
 			} else {
-				if (attributes.presentationModel != null) {
+				if (state.presentationModel != null) {
 					ObjectActions actions = Reflections
-							.at(attributes.presentationModel)
+							.at(state.presentationModel)
 							.annotation(ObjectActions.class);
 					if (actions != null) {
 						Arrays.stream(actions.value()).map(Action::actionClass)
@@ -682,7 +690,7 @@ public class FormModel extends Model
 					link.withText(overrideLinkText);
 				}
 			}
-			if (!attributes.lifecycleControls) {
+			if (!state.lifecycleControls) {
 				formModel.actions.clear();
 			}
 			return formModel;
@@ -801,7 +809,7 @@ public class FormModel extends Model
 			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
 		@Override
 		public FormModel apply(PermissibleAction action) {
-			FormModelAttributes state = new FormModelAttributes();
+			FormModelState state = new FormModelState();
 			state.editable = true;
 			state.adjunct = true;
 			state.expectsModel = true;

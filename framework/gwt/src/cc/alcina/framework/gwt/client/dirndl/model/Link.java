@@ -49,6 +49,10 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * ModelEvent.Handler
  */
 public class Link extends Model implements DomEvents.Click.Handler, HasTag {
+	public static Link of(Class<? extends ModelEvent> modelEvent) {
+		return new Link().withModelEvent(modelEvent).withTextFromModelEvent();
+	}
+
 	private static final transient String INITIAL_HREF = "#";
 
 	public static final transient String PRIMARY_ACTION = "primary-action";

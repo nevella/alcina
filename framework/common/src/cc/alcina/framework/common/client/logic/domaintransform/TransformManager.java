@@ -2340,4 +2340,8 @@ public abstract class TransformManager
 			return ReflectiveSerializer.serialize(object);
 		}
 	}
+
+	public static boolean has() {
+		return factoryInstance != null;
+	}
 }

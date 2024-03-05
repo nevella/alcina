@@ -246,6 +246,33 @@ public class ModelEvents {
 		}
 	}
 
+	public static class FormElementLabelClicked extends
+			ModelEvent.DescendantEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
+		@Override
+		public void dispatch(FormElementLabelClicked.Handler handler) {
+			handler.onFormElementLabelClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFormElementLabelClicked(FormElementLabelClicked event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
+
+	public static class LabelClicked
+			extends ModelEvent<Object, LabelClicked.Handler> {
+		@Override
+		public void dispatch(LabelClicked.Handler handler) {
+			handler.onLabelClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onLabelClicked(LabelClicked event);
+		}
+	}
+
 	public interface FilterContentsElement {
 		boolean matchesFilter(String filterString);
 	}

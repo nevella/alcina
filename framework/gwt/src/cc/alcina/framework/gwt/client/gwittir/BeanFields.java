@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -59,7 +58,6 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -430,7 +428,8 @@ public class BeanFields {
 									: ValidationFeedback.Provider.Direction.RIGHT)
 							.createFeedback();
 					validator = getValidator(domainType, object,
-							query.propertyName, validationFeedback);
+							query.propertyName, validationFeedback,
+							propertyLocation);
 				}
 				Field field = new Field(property,
 						TextProvider.get().getLabelText(propertyLocation), bwp,
@@ -488,35 +487,29 @@ public class BeanFields {
 			}
 			return new Field(property,
 					TextProvider.get().getLabelText(propertyLocation), bwp,
-					getValidator(type, object, query.propertyName, vf), vf,
-					getDefaultConverter(bwp, type), clazz, query.resolver);
+					getValidator(type, object, query.propertyName, vf, null),
+					vf, getDefaultConverter(bwp, type), clazz, query.resolver);
 		}
 		return null;
 	}
 
 	Validator getValidator(Class<?> clazz, Object obj, String propertyName,
-			ValidationFeedback validationFeedback) {
+			ValidationFeedback validationFeedback,
+			AnnotationLocation location) {
 		ClassReflector<? extends Object> classReflector = Reflections.at(obj);
 		Property property = classReflector.property(propertyName);
-		List<cc.alcina.framework.common.client.logic.reflection.Validator> validators = new ArrayList<>();
-		cc.alcina.framework.common.client.logic.reflection.Validators validatorsAnn = property == null
-				? null
-				: property.annotation(Validators.class);
-		cc.alcina.framework.common.client.logic.reflection.Validator info = property == null
-				? null
-				: property.annotation(
-						cc.alcina.framework.common.client.logic.reflection.Validator.class);
-		if (propertyName == null) {
-			validatorsAnn = classReflector.annotation(Validators.class);
-			info = classReflector.annotation(
-					cc.alcina.framework.common.client.logic.reflection.Validator.class);
+		if (location == null) {
+			location = new AnnotationLocation(obj.getClass(), property);
 		}
-		if (validatorsAnn != null) {
-			validators.addAll(Arrays.asList(validatorsAnn.validators()));
-		}
-		if (info != null) {
-			validators.add(info);
-		}
+		List<cc.alcina.framework.common.client.logic.reflection.Validator> validators = location
+				.getAnnotations(
+						cc.alcina.framework.common.client.logic.reflection.Validator.class)
+				.stream().collect(Collectors.toList());
+		location.getAnnotations(
+				cc.alcina.framework.common.client.logic.reflection.Validators.class)
+				.stream().flatMap(vs -> Arrays.stream(vs.value()))
+				.forEach(validators::add);
+		;
 		if (!validators.isEmpty()) {
 			CompositeValidator cv = new CompositeValidator();
 			for (cc.alcina.framework.common.client.logic.reflection.Validator validatorAnnotation : validators) {

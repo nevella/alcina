@@ -759,8 +759,8 @@ public class DirectedLayout implements AlcinaProcess {
 					.getGenericBounds().bounds.get(2);
 			Node cursor = this;
 			while (cursor != null) {
-				if (Reflections.isAssignableFrom(emitterType,
-						cursor.model.getClass())) {
+				if (cursor.model != null && Reflections.isAssignableFrom(
+						emitterType, cursor.model.getClass())) {
 					return (Emitter) cursor.model;
 				}
 				cursor = cursor.parent;

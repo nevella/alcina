@@ -21,19 +21,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
-import cc.alcina.framework.gwt.client.gwittir.ValidationProvider;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target({ ElementType.METHOD, ElementType.TYPE })
+@Target({ ElementType.METHOD, ElementType.TYPE, ElementType.FIELD })
 @ClientVisible
 /**
  *
  * @author Nick Reddel
  */
 public @interface Validators {
-	Class<? extends ValidationProvider> provider() default ValidationProvider.class;
-
-	Validator[] validators();
+	Validator[] value();
 }
