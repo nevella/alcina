@@ -213,7 +213,8 @@ public class RemoteComponentProtocolServer {
 					RemoteComponentResponse response = new RemoteComponentResponse();
 					response.requestId = request.requestId;
 					response.session = request.session;
-					logger.debug("received request #{} - {}", request.requestId,
+					logger.debug("{} received request #{} - {}", Ax.appMillis(),
+							request.requestId,
 							NestedName.get(request.protocolMessage));
 					try {
 						Environment env = PathrefDom.get()
@@ -259,8 +260,8 @@ public class RemoteComponentProtocolServer {
 						}
 						response.protocolMessage = processingException;
 					}
-					logger.debug("dispatched response #{} - {}",
-							response.requestId,
+					logger.debug("{} dispatched response #{} - {}",
+							Ax.appMillis(), response.requestId,
 							NestedName.get(response.protocolMessage));
 					servletResponse.getWriter()
 							.write(ReflectiveSerializer.serialize(response));

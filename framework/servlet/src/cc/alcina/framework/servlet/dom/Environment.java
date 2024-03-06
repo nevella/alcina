@@ -437,6 +437,7 @@ public class Environment {
 	synchronized void emitMutations() {
 		if (mutations != null) {
 			runInClientFrame(() -> {
+				logger.info("{} emitMutations in frame", Ax.appMillis());
 				Document.get().pathrefRemote().flushSinkEventsQueue();
 				queue.send(mutations);
 				mutations = null;

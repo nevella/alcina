@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.util;
 
 import java.util.TimerTask;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 
@@ -50,6 +51,8 @@ public class TimerJvm implements Timer {
 			@Override
 			public void run() {
 				try {
+					Ax.logEvent("timerjvm-invoke-%s",
+							Thread.currentThread().getName());
 					runnable.run();
 					maybeFinish();
 				} catch (Throwable e) {
@@ -68,6 +71,7 @@ public class TimerJvm implements Timer {
 
 	@Override
 	public void cancel() {
+		Ax.logEvent("timerjvm-cancel-%s", Thread.currentThread().getName());
 		task.cancel();
 		timer.cancel();
 	}
@@ -82,6 +86,7 @@ public class TimerJvm implements Timer {
 
 	@Override
 	public void schedule(long delayMillis) {
+		Ax.logEvent("timerjvm-schedule-%s", Thread.currentThread().getName());
 		timer.schedule(task, delayMillis);
 	}
 }

@@ -311,4 +311,19 @@ public class Ax {
 			listIterator.remove();
 		}
 	}
+
+	static long appStartup;
+
+	public static long appMillis() {
+		long now = System.currentTimeMillis();
+		if (appStartup == 0) {
+			appStartup = now;
+		}
+		return now - appStartup;
+	}
+
+	public static void logEvent(String template, Object... args) {
+		String message = format(template, args);
+		out("%s %s", appMillis(), message);
+	}
 }
