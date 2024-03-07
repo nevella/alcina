@@ -180,7 +180,7 @@ public class PropertyReflection extends ReflectionElement
 			JClassType candidateClassType = (JClassType) erased;
 			int specicifity = computeSpecicifity(existingClassType,
 					candidateClassType);
-			if (specicifity <= 0) {
+			if (specicifity >= 0) {
 				return;// covariant, do not update. in particular type
 						// parameters are less specific than any real type
 			}

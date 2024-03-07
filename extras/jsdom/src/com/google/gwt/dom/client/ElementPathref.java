@@ -1,11 +1,7 @@
 package com.google.gwt.dom.client;
 
-import java.text.NumberFormat.Style;
 import java.util.Map;
 import java.util.Objects;
-
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -358,7 +354,7 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	@Override
 	public void setAttribute(String name, String value) {
 		MutationRecord record = new MutationRecord();
-		record.type = Type.attributes;
+		record.type = MutationRecord.Type.attributes;
 		record.target = MutationNode.pathref(elementFor());
 		record.attributeName = name;
 		record.newValue = value;
