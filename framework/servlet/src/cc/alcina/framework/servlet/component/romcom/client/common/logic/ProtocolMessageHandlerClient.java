@@ -44,13 +44,17 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			LocalDom.pathRefRepresentations()
 					.applyMutations(message.domMutations, true);
 			message.eventMutations.forEach(m -> {
-				Element elem = (Element) m.path.node();
-				if (m.eventBits == -1) {
-					DOM.sinkBitlessEvent(elem, m.eventTypeName);
-				} else {
-					DOM.sinkEvents(elem, m.eventBits);
+				try {
+					Element elem = (Element) m.path.node();
+					if (m.eventBits == -1) {
+						DOM.sinkBitlessEvent(elem, m.eventTypeName);
+					} else {
+						DOM.sinkEvents(elem, m.eventBits);
+					}
+					elem.eventListener = new DispatchListener(elem);
+				} catch (Throwable e) {
+					e.printStackTrace();
 				}
-				elem.eventListener = new DispatchListener(elem);
 			});
 			if (message.locationMutation != null) {
 				History.newItem(message.locationMutation.hash);
