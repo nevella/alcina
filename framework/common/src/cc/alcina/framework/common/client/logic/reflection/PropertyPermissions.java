@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Target({ ElementType.METHOD })
+@Target({ ElementType.METHOD, ElementType.FIELD })
 @ClientVisible
 /**
  * Relaxed by design - because we may be inheriting from the object

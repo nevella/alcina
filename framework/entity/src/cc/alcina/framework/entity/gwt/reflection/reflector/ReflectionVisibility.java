@@ -12,6 +12,9 @@ public interface ReflectionVisibility {
 	boolean isVisibleAnnotation(Class<? extends Annotation> annotationType);
 
 	default boolean isVisibleField(JField field) {
+		if (field.toString().contains("offerCode")) {
+			int debug = 3;
+		}
 		return !field.isTransient() && !field.isPrivate() && !field.isStatic()
 				&& !field.isAnnotationPresent(Property.Not.class);
 	}

@@ -506,12 +506,17 @@ public @interface Directed {
 	@interface Transform {
 		boolean transformsNull() default false;
 
-		Class<? extends ModelTransform> value();
+		/*
+		 * This originally required the value be a subtype of ModelTransform -
+		 * that's been relaxed to Function (although, for clarity, subtype
+		 * ModelTransform if the type will only be used for that purpose)
+		 */
+		Class<? extends Function> value();
 
 		public static class Impl implements Directed.Transform {
 			private boolean transformsNull;
 
-			private Class<? extends ModelTransform> value;
+			private Class<? extends Function> value;
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
@@ -524,7 +529,7 @@ public @interface Directed {
 			}
 
 			@Override
-			public Class<? extends ModelTransform> value() {
+			public Class<? extends Function> value() {
 				return value;
 			}
 
@@ -533,7 +538,7 @@ public @interface Directed {
 				return this;
 			}
 
-			public Impl withValue(Class<? extends ModelTransform> value) {
+			public Impl withValue(Class<? extends Function> value) {
 				this.value = value;
 				return this;
 			}
@@ -662,6 +667,6 @@ public @interface Directed {
 	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Wrap {
-		String value();
+		String value() default "";
 	}
 }

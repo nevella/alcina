@@ -1161,6 +1161,21 @@ public class DirectedLayout implements AlcinaProcess {
 			return path();
 		}
 
+		/*
+		 * for debugging, return a list of all Nodes in the ancestry chain of
+		 * this Node
+		 */
+		List<Node> toNodeStack() {
+			Node cursor = this;
+			List<Node> result = new ArrayList<>();
+			while (cursor != null) {
+				result.add(cursor);
+				cursor = cursor.parent;
+			}
+			Collections.reverse(result);
+			return result;
+		}
+
 		@Override
 		public String toString() {
 			return pathSegment();
