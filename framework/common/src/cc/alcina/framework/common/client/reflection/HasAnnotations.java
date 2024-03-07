@@ -9,4 +9,8 @@ public interface HasAnnotations {
 	<A extends Annotation> List<A> annotations(Class<A> annotationClass);
 
 	boolean isProperty(Class<?> owningType, String propertyName);
+
+	default Property asProperty() {
+		return (Property) this;
+	}
 }

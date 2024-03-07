@@ -209,6 +209,8 @@ public class StringInput extends Model.Value<String>
 	public void onBeforeRender(BeforeRender event) {
 		event.node.optional(Placeholder.class)
 				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
+		event.node.optional(Autocomplete.class).ifPresent(
+				autocomplete -> setAutocomplete(autocomplete.value()));
 		event.node.optional(FocusOnBind.class)
 				.ifPresent(ann -> setFocusOnBind(true));
 		super.onBeforeRender(event);
@@ -417,6 +419,14 @@ public class StringInput extends Model.Value<String>
 				return this;
 			}
 		}
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface Autocomplete {
+		String value();
 	}
 
 	static class SelectionState {

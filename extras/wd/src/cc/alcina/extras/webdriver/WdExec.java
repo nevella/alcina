@@ -17,6 +17,7 @@ import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.Select;
 
 import cc.alcina.extras.webdriver.WDUtils.TestCallback;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
@@ -291,12 +292,19 @@ public class WdExec {
 		for (int attempt = 0; attempt < maxTries; attempt++) {
 			WebElement elem = getElement();
 			Actions actions = new Actions(driver);
-			actions.moveToElement(elem);
 			if (WDUtils.isForceTimeout()) {
 				throw new TimedOutException("forced timeout");
 			}
 			try {
 				elem = getElement();
+				actor.accept(elem);
+				return false;
+			} catch (Exception e) {
+				// squelch, now try with a move
+			}
+			try {
+				elem = getElement();
+				actions.moveToElement(elem);
 				actor.accept(elem);
 				return false;
 			} catch (RuntimeException e) {
@@ -387,6 +395,14 @@ public class WdExec {
 				selectItemText).click();
 	}
 
+	public void selectDirndlSelectItem(String fieldName,
+			String selectItemText) {
+		WebElement selectElement = xpath("//form-element[@name='%s']//select",
+				fieldName).getElement();
+		Select select = new Select(selectElement);
+		select.selectByVisibleText(selectItemText);
+	}
+
 	public void selectItemByIndex(int idx) {
 		WDUtils.setSelectedIndex(token, driver, getElement(), idx);
 	}
@@ -403,6 +419,12 @@ public class WdExec {
 		xpath("//label[.='%s']", labelText).click();
 		xpath("//label[.='%s']/ancestor::div/input", labelText)
 				.setTextAndFire(inputText);
+	}
+
+	public void setDirndlInputTextAndFire(String fieldName, String inputText) {
+		xpath("//form-element[@name='%s']//label", fieldName).click();
+		xpath("//form-element[@name='%s']//input", fieldName).click();
+		setTextAndFire(inputText);
 	}
 
 	public void setTextAndFire(String text) {

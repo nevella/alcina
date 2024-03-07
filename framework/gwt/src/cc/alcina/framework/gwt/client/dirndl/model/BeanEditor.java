@@ -6,6 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
@@ -141,6 +142,18 @@ public class BeanEditor extends Model {
 	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 	public @interface Actions {
 		Class<? extends ModelEvent>[] value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+	public @interface ActionsProvider {
+		Class<? extends ActionsProviderType> value();
+	}
+
+	public abstract static class ActionsProviderType
+			extends AbstractContextSensitiveModelTransform<Object, List<Link>> {
 	}
 
 	public static class NonAdjunct extends BeanEditor {

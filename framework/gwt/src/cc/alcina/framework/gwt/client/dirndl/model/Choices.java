@@ -7,11 +7,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -23,6 +25,7 @@ import com.google.gwt.event.dom.client.MouseDownEvent;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -48,6 +51,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 
@@ -138,7 +142,33 @@ public abstract class Choices<T> extends Model implements
 		/**
 		 * The values supplier
 		 */
-		Class<? extends Supplier<?>> value();
+		Class<? extends Function<Values, List<?>>> value();
+
+		Class<? extends Enum> enumClass() default Enum.class;
+
+		boolean withNull() default false;
+
+		public interface ValueSupplier
+				extends Supplier<List<?>>, Function<Values, List<?>> {
+			@Override
+			default List<?> apply(Values t) {
+				return get();
+			}
+		}
+
+		@Reflected
+		public static class EnumSupplier implements Function<Values, List<?>> {
+			@Override
+			public List<?> apply(Values v) {
+				List result = new ArrayList<>();
+				if (v.withNull()) {
+					result.add(null);
+				}
+				Arrays.stream(v.enumClass().getEnumConstants())
+						.forEach(result::add);
+				return result;
+			}
+		}
 	}
 
 	@ClientVisible
@@ -149,13 +179,13 @@ public abstract class Choices<T> extends Model implements
 		/**
 		 * The values supplier
 		 */
-		Class<? extends ModelTransform<?, ?>> value();
+		Class<? extends Function<?, ?>> value();
 	}
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
 		event.node.optional(Values.class).ifPresent(ann -> setValues(
-				(List<T>) Reflections.newInstance(ann.value()).get()));
+				(List<T>) Reflections.newInstance(ann.value()).apply(ann)));
 		super.onBeforeRender(event);
 	}
 
@@ -283,10 +313,25 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
+	/*
+	 * Don't use @Choices.ValueTransformer (since there's already a transformer,
+	 * transforming the value into an HTML Option). Instead, override
+	 * transformOptionName (or - better - add another parameter annotation - say
+	 * ValueTransformer)
+	 */
 	@Directed(tag = "select")
 	@DirectedContextResolver(SelectResolver.class)
 	public static class Select<T> extends Single<T>
 			implements DomEvents.Change.Handler {
+		public static class To implements ModelTransform<Object, Single<?>> {
+			@Override
+			public Select<?> apply(Object t) {
+				Select<Object> select = new Select<>();
+				select.setValue(t);
+				return select;
+			}
+		}
+
 		@Override
 		public void onChange(Change event) {
 			DirectedLayout.Node node = provideNode()
@@ -334,8 +379,8 @@ public abstract class Choices<T> extends Model implements
 		/*
 		 * Override to customize the default
 		 */
-		protected String transformOptionName(Choice choice) {
-			return HasDisplayName.displayName(choice.getValue());
+		protected String transformOptionName(Node node, Choice choice) {
+			return HasDisplayName.displayName(choice.getValue(), "");
 		}
 
 		public static class Option extends Choices.Choice<String> {
@@ -356,7 +401,7 @@ public abstract class Choices<T> extends Model implements
 					SelectResolver resolver = (SelectResolver) node
 							.getResolver();
 					Option option = new Option(
-							resolver.transformOptionName(choice));
+							resolver.transformOptionName(node, choice));
 					option.setSelected(choice.isSelected());
 					return option;
 				}
@@ -393,7 +438,9 @@ public abstract class Choices<T> extends Model implements
 		public static class To implements ModelTransform<Object, Single<?>> {
 			@Override
 			public Single<?> apply(Object t) {
-				return new Single<>();
+				Single<Object> single = new Single<>();
+				single.setValue(t);
+				return single;
 			}
 		}
 
@@ -499,7 +546,7 @@ public abstract class Choices<T> extends Model implements
 
 		public void setSelectedValue(T value) {
 			T oldValue = getSelectedValue();
-			choices.forEach(c -> c.setSelected(c.value == value));
+			choices.forEach(c -> c.setSelected(Objects.equals(c.value, value)));
 			T newValue = getSelectedValue();
 			if (provideIsBound() && !Objects.equals(oldValue, newValue)) {
 				firePropertyChange("selectedValue", oldValue, newValue);

@@ -420,9 +420,10 @@ public class Binding {
 	public void setLeft() {
 		if ((left != null) && (right != null)) {
 			try {
-				right.listener.propertyChange(new PropertyChangeEvent(
-						right.object, right.property.getName(), null,
-						right.property.get(right.object)));
+				Object rightValue = right.property.get(right.object);
+				right.listener
+						.propertyChange(new PropertyChangeEvent(right.object,
+								right.property.getName(), null, rightValue));
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

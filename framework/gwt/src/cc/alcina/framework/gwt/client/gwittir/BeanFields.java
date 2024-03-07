@@ -452,10 +452,12 @@ public class BeanFields {
 		} else if (displayAllProperties != null
 				&& PermissionsManager.get().checkEffectivePropertyPermission(op,
 						null, object, !query.editable)) {
-			// no property info, but all writeable (if object is set)
-			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
-					position);
-			vf.setCss(query.multiple ? null : "gwittir-ValidationPopup-right");
+			ValidationFeedback validationFeedback = query.validationFeedbackProvider
+					.builder().forPropertyName(query.propertyName)
+					.displayDirection(query.multiple
+							? ValidationFeedback.Provider.Direction.BOTTOM
+							: ValidationFeedback.Provider.Direction.RIGHT)
+					.createFeedback();
 			if (bwp != null && !query.editable) {
 				Class domainType = type;
 				boolean isEnum = domainType.isEnum();
@@ -487,8 +489,10 @@ public class BeanFields {
 			}
 			return new Field(property,
 					TextProvider.get().getLabelText(propertyLocation), bwp,
-					getValidator(type, object, query.propertyName, vf, null),
-					vf, getDefaultConverter(bwp, type), clazz, query.resolver);
+					getValidator(type, object, query.propertyName,
+							validationFeedback, null),
+					validationFeedback, getDefaultConverter(bwp, type), clazz,
+					query.resolver);
 		}
 		return null;
 	}

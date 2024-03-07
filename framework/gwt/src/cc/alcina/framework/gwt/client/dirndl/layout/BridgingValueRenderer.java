@@ -288,7 +288,8 @@ public class BridgingValueRenderer extends DirectedRenderer {
 
 			@Override
 			public boolean isEditable() {
-				return parentContext().isEditable();
+				return parentContext().isEditable()
+						&& field.getFeedback() != null;
 			}
 
 			@Override

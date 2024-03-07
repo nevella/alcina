@@ -1,11 +1,12 @@
 @use '../../theme/theme'
 
+
 @mixin label-over
   form-element 
     position: relative
-    margin-bottom: 1rem
+    margin-bottom: 0.8rem
 
-    > label:has(+value>input) 
+    > label:has(+value>:is(input,select))
       position: absolute
       background-color: hsl(46.3, 57%, 99%)
       color: theme.$placeholder-color

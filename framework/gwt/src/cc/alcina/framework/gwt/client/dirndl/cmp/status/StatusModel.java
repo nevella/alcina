@@ -13,7 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule.Message;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import rocket.selection.client.Selection;
 
-@Directed(className = "ol-status")
+@Directed(className = "dl-status")
 public class StatusModel extends Model
 		implements ElementClicked.Handler, StatusElement.CloseElement.Handler {
 	static long delayMillis = 2000;

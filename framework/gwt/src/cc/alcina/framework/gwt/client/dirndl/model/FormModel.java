@@ -70,9 +70,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanEditor.ActionsProviderType;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.BeanValidationChange;
-import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.BeanValidationChange.Data;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.PropertyValidationChange;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.QueryValidity;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.QueryValidityResult;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResult;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
@@ -87,7 +90,8 @@ public class FormModel extends Model
 		implements NodeEditorContext, DomEvents.Submit.Handler,
 		DomEvents.KeyDown.Handler, ModelEvents.Cancel.Handler,
 		ModelEvents.Submit.Handler, FormEvents.BeanValidationChange.Handler,
-		FormEvents.PropertyValidationChange.Handler {
+		FormEvents.PropertyValidationChange.Handler,
+		FormEvents.QueryValidity.Handler {
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
 	public static void installFeedbackProvider() {
@@ -190,7 +194,7 @@ public class FormModel extends Model
 	@Override
 	public void onBeanValidationChange(BeanValidationChange event) {
 		setFormValidationResult(null);
-		Data data = event.getModel();
+		ValidationResult data = event.getModel();
 		switch (data.state) {
 		case ASYNC_VALIDATING:
 		case VALIDATING:
@@ -330,8 +334,8 @@ public class FormModel extends Model
 	}
 
 	void onValidationStateChange(ModelEvent event,
-			FormValidation formValidation, FormValidation.State state) {
-		Data data = new FormEvents.BeanValidationChange.Data(event, state,
+			FormValidation formValidation, FormEvents.ValidationState state) {
+		ValidationResult data = new FormEvents.ValidationResult(event, state,
 				formValidation.beanValidationExceptionMessage);
 		emitEvent(FormEvents.BeanValidationChange.class, data);
 	}
@@ -347,15 +351,15 @@ public class FormModel extends Model
 	}
 
 	/*
-	 * Designed this way so that the event is only bubbled once (possibly async)
-	 * validation is complete
+	 * Designed this way so that the originating ModelEvent (if any) is only
+	 * bubbled after (possibly async) validation is complete
 	 */
 	void submit(ModelEvent event) {
 		FormValidation formValidation = new FormValidation();
-		TopicListener<FormValidation.State> onValid = state -> onValidationStateChange(
+		TopicListener<FormEvents.ValidationState> validationStateChangeListener = state -> onValidationStateChange(
 				event, formValidation, state);
-		formValidation.validate(onValid, getState().formBinding,
-				getState().model);
+		formValidation.validate(validationStateChangeListener,
+				getState().formBinding, getState().model);
 	}
 
 	public static class BindableFormModelTransformer extends
@@ -609,6 +613,17 @@ public class FormModel extends Model
 						.annotation(BeanEditor.Actions.class);
 				if (actions != null) {
 					Arrays.stream(actions.value()).map(Link::of)
+							.forEach(formModel.actions::add);
+				}
+			}
+			{
+				BeanEditor.ActionsProvider actionsProvider = node
+						.annotation(BeanEditor.ActionsProvider.class);
+				if (actionsProvider != null) {
+					ActionsProviderType transform = Reflections
+							.newInstance(actionsProvider.value());
+					transform.withContextNode(node);
+					transform.apply(node.getModel())
 							.forEach(formModel.actions::add);
 				}
 			}
@@ -887,5 +902,25 @@ public class FormModel extends Model
 	 *
 	 */
 	public interface Viewer {
+	}
+
+	/*
+	 * Validates, and emits the result as a QueryValidityResult
+	 */
+	@Override
+	public void onQueryValidity(QueryValidity event) {
+		FormValidation formValidation = new FormValidation();
+		TopicListener<FormEvents.ValidationState> validationStateChangeListener = state -> {
+			switch (state) {
+			case INVALID:
+			case VALID:
+				ValidationResult data = new FormEvents.ValidationResult(event,
+						state, formValidation.beanValidationExceptionMessage);
+				event.reemitAs(this, QueryValidityResult.class, data);
+				break;
+			}
+		};
+		formValidation.validate(validationStateChangeListener,
+				getState().formBinding, getState().model);
 	}
 }

@@ -277,6 +277,8 @@ public class ModelBinding<T> {
 
 		Object on;
 
+		private Function map;
+
 		TargetBinding(SourcesPropertyChangeEvents to) {
 			this.to = to;
 		}
@@ -302,6 +304,7 @@ public class ModelBinding<T> {
 			ModelBinding reverse = new ModelBinding<>(bindings);
 			bindings.modelBindings.add(reverse);
 			reverse.fromPropertyChangeSource = to;
+			reverse.map = map;
 			reverse.on = on;
 			TargetBinding reverseTargetBinding = reverse
 					.to(source.fromPropertyChangeSource);
@@ -312,6 +315,11 @@ public class ModelBinding<T> {
 
 		public TargetBinding on(PropertyEnum on) {
 			this.on = on;
+			return this;
+		}
+
+		public <T2> TargetBinding map(Function<T, T2> map) {
+			this.map = (Function) map;
 			return this;
 		}
 

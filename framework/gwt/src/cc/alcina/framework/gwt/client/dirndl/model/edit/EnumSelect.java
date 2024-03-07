@@ -104,12 +104,12 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 		}
 
 		@Override
-		protected String transformOptionName(Choice choice) {
+		protected String transformOptionName(Node node, Choice choice) {
 			Object input = choice.getValue();
 			if (input == null) {
 				return nullString;
 			} else {
-				return super.transformOptionName(choice);
+				return super.transformOptionName(node, choice);
 			}
 		}
 	}

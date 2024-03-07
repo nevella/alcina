@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.util.AbstractCollection;
 import java.util.Arrays;
+import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
@@ -255,7 +256,7 @@ public abstract class DirectedRenderer {
 					// null output
 					return null;
 				}
-				ModelTransform modelTransform = (ModelTransform) Reflections
+				Function modelTransform = (Function) Reflections
 						.newInstance(transform.value());
 				if (modelTransform instanceof ContextSensitiveTransform) {
 					((ContextSensitiveTransform) modelTransform)

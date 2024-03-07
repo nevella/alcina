@@ -48,7 +48,8 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		if (wrap != null) {
 			Preconditions.checkState(multiple == null && delegating == null);
 			Directed.Impl impl = new Directed.Impl();
-			impl.setTag(wrap.value());
+			impl.setTag(Ax.blankTo(wrap.value(),
+					Ax.cssify(reflector.asProperty().getName())));
 			// Only Container is permitted (or logical) for wrapping
 			impl.setRenderer(DirectedRenderer.Container.class);
 			result.add(impl);

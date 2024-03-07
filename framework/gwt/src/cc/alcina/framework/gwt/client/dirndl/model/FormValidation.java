@@ -21,13 +21,13 @@ class FormValidation {
 
 	Binding binding;
 
-	Topic<State> topicState = Topic.create();
+	Topic<FormEvents.ValidationState> topicState = Topic.create();
 
 	String beanValidationExceptionMessage;
 
 	Bindable bindable;
 
-	void validate(TopicListener<FormValidation.State> stateListener,
+	void validate(TopicListener<FormEvents.ValidationState> stateListener,
 			Binding binding, Bindable bindable) {
 		this.bindable = bindable;
 		topicState.add(stateListener);
@@ -36,7 +36,7 @@ class FormValidation {
 	}
 
 	void validateAndCommit() {
-		topicState.publish(State.VALIDATING);
+		topicState.publish(FormEvents.ValidationState.VALIDATING);
 		try {
 			if (!WidgetUtils.docHasFocus()) {
 				GwittirUtils.commitAllTextBoxes(binding);
@@ -50,7 +50,7 @@ class FormValidation {
 					beanValidator.validate(bindable);
 				} catch (ValidationException e) {
 					beanValidationExceptionMessage = e.getMessage();
-					topicState.publish(State.INVALID);
+					topicState.publish(FormEvents.ValidationState.INVALID);
 					return;
 				}
 			}
@@ -69,7 +69,8 @@ class FormValidation {
 						if (!"fixme".isEmpty()) {
 							throw new UnsupportedOperationException();
 						}
-						topicState.publish(State.ASYNC_VALIDATING);
+						topicState.publish(
+								FormEvents.ValidationState.ASYNC_VALIDATING);
 						ServerValidator sv = (ServerValidator) v;
 						if (sv.isValidating()) {
 							// final CancellableRemoteDialog crd = new
@@ -103,7 +104,7 @@ class FormValidation {
 					}
 				}
 				beanValidationExceptionMessage = DEFAULT_BEAN_EXCEPTION_MESSAGE;
-				topicState.publish(State.INVALID);
+				topicState.publish(FormEvents.ValidationState.INVALID);
 			} else {
 				// if (serverValidationCallback != null) {
 				// for (Validator v : validators) {
@@ -113,28 +114,10 @@ class FormValidation {
 				// }
 				// }
 				// }
-				topicState.publish(State.VALID);
+				topicState.publish(FormEvents.ValidationState.VALID);
 			}
 		} finally {
 			LooseContext.pop();
-		}
-	}
-
-	enum State {
-		VALIDATING, ASYNC_VALIDATING, VALID, INVALID;
-
-		boolean isComplete() {
-			switch (this) {
-			case VALIDATING:
-			case ASYNC_VALIDATING:
-				return false;
-			default:
-				return true;
-			}
-		}
-
-		boolean isValid() {
-			return this == VALID;
 		}
 	}
 }
