@@ -1,13 +1,16 @@
 package com.google.gwt.dom.client;
 
+import java.text.NumberFormat.Style;
 import java.util.Map;
 import java.util.Objects;
+
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
-import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -57,7 +60,6 @@ public class ElementPathref extends NodePathref implements ClientDomElement {
 	}
 
 	public void emitSinkEvents(int eventBits) {
-		Ax.out("emitSinkEvents: %s", getTagName());
 		getOwnerDocument().implAccess().pathrefRemote().emitSinkEvents(this,
 				eventBits);
 	}
