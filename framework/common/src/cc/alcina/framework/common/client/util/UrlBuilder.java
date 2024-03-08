@@ -113,7 +113,7 @@ public class UrlBuilder {
 		return this;
 	}
 
-	public void populateFrom(Url url) {
+	public UrlBuilder populateFrom(Url url) {
 		if (url.protocol != null) {
 			this.protocol = url.protocol;
 		}
@@ -132,6 +132,7 @@ public class UrlBuilder {
 		if (url.hash != null) {
 			this.hash = url.hash;
 		}
+		return this;
 	}
 
 	public void clearFromPath() {

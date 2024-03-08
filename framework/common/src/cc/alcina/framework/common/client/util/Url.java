@@ -72,19 +72,21 @@ public class Url {
 	}
 
 	public String strUrlStartingAtPath() {
-		UrlBuilder builder = new UrlBuilder();
-		builder.populateFrom(this);
-		return builder.toStringStartingAtPath();
+		return toBuilder().toStringStartingAtPath();
 	}
 
 	public String strUrlEndingAtPath() {
-		UrlBuilder builder = new UrlBuilder();
-		builder.populateFrom(this);
-		return builder.toStringEndingAtPath();
+		return toBuilder().toStringEndingAtPath();
 	}
 
 	public Url replaceWithHostFrom(Url hostFrom) {
 		String strUrl = hostFrom.strUrlEndingAtPath() + strUrlStartingAtPath();
 		return parse(strUrl);
+	}
+
+	public UrlBuilder toBuilder() {
+		UrlBuilder builder = new UrlBuilder();
+		builder.populateFrom(this);
+		return builder;
 	}
 }
