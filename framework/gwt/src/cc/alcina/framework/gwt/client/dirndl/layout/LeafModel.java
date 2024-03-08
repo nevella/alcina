@@ -182,28 +182,29 @@ public class LeafModel {
 		}
 	}
 
-	@Directed(bindings = @Binding(from = "text", type = Type.INNER_TEXT))
-	public static class TagTextModel extends Model implements HasTag {
-		private final String text;
+	@Directed
+	public static class TagTextModel extends Model.Fields implements HasTag {
+		@Binding(type = Type.INNER_TEXT)
+		public final String text;
 
-		private final String tag;
+		public final String tag;
+
+		@Binding(type = Type.PROPERTY)
+		public String title;
 
 		public TagTextModel(String tag, String text) {
+			this(tag, text, null);
+		}
+
+		public TagTextModel(String tag, String text, String title) {
 			this.tag = tag;
 			this.text = text;
-		}
-
-		public String getTag() {
-			return this.tag;
-		}
-
-		public String getText() {
-			return this.text;
+			this.title = title;
 		}
 
 		@Override
 		public String provideTag() {
-			return getTag();
+			return tag;
 		}
 	}
 }

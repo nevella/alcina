@@ -326,4 +326,8 @@ public class Ax {
 		String message = format(template, args);
 		out("%s %s", appMillis(), message);
 	}
+
+	public static Date date(int year, int month, int dayOfMonth) {
+		return CommonUtils.oldDate(year, month, dayOfMonth);
+	}
 }
