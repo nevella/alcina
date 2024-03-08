@@ -232,8 +232,11 @@ public class StringInput extends Model.Value<String>
 	public void onFocusin(Focusin event) {
 		if (selectOnFocus != null) {
 			Scheduler.get().scheduleDeferred(() -> {
-				selectOnFocus.apply(provideElement());
-				selectOnFocus = null;
+				// null check handles double-focus in/out
+				if (selectOnFocus != null) {
+					selectOnFocus.apply(provideElement());
+					selectOnFocus = null;
+				}
 			});
 		} else if (isSelectAllOnFocus()) {
 			Rendered rendered = event.getContext().node.getRendered();

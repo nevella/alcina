@@ -1504,6 +1504,33 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
+	public static class CmdReloadProps extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "props" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Reload the local configuration file";
+		}
+
+		@Override
+		public String getUsage() {
+			return "";
+		}
+
+		@Override
+		public boolean rerunIfMostRecentOnRestart() {
+			return false;
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			return console.devHelper.reloadConfigurationFile();
+		}
+	}
+
 	public static class CmdUnescapeJson extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {

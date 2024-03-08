@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timer;
 
 /*
@@ -29,11 +28,9 @@ public class EventCollator<T> {
 			long maxDelay = collationActionsInvoked == 0
 					? maxDelayFromFirstEvent
 					: maxDelayFromFirstCollatedEvent;
-			Ax.out("%s timer check", Ax.appMillis());
 			if (time - lastEventOccurred >= waitToPerformAction
 					|| (maxDelay != 0
 							&& (time - firstEventOccurred >= maxDelay))) {
-				Ax.out("%s timer fire", Ax.appMillis());
 				synchronized (this) {
 					if (timer != null) {
 						timer.cancel();
@@ -125,8 +122,6 @@ public class EventCollator<T> {
 				if (timer == null && timerProvider != null) {
 					timer = timerProvider.getTimer(checkCallback);
 					timer.scheduleRepeating(waitToPerformAction / 2);
-					Ax.out("%s schedule repeating: %s", Ax.appMillis(),
-							waitToPerformAction / 2);
 				}
 			}
 		}

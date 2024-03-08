@@ -2,7 +2,6 @@ package cc.alcina.framework.entity.util;
 
 import java.util.TimerTask;
 
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 
@@ -17,8 +16,6 @@ import cc.alcina.framework.common.client.util.Topic;
  */
 public class TimerJvm implements Timer {
 	public static final Topic<Throwable> topicWrapperException = Topic.create();
-
-	private java.util.Timer timer = new java.util.Timer(true);
 
 	@Override
 	public void scheduleDeferred() {
@@ -35,9 +32,11 @@ public class TimerJvm implements Timer {
 		public Provider() {
 		}
 
+		private java.util.Timer timer = new java.util.Timer(true);
+
 		@Override
 		public Timer getTimer(Runnable runnable) {
-			return new TimerJvm(runnable);
+			return new TimerJvm(timer, runnable);
 		}
 	}
 
@@ -45,14 +44,15 @@ public class TimerJvm implements Timer {
 
 	private Runnable runnable;
 
-	private TimerJvm(final Runnable runnable) {
+	private java.util.Timer timer;
+
+	private TimerJvm(java.util.Timer timer, final Runnable runnable) {
+		this.timer = timer;
 		this.runnable = runnable;
 		task = new TimerTask() {
 			@Override
 			public void run() {
 				try {
-					Ax.logEvent("timerjvm-invoke-%s",
-							Thread.currentThread().getName());
 					runnable.run();
 					maybeFinish();
 				} catch (Throwable e) {
@@ -65,15 +65,13 @@ public class TimerJvm implements Timer {
 
 	private void maybeFinish() {
 		if (periodMillis == 0) {
-			timer.cancel();
+			task.cancel();
 		}
 	}
 
 	@Override
 	public void cancel() {
-		Ax.logEvent("timerjvm-cancel-%s", Thread.currentThread().getName());
 		task.cancel();
-		timer.cancel();
 	}
 
 	long periodMillis;
@@ -86,7 +84,6 @@ public class TimerJvm implements Timer {
 
 	@Override
 	public void schedule(long delayMillis) {
-		Ax.logEvent("timerjvm-schedule-%s", Thread.currentThread().getName());
 		timer.schedule(task, delayMillis);
 	}
 }

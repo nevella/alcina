@@ -213,9 +213,10 @@ public class RemoteComponentProtocolServer {
 					RemoteComponentResponse response = new RemoteComponentResponse();
 					response.requestId = request.requestId;
 					response.session = request.session;
-					logger.debug("{} received request #{} - {}", Ax.appMillis(),
-							request.requestId,
-							NestedName.get(request.protocolMessage));
+					logger.debug("{} received request #{} - {} {}",
+							Ax.appMillis(), request.requestId,
+							NestedName.get(request.protocolMessage),
+							request.protocolMessage.toDebugString());
 					try {
 						Environment env = PathrefDom.get()
 								.getEnvironment(request.session);

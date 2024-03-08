@@ -665,4 +665,11 @@ public abstract class DevHelper {
 		ServletLayerTopics.topicRestartConsole
 				.add(() -> DevConsole.getInstance().restart());
 	}
+
+	public String reloadConfigurationFile() {
+		String configPath = getConfigFilePath();
+		Configuration.properties
+				.register(Io.read().path(configPath).asString());
+		return "reloaded " + configPath;
+	}
 }

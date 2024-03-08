@@ -82,16 +82,14 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 	static abstract class Queue {
 		Collection<Task> tasks;
 
-		Task add(ScheduledCommand cmd) {
+		void add(ScheduledCommand cmd) {
 			Task task = new Task(cmd);
 			tasks.add(task);
-			return task;
 		}
 
-		Task add(RepeatingCommand cmd) {
-			Task task = new Task(cmd);
+		void add(RepeatingCommand cmd, int delayMs) {
+			Task task = new Task(cmd).withDelayMs(delayMs);
 			tasks.add(task);
-			return task;
 		}
 
 		static class Sorted extends Queue {
@@ -133,7 +131,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 	@Override
 	public void scheduleEntry(RepeatingCommand cmd) {
-		entry.add(cmd);
+		entry.add(cmd, 0);
 	}
 
 	@Override
@@ -143,7 +141,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 	@Override
 	public void scheduleFinally(RepeatingCommand cmd) {
-		_finally.add(cmd);
+		_finally.add(cmd, 0);
 	}
 
 	@Override
@@ -153,17 +151,17 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 	@Override
 	public void scheduleFixedDelay(RepeatingCommand cmd, int delayMs) {
-		timed.add(cmd).withDelayMs(delayMs);
+		timed.add(cmd, delayMs);
 	}
 
 	@Override
 	public void scheduleFixedPeriod(RepeatingCommand cmd, int delayMs) {
-		timed.add(cmd).withDelayMs(delayMs);
+		timed.add(cmd, delayMs);
 	}
 
 	@Override
 	public void scheduleIncremental(RepeatingCommand cmd) {
-		timed.add(cmd);
+		timed.add(cmd, 1);
 	}
 
 	public static void initialiseContextProvider(boolean multiple) {
@@ -274,6 +272,11 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		}
 		long now = System.currentTimeMillis();
 		long delayMillis = Math.max(nextScheduledTaskTime - now, 0);
-		new TimerJvm.Provider().getTimer(entry).schedule(delayMillis);
+		if (delayMillis > 500 && timed.tasks.size() > 1) {
+			int debug = 3;
+		}
+		timerProvider.getTimer(entry).schedule(delayMillis);
 	}
+
+	TimerJvm.Provider timerProvider = new TimerJvm.Provider();
 }

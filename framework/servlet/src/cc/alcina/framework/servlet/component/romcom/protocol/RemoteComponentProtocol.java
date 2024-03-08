@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
@@ -193,6 +194,13 @@ public class RemoteComponentProtocol {
 			public List<EventSystemMutation> eventMutations = new ArrayList<>();
 
 			public LocationMutation locationMutation;
+
+			@Override
+			public String toDebugString() {
+				return FormatBuilder.keyValues("dom", domMutations.size(),
+						"event", eventMutations.size(), "loc",
+						locationMutation);
+			}
 		}
 
 		/*
@@ -239,6 +247,10 @@ public class RemoteComponentProtocol {
 			public List<MutationRecord> domMutations = new ArrayList<>();
 
 			public int maxCharsPerTextNode;
+		}
+
+		public String toDebugString() {
+			return "";
 		}
 	}
 
