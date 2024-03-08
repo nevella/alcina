@@ -62,12 +62,20 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 	transient Set<Modifier> modifiers;
 
+	transient static NativeEventJso lastNativeEventJso;
+
 	public NativeEvent() {
 	}
 
 	public NativeEvent(NativeEventJso jso) {
+		Preconditions.checkArgument(jso != null);
 		this.jso = jso;
-		data.jsoId = ++jsoCounter;
+		if (lastNativeEventJso == jso) {
+		} else {
+			++jsoCounter;
+			lastNativeEventJso = jso;
+		}
+		data.jsoId = jsoCounter;
 	}
 
 	@Override
