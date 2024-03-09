@@ -6,6 +6,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
@@ -347,9 +348,11 @@ public class StringInput extends Model.Value<String>
 
 	@Override
 	public void setValue(String value) {
-		String old_value = this.value;
-		this.value = value;
-		propertyChangeSupport().firePropertyChange("value", old_value, value);
+		if (provideIsBound() && !Objects.equals(value, currentValue)) {
+			provideElement().setPropertyString("value", value);
+			currentValue = value;
+		}
+		set("value", this.value, value, () -> this.value = value);
 	}
 
 	void updateHeight() {

@@ -18,7 +18,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
@@ -26,6 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommands.ClearFilter;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
@@ -38,7 +38,8 @@ import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.Sele
 class Page extends Model.All
 		implements TraversalEvents.SelectionSelected.Handler,
 		TraversalEvents.SelectionTypeSelected.Handler,
-		TraversalEvents.FilterSelections.Handler, DomEvents.KeyDown.Handler {
+		TraversalEvents.FilterSelections.Handler,
+		TraversalCommands.ClearFilter.Handler {
 	// FIXME - traversal - resolver/descendant event
 	public static TraversalPlace traversalPlace() {
 		return Ui.get().page.place;
@@ -152,7 +153,6 @@ class Page extends Model.All
 	}
 
 	// FIXME - not hooked up?
-	@Override
 	public void onKeyDown(KeyDown event) {
 		Context context = event.getContext();
 		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
@@ -226,5 +226,11 @@ class Page extends Model.All
 	@Override
 	public void onFilterSelections(FilterSelections event) {
 		place.copy().withTextFilter(event.getModel()).go();
+	}
+
+	@Override
+	public void onClearFilter(ClearFilter event) {
+		header.mid.suggestor.clear();
+		new TraversalPlace().go();
 	}
 }

@@ -44,4 +44,22 @@ public abstract class TraversalCommands<T, H extends NodeEvent.Handler>
 			}
 		}
 	}
+
+	@AppSuggestorCommand(
+		parent = TraversalCommands.class,
+		name = "clear filter",
+		description = "Clear the filter",
+		filter = AppSuggestorCommand.Filter.IsConsole.class)
+	@KeyBinding(key = "C")
+	public static class ClearFilter
+			extends TraversalCommands<Object, ClearFilter.Handler> {
+		@Override
+		public void dispatch(ClearFilter.Handler handler) {
+			handler.onClearFilter(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onClearFilter(ClearFilter event);
+		}
+	}
 }

@@ -1,5 +1,6 @@
 package com.google.gwt.dom.client;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -443,11 +444,13 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 				|| Objects.equals(name, "inputValue")) {
 			if (Objects.equals(value, this.value)) {
 			} else {
+				// local caching to prevent roundtrips (although those do work)
+				this.value = value;
+				invokeSync("setPropertyString",
+						List.of(String.class, String.class),
+						// not list.of - does not allow nulls
+						Arrays.asList(name, value));
 			}
-			// local caching to prevent roundtrips (although those do work)
-			this.value = value;
-			invokeSync("setPropertyString", List.of(String.class, String.class),
-					List.of(name, value));
 		} else {
 			// almost all other properties are attributes
 			setAttribute(name, value);
