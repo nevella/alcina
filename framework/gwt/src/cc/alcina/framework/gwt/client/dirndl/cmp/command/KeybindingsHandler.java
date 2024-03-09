@@ -18,7 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorReques
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding.MatchData;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.util.GlobalKeyboardShortcuts;
+import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 
 /**
  * FIXME - recompute on code module load (registry modification/listener)
@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.util.GlobalKeyboardShortcuts;
  * <p>
  * The app must register a {@link CommandContext.Provider} implementation
  */
-public class KeybindingsHandler implements GlobalKeyboardShortcuts.Handler {
+public class KeybindingsHandler implements KeyboardShortcuts.Handler {
 	List<MatchData> boundEvents;
 
 	EventDispatcher eventDispatcher;
@@ -81,16 +81,15 @@ public class KeybindingsHandler implements GlobalKeyboardShortcuts.Handler {
 				AppSuggestorCommand command = Reflections.at(eventType)
 						.annotation(AppSuggestorCommand.class);
 				if (command != null) {
-					Class<? extends AppSuggestorEvent> omniType = (Class<? extends AppSuggestorEvent>) eventType;
-					if (!AppSuggestorCommand.Support.testFilter(omniType,
-							command)) {
+					Class<? extends AppSuggestorEvent> suggestorEventType = (Class<? extends AppSuggestorEvent>) eventType;
+					if (!AppSuggestorCommand.Support
+							.testFilter(suggestorEventType, command)) {
 						return;
 					}
 				}
 				nativeEvent.stopPropagation();
 				nativeEvent.preventDefault();
 				eventDispatcher.dispatch(eventType);
-				// JadexLayout.get().dispatchTopEvent(eventType, null);
 			}
 		}
 	}

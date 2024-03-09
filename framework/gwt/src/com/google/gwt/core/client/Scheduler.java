@@ -53,6 +53,7 @@ public abstract class Scheduler {
 
 	/**
 	 * A deferred command is executed after the browser event loop returns.
+	 * 
 	 */
 	public abstract void scheduleDeferred(ScheduledCommand cmd);
 

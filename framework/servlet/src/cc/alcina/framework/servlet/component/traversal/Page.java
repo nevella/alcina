@@ -24,7 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.util.GlobalKeyboardShortcuts;
+import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
@@ -102,7 +102,7 @@ class Page extends Model.All
 				.addHandler(PlaceChangeEvent.TYPE, handler));
 	}
 
-	GlobalKeyboardShortcuts shortcuts;
+	KeyboardShortcuts shortcuts;
 
 	void goPreserveScrollPosition(TraversalPlace place) {
 		Element scrollableLayers = layers.provideElement().getChildElement(1);
@@ -125,8 +125,9 @@ class Page extends Model.All
 
 	// needs fix
 	private KeybindingsHandler keybindingsHandler = new KeybindingsHandler(
-			eventType -> provideNode().dispatch(eventType, null),
-			new CommandContextProviderImpl());
+			eventType -> {
+				provideNode().dispatch(eventType, null);
+			}, new CommandContextProviderImpl());
 
 	public static class CommandContextProviderImpl
 			implements CommandContext.Provider {
@@ -144,7 +145,7 @@ class Page extends Model.All
 
 	private void bindKeyboardShortcuts(boolean bound) {
 		if (bound) {
-			shortcuts = new GlobalKeyboardShortcuts();
+			shortcuts = new KeyboardShortcuts();
 			Event.addNativePreviewHandler(shortcuts);
 		}
 		shortcuts.deltaHandler(keybindingsHandler, bound);
@@ -155,7 +156,7 @@ class Page extends Model.All
 	public void onKeyDown(KeyDown event) {
 		Context context = event.getContext();
 		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
-		if (GlobalKeyboardShortcuts.eventFiredFromInputish(
+		if (KeyboardShortcuts.eventFiredFromInputish(
 				domEvent.getNativeEvent().getEventTarget())) {
 			return;
 		}

@@ -53,10 +53,8 @@ public class StatusModel extends Model
 	}
 
 	public void setElements(List<StatusElement> elements) {
-		List<StatusElement> old_elements = this.elements;
-		this.elements = elements;
-		propertyChangeSupport().firePropertyChange("elements", old_elements,
-				elements);
+		set("elements", this.elements, elements,
+				() -> this.elements = elements);
 	}
 
 	private void close(StatusElement model) {

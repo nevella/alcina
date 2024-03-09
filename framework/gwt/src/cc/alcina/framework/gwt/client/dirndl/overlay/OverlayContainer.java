@@ -65,7 +65,7 @@ public class OverlayContainer extends Model implements HasTag {
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
-			Scheduler.get().scheduleFinally(this::position);
+			Scheduler.get().scheduleDeferred(this::position);
 		}
 	}
 

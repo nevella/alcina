@@ -37,38 +37,10 @@ public abstract class TraversalCommands<T, H extends NodeEvent.Handler>
 				/*
 				 * FIXME - trav - per-environment registry/MessageManager
 				 */
-				StatusModule.get().showMessageTransitional("Reloading console");
+				StatusModule.get().showMessageTransitional(
+						"Reloading dev console + traversal view");
 				Environment.get().flush();
 				ServletLayerTopics.topicRestartConsole.signal();
-			}
-		}
-	}
-
-	@AppSuggestorCommand(
-		parent = TraversalCommands.class,
-		name = "reload2",
-		description = "Reload the app2 -and- redeploy the console",
-		filter = AppSuggestorCommand.Filter.IsConsole.class)
-	@KeyBinding(key = "R")
-	public static class ReloadApp2
-			extends TraversalCommands<Object, ReloadApp2.Handler> {
-		@Override
-		public void dispatch(ReloadApp2.Handler handler) {
-			handler.onReloadApp(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onReloadApp(ReloadApp2 event);
-		}
-
-		@Registration({ TopLevelHandler.class, ReloadApp2.class })
-		public static class HandlerImpl implements Handler, TopLevelHandler {
-			@Override
-			public void onReloadApp(ReloadApp2 event) {
-				/*
-				 * FIXME - trav - per-environment registry/MessageManager
-				 */
-				StatusModule.get().showMessageTransitional("NOOOP");
 			}
 		}
 	}

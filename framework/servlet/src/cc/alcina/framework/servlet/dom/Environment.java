@@ -278,6 +278,7 @@ public class Environment {
 
 	public void clientStarted() {
 		clientStarted = true;
+		scheduler.setClientStarted(true);
 	}
 
 	Environment(RemoteUi ui, Credentials credentials) {

@@ -27,6 +27,9 @@ import cc.alcina.framework.entity.util.TimerJvm;
  * 
  * Any call on any queue that is scheduled after a to-browser command emission
  * will wait until that command returns
+ * 
+ * FIXME - sel.trav - remove 'postmutations' - really, that should all be the
+ * responsiblity of the blocking
  */
 public class SchedulerFrame extends Scheduler implements ContextFrame {
 	public static ContextProvider<Void, SchedulerFrame> contextProvider;
@@ -45,6 +48,8 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 			return Ax.format("%s - %s", id, command());
 		}
 
+		SchedulerFrame frame;
+
 		Task(ScheduledCommand scheduledCommand) {
 			this.scheduledCommand = scheduledCommand;
 		}
@@ -56,6 +61,8 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		long scheduledFor;
 
 		long delayMs;
+
+		Queue queue;
 
 		Task withDelayMs(long delayMs) {
 			this.delayMs = delayMs;
@@ -79,46 +86,73 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		}
 	}
 
-	static abstract class Queue {
+	class Queue {
 		Collection<Task> tasks;
+
+		String name;
+
+		Queue(String name, boolean sorted) {
+			this.name = name;
+			if (sorted) {
+				tasks = new TreeSet<>();
+			} else {
+				tasks = new ArrayList<>();
+			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s tasks", name, tasks.size());
+		}
 
 		void add(ScheduledCommand cmd) {
 			Task task = new Task(cmd);
 			tasks.add(task);
+			task.queue = this;
 		}
 
 		void add(RepeatingCommand cmd, int delayMs) {
 			Task task = new Task(cmd).withDelayMs(delayMs);
 			tasks.add(task);
+			task.queue = this;
 		}
 
-		static class Sorted extends Queue {
-			Sorted() {
-				tasks = new TreeSet<>();
-			}
-		}
-
-		static class Unsorted extends Queue {
-			Unsorted() {
-				tasks = new ArrayList<>();
-			}
+		void add(ScheduledCommand cmd, int delayMs) {
+			Task task = new Task(cmd).withDelayMs(delayMs);
+			tasks.add(task);
+			task.queue = this;
 		}
 	}
 
-	Queue entry = new Queue.Unsorted();
+	Queue entry = new Queue("entry", false);
 
-	Queue _finally = new Queue.Unsorted();
+	Queue _finally = new Queue("_finally", false);
 
 	/*
 	 * Because all client-side execution is async, this queue is just treated as
 	 * "after _finally" rather than "timed with delay 1ms" (the latter is the
 	 * client implementation)
 	 */
-	Queue deferred = new Queue.Unsorted();
+	Queue deferred = new Queue("deferred", false);
 
-	Queue timed = new Queue.Sorted();
+	Queue timed = new Queue("timed", true);
+
+	/*
+	 * The sync dispatch pump is not available until after the client has
+	 * rendered its initial DOM, so any code requiring sync DOM access (e.g
+	 * dropdown positioning) must be deferred until after that initial render
+	 */
+	Queue postClientStarted = new Queue("postClientStarted", false);
 
 	public Function<Scheduler.Command, Boolean> commandExecutor;
+
+	private boolean clientStarted;
+
+	public void setClientStarted(boolean clientStarted) {
+		this.clientStarted = clientStarted;
+		postClientStarted.tasks.forEach(_finally.tasks::add);
+		postClientStarted = null;
+	}
 
 	public static Supplier<Scheduler> asSupplier() {
 		return () -> contextProvider.contextFrame();
@@ -126,7 +160,11 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 	@Override
 	public void scheduleDeferred(ScheduledCommand cmd) {
-		deferred.add(cmd);
+		if (clientStarted) {
+			deferred.add(cmd);
+		} else {
+			postClientStarted.add(cmd);
+		}
 	}
 
 	@Override
@@ -146,7 +184,11 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 	@Override
 	public void scheduleFinally(ScheduledCommand cmd) {
-		_finally.add(cmd);
+		if (clientStarted) {
+			_finally.add(cmd);
+		} else {
+			postClientStarted.add(cmd);
+		}
 	}
 
 	@Override
@@ -272,9 +314,6 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		}
 		long now = System.currentTimeMillis();
 		long delayMillis = Math.max(nextScheduledTaskTime - now, 0);
-		if (delayMillis > 500 && timed.tasks.size() > 1) {
-			int debug = 3;
-		}
 		timerProvider.getTimer(entry).schedule(delayMillis);
 	}
 

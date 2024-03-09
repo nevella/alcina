@@ -1,11 +1,11 @@
-.ol-status {
+.dl-status {
   position: fixed;
   left: 0;
   bottom: 0;
   padding: 20px;
   z-index: 1;
 }
-.ol-status > .element {
+.dl-status > .element {
   display: block;
   background-color: #323232;
   color: #f1f1f1;
@@ -24,7 +24,7 @@
   max-height: 70vh;
   overflow: scroll;
 }
-.ol-status > .element.removing {
+.dl-status > .element.removing {
   transition: transform 0.5s, opacity 0.5s;
   opacity: 0;
   transform: translateX(-100%);
@@ -93,7 +93,7 @@ bean-editor.vertical-validation {
   line-height: 2.6rem;
 }
 bean-editor.vertical-validation > form > section > form-element > value > validation-feedback > message {
-  top: 0.1rem;
+  top: 0.3rem;
   left: 1rem;
   line-height: 1;
 }
@@ -107,18 +107,20 @@ bean-editor.horizontal-validation > form > section > form-element > value > vali
 }
 bean-editor.label-over form-element {
   position: relative;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
-bean-editor.label-over form-element > label:has(+ value > input) {
+bean-editor.label-over form-element > label:has(+ value > :is(input, select)) {
   position: absolute;
-  left: 6px;
-  top: -5px;
   background-color: #fefdfb;
   color: #555;
-  font-size: 65%;
+  font-family: "Helvetica Neue", Arial;
+  font-style: normal;
   padding: 0 5px;
   line-height: 100%;
   z-index: 1;
+  left: 6px;
+  top: -5px;
+  font-size: 65%;
 }
 bean-editor.label-over form-element > label:has(+ value > input:placeholder-shown) {
   cursor: text;
@@ -131,10 +133,16 @@ bean-editor.label-over form-element > label:has(+ value > input:placeholder-show
   white-space: nowrap;
   color: #999;
   padding-left: 1px;
+  top: -5px;
+  left: 6px;
+  font-size: 65%;
 }
 bean-editor.label-over form-element > label:not(:has(+ value > input:placeholder-shown)), bean-editor.label-over form-element > label:has(+ value > input:focus) {
   transform: translate(0, 0) scale(1);
   cursor: pointer;
+  left: 6px;
+  top: -5px;
+  font-size: 65%;
 }
 bean-editor.label-over form-element > label, bean-editor.label-over form-element > value > input {
   transition: all 0.2s;
