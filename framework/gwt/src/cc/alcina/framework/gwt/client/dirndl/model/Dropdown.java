@@ -98,9 +98,6 @@ public class Dropdown extends Model
 
 	@Override
 	public void onDropdownButtonClicked(DropdownButtonClicked event) {
-		if ("".isEmpty()) {
-			throw new UnsupportedOperationException();
-		}
 		setOpen(!isOpen());
 	}
 
