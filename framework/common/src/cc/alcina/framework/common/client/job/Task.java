@@ -57,4 +57,18 @@ public interface Task extends TreeSerializable, HasEquivalence {
 
 		Job schedule(Task task);
 	}
+
+	/*
+	 * A convenience interface for tasks that are invoked from a console for
+	 * remote execution
+	 */
+	public static interface RemotePerformable {
+		default void performRemote() {
+			Registry.impl(RemotePerformer.class).performRemote(this);
+		}
+	}
+
+	public interface RemotePerformer {
+		void performRemote(RemotePerformable remotePerformable);
+	}
 }
