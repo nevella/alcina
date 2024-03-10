@@ -19,6 +19,11 @@ public abstract class DomContext {
 		return get().getAbsoluteTop0(parentElement);
 	}
 
+	/* ensure cache exists at a given context level */
+	public static void ensure() {
+		get().ensure0();
+	}
+
 	public static Document getDocument() {
 		return get().getDocument0();
 	}
@@ -61,6 +66,9 @@ public abstract class DomContext {
 	protected abstract int getAbsoluteTop0(Element parentElement);
 
 	protected abstract Document getDocument0();
+
+	protected void ensure0() {
+	};
 
 	protected abstract Element getElementForPositioning0(Element elem);
 

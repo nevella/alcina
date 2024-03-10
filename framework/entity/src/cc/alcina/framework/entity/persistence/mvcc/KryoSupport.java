@@ -57,6 +57,7 @@ public class KryoSupport {
 
 	public static class MvccObjectSerializer extends Serializer {
 		public MvccObjectSerializer(Kryo kryo, Class<?> type) {
+			setImmutable(true);
 		}
 
 		@Override

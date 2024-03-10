@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.List;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -51,6 +53,21 @@ public class StandardModels {
 		public TextTitle(String text, String title) {
 			this.text = text;
 			this.title = title;
+		}
+	}
+
+	@Directed(className = "panel")
+	public static abstract class Panel extends Model.Fields {
+		@Directed
+		public final HeadingActions header;
+
+		public Panel(String caption) {
+			header = new HeadingActions(caption);
+		}
+
+		public <T extends Panel> T addTo(List<? super Panel> panels) {
+			panels.add(this);
+			return (T) this;
 		}
 	}
 }

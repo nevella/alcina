@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -26,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 
 /*
@@ -262,6 +264,14 @@ public class ClassReflector<T> implements HasAnnotations {
 	}
 
 	public Property property(Object stringOrPropertyEnum) {
+		Property property = property0(stringOrPropertyEnum);
+		Objects.requireNonNull(property,
+				() -> Ax.format("Property '%s' not found on type '%s'",
+						stringOrPropertyEnum, NestedName.get(reflectedClass)));
+		return property;
+	}
+
+	Property property0(Object stringOrPropertyEnum) {
 		if (stringOrPropertyEnum instanceof String) {
 			return property((String) stringOrPropertyEnum);
 		} else if (stringOrPropertyEnum instanceof PropertyEnum) {

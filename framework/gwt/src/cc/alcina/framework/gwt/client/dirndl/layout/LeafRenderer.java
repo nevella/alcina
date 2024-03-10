@@ -95,6 +95,13 @@ public abstract class LeafRenderer extends DirectedRenderer {
 		}
 	}
 
+	public static class EntityPlaceholderRenderer extends Text {
+		@Override
+		protected String getModelText(Object model) {
+			return "";
+		}
+	}
+
 	@Registration({ DirectedRenderer.class, Enum.class })
 	public static class EnumRenderer extends HasDisplayNameRenderer {
 	}

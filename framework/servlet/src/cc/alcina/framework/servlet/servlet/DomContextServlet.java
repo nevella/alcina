@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.servlet;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,6 +83,12 @@ public class DomContextServlet extends DomContext {
 	}
 
 	Map<Document, DomDocument> xmlDocs() {
-		return LooseContext.ensure(CONTEXT_DOCS, () -> new LinkedHashMap<>());
+		return LooseContext.ensure(CONTEXT_DOCS,
+				() -> new ConcurrentHashMap<>());
+	}
+
+	@Override
+	protected void ensure0() {
+		xmlDocs();
 	}
 }

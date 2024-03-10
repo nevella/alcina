@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ProcessingInstruction;
@@ -34,6 +33,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -192,8 +192,14 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			return;
 		}
 		// CLEAN - only problematic if ML is HTML-ish
-		Preconditions.checkArgument(!tagName.toLowerCase()
-				.matches("body|title|head|html|style|script"));
+		if (tagName.toLowerCase()
+				.matches("body|title|head|html|style|script")) {
+			String message = Ax.format("Rendering element with tag %s",
+					tagName);
+			Ax.err(message);
+			Ax.out(layoutNode.toNodeStack());
+			throw new IllegalArgumentException(message);
+		}
 		Element element = Document.get().createElement(tagName);
 		String cssClass = layoutNode.directed.className();
 		if (cssClass.length() > 0) {
