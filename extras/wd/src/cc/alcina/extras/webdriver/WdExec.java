@@ -408,7 +408,9 @@ public class WdExec {
 	}
 
 	public void selectItemByText(String text) {
-		WDUtils.setSelectedText(token, driver, getElement(), text);
+		WebElement selectElement = getElement();
+		Select select = new Select(selectElement);
+		select.selectByVisibleText(text);
 	}
 
 	public void sendKeys(CharSequence string) {
@@ -429,9 +431,12 @@ public class WdExec {
 
 	public void setTextAndFire(String text) {
 		String f_text = text.replace("\\", "\\\\");
-		performAction(false,
-				elem -> WDUtils.setProperty(driver, elem, "value", f_text));
-		performAction(false, elem -> WDUtils.sendChanged(token, driver, elem));
+		clear();
+		sendKeys(f_text);
+		// performAction(false,
+		// elem -> WDUtils.setProperty(driver, elem, "value", f_text));
+		// performAction(false, elem -> WDUtils.sendChanged(token, driver,
+		// elem));
 	}
 
 	public void sleep(int ms) {
