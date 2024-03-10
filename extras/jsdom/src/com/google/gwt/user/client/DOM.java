@@ -528,8 +528,13 @@ public class DOM {
 			}
 			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
 				eventCurrentTarget = entry.getKey();
-				EventListener elementListener = entry.getValue();
-				elementListener.onBrowserEvent(event);
+				EventListener dispatchListener = entry.getValue();
+				Element dispatchElement = entry.getKey();
+				if (dispatchElement.eventListener != null
+						&& dispatchInfo.wasDispatchedTo(dispatchElement)) {
+					continue;
+				}
+				dispatchListener.onBrowserEvent(event);
 				if (LocalDom.isStopPropagation(event)) {
 					return;
 				}
