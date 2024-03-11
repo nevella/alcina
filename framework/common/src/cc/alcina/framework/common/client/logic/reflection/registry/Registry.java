@@ -141,13 +141,14 @@ public class Registry {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public Registry() {
+		init();
 	}
 
 	protected void init() {
-		singletons = new Singletons();
+		registryKeys = new RegistryKeys();
 		registrations = new Registrations();
 		implementations = new Implementations();
-		registryKeys = new RegistryKeys();
+		singletons = new Singletons();
 	}
 
 	public Internals instanceInternals() {
