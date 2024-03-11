@@ -60,6 +60,7 @@ import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -799,12 +800,32 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		void writeRegisterRegistrations(SourceWriter sourceWriter) {
 			reflection.getRegistrations().stream()
 					.sorted(REGISTRY_LOCATION_COMPARATOR)
-					.forEach(registryLocation -> {
-						sourceWriter.print("Registry.register().add(%s,",
-								accessSafeClassLiteral(reflection.type));
-						AnnotationExpressionWriter instanceGenerator = new AnnotationExpressionWriter(
-								new AnnotationReflection(registryLocation));
-						instanceGenerator.writeExpression(sourceWriter);
+					.forEach(registration -> {
+						/*
+						 * class literal version
+						 */
+						// sourceWriter.print("Registry.register().add(%s,",
+						// accessSafeClassLiteral(reflection.type));
+						// AnnotationExpressionWriter instanceGenerator = new
+						// AnnotationExpressionWriter(
+						// new AnnotationReflection(registration));
+						// instanceGenerator.writeExpression(sourceWriter);
+						/*
+						 * String version (avoids loading classes on startup)
+						 */
+						sourceWriter.print("Registry.register().add(");
+						sourceWriter.print("\"%s\"",
+								reflection.type.getQualifiedBinaryName());
+						sourceWriter.print(",List.of(");
+						String keys = Arrays.stream(registration.value()).map(
+								clazz -> Ax.format("\"%s\"", clazz.getName()))
+								.collect(Collectors.joining(", "));
+						sourceWriter.print(keys);
+						sourceWriter.print(")");
+						sourceWriter.print(", Registration.Implementation.%s",
+								registration.implementation());
+						sourceWriter.print(", Registration.Priority.%s",
+								registration.priority());
 						sourceWriter.println(");");
 					});
 		}
@@ -1283,6 +1304,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			composerFactory.addImport(ClientReflections.class.getName());
 			composerFactory.addImport(ClassReflector.class.getName());
 			composerFactory.addImport(Supplier.class.getName());
+			composerFactory.addImport(Registration.class.getName());
+			composerFactory.addImport(List.class.getName());
 			composerFactory.setSuperclass(
 					superClassOrInterfaceType.getQualifiedSourceName());
 			sourceWriter = createWriter(composerFactory, printWriter);

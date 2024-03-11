@@ -770,11 +770,22 @@ public class Registry {
 		/*
 		 * Uses string (className) parameters to avoid class init from cache
 		 * loads
+		 * 
+		 * This is optimised for Android, avoiding stream use
 		 */
 		public void add(String registeringClassClassName, List<String> keys,
 				Implementation implementation, Priority priority) {
-			add(registryKeys.get(registeringClassClassName), keys.stream()
-					.map(registryKeys::get).collect(Collectors.toList()),
+			/*
+			 * stream variant
+			 */
+			// add(registryKeys.get(registeringClassClassName), keys.stream()
+			// .map(registryKeys::get).collect(Collectors.toList()),
+			// implementation, priority);
+			List<RegistryKey> list = new ArrayList<>(keys.size());
+			for (String key : keys) {
+				list.add(registryKeys.get(key));
+			}
+			add(registryKeys.get(registeringClassClassName), list,
 					implementation, priority);
 		}
 
