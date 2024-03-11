@@ -47,6 +47,9 @@ public class RemoteInvocationProxy implements InvocationHandler {
 						"transformExPersistenceContext|transformInPersistenceContext")) {
 			params.mayLinkToDomain = false;
 		}
+		// String metricKey = "RemoteInvocationProxy:" + method.getName();
+		// return MethodContext.instance().withMetricKey(metricKey)
+		// .call(() -> remoter.invoke(method.getName(), args, params));
 		return remoter.invoke(method.getName(), args, params);
 	}
 

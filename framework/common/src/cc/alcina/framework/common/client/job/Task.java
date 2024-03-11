@@ -63,12 +63,18 @@ public interface Task extends TreeSerializable, HasEquivalence {
 	 * remote execution
 	 */
 	public static interface RemotePerformable {
-		default void performRemote() {
-			Registry.impl(RemotePerformer.class).performRemote(this);
+		default long performRemote() {
+			return Registry.impl(RemotePerformer.class).performRemote(this);
+		}
+
+		default String performRemoteSync() {
+			return Registry.impl(RemotePerformer.class).performRemoteSync(this);
 		}
 	}
 
 	public interface RemotePerformer {
-		void performRemote(RemotePerformable remotePerformable);
+		long performRemote(RemotePerformable remotePerformable);
+
+		String performRemoteSync(RemotePerformable remotePerformable);
 	}
 }

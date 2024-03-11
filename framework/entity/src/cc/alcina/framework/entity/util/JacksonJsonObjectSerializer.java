@@ -129,7 +129,6 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 				}
 			} catch (Exception e) {
 				Ax.err(e.getMessage());
-				int debug = 3;
 				// deserialization issue
 			}
 			return deserialize_v1(json, clazz);
