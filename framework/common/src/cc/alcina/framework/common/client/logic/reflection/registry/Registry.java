@@ -78,7 +78,7 @@ public class Registry {
 	public static <V> V impl(Class<V> type) {
 		// fast path
 		Registry instance = get();
-		V singleton = (V) instance.singletons.byClass.get(type);
+		V singleton = (V) instance.singletons.byClass(type);
 		if (singleton != null) {
 			return singleton;
 		}
@@ -126,19 +126,29 @@ public class Registry {
 		return get().query0(type).registrations();
 	}
 
-	Singletons singletons = new Singletons();
+	Singletons singletons;
 
-	Registrations registrations = new Registrations();
+	Registrations registrations;
 
-	Implementations implementations = new Implementations();
+	Implementations implementations;
 
-	RegistryKeys registryKeys = new RegistryKeys();
+	RegistryKeys registryKeys;
 
 	public String name;
 
 	Registry sharedImplementations;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
+
+	public Registry() {
+	}
+
+	protected void init() {
+		singletons = new Singletons();
+		registrations = new Registrations();
+		implementations = new Implementations();
+		registryKeys = new RegistryKeys();
+	}
 
 	public Internals instanceInternals() {
 		return new Internals(this);
@@ -631,10 +641,10 @@ public class Registry {
 
 		List<Class> classes = new ArrayList<>();
 
-		public Query() {
+		Query() {
 		}
 
-		public Query(Class<V> type) {
+		Query(Class<V> type) {
 			this.type = type;
 			classes.add(type);
 		}
@@ -918,6 +928,10 @@ public class Registry {
 
 		boolean contains(Class singletonClass) {
 			return byClass.containsKey(singletonClass);
+		}
+
+		<V> V byClass(Class<V> type) {
+			return (V) byClass.get(type);
 		}
 
 		Object ensure(Class singletonClass) {
