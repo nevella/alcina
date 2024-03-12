@@ -8,6 +8,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationParameters.Api;
 
 public class RemoteInvocationProxy implements InvocationHandler {
@@ -47,10 +48,10 @@ public class RemoteInvocationProxy implements InvocationHandler {
 						"transformExPersistenceContext|transformInPersistenceContext")) {
 			params.mayLinkToDomain = false;
 		}
-		// String metricKey = "RemoteInvocationProxy:" + method.getName();
-		// return MethodContext.instance().withMetricKey(metricKey)
-		// .call(() -> remoter.invoke(method.getName(), args, params));
-		return remoter.invoke(method.getName(), args, params);
+		String metricKey = "RemoteInvocationProxy:" + method.getName();
+		return MethodContext.instance().withMetricKey(metricKey)
+				.call(() -> remoter.invoke(method.getName(), args, params));
+		// return remoter.invoke(method.getName(), args, params);
 	}
 
 	public void setRemoteAddress(String remoteAddress) {
