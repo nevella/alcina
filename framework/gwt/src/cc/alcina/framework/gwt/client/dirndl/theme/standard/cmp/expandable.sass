@@ -1,7 +1,10 @@
 @use '../multi/base'
 
-@mixin contents
+@mixin content
   cursor: pointer
+
+  > contracted
+    display: block
 
 @mixin expanded
   display: block
@@ -26,7 +29,7 @@
 
 @mixin expanded-overlay
   body expandable
-    @include contents
+    @include content
     
   overlay 
     > expanded

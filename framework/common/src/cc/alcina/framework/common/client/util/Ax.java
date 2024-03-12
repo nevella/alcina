@@ -100,12 +100,6 @@ public class Ax {
 						: collection.iterator().next();
 	}
 
-	public static String firstLine(String string) {
-		string = blankToEmpty(string);
-		int newlineIdx = string.indexOf("\n");
-		return newlineIdx == -1 ? string : string.substring(0, newlineIdx);
-	}
-
 	public static <T> Optional<T> firstOptional(Collection<T> collection) {
 		return collection.size() == 0 ? Optional.empty()
 				: Optional.ofNullable(collection.iterator().next());

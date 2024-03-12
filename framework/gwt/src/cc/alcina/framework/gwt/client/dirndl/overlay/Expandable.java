@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.overlay;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 import com.google.gwt.dom.client.DomRect;
@@ -28,14 +29,17 @@ public class Expandable extends Model.Fields
 	transient Consumer<AsyncCallback<String>> fullSupplier;
 
 	public Expandable(String string) {
-		this(string, 80, null);
+		this(string, 80, "", null);
 	}
 
-	public Expandable(String string, int trimTo,
+	public Expandable(String string, int trimTo, String blankMessage,
 			Consumer<AsyncCallback<String>> fullSupplier) {
-		this.string = string;
+		this.string = Ax.blankToEmpty(string);
 		this.fullSupplier = fullSupplier;
-		contracted = Ax.trim(Ax.firstLine(string), trimTo);
+		String firstNonEmptyLine = Arrays.stream(this.string.split("\n"))
+				.map(Ax::ntrim).filter(s -> s.length() > 0).findFirst()
+				.orElse(blankMessage);
+		contracted = Ax.trim(firstNonEmptyLine, trimTo);
 	}
 
 	@Override
