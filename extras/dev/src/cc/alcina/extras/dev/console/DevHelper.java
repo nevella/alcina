@@ -143,14 +143,25 @@ public abstract class DevHelper {
 				return;
 			}
 			File nonTemplateFile = new File(nonTemplatePath);
+			File templateFile = new File(nonTemplatePath + ".template");
 			if (!nonTemplateFile.exists()) {
 				try {
 					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath + ".template"),
-							nonTemplateFile);
+					SEUtilities.copyFile(templateFile, nonTemplateFile);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
+				}
+			} else {
+				if (nonTemplateFile.lastModified() < templateFile
+						.lastModified()) {
+					Ax.sysLogHigh(
+							"Replacing template %s - VCS version more recent. \n ",
+							nonTemplateFile);
+					try {
+						SEUtilities.copyFile(templateFile, nonTemplateFile);
+					} catch (Exception e) {
+						throw WrappedRuntimeException.wrap(e);
+					}
 				}
 			}
 		}
