@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
@@ -488,5 +489,16 @@ public @interface Registration {
 			return clazz == Registration.class || clazz == Registrations.class
 					|| clazz == Singleton.class;
 		}
+	}
+
+	/*
+	 * Marks a singleton as being required for each Environment (server-side
+	 * client emulation instance)
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@ClientVisible
+	@Target({ ElementType.TYPE })
+	public @interface EnvironmentSingleton {
 	}
 }

@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.logic.MessageManager;
  *
  */
 @Registration.Singleton
+@Registration.EnvironmentSingleton
 public class StatusModule {
 	public static StatusModule get() {
 		return Registry.impl(StatusModule.class);

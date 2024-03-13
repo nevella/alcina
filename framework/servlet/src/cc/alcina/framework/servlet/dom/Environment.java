@@ -27,6 +27,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Ref;
@@ -276,6 +277,8 @@ public class Environment {
 
 	boolean clientStarted;
 
+	EnvironmentRegistry environmentRegistry;
+
 	public void clientStarted() {
 		clientStarted = true;
 		scheduler.setClientStarted(true);
@@ -332,6 +335,8 @@ public class Environment {
 		try {
 			LooseContext.push();
 			LooseContext.set(CONTEXT_ENVIRONMENT, this);
+			environmentRegistry = new EnvironmentRegistry();
+			EnvironmentRegistry.enter(environmentRegistry);
 			// the order - location, history, client, document - is necessary
 			location = Window.Location.contextProvider.createFrame(null);
 			navigator = Window.Navigator.contextProvider.createFrame(null);
@@ -457,6 +462,7 @@ public class Environment {
 			try {
 				LooseContext.push();
 				LooseContext.set(CONTEXT_ENVIRONMENT, this);
+				EnvironmentRegistry.enter(environmentRegistry);
 				Client.contextProvider.registerFrame(client);
 				History.contextProvider.registerFrame(history);
 				Window.Location.contextProvider.registerFrame(location);

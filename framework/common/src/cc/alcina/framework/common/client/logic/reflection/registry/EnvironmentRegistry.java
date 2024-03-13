@@ -1,7 +1,13 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  * <p>
@@ -18,13 +24,47 @@ import java.util.stream.Stream;
  * particular interface
  */
 public class EnvironmentRegistry extends Registry {
+	static final String CONTEXT_REGISTRY = EnvironmentRegistry.class.getName()
+			+ ".CONTEXT_REGISTRY";
+
 	static RegistryProvider delegateProvider;
 
 	Registry delegate() {
 		return delegateProvider.getRegistry();
 	}
 
-	public static void registerProviders() {
+	public static void
+			registerDelegateProvider(RegistryProvider delegateProvider) {
+		RegistryProvider currentProvider = Registry.Internals.getProvider();
+		Registry.Internals.setProvider(new Provider());
+		EnvironmentRegistry.delegateProvider = delegateProvider != null
+				? delegateProvider
+				: currentProvider;
+	}
+
+	static class Provider implements RegistryProvider {
+		@Override
+		public void appShutdown() {
+			delegateProvider.appShutdown();
+		}
+
+		@Override
+		public Registry getRegistry() {
+			EnvironmentRegistry contextRegistry = LooseContext
+					.get(CONTEXT_REGISTRY);
+			if (contextRegistry != null) {
+				return contextRegistry;
+			} else {
+				return delegateProvider.getRegistry();
+			}
+		}
+	}
+
+	static Map<Class, Boolean> classEnvironmentSingleton = CollectionCreators.Bootstrap
+			.createConcurrentClassMap();
+
+	public static void enter(EnvironmentRegistry registry) {
+		LooseContext.set(CONTEXT_REGISTRY, registry);
 	}
 
 	@Override
@@ -62,7 +102,12 @@ public class EnvironmentRegistry extends Registry {
 
 		@Override
 		public V impl() {
-			return delegateQuery().impl();
+			boolean hasEnvironmentSingleton = hasEnvironmentSingleton(type);
+			if (hasEnvironmentSingleton) {
+				return (V) singletons.ensure(type);
+			} else {
+				return delegateQuery().impl();
+			}
 		}
 
 		@Override
@@ -96,14 +141,48 @@ public class EnvironmentRegistry extends Registry {
 		}
 	}
 
+	static boolean hasEnvironmentSingleton(Class<?> type) {
+		boolean hasEnvironmentSingleton = classEnvironmentSingleton
+				.computeIfAbsent(type, clazz -> Reflections.at(clazz)
+						.has(Registration.EnvironmentSingleton.class));
+		return hasEnvironmentSingleton;
+	}
+
 	class EnvironmentSingletons extends Singletons {
 		@Override
 		<V> V byClass(Class<V> type) {
-			V result = super.byClass(type);
-			if (result != null) {
-				return result;
+			if (hasEnvironmentSingleton(type)) {
+				return super.byClass(type);
+			} else {
+				return delegate().singletons.byClass(type);
 			}
-			return delegate().singletons.byClass(type);
+		}
+
+		@Override
+		Object ensure(Class singletonClass) {
+			if (hasEnvironmentSingleton(singletonClass)) {
+				return super.ensure(singletonClass);
+			} else {
+				return delegate().singletons.ensure(singletonClass);
+			}
+		}
+
+		@Override
+		void put(Object implementation) {
+			if (hasEnvironmentSingleton(implementation.getClass())) {
+				super.put(implementation);
+			} else {
+				delegate().singletons.put(implementation);
+			}
+		}
+
+		@Override
+		void remove(Class singletonImplementationType) {
+			if (hasEnvironmentSingleton(singletonImplementationType)) {
+				super.remove(singletonImplementationType);
+			} else {
+				delegate().singletons.remove(singletonImplementationType);
+			}
 		}
 	}
 

@@ -4,7 +4,7 @@ function cc_alcina_framework_servlet_component_romcom_RemoteObjectModelComponent
   sendStats('bootstrap', 'begin');
   function isHostedMode(){
     var query = $wnd_0.location.search;
-    return query.indexOf('gwt.codesvr.cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient=') != -1 || query.indexOf('gwt.codesvr=') != -1;
+    return query.indexOf('gwt.codesvr.cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient=') != -1 || (query.indexOf('gwt.codesvr=') != -1 || query.indexOf('gwt97') != -1);
   }
 
   function sendStats(evtGroupString, typeString){
@@ -334,7 +334,7 @@ function cc_alcina_framework_servlet_component_romcom_RemoteObjectModelComponent
     }
     var strongName;
     try {
-      strongName = '16E72CD03DCEF0D9D29E00BF66D872E3';
+      strongName = 'A18F608EAD64661D750EAD33F2F355F2';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);

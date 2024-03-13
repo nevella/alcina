@@ -498,6 +498,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		JvmReflections.init();
 		Reflections.init();
 		createDevHelper();
+		devHelper.initRegistry();
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		devHelper.doParallelEarlyClassInit();
 		devHelper.copyTemplates();

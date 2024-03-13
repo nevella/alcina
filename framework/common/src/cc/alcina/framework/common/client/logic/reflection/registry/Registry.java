@@ -407,6 +407,10 @@ public class Registry {
 			Ax.out("Registry stats: %s", registry);
 			registry.registrations.stats();
 		}
+
+		public static RegistryProvider getProvider() {
+			return Registry.provider;
+		}
 	}
 
 	static class LookupTree<T> {

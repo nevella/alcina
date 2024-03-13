@@ -47,6 +47,37 @@ public abstract class TraversalCommands<T, H extends NodeEvent.Handler>
 
 	@AppSuggestorCommand(
 		parent = TraversalCommands.class,
+		name = "reload2",
+		description = "Reload2 the app -and- redeploy the console",
+		filter = AppSuggestorCommand.Filter.IsConsole.class)
+	@KeyBinding(key = "2")
+	public static class ReloadApp2
+			extends TraversalCommands<Object, ReloadApp2.Handler> {
+		@Override
+		public void dispatch(ReloadApp2.Handler handler) {
+			handler.onReloadApp2(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onReloadApp2(ReloadApp2 event);
+		}
+
+		@Registration({ TopLevelHandler.class, ReloadApp2.class })
+		public static class HandlerImpl implements Handler, TopLevelHandler {
+			@Override
+			public void onReloadApp2(ReloadApp2 event) {
+				/*
+				 * FIXME - trav - per-environment registry/MessageManager
+				 */
+				StatusModule.get().showMessageTransitional(
+						"Reloading dev console + not really");
+				Environment.get().flush();
+			}
+		}
+	}
+
+	@AppSuggestorCommand(
+		parent = TraversalCommands.class,
 		name = "clear filter",
 		description = "Clear the filter",
 		filter = AppSuggestorCommand.Filter.IsConsole.class)

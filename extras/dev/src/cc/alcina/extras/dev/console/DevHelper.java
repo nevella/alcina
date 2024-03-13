@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
+import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
@@ -671,5 +672,9 @@ public abstract class DevHelper {
 		Configuration.properties
 				.register(Io.read().path(configPath).asString());
 		return "reloaded " + configPath;
+	}
+
+	public void initRegistry() {
+		EnvironmentRegistry.registerDelegateProvider(null);
 	}
 }
