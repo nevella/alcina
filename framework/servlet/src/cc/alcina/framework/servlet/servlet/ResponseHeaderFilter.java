@@ -65,12 +65,16 @@ public class ResponseHeaderFilter implements Filter {
 			}
 		}
 		if (crossOriginIfGwtCodeserver) {
-			boolean usesCodeserver = (Ax.notBlank(request.getQueryString())
-					&& (request.getParameter("gwt.codesvr") != null)
-					|| request.getParameter("gwt.l") != null)
-					|| Ax.matches(request.getHeader("Referer"),
-							".*gwt.codesvr.*")
-					|| Ax.matches(request.getHeader("Referer"), ".*gwt.l.*");
+			/*
+			 * The request.getQueryString() check is required - otherwise the
+			 * parameter checks will consume the POST inputStream
+			 */
+			boolean usesCodeserver = Ax.notBlank(request.getQueryString())
+					&& (request.getParameter("gwt.codesvr") != null
+							|| request.getParameter("gwt.l") != null);
+			usesCodeserver |= (Ax.matches(request.getHeader("Referer"),
+					".*gwt.codesvr.*")
+					|| Ax.matches(request.getHeader("Referer"), ".*gwt.l.*"));
 			if (usesCodeserver) {
 				response.addHeader("Cross-Origin-Embedder-Policy",
 						"require-corp");
