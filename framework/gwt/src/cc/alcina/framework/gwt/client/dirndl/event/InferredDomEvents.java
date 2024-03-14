@@ -41,6 +41,7 @@ public class InferredDomEvents {
 			handler.onActionOutside(this);
 		}
 
+		@Registration({ DomBinding.class, ActionOutside.class })
 		public static class BindingImpl
 				extends EventRelativeBinding<ActionOutside> {
 			@Override
@@ -61,6 +62,7 @@ public class InferredDomEvents {
 			handler.onClickOutside(this);
 		}
 
+		@Registration({ DomBinding.class, ClickOutside.class })
 		public static class BindingImpl
 				extends EventRelativeBinding<ClickOutside> {
 			@Override
@@ -85,6 +87,12 @@ public class InferredDomEvents {
 		public static class BindingImpl extends DomBinding<CtrlEnterPressed>
 				implements KeyUpHandler {
 			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onKeyUp,
+						KeyUpEvent.getType());
+			}
+
+			@Override
 			public void onKeyUp(KeyUpEvent event) {
 				int keyCode = event.getNativeEvent().getKeyCode();
 				if (keyCode == KeyCodes.KEY_ENTER) {
@@ -92,12 +100,6 @@ public class InferredDomEvents {
 						fireEvent(event);
 					}
 				}
-			}
-
-			@Override
-			protected HandlerRegistration bind1(Element element) {
-				return element.addDomHandler(this::onKeyUp,
-						KeyUpEvent.getType());
 			}
 		}
 
@@ -115,6 +117,12 @@ public class InferredDomEvents {
 		public static class BindingImpl extends DomBinding<EnterPressed>
 				implements KeyUpHandler {
 			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onKeyUp,
+						KeyUpEvent.getType());
+			}
+
+			@Override
 			public void onKeyUp(KeyUpEvent event) {
 				int keyCode = event.getNativeEvent().getKeyCode();
 				if (keyCode == KeyCodes.KEY_ENTER) {
@@ -122,12 +130,6 @@ public class InferredDomEvents {
 						fireEvent(event);
 					}
 				}
-			}
-
-			@Override
-			protected HandlerRegistration bind1(Element element) {
-				return element.addDomHandler(this::onKeyUp,
-						KeyUpEvent.getType());
 			}
 		}
 
@@ -145,22 +147,149 @@ public class InferredDomEvents {
 		public static class BindingImpl extends DomBinding<EscapePressed>
 				implements KeyUpHandler {
 			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onKeyUp,
+						KeyUpEvent.getType());
+			}
+
+			@Override
 			public void onKeyUp(KeyUpEvent event) {
 				int keyCode = event.getNativeEvent().getKeyCode();
 				if (keyCode == KeyCodes.KEY_ESCAPE) {
 					fireEvent(event);
 				}
 			}
-
-			@Override
-			protected HandlerRegistration bind1(Element element) {
-				return element.addDomHandler(this::onKeyUp,
-						KeyUpEvent.getType());
-			}
 		}
 
 		public interface Handler extends NodeEvent.Handler {
 			void onEscapePressed(EscapePressed event);
+		}
+	}
+
+	/*
+	 * Fires an event based on whether the previewed event is inside or outside
+	 * the element
+	 *
+	 * This class also manages the nativepreviewevent [consumed, canceled]
+	 * states that are managed by GWT PopupPanel.
+	 *
+	 * FIXME - dirndl 1x1dz - check on mobile (and maybe remove)
+	 */
+	static abstract class EventRelativeBinding<E extends NodeEvent>
+			extends DomBinding<E> implements NativePreviewHandler {
+		static boolean mobile = GWT.isClient() && BrowserMod.isMobile();
+
+		protected boolean modal;
+
+		Element element;
+
+		@Override
+		protected HandlerRegistration bind0(Element element, Object model) {
+			this.element = element;
+			this.modal = model instanceof IsModal
+					&& ((IsModal) model).provideModal();
+			return Event.addNativePreviewHandler(this);
+		}
+
+		@Override
+		protected HandlerRegistration bind1(Element element) {
+			// never called
+			throw new UnsupportedOperationException();
+		}
+
+		private boolean eventTargetsWidget(NativePreviewEvent event) {
+			EventTarget target = event.getNativeEvent().getEventTarget();
+			if (Element.is(target)) {
+				return element.isOrHasChild(Element.as(target));
+			}
+			return false;
+		}
+
+		/*
+		 * true = outside; false = inside
+		 */
+		protected boolean fireIfOutside() {
+			return true;
+		}
+
+		/*
+		 * Returns true if event should not be fired due to consumption
+		 */
+		boolean handleConsumed(NativePreviewEvent event) {
+			// If the event has been canceled or consumed, ignore it
+			if (event.isCanceled() || event.isConsumed()) {
+				// We need to ensure that we cancel the event even if its been
+				// consumed so
+				// that popups lower on the stack do not auto hide
+				if (modal) {
+					event.cancel();
+				}
+				return true;
+			}
+			if (event.isCanceled()) {
+				return true;
+			}
+			boolean eventTargetsWidget = eventTargetsWidget(event);
+			// If the event targets the popup or the partner, consume it
+			Event nativeEvent = Event.as(event.getNativeEvent());
+			EventTarget eTarget = nativeEvent.getEventTarget();
+			boolean eventTargetsScrollBar = Element.is(eTarget) && Element
+					.as(eTarget).getTagName().equalsIgnoreCase("html");
+			boolean wasTouchMaybeDrag = mobile && (BrowserEvents.TOUCHSTART
+					.equals(nativeEvent.getType())
+					|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())
+					|| BrowserEvents.TOUCHMOVE.equals(nativeEvent.getType())
+					|| BrowserEvents.GESTURECHANGE.equals(nativeEvent.getType())
+					|| BrowserEvents.GESTUREEND.equals(nativeEvent.getType())
+					|| BrowserEvents.GESTURESTART.equals(nativeEvent.getType())
+					|| BrowserEvents.SCROLL.equals(nativeEvent.getType()));
+			if (eventTargetsWidget || eventTargetsScrollBar
+					|| wasTouchMaybeDrag) {
+				event.consume();
+			}
+			return false;
+		}
+
+		protected abstract boolean isObservedEvent(NativePreviewEvent event);
+
+		/*
+		 * follows com.google.gwt.user.client.ui.PopupPanel.previewNativeEvent(
+		 * NativePreviewEvent)
+		 *
+		 * see also OverlayContainer.previewNativeEvent in alcina/e82f44f7e
+		 *
+		 * TODO - there are several thins going on that should be split:
+		 *
+		 * @formatter:off
+		 * - what does consumed vs canceled *really* mean?
+		 * - modal handling (event cancellation/consumption) should be split out from event emission
+		 * - 'exit' events (which this binding mostly supports) should be emitted on the event bus *after* native events are consumed
+		 * - (but before the scheduled DOM event)
+		 *
+		 *
+		 * @formatter:on
+		 */
+		@Override
+		public void onPreviewNativeEvent(NativePreviewEvent event) {
+			if (!isObservedEvent(event)) {
+				return;
+			}
+			// if (handleConsumed(event)) {
+			// return;
+			// }
+			boolean eventTargetsWidget = eventTargetsWidget(event);
+			// copy from NativePreviewEvent singleton
+			NativeEvent nativeEvent = event.getNativeEvent();
+			boolean fire = eventTargetsWidget ^ fireIfOutside();
+			if (fire) {
+				Scheduler.get().scheduleFinally(() -> {
+					if (handlerRegistration == null) {
+						// was unbound by a prior finally event
+						return;
+					}
+					fireEvent(new NativePreviewEventAsync(nativeEvent));
+				});
+			}
 		}
 	}
 
@@ -184,14 +313,13 @@ public class InferredDomEvents {
 			private boolean changeReceivedWhileFocussedElement = false;
 
 			@Override
-			public void onChange(ChangeEvent event) {
-				handleChangeEvent(event);
-			}
-
-			@Override
-			public void onKeyUp(KeyUpEvent event) {
-				enterReceived |= event.getNativeKeyCode() == KeyCodes.KEY_ENTER;
-				checkFire(event);
+			protected HandlerRegistration bind1(Element element) {
+				MultiHandlerRegistration multiHandlerRegistration = new MultiHandlerRegistration();
+				multiHandlerRegistration.add(element
+						.addDomHandler(this::onChange, ChangeEvent.getType()));
+				multiHandlerRegistration.add(element
+						.addDomHandler(this::onKeyUp, KeyUpEvent.getType()));
+				return multiHandlerRegistration;
 			}
 
 			private void checkFire(GwtEvent event) {
@@ -220,13 +348,14 @@ public class InferredDomEvents {
 			}
 
 			@Override
-			protected HandlerRegistration bind1(Element element) {
-				MultiHandlerRegistration multiHandlerRegistration = new MultiHandlerRegistration();
-				multiHandlerRegistration.add(element
-						.addDomHandler(this::onChange, ChangeEvent.getType()));
-				multiHandlerRegistration.add(element
-						.addDomHandler(this::onKeyUp, KeyUpEvent.getType()));
-				return multiHandlerRegistration;
+			public void onChange(ChangeEvent event) {
+				handleChangeEvent(event);
+			}
+
+			@Override
+			public void onKeyUp(KeyUpEvent event) {
+				enterReceived |= event.getNativeKeyCode() == KeyCodes.KEY_ENTER;
+				checkFire(event);
 			}
 		}
 
@@ -269,12 +398,6 @@ public class InferredDomEvents {
 
 			boolean removed = false;
 
-			public void fireEvent(boolean visible) {
-				IntersectionObserved event = new IntersectionObserved();
-				event.setIntersecting(visible);
-				super.fireEvent(event);
-			}
-
 			@Override
 			protected HandlerRegistration bind1(Element element) {
 				Scheduler.get().scheduleFinally(() -> {
@@ -292,6 +415,12 @@ public class InferredDomEvents {
 						}
 					}
 				};
+			}
+
+			public void fireEvent(boolean visible) {
+				IntersectionObserved event = new IntersectionObserved();
+				event.setIntersecting(visible);
+				super.fireEvent(event);
 			}
 
 			public static final class IntersectionObserver
@@ -345,6 +474,12 @@ public class InferredDomEvents {
 		public static class BindingImpl extends DomBinding<LeftClick>
 				implements ClickHandler {
 			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::onClick,
+						ClickEvent.getType());
+			}
+
+			@Override
 			public void onClick(ClickEvent event) {
 				int nativeButton = event.getNativeButton();
 				switch (nativeButton) {
@@ -356,12 +491,6 @@ public class InferredDomEvents {
 					fireEvent(event);
 					break;
 				}
-			}
-
-			@Override
-			protected HandlerRegistration bind1(Element element) {
-				return element.addDomHandler(this::onClick,
-						ClickEvent.getType());
 			}
 		}
 
@@ -378,6 +507,7 @@ public class InferredDomEvents {
 			handler.onMouseDownOutside(this);
 		}
 
+		@Registration({ DomBinding.class, MouseDownOutside.class })
 		public static class BindingImpl
 				extends EventRelativeBinding<MouseDownOutside> {
 			@Override
@@ -507,10 +637,6 @@ public class InferredDomEvents {
 
 			boolean removed = false;
 
-			public void fireEvent() {
-				super.fireEvent(null);
-			}
-
 			@Override
 			protected HandlerRegistration bind1(Element element) {
 				Scheduler.get().scheduleFinally(() -> {
@@ -528,6 +654,10 @@ public class InferredDomEvents {
 						}
 					}
 				};
+			}
+
+			public void fireEvent() {
+				super.fireEvent(null);
 			}
 		}
 
@@ -567,133 +697,6 @@ public class InferredDomEvents {
 			final native void disconnect() /*-{
         this.disconnect();
 			}-*/;
-		}
-	}
-
-	/*
-	 * Fires an event based on whether the previewed event is inside or outside
-	 * the element
-	 *
-	 * This class also manages the nativepreviewevent [consumed, canceled]
-	 * states that are managed by GWT PopupPanel.
-	 *
-	 * FIXME - dirndl 1x1dz - check on mobile (and maybe remove)
-	 */
-	static abstract class EventRelativeBinding<E extends NodeEvent>
-			extends DomBinding<E> implements NativePreviewHandler {
-		static boolean mobile = GWT.isClient() && BrowserMod.isMobile();
-
-		protected boolean modal;
-
-		Element element;
-
-		/*
-		 * follows com.google.gwt.user.client.ui.PopupPanel.previewNativeEvent(
-		 * NativePreviewEvent)
-		 *
-		 * see also OverlayContainer.previewNativeEvent in alcina/e82f44f7e
-		 *
-		 * TODO - there are several thins going on that should be split:
-		 *
-		 * @formatter:off
-		 * - what does consumed vs canceled *really* mean?
-		 * - modal handling (event cancellation/consumption) should be split out from event emission
-		 * - 'exit' events (which this binding mostly supports) should be emitted on the event bus *after* native events are consumed
-		 * - (but before the scheduled DOM event)
-		 *
-		 *
-		 * @formatter:on
-		 */
-		@Override
-		public void onPreviewNativeEvent(NativePreviewEvent event) {
-			if (!isObservedEvent(event)) {
-				return;
-			}
-			// if (handleConsumed(event)) {
-			// return;
-			// }
-			boolean eventTargetsWidget = eventTargetsWidget(event);
-			// copy from NativePreviewEvent singleton
-			NativeEvent nativeEvent = event.getNativeEvent();
-			boolean fire = eventTargetsWidget ^ fireIfOutside();
-			if (fire) {
-				Scheduler.get().scheduleFinally(() -> {
-					if (handlerRegistration == null) {
-						// was unbound by a prior finally event
-						return;
-					}
-					fireEvent(new NativePreviewEventAsync(nativeEvent));
-				});
-			}
-		}
-
-		private boolean eventTargetsWidget(NativePreviewEvent event) {
-			EventTarget target = event.getNativeEvent().getEventTarget();
-			if (Element.is(target)) {
-				return element.isOrHasChild(Element.as(target));
-			}
-			return false;
-		}
-
-		@Override
-		protected HandlerRegistration bind0(Element element, Object model) {
-			this.element = element;
-			this.modal = model instanceof IsModal
-					&& ((IsModal) model).provideModal();
-			return Event.addNativePreviewHandler(this);
-		}
-
-		@Override
-		protected HandlerRegistration bind1(Element element) {
-			// never called
-			throw new UnsupportedOperationException();
-		}
-
-		/*
-		 * true = outside; false = inside
-		 */
-		protected boolean fireIfOutside() {
-			return true;
-		}
-
-		protected abstract boolean isObservedEvent(NativePreviewEvent event);
-
-		/*
-		 * Returns true if event should not be fired due to consumption
-		 */
-		boolean handleConsumed(NativePreviewEvent event) {
-			// If the event has been canceled or consumed, ignore it
-			if (event.isCanceled() || event.isConsumed()) {
-				// We need to ensure that we cancel the event even if its been
-				// consumed so
-				// that popups lower on the stack do not auto hide
-				if (modal) {
-					event.cancel();
-				}
-				return true;
-			}
-			if (event.isCanceled()) {
-				return true;
-			}
-			boolean eventTargetsWidget = eventTargetsWidget(event);
-			// If the event targets the popup or the partner, consume it
-			Event nativeEvent = Event.as(event.getNativeEvent());
-			EventTarget eTarget = nativeEvent.getEventTarget();
-			boolean eventTargetsScrollBar = Element.is(eTarget) && Element
-					.as(eTarget).getTagName().equalsIgnoreCase("html");
-			boolean wasTouchMaybeDrag = mobile && (BrowserEvents.TOUCHSTART
-					.equals(nativeEvent.getType())
-					|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())
-					|| BrowserEvents.TOUCHMOVE.equals(nativeEvent.getType())
-					|| BrowserEvents.GESTURECHANGE.equals(nativeEvent.getType())
-					|| BrowserEvents.GESTUREEND.equals(nativeEvent.getType())
-					|| BrowserEvents.GESTURESTART.equals(nativeEvent.getType())
-					|| BrowserEvents.SCROLL.equals(nativeEvent.getType()));
-			if (eventTargetsWidget || eventTargetsScrollBar
-					|| wasTouchMaybeDrag) {
-				event.consume();
-			}
-			return false;
 		}
 	}
 }
