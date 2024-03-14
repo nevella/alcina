@@ -28,8 +28,7 @@ public class LocalDomDebugImpl {
 		if (!debug) {
 			return;
 		}
-		NodeListJso<Node> childNodes = withRemote.jsoRemote()
-				.getChildNodes0();
+		NodeListJso<Node> childNodes = withRemote.jsoRemote().getChildNodes0();
 		NodeJso remoteChild = null;
 		Node localChild = null;
 		String issue = null;
@@ -43,8 +42,7 @@ public class LocalDomDebugImpl {
 				issue = "node removed";
 			} else if (remoteChild.provideIsElement()) {
 				localChild = withRemote.getChild(idx);
-				String tagName0 = ((ElementJso) remoteChild)
-						.getTagNameRemote();
+				String tagName0 = ((ElementJso) remoteChild).getTagNameRemote();
 				if (!tagName0.equalsIgnoreCase(localChild.getNodeName())) {
 					issue = "mismatched tagname";
 				}
@@ -85,8 +83,8 @@ public class LocalDomDebugImpl {
 	}
 
 	private void debugElement(Element element, Element withRemote,
-			ElementJso elementJso, NodeJso remoteChild,
-			Node localChild, String issue) {
+			ElementJso elementJso, NodeJso remoteChild, Node localChild,
+			String issue) {
 		String remoteDebug = null;
 		String innerHTML = element.getInnerHTML();
 		String remoteDom = elementJso.provideRemoteDomTree();

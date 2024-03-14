@@ -778,7 +778,8 @@ class ClientDomStyleStatic {
 	/**
 	 * Set the border-width css property.
 	 */
-	static void setBorderWidth(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setBorderWidth(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_BORDER_WIDTH, value, unit);
 	}
 
@@ -863,7 +864,8 @@ class ClientDomStyleStatic {
 	/**
 	 * Set the line-height css property.
 	 */
-	static void setLineHeight(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setLineHeight(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_LINE_HEIGHT, value, unit);
 	}
 
@@ -884,21 +886,24 @@ class ClientDomStyleStatic {
 	/**
 	 * Set the margin-bottom css property.
 	 */
-	static void setMarginBottom(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setMarginBottom(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_MARGIN_BOTTOM, value, unit);
 	}
 
 	/**
 	 * Set the margin-left css property.
 	 */
-	static void setMarginLeft(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setMarginLeft(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_MARGIN_LEFT, value, unit);
 	}
 
 	/**
 	 * Set the margin-right css property.
 	 */
-	static void setMarginRight(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setMarginRight(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_MARGIN_RIGHT, value, unit);
 	}
 
@@ -933,7 +938,8 @@ class ClientDomStyleStatic {
 	/**
 	 * Set the outline-width css property.
 	 */
-	static void setOutlineWidth(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setOutlineWidth(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_OUTLINE_WIDTH, value, unit);
 	}
 
@@ -968,28 +974,32 @@ class ClientDomStyleStatic {
 	/**
 	 * Set the padding-bottom css property.
 	 */
-	static void setPaddingBottom(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setPaddingBottom(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_PADDING_BOTTOM, value, unit);
 	}
 
 	/**
 	 * Set the padding-left css property.
 	 */
-	static void setPaddingLeft(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setPaddingLeft(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_PADDING_LEFT, value, unit);
 	}
 
 	/**
 	 * Set the padding-right css property.
 	 */
-	static void setPaddingRight(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setPaddingRight(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_PADDING_RIGHT, value, unit);
 	}
 
 	/**
 	 * Set the padding-top css property.
 	 */
-	static void setPaddingTop(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setPaddingTop(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_PADDING_TOP, value, unit);
 	}
 
@@ -1012,7 +1022,8 @@ class ClientDomStyleStatic {
 	/**
 	 * Sets the value of a named property.
 	 */
-	static void setProperty(ClientDomStyle domStyle, String name, String value) {
+	static void setProperty(ClientDomStyle domStyle, String name,
+			String value) {
 		assertCamelCase(name);
 		domStyle.setPropertyImpl(name, value);
 	}
@@ -1050,14 +1061,16 @@ class ClientDomStyleStatic {
 	/**
 	 * Sets the text-decoration CSS property.
 	 */
-	static void setTextDecoration(ClientDomStyle domStyle, TextDecoration value) {
+	static void setTextDecoration(ClientDomStyle domStyle,
+			TextDecoration value) {
 		domStyle.setProperty(STYLE_TEXT_DECORATION, value.getCssName());
 	}
 
 	/**
 	 * Set the 'text-indent' CSS property.
 	 */
-	static void setTextIndent(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setTextIndent(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_TEXT_INDENT, value, unit);
 	}
 
@@ -1092,7 +1105,8 @@ class ClientDomStyleStatic {
 	/**
 	 * Sets the vertical-align CSS property.
 	 */
-	static void setVerticalAlign(ClientDomStyle domStyle, double value, Unit unit) {
+	static void setVerticalAlign(ClientDomStyle domStyle, double value,
+			Unit unit) {
 		domStyle.setProperty(STYLE_VERTICAL_ALIGN, value, unit);
 	}
 

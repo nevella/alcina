@@ -95,8 +95,7 @@ public class DomTokenStream implements Iterator<DomNode> {
 
 	public void skipChildren() {
 		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
-		currentDomNode.descendants().map(DomNode::w3cNode)
-				.forEach(skip::add);
+		currentDomNode.descendants().map(DomNode::w3cNode).forEach(skip::add);
 	}
 
 	public void skipChildren(Predicate<DomNode> predicate) {

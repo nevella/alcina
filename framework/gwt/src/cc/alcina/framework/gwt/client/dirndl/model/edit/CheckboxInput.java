@@ -28,8 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 		type = Type.PROPERTY,
 		to = "type",
 		literal = "checkbox"),
-	
-emits = { ModelEvents.Change.class })
+	emits = { ModelEvents.Change.class })
 public class CheckboxInput extends Model implements DomEvents.Change.Handler {
 	public static final transient String VALUE = "value";
 

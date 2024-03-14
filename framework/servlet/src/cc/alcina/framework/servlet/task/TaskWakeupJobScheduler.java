@@ -5,7 +5,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 public class TaskWakeupJobScheduler extends PerformerTask {
 	@Override
-	public void run() throws Exception  {
+	public void run() throws Exception {
 		JobRegistry.get().wakeupScheduler();
 	}
 }

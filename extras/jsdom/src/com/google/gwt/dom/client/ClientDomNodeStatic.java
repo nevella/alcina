@@ -45,7 +45,8 @@ class ClientDomNodeStatic {
 		return domNode.getParentElement() != null;
 	}
 
-	static Node insertAfter(ClientDomNode domNode, Node newChild, Node refChild) {
+	static Node insertAfter(ClientDomNode domNode, Node newChild,
+			Node refChild) {
 		assert (newChild != null) : "Cannot add a null child node";
 		if (refChild == null) {
 			// insert at start

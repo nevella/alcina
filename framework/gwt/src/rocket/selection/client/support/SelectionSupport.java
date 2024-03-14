@@ -252,8 +252,8 @@ abstract public class SelectionSupport {
     selection.addRange(range);
 	}-*/;
 
-	native protected TextJso getFirstTextDepthFirst(
-			final ElementJso parent, int childIndex, int direction)/*-{
+	native protected TextJso getFirstTextDepthFirst(final ElementJso parent,
+			int childIndex, int direction)/*-{
     var childNodes = parent.childNodes;
     var i = childIndex;
     for (; i >= 0 && i < childNodes.length; i += direction) {

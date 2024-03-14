@@ -10,11 +10,11 @@ import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
 import cc.alcina.framework.servlet.dom.RemoteUi;
 
 public interface RemoteComponent {
-	default RemoteComponentProtocol.Session createEnvironment(HttpServletRequest request) {
+	default RemoteComponentProtocol.Session
+			createEnvironment(HttpServletRequest request) {
 		Credentials credentials = Credentials.createUnique();
 		RemoteUi ui = getUiInstance();
-		Environment environment = PathrefDom.get().register(ui,
-				credentials);
+		Environment environment = PathrefDom.get().register(ui, credentials);
 		RemoteComponentProtocol.Session session = new RemoteComponentProtocol.Session();
 		session.id = credentials.id;
 		session.auth = credentials.auth;

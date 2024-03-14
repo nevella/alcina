@@ -78,7 +78,7 @@ public class TaskReportDevMetrics extends PerformerTask {
 	}
 
 	@Override
-	public void run() throws Exception  {
+	public void run() throws Exception {
 		DomDocument doc = DomDocument.basicHtmlDoc();
 		String css = Io.read().resource("res/TaskReportDevMetrics.css")
 				.asString();

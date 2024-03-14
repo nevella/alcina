@@ -14,10 +14,9 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskFixHibernateDatetimePersistentType
-		extends PerformerTask {
+public class TaskFixHibernateDatetimePersistentType extends PerformerTask {
 	@Override
-	public void run() throws Exception  {
+	public void run() throws Exception {
 		try (Connection conn = Registry
 				.impl(CommonPersistenceConnectionProvider.class)
 				.getConnection()) {

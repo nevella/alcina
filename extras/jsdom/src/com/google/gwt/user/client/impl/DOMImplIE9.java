@@ -24,8 +24,7 @@ import com.google.gwt.dom.client.ElementJso;
  */
 class DOMImplIE9 extends DOMImplStandardBase {
 	@Override
-	protected void sinkBitlessEventImpl(ElementJso elem,
-			String eventTypeName) {
+	protected void sinkBitlessEventImpl(ElementJso elem, String eventTypeName) {
 		super.sinkBitlessEventImpl(elem, eventTypeName);
 		if (BrowserEvents.DRAGOVER.equals(eventTypeName)) {
 			/*

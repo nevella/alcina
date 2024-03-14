@@ -6,7 +6,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 public class TaskVacuumDtrTable extends PerformerTask {
 	@Override
-	public void run() throws Exception  {
+	public void run() throws Exception {
 		if (!Configuration.is("enabled")) {
 			logger.warn("Disabled");
 			return;

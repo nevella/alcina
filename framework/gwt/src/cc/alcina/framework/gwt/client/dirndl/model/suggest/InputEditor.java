@@ -28,9 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.Edito
  * 
  *
  */
-@Directed(
-	
-emits = EditorAsk.class)
+@Directed(emits = EditorAsk.class)
 public class InputEditor extends Model implements Suggestor.Editor,
 		ModelEvents.Input.Handler, DomEvents.Focusin.Handler,
 		// routes keydown events to the keyboardNavigation and

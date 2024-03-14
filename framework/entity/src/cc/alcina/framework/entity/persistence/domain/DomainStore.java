@@ -146,8 +146,7 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  *
  * 
  *
- *         FIXME - mvcc.5 - don't add listeners during postprocess
- *         (optimisation)
+ * FIXME - mvcc.5 - don't add listeners during postprocess (optimisation)
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomainStore implements IDomainStore {
@@ -1402,7 +1401,7 @@ public class DomainStore implements IDomainStore {
 			}
 
 			public <V extends Entity> boolean isMvccObject(V v) {
-				return v == null ? false 
+				return v == null ? false
 						: MvccObject.class.isAssignableFrom(v.getClass());
 			};
 
@@ -1830,7 +1829,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public <V extends Entity> boolean isMvccObject(V v) {
-			return v == null ? false 
+			return v == null ? false
 					: MvccObject.class.isAssignableFrom(v.getClass());
 		};
 

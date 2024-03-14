@@ -253,7 +253,8 @@ public class ClientDomElementStatic {
 	 * @return <code>true</code> if this element had the specified class name
 	 * @see #setClassName(String)
 	 */
-	static boolean removeClassName(ClientDomElement domElement, String className) {
+	static boolean removeClassName(ClientDomElement domElement,
+			String className) {
 		className = trimClassName(className);
 		// Get the current className string.
 		String oldClassName = domElement.getClassName();
@@ -287,8 +288,8 @@ public class ClientDomElementStatic {
 	 * @param newClassName
 	 *            the class name to replace it
 	 */
-	static void replaceClassName(ClientDomElement domElement, String oldClassName,
-			String newClassName) {
+	static void replaceClassName(ClientDomElement domElement,
+			String oldClassName, String newClassName) {
 		domElement.removeClassName(oldClassName);
 		domElement.addClassName(newClassName);
 	}

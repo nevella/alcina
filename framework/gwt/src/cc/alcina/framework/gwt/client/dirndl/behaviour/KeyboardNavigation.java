@@ -86,7 +86,6 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 			handler.onNavigation(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onNavigation(Navigation event);
 		}

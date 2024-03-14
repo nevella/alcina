@@ -11,7 +11,6 @@ public class ContentDecoratorEvents {
 			handler.onReferenceSelected(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onReferenceSelected(ReferenceSelected event);
 		}

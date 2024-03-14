@@ -1703,8 +1703,7 @@ public class DOM {
 		 * bubbling handling in the local dom so don't want/need the non-first
 		 * dom events
 		 */
-		if (elem.eventListener != null
-				&& dispatchInfo.wasDispatchedTo(elem)) {
+		if (elem.eventListener != null && dispatchInfo.wasDispatchedTo(elem)) {
 			return;
 		}
 		if (Element.is(eventTarget)) {

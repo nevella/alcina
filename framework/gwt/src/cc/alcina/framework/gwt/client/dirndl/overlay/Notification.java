@@ -206,9 +206,7 @@ public class Notification extends Model {
 			return this.model;
 		}
 
-		@Directed(
-			
-		reemits = { DomEvents.Click.class, ModelEvents.Close.class })
+		@Directed(reemits = { DomEvents.Click.class, ModelEvents.Close.class })
 		public String getX() {
 			return this.x;
 		}

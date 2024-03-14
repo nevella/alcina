@@ -39,8 +39,8 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
  * 
  * 
  * 
- *         In general, when adding a merge field, make sure that the object's
- *         equivalentTo checks the new field
+ * In general, when adding a merge field, make sure that the object's
+ * equivalentTo checks the new field
  */
 public class SyncMerger<T> {
 	public static MergeFilter RIGHT_IS_DEFINITIVE = new MergeFilter() {

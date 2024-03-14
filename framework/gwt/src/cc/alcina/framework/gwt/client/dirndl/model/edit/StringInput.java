@@ -56,8 +56,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(type = Type.PROPERTY, from = "spellcheck"),
 			@Binding(type = Type.PROPERTY, from = "autocomplete"),
 			@Binding(type = Type.INNER_TEXT, from = "innerText") },
-	
-emits = { ModelEvents.Change.class, ModelEvents.Input.class })
+	emits = { ModelEvents.Change.class, ModelEvents.Input.class })
 public class StringInput extends Model
 		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
 		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,

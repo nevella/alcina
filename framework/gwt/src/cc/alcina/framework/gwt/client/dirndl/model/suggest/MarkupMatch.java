@@ -43,11 +43,9 @@ class MarkupMatch {
 		SafeHtmlBuilder builder = new SafeHtmlBuilder();
 		int idx = 0;
 		for (IntPair match : matches) {
-			builder.appendEscaped(
-					string.substring(idx, match.i1));
+			builder.appendEscaped(string.substring(idx, match.i1));
 			builder.appendHtmlConstant("<match>");
-			builder.appendEscaped(
-					string.substring(match.i1, match.i2));
+			builder.appendEscaped(string.substring(match.i1, match.i2));
 			builder.appendHtmlConstant("</match>");
 			idx = match.i2;
 		}

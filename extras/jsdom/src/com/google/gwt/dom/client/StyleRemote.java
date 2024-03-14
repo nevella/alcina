@@ -25,7 +25,8 @@ import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 
-public final class StyleRemote extends JavaScriptObject implements ClientDomStyle {
+public final class StyleRemote extends JavaScriptObject
+		implements ClientDomStyle {
 	protected StyleRemote() {
 	}
 

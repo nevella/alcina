@@ -5,7 +5,7 @@ import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 
 public class TaskDumpProperties extends PerformerTask {
 	@Override
-	public void run() throws Exception  {
+	public void run() throws Exception {
 		logger.info(AppLifecycleServletBase.get().dumpCustomProperties());
 	}
 }

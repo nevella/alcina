@@ -15,13 +15,12 @@ public abstract class CellFilter extends Composite implements KeyUpHandler {
 
 	protected TextBox textBox;
 
-	private EventCollator seriesTimer = new EventCollator(
-			200, new Runnable() {
-				@Override
-				public void run() {
-					afterSeries();
-				}
-			}).withMaxDelayFromFirstEvent(3000);
+	private EventCollator seriesTimer = new EventCollator(200, new Runnable() {
+		@Override
+		public void run() {
+			afterSeries();
+		}
+	}).withMaxDelayFromFirstEvent(3000);
 
 	public CellFilter() {
 		this.fp = new FlowPanel();

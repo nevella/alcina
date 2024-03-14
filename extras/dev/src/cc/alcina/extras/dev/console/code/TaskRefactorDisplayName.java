@@ -133,8 +133,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				UnitType type = new UnitType(
-						unit, node);
+				UnitType type = new UnitType(unit, node);
 				type.setDeclaration(node);
 				unit.declarations.add(type);
 				boolean hasDisplayAnnotation = hasDisplayAnnotation(node)
@@ -156,10 +155,8 @@ public class TaskRefactorDisplayName extends PerformerTask {
 		static Logger logger = LoggerFactory
 				.getLogger(TaskFlatSerializerMetadata.class);
 
-		public static void cleanDisplayAnnotations(
-				UnitType type) {
-			ClassOrInterfaceDeclaration declaration = type
-					.getDeclaration();
+		public static void cleanDisplayAnnotations(UnitType type) {
+			ClassOrInterfaceDeclaration declaration = type.getDeclaration();
 			{
 				Optional<AnnotationExpr> annotation = declaration
 						.getAnnotationByClass(Display.class);
@@ -186,8 +183,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 			// }
 		}
 
-		private static void clean(
-				UnitType type,
+		private static void clean(UnitType type,
 				Optional<AnnotationExpr> annotation,
 				MethodDeclaration methodDeclaration) {
 			if (!annotation.isPresent()) {

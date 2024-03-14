@@ -32,21 +32,20 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /**
  *
  * 
- *         <p>
- *         Basic session support for the (possibly offline) client
- *         </p>
+ * <p>
+ * Basic session support for the (possibly offline) client
+ * </p>
  *
- *         Logic:
- *         <ul>
- *         <li>Each client (browser "process", pace chrome) has a storage
- *         session</li>
- *         <li>For simplicity, only one offline instance (tab) can be run per
- *         browser instance (one per clientInstanceId would be possible, but
- *         probably confusin to users)</li>
- *         <li>Also, the save_initial function is only called once (first time)
- *         per session - saves on wear'n'tear</li>
- *         <li>Tabs communicate via cookies n timers</li>
- *         </ul>
+ * Logic:
+ * <ul>
+ * <li>Each client (browser "process", pace chrome) has a storage session</li>
+ * <li>For simplicity, only one offline instance (tab) can be run per browser
+ * instance (one per clientInstanceId would be possible, but probably confusin
+ * to users)</li>
+ * <li>Also, the save_initial function is only called once (first time) per
+ * session - saves on wear'n'tear</li>
+ * <li>Tabs communicate via cookies n timers</li>
+ * </ul>
  *
  */
 @Registration.Singleton

@@ -41,7 +41,6 @@ public class DomEvents {
 			handler.onBeforeInput(this);
 		}
 
-		
 		public NativeBeforeInputEvent getNativeBeforeInputEvent() {
 			return this.nativeBeforeInputEvent;
 		}
@@ -65,7 +64,6 @@ public class DomEvents {
 			handler.onBlur(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Blur> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -92,7 +90,6 @@ public class DomEvents {
 			handler.onChange(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Change> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -119,7 +116,6 @@ public class DomEvents {
 			handler.onClick(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Click> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -139,7 +135,6 @@ public class DomEvents {
 			handler.onFocus(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Focus> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -159,7 +154,6 @@ public class DomEvents {
 			handler.onFocusin(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Focusin> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -179,7 +173,6 @@ public class DomEvents {
 			handler.onFocusout(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Focusout> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -217,7 +210,6 @@ public class DomEvents {
 			handler.onInput(this);
 		}
 
-		
 		public String getValue() {
 			return this.value;
 		}
@@ -241,7 +233,6 @@ public class DomEvents {
 			handler.onKeyDown(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<KeyDown> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -261,7 +252,6 @@ public class DomEvents {
 			handler.onKeyUp(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<KeyUp> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -281,7 +271,6 @@ public class DomEvents {
 			handler.onMouseDown(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<MouseDown> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -301,7 +290,6 @@ public class DomEvents {
 			handler.onMouseOut(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<MouseOut> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -321,7 +309,6 @@ public class DomEvents {
 			handler.onMouseOver(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<MouseOver> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -341,7 +328,6 @@ public class DomEvents {
 			handler.onMouseUp(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<MouseUp> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -361,7 +347,6 @@ public class DomEvents {
 			handler.onScroll(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Scroll> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
@@ -386,7 +371,6 @@ public class DomEvents {
 			handler.onSubmit(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<Submit> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {

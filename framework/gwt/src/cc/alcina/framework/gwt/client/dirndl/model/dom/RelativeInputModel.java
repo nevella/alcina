@@ -76,10 +76,9 @@ public class RelativeInputModel {
 		return this.focusOffset;
 	}
 
-	public Optional<DomNode>
-			getFocusNodePartiallySelectedAncestor(Predicate<DomNode> predicate) {
-		Optional<DomNode> ancestor = focusNode().ancestors()
-				.match(predicate);
+	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(
+			Predicate<DomNode> predicate) {
+		Optional<DomNode> ancestor = focusNode().ancestors().match(predicate);
 		if (ancestor.isEmpty()) {
 			return Optional.empty();
 		}

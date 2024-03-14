@@ -11,6 +11,7 @@ public interface MatchingToken extends Token {
 	Measure match(InputState state);
 
 	Selection select(InputState state, Measure measure);
+
 	public static abstract class SingleMatch implements MatchingToken {
 		private Optional<DomNode> match;
 

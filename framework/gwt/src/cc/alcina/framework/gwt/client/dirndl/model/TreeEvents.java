@@ -11,7 +11,6 @@ public class TreeEvents {
 			handler.onNodeLabelClicked(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onNodeLabelClicked(NodeLabelClicked event);
 		}
@@ -24,7 +23,6 @@ public class TreeEvents {
 			handler.onNodeToggleButtonClicked(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onNodeToggleButtonClicked(NodeToggleButtonClicked event);
 		}
@@ -37,7 +35,6 @@ public class TreeEvents {
 			handler.onPaginatorVisible(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onPaginatorVisible(PaginatorVisible event);
 		}

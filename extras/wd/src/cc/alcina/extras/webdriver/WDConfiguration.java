@@ -73,7 +73,8 @@ public class WDConfiguration {
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@Registration(JaxbContextRegistration.class)
 	public static class WDConfigurations {
-		@XmlElementWrapper(name = "items") @XmlElement(name = "item")
+		@XmlElementWrapper(name = "items")
+		@XmlElement(name = "item")
 		public List<WDConfiguration> configurations;
 
 		public boolean runRecurrentTests;

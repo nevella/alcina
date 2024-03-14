@@ -13,8 +13,8 @@ import cc.alcina.framework.entity.util.LengthConstrainedStringWriter.OverflowExc
  *
  * 
  *
- *         // FIXME - 2023 - remove check should be for mvcc (domaingraph) //
- *         objects, not length per se
+ * // FIXME - 2023 - remove check should be for mvcc (domaingraph) // objects,
+ * not length per se
  *
  */
 public class LengthConstrainedStringBuilder {

@@ -40,8 +40,8 @@ public class GlassDialogBox extends DialogBox {
 
 	private int scrollTop;
 
-	private EventCollator scrollBackTimer = new EventCollator(
-			100, new Runnable() {
+	private EventCollator scrollBackTimer = new EventCollator(100,
+			new Runnable() {
 				@Override
 				public void run() {
 					if (getOffsetHeight() < Window.getClientHeight() - 40) {

@@ -5,7 +5,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 public class TaskDumpStackTraces extends PerformerTask {
 	@Override
-	public void run() throws Exception  {
+	public void run() throws Exception {
 		SEUtilities.dumpAllThreads();
 	}
 }

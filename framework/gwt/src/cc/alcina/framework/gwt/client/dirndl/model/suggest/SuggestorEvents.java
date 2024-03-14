@@ -11,7 +11,6 @@ public class SuggestorEvents {
 			handler.onEditorAsk(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onEditorAsk(EditorAsk event);
 		}
@@ -24,7 +23,6 @@ public class SuggestorEvents {
 			handler.onEditorExit(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onEditorExit(EditorExit event);
 		}
@@ -37,7 +35,6 @@ public class SuggestorEvents {
 			handler.onShowingSuggestions(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onShowingSuggestions(SuggestionsVisible event);
 		}

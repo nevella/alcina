@@ -259,7 +259,9 @@ public class InternalMetrics {
 						persistExecutor.submit(() -> {
 							try {
 								LooseContext.push();
-								LooseContext.set(JacksonJsonObjectSerializer.MAX_LENGTH, 40000000);
+								LooseContext.set(
+										JacksonJsonObjectSerializer.MAX_LENGTH,
+										40000000);
 								persist();
 							} catch (Throwable e) {
 								try {
