@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -145,6 +146,13 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
+	public static final String CONTEXT_SELECTION = SelectionTraversal.class
+			.getName() + ".CONTEXT_SELECTION";
+
+	public static <S extends Selection> S contextSelection() {
+		return LooseContext.get(CONTEXT_SELECTION);
+	}
+
 	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
 			.create();
 
@@ -273,6 +281,7 @@ public class SelectionTraversal
 
 	private void processSelection(Selection selection) {
 		try {
+			LooseContext.pushWithKey(CONTEXT_SELECTION, selection);
 			Layer layer = currentLayer();
 			enterSelectionContext(selection);
 			if (layer.state.traversalCancelled) {
@@ -305,6 +314,7 @@ public class SelectionTraversal
 			releaseCompletedSelections(selection);
 			state.onSelectionProcessed(selection);
 			selectionProcessed.publish(selection);
+			LooseContext.pop();
 		}
 	}
 

@@ -18,6 +18,8 @@ public class CacheBranch extends Bindable implements TreeSerializable {
 
 	private String regex;
 
+	private CacheAgeOracle oracle;
+
 	public CacheBranch() {
 	}
 
@@ -26,7 +28,15 @@ public class CacheBranch extends Bindable implements TreeSerializable {
 		this.regex = regex;
 	}
 
+	public CacheBranch(CacheAgeOracle oracle, String regex) {
+		this.oracle = oracle;
+		this.regex = regex;
+	}
+
 	public long getMaxAge() {
+		if (oracle != null) {
+			maxAge = oracle.computeMaxAge();
+		}
 		return maxAge;
 	}
 
@@ -47,5 +57,14 @@ public class CacheBranch extends Bindable implements TreeSerializable {
 		String durationString = maxAge == Long.MAX_VALUE ? "Lots"
 				: TimeConstants.toDurationString(maxAge);
 		return Ax.format("[%s] :: %s", durationString, regex);
+	}
+
+	/**
+	 * For a given context object (normally a selection - specified in a higher
+	 * scope) plus the cache url, determine the max cache age of the request
+	 * results
+	 */
+	public interface CacheAgeOracle {
+		long computeMaxAge();
 	}
 }
