@@ -17,25 +17,38 @@ package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.reflect.WildcardType;
 
-import com.google.gwt.core.ext.typeinfo.JGenericType;
-
 /**
  * Wildcard type. FIXME - reflection - typemodel - implement
  */
-public class JWildcardType extends JClassType
+public class JWildcardType extends JClassType<WildcardType>
 		implements com.google.gwt.core.ext.typeinfo.JWildcardType {
 	public JWildcardType(TypeOracle typeOracle, WildcardType type) {
 		super(typeOracle, type);
 	}
 
 	@Override
-	public JGenericType getBaseType() {
-		throw new UnsupportedOperationException();
+	public JClassType getBaseType() {
+		switch (getBoundType()) {
+		case EXTENDS:
+			return typeOracle.getType(type.getUpperBounds()[0]);
+		case SUPER:
+			return typeOracle.getType(type.getLowerBounds()[0]);
+		case UNBOUND:
+			return typeOracle.getJavaLangObject();
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	@Override
 	public BoundType getBoundType() {
-		throw new UnsupportedOperationException();
+		if (type.getUpperBounds().length > 0) {
+			return BoundType.EXTENDS;
+		}
+		if (type.getLowerBounds().length > 0) {
+			return BoundType.SUPER;
+		}
+		return BoundType.UNBOUND;
 	}
 
 	@Override

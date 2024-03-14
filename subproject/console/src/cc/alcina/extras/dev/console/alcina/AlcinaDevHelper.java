@@ -61,12 +61,26 @@ public class AlcinaDevHelper extends DevHelper {
 	}
 
 	@Override
+	public AlcinaDevHelper solidTestEnv() {
+		return (AlcinaDevHelper) super.solidTestEnv();
+	}
+
+	@Override
+	public AlcinaDevHelper solidTestEnvSecondHalf() {
+		initPostObjectServices();
+		return this;
+	}
+
+	@Override
 	protected String getConfigFilePath() {
 		return getConsoleSourceRelativePath("alcina.console.properties");
 	}
 
 	protected String getConsoleSourcePath() {
-		return "/g/alcina/extras/dev/src/cc/alcina/extras/dev/console/alcina";
+		return getClass().getProtectionDomain().getCodeSource().getLocation().toString()//
+				.replaceFirst("(file:)(.+)(/bin)",
+						"$2/src/")
+				+ getClass().getPackageName().replace(".", "/");
 	}
 
 	protected String getConsoleSourceRelativePath(String relativePath) {

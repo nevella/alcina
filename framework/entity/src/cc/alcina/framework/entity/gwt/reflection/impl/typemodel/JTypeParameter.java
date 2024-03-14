@@ -89,7 +89,8 @@ public class JTypeParameter extends JClassType
 	@Override
 	public String getQualifiedSourceName() {
 		if (clazz == null) {
-			return typeOracle.simpleBoundType(type).getName();
+			Class simpleBoundType = typeOracle.simpleBoundType(type);
+			return getQualifiedSourceName(simpleBoundType);
 		} else {
 			return super.getQualifiedSourceName();
 		}

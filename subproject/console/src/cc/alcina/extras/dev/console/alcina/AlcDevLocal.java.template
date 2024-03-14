@@ -1,6 +1,6 @@
 package cc.alcina.extras.dev.console.alcina;
 
-import cc.alcina.extras.dev.console.alcina.sub1.AlcSub1TestReflectionGeneration;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class AlcDevLocal extends AlcinaDevConsoleRunnable {
 	@Override
@@ -10,6 +10,6 @@ public class AlcDevLocal extends AlcinaDevConsoleRunnable {
 
 	@Override
 	public void run() throws Exception {
-		new AlcSub1TestReflectionGeneration().sub(this);
+		Ax.out("hello world");
 	}
 }

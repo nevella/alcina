@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.Pr
  */
 public class JMethod extends JAbstractMethod implements
 		com.google.gwt.core.ext.typeinfo.JMethod, ProvidesPropertyMethod {
-	private Method method;
+	protected Method method;
 
 	private JType returnType;
 

@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -10,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,6 +43,24 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.Provi
 public abstract class JClassType<T extends Type>
 		implements com.google.gwt.core.ext.typeinfo.JClassType,
 		ProvidesAssignableTo, ProvidesInterfaces, ProvidesJavaType {
+	private static void getFlattenedSuperTypeHierarchyRecursive(JClassType type,
+			Set<JClassType> typesSeen) {
+		if (typesSeen.contains(type)) {
+			return;
+		}
+		typesSeen.add(type);
+		// Check the interfaces
+		JClassType[] intfs = type.getImplementedInterfaces();
+		for (JClassType intf : intfs) {
+			typesSeen.addAll(intf.getFlattenedSupertypeHierarchy());
+		}
+		// Superclass
+		JClassType superclass = type.getSuperclass();
+		if (superclass != null) {
+			typesSeen.addAll(superclass.getFlattenedSupertypeHierarchy());
+		}
+	}
+
 	T type;
 
 	Class clazz;
@@ -52,6 +72,8 @@ public abstract class JClassType<T extends Type>
 	private JPackage jPackage;
 
 	private int modifierBits;
+
+	private Set<JClassType> flattenedSupertypes;
 
 	public JClassType(TypeOracle typeOracle, T type) {
 		this.typeOracle = typeOracle;
@@ -71,6 +93,10 @@ public abstract class JClassType<T extends Type>
 	@Override
 	public JParameterizedType asParameterizationOf(JGenericType type) {
 		throw new UnsupportedOperationException();
+	}
+
+	JMethod createMethod(Method m) {
+		return new JMethod(typeOracle, m);
 	}
 
 	private Members ensureMembers() {
@@ -135,7 +161,7 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JClassType getEnclosingType() {
-		throw new UnsupportedOperationException();
+		return typeOracle.getType(clazz.getEnclosingClass());
 	}
 
 	@Override
@@ -154,7 +180,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public Set<? extends JClassType> getFlattenedSupertypeHierarchy() {
-		throw new UnsupportedOperationException();
+		if (flattenedSupertypes == null) {
+			flattenedSupertypes = new LinkedHashSet<>();
+			getFlattenedSuperTypeHierarchyRecursive(this, flattenedSupertypes);
+		}
+		return flattenedSupertypes;
 	}
 
 	@Override
@@ -243,8 +273,12 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public String getQualifiedSourceName() {
-		String canonicalName = clazz.getCanonicalName();
-		return canonicalName != null ? canonicalName : clazz.getName();
+		return getQualifiedSourceName(clazz);
+	}
+
+	protected String getQualifiedSourceName(Class clazz0) {
+		String canonicalName = clazz0.getCanonicalName();
+		return canonicalName != null ? canonicalName : clazz0.getName();
 	}
 
 	@Override
@@ -273,7 +307,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JAnnotationType isAnnotation() {
-		return null;
+		if (this instanceof JAnnotationType) {
+			return (JAnnotationType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -284,7 +322,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JArrayType isArray() {
-		return null;
+		if (this instanceof JArrayType) {
+			return (JArrayType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -322,7 +364,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JEnumType isEnum() {
-		return null;
+		if (this instanceof JEnumType) {
+			return (JEnumType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -332,7 +378,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JGenericType isGenericType() {
-		return null;
+		if (this instanceof JGenericType) {
+			return (JGenericType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -358,7 +408,11 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JParameterizedType isParameterized() {
-		return null;
+		if (this instanceof JParameterizedType) {
+			return (JParameterizedType) this;
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -460,7 +514,12 @@ public abstract class JClassType<T extends Type>
 			try {
 				init();
 			} catch (Throwable e) {
-				throw e;
+				if (e instanceof VerifyError) {
+					// assume no reflection, native access issue
+					initBlank();
+				} else {
+					throw e;
+				}
 			}
 		}
 
@@ -585,12 +644,12 @@ public abstract class JClassType<T extends Type>
 				Collections.sort(fields, new ExternalOrderFieldComparator());
 			}
 			methods = Arrays.stream(clazz.getDeclaredMethods())
-					.map(m -> new JMethod(typeOracle, m))
+					.map(JClassType.this::createMethod)
 					.collect(Collectors.toList());
 			constructors = Arrays.stream(clazz.getDeclaredConstructors())
 					.map(c -> new JConstructor(typeOracle, c))
 					.collect(Collectors.toList());
-			implementedInterfaces = Arrays.stream(clazz.getInterfaces())
+			implementedInterfaces = Arrays.stream(clazz.getGenericInterfaces())
 					.map(typeOracle::getType).collect(Collectors.toList());
 			computeBounds();
 			/*
@@ -627,6 +686,18 @@ public abstract class JClassType<T extends Type>
 						.forEach(inheritableFields::add);
 				cursor = cursor.getSuperclass();
 			}
+		}
+
+		void initBlank() {
+			fields = new ArrayList<>();
+			methods = new ArrayList<>();
+			inheritableMethods = new ArrayList<>();
+			inheritableFields = new ArrayList<>();
+			constructors = new ArrayList<>();
+			implementedInterfaces = new ArrayList<>();
+			resolvedSuperclassTypes = new ArrayList<>();
+			resolution = new TypeParameterResolution(JClassType.this);
+			typeBounds = new TypeBounds(List.of());
 		}
 
 		boolean sameCallingSignature(JMethod m1, JMethod m2) {
