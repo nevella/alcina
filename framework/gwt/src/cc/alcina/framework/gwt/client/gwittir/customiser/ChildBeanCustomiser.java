@@ -102,7 +102,8 @@ public class ChildBeanCustomiser implements Customiser {
 			List<Field> fields = BeanFields.query().forClass(objectClass)
 					.asEditable(editable).withEditableNamePredicate(filter)
 					.listFields();
-			this.gridForm = new GridForm(fields, 1, new GridFormCellRendererGrid(false));
+			this.gridForm = new GridForm(fields, 1,
+					new GridFormCellRendererGrid(false));
 			gridForm.setDirectSetModelDisabled(true);
 			gridForm.addAttachHandler(new RecheckVisibilityHandler(gridForm));
 			// the model should be the child

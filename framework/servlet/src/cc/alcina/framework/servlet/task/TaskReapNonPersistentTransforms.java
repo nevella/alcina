@@ -116,7 +116,7 @@ public class TaskReapNonPersistentTransforms extends PerformerTask {
 	}
 
 	@Override
-	public void run() throws Exception  {
+	public void run() throws Exception {
 		// run as root, otherwise shouldPersistEventRecord will always return
 		// true
 		MethodContext.instance().withRootPermissions(true).run(this::reap);

@@ -63,6 +63,7 @@ public class PotentialElement extends Element {
 	public static PotentialElement build(UIObject o, String tagName) {
 		throw new UnsupportedOperationException();
 	}
+
 	/**
 	 * Builds a new PotentialElement. This element keeps track of the
 	 * {@link UIObject} so that it can call
@@ -78,7 +79,6 @@ public class PotentialElement extends Element {
 	// return
 	// @com.google.gwt.dom.client.Element::as(Lcom/google/gwt/core/client/JavaScriptObject;)(el);
 	// }-*/;
-
 	private static native JavaScriptObject
 			buildResolveCallback(UIObject resolver) /*-{
 													return function() {

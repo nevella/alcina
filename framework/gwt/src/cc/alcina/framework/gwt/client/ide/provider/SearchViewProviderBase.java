@@ -293,8 +293,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 				tb.setStyleName("table-toolbar alcina-ToolbarSmall clearfix");
 				resultsHolder.add(tb);
 			}
-			return isEditableWidgets()
-					? new BoundTableExt(mask, fields, dp)
+			return isEditableWidgets() ? new BoundTableExt(mask, fields, dp)
 					: new NiceWidthBoundTable(mask, fields, dp);
 		}
 

@@ -11,7 +11,6 @@ public class DropdownEvents {
 			handler.onDropdownButtonClicked(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onDropdownButtonClicked(DropdownButtonClicked event);
 		}
@@ -24,7 +23,6 @@ public class DropdownEvents {
 			handler.onInsideDropdownClicked(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onInsideDropdownClicked(InsideDropdownClicked event);
 		}
@@ -37,7 +35,6 @@ public class DropdownEvents {
 			handler.onOutsideDropdownClicked(this);
 		}
 
-		
 		public interface Handler extends NodeEvent.Handler {
 			void onOutsideDropdownClicked(OutsideDropdownClicked event);
 		}

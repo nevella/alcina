@@ -19,6 +19,5 @@ import java.util.function.Function;
  *
  * @author Nick Reddel
  */
-public interface FromStringFunction<T> extends Function< String,T> {
-	
+public interface FromStringFunction<T> extends Function<String, T> {
 }

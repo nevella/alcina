@@ -21,12 +21,13 @@ public class Pair {
 		this.o2 = o2;
 		this.hash = Objects.hash(o1, o2);
 	}
+
 	@Override
 	public boolean equals(Object obj) {
-		if(obj instanceof Pair){
+		if (obj instanceof Pair) {
 			Pair o = (Pair) obj;
-			return Objects.equals(o1, o.o1)&&Objects.equals(o2, o.o2);
-		}else{
+			return Objects.equals(o1, o.o1) && Objects.equals(o2, o.o2);
+		} else {
 			return false;
 		}
 	}

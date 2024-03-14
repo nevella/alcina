@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Timer;
-import cc.alcina.framework.common.client.util.Timer.Provider;
 import cc.alcina.framework.gwt.client.Client;
 
 @Reflected

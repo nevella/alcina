@@ -104,7 +104,6 @@ public class CacheTrace {
 			this.trace = trace;
 		}
 
-		
 		@Override
 		public void onSubscription(boolean subscribed) {
 			if (!subscribed) {

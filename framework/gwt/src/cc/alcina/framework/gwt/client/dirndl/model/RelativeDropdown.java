@@ -14,8 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.OutsideDropdow
 
 @Directed(
 	tag = "relative-dropdown",
-	bindings = @Binding(from = "open", type = Type.CSS_CLASS)
-)
+	bindings = @Binding(from = "open", type = Type.CSS_CLASS))
 public class RelativeDropdown<D extends Model> extends Model
 		implements DropdownButtonClicked.Handler,
 		OutsideDropdownClicked.Handler, InsideDropdownClicked.Handler {
@@ -33,8 +32,8 @@ public class RelativeDropdown<D extends Model> extends Model
 	}
 
 	@Directed(
-		
-	reemits = { DomEvents.Click.class, DropdownEvents.DropdownButtonClicked.class })
+		reemits = { DomEvents.Click.class,
+				DropdownEvents.DropdownButtonClicked.class })
 	public Model getButton() {
 		return this.button;
 	}
@@ -44,8 +43,8 @@ public class RelativeDropdown<D extends Model> extends Model
 	}
 
 	@Directed(
-		
-	reemits = { InferredDomEvents.ClickOutside.class, DropdownEvents.OutsideDropdownClicked.class })
+		reemits = { InferredDomEvents.ClickOutside.class,
+				DropdownEvents.OutsideDropdownClicked.class })
 	public D getVisibleDropdown() {
 		return this.visibleDropdown;
 	}

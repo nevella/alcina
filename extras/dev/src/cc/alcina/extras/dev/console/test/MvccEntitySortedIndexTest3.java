@@ -22,15 +22,15 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  *
  * 
  *
- *         In one thread, create 100 date entities [thread 1]
+ * In one thread, create 100 date entities [thread 1]
  *
- *         Then, randomly modify and commit [thread 1]
+ * Then, randomly modify and commit [thread 1]
  *
- *         Simultaneously, randomly access and get [thread 2]
+ * Simultaneously, randomly access and get [thread 2]
  *
- *         Repeat n times
+ * Repeat n times
  *
- *         Check result is consistent with thread 1 changes
+ * Check result is consistent with thread 1 changes
  *
  */
 public class MvccEntitySortedIndexTest3<IU extends Entity & IUser, IG extends Entity & IGroup>

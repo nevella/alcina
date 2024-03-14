@@ -28,7 +28,6 @@ public class GwtEvents {
 			handler.onAttach(this);
 		}
 
-		
 		public boolean isAttached() {
 			return ((AttachEvent) getContext().getGwtEvent()).isAttached();
 		}
@@ -48,7 +47,6 @@ public class GwtEvents {
 			handler.onValueChange(this);
 		}
 
-		
 		public static class BindingImpl extends DomBinding<ValueChange> {
 			@Override
 			protected HandlerRegistration bind1(Element element) {

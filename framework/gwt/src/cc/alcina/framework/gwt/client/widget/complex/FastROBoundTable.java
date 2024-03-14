@@ -87,8 +87,7 @@ public class FastROBoundTable extends BoundTableExt {
 
 	private Object selectedObject = null;
 
-	public FastROBoundTable(int mask, Field[] fields,
-			DataProvider provider) {
+	public FastROBoundTable(int mask, Field[] fields, DataProvider provider) {
 		super(mask, fields, provider);
 	}
 

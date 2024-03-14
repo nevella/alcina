@@ -42,8 +42,8 @@ public class HeaderContent extends Model {
 	public void setClassName(String className) {
 		String old_className = this.className;
 		this.className = className;
-		propertyChangeSupport().firePropertyChange("className",
-				old_className, className);
+		propertyChangeSupport().firePropertyChange("className", old_className,
+				className);
 	}
 
 	public void setContent(Object content) {
@@ -62,16 +62,15 @@ public class HeaderContent extends Model {
 
 	/**
 	 * <p>
-	 * This is a WIP and may well be reverted - it's really the
-	 * responsibility of the HeaderContentModel subclass (or a subcomponent)
-	 * to track ModelEvents and adjust its style accordingly.
+	 * This is a WIP and may well be reverted - it's really the responsibility
+	 * of the HeaderContentModel subclass (or a subcomponent) to track
+	 * ModelEvents and adjust its style accordingly.
 	 *
 	 * </p>
 	 */
 	public static class BoundToPageCssClass extends HeaderContent {
 		public BoundToPageCssClass() {
-			bindings().add("className", PageCssClass.get(),
-					"pageClassName");
+			bindings().add("className", PageCssClass.get(), "pageClassName");
 		}
 	}
 

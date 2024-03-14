@@ -194,8 +194,8 @@ public class JsonUtil {
 
 		private final boolean pretty;
 
-		private StringifyJsonVisitor(String indent,
-				StringBuilder sb, boolean pretty) {
+		private StringifyJsonVisitor(String indent, StringBuilder sb,
+				boolean pretty) {
 			this.indent = indent;
 			this.sb = sb;
 			this.pretty = pretty;

@@ -20,8 +20,7 @@ abstract class SourceModifier {
 
 	private String initialSource;
 
-	public SourceModifier(
-			UnitType type) {
+	public SourceModifier(UnitType type) {
 		this.type = type;
 		this.declaration = this.type.getDeclaration();
 	}

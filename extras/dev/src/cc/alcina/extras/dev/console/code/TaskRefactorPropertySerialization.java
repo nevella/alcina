@@ -135,8 +135,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			if (!node.isInterface()) {
-				UnitType type = new UnitType(
-						unit, node);
+				UnitType type = new UnitType(unit, node);
 				type.setDeclaration(node);
 				unit.declarations.add(type);
 				boolean hasAnnotation = node.getMethods().stream()
@@ -153,8 +152,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 		static Logger logger = LoggerFactory
 				.getLogger(TaskFlatSerializerMetadata.class);
 
-		private static void cleanIfRedundant(
-				UnitType type,
+		private static void cleanIfRedundant(UnitType type,
 				Optional<AnnotationExpr> annotation,
 				MethodDeclaration methodDeclaration) {
 			if (!annotation.isPresent()) {
@@ -196,10 +194,9 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 			expr.remove();
 		}
 
-		public static void removeRedundantPropertySerializationAnnotations(
-				UnitType type) {
-			ClassOrInterfaceDeclaration declaration = type
-					.getDeclaration();
+		public static void
+				removeRedundantPropertySerializationAnnotations(UnitType type) {
+			ClassOrInterfaceDeclaration declaration = type.getDeclaration();
 			declaration.getMethods().forEach(m -> {
 				Optional<AnnotationExpr> annotation = m
 						.getAnnotationByClass(PropertySerialization.class);

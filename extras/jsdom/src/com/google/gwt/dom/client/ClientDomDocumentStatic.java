@@ -90,7 +90,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createButtonInputElement(ClientDomDocument domDocument) {
+	static InputElement
+			createButtonInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"button");
 	}
@@ -110,7 +111,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableCaptionElement createCaptionElement(ClientDomDocument domDocument) {
+	static TableCaptionElement
+			createCaptionElement(ClientDomDocument domDocument) {
 		return (TableCaptionElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableCaptionElement.TAG);
 	}
@@ -159,9 +161,10 @@ public class ClientDomDocumentStatic {
 	 *            <code>true</code> if the meta key is depressed
 	 * @return the event object
 	 */
-	static NativeEvent createClickEvent(ClientDomDocument domDocument, int detail,
-			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey) {
+	static NativeEvent createClickEvent(ClientDomDocument domDocument,
+			int detail, int screenX, int screenY, int clientX, int clientY,
+			boolean ctrlKey, boolean altKey, boolean shiftKey,
+			boolean metaKey) {
 		// We disallow setting the button here, because IE doesn't provide the
 		// button property for click events.
 		return domDocument.createMouseEvent(BrowserEvents.CLICK, true, true,
@@ -184,7 +187,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableColElement createColGroupElement(ClientDomDocument domDocument) {
+	static TableColElement
+			createColGroupElement(ClientDomDocument domDocument) {
 		return (TableColElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableColElement.TAG_COLGROUP);
 	}
@@ -235,9 +239,10 @@ public class ClientDomDocumentStatic {
 	 *            <code>true</code> if the meta key is depressed
 	 * @return the event object
 	 */
-	static NativeEvent createDblClickEvent(ClientDomDocument domDocument, int detail,
-			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey) {
+	static NativeEvent createDblClickEvent(ClientDomDocument domDocument,
+			int detail, int screenX, int screenY, int clientX, int clientY,
+			boolean ctrlKey, boolean altKey, boolean shiftKey,
+			boolean metaKey) {
 		// We disallow setting the button here, because IE doesn't provide the
 		// button property for click events.
 		return domDocument.createMouseEvent(BrowserEvents.DBLCLICK, true, true,
@@ -282,7 +287,8 @@ public class ClientDomDocumentStatic {
 	 *            the tag name of the element to be created
 	 * @return the newly created element
 	 */
-	static Element createElement(ClientDomDocument domDocument, String tagName) {
+	static Element createElement(ClientDomDocument domDocument,
+			String tagName) {
 		return DOMImpl.impl.createElement(domDocument.documentFor(), tagName);
 	}
 
@@ -300,7 +306,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static FieldSetElement createFieldSetElement(ClientDomDocument domDocument) {
+	static FieldSetElement
+			createFieldSetElement(ClientDomDocument domDocument) {
 		return (FieldSetElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), FieldSetElement.TAG);
 	}
@@ -349,7 +356,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static FrameSetElement createFrameSetElement(ClientDomDocument domDocument) {
+	static FrameSetElement
+			createFrameSetElement(ClientDomDocument domDocument) {
 		return (FrameSetElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), FrameSetElement.TAG);
 	}
@@ -382,7 +390,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createHiddenInputElement(ClientDomDocument domDocument) {
+	static InputElement
+			createHiddenInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"hidden");
 	}
@@ -421,8 +430,8 @@ public class ClientDomDocumentStatic {
 	 *            <code>true</code> if the event should be cancelable
 	 * @return the event object
 	 */
-	static NativeEvent createHtmlEvent(ClientDomDocument domDocument, String type,
-			boolean canBubble, boolean cancelable) {
+	static NativeEvent createHtmlEvent(ClientDomDocument domDocument,
+			String type, boolean canBubble, boolean cancelable) {
 		return DOMImpl.impl.createHtmlEvent(domDocument.documentFor(), type,
 				canBubble, cancelable);
 	}
@@ -499,9 +508,9 @@ public class ClientDomDocumentStatic {
 	 *            the key-code to be set on the event
 	 * @return the event object
 	 */
-	static NativeEvent createKeyCodeEvent(ClientDomDocument domDocument, String type,
-			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
-			int keyCode) {
+	static NativeEvent createKeyCodeEvent(ClientDomDocument domDocument,
+			String type, boolean ctrlKey, boolean altKey, boolean shiftKey,
+			boolean metaKey, int keyCode) {
 		return DOMImpl.impl.createKeyCodeEvent(domDocument.documentFor(), type,
 				ctrlKey, altKey, shiftKey, metaKey, keyCode);
 	}
@@ -599,8 +608,8 @@ public class ClientDomDocumentStatic {
 	 *             {@link #createKeyPressEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	static NativeEvent createKeyEvent(ClientDomDocument domDocument, String type,
-			boolean canBubble, boolean cancelable, boolean ctrlKey,
+	static NativeEvent createKeyEvent(ClientDomDocument domDocument,
+			String type, boolean canBubble, boolean cancelable, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
 			int charCode) {
 		return DOMImpl.impl.createKeyEvent(domDocument.documentFor(), type,
@@ -803,9 +812,10 @@ public class ClientDomDocumentStatic {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	static NativeEvent createMouseDownEvent(ClientDomDocument domDocument, int detail,
-			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
+	static NativeEvent createMouseDownEvent(ClientDomDocument domDocument,
+			int detail, int screenX, int screenY, int clientX, int clientY,
+			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
+			int button) {
 		return domDocument.createMouseEvent(BrowserEvents.MOUSEDOWN, true, true,
 				detail, screenX, screenY, clientX, clientY, ctrlKey, altKey,
 				shiftKey, metaKey, button, null);
@@ -860,9 +870,9 @@ public class ClientDomDocumentStatic {
 	 *            mouseout events)
 	 * @return the event object
 	 */
-	static NativeEvent createMouseEvent(ClientDomDocument domDocument, String type,
-			boolean canBubble, boolean cancelable, int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
+	static NativeEvent createMouseEvent(ClientDomDocument domDocument,
+			String type, boolean canBubble, boolean cancelable, int detail,
+			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
 		return DOMImpl.impl.createMouseEvent(domDocument.documentFor(), type,
@@ -897,9 +907,10 @@ public class ClientDomDocumentStatic {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	static NativeEvent createMouseMoveEvent(ClientDomDocument domDocument, int detail,
-			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
+	static NativeEvent createMouseMoveEvent(ClientDomDocument domDocument,
+			int detail, int screenX, int screenY, int clientX, int clientY,
+			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
+			int button) {
 		return domDocument.createMouseEvent(BrowserEvents.MOUSEMOVE, true, true,
 				detail, screenX, screenY, clientX, clientY, ctrlKey, altKey,
 				shiftKey, metaKey, button, null);
@@ -936,10 +947,10 @@ public class ClientDomDocumentStatic {
 	 *            the event's related target
 	 * @return the event object
 	 */
-	static NativeEvent createMouseOutEvent(ClientDomDocument domDocument, int detail,
-			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget) {
+	static NativeEvent createMouseOutEvent(ClientDomDocument domDocument,
+			int detail, int screenX, int screenY, int clientX, int clientY,
+			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
+			int button, Element relatedTarget) {
 		return domDocument.createMouseEvent(BrowserEvents.MOUSEOUT, true, true,
 				detail, screenX, screenY, clientX, clientY, ctrlKey, altKey,
 				shiftKey, metaKey, button, relatedTarget);
@@ -976,10 +987,10 @@ public class ClientDomDocumentStatic {
 	 *            the event's related target
 	 * @return the event object
 	 */
-	static NativeEvent createMouseOverEvent(ClientDomDocument domDocument, int detail,
-			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget) {
+	static NativeEvent createMouseOverEvent(ClientDomDocument domDocument,
+			int detail, int screenX, int screenY, int clientX, int clientY,
+			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
+			int button, Element relatedTarget) {
 		return domDocument.createMouseEvent(BrowserEvents.MOUSEOVER, true, true,
 				detail, screenX, screenY, clientX, clientY, ctrlKey, altKey,
 				shiftKey, metaKey, button, relatedTarget);
@@ -1011,9 +1022,10 @@ public class ClientDomDocumentStatic {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	static NativeEvent createMouseUpEvent(ClientDomDocument domDocument, int detail,
-			int screenX, int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
+	static NativeEvent createMouseUpEvent(ClientDomDocument domDocument,
+			int detail, int screenX, int screenY, int clientX, int clientY,
+			boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
+			int button) {
 		return domDocument.createMouseEvent(BrowserEvents.MOUSEUP, true, true,
 				detail, screenX, screenY, clientX, clientY, ctrlKey, altKey,
 				shiftKey, metaKey, button, null);
@@ -1044,7 +1056,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static OptGroupElement createOptGroupElement(ClientDomDocument domDocument) {
+	static OptGroupElement
+			createOptGroupElement(ClientDomDocument domDocument) {
 		return (OptGroupElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), OptGroupElement.TAG);
 	}
@@ -1074,7 +1087,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createPasswordInputElement(ClientDomDocument domDocument) {
+	static InputElement
+			createPasswordInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"password");
 	}
@@ -1104,7 +1118,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ButtonElement createPushButtonElement(ClientDomDocument domDocument) {
+	static ButtonElement
+			createPushButtonElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createButtonElement(domDocument.documentFor(),
 				"button");
 	}
@@ -1137,7 +1152,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ButtonElement createResetButtonElement(ClientDomDocument domDocument) {
+	static ButtonElement
+			createResetButtonElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createButtonElement(domDocument.documentFor(),
 				"reset");
 	}
@@ -1251,7 +1267,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static ButtonElement createSubmitButtonElement(ClientDomDocument domDocument) {
+	static ButtonElement
+			createSubmitButtonElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createButtonElement(domDocument.documentFor(),
 				"submit");
 	}
@@ -1261,7 +1278,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static InputElement createSubmitInputElement(ClientDomDocument domDocument) {
+	static InputElement
+			createSubmitInputElement(ClientDomDocument domDocument) {
 		return DOMImpl.impl.createInputElement(domDocument.documentFor(),
 				"submit");
 	}
@@ -1281,7 +1299,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableSectionElement createTBodyElement(ClientDomDocument domDocument) {
+	static TableSectionElement
+			createTBodyElement(ClientDomDocument domDocument) {
 		return (TableSectionElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableSectionElement.TAG_TBODY);
 	}
@@ -1301,7 +1320,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TextAreaElement createTextAreaElement(ClientDomDocument domDocument) {
+	static TextAreaElement
+			createTextAreaElement(ClientDomDocument domDocument) {
 		return (TextAreaElement) DOMImpl.impl
 				.createElement(domDocument.documentFor(), TextAreaElement.TAG);
 	}
@@ -1321,7 +1341,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableSectionElement createTFootElement(ClientDomDocument domDocument) {
+	static TableSectionElement
+			createTFootElement(ClientDomDocument domDocument) {
 		return (TableSectionElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableSectionElement.TAG_TFOOT);
 	}
@@ -1331,7 +1352,8 @@ public class ClientDomDocumentStatic {
 	 * 
 	 * @return the newly created element
 	 */
-	static TableSectionElement createTHeadElement(ClientDomDocument domDocument) {
+	static TableSectionElement
+			createTHeadElement(ClientDomDocument domDocument) {
 		return (TableSectionElement) DOMImpl.impl.createElement(
 				domDocument.documentFor(), TableSectionElement.TAG_THEAD);
 	}
@@ -1418,7 +1440,8 @@ public class ClientDomDocumentStatic {
 		throw new UnsupportedOperationException();
 	}
 
-	static Element getElementById(ClientDomDocument domDocument, String elementId) {
+	static Element getElementById(ClientDomDocument domDocument,
+			String elementId) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -1475,7 +1498,8 @@ public class ClientDomDocumentStatic {
 		throw new UnsupportedOperationException();
 	}
 
-	static void importNode(ClientDomDocument domDocument, Node node, boolean deep) {
+	static void importNode(ClientDomDocument domDocument, Node node,
+			boolean deep) {
 		throw new UnsupportedOperationException();
 	}
 

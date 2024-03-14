@@ -21,12 +21,11 @@ import cc.alcina.framework.common.client.util.LooseContext;
  * 
  * 
  * 
- *         Uses ordering (by id or localid) to speed 'find' ops. This is
- *         *useful* even though 'index' is mostly used to improve performance in
- *         add() because we have to check we're not adding an element that
- *         already exists in the set.
+ * Uses ordering (by id or localid) to speed 'find' ops. This is *useful* even
+ * though 'index' is mostly used to improve performance in add() because we have
+ * to check we're not adding an element that already exists in the set.
  * 
- *         This class handles 'promoted' objects (local->global)
+ * This class handles 'promoted' objects (local->global)
  * 
  * @param <H>
  */

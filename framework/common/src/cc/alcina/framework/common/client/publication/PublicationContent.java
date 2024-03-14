@@ -21,8 +21,8 @@ import java.util.List;
  * 
  * 
  *
- *         Note - these will want to be xmlroot elt, jaxb registered, because
- *         they will be jaxb-serialised for transform
+ * Note - these will want to be xmlroot elt, jaxb registered, because they will
+ * be jaxb-serialised for transform
  */
 public interface PublicationContent extends Serializable {
 	default String getCss() {

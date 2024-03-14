@@ -18,7 +18,7 @@ public class TaskSwitchPostgresUrl extends PerformerTask {
 	}
 
 	@Override
-	public void run() throws Exception  {
+	public void run() throws Exception {
 		DomainStore store = DomainStore.stores().storeFor(descriptorClassName);
 		store.setConnectionUrl(newUrl);
 		if (store == DomainStore.writableStore()) {

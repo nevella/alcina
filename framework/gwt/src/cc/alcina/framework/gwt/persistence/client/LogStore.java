@@ -69,8 +69,8 @@ public class LogStore {
 	private ClientLogRecords logs = new ClientLogRecords();
 
 	// persist logs to local db
-	private EventCollator localPersistenceTimer = new EventCollator(
-			1000, new Runnable() {
+	private EventCollator localPersistenceTimer = new EventCollator(1000,
+			new Runnable() {
 				@Override
 				public void run() {
 					flushToLocalPersistence();
@@ -78,8 +78,8 @@ public class LogStore {
 			});
 
 	// push logs to remote store
-	private EventCollator remotePersistenceTimer = new EventCollator(
-			20000, new Runnable() {
+	private EventCollator remotePersistenceTimer = new EventCollator(20000,
+			new Runnable() {
 				@Override
 				public void run() {
 					if (!isLocalPersistencePaused()) {

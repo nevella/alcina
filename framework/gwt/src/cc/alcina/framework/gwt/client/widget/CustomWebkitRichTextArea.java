@@ -25,16 +25,16 @@ public class CustomWebkitRichTextArea extends RichTextAreaImplSafari {
 
 	private native void hookBlur(Element iframe)
 	/*-{
-    //can happen if immediately detached
-    if (!(iframe && iframe.contentDocument && iframe.contentDocument.documentElement)) {
-      return;
-    }
-    iframe.contentDocument.documentElement.onblur = function(evtJso) {
-      if (iframe.__listener) {
-        var evt = @com.google.gwt.user.client.Event::new(Lcom/google/gwt/dom/client/NativeEventJso;)(evtJso);
-        iframe.__listener.@com.google.gwt.user.client.ui.Widget::onBrowserEvent(Lcom/google/gwt/user/client/Event;)(evt);
-      }
-    };
+	//can happen if immediately detached
+	if (!(iframe && iframe.contentDocument && iframe.contentDocument.documentElement)) {
+	  return;
+	}
+	iframe.contentDocument.documentElement.onblur = function(evtJso) {
+	  if (iframe.__listener) {
+	    var evt = @com.google.gwt.user.client.Event::new(Lcom/google/gwt/dom/client/NativeEventJso;)(evtJso);
+	    iframe.__listener.@com.google.gwt.user.client.ui.Widget::onBrowserEvent(Lcom/google/gwt/user/client/Event;)(evt);
+	  }
+	};
 	}-*/;
 
 	// guard against instantly-detached elts
