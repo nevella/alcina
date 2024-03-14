@@ -55,7 +55,7 @@ public abstract class NodePathref implements ClientDomNode {
 		child.streamChildren().forEach(NodePathref::ensurePathrefRemote);
 	}
 
-	private Node node;
+	protected Node node;
 
 	NodePathref(Node node) {
 		this.node = node;
@@ -224,7 +224,6 @@ public abstract class NodePathref implements ClientDomNode {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s: null::remote-placeholder",
-				getClass().getSimpleName());
+		return Ax.format("%s: %s", getClass().getSimpleName(), node);
 	}
 }

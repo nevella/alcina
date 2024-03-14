@@ -57,8 +57,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
  *
  *
  *
- */
-/*
+ * <pre>
  * FIXME - dirndl 1x1h - document (and document annotationresolver in general,
  * top & bottom)
  *
@@ -73,6 +72,16 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
  * - javadoc on Directed.MergeStrategy
  *
  * - examples (and in cookboook)
+* 
+ * Also - rework:
+ * 
+ * - All functionality here should (per method) call an interface sequence - say:
+ * for resolveDirectedProperty0:
+ * -- have (on ContextResolver) protected ResolutionSequence<ResolveDirectedProperty0> resolveDirectedProperty0Sequence
+ * -- descendant (in directed graph aka dom) resolvers can "append", "insert" or "restart" into the sequence
+ * -- mostly there'll just be a single-element sequence
+ * 
+ * </pre>
  *
  */
 @Reflected

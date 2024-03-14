@@ -19,6 +19,9 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -64,6 +67,9 @@ class ReachabilityData {
 
 	static Class<? extends ReachabilityLinkerPeer> linkerPeerClass;
 
+	transient static Logger logger = LoggerFactory
+			.getLogger(ReachabilityData.class);
+
 	private static Set<JClassType> computeImplementations(
 			JTypeParameter typeParameter,
 			Multiset<JClassType, Set<JClassType>> subtypes) {
@@ -81,7 +87,7 @@ class ReachabilityData {
 		}
 		if (result.size() > 0
 				&& typeParametersLogged.add(typeParameter.toString())) {
-			Ax.out(" -- %s", typeParameter);
+			logger.debug(" -- %s", typeParameter);
 		}
 		return result;
 	}
@@ -167,7 +173,9 @@ class ReachabilityData {
 			if (!visited.add(pop)) {
 				continue;
 			}
-			if (pop instanceof JPrimitiveType) {
+			if (pop == null) {
+				// ignore
+			} else if (pop instanceof JPrimitiveType) {
 				// ignore, only interested in class types
 			} else {
 				JClassType cursor = (JClassType) pop;

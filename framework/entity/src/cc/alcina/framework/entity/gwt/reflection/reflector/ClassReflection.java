@@ -58,7 +58,13 @@ public class ClassReflection extends ReflectionElement {
 
 	public static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
-			return t.isParameterized().getBaseType().getErasedType();
+			if (t.isParameterized().getBaseType() == null) {
+				// e.g. an inner class of a parametrized type. possibly there's
+				// some more generic variant - but this works
+				return t.getErasedType();
+			} else {
+				return t.isParameterized().getBaseType().getErasedType();
+			}
 		} else {
 			return t.getErasedType();
 		}

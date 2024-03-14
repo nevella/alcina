@@ -197,7 +197,7 @@ public class Registry {
 
 		<V> V ensure(Query<V> query, boolean throwIfNotNull) {
 			ImplementationData implementation = implementation(query,
-					throwIfNotNull);
+					throwIfNotNull, true);
 			return implementation == null ? null
 					: (V) implementation.instance();
 		}
@@ -206,21 +206,28 @@ public class Registry {
 			return lookup.root.map.containsKey(key);
 		}
 
+		/*
+		 * Normal resolution ascends - if the query doesn't match exactly,
+		 * ascend the superclass hierarchy of the last key etc (see KeyAscent).
+		 * 
+		 * But for testing the existence of a registration, the system should
+		 * *not* ascend (see the has() method)
+		 */
 		<V> ImplementationData implementation(Query<V> query,
-				boolean throwIfNotNull) {
+				boolean throwIfNotNull, boolean ascend) {
 			List<RegistryKey> keys = query.asRegistrationKeys();
 			ImplementationData data = lookup.get(keys);
 			if (data != null) {
 				// fast path
 				return data;
 			}
-			KeyAscent ascent = new KeyAscent(keys);
+			KeyAscent ascent = new KeyAscent(keys, ascend);
 			do {
 				data = lookup.get(keys);
 				if (data == null) {
 					if (sharedImplementations != null) {
 						data = sharedImplementations.implementations
-								.implementation(query, throwIfNotNull);
+								.implementation(query, throwIfNotNull, ascend);
 						return data;
 					}
 					List<RegistrationData> located = registrations
@@ -296,8 +303,11 @@ public class Registry {
 
 			List<RegistryKey> initialKeys;
 
-			public KeyAscent(List<RegistryKey> keys) {
+			boolean ascend;
+
+			KeyAscent(List<RegistryKey> keys, boolean ascend) {
 				this.keys = keys;
+				this.ascend = ascend;
 				this.initialKeys = keys.stream().collect(Collectors.toList());
 			}
 
@@ -315,15 +325,14 @@ public class Registry {
 			 * @formatter:on
 			 */
 			boolean ascend() {
+				if (!ascend) {
+					return false;
+				}
 				if (keys.size() == 1) {
 					return false;
 				}
 				RegistryKey key = keys.get(keys.size() - 1);
 				Class superclass = key.clazz().getSuperclass();
-				// handle primitives, interfaces
-				if (superclass == null && key.clazz() != Object.class) {
-					superclass = Object.class;
-				}
 				if (superclass == null) {
 					if (ascendedFinalKey) {
 						return false;
@@ -489,22 +498,11 @@ public class Registry {
 			}
 
 			void dump(String key, int depth) {
-				Collection coll = value instanceof Collection
-						? (Collection) value
-						: null;
-				Object firstElement = coll != null && coll.size() > 0
-						? Ax.first((Collection<T>) value)
-						: value;
-				Ax.out("%s%s : %s",
-						CommonUtils.padStringRight("", depth * 2, ' '),
-						CommonUtils.padStringRight(key, 45 - depth * 2, ' '),
-						firstElement);
-				if (coll != null) {
-					coll.stream().skip(1).forEach(v -> {
-						Ax.out("%s : %s",
-								CommonUtils.padStringRight("", 45, ' '), v);
-					});
-				}
+				String indentedKey = CommonUtils.padStringLeft("", depth * 2,
+						' ') + key;
+				Ax.out("%s : %s",
+						CommonUtils.padStringRight(indentedKey, 60, ' '),
+						value);
 				map.forEach((k, v) -> v.dump(k.simpleName(), depth + 1));
 			}
 
@@ -684,8 +682,11 @@ public class Registry {
 					.findFirst().orElse(null);
 		}
 
+		/**
+		 * Tests for an exact match to this query
+		 */
 		public boolean hasImplementation() {
-			return implementations.implementation(this, false) != null;
+			return implementations.implementation(this, false, false) != null;
 		}
 
 		public V impl() {
@@ -702,7 +703,7 @@ public class Registry {
 		}
 
 		public Class<? extends V> registration() {
-			return implementations.implementation(this,
+			return implementations.implementation(this, true,
 					true).registrationData.registeringClassKey.clazz();
 		}
 
@@ -782,11 +783,22 @@ public class Registry {
 		/*
 		 * Uses string (className) parameters to avoid class init from cache
 		 * loads
+		 * 
+		 * This is optimised for Android, avoiding stream use
 		 */
 		public void add(String registeringClassClassName, List<String> keys,
 				Implementation implementation, Priority priority) {
-			add(registryKeys.get(registeringClassClassName), keys.stream()
-					.map(registryKeys::get).collect(Collectors.toList()),
+			/*
+			 * stream variant
+			 */
+			// add(registryKeys.get(registeringClassClassName), keys.stream()
+			// .map(registryKeys::get).collect(Collectors.toList()),
+			// implementation, priority);
+			List<RegistryKey> list = new ArrayList<>(keys.size());
+			for (String key : keys) {
+				list.add(registryKeys.get(key));
+			}
+			add(registryKeys.get(registeringClassClassName), list,
 					implementation, priority);
 		}
 

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -43,6 +44,19 @@ public class CollectionCreatorsClient {
 
 		@Override
 		protected void createTopMap() {
+		}
+	}
+
+	public static interface TransactionalSetCreator<E extends Entity> {
+		public Set<E> create(Class<E> valueClass);
+	}
+
+	@Reflected
+	public static class TransactionalSetCreatorClient<E extends Entity>
+			implements CollectionCreators.TransactionalSetCreator<E> {
+		@Override
+		public Set<E> create(Class<E> valueClass) {
+			return new LinkedHashSet<>();
 		}
 	}
 

@@ -2084,4 +2084,15 @@ public class SEUtilities {
 			return calendar.get(Calendar.YEAR);
 		}
 	}
+
+	public static void invokeDelayed(Runnable runnable, long delayMs) {
+		new Thread(() -> {
+			try {
+				Thread.sleep(delayMs);
+				runnable.run();
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
+		}, "se-delayed-invoker").start();
+	}
 }

@@ -32,6 +32,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class Io {
@@ -362,6 +363,13 @@ public class Io {
 				return ReadOp.this;
 			}
 
+			@Override
+			public String toString() {
+				return FormatBuilder.keyValues("path", path, "url", url,
+						"classpathRelative", classpathRelative,
+						"classpathResource", classpathResource);
+			}
+
 			public ReadOp url(String url) {
 				this.url = url;
 				return ReadOp.this;
@@ -431,7 +439,7 @@ public class Io {
 
 		private Resource resource = new Resource();
 
-		private boolean noUpdate;
+		private boolean noUpdateIdentical;
 
 		private boolean compress;
 
@@ -442,7 +450,7 @@ public class Io {
 
 		public void write() {
 			try {
-				if (noUpdate) {
+				if (noUpdateIdentical) {
 					resource.ensureFile();
 					if (resource.file != null && resource.file.exists()) {
 						byte[] existingBytes = Io.read().file(resource.file)
@@ -570,13 +578,12 @@ public class Io {
 				return this;
 			}
 
-			public Resource withNoUpdate(boolean noUpdate) {
-				WriteOp.this.noUpdate = noUpdate;
-				return this;
-			}
-
-			public Resource withEnsureParents(boolean ensureParents) {
-				WriteOp.this.ensureParents = ensureParents;
+			/**
+			 * Do not update the file (i.e. the timestamp, via a rewrite) if its
+			 * content is identical to the content being written
+			 */
+			public Resource withNoUpdateIdentical(boolean noUpdateIdentical) {
+				WriteOp.this.noUpdateIdentical = noUpdateIdentical;
 				return this;
 			}
 		}

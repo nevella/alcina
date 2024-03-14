@@ -57,28 +57,6 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 								String.class, Object.class, Object.class }));
 	}
 
-	public static class ClassAnnotationProvider implements AnnotationProvider {
-		private Class clazz;
-
-		public ClassAnnotationProvider(Class clazz) {
-			this.clazz = clazz;
-		}
-
-		//
-		@Override
-		public <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass) {
-			return (A) clazz.getAnnotation(annotationClass);
-		}
-
-		@Override
-		public <A extends Annotation> List<A>
-				getAnnotations(Class<A> annotationClass) {
-			return (List<A>) Arrays
-					.asList(clazz.getAnnotationsByType(annotationClass));
-		}
-	}
-
 	static class MethodAnnotationProvider implements AnnotationProvider {
 		@SuppressWarnings("unused")
 		private Class clazz;

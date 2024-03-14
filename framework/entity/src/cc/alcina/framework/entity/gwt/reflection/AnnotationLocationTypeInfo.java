@@ -218,9 +218,11 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		}
 
 		/**
-		 * Handling is different to jvm typemodel, since the
+		 * Handling is different to jvm typemodel (? why)
 		 *
 		 * @param resolvingClass
+		 * 
+		 * 
 		 */
 		Optional<Registration> applicableNonGeneric(JClassType clazz,
 				JClassType resolvingClass,

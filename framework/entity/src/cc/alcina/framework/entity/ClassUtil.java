@@ -12,4 +12,10 @@ public class ClassUtil {
 			throw new WrappedRuntimeException(e);
 		}
 	};
+
+	public static final String getRootClasspathElement(Class clazz) {
+		return clazz.getProtectionDomain().getCodeSource().getLocation()
+				.toString()//
+				.replaceFirst("(file:)(.+)", "$2");
+	}
 }

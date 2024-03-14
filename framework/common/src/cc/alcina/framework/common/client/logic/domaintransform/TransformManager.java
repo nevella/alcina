@@ -441,6 +441,11 @@ public abstract class TransformManager
 		});
 	}
 
+	/*
+	 * FIXME - localdomainstore - remove once everything is transactional
+	 */
+	public boolean allowApplyTransformsToDeletedEntities = false;
+
 	private boolean useCreatedLocals = true;
 
 	private ObjectStore objectStore;
@@ -561,8 +566,10 @@ public abstract class TransformManager
 		if (markedForDeletion.contains(token.object)
 				|| markedForDeletion.contains(token.newTargetEntity)
 				|| markedForDeletion.contains(token.existingTargetEntity)) {
-			throw new DomainTransformException(
-					"Modifying object marked for deletion");
+			if (!allowApplyTransformsToDeletedEntities) {
+				throw new DomainTransformException(
+						"Modifying object marked for deletion");
+			}
 		}
 		getUndoManager().prepareUndo(event);
 		checkVersion(token.object, event);
@@ -2035,7 +2042,7 @@ public abstract class TransformManager
 		if (associated.domain().wasRemoved()) {
 			return;
 		}
-		associated = (Entity) ensureEndpointWriteable(associated);
+		associated = ensureEndpointWriteable(associated);
 		Property associatedProperty = Reflections.at(associated)
 				.property(association.propertyName());
 		Object associatedExistingValue = associatedProperty.get(associated);

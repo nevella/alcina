@@ -9,7 +9,6 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
-import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -288,7 +287,7 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 
 	@Override
 	public String getTagName() {
-		throw new UnsupportedOperationException();
+		return ((Element) node).getTagName();
 	}
 
 	@Override
@@ -355,7 +354,7 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 	@Override
 	public void setAttribute(String name, String value) {
 		MutationRecord record = new MutationRecord();
-		record.type = Type.attributes;
+		record.type = MutationRecord.Type.attributes;
 		record.target = MutationNode.pathref(elementFor());
 		record.attributeName = name;
 		record.newValue = value;
