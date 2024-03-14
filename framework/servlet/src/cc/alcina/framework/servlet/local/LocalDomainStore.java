@@ -320,6 +320,7 @@ public class LocalDomainStore {
 
 		@Override
 		public void deregister(Entity entity) {
+			domain.getCache().remove(entity);
 		}
 
 		@Override
