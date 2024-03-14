@@ -15,7 +15,6 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,7 +27,6 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 @Documented
 @Target({ ElementType.METHOD, ElementType.TYPE, ElementType.FIELD })
 @ClientVisible

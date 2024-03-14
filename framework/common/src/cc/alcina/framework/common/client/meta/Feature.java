@@ -12,9 +12,16 @@ import java.util.Comparator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.relational.RelationalCode;
 
-/*
- * Project planning/structure - expressed in code
+/**
+ * <p>
+ * A project planning/structure - expressed in code
  *
+ * <p>
+ * Most of the linkage is expressed by annotations on subtypes of Feature - one
+ * wrinkle is Feature.Note - which is intended to contain the documentation
+ * contents (inline, or in parallel markup files).
+ * <p>
+ * Those notes should reference the noted feature via a Feature.Ref annotation
  */
 @Registration(Feature.class)
 @RelationalCode

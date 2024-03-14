@@ -7,7 +7,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 
 @Directed(renderer = DirectedRenderer.Delegating.class)
-@Feature.Ref(Feature_TraversalProcessView.AppSuggestorImplementation.class)
+@Feature.Ref(Feature_TraversalProcessView_AppSuggestorImplementation.class)
 public class AppSuggestorTraversal extends AppSuggestor {
 	public AppSuggestorTraversal() {
 		super(createAppAttributes());

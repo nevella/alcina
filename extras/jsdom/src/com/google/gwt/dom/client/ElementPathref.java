@@ -263,7 +263,7 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 
 	@Override
 	public int getScrollTop() {
-		throw new UnsupportedOperationException();
+		return invokeSync("getScrollTop");
 	}
 
 	@Override
@@ -459,12 +459,12 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
-		throw new UnsupportedOperationException();
+		invokeSync("setScrollLeft", List.of(int.class), List.of(scrollLeft));
 	}
 
 	@Override
 	public void setScrollTop(int scrollTop) {
-		throw new UnsupportedOperationException();
+		invokeSync("setScrollTop", List.of(int.class), List.of(scrollTop));
 	}
 
 	@Override

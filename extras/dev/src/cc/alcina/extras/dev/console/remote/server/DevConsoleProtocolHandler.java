@@ -38,11 +38,12 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 	public void handle(String target, Request baseRequest,
 			HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		if (!DevConsole.getInstance().isInitialised()) {
-			response.getWriter().write("Warming up");
-			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-			baseRequest.setHandled(true);
-			return;
+		while (!DevConsole.getInstance().isInitialised()) {
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		try {
 			LooseContext.push();

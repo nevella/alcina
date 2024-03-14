@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
@@ -10,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.dom.Environment;
 
+@Feature.Ref(Feature_TraversalProcessView_AppSuggestorImplementation.Shortcuts.class)
 @AppSuggestorCommand(contexts = TraversalViewContext.class, name = "app")
 public abstract class TraversalCommands<T, H extends NodeEvent.Handler>
 		extends ModelEvent<T, H> implements AppSuggestorEvent {

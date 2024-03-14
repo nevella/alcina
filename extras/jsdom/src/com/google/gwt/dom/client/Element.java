@@ -1285,12 +1285,12 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setScrollLeft(int scrollLeft) {
-		ensureJsoRemote().setScrollLeft(scrollLeft);
+		ensureRemote().setScrollLeft(scrollLeft);
 	}
 
 	@Override
 	public void setScrollTop(int scrollTop) {
-		ensureJsoRemote().setScrollTop(scrollTop);
+		ensureRemote().setScrollTop(scrollTop);
 	}
 
 	@Override
