@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JTypeParameter;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesTypeBounds;
+import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyAccessor.Field;
 
 /**
  * FIXME - reflection - as per policy, should not expose public fields as
@@ -93,12 +94,30 @@ public class PropertyReflection extends ReflectionElement
 		this.providesTypeBounds = providesTypeBounds;
 	}
 
+	List<PropertyAccessor.Field> addedFieldMethods = new ArrayList<>();
+
 	/*
 	 * ignore methods (or field set/get) if they're contravariant to the
 	 * existing getter/setter (i.e. it existing has a more specific
 	 * parameter/return type )
 	 */
 	public void addMethod(PropertyAccessor method) {
+		if (method instanceof PropertyAccessor.Field) {
+			PropertyAccessor.Field fieldAccessor = (PropertyAccessor.Field) method;
+			if (addedFieldMethods.size() > 0) {
+				if (addedFieldMethods.get(0).field == fieldAccessor.field) {
+					/*
+					 * TODO - fix addition of identical accessor
+					 */
+					return;
+				}
+				String message = Ax.format(
+						"Duplicate (overriding/shadowed) field accessors:\n\t%s\n\t%s",
+						addedFieldMethods.get(0), fieldAccessor);
+				throw new IllegalStateException(message);
+			}
+			addedFieldMethods.add(fieldAccessor);
+		}
 		if (method.getter) {
 			if (method.isContravariantTo(getter)) {
 				return;
@@ -310,6 +329,11 @@ public class PropertyReflection extends ReflectionElement
 							boolean firePropertyChangeEvents) {
 				return ((ProvidesPropertyMethod) field).providePropertyMethod(
 						getter, firePropertyChangeEvents);
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("Field (accessor) :: %s", field);
 			}
 		}
 
