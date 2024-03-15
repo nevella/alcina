@@ -41,6 +41,13 @@ public class InferredDomEvents {
 			handler.onActionOutside(this);
 		}
 
+		// TODO - this extra registration is caused by buildtimereflection not
+		// handling the generic parameter correctly
+		// it's patched because there are only a few cases (where there's two
+		// layers of inheritance - DomBinding -> EventRelativeBinding ->
+		// BindingImpl), but it should be
+		// fixed
+		@Registration({ DomBinding.class, ActionOutside.class })
 		public static class BindingImpl
 				extends EventRelativeBinding<ActionOutside> {
 			@Override
@@ -61,6 +68,7 @@ public class InferredDomEvents {
 			handler.onClickOutside(this);
 		}
 
+		@Registration({ DomBinding.class, ClickOutside.class })
 		public static class BindingImpl
 				extends EventRelativeBinding<ClickOutside> {
 			@Override
@@ -506,6 +514,7 @@ public class InferredDomEvents {
 			handler.onMouseDownOutside(this);
 		}
 
+		@Registration({ DomBinding.class, MouseDownOutside.class })
 		public static class BindingImpl
 				extends EventRelativeBinding<MouseDownOutside> {
 			@Override
