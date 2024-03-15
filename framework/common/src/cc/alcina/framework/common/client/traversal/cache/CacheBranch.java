@@ -18,7 +18,7 @@ public class CacheBranch extends Bindable implements TreeSerializable {
 
 	private String regex;
 
-	private CacheAgeOracle oracle;
+	private transient CacheAgeOracle oracle;
 
 	public CacheBranch() {
 	}
