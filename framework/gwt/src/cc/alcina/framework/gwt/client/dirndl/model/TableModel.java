@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.google.gwt.place.shared.Place;
+import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -456,6 +457,11 @@ public class TableModel extends Model implements NodeEditorContext {
 		@Override
 		public String getGroupName() {
 			return null;
+		}
+
+		@Override
+		public void onChildBindingCreated(Binding binding) {
+			// NOOP
 		}
 	}
 }

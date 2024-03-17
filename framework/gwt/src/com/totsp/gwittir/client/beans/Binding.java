@@ -619,13 +619,17 @@ public class Binding {
 			}
 			Object value = propertyChangeEvent.getNewValue();
 			if (instance.validator != null) {
+				if (instance.validator.validateAsync(value,
+						() -> this.propertyChange(propertyChangeEvent))) {
+					return;
+				}
 				try {
 					value = instance.validator.validate(value);
 				} catch (ValidationException ve) {
 					if (instance.feedback != null) {
 						if (this.lastException != null) {
-							instance.feedback
-									.resolve(propertyChangeEvent.getSource());
+							instance.feedback.resolve(
+									propertyChangeEvent.getSource(), true);
 						}
 						instance.feedback.handleException(
 								propertyChangeEvent.getSource(), ve);

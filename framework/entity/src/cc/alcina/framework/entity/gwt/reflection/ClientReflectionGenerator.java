@@ -1093,7 +1093,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		Map<JClassType, ClassReflectorGenerator> classReflectors = new LinkedHashMap<>();
 
-		List<ClassReflectorGenerator> writeReflectors;
+		List<ClassReflectorGenerator> writeReflectors = new ArrayList<>();
 
 		boolean alreadyWritten = false;
 

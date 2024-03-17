@@ -19,6 +19,8 @@
  */
 package com.totsp.gwittir.client.validator;
 
+import java.util.List;
+
 /**
  *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
@@ -26,4 +28,22 @@ package com.totsp.gwittir.client.validator;
  */
 public interface Validator {
 	public Object validate(Object value) throws ValidationException;
+
+	public interface Has {
+		Validator getValidator();
+	}
+
+	/**
+	 * A noop implementation for sync validators, this allows async validation
+	 * to exit the sync validation process and reenter once complete
+	 * 
+	 * @param value
+	 *            the value to validate
+	 * @param postAsyncValidation
+	 *            the runnable to execute once async validation is complete
+	 * @return true if async validation is required
+	 */
+	default boolean validateAsync(Object value, Runnable postAsyncValidation) {
+		return false;
+	}
 }

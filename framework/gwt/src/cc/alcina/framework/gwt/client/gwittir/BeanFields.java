@@ -515,27 +515,28 @@ public class BeanFields {
 				.forEach(validators::add);
 		;
 		if (!validators.isEmpty()) {
-			CompositeValidator cv = new CompositeValidator();
+			Validator fieldValidator = null;
+			CompositeValidator compositeValidator = null;
 			for (cc.alcina.framework.common.client.logic.reflection.Validator validatorAnnotation : validators) {
-				Validator v = Reflections
+				Validator validator = Reflections
 						.newInstance(validatorAnnotation.value());
-				if (v instanceof ParameterisedValidator) {
-					ParameterisedValidator pv = (ParameterisedValidator) v;
+				if (validator instanceof ParameterisedValidator) {
+					ParameterisedValidator pv = (ParameterisedValidator) validator;
 					pv.setParameters(validatorAnnotation.parameters());
 				}
-				if (v instanceof ServerUniquenessValidator
+				if (validator instanceof ServerUniquenessValidator
 						&& obj instanceof HasId) {
-					ServerUniquenessValidator suv = (ServerUniquenessValidator) v;
+					ServerUniquenessValidator suv = (ServerUniquenessValidator) validator;
 					suv.setOkId(((HasId) obj).getId());
 				}
-				if (v instanceof RequiresSourceValidator
+				if (validator instanceof RequiresSourceValidator
 						&& obj instanceof Entity) {
-					RequiresSourceValidator rsv = (RequiresSourceValidator) v;
+					RequiresSourceValidator rsv = (RequiresSourceValidator) validator;
 					rsv.setSourceObject((Entity) obj);
 					rsv.setOnProperty(property);
 				}
-				if (v instanceof RequiresContextBindable) {
-					((RequiresContextBindable) v)
+				if (validator instanceof RequiresContextBindable) {
+					((RequiresContextBindable) validator)
 							.setBindable((SourcesPropertyChangeEvents) obj);
 				}
 				NamedParameter msg = NamedParameter.Support.getParameter(
@@ -548,11 +549,20 @@ public class BeanFields {
 									msg.stringValue());
 				}
 				if (validatorAnnotation.validateBeanOnly()) {
-					v = new BeanValidationOnlyValidator(v);
+					validator = new BeanValidationOnlyValidator(validator);
 				}
-				cv.add(v);
+				if (fieldValidator == null) {
+					fieldValidator = validator;
+				} else {
+					if (compositeValidator == null) {
+						compositeValidator = new CompositeValidator();
+						compositeValidator.add(fieldValidator);
+						fieldValidator = compositeValidator;
+					}
+					compositeValidator.add(validator);
+				}
 			}
-			return cv;
+			return fieldValidator;
 		} else {
 			return validatorMap.get(clazz);
 		}

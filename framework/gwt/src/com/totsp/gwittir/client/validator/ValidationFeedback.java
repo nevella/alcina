@@ -30,6 +30,10 @@ public interface ValidationFeedback {
 
 	public void resolve(Object source);
 
+	default void resolve(Object source, boolean beforeException) {
+		resolve(source);
+	}
+
 	public static interface Provider {
 		public abstract Builder builder();
 

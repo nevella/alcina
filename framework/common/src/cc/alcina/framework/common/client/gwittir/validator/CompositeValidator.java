@@ -21,6 +21,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
@@ -44,16 +45,22 @@ public class CompositeValidator implements Validator {
 		return this;
 	}
 
-	public ArrayList<Validator> getValidators() {
+	public List<Validator> getValidators() {
 		return this.validators;
 	}
 
+	/*
+	 * This just returns the input value (chaining validator transforms is just
+	 * too error-prone)
+	 * 
+	 * Dirndl - no member can be an async/server validator (if some sort of
+	 * composite is required, handle it all server-side)
+	 */
 	public Object validate(Object value) throws ValidationException {
-		Object retValue = value;
 		for (Iterator it = validators.iterator(); it.hasNext();) {
 			Validator validator = (Validator) it.next();
-			retValue = validator.validate(retValue);
+			validator.validate(value);
 		}
-		return retValue;
+		return value;
 	}
 }

@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -10,29 +11,30 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class LeafModel {
-	@Directed(
-		tag = "div",
-		bindings = @Binding(from = "html", type = Type.INNER_HTML))
-	public static class HtmlBlock extends Model {
-		private String html;
+	@Directed(tag = "div")
+	public static class HtmlBlock extends Model implements HasValue<String> {
+		public String value;
 
 		public HtmlBlock() {
 		}
 
 		public HtmlBlock(String html) {
-			setHtml(html);
+			setValue(html);
 		}
 
 		public HtmlBlock(String template, Object... args) {
 			this(Ax.format(template, args));
 		}
 
-		public String getHtml() {
-			return this.html;
+		@Override
+		@Binding(type = Type.INNER_HTML)
+		public String getValue() {
+			return value;
 		}
 
-		public void setHtml(String html) {
-			this.html = html;
+		@Override
+		public void setValue(String value) {
+			set("value", this.value, value, () -> this.value = value);
 		}
 	}
 

@@ -147,9 +147,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;
 		}
-		if (formModel != null) {
-			formModel.getState().formBinding.getChildren().add(binding);
-		}
+		valueModel.onChildBindingCreated(binding);
 		return binding;
 	}
 
@@ -210,7 +208,23 @@ public class BridgingValueRenderer extends DirectedRenderer {
 						contextAnnotation = (A) impl;
 					} else {
 						/*
-						 * The transform result must implement HasValue
+						 * The transform result must implement HasValue, and
+						 * listen on changes (it will not be populated on
+						 * initial render)
+						 * 
+						 * Note that this current requires the ModelTransform to
+						 * be the first generic declaration - so:
+						 * 
+						 * CampaignSignupHtml extends Model.Fields implements
+						 * ModelTransform<Campaign, CampaignSignupHtml>,
+						 * HasValue<Campaign> {
+						 * 
+						 * not
+						 * 
+						 * CampaignSignupHtml extends Model.Fields implements
+						 * 
+						 * HasValue<Campaign>,ModelTransform<Campaign,
+						 * CampaignSignupHtml> {
 						 */
 						Directed.Transform transform = (Transform) contextAnnotation;
 						List<Class> bounds = Reflections.at(transform.value())

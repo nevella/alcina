@@ -1,57 +1,79 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.Objects;
+
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.gwittir.validator.ValidationState;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 
 public class FormEvents {
 	/*
-	 * Emitted during form validation by FormValidation, and handled by
-	 * FormModel
+	 * Note that a result can be intermediate - i.e. with a non-complete state
 	 */
-	public static class BeanValidationChange extends
-			ModelEvent<FormEvents.ValidationResult, BeanValidationChange.Handler> {
-		@Override
-		public void dispatch(BeanValidationChange.Handler handler) {
-			handler.onBeanValidationChange(this);
-		}
-
-		public boolean isComplete() {
-			return getModel().state.isComplete();
-		}
-
-		public boolean isValid() {
-			return getModel().state.isValid();
-		}
-
-		@Override
-		public String toString() {
-			return getModel().toString();
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onBeanValidationChange(BeanValidationChange event);
-		}
-	}
-
-	public static class ValidationResult {
-		public FormEvents.ValidationState state;
+	public static class ValidationResult extends Bindable.Fields {
+		public ValidationState state;
 
 		public String exceptionMessage;
 
-		ModelEvent originatingEvent;
+		transient ModelEvent originatingEvent;
 
-		ValidationResult(ModelEvent originatingEvent,
-				FormEvents.ValidationState state, String exceptionMessage) {
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof ValidationResult) {
+				ValidationResult o = (ValidationResult) obj;
+				return CommonUtils.equals(state, o.state, exceptionMessage,
+						o.exceptionMessage, originatingEvent,
+						o.originatingEvent);
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(state, exceptionMessage, originatingEvent);
+		}
+
+		ValidationResult(ModelEvent originatingEvent, ValidationState state,
+				String exceptionMessage) {
 			this.originatingEvent = originatingEvent;
 			this.state = state;
 			this.exceptionMessage = exceptionMessage;
+		}
+
+		public ValidationResult() {
+		}
+
+		public ValidationResult(ValidationState state) {
+			this(null, state, null);
 		}
 
 		@Override
 		public String toString() {
 			return FormatBuilder.keyValues("state", state, "exceptionMessage",
 					exceptionMessage);
+		}
+
+		@Property.Not
+		public boolean isValidationComplete() {
+			return state.isComplete();
+		}
+
+		public ValidationResult copy() {
+			return new ValidationResult(originatingEvent, state,
+					exceptionMessage);
+		}
+
+		public static ValidationResult invalid(Throwable e) {
+			return invalid(CommonUtils.toSimpleExceptionMessage(e));
+		}
+
+		public static ValidationResult invalid(String message) {
+			return new ValidationResult(null, ValidationState.INVALID, message);
 		}
 	}
 
@@ -90,33 +112,15 @@ public class FormEvents {
 		}
 	}
 
-	public static class QueryValidityResult extends
-			ModelEvent<FormEvents.ValidationResult, QueryValidityResult.Handler> {
+	public static class ValidationResultEvent extends
+			ModelEvent<FormEvents.ValidationResult, ValidationResultEvent.Handler> {
 		@Override
-		public void dispatch(QueryValidityResult.Handler handler) {
-			handler.onQueryValidityResult(this);
+		public void dispatch(ValidationResultEvent.Handler handler) {
+			handler.onValidationResult(this);
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onQueryValidityResult(QueryValidityResult event);
-		}
-	}
-
-	public enum ValidationState {
-		VALIDATING, ASYNC_VALIDATING, VALID, INVALID;
-
-		boolean isComplete() {
-			switch (this) {
-			case VALIDATING:
-			case ASYNC_VALIDATING:
-				return false;
-			default:
-				return true;
-			}
-		}
-
-		boolean isValid() {
-			return this == VALID;
+			void onValidationResult(ValidationResultEvent event);
 		}
 	}
 }

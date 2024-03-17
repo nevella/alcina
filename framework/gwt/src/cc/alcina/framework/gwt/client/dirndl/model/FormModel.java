@@ -27,6 +27,7 @@ import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
+import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -35,6 +36,8 @@ import cc.alcina.framework.common.client.actions.PermissibleEntityAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.gwittir.validator.Validation;
+import cc.alcina.framework.common.client.gwittir.validator.ValidationState;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -56,7 +59,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -71,11 +74,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanEditor.ActionsProviderType;
-import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.BeanValidationChange;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.PropertyValidationChange;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.QueryValidity;
-import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.QueryValidityResult;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResult;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResultEvent;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
@@ -89,14 +91,9 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 public class FormModel extends Model
 		implements NodeEditorContext, DomEvents.Submit.Handler,
 		DomEvents.KeyDown.Handler, ModelEvents.Cancel.Handler,
-		ModelEvents.Submit.Handler, FormEvents.BeanValidationChange.Handler,
-		FormEvents.PropertyValidationChange.Handler,
+		ModelEvents.Submit.Handler, FormEvents.PropertyValidationChange.Handler,
 		FormEvents.QueryValidity.Handler {
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
-
-	public static void installFeedbackProvider() {
-		ValidationFeedback.Support.DEFAULT_PROVIDER = new ValidationFeedbackProvider();
-	}
 
 	protected List<FormElement> elements = new ArrayList<>();
 
@@ -107,6 +104,8 @@ public class FormModel extends Model
 	private boolean unAttachConfirmsTransformClear = false;
 
 	private boolean submitTextBoxesOnEnter = false;
+
+	private Feedback formValidationFeedback;
 
 	private Model formValidationResult;
 
@@ -121,7 +120,12 @@ public class FormModel extends Model
 		}
 	};
 
+	private FormValidation formValidation;
+
 	public FormModel() {
+		formValidationFeedback = new Feedback();
+		formValidationResult = formValidationFeedback.provideModel();
+		formValidation = new FormValidation(this);
 	}
 
 	private void bind(Bind event) {
@@ -191,17 +195,16 @@ public class FormModel extends Model
 		return this.submitTextBoxesOnEnter;
 	}
 
-	@Override
-	public void onBeanValidationChange(BeanValidationChange event) {
-		setFormValidationResult(null);
-		ValidationResult data = event.getModel();
-		switch (data.state) {
+	public void onSubmitResult(ValidationResult result) {
+		// FIXME - validation - instead, reuse a general state/exception api
+		formValidationFeedback.resolve(null);
+		switch (result.state) {
 		case ASYNC_VALIDATING:
 		case VALIDATING:
 			return;
 		case INVALID:
-			setFormValidationResult(
-					new FormValidationModel(data.exceptionMessage));
+			formValidationFeedback.handleException(null,
+					new ValidationException(result.exceptionMessage));
 			return;
 		}// VALID - handle success
 		if (getState().model instanceof Entity) {
@@ -220,8 +223,8 @@ public class FormModel extends Model
 					categoryNamePlace.ensureAction(), provideNode());
 		}
 		// now bubble the originating submit event (post validation)
-		if (data.originatingEvent != null) {
-			data.originatingEvent.bubble();
+		if (result.originatingEvent != null) {
+			result.originatingEvent.bubble();
 		}
 	}
 
@@ -333,13 +336,6 @@ public class FormModel extends Model
 		submit(event);
 	}
 
-	void onValidationStateChange(ModelEvent event,
-			FormValidation formValidation, FormEvents.ValidationState state) {
-		ValidationResult data = new FormEvents.ValidationResult(event, state,
-				formValidation.beanValidationExceptionMessage);
-		emitEvent(FormEvents.BeanValidationChange.class, data);
-	}
-
 	public void setFormValidationResult(Model formValidationResult) {
 		set("formValidationResult", this.formValidationResult,
 				formValidationResult,
@@ -355,11 +351,7 @@ public class FormModel extends Model
 	 * bubbled after (possibly async) validation is complete
 	 */
 	void submit(ModelEvent event) {
-		FormValidation formValidation = new FormValidation();
-		TopicListener<FormEvents.ValidationState> validationStateChangeListener = state -> onValidationStateChange(
-				event, formValidation, state);
-		formValidation.validate(validationStateChangeListener,
-				getState().formBinding, getState().model);
+		formValidation.validate(this::onSubmitResult, event);
 	}
 
 	public static class BindableFormModelTransformer extends
@@ -424,9 +416,13 @@ public class FormModel extends Model
 		}
 	}
 
-	public static class Feedback extends ValidationFeedback.Provider.Builder
+	static class Feedback extends ValidationFeedback.Provider.Builder
 			implements ValidationFeedback, Model.Has {
+		Topic<ValidationResult> topicValidationChange = Topic.create();
+
 		FeedbackModel model;
+
+		ValidationState validationState = ValidationState.NOT_VALIDATED;
 
 		Feedback() {
 			model = new FeedbackModel();
@@ -437,10 +433,16 @@ public class FormModel extends Model
 			return this;
 		}
 
+		String getMessage() {
+			return model.message;
+		}
+
 		@Override
 		public void handleException(Object source,
 				ValidationException exception) {
 			model.setMessage(exception.getMessage());
+			topicValidationChange
+					.publish(ValidationResult.invalid(exception.getMessage()));
 		}
 
 		@Override
@@ -451,6 +453,14 @@ public class FormModel extends Model
 		@Override
 		public void resolve(Object source) {
 			model.setMessage(null);
+			topicValidationChange
+					.publish(new ValidationResult(ValidationState.VALID));
+		}
+
+		@Override
+		public void resolve(Object source, boolean beforeException) {
+			// NOOP (ignore, since the validation itself isn't resolved, and
+			// this only renders the most recent exception)
 		}
 
 		@Directed(
@@ -478,7 +488,7 @@ public class FormModel extends Model
 	@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 	public static class FormElement extends Model.Fields
 			implements FormEvents.PropertyValidationChange.Handler,
-			ModelEvents.FormElementLabelClicked.Emitter {
+			ModelEvents.FormElementLabelClicked.Emitter, Validation.Has {
 		public static transient String PREFIX = "";
 
 		private LabelModel label;
@@ -493,11 +503,17 @@ public class FormModel extends Model
 
 		boolean invalid;
 
+		Binding formBinding;
+
+		Binding binding;
+
 		public FormElement() {
 		}
 
-		public FormElement(Field field, Bindable bindable) {
+		public FormElement(Field field, Binding formBinding,
+				Bindable bindable) {
 			this.field = field;
+			this.formBinding = formBinding;
 			this.bindable = bindable;
 			ContextResolver resolver = (ContextResolver) field.getResolver();
 			this.label = resolver.impl(LabelModel.class).withFormElement(this);
@@ -571,6 +587,63 @@ public class FormModel extends Model
 			public FormValueModel getValue() {
 				return this.value;
 			}
+		}
+
+		@Override
+		public Validation getValidation() {
+			if (field.getValidator() == null) {
+				return null;
+			} else {
+				return new ValidationImpl();
+			}
+		}
+
+		class ValidationImpl extends Validation {
+			private Feedback feedback;
+
+			ValidationImpl() {
+				feedback = (Feedback) field.getFeedback();
+				feedback.topicValidationChange
+						.add(this::onFeedbackValidationChanged);
+			}
+
+			void onFeedbackValidationChanged(
+					ValidationResult validationResult) {
+				setResult(validationResult);
+			}
+
+			public String getMessage() {
+				return feedback.getMessage();
+			};
+
+			@Override
+			public String getBeanValidationExceptionMessage() {
+				return null;
+			}
+
+			@Override
+			public Validator getValidator() {
+				// the validator should not be accessed directly, rather it's
+				// triggered by binding.set()
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public Object getValidationInput() {
+				// the validator should not be accessed directly, rather it's
+				// triggered by binding.set()
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public Binding getBinding() {
+				return binding;
+			}
+		}
+
+		public void onChildBindingCreated(Binding binding) {
+			this.binding = binding;
+			formBinding.getChildren().add(binding);
 		}
 	}
 
@@ -663,7 +736,7 @@ public class FormModel extends Model
 								.accept(state.presentationModel, field))
 						.map(field -> {
 							FormElement e = new FormElement(field,
-									state.presentationModel);
+									state.formBinding, state.presentationModel);
 							if (args != null && args.focusOnAttach()
 									.equals(field.getPropertyName())) {
 								e.setFocusOnAttach(true);
@@ -784,6 +857,11 @@ public class FormModel extends Model
 		public String getGroupName() {
 			return formElement.getElementName();
 		}
+
+		@Override
+		public void onChildBindingCreated(Binding binding) {
+			formElement.onChildBindingCreated(binding);
+		}
 	}
 
 	// FIXME - dirndl 1x2 - can probably remove (since modelevents locate the
@@ -881,7 +959,7 @@ public class FormModel extends Model
 		}
 	}
 
-	public static class ValidationFeedbackProvider
+	static class ValidationFeedbackProvider
 			implements ValidationFeedback.Provider {
 		@Override
 		public Builder builder() {
@@ -895,6 +973,8 @@ public class FormModel extends Model
 		Field getField();
 
 		String getGroupName();
+
+		void onChildBindingCreated(Binding binding);
 	}
 
 	/**
@@ -905,22 +985,17 @@ public class FormModel extends Model
 	}
 
 	/*
-	 * Validates, and emits the result as a QueryValidityResult
+	 * Validates, and emits the result as a ValidationResultEvent
 	 */
 	@Override
 	public void onQueryValidity(QueryValidity event) {
-		FormValidation formValidation = new FormValidation();
-		TopicListener<FormEvents.ValidationState> validationStateChangeListener = state -> {
-			switch (state) {
-			case INVALID:
-			case VALID:
-				ValidationResult data = new FormEvents.ValidationResult(event,
-						state, formValidation.beanValidationExceptionMessage);
-				event.reemitAs(this, QueryValidityResult.class, data);
-				break;
-			}
-		};
-		formValidation.validate(validationStateChangeListener,
-				getState().formBinding, getState().model);
+		formValidation.validate(this::onQueryValidityResult, event);
+	}
+
+	void onQueryValidityResult(ValidationResult result) {
+		if (result.isValidationComplete()) {
+			result.originatingEvent.reemitAs(this, ValidationResultEvent.class,
+					result);
+		}
 	}
 }

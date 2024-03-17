@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,6 +20,7 @@ import cc.alcina.framework.common.client.reflection.Method;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JTypeParameter;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesTypeBounds;
@@ -94,7 +96,9 @@ public class PropertyReflection extends ReflectionElement
 		this.providesTypeBounds = providesTypeBounds;
 	}
 
-	List<PropertyAccessor.Field> addedFieldMethods = new ArrayList<>();
+	List<PropertyAccessor.Field> addedFieldGetterMethods = new ArrayList<>();
+
+	List<PropertyAccessor.Field> addedFieldSetterMethods = new ArrayList<>();
 
 	/*
 	 * ignore methods (or field set/get) if they're contravariant to the
@@ -104,8 +108,11 @@ public class PropertyReflection extends ReflectionElement
 	public void addMethod(PropertyAccessor method) {
 		if (method instanceof PropertyAccessor.Field) {
 			PropertyAccessor.Field fieldAccessor = (PropertyAccessor.Field) method;
+			List<PropertyAccessor.Field> addedFieldMethods = method.getter
+					? addedFieldGetterMethods
+					: addedFieldSetterMethods;
 			if (addedFieldMethods.size() > 0) {
-				if (addedFieldMethods.get(0).field == fieldAccessor.field) {
+				if (addedFieldMethods.contains(fieldAccessor)) {
 					/*
 					 * TODO - fix addition of identical accessor
 					 */
@@ -321,6 +328,21 @@ public class PropertyReflection extends ReflectionElement
 				 */
 				Preconditions.checkState(!(test instanceof Field));
 				return test != null;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof Field) {
+					Field o = (Field) obj;
+					return CommonUtils.equals(field, o.field, getter, o.getter);
+				} else {
+					return false;
+				}
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(field, getter);
 			}
 
 			@Override
