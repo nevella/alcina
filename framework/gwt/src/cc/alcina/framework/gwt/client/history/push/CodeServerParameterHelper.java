@@ -51,6 +51,17 @@ public final class CodeServerParameterHelper {
 				}
 				result += "gwt.codesvr=" + gwtCodesvr;
 			}
+			String gwtLocal = Window.Location.getParameter("gwt.l");
+			if (gwtLocal != null) {
+				if (token.contains("?")) {
+					if (!token.endsWith("?")) {
+						result += "&";
+					}
+				} else {
+					result += "?";
+				}
+				result += "gwt.l";
+			}
 		}
 		return result;
 	}
@@ -70,7 +81,7 @@ public final class CodeServerParameterHelper {
 				if (keyValue.startsWith("?")) {
 					keyValue = keyValue.substring(1);
 				}
-				if (!keyValue.matches("gwt\\.codesvr=.*")) {
+				if (!keyValue.matches("gwt\\.codesvr=.*|gwt\\.l")) {
 					builder.append(separator + keyValue.trim());
 					separator = "&";
 				}

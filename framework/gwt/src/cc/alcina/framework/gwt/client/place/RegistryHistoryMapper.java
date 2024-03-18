@@ -48,7 +48,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	private String cleanGwtCodesvr(String token) {
-		return token.replaceFirst("[?&]gwt.codesvr=127.0.0.1:\\d+$", "");
+		return token.replaceFirst("[?&](gwt.codesvr=127.0.0.1:\\d+|gwt.l)$",
+				"");
 	}
 
 	public <T extends Place> T copyPlace(T place) {
