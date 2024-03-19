@@ -394,6 +394,7 @@ public class FormModel extends Model
 	 * Marker interface for edtiors of a type
 	 *
 	 */
+	@Reflected
 	public interface Editor {
 	}
 
@@ -991,6 +992,7 @@ public class FormModel extends Model
 	 * Marker interface for viewers of a type
 	 *
 	 */
+	@Reflected
 	public interface Viewer {
 	}
 

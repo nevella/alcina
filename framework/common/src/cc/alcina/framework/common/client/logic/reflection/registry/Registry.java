@@ -333,6 +333,13 @@ public class Registry {
 				}
 				RegistryKey key = keys.get(keys.size() - 1);
 				Class superclass = key.clazz().getSuperclass();
+				if (superclass == null && key.clazz() != Object.class) {
+					/*
+					 * use Object.class as the catchall, including of say
+					 * long.class
+					 */
+					superclass = Object.class;
+				}
 				if (superclass == null) {
 					if (ascendedFinalKey) {
 						return false;
