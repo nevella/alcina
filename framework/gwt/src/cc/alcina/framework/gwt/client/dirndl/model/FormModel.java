@@ -603,8 +603,18 @@ public class FormModel extends Model
 
 			ValidationImpl() {
 				feedback = (Feedback) field.getFeedback();
-				feedback.topicValidationChange
-						.add(this::onFeedbackValidationChanged);
+				if (feedback != null) {
+					feedback.topicValidationChange
+							.add(this::onFeedbackValidationChanged);
+				}
+			}
+
+			public void validate() {
+				if (feedback != null) {
+					super.validate();
+				} else {
+					setResult(new ValidationResult(ValidationState.VALID));
+				}
 			}
 
 			void onFeedbackValidationChanged(
@@ -613,7 +623,7 @@ public class FormModel extends Model
 			}
 
 			public String getMessage() {
-				return feedback.getMessage();
+				return feedback == null ? null : feedback.getMessage();
 			};
 
 			@Override

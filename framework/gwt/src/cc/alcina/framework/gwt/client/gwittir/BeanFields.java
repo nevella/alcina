@@ -333,11 +333,18 @@ public class BeanFields {
 		Display display = propertyLocation.getAnnotation(Display.class);
 		Display.AllProperties displayAllProperties = propertyLocation
 				.getAnnotation(Display.AllProperties.class);
+		Association association = propertyLocation
+				.getAnnotation(Association.class);
+		boolean propertyIsCollection = type == Set.class;
+		Class domainType = type;
+		domainType = (association == null || !propertyIsCollection
+				|| association.implementationClass() == void.class) ? domainType
+						: association.implementationClass();
+		boolean isDomainClass = Reflections.isAssignableFrom(Entity.class,
+				domainType);
 		if (display != null) {
 			PropertyPermissions pp = propertyLocation
 					.getAnnotation(PropertyPermissions.class);
-			Association association = propertyLocation
-					.getAnnotation(Association.class);
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, object, true)
 					&& display != null
@@ -349,7 +356,6 @@ public class BeanFields {
 				return null;
 			}
 			boolean focus = display.focus();
-			boolean propertyIsCollection = type == Set.class;
 			boolean fieldEditable = query.editable
 					&& (PermissionsManager.get()
 							.checkEffectivePropertyPermission(op, pp, object,
@@ -357,13 +363,6 @@ public class BeanFields {
 							|| ((display.displayMask()
 									& Display.DISPLAY_EDITABLE) != 0))
 					&& ((display.displayMask() & Display.DISPLAY_RO) == 0);
-			Class domainType = type;
-			domainType = (association == null || !propertyIsCollection
-					|| association.implementationClass() == void.class)
-							? domainType
-							: association.implementationClass();
-			boolean isDomainClass = Reflections.isAssignableFrom(Entity.class,
-					domainType);
 			if (bwp == null && isDomainClass) {
 				if (fieldEditable) {
 					bwp = Registry.impl(DomainListProvider.class)
@@ -434,7 +433,8 @@ public class BeanFields {
 				Field field = new Field(property,
 						TextProvider.get().getLabelText(propertyLocation), bwp,
 						validator, validationFeedback,
-						getDefaultConverter(bwp, type), clazz, query.resolver);
+						getDefaultConverter(bwp, type), clazz, query.resolver,
+						fieldEditable);
 				if (!display.styleName().isEmpty()) {
 					field.setStyleName(display.styleName());
 				}
@@ -453,16 +453,18 @@ public class BeanFields {
 				&& PermissionsManager.get().checkEffectivePropertyPermission(op,
 						null, object, !query.editable)) {
 			ValidationFeedback validationFeedback = null;
+			Validator validator = null;
 			if (query.editable) {
-				query.validationFeedbackProvider.builder()
+				validationFeedback = query.validationFeedbackProvider.builder()
 						.forPropertyName(query.propertyName)
 						.displayDirection(query.multiple
 								? ValidationFeedback.Provider.Direction.BOTTOM
 								: ValidationFeedback.Provider.Direction.RIGHT)
 						.createFeedback();
+				validator = getValidator(domainType, object, query.propertyName,
+						validationFeedback, propertyLocation);
 			}
 			if (bwp != null && !query.editable) {
-				Class domainType = type;
 				boolean isEnum = domainType.isEnum();
 				if (domainType == Date.class) {
 					bwp = AU_DATE_PROVIDER;
@@ -475,7 +477,6 @@ public class BeanFields {
 					bwp = NOWRAP_LABEL_PROVIDER;
 				}
 			} else if (bwp == null) {
-				Class domainType = type;
 				boolean isEnum = domainType.isEnum();
 				if (domainType == Date.class) {
 					bwp = AU_DATE_PROVIDER;
@@ -495,7 +496,7 @@ public class BeanFields {
 					getValidator(type, object, query.propertyName,
 							validationFeedback, null),
 					validationFeedback, getDefaultConverter(bwp, type), clazz,
-					query.resolver);
+					query.resolver, query.editable);
 		}
 		return null;
 	}

@@ -454,10 +454,10 @@ public class CommonUtils {
 			return s;
 		}
 		StringBuilder buf = new StringBuilder();
-		for (int i = 0; i < s.length(); i++) {
-			String c = s.substring(i, i + 1);
-			buf.append(c.toUpperCase().equals(c) ? " " : "");
-			buf.append(i == 0 ? c.toUpperCase() : c.toLowerCase());
+		for (int idx = 0; idx < s.length(); idx++) {
+			String c = s.substring(idx, idx + 1);
+			buf.append(c.toUpperCase().equals(c) && idx != 0 ? " " : "");
+			buf.append(idx == 0 ? c.toUpperCase() : c.toLowerCase());
 		}
 		return buf.toString();
 	}

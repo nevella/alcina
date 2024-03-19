@@ -62,10 +62,13 @@ public class Field {
 
 	private AnnotationLocation.Resolver resolver;
 
+	private boolean editable;
+
 	public Field(Property property, String label,
 			BoundWidgetProvider cellProvider, Validator validator,
 			ValidationFeedback feedback, Converter converter,
-			Class<?> declaringType, AnnotationLocation.Resolver resolver) {
+			Class<?> declaringType, AnnotationLocation.Resolver resolver,
+			boolean editable) {
 		this.property = property;
 		this.label = label;
 		this.cellProvider = cellProvider;
@@ -74,6 +77,15 @@ public class Field {
 		this.converter = converter;
 		this.declaringType = declaringType;
 		this.resolver = resolver;
+		this.editable = editable;
+	}
+
+	public boolean isEditable() {
+		return editable;
+	}
+
+	public void setEditable(boolean editable) {
+		this.editable = editable;
 	}
 
 	public String getAutocompleteName() {
