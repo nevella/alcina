@@ -452,12 +452,15 @@ public class BeanFields {
 		} else if (displayAllProperties != null
 				&& PermissionsManager.get().checkEffectivePropertyPermission(op,
 						null, object, !query.editable)) {
-			ValidationFeedback validationFeedback = query.validationFeedbackProvider
-					.builder().forPropertyName(query.propertyName)
-					.displayDirection(query.multiple
-							? ValidationFeedback.Provider.Direction.BOTTOM
-							: ValidationFeedback.Provider.Direction.RIGHT)
-					.createFeedback();
+			ValidationFeedback validationFeedback = null;
+			if (query.editable) {
+				query.validationFeedbackProvider.builder()
+						.forPropertyName(query.propertyName)
+						.displayDirection(query.multiple
+								? ValidationFeedback.Provider.Direction.BOTTOM
+								: ValidationFeedback.Provider.Direction.RIGHT)
+						.createFeedback();
+			}
 			if (bwp != null && !query.editable) {
 				Class domainType = type;
 				boolean isEnum = domainType.isEnum();

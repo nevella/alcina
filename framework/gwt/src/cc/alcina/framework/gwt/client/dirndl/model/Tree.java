@@ -81,9 +81,19 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		return this.rootHidden;
 	}
 
-	void keyboardSelectModel(ModelEvent<TN, ?> event) {
-		TN model = event.getModel();
-		if (model == keyboardSelectedNodeModel) {
+	void onKeyboardSelectModelEvent(ModelEvent<TN, ?> event) {
+		TN node = event.getModel();
+		if (node == keyboardSelectedNodeModel) {
+			return;
+		}
+		keyboardSelectTreeNode(node);
+		if (commitAfterKeyboardNavigation) {
+			onSelectEvent(event);
+		}
+	}
+
+	void keyboardSelectTreeNode(TN node) {
+		if (node == keyboardSelectedNodeModel) {
 			return;
 		}
 		if (keyboardSelectedNodeModel != null) {
@@ -92,11 +102,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		if (selectedNodeModel != null) {
 			selectedNodeModel.setSelected(false);
 		}
-		keyboardSelectedNodeModel = model;
+		keyboardSelectedNodeModel = node;
 		keyboardSelectedNodeModel.setKeyboardSelected(true);
-		if (commitAfterKeyboardNavigation) {
-			selectNode(event);
-		}
 	}
 
 	protected void loadChildren(TN model) {
@@ -108,7 +115,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	@Override
 	public void onKeyboardSelectNode(KeyboardSelectNode event) {
-		keyboardSelectModel((ModelEvent) event);
+		onKeyboardSelectModelEvent((ModelEvent) event);
 	}
 
 	@Override
@@ -131,7 +138,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	@Override
 	public void onNodeLabelClicked(NodeLabelClicked event) {
 		focusTree();
-		selectNode((ModelEvent) event);
+		onSelectEvent((ModelEvent) event);
 	}
 
 	@Override
@@ -152,18 +159,27 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	@Override
 	public void onSelectNode(SelectNode event) {
-		selectNode((ModelEvent) event);
+		onSelectEvent((ModelEvent) event);
 	}
 
-	void selectNode(ModelEvent<TN, ?> event) {
-		keyboardSelectModel(event);
-		TN model = event.getModel();
+	public void selectNode(TN node) {
+		keyboardSelectTreeNode(node);
+		selectNode0(node);
+	}
+
+	void onSelectEvent(ModelEvent<TN, ?> event) {
+		onKeyboardSelectModelEvent(event);
+		TN node = event.getModel();
+		selectNode0(node);
+		event.reemitAs(this, SelectionChanged.class, node);
+	}
+
+	void selectNode0(TN node) {
 		if (selectedNodeModel != null) {
 			selectedNodeModel.setSelected(false);
 		}
-		selectedNodeModel = model;
+		selectedNodeModel = node;
 		selectedNodeModel.setSelected(true);
-		event.reemitAs(this, SelectionChanged.class, model);
 	}
 
 	public void setCommitAfterKeyboardNavigation(
@@ -483,6 +499,16 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 					.copyOf(children);
 			Collections.sort((List<? extends Comparable>) (List<?>) sorted);
 			setChildren(sorted);
+		}
+
+		public void openTo() {
+			TreeNode cursor = this;
+			while (cursor != null) {
+				if (!cursor.isLeaf()) {
+					cursor.setOpen(true);
+				}
+				cursor = cursor.getParent();
+			}
 		}
 
 		@Directed(

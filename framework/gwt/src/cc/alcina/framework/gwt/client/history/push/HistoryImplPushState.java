@@ -91,6 +91,7 @@ public class HistoryImplPushState extends HistoryImpl {
 				initialToken = hash;
 			}
 		}
+		initialToken = decodeFragment(initialToken);
 		updateHistoryToken(initialToken);
 		// initialize the empty state with the current history token
 		nativeUpdate(getToken());
