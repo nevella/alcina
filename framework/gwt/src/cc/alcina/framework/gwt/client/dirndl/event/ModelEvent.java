@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ClassSerialization;
-import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.HasDisplayName.ClassDisplayName;
 import cc.alcina.framework.gwt.client.Client;
@@ -105,8 +105,8 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		if (classDisplayName.isPresent()) {
 			return classDisplayName.get().displayName();
 		} else {
-			return Ax
-					.friendly(clazz.getSimpleName().replaceFirst("Event$", ""));
+			return CommonUtils
+					.deInfix(clazz.getSimpleName().replaceFirst("Event$", ""));
 		}
 	}
 
