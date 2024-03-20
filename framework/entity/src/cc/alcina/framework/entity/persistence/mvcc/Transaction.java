@@ -243,8 +243,12 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static void ensureBegun() {
-		if (getPerThreadTransaction() == null
-				|| getPerThreadTransaction().isEnded()) {
+		Transaction perThreadTransaction = getPerThreadTransaction();
+		if (perThreadTransaction != null && perThreadTransaction.isEnded()) {
+			removeThreadLocalTransaction();
+			perThreadTransaction = null;
+		}
+		if (perThreadTransaction == null) {
 			begin();
 		}
 	}
