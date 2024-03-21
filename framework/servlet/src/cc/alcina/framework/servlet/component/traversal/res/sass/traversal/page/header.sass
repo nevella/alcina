@@ -1,4 +1,5 @@
 @use '../../theme/theme'
+@use '../multi/icons/ellipsis-vertical.svg.data-url-rule' as ellipsis-vertical
 
 $header-height: 50px
 $font-family: Arial
@@ -58,11 +59,23 @@ $item-gap: 0.5rem
     justify-content: flex-end
     grid-area: right
 
-    > a
-      //FIXME - hardcoded
+    > dropdown
+      display: inline-block
       width: 20px
       height: 20px
-      filter: invert(1)
-      display: inline-block
-      background-repeat: no-repeat
-      background-position: center
+
+      > button
+        display: inline-block
+        width: 20px
+        height: 20px
+        background-repeat: no-repeat
+        background-position: center
+        border: none
+        background-color: transparent
+        filter: invert(1)
+
+        &:hover
+          filter: invert(0.5)
+
+        &.dotburger
+          @include ellipsis-vertical.content

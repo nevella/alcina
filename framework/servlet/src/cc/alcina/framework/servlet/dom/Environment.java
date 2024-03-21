@@ -279,6 +279,13 @@ public class Environment {
 
 	EnvironmentRegistry environmentRegistry;
 
+	/*
+	 * Instruction from the queue that serial execution is controlled by
+	 * invokeSync (so execute the next invokeInClientFrame without synchronizing
+	 * on 'this')
+	 */
+	boolean runInFrameWithoutSync;
+
 	public void clientStarted() {
 		clientStarted = true;
 		scheduler.setClientStarted(true);
@@ -455,7 +462,17 @@ public class Environment {
 				Message.Mutations.ofLocation().locationMutation);
 	}
 
-	synchronized void runInClientFrame(Runnable runnable) {
+	void runInClientFrame(Runnable runnable) {
+		if (runInFrameWithoutSync) {
+			runInClientFrameUnsynced(runnable);
+		} else {
+			synchronized (this) {
+				runInClientFrameUnsynced(runnable);
+			}
+		}
+	}
+
+	void runInClientFrameUnsynced(Runnable runnable) {
 		if (has()) {
 			runnable.run();
 		} else {

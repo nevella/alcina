@@ -124,11 +124,22 @@ class ClientExecutionQueue implements Runnable {
 	 * environment's event queue/thread. If an http thread is blocking while
 	 * waiting for the token to be processed, it will be unblocked by the
 	 * token.latch.countDown() call
+	 * 
+	 * The 'environment.runInFrameWithoutSync' is necessary to prevent deadlocks
+	 * when multiple client events are emitted, at least one of which causes a
+	 * server->client sync call
 	 */
 	private void handleFromClientMessageSync(MessageHandlingToken token) {
-		token.messageHandler.handle(token.request, token.response, environment,
-				token.request.protocolMessage);
-		handleFromClientMessageAcceptor(token.messageHandler);
+		try {
+			if (token.request.protocolMessage.sync) {
+				environment.runInFrameWithoutSync = true;
+			}
+			token.messageHandler.handle(token.request, token.response,
+					environment, token.request.protocolMessage);
+			handleFromClientMessageAcceptor(token.messageHandler);
+		} finally {
+			environment.runInFrameWithoutSync = false;
+		}
 		token.latch.countDown();
 	}
 

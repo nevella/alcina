@@ -36,6 +36,7 @@ class Header extends Model.All {
 	}
 
 	class Right extends Model.All {
+		Dotburger dotburger = new Dotburger();
 	}
 
 	Left left;

@@ -209,4 +209,22 @@ public class LeafModel {
 			return tag;
 		}
 	}
+
+	@Directed
+	public static class Button extends Model.Fields {
+		@Binding(type = Type.PROPERTY)
+		public String title;
+
+		@Binding(type = Type.CLASS_PROPERTY)
+		public String className;
+
+		public Button(String className) {
+			this(className, null);
+		}
+
+		public Button(String className, String title) {
+			this.className = className;
+			this.title = title;
+		}
+	}
 }

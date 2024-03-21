@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.meta.Feature;
  * </pre>
  */
 @Feature.Type.Ref(Feature.Type.Ui_implementation.class)
-@Feature.Parent(Feature_TraversalProcessView.class)
+@Feature.Parent(Feature_TraversalProcessView_Header.class)
 public interface Feature_TraversalProcessView_AppSuggestorImplementation
 		extends Feature {
 	/**
