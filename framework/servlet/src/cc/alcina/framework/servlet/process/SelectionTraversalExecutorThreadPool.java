@@ -33,11 +33,12 @@ public class SelectionTraversalExecutorThreadPool
 	}
 
 	@Override
-	public void awaitCompletion() {
+	public void awaitCompletion(boolean serialExecution) {
 		List<Runnable> runnables = this.runnables;
 		this.runnables = new ArrayList<>();
 		AlcinaParallel.builder().withExecutor(executor).withTransaction()
-				.withSerial(isSerial()).withRunnables(runnables).run();
+				.withSerial(isSerial() || serialExecution)
+				.withRunnables(runnables).run();
 	}
 
 	public boolean isSerial() {

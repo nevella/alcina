@@ -166,6 +166,8 @@ public class SelectionTraversal
 
 	public Topic<Selection> beforeSelectionProcessed = Topic.create();
 
+	public Topic<Layer> topicBeforeLayerTraversal = Topic.create();
+
 	private State state = new State();
 
 	Map<Selection, Integer> selectionIndicies = new ConcurrentHashMap<>();
@@ -183,6 +185,8 @@ public class SelectionTraversal
 	public String id;
 
 	public Object outputContainer;
+
+	public boolean serialExecution = false;
 
 	public SelectionTraversal() {
 		this(null);
@@ -409,6 +413,7 @@ public class SelectionTraversal
 			state.currentLayer = layer;
 			state.onBeforeLayerTraversal();
 			layer.onBeforeTraversal(state);
+			topicBeforeLayerTraversal.publish(layer);
 			ProcessObservers.publish(LayerEntry.class, () -> new LayerEntry());
 			for (;;) {
 				layer.onBeforeIteration();
@@ -419,7 +424,7 @@ public class SelectionTraversal
 							executor.submit(() -> processSelection(selection));
 						}
 					}
-					executor.awaitCompletion();
+					executor.awaitCompletion(serialExecution);
 				} catch (RuntimeException e) {
 					e.printStackTrace();
 					throw e;
@@ -487,7 +492,7 @@ public class SelectionTraversal
 	 *
 	 */
 	public interface Executor {
-		void awaitCompletion();
+		void awaitCompletion(boolean serialExecution);
 
 		void submit(Runnable runnable);
 
@@ -495,7 +500,7 @@ public class SelectionTraversal
 			private List<Runnable> runnables = new ArrayList<>();
 
 			@Override
-			public synchronized void awaitCompletion() {
+			public synchronized void awaitCompletion(boolean serialExecution) {
 				List<Runnable> current = runnables;
 				runnables = new ArrayList<>();
 				for (Runnable runnable : current) {
