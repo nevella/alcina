@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
@@ -21,6 +23,7 @@ import cc.alcina.framework.common.client.domain.search.SearchContext;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.domain.search.SearcherCollectionSource;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -48,9 +51,6 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
  */
 @Registration.Singleton
 public class DomainSearchHandler {
-	public static final transient String CONTEXT_DO_NOT_PROJECT_SEARCH = DomainSearchHandler.class
-			.getName() + ".CONTEXT_DO_NOT_PROJECT_SEARCH";
-
 	public static DomainSearchHandler get() {
 		return Registry.impl(DomainSearchHandler.class);
 	}
@@ -78,7 +78,7 @@ public class DomainSearchHandler {
 			List<? extends Entity> queried, EntitySearchDefinition def) {
 		ModelSearchResults<?> modelSearchResults = new ModelSearchResults();
 		modelSearchResults.setDef(def);
-		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
+		if (withoutProjection(def)) {
 		} else {
 			if (def == null) {
 				// single object
@@ -216,7 +216,7 @@ public class DomainSearchHandler {
 				if (customSearchHandler.isPresent()) {
 					customSearchHandler.get().beforeProjection(searchContext);
 				}
-				if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
+				if (withoutProjection(def)) {
 				} else {
 					searchContext.modelSearchResults = GraphProjections
 							.defaultProjections()
@@ -236,6 +236,14 @@ public class DomainSearchHandler {
 			MetricLogging.get().end(key);
 			LooseContext.pop();
 		}
+	}
+
+	boolean withoutProjection(BindableSearchDefinition def) {
+		if (def != null && def.withoutProjection) {
+			Preconditions.checkState(PermissionsManager.get().isRoot());
+			return true;
+		}
+		return false;
 	}
 
 	public ModelSearchResults toModelSearchResults(

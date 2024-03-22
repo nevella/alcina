@@ -74,6 +74,12 @@ public abstract class SearchDefinition extends Bindable
 	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
 			.getName() + ".CONTEXT_CURRENT_SEARCH_DEFINITION";
 
+	/*
+	 * Instructs the searcher to not project (results are for an identity with
+	 * root/system privileges)
+	 */
+	public transient boolean withoutProjection;
+
 	final transient String orderJoin = ", ";
 
 	private int resultsPerPage;
