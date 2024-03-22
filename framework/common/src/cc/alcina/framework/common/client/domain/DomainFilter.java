@@ -9,6 +9,22 @@ import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.Ax;
 
+/**
+ * <p>
+ * To debug domain search, use the testingPredicate as so
+ * 
+ * <pre>
+ * <code>
+ void debugSearch(BindableSearchDefinition def, Entity entity) {
+		DomainFilter.testingPredicate = new TestingPredicate(e -> e == entity,
+				null);
+		DomainSearchHandler.get().searchModel(def).getQueriedResultObjects()
+				.forEach(Ax::out);
+	}				
+ * 
+ * </code>
+ * </pre>
+ */
 public class DomainFilter {
 	public static TestingPredicate testingPredicate;
 
