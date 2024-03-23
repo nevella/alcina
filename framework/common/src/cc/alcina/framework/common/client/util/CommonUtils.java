@@ -456,6 +456,15 @@ public class CommonUtils {
 		StringBuilder buf = new StringBuilder();
 		for (int idx = 0; idx < s.length(); idx++) {
 			String c = s.substring(idx, idx + 1);
+			if (c.equals("_")) {
+				/*
+				 * break at underscore - anything from underscore on is output
+				 * verbatim
+				 */
+				buf.append(" ");
+				buf.append(s.substring(idx + 1));
+				break;
+			}
 			buf.append(c.toUpperCase().equals(c) && idx != 0 ? " " : "");
 			buf.append(idx == 0 ? c.toUpperCase() : c.toLowerCase());
 		}
