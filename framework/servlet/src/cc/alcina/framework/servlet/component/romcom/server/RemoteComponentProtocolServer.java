@@ -1,7 +1,14 @@
 package cc.alcina.framework.servlet.component.romcom.server;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -62,23 +69,6 @@ public class RemoteComponentProtocolServer {
 			}
 		}
 
-		@Override
-		public void handle(String target, Request baseRequest,
-				HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-			String method = request.getMethod();
-			switch (method) {
-			case "GET":
-				serveFile(baseRequest, request, response);
-				break;
-			case "POST":
-				serveProtocol(baseRequest, request, response);
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-
 		private InvalidClientException
 				buildInvalidClientException(String componentClassName) {
 			Class<? extends RemoteUi> uiType = Reflections
@@ -104,6 +94,49 @@ public class RemoteComponentProtocolServer {
 			return cl.getResource(Ax.format(
 					"cc/alcina/framework/servlet/component/romcom/war%s",
 					warRelativePart));
+		}
+
+		@Override
+		public void handle(String target, Request baseRequest,
+				HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+			String method = request.getMethod();
+			switch (method) {
+			case "GET":
+				serveFile(baseRequest, request, response);
+				break;
+			case "POST":
+				serveProtocol(baseRequest, request, response);
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		public void insertHtml(String html) {
+			List<String> lines = new ArrayList<String>();
+			String line = null;
+			try {
+				URL a = getResourceUrl("/rc.html");
+				File f1 = new File(a.getFile());
+				FileReader fr = new FileReader(f1);
+				BufferedReader br = new BufferedReader(fr);
+				while ((line = br.readLine()) != null) {
+					if (line.contains("<body>"))
+						line = line.replace("<body>", "<body>" + html);
+					lines.add(html);
+				}
+				fr.close();
+				br.close();
+				FileWriter fw = new FileWriter(f1);
+				BufferedWriter out = new BufferedWriter(fw);
+				for (String s : lines)
+					out.write(s);
+				out.flush();
+				out.close();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 		}
 
 		void serveFile(Request baseRequest, HttpServletRequest request,
