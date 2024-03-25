@@ -73,8 +73,8 @@ import cc.alcina.framework.servlet.task.TaskDomainQuery;
 
 @Registration(DevConsoleCommand.class)
 @Directed(tag = "asdeee")
-public abstract class DevConsoleCommand<C extends DevConsole> {
-	public C console;
+public abstract class DevConsoleCommand {
+	public DevConsole console;
 
 	public Logger logger;
 
@@ -252,7 +252,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return sub.run(argv == null ? new String[0] : argv);
 	}
 
-	public void setEnvironment(C console) {
+	public void setEnvironment(DevConsole console) {
 		this.console = console;
 		this.logger = console.logger;
 	}

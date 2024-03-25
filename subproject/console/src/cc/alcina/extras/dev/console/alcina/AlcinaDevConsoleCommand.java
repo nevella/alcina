@@ -2,8 +2,7 @@ package cc.alcina.extras.dev.console.alcina;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand;
 
-public abstract class AlcinaDevConsoleCommand
-		extends DevConsoleCommand<AlcinaDevConsole> {
+public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 	public static class CmdTestLocal extends AlcinaDevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
