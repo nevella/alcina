@@ -55,7 +55,7 @@ public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity
 					place.action = enumValue(EntityAction.class, part3);
 				}
 			} else {
-				detail = part3;
+				detail = part2;
 			}
 		}
 		if (detail != null) {
