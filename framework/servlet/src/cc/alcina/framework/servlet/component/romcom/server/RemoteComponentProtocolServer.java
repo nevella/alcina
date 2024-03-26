@@ -54,28 +54,13 @@ public class RemoteComponentProtocolServer {
 	public static class ServerHandler extends AbstractHandler {
 		RemoteComponent component;
 
+		public String loadIndicatorHtml = "";
+
 		public ServerHandler(RemoteComponent component) {
 			this.component = component;
 			URL url = getResourceUrl("/rc.html");
 			if (url == null) {
 				throw new RuntimeException("Unable to find resource directory");
-			}
-		}
-
-		@Override
-		public void handle(String target, Request baseRequest,
-				HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-			String method = request.getMethod();
-			switch (method) {
-			case "GET":
-				serveFile(baseRequest, request, response);
-				break;
-			case "POST":
-				serveProtocol(baseRequest, request, response);
-				break;
-			default:
-				throw new UnsupportedOperationException();
 			}
 		}
 
@@ -104,6 +89,23 @@ public class RemoteComponentProtocolServer {
 			return cl.getResource(Ax.format(
 					"cc/alcina/framework/servlet/component/romcom/war%s",
 					warRelativePart));
+		}
+
+		@Override
+		public void handle(String target, Request baseRequest,
+				HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+			String method = request.getMethod();
+			switch (method) {
+			case "GET":
+				serveFile(baseRequest, request, response);
+				break;
+			case "POST":
+				serveProtocol(baseRequest, request, response);
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		void serveFile(Request baseRequest, HttpServletRequest request,
@@ -161,6 +163,8 @@ public class RemoteComponentProtocolServer {
 				bootstrapHtml = bootstrapHtml.replace(
 						"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
 						websocketTransportClientPrefix);
+				bootstrapHtml = bootstrapHtml.replace("%%LOAD_INDICATOR_HTML%%",
+						loadIndicatorHtml);
 				Io.write().string(bootstrapHtml)
 						.toStream(response.getOutputStream());
 			} else {
@@ -228,6 +232,10 @@ public class RemoteComponentProtocolServer {
 			} finally {
 				LooseContext.pop();
 			}
+		}
+
+		public void setLoadIndicatorHtml(String loadIndicatorHtml) {
+			this.loadIndicatorHtml = loadIndicatorHtml;
 		}
 	}
 }
