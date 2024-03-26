@@ -25,6 +25,19 @@ public interface SourceFinder {
 		}
 	}
 
+	static File findSourceFile(Class clazz) throws Exception {
+		ensureDefaultFinders();
+		clazz = clazz.getNestHost();
+		for (SourceFinder finder : sourceFinders) {
+			File file = finder.findSourceFile0(clazz);
+			if (file != null) {
+				return file;
+			}
+		}
+		Ax.err("Warn - cannot find source:\n\t%s", clazz.getName());
+		return null;
+	}
+
 	static String findSource(Class clazz) throws Exception {
 		ensureDefaultFinders();
 		clazz = clazz.getNestHost();
@@ -38,11 +51,15 @@ public interface SourceFinder {
 		return null;
 	}
 
-	String findSource0(Class clazz);
+	default String findSource0(Class clazz) {
+		return Io.read().file(findSourceFile0(clazz)).asString();
+	}
+
+	File findSourceFile0(Class clazz);
 
 	static class SourceFinderFs implements SourceFinder {
 		@Override
-		public String findSource0(Class clazz) {
+		public File findSourceFile0(Class clazz) {
 			try {
 				CodeSource codeSource = clazz.getProtectionDomain()
 						.getCodeSource();
@@ -50,31 +67,32 @@ public interface SourceFinder {
 				URL sourceFileLocation = new URL(
 						Ax.format("%s%s.java", classFileLocation.toString(),
 								clazz.getName().replace(".", "/")));
-				if (new File(toPath(sourceFileLocation)).exists()
+				File file = new File(toPath(sourceFileLocation));
+				if (file.exists()
 						&& !sourceFileLocation.toString().contains("/build/")) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
+					return file;
 				}
 				sourceFileLocation = new URL(sourceFileLocation.toString()
 						.replace("/alcina/bin/",
 								"/alcina/framework/entity/src/")
 						.replace("/bin/", "/src/")
+						.replace("/WebRoot/WEB-INF/classes/", "/src/")
 						.replace("/build/classes/", "/src/"));
 				if (sourceFileLocation.toString().contains("/build/")
 						&& !sourceFileLocation.toString().contains("/src/")) {
 					sourceFileLocation = new URL(sourceFileLocation.toString()
 							.replace("/build/", "/src/"));
 				}
-				if (new File(toPath(sourceFileLocation)).exists()) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
+				File file2 = new File(toPath(sourceFileLocation));
+				if (file2.exists()) {
+					return file2;
 				}
 				sourceFileLocation = new URL(sourceFileLocation.toString()
 						.replace("/alcina/framework/entity/src/",
 								"/alcina/framework/common/src/"));
-				if (new File(toPath(sourceFileLocation)).exists()) {
-					return Io.read().url(sourceFileLocation.toString())
-							.asString();
+				File file3 = new File(toPath(sourceFileLocation));
+				if (file3.exists()) {
+					return file3;
 				}
 				Optional<SourceFinderFsHelper> helper = Registry
 						.optional(SourceFinderFsHelper.class);
@@ -82,9 +100,9 @@ public interface SourceFinder {
 					sourceFileLocation = new URL(sourceFileLocation.toString()
 							.replace("/alcina/framework/entity/src/",
 									"/alcina/framework/common/src/"));
-					if (new File(toPath(sourceFileLocation)).exists()) {
-						return Io.read().url(sourceFileLocation.toString())
-								.asString();
+					File file4 = new File(toPath(sourceFileLocation));
+					if (file4.exists()) {
+						return file4;
 					}
 				}
 				return null;

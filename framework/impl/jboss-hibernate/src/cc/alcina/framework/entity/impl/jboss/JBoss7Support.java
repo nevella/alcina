@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.impl.jboss;
 
+import java.io.File;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.List;
@@ -88,6 +89,12 @@ public class JBoss7Support {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		@Override
+		public File findSourceFile0(Class clazz) {
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'findSourceFile0'");
 		}
 	}
 
