@@ -56,7 +56,11 @@ public class PlainTextDocumentSelection extends TextSelection
 
 	public abstract static class TransformLayer<I extends Selection, O extends PlainTextDocumentSelection>
 			extends Layer<I> {
-		private Function<I, O> transform;
+		Function<I, O> transform;
+
+		public Function<I, O> getTransform() {
+			return transform;
+		}
 
 		public TransformLayer(Function<I, O> transform) {
 			this.transform = transform;
