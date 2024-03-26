@@ -163,10 +163,8 @@ public class RemoteComponentProtocolServer {
 				bootstrapHtml = bootstrapHtml.replace(
 						"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
 						websocketTransportClientPrefix);
-				if (!loadIndicatorHtml.isEmpty()) {
-					bootstrapHtml = bootstrapHtml.replace(
-							"%%LOAD_INDICATOR_HTML%%", loadIndicatorHtml);
-				}
+				bootstrapHtml = bootstrapHtml.replace("%%LOAD_INDICATOR_HTML%%",
+						loadIndicatorHtml);
 				Io.write().string(bootstrapHtml)
 						.toStream(response.getOutputStream());
 			} else {
