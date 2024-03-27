@@ -11,6 +11,20 @@ import java.util.function.Supplier;
  * FIXME - dirndl 1x5 - cleanup "LooseContext" vs "LooseContextInstance";
  * generalise stack-based contexts (this, permissions, etc)
  *
+ * <p>
+ * (WIP)The LooseContext system provides scoped configuration data to code
+ * execution, accessible from any level in a thread's stack at or below the time
+ * the value is set via LooseContext.set
+ * <ul>
+ * <li>LooseContext instances form a stack, controlled by LooseContext.push/pop
+ * *
+ * <li>Code *should* only populate the context in the same stack framge as the
+ * push/pop - rarely it's unavoidable to do otherwise
+ * <li>LooseContexts are a useful way to customise job performance - the Job
+ * task will contain a field <code>String contextProperties</code>, which is
+ * deserialized to a StringMap and then used to populate a LooseContextInstance
+ * visible to the JobPerformer stack
+ * </ul>
  * 
  *
  */
