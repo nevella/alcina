@@ -917,7 +917,7 @@ class ClientDomStyleStatic {
 	/**
 	 * Set the opacity css property.
 	 */
-	static void setOpacity(ClientDomStyle domStyle, double value) {
+	static void setOpacity(ClientDomStyle domStyle, String value) {
 		DOMImpl.impl.cssSetOpacity(domStyle.styleObject(), value);
 	}
 

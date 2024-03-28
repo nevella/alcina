@@ -115,7 +115,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	public interface Intermediate {
 	}
 
-	static class View implements Selection.View<MeasureSelection> {
+	static class View extends AbstractSelection.View<MeasureSelection> {
 		@Override
 		public String getDiscriminator(MeasureSelection selection) {
 			FormatBuilder format = new FormatBuilder().separator(" - ");

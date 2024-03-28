@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
+import cc.alcina.framework.common.client.reflection.Property;
 
 /**
  * Provides programmatic access to properties of the style object.
@@ -778,7 +779,7 @@ public class Style implements ClientDomStyle {
 	}
 
 	@Override
-	public void setOpacity(double value) {
+	public void setOpacity(String value) {
 		local().setOpacity(value);
 		sync(() -> remote().setOpacity(value));
 	}
@@ -978,6 +979,7 @@ public class Style implements ClientDomStyle {
 		sync(() -> remote().setWidth(value, unit));
 	}
 
+	@Property.Not
 	@Override
 	public void setZIndex(int value) {
 		local().setZIndex(value);

@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -208,9 +207,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 				ancestorSelections().collect(Collectors.toList()));
 	}
 
-	default View view() {
-		return Registry.impl(Selection.View.class, getClass());
-	}
+	View view();
 
 	public interface Has {
 		Selection provideSelection();

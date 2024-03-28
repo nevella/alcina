@@ -133,7 +133,7 @@ public class DomDispatch implements DomDispatchContract {
 	}
 
 	@Override
-	public void cssSetOpacity(Style style, double value) {
+	public void cssSetOpacity(Style style, String value) {
 		local().cssSetOpacity(style, value);
 		remote().cssSetOpacity(style, value);
 	}

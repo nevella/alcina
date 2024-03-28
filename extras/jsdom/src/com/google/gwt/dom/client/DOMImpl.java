@@ -109,8 +109,8 @@ abstract class DOMImpl {
 		return "cssFloat";
 	}
 
-	protected void cssSetOpacity(Style style, double value) {
-		style.setProperty("opacity", String.valueOf(value));
+	protected void cssSetOpacity(Style style, String value) {
+		style.setProperty("opacity", value);
 	}
 
 	protected abstract void dispatchEvent(ElementJso target,

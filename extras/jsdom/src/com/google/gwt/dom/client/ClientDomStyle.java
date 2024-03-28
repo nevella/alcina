@@ -642,7 +642,7 @@ public interface ClientDomStyle {
 	/**
 	 * Set the opacity css property.
 	 */
-	void setOpacity(double value);
+	void setOpacity(String value);
 
 	/**
 	 * Set the outline-color css property.

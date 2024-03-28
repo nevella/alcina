@@ -6,8 +6,10 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasFilterableString;
 
 public abstract class AbstractSelection<T> implements Selection<T> {
 	private T value;
@@ -102,6 +104,26 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	public interface AllowsNullValue {
 	}
 
-	static class View implements Selection.View<AbstractSelection> {
+	Selection.View view;
+
+	@Override
+	public Selection.View view() {
+		if (view == null) {
+			view = Registry.impl(Selection.View.class, getClass());
+		}
+		return view;
+	}
+
+	protected static class View<S extends AbstractSelection>
+			implements Selection.View<S> {
+		String filterableString;
+
+		public String getText(S selection) {
+			if (filterableString == null) {
+				filterableString = HasFilterableString
+						.filterableString(selection.get());
+			}
+			return filterableString;
+		}
 	}
 }

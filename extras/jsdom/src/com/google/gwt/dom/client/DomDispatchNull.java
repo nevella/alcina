@@ -11,7 +11,7 @@ public class DomDispatchNull implements DomDispatchContract {
 	}
 
 	@Override
-	public void cssSetOpacity(Style style, double value) {
+	public void cssSetOpacity(Style style, String value) {
 	}
 
 	@Override

@@ -289,7 +289,7 @@ function getCodeServer() {
 	var server = "127.0.0.1:9997";
 	var query = $wnd.location.search;
 	{
-		var idx = query.indexOf("gwt97");
+		var idx = query.indexOf("gwt.l");
 		if (idx >= 0) {
 			return server;
 		}

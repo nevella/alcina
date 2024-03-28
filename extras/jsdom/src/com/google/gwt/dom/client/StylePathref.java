@@ -658,7 +658,7 @@ public class StylePathref implements ClientDomStyle {
 	}
 
 	@Override
-	public void setOpacity(double value) {
+	public void setOpacity(String value) {
 		throw new UnsupportedOperationException();
 	}
 

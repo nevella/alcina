@@ -12,8 +12,8 @@ public class DomDispatchLocal implements DomDispatchContract {
 	}
 
 	@Override
-	public void cssSetOpacity(Style style, double value) {
-		style.local.setProperty("opacity", String.valueOf(value));
+	public void cssSetOpacity(Style style, String value) {
+		style.local.setProperty("opacity", value);
 	}
 
 	@Override

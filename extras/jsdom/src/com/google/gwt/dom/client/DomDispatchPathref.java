@@ -12,7 +12,7 @@ public class DomDispatchPathref implements DomDispatchContract {
 	}
 
 	@Override
-	public void cssSetOpacity(Style style, double value) {
+	public void cssSetOpacity(Style style, String value) {
 		// TODO Auto-generated method stub
 	}
 

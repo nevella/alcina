@@ -12,7 +12,7 @@ public interface DomDispatchContract {
 		return "float";
 	}
 
-	void cssSetOpacity(Style style, double value);
+	void cssSetOpacity(Style style, String value);
 
 	void eventPreventDefault(NativeEvent evt);
 

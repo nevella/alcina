@@ -673,7 +673,7 @@ public class StyleLocal implements ClientDomStyle {
 	}
 
 	@Override
-	public void setOpacity(double value) {
+	public void setOpacity(String value) {
 		ClientDomStyleStatic.setOpacity(this, value);
 	}
 

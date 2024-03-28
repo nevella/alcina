@@ -578,7 +578,7 @@ public class StyleNull implements ClientDomStyle {
 	}
 
 	@Override
-	public void setOpacity(double value) {
+	public void setOpacity(String value) {
 	}
 
 	@Override

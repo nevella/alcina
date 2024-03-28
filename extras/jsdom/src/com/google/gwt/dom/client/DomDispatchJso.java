@@ -26,7 +26,7 @@ public class DomDispatchJso implements DomDispatchContract {
 	}
 
 	@Override
-	public void cssSetOpacity(Style style, double value) {
+	public void cssSetOpacity(Style style, String value) {
 		if (style.linkedToRemote()) {
 			domImpl.cssSetOpacity(style, value);
 		}

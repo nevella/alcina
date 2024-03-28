@@ -652,7 +652,7 @@ public final class StyleRemote extends JavaScriptObject
 	}
 
 	@Override
-	public final void setOpacity(double value) {
+	public final void setOpacity(String value) {
 		ClientDomStyleStatic.setOpacity(this, value);
 	}
 
