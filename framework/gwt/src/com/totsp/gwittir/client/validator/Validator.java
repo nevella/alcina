@@ -19,7 +19,7 @@
  */
 package com.totsp.gwittir.client.validator;
 
-import java.util.List;
+import cc.alcina.framework.common.client.reflection.Property;
 
 /**
  *
@@ -45,5 +45,14 @@ public interface Validator {
 	 */
 	default boolean validateAsync(Object value, Runnable postAsyncValidation) {
 		return false;
+	}
+
+	/**
+	 * Makes the defining property available to the validator for configuration
+	 * from property annotations
+	 * 
+	 * @param property
+	 */
+	default void onProperty(Property property) {
 	}
 }

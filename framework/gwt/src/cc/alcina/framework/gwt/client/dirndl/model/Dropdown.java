@@ -31,7 +31,6 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  *
  *
  *
- * @param <D>
  */
 @Directed(bindings = @Binding(from = "open", type = Type.CSS_CLASS))
 public class Dropdown extends Model

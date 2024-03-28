@@ -469,7 +469,7 @@ public class FormModel extends Model
 			emits = FormEvents.PropertyValidationChange.class)
 		public class FeedbackModel extends Model.Fields {
 			@Directed
-			String message;
+			public String message;
 
 			public FeedbackModel() {
 				bindings().addListener(new RemovablePropertyChangeListener(this,

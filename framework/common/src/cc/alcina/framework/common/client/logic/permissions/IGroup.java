@@ -66,6 +66,14 @@ public interface IGroup
 		return forAnyMemberGroup(group -> group.containsUser(user));
 	}
 
+	/**
+	 * Does the group, or a member group, contain the current user
+	 */
+	default <IU extends IUser> boolean containsCurrentUserTransitive() {
+		return forAnyMemberGroup(group -> group
+				.containsUser(PermissionsManager.get().getUser()));
+	}
+
 	@Override
 	default String displayName() {
 		return Ax.blankTo(getName(), "(null)");

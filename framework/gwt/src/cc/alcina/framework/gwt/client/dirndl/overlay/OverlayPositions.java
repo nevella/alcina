@@ -42,6 +42,11 @@ public class OverlayPositions {
 		}
 	}
 
+	public void closeAll() {
+		openOverlays.keySet().stream().toList()
+				.forEach(m -> this.hide((Overlay) m));
+	}
+
 	void show(Overlay model, ContainerOptions containerOptions) {
 		Preconditions.checkState(!openOverlays.containsKey(model));
 		DirectedLayout layout = new DirectedLayout();

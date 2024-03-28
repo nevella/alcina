@@ -524,6 +524,7 @@ public class BeanFields {
 			for (cc.alcina.framework.common.client.logic.reflection.Validator validatorAnnotation : validators) {
 				Validator validator = Reflections
 						.newInstance(validatorAnnotation.value());
+				validator.onProperty(property);
 				if (validator instanceof ParameterisedValidator) {
 					ParameterisedValidator pv = (ParameterisedValidator) validator;
 					pv.setParameters(validatorAnnotation.parameters());
@@ -537,7 +538,6 @@ public class BeanFields {
 						&& obj instanceof Entity) {
 					RequiresSourceValidator rsv = (RequiresSourceValidator) validator;
 					rsv.setSourceObject((Entity) obj);
-					rsv.setOnProperty(property);
 				}
 				if (validator instanceof RequiresContextBindable) {
 					((RequiresContextBindable) validator)
