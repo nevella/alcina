@@ -78,6 +78,8 @@ public class RemoteComponentProtocolServer {
 	public static class ServerHandler extends AbstractHandler {
 		RemoteComponent component;
 
+		public String loadIndicatorHtml = "";
+
 		public ServerHandler(RemoteComponent component) {
 			this.component = component;
 			URL url = getResourceUrl("/rc.html");
@@ -186,6 +188,8 @@ public class RemoteComponentProtocolServer {
 				bootstrapHtml = bootstrapHtml.replace(
 						"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
 						websocketTransportClientPrefix);
+				bootstrapHtml = bootstrapHtml.replace("%%LOAD_INDICATOR_HTML%%",
+						loadIndicatorHtml);
 				Io.write().string(bootstrapHtml)
 						.toStream(response.getOutputStream());
 			} else {
@@ -274,6 +278,10 @@ public class RemoteComponentProtocolServer {
 			} finally {
 				LooseContext.pop();
 			}
+		}
+
+		public void setLoadIndicatorHtml(String loadIndicatorHtml) {
+			this.loadIndicatorHtml = loadIndicatorHtml;
 		}
 	}
 }

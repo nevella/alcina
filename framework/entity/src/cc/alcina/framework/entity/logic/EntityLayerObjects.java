@@ -38,9 +38,15 @@ public class EntityLayerObjects {
 		if (optional.isPresent()) {
 			return optional.get();
 		}
-		EntityLayerObjects objects = new EntityLayerObjects();
-		Registry.register().singleton(EntityLayerObjects.class, objects);
-		return objects;
+		synchronized (EntityLayerObjects.class) {
+			optional = Registry.optional(EntityLayerObjects.class);
+			if (optional.isPresent()) {
+				return optional.get();
+			}
+			EntityLayerObjects objects = new EntityLayerObjects();
+			Registry.register().singleton(EntityLayerObjects.class, objects);
+			return objects;
+		}
 	}
 
 	private Logger metricLogger;
