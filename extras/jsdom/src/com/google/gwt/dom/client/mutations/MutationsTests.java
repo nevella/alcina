@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
-import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagTextModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagText;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
@@ -54,7 +54,7 @@ public class MutationsTests {
 		bindings = { @Binding(type = Type.PROPERTY, from = "style"),
 				@Binding(type = Type.STYLE_ATTRIBUTE, from = "background") })
 	public static class TestContainer extends Model {
-		private TagTextModel string = new TagTextModel("div", "some text");
+		private TagText string = new TagText("div", "some text");
 
 		private String style = " padding: 1em; margin: 2em; "
 				+ "font-size:3em;display: flex;flex-direction: column;align-items: center";
@@ -70,7 +70,7 @@ public class MutationsTests {
 		}
 
 		@Directed
-		public TagTextModel getString() {
+		public TagText getString() {
 			return this.string;
 		}
 
@@ -78,7 +78,7 @@ public class MutationsTests {
 			return this.style;
 		}
 
-		public void setString(TagTextModel string) {
+		public void setString(TagText string) {
 			var old_string = this.string;
 			this.string = string;
 			propertyChangeSupport().firePropertyChange("string", old_string,

@@ -8,10 +8,12 @@
   > layers
     display: grid
     gap: 1rem
-    grid-template-columns: 18rem 1fr 1fr 1fr 1fr 1fr
+    grid-template-columns: 18rem repeat(250, 200px)
     overflow: scroll
-    max-height: calc(100% - 2.2rem)
+    max-height: calc(100% - 3.2rem)
     margin-top: 1rem
+    box-sizing: border-box
+    margin-bottom: 1rem
 
     > layer-selections
       display: contents
@@ -24,6 +26,7 @@
         text-overflow: ellipsis
         white-space: pre
         min-height: 3rem
+        cursor: pointer
         
       &[empty='true'] .bordered-area
         min-height: 1rem
@@ -52,4 +55,7 @@
 
           &[selectionType='DESCENT']
             background: #ddf
+
+          &[secondary-descendant-relation='true']
+            background: #eaeafa
 

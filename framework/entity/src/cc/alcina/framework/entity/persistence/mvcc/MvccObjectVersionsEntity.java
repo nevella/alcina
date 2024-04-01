@@ -85,12 +85,12 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected void onResolveNull(boolean write) {
+	protected void onResolveNull(boolean resolvingWriteableVersion) {
 		if (notifyResolveNullCount > 0) {
 			logger.warn("onResolveNull - {}/{}", domainIdentity.getId(),
 					domainIdentity.getClass().getSimpleName());
 		}
-		super.onResolveNull(write);
+		super.onResolveNull(resolvingWriteableVersion);
 	}
 
 	@Override

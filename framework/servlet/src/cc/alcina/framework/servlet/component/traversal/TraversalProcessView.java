@@ -89,6 +89,8 @@ public class TraversalProcessView {
 
 		Environment environment;
 
+		public TraversalProperties properties = new TraversalProperties();
+
 		@Override
 		public Client createClient() {
 			return new ClientImpl();

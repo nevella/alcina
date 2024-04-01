@@ -7,6 +7,7 @@ import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer;
 
@@ -18,7 +19,9 @@ public class RemoteComponentInit implements NativePreviewHandler {
 	public void init() {
 		Event.addNativePreviewHandler(this);
 		History.addValueChangeHandler(hash -> {
-			ClientRpc.send(Message.Mutations.ofLocation());
+			if (!RemoteObjectModelComponentState.get().firingLocationMutation) {
+				ClientRpc.send(Message.Mutations.ofLocation());
+			}
 		});
 		ClientRpc.session = ReflectiveSerializer
 				.deserialize(ClientUtils.wndString(

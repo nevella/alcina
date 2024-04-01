@@ -24,7 +24,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
 /**
  *
  * <p>
- * Build a binding pipeline with a lifecycle controlled by the registering model
+ * Build a binding pipeline with a lifecycle controlled by the registering
+ * model. The logic and api are similar to the {@link java.util.stream.Stream}
+ * api.
  *
  * <p>
  * FIXME - dirndl - this could be refactored to an "event source" and an "event
@@ -58,9 +60,11 @@ public class ModelBinding<T> {
 
 	Ref<Consumer<Runnable>> dispatchRef = null;
 
-	Predicate<T> predicate;
+	Predicate<T> postMapPredicate;
 
 	boolean transformsNull;
+
+	Predicate<T> preSupplierPredicate;
 
 	Predicate<T> preMapPredicate;
 
@@ -88,6 +92,10 @@ public class ModelBinding<T> {
 	}
 
 	void acceptStreamElement0(Object obj) {
+		if (preSupplierPredicate != null
+				&& !((Predicate) preSupplierPredicate).test(obj)) {
+			return;
+		}
 		Object o1 = supplier == null ? obj : supplier.get();
 		if (preMapPredicate != null
 				&& !((Predicate) preMapPredicate).test(o1)) {
@@ -95,7 +103,8 @@ public class ModelBinding<T> {
 		}
 		Object o2 = map == null || (o1 == null && !transformsNull) ? o1
 				: ((Function) map).apply(o1);
-		if (predicate != null && !((Predicate) predicate).test(o2)) {
+		if (postMapPredicate != null
+				&& !((Predicate) postMapPredicate).test(o2)) {
 			return;
 		}
 		Preconditions.checkState(consumer != null,
@@ -132,10 +141,29 @@ public class ModelBinding<T> {
 		return dispatchRef.get();
 	}
 
+	/**
+	 * Depending on whether map() or value()/supplier() have already been
+	 * called, this filter will be inserted into a different location in the
+	 * binding pipeline (i.e. after whatever the most recent stream operation
+	 * is)
+	 * 
+	 * @param predicate
+	 * @return
+	 */
 	public ModelBinding<T> filter(Predicate<T> predicate) {
-		Preconditions.checkState(this.predicate == null,
+		Predicate existingFilter = null;
+		if (map != null) {
+			existingFilter = this.postMapPredicate;
+			this.postMapPredicate = predicate;
+		} else if (supplier != null) {
+			existingFilter = this.preMapPredicate;
+			this.preMapPredicate = predicate;
+		} else {
+			existingFilter = preSupplierPredicate;
+			this.preSupplierPredicate = predicate;
+		}
+		Preconditions.checkState(existingFilter == null,
 				"Cannot set multiple predicates");
-		this.predicate = predicate;
 		return this;
 	}
 
@@ -178,11 +206,6 @@ public class ModelBinding<T> {
 	public <P> ModelBinding<P> on(String fromPropertyName) {
 		this.on = fromPropertyName;
 		return (ModelBinding<P>) this;
-	}
-
-	public ModelBinding<T> preMapFilter(Predicate<T> preMapPredicate) {
-		this.preMapPredicate = preMapPredicate;
-		return this;
 	}
 
 	void prepare() {

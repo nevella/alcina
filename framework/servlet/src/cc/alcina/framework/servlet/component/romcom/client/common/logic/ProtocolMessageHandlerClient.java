@@ -184,7 +184,14 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				}
 			});
 			if (message.locationMutation != null) {
-				History.newItem(message.locationMutation.hash);
+				try {
+					RemoteObjectModelComponentState
+							.get().firingLocationMutation = true;
+					History.newItem(message.locationMutation.hash);
+				} finally {
+					RemoteObjectModelComponentState
+							.get().firingLocationMutation = false;
+				}
 			}
 		}
 

@@ -2,8 +2,11 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,8 +24,8 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
  * An example of "side composition" - selections form a tree, but the tree
- * implementation is accessed via HasNode.processNode (composition) rather than
- * inheritance
+ * implementation is accessed via HasProcessNode.processNode (composition)
+ * rather than inheritance
  *
  * 
  *
@@ -115,26 +118,74 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	}
 
 	default boolean hasDescendantRelation(Selection selection) {
-		return selection.isSelfOrAncestor(this)
-				|| this.isSelfOrAncestor(selection);
+		return hasDescendantRelation(selection, false);
+	};
+
+	default boolean hasDescendantRelation(Selection selection,
+			boolean descentSelectionIncludesSecondaryRelations) {
+		return selection.isSelfOrAncestor(this,
+				descentSelectionIncludesSecondaryRelations)
+				|| this.isSelfOrAncestor(selection,
+						descentSelectionIncludesSecondaryRelations);
 	};
 
 	@Property.Not
 	default boolean isContainedBy(Selection selection) {
-		return selection.isSelfOrAncestor(this);
+		return selection.isSelfOrAncestor(this, false);
 	};
 
-	@Property.Not
-	default boolean isSelfOrAncestor(Selection selection) {
-		Selection cursor = selection;
-		while (cursor != null) {
-			if (Objects.equals(cursor.processNode().treePath(),
-					processNode().treePath())) {
+	public static class OnetimeStack<T> extends LinkedList<T> {
+		Set<T> tested = new LinkedHashSet<>();
+
+		public boolean allowNulls = false;
+
+		@Override
+		public boolean add(T e) {
+			if (e == null && !allowNulls) {
+				return false;
+			}
+			if (!tested.add(e)) {
 				return true;
 			}
-			cursor = cursor.parentSelection();
+			return super.add(e);
 		}
-		return false;
+	}
+
+	boolean hasRelations();
+
+	@Property.Not
+	default boolean isSelfOrAncestor(Selection selection,
+			boolean descentSelectionIncludesSecondaryRelations) {
+		if (descentSelectionIncludesSecondaryRelations) {
+			OnetimeStack<Selection> pending = new OnetimeStack<>();
+			pending.add(selection);
+			while (pending.size() > 0) {
+				Selection test = pending.pop();
+				if (Objects.equals(test.processNode().treePath(),
+						processNode().treePath())) {
+					return true;
+				}
+				pending.add(test.parentSelection());
+				if (test.hasRelations()) {
+				}
+				if (test.hasRelations()) {
+					test.getRelations()
+							.stream(Relations.Type.SecondaryParent.class)
+							.forEach(pending::add);
+				}
+			}
+			return false;
+		} else {
+			Selection cursor = selection;
+			while (cursor != null) {
+				if (Objects.equals(cursor.processNode().treePath(),
+						processNode().treePath())) {
+					return true;
+				}
+				cursor = cursor.parentSelection();
+			}
+			return false;
+		}
 	};
 
 	default boolean matchesText(String textFilter) {
@@ -173,6 +224,59 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			return null;
 		}
 	}
+
+	/*
+	 * 
+	 */
+	public static class Relations {
+		public interface Type {
+			public interface SecondaryParent extends Type {
+			}
+
+			public interface SecondaryChild extends Type {
+			}
+		}
+
+		static class Entry {
+			Entry(Class<? extends Type> type, Selection selection) {
+				this.type = type;
+				this.selection = selection;
+			}
+
+			Class<? extends Type> type;
+
+			Selection selection;
+		}
+
+		List<Entry> entries = Collections.synchronizedList(new ArrayList<>());
+
+		Selection<?> selection;
+
+		Relations(Selection<?> selection) {
+			this.selection = selection;
+		}
+
+		Stream<Selection> stream(Class<? extends Relations.Type> clazz) {
+			return entries.stream().filter(e -> e.type == clazz)
+					.map(e -> e.selection);
+		}
+
+		public void addSecondaryParent(Selection secondaryParent) {
+			if (secondaryParent == null) {
+				return;
+			}
+			addRelation(Type.SecondaryParent.class, secondaryParent);
+			secondaryParent.getRelations()
+					.addRelation(Type.SecondaryChild.class, this.selection);
+		}
+
+		public void addRelation(Class<? extends Type> type,
+				Selection toSelection) {
+			entries.add(new Entry(type, toSelection));
+		}
+	}
+
+	Relations getRelations();
 
 	default boolean referencesAncestorResources() {
 		return true;

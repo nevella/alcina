@@ -45,7 +45,8 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * lazy-load?), but read-only _access_ (to prior visible tx version) is
  * definitely not.
  *
- * 
+ * Debugging note - attach breakpoints to debugMe() and call it - otherwise the
+ * caller will be de-optimised and you'll never hit sync issues
  *
  * @param <T>
  */
@@ -150,6 +151,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	/*
 	 * synchronization - either a newly created object t for this domainstore
 	 * (so no sync needed), or accessed via a block synced on 't'
+	 * 
+	 * NOTE. This constructor should be regarded as effectively final. Because
+	 * ordering is so sensitive (in particular, all setup should be performed
+	 * before attach()), subclasses should override the called-to methods rather
+	 * than the constructor (i.e. they should just call super())
 	 */
 	MvccObjectVersions(T t, Transaction initialTransaction,
 			boolean initialObjectIsWriteable,
@@ -239,19 +245,23 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return false;
 	}
 
-	protected synchronized void onResolveNull(boolean write) {
+	protected synchronized void
+			onResolveNull(boolean resolvingWriteableVersion) {
 		if (!mayBeReachableFromPreCreationTransactions()) {
 			if (notifyResolveNullCount-- >= 0) {
+				T debugResolved = resolveWithSync(Transaction.current(),
+						resolvingWriteableVersion);
 				logger.warn(
 						"onResolveNull: \nVersions: {}\nCurrent tx-id: {} - highest visible id: {}\n"
 								+ "Visible all tx?: {}\nFirst committed tx-id: {}\nInitial  txid: {}"
-								+ "\nInitial writeable tx: {}\nCached resolution: {}",
+								+ "\nInitial writeable tx: {}\nCached resolution: {}\nResolving writeable version: {}",
 						versions().keySet(), Transaction.current(),
 						Transaction
 								.current().highestVisibleCommittedTransactionId,
 						visibleAllTransactions != null,
 						firstCommittedTransactionId, initialTransactionId,
-						initialWriteableTransaction, cachedResolution);
+						initialWriteableTransaction, cachedResolution,
+						resolvingWriteableVersion);
 				logger.warn("onResolveNull", new Exception());
 			}
 		}
@@ -304,7 +314,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 		// try non-cached and update cached
 		resolved = resolveWithSync(transaction, writeableVersion);
-		if (resolved == null) {
+		if (resolved == null && !mayBeReachableFromPreCreationTransactions()) {
 			onResolveNull(writeableVersion);
 		}
 		updateCached(transaction, resolved, writeableVersion);
@@ -373,6 +383,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					&& !transaction.isVisible(firstCommittedTransactionId)) {
 				return null;
 			} else {
+				if (visibleAllTransactions == null) {
+					debugMe();
+				}
 				return visibleAllTransactions;
 			}
 		}
@@ -429,6 +442,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 */
 			return mostRecentObject;
 		}
+	}
+
+	void debugMe() {
+		System.out.println("debug");
 	}
 
 	protected void setVisibleAllTransactions(T value) {
@@ -712,17 +729,21 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		MvccObjectVersionsMvccObject(T t, Transaction initialTransaction,
 				boolean initialObjectIsWriteable) {
 			super(t, initialTransaction, initialObjectIsWriteable, null);
-			if (!initialObjectIsWriteable) {
-				// creating a versions object from a committed domainIdentity
-				// object.
-				//
-				// DOC : this is called either from create()
-				// (Transaction.create(), TransactionalTrieEntry constructor;
-				// both with initialObjectIsWriteable) or resolve( with
-				// false)(from a visible object with no mvccobjectversions i.e.
-				// visible to all txs)
-				setVisibleAllTransactions(domainIdentity);
-			}
+			/*
+			 * No! See note in super (this caused a a hard-to-track resolution
+			 * issue)
+			 */
+			// if (!initialObjectIsWriteable) {
+			// // creating a versions object from a committed domainIdentity
+			// // object.
+			// //
+			// // DOC : this is called either from create()
+			// // (Transaction.create(), TransactionalTrieEntry constructor;
+			// // both with initialObjectIsWriteable) or resolve( with
+			// // false)(from a visible object with no mvccobjectversions i.e.
+			// // visible to all txs)
+			// setVisibleAllTransactions(domainIdentity);
+			// }
 		}
 
 		@Override
@@ -737,6 +758,20 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				((MvccObject) version.object).__setMvccVersions__(this);
 			}
 			super.putVersion(version);
+			boolean initialObjectIsWriteable = this.initialWriteableTransaction != null;
+			if (!initialObjectIsWriteable) {
+				// creating a versions object from a committed domainIdentity
+				// object.
+				//
+				// DOC : this is called either from create()
+				// (Transaction.create(), TransactionalTrieEntry constructor;
+				// both with initialObjectIsWriteable) or resolve( with
+				// false)(from a visible object with no mvccobjectversions i.e.
+				// visible to all txs)
+				//
+				// Note - moved from constructor
+				setVisibleAllTransactions(domainIdentity);
+			}
 		}
 
 		@Override

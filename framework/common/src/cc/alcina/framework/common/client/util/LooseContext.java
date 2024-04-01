@@ -3,6 +3,9 @@ package cc.alcina.framework.common.client.util;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.entity.util.AlcinaParallel;
+
 /**
  * Beginnings of a general approach to decoupling hints - let's see if it works
  *
@@ -18,13 +21,81 @@ import java.util.function.Supplier;
  * <ul>
  * <li>LooseContext instances form a stack, controlled by LooseContext.push/pop
  * *
- * <li>Code *should* only populate the context in the same stack framge as the
+ * <li>Code *should* only populate the context in the same stack frame as the
  * push/pop - rarely it's unavoidable to do otherwise
  * <li>LooseContexts are a useful way to customise job performance - the Job
  * task will contain a field <code>String contextProperties</code>, which is
  * deserialized to a StringMap and then used to populate a LooseContextInstance
  * visible to the JobPerformer stack
+ * <li>Encapsulation? Some ideas:
+ * https://stackoverflow.com/questions/26330133/is-it-ever-a-good-idea-to-break-encapsulation
+ * asdf
  * </ul>
+ * <p>
+ * Implementation is via a stack of LooseContextInstance objects, the stack
+ * itself is a Threadlocal.
+ * <p>
+ * When threads are spawned (for instance for parallel job execution), the
+ * {@link AlcinaParallel} class can be used to replicate the LooseContext of the
+ * caller (along with other contexts, such as {@link PermissionsManager})
+ * 
+ * <h3>A simple example</h3>
+ * 
+ * <pre>
+ * <code>
+ &#64;Bean(PropertySource.FIELDS)
+public static class ContextTaskExample extends PerformerTask {
+	public static final String CONTEXT_LOG_LEVEL = ContextTaskExample.class
+			.getName() + ".CONTEXT_LOG_LEVEL";
+
+	public static void test() {
+		ContextTaskExample example = new ContextTaskExample();
+		example.contextProperties = StringMap.property(
+				"au.com.barnet.jade.dev.console.JDevLocal.ContextTaskExample.CONTEXT_LOG_LEVEL",
+				"WARN").toPropertyString();
+		example.perform();
+	}
+
+	public String contextProperties = "";
+
+	@Override
+	public void run() throws Exception {
+		// assume called from ContextTaskExample.test()
+		try {
+			LooseContext.push();
+			LooseContext.getContext().addProperties(contextProperties);
+			Ax.out(LooseContext.get(CONTEXT_LOG_LEVEL));
+			// WARN
+			LooseContext.set(CONTEXT_LOG_LEVEL, "INFO");
+			methodA();
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	void methodA() {
+		Ax.out(LooseContext.get(CONTEXT_LOG_LEVEL));
+		// INFO
+		try {
+			LooseContext.pushWithKey(CONTEXT_LOG_LEVEL, "DEBUG");
+			Ax.out(LooseContext.get(CONTEXT_LOG_LEVEL));
+			// DEBUG
+			methodB();
+		} finally {
+			LooseContext.pop();
+		}
+		Ax.out(LooseContext.get(CONTEXT_LOG_LEVEL));
+		// INFO
+	}
+
+	void methodB() {
+		Ax.out(LooseContext.get(CONTEXT_LOG_LEVEL));
+		// DEBUG
+	}
+}
+ 
+ * </code>
+ * </pre>
  * 
  *
  */

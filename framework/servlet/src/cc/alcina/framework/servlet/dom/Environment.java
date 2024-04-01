@@ -5,13 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
@@ -30,7 +28,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
@@ -55,7 +52,8 @@ import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
  * 
  * Environment affecting code is not run on a single thread but it is (where
  * needed) synchronized. This will probably change to 'yes, single-threaded' -
- * on the ClientExecutionQueue loop/dispatch thread
+ * on the ClientExecutionQueue loop/dispatch thread (update - yes, it's
+ * single-threaded on the queue thread)
  */
 public class Environment {
 	public static class TimerProvider implements Timer.Provider {
@@ -74,6 +72,10 @@ public class Environment {
 		}
 	}
 
+	/*
+	 * FIXME - tricky - what to do with timeouts here - does this interact with
+	 * keep-alives, environmentmanager
+	 */
 	class InvokeProxyImpl implements DocumentPathref.InvokeProxy {
 		int invokeCounter = 0;
 
@@ -161,10 +163,14 @@ public class Environment {
 			 * 2006 is back!
 			 */
 			queue.onInvokedSync();
+			boolean timedOut = false;
 			try {
-				handler.latch.await();
+				timedOut = !handler.latch.await(1, TimeUnit.SECONDS);
 			} catch (Exception e) {
 				Ax.simpleExceptionOut(e);
+			}
+			if (timedOut) {
+				throw new InvokeException("Timed out");
 			}
 			if (handler.response.exception == null) {
 				return (T) handler.response.response;
@@ -177,6 +183,10 @@ public class Environment {
 	static class InvokeException extends RuntimeException {
 		InvokeException(ExceptionTransport exception) {
 			super(exception.toExceptionString());
+		}
+
+		InvokeException(String message) {
+			super(message);
 		}
 	}
 
@@ -321,21 +331,27 @@ public class Environment {
 			String token = locationMutation.hash.startsWith("#")
 					? locationMutation.hash.substring(1)
 					: locationMutation.hash;
-			Ax.out("Navigate %s:: -> %s", startup ? "(startup) " : "", token);
+			Ax.logEvent("Navigate %s:: -> %s", startup ? "(startup) " : "",
+					token);
 			History.newItem(token, !startup);
 		});
 	}
 
+	// TODO - threading - this should only occur on the ClientExecutionQueue, so
+	// probably dispatch should go via that
 	public void applyMutations(List<MutationRecord> mutations) {
 		runInClientFrame(() -> LocalDom.pathRefRepresentations()
 				.applyMutations(mutations, false));
 	}
 
 	/**
-	 * Executes the runnable within the environment's context
+	 * Executes the runnable within the environment's context. Called from
+	 * outside the queuing system (so simply add to the execution queue)
+	 * 
+	 * Note that probably the queue should wrap the runnable (rather than here)
 	 */
 	public void dispatch(Runnable runnable) {
-		runInClientFrame(runnable);
+		queue.submit(() -> runInClientFrame(runnable));
 	}
 
 	public void initialiseClient(RemoteComponentProtocol.Session session) {
@@ -353,7 +369,7 @@ public class Environment {
 			client.getPlaceController();
 			client.setupPlaceMapping();
 			scheduler = SchedulerFrame.contextProvider.createFrame(null);
-			scheduler.commandExecutor = this::performScheduledCommand;
+			scheduler.commandExecutor = new CommandExecutorImpl();
 			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
 			document.createDocumentElement("<html/>");
 			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
@@ -365,21 +381,19 @@ public class Environment {
 		}
 	}
 
-	public boolean isInitialised() {
-		return client != null;
+	class CommandExecutorImpl implements SchedulerFrame.CommandExecutor {
+		@Override
+		public void execute(SchedulerFrame.Task task) {
+			queue.submit(() -> {
+				runInClientFrame(() -> {
+					task.executeCommand();
+				});
+			});
+		}
 	}
 
-	public boolean performScheduledCommand(Scheduler.Command command) {
-		Ref<Boolean> resultRef = Ref.of(false);
-		runInClientFrame(() -> {
-			if (command instanceof RepeatingCommand) {
-				boolean result = ((RepeatingCommand) command).execute();
-				resultRef.set(result);
-			} else {
-				((ScheduledCommand) command).execute();
-			}
-		});
-		return resultRef.get();
+	public boolean isInitialised() {
+		return client != null;
 	}
 
 	public void onInvokeResponse(InvokeResponse response) {
@@ -436,8 +450,14 @@ public class Environment {
 				scheduler.pump(true);
 				runnable.run();
 			} finally {
+				//
 				scheduler.pump(false);
-				scheduler.scheduleNextEntry(() -> runInClientFrame(new Noop()));
+				/**
+				 * If there are future timer events, this will queue a
+				 * noop-runnable (which will flush the scheduler) at the
+				 * earliest event
+				 */
+				scheduler.scheduleNextEntry(() -> dispatch(new Noop()));
 			}
 		} catch (RuntimeException e) {
 			e.printStackTrace();

@@ -12,15 +12,22 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasFilterableString;
 
 public abstract class AbstractSelection<T> implements Selection<T> {
-	private T value;
+	T value;
 
-	private Node node;
+	Node node;
 
-	private String pathSegment;
+	String pathSegment;
 
-	private List<String> filterableSegments = new ArrayList<>();
+	List<String> filterableSegments = new ArrayList<>();
 
-	private int segmentCounter = -1;
+	int segmentCounter = -1;
+
+	volatile Selection.Relations relations;
+
+	@Override
+	public boolean hasRelations() {
+		return relations != null;
+	}
 
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
 		if (!(this instanceof AllowsNullValue)) {
@@ -32,6 +39,18 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 			pathSegment = parentNode.tree().createUniqueSegment(this);
 		}
 		setPathSegment(pathSegment);
+	}
+
+	@Override
+	public Relations getRelations() {
+		if (relations == null) {
+			synchronized (this) {
+				if (relations == null) {
+					relations = new Relations(this);
+				}
+			}
+		}
+		return relations;
 	}
 
 	public AbstractSelection(Selection parent, T value) {

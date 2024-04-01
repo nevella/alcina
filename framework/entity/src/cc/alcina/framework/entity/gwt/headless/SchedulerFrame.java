@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import com.google.gwt.core.client.Scheduler;
@@ -34,7 +33,7 @@ import cc.alcina.framework.entity.util.TimerJvm;
 public class SchedulerFrame extends Scheduler implements ContextFrame {
 	public static ContextProvider<Void, SchedulerFrame> contextProvider;
 
-	static class Task implements Comparable<Task> {
+	public static class Task implements Comparable<Task> {
 		static IdCounter counter = new IdCounter();
 
 		ScheduledCommand scheduledCommand;
@@ -83,6 +82,19 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		public boolean isFuture() {
 			return scheduledFor != 0
 					&& scheduledFor > System.currentTimeMillis();
+		}
+
+		public void executeCommand() {
+			Command command = command();
+			if (command instanceof RepeatingCommand) {
+				RepeatingCommand repeatingCommand = (RepeatingCommand) command;
+				boolean repeat = repeatingCommand.execute();
+				if (repeat) {
+					queue.add(repeatingCommand, (int) delayMs);
+				}
+			} else {
+				((ScheduledCommand) command).execute();
+			}
 		}
 	}
 
@@ -144,7 +156,11 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 	 */
 	Queue postClientStarted = new Queue("postClientStarted", false);
 
-	public Function<Scheduler.Command, Boolean> commandExecutor;
+	public CommandExecutor commandExecutor;
+
+	public interface CommandExecutor {
+		void execute(SchedulerFrame.Task task);
+	}
 
 	private boolean clientStarted;
 
@@ -220,7 +236,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		do {
 			task = popNextTask(queues);
 			if (task != null) {
-				commandExecutor.apply(task.command());
+				commandExecutor.execute(task);
 			}
 		} while (task != null);
 	}

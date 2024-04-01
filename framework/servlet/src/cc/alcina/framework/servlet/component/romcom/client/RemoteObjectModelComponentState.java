@@ -10,4 +10,6 @@ public class RemoteObjectModelComponentState {
 	}
 
 	public boolean finished;
+
+	public boolean firingLocationMutation;
 }

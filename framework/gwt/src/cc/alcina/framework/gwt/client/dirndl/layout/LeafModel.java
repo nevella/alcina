@@ -185,7 +185,7 @@ public class LeafModel {
 	}
 
 	@Directed
-	public static class TagTextModel extends Model.Fields implements HasTag {
+	public static class TagText extends Model.Fields implements HasTag {
 		@Binding(type = Type.INNER_TEXT)
 		public final String text;
 
@@ -194,11 +194,11 @@ public class LeafModel {
 		@Binding(type = Type.PROPERTY)
 		public String title;
 
-		public TagTextModel(String tag, String text) {
+		public TagText(String tag, String text) {
 			this(tag, text, null);
 		}
 
-		public TagTextModel(String tag, String text, String title) {
+		public TagText(String tag, String text, String title) {
 			this.tag = tag;
 			this.text = text;
 			this.title = title;
@@ -207,6 +207,24 @@ public class LeafModel {
 		@Override
 		public String provideTag() {
 			return tag;
+		}
+	}
+
+	@Directed
+	public static class TextTitle extends Model.Fields {
+		@Binding(type = Type.INNER_TEXT)
+		public final String text;
+
+		@Binding(type = Type.PROPERTY)
+		public String title;
+
+		public TextTitle(String text) {
+			this(text, text);
+		}
+
+		public TextTitle(String text, String title) {
+			this.text = text;
+			this.title = title;
 		}
 	}
 

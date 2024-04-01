@@ -217,10 +217,28 @@ public abstract class Model extends Bindable implements
 	public static abstract class All extends Fields {
 	}
 
-	/*
+	/**
+	 * <p>
+	 * This encapsulates 3 binding sources:
+	 * 
+	 * <ul>
+	 * <li>Gwittir Binding (a set of property change listener bindings)
+	 * 
+	 * <li>a list of ModelBinding objects (similar to gwittir bindings, but
+	 * stream-like, more 'change pipelines' than bindings)
+	 * <li>a list of listeners (generic objects than can be bound and unbound -
+	 * topic subscribers being one example)
+	 * </ul>
+	 * 
+	 * <p>
+	 * Note - listener binding should happen earlier than 'bind', because topics
+	 * can already have a pre-published value which the ui might potentially
+	 * need for rendering - FIXME - that listener binding really wants a
+	 * prepare/bind/unbind system (at the moment, just set the thing)
 	 * 
 	 * FIXME - dirndl - simplify to just from(SPCE/TOPIC) and
 	 * add(listenerbinding)
+	 * 
 	 */
 	public class Bindings {
 		private Binding binding = new Binding();
@@ -420,6 +438,33 @@ public abstract class Model extends Bindable implements
 			listenerBindings.unbind();
 			binding.unbind();
 			bound = false;
+		}
+
+		public void addBindHandler(BindHandler bindHandler) {
+			addListener(new BindHandler.Reference(bindHandler));
+		}
+	}
+
+	@FunctionalInterface
+	public interface BindHandler {
+		void accept(boolean bound);
+
+		static class Reference implements ListenerBinding {
+			BindHandler bindHandler;
+
+			Reference(BindHandler bindHandler) {
+				this.bindHandler = bindHandler;
+			}
+
+			@Override
+			public void bind() {
+				bindHandler.accept(true);
+			}
+
+			@Override
+			public void unbind() {
+				bindHandler.accept(false);
+			}
 		}
 	}
 

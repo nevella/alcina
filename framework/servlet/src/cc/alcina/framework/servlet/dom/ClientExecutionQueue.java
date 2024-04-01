@@ -20,9 +20,26 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * It also
  */
 class ClientExecutionQueue implements Runnable {
-	BlockingQueue<Message> fromServerMessageQueue = new LinkedBlockingQueue<>();
+	BlockingQueue<Message> syncEventQueue = new LinkedBlockingQueue<>();
 
-	BlockingQueue<MessageHandlingToken> fromClientMessageQueue = new LinkedBlockingQueue<>();
+	BlockingQueue<AsyncEvent> asyncEventQueue = new LinkedBlockingQueue<>();
+
+	/*
+	 * either of these should be dispatched asynchronously, in order
+	 */
+	class AsyncEvent {
+		AsyncEvent(Runnable runnable) {
+			this.runnable = runnable;
+		}
+
+		AsyncEvent(MessageHandlingToken fromClientMessage) {
+			this.fromClientMessage = fromClientMessage;
+		}
+
+		MessageHandlingToken fromClientMessage;
+
+		Runnable runnable;
+	}
 
 	boolean finished = false;
 
@@ -57,7 +74,7 @@ class ClientExecutionQueue implements Runnable {
 		boolean delta = false;
 		synchronized (this) {
 			if (fromClientMessageAcceptor != null) {
-				Message message = fromServerMessageQueue.poll();
+				Message message = syncEventQueue.poll();
 				if (message != null) {
 					fromClientMessageAcceptor.accept(message);
 					fromClientMessageAcceptor = null;
@@ -66,17 +83,23 @@ class ClientExecutionQueue implements Runnable {
 				}
 			}
 			if (acceptClientEvents) {
-				MessageHandlingToken messageHandlingToken = fromClientMessageQueue
-						.poll();
-				if (messageHandlingToken != null) {
-					handleFromClientMessageSync(messageHandlingToken);
+				AsyncEvent asyncEvent = asyncEventQueue.poll();
+				if (asyncEvent != null) {
+					if (asyncEvent.fromClientMessage != null) {
+						handleFromClientMessageSync(
+								asyncEvent.fromClientMessage);
+					} else {
+						asyncEvent.runnable.run();
+					}
 					delta = true;
 				}
 			}
 			if (!delta) {
 				try {
 					waiting.set(true);
-					wait();
+					// FIXME - an infinite wait is problematic here - but when
+					// should the lock be released?
+					wait(1000);
 				} catch (InterruptedException e) {
 					Ax.simpleExceptionOut(e);
 				} finally {
@@ -94,7 +117,7 @@ class ClientExecutionQueue implements Runnable {
 	 * Does not await receipt
 	 */
 	void send(Message message) {
-		fromServerMessageQueue.add(message);
+		syncEventQueue.add(message);
 		if (waiting.get()) {
 			synchronized (this) {
 				notify();
@@ -107,7 +130,7 @@ class ClientExecutionQueue implements Runnable {
 			handleFromClientMessageSync(token);
 		} else {
 			synchronized (this) {
-				fromClientMessageQueue.add(token);
+				asyncEventQueue.add(new AsyncEvent(token));
 				notify();
 			}
 			try {
@@ -147,7 +170,7 @@ class ClientExecutionQueue implements Runnable {
 
 	void acceptServerMessage(Message message) {
 		synchronized (this) {
-			fromServerMessageQueue.add(message);
+			syncEventQueue.add(message);
 			notify();
 		}
 	}
@@ -166,8 +189,15 @@ class ClientExecutionQueue implements Runnable {
 	}
 
 	public void onInvokedSync() {
-		while (fromServerMessageQueue.size() > 0) {
+		while (syncEventQueue.size() > 0) {
 			loop(false);
+		}
+	}
+
+	void submit(Runnable runnable) {
+		synchronized (this) {
+			asyncEventQueue.add(new AsyncEvent(runnable));
+			notify();
 		}
 	}
 }

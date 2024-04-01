@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 
 @Directed(tag = "layers")
 class SelectionLayers extends Model.Fields {
@@ -22,8 +23,11 @@ class SelectionLayers extends Model.Fields {
 
 	SelectionTraversal traversal;
 
+	TraversalPlace place;
+
 	SelectionLayers(Page page) {
 		this.page = page;
+		this.place = page.place;
 		render();
 	}
 
@@ -38,11 +42,15 @@ class SelectionLayers extends Model.Fields {
 				.map(layer -> new LayerSelections(this, layer))
 				.collect(Collectors.toList());
 		layers.removeIf(layer -> !Settings.get().showContainerLayers
-				&& layer.outputCount() == 0);
+				&& layer.unfiliteredSelectionCount() == 0);
 		setLayers(layers);
 	}
 
 	public void setLayers(List<LayerSelections> layers) {
 		set("layers", this.layers, layers, () -> this.layers = layers);
+	}
+
+	boolean placeChangeCausesChange(TraversalPlace newPlace) {
+		return !place.equivalentFilterTo(newPlace);
 	}
 }

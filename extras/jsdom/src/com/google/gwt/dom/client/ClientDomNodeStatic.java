@@ -18,8 +18,9 @@ class ClientDomNodeStatic {
 	}
 
 	static Node getChild(ClientDomNode domNode, int index) {
-		assert (index >= 0) && (index < domNode
-				.getChildCount()) : "Child index out of bounds";
+		if (index < 0 || index >= domNode.getChildCount()) {
+			throw new IndexOutOfBoundsException();
+		}
 		return domNode.getChildNodes().getItem(index);
 	}
 

@@ -1,6 +1,9 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -20,6 +23,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
@@ -37,17 +42,27 @@ class LayerSelections extends Model.All {
 
 	private SelectionLayers selectionLayers;
 
+	private int maxRenderedSelections = 250;
+
 	public LayerSelections(SelectionLayers selectionLayers, Layer layer) {
 		this.selectionLayers = selectionLayers;
 		this.layer = layer;
-		nameArea = new NameArea();
 		selectionsArea = new SelectionsArea();
+		// after selectionsArea, since it requires the #selections rendered
+		nameArea = new NameArea();
 	}
 
 	String computeOutputs() {
-		int size = outputCount();
-		if (size != 0) {
-			return String.valueOf(size);
+		int unfiliteredSelectionCount = unfiliteredSelectionCount();
+		int filteredSelectionCount = selectionsArea.filtered.size();
+		if (unfiliteredSelectionCount != 0) {
+			if (filteredSelectionCount != unfiliteredSelectionCount
+					&& filteredSelectionCount != maxRenderedSelections) {
+				return Ax.format("%s/%s", filteredSelectionCount,
+						unfiliteredSelectionCount);
+			} else {
+				return String.valueOf(unfiliteredSelectionCount);
+			}
 		}
 		Layer firstLeaf = layer.firstLeaf();
 		int firstLeafSize = selectionLayers.traversal.getSelections(firstLeaf)
@@ -59,13 +74,14 @@ class LayerSelections extends Model.All {
 		}
 	}
 
-	int outputCount() {
+	int unfiliteredSelectionCount() {
 		return selectionLayers.traversal.getSelections(layer).size();
 	}
 
 	@Directed(className = "bordered-area")
-	class NameArea extends Model.All {
-		String key;
+	class NameArea extends Model.Fields {
+		@Directed
+		LeafModel.TextTitle key;
 
 		String outputs;
 
@@ -73,17 +89,22 @@ class LayerSelections extends Model.All {
 			FormatBuilder keyBuilder = new FormatBuilder();
 			keyBuilder.indent(layer.depth());
 			keyBuilder.append(layer.getName());
-			key = keyBuilder.toString();
+			String keyString = keyBuilder.toString();
 			outputs = computeOutputs();
+			key = new TextTitle(keyString,
+					Ax.format("%s : %s", keyString, outputs));
 		}
 	}
 
-	class SelectionsArea extends Model.All {
+	class SelectionsArea extends Model.Fields {
+		@Directed
 		List<Object> selections;
 
-		private boolean parallel;
+		boolean parallel;
 
-		private LooseContextInstance snapshot;
+		LooseContextInstance snapshot;
+
+		List<Selection> filtered;
 
 		SelectionsArea() {
 			Stream<Selection> stream = selectionLayers.traversal
@@ -93,28 +114,69 @@ class LayerSelections extends Model.All {
 			if (parallel) {
 				stream.parallel();
 			}
-			List<Selection> filtered = stream.filter(this::test).limit(5)
+			testHistory.beforeFilter();
+			filtered = stream.filter(this::test).limit(maxRenderedSelections)
 					.toList();
 			selections = filtered.stream().map(SelectionArea::new)
 					.collect(Collectors.toList());
 			empty = selections.isEmpty();
-			for (int idx = selections.size(); idx < 5; idx++) {
+			for (int idx = selections
+					.size(); idx < maxRenderedSelections; idx++) {
 				selections.add(new Spacer());
 			}
 		}
 
+		/*
+		 * Cache test results for a given selection/string
+		 */
+		class TestHistory {
+			String testFilter = "";
+
+			Map<Selection, Boolean> results = new ConcurrentHashMap<>();
+
+			boolean checkForExistingTest;
+
+			void beforeFilter() {
+				String incomingFilter = Page.traversalPlace().getTextFilter();
+				checkForExistingTest = Objects.equals(testFilter,
+						incomingFilter);
+				if (!checkForExistingTest) {
+					testFilter = incomingFilter;
+					results.clear();
+				}
+			}
+
+			Boolean getExistingResult(Selection selection) {
+				return checkForExistingTest ? results.get(selection) : null;
+			}
+
+			void put(Selection selection, Boolean result) {
+				results.put(selection, result);
+			}
+		}
+
+		@Directed.Exclude
+		TestHistory testHistory = new TestHistory();
+
 		boolean test(Selection selection) {
+			Boolean existingResult = testHistory.getExistingResult(selection);
+			if (existingResult != null) {
+				return existingResult;
+			}
+			Boolean result = null;
 			if (parallel) {
 				try {
 					LooseContext.push();
 					LooseContext.putSnapshotProperties(snapshot);
-					return Page.traversalPlace().test(selection);
+					result = Page.traversalPlace().test(selection);
 				} finally {
 					LooseContext.pop();
 				}
 			} else {
-				return Page.traversalPlace().test(selection);
+				result = Page.traversalPlace().test(selection);
 			}
+			testHistory.put(selection, result);
+			return result;
 		}
 
 		@Directed(className = "bordered-area")
@@ -131,6 +193,9 @@ class LayerSelections extends Model.All {
 			@Binding(type = Type.PROPERTY)
 			TraversalPlace.SelectionType selectionType;
 
+			@Binding(type = Type.PROPERTY)
+			boolean secondaryDescendantRelation;
+
 			SelectionArea(Selection selection) {
 				this.selection = selection;
 				View view = selection.view();
@@ -138,6 +203,8 @@ class LayerSelections extends Model.All {
 				text = view.getText(selection);
 				text = text == null ? "[gc]" : Ax.ntrim(Ax.trim(text, 100));
 				selectionType = Page.traversalPlace().selectionType(selection);
+				secondaryDescendantRelation = Page.traversalPlace()
+						.isSecondaryDescendantRelation(selection);
 			}
 
 			@Override

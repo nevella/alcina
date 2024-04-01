@@ -2,11 +2,13 @@ package cc.alcina.framework.servlet.component.traversal.place;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -16,6 +18,10 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
 
+/*
+ * This is designed to record multiple selections (SelectionPath entries in the
+ * paths field), but currently implementation is only tested against one path
+ */
 @Bean(PropertySource.FIELDS)
 public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	String textFilter;
@@ -47,12 +53,8 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	public Selection provideSelection(SelectionType type) {
-		SelectionPath selectionPath = paths.stream().filter(p -> p.type == type)
-				.findFirst().orElse(null);
-		if (selectionPath == null) {
-			return null;
-		}
-		return selectionPath.selection();
+		return paths.stream().filter(p -> p.type == type).findFirst()
+				.map(SelectionPath::selection).orElse(null);
 	}
 
 	public SelectionType selectionType(Selection selection) {
@@ -86,14 +88,26 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	public TraversalPlace withSelectionType(SelectionType type) {
+		if (paths.isEmpty()) {
+			return new TraversalPlace();
+		}
 		SelectionPath to = Ax.last(paths).copy();
+		paths.clear();
 		to.type = type;
 		return withSelection(to);
 	}
 
+	/*
+	 * If the current place filter is non-view, reset (since it would override
+	 * the filter)
+	 */
 	public TraversalPlace withTextFilter(String textFilter) {
-		this.textFilter = textFilter;
-		return this;
+		if (firstSelectionType() == SelectionType.VIEW) {
+			this.textFilter = textFilter;
+			return this;
+		} else {
+			return new TraversalPlace().withTextFilter(textFilter);
+		}
 	}
 
 	static class Data extends Bindable.Fields implements TreeSerializable {
@@ -124,6 +138,21 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 		public SelectionType type;
 
+		@Override
+		public int hashCode() {
+			return Objects.hash(path, type);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof SelectionPath) {
+				SelectionPath o = (SelectionPath) obj;
+				return Ax.equals(path, o.path, type, o.type);
+			} else {
+				return false;
+			}
+		}
+
 		boolean isFilter() {
 			return type == SelectionType.CONTAINMENT
 					|| type == SelectionType.DESCENT;
@@ -151,12 +180,16 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			if (this.selection == null) {
 				return true;
 			}
+			boolean descentSelectionIncludesSecondaryRelations = TraversalProcessView.Ui
+					.get().properties.descentSelectionIncludesSecondaryRelations;
 			switch (type) {
 			case CONTAINMENT:
 				return selection.hasContainmentRelation(this.selection)
-						|| selection.hasDescendantRelation(this.selection);
+						|| selection.hasDescendantRelation(this.selection,
+								descentSelectionIncludesSecondaryRelations);
 			case DESCENT:
-				return selection.hasDescendantRelation(this.selection);
+				return selection.hasDescendantRelation(this.selection,
+						descentSelectionIncludesSecondaryRelations);
 			default:
 				throw new UnsupportedOperationException();
 			}
@@ -196,5 +229,42 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			addTokenPart(
 					FlatTreeSerializer.serializeSingleLine(Data.from(place)));
 		}
+	}
+
+	public boolean equivalentFilterTo(TraversalPlace incomingPlace) {
+		String existingFilter = Ax.notBlank(textFilter)
+				&& firstSelectionType() == SelectionType.VIEW ? textFilter
+						: null;
+		String incomingFilter = Ax.notBlank(incomingPlace.textFilter)
+				&& incomingPlace.firstSelectionType() == SelectionType.VIEW
+						? incomingPlace.textFilter
+						: null;
+		if (existingFilter != null || incomingFilter != null) {
+			return Objects.equals(existingFilter, incomingFilter);
+		} else {
+			SelectionPath firstFilteringPath = paths.stream()
+					.filter(p -> p.isFilter()).findFirst().orElse(null);
+			SelectionPath newPlaceFirstFilteringPath = incomingPlace.paths
+					.stream().filter(p -> p.isFilter()).findFirst()
+					.orElse(null);
+			return Objects.equals(firstFilteringPath,
+					newPlaceFirstFilteringPath);
+		}
+	}
+
+	@Property.Not
+	public boolean isSecondaryDescendantRelation(Selection selection) {
+		if (firstSelectionType() != SelectionType.DESCENT) {
+			return false;
+		}
+		Selection testSelection = provideSelection(SelectionType.DESCENT);
+		if (testSelection == null) {
+			return false;
+		}
+		boolean hasDirectRelation = testSelection
+				.hasDescendantRelation(selection, false);
+		boolean hasDescendantRelation = testSelection
+				.hasDescendantRelation(selection, true);
+		return hasDescendantRelation && !hasDirectRelation;
 	}
 }

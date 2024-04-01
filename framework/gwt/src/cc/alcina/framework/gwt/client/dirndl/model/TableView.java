@@ -29,8 +29,8 @@ public class TableView extends
 		TableContainer tableContainer = new TableContainer(tableModel);
 		tableModel.init(node);
 		if (bindables.size() == 0) {
-			tableModel.setEmptyResults(new LeafModel.TagTextModel(
-					"empty-results", "No matching results found"));
+			tableModel.setEmptyResults(new LeafModel.TagText("empty-results",
+					"No matching results found"));
 		} else {
 			Bindable first = bindables.iterator().next();
 			Class<? extends Bindable> resultClass = first.getClass();

@@ -4,8 +4,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
@@ -18,10 +16,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
@@ -30,6 +26,9 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSel
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelContainment;
+import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelDescendant;
+import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelView;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
@@ -39,7 +38,10 @@ class Page extends Model.All
 		implements TraversalEvents.SelectionSelected.Handler,
 		TraversalEvents.SelectionTypeSelected.Handler,
 		TraversalEvents.FilterSelections.Handler,
-		TraversalCommands.ClearFilter.Handler {
+		TraversalCommands.ClearFilter.Handler,
+		TraversalViewCommands.SelectionFilterModelContainment.Handler,
+		TraversalViewCommands.SelectionFilterModelDescendant.Handler,
+		TraversalViewCommands.SelectionFilterModelView.Handler {
 	// FIXME - traversal - resolver/descendant event
 	public static TraversalPlace traversalPlace() {
 		return Ui.get().page.place;
@@ -70,14 +72,18 @@ class Page extends Model.All
 		 * to a PageContext event
 		 */
 		// FIXME - dirndl - bindings - change addListener to a ModelBinding with
-		// a prebind (setleft) phase
-		TraversalHistories.get().subscribe(null, this::setHistory);
-		// bindings().addListener(() -> TraversalHistories.get().subscribe(null,
-		// this::setHistory));
+		// a prebind (setleft) phase....maybe? that might be a bit too
+		// tree-shaped, even for me
+		bindings().addBindHandler(this::bindKeyboardShortcuts);
+		// one-off (to get the initial value)
+		TraversalHistories.get().subscribe(null, this::setHistory).remove();
+		bindings().addListener(() -> TraversalHistories.get().subscribe(null,
+				this::setHistory));
 		bindings().from(this).on(Property.history).value(this)
 				.map(SelectionLayers::new).accept(this::setLayers);
-		bindings().from(this).on(Property.place).value(this)
-				.map(SelectionLayers::new).accept(this::setLayers);
+		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
+				.filter(this::placeChangeCausesSelectionLayersChange)
+				.value(this).map(SelectionLayers::new).accept(this::setLayers);
 		bindings().from(this).on(Property.history).value(this)
 				.map(Properties::new).accept(this::setProperties);
 		bindings().from(this).on(Property.history)
@@ -99,8 +105,19 @@ class Page extends Model.All
 			this.place = (TraversalPlace) place;
 		}
 		// FIXME - dirndl - bindings - should set startup
+		// (later - not sure what this means. probably that the an init
+		// PlaceChangeEvent should be fired on beforeRender/setleft, in addition
+		// to regular listening)
 		bindings().addRegistration(() -> Client.eventBus()
 				.addHandler(PlaceChangeEvent.TYPE, handler));
+	}
+
+	boolean placeChangeCausesSelectionLayersChange(TraversalPlace place) {
+		if (layers != null) {
+			return layers.placeChangeCausesChange(place);
+		} else {
+			return true;
+		}
 	}
 
 	KeyboardShortcuts shortcuts;
@@ -120,8 +137,6 @@ class Page extends Model.All
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
-		// FIXME - to a registration
-		bindKeyboardShortcuts(event.isBound());
 	}
 
 	// needs fix
@@ -152,34 +167,6 @@ class Page extends Model.All
 		shortcuts.deltaHandler(keybindingsHandler, bound);
 	}
 
-	// FIXME - not hooked up?
-	public void onKeyDown(KeyDown event) {
-		Context context = event.getContext();
-		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
-		if (KeyboardShortcuts.eventFiredFromInputish(
-				domEvent.getNativeEvent().getEventTarget())) {
-			return;
-		}
-		TraversalPlace to = null;
-		switch (domEvent.getNativeKeyCode()) {
-		case KeyCodes.KEY_ESCAPE:
-			to = new TraversalPlace();
-			break;
-		case KeyCodes.KEY_ONE:
-			to = place.copy().withSelectionType(SelectionType.VIEW);
-			break;
-		case KeyCodes.KEY_TWO:
-			to = place.copy().withSelectionType(SelectionType.CONTAINMENT);
-			break;
-		case KeyCodes.KEY_THREE:
-			to = place.withSelectionType(SelectionType.DESCENT);
-			break;
-		}
-		if (to != null) {
-			goPreserveScrollPosition(to);
-		}
-	}
-
 	@Override
 	public void onSelectionSelected(SelectionSelected event) {
 		goPreserveScrollPosition(place.copy().withSelection(event.getModel()));
@@ -187,8 +174,12 @@ class Page extends Model.All
 
 	@Override
 	public void onSelectionTypeSelected(SelectionTypeSelected event) {
-		TraversalPlace to = place.copy()
-				.withSelectionType(event.getSelectionType());
+		SelectionType selectionType = event.getSelectionType();
+		changeSelectionType(selectionType);
+	}
+
+	void changeSelectionType(SelectionType selectionType) {
+		TraversalPlace to = place.copy().withSelectionType(selectionType);
 		goPreserveScrollPosition(to);
 	}
 
@@ -232,5 +223,22 @@ class Page extends Model.All
 	public void onClearFilter(ClearFilter event) {
 		header.mid.suggestor.clear();
 		new TraversalPlace().go();
+	}
+
+	@Override
+	public void onSelectionFilterModelView(SelectionFilterModelView event) {
+		changeSelectionType(SelectionType.VIEW);
+	}
+
+	@Override
+	public void onSelectionFilterModelDescendant(
+			SelectionFilterModelDescendant event) {
+		changeSelectionType(SelectionType.DESCENT);
+	}
+
+	@Override
+	public void onSelectionFilterModelContainment(
+			SelectionFilterModelContainment event) {
+		changeSelectionType(SelectionType.CONTAINMENT);
 	}
 }

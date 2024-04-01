@@ -500,10 +500,12 @@ body > page > layers {
 body > page > layers > layers {
   display: grid;
   gap: 1rem;
-  grid-template-columns: 18rem 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 18rem repeat(250, 200px);
   overflow: scroll;
-  max-height: calc(100% - 2.2rem);
+  max-height: calc(100% - 3.2rem);
   margin-top: 1rem;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
 }
 body > page > layers > layers > layer-selections {
   display: contents;
@@ -515,6 +517,7 @@ body > page > layers > layers > layer-selections .bordered-area {
   text-overflow: ellipsis;
   white-space: pre;
   min-height: 3rem;
+  cursor: pointer;
 }
 body > page > layers > layers > layer-selections[empty=true] .bordered-area {
   min-height: 1rem;
@@ -543,6 +546,9 @@ body > page > layers > layers > layer-selections > selections-area > selection-a
 }
 body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=DESCENT] {
   background: #ddf;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area[secondary-descendant-relation=true] {
+  background: #eaeafa;
 }
 body > page > properties {
   display: block;

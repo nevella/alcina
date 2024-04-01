@@ -28,31 +28,33 @@ public class EventCollator<T> {
 			long maxDelay = collationActionsInvoked == 0
 					? maxDelayFromFirstEvent
 					: maxDelayFromFirstCollatedEvent;
-			if (time - lastEventOccurred >= waitToPerformAction
+			boolean execute = time - lastEventOccurred >= waitToPerformAction
 					|| (maxDelay != 0
-							&& (time - firstEventOccurred >= maxDelay))) {
-				synchronized (this) {
-					if (timer != null) {
-						timer.cancel();
-						timer = null;
-					}
-					firstEventOccurred = 0;
-					collationActionsInvoked++;
+							&& (time - firstEventOccurred >= maxDelay));
+			if (!execute) {
+				return;
+			}
+			synchronized (this) {
+				if (timer != null) {
+					timer.cancel();
+					timer = null;
 				}
-				try {
-					synchronized (finishedMonitor) {
-						if (!finished) {
-							action.accept(EventCollator.this);
-						}
+				firstEventOccurred = 0;
+				collationActionsInvoked++;
+			}
+			try {
+				synchronized (finishedMonitor) {
+					if (!finished) {
+						action.accept(EventCollator.this);
 					}
-				} catch (Throwable t) {
-					t.printStackTrace();
 				}
-				synchronized (this) {
-					if (firstEventOccurred == 0) {
-						firstObject = null;
-						lastObject = null;
-					}
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
+			synchronized (this) {
+				if (firstEventOccurred == 0) {
+					firstObject = null;
+					lastObject = null;
 				}
 			}
 		}
