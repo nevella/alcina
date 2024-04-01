@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasFilterableString;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
@@ -345,6 +346,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 		default String getTreePath(Selection selection) {
 			return selection.processNode().treePath();
+		}
+
+		default Model getExtended(S selection) {
+			return null;
 		}
 	}
 }

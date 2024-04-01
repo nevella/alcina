@@ -76,6 +76,8 @@ class Properties extends Model.Fields {
 
 		String markup;
 
+		Model extended;
+
 		SelectionArea() {
 		}
 
@@ -89,6 +91,7 @@ class Properties extends Model.Fields {
 			discriminator = view.getDiscriminator(selection);
 			text = view.getText(selection);
 			markup = view.getMarkup(selection);
+			extended = view.getExtended(selection);
 			return this;
 		}
 	}

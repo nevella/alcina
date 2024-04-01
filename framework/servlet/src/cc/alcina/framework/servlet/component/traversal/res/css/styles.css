@@ -578,13 +578,14 @@ body > page > properties bean-editor value {
 }
 body > page > properties bean-editor form-element {
   padding-bottom: 1rem;
+  display: block;
 }
 body > page > properties bean-editor label {
   display: block;
   color: #666;
   padding-bottom: 0.3rem;
 }
-body > page > properties bean-editor form-element[name=markup] > value > value {
+body > page > properties bean-editor form-element[name=markup] > value > value, body > page > properties bean-editor form-element[name=text] > value > value {
   max-width: 100%;
   overflow: scroll;
   white-space: pre;

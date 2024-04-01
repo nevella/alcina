@@ -30,6 +30,12 @@ import cc.alcina.framework.servlet.dom.RemoteUi;
  * 
  * The name displayed (for the traversal) can be customised by registering a
  * RootLayerNamer for the traversal's RootLayer
+ * 
+ * <h3>Notes
+ * <ul>
+ * <li>A traversal place will not be consistent (so will not, for instance, work
+ * on app refresh) if the traversal is performed in parallel.
+ * </ul>
  *
  */
 @Feature.Ref(Feature_TraversalProcessView.class)
