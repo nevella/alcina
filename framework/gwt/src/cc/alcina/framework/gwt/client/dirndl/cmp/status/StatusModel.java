@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusElement.CloseElement;
@@ -75,6 +76,7 @@ public class StatusModel extends Model
 
 	void addMessage(Message message) {
 		if (message.isNotBlank()) {
+			Ax.out(message);
 			StatusElement element = new StatusElement();
 			element.setText(message.string);
 			element.setModel(message.model);

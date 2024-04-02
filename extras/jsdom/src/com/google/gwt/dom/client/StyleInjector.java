@@ -39,17 +39,17 @@ public class StyleInjector {
 
 	private static boolean needsInjection = false;
 
-	private static StyleElement createElement(String contents) {
+	public static StyleElement createAndAttachElement(String contents) {
 		StyleElement style = Document.get().createStyleElement();
 		style.setPropertyString("language", "text/css");
 		setContents(style, contents);
+		getHead().appendChild(style);
 		return style;
 	}
 
 	public static void flush() {
 		String contents = pending.stream().collect(Collectors.joining(""));
-		StyleElement style = createElement(contents);
-		getHead().appendChild(style);
+		StyleElement style = createAndAttachElement(contents);
 		pending.clear();
 		needsInjection = false;
 	}

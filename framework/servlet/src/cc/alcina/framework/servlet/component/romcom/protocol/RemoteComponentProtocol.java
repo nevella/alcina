@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentSettings;
 
 public class RemoteComponentProtocol {
 	@Bean
@@ -141,6 +142,10 @@ public class RemoteComponentProtocol {
 			}
 		}
 
+		public static class PersistSettings extends Message {
+			public String value;
+		}
+
 		// FIXME - doc this annotation
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class InvokeResponse extends Message {
@@ -239,6 +244,7 @@ public class RemoteComponentProtocol {
 				result.domMutations = LocalDom.pathRefRepresentations()
 						.domAsMutations();
 				result.locationMutation = LocationMutation.ofWindow(true);
+				result.settings = RemoteComponentSettings.getSettings();
 				return result;
 			}
 
@@ -247,6 +253,8 @@ public class RemoteComponentProtocol {
 			public List<MutationRecord> domMutations = new ArrayList<>();
 
 			public int maxCharsPerTextNode;
+
+			public String settings;
 		}
 
 		public String toDebugString() {

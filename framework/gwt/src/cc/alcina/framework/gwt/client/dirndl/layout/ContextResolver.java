@@ -201,8 +201,8 @@ public class ContextResolver extends AnnotationLocation.Resolver
 			return;
 		}
 		// CLEAN - only problematic if ML is HTML-ish
-		if (tagName.toLowerCase()
-				.matches("body|title|head|html|style|script")) {
+		if (tagName.toLowerCase().matches("body|title|head|html|style|script")
+				&& !(layoutNode.model instanceof RestrictedHtmlTag)) {
 			String message = Ax.format("Rendering element with tag %s",
 					tagName);
 			Ax.err(message);

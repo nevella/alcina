@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.meta.Feature;
  * Doc: Short form: 'Click to display a list of keyboard shortcuts'
  */
 @Feature.Status.Ref(Feature.Status.Open.class)
-@Feature.Parent(Feature_TraversalProcessView_Header.class)
+@Feature.Parent(Feature_TraversalProcessView_PersistentSettings.class)
 public interface Feature_TraversalProcessView_DotBurger extends Feature {
 	/*
 	 * Test: test the shortcuts term existence, [doc: highlight term + display

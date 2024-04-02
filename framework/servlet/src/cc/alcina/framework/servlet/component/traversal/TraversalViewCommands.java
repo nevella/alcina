@@ -63,4 +63,21 @@ public abstract class TraversalViewCommands<T, H extends NodeEvent.Handler>
 					SelectionFilterModelContainment event);
 		}
 	}
+
+	@AppSuggestorCommand(
+		parent = TraversalViewCommands.class,
+		name = "property display: cycle",
+		description = "Property display: cycle mode")
+	@KeyBinding(key = "p")
+	public static class PropertyDisplayCycle extends
+			TraversalViewCommands<Object, PropertyDisplayCycle.Handler> {
+		@Override
+		public void dispatch(PropertyDisplayCycle.Handler handler) {
+			handler.onPropertyDisplayCycle(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPropertyDisplayCycle(PropertyDisplayCycle event);
+		}
+	}
 }

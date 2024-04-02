@@ -1,5 +1,8 @@
 package com.google.gwt.dom.client;
 
+import com.google.gwt.dom.client.mutations.MutationNode;
+import com.google.gwt.dom.client.mutations.MutationRecord;
+
 public class TextPathref extends NodePathref implements ClientDomText {
 	TextPathref(Node node) {
 		super(node);
@@ -16,7 +19,7 @@ public class TextPathref extends NodePathref implements ClientDomText {
 
 	@Override
 	public void deleteData(int offset, int length) {
-		// noop
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -46,33 +49,35 @@ public class TextPathref extends NodePathref implements ClientDomText {
 
 	@Override
 	public int indexInParentChildren() {
-		// TODO Auto-generated method stub
-		return 0;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void insertData(int offset, String data) {
-		// noop
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void replaceData(int offset, int length, String data) {
-		// noop
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setData(String data) {
-		// noop
+		setNodeValue(data);
 	}
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		// noop
+		MutationRecord record = new MutationRecord();
+		record.type = MutationRecord.Type.characterData;
+		record.target = MutationNode.pathref(node());
+		record.newValue = nodeValue;
+		emitMutation(record);
 	}
 
 	@Override
 	public Text splitText(int offset) {
-		// noop
-		return null;
+		throw new UnsupportedOperationException();
 	}
 }

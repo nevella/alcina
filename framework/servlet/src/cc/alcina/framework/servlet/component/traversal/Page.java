@@ -1,21 +1,30 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.StyleElement;
+import com.google.gwt.dom.client.StyleInjector;
+import com.google.gwt.dom.client.Text;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -26,6 +35,8 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSel
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelContainment;
 import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelDescendant;
 import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelView;
@@ -41,7 +52,8 @@ class Page extends Model.All
 		TraversalCommands.ClearFilter.Handler,
 		TraversalViewCommands.SelectionFilterModelContainment.Handler,
 		TraversalViewCommands.SelectionFilterModelDescendant.Handler,
-		TraversalViewCommands.SelectionFilterModelView.Handler {
+		TraversalViewCommands.SelectionFilterModelView.Handler,
+		TraversalViewCommands.PropertyDisplayCycle.Handler {
 	// FIXME - traversal - resolver/descendant event
 	public static TraversalPlace traversalPlace() {
 		return Ui.get().page.place;
@@ -95,6 +107,8 @@ class Page extends Model.All
 		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
+		bindings().from(TraversalProcessView.Ui.get().settings)
+				.accept(this::updateStyles);
 		PlaceChangeEvent.Handler handler = evt -> {
 			if (evt.getNewPlace() instanceof TraversalPlace) {
 				setPlace((TraversalPlace) evt.getNewPlace());
@@ -110,6 +124,46 @@ class Page extends Model.All
 		// to regular listening)
 		bindings().addRegistration(() -> Client.eventBus()
 				.addHandler(PlaceChangeEvent.TYPE, handler));
+	}
+
+	private StyleElement styleElement;
+
+	void updateStyles(TraversalSettings settings) {
+		FormatBuilder builder = new FormatBuilder();
+		{
+			/*
+			 * body > page grid-template-areas - default:
+			 * "header header header header" "layers layers layers props"
+			 * "input input output output";
+			 */
+			List<String> rows = new ArrayList<>();
+			rows.add("header header header header");
+			switch (settings.propertyDisplayMode) {
+			case QUARTER_WIDTH:
+				rows.add("layers layers layers props");
+				break;
+			case HALF_WIDTH:
+				rows.add("layers layers props props");
+				break;
+			case NONE:
+				rows.add("layers layers layers layers");
+				builder.line("body > page > properties{display: none;}");
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+			rows.add("input input output output");
+			//
+			String areas = rows.stream().map(s -> Ax.format("\"%s\"", s))
+					.collect(Collectors.joining(" "));
+			builder.line("body > page {grid-template-areas: %s;}", areas);
+		}
+		String text = builder.toString();
+		if (styleElement == null) {
+			styleElement = StyleInjector.createAndAttachElement(text);
+		} else {
+			((Text) styleElement.getChild(0)).setTextContent(text);
+		}
 	}
 
 	boolean placeChangeCausesSelectionLayersChange(TraversalPlace place) {
@@ -240,5 +294,17 @@ class Page extends Model.All
 	public void onSelectionFilterModelContainment(
 			SelectionFilterModelContainment event) {
 		changeSelectionType(SelectionType.CONTAINMENT);
+	}
+
+	@Override
+	public void onPropertyDisplayCycle(PropertyDisplayCycle event) {
+		TraversalSettings settings = TraversalProcessView.Ui.get().settings;
+		PropertyDisplayMode propertyDisplayMode = settings.propertyDisplayMode;
+		PropertyDisplayMode next = PropertyDisplayMode
+				.values()[(propertyDisplayMode.ordinal() + 1)
+						% PropertyDisplayMode.values().length];
+		settings.setPropertyDisplayMode(next);
+		StatusModule.get().showMessageTransitional(
+				Ax.format("Property display mode -> %s", next));
 	}
 }

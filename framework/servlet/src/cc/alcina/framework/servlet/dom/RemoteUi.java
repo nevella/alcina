@@ -78,4 +78,7 @@ public interface RemoteUi {
 	 */
 	public interface SingleInstance {
 	}
+
+	default void initialiseSettings(String settings) {
+	}
 }

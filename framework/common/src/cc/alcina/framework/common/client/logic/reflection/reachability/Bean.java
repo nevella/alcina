@@ -35,7 +35,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  *
  * <li>type introspection {@link Reflections#at}
  *
- * <li>type property introspection {@link ClassReflector#properties}
+ * <li>type property introspection {@link ClassReflector#settings}
  *
  * <li>type/method annotation access - {@link ClassReflector#annotation},
  * {@link Property#annotation}

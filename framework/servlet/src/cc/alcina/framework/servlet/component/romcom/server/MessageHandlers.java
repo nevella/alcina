@@ -95,6 +95,7 @@ public class MessageHandlers {
 			env.initialiseClient(request.session);
 			env.applyMutations(message.domMutations);
 			env.applyLocationMutation(message.locationMutation, true);
+			env.initialiseSettings(message.settings);
 			/*
 			 * will enqueue a mutations event in the to-client queue
 			 */

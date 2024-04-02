@@ -181,7 +181,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 				return true;
 			}
 			boolean descentSelectionIncludesSecondaryRelations = TraversalProcessView.Ui
-					.get().properties.descentSelectionIncludesSecondaryRelations;
+					.get().settings.descentSelectionIncludesSecondaryRelations;
 			switch (type) {
 			case CONTAINMENT:
 				return selection.hasContainmentRelation(this.selection)

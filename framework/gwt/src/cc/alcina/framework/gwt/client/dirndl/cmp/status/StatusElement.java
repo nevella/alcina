@@ -10,8 +10,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @Directed(
 	className = "element",
-	bindings = { @Binding(from = "removing", type = Type.CSS_CLASS),
-			@Binding(from = "text", type = Type.INNER_TEXT) },
 	reemits = { DomEvents.Click.class, StatusElement.ElementClicked.class })
 /*
  * TODO - only one of text,html, model is permissible
@@ -38,6 +36,7 @@ public class StatusElement extends Model {
 		return this.model;
 	}
 
+	@Binding(type = Type.INNER_TEXT)
 	public String getText() {
 		return this.text;
 	}
@@ -46,6 +45,7 @@ public class StatusElement extends Model {
 		return this.closeOnClick;
 	}
 
+	@Binding(type = Type.CSS_CLASS)
 	public boolean isRemoving() {
 		return this.removing;
 	}

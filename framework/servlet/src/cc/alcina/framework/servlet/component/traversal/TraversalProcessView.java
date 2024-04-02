@@ -24,6 +24,7 @@ import cc.alcina.framework.servlet.component.traversal.place.TraversalProcessPla
 import cc.alcina.framework.servlet.dom.ClientRemoteImpl;
 import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.dom.RemoteUi;
+import cc.alcina.framework.servlet.dom.SettingsSupport;
 
 /**
  * A remote component that models a SelectionTraversal's process tree
@@ -95,7 +96,7 @@ public class TraversalProcessView {
 
 		Environment environment;
 
-		public TraversalProperties properties = new TraversalProperties();
+		public TraversalSettings settings;
 
 		@Override
 		public Client createClient() {
@@ -119,6 +120,12 @@ public class TraversalProcessView {
 		public void init() {
 			// FIXME - st - implement
 			// Registry.impl(TopLevelCatchallHandler.class).register(this);
+		}
+
+		@Override
+		public void initialiseSettings(String settings) {
+			this.settings = SettingsSupport
+					.deserializeSettings(TraversalSettings.class, settings);
 		}
 
 		@Override

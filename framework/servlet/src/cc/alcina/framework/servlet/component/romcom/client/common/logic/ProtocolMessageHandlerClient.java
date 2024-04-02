@@ -231,4 +231,13 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			Window.alert(clientMessage);
 		}
 	}
+
+	public static class PersistSettingsHandler
+			extends ProtocolMessageHandlerClient<Message.PersistSettings> {
+		@Override
+		public void handle(RemoteComponentResponse response,
+				Message.PersistSettings message) {
+			RemoteComponentSettings.setSettings(message.value);
+		}
+	}
 }

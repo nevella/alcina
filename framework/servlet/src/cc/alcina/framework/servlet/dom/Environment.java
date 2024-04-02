@@ -533,4 +533,8 @@ public class Environment {
 	public void flush() {
 		emitMutations();
 	}
+
+	public void initialiseSettings(String settings) {
+		ui.initialiseSettings(settings);
+	}
 }

@@ -41,7 +41,7 @@ class SelectionLayers extends Model.Fields {
 		List<LayerSelections> layers = renderTraversal.stream()
 				.map(layer -> new LayerSelections(this, layer))
 				.collect(Collectors.toList());
-		layers.removeIf(layer -> !Settings.get().showContainerLayers
+		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers
 				&& layer.unfiliteredSelectionCount() == 0);
 		setLayers(layers);
 	}
