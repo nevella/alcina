@@ -446,6 +446,12 @@ public class Suggestor extends Model
 		public void setValue(String value) {
 			this.value = value;
 		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("value", value, "resultRange",
+					resultRange);
+		}
 	}
 
 	/*

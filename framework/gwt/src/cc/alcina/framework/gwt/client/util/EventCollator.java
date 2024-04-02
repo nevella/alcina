@@ -34,7 +34,7 @@ public class EventCollator<T> {
 			if (!execute) {
 				return;
 			}
-			synchronized (this) {
+			synchronized (EventCollator.this) {
 				if (timer != null) {
 					timer.cancel();
 					timer = null;

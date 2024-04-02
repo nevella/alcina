@@ -8,7 +8,6 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Naviga
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -75,16 +74,6 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	@Directed
 	public StringInput getInput() {
 		return this.input;
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (event.isBound()) {
-			if (Ax.notBlank(input.getValue())) {
-				deferEmitAsk();
-			}
-		}
 	}
 
 	@Override
