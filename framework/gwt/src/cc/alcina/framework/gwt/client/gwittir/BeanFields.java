@@ -347,7 +347,6 @@ public class BeanFields {
 					.getAnnotation(PropertyPermissions.class);
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, object, true)
-					&& display != null
 					&& PermissionsManager.get().isPermitted(object,
 							display.visible())
 					&& ((display.displayMask()
