@@ -31,7 +31,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 import cc.alcina.framework.servlet.dom.Environment;
-import cc.alcina.framework.servlet.dom.PathrefDom;
+import cc.alcina.framework.servlet.dom.EnvironmentManager;
 import cc.alcina.framework.servlet.dom.RemoteUi;
 
 public class RemoteComponentProtocolServer {
@@ -95,7 +95,7 @@ public class RemoteComponentProtocolServer {
 			boolean singleInstance = RemoteUi.SingleInstance.class
 					.isAssignableFrom(uiType);
 			boolean existingInstance = singleInstance
-					&& PathrefDom.get().hasEnvironment(uiType);
+					&& EnvironmentManager.get().hasEnvironment(uiType);
 			String message = null;
 			InvalidClientException.Action action = Action.REFRESH;
 			if (existingInstance) {
@@ -222,7 +222,7 @@ public class RemoteComponentProtocolServer {
 							NestedName.get(request.protocolMessage),
 							request.protocolMessage.toDebugString());
 					try {
-						Environment env = PathrefDom.get()
+						Environment env = EnvironmentManager.get()
 								.getEnvironment(request.session);
 						if (env == null) {
 							throw buildInvalidClientException(

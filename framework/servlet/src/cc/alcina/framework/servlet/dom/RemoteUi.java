@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.dom;
 import java.util.function.Consumer;
 
 import com.google.gwt.dom.client.StyleInjector;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -12,6 +13,12 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 
+/**
+ * <p>
+ * This is the top-level ROMCOM application class - analagous to a browser
+ * Client class, but a level up (to provide hooks for css injection, init,
+ * app-specific settings etc)
+ */
 public interface RemoteUi {
 	default Client createClient() {
 		return Registry.impl(ClientRemoteImpl.class);
@@ -80,5 +87,10 @@ public interface RemoteUi {
 	}
 
 	default void initialiseSettings(String settings) {
+	}
+
+	default void addLifecycleHandlers() {
+		Window.addPageHideHandler(
+				evt -> EnvironmentManager.get().deregister(this));
 	}
 }

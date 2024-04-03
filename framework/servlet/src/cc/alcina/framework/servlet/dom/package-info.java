@@ -69,6 +69,9 @@
   double hookup of local/patheref/browserlocal/jso is complicated) - it definitely needs a 
   "one path for all". There - possibly a simplification of GWT DOM/DOMImpl would make sense 
   (since there's now basically just one DOM - webkit/blink/gecko - are all similar enough )
+
+  Notes - Window events are handled differently again (with some wrinkles for IE6) - basically, for ROMCOM 
+  just use the PageHideEvent which is handled separately
  * 
  * 
  * 

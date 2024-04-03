@@ -60,6 +60,7 @@ public class MessageHandlers {
 		public void handle(RemoteComponentRequest request,
 				RemoteComponentResponse response, Environment env,
 				Message.DomEventMessage message) {
+			message.events.forEach(Ax::out);
 			message.events.forEach(env::applyEvent);
 		}
 	}
@@ -100,6 +101,7 @@ public class MessageHandlers {
 			 * will enqueue a mutations event in the to-client queue
 			 */
 			env.renderInitialUi();
+			env.addLifecycleHandlers();
 			env.clientStarted();
 			response.protocolMessage = new Message.BeginAwaitLoop();
 		}

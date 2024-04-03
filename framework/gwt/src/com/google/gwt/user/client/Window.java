@@ -24,6 +24,8 @@ import java.util.Map;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.event.dom.client.PageHideEvent;
+import com.google.gwt.event.dom.client.PageHideHandler;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.event.logical.shared.HasCloseHandlers;
@@ -76,6 +78,18 @@ public class Window {
 			addCloseHandler(CloseHandler<Window> handler) {
 		maybeInitializeCloseHandlers();
 		return addHandler(CloseEvent.getType(), handler);
+	}
+
+	/**
+	 * Adds a {@link PageHideEvent} handler.
+	 *
+	 * @param handler
+	 *            the handler
+	 * @return returns the handler registration
+	 */
+	public static HandlerRegistration
+			addPageHideHandler(PageHideHandler handler) {
+		return addHandler(PageHideEvent.getType(), handler);
 	}
 
 	/**
@@ -342,6 +356,10 @@ public class Window {
 			return event.getMessage();
 		}
 		return null;
+	}
+
+	public static void onPageHide() {
+		fireEvent(new PageHideEvent());
 	}
 
 	static void onResize() {

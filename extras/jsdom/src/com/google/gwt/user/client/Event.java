@@ -415,6 +415,10 @@ public class Event extends NativeEvent {
 		super(jso);
 	}
 
+	public Event(String windowEventTypeName) {
+		super(windowEventTypeName);
+	}
+
 	/**
 	 * Cancels bubbling for the given event. This will stop the event from being
 	 * propagated to parent elements.

@@ -40,7 +40,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
-import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
+import cc.alcina.framework.servlet.dom.EnvironmentManager.Credentials;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -536,5 +536,9 @@ public class Environment {
 
 	public void initialiseSettings(String settings) {
 		ui.initialiseSettings(settings);
+	}
+
+	public void addLifecycleHandlers() {
+		runInClientFrame(() -> ui.addLifecycleHandlers());
 	}
 }

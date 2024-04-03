@@ -89,6 +89,8 @@ public class BrowserEvents {
 
 	public static final String MOUSEWHEEL = "mousewheel";
 
+	public static final String PAGEHIDE = "pagehide";
+
 	public static final String PROGRESS = "progress";
 
 	public static final String SCROLL = "scroll";

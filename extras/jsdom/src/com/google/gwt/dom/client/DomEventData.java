@@ -4,6 +4,8 @@ import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 
 @Bean(PropertySource.FIELDS)
 public final class DomEventData {
@@ -17,6 +19,14 @@ public final class DomEventData {
 	public String inputValue;
 
 	public boolean preview;
+
+	public boolean window;
+
+	@Override
+	public String toString() {
+		return FormatBuilder.keyValues("type", event.getType(), "preview",
+				preview, "window", window);
+	}
 
 	/*
 	 * Used to avoid value/inputValue roundtrips

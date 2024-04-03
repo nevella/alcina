@@ -78,6 +78,12 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		data.jsoId = jsoCounter;
 	}
 
+	public NativeEvent(String windowEventTypeName) {
+		Preconditions.checkArgument(windowEventTypeName != null);
+		data.populateWrapperDefaults();
+		data.type = windowEventTypeName;
+	}
+
 	@Override
 	public <T extends JavascriptObjectEquivalent> T cast() {
 		// only a few calls from the days of Trident
@@ -415,9 +421,13 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 	public <NE extends NativeEvent> NE serializableForm() {
 		NativeEvent event = Reflections.newInstance(getClass());
-		event.jso = jso;
-		event.serializableForm0();
-		event.data.jsoId = getId();
+		if (jso == null) {
+			event.data = data;
+		} else {
+			event.jso = jso;
+			event.serializableForm0();
+			event.data.jsoId = getId();
+		}
 		return (NE) event;
 	}
 
@@ -521,6 +531,23 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 			eventTarget = EventTarget.serializableForm(eventTarget);
 			currentEventTarget = EventTarget
 					.serializableForm(currentEventTarget);
+		}
+
+		void populateWrapperDefaults() {
+			shiftKey = false;
+			screenY = 0;
+			screenX = 0;
+			scale = 0.0;
+			rotation = 0.0;
+			mouseWheelVelocityY = 0;
+			metaKey = false;
+			keyCode = 0;
+			ctrlKey = false;
+			clientY = 0;
+			clientX = 0;
+			charCode = 0;
+			button = 0;
+			altKey = false;
 		}
 
 		@Override

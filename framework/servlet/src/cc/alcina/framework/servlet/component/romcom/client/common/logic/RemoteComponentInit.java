@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
+import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
@@ -27,11 +28,25 @@ public class RemoteComponentInit implements NativePreviewHandler {
 				.deserialize(ClientUtils.wndString(
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
 		ClientRpc.send(Message.Startup.forClient());
+		initWindowListeners();
 	}
+
+	void onPageHideNativeEvent() {
+		Event event = new Event(BrowserEvents.PAGEHIDE);
+		ProtocolMessageHandlerClient.dispatchEventMessage(event, null, false,
+				true);
+	}
+
+	final native void initWindowListeners() /*-{
+		var _this=this;
+		$wnd.onpagehide = $entry(function (evt){
+			_this. @cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentInit::onPageHideNativeEvent()();
+		});
+		}-*/;
 
 	@Override
 	public void onPreviewNativeEvent(NativePreviewEvent event) {
 		ProtocolMessageHandlerClient.dispatchEventMessage(
-				(Event) event.getNativeEvent(), null, true);
+				(Event) event.getNativeEvent(), null, true, false);
 	}
 }

@@ -5,8 +5,8 @@ import javax.servlet.http.HttpServletRequest;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.dom.Environment;
-import cc.alcina.framework.servlet.dom.PathrefDom;
-import cc.alcina.framework.servlet.dom.PathrefDom.Credentials;
+import cc.alcina.framework.servlet.dom.EnvironmentManager;
+import cc.alcina.framework.servlet.dom.EnvironmentManager.Credentials;
 import cc.alcina.framework.servlet.dom.RemoteUi;
 
 public interface RemoteComponent {
@@ -14,7 +14,8 @@ public interface RemoteComponent {
 			createEnvironment(HttpServletRequest request) {
 		Credentials credentials = Credentials.createUnique();
 		RemoteUi ui = getUiInstance();
-		Environment environment = PathrefDom.get().register(ui, credentials);
+		Environment environment = EnvironmentManager.get().register(ui,
+				credentials);
 		RemoteComponentProtocol.Session session = new RemoteComponentProtocol.Session();
 		session.id = credentials.id;
 		session.auth = credentials.auth;

@@ -112,17 +112,16 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 	static DomEventMessage currentEventMessage = null;
 
 	static void dispatchEventMessage(Event event, Element listenerElement,
-			boolean preview) {
+			boolean preview, boolean window) {
 		/*
 		 * FIXME - shouldn't need to dedpue
 		 */
 		if (currentEventMessage == null) {
 			currentEventMessage = new Message.DomEventMessage();
 			Scheduler.get().scheduleDeferred(() -> {
-				Optional<DomEventData> first = currentEventMessage.events
-						.stream().filter(e -> e.event.getId() == 0).findFirst();
-				if (first.isPresent()) {
-					int debug = 3;
+				// may have been removed by a 'fire-now'
+				if (currentEventMessage == null) {
+					return;
 				}
 				ClientRpc.send(currentEventMessage, true);
 				currentEventMessage = null;
@@ -132,6 +131,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		currentEventMessage.events.add(eventData);
 		eventData.event = event.serializableForm();
 		eventData.preview = preview;
+		eventData.window = window;
 		eventData.firstReceiver = listenerElement == null ? null
 				: Pathref.forNode(listenerElement);
 		String eventType = event.getType();
@@ -160,6 +160,10 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			if (Objects.equals(eventType, "input")) {
 				eventData.inputValue = elem.getPropertyString("value");
 			}
+		}
+		if (window) {
+			ClientRpc.send(currentEventMessage, true);
+			currentEventMessage = null;
 		}
 	}
 
@@ -204,7 +208,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 
 			@Override
 			public void onBrowserEvent(Event event) {
-				dispatchEventMessage(event, elem, false);
+				dispatchEventMessage(event, elem, false, false);
 			}
 		}
 	}
