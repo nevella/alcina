@@ -169,7 +169,9 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 						clonedEntity.setLocalId(entity.getLocalId());
 						result = (T) clonedEntity;
 					}
-					getCache().put((Entity) result);
+					if (entity.getId() != 0 || entity.getLocalId() != 0) {
+						getCache().put((Entity) result);
+					}
 					return (T) result;
 				}
 			}
