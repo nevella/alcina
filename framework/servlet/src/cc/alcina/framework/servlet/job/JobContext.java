@@ -249,10 +249,20 @@ public class JobContext {
 
 	public static void setStatusMessage(Supplier<String> messageSupplier) {
 		if (has()) {
-			get().fireDebounced(() -> {
+			JobContext jobContext = get();
+			jobContext.fireDebouncedUpdateStatus(() -> {
 				String message = messageSupplier.get();
-				get().maybeEnqueue(
-						() -> get().getJob().setStatusMessage(message));
+				get().maybeEnqueue(() -> {
+					Job job = jobContext.getJob();
+					job.setStatusMessage(message);
+					// FIXME - there should be a higher-level
+					// 'statusMessage/completion' tuple passed here
+					if (jobContext.itemCount > 0
+							&& jobContext.itemsCompleted > 0) {
+						setCompletion(((double) jobContext.itemsCompleted)
+								/ ((double) jobContext.itemCount));
+					}
+				});
 				LoggerFactory.getLogger(JobContext.class)
 						.info("status message: {}", message);
 			});
@@ -281,7 +291,7 @@ public class JobContext {
 	Set<String> publishedMessages = Collections
 			.synchronizedSet(new LinkedHashSet<>());
 
-	private EventCollator<Runnable> debouncer = new EventCollator<Runnable>(
+	private EventCollator<Runnable> updateStatusDebouncer = new EventCollator<Runnable>(
 			1000,
 			collator -> AlcinaChildRunnable
 					.runInTransaction(() -> collator.getLastObject().run()))
@@ -433,7 +443,7 @@ public class JobContext {
 			}
 		}
 		if (job.provideIsNotComplete()) {
-			debouncer.cancel();
+			updateStatusDebouncer.cancel();
 			// occurs just before end, since possibly on a different thread
 			// log = Registry.impl(PerThreadLogging.class).endBuffer();
 			int maxChars = LooseContext
@@ -464,8 +474,8 @@ public class JobContext {
 		}
 	}
 
-	private void fireDebounced(Runnable runnable) {
-		debouncer.eventOccurred(runnable);
+	private void fireDebouncedUpdateStatus(Runnable runnable) {
+		updateStatusDebouncer.eventOccurred(runnable);
 	}
 
 	public ExecutionConstraints getExecutionConstraints() {
@@ -516,6 +526,7 @@ public class JobContext {
 			TransformCommit.get().enqueueBackendTransform(runnable);
 		} else {
 			runnable.run();
+			Transaction.commit();
 		}
 	}
 

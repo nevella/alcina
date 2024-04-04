@@ -34,6 +34,9 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  * tuples is that it improves code reuse, since SearchCriterion classes can be
  * used in multiple SearchDefinition types.
  * 
+ * <p>
+ * See {@link DomainFilter} for search debugging assistance
+ * 
  * 
  *
  * @param <T>
