@@ -115,6 +115,18 @@ public class LooseContextInstance {
 		return (Integer) get(key);
 	}
 
+	public Long getLong(String key) {
+		Object obj = get(key);
+		if (obj instanceof String) {
+			try {
+				return Long.parseLong((String) obj);
+			} catch (Exception e) {
+				return null;
+			}
+		}
+		return (Long) get(key);
+	}
+
 	public int getInteger(String key, int defaultValue) {
 		return containsKey(key) ? getInteger(key) : defaultValue;
 	}

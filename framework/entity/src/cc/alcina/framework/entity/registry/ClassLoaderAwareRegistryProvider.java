@@ -86,8 +86,15 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		}
 	}
 
+	private static ClassLoaderAwareRegistryProvider instance;
+
 	public static ClassLoaderAwareRegistryProvider get() {
-		return (ClassLoaderAwareRegistryProvider) Registry.getProvider();
+		if (instance == null) {
+			// no need to worry about threading, this happens early in servlet
+			// init
+			instance = new ClassLoaderAwareRegistryProvider();
+		}
+		return instance;
 	}
 
 	Map<ClassLoader, Registry> perClassLoader = new LinkedHashMap<ClassLoader, Registry>();

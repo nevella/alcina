@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.util.AlcinaParallel;
@@ -15,6 +16,9 @@ import cc.alcina.framework.entity.util.AlcinaParallel;
 @Registration.Singleton
 public class SelectionTraversalExecutorThreadPool
 		implements SelectionTraversal.Executor {
+	public static final String CONTEXT_SERIAL = SelectionTraversalExecutorThreadPool.class
+			.getName() + ".CONTEXT_SERIAL";
+
 	public static SelectionTraversalExecutorThreadPool get() {
 		return Registry.impl(SelectionTraversalExecutorThreadPool.class);
 	}
@@ -37,7 +41,8 @@ public class SelectionTraversalExecutorThreadPool
 		List<Runnable> runnables = this.runnables;
 		this.runnables = new ArrayList<>();
 		AlcinaParallel.builder().withExecutor(executor).withTransaction()
-				.withSerial(isSerial() || serialExecution)
+				.withSerial(isSerial() || serialExecution
+						|| LooseContext.is(CONTEXT_SERIAL))
 				.withRunnables(runnables).run();
 	}
 

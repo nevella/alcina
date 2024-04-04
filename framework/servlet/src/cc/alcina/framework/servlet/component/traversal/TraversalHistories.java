@@ -23,7 +23,7 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 		return Registry.impl(TraversalHistories.class);
 	}
 
-	RemoteComponentObservables<SelectionTraversal> observables;
+	public RemoteComponentObservables<SelectionTraversal> observables;
 
 	public TraversalHistories() {
 		observables = new RemoteComponentObservables<>(SelectionTraversal.class,

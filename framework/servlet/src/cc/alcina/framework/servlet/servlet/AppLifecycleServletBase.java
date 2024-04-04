@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -137,7 +138,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	public static void setupAppServerBootstrapJvmServices() {
-		Registry.Internals.setProvider(new ClassLoaderAwareRegistryProvider());
+		Registry.Internals.setProvider(ClassLoaderAwareRegistryProvider.get());
+		EnvironmentRegistry.registerDelegateProvider(null);
 	}
 
 	protected ServletConfig initServletConfig;

@@ -161,6 +161,10 @@ public abstract class LooseContext {
 		return getContext().getInteger(key);
 	}
 
+	public static Long getLong(String key) {
+		return getContext().getLong(key);
+	}
+
 	public static String getString(String key) {
 		return getContext().get(key);
 	}
