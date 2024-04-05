@@ -136,7 +136,7 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		}
 
 		@Override
-		public String getText(MeasureSelection selection) {
+		public String computeText(MeasureSelection selection) {
 			return selection.get().ntc();
 		}
 	}

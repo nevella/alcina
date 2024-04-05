@@ -394,6 +394,9 @@ public abstract class Entity<T extends Entity> extends Bindable
 			TransformManager.get().persistSerializables(Entity.this);
 		}
 
+		/*
+		 * Attach this object to the Domain
+		 */
 		public T register() {
 			TransformManager.get().registerDomainObject(Entity.this);
 			return (T) Entity.this;

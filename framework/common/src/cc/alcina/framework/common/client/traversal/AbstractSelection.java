@@ -135,14 +135,17 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	protected static class View<S extends AbstractSelection>
 			implements Selection.View<S> {
-		String filterableString;
+		String text;
 
-		public String getText(S selection) {
-			if (filterableString == null) {
-				filterableString = HasFilterableString
-						.filterableString(selection.get());
+		public final String getText(S selection) {
+			if (text == null) {
+				text = HasFilterableString.filterableString(selection.get());
 			}
-			return filterableString;
+			return text;
+		}
+
+		protected String computeText(S selection) {
+			return HasFilterableString.filterableString(selection.get());
 		}
 	}
 }

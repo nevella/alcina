@@ -192,7 +192,8 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	default boolean matchesText(String textFilter) {
 		View view = view();
 		return SearchUtils.containsIgnoreCase(textFilter, view.getText(this),
-				view.getDiscriminator(this));
+				view.getDiscriminator(this), getPathSegment(),
+				processNode().treePath());
 	};
 
 	default void onDuplicatePathSelection(Layer layer, Selection selection) {
