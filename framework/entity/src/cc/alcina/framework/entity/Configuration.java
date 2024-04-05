@@ -382,12 +382,26 @@ public class Configuration {
 			immutableCustomProperties.put(key, new Object());
 		}
 
-		public String asString(boolean flat) {
-			Map<String, String> map = keyValues.keySet().stream().sorted()
-					.collect(AlcinaCollectors.toLinkedHashMap(k -> k,
+		public String asString(boolean withSources) {
+			StringBuilder builder = new StringBuilder();
+			Map<String, String> propertyView = keyValues.keySet().stream()
+					.sorted().collect(AlcinaCollectors.toLinkedHashMap(k -> k,
 							k -> keyValues.get(k).resolvedValue));
-			return map.entrySet().stream().map(Object::toString)
-					.collect(Collectors.joining("\n"));
+			builder.append(propertyView.entrySet().stream()
+					.map(Object::toString).collect(Collectors.joining("\n")));
+			if (withSources) {
+				builder.append("\n==========Source View========\n\n");
+				Map<String, String> sourceView = keyValues.keySet().stream()
+						.sorted()
+						.collect(AlcinaCollectors.toLinkedHashMap(k -> k,
+								k -> "\n\t" + keyValues.get(k)
+										.toShortSourceString()));
+				builder.append(keyValues.keySet().stream().sorted()
+						.map(k -> keyValues.get(k))
+						.map(PropertyValues::toShortSourceString)
+						.collect(Collectors.joining("\n")));
+			}
+			return builder.toString();
 		}
 
 		public void clearCustom() {
@@ -752,6 +766,16 @@ public class Configuration {
 				resolve();
 			}
 
+			public String toShortSourceString() {
+				FormatBuilder format = new FormatBuilder();
+				format.format("%s value: ", key);
+				format.append(resolvedValue);
+				format.separator("\n\t");
+				sources.forEach(
+						source -> format.append(source.toShortString()));
+				return format.toString();
+			}
+
 			public PropertyValues copyFor(String stringKey) {
 				PropertyValues result = new PropertyValues(key);
 				result.registeredAt = stringKey;
@@ -801,6 +825,12 @@ public class Configuration {
 							key, results));
 				}
 				return Stream.of(Ax.first(results));
+			}
+
+			public String toShortString() {
+				String key = packageBundles != null ? Ax.format("%s [pkg: %s]",
+						set.key, packageBundles.packageName) : set.key;
+				return FormatBuilder.keyValues(key, value);
 			}
 
 			static ValueSource fromMap(PropertySet propertySet, String key,
