@@ -373,7 +373,7 @@ public class JobContext {
 	}
 
 	void checkCancelled0(boolean ignoreSelf) {
-		Transaction.endAndBeginNew();
+		Transaction.ensureAndRestartIfOlderThan(200);
 		Job cursor = job;
 		if (ignoreSelf) {
 			Optional<Job> parent = cursor.provideFirstInSequence()

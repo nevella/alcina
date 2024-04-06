@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -831,5 +832,22 @@ public class Transaction implements Comparable<Transaction> {
 			NavigableSet<Transaction> otherCommittedTransactionsSet) {
 		return TransactionVersions.commonVisible(committedTransactions,
 				otherCommittedTransactionsSet);
+	}
+
+	/**
+	 * <p>
+	 * Intended for multi-threaded objects such as jobs, this debounces 'start a
+	 * new tx to check for changes' to prevent 1000s of new transactions per
+	 * second, while having a reasonable cross-thread object update period
+	 * 
+	 * @param ageMs
+	 *            the maxage of the transaction before beginning a new one
+	 */
+	public static void ensureAndRestartIfOlderThan(long ageMs) {
+		ensureBegun();
+		Transaction current = current();
+		if (!TimeConstants.within(current.startTime, ageMs)) {
+			endAndBeginNew();
+		}
 	}
 }
