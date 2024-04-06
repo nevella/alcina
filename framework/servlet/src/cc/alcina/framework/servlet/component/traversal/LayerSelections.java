@@ -104,7 +104,7 @@ class LayerSelections extends Model.All {
 
 		LooseContextInstance snapshot;
 
-		List<Selection> filtered;
+		List<SelectionArea> filtered;
 
 		SelectionsArea() {
 			Stream<Selection> stream = selectionLayers.traversal
@@ -115,15 +115,22 @@ class LayerSelections extends Model.All {
 				stream.parallel();
 			}
 			testHistory.beforeFilter();
-			filtered = stream.filter(this::test).limit(maxRenderedSelections)
+			List<Selection> filteredSelections = stream.filter(this::test)
+					.limit(maxRenderedSelections).toList();
+			filtered = filteredSelections.stream().map(SelectionArea::new)
 					.toList();
-			selections = filtered.stream().map(SelectionArea::new)
-					.collect(Collectors.toList());
-			empty = selections.isEmpty();
+			empty = filtered.isEmpty();
+			selections = filtered.stream().collect(Collectors.toList());
 			for (int idx = selections
 					.size(); idx < maxRenderedSelections; idx++) {
 				selections.add(new Spacer());
 			}
+			bindings().from(selectionLayers.page).on(Page.Property.place)
+					.signal(this::updateSelected);
+		}
+
+		void updateSelected() {
+			filtered.forEach(SelectionArea::updateSelected);
 		}
 
 		/*
@@ -196,6 +203,14 @@ class LayerSelections extends Model.All {
 			@Binding(type = Type.PROPERTY)
 			boolean secondaryDescendantRelation;
 
+			@Binding(type = Type.PROPERTY)
+			boolean selected;
+
+			void setSelected(boolean selected) {
+				set("selected", this.selected, selected,
+						() -> this.selected = selected);
+			}
+
 			SelectionArea(Selection selection) {
 				this.selection = selection;
 				View view = selection.view();
@@ -219,6 +234,10 @@ class LayerSelections extends Model.All {
 				selectionPath.type = selectionType;
 				event.reemitAs(this, TraversalEvents.SelectionSelected.class,
 						selectionPath);
+			}
+
+			void updateSelected() {
+				setSelected(Page.traversalPlace().isSelected(selection));
 			}
 		}
 	}

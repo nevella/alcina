@@ -98,6 +98,52 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	}
 
 	@Override
+	public boolean matchesText(String textFilter) {
+		if (TextRangeMatcher.matches(textFilter, get().toIntPair())) {
+			return true;
+		}
+		return super.matchesText(textFilter);
+	}
+
+	/*
+	 * A simple per-app cache to optimise range filtering
+	 */
+	static class TextRangeMatcher {
+		static class Data {
+			static Data last;
+
+			String textFilter;
+
+			int idx = -1;
+
+			Data(String textFilter) {
+				this.textFilter = textFilter;
+				if (textFilter.matches("\\d{1,9}")) {
+					idx = Integer.parseInt(textFilter);
+				}
+			}
+
+			static Data get(String textFilter) {
+				Data data = last;
+				if (data != null && data.textFilter == textFilter) {
+					return data;
+				}
+				data = new Data(textFilter);
+				last = data;
+				return data;
+			}
+
+			boolean matches(IntPair intPair) {
+				return idx == -1 ? false : intPair.contains(idx);
+			}
+		}
+
+		public static boolean matches(String textFilter, IntPair intPair) {
+			return Data.get(textFilter).matches(intPair);
+		}
+	}
+
+	@Override
 	public String toDebugString() {
 		return Ax.format("%s :: %s :: %s", super.toString(), get().getData(),
 				Ax.ntrim(get().text(), 40));

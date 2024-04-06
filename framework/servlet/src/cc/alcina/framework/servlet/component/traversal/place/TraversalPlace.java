@@ -48,6 +48,11 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 				.orElse(SelectionType.VIEW);
 	}
 
+	public SelectionType lastSelectionType() {
+		return paths.stream().reduce(Ax.last()).map(SelectionPath::type)
+				.orElse(SelectionType.VIEW);
+	}
+
 	public String getTextFilter() {
 		return textFilter;
 	}
@@ -266,5 +271,10 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		boolean hasDescendantRelation = testSelection
 				.hasDescendantRelation(selection, true);
 		return hasDescendantRelation && !hasDirectRelation;
+	}
+
+	public boolean isSelected(Selection selection) {
+		return paths.stream().anyMatch(p -> p.type == SelectionType.VIEW
+				&& p.selection() == selection);
 	}
 }

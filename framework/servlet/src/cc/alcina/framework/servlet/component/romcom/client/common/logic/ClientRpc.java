@@ -88,16 +88,19 @@ public class ClientRpc {
 	 *            probably not
 	 */
 	static void send(Message message, boolean block) {
-		BrowserDispatchQueue queue = message instanceof AwaitRemote
-				? acceptorQueue
-				: submitQueue;
-		queue.submit(message);
+		if (message instanceof AwaitRemote) {
+			if (acceptorQueue.isEmpty()) {
+				acceptorQueue.submit(message);
+			}
+		} else {
+			submitQueue.submit(message);
+		}
 	}
 
-	static class BrowserDispatchQueue implements TopicListener<Void> {
+	static class BrowserDispatchQueue implements TopicListener<Request> {
 		List<RemoteComponentRequest> requestQueue = new ArrayList<>();
 
-		public void submit(Message message) {
+		void submit(Message message) {
 			RemoteComponentRequest request = createRequest();
 			request.protocolMessage = message;
 			if (message.sync) {
@@ -108,25 +111,82 @@ public class ClientRpc {
 			}
 		}
 
-		RemoteComponentRequest inFlight = null;
+		boolean isEmpty() {
+			return requestQueue.isEmpty();
+		}
+
+		RemoteComponentRequest inFlightComponentRequest = null;
+
+		Request inFlightHttpRequest;
 
 		void maybeDispatch() {
-			if (inFlight != null) {
+			if (inFlightComponentRequest != null) {
 				return;
 			}
 			if (requestQueue.isEmpty()) {
 				return;
 			}
-			inFlight = requestQueue.remove(0);
-			Topic<Void> calledSignal = Topic.create();
+			inFlightComponentRequest = requestQueue.remove(0);
+			Topic<Request> calledSignal = Topic.create();
 			calledSignal.add(this);
-			submitRequest(inFlight, null, calledSignal);
+			inFlightHttpRequest = submitRequest(inFlightComponentRequest, null,
+					calledSignal);
 		}
 
 		@Override
-		public void topicPublished(Void message) {
-			inFlight = null;
-			maybeDispatch();
+		public void topicPublished(Request httpRequest) {
+			if (httpRequest == inFlightHttpRequest) {
+				maybeEnqueueAwaitRemote();
+				inFlightComponentRequest = null;
+				maybeDispatch();
+			}
+		}
+
+		void maybeEnqueueAwaitRemote() {
+			if (!(inFlightComponentRequest.protocolMessage instanceof AwaitRemote)) {
+				return;
+			}
+			enqueueWhenVisible();
+		}
+
+		void retry() {
+			if (Document.get().getVisibilityState().equals("visible")) {
+			} else {
+				new Timer() {
+					@Override
+					public void run() {
+						retry();
+					}
+				}.schedule(100);
+			}
+		}
+
+		void enqueueWhenVisible() {
+			if (Document.get().getVisibilityState().equals("visible")) {
+				if (awaitDelay == 0) {
+					submit(new AwaitRemote());
+				} else {
+					/*
+					 * if the server is reloading or there's a network issue,
+					 * don't try too often
+					 */
+					new Timer() {
+						@Override
+						public void run() {
+							submit(new AwaitRemote());
+						}
+					}.schedule(awaitDelay);
+					awaitDelay = Math.min(1000, awaitDelay + 100);
+				}
+			} else {
+				new Timer() {
+					@Override
+					public void run() {
+						enqueueWhenVisible();
+						;
+					}
+				}.schedule(100);
+			}
 		}
 	}
 
@@ -134,13 +194,12 @@ public class ClientRpc {
 
 	static BrowserDispatchQueue acceptorQueue = new BrowserDispatchQueue();
 
-	static void sendAwaitRemoteMessage() {
-		send(new Message.AwaitRemote());
-	}
+	static int clientServerMessageCounter = 0;
 
-	static void submitRequest(RemoteComponentRequest request,
+	static Request submitRequest(RemoteComponentRequest request,
 			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
-			Topic<Void> calledSignal) {
+			Topic<Request> calledSignal) {
+		request.protocolMessage.messageId = clientServerMessageCounter++;
 		String payload = ReflectiveSerializer.serialize(request);
 		String path = Window.Location.getPath();
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
@@ -148,12 +207,12 @@ public class ClientRpc {
 			@Override
 			public void onError(Request httpRequest, Throwable exception) {
 				new ExceptionHandler().accept(request, exception);
-				signalCalled();
+				signalCalled(httpRequest);
 			}
 
-			void signalCalled() {
+			void signalCalled(Request httpRequest) {
 				if (calledSignal != null) {
-					calledSignal.signal();
+					calledSignal.publish(httpRequest);
 				}
 			}
 
@@ -163,7 +222,7 @@ public class ClientRpc {
 				if (httpResponse.getStatusCode() == 0
 						|| httpResponse.getStatusCode() >= 400) {
 					onError(httpRequest, new StatusCodeException(httpResponse));
-					signalCalled();
+					signalCalled(httpRequest);
 					return;
 				}
 				String text = httpResponse.getText();
@@ -183,12 +242,19 @@ public class ClientRpc {
 						try {
 							handler.handle(response, message);
 						} catch (Throwable e) {
+							Ax.out("Exception handling message %s\n"
+									+ "================\nSerialized form:\n%s",
+									message, text);
+							e.printStackTrace();
 							/*
 							 * FIXME - devex - 0 this can range - but at least
 							 * initially includes invalid pathrefs (which are
 							 * basically fatal but continue during dev)
 							 * 
-							 * 
+							 * correction - since client/server are async, and
+							 * thus the client's dom can be behind the server's,
+							 * it's not necessarily true that invalid pathrefs
+							 * *should* be fatal. but handling is complex
 							 */
 							Window.alert(
 									CommonUtils.toSimpleExceptionMessage(e));
@@ -197,18 +263,12 @@ public class ClientRpc {
 						Ax.out("Received no-message response for %s",
 								NestedName.get(messageClass));
 					}
-					if (messageClass == AwaitRemote.class
-							&& !RemoteObjectModelComponentState
-									.get().finished) {
-						// continue 'receive loop' with component server
-						sendAwaitRemoteMessage();
-					}
-					signalCalled();
+					signalCalled(httpRequest);
 				}
 			}
 		};
 		try {
-			builder.sendRequest(payload, callback);
+			return builder.sendRequest(payload, callback);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -224,30 +284,12 @@ public class ClientRpc {
 				switch (statusCode) {
 				case 0:
 				case 404:
-					retry();
+					awaitDelay++;
 					break;
 				default:
+					RemoteObjectModelComponentState.get().finished = true;
 					break;
 				}
-			}
-		}
-
-		void retry() {
-			if (Document.get().getVisibilityState().equals("visible")) {
-				new Timer() {
-					@Override
-					public void run() {
-						sendAwaitRemoteMessage();
-					}
-				}.schedule(awaitDelay);
-				awaitDelay = Math.min(1000, awaitDelay + 100);
-			} else {
-				new Timer() {
-					@Override
-					public void run() {
-						retry();
-					}
-				}.schedule(100);
 			}
 		}
 	}
@@ -258,5 +300,9 @@ public class ClientRpc {
 		StatusCodeException(Response httpResponse) {
 			this.httpResponse = httpResponse;
 		}
+	}
+
+	public static void beginAwaitLoop() {
+		send(new Message.AwaitRemote());
 	}
 }

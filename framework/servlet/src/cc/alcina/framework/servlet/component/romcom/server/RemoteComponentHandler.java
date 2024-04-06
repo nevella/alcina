@@ -166,6 +166,7 @@ class RemoteComponentHandler {
 			String requestJson = Io.read()
 					.fromStream(servletRequest.getInputStream()).asString();
 			if (requestJson.length() > 0) {
+				Environment env = null;
 				RemoteComponentRequest request = ReflectiveSerializer
 						.deserialize(requestJson);
 				MessageHandlerServer messageHandler = Registry.impl(
@@ -179,7 +180,7 @@ class RemoteComponentHandler {
 						NestedName.get(request.protocolMessage),
 						request.protocolMessage.toDebugString());
 				try {
-					Environment env = EnvironmentManager.get()
+					env = EnvironmentManager.get()
 							.getEnvironment(request.session);
 					if (env == null) {
 						throw buildInvalidClientException(
@@ -221,6 +222,10 @@ class RemoteComponentHandler {
 						processingException.protocolException = e;
 					}
 					response.protocolMessage = processingException;
+				}
+				if (response.protocolMessage != null && env != null) {
+					response.protocolMessage.messageId = env
+							.nextServerClientMessageId();
 				}
 				logger.debug("{} dispatched response #{} - {}", Ax.appMillis(),
 						response.requestId,

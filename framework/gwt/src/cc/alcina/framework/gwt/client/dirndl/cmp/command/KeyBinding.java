@@ -98,9 +98,11 @@ public @interface KeyBinding {
 
 			boolean matches(Set<Class<? extends CommandContext>> contexts,
 					Set<Modifier> modifiers, String key) {
-				if (contexts.stream().anyMatch(ctx -> contexts.contains(ctx))) {
-					return key.equalsIgnoreCase(binding.key())
+				if (contexts.stream()
+						.anyMatch(ctx -> this.contexts.contains(ctx))) {
+					boolean matches = key.equalsIgnoreCase(binding.key())
 							&& modifiers.equals(this.modifiers);
+					return matches;
 				} else {
 					return false;
 				}

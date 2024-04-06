@@ -547,8 +547,11 @@ body > page > layers > layers > layer-selections > selections-area > selection-a
 body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=DESCENT] {
   background: #ddf;
 }
-body > page > layers > layers > layer-selections > selections-area > selection-area[secondary-descendant-relation=true] {
+body > page > layers > layers > layer-selections > selections-area > selection-area[secondary-descendant-relation] {
   background: #eaeafa;
+}
+body > page > layers > layers > layer-selections > selections-area > selection-area[selected] {
+  background: #e3fae3;
 }
 body > page > properties {
   display: block;

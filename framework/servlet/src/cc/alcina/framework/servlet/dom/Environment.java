@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,14 +165,16 @@ public class Environment {
 			 */
 			queue.onInvokedSync();
 			boolean timedOut = false;
-			try {
-				timedOut = !handler.latch.await(1, TimeUnit.SECONDS);
-			} catch (Exception e) {
-				Ax.simpleExceptionOut(e);
-			}
-			if (timedOut) {
-				throw new InvokeException("Timed out");
-			}
+			do {
+				try {
+					timedOut = !handler.latch.await(1, TimeUnit.SECONDS);
+				} catch (Exception e) {
+					Ax.simpleExceptionOut(e);
+				}
+				if (timedOut) {
+					Ax.out("invokesync - timedout");
+				}
+			} while (timedOut);
 			if (handler.response.exception == null) {
 				return (T) handler.response.response;
 			} else {
@@ -295,6 +298,8 @@ public class Environment {
 	 * on 'this')
 	 */
 	boolean runInFrameWithoutSync;
+
+	AtomicInteger serverClientMessageCounter = new AtomicInteger();
 
 	public void clientStarted() {
 		clientStarted = true;
@@ -540,5 +545,9 @@ public class Environment {
 
 	public void addLifecycleHandlers() {
 		runInClientFrame(() -> ui.addLifecycleHandlers());
+	}
+
+	public int nextServerClientMessageId() {
+		return serverClientMessageCounter.getAndIncrement();
 	}
 }

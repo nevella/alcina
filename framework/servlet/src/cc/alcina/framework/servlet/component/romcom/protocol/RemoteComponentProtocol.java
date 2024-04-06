@@ -73,6 +73,11 @@ public class RemoteComponentProtocol {
 		public boolean sync;
 
 		/*
+		 * Client -> server; incremental.
+		 */
+		public int messageId;
+
+		/*
 		 * Sent by the client to allow the server to send it messages
 		 */
 		public static class AwaitRemote extends Message {

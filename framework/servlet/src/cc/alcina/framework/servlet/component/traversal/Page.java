@@ -31,6 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommands.ClearFilter;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommands.FocusSearch;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
@@ -53,7 +54,8 @@ class Page extends Model.All
 		TraversalViewCommands.SelectionFilterModelContainment.Handler,
 		TraversalViewCommands.SelectionFilterModelDescendant.Handler,
 		TraversalViewCommands.SelectionFilterModelView.Handler,
-		TraversalViewCommands.PropertyDisplayCycle.Handler {
+		TraversalViewCommands.PropertyDisplayCycle.Handler,
+		TraversalCommands.FocusSearch.Handler {
 	// FIXME - traversal - resolver/descendant event
 	public static TraversalPlace traversalPlace() {
 		return Ui.get().page.place;
@@ -93,9 +95,6 @@ class Page extends Model.All
 				this::setHistory));
 		bindings().from(this).on(Property.history).value(this)
 				.map(SelectionLayers::new).accept(this::setLayers);
-		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
-				.filter(this::placeChangeCausesSelectionLayersChange)
-				.value(this).map(SelectionLayers::new).accept(this::setLayers);
 		bindings().from(this).on(Property.history).value(this)
 				.map(Properties::new).accept(this::setProperties);
 		bindings().from(this).on(Property.history)
@@ -104,6 +103,9 @@ class Page extends Model.All
 		bindings().from(this).on(Property.history)
 				.map(o -> new RenderedSelections(this, false))
 				.accept(this::setOutput);
+		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
+				.filter(this::placeChangeCausesSelectionLayersChange)
+				.value(this).map(SelectionLayers::new).accept(this::setLayers);
 		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
@@ -233,6 +235,9 @@ class Page extends Model.All
 	}
 
 	void changeSelectionType(SelectionType selectionType) {
+		if (place.lastSelectionType() == selectionType) {
+			return;
+		}
 		TraversalPlace to = place.copy().withSelectionType(selectionType);
 		goPreserveScrollPosition(to);
 	}
@@ -306,5 +311,10 @@ class Page extends Model.All
 		settings.setPropertyDisplayMode(next);
 		StatusModule.get().showMessageTransitional(
 				Ax.format("Property display mode -> %s", next));
+	}
+
+	@Override
+	public void onFocusSearch(FocusSearch event) {
+		header.mid.suggestor.focus();
 	}
 }

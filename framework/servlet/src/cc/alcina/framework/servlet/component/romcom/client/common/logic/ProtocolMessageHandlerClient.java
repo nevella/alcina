@@ -1,7 +1,6 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.DomEventData;
@@ -38,7 +37,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		@Override
 		public void handle(RemoteComponentResponse response,
 				Message.BeginAwaitLoop message) {
-			ClientRpc.sendAwaitRemoteMessage();
+			ClientRpc.beginAwaitLoop();
 		}
 	}
 

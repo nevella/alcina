@@ -54,7 +54,21 @@ class SyncMutations {
 			mutationsAccess.setApplyToRemote(applyToRemote);
 			recordList.stream().forEach(record -> {
 				record.sync = this;
-				record.connectMutationNodeRefs();
+				try {
+					record.connectMutationNodeRefs();
+				} catch (RuntimeException e) {
+					if (applyToRemote) {
+						// FIXME - romcom - possibly these should never be sent
+						// (possibly a dom mutation is being fired on a detached
+						// element)(reproduction: traversal - croissanteria -
+						// filter '12' - select - descent - change filter)
+						Ax.simpleExceptionOut(e);
+						Ax.out("[continue]");
+						return;
+					} else {
+						throw e;
+					}
+				}
 				record.apply(ApplyTo.local);
 				record.addedNodes.forEach(added -> {
 					record.connectMutationNodeRef(added);

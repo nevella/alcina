@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import elemental.json.Json;
@@ -314,8 +315,14 @@ public class MutationRecord {
 		if (mutationNode == null) {
 			return;
 		}
-		mutationNode.node = mutationNode.path.node();
-		mutationNode.sync = sync;
+		try {
+			mutationNode.node = mutationNode.path.node();
+			mutationNode.sync = sync;
+		} catch (RuntimeException e) {
+			Ax.out("Issue connecting node: \n%s\nRecord:\n%s ", mutationNode,
+					this);
+			throw e;
+		}
 	}
 
 	void connectMutationNodeRefs() {
