@@ -9,6 +9,10 @@ import cc.alcina.framework.common.client.util.Timer;
 
 /*
  * Collects events and triggers an action after a specified delay
+ * 
+ * Synchronization - all access to the timer should be synced on the Collator
+ * 
+ * Synchronization - all access to finished should be synced on finishedMonitor
  */
 public class EventCollator<T> {
 	private long lastEventOccurred = 0;
@@ -51,7 +55,7 @@ public class EventCollator<T> {
 			} catch (Throwable t) {
 				t.printStackTrace();
 			}
-			synchronized (this) {
+			synchronized (EventCollator.this) {
 				if (firstEventOccurred == 0) {
 					firstObject = null;
 					lastObject = null;
@@ -100,9 +104,11 @@ public class EventCollator<T> {
 	}
 
 	public void cancel() {
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
+		synchronized (this) {
+			if (timer != null) {
+				timer.cancel();
+				timer = null;
+			}
 		}
 		synchronized (finishedMonitor) {
 			finished = true;

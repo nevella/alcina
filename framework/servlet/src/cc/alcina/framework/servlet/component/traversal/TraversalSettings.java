@@ -13,6 +13,15 @@ public class TraversalSettings extends Bindable.Fields {
 
 	public PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
 
+	public InputOutputDisplayMode inputOutputDisplayMode = InputOutputDisplayMode.INPUT_OUTPUT;
+
+	public void setInputOutputDisplayMode(
+			InputOutputDisplayMode inputOutputDisplayMode) {
+		set("inputOutputDisplayMode", this.inputOutputDisplayMode,
+				inputOutputDisplayMode,
+				() -> this.inputOutputDisplayMode = inputOutputDisplayMode);
+	}
+
 	public void setDescentSelectionIncludesSecondaryRelations(
 			boolean descentSelectionIncludesSecondaryRelations) {
 		set("descentSelectionIncludesSecondaryRelations",
@@ -36,5 +45,25 @@ public class TraversalSettings extends Bindable.Fields {
 
 	public enum PropertyDisplayMode {
 		QUARTER_WIDTH, HALF_WIDTH, NONE
+	}
+
+	public enum InputOutputDisplayMode {
+		INPUT_OUTPUT, INPUT, OUTPUT, NONE
+	}
+
+	public PropertyDisplayMode nextPropertyDisplayMode() {
+		PropertyDisplayMode next = PropertyDisplayMode
+				.values()[(propertyDisplayMode.ordinal() + 1)
+						% PropertyDisplayMode.values().length];
+		setPropertyDisplayMode(next);
+		return next;
+	}
+
+	public InputOutputDisplayMode nextInputOutputDisplayMode() {
+		InputOutputDisplayMode next = InputOutputDisplayMode
+				.values()[(inputOutputDisplayMode.ordinal() + 1)
+						% InputOutputDisplayMode.values().length];
+		setInputOutputDisplayMode(next);
+		return next;
 	}
 }

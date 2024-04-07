@@ -37,11 +37,7 @@ public class MessageHandlers {
 		@Override
 		public void onAfterMessageHandled(Message.AwaitRemote message) {
 			try {
-				Ax.logEvent("before await latch - %s - message id %s",
-						hashCode(), message.messageId);
 				latch.await();
-				Ax.logEvent("after await latch - %s - message id %s",
-						hashCode(), message.messageId);
 			} catch (InterruptedException e) {
 				Ax.simpleExceptionOut(e);// and exit, client will retry
 			}
@@ -51,9 +47,6 @@ public class MessageHandlers {
 		public void accept(Message message) {
 			response.protocolMessage = message;
 			latch.countDown();
-			Ax.logEvent(
-					"after await latch - consumed - %s - result message id %s",
-					hashCode(), message == null ? "(null)" : message.messageId);
 		}
 	}
 

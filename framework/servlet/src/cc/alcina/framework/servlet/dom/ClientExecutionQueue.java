@@ -182,8 +182,6 @@ class ClientExecutionQueue implements Runnable {
 				if (this.fromClientMessageAcceptor != null) {
 					this.fromClientMessageAcceptor.accept(null);
 				}
-				Ax.logEvent("populated FromClientMessageAcceptor %s",
-						messageHandler.hashCode());
 				this.fromClientMessageAcceptor = (FromClientMessageAcceptor) messageHandler;
 				logger.debug("fromClientMessageAcceptor :: registered");
 				notify();

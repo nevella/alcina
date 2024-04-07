@@ -80,4 +80,21 @@ public abstract class TraversalViewCommands<T, H extends NodeEvent.Handler>
 			void onPropertyDisplayCycle(PropertyDisplayCycle event);
 		}
 	}
+
+	@AppSuggestorCommand(
+		parent = TraversalViewCommands.class,
+		name = "input/output: cycle",
+		description = "Cycle through the input/output display modes")
+	@KeyBinding(key = "i")
+	public static class InputOutputCycle
+			extends TraversalViewCommands<Object, InputOutputCycle.Handler> {
+		@Override
+		public void dispatch(InputOutputCycle.Handler handler) {
+			handler.onInputOutputCycle(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onInputOutputCycle(InputOutputCycle event);
+		}
+	}
 }

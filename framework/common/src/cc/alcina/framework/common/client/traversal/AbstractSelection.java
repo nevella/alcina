@@ -139,7 +139,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 		public final String getText(S selection) {
 			if (text == null) {
-				text = HasFilterableString.filterableString(selection.get());
+				text = computeText(selection);
 			}
 			return text;
 		}

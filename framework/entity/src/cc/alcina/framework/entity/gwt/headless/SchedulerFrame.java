@@ -300,16 +300,29 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 		@Override
 		public void scheduleRepeating(long periodMillis) {
-			this.periodMillis = periodMillis;
+			this.periodMillis = Math.max(1, periodMillis);
+			/* run once */
 			schedule(0);
+			schedule(periodMillis);
 		}
 
 		@Override
 		public void schedule(long delayMillis) {
-			scheduleFixedDelay(() -> {
+			scheduleFixedDelay(new TimerCommand(), (int) delayMillis);
+		}
+
+		class TimerCommand implements RepeatingCommand {
+			@Override
+			public boolean execute() {
 				run();
 				return !cancelled && periodMillis != 0;
-			}, (int) delayMillis);
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("timercommand - timer %s",
+						TimerImpl.this.hashCode());
+			}
 		}
 
 		@Override

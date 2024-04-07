@@ -36,7 +36,9 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSel
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.InputOutputDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.InputOutputCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelContainment;
 import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelDescendant;
@@ -55,6 +57,7 @@ class Page extends Model.All
 		TraversalViewCommands.SelectionFilterModelDescendant.Handler,
 		TraversalViewCommands.SelectionFilterModelView.Handler,
 		TraversalViewCommands.PropertyDisplayCycle.Handler,
+		TraversalViewCommands.InputOutputCycle.Handler,
 		TraversalCommands.FocusSearch.Handler {
 	// FIXME - traversal - resolver/descendant event
 	public static TraversalPlace traversalPlace() {
@@ -154,7 +157,26 @@ class Page extends Model.All
 			default:
 				throw new UnsupportedOperationException();
 			}
-			rows.add("input input output output");
+			builder.line("body > page {grid-template-rows: 50px 1fr 260px;}");
+			switch (settings.inputOutputDisplayMode) {
+			case INPUT_OUTPUT:
+				rows.add("input input output output");
+				break;
+			case INPUT:
+				rows.add("input input input input");
+				builder.line("body > page > selections.output{display: none;}");
+				break;
+			case OUTPUT:
+				rows.add("output output output output");
+				builder.line("body > page > selections.input{display: none;}");
+				break;
+			case NONE:
+				builder.line("body > page > selections{display: none;}");
+				builder.line("body > page {grid-template-rows: 50px 1fr;}");
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
 			//
 			String areas = rows.stream().map(s -> Ax.format("\"%s\"", s))
 					.collect(Collectors.joining(" "));
@@ -304,11 +326,7 @@ class Page extends Model.All
 	@Override
 	public void onPropertyDisplayCycle(PropertyDisplayCycle event) {
 		TraversalSettings settings = TraversalProcessView.Ui.get().settings;
-		PropertyDisplayMode propertyDisplayMode = settings.propertyDisplayMode;
-		PropertyDisplayMode next = PropertyDisplayMode
-				.values()[(propertyDisplayMode.ordinal() + 1)
-						% PropertyDisplayMode.values().length];
-		settings.setPropertyDisplayMode(next);
+		PropertyDisplayMode next = settings.nextPropertyDisplayMode();
 		StatusModule.get().showMessageTransitional(
 				Ax.format("Property display mode -> %s", next));
 	}
@@ -316,5 +334,13 @@ class Page extends Model.All
 	@Override
 	public void onFocusSearch(FocusSearch event) {
 		header.mid.suggestor.focus();
+	}
+
+	@Override
+	public void onInputOutputCycle(InputOutputCycle event) {
+		TraversalSettings settings = TraversalProcessView.Ui.get().settings;
+		InputOutputDisplayMode next = settings.nextInputOutputDisplayMode();
+		StatusModule.get().showMessageTransitional(
+				Ax.format("Input/Output display mode -> %s", next));
 	}
 }
