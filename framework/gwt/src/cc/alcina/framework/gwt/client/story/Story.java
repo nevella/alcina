@@ -39,11 +39,46 @@ public interface Story {
 	 * A marker interface, modelled by subtypes which represent particular
 	 * states in the environment of the Story. A {@link Point} can provide
 	 * and/or require states, required state resolution will be resolved before
-	 * the Story
+	 * the Point is told
 	 */
 	public interface State {
 	}
 
+	/**
+	 * <p>
+	 * Elements of a story. Progres characteristics are:
+	 * <ul>
+	 * <li>Specify an app location (href)
+	 * <li>Specify a UI element (xpath)
+	 * 
+	 * <li>Perform a UI action
+	 * <li>Perform a non-UI action
+	 * <li>Record the screen, possibly animated
+	 * <li>Specify a point id [for later reference]
+	 * <li>Specify required {@link State} elements
+	 * <li>Specify child Point elements
+	 * </ul>
+	 * <p>
+	 * Commentary characteristics are:
+	 * <ul>
+	 * <li>Annotate a UI element
+	 * </ul>
+	 * 
+	 */
 	public interface Point {
+	}
+
+	/**
+	 * <p>
+	 * Traverses the points of a story. Implementation is (presumably) via
+	 * SelectionTraversal. The Per-point characteristics are:
+	 * <ul>
+	 * <li>Resolve point dependencies
+	 * <li>Perform point actions (see Point)
+	 * <li>Perform child actions
+	 * <li>
+	 * </ul>
+	 */
+	public interface Teller {
 	}
 }
