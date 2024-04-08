@@ -160,8 +160,10 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 						((EntityPlace) Client.currentPlace()).provideEntity());
 			} else {
 				// propagate href (not squelched)
-				if (!Objects.equals(tag, "a") && Ax.notBlank(href)) {
-					History.newItem(href);
+				if (Ax.notBlank(href)) {
+					if (!Objects.equals(tag, "a")) {
+						History.newItem(href);
+					}
 				}
 			}
 		}
