@@ -624,6 +624,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		public boolean guaranteedSinglePermutationBuild = false;
 
 		public String simpleExcludes;
+
+		public boolean useJdkForName;
 	}
 
 	class ClassReflectorGenerator extends UnitGenerator
@@ -1387,8 +1389,25 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		void writeForNameCases() {
-			writeForClassReflectors("forName", "String className", "Class",
+			if(attributes.useJdkForName){
+				sourceWriter.println("public Class forName(String className){");
+				sourceWriter.indent();
+				sourceWriter.println("try{");
+				sourceWriter.indent();
+				sourceWriter.println("return Class.forName(className);");
+				sourceWriter.outdent();
+				sourceWriter.println("} catch (Exception e) {");
+				sourceWriter.indent();
+				sourceWriter.println("throw new RuntimeException(e);");
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.println();
+			}else{
+				writeForClassReflectors("forName", "String className", "Class",
 					crg -> crg.writeForNameCase(sourceWriter));
+			}
 		}
 
 		private void writeMethodDefinition(String accessModifier,
@@ -1400,9 +1419,40 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		void writeReflectorCases() {
+			if(attributes.useJdkForName){
+				sourceWriter.println("public ClassReflector getClassReflector_(String className){");
+				sourceWriter.indent();
+				sourceWriter.println("if(!className.contains(\".\")){");
+				sourceWriter.indent();
+				sourceWriter.println("return null;");
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.println("try{");
+				sourceWriter.indent();
+				sourceWriter.println("String packageName=className.replaceFirst(\"(.+)\\\\.(.+)\", \"$1\");");
+				sourceWriter.println("String fileName=className.replaceFirst(\"(.+)\\\\.(.+)\", \"$2\");");
+				sourceWriter.println("String modifiedPackageName = packageName.startsWith(\"java\")?\"cc.alcina.framework.entity.gwt.reflection.\"+packageName.replace(\".\", \"_\"):packageName;");
+				sourceWriter.println("String modifiedFileName=fileName.replace(\"$\", \"_\");");
+				sourceWriter.println("String reflectorClassName=modifiedPackageName+\".\"+modifiedFileName+\"___refImpl\";");
+				sourceWriter.println("return (ClassReflector)Class.forName(reflectorClassName).getConstructor().newInstance();");
+				sourceWriter.outdent();
+				sourceWriter.println("} catch (ClassNotFoundException cnfe) {");
+				sourceWriter.indent();
+				sourceWriter.println("return null;");
+				sourceWriter.outdent();
+				sourceWriter.println("} catch (Exception e) {");
+				sourceWriter.indent();
+				sourceWriter.println("throw new RuntimeException(e);");
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.println();
+			}else{
 			writeForClassReflectors("getClassReflector_", "String className",
 					"ClassReflector",
 					crg -> crg.writeReflectorCase(sourceWriter));
+			}
 		}
 
 		void writeRegisterRegistrations() {
