@@ -45,6 +45,7 @@ public class JdkReflectionGenerator {
 		ClientReflectionGenerator generator = new ClientReflectionGenerator();
 		generator.attributes.guaranteedSinglePermutationBuild = true;
 		generator.attributes.simpleExcludes = attributes.exclude;
+		generator.attributes.useJdkForName = true;
 		generator.providesTypeBounds = generatorContext.typeOracle;
 		try {
 			generator.generate(treeLogger, generatorContext,
