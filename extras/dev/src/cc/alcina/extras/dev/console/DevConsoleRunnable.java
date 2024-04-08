@@ -46,20 +46,24 @@ public abstract class DevConsoleRunnable extends PerformerTask {
 	public void runAsSubcommand(DevConsoleRunnable parentRunnable) {
 		command = parentRunnable.command;
 		argv = new String[0];// don't pass through - this is all devvy
-		try {
-			run();
-		} catch (Exception e) {
-			throw WrappedRuntimeException.wrap(e);
-		}
+		runFromCommand(command, argv);
 	}
 
 	public void runFromCommand(DevConsoleCommand command, String[] argv) {
 		this.argv = argv;
 		try {
+			DevConsole.instance.currentRunnables.push(this);
 			run();
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
+		} finally {
+			DevConsole.instance.currentRunnables.pop();
 		}
+	}
+
+	// typed a lot - so alias
+	public void sub() {
+		sub(DevConsole.instance.currentRunnables.peek());
 	}
 
 	// typed a lot - so alias

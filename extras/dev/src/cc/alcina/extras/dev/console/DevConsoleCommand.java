@@ -541,6 +541,7 @@ public abstract class DevConsoleCommand {
 							PermissionsManager.get().pushUser(pushedUser,
 									LoginState.LOGGED_IN);
 						}
+						console.currentRunnables.push(runnable);
 						runnable.run();
 						String msg = LooseContext.getString(
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT);
@@ -565,6 +566,9 @@ public abstract class DevConsoleCommand {
 						e0.printStackTrace();
 						throw e0;
 					} finally {
+						if (console.currentRunnables.peek() == runnable) {
+							console.currentRunnables.pop();
+						}
 						try {
 							if (pushedUser != null) {
 								PermissionsManager.get().popUser();

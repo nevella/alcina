@@ -4,10 +4,10 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import com.google.gwt.dom.client.DomStyleConstants;
-
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -32,15 +32,7 @@ public enum Status implements ProvidesStatus {
 		return this;
 	}
 
-	@Directed(
-		bindings = {
-				@Binding(from = "reason", to = "title", type = Type.PROPERTY),
-				@Binding(from = "displayText", type = Type.INNER_TEXT),
-				@Binding(
-					from = "status",
-					to = DomStyleConstants.STYLE_BACKGROUND_COLOR,
-					type = Type.STYLE_ATTRIBUTE,
-					transform = StatusTransform.class) })
+	@Directed
 	public static class StatusReason extends Model implements ProvidesStatus {
 		public static StatusReason check(boolean condition,
 				String successReason, String failureReason) {
@@ -49,6 +41,13 @@ public enum Status implements ProvidesStatus {
 			} else {
 				return error(failureReason, failureReason);
 			}
+		}
+
+		public StatusReason() {
+		}
+
+		public static StatusReason error(String reason) {
+			return error(null, reason);
 		}
 
 		public static StatusReason error(Object value, String reason) {
@@ -87,7 +86,8 @@ public enum Status implements ProvidesStatus {
 			if (value == null) {
 				value = "OK";
 			}
-			return new StatusReason(Status.OK, null, value);
+			String reason = value.toString();
+			return new StatusReason(Status.OK, reason, value);
 		}
 
 		public static StatusReason warn(Object value, String reason) {
@@ -96,30 +96,50 @@ public enum Status implements ProvidesStatus {
 
 		private Status status;
 
+		public void setStatus(Status status) {
+			this.status = status;
+		}
+
+		public void setReason(String reason) {
+			this.reason = reason;
+		}
+
+		public void setValue(Object value) {
+			this.value = value;
+		}
+
 		private String reason;
 
-		private Object value;
+		private transient Object value;
 
 		public StatusReason(Status status, String reason, Object value) {
-			super();
 			this.status = status;
 			this.reason = reason;
 			this.value = value;
 		}
 
+		@Binding(from = "displayText", type = Type.INNER_TEXT)
 		public Object getDisplayText() {
-			return CommonUtils.trimToWsChars(
-					value == null ? "(null)" : value.toString(), 60, true);
+			String text = "[null]";
+			if (value != null) {
+				text = value.toString();
+			} else if (reason != null) {
+				text = reason;
+			}
+			return CommonUtils.trimToWsChars(text, 60, true);
 		}
 
+		@Binding(to = "title", type = Type.PROPERTY)
 		public String getReason() {
 			return this.reason;
 		}
 
+		@Binding(type = Type.CLASS_PROPERTY)
 		public Status getStatus() {
 			return this.status;
 		}
 
+		@AlcinaTransient
 		public Object getValue() {
 			return this.value;
 		}
@@ -132,6 +152,11 @@ public enum Status implements ProvidesStatus {
 		@Override
 		public String toString() {
 			return Ax.format("%s :: %s", status, getDisplayText());
+		}
+
+		@Property.Not
+		public boolean isOk() {
+			return status == OK;
 		}
 	}
 
