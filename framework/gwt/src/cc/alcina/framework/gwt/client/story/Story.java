@@ -1,5 +1,14 @@
 package cc.alcina.framework.gwt.client.story;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import cc.alcina.framework.common.client.meta.Feature;
+
 /**
  * <h2>Goal</h2>
  * <p>
@@ -36,12 +45,31 @@ package cc.alcina.framework.gwt.client.story;
  */
 public interface Story {
 	/**
+	 *
+	 * @return the top-level feature illustrated by the story
+	 */
+	Class<? extends Feature> getFeature();
+
+	/**
+	 *
+	 * @return the top-level point illustrating the feature
+	 */
+	Point getPoint();
+
+	/**
 	 * A marker interface, modelled by subtypes which represent particular
 	 * states in the environment of the Story. A {@link Point} can provide
 	 * and/or require states, required state resolution will be resolved before
 	 * the Point is told
 	 */
 	public interface State {
+		@Retention(RetentionPolicy.RUNTIME)
+		@Inherited
+		@Documented
+		@Target(ElementType.TYPE)
+		public @interface Provides {
+			Class<? extends State> value();
+		}
 	}
 
 	/**
@@ -63,9 +91,20 @@ public interface Story {
 	 * <ul>
 	 * <li>Annotate a UI element
 	 * </ul>
+	 * <h3>Notes</h3>
+	 * <ul>
+	 * <li>Points which contain other points should not themselves perform
+	 * actions (although they can define required states). The class structure
+	 * -will- encourage this
+	 * </ul>
 	 * 
 	 */
 	public interface Point {
+		public interface Container {
+		}
+	}
+
+	public interface StoryAction {
 	}
 
 	/**
