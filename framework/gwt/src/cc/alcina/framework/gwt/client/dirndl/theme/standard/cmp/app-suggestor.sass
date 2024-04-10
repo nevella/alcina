@@ -8,6 +8,10 @@ $first-weight: theme.$app-suggestor-first-weight
 
 @mixin results
   display: block
+
+  > spinner
+    margin: theme.$app-suggestor-spinner-margin
+
   > choice
     @include context-menu.dropdown-list-item
     display: block
