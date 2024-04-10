@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
-import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding.MatchData;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -53,7 +52,6 @@ public class KeybindingsHandler implements KeyboardShortcuts.Handler {
 			CommandContext.Provider commandContextProvider) {
 		this.eventDispatcher = eventDispatcher;
 		this.commandContextProvider = commandContextProvider;
-		AppSuggestorRequest suggestorRequest = new AppSuggestorRequest();
 		boundEvents = Registry.query(NodeEvent.class).registrations()
 				.filter(type -> Reflections.at(type).has(KeyBinding.class))
 				.map(clazz -> (Class<? extends ModelEvent>) clazz)
