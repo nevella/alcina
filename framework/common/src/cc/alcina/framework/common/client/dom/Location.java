@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.w3c.dom.Text;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Property;
@@ -216,6 +218,14 @@ public class Location implements Comparable<Location> {
 
 	public boolean isBefore(Location other) {
 		return compareTo(other) < 0;
+	}
+
+	public boolean isAtDocumentStart() {
+		return treeIndex == 0 && isAtNodeStart();
+	}
+
+	public boolean isAtDocumentEnd() {
+		return treeIndex == 0 && isAtNodeEnd();
 	}
 
 	public boolean isTextNode() {
@@ -577,5 +587,13 @@ public class Location implements Comparable<Location> {
 		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE, TO_END_OF_NODE,
 		// will throw if traversing a text node
 		UNDEFINED
+	}
+
+	public void ensureAtBoundary() {
+		int textOffsetInNode = getTextOffsetInNode();
+		int length = containingNode.textContent().length();
+		if (textOffsetInNode != 0 && textOffsetInNode != length) {
+			((Text) containingNode.w3cNode()).splitText(textOffsetInNode);
+		}
 	}
 }

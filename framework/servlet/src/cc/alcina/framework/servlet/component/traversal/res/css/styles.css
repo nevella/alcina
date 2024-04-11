@@ -597,7 +597,7 @@ body > page > properties bean-editor form-element[name=markup] > value > value, 
 body > page > selections {
   display: block;
 }
-body > page > selections > html-model {
+body > page > selections > selection-markup-area {
   display: block;
   padding: 0 0.5em;
   max-height: calc(100% - 2.2rem);
@@ -642,6 +642,9 @@ app-suggestor > editor > input::placeholder {
 app-suggestor > results {
   display: block;
 }
+app-suggestor > results > spinner {
+  margin: 1rem;
+}
 app-suggestor > results > choice {
   padding: 0.4rem 1rem;
   /* use padding, not line-height, so hover bkg is vertically centered*/
@@ -682,6 +685,9 @@ overlay.app-suggestor > results {
   width: 34rem;
   border: solid 1px #d0d0d0;
   background: white;
+}
+overlay.app-suggestor > results > spinner {
+  margin: 1rem;
 }
 overlay.app-suggestor > results > choice {
   padding: 0.4rem 1rem;

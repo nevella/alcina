@@ -255,7 +255,15 @@ public class Document extends Node
 	}
 
 	public Element createDocumentElement(String markup) {
+		return createDocumentElement(markup, false);
+	}
+
+	public Element createDocumentElement(String markup,
+			boolean attachToParent) {
 		documentElement = new HtmlParser().parse(markup, null, false);
+		if (attachToParent) {
+			documentElement.local().parentNode = this.local();
+		}
 		return documentElement;
 	}
 

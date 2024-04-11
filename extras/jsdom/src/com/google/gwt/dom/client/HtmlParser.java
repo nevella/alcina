@@ -13,11 +13,24 @@ import com.google.gwt.dom.client.Document.RemoteType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.util.DomUtils;
 
 public class HtmlParser {
 	public static boolean debugCursor = false;
+
+	public static Element parseMarkup(String markup) {
+		try {
+			LooseContext.push();
+			Document.contextProvider.createFrame(RemoteType.NONE);
+			Element element = Document.get().createDocumentElement(markup,
+					true);
+			return element;
+		} finally {
+			LooseContext.pop();
+		}
+	}
 
 	public static void appendTextNodes(ClientDomDocument document,
 			ClientDomElement element, String string) {

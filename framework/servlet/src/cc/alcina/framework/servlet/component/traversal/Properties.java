@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.View;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanEditor;
@@ -45,11 +44,6 @@ class Properties extends Model.Fields {
 				.typed(TraversalPlace.class)
 				.map(TraversalPlace::firstSelectionType)
 				.accept(filter::setSelectedValue);
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
 	}
 
 	public void setSelection(Selection selection) {

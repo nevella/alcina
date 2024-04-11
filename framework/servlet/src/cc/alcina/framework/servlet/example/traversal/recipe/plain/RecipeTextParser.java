@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.example.traversal.recipe;
+package cc.alcina.framework.servlet.example.traversal.recipe.plain;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.traversal.InitialTextSelection;
 import cc.alcina.framework.common.client.traversal.PlainTextSelection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.servlet.example.traversal.recipe.IngredientLayer.IngredientSelection;
+import cc.alcina.framework.servlet.example.traversal.recipe.plain.IngredientLayer.IngredientSelection;
 import cc.alcina.framework.servlet.job.JobContext;
 
 /**
@@ -31,7 +31,7 @@ import cc.alcina.framework.servlet.job.JobContext;
  * 
  *
  */
-public class RecipeParser {
+public class RecipeTextParser {
 	SelectionTraversal traversal;
 
 	RootLayer rootLayer;

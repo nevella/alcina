@@ -253,6 +253,10 @@ public class SelectionTraversal
 		return this.filter;
 	}
 
+	public Layer getLayer(Selection selection) {
+		return state.selections.getLayer(selection);
+	}
+
 	public Layer getRootLayer() {
 		return state.rootLayer;
 	}
@@ -595,6 +599,12 @@ public class SelectionTraversal
 			return add;
 		}
 
+		Layer getLayer(Selection selection) {
+			return byLayer.entrySet().stream()
+					.filter(e -> e.getValue().containsKey(selection))
+					.map(Entry::getKey).findFirst().get();
+		}
+
 		public Map<Selection, Integer> byLayer(Layer layer) {
 			return byLayer.computeIfAbsent(layer,
 					l -> AlcinaCollections.newLinkedHashMap());
@@ -699,7 +709,8 @@ public class SelectionTraversal
 	}
 
 	public <T> T context(Class<T> clazz) {
-		return (T) traversalContext;
+		return traversalContext != null && Reflections.isAssignableFrom(clazz,
+				traversalContext.getClass()) ? (T) traversalContext : null;
 	}
 
 	/*

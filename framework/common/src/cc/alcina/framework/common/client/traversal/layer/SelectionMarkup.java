@@ -1,0 +1,48 @@
+package cc.alcina.framework.common.client.traversal.layer;
+
+import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
+
+public abstract class SelectionMarkup {
+	public interface Has {
+		SelectionMarkup getSelectionMarkup();
+	}
+
+	public class Query {
+		public Selection<?> selection;
+
+		public boolean input;
+
+		public String styleScope;
+
+		Query(Selection<?> selection, String styleScope, boolean input) {
+			this.selection = selection;
+			this.styleScope = styleScope;
+			this.input = input;
+		}
+
+		public Model getModel() {
+			return SelectionMarkup.this.getModel(this);
+		}
+
+		public String getCss() {
+			return SelectionMarkup.this.getCss(this);
+		}
+	}
+
+	public Query query(Selection<?> selection, String styleScope,
+			boolean input) {
+		return new Query(selection, styleScope, input);
+	}
+
+	/*
+	 * Use another query as a parameter source
+	 */
+	public Query query(Query query) {
+		return new Query(query.selection, query.styleScope, query.input);
+	}
+
+	protected abstract String getCss(Query query);
+
+	protected abstract Model getModel(Query query);
+}

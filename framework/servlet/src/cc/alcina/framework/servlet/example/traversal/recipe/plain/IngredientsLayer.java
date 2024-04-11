@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.example.traversal.recipe;
+package cc.alcina.framework.servlet.example.traversal.recipe.plain;
 
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;

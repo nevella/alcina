@@ -89,6 +89,16 @@ public class DomDocument extends DomNode {
 
 	private Locations locations;
 
+	/*
+	 * Normally this will be null, unless the DomDocument has no backing w3c/gwt
+	 * document
+	 */
+	private DomNode documentElementDomNode;
+
+	public void setDocumentElementDomNode(DomNode documentElementDomNode) {
+		this.documentElementDomNode = documentElementDomNode;
+	}
+
 	private DomDocument(Document domDocument) {
 		super(null, null);
 		initNodes(1000);
@@ -136,7 +146,8 @@ public class DomDocument extends DomNode {
 	}
 
 	public DomNode getDocumentElementNode() {
-		return nodeFor(domDoc().getDocumentElement());
+		return documentElementDomNode != null ? documentElementDomNode
+				: nodeFor(domDoc().getDocumentElement());
 	}
 
 	public Element getElementById(String elementId) {
@@ -254,6 +265,11 @@ public class DomDocument extends DomNode {
 	public DomDocument withUseCachedElementIds(boolean useCachedElementIds) {
 		this.useCachedElementIds = useCachedElementIds;
 		return this;
+	}
+
+	// FIXME - remove with universal mutable location support
+	public void invalidateLocations() {
+		locations.invalidateLookups();
 	}
 
 	/*

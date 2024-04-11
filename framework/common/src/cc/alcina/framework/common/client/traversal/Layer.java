@@ -53,6 +53,13 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 		}
 	}
 
+	/*
+	 * Marker for an output layer transformation traversals - this allows the
+	 * traversal UI to determine whether a selection is 'input' or 'output'
+	 */
+	public interface Output {
+	}
+
 	/**
 	 * Returns a (Layer) context object implementing class T, resolved by
 	 * ascending the layer tree until a layer implementing T is found. This
@@ -63,7 +70,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	 *            the type required, and returned
 	 * @param clazz
 	 *            the class used to query the layer tree
-	 * @return an instance
+	 * @return an instance, or null if it does not exist
 	 */
 	public <T> T layerContext(Class<T> clazz) {
 		Layer cursor = this;
@@ -73,9 +80,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			}
 			cursor = cursor.parent;
 		} while (cursor.parent != null);
-		throw new IllegalArgumentException(Ax.format(
-				"No context object implementing %s found for layer %s",
-				NestedName.get(clazz), NestedName.get(this)));
+		return null;
 	}
 
 	public void addChild(Layer child) {

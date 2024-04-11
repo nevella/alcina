@@ -2,8 +2,9 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -38,69 +39,29 @@ public class LeafModel {
 		}
 	}
 
-	@Directed(bindings = @Binding(from = "html", type = Type.INNER_HTML))
-	public static class HtmlModel extends Model {
-		private String html;
+	/*
+	 * A null tag is permitted (see HasTag)
+	 */
+	@Directed
+	public static class TagMarkup extends Model.Fields implements HasTag {
+		@Binding(type = Type.INNER_HTML)
+		public String markup;
 
-		public HtmlModel() {
+		String tag;
+
+		public TagMarkup() {
 		}
 
-		public HtmlModel(String html) {
-			setHtml(html);
-		}
-
-		public String getHtml() {
-			return this.html;
-		}
-
-		public void setHtml(String html) {
-			this.html = html;
-		}
-
-		@Reflected
-		public static class Transform
-				implements ModelTransform<String, HtmlModel> {
-			@Override
-			public HtmlModel apply(String t) {
-				return new HtmlModel(t);
-			}
-		}
-	}
-
-	@Directed(bindings = @Binding(from = "string", type = Type.INNER_HTML))
-	public static class HtmlTagModel extends Model implements HasTag {
-		private String string;
-
-		private String tag;
-
-		public HtmlTagModel() {
-		}
-
-		public HtmlTagModel(String string, String tag) {
-			this.string = string;
+		public TagMarkup(String tag, String markup) {
+			Preconditions.checkArgument(
+					tag == null || tag.matches("[a-zA-Z\\-0-9_]+"));
 			this.tag = tag;
-		}
-
-		@Directed
-		public String getString() {
-			return this.string;
-		}
-
-		public String getTag() {
-			return this.tag;
+			this.markup = markup;
 		}
 
 		@Override
 		public String provideTag() {
-			return getTag();
-		}
-
-		public void setString(String string) {
-			this.string = string;
-		}
-
-		public void setTag(String tag) {
-			this.tag = tag;
+			return tag;
 		}
 	}
 

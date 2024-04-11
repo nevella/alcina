@@ -153,7 +153,11 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	public Text splitText(int offset) {
-		throw new UnsupportedOperationException();
+		String contents = getTextContent();
+		setTextContent(contents.substring(0, offset));
+		Text createdNode = getOwnerDocument()
+				.createTextNode(contents.substring(offset));
+		return createdNode;
 	}
 
 	@Override

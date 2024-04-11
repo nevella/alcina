@@ -1,15 +1,15 @@
-package cc.alcina.framework.servlet.example.traversal.recipe;
+package cc.alcina.framework.servlet.example.traversal.recipe.plain;
 
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.PlainTextSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.TextSelection;
-import cc.alcina.framework.servlet.example.traversal.recipe.RecipeParser.RecipeText;
+import cc.alcina.framework.servlet.example.traversal.recipe.plain.RecipeTextParser.RecipeText;
 
 /*
  * Normalises the input text
  */
-class NormalisationLayer extends Layer<RecipeParser.RecipeText> {
+class NormalisationLayer extends Layer<RecipeTextParser.RecipeText> {
 	private String normaliseInput(String text) {
 		return text;
 	}

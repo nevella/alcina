@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.example.traversal.recipe;
+package cc.alcina.framework.servlet.example.traversal.recipe.plain;
 
 import java.util.regex.Pattern;
 
