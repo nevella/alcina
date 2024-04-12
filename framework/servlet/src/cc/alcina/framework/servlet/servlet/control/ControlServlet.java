@@ -315,5 +315,9 @@ public class ControlServlet extends AlcinaServlet {
 		public static TaskExecutionType defaultForWait(boolean wait) {
 			return wait ? WAIT_RETURN_LOG : SCHEDULE_RETURN_ID;
 		}
+
+		public boolean isWait() {
+			return this != SCHEDULE_RETURN_ID;
+		}
 	}
 }

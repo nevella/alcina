@@ -46,6 +46,9 @@ public class ContentDeliveryLocalFilesystem implements ContentDelivery {
 			suggestedFileName = suggestedFileName.replace("/", "_")
 					.replace("\\", "_");
 		}
+		if (Configuration.is("noSpaces")) {
+			suggestedFileName = suggestedFileName.replace(" ", "_");
+		}
 		File file = suggestedFileName.startsWith("/")
 				? new File(suggestedFileName)
 				: SEUtilities.getChildFile(folder, suggestedFileName);
