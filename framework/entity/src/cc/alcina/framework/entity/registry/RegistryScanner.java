@@ -29,12 +29,22 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 
-/*
+/**
+ * <p>
  * Considered, as per seam etc, use javaassist to avoid loading every class in
  * the app here... But the caching idea works better, because we need to check
  * method annotations etc...and simpler
- */
-/**
+ * <h3>Debugging registration issues</h3>
+ * <ul>
+ * <li>Make sure the classpath element has a file 'registry.properties' at the
+ * root (so say src/registry.properties)
+ * <li>List java classpath elements considered by the scanner: (TODO - but see
+ * classpathscanner)
+ * 
+ * *
+ * <li>List java classes considered by the scanner:(TODO - but see
+ * classpathscanner)
+ * </ul>
  *
  *
  * @author Nick Reddel

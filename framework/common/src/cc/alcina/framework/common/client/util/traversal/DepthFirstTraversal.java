@@ -50,7 +50,9 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 
 	TraversalNode next;
 
-	public Topic<T> topicNodeExit = Topic.create();
+	public Topic<T> topicBeforeNodeExit = Topic.create();
+
+	public Topic<T> topicAtEndOfChildIterator = Topic.create();
 
 	private T root;
 
@@ -77,6 +79,10 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 			prepareNext();
 		}
 		return next != null;
+	}
+
+	public T current() {
+		return current.value;
 	}
 
 	@Override
@@ -184,6 +190,7 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 		}
 
 		public TraversalNode next() {
+			current = this;
 			modifiedSinceLastNext = false;
 			// ensure children
 			if (children == null) {
@@ -201,10 +208,19 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 				if (childCursorPosition >= 0
 						&& childCursorPosition < children.size()) {
 					return children.get(childCursorPosition);
+				} else {
+					topicAtEndOfChildIterator.publish(value);
+					/*
+					 * retry to check if the child list was modified
+					 */
+					if (childCursorPosition >= 0
+							&& childCursorPosition < children.size()) {
+						return children.get(childCursorPosition);
+					}
 				}
 			}
 			// children exhausted, try parent.next (child)
-			topicNodeExit.publish(value);
+			topicBeforeNodeExit.publish(value);
 			if (parent != null) {
 				return parent.next();
 			}

@@ -95,13 +95,13 @@ public class ProcessObservers {
 
 	/*
 	 * Higher-cost than process observers, since the caller (if passing control)
-	 * will generally maintain a multable state that allows ancestor
+	 * will generally maintain a mutable state that allows ancestor
 	 * modification.
 	 *
 	 * Used for context-based control, as well as observation of a process. See
 	 * e.g. TreeSync.Preparer
 	 *
-	 * Thread-safe - due to the co
+	 * Thread-safe - due to the context
 	 */
 	public static class ContextObservers {
 		static ContextObservers get() {
@@ -114,6 +114,12 @@ public class ProcessObservers {
 
 		static String key() {
 			return ContextObservers.class.getName();
+		}
+
+		public interface Observable extends ProcessObservable {
+			default void publish() {
+				context().publish(this);
+			}
 		}
 
 		private ProcessObservers instance = new ProcessObservers();

@@ -339,4 +339,8 @@ public class ClassReflector<T> implements HasAnnotations {
 	public boolean isProperty(Class<?> owningType, String name) {
 		return false;
 	}
+
+	public <B> Class<B> firstGenericBound() {
+		return genericBounds.bounds.get(0);
+	}
 }

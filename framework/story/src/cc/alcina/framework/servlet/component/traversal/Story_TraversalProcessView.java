@@ -4,6 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.story.Story;
+import cc.alcina.framework.gwt.client.story.Waypoint;
 
 /**
  * The story of the {@link Feature_TraversalProcessView}
@@ -23,26 +24,29 @@ public class Story_TraversalProcessView implements Story {
 	/*
 	 * 
 	 */
-	static class Top implements Story.Point {
-		/*
-		 * All points in the story will require these states
-		 */
-		public List<Class<? extends Story.State>> getRequires() {
-			return List.of(State.ConsoleRunning.class,
-					State.CroissanteriaTraversalPerformed.class);
-		}
-
+	static class Top extends Waypoint {
 		Top() {
+			/*
+			 * All points in the story will require these states
+			 */
+			requires = List.of(State.ConsoleRunning.class,
+					State.CroissanteriaTraversalPerformed.class);
 		}
 	}
 
 	/*
 	 * Ensures the console is running
 	 */
-	@Story.State.Provides(State.ConsoleRunning.class)
-	static class EnsuresConsoleRunning implements Story.Point {
-		EnsuresConsoleRunning() {
-		}
+	static class EnsuresConsoleRunning extends Waypoint
+			implements Story.State.Provider<State.ConsoleRunning> {
+	}
+
+	/*
+	 * Ensures the traversal was performed
+	 */
+	static class EnsuresCroissanteriaTraversalPerformed extends Waypoint
+			implements
+			Story.State.Provider<State.CroissanteriaTraversalPerformed> {
 	}
 
 	public Class<? extends Feature> getFeature() {

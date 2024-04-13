@@ -91,7 +91,7 @@ public class TreeProcess {
 	}
 
 	public String getCurrentPositionMessage() {
-		return logAsLevelledPosition ? levlledPosition(getSelectedNode())
+		return logAsLevelledPosition ? levelledPosition(getSelectedNode())
 				: flatPosition(getSelectedNode());
 	}
 
@@ -118,7 +118,7 @@ public class TreeProcess {
 		return levelSizes.get(depth);
 	}
 
-	String levlledPosition(Node node) {
+	String levelledPosition(Node node) {
 		FormatBuilder position = new FormatBuilder().separator(" > ");
 		List<Node> selectionPath = node.asNodePath();
 		selectionPath.stream().
@@ -150,7 +150,7 @@ public class TreeProcess {
 			Supplier<String> positionMessage = null;
 			if (processContextProvider == null || logAsLevelledPosition) {
 				if (logAsLevelledPosition) {
-					positionMessage = () -> levlledPosition(node);
+					positionMessage = () -> levelledPosition(node);
 				} else {
 					positionMessage = () -> flatPosition(node);
 				}
@@ -290,6 +290,10 @@ public class TreeProcess {
 		boolean isReleasedResources();
 
 		boolean isSelfComplete();
+
+		default String displayNamePath() {
+			return tree().levelledPosition(this);
+		}
 
 		default void log(Level level, String template, Object... args) {
 			// TODO - if needed - add tree info

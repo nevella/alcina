@@ -411,7 +411,7 @@ public class SelectionTraversal
 		 * traversal
 		 *
 		 */
-		state.layerTraversal.topicNodeExit.add(Layer::onAfterTraversal);
+		state.layerTraversal.topicBeforeNodeExit.add(Layer::onAfterTraversal);
 		for (Layer<?> layer : state.layerTraversal) {
 			Layer untyped = layer;
 			state.currentLayer = layer;

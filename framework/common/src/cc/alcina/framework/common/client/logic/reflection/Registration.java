@@ -68,6 +68,9 @@ import cc.alcina.framework.common.client.util.Ax;
  * {@link AnnotationLocationTypeInfo#RegistrationMergeStrategy}. Most of the
  * interesting logic in resolution is shared here though (see
  * {@link Registration#Shared})
+ * <p>
+ * For a useful pattern that implements a decoupled type/handler pattern, see
+ * {@link NonGenericSubtypes}
  *
  * @see Registry
  *

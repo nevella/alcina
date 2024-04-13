@@ -1,13 +1,10 @@
 package cc.alcina.framework.gwt.client.story;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
  * <h2>Goal</h2>
@@ -57,18 +54,26 @@ public interface Story {
 	Point getPoint();
 
 	/**
+	 * <p>
 	 * A marker interface, modelled by subtypes which represent particular
 	 * states in the environment of the Story. A {@link Point} can provide
 	 * and/or require states, required state resolution will be resolved before
 	 * the Point is told
+	 * 
+	 * <p>
+	 * State resolvers should be idempotent, and query their context to avoid
+	 * multiple-execution
 	 */
 	public interface State {
-		@Retention(RetentionPolicy.RUNTIME)
-		@Inherited
-		@Documented
-		@Target(ElementType.TYPE)
-		public @interface Provides {
-			Class<? extends State> value();
+		/*
+		 * Marker interface, implemented by providers
+		 */
+		@Registration.NonGenericSubtypes(Provider.class)
+		public interface Provider<S extends State>
+				extends Point, Registration.AllSubtypesClient {
+			default Class<? extends State> resolvesState() {
+				return Reflections.at(this).firstGenericBound();
+			}
 		}
 	}
 
@@ -100,8 +105,11 @@ public interface Story {
 	 * 
 	 */
 	public interface Point {
-		public interface Container {
-		}
+		List<Class<? extends Story.State>> getRequires();
+
+		List<? extends Point> getChildren();
+
+		String getName();
 	}
 
 	public interface StoryAction {
