@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
@@ -18,8 +19,6 @@ import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 import cc.alcina.framework.gwt.client.story.teller.StoryActionPerformer.Result;
-import cc.alcina.framework.servlet.component.traversal.Story_TraversalProcessView;
-import cc.alcina.framework.servlet.job.JobContext;
 
 /**
  */
@@ -143,7 +142,7 @@ public class StoryTeller {
 	}
 
 	public class State {
-		public Story_TraversalProcessView story;
+		public Story story;
 
 		DepthFirstTraversal<Visit> traversal;
 
@@ -202,11 +201,13 @@ public class StoryTeller {
 		this.state = new State();
 	}
 
-	public void tell(Story_TraversalProcessView story) {
+	public void tell(Story story) {
 		try {
 			LooseContext.push();
 			state.story = story;
-			TreeProcess.Node parentNode = JobContext.getSelectedProcessNode();
+			TreeProcess.Node parentNode = Registry
+					.impl(TreeProcess.SelectedProcessNodeProvider.class)
+					.getSelectedProcessNode();
 			state.init(new Visit(parentNode, state.story.getPoint()));
 			context.init(this);
 			tell();

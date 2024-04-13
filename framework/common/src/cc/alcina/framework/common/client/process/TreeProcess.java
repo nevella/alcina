@@ -212,6 +212,13 @@ public class TreeProcess {
 			return false;
 		}
 	}
+	/*
+	 * Provides an initial process node for a process
+	 */
+
+	public interface SelectedProcessNodeProvider {
+		Node getSelectedProcessNode();
+	}
 
 	public interface Node extends HasDisplayName {
 		default Node add(Object o) {

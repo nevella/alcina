@@ -27,8 +27,10 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess;
+import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -670,6 +672,15 @@ public class JobContext {
 		public ProgressBuilder withTotal(int total) {
 			this.total = total;
 			return this;
+		}
+	}
+
+	@Registration(TreeProcess.SelectedProcessNodeProvider.class)
+	public static class SelectedProcessNodeProviderImpl
+			implements TreeProcess.SelectedProcessNodeProvider {
+		@Override
+		public Node getSelectedProcessNode() {
+			return JobContext.getSelectedProcessNode();
 		}
 	}
 }
