@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import cc.alcina.extras.dev.console.alcina.AlcDevLocal;
+import cc.alcina.extras.dev.console.alcina.AlcinaDevConsole;
 import cc.alcina.extras.dev.console.alcina.AlcinaDevConsoleRunnable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
@@ -20,7 +20,8 @@ public class AlcSub1TestReflectionGeneration extends AlcinaDevConsoleRunnable {
 				.attributes();
 		attributes.clean = true;
 		attributes.outputRoot = "/tmp/log/alc/reflection";
-		attributes.loadClassDirectoryPaths(Entity.class, AlcDevLocal.class);
+		attributes.loadClassDirectoryPaths(Entity.class,
+				AlcinaDevConsole.class);
 		String indexFilePath = Ax.format(
 				"%s/src/cc/alcina/framework/common/client/reflection/ModuleReflector_Initial_Impl.java",
 				attributes.outputRoot);
