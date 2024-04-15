@@ -41,7 +41,6 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
-import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
@@ -149,6 +148,7 @@ public class JobContext {
 		return treeProcess.getSelectedNode();
 	}
 
+	//
 	public static boolean has() {
 		return get() != null;
 	}
@@ -294,12 +294,31 @@ public class JobContext {
 			.synchronizedSet(new LinkedHashSet<>());
 
 	private EventCollator<Runnable> updateStatusDebouncer = new EventCollator<Runnable>(
-			1000,
-			collator -> AlcinaChildRunnable
-					.runInTransaction(() -> collator.getLastObject().run()))
-							.withMaxDelayFromFirstEvent(100)
-							.withMaxDelayFromFirstCollatedEvent(1000)
-							.withRunOnCurrentThread(true);
+			200, this::updateStatus).withMaxDelayFromFirstEvent(100)
+					.withMaxDelayFromFirstCollatedEvent(1000);
+
+	void updateStatus(EventCollator<Runnable> collator) {
+		/*
+		 * updateStatusDebouncer.cancel() will execute the collator task on the
+		 * main job thread
+		 */
+		if (JobContext.has()) {
+			collator.getLastObject().run();
+		} else {
+			try {
+				JobContext.adopt(this, true);
+				Transaction.ensureBegun();
+				collator.getLastObject().run();
+				TransformCommit
+						.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				JobContext.adopt(this, false);
+				Transaction.end();
+			}
+		}
+	}
 
 	private boolean enqueueProgressOnBackend;
 

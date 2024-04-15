@@ -84,8 +84,6 @@ public class EventCollator<T> {
 
 	private Object finishedMonitor = new Object();
 
-	boolean runOnCurrentThread;
-
 	public EventCollator(long waitToPerformAction,
 			Consumer<EventCollator<T>> action) {
 		this(waitToPerformAction, action, Registry.impl(Timer.Provider.class));
@@ -124,13 +122,9 @@ public class EventCollator<T> {
 			if (firstEventOccurred == 0) {
 				firstEventOccurred = lastEventOccurred;
 			}
-			if (runOnCurrentThread) {
-				checkCallback.run();
-			} else {
-				if (timer == null && timerProvider != null) {
-					timer = timerProvider.getTimer(checkCallback);
-					timer.scheduleRepeating(waitToPerformAction / 2);
-				}
+			if (timer == null && timerProvider != null) {
+				timer = timerProvider.getTimer(checkCallback);
+				timer.scheduleRepeating(waitToPerformAction / 2);
 			}
 		}
 	}
@@ -167,11 +161,6 @@ public class EventCollator<T> {
 		if (this.maxDelayFromFirstCollatedEvent == 0) {
 			this.maxDelayFromFirstCollatedEvent = maxDelayFromFirstEvent;
 		}
-		return this;
-	}
-
-	public EventCollator<T> withRunOnCurrentThread(boolean runOnCurrentThread) {
-		this.runOnCurrentThread = runOnCurrentThread;
 		return this;
 	}
 }
