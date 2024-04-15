@@ -34,21 +34,6 @@ public class Story_TraversalProcessView implements Story {
 		}
 	}
 
-	/*
-	 * Ensures the console is running
-	 */
-	static class EnsuresConsoleRunning extends Waypoint
-			implements Story.State.Provider<State.ConsoleRunning> {
-	}
-
-	/*
-	 * Ensures the traversal was performed
-	 */
-	static class EnsuresCroissanteriaTraversalPerformed extends Waypoint
-			implements
-			Story.State.Provider<State.CroissanteriaTraversalPerformed> {
-	}
-
 	public Class<? extends Feature> getFeature() {
 		return Feature_TraversalProcessView.class;
 	}

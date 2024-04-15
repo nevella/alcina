@@ -37,7 +37,6 @@ public interface ProcessObserver<T extends ProcessObservable>
 	 *
 	 *
 	 */
-	@Registration.Singleton
 	public abstract static class AppDebug implements HasObservers {
 		public static void register() {
 			Registry.query(AppDebug.class).implementations()

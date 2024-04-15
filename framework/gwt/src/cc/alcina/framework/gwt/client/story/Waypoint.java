@@ -11,8 +11,14 @@ public class Waypoint implements Story.Point {
 		return requires;
 	}
 
+	protected Story.Action action;
+
 	public Waypoint() {
 		name = getClass().getSimpleName();
+	}
+
+	public Story.Action getAction() {
+		return action;
 	}
 
 	public void setRequires(List<Class<? extends Story.State>> requires) {

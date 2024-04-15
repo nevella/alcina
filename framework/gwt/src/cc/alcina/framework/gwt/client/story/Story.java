@@ -1,5 +1,11 @@
 package cc.alcina.framework.gwt.client.story;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -78,6 +84,37 @@ public interface Story {
 	}
 
 	/**
+	 * A naming container (short for 'Declarative')
+	 */
+	public interface Decl {
+		/** Declaratively define a point */
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		@Repeatable(Points.class)
+		public @interface Point {
+			Decl.Action.Code[] code() default {};
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Points {
+			Point[] value();
+		}
+
+		public interface Action {
+			/** Declaratively define a code action */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface Code {
+				Class<? extends Story.Action.Code> value();
+			}
+		}
+	}
+
+	/**
 	 * <p>
 	 * Elements of a story. Progres characteristics are:
 	 * <ul>
@@ -112,7 +149,20 @@ public interface Story {
 		String getName();
 	}
 
-	public interface StoryAction {
+	public interface Action {
+		/*
+		 * A code action.
+		 */
+		public interface Code {
+			void perform(Action.Context context);
+		}
+
+		/*
+		 * Provides context access to the story context during action
+		 * performance
+		 */
+		public interface Context {
+		}
 	}
 
 	/**
