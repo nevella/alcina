@@ -42,4 +42,12 @@ public class Waypoint implements Story.Point {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public static abstract class Code extends Waypoint
+			implements Story.Action.Code {
+		@Override
+		public Story.Action getAction() {
+			return this;
+		}
+	}
 }

@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -418,10 +419,10 @@ public class Configuration {
 			Ax.out(asString(true));
 		}
 
-		private void ensureBundles(Key key) {
+		private void ensureBundles(Key key, boolean required) {
 			String packageName = key.clazz.getPackage().getName();
 			if (!packageBundles.containsKey(packageName)) {
-				PackageBundle bundles = new PackageBundle(key.clazz);
+				PackageBundle bundles = new PackageBundle(key.clazz, required);
 				packageBundles.put(packageName, bundles);
 				bundles.load();
 			}
@@ -443,7 +444,7 @@ public class Configuration {
 					while (true) {
 						Class clazz = cursor.clazz;
 						if (clazz != null) {
-							ensureBundles(cursor);
+							ensureBundles(cursor, cursor == key);
 						}
 						propertyValues = keyValues
 								.get(cursor.stringRepresentation);
@@ -628,33 +629,44 @@ public class Configuration {
 
 			StringMap map = new StringMap();
 
-			private ClassLoader classLoader;
+			ClassLoader classLoader;
 
-			public PackageBundle(Class clazz) {
+			boolean required;
+
+			PackageBundle(Class clazz, boolean required) {
+				this.required = required;
 				packageName = clazz.getPackage().getName();
 				classLoader = clazz.getClassLoader();
 			}
 
-			public boolean containsKey(String key) {
+			boolean containsKey(String key) {
 				return map.containsKey(key);
 			}
 
-			public String getValue(String key) {
+			String getValue(String key) {
 				return map.get(key);
 			}
 
-			public Set<String> keys() {
+			Set<String> keys() {
 				return map.keySet();
 			}
 
-			public void load() {
+			void load() {
 				String baseName = useSets ? "configuration" : "Bundle";
 				String bundleBase = Ax.format("%s.%s", packageName, baseName);
-				ResourceBundle bundle = ResourceBundle.getBundle(bundleBase,
-						Locale.getDefault(), classLoader);
-				bundle.keySet().forEach(key -> {
-					map.put(key, bundle.getString(key));
-				});
+				try {
+					ResourceBundle bundle = ResourceBundle.getBundle(bundleBase,
+							Locale.getDefault(), classLoader);
+					bundle.keySet().forEach(key -> {
+						map.put(key, bundle.getString(key));
+					});
+				} catch (MissingResourceException mre) {
+					if (required) {
+						throw mre;
+					} else {
+						// superclass bundles are not required
+					}
+				}
 				invalidate();
 			}
 

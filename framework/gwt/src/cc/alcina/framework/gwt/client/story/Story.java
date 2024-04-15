@@ -72,7 +72,10 @@ public interface Story {
 	 */
 	public interface State {
 		/*
-		 * Marker interface, implemented by providers
+		 * Marker interface, implemented by providers. The default execution
+		 * behaviour is for a state to be resolved (added to the set of resolved
+		 * states) once the Provider Point is visited. For async/parallel
+		 * dependency resolution, that behaviour would need to be overridden
 		 */
 		@Registration.NonGenericSubtypes(Provider.class)
 		public interface Provider<S extends State>
@@ -147,14 +150,16 @@ public interface Story {
 		List<? extends Point> getChildren();
 
 		String getName();
+
+		Story.Action getAction();
 	}
 
 	public interface Action {
 		/*
 		 * A code action.
 		 */
-		public interface Code {
-			void perform(Action.Context context);
+		public interface Code extends Story.Action {
+			void perform(Action.Context context) throws Exception;
 		}
 
 		/*
@@ -162,6 +167,19 @@ public interface Story {
 		 * performance
 		 */
 		public interface Context {
+		}
+
+		public class Result {
+			public boolean ok;
+
+			public Throwable throwable;
+		}
+
+		default Class<? extends Action> getActionClass() {
+			return Reflections.at(this).provideAllImplementedInterfaces()
+					.filter(intf -> Reflections.isAssignableFrom(Action.class,
+							intf))
+					.findFirst().get();
 		}
 	}
 

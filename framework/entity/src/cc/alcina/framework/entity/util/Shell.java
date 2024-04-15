@@ -635,4 +635,9 @@ public class Shell {
 			}
 		}
 	}
+
+	public void closeStreams() {
+		errorBuffer.close();
+		outputBuffer.close();
+	}
 }

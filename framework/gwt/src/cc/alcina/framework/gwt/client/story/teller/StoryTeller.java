@@ -16,9 +16,10 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.story.Story;
+import cc.alcina.framework.gwt.client.story.Story.Action;
+import cc.alcina.framework.gwt.client.story.Story.Action.Result;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
-import cc.alcina.framework.gwt.client.story.teller.StoryActionPerformer.Result;
 
 /**
  */
@@ -72,7 +73,7 @@ public class StoryTeller {
 			return node;
 		}
 
-		StoryActionPerformer.Result performAction() {
+		Story.Action.Result performAction() {
 			return new StoryActionPerformer().perform(this);
 		}
 
@@ -138,6 +139,17 @@ public class StoryTeller {
 		public String displayName() {
 			return Ax.blankTo(point.getName(),
 					String.valueOf(processNode().indexInParent()));
+		}
+
+		public Action getAction() {
+			return point.getAction();
+		}
+
+		public void afterActionPerformed(Result result) {
+			if (point instanceof Story.State.Provider && result.ok) {
+				Story.State.Provider provider = (Provider) point;
+				state.dependencyResolved(provider);
+			}
 		}
 	}
 
@@ -232,11 +244,8 @@ public class StoryTeller {
 
 	void performAction(Visit visit) {
 		new BeforePerformAction().publish();
-		Result result = visit.performAction();
-		if (visit.point instanceof Story.State.Provider && result.ok) {
-			Story.State.Provider provider = (Provider) visit.point;
-			state.dependencyResolved(provider);
-		}
+		Story.Action.Result result = visit.performAction();
+		visit.afterActionPerformed(result);
 		new AfterPerformAction().publish();
 	}
 }

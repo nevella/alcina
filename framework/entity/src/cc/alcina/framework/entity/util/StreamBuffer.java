@@ -52,6 +52,9 @@ public class StreamBuffer implements Runnable {
 					line = new StringBuilder();
 				}
 			}
+			if (!line.isEmpty()) {
+				outputCallback.accept(line.toString());
+			}
 			closed = true;
 			notifyAll();
 		} catch (IOException ioe) {
@@ -76,5 +79,15 @@ public class StreamBuffer implements Runnable {
 			}
 		}
 		return;
+	}
+
+	public void close() {
+		if (!closed) {
+			try {
+				is.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
