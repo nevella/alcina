@@ -20,12 +20,12 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
+import cc.alcina.framework.entity.util.StreamBuffer.LineCallback;
 
 public class Shell {
 	public static String exec(String script, Object... args) {
@@ -112,14 +112,15 @@ public class Shell {
 		File tmp = File.createTempFile("shell", getScriptExtension());
 		tmp.deleteOnExit();
 		Io.write().string(script).toFile(tmp);
-		launchProcess(new String[] { "/bin/bash", tmp.getPath() },
-				s -> s.length(), s -> s.length());
+		launchProcess(new String[] { "/bin/bash", tmp.getPath() });
 		return tmp;
 	}
 
-	public void launchProcess(String[] cmdAndArgs,
-			Callback<String> outputCallback, Callback<String> errorCallback)
-			throws IOException {
+	public StreamBuffer.LineCallback outputCallback = new LineCallback.Noop();
+
+	public StreamBuffer.LineCallback errorCallback = new LineCallback.Noop();
+
+	public void launchProcess(String[] cmdAndArgs) throws IOException {
 		if (cmdAndArgs[0].equals("/bin/bash") && isWindows()) {
 			List<String> rewrite = Arrays.asList(cmdAndArgs).stream()
 					.collect(Collectors.toList());
@@ -176,31 +177,26 @@ public class Shell {
 		}
 	}
 
-	public Output runProcessCatchOutputAndWait(String... cmdAndArgs)
+	public Output runProcessCatchOutputAndWait(String[] cmdAndArgs)
 			throws Exception {
-		return runProcessCatchOutputAndWaitPrompt("", cmdAndArgs);
-	}
-
-	public Output runProcessCatchOutputAndWait(String[] cmdAndArgs,
-			Callback<String> outputCallback, Callback<String> errorCallback)
-			throws Exception {
-		launchProcess(cmdAndArgs, outputCallback, errorCallback);
+		launchProcess(cmdAndArgs);
 		return waitFor();
 	}
 
 	public Output runProcessCatchOutputAndWaitPrompt(String prompt,
 			String... cmdAndArgs) throws Exception {
 		if (logToStdOut) {
-			return runProcessCatchOutputAndWait(cmdAndArgs,
-					new TabbedSysoutCallback(prompt + OUTPUT_MARKER),
-					new TabbedSysoutCallback(prompt + ERROR_MARKER));
+			errorCallback = new TabbedSysoutCallback(prompt + ERROR_MARKER);
+			outputCallback = new TabbedSysoutCallback(prompt + OUTPUT_MARKER);
+			return runProcessCatchOutputAndWait(cmdAndArgs);
 		} else if (logToFile != null) {
-			return runProcessCatchOutputAndWait(cmdAndArgs,
-					new FileAppenderCallback(prompt + OUTPUT_MARKER, logToFile),
-					new FileAppenderCallback(prompt + ERROR_MARKER, logToFile));
+			errorCallback = new FileAppenderCallback(prompt + ERROR_MARKER,
+					logToFile);
+			outputCallback = new FileAppenderCallback(prompt + OUTPUT_MARKER,
+					logToFile);
+			return runProcessCatchOutputAndWait(cmdAndArgs);
 		} else {
-			return runProcessCatchOutputAndWait(cmdAndArgs, s -> s.length(),
-					s -> s.length());
+			return runProcessCatchOutputAndWait(cmdAndArgs);
 		}
 	}
 
@@ -639,5 +635,10 @@ public class Shell {
 	public void closeStreams() {
 		errorBuffer.close();
 		outputBuffer.close();
+	}
+
+	public void detachCallbacks() {
+		errorBuffer.lineCallback = new LineCallback.Noop();
+		outputBuffer.lineCallback = new LineCallback.Noop();
 	}
 }

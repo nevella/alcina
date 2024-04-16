@@ -16,13 +16,22 @@ public class StreamBuffer implements Runnable {
 
 	StringBuilder buf = new StringBuilder();
 
-	Callback<String> outputCallback;
+	public interface LineCallback extends Callback<String> {
+		public static class Noop implements LineCallback {
+			@Override
+			public void accept(String s) {
+				//
+			}
+		}
+	}
+
+	LineCallback lineCallback;
 
 	boolean closed = false;
 
-	public StreamBuffer(InputStream is, Callback<String> outputCallback) {
+	public StreamBuffer(InputStream is, LineCallback lineCallback) {
 		this.is = is;
-		this.outputCallback = outputCallback;
+		this.lineCallback = lineCallback;
 	}
 
 	public StreamBuffer(InputStream is, String type) {
@@ -48,12 +57,12 @@ public class StreamBuffer implements Runnable {
 				buf.append(c);
 				line.append(c);
 				if (c == '\n') {
-					outputCallback.accept(line.toString());
+					lineCallback.accept(line.toString());
 					line = new StringBuilder();
 				}
 			}
 			if (!line.isEmpty()) {
-				outputCallback.accept(line.toString());
+				lineCallback.accept(line.toString());
 			}
 			closed = true;
 			notifyAll();

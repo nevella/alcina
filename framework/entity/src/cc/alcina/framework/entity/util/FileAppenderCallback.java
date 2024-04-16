@@ -3,10 +3,9 @@ package cc.alcina.framework.entity.util;
 import java.io.FileOutputStream;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.entity.Io;
 
-public class FileAppenderCallback implements Callback<String> {
+public class FileAppenderCallback implements StreamBuffer.LineCallback {
 	private String prompt;
 
 	private String path;

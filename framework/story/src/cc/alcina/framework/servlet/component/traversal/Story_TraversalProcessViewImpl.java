@@ -37,6 +37,9 @@ class Story_TraversalProcessViewImpl {
 			Timeout timeout = new Timeout(5000);
 			while (timeout.check()) {
 				if (checkSocketOpen()) {
+					if (shell != null) {
+						shell.detachCallbacks();
+					}
 					return;
 				}
 				if (!launched) {
@@ -45,11 +48,13 @@ class Story_TraversalProcessViewImpl {
 							"%s --http-port=%s --no-exit croissant",
 							launcherPath, port);
 					context.log(Level.INFO, "Launching console: %s", cmd);
-					// TODO - logger
-					Ax.out("Launching console: %s", cmd);
 					// TODO - shell shd log to stdout (well, to the logger) -
 					// but must detach on exit
 					shell = new Shell();
+					shell.errorCallback = context
+							.createLogCallback(Level.WARNING);
+					shell.outputCallback = context
+							.createLogCallback(Level.INFO);
 					shell.logLaunchMessage = false;
 					launched = true;
 					shell.launchBashScript(cmd);
@@ -99,7 +104,7 @@ class Story_TraversalProcessViewImpl {
 			Story.State.Provider<Story_TraversalProcessView.State.CroissanteriaTraversalPerformed> {
 		@Override
 		public void perform(Context context) {
-			Ax.out("performed - %s", NestedName.get(this));
+			context.log("performed - %s", NestedName.get(this));
 		}
 	}
 }

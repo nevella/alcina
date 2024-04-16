@@ -12,6 +12,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.entity.util.StreamBuffer.LineCallback;
 
 /**
  * <h2>Goal</h2>
@@ -168,7 +169,13 @@ public interface Story {
 		 * performance
 		 */
 		public interface Context {
-			void log(Level info, String template, Object... args);
+			default void log(String template, Object... args) {
+				log(Level.INFO, template, args);
+			}
+
+			void log(Level level, String template, Object... args);
+
+			LineCallback createLogCallback(Level warning);
 		}
 
 		default Class<? extends Action> getActionClass() {

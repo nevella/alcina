@@ -1,7 +1,9 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -484,6 +486,43 @@ public class FormatBuilder {
 		int lineLength = sb.length() - startOfLineIdx;
 		if (to > lineLength) {
 			appendPadLeft(to - lineLength, "");
+		}
+	}
+
+	public static class HardBreak {
+		public List<String> lines = new ArrayList<>();
+
+		public HardBreak(String string, int maxWidth) {
+			int idx = 0;
+			string = string.replace("\t", "    ");
+			while (idx < string.length()) {
+				int newlineIdx = string.indexOf('\n', idx);
+				int breakAt = Math.min(idx + maxWidth, string.length());
+				if (newlineIdx != -1 && newlineIdx < breakAt) {
+					breakAt = newlineIdx;
+				} else {
+					if (idx + maxWidth > string.length()) {
+						// don't break at space
+					} else {
+						int spaceIdx = string.lastIndexOf(' ', breakAt);
+						if (spaceIdx > idx) {
+							breakAt = spaceIdx + 1;
+						}
+					}
+				}
+				String line = string.substring(idx, breakAt);
+				if (line.length() > maxWidth) {
+					int debug = 3;
+				}
+				lines.add(line);
+				idx = breakAt;
+				if (idx < string.length() && string.charAt(idx) == '\n') {
+					idx++;
+				}
+			}
+			if (lines.isEmpty()) {
+				lines.add("");
+			}
 		}
 	}
 }

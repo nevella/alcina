@@ -171,9 +171,10 @@ public class RemoteDebugHandler
 					"com.sun.jdi.SocketAttach:hostname=%s,port=%s", jdbHostname,
 					jdbPort);
 			jdb = new Shell();
+			jdb.errorCallback = this::onMessage;
+			jdb.outputCallback = this::onMessage;
 			jdb.launchProcess(
-					new String[] { jdbPath, "-connect", connectionString },
-					this::onMessage, this::onMessage);
+					new String[] { jdbPath, "-connect", connectionString });
 			return pollJdb();
 		}
 

@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.story.teller;
 
+import java.io.PrintStream;
 import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,6 +15,7 @@ import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.FormatBuilder.HardBreak;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -160,7 +162,7 @@ public class StoryTeller {
 		}
 
 		public class Result {
-			public boolean ok;
+			public boolean ok = true;
 
 			public Throwable throwable;
 
@@ -194,7 +196,7 @@ public class StoryTeller {
 
 				public long time;
 
-				public System.Logger.Level level;
+				public System.Logger.Level level = Level.INFO;
 
 				public Throwable throwable;
 
@@ -271,6 +273,8 @@ public class StoryTeller {
 
 		Set<Class<? extends Story.State>> resolvedStates = new LinkedHashSet<>();
 
+		public boolean finished;
+
 		public Visit current() {
 			return traversal.current();
 		}
@@ -325,16 +329,26 @@ public class StoryTeller {
 	}
 
 	public void echo(Log log) {
-		int depth = log.getVisit().depth();
+		int depth = log.getVisit().depth() - 1;
 		FormatBuilder format = new FormatBuilder();
 		int treeLength = 110;
 		if (!log.hasType(LogType.PROCESS)) {
+			depth++;
 		}
-		format.padTo(depth * 2);
-		format.append(Ax.trim(log.message, treeLength - depth * 2));
+		format.indent(depth * 2);
+		HardBreak hardBreak = new FormatBuilder.HardBreak(log.message,
+				treeLength - depth * 2);
+		format.append(hardBreak.lines.get(0));
 		format.padTo(treeLength);
 		format.appendPadLeft(8, log.time - state.start);
-		Ax.out(format);
+		format.format("  %s", log.level);
+		format.newLine();
+		hardBreak.lines.stream().skip(1).forEach(format::line);
+		PrintStream out = System.out;
+		if (log.level.getSeverity() >= Level.WARNING.getSeverity()) {
+			out = System.err;
+		}
+		out.print(format);
 	}
 
 	public void tell(Story story) {
@@ -346,7 +360,9 @@ public class StoryTeller {
 					.getSelectedProcessNode();
 			state.init(new Visit(parentNode, state.story.getPoint()));
 			context.init(this);
+			System.out.println();
 			tell();
+			System.out.println();
 		} finally {
 			LooseContext.pop();
 		}
@@ -357,9 +373,13 @@ public class StoryTeller {
 		new BeforeStory().publish();
 		while (state.traversal.hasNext()) {
 			Visit visit = state.next();
+			if (state.finished) {
+				break;
+			}
 			new BeforeVisit().publish();
 			visit.populateInitialChildren();
-			// this will be called after children are visited. In most cases, a
+			// visit.performAction() will be called after children are visited
+			// via the depthfirsttraversal callback. In most cases, a
 			// node (visit) will either have children or an action, but there's
 			// a decent case for has-dependencies-has-action
 			// visit.performAction();
@@ -370,6 +390,9 @@ public class StoryTeller {
 	void performAction(Visit visit) {
 		new BeforePerformAction().publish();
 		Visit.Result result = visit.performAction();
+		if (!result.ok) {
+			state.finished = true;
+		}
 		visit.afterActionPerformed(result);
 		new AfterPerformAction().publish();
 	}

@@ -4,6 +4,7 @@ import java.lang.System.Logger.Level;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.util.StreamBuffer.LineCallback;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit;
@@ -24,6 +25,24 @@ public class StoryActionPerformer {
 			visit.result.logEntry().level(level).template(template).args(args)
 					.log();
 		}
+
+		@Override
+		public LineCallback createLogCallback(Level level) {
+			return new LogCallback(level);
+		}
+
+		class LogCallback implements LineCallback {
+			Level level;
+
+			LogCallback(Level level) {
+				this.level = level;
+			}
+
+			@Override
+			public void accept(String message) {
+				log(level, message);
+			}
+		}
 	}
 
 	public void perform(Visit visit) {
@@ -39,6 +58,7 @@ public class StoryActionPerformer {
 		try {
 			performer.perform(context, action);
 		} catch (Throwable t) {
+			System.out.println();
 			t.printStackTrace();
 			visit.result.ok = false;
 			visit.result.throwable = t;
