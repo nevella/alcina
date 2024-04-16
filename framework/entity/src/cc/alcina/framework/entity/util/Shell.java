@@ -179,6 +179,10 @@ public class Shell {
 
 	public Output runProcessCatchOutputAndWait(String[] cmdAndArgs)
 			throws Exception {
+		if (logToFile != null) {
+			errorCallback = new FileAppenderCallback(ERROR_MARKER, logToFile);
+			outputCallback = new FileAppenderCallback(OUTPUT_MARKER, logToFile);
+		}
 		launchProcess(cmdAndArgs);
 		return waitFor();
 	}
@@ -188,12 +192,6 @@ public class Shell {
 		if (logToStdOut) {
 			errorCallback = new TabbedSysoutCallback(prompt + ERROR_MARKER);
 			outputCallback = new TabbedSysoutCallback(prompt + OUTPUT_MARKER);
-			return runProcessCatchOutputAndWait(cmdAndArgs);
-		} else if (logToFile != null) {
-			errorCallback = new FileAppenderCallback(prompt + ERROR_MARKER,
-					logToFile);
-			outputCallback = new FileAppenderCallback(prompt + OUTPUT_MARKER,
-					logToFile);
 			return runProcessCatchOutputAndWait(cmdAndArgs);
 		} else {
 			return runProcessCatchOutputAndWait(cmdAndArgs);
