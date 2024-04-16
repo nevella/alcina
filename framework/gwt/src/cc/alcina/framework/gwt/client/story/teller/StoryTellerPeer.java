@@ -39,7 +39,8 @@ public class StoryTellerPeer implements TellerContext {
 		@Override
 		public void topicPublished(StoryTeller.BeforeVisit beforeVisit) {
 			beforeVisit.getVisit().result.logEntry().template("> %s")
-					.args(beforeVisit.getVisit().displayName()).log();
+					.args(beforeVisit.getVisit().displayName())
+					.types(StoryTeller.LogType.PROCESS).log();
 		}
 	}
 

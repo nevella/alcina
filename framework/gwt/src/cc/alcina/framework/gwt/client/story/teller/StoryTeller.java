@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -199,6 +200,8 @@ public class StoryTeller {
 
 				public String message;
 
+				List<LogType> types;
+
 				public Builder builder() {
 					return new Builder();
 				}
@@ -228,18 +231,41 @@ public class StoryTeller {
 						return this;
 					}
 
+					public Builder types(LogType... types) {
+						Log.this.types = List.of(types);
+						return this;
+					}
+
 					public void log() {
 						Log.this.time = System.currentTimeMillis();
 						Log.this.message = Ax.format(template, args);
 						echo(Log.this);
 					}
 				}
+
+				public Visit getVisit() {
+					return Visit.this;
+				}
+
+				public boolean hasType(LogType type) {
+					return types != null && types.contains(type);
+				}
 			}
 		}
+
+		public int depth() {
+			return processNode().depth();
+		}
+	}
+
+	public enum LogType {
+		PROCESS
 	}
 
 	public class State {
 		public Story story;
+
+		long start;
 
 		DepthFirstTraversal<Visit> traversal;
 
@@ -299,7 +325,16 @@ public class StoryTeller {
 	}
 
 	public void echo(Log log) {
-		Ax.out(log.message);
+		int depth = log.getVisit().depth();
+		FormatBuilder format = new FormatBuilder();
+		int treeLength = 110;
+		if (!log.hasType(LogType.PROCESS)) {
+		}
+		format.padTo(depth * 2);
+		format.append(Ax.trim(log.message, treeLength - depth * 2));
+		format.padTo(treeLength);
+		format.appendPadLeft(8, log.time - state.start);
+		Ax.out(format);
 	}
 
 	public void tell(Story story) {
@@ -318,6 +353,7 @@ public class StoryTeller {
 	}
 
 	void tell() {
+		state.start = System.currentTimeMillis();
 		new BeforeStory().publish();
 		while (state.traversal.hasNext()) {
 			Visit visit = state.next();

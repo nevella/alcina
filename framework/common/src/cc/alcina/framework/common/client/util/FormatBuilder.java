@@ -23,26 +23,33 @@ public class FormatBuilder {
 	}
 
 	/**
-	 * Internal string bugger
+	 * Internal string builder
 	 */
-	private StringBuilder sb = new StringBuilder();
+	StringBuilder sb = new StringBuilder();
 
 	/**
 	 * Separator to append after each `format()` call
 	 */
-	private String separator = "";
+	String separator = "";
 
-	private String prefix;
+	String prefix;
 
 	/**
 	 * Indent level to prepend on to every line
 	 */
-	private int indent;
+	int indent;
 
 	/**
 	 * Whether the current line has been indented or not
 	 */
 	boolean indented = false;
+
+	/**
+	 * The start of the current line in the builder. This tracks all newlines
+	 * (either inserted explictly via methods like line() or by the contents of
+	 * template/args )
+	 */
+	int startOfLineIdx = 0;
 
 	/**
 	 * Append an object as a string to the end of the buffer
@@ -95,7 +102,7 @@ public class FormatBuilder {
 	public FormatBuilder appendIfBuilderEmpty(String optional) {
 		if (sb.length() == 0) {
 			ensureIndent();
-			sb.append(optional);
+			appendToBuilder(optional);
 		}
 		return this;
 	}
@@ -110,7 +117,7 @@ public class FormatBuilder {
 	public void appendIfBuilderNonEmpty(String optional) {
 		if (sb.length() > 0) {
 			ensureIndent();
-			sb.append(optional);
+			appendToBuilder(optional);
 		}
 	}
 
@@ -169,7 +176,7 @@ public class FormatBuilder {
 		if (Ax.notBlank(optional)) {
 			ensureIndent();
 			maybeAppendSeparator();
-			sb.append(optional);
+			appendToBuilder(optional);
 		}
 	}
 
@@ -180,8 +187,8 @@ public class FormatBuilder {
 		String toString = value == null ? null : value.toString();
 		if (Ax.notBlank(toString)) {
 			append(key);
-			sb.append(":");
-			sb.append(toString);
+			appendToBuilder(":");
+			appendToBuilder(toString);
 		}
 		return this;
 	}
@@ -213,7 +220,7 @@ public class FormatBuilder {
 	 * @return This FormatBuilder
 	 */
 	public FormatBuilder appendPadLeft(int width, Object object) {
-		sb.append(CommonUtils.padStringLeft(
+		appendToBuilder(CommonUtils.padStringLeft(
 				CommonUtils.nullSafeToString(object), width, " "));
 		return this;
 	}
@@ -228,7 +235,7 @@ public class FormatBuilder {
 	 * @return This FormatBuilder
 	 */
 	public FormatBuilder appendPadRight(int width, Object object) {
-		sb.append(CommonUtils.padStringRight(
+		appendToBuilder(CommonUtils.padStringRight(
 				CommonUtils.nullSafeToString(object), width, ' '));
 		return this;
 	}
@@ -242,7 +249,7 @@ public class FormatBuilder {
 	 * @return This FormatBuilder
 	 */
 	public FormatBuilder appendWithoutSeparator(String string) {
-		sb.append(string);
+		appendToBuilder(string);
 		return this;
 	}
 
@@ -256,7 +263,8 @@ public class FormatBuilder {
 	 * @return This FormatBuilder
 	 */
 	public FormatBuilder appendZeroesLeft(int width, int value) {
-		sb.append(CommonUtils.padStringLeft(String.valueOf(value), width, "0"));
+		appendToBuilder(
+				CommonUtils.padStringLeft(String.valueOf(value), width, "0"));
 		return this;
 	}
 
@@ -287,7 +295,7 @@ public class FormatBuilder {
 	private void ensureIndent() {
 		if (!indented && indent != 0) {
 			indented = true;
-			sb.append(CommonUtils.padStringLeft("", indent, ' '));
+			appendToBuilder(CommonUtils.padStringLeft("", indent, ' '));
 		}
 	}
 
@@ -301,8 +309,8 @@ public class FormatBuilder {
 	 * @return This FormatBuilder
 	 */
 	public FormatBuilder fill(int width, String fill) {
-		sb.append(CommonUtils.padStringLeft("", width, fill));
-		sb.append("\n");
+		appendToBuilder(CommonUtils.padStringLeft("", width, fill));
+		appendToBuilder('\n');
 		return this;
 	}
 
@@ -319,7 +327,8 @@ public class FormatBuilder {
 	public FormatBuilder format(String template, Object... args) {
 		ensureIndent();
 		maybeAppendSeparator();
-		sb.append(args.length == 0 ? template : Ax.format(template, args));
+		appendToBuilder(
+				args.length == 0 ? template : Ax.format(template, args));
 		return this;
 	}
 
@@ -391,7 +400,7 @@ public class FormatBuilder {
 		if (sb.length() > 0 && separator.length() > 0
 				&& !(prefix != null && prefix.length() == sb.length())) {
 			ensureIndent();
-			sb.append(separator);
+			appendToBuilder(separator);
 		}
 	}
 
@@ -401,7 +410,7 @@ public class FormatBuilder {
 	 * @return This FormatBuilder
 	 */
 	public FormatBuilder newLine() {
-		sb.append("\n");
+		appendToBuilder('\n');
 		indented = false;
 		return this;
 	}
@@ -433,11 +442,26 @@ public class FormatBuilder {
 	 * @return This FormatBuilder
 	 */
 	public FormatBuilder title(String title) {
-		sb.append(title);
-		sb.append('\n');
-		IntStream.range(0, title.length()).forEach(i -> sb.append('-'));
-		sb.append('\n');
+		appendToBuilder(title);
+		appendToBuilder('\n');
+		IntStream.range(0, title.length()).forEach(i -> appendToBuilder('-'));
+		appendToBuilder('\n');
 		return this;
+	}
+
+	private void appendToBuilder(String string) {
+		int lastIdx = string.lastIndexOf('\n');
+		if (lastIdx != -1) {
+			startOfLineIdx = sb.length() + lastIdx + 1;
+		}
+		sb.append(string);
+	}
+
+	private void appendToBuilder(char c) {
+		sb.append(c);
+		if (c == '\n') {
+			startOfLineIdx = sb.length();
+		}
 	}
 
 	/**
@@ -448,5 +472,18 @@ public class FormatBuilder {
 	@Override
 	public String toString() {
 		return sb.toString();
+	}
+
+	/**
+	 * Pad the current line to index 'to'
+	 * 
+	 * @param to
+	 *            the index to pad to
+	 */
+	public void padTo(int to) {
+		int lineLength = sb.length() - startOfLineIdx;
+		if (to > lineLength) {
+			appendPadLeft(to - lineLength, "");
+		}
 	}
 }
