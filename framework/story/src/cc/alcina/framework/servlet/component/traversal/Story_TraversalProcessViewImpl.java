@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import java.io.IOException;
+import java.lang.System.Logger.Level;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -43,6 +44,7 @@ class Story_TraversalProcessViewImpl {
 					String cmd = Ax.format(
 							"%s --http-port=%s --no-exit croissant",
 							launcherPath, port);
+					context.log(Level.INFO, "Launching console: %s", cmd);
 					// TODO - logger
 					Ax.out("Launching console: %s", cmd);
 					// TODO - shell shd log to stdout (well, to the logger) -

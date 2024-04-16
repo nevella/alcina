@@ -1,40 +1,48 @@
 package cc.alcina.framework.gwt.client.story.teller;
 
+import java.lang.System.Logger.Level;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
-import cc.alcina.framework.gwt.client.story.Story.Action.Result;
 import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit;
+import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit.Result;
 
 public class StoryActionPerformer {
-	public Result result = new Result();
-
 	private ContextImpl context;
 
 	public class ContextImpl implements Story.Action.Context {
+		public Visit visit;
+
 		public Result getResult() {
-			return result;
+			return visit.result;
+		}
+
+		@Override
+		public void log(Level level, String template, Object... args) {
+			visit.result.logEntry().level(level).template(template).args(args)
+					.log();
 		}
 	}
 
-	public Result perform(Visit visit) {
+	public void perform(Visit visit) {
 		Story.Action action = visit.getAction();
 		if (action == null) {
-			return result;
+			return;
 		}
+		context = new ContextImpl();
+		context.visit = visit;
 		Class<? extends Story.Action> actionClass = action.getActionClass();
 		ActionTypePerformer performer = Registry.impl(ActionTypePerformer.class,
 				actionClass);
-		context = new ContextImpl();
 		try {
 			performer.perform(context, action);
 		} catch (Throwable t) {
 			t.printStackTrace();
-			result.ok = false;
-			result.throwable = t;
+			visit.result.ok = false;
+			visit.result.throwable = t;
 		}
-		return result;
 	}
 
 	@Registration.NonGenericSubtypes(ActionTypePerformer.class)

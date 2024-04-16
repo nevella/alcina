@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.story.teller;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.State;
 
@@ -39,7 +38,8 @@ public class StoryTellerPeer implements TellerContext {
 			implements ProcessObserver<StoryTeller.BeforeVisit> {
 		@Override
 		public void topicPublished(StoryTeller.BeforeVisit beforeVisit) {
-			Ax.out("Before :: %s", beforeVisit.getVisit());
+			beforeVisit.getVisit().result.logEntry().template("> %s")
+					.args(beforeVisit.getVisit().displayName()).log();
 		}
 	}
 

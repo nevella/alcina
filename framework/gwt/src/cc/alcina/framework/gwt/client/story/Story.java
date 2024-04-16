@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.story;
 
+import java.lang.System.Logger.Level;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -167,12 +168,7 @@ public interface Story {
 		 * performance
 		 */
 		public interface Context {
-		}
-
-		public class Result {
-			public boolean ok;
-
-			public Throwable throwable;
+			void log(Level info, String template, Object... args);
 		}
 
 		default Class<? extends Action> getActionClass() {

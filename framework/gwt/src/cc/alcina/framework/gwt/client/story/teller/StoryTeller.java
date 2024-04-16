@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.story.teller;
 
+import java.lang.System.Logger.Level;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,9 +19,9 @@ import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action;
-import cc.alcina.framework.gwt.client.story.Story.Action.Result;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
+import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit.Result.Log;
 
 /**
  */
@@ -59,9 +61,12 @@ public class StoryTeller {
 
 		private Iterator<? extends Point> childItr;
 
+		public Result result;
+
 		Visit(Node parentNode, Point point) {
 			this.node = parentNode.add(this);
 			this.point = point;
+			result = new Result();
 		}
 
 		Visit(Visit parent, Point point) {
@@ -73,8 +78,9 @@ public class StoryTeller {
 			return node;
 		}
 
-		Story.Action.Result performAction() {
-			return new StoryActionPerformer().perform(this);
+		Visit.Result performAction() {
+			new StoryActionPerformer().perform(this);
+			return result;
 		}
 
 		void add(Point point) {
@@ -151,6 +157,85 @@ public class StoryTeller {
 				state.dependencyResolved(provider);
 			}
 		}
+
+		public class Result {
+			public boolean ok;
+
+			public Throwable throwable;
+
+			public List<Log> logs = new ArrayList<>();
+
+			Result() {
+			}
+
+			/**
+			 * The pattern used to emit log records is call this method,
+			 * populate the entry and call log - e.g.
+			 * 
+			 * <pre>
+			 * <code>
+			 * visit.result.logEntry().level(level).template(template).args(args)
+					.log();
+			 * </code>
+			 * </pre>
+			 * 
+			 * @return the Log.Builder builder instance
+			 */
+			public Log.Builder logEntry() {
+				Log log = new Log();
+				logs.add(log);
+				return log.builder();
+			}
+
+			public class Log {
+				Log() {
+				}
+
+				public long time;
+
+				public System.Logger.Level level;
+
+				public Throwable throwable;
+
+				public String message;
+
+				public Builder builder() {
+					return new Builder();
+				}
+
+				public class Builder {
+					private Object[] args;
+
+					private String template;
+
+					public Builder level(Level level) {
+						Log.this.level = level;
+						return this;
+					}
+
+					public Builder throwable(Throwable throwable) {
+						Log.this.throwable = throwable;
+						return this;
+					}
+
+					public Builder template(String template) {
+						this.template = template;
+						return this;
+					}
+
+					public Builder args(Object... args) {
+						this.args = args;
+						return this;
+					}
+
+					public void log() {
+						Log.this.time = System.currentTimeMillis();
+						Log.this.message = Ax.format(template, args);
+						echo(Log.this);
+					}
+				}
+			}
+		}
 	}
 
 	public class State {
@@ -213,6 +298,10 @@ public class StoryTeller {
 		this.state = new State();
 	}
 
+	public void echo(Log log) {
+		Ax.out(log.message);
+	}
+
 	public void tell(Story story) {
 		try {
 			LooseContext.push();
@@ -244,7 +333,7 @@ public class StoryTeller {
 
 	void performAction(Visit visit) {
 		new BeforePerformAction().publish();
-		Story.Action.Result result = visit.performAction();
+		Visit.Result result = visit.performAction();
 		visit.afterActionPerformed(result);
 		new AfterPerformAction().publish();
 	}
