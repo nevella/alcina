@@ -410,4 +410,8 @@ public class AuthenticationManager {
 			super("Not authorized - client instance expired");
 		}
 	}
+
+	public static boolean canAuthenticate() {
+		return Registry.query(Authenticator.class).hasImplementation();
+	}
 }

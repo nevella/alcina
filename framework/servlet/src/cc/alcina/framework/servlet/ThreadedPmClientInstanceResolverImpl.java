@@ -23,7 +23,7 @@ public class ThreadedPmClientInstanceResolverImpl
 		if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
 			return LooseContext.get(CONTEXT_CLIENT_INSTANCE);
 		}
-		if (!AuthenticationManager.hasContext()) {
+		if (!AuthenticationManager.canAuthenticate()) {
 			return null;
 		}
 		try {
