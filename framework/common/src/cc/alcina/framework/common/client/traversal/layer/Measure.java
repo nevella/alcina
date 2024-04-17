@@ -187,7 +187,8 @@ public class Measure extends Location.Range {
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
-		if (start.treeIndex == end.treeIndex && start.containingNode.isText()) {
+		if (start.treeIndex == end.treeIndex && start.containingNode != null
+				&& start.containingNode.isText()) {
 			return Ax.format("%s-%s :: %s", start.index, end.index,
 					tokenString);
 		} else {

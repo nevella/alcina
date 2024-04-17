@@ -267,7 +267,8 @@ public class Location implements Comparable<Location> {
 	}
 
 	public String toLocationString() {
-		String dir = containingNode.isText() ? "" : after ? ",>" : ",<";
+		String dir = containingNode == null ? "[detached location]"
+				: containingNode.isText() ? "" : after ? ",>" : ",<";
 		return Ax.format("%s,%s%s", treeIndex, index, dir);
 	}
 
