@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
-import cc.alcina.framework.entity.util.StreamBuffer.LineCallback;
+import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class Shell {
 	public static String exec(String script, Object... args) {
@@ -116,9 +116,9 @@ public class Shell {
 		return tmp;
 	}
 
-	public StreamBuffer.LineCallback outputCallback = new LineCallback.Noop();
+	public LineCallback outputCallback = new LineCallback.Noop();
 
-	public StreamBuffer.LineCallback errorCallback = new LineCallback.Noop();
+	public LineCallback errorCallback = new LineCallback.Noop();
 
 	public void launchProcess(String[] cmdAndArgs) throws IOException {
 		if (cmdAndArgs[0].equals("/bin/bash") && isWindows()) {

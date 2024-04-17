@@ -79,4 +79,16 @@
  * 
  * </pre>
  */
+/*
+ * PathrefDom DOM(s) are a server-side dom pair (local, pathref) coupled to an
+ * in-browser dom pair (local, remote) via rpc calls - the relationship is:
+ *
+ * Server.NodeLocal <--> Server.NodePathRef <==> Client.NodeLocal <-->
+ * Client.NodeJso (Client.NodeJso being the 'real' browser dom)
+ *
+ * 'PathRef' because the server has no object refs to client nodes, instead
+ * using node (x.y.z) paths to transmit references
+ * 
+ * 
+ */
 package cc.alcina.framework.servlet.dom;

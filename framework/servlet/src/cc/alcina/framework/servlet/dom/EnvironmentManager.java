@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.dom;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -12,21 +14,22 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Timeout;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 
 /*
- * PathrefDom DOM(s) are a server-side dom pair (local, pathref) coupled to an
- * in-browser dom pair (local, remote) via rpc calls - the relationship is:
- *
- * Server.NodeLocal <--> Server.NodePathRef <==> Client.NodeLocal <-->
- * Client.NodeJso (Client.NodeJso being the 'real' browser dom)
- *
- * 'PathRef' because the server has no object refs to client nodes, instead
- * using node (x.y.z) paths to transmit references
+ * The EnvironmentManager maintains mappings of credentials (per-browser-tab) to
+ * Environment instances (essentially server-side client apps with an associated
+ * DOM + trimmings). An Environment instance is essentially the OM in ROM - it's
+ * remote from the POV of the client
+ * 
+ * The EnvironmentManager also maintains a list of named environment
+ * <i>sources</i>
  */
 @Registration.Singleton
 public class EnvironmentManager {
@@ -35,6 +38,33 @@ public class EnvironmentManager {
 	}
 
 	private ConcurrentMap<String, Environment> environments = new ConcurrentHashMap<>();
+
+	/*
+	 * Since this is awaited, it's easier to manage synchronization manually
+	 */
+	private Map<String, EnvironmentSource> environmentSources = new LinkedHashMap<>();
+
+	public static class EnvironmentSource {
+		String path;
+
+		public EnvironmentSource(String path) {
+			this.path = path;
+		}
+	}
+
+	public void registerSource(EnvironmentSource source) {
+		synchronized (environmentSources) {
+			environmentSources.put(source.path, source);
+			environmentSources.notifyAll();
+		}
+	}
+
+	public void deregisterSource(EnvironmentSource source) {
+		synchronized (environmentSources) {
+			environmentSources.remove(source.path);
+			environmentSources.notifyAll();
+		}
+	}
 
 	public EnvironmentManager() {
 		// initialise the primary contexts for each server-hosted 'client app'
@@ -101,5 +131,19 @@ public class EnvironmentManager {
 
 	public void deregister(RemoteUi remoteUi) {
 		environments.remove(remoteUi.getEnvironment().credentials.id);
+	}
+
+	public void await(RemoteComponent component, String path)
+			throws InterruptedException {
+		String awaitPath = Ax.format("%s/%s", component.getPath(), path);
+		Timeout timeout = new Timeout(60000);
+		while (timeout.check()) {
+			synchronized (environmentSources) {
+				if (environmentSources.containsKey(awaitPath)) {
+					return;
+				}
+				environmentSources.wait(timeout.remaining());
+			}
+		}
 	}
 }

@@ -12,7 +12,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.entity.util.StreamBuffer.LineCallback;
+import cc.alcina.framework.gwt.client.util.LineCallback;
 
 /**
  * <h2>Goal</h2>
@@ -53,7 +53,9 @@ public interface Story {
 	 *
 	 * @return the top-level feature illustrated by the story
 	 */
-	Class<? extends Feature> getFeature();
+	default Class<? extends Feature> getFeature() {
+		return getPoint().getFeature();
+	}
 
 	/**
 	 *
@@ -89,7 +91,8 @@ public interface Story {
 	}
 
 	/**
-	 * A naming container (short for 'Declarative')
+	 * A naming container (short for 'Declarative'). The single/repeated pattern
+	 * is for annotation readability
 	 */
 	public interface Decl {
 		/** Declaratively define a point */
@@ -106,6 +109,43 @@ public interface Story {
 		@Target({ ElementType.TYPE })
 		public @interface Points {
 			Point[] value();
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		@Repeatable(Requires.class)
+		public @interface Require {
+			Class<? extends Story.State> value();
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Requires {
+			Require[] value();
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		@Repeatable(Children.class)
+		public @interface Child {
+			Class<? extends Story.Point> value();
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Children {
+			Child[] value();
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Feature {
+			Class<? extends cc.alcina.framework.common.client.meta.Feature> value();
 		}
 
 		public interface Action {
@@ -154,6 +194,8 @@ public interface Story {
 		String getName();
 
 		Story.Action getAction();
+
+		Class<? extends Feature> getFeature();
 	}
 
 	public interface Action {
@@ -183,6 +225,12 @@ public interface Story {
 					.filter(intf -> Reflections.isAssignableFrom(Action.class,
 							intf))
 					.findFirst().get();
+		}
+
+		/*
+		 * The action performer must set the Context.Result to true or false
+		 */
+		public interface Test {
 		}
 	}
 

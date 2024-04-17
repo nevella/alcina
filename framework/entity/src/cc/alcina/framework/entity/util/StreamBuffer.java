@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class StreamBuffer implements Runnable {
 	private static final int TIMEOUT = 1 * 1000;
@@ -15,15 +15,6 @@ public class StreamBuffer implements Runnable {
 	String type;
 
 	StringBuilder buf = new StringBuilder();
-
-	public interface LineCallback extends Callback<String> {
-		public static class Noop implements LineCallback {
-			@Override
-			public void accept(String s) {
-				//
-			}
-		}
-	}
 
 	LineCallback lineCallback;
 

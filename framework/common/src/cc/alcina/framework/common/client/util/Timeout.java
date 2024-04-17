@@ -21,9 +21,13 @@ public class Timeout {
 	 *         an exception
 	 */
 	public boolean check() {
-		if (System.currentTimeMillis() - start > timeout) {
+		if (remaining() < 0) {
 			throw new IllegalStateException("Timed out");
 		}
 		return true;
+	}
+
+	public long remaining() {
+		return start + timeout - System.currentTimeMillis();
 	}
 }

@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -83,13 +84,68 @@ class RemoteComponentHandler {
 		String method = request.getMethod();
 		switch (method) {
 		case "GET":
-			serveFile(request, response);
+			if (Ax.notBlank(request.getQueryString())) {
+				serveQuery(request, response);
+			} else {
+				serveFile(request, response);
+			}
 			break;
 		case "POST":
 			serveProtocol(request, response);
 			break;
 		default:
 			throw new UnsupportedOperationException();
+		}
+	}
+
+	void serveQuery(HttpServletRequest request, HttpServletResponse response)
+			throws IOException {
+		new QueryHandler(component, request, response).serve();
+	}
+
+	static class QueryHandler {
+		HttpServletRequest request;
+
+		HttpServletResponse response;
+
+		RemoteComponent component;
+
+		String path;
+
+		Action action;
+
+		QueryHandler(RemoteComponent component, HttpServletRequest request,
+				HttpServletResponse response) {
+			this.component = component;
+			this.request = request;
+			this.response = response;
+		}
+
+		void serve() throws IOException {
+			action = Action.valueOf(request.getParameter("action"));
+			path = request.getParameter("path");
+			switch (action) {
+			case await:
+				try {
+					EnvironmentManager.get().await(component, path);
+				} catch (Exception e) {
+					throw WrappedRuntimeException.wrap(e);
+				}
+				writeTextResponse("Component %s/%s available",
+						component.getPath(), path);
+				break;
+			}
+		}
+
+		void writeTextResponse(String template, Object... args)
+				throws IOException {
+			String string = Ax.format(template, args);
+			response.setContentType("text/plain");
+			Io.write().string(string).toStream(response.getOutputStream());
+		}
+
+		enum Action {
+			await
 		}
 	}
 

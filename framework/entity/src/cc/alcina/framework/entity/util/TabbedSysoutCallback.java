@@ -1,6 +1,6 @@
 package cc.alcina.framework.entity.util;
 
-import cc.alcina.framework.entity.util.StreamBuffer.LineCallback;
+import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class TabbedSysoutCallback implements LineCallback {
 	private String prompt;

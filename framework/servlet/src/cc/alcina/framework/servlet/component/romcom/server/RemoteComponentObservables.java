@@ -8,6 +8,8 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -15,6 +17,8 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.servlet.dom.EnvironmentManager;
+import cc.alcina.framework.servlet.dom.EnvironmentManager.EnvironmentSource;
 
 /**
  * This class abstracts support for observable backend events which are the root
@@ -24,7 +28,9 @@ public class RemoteComponentObservables<T> {
 	public static final transient String CONTEXT_OVERRIDE_EVICTION_TIME = RemoteComponentObservables.class
 			.getName() + ".CONTEXT_OVERRIDE_EVICTION_TIME";
 
-	Class<T> clazz;
+	Class<? extends RemoteComponent> componentClass;
+
+	Class<T> observedClass;
 
 	Function<T, String> observableDisplayName;
 
@@ -41,16 +47,27 @@ public class RemoteComponentObservables<T> {
 				histories.entrySet().stream()
 						.filter(e -> e.getValue().getPublished() != null
 								&& e.getValue().getPublished().shouldEvict())
-						.forEach(e -> e.getValue().clearPublished());
+						.forEach(RemoteComponentObservables.this::evict);
 			}
 		}
 	};
 
+	void evict(Map.Entry<String, Topic<ObservableHistory>> entry) {
+		ObservableHistory published = entry.getValue().getPublished();
+		entry.getValue().clearPublished();
+		EnvironmentManager.get()
+				.deregisterSource(published.toEnvironmentSource());
+	}
+
 	Map<String, Topic<ObservableHistory>> histories = new LinkedHashMap<>();
 
-	public RemoteComponentObservables(Class<T> clazz,
-			Function<T, String> observableDisplayName, long evictionTimeMs) {
-		this.clazz = clazz;
+	public RemoteComponentObservables(
+			Class<? extends RemoteComponent> componentClass,
+			Class<T> observedClass, Function<T, String> observableDisplayName,
+			long evictionTimeMs) {
+		this.componentClass = componentClass;
+		this.path = Reflections.newInstance(componentClass).getPath();
+		this.observedClass = observedClass;
 		this.observableDisplayName = observableDisplayName;
 		this.evictionTimeMs = evictionTimeMs;
 	}
@@ -72,7 +89,9 @@ public class RemoteComponentObservables<T> {
 				return;
 			}
 		}
-		ensureTopic(id).publish(new ObservableHistory(observable, id));
+		ObservableHistory history = new ObservableHistory(observable, id);
+		EnvironmentManager.get().registerSource(history.toEnvironmentSource());
+		ensureTopic(id).publish(history);
 	}
 
 	public ListenerReference subscribe(String traversalKey,
@@ -101,6 +120,14 @@ public class RemoteComponentObservables<T> {
 				logger.warn("Observed component observable: {} {}",
 						observable.getClass().getName(), id);
 			}
+		}
+
+		public EnvironmentSource toEnvironmentSource() {
+			return new EnvironmentSource(this.getPath());
+		}
+
+		String getPath() {
+			return Ax.format("%s/%s", path, id);
 		}
 
 		public String displayName() {

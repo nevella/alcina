@@ -4,11 +4,11 @@ import java.lang.System.Logger.Level;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.util.StreamBuffer.LineCallback;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit.Result;
+import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class StoryActionPerformer {
 	private ContextImpl context;

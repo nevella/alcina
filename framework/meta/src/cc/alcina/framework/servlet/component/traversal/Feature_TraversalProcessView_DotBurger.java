@@ -24,12 +24,12 @@ import cc.alcina.framework.common.client.meta.Feature;
  *
  */
 /*
- * Test: display a shortcuts icon, emit 'show action'
+ * Test: locate + click the dotburger icon in the header
  * 
  * Doc: Short form: 'Click to display a list of keyboard shortcuts'
  */
 @Feature.Status.Ref(Feature.Status.Open.class)
-@Feature.Parent(Feature_TraversalProcessView_PersistentSettings.class)
+@Feature.Parent(Feature_TraversalProcessView_Header.class)
 public interface Feature_TraversalProcessView_DotBurger extends Feature {
 	/*
 	 * Test: test the shortcuts term existence, [doc: highlight term + display

@@ -4,8 +4,9 @@ import java.io.FileOutputStream;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.gwt.client.util.LineCallback;
 
-public class FileAppenderCallback implements StreamBuffer.LineCallback {
+public class FileAppenderCallback implements LineCallback {
 	private String prompt;
 
 	private String path;

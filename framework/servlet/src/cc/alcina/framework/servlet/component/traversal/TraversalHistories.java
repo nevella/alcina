@@ -26,7 +26,8 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 	public RemoteComponentObservables<SelectionTraversal> observables;
 
 	public TraversalHistories() {
-		observables = new RemoteComponentObservables<>(SelectionTraversal.class,
+		observables = new RemoteComponentObservables<>(
+				TraversalProcessView.Component.class, SelectionTraversal.class,
 				t -> {
 					Layer rootLayer = t.getRootLayer();
 					return Registry

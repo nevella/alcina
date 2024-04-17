@@ -428,6 +428,10 @@ public class Configuration {
 			}
 		}
 
+		/*
+		 * A class key combines its own values - "Clazz.key" from bundles - with
+		 * all superclass values. But *not* nest parent values
+		 */
 		PropertyValues ensureValues(Key key) {
 			String stringKey = key.stringRepresentation;
 			PropertyValues propertyValues = keyValues.get(stringKey);
