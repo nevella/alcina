@@ -20,6 +20,7 @@ public class Story_TraversalProcessView implements Story {
 		//@formatter:on
 	}
 
+	//
 	@Decl.Feature(Feature_TraversalProcessView.class)
 	/*
 	 * All points in the story will require these states
