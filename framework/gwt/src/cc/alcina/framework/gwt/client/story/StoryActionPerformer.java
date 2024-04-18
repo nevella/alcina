@@ -1,20 +1,19 @@
-package cc.alcina.framework.gwt.client.story.teller;
+package cc.alcina.framework.gwt.client.story;
 
 import java.lang.System.Logger.Level;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
-import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit;
-import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit.Result;
+import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
+import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class StoryActionPerformer {
 	private ContextImpl context;
 
 	public class ContextImpl implements Story.Action.Context {
-		public Visit visit;
+		Visit visit;
 
 		public Result getResult() {
 			return visit.result;
@@ -42,6 +41,11 @@ public class StoryActionPerformer {
 			public void accept(String message) {
 				log(level, message);
 			}
+		}
+
+		@Override
+		public Visit getVisit() {
+			return visit;
 		}
 	}
 

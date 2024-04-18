@@ -2,8 +2,8 @@ package cc.alcina.extras.dev.console.alcina;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.gwt.client.story.teller.StoryTeller;
-import cc.alcina.framework.gwt.client.story.teller.StoryTellerPeer;
+import cc.alcina.framework.gwt.client.story.StoryTeller;
+import cc.alcina.framework.gwt.client.story.StoryTellerPeer;
 import cc.alcina.framework.servlet.example.traversal.recipe.markup.RecipeMarkupParser;
 import cc.alcina.framework.servlet.story.component.traversal.Story_TraversalProcessView;
 

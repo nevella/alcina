@@ -12,6 +12,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
 /**
@@ -95,7 +96,7 @@ public interface Story {
 	 * is for annotation readability
 	 */
 	public interface Decl {
-		/** Declaratively define a point */
+		/** Declaratively define a point. This may end up going unused */
 		@Retention(RetentionPolicy.RUNTIME)
 		@Documented
 		@Target({ ElementType.TYPE })
@@ -148,6 +149,17 @@ public interface Story {
 			Class<? extends cc.alcina.framework.common.client.meta.Feature> value();
 		}
 
+		/*
+		 * A todo note
+		 */
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Todo {
+			String value();
+		}
+
+		/** Declarative actions */
 		public interface Action {
 			/** Declaratively define a code action */
 			@Retention(RetentionPolicy.RUNTIME)
@@ -156,6 +168,117 @@ public interface Story {
 			public @interface Code {
 				Class<? extends Story.Action.Code> value();
 			}
+
+			/**
+			 * UI actions. Could be done as annotation/type - but this way reads
+			 * better
+			 */
+			public interface UI {
+				/** A click action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				public @interface Click {
+				}
+
+				/** A (send) keys action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				public @interface Keys {
+				}
+
+				public interface Select {
+					/** Define a select-by-value action */
+					@Retention(RetentionPolicy.RUNTIME)
+					@Documented
+					@Target({ ElementType.TYPE })
+					public @interface ByValue {
+						String value();
+					}
+
+					/** A select-by-text action */
+					@Retention(RetentionPolicy.RUNTIME)
+					@Documented
+					@Target({ ElementType.TYPE })
+					public @interface ByText {
+						String value();
+					}
+				}
+			}
+		}
+
+		/** Declarative locations */
+		public interface Loc {
+			/** Define an xpath location */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface Xpath {
+				String value();
+			}
+
+			/** Define an UR location */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface Url {
+				String value();
+			}
+		}
+
+		/** The point's label (for rendering in the UI or logs) */
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Label {
+			String value();
+		}
+
+		/** The point's description */
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
+		public @interface Description {
+			String value();
+		}
+
+		/** Documentation hints */
+		public interface Doc {
+			/**
+			 * Highlight the first matched UI node
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface HighlightUiNode {
+			}
+		}
+
+		/**
+		 * Conditional execution attributes
+		 */
+		public interface Conditional {
+			/**
+			 * Child traversal will halt if a conditional (test) child returns
+			 * false
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface Traversal {
+			}
+
+			/**
+			 * Invert the test result for ascent propagation (e.g. if the point
+			 * is a dom existence test, the evaluated test result should be true
+			 * if the node <i>doesn't</i> exist)
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface Invert {
+			}
 		}
 	}
 
@@ -163,7 +286,7 @@ public interface Story {
 	 * <p>
 	 * Elements of a story. Progres characteristics are:
 	 * <ul>
-	 * <li>Specify an app location (href)
+	 * <li>Specify an app location (url)
 	 * <li>Specify a UI element (xpath)
 	 * 
 	 * <li>Perform a UI action
@@ -218,6 +341,8 @@ public interface Story {
 			void log(Level level, String template, Object... args);
 
 			LineCallback createLogCallback(Level warning);
+
+			Visit getVisit();
 		}
 
 		default Class<? extends Action> getActionClass() {
@@ -228,7 +353,8 @@ public interface Story {
 		}
 
 		/*
-		 * The action performer must set the Context.Result to true or false
+		 * The action performer must set the Context.Visit.Result.testResult to
+		 * true or false
 		 */
 		public interface Test {
 		}

@@ -8,7 +8,15 @@ import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessV
 
 @Decl.Feature(Feature_TraversalProcessView_Header.class)
 class Header extends Waypoint {
+	static String XPATH_DOTBURGER_ICON = "";
+
+	@Decl.Doc.HighlightUiNode
+	@Decl.Loc.Xpath("")
+	@Decl.Label("Application menu")
+	@Decl.Description("The application menu provides access to application"
+			+ " settings such as window display and selection ancestry modes")
 	@Decl.Feature(Feature_TraversalProcessView_DotBurger.class)
+	@Decl.Todo("Add reference links for the modes")
 	static class Dotburger extends Waypoint {
 		/*
 		 * Declarative types
@@ -20,11 +28,13 @@ class Header extends Waypoint {
 		//@formatter:on
 		}
 
+		@Decl.Conditional.Traversal
 		@Decl.Child(EnsureShowing.TestShowing.class)
 		@Decl.Child(EnsureShowing.ClickButton.class)
 		@Decl.Child(EnsureShowing.TestShowing.class)
 		static class EnsureShowing extends Waypoint
 				implements Story.State.Provider<State.MenuShowing> {
+			@Decl.Action.UI.Click
 			static class TestShowing extends Waypoint
 					implements Story.Action.Test {
 			}
@@ -36,8 +46,11 @@ class Header extends Waypoint {
 		/*
 		 * The dotburger test is just ensure that the menu is showing
 		 */
+		@Decl.Doc.HighlightUiNode
+		@Decl.Label("Displaying the menu")
+		@Decl.Description("Click to open the application menu")
 		@Decl.Require(State.MenuShowing.class)
-		static class Test extends Waypoint {
+		static class Open extends Waypoint {
 		}
 	}
 }

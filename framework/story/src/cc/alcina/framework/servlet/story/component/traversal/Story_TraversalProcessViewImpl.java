@@ -102,6 +102,13 @@ class Story_TraversalProcessViewImpl {
 	/*
 	 * Ensures the traversal was performed
 	 */
+	/*
+	 * TODO - if this times out, restart the alcina devconsole (the traversal
+	 * was evicted). That'll be a good test of dependency resolution anyway -
+	 * resolve (but do not mark resolved)
+	 * Story_TraversalProcessView.State.ConsoleNotRunning - which will clear
+	 * ConsoleRunning
+	 */
 	static class EnsuresCroissanteriaTraversalPerformed extends Waypoint.Code
 			implements
 			Story.State.Provider<Story_TraversalProcessView.State.CroissanteriaTraversalPerformed> {
@@ -112,7 +119,8 @@ class Story_TraversalProcessViewImpl {
 			port = Configuration.getInt(Story_TraversalProcessViewImpl.class,
 					"port");
 			String url = Ax.format(
-					"http://127.0.0.1:%s/traversal?action=await&path=0.1");
+					"http://127.0.0.1:%s/traversal?action=await&path=0.1",
+					port);
 			SimpleHttp http = new SimpleHttp(url).withTimeout(TIMEOUT);
 			String response = http.asString();
 			context.log(Level.INFO, "%s >> %s", url, response);

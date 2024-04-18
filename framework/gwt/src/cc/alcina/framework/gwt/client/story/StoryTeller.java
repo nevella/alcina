@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.story.teller;
+package cc.alcina.framework.gwt.client.story;
 
 import java.io.PrintStream;
 import java.lang.System.Logger.Level;
@@ -20,11 +20,10 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
-import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
-import cc.alcina.framework.gwt.client.story.teller.StoryTeller.Visit.Result.Log;
+import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result.Log;
 
 /**
  */

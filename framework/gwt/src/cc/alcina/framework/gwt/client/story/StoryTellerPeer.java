@@ -1,9 +1,8 @@
-package cc.alcina.framework.gwt.client.story.teller;
+package cc.alcina.framework.gwt.client.story;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
-import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.State;
 
 public class StoryTellerPeer implements TellerContext {
