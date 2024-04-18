@@ -429,7 +429,8 @@ public class ClasspathScanner {
 			//
 			// FIXME - console - perf - possibly check with GraalVM/a
 			// precompiler?
-			urls.collect(Collectors.toList()).stream()
+			List<URL> urlList = urls.collect(Collectors.toList());
+			urlList.stream()
 					// .parallel()
 					.forEach(url -> invokeHandler(url));
 			return classDataCache;

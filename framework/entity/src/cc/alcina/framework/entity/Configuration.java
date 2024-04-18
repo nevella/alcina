@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -555,10 +556,13 @@ public class Configuration {
 					if (logResourceLoad) {
 						Ax.out("Loading config path: %s", trimmedPath);
 					}
-					contents = Io.read()
-							.fromStream(provideClassLoader()
-									.getResourceAsStream(trimmedPath))
-							.asString();
+					/*
+					 * if this has exceptions, check trimmed path for invisible
+					 * spaces such as 0x200b
+					 */
+					InputStream res = provideClassLoader()
+							.getResourceAsStream(trimmedPath);
+					contents = Io.read().fromStream(res).asString();
 					break;
 				}
 				case "file": {

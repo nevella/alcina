@@ -1,3 +1,3 @@
-include.resource=/​cc/​alcina/​extras/​dev/​console/​alcina/configuration_dev.properties
-include.resource=/​cc/​alcina/​extras/​dev/​console/​alcina/configuration_console.properties
-include.resource=/​cc/​alcina/​extras/​dev/​console/​alcina/configuration_alcina_console.properties
+include.resource=/cc/alcina/extras/dev/console/alcina/configuration_dev.properties
+include.resource=/cc/alcina/extras/dev/console/alcina/configuration_console.properties
+include.resource=/cc/alcina/extras/dev/console/alcina/configuration_alcina_console.properties
