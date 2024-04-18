@@ -28,11 +28,15 @@ public class TimerJvm implements Timer {
 		runnable.run();
 	}
 
+	/*
+	 * Provides a single timer
+	 */
 	public static class Provider implements Timer.Provider {
 		public Provider() {
 		}
 
-		private java.util.Timer timer = new java.util.Timer(true);
+		private java.util.Timer timer = new java.util.Timer(
+				"alcina-timerjvm-provider", true);
 
 		@Override
 		public Timer getTimer(Runnable runnable) {

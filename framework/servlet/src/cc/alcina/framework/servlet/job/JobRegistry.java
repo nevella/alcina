@@ -551,8 +551,10 @@ public class JobRegistry {
 	}
 
 	public void init() {
+		// max 200, since we want the first job status message to be max 200ms
+		// from job start (and it's debounced)
 		TransformCommit.get()
-				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
+				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 200);
 		jobExecutors = Registry.impl(JobExecutors.class);
 		jobExecutors.addScheduledJobExecutorChangeConsumer(leader -> {
 			if (leader && scheduler != null) {

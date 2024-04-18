@@ -218,17 +218,10 @@ public class JobContext {
 
 	public static void setCompletion(double completion) {
 		if (has()) {
-			get().maybeEnqueue(() -> get().getJob().setCompletion(completion));
+			get().enqueue(() -> get().getJob().setCompletion(completion));
 		} else {
 			LoggerFactory.getLogger(JobContext.class)
 					.info("(no-job) job completion => {}", completion);
-		}
-	}
-
-	public static void
-			setEnqueueProgressOnBackend(boolean enqueueProgressOnBackend) {
-		if (has()) {
-			get().enqueueProgressOnBackend = enqueueProgressOnBackend;
 		}
 	}
 
@@ -275,7 +268,7 @@ public class JobContext {
 
 	void setStatusMessage0(String message) {
 		fireDebouncedUpdateStatus(() -> {
-			get().maybeEnqueue(() -> {
+			get().enqueue(() -> {
 				Job job = getJob();
 				job.setStatusMessage(message);
 				// FIXME - there should be a higher-level
@@ -310,7 +303,7 @@ public class JobContext {
 			.synchronizedSet(new LinkedHashSet<>());
 
 	private EventCollator<Runnable> updateStatusDebouncer = new EventCollator<Runnable>(
-			200, this::updateStatus).withMaxDelayFromFirstEvent(100)
+			200, this::updateStatus).withMaxDelayFromFirstEvent(1)
 					.withMaxDelayFromFirstCollatedEvent(1000);
 
 	void updateStatus(EventCollator<Runnable> collator) {
@@ -335,8 +328,6 @@ public class JobContext {
 			}
 		}
 	}
-
-	private boolean enqueueProgressOnBackend;
 
 	private TaskPerformer performer;
 
@@ -480,8 +471,8 @@ public class JobContext {
 				InternalMetrics.get().endTracker(performer);
 			}
 		}
+		updateStatusDebouncer.cancel();
 		if (job.provideIsNotComplete()) {
-			updateStatusDebouncer.cancel();
 			// occurs just before end, since possibly on a different thread
 			// log = Registry.impl(PerThreadLogging.class).endBuffer();
 			int maxChars = LooseContext
@@ -559,13 +550,8 @@ public class JobContext {
 		getJob().setCompletion(completion);
 	}
 
-	private void maybeEnqueue(Runnable runnable) {
-		if (enqueueProgressOnBackend) {
-			TransformCommit.get().enqueueBackendTransform(runnable);
-		} else {
-			runnable.run();
-			Transaction.commit();
-		}
+	private void enqueue(Runnable runnable) {
+		TransformCommit.get().enqueueBackendTransform(runnable);
 	}
 
 	public void onJobException(Exception e) {

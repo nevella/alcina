@@ -69,7 +69,6 @@ public class TaskTestBackendQueues extends PerformerTask {
 		@Override
 		public void run() throws Exception {
 			Ax.sysLogHigh("Performing subjob test: %s", type);
-			JobContext.setEnqueueProgressOnBackend(true);
 			switch (type) {
 			case backend_transforms:
 				backend_transforms();

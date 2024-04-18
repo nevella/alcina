@@ -65,7 +65,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceList
  * <h3>Terminology</h3>
  * <ul>
  * <li>BTQ - backendtransformqueue
- * <li>Thread A: non-BTQ, committing
+ * <li>Thread A: non-BTQ, committing, modifying entity J
  * <li>Thread B: BTQ
  * </ul>
  * <h3>Process:</h3>
@@ -75,13 +75,13 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceList
  * <li>Synchronize access to the BTQ per-queue data on the queue instance.
  * Acquired by any thread which accesses the per-queue data structure (very fast
  * access/release)
- * <li>Before thread A commit, if the commit contains job transforms, check the
+ * <li>Before thread A commit, if the commit contains J transforms, check the
  * BTQ:
  * <ul>
  * <li>If there’s an inflight transform db commit on thread B, and that commit
- * contains transforms modifying the J, wait for the BTQ.queueModification lock
- * (so let the commit complete but ensure that thread A commits before the next
- * thread B commit.
+ * contains transforms modifying J, wait for the BTQ.queueModification lock (so
+ * let the commit complete but ensure that thread A commits before the next
+ * thread B commit).
  * <li>If there’s not an inflight transform db commit on thread B, interpolate
  * (using collations) any transforms on the BTQ transform queue into our
  * transaction
@@ -89,7 +89,10 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceList
  * </ul>
  * </ul>
  */
-/*Test sketch
+/*
+Implementation - in TransformInterpolator
+
+Test sketch
  * @formatter:off
  - backend transforms
  	- start a job
@@ -376,21 +379,32 @@ public class BackendTransformQueue {
 		 * the transform locator
 		 */
 		synchronized void possiblyMoveTransformsTo(
-				DomainTransformPersistenceEvent event) {
-			AdjunctTransformCollation eventCollation = event
+				DomainTransformPersistenceEvent nonQueueEvent) {
+			AdjunctTransformCollation nonQueueEventCollation = nonQueueEvent
 					.getPreProcessCollation();
 			TransformCollation queueCollation = new TransformCollation(events);
-			if (eventCollation.conflictsWith(queueCollation)) {
-				Set<DomainTransformEvent> transforms = queueCollation
-						.removeConflictingTransforms(eventCollation);
-				events.addAll(transforms);
-				Collections.sort(events);
-				queueCollation = new TransformCollation(events);
-				queueCollation.filterNonpersistentTransforms();
-				events = queueCollation.getAllEvents();
+			if (nonQueueEventCollation.conflictsWith(queueCollation)) {
+				if (nonQueueEvent.getTransformPersistenceToken().getRequest()
+						.getPriorRequestsWithoutResponse().size() > 0) {
+					// transforms can't be easily modified in a backoff request
+					// - but the entity shouldn't be modificable by the client
+					// in this case
+					logger.warn(
+							"DEVEX-2 - Cannot move transforms from client/backoff request");
+					return;
+				}
+				Set<DomainTransformEvent> removedFromBackendQueueTransforms = queueCollation
+						.removeConflictingTransforms(nonQueueEventCollation);
+				List<DomainTransformEvent> nonQueueTransforms = nonQueueEventCollation
+						.getAllEvents();
+				nonQueueTransforms.addAll(removedFromBackendQueueTransforms);
+				Collections.sort(nonQueueTransforms);
+				nonQueueEventCollation.filterNonpersistentTransforms();
+				nonQueueEvent.getTransformPersistenceToken()
+						.updateRequestFromCollation();
 				logger.info(
 						"Transferred {} transforms from queue {} to non-backend commit",
-						transforms.size(), name);
+						removedFromBackendQueueTransforms.size(), name);
 			}
 		}
 
@@ -401,6 +415,14 @@ public class BackendTransformQueue {
 		}
 	}
 
+	/**
+	 * A peristence listener, that transfers backend transforms to non-backend
+	 * txs if desirable, and blocks non-backend txs if there is a conflicting
+	 * backend tx committing
+	 * 
+	 * TODO - noted some strangeness (for instance timeouts are generated a
+	 * looong time after ) - this should be debugged with more info
+	 */
 	private class TransformInterpolator
 			implements DomainTransformPersistenceListener {
 		private Map<String, PersistenceEventAffects> affects = new LinkedHashMap<>();
@@ -415,7 +437,14 @@ public class BackendTransformQueue {
 			while (itr.hasNext()) {
 				Entry<String, PersistenceEventAffects> next = itr.next();
 				if (next.getValue().isTimedOut(now)) {
-					logger.warn("Timed-out-waiting-for-backend-queue : {}",
+					/*
+					 * this means the tx commit didn't return in 10 secs -
+					 * remove from the affects list so as to not block further.
+					 * 
+					 * the problem is not here, rather in the
+					 * transformpersistence ok/error not being reached
+					 */
+					logger.warn("Timed-out-waiting-for-backend-queue-exit : {}",
 							next.getValue());
 					itr.remove();
 				} else {
@@ -450,8 +479,6 @@ public class BackendTransformQueue {
 					} finally {
 						preCommitQueueModification.unlock();
 					}
-				} else {
-					int deubge = 3;
 				}
 				PersistenceEventAffects eventAffects = createAffects(event,
 						backend);
@@ -468,8 +495,8 @@ public class BackendTransformQueue {
 			}
 		}
 
-		private synchronized void
-				waitForNonConflictingAffects(PersistenceEventAffects affects) {
+		// the thread is already synchronized on the TransformInterpolator
+		void waitForNonConflictingAffects(PersistenceEventAffects affects) {
 			if (affects == null) {
 				return;
 			}
@@ -488,7 +515,7 @@ public class BackendTransformQueue {
 				logger.info("Waiting to avoid transform conflicts: {}",
 						affects);
 				try {
-					wait(1000L);
+					wait(100L);
 				} catch (InterruptedException e) {
 					throw WrappedRuntimeException.wrap(e);
 				}
@@ -533,11 +560,15 @@ public class BackendTransformQueue {
 			}
 
 			Stream<EntityLocator> getConflictingLocators() {
+				return canConflictWith().map(pea -> getConflicting(pea))
+						.flatMap(s -> s).map(EntityCollation::getLocator)
+						.distinct();
+			}
+
+			private Stream<PersistenceEventAffects> canConflictWith() {
 				return affects.values().stream()
 						.filter(pea -> pea.backend == !backend
-								&& pea.sequenceId < sequenceId)
-						.map(pea -> getConflicting(pea)).flatMap(s -> s)
-						.map(EntityCollation::getLocator).distinct();
+								&& pea.sequenceId < sequenceId);
 			}
 
 			// deliberately *don't* check if two non-backend persistenceEvents
@@ -548,9 +579,7 @@ public class BackendTransformQueue {
 			//// only wait (and check for conflicts) with sequence-prior affects
 			// - avoids deadlock and provides fairness
 			boolean isNonConflicting() {
-				return affects.values().stream()
-						.filter(pea -> pea.backend == !backend
-								&& pea.sequenceId < sequenceId)
+				return canConflictWith()
 						.noneMatch(pea -> pea.conflictsWith(this));
 			}
 

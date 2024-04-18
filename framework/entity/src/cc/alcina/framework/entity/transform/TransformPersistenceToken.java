@@ -343,4 +343,11 @@ public class TransformPersistenceToken implements Serializable {
 	public enum Pass {
 		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
 	}
+
+	public void updateRequestFromCollation() {
+		Preconditions.checkState(
+				getRequest().getPriorRequestsWithoutResponse().size() == 0);
+		getRequest().getEvents().clear();
+		getRequest().getEvents().addAll(getTransformCollation().getAllEvents());
+	}
 }
