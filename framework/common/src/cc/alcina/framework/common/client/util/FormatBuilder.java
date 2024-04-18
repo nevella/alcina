@@ -452,9 +452,11 @@ public class FormatBuilder {
 	}
 
 	private void appendToBuilder(String string) {
-		int lastIdx = string.lastIndexOf('\n');
-		if (lastIdx != -1) {
-			startOfLineIdx = sb.length() + lastIdx + 1;
+		if (string != null) {
+			int lastIdx = string.lastIndexOf('\n');
+			if (lastIdx != -1) {
+				startOfLineIdx = sb.length() + lastIdx + 1;
+			}
 		}
 		sb.append(string);
 	}

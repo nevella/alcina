@@ -101,6 +101,7 @@ public class Io {
 				}
 				return bytes;
 			} catch (Exception e) {
+				Ax.out("Error accessing resource :: %s", resource);
 				throw WrappedRuntimeException.wrap(e);
 			}
 		}
