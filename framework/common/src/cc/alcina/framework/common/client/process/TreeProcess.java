@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
@@ -44,7 +45,7 @@ public class TreeProcess {
 
 	List<NodeException> processExceptions = new ArrayList<>();
 
-	public Topic<Supplier<String>> positionChangedMessage = Topic.create();
+	public Topic<Supplier<String>> topicPositionChangedMessage = Topic.create();
 
 	Node selected;
 
@@ -132,7 +133,7 @@ public class TreeProcess {
 				});
 		position.appendWithoutSeparator(" :: ");
 		selectionPath.stream().skip(1)
-				.forEach(n -> position.append(n.displayName()));
+				.forEach(n -> position.append(n.pathDisplayName()));
 		String positionMessage = position.toString();
 		return positionMessage;
 	}
@@ -158,7 +159,7 @@ public class TreeProcess {
 				positionMessage = () -> processContextProvider
 						.flatPosition(node);
 			}
-			positionChangedMessage.publish(positionMessage);
+			topicPositionChangedMessage.publish(positionMessage);
 		}
 		}
 	}
@@ -223,6 +224,10 @@ public class TreeProcess {
 	public interface Node extends HasDisplayName {
 		default Node add(Object o) {
 			throw new UnsupportedOperationException();
+		}
+
+		default String pathDisplayName() {
+			return PathDisplayName.Support.pathDisplayName(this);
 		}
 
 		default List<Integer> asNodeIndicies() {
@@ -389,6 +394,25 @@ public class TreeProcess {
 		default <T> T typedValue() {
 			return (T) getValue();
 		}
+	}
+
+	/**
+	 * Allows process node contents to specify how their path segment is
+	 * displayed (default is NestedSimpleName)
+	 */
+	public interface PathDisplayName {
+		static class Support {
+			static String pathDisplayName(Node node) {
+				Object value = node.getValue();
+				if (value instanceof PathDisplayName) {
+					return ((PathDisplayName) value).pathDisplayName();
+				} else {
+					return NestedName.get(value);
+				}
+			}
+		}
+
+		String pathDisplayName();
 	}
 
 	public static class NodeException extends Exception {

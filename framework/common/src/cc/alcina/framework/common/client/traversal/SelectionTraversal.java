@@ -214,19 +214,17 @@ public class SelectionTraversal
 		List<Node> selectionPath = node.asNodePath();
 		Node last = CommonUtils.last(selectionPath);
 		Selection value = (Selection) last.getValue();
-		{
-			Layer layer = state.findLayerHandlingInput(value);
-			if (layer != null) {
-				position.format("Layer: [%s/%s]", layer.layerPath(),
-						layer.root().getChildren().size());
-				IntPair pair = state.selections.getSelectionPosition(value);
-				position.append(pair);
-				position.separator(" :: ");
-				position.append(layer);
-				position.append(last.displayName());
-				String positionMessage = position.toString();
-				return positionMessage;
-			}
+		Layer layer = state.findLayerHandlingInput(value);
+		if (layer != null) {
+			position.format("Layer: [%s/%s]", layer.layerPath(),
+					layer.root().getChildren().size());
+			IntPair pair = state.selections.getSelectionPosition(value);
+			position.append(pair);
+			position.separator(" :: ");
+			position.append(layer);
+			position.append(last.pathDisplayName());
+			String positionMessage = position.toString();
+			return positionMessage;
 		}
 		// unsupported?
 		return "[Unknown position]";
@@ -562,6 +560,9 @@ public class SelectionTraversal
 		Map<Layer, Map<Selection, Integer>> byLayer = AlcinaCollections
 				.newLinkedHashMap();
 
+		Map<Selection, Layer> selectionLayer = AlcinaCollections
+				.newLinkedHashMap();
+
 		// layer/segment
 		MultikeyMap<Selection> byLayerSegments = new UnsortedMultikeyMap<>(2);
 
@@ -584,6 +585,7 @@ public class SelectionTraversal
 			byCurrentLayer.put(selection, byCurrentLayer.size());
 			byLayerSegments.put(currentLayer(), selection.getPathSegment(),
 					selection);
+			selectionLayer.put(selection, currentLayer());
 			boolean add = true;
 			if (isLayerOnly()) {
 			} else {
@@ -657,13 +659,11 @@ public class SelectionTraversal
 		}
 
 		synchronized IntPair getSelectionPosition(Selection value) {
-			for (Entry<Layer, Map<Selection, Integer>> entry : byLayer
-					.entrySet()) {
-				Map<Selection, Integer> layerSelections = entry.getValue();
-				if (layerSelections.containsKey(value)) {
-					return new IntPair(layerSelections.get(value) + 1,
-							layerSelections.size());
-				}
+			Layer layer = selectionLayer.get(value);
+			Map<Selection, Integer> layerSelections = byLayer.get(layer);
+			Integer layerPosition = layerSelections.get(value);
+			if (layerPosition != null) {
+				return new IntPair(layerPosition + 1, layerSelections.size());
 			}
 			return null;
 		}

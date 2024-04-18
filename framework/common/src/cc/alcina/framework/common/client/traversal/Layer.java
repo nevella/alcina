@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -40,6 +42,10 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	protected Layer inputsToLayer;
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
+
+	String layerPath;
+
+	private String _toString;
 
 	public SelectionTraversal getTraversal() {
 		return state.getTraversal();
@@ -119,17 +125,25 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	public void ensureChildren() {
 	}
 
-	public Layer findHandlingLayer(Class<? extends Selection> clazz) {
-		Stack<Layer> layers = new Stack<>();
-		layers.push(this);
-		while (layers.size() > 0) {
-			Layer<?> layer = layers.pop();
-			if (layer.inputType == clazz) {
-				return layer;
-			}
-			layer.getChildren().forEach(layers::push);
+	Map<Class<? extends Selection>, Layer> selectionClassHandlingLayer;
+
+	public synchronized Layer
+			findHandlingLayer(Class<? extends Selection> clazz) {
+		if (selectionClassHandlingLayer == null) {
+			selectionClassHandlingLayer = AlcinaCollections.newLinkedHashMap();
 		}
-		return null;
+		return selectionClassHandlingLayer.computeIfAbsent(clazz, c -> {
+			Stack<Layer> layers = new Stack<>();
+			layers.push(this);
+			while (layers.size() > 0) {
+				Layer<?> layer = layers.pop();
+				if (layer.inputType == clazz) {
+					return layer;
+				}
+				layer.getChildren().forEach(layers::push);
+			}
+			return null;
+		});
 	}
 
 	public Layer firstLeaf() {
@@ -185,15 +199,18 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	}
 
 	public String layerPath() {
-		List<Integer> offsets = new ArrayList<>();
-		Layer cursor = this;
-		while (cursor.parent != null) {
-			offsets.add(0, cursor.parent.children.indexOf(cursor));
-			cursor = cursor.parent;
+		if (layerPath == null) {
+			List<Integer> offsets = new ArrayList<>();
+			Layer cursor = this;
+			while (cursor.parent != null) {
+				offsets.add(0, cursor.parent.children.indexOf(cursor));
+				cursor = cursor.parent;
+			}
+			layerPath = offsets.isEmpty() ? "0"// root
+					: offsets.stream().map(String::valueOf)
+							.collect(Collectors.joining("."));
 		}
-		return offsets.isEmpty() ? "0"// root
-				: offsets.stream().map(String::valueOf)
-						.collect(Collectors.joining("."));
+		return layerPath;
 	}
 
 	protected void onAfterInputsProcessed() {
@@ -275,7 +292,11 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s :: %s", getName(), NestedName.get(inputType));
+		if (_toString == null) {
+			_toString = Ax.format("%s :: %s", getName(),
+					NestedName.get(inputType));
+		}
+		return _toString;
 	}
 
 	public void withParent(Layer parent) {

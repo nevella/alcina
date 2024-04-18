@@ -8,8 +8,13 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @Registration.Singleton
 public class NestedName {
+	private static NestedName instance;
+
 	private static NestedName get() {
-		return Registry.impl(NestedName.class);
+		if (instance == null) {
+			instance = Registry.impl(NestedName.class);
+		}
+		return instance;
 	}
 
 	public static String get(Class clazz) {

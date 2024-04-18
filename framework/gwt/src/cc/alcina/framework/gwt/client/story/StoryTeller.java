@@ -330,6 +330,7 @@ public class StoryTeller {
 	public void echo(Log log) {
 		int depth = log.getVisit().depth() - 1;
 		FormatBuilder format = new FormatBuilder();
+		format.withTrackNewlines(true);
 		int treeLength = 110;
 		if (!log.hasType(LogType.PROCESS)) {
 			depth++;

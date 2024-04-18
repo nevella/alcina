@@ -105,6 +105,9 @@ public class Reflections {
 	private Map<String, Class> forName = CollectionCreators.Bootstrap
 			.createConcurrentStringMap();
 
+	private Map<Class, Boolean> hasReflectionMetadata = CollectionCreators.Bootstrap
+			.createConcurrentClassMap();
+
 	private String applicationName = "app";
 
 	public void appShutdown() {
@@ -116,6 +119,7 @@ public class Reflections {
 	 * used by isAssignableFrom which is already, in a way, a metadata check
 	 */
 	private boolean hasReflectionMetadata(Class clazz) {
-		return forName(clazz.getName()) != null;
+		return hasReflectionMetadata.computeIfAbsent(clazz,
+				c -> forName(c.getName()) != null);
 	}
 }

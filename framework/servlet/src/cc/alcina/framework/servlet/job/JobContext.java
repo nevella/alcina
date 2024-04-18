@@ -49,6 +49,16 @@ import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
+/**
+ * <p>
+ * Logging note - I tried debouncing log messages for higher performance - but
+ * that's fundamentally dangerous, since the runnables were evaluated on another
+ * (eventcollator) thread
+ * 
+ * <p>
+ * Instead, the debouncer works on the same thread, and the performance cost
+ * gets paid...
+ */
 public class JobContext {
 	static final String CONTEXT_CURRENT = JobContext.class.getName()
 			+ ".CONTEXT_CURRENT";
@@ -250,28 +260,34 @@ public class JobContext {
 	}
 
 	public static void setStatusMessage(Supplier<String> messageSupplier) {
+		/*
+		 * see note in the class doc - the threading issues are just too
+		 * dangerous to put this supplier on another thread
+		 */
+		String message = messageSupplier.get();
 		if (has()) {
-			JobContext jobContext = get();
-			jobContext.fireDebouncedUpdateStatus(() -> {
-				String message = messageSupplier.get();
-				get().maybeEnqueue(() -> {
-					Job job = jobContext.getJob();
-					job.setStatusMessage(message);
-					// FIXME - there should be a higher-level
-					// 'statusMessage/completion' tuple passed here
-					if (jobContext.itemCount > 0
-							&& jobContext.itemsCompleted > 0) {
-						setCompletion(((double) jobContext.itemsCompleted)
-								/ ((double) jobContext.itemCount));
-					}
-				});
-				LoggerFactory.getLogger(JobContext.class)
-						.info("status message: {}", message);
-			});
+			get().setStatusMessage0(message);
 		} else {
 			LoggerFactory.getLogger(JobContext.class)
 					.info("(no-job) status message: {}", messageSupplier.get());
 		}
+	}
+
+	void setStatusMessage0(String message) {
+		fireDebouncedUpdateStatus(() -> {
+			get().maybeEnqueue(() -> {
+				Job job = getJob();
+				job.setStatusMessage(message);
+				// FIXME - there should be a higher-level
+				// 'statusMessage/completion' tuple passed here
+				if (itemCount > 0 && itemsCompleted > 0) {
+					setCompletion(
+							((double) itemsCompleted) / ((double) itemCount));
+				}
+			});
+			LoggerFactory.getLogger(JobContext.class).info("status message: {}",
+					message);
+		});
 	}
 
 	public static void warn(String template, Exception ex) {
@@ -353,7 +369,7 @@ public class JobContext {
 		this.job = job;
 		this.performer = performer;
 		treeProcess = new TreeProcess(performer);
-		treeProcess.positionChangedMessage
+		treeProcess.topicPositionChangedMessage
 				.add(v -> JobContext.setStatusMessage(v));
 		this.launcherThreadState = launcherThreadState;
 		this.allocator = allocator;

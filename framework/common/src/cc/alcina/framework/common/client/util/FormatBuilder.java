@@ -53,6 +53,8 @@ public class FormatBuilder {
 	 */
 	int startOfLineIdx = 0;
 
+	private boolean trackNewlines;
+
 	/**
 	 * Append an object as a string to the end of the buffer
 	 *
@@ -452,7 +454,7 @@ public class FormatBuilder {
 	}
 
 	private void appendToBuilder(String string) {
-		if (string != null) {
+		if (string != null && trackNewlines) {
 			int lastIdx = string.lastIndexOf('\n');
 			if (lastIdx != -1) {
 				startOfLineIdx = sb.length() + lastIdx + 1;
@@ -463,7 +465,7 @@ public class FormatBuilder {
 
 	private void appendToBuilder(char c) {
 		sb.append(c);
-		if (c == '\n') {
+		if (c == '\n' && trackNewlines) {
 			startOfLineIdx = sb.length();
 		}
 	}
@@ -485,6 +487,7 @@ public class FormatBuilder {
 	 *            the index to pad to
 	 */
 	public void padTo(int to) {
+		Preconditions.checkArgument(trackNewlines);
 		int lineLength = sb.length() - startOfLineIdx;
 		if (to > lineLength) {
 			appendPadLeft(to - lineLength, "");
@@ -526,5 +529,9 @@ public class FormatBuilder {
 				lines.add("");
 			}
 		}
+	}
+
+	public void withTrackNewlines(boolean trackNewlines) {
+		this.trackNewlines = trackNewlines;
 	}
 }
