@@ -87,9 +87,9 @@ CLASSPATH=/g/jade/server/lib/war/httpclient-4.5.13.jar:\
 /g/alcina/lib/framework/classmeta/javaparser-symbol-solver-testing-3.24.9.jar
 DEBUG_ARGS=
 if [ -z ${DEBUG} ]; then
-	DEBUG_ARGS=-agentlib:jdwp=transport=dt_socket,suspend=n,quiet=y,server=y,address=localhost:31201
-else
     :
+else
+	DEBUG_ARGS=-agentlib:jdwp=transport=dt_socket,suspend=n,quiet=y,server=y,address=localhost:31201
 fi
 java  -Xms2000m -Xmx2000m -Xss4M -ea -XX:ParallelGCThreads=6 -Djava.awt.headless=true -Dawt.toolkit=sun.awt.HToolkit \
 --add-opens java.logging/java.util.logging=ALL-UNNAMED --add-opens java.base/sun.net.www.protocol.jar=ALL-UNNAMED \
