@@ -40,6 +40,7 @@ import cc.alcina.extras.dev.console.DevConsoleProperties.SetPropInfo;
 import cc.alcina.extras.dev.console.DevConsoleStrings.DevConsoleString;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -960,6 +961,54 @@ public abstract class DevConsoleCommand {
 		@Override
 		public String run(String[] argv) throws Exception {
 			System.exit(0);
+			return "";
+		}
+	}
+
+	public static class CmdLocalDomainQuery extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "ldq" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Query the local domain";
+		}
+
+		@Override
+		public String getUsage() {
+			return "ldq <class-simple-name> <id> <paths> - e.g. rdq MyUser 1 email";
+		}
+
+		@Override
+		public boolean ignoreForCommandHistory() {
+			return false;
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			console.ensureDomainStore();
+			Preconditions.checkArgument(argv.length == 2 || argv.length == 3);
+			String className = argv[0];
+			String idStr = argv[1];
+			String paths = argv.length == 2 ? null : argv[2];
+			Optional<Class<? extends Entity>> clazz = Registry
+					.query(Entity.class).registrations()
+					.filter(c -> Objects.equals(c.getSimpleName(), className))
+					.findFirst();
+			if (clazz.isEmpty()) {
+				throw new IllegalArgumentException(
+						Ax.format("Entity class not found: %s", className));
+			}
+			Entity entity = Reflections.at(clazz.get()).newInstance();
+			entity.setId(Long.parseLong(idStr));
+			String[] pathsArray = paths == null ? new String[0]
+					: paths.split(",");
+			TaskDomainQuery task = new TaskDomainQuery().withFrom(entity)
+					.withResultPaths(pathsArray);
+			Job job = task.perform();
+			Ax.out(job.domain().ensurePopulated().getLog());
 			return "";
 		}
 	}
