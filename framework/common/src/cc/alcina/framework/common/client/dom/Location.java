@@ -590,6 +590,10 @@ public class Location implements Comparable<Location> {
 		UNDEFINED
 	}
 
+	/**
+	 * This does not invalidate the LocationContext locations, do that manually
+	 * (until the tree/log location invalidation handling is implemented)
+	 */
 	public void ensureAtBoundary() {
 		int textOffsetInNode = getTextOffsetInNode();
 		int length = containingNode.textContent().length();

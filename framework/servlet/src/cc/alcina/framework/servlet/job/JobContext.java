@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -35,13 +36,16 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Timeout;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
@@ -57,7 +61,11 @@ import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
  * 
  * <p>
  * Instead, the debouncer works on the same thread, and the performance cost
- * gets paid...
+ * gets paid. Commits occur off-thread (see {@link BackendTransformQueue})
+ * 
+ * <p>
+ * Another threading topic is checking for cancelled - since jobs will run in a
+ * transaction, the cancelled check is run off-thread (in a shared executor )
  */
 public class JobContext {
 	static final String CONTEXT_CURRENT = JobContext.class.getName()
@@ -400,8 +408,36 @@ public class JobContext {
 		Registry.impl(PerThreadLogging.class).beginBuffer();
 	}
 
+	Timeout lastCheckCancelled = new Timeout(200).withTimeoutOnNextCheck();
+
 	void checkCancelled0(boolean ignoreSelf) {
-		Transaction.ensureAndRestartIfOlderThan(200);
+		if (!lastCheckCancelled.checkAndReset()) {
+			return;
+		}
+		if (computeCancelledInNewTx(ignoreSelf)) {
+			info("Job cancelled");
+			throw new CancelledException("Job cancelled");
+		}
+	}
+
+	/*
+	 * This should not timeout, but the check definitely shouldn't take more
+	 * than one second
+	 */
+	boolean computeCancelledInNewTx(boolean ignoreSelf) {
+		try {
+			return JobRegistry.checkCancelledExecutor
+					.submit(() -> MethodContext.instance()
+							.withWrappingTransaction()
+							.call(() -> computeCancelledInNewTx0(ignoreSelf)))
+					.get(1, TimeUnit.SECONDS);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	boolean computeCancelledInNewTx0(boolean ignoreSelf) {
 		Job cursor = job;
 		if (ignoreSelf) {
 			Optional<Job> parent = cursor.provideFirstInSequence()
@@ -409,20 +445,19 @@ public class JobContext {
 			if (parent.isPresent()) {
 				cursor = parent.get();
 			} else {
-				return;
+				return false;
 			}
 		}
 		while (true) {
 			if (cursor.provideIsComplete()) {
-				info("Job cancelled");
-				throw new CancelledException("Job cancelled");
+				return true;
 			}
 			Optional<Job> parent = cursor.provideFirstInSequence()
 					.provideParent();
 			if (parent.isPresent()) {
 				cursor = parent.get();
 			} else {
-				return;
+				return false;
 			}
 		}
 	}

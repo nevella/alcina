@@ -17,17 +17,47 @@ public class Timeout {
 
 	/**
 	 * 
-	 * @return true (for use in a while loop) if not timed out, otherwise throws
-	 *         an exception
+	 * @param b
+	 * @return true (for use in a while loop) if timed out and not
+	 *         throwontimeout
 	 */
-	public boolean check() {
+	public boolean check(boolean throwOnTimeout) {
 		if (remaining() < 0) {
-			throw new IllegalStateException("Timed out");
+			if (throwOnTimeout) {
+				throw new IllegalStateException("Timed out");
+			} else {
+				return true;
+			}
+		} else {
+			return false;
 		}
-		return true;
 	}
 
 	public long remaining() {
 		return start + timeout - System.currentTimeMillis();
+	}
+
+	/**
+	 * Force a timeout (signal) on the next check
+	 * 
+	 * @return this, a Timeout
+	 */
+	public Timeout withTimeoutOnNextCheck() {
+		this.start = 0;
+		return this;
+	}
+
+	/**
+	 * When using a timeout as a debouncer, reset the timeout (to now) if it
+	 * times out
+	 * 
+	 * @return true if timed out
+	 */
+	public boolean checkAndReset() {
+		boolean result = check(false);
+		if (result) {
+			this.start = 0;
+		}
+		return result;
 	}
 }

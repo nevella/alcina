@@ -3,6 +3,14 @@ package cc.alcina.framework.common.client.traversal.layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/**
+ * <p>
+ * An API to extract ('select') a section of markup from a larger document
+ * 
+ * <p>
+ * To render correctly, this can involve replicating the ancestor tag structure
+ * of the selected range
+ */
 public abstract class SelectionMarkup {
 	public interface Has {
 		SelectionMarkup getSelectionMarkup();

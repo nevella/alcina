@@ -38,7 +38,7 @@ class Story_TraversalProcessViewImpl {
 			String reason = null;
 			boolean launched = false;
 			Timeout timeout = new Timeout(TIMEOUT);
-			while (timeout.check()) {
+			while (timeout.check(true)) {
 				if (checkSocketOpen()) {
 					if (shell != null) {
 						shell.detachCallbacks();

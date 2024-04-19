@@ -26,7 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.dom.style.StyleScoper;
 
 /**
- * Markup support for a single document
+ * SelectionMarkup implementation for a single document
  */
 public class SelectionMarkupSingle extends SelectionMarkup {
 	final SelectionTraversal traversal;

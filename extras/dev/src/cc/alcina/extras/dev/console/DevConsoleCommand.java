@@ -977,7 +977,7 @@ public abstract class DevConsoleCommand {
 
 		@Override
 		public String getUsage() {
-			return "rdq <class-simple-name> <id> <paths> - e.g. dq MyUser 1 email";
+			return "rdq <class-simple-name> <id> <paths> - e.g. rdq MyUser 1 email";
 		}
 
 		@Override

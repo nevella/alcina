@@ -137,7 +137,7 @@ public class EnvironmentManager {
 			throws InterruptedException {
 		String awaitPath = Ax.format("%s/%s", component.getPath(), path);
 		Timeout timeout = new Timeout(60000);
-		while (timeout.check()) {
+		while (timeout.check(true)) {
 			synchronized (environmentSources) {
 				if (environmentSources.containsKey(awaitPath)) {
 					return;
