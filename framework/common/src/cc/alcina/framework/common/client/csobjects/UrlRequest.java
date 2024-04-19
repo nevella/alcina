@@ -41,7 +41,12 @@ public class UrlRequest {
 	private Date cacheEntryValidSince;
 
 	public UrlRequest(String url) {
+		this(url, null);
+	}
+
+	public UrlRequest(String url, String cacheKey) {
 		this.url = url;
+		this.cacheKey = cacheKey;
 	}
 
 	public void addHeaderValue(String name, String value) {
