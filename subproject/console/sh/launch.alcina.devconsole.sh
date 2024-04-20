@@ -63,11 +63,11 @@ CLASSPATH=/g/jade/server/lib/war/httpclient-4.5.13.jar:\
 /g/alcina/lib/framework/google/google-api-client-java6-1.25.0.jar:\
 /g/alcina/lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0-sources.jar:\
 /g/alcina/lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0.jar:\
-/g/alcina/lib/framework/google/google-http-client-1.25.0.jar:\
-/g/alcina/lib/framework/google/google-http-client-jackson2-1.25.0.jar:\
-/g/alcina/lib/framework/google/google-oauth-client-1.25.0.jar:\
-/g/alcina/lib/framework/google/google-oauth-client-java6-1.25.0.jar:\
-/g/alcina/lib/framework/google/google-oauth-client-jetty-1.25.0.jar:\
+/g/alcina/lib/framework/google/google-http-client-1.44.1.jar:\
+/g/alcina/lib/framework/google/google-http-client-jackson2-1.44.1.jar:\
+/g/alcina/lib/framework/google/google-oauth-client-1.35.0.jar:\
+/g/alcina/lib/framework/google/google-oauth-client-java6-1.35.0.jar:\
+/g/alcina/lib/framework/google/google-oauth-client-jetty-1.35.0.jar:\
 /g/alcina/lib/framework/google/gson-2.1.jar:\
 /g/alcina/lib/framework/google/protobuf-java-2.4.1.jar:\
 /g/alcina/lib/framework/google/google-api-services-drive-v3-rev161-1.25.0.jar:\
