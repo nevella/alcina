@@ -25,6 +25,7 @@ import com.google.api.services.drive.model.FileList;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
+@SuppressWarnings("deprecation")
 public class DriveAccessor {
 	private JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 

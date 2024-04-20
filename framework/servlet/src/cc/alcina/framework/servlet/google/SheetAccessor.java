@@ -36,6 +36,7 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
+@SuppressWarnings("deprecation")
 public class SheetAccessor {
 	private JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
