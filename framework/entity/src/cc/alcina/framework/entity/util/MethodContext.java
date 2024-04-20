@@ -36,6 +36,8 @@ public class MethodContext {
 
 	private boolean runInNewThread;
 
+	private String threadName;
+
 	public <T> T call(Callable<T> callable) {
 		if (runInNewThread) {
 			String name = callable.getClass().getName();
@@ -46,10 +48,12 @@ public class MethodContext {
 					Ax.format("child-thread-%s", name), () -> callable.call());
 			return null;
 		}
-		entryClassLoader = Thread.currentThread().getContextClassLoader();
+		Thread currentThread = Thread.currentThread();
+		entryClassLoader = currentThread.getContextClassLoader();
 		boolean pushedRoot = false;
 		boolean inTransaction = Transaction.isInTransaction();
 		int looseContextDepth = 0;
+		String entryThreadName = currentThread.getName();
 		try {
 			if (wrappingTransaction && !inTransaction) {
 				Transaction.begin();
@@ -63,6 +67,9 @@ public class MethodContext {
 				context.entrySet().forEach(e -> LooseContext.getContext()
 						.set(e.getKey(), e.getValue()));
 			}
+			if (threadName != null) {
+				currentThread.setName(threadName);
+			}
 			if (metricKey != null) {
 				MetricLogging.get().start(metricKey);
 			}
@@ -73,8 +80,7 @@ public class MethodContext {
 				pushedRoot = true;
 			}
 			if (contextClassLoader != null) {
-				Thread.currentThread()
-						.setContextClassLoader(contextClassLoader);
+				currentThread.setContextClassLoader(contextClassLoader);
 			}
 			return callable.call();
 		} catch (Throwable e) {
@@ -82,12 +88,15 @@ public class MethodContext {
 			throw new RuntimeException(e);
 		} finally {
 			try {
-				Thread.currentThread().setContextClassLoader(entryClassLoader);
+				currentThread.setContextClassLoader(entryClassLoader);
 				if (pushedRoot) {
 					ThreadedPermissionsManager.cast().popUser();
 				}
 				if (metricKey != null) {
 					MetricLogging.get().end(metricKey);
+				}
+				if (threadName != null) {
+					currentThread.setName(entryThreadName);
 				}
 				if (!context.isEmpty()) {
 					LooseContext.confirmDepth(looseContextDepth);
@@ -100,7 +109,6 @@ public class MethodContext {
 					Transaction.begin();
 				}
 			} catch (Throwable e) {
-				// TODO Auto-generated catch block
 				Ax.out("DEVEX::0 - Exception in methodcontext/finally");
 				e.printStackTrace();
 				throw e;
@@ -154,6 +162,11 @@ public class MethodContext {
 
 	public MethodContext withWrappingTransaction() {
 		this.wrappingTransaction = true;
+		return this;
+	}
+
+	public MethodContext withThreadName(String threadName) {
+		this.threadName = threadName;
 		return this;
 	}
 }

@@ -279,15 +279,14 @@ public class JobContext {
 			get().enqueue(() -> {
 				Job job = getJob();
 				job.setStatusMessage(message);
-				// FIXME - there should be a higher-level
-				// 'statusMessage/completion' tuple passed here
 				if (itemCount > 0 && itemsCompleted > 0) {
 					setCompletion(
 							((double) itemsCompleted) / ((double) itemCount));
 				}
 			});
-			LoggerFactory.getLogger(JobContext.class).info("status message: {}",
-					message);
+			MethodContext.instance().withThreadName(thread.getName())
+					.run(() -> LoggerFactory.getLogger(JobContext.class)
+							.info("status message: {}", message));
 		});
 	}
 
