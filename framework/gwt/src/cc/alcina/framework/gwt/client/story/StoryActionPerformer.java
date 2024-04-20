@@ -5,6 +5,8 @@ import java.lang.System.Logger.Level;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result;
 import cc.alcina.framework.gwt.client.util.LineCallback;
@@ -46,6 +48,17 @@ public class StoryActionPerformer {
 		@Override
 		public Visit getVisit() {
 			return visit;
+		}
+
+		@Override
+		public <PR extends PerformerResource> PR
+				performerResource(Class<PR> clazz) {
+			return visit.teller().state.performerResource(clazz, this);
+		}
+
+		@Override
+		public <L extends Location> L getLocation(Axis axis) {
+			return visit.teller().state.getLocation(axis);
 		}
 	}
 

@@ -4,8 +4,10 @@ import java.io.PrintStream;
 import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -13,6 +15,7 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.FormatBuilder.HardBreak;
@@ -21,6 +24,9 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.story.Story.Action;
+import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResource;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result.Log;
@@ -153,6 +159,10 @@ public class StoryTeller {
 			return point.getAction();
 		}
 
+		public Action.Location getLocation() {
+			return point.getLocation();
+		}
+
 		public void afterActionPerformed(Result result) {
 			if (point instanceof Story.State.Provider && result.ok) {
 				Story.State.Provider provider = (Provider) point;
@@ -257,6 +267,10 @@ public class StoryTeller {
 		public int depth() {
 			return processNode().depth();
 		}
+
+		StoryTeller teller() {
+			return StoryTeller.this;
+		}
 	}
 
 	public enum LogType {
@@ -274,6 +288,10 @@ public class StoryTeller {
 
 		public boolean finished;
 
+		Map<Class<? extends PerformerResource>, PerformerResource> performerResources = new LinkedHashMap();
+
+		Map<Location.Axis, Location> locations = new LinkedHashMap<>();
+
 		public Visit current() {
 			return traversal.current();
 		}
@@ -281,6 +299,7 @@ public class StoryTeller {
 		class BeforeNodeExitListener implements TopicListener<Visit> {
 			@Override
 			public void topicPublished(Visit visit) {
+				updateLocation(visit);
 				performAction(visit);
 			}
 		}
@@ -315,6 +334,23 @@ public class StoryTeller {
 
 		public void dependencyResolved(Provider provider) {
 			resolvedStates.add(provider.resolvesState());
+		}
+
+		public <PR extends PerformerResource> PR performerResource(
+				Class<PR> clazz, Story.Action.Context context) {
+			return (PR) performerResources.computeIfAbsent(clazz, c -> {
+				PR resource = (PR) Reflections.newInstance(c);
+				resource.initialise(context);
+				return resource;
+			});
+		}
+
+		public void updateLocationAxis(Location location) {
+			locations.put(location.getAxis(), location);
+		}
+
+		public <L extends Location> L getLocation(Axis axis) {
+			return (L) locations.get(axis);
 		}
 	}
 
@@ -385,6 +421,13 @@ public class StoryTeller {
 			// visit.performAction();
 		}
 		new AfterStory().publish();
+	}
+
+	void updateLocation(Visit visit) {
+		Location location = visit.getLocation();
+		if (location != null) {
+			state.updateLocationAxis(location);
+		}
 	}
 
 	void performAction(Visit visit) {

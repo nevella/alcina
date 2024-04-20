@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.story;
 
 import java.lang.System.Logger.Level;
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -12,6 +13,8 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
@@ -161,6 +164,9 @@ public interface Story {
 
 		/** Declarative actions */
 		public interface Action {
+			/*
+			 * Possibly unused
+			 */
 			/** Declaratively define a code action */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
@@ -171,21 +177,46 @@ public interface Story {
 
 			/**
 			 * UI actions. Could be done as annotation/type - but this way reads
-			 * better
+			 * better. This includes navigation actions
 			 */
 			public interface UI {
+				@Registration.NonGenericSubtypes(Converter.class)
+				public interface Converter<A extends Annotation>
+						extends Registration.AllSubtypes {
+					Story.Action convert(A ann);
+				}
+
 				/** A click action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
+				@Registration(Action.UI.class)
 				public @interface Click {
+					public static class ConverterImpl
+							implements Converter<Click> {
+						@Override
+						public Story.Action convert(Click ann) {
+							return new Story.Action.Ui.Click();
+						}
+					}
 				}
 
 				/** A (send) keys action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
+				@Registration(Action.UI.class)
 				public @interface Keys {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<Keys> {
+						@Override
+						public Story.Action convert(Keys ann) {
+							return new Story.Action.Ui.Keys()
+									.withText(ann.value());
+						}
+					}
 				}
 
 				public interface Select {
@@ -193,37 +224,111 @@ public interface Story {
 					@Retention(RetentionPolicy.RUNTIME)
 					@Documented
 					@Target({ ElementType.TYPE })
+					@Registration(Action.UI.class)
 					public @interface ByValue {
 						String value();
+
+						public static class ConverterImpl
+								implements Converter<ByValue> {
+							@Override
+							public Story.Action convert(ByValue ann) {
+								return new Story.Action.Ui.SelectByValue()
+										.withText(ann.value());
+							}
+						}
 					}
 
 					/** A select-by-text action */
 					@Retention(RetentionPolicy.RUNTIME)
 					@Documented
 					@Target({ ElementType.TYPE })
+					@Registration(Action.UI.class)
 					public @interface ByText {
 						String value();
+
+						public static class ConverterImpl
+								implements Converter<ByText> {
+							@Override
+							public Story.Action convert(ByText ann) {
+								return new Story.Action.Ui.SelectByText()
+										.withText(ann.value());
+							}
+						}
+					}
+				}
+
+				public interface Navigation {
+					/** A go-to-url action */
+					@Retention(RetentionPolicy.RUNTIME)
+					@Documented
+					@Target({ ElementType.TYPE })
+					@Registration(Action.UI.class)
+					public @interface Go {
+						public static class ConverterImpl
+								implements Converter<Go> {
+							@Override
+							public Story.Action convert(Go ann) {
+								return new Story.Action.Ui.Go();
+							}
+						}
+					}
+
+					/** A refresh-url action */
+					@Retention(RetentionPolicy.RUNTIME)
+					@Documented
+					@Target({ ElementType.TYPE })
+					@Registration(Action.UI.class)
+					public @interface Refresh {
+						public static class ConverterImpl
+								implements Converter<Refresh> {
+							@Override
+							public Story.Action convert(Refresh ann) {
+								return new Story.Action.Ui.Refresh();
+							}
+						}
 					}
 				}
 			}
 		}
 
 		/** Declarative locations */
-		public interface Loc {
+		public interface Location {
+			@Registration.NonGenericSubtypes(Converter.class)
+			public interface Converter<A extends Annotation>
+					extends Registration.AllSubtypes {
+				Story.Action.Location convert(A ann);
+			}
+
 			/** Define an xpath location */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
 			public @interface Xpath {
 				String value();
+
+				public static class ConverterImpl implements Converter<Xpath> {
+					@Override
+					public Story.Action.Location convert(Xpath ann) {
+						return new Story.Action.Location.Xpath()
+								.withText(ann.value());
+					}
+				}
 			}
 
-			/** Define an UR location */
+			/** Define an URL location */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
 			public @interface Url {
 				String value();
+
+				public static class ConverterImpl implements Converter<Url> {
+					@Override
+					public Story.Action.Location convert(Url ann) {
+						return new Story.Action.Location.Url()
+								.withText(ann.value());
+					}
+				}
 			}
 		}
 
@@ -319,6 +424,8 @@ public interface Story {
 		Story.Action getAction();
 
 		Class<? extends Feature> getFeature();
+
+		Location getLocation();
 	}
 
 	public interface Action {
@@ -327,6 +434,92 @@ public interface Story {
 		 */
 		public interface Code extends Story.Action {
 			void perform(Action.Context context) throws Exception;
+		}
+
+		/** A UI Location */
+		public interface Location {
+			public enum Axis {
+				URL, DOCUMENT
+			}
+
+			Axis getAxis();
+
+			String getText();
+
+			abstract static class LocWithText implements Location {
+				String text;
+
+				public String getText() {
+					return text;
+				}
+
+				public void setText(String text) {
+					this.text = text;
+				}
+
+				public Location withText(String text) {
+					setText(text);
+					return this;
+				}
+			}
+
+			public static class Xpath extends LocWithText {
+				@Override
+				public Axis getAxis() {
+					return Axis.DOCUMENT;
+				}
+			}
+
+			public static class Url extends LocWithText {
+				@Override
+				public Axis getAxis() {
+					return Axis.URL;
+				}
+			}
+		}
+
+		/*
+		 * A UI action.
+		 */
+		public interface Ui extends Story.Action {
+			default String text() {
+				return null;
+			}
+
+			public static class Click implements Ui {
+			}
+
+			public static class Go implements Ui {
+			}
+
+			public static class Refresh implements Ui {
+			}
+
+			abstract static class ActionWithText implements Ui {
+				String text;
+
+				public String getText() {
+					return text;
+				}
+
+				public void setText(String text) {
+					this.text = text;
+				}
+
+				public Ui withText(String text) {
+					setText(text);
+					return this;
+				}
+			}
+
+			public static class Keys extends ActionWithText {
+			}
+
+			public static class SelectByText extends ActionWithText {
+			}
+
+			public static class SelectByValue extends ActionWithText {
+			}
 		}
 
 		/*
@@ -343,6 +536,26 @@ public interface Story {
 			LineCallback createLogCallback(Level warning);
 
 			Visit getVisit();
+
+			/**
+			 * Returns a story-singleton PerformerResource object of type PR,
+			 * with initialise() called (creating/initialising if need be)
+			 * 
+			 * @param <PR>
+			 *            The PerformerResource type parameter
+			 * @param clazz
+			 *            The PerformerResource type
+			 * @return The PerformerResource object
+			 */
+			<PR extends PerformerResource> PR
+					performerResource(Class<PR> clazz);
+
+			public interface PerformerResource {
+				default void initialise(Context context) {
+				}
+			}
+
+			<L extends Location> L getLocation(Axis url);
 		}
 
 		default Class<? extends Action> getActionClass() {

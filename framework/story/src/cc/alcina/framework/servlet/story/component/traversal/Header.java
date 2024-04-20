@@ -11,7 +11,7 @@ class Header extends Waypoint {
 	static String XPATH_DOTBURGER_ICON = "";
 
 	@Decl.Doc.HighlightUiNode
-	@Decl.Loc.Xpath("")
+	@Decl.Location.Xpath("")
 	@Decl.Label("Application menu")
 	@Decl.Description("The application menu provides access to application"
 			+ " settings such as window display and selection ancestry modes")

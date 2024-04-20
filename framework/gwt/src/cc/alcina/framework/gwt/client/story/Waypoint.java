@@ -9,6 +9,17 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class Waypoint implements Story.Point {
+	public static abstract class Code extends Waypoint
+			implements Story.Action.Code {
+		@Override
+		public Story.Action getAction() {
+			return this;
+		}
+	}
+
+	/*
+	 * Possibly unused
+	 */
 	public static Story.Point toStoryPoint(Story.Decl.Point declPoint) {
 		Waypoint waypoint = new Waypoint();
 		Story.Decl.Action.Code[] code = declPoint.code();
@@ -23,27 +34,61 @@ public class Waypoint implements Story.Point {
 
 	protected List<Class<? extends Story.State>> requires;
 
+	protected Story.Action action;
+
+	protected Story.Action.Location location;
+
+	protected Class<? extends Feature> feature;
+
+	boolean populated;
+
+	protected List<? extends Story.Point> children;
+
+	public Waypoint() {
+	}
+
 	public List<Class<? extends Story.State>> getRequires() {
 		ensurePopulated();
 		return requires;
 	}
 
-	protected Story.Action action;
+	public Story.Action.Location getLocation() {
+		return location;
+	}
 
-	protected Class<? extends Feature> feature;
+	public void setLocation(Story.Action.Location location) {
+		this.location = location;
+	}
 
 	public Class<? extends Feature> getFeature() {
 		return feature;
 	}
 
-	boolean populated;
-
-	public Waypoint() {
-	}
-
 	public Story.Action getAction() {
 		ensurePopulated();
 		return action;
+	}
+
+	public void setRequires(List<Class<? extends Story.State>> requires) {
+		this.requires = requires;
+	}
+
+	public List<? extends Story.Point> getChildren() {
+		ensurePopulated();
+		return children;
+	}
+
+	public void setChildren(List<? extends Story.Point> children) {
+		this.children = children;
+	}
+
+	public String getName() {
+		ensurePopulated();
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	protected void ensurePopulated() {
@@ -91,37 +136,7 @@ public class Waypoint implements Story.Point {
 				feature = featureAnn.value();
 			}
 		}
-	}
-
-	public void setRequires(List<Class<? extends Story.State>> requires) {
-		this.requires = requires;
-	}
-
-	protected List<? extends Story.Point> children;
-
-	public List<? extends Story.Point> getChildren() {
-		ensurePopulated();
-		return children;
-	}
-
-	public void setChildren(List<? extends Story.Point> children) {
-		this.children = children;
-	}
-
-	public String getName() {
-		ensurePopulated();
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public static abstract class Code extends Waypoint
-			implements Story.Action.Code {
-		@Override
-		public Story.Action getAction() {
-			return this;
+		if (action == null) {
 		}
 	}
 }

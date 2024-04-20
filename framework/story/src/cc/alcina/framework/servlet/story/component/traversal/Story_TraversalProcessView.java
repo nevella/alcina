@@ -17,6 +17,7 @@ public class Story_TraversalProcessView implements Story {
 		//@formatter:off
 		static interface ConsoleRunning extends State {}
 		static interface CroissanteriaTraversalPerformed extends State {}
+		static interface TraversalUiLoaded extends State {}
 		//@formatter:on
 	}
 

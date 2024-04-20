@@ -20,6 +20,10 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
 class Story_TraversalProcessViewImpl {
 	static final int TIMEOUT = 5000;
 
+	static int port() {
+		return Configuration.getInt("port");
+	}
+
 	/*
 	 * Ensures the console is running.
 	 * 
@@ -28,13 +32,9 @@ class Story_TraversalProcessViewImpl {
 	 */
 	static class EnsuresConsoleRunning extends Waypoint.Code implements
 			Story.State.Provider<Story_TraversalProcessView.State.ConsoleRunning> {
-		int port;
-
 		Shell shell = null;
 
 		void perform0(Context context) throws Exception {
-			port = Configuration.getInt(Story_TraversalProcessViewImpl.class,
-					"port");
 			String reason = null;
 			boolean launched = false;
 			Timeout timeout = new Timeout(TIMEOUT);
@@ -49,7 +49,7 @@ class Story_TraversalProcessViewImpl {
 					String launcherPath = Configuration.get("launcherPath");
 					String cmd = Ax.format(
 							"%s --http-port=%s --no-exit croissant",
-							launcherPath, port);
+							launcherPath, port());
 					context.log(Level.INFO, "Launching console: %s", cmd);
 					// TODO - shell shd log to stdout (well, to the logger) -
 					// but must detach on exit
@@ -82,7 +82,7 @@ class Story_TraversalProcessViewImpl {
 			try {
 				s = new Socket();
 				s.setReuseAddress(true);
-				SocketAddress sa = new InetSocketAddress("127.0.0.1", port);
+				SocketAddress sa = new InetSocketAddress("127.0.0.1", port());
 				s.connect(sa, 5);
 				return true;
 			} catch (IOException e) {
@@ -112,18 +112,24 @@ class Story_TraversalProcessViewImpl {
 	static class EnsuresCroissanteriaTraversalPerformed extends Waypoint.Code
 			implements
 			Story.State.Provider<Story_TraversalProcessView.State.CroissanteriaTraversalPerformed> {
-		int port;
-
 		@Override
 		public void perform(Context context) throws Exception {
-			port = Configuration.getInt(Story_TraversalProcessViewImpl.class,
-					"port");
 			String url = Ax.format(
 					"http://127.0.0.1:%s/traversal?action=await&path=0.1",
-					port);
+					port());
 			SimpleHttp http = new SimpleHttp(url).withTimeout(TIMEOUT);
 			String response = http.asString();
 			context.log(Level.INFO, "%s >> %s", url, response);
+		}
+	}
+	/* Loads the traversal UI in the browser */
+
+	static class TraversalUiLoaded extends Waypoint implements
+			Story.State.Provider<Story_TraversalProcessView.State.TraversalUiLoaded> {
+		TraversalUiLoaded() {
+			String url = Ax.format("http://127.0.0.1:%s/traversal", port());
+			action = new Story.Action.Ui.Go();
+			location = new Story.Action.Location.Url().withText(url);
 		}
 	}
 }
