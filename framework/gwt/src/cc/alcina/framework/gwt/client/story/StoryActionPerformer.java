@@ -60,6 +60,11 @@ public class StoryActionPerformer {
 		public <L extends Location> L getLocation(Axis axis) {
 			return visit.teller().state.getLocation(axis);
 		}
+
+		@Override
+		public TellerContext tellerContext() {
+			return visit.teller().context;
+		}
 	}
 
 	public void perform(Visit visit) {

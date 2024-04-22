@@ -24,10 +24,14 @@ public class Story_TraversalProcessView implements Story {
 	//
 	@Decl.Feature(Feature_TraversalProcessView.class)
 	/*
-	 * All points in the story will require these states
+	 * All points in the story will require these states. They (the states)
+	 * could also be represented as a depends chain - i.e.
+	 * CroissanteriaTraversalPerformed requires ConsoleRunning (which is true),
+	 * this is just a tad clearer
 	 */
 	@Decl.Require(State.ConsoleRunning.class)
 	@Decl.Require(State.CroissanteriaTraversalPerformed.class)
+	@Decl.Require(State.TraversalUiLoaded.class)
 	/*
 	 * Children
 	 */

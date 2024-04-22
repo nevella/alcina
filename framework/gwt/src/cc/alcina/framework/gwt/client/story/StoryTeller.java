@@ -173,6 +173,10 @@ public class StoryTeller {
 		public class Result {
 			public boolean ok = true;
 
+			public boolean filtered = false;
+
+			public Boolean testResult;
+
 			public Throwable throwable;
 
 			public List<Log> logs = new ArrayList<>();
@@ -270,6 +274,10 @@ public class StoryTeller {
 
 		StoryTeller teller() {
 			return StoryTeller.this;
+		}
+
+		public void onActionTestResult(boolean testResult) {
+			// res
 		}
 	}
 

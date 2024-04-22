@@ -70,7 +70,10 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 		ensureShutdownCleanup();
 		HttpServletRequest req = LooseContext.get(WDManager.CONTEXT_REQUEST);
 		if (driver == null) {
-			if (req != null && Boolean.valueOf(req.getParameter("reuse"))) {
+			boolean resuse = (req != null
+					&& Boolean.valueOf(req.getParameter("reuse")))
+					|| LooseContext.is(WDDriverHandler.CONTEXT_REUSE_SESSION);
+			if (resuse) {
 				RemoteWebDriver lastDriver = lastDriver();
 				if (lastDriver != null) {
 					driver = lastDriver;

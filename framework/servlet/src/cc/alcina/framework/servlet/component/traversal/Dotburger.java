@@ -27,6 +27,7 @@ class Dotburger extends Model.Fields {
 
 	Dotburger() {
 		menu = new Menu();
-		dropdown = new Dropdown(new LeafModel.Button("dotburger"), menu);
+		dropdown = new Dropdown(new LeafModel.Button("dotburger"), menu)
+				.withLogicalAncestor(Dotburger.class);
 	}
 }

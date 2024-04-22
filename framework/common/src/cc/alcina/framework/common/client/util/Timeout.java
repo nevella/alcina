@@ -18,18 +18,18 @@ public class Timeout {
 	/**
 	 * 
 	 * @param b
-	 * @return true (for use in a while loop) if timed out and not
-	 *         throwontimeout
+	 * @return true (for use in a while loop) to continue, false if timed out
+	 *         and not throwontimeout
 	 */
 	public boolean check(boolean throwOnTimeout) {
 		if (remaining() < 0) {
 			if (throwOnTimeout) {
 				throw new IllegalStateException("Timed out");
 			} else {
-				return true;
+				return false;
 			}
 		} else {
-			return false;
+			return true;
 		}
 	}
 
@@ -51,11 +51,11 @@ public class Timeout {
 	 * When using a timeout as a debouncer, reset the timeout (to now) if it
 	 * times out
 	 * 
-	 * @return true if timed out
+	 * @return false if timed out
 	 */
 	public boolean checkAndReset() {
 		boolean result = check(false);
-		if (result) {
+		if (!result) {
 			this.start = 0;
 		}
 		return result;

@@ -102,6 +102,10 @@ public class ProcessObservers {
 	 * e.g. TreeSync.Preparer
 	 *
 	 * Thread-safe - due to the context
+	 * 
+	 * ContextObservables will also be emitted as general ProcessObservables
+	 * (for testing, development essentially - such as attaching an appdebug
+	 * observer to a particular context observable)
 	 */
 	public static class ContextObservers {
 		static ContextObservers get() {
@@ -159,6 +163,13 @@ public class ProcessObservers {
 				}
 			}
 			instance.publish0((Class<O>) observable.getClass(),
+					() -> observable);
+			/*
+			 * Also publish to the global process observer system. As per the
+			 * class doc, only observe contextobservables at the process level
+			 * in development
+			 */
+			ProcessObservers.publish((Class) observable.getClass(),
 					() -> observable);
 		}
 	}

@@ -307,4 +307,8 @@ public class ElementQuery {
 			super(String.format("Timed out - %s", ElementQuery.this));
 		}
 	}
+
+	public static ElementQuery xpath(WebDriver webDriver, String xpath) {
+		return new ElementQuery(webDriver).withXpath(xpath);
+	}
 }

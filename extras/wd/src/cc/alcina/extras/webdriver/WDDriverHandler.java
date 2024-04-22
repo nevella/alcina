@@ -6,7 +6,10 @@ public interface WDDriverHandler {
 	public static final String CONTEXT_REMOTE_DRIVER_URL = WDDriverHandler.class
 			.getName() + ".CONTEXT_REMOTE_DRIVER_URL";
 
-	public void closeAndCleanup();
+	public static final String CONTEXT_REUSE_SESSION = WDDriverHandler.class
+			.getName() + ".CONTEXT_REUSE_SESSION";
 
-	public WebDriver getDriver();
+	void closeAndCleanup();
+
+	WebDriver getDriver();
 }

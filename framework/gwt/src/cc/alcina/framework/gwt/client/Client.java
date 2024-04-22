@@ -171,7 +171,9 @@ public abstract class Client implements ContextFrame {
 			/*
 			 * Attach non-vcs process debugging
 			 */
-			AppDebug.register();
+			if (!GWT.isScript()) {
+				AppDebug.register();
+			}
 			/*
 			 * Setup client context provider. One client for client apps,
 			 * multiple (one per environment) for server

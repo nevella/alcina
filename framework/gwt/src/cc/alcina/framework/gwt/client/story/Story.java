@@ -164,6 +164,18 @@ public interface Story {
 
 		/** Declarative actions */
 		public interface Action {
+			public static List<Class<? extends Annotation>> actionAnnotations = (List) List
+					.of(Action.Code.class, Action.UI.Click.class,
+							Action.UI.Keys.class, Action.UI.Navigation.class,
+							Action.UI.Select.ByText.class,
+							Action.UI.Select.ByValue.class);
+
+			@Registration.NonGenericSubtypes(Converter.class)
+			public interface Converter<A extends Annotation>
+					extends Registration.AllSubtypes {
+				Story.Action convert(A ann);
+			}
+
 			/*
 			 * Possibly unused
 			 */
@@ -180,12 +192,6 @@ public interface Story {
 			 * better. This includes navigation actions
 			 */
 			public interface UI {
-				@Registration.NonGenericSubtypes(Converter.class)
-				public interface Converter<A extends Annotation>
-						extends Registration.AllSubtypes {
-					Story.Action convert(A ann);
-				}
-
 				/** A click action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -197,6 +203,36 @@ public interface Story {
 						@Override
 						public Story.Action convert(Click ann) {
 							return new Story.Action.Ui.Click();
+						}
+					}
+				}
+
+				/** A TestPresent action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(Action.UI.class)
+				public @interface TestPresent {
+					public static class ConverterImpl
+							implements Converter<TestPresent> {
+						@Override
+						public Story.Action convert(TestPresent ann) {
+							return new Story.Action.Ui.TestPresent();
+						}
+					}
+				}
+
+				/** A TestAbsent action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(Action.UI.class)
+				public @interface TestAbsent {
+					public static class ConverterImpl
+							implements Converter<TestAbsent> {
+						@Override
+						public Story.Action convert(TestAbsent ann) {
+							return new Story.Action.Ui.TestAbsent();
 						}
 					}
 				}
@@ -293,6 +329,9 @@ public interface Story {
 
 		/** Declarative locations */
 		public interface Location {
+			public static List<Class<? extends Annotation>> locationAnnotations = (List) List
+					.of(Location.Xpath.class, Location.Url.class);
+
 			@Registration.NonGenericSubtypes(Converter.class)
 			public interface Converter<A extends Annotation>
 					extends Registration.AllSubtypes {
@@ -365,19 +404,26 @@ public interface Story {
 		 */
 		public interface Conditional {
 			/**
-			 * Child traversal will halt if a conditional (test) child returns
-			 * false
+			 * Child traversal will skip subsequent dep.resolution and actions
+			 * if the conditional (test) child specified by value() returns
+			 * false [and will not throw]
 			 */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
-			public @interface Traversal {
+			public @interface ExitOkOnFalse {
+				Class<? extends Story.Point> value();
 			}
 
 			/**
+			 * <p>
 			 * Invert the test result for ascent propagation (e.g. if the point
 			 * is a dom existence test, the evaluated test result should be true
 			 * if the node <i>doesn't</i> exist)
+			 * 
+			 * <p>
+			 * TODO - speculative, maybe remove (since it may be simpler/more
+			 * reusable to invert elsewhere - such as TestAbsent/TestPresent)
 			 */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
@@ -489,6 +535,18 @@ public interface Story {
 			public static class Click implements Ui {
 			}
 
+			/**
+			 * Test for the presence of the document locator
+			 */
+			public static class TestPresent implements Ui {
+			}
+
+			/**
+			 * Test for the absence of the document locator
+			 */
+			public static class TestAbsent implements Ui {
+			}
+
 			public static class Go implements Ui {
 			}
 
@@ -556,6 +614,8 @@ public interface Story {
 			}
 
 			<L extends Location> L getLocation(Axis url);
+
+			TellerContext tellerContext();
 		}
 
 		default Class<? extends Action> getActionClass() {

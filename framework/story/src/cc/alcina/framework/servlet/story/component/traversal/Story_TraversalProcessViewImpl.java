@@ -118,8 +118,13 @@ class Story_TraversalProcessViewImpl {
 					"http://127.0.0.1:%s/traversal?action=await&path=0.1",
 					port());
 			SimpleHttp http = new SimpleHttp(url).withTimeout(TIMEOUT);
-			String response = http.asString();
-			context.log(Level.INFO, "%s >> %s", url, response);
+			try {
+				String response = http.asString();
+				context.log(Level.INFO, "%s >> %s", url, response);
+			} catch (Exception e) {
+				context.log(Level.WARNING, "issue loading :: %s", url);
+				throw e;
+			}
 		}
 	}
 	/* Loads the traversal UI in the browser */

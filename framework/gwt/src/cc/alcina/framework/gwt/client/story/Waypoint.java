@@ -1,9 +1,12 @@
 package cc.alcina.framework.gwt.client.story;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -137,6 +140,26 @@ public class Waypoint implements Story.Point {
 			}
 		}
 		if (action == null) {
+			Annotation actionAnnotation = Story.Decl.Action.actionAnnotations
+					.stream().map(clazz -> reflector.annotation(clazz))
+					.filter(Objects::nonNull).findFirst().orElse(null);
+			if (actionAnnotation != null) {
+				Story.Decl.Action.Converter converter = Registry.impl(
+						Story.Decl.Action.Converter.class,
+						actionAnnotation.annotationType());
+				action = converter.convert(actionAnnotation);
+			}
+		}
+		if (location == null) {
+			Annotation locationAnnotation = Story.Decl.Location.locationAnnotations
+					.stream().map(clazz -> reflector.annotation(clazz))
+					.filter(Objects::nonNull).findFirst().orElse(null);
+			if (locationAnnotation != null) {
+				Story.Decl.Location.Converter converter = Registry.impl(
+						Story.Decl.Location.Converter.class,
+						locationAnnotation.annotationType());
+				location = converter.convert(locationAnnotation);
+			}
 		}
 	}
 }

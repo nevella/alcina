@@ -33,7 +33,8 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 					return Registry
 							.impl(RootLayerNamer.class, rootLayer.getClass())
 							.rootLayerName(rootLayer);
-				}, 1 * TimeConstants.ONE_MINUTE_MS);
+				}, Configuration.getInt("evictionMinutes")
+						* TimeConstants.ONE_MINUTE_MS);
 	}
 
 	@Registration(RootLayerNamer.class)

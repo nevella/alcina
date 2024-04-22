@@ -31,6 +31,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -144,16 +145,25 @@ public class Io {
 			}
 		}
 
-		public <T> T asObject() throws IOException {
-			byte[] bytes = asBytes();
-			try (ObjectInputStream in = new ObjectInputStream(
-					new ByteArrayInputStream(bytes))) {
-				try {
-					return (T) in.readObject();
-				} catch (Exception e) {
-					throw new IOException(e);
+		public <T> T asObject() {
+			try {
+				byte[] bytes = asBytes();
+				try (ObjectInputStream in = new ObjectInputStream(
+						new ByteArrayInputStream(bytes))) {
+					try {
+						return (T) in.readObject();
+					} catch (Exception e) {
+						throw new IOException(e);
+					}
 				}
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
 			}
+		}
+
+		public <T> T asReflectiveSerializedObject() {
+			String s = asString();
+			return ReflectiveSerializer.deserialize(s);
 		}
 
 		public String asString() {
@@ -446,9 +456,6 @@ public class Io {
 
 		public boolean ensureParents;
 
-		public void toFile(File file) {
-		}
-
 		public void write() {
 			try {
 				if (noUpdateIdentical) {
@@ -482,6 +489,14 @@ public class Io {
 
 			private InputStream inputStream;
 
+			private boolean reflectiveSerialized;
+
+			public Contents
+					asReflectiveSerialized(boolean reflectiveSerialized) {
+				this.reflectiveSerialized = reflectiveSerialized;
+				return this;
+			}
+
 			public Resource bytes(byte[] bytes) {
 				this.bytes = bytes;
 				return WriteOp.this.resource;
@@ -501,17 +516,22 @@ public class Io {
 			}
 
 			public Resource object(Object object) {
-				try {
-					ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(
-							1024);
-					ObjectOutputStream oos = new ObjectOutputStream(baos);
-					oos.writeObject(object);
-					oos.close();
-					this.inputStream = new ByteArrayInputStream(
-							baos.toByteArray());
+				if (reflectiveSerialized) {
+					this.string = ReflectiveSerializer.serialize(object);
 					return WriteOp.this.resource;
-				} catch (Exception e) {
-					throw WrappedRuntimeException.wrap(e);
+				} else {
+					try {
+						ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(
+								1024);
+						ObjectOutputStream oos = new ObjectOutputStream(baos);
+						oos.writeObject(object);
+						oos.close();
+						this.inputStream = new ByteArrayInputStream(
+								baos.toByteArray());
+						return WriteOp.this.resource;
+					} catch (Exception e) {
+						throw WrappedRuntimeException.wrap(e);
+					}
 				}
 			}
 

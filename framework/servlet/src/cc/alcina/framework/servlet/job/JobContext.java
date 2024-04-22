@@ -410,7 +410,7 @@ public class JobContext {
 	Timeout lastCheckCancelled = new Timeout(200).withTimeoutOnNextCheck();
 
 	void checkCancelled0(boolean ignoreSelf) {
-		if (!lastCheckCancelled.checkAndReset()) {
+		if (lastCheckCancelled.checkAndReset()) {
 			return;
 		}
 		if (computeCancelledInNewTx(ignoreSelf)) {

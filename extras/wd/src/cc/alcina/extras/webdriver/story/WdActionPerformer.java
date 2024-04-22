@@ -1,5 +1,6 @@
 package cc.alcina.extras.webdriver.story;
 
+import cc.alcina.extras.webdriver.query.ElementQuery;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.story.Story;
@@ -50,6 +51,49 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 						.to(location.getText());
 				wdPerformer.context.log("Navigate --> %s", location.getText());
 			}
+		}
+
+		public static class Click
+				implements TypedPerformer<Story.Action.Ui.Click> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.Click action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				query.click();
+				wdPerformer.context.log("Click --> %s", query);
+			}
+		}
+
+		public static class TestPresent
+				implements TypedPerformer<Story.Action.Ui.TestPresent> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.TestPresent action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				boolean present = query.isPresent();
+				wdPerformer.context.getVisit().onActionTestResult(present);
+				wdPerformer.context.log("TestPresent --> %s", query);
+			}
+		}
+
+		public static class TestAbsent
+				implements TypedPerformer<Story.Action.Ui.TestAbsent> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.TestAbsent action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				boolean absent = !query.isPresent();
+				wdPerformer.context.getVisit().onActionTestResult(absent);
+				wdPerformer.context.log("TestAbsent --> %s", query);
+			}
+		}
+
+		static ElementQuery createQuery(WdActionPerformer wdPerformer) {
+			Story.Action.Location.Xpath location = wdPerformer.context
+					.getLocation(Story.Action.Location.Axis.DOCUMENT);
+			return ElementQuery.xpath(
+					wdPerformer.wdContext.token.getWebDriver(),
+					location.getText());
 		}
 	}
 }
