@@ -5,11 +5,16 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.shared.GwtEvent;
 
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.NativePreviewEventAsync;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.DropdownButtonClicked;
@@ -89,14 +94,66 @@ public class Dropdown extends Model
 		return this.open;
 	}
 
+	/*
+	 * The overlay may be closed by a click on the dropdown (which is logically
+	 * outside the overlay), interpreted as a MousedownOutside event on the
+	 * overlay
+	 * 
+	 * If it was, don't then re-open on the click itself
+	 */
+	class ClosedOverlayData {
+		long time;
+
+		int screenX;
+
+		int screenY;
+
+		boolean mouseDown;
+
+		ClosedOverlayData(Closed event) {
+			GwtEvent originatingGwtEvent = event.getContext()
+					.getOriginatingGwtEvent();
+			if (originatingGwtEvent instanceof NativePreviewEventAsync) {
+				NativePreviewEventAsync async = (NativePreviewEventAsync) originatingGwtEvent;
+				NativeEvent nativeEvent = async.getNativeEvent();
+				time = System.currentTimeMillis();
+				if (nativeEvent.getType().equals("mousedown")) {
+					this.mouseDown = true;
+					screenX = nativeEvent.getScreenX();
+					screenY = nativeEvent.getScreenY();
+				}
+			}
+		}
+
+		boolean isSuppress(DropdownButtonClicked event) {
+			GwtEvent originatingGwtEvent = event.getContext()
+					.getOriginatingGwtEvent();
+			ClickEvent click = (ClickEvent) originatingGwtEvent;
+			return this.mouseDown
+					&& TimeConstants.within(time, TimeConstants.ONE_SECOND_MS)
+					&& click.getScreenX() == this.screenX
+					&& click.getScreenY() == this.screenY;
+		}
+	}
+
+	ClosedOverlayData closedOverlayData;
+
 	@Override
 	public void onClosed(Closed event) {
+		closedOverlayData = new ClosedOverlayData(event);
 		// the popup closed, so change the corresponding state
 		setOpen(false);
 	}
 
 	@Override
 	public void onDropdownButtonClicked(DropdownButtonClicked event) {
+		if (!isOpen()) {
+			if (closedOverlayData != null
+					&& closedOverlayData.isSuppress(event)) {
+				closedOverlayData = null;
+				return;
+			}
+		}
 		setOpen(!isOpen());
 	}
 
@@ -161,6 +218,11 @@ public class Dropdown extends Model
 				dropdown = dropdownStack.get(dropdownStack.size() - 1);
 			}
 		}
+	}
+
+	public Dropdown
+			withLogicalAncestor(Class<? extends Model> logicalAncestor) {
+		return withLogicalAncestors(List.of(logicalAncestor));
 	}
 
 	public Dropdown withLogicalAncestors(
