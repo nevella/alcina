@@ -8,6 +8,11 @@ public abstract class AlcinaDevConsoleRunnable extends DevConsoleRunnable {
 	}
 
 	@Override
+	public boolean requiresDomainStore() {
+		return false;
+	}
+
+	@Override
 	public String[] tagStrings() {
 		AlcinaTag[] tags = tags();
 		String[] tagStrings = new String[tags.length];

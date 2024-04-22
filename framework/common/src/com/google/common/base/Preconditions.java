@@ -542,4 +542,41 @@ public final class Preconditions {
 
 	private Preconditions() {
 	}
+
+	public static void checkArgument(boolean b, String errorMessageTemplate,
+			Object p1) {
+		if (!b) {
+			throw new IllegalArgumentException(
+					format(errorMessageTemplate, p1));
+		}
+	}
+
+	public static void checkArgument(boolean b, String errorMessageTemplate,
+			Object p1, Object p2) {
+		if (!b) {
+			throw new IllegalArgumentException(
+					format(errorMessageTemplate, p1, p2));
+		}
+	}
+
+	public static void checkState(boolean b, String errorMessageTemplate,
+			Object p1) {
+		if (!b) {
+			throw new IllegalStateException(format(errorMessageTemplate, p1));
+		}
+	}
+
+	public static void checkState(boolean b, String errorMessageTemplate,
+			int p1) {
+		if (!b) {
+			throw new IllegalStateException(format(errorMessageTemplate, p1));
+		}
+	}
+
+	public static void checkState(boolean b, String errorMessageTemplate,
+			long p1) {
+		if (!b) {
+			throw new IllegalStateException(format(errorMessageTemplate, p1));
+		}
+	}
 }
