@@ -86,9 +86,10 @@ public class StoryTeller {
 			return node;
 		}
 
-		Visit.Result performAction() {
-			new StoryActionPerformer().perform(this);
-			return result;
+		void performAction() {
+			if (!filter.isFiltered(this)) {
+				new StoryActionPerformer().perform(this);
+			}
 		}
 
 		void add(Point point) {
@@ -155,6 +156,17 @@ public class StoryTeller {
 					String.valueOf(processNode().indexInParent()));
 		}
 
+		public Visit getParent() {
+			Node rel = processNode().getParent();
+			return rel == null ? null
+					: rel.getValue() instanceof Visit ? rel.typedValue() : null;
+		}
+
+		public Visit getPreviousSibling() {
+			Node rel = processNode().getPreviousSibling();
+			return rel == null ? null : rel.typedValue();
+		}
+
 		public Action getAction() {
 			return point.getAction();
 		}
@@ -163,7 +175,7 @@ public class StoryTeller {
 			return point.getLocation();
 		}
 
-		public void afterActionPerformed(Result result) {
+		public void afterActionPerformed() {
 			if (point instanceof Story.State.Provider && result.ok) {
 				Story.State.Provider provider = (Provider) point;
 				state.dependencyResolved(provider);
@@ -279,6 +291,22 @@ public class StoryTeller {
 		public void onActionTestResult(boolean testResult) {
 			// res
 		}
+
+		public boolean isResultFiltered() {
+			return result.filtered;
+		}
+
+		public Story.Conditional getConditional() {
+			return point.getConditional();
+		}
+
+		public boolean isExitChildSequence(Visit visit) {
+			if (visit.result.ok) {
+				return false;
+			}
+			return getConditional().exitOkOnFalse()
+					.contains(visit.point.getClass());
+		}
 	}
 
 	public enum LogType {
@@ -294,7 +322,7 @@ public class StoryTeller {
 
 		Set<Class<? extends Story.State>> resolvedStates = new LinkedHashSet<>();
 
-		public boolean finished;
+		public Visit exitVisit;
 
 		Map<Class<? extends PerformerResource>, PerformerResource> performerResources = new LinkedHashMap();
 
@@ -366,9 +394,42 @@ public class StoryTeller {
 
 	State state;
 
+	VisitFilter filter;
+
+	class VisitFilter {
+		boolean isFiltered(Visit visit) {
+			if (visit.isResultFiltered()) {
+				return true;
+			}
+			Visit parent = visit.getParent();
+			if (parent == null) {
+				return false;
+			}
+			if (parent.isResultFiltered()) {
+				return true;
+			}
+			Visit previousSibling = visit.getPreviousSibling();
+			if (previousSibling != null) {
+				if (previousSibling.isResultFiltered()) {
+					return true;
+				}
+				if (isSequenceExit(parent, previousSibling)) {
+					previousSibling.result.filtered = true;
+					return true;
+				}
+			}
+			return false;
+		}
+
+		boolean isSequenceExit(Visit parentVisit, Visit previousSiblingVisit) {
+			return parentVisit.isExitChildSequence(previousSiblingVisit);
+		}
+	}
+
 	public StoryTeller(TellerContext context) {
 		this.context = context;
 		this.state = new State();
+		this.filter = new VisitFilter();
 	}
 
 	public void echo(Log log) {
@@ -417,7 +478,7 @@ public class StoryTeller {
 		new BeforeStory().publish();
 		while (state.traversal.hasNext()) {
 			Visit visit = state.next();
-			if (state.finished) {
+			if (state.exitVisit != null) {
 				break;
 			}
 			new BeforeVisit().publish();
@@ -429,6 +490,21 @@ public class StoryTeller {
 			// visit.performAction();
 		}
 		new AfterStory().publish();
+		if (state.exitVisit != null) {
+			String message = Ax.format("Issue at visit %s",
+					state.exitVisit.processNode().asNodePath());
+			if (context.isThrowOnFailure()) {
+				throw new StoryIncomplete(message);
+			} else {
+				Ax.out("RESULT :: %s", message);
+			}
+		}
+	}
+
+	public static class StoryIncomplete extends RuntimeException {
+		public StoryIncomplete(String message) {
+			super(message);
+		}
 	}
 
 	void updateLocation(Visit visit) {
@@ -440,11 +516,18 @@ public class StoryTeller {
 
 	void performAction(Visit visit) {
 		new BeforePerformAction().publish();
-		Visit.Result result = visit.performAction();
-		if (!result.ok) {
-			state.finished = true;
+		visit.performAction();
+		if (!visit.result.ok) {
+			evaluateTestNotPassed(visit);
 		}
-		visit.afterActionPerformed(result);
+		visit.afterActionPerformed();
 		new AfterPerformAction().publish();
+	}
+
+	void evaluateTestNotPassed(Visit visit) {
+		if (visit.getParent().isExitChildSequence(visit)) {
+			return;
+		}
+		state.exitVisit = visit;
 	}
 }

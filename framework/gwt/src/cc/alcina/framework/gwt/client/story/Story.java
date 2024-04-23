@@ -9,6 +9,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -472,6 +473,8 @@ public interface Story {
 		Class<? extends Feature> getFeature();
 
 		Location getLocation();
+
+		Conditional getConditional();
 	}
 
 	public interface Action {
@@ -645,5 +648,12 @@ public interface Story {
 	 * </ul>
 	 */
 	public interface Teller {
+	}
+
+	/*
+	 * Encapsulates conditional logic associated with a point
+	 */
+	public interface Conditional {
+		Set<Class<? extends Point>> exitOkOnFalse();
 	}
 }

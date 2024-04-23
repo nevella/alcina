@@ -26,4 +26,6 @@ public interface TellerContext {
 	 */
 	public interface Part {
 	}
+
+	boolean isThrowOnFailure();
 }

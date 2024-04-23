@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.story;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
@@ -17,6 +18,15 @@ public class Waypoint implements Story.Point {
 		@Override
 		public Story.Action getAction() {
 			return this;
+		}
+	}
+
+	protected class ConditionalImpl implements Story.Conditional {
+		Set<Class<? extends Story.Point>> exitOkOnFalse = Set.of();
+
+		@Override
+		public Set<Class<? extends Story.Point>> exitOkOnFalse() {
+			return exitOkOnFalse;
 		}
 	}
 
@@ -47,7 +57,13 @@ public class Waypoint implements Story.Point {
 
 	protected List<? extends Story.Point> children;
 
+	protected ConditionalImpl conditional;
+
 	public Waypoint() {
+	}
+
+	public ConditionalImpl getConditional() {
+		return conditional;
 	}
 
 	public List<Class<? extends Story.State>> getRequires() {
@@ -159,6 +175,14 @@ public class Waypoint implements Story.Point {
 						Story.Decl.Location.Converter.class,
 						locationAnnotation.annotationType());
 				location = converter.convert(locationAnnotation);
+			}
+		}
+		if (conditional == null) {
+			conditional = new ConditionalImpl();
+			Story.Decl.Conditional.ExitOkOnFalse exitOkOnFalseAnn = reflector
+					.annotation(Story.Decl.Conditional.ExitOkOnFalse.class);
+			if (exitOkOnFalseAnn != null) {
+				conditional.exitOkOnFalse = Set.of(exitOkOnFalseAnn.value());
 			}
 		}
 	}

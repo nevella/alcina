@@ -394,6 +394,11 @@ public class TreeProcess {
 		default <T> T typedValue() {
 			return (T) getValue();
 		}
+
+		default Node getPreviousSibling() {
+			int idx = indexInParent();
+			return idx == 0 ? null : getParent().getChildren().get(idx - 1);
+		}
 	}
 
 	/**

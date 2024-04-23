@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.story;
 
 import java.lang.System.Logger.Level;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
@@ -72,6 +74,9 @@ public class StoryActionPerformer {
 		if (action == null) {
 			return;
 		}
+		// required for the conditional logic (which uses parent attributes)
+		Preconditions.checkState(visit.getParent() != null,
+				"Root visit/points cannot have an action");
 		context = new ContextImpl();
 		context.visit = visit;
 		Class<? extends Story.Action> actionClass = action.getActionClass();
