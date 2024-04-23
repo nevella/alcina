@@ -102,6 +102,19 @@ public class DomainTransformEvent
 	public DomainTransformEvent() {
 	}
 
+	/*
+	 * Note that transform creation order is not necessarily the application
+	 * order - <i>particularly</i> in the case of deletion, where reference
+	 * removal transfroms are necessarily created after the initial DELETE
+	 * transform (but added to the transform sequence before the DELETE
+	 * transform)
+	 * 
+	 * TL;DR - don't sort a list of transforms prior to application, and even
+	 * post-application sorting by eventId is not a good idea. So - REVISIT -
+	 * maybe just remove Comparable impelemntation. Persisted events, on the
+	 * other hand, _can_ be sorted by their persistent id (within a single
+	 * request)
+	 */
 	@Override
 	public int compareTo(DomainTransformEvent o) {
 		return CommonUtils.compareLongs(getEventId(), o.getEventId());

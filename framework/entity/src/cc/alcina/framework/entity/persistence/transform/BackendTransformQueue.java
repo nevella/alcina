@@ -397,8 +397,20 @@ public class BackendTransformQueue {
 						.removeConflictingTransforms(nonQueueEventCollation);
 				List<DomainTransformEvent> nonQueueTransforms = nonQueueEventCollation
 						.getAllEvents();
-				nonQueueTransforms.addAll(removedFromBackendQueueTransforms);
-				Collections.sort(nonQueueTransforms);
+				/*
+				 * NO! See DomainTransformRequest.compareTo
+				 */
+				// Collections.sort(nonQueueTransforms);
+				/*
+				 * Instead, prepend the transforms.
+				 */
+				int idx = 0;
+				Iterator<DomainTransformEvent> removedItr = removedFromBackendQueueTransforms
+						.iterator();
+				while (removedItr.hasNext()) {
+					DomainTransformEvent removed = removedItr.next();
+					nonQueueTransforms.add(idx++, removed);
+				}
 				nonQueueEventCollation.filterNonpersistentTransforms();
 				nonQueueEvent.getTransformPersistenceToken()
 						.updateRequestFromCollation();
