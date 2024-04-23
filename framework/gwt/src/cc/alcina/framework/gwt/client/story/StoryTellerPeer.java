@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.story.Story.State;
+import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 
 public class StoryTellerPeer implements TellerContext {
 	class SimpleDependencyResolver implements DependencyResolver {
@@ -22,8 +23,11 @@ public class StoryTellerPeer implements TellerContext {
 			implements ProcessObserver<StoryTeller.BeforeVisit> {
 		@Override
 		public void topicPublished(StoryTeller.BeforeVisit beforeVisit) {
-			beforeVisit.getVisit().result.logEntry().template("> %s")
-					.args(beforeVisit.getVisit().displayName())
+			Visit visit = beforeVisit.getVisit();
+			if (visit.isResultFiltered()) {
+				return;
+			}
+			visit.result.logEntry().template("> %s").args(visit.displayName())
 					.types(StoryTeller.LogType.PROCESS).log();
 		}
 	}

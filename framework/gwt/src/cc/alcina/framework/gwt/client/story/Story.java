@@ -169,7 +169,9 @@ public interface Story {
 					.of(Action.Code.class, Action.UI.Click.class,
 							Action.UI.Keys.class, Action.UI.Navigation.class,
 							Action.UI.Select.ByText.class,
-							Action.UI.Select.ByValue.class);
+							Action.UI.Select.ByValue.class,
+							Action.UI.TestAbsent.class,
+							Action.UI.TestPresent.class);
 
 			@Registration.NonGenericSubtypes(Converter.class)
 			public interface Converter<A extends Annotation>

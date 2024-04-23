@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
+import cc.alcina.framework.common.client.process.TreeProcess.PathDisplayName;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -60,7 +61,8 @@ public class StoryTeller {
 	 * Models a visit to a point (i.e. what the teller does while processing a
 	 * point)
 	 */
-	public class Visit implements HasProcessNode<Visit>, HasDisplayName {
+	public class Visit
+			implements HasProcessNode<Visit>, HasDisplayName, PathDisplayName {
 		public Point point;
 
 		Node node;
@@ -87,7 +89,9 @@ public class StoryTeller {
 		}
 
 		void performAction() {
-			if (!filter.isFiltered(this)) {
+			if (result.filtered) {
+				//
+			} else {
 				new StoryActionPerformer().perform(this);
 			}
 		}
@@ -289,6 +293,7 @@ public class StoryTeller {
 		}
 
 		public void onActionTestResult(boolean testResult) {
+			result.testResult = testResult;
 			// res
 		}
 
@@ -301,11 +306,20 @@ public class StoryTeller {
 		}
 
 		public boolean isExitChildSequence(Visit visit) {
-			if (visit.result.ok) {
+			if (visit.result.testResult == null || visit.result.testResult) {
 				return false;
 			}
 			return getConditional().exitOkOnFalse()
 					.contains(visit.point.getClass());
+		}
+
+		@Override
+		public String pathDisplayName() {
+			return displayName();
+		}
+
+		public void evaluateFiltered() {
+			result.filtered = filter.isFiltered(this);
 		}
 	}
 
@@ -481,6 +495,7 @@ public class StoryTeller {
 			if (state.exitVisit != null) {
 				break;
 			}
+			visit.evaluateFiltered();
 			new BeforeVisit().publish();
 			visit.populateInitialChildren();
 			// visit.performAction() will be called after children are visited
@@ -492,7 +507,7 @@ public class StoryTeller {
 		new AfterStory().publish();
 		if (state.exitVisit != null) {
 			String message = Ax.format("Issue at visit %s",
-					state.exitVisit.processNode().asNodePath());
+					state.exitVisit.processNode().displayNamePath());
 			if (context.isThrowOnFailure()) {
 				throw new StoryIncomplete(message);
 			} else {
@@ -517,7 +532,7 @@ public class StoryTeller {
 	void performAction(Visit visit) {
 		new BeforePerformAction().publish();
 		visit.performAction();
-		if (!visit.result.ok) {
+		if (visit.result.testResult != null && !visit.result.testResult) {
 			evaluateTestNotPassed(visit);
 		}
 		visit.afterActionPerformed();
@@ -528,6 +543,7 @@ public class StoryTeller {
 		if (visit.getParent().isExitChildSequence(visit)) {
 			return;
 		}
+		visit.result.ok = false;
 		state.exitVisit = visit;
 	}
 }

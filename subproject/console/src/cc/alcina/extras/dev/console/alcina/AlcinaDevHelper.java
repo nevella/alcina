@@ -1,13 +1,10 @@
 package cc.alcina.extras.dev.console.alcina;
 
 import java.io.File;
-import java.util.Optional;
 
 import cc.alcina.extras.dev.console.DevHelper;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.process.ProcessObserver;
-import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
@@ -44,9 +41,6 @@ public class AlcinaDevHelper extends DevHelper {
 			 */
 			Registry.register().singleton(AlcinaBeanSerializer.class,
 					new AlcinaBeanSerializerS());
-			Optional<AppDebug> appDebug = Registry
-					.optional(ProcessObserver.AppDebug.class);
-			appDebug.ifPresent(AppDebug::attach);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -66,9 +60,9 @@ public class AlcinaDevHelper extends DevHelper {
 	}
 
 	protected String getConsoleSourcePath() {
-		return getClass().getProtectionDomain().getCodeSource().getLocation().toString()//
-				.replaceFirst("(file:)(.+)(/bin)",
-						"$2/src/")
+		return getClass().getProtectionDomain().getCodeSource().getLocation()
+				.toString()//
+				.replaceFirst("(file:)(.+)(/bin)", "$2/src/")
 				+ getClass().getPackageName().replace(".", "/");
 	}
 
