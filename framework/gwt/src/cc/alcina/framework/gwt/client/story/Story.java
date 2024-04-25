@@ -18,7 +18,6 @@ import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.util.LineCallback;
-import cc.alcina.framework.servlet.story.console.Story_Console.Attribute.ConsoleShouldRestart;
 
 /**
  * <h2>Goal</h2>

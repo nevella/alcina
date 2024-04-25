@@ -33,7 +33,6 @@ import cc.alcina.framework.gwt.client.story.Story.Attribute;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result.Log;
-import cc.alcina.framework.servlet.story.console.Story_Console.State.ConsoleNotRunning;
 
 /**
  */
