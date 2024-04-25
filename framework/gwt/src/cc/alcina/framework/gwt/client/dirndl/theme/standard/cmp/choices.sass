@@ -1,0 +1,20 @@
+@use '../../theme/theme'
+@use '../../theme/color'
+@use '../multi/base'
+
+//various choices style mixins
+
+@mixin vertical()
+  display: flex
+  flex-direction: column
+  gap: 2px
+
+  > choice
+    display: block
+    cursor: pointer
+
+    &:hover
+      background-color: #f7f7f7
+
+    &[_selected]
+      font-weight: bold

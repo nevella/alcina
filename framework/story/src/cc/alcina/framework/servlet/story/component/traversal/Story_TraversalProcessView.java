@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessView;
+import cc.alcina.framework.servlet.story.console.Story_Console;
 
 /**
  * The story of the {@link Feature_TraversalProcessView}
@@ -15,7 +16,6 @@ public class Story_TraversalProcessView implements Story {
 	 */
 	static interface State extends Story.State {
 		//@formatter:off
-		static interface ConsoleRunning extends State {}
 		static interface CroissanteriaTraversalPerformed extends State {}
 		static interface TraversalUiLoaded extends State {}
 		//@formatter:on
@@ -29,7 +29,8 @@ public class Story_TraversalProcessView implements Story {
 	 * CroissanteriaTraversalPerformed requires ConsoleRunning (which is true),
 	 * this is just a tad clearer
 	 */
-	@Decl.Require(State.ConsoleRunning.class)
+	@Decl.Require(Story_Console.State.ConsoleConditionalRestart.class)
+	@Decl.Require(Story_Console.State.ConsoleRunning.class)
 	@Decl.Require(State.CroissanteriaTraversalPerformed.class)
 	@Decl.Require(State.TraversalUiLoaded.class)
 	/*

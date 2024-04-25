@@ -83,6 +83,14 @@ public class ElementQuery {
 		awaitRemoval(element);
 	}
 
+	public void awaitAbsent() {
+		if (!isPresent()) {
+			return;
+		}
+		WebElement element = getElement();
+		awaitRemoval(element);
+	}
+
 	public void awaitRemoval(double timeout) {
 		withXpath("//*");
 		WebElement element = (WebElement) context;

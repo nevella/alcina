@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
+import cc.alcina.framework.gwt.client.story.Story.Attribute;
+import cc.alcina.framework.gwt.client.story.Story.Attribute.Entry;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result;
 import cc.alcina.framework.gwt.client.util.LineCallback;
@@ -67,9 +69,19 @@ public class StoryActionPerformer {
 		public TellerContext tellerContext() {
 			return visit.teller().context;
 		}
+
+		@Override
+		public <V> Entry<V, Attribute<V>>
+				getAttribute(Class<? extends Attribute<V>> clazz) {
+			return visit.teller().state.getAttribute(clazz);
+		}
 	}
 
 	public void perform(Visit visit) {
+		if (!visit.result.ok) {
+			// already failed
+			return;
+		}
 		Story.Action action = visit.getAction();
 		if (action == null) {
 			return;
@@ -103,6 +115,26 @@ public class StoryActionPerformer {
 		public void perform(Context context, Story.Action.Code action)
 				throws Exception {
 			action.perform(context);
+		}
+	}
+
+	public void beforeChildren(Visit visit) {
+		Story.Action action = visit.getAction();
+		if (action == null) {
+			return;
+		}
+		if (action instanceof Story.Point.BeforeChildren) {
+			context = new ContextImpl();
+			context.visit = visit;
+			Story.Point.BeforeChildren beforeChildren = (Story.Point.BeforeChildren) action;
+			try {
+				beforeChildren.beforeChildren(context);
+			} catch (Throwable t) {
+				System.out.println();
+				t.printStackTrace();
+				visit.result.ok = false;
+				visit.result.throwable = t;
+			}
 		}
 	}
 }

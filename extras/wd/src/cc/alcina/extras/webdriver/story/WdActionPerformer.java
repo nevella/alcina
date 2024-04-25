@@ -76,6 +76,28 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 			}
 		}
 
+		public static class AwaitPresent
+				implements TypedPerformer<Story.Action.Ui.AwaitPresent> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.AwaitPresent action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				query.await();
+				wdPerformer.context.log("AwaitPresent --> %s", query);
+			}
+		}
+
+		public static class AwaitAbsent
+				implements TypedPerformer<Story.Action.Ui.AwaitAbsent> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.AwaitAbsent action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				query.awaitAbsent();
+				wdPerformer.context.log("AwaitAbsent --> %s", query);
+			}
+		}
+
 		public static class TestAbsent
 				implements TypedPerformer<Story.Action.Ui.TestAbsent> {
 			@Override

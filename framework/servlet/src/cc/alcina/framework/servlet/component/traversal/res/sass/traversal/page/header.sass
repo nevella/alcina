@@ -1,5 +1,8 @@
 @use '../../theme/theme'
 @use '../multi/icons/ellipsis-vertical.svg.data-url-rule' as ellipsis-vertical
+@use '../../dirndl/cmp/context-menu'
+@use '../../dirndl/cmp/choices'
+@use '../../dirndl/cmp/heading'
 
 $header-height: 50px
 $font-family: Arial
@@ -79,3 +82,14 @@ $item-gap: 0.5rem
 
         &.dotburger
           @include ellipsis-vertical.content
+
+overlay > menu
+  @include context-menu.context-menu-std-padding
+  @include context-menu.context-menu-text-only
+
+  > heading
+    @include heading.panel-2
+
+  > choices
+    @include choices.vertical
+    margin-bottom: 0.5rem

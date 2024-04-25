@@ -230,6 +230,8 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	LinkedList<DevConsoleRunnable> currentRunnables = new LinkedList<>();
 
+	private boolean noHistory;
+
 	public DevConsole(String[] args) {
 		if (args.length == 0) {
 			String propertyArgs = System.getProperty("DevConsole.args");
@@ -556,6 +558,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		new InitPostObjectServices().emit(System.currentTimeMillis());
 		new InitConsole().emit(System.currentTimeMillis());
 		initialised = true;
+		noHistory = launchConfiguration.noHistory;
 		if (launchConfiguration.hasCommandString()) {
 			performCommand(launchConfiguration.getCommandString());
 		} else if (!props.lastCommand.matches("|q|re|restart")
@@ -820,7 +823,9 @@ public abstract class DevConsole implements ClipboardOwner {
 			PermissionsManager.get().pushUser(DevHelper.getDefaultUser(),
 					LoginState.LOGGED_IN);
 			runningJobs.add(c);
-			history.addCommand(lastCommand);
+			if (!noHistory) {
+				history.addCommand(lastCommand);
+			}
 			if (!c.silent()) {
 				System.out.format("%s...\n", lastCommand);
 			}
@@ -836,7 +841,7 @@ public abstract class DevConsole implements ClipboardOwner {
 			if (msg != null) {
 				ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
 			}
-			if (topLevel && !c.ignoreForCommandHistory()) {
+			if (topLevel && !c.ignoreForCommandHistory() && !noHistory) {
 				String modCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
 						: "";
 				if (!Objects.equals(modCommand, props.lastCommand)) {
@@ -1113,6 +1118,8 @@ public abstract class DevConsole implements ClipboardOwner {
 
 		private Integer httpPort;
 
+		boolean noHistory;
+
 		public LaunchConfiguration(String[] argv) {
 			parser = new ArgParser(argv);
 			noHttpServer = parser.hasAndRemove("--no-http");
@@ -1121,6 +1128,7 @@ public abstract class DevConsole implements ClipboardOwner {
 					.orElse(null);
 			exitAfterCommand = !parser.hasAndRemove("--no-exit")
 					&& hasCommandString() && httpPort == null;
+			noHistory = parser.hasAndRemove("--no-history");
 			if (exitAfterCommand) {
 				noHttpServer = true;
 			}

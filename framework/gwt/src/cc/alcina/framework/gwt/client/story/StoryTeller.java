@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -28,9 +29,11 @@ import cc.alcina.framework.gwt.client.story.Story.Action;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResource;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
+import cc.alcina.framework.gwt.client.story.Story.Attribute;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result.Log;
+import cc.alcina.framework.servlet.story.console.Story_Console.State.ConsoleNotRunning;
 
 /**
  */
@@ -67,8 +70,6 @@ public class StoryTeller {
 
 		Node node;
 
-		private Iterator<Class<? extends cc.alcina.framework.gwt.client.story.Story.State>> requiresItr;
-
 		private Iterator<? extends Point> childItr;
 
 		public Result result;
@@ -101,13 +102,22 @@ public class StoryTeller {
 			// structure
 			Visit visit = new Visit(this, point);
 			if (initialChildren != null) {
+				addedChildOfCurrentVisist = true;
 				/* must also add to the traversal */
 				state.onChildOfCurrentVisitAdded(visit);
 			}
 		}
 
+		int requiresIdx = 0;
+
+		List<Class<? extends Story.State>> requires;
+
 		void populateInitialChildren() {
-			List<Class<? extends Story.State>> requires = point.getRequires();
+			/*
+			 * Make a copy, since it may be modified
+			 */
+			requires = point.getRequires().stream()
+					.collect(Collectors.toList());
 			List<? extends Point> children = point.getChildren();
 			if (requires == null) {
 				requires = List.of();
@@ -115,10 +125,11 @@ public class StoryTeller {
 			if (children == null) {
 				children = List.of();
 			}
-			requiresItr = requires.iterator();
 			childItr = children.iterator();
 			addPending();
 		}
+
+		boolean addedChildOfCurrentVisist;
 
 		/*
 		 * Either add the first unresolved dependency, or all children
@@ -127,10 +138,11 @@ public class StoryTeller {
 		 * dependencies are evaluated in the correct order
 		 */
 		void addPending() {
-			while (requiresItr.hasNext()) {
-				Class<? extends Story.State> requires = requiresItr.next();
-				if (!state.isResolved(requires)) {
-					add(context.resolveSatisfies(requires));
+			while (requiresIdx < requires.size()) {
+				Class<? extends Story.State> requireElement = requires
+						.get(requiresIdx++);
+				if (!state.isResolved(requireElement)) {
+					add(context.resolveSatisfies(requireElement));
 					return;
 				}
 			}
@@ -321,6 +333,25 @@ public class StoryTeller {
 		public void evaluateFiltered() {
 			result.filtered = filter.isFiltered(this);
 		}
+
+		/**
+		 * A good place for the point to conditionally populate
+		 * requires/children, post declarative population
+		 */
+		public void onBeforeChildren() {
+			if (result.filtered) {
+				//
+			} else {
+				new StoryActionPerformer().beforeChildren(this);
+			}
+		}
+
+		public void addRequires(Class<? extends Story.State> clazz) {
+			requires.add(clazz);
+			if (!addedChildOfCurrentVisist) {
+				addPending();
+			}
+		}
 	}
 
 	public enum LogType {
@@ -339,6 +370,8 @@ public class StoryTeller {
 		public Visit exitVisit;
 
 		Map<Class<? extends PerformerResource>, PerformerResource> performerResources = new LinkedHashMap();
+
+		Map<Class<? extends Story.Attribute>, Object> attributes = new LinkedHashMap();
 
 		Map<Location.Axis, Location> locations = new LinkedHashMap<>();
 
@@ -359,6 +392,11 @@ public class StoryTeller {
 			public void topicPublished(Visit visit) {
 				visit.addPending();
 			}
+		}
+
+		public <T> void setAttribute(Class<? extends Story.Attribute<T>> key,
+				T value) {
+			attributes.put(key, value);
 		}
 
 		public boolean isResolved(Class<? extends Story.State> requires) {
@@ -401,6 +439,23 @@ public class StoryTeller {
 
 		public <L extends Location> L getLocation(Axis axis) {
 			return (L) locations.get(axis);
+		}
+
+		<V> Attribute.Entry<V, Attribute<V>>
+				getAttribute(Class<? extends Attribute<V>> clazz) {
+			V value = (V) attributes.get(clazz);
+			if (value == null) {
+				Class firstGenericBound = Reflections.at(clazz)
+						.firstGenericBound();
+				if (firstGenericBound == Boolean.class) {
+					value = (V) Boolean.FALSE;
+				} else {
+					throw new UnsupportedOperationException();
+				}
+			}
+			Attribute.Entry<V, Attribute<V>> entry = new Attribute.Entry<>(
+					value);
+			return entry;
 		}
 	}
 
@@ -498,6 +553,9 @@ public class StoryTeller {
 			visit.evaluateFiltered();
 			new BeforeVisit().publish();
 			visit.populateInitialChildren();
+			// this will possibly add to the child list (but should do nothing
+			// else)
+			visit.onBeforeChildren();
 			// visit.performAction() will be called after children are visited
 			// via the depthfirsttraversal callback. In most cases, a
 			// node (visit) will either have children or an action, but there's
@@ -545,5 +603,10 @@ public class StoryTeller {
 		}
 		visit.result.ok = false;
 		state.exitVisit = visit;
+	}
+
+	public <T> void setAttribute(Class<? extends Story.Attribute<T>> key,
+			T value) {
+		state.setAttribute(key, value);
 	}
 }

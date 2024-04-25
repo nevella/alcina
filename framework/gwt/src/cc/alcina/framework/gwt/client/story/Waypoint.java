@@ -1,9 +1,11 @@
 package cc.alcina.framework.gwt.client.story;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -110,6 +112,9 @@ public class Waypoint implements Story.Point {
 		this.name = name;
 	}
 
+	/*
+	 * Note that created requires/children collections are intentionally mutable
+	 */
 	protected void ensurePopulated() {
 		if (populated == true) {
 			return;
@@ -125,9 +130,10 @@ public class Waypoint implements Story.Point {
 					.annotations(Story.Decl.Require.class);
 			if (requireAnns.size() > 0) {
 				requires = (List<Class<? extends Story.State>>) (List<?>) requireAnns
-						.stream().map(Story.Decl.Require::value).toList();
+						.stream().map(Story.Decl.Require::value)
+						.collect(Collectors.toList());
 			} else {
-				requires = List.of();
+				requires = new ArrayList<>();
 			}
 		}
 		if (children == null) {
@@ -136,7 +142,8 @@ public class Waypoint implements Story.Point {
 						.annotations(Story.Decl.Child.class);
 				if (childAnns.size() > 0) {
 					children = childAnns.stream().map(Story.Decl.Child::value)
-							.map(Reflections::newInstance).toList();
+							.map(Reflections::newInstance)
+							.collect(Collectors.toList());
 				}
 			}
 			if (children == null) {
@@ -144,8 +151,11 @@ public class Waypoint implements Story.Point {
 						.annotations(Story.Decl.Point.class);
 				if (points.size() > 0) {
 					children = points.stream().map(Waypoint::toStoryPoint)
-							.toList();
+							.collect(Collectors.toList());
 				}
+			}
+			if (children == null) {
+				children = new ArrayList<>();
 			}
 		}
 		if (feature == null) {

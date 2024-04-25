@@ -33,7 +33,7 @@ class Header extends Waypoint {
 		@Decl.Conditional.ExitOkOnFalse(EnsureShowing.TestNotShowing.class)
 		@Decl.Child(EnsureShowing.TestNotShowing.class)
 		@Decl.Child(EnsureShowing.ClickButton.class)
-		@Decl.Child(EnsureShowing.TestShowing.class)
+		@Decl.Child(EnsureShowing.AwaitShowing.class)
 		static class EnsureShowing extends Waypoint
 				implements Story.State.Provider<State.MenuShowing> {
 			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU)
@@ -51,12 +51,23 @@ class Header extends Waypoint {
 			static class TestShowing extends Waypoint
 					implements Story.Action.Test {
 			}
+
+			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU)
+			@Decl.Action.UI.AwaitAbsent
+			static class AwaitNotShowing extends Waypoint {
+			}
+
+			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU)
+			@Decl.Action.UI.AwaitPresent
+			static class AwaitShowing extends Waypoint
+					implements Story.Action.Test {
+			}
 		}
 
 		@Decl.Conditional.ExitOkOnFalse(EnsureShowing.TestShowing.class)
 		@Decl.Child(EnsureShowing.TestShowing.class)
 		@Decl.Child(EnsureShowing.ClickButton.class)
-		@Decl.Child(EnsureShowing.TestNotShowing.class)
+		@Decl.Child(EnsureShowing.AwaitNotShowing.class)
 		static class EnsureNotShowing extends Waypoint
 				implements Story.State.Provider<State.MenuNotShowing> {
 		}

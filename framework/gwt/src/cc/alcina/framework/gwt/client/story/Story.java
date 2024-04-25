@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.util.LineCallback;
+import cc.alcina.framework.servlet.story.console.Story_Console.Attribute.ConsoleShouldRestart;
 
 /**
  * <h2>Goal</h2>
@@ -91,6 +92,26 @@ public interface Story {
 				extends Point, Registration.AllSubtypesClient {
 			default Class<? extends State> resolvesState() {
 				return Reflections.at(this).firstGenericBound();
+			}
+		}
+	}
+
+	/**
+	 * A configuration key for a story - used for instance to specify that a app
+	 * (such as a devconsole) should be restarted.
+	 * 
+	 * T is the type of the attribute value
+	 */
+	public interface Attribute<T> {
+		public static class Entry<V, A extends Attribute<V>> {
+			V value;
+
+			public Entry(V value) {
+				this.value = value;
+			}
+
+			public V get() {
+				return value;
 			}
 		}
 	}
@@ -221,6 +242,36 @@ public interface Story {
 						@Override
 						public Story.Action convert(TestPresent ann) {
 							return new Story.Action.Ui.TestPresent();
+						}
+					}
+				}
+
+				/** An AwaitPresent action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(Action.UI.class)
+				public @interface AwaitPresent {
+					public static class ConverterImpl
+							implements Converter<AwaitPresent> {
+						@Override
+						public Story.Action convert(AwaitPresent ann) {
+							return new Story.Action.Ui.AwaitPresent();
+						}
+					}
+				}
+
+				/** An AwaitAbsent action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(Action.UI.class)
+				public @interface AwaitAbsent {
+					public static class ConverterImpl
+							implements Converter<AwaitAbsent> {
+						@Override
+						public Story.Action convert(AwaitAbsent ann) {
+							return new Story.Action.Ui.AwaitAbsent();
 						}
 					}
 				}
@@ -477,6 +528,13 @@ public interface Story {
 		Location getLocation();
 
 		Conditional getConditional();
+
+		/*
+		 * An aspect added to point/performers
+		 */
+		public interface BeforeChildren {
+			void beforeChildren(Action.Context context) throws Exception;
+		}
 	}
 
 	public interface Action {
@@ -538,6 +596,18 @@ public interface Story {
 			}
 
 			public static class Click implements Ui {
+			}
+
+			/**
+			 * Await the presence of the document locator
+			 */
+			public static class AwaitPresent implements Ui {
+			}
+
+			/**
+			 * Await the absence of the document locator
+			 */
+			public static class AwaitAbsent implements Ui {
 			}
 
 			/**
@@ -621,6 +691,9 @@ public interface Story {
 			<L extends Location> L getLocation(Axis url);
 
 			TellerContext tellerContext();
+
+			<V> Attribute.Entry<V, Attribute<V>>
+					getAttribute(Class<? extends Attribute<V>> clazz);
 		}
 
 		default Class<? extends Action> getActionClass() {

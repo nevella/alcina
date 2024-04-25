@@ -392,6 +392,69 @@ edit-value textarea {
  *
  *  TODO - move some/most to dropdown
  * */
+overlay > menu {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  padding: 0.5rem 0;
+}
+overlay > menu > action {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 15px 1fr;
+  padding: 4px 0;
+  align-items: baseline;
+}
+overlay > menu > action:hover, overlay > menu > action[index-selected] {
+  background-color: #00000010;
+}
+overlay > menu > action > icon {
+  width: 15px;
+  height: 15px;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position-y: 1px;
+}
+overlay > menu > action {
+  padding: 0 1.5rem;
+  grid-template-columns: 1fr;
+}
+overlay > menu > action > icon {
+  display: none;
+}
+overlay > menu > heading {
+  display: block;
+  font-weight: bold;
+  color: #999;
+  line-height: 2;
+}
+overlay > menu > choices {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 0.5rem;
+}
+overlay > menu > choices > choice {
+  display: block;
+  cursor: pointer;
+}
+overlay > menu > choices > choice:hover {
+  background-color: #f7f7f7;
+}
+overlay > menu > choices > choice[_selected] {
+  font-weight: bold;
+}
+
 body {
   margin: 0;
   font-family: "Helvetica Neue", Arial;

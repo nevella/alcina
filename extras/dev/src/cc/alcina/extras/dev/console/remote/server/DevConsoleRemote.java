@@ -194,6 +194,13 @@ public class DevConsoleRemote {
 			serveLocalHandler.setHandler(new DevConsoleServeLocalHandler(this));
 		}
 		{
+			ContextHandler serveControlHandler = new ContextHandler(handlers,
+					"/control");
+			serveControlHandler.setAllowNullPathInfo(true);
+			serveControlHandler
+					.setHandler(new DevConsoleServeControlHandler(this));
+		}
+		{
 			ServletContextHandler jsCodeServerHandler = new ServletContextHandler(
 					handlers, "/jsCodeServer.tcp");
 			jsCodeServerHandler.addServlet(
