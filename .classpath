@@ -73,7 +73,10 @@
 	<classpathentry exported="true" kind="lib" path="lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0.jar" sourcepath="lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0-sources.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/google/google-http-client-1.44.1.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/google/google-http-client-jackson2-1.44.1.jar" />
+	<classpathentry exported="true" kind="lib" path="lib/framework/google/opencensus-api-0.31.1.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/google/google-oauth-client-1.35.0.jar" />
+	<classpathentry exported="true" kind="lib" path="lib/framework/google/opencensus-contrib-http-util-0.11.0.jar" />
+	<classpathentry exported="true" kind="lib" path="lib/framework/google/grpc-context-1.0.1.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/google/google-oauth-client-java6-1.35.0.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/google/google-oauth-client-jetty-1.35.0.jar" />
 	<classpathentry exported="true" kind="lib" path="lib/framework/google/gson-2.1.jar" />

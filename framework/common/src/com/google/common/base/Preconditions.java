@@ -579,4 +579,12 @@ public final class Preconditions {
 			throw new IllegalStateException(format(errorMessageTemplate, p1));
 		}
 	}
+
+	public static void checkArgument(boolean b, String errorMessageTemplate,
+			char p1) {
+		if (!b) {
+			throw new IllegalArgumentException(
+					format(errorMessageTemplate, p1));
+		}
+	}
 }
