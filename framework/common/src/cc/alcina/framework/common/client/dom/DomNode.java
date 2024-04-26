@@ -430,7 +430,9 @@ public class DomNode {
 	}
 
 	public void removeAttribute(String key) {
-		node.getAttributes().removeNamedItem(key);
+		if (node.getAttributes().getNamedItem(key) != null) {
+			node.getAttributes().removeNamedItem(key);
+		}
 	}
 
 	public void removeFromParent() {
