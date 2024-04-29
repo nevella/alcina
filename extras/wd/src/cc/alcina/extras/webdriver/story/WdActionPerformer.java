@@ -1,5 +1,9 @@
 package cc.alcina.extras.webdriver.story;
 
+import java.util.Objects;
+
+import org.openqa.selenium.WebDriver;
+
 import cc.alcina.extras.webdriver.query.ElementQuery;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -47,9 +51,35 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 					Story.Action.Ui.Go action) throws Exception {
 				Story.Action.Location.Url location = wdPerformer.context
 						.getLocation(Story.Action.Location.Axis.URL);
-				wdPerformer.wdContext.token.getWebDriver().navigate()
-						.to(location.getText());
-				wdPerformer.context.log("Navigate --> %s", location.getText());
+				WdContext wdContext = wdPerformer.wdContext;
+				WebDriver webDriver = wdContext.token.getWebDriver();
+				String currentUrl = webDriver.getCurrentUrl();
+				String to = location.getText();
+				if (Objects.equals(currentUrl, to)) {
+					if (!wdContext.alwaysRefresh
+							&& wdContext.navigationPerformed) {
+						return;
+					}
+				}
+				webDriver.navigate().to(to);
+				wdPerformer.context.log("Navigate --> %s", to);
+				wdContext.navigationPerformed = true;
+			}
+		}
+
+		public static class Refresh
+				implements TypedPerformer<Story.Action.Ui.Refresh> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.Refresh action) throws Exception {
+				Story.Action.Location.Url location = wdPerformer.context
+						.getLocation(Story.Action.Location.Axis.URL);
+				WdContext wdContext = wdPerformer.wdContext;
+				WebDriver webDriver = wdContext.token.getWebDriver();
+				String currentUrl = webDriver.getCurrentUrl();
+				webDriver.navigate().refresh();
+				wdPerformer.context.log("Refresh --> %s", currentUrl);
+				wdContext.navigationPerformed = true;
 			}
 		}
 
@@ -107,6 +137,18 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 				boolean absent = !query.isPresent();
 				wdPerformer.context.getVisit().onActionTestResult(absent);
 				wdPerformer.context.log("TestAbsent --> %s", query);
+			}
+		}
+
+		public static class Keys
+				implements TypedPerformer<Story.Action.Ui.Keys> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.Keys action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				String text = action.getText();
+				query.sendKeys(text);
+				wdPerformer.context.log("Keys :: '%s' --> %s", text, query);
 			}
 		}
 

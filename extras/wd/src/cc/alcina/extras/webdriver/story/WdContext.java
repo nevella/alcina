@@ -17,6 +17,10 @@ class WdContext implements PerformerResource {
 
 	WdExec exec;
 
+	boolean alwaysRefresh = false;
+
+	boolean navigationPerformed = false;
+
 	@Override
 	public void initialise(Context context) {
 		WdContextPart part = context.tellerContext()

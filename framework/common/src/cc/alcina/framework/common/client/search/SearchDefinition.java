@@ -90,8 +90,6 @@ public abstract class SearchDefinition extends Bindable
 
 	private String orderName;
 
-	private int charWidth;
-
 	private Set<CriteriaGroup> criteriaGroups = new LightSet<CriteriaGroup>();
 
 	private Set<OrderGroup> orderGroups = new LightSet<OrderGroup>();
@@ -280,11 +278,6 @@ public abstract class SearchDefinition extends Bindable
 		return first != null ? first : sub;
 	}
 
-	@AlcinaTransient
-	public int getCharWidth() {
-		return this.charWidth;
-	}
-
 	public Set<CriteriaGroup> getCriteriaGroups() {
 		return this.criteriaGroups;
 	}
@@ -467,10 +460,6 @@ public abstract class SearchDefinition extends Bindable
 
 	public String resultEqlPrefix() {
 		return null;
-	}
-
-	public void setCharWidth(int charWidth) {
-		this.charWidth = charWidth;
 	}
 
 	public void setCriteriaGroups(Set<CriteriaGroup> criteriaGroups) {

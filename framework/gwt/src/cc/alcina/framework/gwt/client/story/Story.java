@@ -46,8 +46,12 @@ import cc.alcina.framework.gwt.client.util.LineCallback;
    - [ancestor] document what the ui does
    - [ancestor] document what the header does
    - [ancestor] document what the suggestor does
-  - 'filter selections for investigation by typing a string. it will match text contents of input nodes
+  - filter selections for investigation by typing a string. it will match text contents of input nodes
      and can be customised to match any aspect of a node (such as index in the document text run)
+  - the readme:
+    - always use a ui action (rather than say going to a url) if possible - helps the story, even if the 
+	  test could be done with a url
+	- naming - public names should be prefixed, package should not (so Feature_ is prefixed, generally Point_ is not)
   
 
  * </code>
@@ -113,6 +117,15 @@ public interface Story {
 				return value;
 			}
 		}
+	}
+
+	/*
+	 * Copied from org.openqa.selenium.Keys
+	 */
+	public interface Keys {
+		public static final String TAB = "\uE004";
+
+		public static final String ENTER = "\uE007";
 	}
 
 	/**
