@@ -1,6 +1,6 @@
 package cc.alcina.extras.dev.console.alcina;
 
-import cc.alcina.extras.dev.console.alcina.sub1.AlcSubStory;
+import cc.alcina.extras.dev.console.alcina.sub1.AlcListStatics;
 
 public class AlcDevLocal extends AlcinaDevConsoleRunnable {
 	@Override
@@ -11,6 +11,7 @@ public class AlcDevLocal extends AlcinaDevConsoleRunnable {
 	@Override
 	public void run() throws Exception {
 		// Ax.out("hello world");
-		new AlcSubStory().sub();
+		new AlcListStatics().sub();
+		// new AlcSubStory().sub();
 	}
 }

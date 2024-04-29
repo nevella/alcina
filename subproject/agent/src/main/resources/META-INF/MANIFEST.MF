@@ -1,0 +1,5 @@
+Manifest-Version: 1.0 
+Premain-Class: cc.alcina.tool.agent.ClassTrackingAgent
+Agent-Class: cc.alcina.tool.agent.ClassTrackingAgent
+Can-Redefine-Classes: true
+Can-Retransform-Classes: true
