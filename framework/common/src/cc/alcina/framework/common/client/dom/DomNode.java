@@ -1042,7 +1042,8 @@ public class DomNode {
 		public boolean handlesXpath(String xpath) {
 			DomNodeReadonlyLookupQuery query = parse(xpath);
 			return query.valid && (query.immediateChild || query.grandChild
-					|| DomNode.this == document);
+					|| DomNode.this == document
+					|| DomNode.this == document.getDocumentElementNode());
 		}
 
 		private String normaliseTag(String tag) {
@@ -1101,8 +1102,8 @@ public class DomNode {
 				query.tag = xpath.replaceFirst(tagAttrNodeRegex, "$1");
 				String attrName = xpath.replaceFirst(tagAttrNodeRegex, "$2");
 				query.predicate = node -> node.has(attrName);
-				query.map = node -> node.document.nodeFor(
-						((Element) node.w3cNode()).getAttributeNode(attrName));
+				query.map = node -> Stream.of(node.document.nodeFor(
+						((Element) node.w3cNode()).getAttributeNode(attrName)));
 				query.valid = true;
 			} else if (xpath.matches(tagAttrValueRegex)) {
 				query.tag = xpath.replaceFirst(tagAttrValueRegex, "$1");
@@ -1167,12 +1168,12 @@ public class DomNode {
 			DomNodeReadonlyLookupQuery query = parse(xpath);
 			if (query.immediateChild) {
 				return children.byTag(query.tag).stream()
-						.filter(query.predicate).map(query.map);
+						.filter(query.predicate).flatMap(query.map);
 			} else if (query.grandChild) {
 				return children.byTag(query.tag).stream()
 						.filter(query.predicate)
 						.map(n -> n.children.byTag(query.grandChildTag))
-						.flatMap(Collection::stream).map(query.map);
+						.flatMap(Collection::stream).flatMap(query.map);
 			} else {
 				Stream<DomNode> stream = null;
 				if (Ax.notBlank(query.id2)) {
@@ -1184,12 +1185,12 @@ public class DomNode {
 				} else {
 					stream = document.byTag().getAndEnsure(query.tag).stream();
 				}
-				return stream.filter(query.predicate).map(query.map)
+				return stream.filter(query.predicate).flatMap(query.map)
 						.filter(Objects::nonNull);
 			}
 		}
 
-		class DescendantMap implements Function<DomNode, DomNode> {
+		class DescendantMap implements Function<DomNode, Stream<DomNode>> {
 			private String tag;
 
 			private int index;
@@ -1200,21 +1201,25 @@ public class DomNode {
 					boolean immediateChildrenOnly) {
 				this.immediateChildrenOnly = immediateChildrenOnly;
 				this.tag = normaliseTag(tag);
-				this.index = Ax.isBlank(indexStr) ? 1
+				this.index = Ax.isBlank(indexStr) ? -1
 						: Integer.parseInt(indexStr);
 			}
 
 			@Override
-			public DomNode apply(DomNode t) {
+			public Stream<DomNode> apply(DomNode t) {
 				Stream<DomNode> stream = immediateChildrenOnly
 						? t.children.elements().stream()
 						: t.descendants();
-				return stream.filter(n -> n.tagIs(tag)).skip(index - 1)
-						.findFirst().orElse(null);
+				stream = stream.filter(n -> n.tagIs(tag));
+				if (index != -1) {
+					stream = stream.skip(index - 1).limit(1);
+				}
+				return stream;
 			}
 		}
 
-		class DescendantTagAttrTagMap implements Function<DomNode, DomNode> {
+		class DescendantTagAttrTagMap
+				implements Function<DomNode, Stream<DomNode>> {
 			private String tag;
 
 			private String attrName;
@@ -1232,12 +1237,10 @@ public class DomNode {
 			}
 
 			@Override
-			public DomNode apply(DomNode t) {
+			public Stream<DomNode> apply(DomNode t) {
 				return t.descendants().filter(n -> n.tagIs(tag))
-						.filter(n -> n.attrIs(attrName, attrValue)).findFirst()
-						.flatMap(n -> n.children.byTag(childTag).stream()
-								.findFirst())
-						.orElse(null);
+						.filter(n -> n.attrIs(attrName, attrValue))
+						.flatMap(n -> n.children.byTag(childTag).stream());
 			}
 		}
 
@@ -1256,7 +1259,7 @@ public class DomNode {
 
 			Predicate<DomNode> predicate = node -> true;
 
-			Function<DomNode, DomNode> map = node -> node;
+			Function<DomNode, Stream<DomNode>> map = node -> Stream.of(node);
 
 			boolean valid = false;
 		}
