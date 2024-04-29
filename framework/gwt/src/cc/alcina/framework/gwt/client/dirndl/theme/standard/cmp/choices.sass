@@ -18,3 +18,17 @@
 
     &[_selected]
       font-weight: bold
+
+@mixin horizontal()
+  display: flex
+  gap: 2rem
+
+  > choice
+    display: block
+    cursor: pointer
+
+    &:hover
+      background-color: #f7f7f7
+
+    &[_selected]
+      text-decoration: underline

@@ -46,6 +46,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -282,6 +283,9 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void onSelected(Selected event) {
+			if (event.checkReemitted(this)) {
+				return;
+			}
 			Choices.Choice<T> choice = event == null ? null : event.getModel();
 			T value = choice == null ? null : choice.getValue();
 			List<T> updatedValues = choices.stream().filter(c -> {
@@ -294,6 +298,7 @@ public abstract class Choices<T> extends Model implements
 				}
 			}).map(Choice::getValue).collect(Collectors.toList());
 			setSelectedValues(updatedValues);
+			event.reemit();
 		}
 
 		@Override
@@ -435,6 +440,8 @@ public abstract class Choices<T> extends Model implements
 
 		private T provisionalValue;
 
+		protected T lastSelectedValue;
+
 		public static class To implements ModelTransform<Object, Single<?>> {
 			@Override
 			public Single<?> apply(Object t) {
@@ -545,6 +552,7 @@ public abstract class Choices<T> extends Model implements
 		}
 
 		public void setSelectedValue(T value) {
+			this.lastSelectedValue = value;
 			T oldValue = getSelectedValue();
 			choices.forEach(c -> c.setSelected(Objects.equals(c.value, value)));
 			T newValue = getSelectedValue();
@@ -558,6 +566,13 @@ public abstract class Choices<T> extends Model implements
 						.dispatch(ModelEvents.SelectionChanged.class, newValue);
 				selectionChanged.signal();
 			}
+		}
+
+		@Override
+		public void setValues(List<T> values) {
+			super.setValues(values);
+			choices.forEach(c -> c
+					.setSelected(Objects.equals(c.value, lastSelectedValue)));
 		}
 
 		public ListenerReference subscribeSelectionChanged(Runnable runnable) {
