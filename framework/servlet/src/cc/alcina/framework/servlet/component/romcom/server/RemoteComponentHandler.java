@@ -286,6 +286,7 @@ class RemoteComponentHandler {
 				logger.debug("{} dispatched response #{} - {}", Ax.appMillis(),
 						response.requestId,
 						NestedName.get(response.protocolMessage));
+				new RemoteComponentEvent(request, response).publish();
 				servletResponse.getWriter()
 						.write(ReflectiveSerializer.serialize(response));
 			}

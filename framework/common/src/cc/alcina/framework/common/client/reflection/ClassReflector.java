@@ -256,6 +256,10 @@ public class ClassReflector<T> implements HasAnnotations {
 	}
 
 	public T newInstance() {
+		if (noArgsConstructor == null) {
+			throw new NullPointerException(Ax.format(
+					"Reflector %s has no no-args constructor", reflectedClass));
+		}
 		return noArgsConstructor.get();
 	}
 

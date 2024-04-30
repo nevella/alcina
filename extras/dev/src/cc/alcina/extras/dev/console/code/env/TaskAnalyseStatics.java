@@ -161,7 +161,23 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 		}
 
 		public enum OkType {
-			OTHER, FRAME, STATICS, N_A
+			// has a context provider (uses contextFrame)
+			CONTEXT_PROVIDER,
+			// unused in multi-threaded env (js/devmode client only)
+			UNUSED_MT,
+			// correctly behaves as a static (probably multi-client
+			// aware/synchronized)
+			CORRECT_STATIC,
+			// static field type is a stateless type marker
+			CORRECT_STATIC_TYPE_MARKER,
+			// static field is a switch table
+			SWITCH_TABLE,
+			// it's a jso, so client only
+			JSO,
+			// tricky...
+			TODO, TO_FRAME,
+			// fixed (by changing)
+			FIXED
 		}
 
 		public static class Entry {

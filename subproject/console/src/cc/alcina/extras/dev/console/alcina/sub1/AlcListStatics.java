@@ -6,6 +6,10 @@ import cc.alcina.extras.dev.console.code.env.TaskAnalyseStatics.PersistentResult
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 
+/*
+ * TODO: fix 'todos' in csv - make TaskAnalyseStatics able to merge exiting -
+ * singletons?
+ */
 public class AlcListStatics extends AlcinaDevConsoleRunnable {
 	@Override
 	public void run() throws Exception {

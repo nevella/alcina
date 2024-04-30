@@ -81,7 +81,7 @@ public class DevConsoleDebugCommands2 {
 					remoteHtml = m1.group(1);
 					localHtml = m1.group(2);
 					remoteParseByLocalDom = Document.get().createElement("div");
-					HtmlParser.debugCursor = false;
+					// HtmlParser.debugCursor = false;
 					new HtmlParser().parse(remoteHtml, remoteParseByLocalDom,
 							true);
 					localParseByLocalDom = Document.get().createElement("div");

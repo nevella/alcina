@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.gwt.headless;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -407,7 +408,8 @@ public class GWTBridgeHeadless extends GWTBridge {
 		}
 	}
 
-	private Set<Class> notImplemented = new LinkedHashSet<>();
+	private Set<Class> notImplemented = Collections
+			.synchronizedSet(new LinkedHashSet<>());
 
 	@Override
 	public <T> T create(Class<?> classLiteral) {

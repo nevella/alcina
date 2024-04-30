@@ -14,7 +14,7 @@ public interface ProcessObservable {
 	/**
 	 * Note - only use this when not in a tight loop (it is more elegant/shorter
 	 * than a static call to ProcessObservers, but causes unnecessary object
-	 * creation
+	 * (observable) creation
 	 */
 	default void publish() {
 		ProcessObservers.publishUntyped(getClass(), () -> this);

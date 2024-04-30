@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.util.DomUtils;
 
 public class HtmlParser {
-	public static boolean debugCursor = false;
+	static final boolean debugCursor = false;
 
 	public static Element parseMarkup(String markup) {
 		try {

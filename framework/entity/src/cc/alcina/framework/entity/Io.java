@@ -474,6 +474,7 @@ public class Io {
 					}
 				}
 				if (ensureParents) {
+					resource.ensureFile();
 					resource.file.getParentFile().mkdirs();
 				}
 				Io.Streams.copy(contents.getStream(), resource.getStream());
@@ -549,7 +550,7 @@ public class Io {
 			private OutputStream stream;
 
 			private void ensureFile() {
-				if (path != null) {
+				if (path != null && file == null) {
 					file = new File(path);
 				}
 			}
@@ -596,6 +597,11 @@ public class Io {
 			 */
 			public Resource withCompress(boolean compress) {
 				WriteOp.this.compress = compress;
+				return this;
+			}
+
+			public Resource withEnsureParents(boolean ensureParents) {
+				WriteOp.this.ensureParents = ensureParents;
 				return this;
 			}
 

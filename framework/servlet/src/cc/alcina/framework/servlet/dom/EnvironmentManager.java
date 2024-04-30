@@ -10,17 +10,22 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObserver;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timeout;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
 
 /*
  * The EnvironmentManager maintains mappings of credentials (per-browser-tab) to
@@ -79,6 +84,24 @@ public class EnvironmentManager {
 		Window.Navigator.contextProvider = ContextProvider.createProvider(
 				ctx -> new Window.Navigator(), null, null,
 				Window.Navigator.class, true);
+		flightRecordingEnabled = Configuration.is("flightRecordingEnabled");
+		if (flightRecordingEnabled) {
+			startFlightRecording();
+		}
+	}
+
+	boolean flightRecordingEnabled;
+
+	void startFlightRecording() {
+		ProcessObservers.observe(new RemoteComponentEventObserver(), true);
+	}
+
+	class RemoteComponentEventObserver
+			implements ProcessObserver<RemoteComponentEvent> {
+		@Override
+		public void topicPublished(RemoteComponentEvent message) {
+			new FlightEvent(message).publish();
+		}
 	}
 
 	public Environment getEnvironment(RemoteComponentProtocol.Session session) {

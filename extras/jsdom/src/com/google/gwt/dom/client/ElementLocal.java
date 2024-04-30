@@ -22,11 +22,12 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.IntCounter;
 
 // FIXME - dirndl - move all event code from Element to here?
 public class ElementLocal extends NodeLocal
 		implements ClientDomElement, LocalDomElement {
-	static int _idCounter;
+	static transient IntCounter _idCounter = new IntCounter(1);
 
 	private static final RegExp PERMITTED_TAGS = RegExp
 			.compile("[A-Za-z0-9\\-_]+");
@@ -216,7 +217,7 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public void ensureId() {
 		if (getId().isEmpty()) {
-			setId("__localdom__" + (++_idCounter));
+			setId("__localdom__" + (_idCounter.nextId()));
 		}
 	}
 

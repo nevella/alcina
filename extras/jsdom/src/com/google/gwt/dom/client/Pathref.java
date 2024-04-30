@@ -45,7 +45,8 @@ public class Pathref {
 		if (preRemovalPaths == null) {
 			synchronized (Pathref.class) {
 				if (preRemovalPaths == null) {
-					preRemovalPaths = AlcinaCollections.newWeakMap();
+					preRemovalPaths = Collections
+							.synchronizedMap(AlcinaCollections.newWeakMap());
 				}
 			}
 		}

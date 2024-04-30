@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class LocalDomDebugImpl {
 	final static boolean debug = true;
 
-	static boolean debugAll = false;
+	final static boolean debugAll = false;
 
 	private void debugElement(Element element, Element withRemote,
 			ElementJso elementJso, NodeJso remoteChild, Node localChild,

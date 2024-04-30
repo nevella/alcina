@@ -1,6 +1,7 @@
 package com.google.gwt.regexp.shared;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -116,7 +117,8 @@ public class RegExp_Jvm implements IRegExp {
 		StringPair key = new StringPair(pattern,
 				String.valueOf(javaPatternFlags));
 		if (cachedPatterns == null) {
-			cachedPatterns = new EvictingMap<>(10, 0.75f, true);
+			cachedPatterns = Collections
+					.synchronizedMap(new EvictingMap<>(10, 0.75f, true));
 		}
 		return cachedPatterns.computeIfAbsent(key,
 				k -> Pattern.compile(pattern, javaPatternFlags));

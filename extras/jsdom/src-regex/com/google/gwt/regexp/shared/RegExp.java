@@ -22,10 +22,8 @@ import com.google.gwt.core.shared.GWT;
  * String class's replace and split methods, which can take a RegExp parameter.
  */
 public class RegExp {
-	private static Boolean isScript;
-
 	public static RegExp compile(String pattern) {
-		return isScript() ? RegExp_Jso.compile(pattern)
+		return GWT.isScript() ? RegExp_Jso.compile(pattern)
 				: RegExp_Jvm.compile(pattern);
 	}
 
@@ -44,20 +42,12 @@ public class RegExp {
 	 *             if the pattern or the flags are invalid
 	 */
 	public static RegExp compile(String pattern, String flags) {
-		return isScript() ? RegExp_Jso.compile(pattern, flags)
+		return GWT.isScript() ? RegExp_Jso.compile(pattern, flags)
 				: RegExp_Jvm.compile(pattern, flags);
 	}
 
 	static RegExp construct(IRegExp impl) {
 		return new RegExp(impl);
-	}
-
-	private static boolean isScript() {
-		if (isScript == null) {
-			// cache
-			isScript = GWT.isScript();
-		}
-		return isScript;
 	}
 
 	/**

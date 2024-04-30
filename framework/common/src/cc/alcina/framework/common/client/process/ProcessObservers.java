@@ -7,8 +7,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.LooseContextInstance.Frame;
@@ -31,6 +29,8 @@ import cc.alcina.framework.common.client.util.TopicListener;
  *
  */
 public class ProcessObservers {
+	public static boolean enabled = true;
+
 	private static ProcessObservers instance = new ProcessObservers();
 
 	public static ContextObservers context() {
@@ -53,7 +53,7 @@ public class ProcessObservers {
 
 	public static <O extends ProcessObservable> void
 			publish(Class<O> observableClass, Supplier<O> observableSupplier) {
-		if (GWT.isScript()) {
+		if (!enabled) {
 			return;
 		}
 		instance.publish0(observableClass, observableSupplier);
@@ -62,7 +62,7 @@ public class ProcessObservers {
 	public static void publishUntyped(
 			Class<? extends ProcessObservable> observableClass,
 			Supplier<? extends ProcessObservable> observableSupplier) {
-		if (GWT.isScript()) {
+		if (!enabled) {
 			return;
 		}
 		publish((Class) observableClass, (Supplier) observableSupplier);
