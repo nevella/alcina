@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.flight;
 
-public interface HasSessionId {
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ReflectiveSerializable;
+
+public interface HasSessionId extends ReflectiveSerializable {
 	String getSessionId();
 }
