@@ -278,6 +278,15 @@ public class CommonUtils {
 		return i;
 	}
 
+	/**
+	 * Compare two dates with null low
+	 * 
+	 * @param d1
+	 *            The first date
+	 * @param d2
+	 *            The second date
+	 * @return the comparator result (with a null first date being low)
+	 */
 	public static int compareDates(Date d1, Date d2) {
 		long t1 = d1 == null ? 0 : d1.getTime();
 		long t2 = d2 == null ? 0 : d2.getTime();
