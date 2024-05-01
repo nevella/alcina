@@ -218,7 +218,8 @@ public abstract class TransformManager
 		return c;
 	}
 
-	public static long getEventIdCounter() {
+	// synchronized to prevent tearing
+	public static synchronized long getEventIdCounter() {
 		return eventIdCounter;
 	}
 

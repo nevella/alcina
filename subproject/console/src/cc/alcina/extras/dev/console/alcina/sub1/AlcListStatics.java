@@ -16,11 +16,13 @@ public class AlcListStatics extends AlcinaDevConsoleRunnable {
 		String txt = Io.read().resource("ClassTrackingAgent.txt").asString();
 		TaskAnalyseStatics task = new TaskAnalyseStatics();
 		task.classList = txt;
-		task.classNameFilter = "(com.google.gwt|(cc.alcina.framework.(common|gwt|entity))	)\\..+";
+		task.classNameFilter = "(com.google.gwt|(cc.alcina.framework.(common|gwt|entity)))\\..+";
 		task.run();
 		Ax.out(task.result.toUnresolvedString());
 		PersistentResult persistentResult = new TaskAnalyseStatics.PersistentResult(
 				task.result);
+		persistentResult.mergeAnalysisFrom(
+				"/g/alcina/subproject/console/src/cc/alcina/extras/dev/console/alcina/sub1/ClassTrackingAgent.csv");
 		String csvString = persistentResult.toCsvString();
 		Io.write().string(csvString).toPath(
 				"/g/alcina/subproject/console/src/cc/alcina/extras/dev/console/alcina/sub1/ClassTrackingAgent.out.csv");

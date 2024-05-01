@@ -109,12 +109,12 @@ public abstract class ExtensibleEnum {
 	private static UnsortedMultikeyMap<ExtensibleEnum> tagLookup = new UnsortedMultikeyMap<ExtensibleEnum>(
 			3);
 
-	public static Collection<ExtensibleEnum>
+	public static synchronized Collection<ExtensibleEnum>
 			forClassAndTag(Class<? extends ExtensibleEnum> clazz, String tag) {
 		return tagLookup.asMap(clazz, tag).keySet();
 	}
 
-	public static Class<? extends ExtensibleEnum>
+	public static synchronized Class<? extends ExtensibleEnum>
 			registryPoint(Class<? extends ExtensibleEnum> clazz) {
 		if (clazz.getSuperclass() == ExtensibleEnum.class) {
 			return clazz;
@@ -123,8 +123,8 @@ public abstract class ExtensibleEnum {
 		}
 	}
 
-	public static <E extends ExtensibleEnum> E valueOf(Class<E> enumClass,
-			String name) {
+	public static synchronized <E extends ExtensibleEnum> E
+			valueOf(Class<E> enumClass, String name) {
 		Class<? extends ExtensibleEnum> registryPoint = enumClass;
 		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
 			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
@@ -133,7 +133,7 @@ public abstract class ExtensibleEnum {
 		return (E) valueLookup.get(registryPoint, name);
 	}
 
-	public static <E extends ExtensibleEnum> List<E>
+	public static synchronized <E extends ExtensibleEnum> List<E>
 			values(Class<E> enumClass) {
 		return (List<E>) superLookup.get(enumClass);
 	}
@@ -164,8 +164,10 @@ public abstract class ExtensibleEnum {
 	public ExtensibleEnum(String key, String... tags) {
 		this(key);
 		this.tags = tags;
-		for (String tag : tags) {
-			tagLookup.put(getRegistryPoint(), tag, this, this);
+		synchronized (ExtensibleEnum.class) {
+			for (String tag : tags) {
+				tagLookup.put(getRegistryPoint(), tag, this, this);
+			}
 		}
 	}
 

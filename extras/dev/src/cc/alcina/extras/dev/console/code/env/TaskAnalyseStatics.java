@@ -5,16 +5,19 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.Csv;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
@@ -69,10 +72,6 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 
 		ClassStatics(String className) {
 			this.className = className;
-			if (className.equals(
-					"cc.alcina.framework.common.client.util.NestedName")) {
-				int debug = 3;
-			}
 			try {
 				this.clazz = Reflections.forName(className);
 			} catch (Exception e) {
@@ -89,7 +88,8 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 			registrySingleton = reflector.has(Registration.Singleton.class);
 			Arrays.stream(clazz.getDeclaredFields())
 					.filter(f -> Modifier.isStatic(f.getModifiers())
-							&& !Modifier.isFinal(f.getModifiers()))
+							&& !Modifier.isFinal(f.getModifiers())
+							&& !f.getName().startsWith("$SWITCH_TABLE"))
 					.map(StaticField::new).forEach(staticFields::add);
 		}
 
@@ -144,6 +144,8 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 		}
 
 		public List<Entry> entries = new ArrayList<>();
+
+		transient Map<String, Entry> classNameEntry;
 
 		public PersistentResult(Result result) {
 			entries = result.list.stream().filter(ClassStatics::hasStatics)
@@ -213,6 +215,30 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 			OkType type;
 
 			String notes;
+
+			public void mergeAnalysisFrom(Entry fromEntry) {
+				type = fromEntry.type;
+				notes = fromEntry.notes;
+			}
+		}
+
+		public void mergeAnalysisFrom(String path) {
+			PersistentResult from = new PersistentResult(
+					Io.read().path(path).asString());
+			ensureLookup();
+			from.entries.forEach(fromEntry -> {
+				Entry entry = classNameEntry.get(fromEntry.name);
+				if (entry != null) {
+					entry.mergeAnalysisFrom(fromEntry);
+				}
+			});
+		}
+
+		void ensureLookup() {
+			if (classNameEntry == null) {
+				classNameEntry = entries.stream()
+						.collect(AlcinaCollectors.toKeyMap(e -> e.name));
+			}
 		}
 	}
 }
