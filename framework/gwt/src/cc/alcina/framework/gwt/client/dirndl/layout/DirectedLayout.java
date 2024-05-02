@@ -2,7 +2,9 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
+import java.util.AbstractCollection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -319,7 +321,8 @@ public class DirectedLayout implements AlcinaProcess {
 	/*
 	 * very simple caching, but lowers allocation *a lot*
 	 */
-	Class<? extends DirectedRenderer> resolveModelRenderer(Object model) {
+	Class<? extends DirectedRenderer> resolveModelRenderer(Object model,
+			boolean collection) {
 		return modelRenderers.computeIfAbsent(model.getClass(), clazz -> {
 			// Object.class itself (not as the root of the class hieararchy)
 			// resolves to a Container. It's generally used for images or
@@ -330,7 +333,16 @@ public class DirectedLayout implements AlcinaProcess {
 			try {
 				Class<? extends DirectedRenderer> registration = Registry
 						.query(DirectedRenderer.class).addKeys(clazz)
-						.registration();
+						.registrationOrNull();
+				if (registration == null && collection) {
+					// the registry doesn't ascend interface hierarchies, so the
+					// CollectionRenderer registration renders
+					// AbstractCollection subtypes,
+					// not Collection subtypes
+					registration = Registry.query(DirectedRenderer.class)
+							.addKeys(AbstractCollection.class).registration();
+				}
+				Preconditions.checkNotNull(registration);
 				return registration;
 			} catch (RuntimeException e) {
 				throw new RendererNotFoundException(Ax.format(
@@ -351,7 +363,8 @@ public class DirectedLayout implements AlcinaProcess {
 			return new LeafRenderer.Blank();
 		}
 		if (rendererClass == DirectedRenderer.ModelClass.class) {
-			rendererClass = resolveModelRenderer(model);
+			rendererClass = resolveModelRenderer(model,
+					model instanceof Collection);
 		}
 		return Reflections.newInstance(rendererClass);
 	}

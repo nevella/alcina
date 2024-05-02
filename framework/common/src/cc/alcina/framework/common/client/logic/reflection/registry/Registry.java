@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Implementations.ImplementationData;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Registrations.RegistrationData;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -712,6 +713,13 @@ public class Registry {
 		public Class<? extends V> registration() {
 			return implementations.implementation(this, true,
 					true).registrationData.registeringClassKey.clazz();
+		}
+
+		public Class<? extends V> registrationOrNull() {
+			ImplementationData data = implementations.implementation(this,
+					false, true);
+			return data == null ? null
+					: data.registrationData.registeringClassKey.clazz();
 		}
 
 		// FIXME - reflection - refactor to types()
