@@ -4,11 +4,11 @@ import java.util.Comparator;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.util.ToStringComparator;
+import cc.alcina.framework.common.client.util.CachingToStringComparator;
 
 public class Comparators {
 	public static class ClassEquivalenceComparator implements Comparator {
-		public static final ClassEquivalenceComparator INSTANCE = new ClassEquivalenceComparator();
+		static final CachingToStringComparator INSTANCE = new CachingToStringComparator();
 
 		public int compare(Object o1, Object o2) {
 			if (o1 == null) {
@@ -18,7 +18,7 @@ public class Comparators {
 				return 1;
 			}
 			return o1.getClass() == o2.getClass() ? 0
-					: ToStringComparator.INSTANCE.compare(o1, o2);
+					: INSTANCE.compare(o1, o2);
 		}
 	}
 

@@ -305,6 +305,19 @@ public abstract class Model extends Bindable implements
 			listenerBindings.add(listenerBinding);
 		}
 
+		/**
+		 * <p>
+		 * Add a supplier such as topic binding lambda - for instance,
+		 * 
+		 * <pre>
+		 * <code>
+		 * bindings().addListener(() -> activity.topicEditHistoryLoaded
+				.addWithPublishedCheck(this::initMarkup));
+		 * </code>
+		 * </pre>
+		 * 
+		 * @param listenerReferenceSupplier
+		 */
 		public void addListener(
 				Supplier<ListenerReference> listenerReferenceSupplier) {
 			listenerBindings.add(listenerReferenceSupplier);

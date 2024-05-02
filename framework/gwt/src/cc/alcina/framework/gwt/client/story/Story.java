@@ -175,6 +175,12 @@ public interface Story {
 		@Retention(RetentionPolicy.RUNTIME)
 		@Documented
 		@Target({ ElementType.TYPE })
+		public @interface ChildrenFromNestedTypes {
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE })
 		public @interface Children {
 			Child[] value();
 		}

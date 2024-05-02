@@ -1,7 +1,9 @@
 package cc.alcina.framework.gwt.client.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
@@ -11,6 +13,7 @@ import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Text;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class GwtDomUtils {
 	public static List<Element> getChildElements(Element elt) {
@@ -122,5 +125,39 @@ public class GwtDomUtils {
 		Element elt = Document.get().createElement("DIV");
 		elt.setInnerHTML(html);
 		return elt.getInnerText();
+	}
+
+	public static String trimMarkupText(String markup, int maxChars) {
+		DivElement div = Document.get().createDivElement();
+		div.setInnerHTML(markup);
+		DomNode domNode = div.asDomNode();
+		int chars = 0;
+		List<DomNode> toRemove = new ArrayList<>();
+		List<DomNode> nodes = domNode.children.nodes();
+		for (DomNode node : nodes) {
+			if (chars >= maxChars) {
+				boolean removingAncestor = false;
+				for (DomNode removing : toRemove) {
+					if (removing.isAncestorOf(node)) {
+						removingAncestor = true;
+						break;
+					}
+				}
+				if (!removingAncestor) {
+					toRemove.add(node);
+				}
+				continue;
+			}
+			if (node.isText()) {
+				String textContent = node.textContent();
+				if (chars + textContent.length() >= maxChars) {
+					String trim = Ax.trim(textContent, maxChars - chars);
+					node.setText(trim);
+				}
+				chars += textContent.length();
+			}
+		}
+		toRemove.forEach(DomNode::removeFromParent);
+		return div.getInnerHTML();
 	}
 }

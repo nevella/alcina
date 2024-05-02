@@ -102,8 +102,8 @@ class ResourceAccumulator {
 		if (watchFileChanges) {
 			stopWatchService();
 			try {
-				watchService = FsUtils.newWatchService();
-			} catch (IOException e) {
+				watchService = FsUtils.watchServiceFor(getClass());
+			} catch (Exception e) {
 				watchFileChanges = false;
 			}
 		}

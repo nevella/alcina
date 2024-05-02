@@ -435,6 +435,21 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Searching extends
+			ModelEvent.DescendantEvent<Object, Searching.Handler, Searching.Emitter> {
+		@Override
+		public void dispatch(Searching.Handler handler) {
+			handler.onSearching(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSearching(Searching event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
+
 	/**
 	 * <p>
 	 * Emitted by single-item selection sources, such as {@code Choices.Single}

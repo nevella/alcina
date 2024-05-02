@@ -14,22 +14,27 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
+import java.util.Map;
 
 /**
  *
  * @author Nick Reddel
  */
-public class ToStringComparator implements Comparator {
-	public static final CachingToStringComparator INSTANCE = new CachingToStringComparator();
+public class CachingToStringComparator implements Comparator {
+	Map<Object, String> objectToString = AlcinaCollections.newHashMap();
 
 	@Override
 	public int compare(Object o1, Object o2) {
-		if (o1 == null || o1.toString() == null) {
+		String s1 = objectToString.computeIfAbsent(o1,
+				o -> o == null ? null : o.toString());
+		String s2 = objectToString.computeIfAbsent(o2,
+				o -> o == null ? null : o.toString());
+		if (s1==null) {
 			return o2 == null ? -1 : 0;
 		}
-		if (o2 == null || o2.toString() == null) {
+		if (s2 == null) {
 			return 1;
 		}
-		return o1.toString().compareTo(o2.toString());
+		return s1.compareTo(s2);
 	}
 }

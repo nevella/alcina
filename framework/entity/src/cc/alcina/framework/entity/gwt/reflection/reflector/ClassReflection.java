@@ -162,6 +162,13 @@ public class ClassReflection extends ReflectionElement {
 				.provideAssignableTo();
 		List<Class> interfaces = ((ProvidesInterfaces) type)
 				.provideInterfaces();
+		List<Class> classes = Arrays.stream(type.getNestedTypes()).map(t -> {
+			if (t instanceof ProvidesJavaType) {
+				return ((ProvidesJavaType) t).provideJavaType();
+			} else {
+				return null;
+			}
+		}).filter(Objects::nonNull).collect(Collectors.toList());
 		Class javaType = ((ProvidesJavaType) type).provideJavaType();
 		List<? extends JClassType> jTypeBounds = providesTypeBounds
 				.provideTypeBounds(type);
@@ -172,7 +179,8 @@ public class ClassReflection extends ReflectionElement {
 				properties.stream()
 						.collect(AlcinaCollectors.toKeyMap(Property::getName)),
 				new AnnotationProviderImpl(), supplier, assignableTo,
-				interfaces, typeBounds, type.isAbstract(), type.isFinal());
+				interfaces, typeBounds, classes, type.isAbstract(),
+				type.isFinal());
 	}
 
 	/*

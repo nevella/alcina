@@ -62,10 +62,10 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CachingToStringComparator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
@@ -486,7 +486,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.annotationType();
 			List<Method> declaredMethods = new ArrayList<Method>(
 					Arrays.asList(annotationType.getDeclaredMethods()));
-			Collections.sort(declaredMethods, ToStringComparator.INSTANCE);
+			Collections.sort(declaredMethods, new CachingToStringComparator());
 			String implementationName = annotationImplFqn.get(annotationType);
 			sourceWriter.print("new %s()", implementationName);
 			try {
@@ -745,6 +745,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.forEach(PropertyGenerator::write);
 			sourceWriter.println("List<Class> interfaces = new ArrayList<>();");
 			sourceWriter.println("List<Class> bounds = new ArrayList<>();");
+			sourceWriter.println("List<Class> classes = new ArrayList<>();");
 			sourceWriter.println(
 					"AnnotationProvider.LookupProvider provider = new AnnotationProvider.LookupProvider();");
 			reflection.getAnnotationReflections().stream()
@@ -771,6 +772,12 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						sourceWriter.println("interfaces.add(%s.class);",
 								i.getQualifiedSourceName());
 					});
+			Arrays.stream(reflection.type.getNestedTypes()).filter(
+					ClientReflectionGenerator.this.moduleGenerator::isReflectable)
+					.forEach(i -> {
+						sourceWriter.println("classes.add(%s.class);",
+								i.getQualifiedSourceName());
+					});
 			List<JClassType> bounds = reflection
 					.computeTypeBounds(providesTypeBounds);
 			bounds.forEach(t -> {
@@ -784,7 +791,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.println("boolean isFinal = %s;",
 					reflection.isHasFinalModifier());
 			sourceWriter.println("init(clazz, properties, byName, provider,"
-					+ " supplier, assignableTo, interfaces, typeBounds, isAbstract, isFinal);");
+					+ " supplier, assignableTo, interfaces, typeBounds,classes, isAbstract, isFinal);");
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 			closeClassBody();

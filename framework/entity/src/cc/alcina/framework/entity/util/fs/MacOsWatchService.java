@@ -9,56 +9,111 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchEvent.Modifier;
 import java.nio.file.WatchKey;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import com.barbarysoftware.watchservice.ClosedWatchServiceException;
 import com.barbarysoftware.watchservice.StandardWatchEventKind;
 import com.barbarysoftware.watchservice.WatchEvent;
+import com.barbarysoftware.watchservice.WatchService;
 import com.barbarysoftware.watchservice.WatchableFile;
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 /*
- * TODO - 2023 - could probably just have one thread for the whole app - how
- * nice would that be?
+ * Uses a single os thread, single jvm thread to monitor the resources (by
+ * selecting the highest common path)
  */
 class MacOsWatchService extends AbstractNonSunWatchService {
 	static <T> WatchEvent<T> cast(WatchEvent<?> event) {
 		return (WatchEvent<T>) event;
 	}
 
-	private com.barbarysoftware.watchservice.WatchService barbaryWatchService;
+	List<MacOsWatchKey> watchKeys = new ArrayList<>();
 
-	private Map<com.barbarysoftware.watchservice.WatchKey, Path> keys = new ConcurrentHashMap<>();
+	File longestCommonFile;
 
-	private Map<com.barbarysoftware.watchservice.WatchKey, MacOsWatchKey> nioKeys = new ConcurrentHashMap<>();
+	com.barbarysoftware.watchservice.WatchKey longestCommonKey;
 
 	public MacOsWatchService() {
-		this.barbaryWatchService = com.barbarysoftware.watchservice.WatchService
-				.newWatchService();
-		new Thread() {
-			@Override
-			public void run() {
-				setName("mac-os-fs-watchservice");
-				try {
-					processEvents();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			};
-		}.start();
+		watcherThread = new WatcherThread();
+		watcherThread.start();
 	}
 
-	private void handleEvent(com.barbarysoftware.watchservice.WatchKey key,
+	WatcherThread watcherThread;
+
+	class WatcherThread extends Thread {
+		com.barbarysoftware.watchservice.WatchService service;
+
+		WatcherThread() {
+			super("mac-os-fs-watchservice");
+			setDaemon(true);
+			newService();
+		}
+
+		@Override
+		public void run() {
+			while (true) {
+				try {
+					processEvents();
+				} catch (Throwable e) {
+					e.printStackTrace();
+					throw new WrappedRuntimeException(e);
+				}
+				try {
+					Thread.sleep(1);
+				} catch (Exception e) {
+					throw WrappedRuntimeException.wrap(e);
+				}
+			}
+		}
+
+		public void close() throws IOException {
+			service.close();
+		}
+
+		public com.barbarysoftware.watchservice.WatchKey take()
+				throws InterruptedException {
+			return service.take();
+		}
+
+		public void newService() {
+			WatchService oldService = service;
+			this.service = com.barbarysoftware.watchservice.WatchService
+					.newWatchService();
+			if (oldService != null) {
+				try {
+					oldService.close();
+				} catch (Exception e) {
+					throw WrappedRuntimeException.wrap(e);
+				}
+			}
+		}
+	}
+
+	void handleEvent(com.barbarysoftware.watchservice.WatchKey key,
 			WatchEvent<?> event, File file) {
-		MacOsWatchKey nioKey = nioKeys.get(key);
-		nioKey.signalEvent(translate(event.kind()), file.toPath());
+		try {
+			String canonicalPath = file.getCanonicalPath();
+			Optional<MacOsWatchKey> nioKey = watchKeys.stream().filter(
+					watchKey -> watchKey.matchesCanonicalPath(canonicalPath))
+					.findFirst();
+			// it may not be, since the commonpath is a super of the path
+			// elements
+			if (nioKey.isPresent()) {
+				nioKey.get().signalEvent(translate(event.kind()),
+						file.toPath());
+			}
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	@Override
 	void implClose() throws IOException {
-		barbaryWatchService.close();
+		watcherThread.close();
 	}
 
 	void processEvents() {
@@ -66,7 +121,7 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 			// wait for key to be signalled
 			com.barbarysoftware.watchservice.WatchKey key;
 			try {
-				key = barbaryWatchService.take();
+				key = watcherThread.take();
 			} catch (InterruptedException x) {
 				return;
 			} catch (ClosedWatchServiceException cwse) {
@@ -93,11 +148,8 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 				// accessible
 				boolean valid = key.reset();
 				if (!valid) {
-					keys.remove(key);
 					// all directories are inaccessible
-					if (keys.isEmpty()) {
-						break;
-					}
+					break;
 				}
 			}
 		}
@@ -106,17 +158,41 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 	@Override
 	WatchKey register(Path path, Kind<?>[] events, Modifier... modifers)
 			throws IOException {
-		File file = path.toFile();
+		File file = path.toFile().getCanonicalFile();
 		if (file.isDirectory()) {
 		} else {
 			file = file.getParentFile();
 		}
-		WatchableFile key = new WatchableFile(file);
-		com.barbarysoftware.watchservice.WatchKey barbaryKey = key.register(
-				barbaryWatchService, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-		keys.put(barbaryKey, path);
-		MacOsWatchKey nioKey = new MacOsWatchKey(path, this, barbaryKey);
-		nioKeys.put(barbaryKey, nioKey);
+		boolean registerKey = true;
+		if (longestCommonFile == null) {
+			longestCommonFile = file;
+		} else {
+			int idx = 0;
+			String p1 = file.getPath();
+			String p2 = longestCommonFile.getPath();
+			for (; idx < p1.length() && idx < p2.length()
+					&& p1.charAt(idx) == p2.charAt(idx); idx++) {
+			}
+			File registerCommonFile = new File(p2.substring(0, idx));
+			Preconditions.checkArgument(
+					registerCommonFile.toString().length() > 1,
+					"Common path must be non-root");
+			if (registerCommonFile.equals(longestCommonFile)) {
+				registerKey = false;
+			} else {
+				longestCommonFile = registerCommonFile;
+			}
+		}
+		if (registerKey) {
+			if (longestCommonKey != null) {
+				longestCommonKey.cancel();
+				watcherThread.newService();
+			}
+			WatchableFile key = new WatchableFile(longestCommonFile);
+			longestCommonKey = key.register(watcherThread.service, ENTRY_CREATE,
+					ENTRY_DELETE, ENTRY_MODIFY);
+		}
+		MacOsWatchKey nioKey = new MacOsWatchKey(path, this);
 		return nioKey;
 	}
 
@@ -138,22 +214,29 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 	}
 
 	static class MacOsWatchKey extends AbstractNonSunWatchKey {
-		private com.barbarysoftware.watchservice.WatchKey barbarykey;
+		private String canonicalPath;
 
-		protected MacOsWatchKey(Path dir, AbstractNonSunWatchService watcher,
-				com.barbarysoftware.watchservice.WatchKey barbaryKey) {
+		protected MacOsWatchKey(Path dir, AbstractNonSunWatchService watcher) {
 			super(dir, watcher);
-			this.barbarykey = barbaryKey;
+			try {
+				this.canonicalPath = dir.toFile().getCanonicalPath();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		public boolean matchesCanonicalPath(String fileCanonicalPath) {
+			return fileCanonicalPath.startsWith(canonicalPath);
 		}
 
 		@Override
 		public void cancel() {
-			barbarykey.cancel();
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		public boolean isValid() {
-			return barbarykey.isValid();
+			return true;
 		}
 	}
 }

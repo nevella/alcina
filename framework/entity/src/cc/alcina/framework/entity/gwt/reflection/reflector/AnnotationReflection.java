@@ -11,8 +11,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.CachingToStringComparator;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.ToStringComparator;
 
 /**
  * Because GWT reuses JDK annotations, this is just an {@link Annotation}
@@ -41,7 +41,7 @@ public class AnnotationReflection extends ReflectionElement
 				.annotationType();
 		List<Method> declaredMethods = new ArrayList<Method>(
 				Arrays.asList(annotationType.getDeclaredMethods()));
-		Collections.sort(declaredMethods, ToStringComparator.INSTANCE);
+		Collections.sort(declaredMethods, new CachingToStringComparator());
 		Set<Class> types = new LinkedHashSet<>();
 		try {
 			for (Method method : declaredMethods) {

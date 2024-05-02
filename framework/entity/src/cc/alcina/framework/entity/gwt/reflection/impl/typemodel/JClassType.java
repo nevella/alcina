@@ -238,7 +238,9 @@ public abstract class JClassType<T extends Type>
 
 	@Override
 	public JClassType[] getNestedTypes() {
-		throw new UnsupportedOperationException();
+		List<JClassType> list = Arrays.stream(clazz.getDeclaredClasses())
+				.map(typeOracle::getType).collect(Collectors.toList());
+		return list.toArray(new JClassType[list.size()]);
 	}
 
 	@Override

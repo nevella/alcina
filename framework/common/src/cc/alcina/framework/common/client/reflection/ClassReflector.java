@@ -34,6 +34,44 @@ import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
  * TODO - caching annotation facade? Or cache on the resolver (possibly latter)
  */
 public class ClassReflector<T> implements HasAnnotations {
+	@Registration(TypeInvoker.class)
+	public static class TypeInvoker<T> {
+		public Object invoke(T bean, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+			return invokeReflective(bean, methodName, argumentTypes, arguments,
+					flags);
+		}
+
+		protected Object invokeReflective(Object bean, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
+			String beanRegex = "(get|set|is)(.)(.+)";
+			RegExp regExp = RegExp.compile(beanRegex);
+			MatchResult matchResult = regExp.exec(methodName);
+			boolean reflective = matchResult != null;
+			if (!reflective) {
+				boolean get = !matchResult.getGroup(1).equals("set");
+				reflective &= get && argumentTypes.size() == 0;
+				reflective &= !get && argumentTypes.size() == 1;
+			}
+			if (!reflective) {
+				throw new IllegalArgumentException(
+						Ax.format("Not bean method format: %s", methodName));
+			} else {
+				boolean get = !matchResult.getGroup(1).equals("set");
+				String propertyName = Ax.format("%s%s",
+						matchResult.getGroup(2).toLowerCase(),
+						matchResult.getGroup(3));
+				Property property = Reflections.at(bean).property(propertyName);
+				if (get) {
+					return property.get(bean);
+				} else {
+					property.set(bean, arguments.get(0));
+					return null;
+				}
+			}
+		}
+	}
+
 	// FIXME - reflection 1.1 - use optimised collections, probably remove the
 	// string/class maps (use 'isPrimitiveWrapper; isJdkValueClass'
 	public static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
@@ -86,6 +124,7 @@ public class ClassReflector<T> implements HasAnnotations {
 		return new ClassReflector<>(clazz, Collections.emptyList(),
 				Collections.emptyMap(), new AnnotationProvider.EmptyProvider(),
 				null, t -> false, Collections.emptyList(), null,
+				Collections.emptyList(),
 				// may in fact be true, but unused
 				false, false);
 	}
@@ -116,19 +155,25 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	private transient List<Class> allInterfaces;
 
-	protected ClassReflector() {
-		init0();
-	}
+	private List<Class> classes;
 
 	public ClassReflector(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
 			List<Class> interfaces, TypeBounds genericBounds,
-			boolean isAbstract, boolean isFinal) {
+			List<Class> classes, boolean isAbstract, boolean isFinal) {
 		this();
 		init(reflectedClass, properties, byName, annotationResolver,
-				constructor, assignableTo, interfaces, genericBounds,
+				constructor, assignableTo, interfaces, genericBounds, classes,
 				isAbstract, isFinal);
+	}
+
+	protected ClassReflector() {
+		init0();
+	}
+
+	public List<Class> getClasses() {
+		return classes;
 	}
 
 	@Override
@@ -172,71 +217,11 @@ public class ClassReflector<T> implements HasAnnotations {
 		return byName.containsKey(propertyName);
 	}
 
-	protected void init(Class<T> reflectedClass, List<Property> properties,
-			Map<String, Property> byName, AnnotationProvider annotationProvider,
-			Supplier<T> constructor, Predicate<Class> assignableTo,
-			List<Class> interfaces, TypeBounds genericBounds,
-			boolean isAbstract, boolean isFinal) {
-		this.reflectedClass = reflectedClass;
-		this.properties = properties;
-		this.byName = byName;
-		this.annotationProvider = annotationProvider;
-		this.noArgsConstructor = constructor;
-		this.assignableTo = assignableTo;
-		this.genericBounds = genericBounds;
-		this.isAbstract = isAbstract;
-		this.interfaces = interfaces;
-		this.isFinal = isFinal;
-		this.primitive = ClassReflector.primitives.contains(reflectedClass);
-	}
-
-	protected void init0() {
-		// Overriden by generated subclasses
-	}
-
 	public Object invoke(Object bean, String methodName,
 			List<Class> argumentTypes, List<?> arguments, List<?> flags) {
 		TypeInvoker invoker = Registry.impl(TypeInvoker.class, bean.getClass());
 		return invoker.invoke(bean, methodName, argumentTypes, arguments,
 				flags);
-	}
-
-	@Registration(TypeInvoker.class)
-	public static class TypeInvoker<T> {
-		public Object invoke(T bean, String methodName,
-				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
-			return invokeReflective(bean, methodName, argumentTypes, arguments,
-					flags);
-		}
-
-		protected Object invokeReflective(Object bean, String methodName,
-				List<Class> argumentTypes, List<?> arguments, List<?> flags) {
-			String beanRegex = "(get|set|is)(.)(.+)";
-			RegExp regExp = RegExp.compile(beanRegex);
-			MatchResult matchResult = regExp.exec(methodName);
-			boolean reflective = matchResult != null;
-			if (!reflective) {
-				boolean get = !matchResult.getGroup(1).equals("set");
-				reflective &= get && argumentTypes.size() == 0;
-				reflective &= !get && argumentTypes.size() == 1;
-			}
-			if (!reflective) {
-				throw new IllegalArgumentException(
-						Ax.format("Not bean method format: %s", methodName));
-			} else {
-				boolean get = !matchResult.getGroup(1).equals("set");
-				String propertyName = Ax.format("%s%s",
-						matchResult.getGroup(2).toLowerCase(),
-						matchResult.getGroup(3));
-				Property property = Reflections.at(bean).property(propertyName);
-				if (get) {
-					return property.get(bean);
-				} else {
-					property.set(bean, arguments.get(0));
-					return null;
-				}
-			}
-		}
 	}
 
 	public boolean isAbstract() {
@@ -273,16 +258,6 @@ public class ClassReflector<T> implements HasAnnotations {
 				() -> Ax.format("Property '%s' not found on type '%s'",
 						stringOrPropertyEnum, NestedName.get(reflectedClass)));
 		return property;
-	}
-
-	Property property0(Object stringOrPropertyEnum) {
-		if (stringOrPropertyEnum instanceof String) {
-			return property((String) stringOrPropertyEnum);
-		} else if (stringOrPropertyEnum instanceof PropertyEnum) {
-			return byName.get(((PropertyEnum) stringOrPropertyEnum).name());
-		} else {
-			throw new UnsupportedOperationException();
-		}
 	}
 
 	public Property property(PropertyEnum name) {
@@ -346,5 +321,38 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	public <B> Class<B> firstGenericBound() {
 		return genericBounds.bounds.get(0);
+	}
+
+	protected void init(Class<T> reflectedClass, List<Property> properties,
+			Map<String, Property> byName, AnnotationProvider annotationProvider,
+			Supplier<T> constructor, Predicate<Class> assignableTo,
+			List<Class> interfaces, TypeBounds genericBounds,
+			List<Class> classes, boolean isAbstract, boolean isFinal) {
+		this.reflectedClass = reflectedClass;
+		this.properties = properties;
+		this.byName = byName;
+		this.annotationProvider = annotationProvider;
+		this.noArgsConstructor = constructor;
+		this.assignableTo = assignableTo;
+		this.genericBounds = genericBounds;
+		this.isAbstract = isAbstract;
+		this.interfaces = interfaces;
+		this.classes = classes;
+		this.isFinal = isFinal;
+		this.primitive = ClassReflector.primitives.contains(reflectedClass);
+	}
+
+	protected void init0() {
+		// Overriden by generated subclasses
+	}
+
+	Property property0(Object stringOrPropertyEnum) {
+		if (stringOrPropertyEnum instanceof String) {
+			return property((String) stringOrPropertyEnum);
+		} else if (stringOrPropertyEnum instanceof PropertyEnum) {
+			return byName.get(((PropertyEnum) stringOrPropertyEnum).name());
+		} else {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

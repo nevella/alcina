@@ -67,7 +67,9 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 
 	@Override
 	public WebDriver getDriver() {
-		ensureShutdownCleanup();
+		if (!LooseContext.is(WDDriverHandler.CONTEXT_REUSE_SESSION)) {
+			ensureShutdownCleanup();
+		}
 		HttpServletRequest req = LooseContext.get(WDManager.CONTEXT_REQUEST);
 		if (driver == null) {
 			boolean resuse = (req != null
