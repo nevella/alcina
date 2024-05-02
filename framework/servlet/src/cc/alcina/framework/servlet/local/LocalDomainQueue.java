@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.local;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -11,6 +13,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 @Registration.Singleton
@@ -76,7 +79,9 @@ public class LocalDomainQueue {
 			while (!finished) {
 				RunnableEntry entry = null;
 				try {
+					LooseContext.push();
 					entry = queue.take();
+					entry.context.forEach((k, v) -> LooseContext.set(k, v));
 					entry.runnable.run();
 				} catch (Throwable t) {
 					logger.warn("Local domain access issue", t);
@@ -86,6 +91,7 @@ public class LocalDomainQueue {
 						entry.latch.countDown();
 						entry = null;
 					}
+					LooseContext.pop();
 				}
 			}
 		}
@@ -99,7 +105,10 @@ public class LocalDomainQueue {
 
 		Throwable throwable;
 
+		Map<String, Object> context = new LinkedHashMap<>();
+
 		RunnableEntry(ThrowingRunnable runnable) {
+			context.putAll(LooseContext.getContext().getProperties());
 			this.runnable = runnable;
 		}
 
