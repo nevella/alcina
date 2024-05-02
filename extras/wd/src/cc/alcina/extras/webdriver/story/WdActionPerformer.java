@@ -152,6 +152,18 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 			}
 		}
 
+		public static class ByText
+				implements TypedPerformer<Story.Action.Ui.SelectByText> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.SelectByText action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				String text = action.getText();
+				query.selectOption(text);
+				wdPerformer.context.log("Select :: '%s' --> %s", text, query);
+			}
+		}
+
 		static ElementQuery createQuery(WdActionPerformer wdPerformer) {
 			Story.Action.Location.Xpath location = wdPerformer.context
 					.getLocation(Story.Action.Location.Axis.DOCUMENT);

@@ -12,10 +12,10 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResource;
 
-class WdContext implements PerformerResource {
-	WDToken token;
+public class WdContext implements PerformerResource {
+	public WDToken token;
 
-	WdExec exec;
+	public WdExec exec;
 
 	boolean alwaysRefresh = false;
 
@@ -40,6 +40,7 @@ class WdContext implements PerformerResource {
 			LooseContext.pop();
 		}
 		exec = new WdExec();
+		exec.timeout(part.getDefaultTimeout());
 		exec.token(token);
 		if (part.isShouldMaximiseTab()) {
 			token.getWebDriver().manage().window().maximize();

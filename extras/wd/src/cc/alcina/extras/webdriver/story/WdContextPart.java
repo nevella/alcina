@@ -7,6 +7,16 @@ public class WdContextPart implements TellerContext.Part {
 
 	boolean reuseSession = true;
 
+	int defaultTimeout = 5;
+
+	public int getDefaultTimeout() {
+		return defaultTimeout;
+	}
+
+	public void setDefaultTimeout(int defaultTimeout) {
+		this.defaultTimeout = defaultTimeout;
+	}
+
 	public boolean isReuseSession() {
 		return reuseSession;
 	}

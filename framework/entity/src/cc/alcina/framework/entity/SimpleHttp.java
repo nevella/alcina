@@ -292,7 +292,7 @@ public class SimpleHttp {
 
 	// Set Content-Type header to given string
 	public SimpleHttp withContentType(String string) {
-		headers.put("content-type", string);
+		headers.put("Content-Type", string);
 		return this;
 	}
 
@@ -315,7 +315,7 @@ public class SimpleHttp {
 
 	// Set headers on request
 	public SimpleHttp withHeaders(StringMap headers) {
-		this.headers = headers;
+		this.headers.putAll(headers);
 		return this;
 	}
 

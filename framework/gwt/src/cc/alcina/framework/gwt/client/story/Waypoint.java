@@ -155,16 +155,18 @@ public class Waypoint implements Story.Point {
 				}
 			}
 			if (children == null) {
-				if (reflector.has(Story.Decl.ChildrenFromNestedTypes.class)) {
-					children = reflector.getClasses().stream().map(t -> {
-						if (Reflections.isAssignableFrom(Waypoint.class, t)) {
-							Class<? extends Waypoint> clazz = (Class<? extends Waypoint>) t;
-							return Reflections.newInstance(clazz);
-						} else {
-							return null;
-						}
-					}).filter(Objects::nonNull).collect(Collectors.toList());
-				}
+				// if (reflector.has(Story.Decl.ChildrenFromNestedTypes.class))
+				// {
+				// children = reflector.getClasses().stream().map(t -> {
+				// if (Reflections.isAssignableFrom(Waypoint.class, t)) {
+				// Class<? extends Waypoint> clazz = (Class<? extends Waypoint>)
+				// t;
+				// return Reflections.newInstance(clazz);
+				// } else {
+				// return null;
+				// }
+				// }).filter(Objects::nonNull).collect(Collectors.toList());
+				// }
 			}
 			if (children == null) {
 				children = new ArrayList<>();

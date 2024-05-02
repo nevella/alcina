@@ -172,6 +172,15 @@ public interface Story {
 			Class<? extends Story.Point> value();
 		}
 
+		/**
+		 * <p>
+		 * DO NOT USE (yet) -- Class.getDeclaredClasses() order is undefined in
+		 * the JDK.
+		 * 
+		 * <p>
+		 * The plan is to use javaparser to derive ordering from source ordering
+		 */
+		@Deprecated
 		@Retention(RetentionPolicy.RUNTIME)
 		@Documented
 		@Target({ ElementType.TYPE })
