@@ -336,7 +336,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 		}
 		addActive(doc, "top-level - active", Job::provideIsTopLevel);
 		addActive(doc, "child - active", Job::provideIsNotTopLevel);
-		limit = 20;
+		limit = Math.max(limit, 20);
 		addCompleted(doc, "top-level", true, limit);
 		addCompleted(doc, "child", false, limit);
 		addConsistency(doc);
