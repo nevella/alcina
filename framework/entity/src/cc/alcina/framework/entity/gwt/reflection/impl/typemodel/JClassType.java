@@ -239,6 +239,8 @@ public abstract class JClassType<T extends Type>
 	@Override
 	public JClassType[] getNestedTypes() {
 		List<JClassType> list = Arrays.stream(clazz.getDeclaredClasses())
+				.filter(clazz -> !(clazz.isLocalClass()
+						|| clazz.isAnonymousClass()))
 				.map(typeOracle::getType).collect(Collectors.toList());
 		return list.toArray(new JClassType[list.size()]);
 	}
