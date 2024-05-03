@@ -1787,7 +1787,7 @@ public class SEUtilities {
 	@Registration.Singleton(
 		value = NestedName.class,
 		priority = Priority.PREFERRED_LIBRARY)
-	public static class NestedNameProviderJvm extends NestedName {
+	public static class NestedNameJvm extends NestedName {
 		public static NestedName get() {
 			return Registry.impl(NestedName.class);
 		}

@@ -28,7 +28,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.FileData;
  *
  * @author Nick Reddel
  */
-public class FileSelectorInfoValidator implements ParameterisedValidator {
+public class FileSelectorValidator implements ParameterisedValidator {
 	/*
 	 * comma-separated list: csv, xml, pdf
 	 */
@@ -40,7 +40,7 @@ public class FileSelectorInfoValidator implements ParameterisedValidator {
 
 	private boolean required;
 
-	public FileSelectorInfoValidator() {
+	public FileSelectorValidator() {
 	}
 
 	@Override

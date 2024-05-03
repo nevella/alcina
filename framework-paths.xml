@@ -33,7 +33,7 @@
 		<fileset dir="${framework.servlet.lib.dir}">
 			<include name="**/*.jar" />
 		</fileset>
-		<fileset dir="${framework.google.lib.dir}">
+		<fileset dir="${extras.google.lib.dir}">
 					<include name="**/*.jar" />
 				</fileset>
 	</path>
