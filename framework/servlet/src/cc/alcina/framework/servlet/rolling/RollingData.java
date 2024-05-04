@@ -30,6 +30,11 @@ public abstract class RollingData<K extends Comparable, V> {
 
 	protected abstract List<V> getData(K from);
 
+	/*
+	 * Synchronized on the class (only 1 update per VM - preferably per-cluster,
+	 * but duplicates are not problematic due to key uniqueness - just a little
+	 * wasteful, so 'per-cluster' isn't that important)
+	 */
 	public SortedMap<K, V> getValues(K earliestKey) {
 		synchronized (getClass()) {
 			return getValues0(earliestKey);

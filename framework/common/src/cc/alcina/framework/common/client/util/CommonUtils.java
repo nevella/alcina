@@ -1148,6 +1148,19 @@ public class CommonUtils {
 		}
 	}
 
+	/**
+	 * @param d
+	 * @return the month (zero-based)
+	 */
+	@SuppressWarnings("deprecation")
+	public static int getMonth(Date d) {
+		if (GWT.isClient()) {
+			return d.getMonth();
+		} else {
+			return Registry.impl(MonthResolver.class).getMonth(d);
+		}
+	}
+
 	public static String hangingIndent(String text, boolean noTabsFirstLine,
 			int tabs) {
 		StringBuilder result = new StringBuilder();
@@ -2593,6 +2606,10 @@ public class CommonUtils {
 
 	public static interface YearResolver {
 		int getYear(Date d);
+	}
+
+	public static interface MonthResolver {
+		int getMonth(Date d);
 	}
 
 	public static String getFullExceptionMessage(Throwable t) {

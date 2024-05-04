@@ -2,15 +2,80 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
+import cc.alcina.framework.gwt.client.dirndl.layout.Tables.ColumnName;
+import cc.alcina.framework.gwt.client.dirndl.layout.Tables.ColumnsWidth;
+
+@Directed.Transform(GridData.Table.class)
 public class GridData extends Model.All {
 	public static class Row extends Model.All {
 		public String caption = "";
 
 		public List<String> data = new ArrayList<>();
+
+		List<String> toStringList() {
+			List<String> result = new ArrayList<>();
+			result.add(caption);
+			result.addAll(data);
+			return result;
+		}
 	}
 
 	public Row header = new Row();
 
 	public List<Row> rows = new ArrayList<>();
+
+	/*
+	 * Constructs a multi-column table from a list of reflected objects. Column
+	 * headers are either supplied or derived from fields
+	 */
+	public static class Table extends
+			AbstractContextSensitiveModelTransform<GridData, Table.IntermediateModel> {
+		@Override
+		public IntermediateModel apply(GridData t) {
+			return new IntermediateModel(t);
+		}
+
+		@Directed
+		class IntermediateModel extends Model.All
+				implements Directed.NonClassTag {
+			@Binding(type = Type.STYLE_ATTRIBUTE)
+			String gridTemplateColumns;
+
+			@Directed.Wrap("column-names")
+			List<Tables.ColumnName> columnNames;
+
+			List<RowData> rows;
+
+			@Directed(tag = "row")
+			class RowData extends Model.All {
+				@Directed(tag = "cell")
+				List<String> cells;
+
+				RowData(Row row) {
+					cells = row.toStringList();
+				}
+			}
+
+			@Directed.Exclude
+			String gridColumnWidth;
+
+			IntermediateModel(GridData data) {
+				gridColumnWidth = "auto";
+				this.rows = data.rows.stream().map(RowData::new).toList();
+				columnNames = data.header.toStringList().stream()
+						.map(ColumnName::new).collect(Collectors.toList());
+				ColumnsWidth columnsWidth = node.annotation(ColumnsWidth.class);
+				gridTemplateColumns = columnNames.stream()
+						.map(n -> gridColumnWidth)
+						.collect(Collectors.joining(" "));
+			}
+		}
+	}
 }

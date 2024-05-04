@@ -64,6 +64,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DurationCounter;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.Configuration;
@@ -79,6 +80,8 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.projection.GraphProjections;
+import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
@@ -100,6 +103,9 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	public static final transient String CONTEXT_CLIENT_INSTANCE_ID = CommonPersistenceBase.class
 			.getName() + ".CONTEXT_CLIENT_INSTANCE_ID";
+
+	public static final transient String CONTEXT_PROJECT_ENTITIES = CommonPersistenceBase.class
+			.getName() + ".CONTEXT_PROJECT_ENTITIES";
 
 	private static <A> Class<? extends A> getImplementation(Class<A> clazz) {
 		return PersistentImpl.getImplementation(clazz);
@@ -561,6 +567,37 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				"select ci.id from %s ci where ci.iid = ?1 order by id desc",
 				clientInstanceImpl.getSimpleName())).setParameter(1, iidKey)
 				.setMaxResults(99).getResultList();
+	}
+
+	@Override
+	public <E extends Entity> List<? extends E> listEntities(Class<E> clazz,
+			long fromId, long toId) {
+		Class<? extends E> implementationClass = PersistentImpl
+				.getImplementationOrSelf(clazz);
+		List resultList = getEntityManager().createQuery(String.format(
+				"select  e from %s e where e.id >= ?1 and e.id < ?2 order by id desc",
+				implementationClass.getSimpleName())).setParameter(1, fromId)
+				.setParameter(2, toId).getResultList();
+		if (LooseContext.is(CONTEXT_PROJECT_ENTITIES)) {
+			GraphProjectionDataFilter dataFilter = Registry
+					.impl(JPAImplementation.class)
+					.getResolvingFilter(null, null, true);
+			return GraphProjections.defaultProjections()
+					.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
+					.maxDepth(2).dataFilter(dataFilter).project(resultList);
+		} else {
+			return resultList;
+		}
+	}
+
+	@Override
+	public long getMaxId(Class<? extends Entity> clazz) {
+		Class<?> impl = (Class<?>) PersistentImpl
+				.getImplementationOrSelf(clazz);
+		List list = getEntityManager().createQuery(String
+				.format("select  max(t.id) from %s t ", impl.getSimpleName()))
+				.getResultList();
+		return list.isEmpty() ? 0L : (long) list.get(0);
 	}
 
 	@Override

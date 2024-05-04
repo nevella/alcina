@@ -53,7 +53,7 @@ public class Tables {
 	}
 
 	@Directed
-	static class ColumnName extends Model.Fields {
+	public static class ColumnName extends Model.Fields {
 		@Binding(type = Type.INNER_TEXT)
 		String text;
 
@@ -61,7 +61,7 @@ public class Tables {
 		@Binding(type = Type.PROPERTY)
 		String name;
 
-		ColumnName(String name) {
+		public ColumnName(String name) {
 			this.name = name;
 			this.text = name;
 		}
@@ -112,21 +112,21 @@ public class Tables {
 			return new IntermediateModel(t);
 		}
 
-		@Directed(
-			bindings = @Binding(
-				from = "gridTemplateColumns",
-				type = Type.STYLE_ATTRIBUTE))
-		public class IntermediateModel extends Model
+		@Directed
+		class IntermediateModel extends Model.All
 				implements Directed.NonClassTag {
-			private String gridTemplateColumns;
+			@Binding(type = Type.STYLE_ATTRIBUTE)
+			String gridTemplateColumns;
 
-			private List<ColumnName> columnNames;
+			@Directed.Wrap("column-names")
+			List<ColumnName> columnNames;
 
-			private String gridColumnWidth;
+			List<? extends Model> rows;
 
-			private List<? extends Model> rows;
+			@Directed.Exclude
+			String gridColumnWidth;
 
-			public IntermediateModel(List<? extends Model> rows) {
+			IntermediateModel(List<? extends Model> rows) {
 				ColumnWidth defaultWidth = node.annotationLocation
 						.getAnnotation(ColumnWidth.class);
 				gridColumnWidth = defaultWidth != null ? defaultWidth.value()
@@ -161,24 +161,6 @@ public class Tables {
 												: gridColumnWidth;
 									}).collect(Collectors.joining(" "));
 				}
-			}
-
-			@Directed.Wrap("column-names")
-			public List<ColumnName> getColumnNames() {
-				return this.columnNames;
-			}
-
-			public String getGridColumnWidth() {
-				return this.gridColumnWidth;
-			}
-
-			public String getGridTemplateColumns() {
-				return this.gridTemplateColumns;
-			}
-
-			@Directed
-			public List<? extends Model> getRows() {
-				return this.rows;
 			}
 		}
 	}
