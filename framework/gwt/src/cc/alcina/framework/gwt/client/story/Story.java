@@ -405,13 +405,35 @@ public interface Story {
 						}
 					}
 				}
+
+				/**
+				 * A mark action - stores an element ref under a name key for
+				 * later awaitremoval
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(Action.UI.class)
+				public @interface Mark {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<Mark> {
+						@Override
+						public Story.Action convert(Mark ann) {
+							return new Story.Action.Ui.Mark()
+									.withText(ann.value());
+						}
+					}
+				}
 			}
 		}
 
 		/** Declarative locations */
 		public interface Location {
 			public static List<Class<? extends Annotation>> locationAnnotations = (List) List
-					.of(Location.Xpath.class, Location.Url.class);
+					.of(Location.Xpath.class, Location.Url.class,
+							Location.Marked.class);
 
 			@Registration.NonGenericSubtypes(Converter.class)
 			public interface Converter<A extends Annotation>
@@ -430,6 +452,22 @@ public interface Story {
 					@Override
 					public Story.Action.Location convert(Xpath ann) {
 						return new Story.Action.Location.Xpath()
+								.withText(ann.value());
+					}
+				}
+			}
+
+			/** Define a marked location */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface Marked {
+				String value();
+
+				public static class ConverterImpl implements Converter<Marked> {
+					@Override
+					public Story.Action.Location convert(Marked ann) {
+						return new Story.Action.Location.Marked()
 								.withText(ann.value());
 					}
 				}
@@ -575,7 +613,7 @@ public interface Story {
 		/** A UI Location */
 		public interface Location {
 			public enum Axis {
-				URL, DOCUMENT
+				URL, DOCUMENT, MARK
 			}
 
 			Axis getAxis();
@@ -603,6 +641,13 @@ public interface Story {
 				@Override
 				public Axis getAxis() {
 					return Axis.DOCUMENT;
+				}
+			}
+
+			public static class Marked extends LocWithText {
+				@Override
+				public Axis getAxis() {
+					return Axis.MARK;
 				}
 			}
 
@@ -673,6 +718,10 @@ public interface Story {
 			}
 
 			public static class Keys extends ActionWithText {
+			}
+
+			// Note - not implemented in WD yet
+			public static class Mark extends ActionWithText {
 			}
 
 			public static class SelectByText extends ActionWithText {

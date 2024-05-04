@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -89,7 +90,7 @@ public class StoryTeller {
 		}
 
 		void performAction() {
-			if (result.filtered) {
+			if (result.isFiltered()) {
 				//
 			} else {
 				new StoryActionPerformer().perform(this);
@@ -110,6 +111,14 @@ public class StoryTeller {
 		int requiresIdx = 0;
 
 		List<Class<? extends Story.State>> requires;
+
+		/*
+		 * For pre-story filter generation
+		 */
+		void populateDirectChildren() {
+			List<? extends Point> children = point.getChildren();
+			children.forEach(this::add);
+		}
 
 		void populateInitialChildren() {
 			/*
@@ -200,7 +209,11 @@ public class StoryTeller {
 		public class Result {
 			public boolean ok = true;
 
-			public boolean filtered = false;
+			public FilteredType filteredType = FilteredType.NOT;
+
+			public boolean isFiltered() {
+				return filteredType != FilteredType.NOT;
+			}
 
 			public Boolean testResult;
 
@@ -308,10 +321,6 @@ public class StoryTeller {
 			// res
 		}
 
-		public boolean isResultFiltered() {
-			return result.filtered;
-		}
-
 		public Story.Conditional getConditional() {
 			return point.getConditional();
 		}
@@ -330,7 +339,7 @@ public class StoryTeller {
 		}
 
 		public void evaluateFiltered() {
-			result.filtered = filter.isFiltered(this);
+			result.filteredType = filter.isFiltered(this);
 		}
 
 		/**
@@ -338,7 +347,7 @@ public class StoryTeller {
 		 * requires/children, post declarative population
 		 */
 		public void onBeforeChildren() {
-			if (result.filtered) {
+			if (result.isFiltered()) {
 				//
 			} else {
 				new StoryActionPerformer().beforeChildren(this);
@@ -351,14 +360,89 @@ public class StoryTeller {
 				addPending();
 			}
 		}
+
+		public Class<? extends Point> pointClass() {
+			return point.getClass();
+		}
 	}
 
 	public enum LogType {
 		PROCESS
 	}
 
+	public enum FilteredType {
+		NOT,
+		// a previous test correctly failed, branch should not continue
+		TEST,
+		// filtered via subtree (story part) filtering
+		SUBTREE
+	}
+
 	public class State {
 		public Story story;
+
+		SubtreeFilter subtreeFilter = new SubtreeFilter();
+
+		class SubtreeFilter {
+			List<Class<? extends Point>> restrictionAncestors = null;
+
+			void buildPointRestrictions() {
+				if (restrictToPoint == null) {
+					return;
+				}
+				/*
+				 * Build a tree of child relations (without requires) - this
+				 * will be used to skip children during main traversal
+				 * 
+				 * Reuse the visit logic/traversal for this
+				 */
+				TreeProcess.Node parentNode = Registry
+						.impl(TreeProcess.SelectedProcessNodeProvider.class)
+						.getSelectedProcessNode();
+				Visit rootVisit = new Visit(parentNode, state.story.getPoint());
+				DepthFirstTraversal<Visit> restrictionTraversal = new DepthFirstTraversal<>(
+						rootVisit, v -> v.getInitialChildren());
+				Stream<Visit> stream = restrictionTraversal.stream()
+						.peek(v -> v.populateDirectChildren());
+				Visit restrictionVisit = stream
+						.filter(v -> v.pointClass() == restrictToPoint)
+						.findFirst().get();
+				restrictionAncestors = new ArrayList<>();
+				Visit cursor = restrictionVisit;
+				while (cursor != null) {
+					restrictionAncestors.add(cursor.pointClass());
+					cursor = cursor.getParent();
+				}
+			}
+
+			/*
+			 * Return false if the visit should be skipped
+			 */
+			boolean test(Visit visit) {
+				if (restrictToPoint == null) {
+					return true;
+				}
+				Class<? extends Point> pointClass = visit.pointClass();
+				if (restrictionAncestors.contains(pointClass)) {
+					return true;
+				}
+				Visit cursor = visit;
+				do {
+					if (testVisitEntry(cursor)) {
+						return true;
+					}
+					cursor = cursor.getParent();
+				} while (cursor != null);
+				return false;
+			}
+
+			// if this is one of the direct ancestors *or* a dependency
+			// satisfier, allow
+			boolean testVisitEntry(Visit cursor) {
+				return cursor.pointClass() == restrictToPoint
+						|| cursor.point instanceof Story.State.Provider;
+			}
+		}
 
 		long start;
 
@@ -464,29 +548,37 @@ public class StoryTeller {
 
 	VisitFilter filter;
 
+	public Class<? extends Point> restrictToPoint;
+
 	class VisitFilter {
-		boolean isFiltered(Visit visit) {
-			if (visit.isResultFiltered()) {
-				return true;
+		/*
+		 * Return true if the visit is filtered (should be skipped)
+		 */
+		FilteredType isFiltered(Visit visit) {
+			if (visit.result.isFiltered()) {
+				return visit.result.filteredType;
 			}
 			Visit parent = visit.getParent();
 			if (parent == null) {
-				return false;
+				return FilteredType.NOT;
 			}
-			if (parent.isResultFiltered()) {
-				return true;
+			if (!state.subtreeFilter.test(visit)) {
+				return FilteredType.SUBTREE;
+			}
+			if (parent.result.isFiltered()) {
+				return parent.result.filteredType;
 			}
 			Visit previousSibling = visit.getPreviousSibling();
 			if (previousSibling != null) {
-				if (previousSibling.isResultFiltered()) {
-					return true;
+				if (previousSibling.result.filteredType == FilteredType.TEST) {
+					return previousSibling.result.filteredType;
 				}
 				if (isSequenceExit(parent, previousSibling)) {
-					previousSibling.result.filtered = true;
-					return true;
+					previousSibling.result.filteredType = FilteredType.TEST;
+					return previousSibling.result.filteredType;
 				}
 			}
-			return false;
+			return FilteredType.NOT;
 		}
 
 		boolean isSequenceExit(Visit parentVisit, Visit previousSiblingVisit) {
@@ -533,6 +625,7 @@ public class StoryTeller {
 					.getSelectedProcessNode();
 			state.init(new Visit(parentNode, state.story.getPoint()));
 			context.init(this);
+			state.subtreeFilter.buildPointRestrictions();
 			System.out.println();
 			tell();
 			System.out.println();
