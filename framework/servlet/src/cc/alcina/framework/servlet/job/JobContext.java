@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -362,6 +363,12 @@ public class JobContext {
 
 	private TreeProcess treeProcess;
 
+	public TreeSerializable typedResult;
+
+	public <V extends TreeSerializable> V typedResult() {
+		return (V) typedResult;
+	}
+
 	public JobContext(Job job, TaskPerformer performer,
 			LauncherThreadState launcherThreadState, JobAllocator allocator) {
 		this.job = job;
@@ -519,6 +526,9 @@ public class JobContext {
 				allocator.ensureStarted();
 			} else {
 				job.setState(JobState.SEQUENCE_COMPLETE);
+			}
+			if (typedResult != null) {
+				job.setLargeResult(typedResult);
 			}
 			job.setEndTime(new Date());
 			if (job.getResultType() == null) {

@@ -15,4 +15,15 @@ public enum JobResultType {
 			return false;
 		}
 	}
+
+	public boolean isProblematic() {
+		switch (this) {
+		case FAIL:
+		case EXCEPTION:
+		case DID_NOT_COMPLETE:
+			return true;
+		default:
+			return false;
+		}
+	}
 }

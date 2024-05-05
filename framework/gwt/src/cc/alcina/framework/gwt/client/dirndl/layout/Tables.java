@@ -190,6 +190,7 @@ public class Tables {
 				List<Property> properties = Reflections.at(model).properties();
 				result.rows = properties.stream()
 						.filter(Property::provideNotDefaultIgnoreable)
+						.filter(p -> !p.has(Directed.Exclude.class))
 						.map(r -> new Row(r, model))
 						.collect(Collectors.toList());
 				return result;
@@ -214,10 +215,15 @@ public class Tables {
 			}
 
 			@Directed(tag = "tr")
-			public static class Row extends Model.Fields {
-				private String key;
+			public static class Row extends Model.All {
+				@Directed(tag = "th")
+				String key;
 
-				private Object value;
+				@Directed.Wrap("td")
+				Object value;
+
+				@Binding(type = Type.PROPERTY)
+				String name;
 
 				public Row() {
 				}
@@ -240,21 +246,13 @@ public class Tables {
 					} else {
 						value = propertyValue.toString();
 					}
+					this.name = property.getName();
 				}
 
 				public Row(String key, String value) {
 					this.key = key;
 					this.value = value;
-				}
-
-				@Directed(tag = "th")
-				public String getKey() {
-					return this.key;
-				}
-
-				@Directed.Wrap("td")
-				public Object getValue() {
-					return this.value;
+					this.name = key;
 				}
 			}
 		}

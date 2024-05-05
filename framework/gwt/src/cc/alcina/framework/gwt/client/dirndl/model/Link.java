@@ -344,4 +344,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 					.withText(CommonUtils.shortenPath(url, 60)).withTitle(url);
 		}
 	}
+
+	public Link withText(Object textSource) {
+		return withText(textSource.toString());
+	}
 }

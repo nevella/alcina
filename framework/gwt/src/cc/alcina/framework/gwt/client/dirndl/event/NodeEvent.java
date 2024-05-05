@@ -3,6 +3,8 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 import java.lang.annotation.Annotation;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 
@@ -155,6 +157,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 				cursor = cursor.previous;
 			}
 			return cursor.gwtEvent;
+		}
+
+		public NativeEvent getOriginatingNativeEvent() {
+			return ((HasNativeEvent) getOriginatingGwtEvent()).getNativeEvent();
 		}
 
 		/**
