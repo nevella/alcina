@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagText;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables.ColumnName;
@@ -55,11 +56,12 @@ public class GridData extends Model.All {
 
 			@Directed(tag = "row")
 			class RowData extends Model.All {
-				@Directed(tag = "cell")
-				List<String> cells;
+				@Directed
+				List<TagText> cells;
 
 				RowData(Row row) {
-					cells = row.toStringList();
+					cells = row.toStringList().stream()
+							.map(s -> new TagText("cell", s, s)).toList();
 				}
 			}
 
