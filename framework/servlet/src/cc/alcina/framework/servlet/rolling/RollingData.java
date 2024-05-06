@@ -57,6 +57,7 @@ public abstract class RollingData<K extends Comparable, V> {
 		Function<V, K> keyMaker = keyMaker();
 		List<V> data = getData(from);
 		if (data.size() > 0) {
+			Transaction.endAndBeginNew();
 			Optional<K> maxRetrieved = data.stream().map(keyMaker)
 					.max(Comparator.naturalOrder());
 			if (maxRetrieved.equals(max)) {
