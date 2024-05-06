@@ -242,32 +242,32 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	}
 
 	public Link withClassName(String className) {
-		this.className = className;
+		setClassName(className);
 		return this;
 	}
 
 	public Link withHref(String href) {
-		this.href = href;
+		setHref(href);
 		return this;
 	}
 
 	public Link withId(String id) {
-		this.id = id;
+		setId(id);
 		return this;
 	}
 
 	public Link withInner(Object inner) {
-		this.inner = inner;
+		setInner(inner);
 		return this;
 	}
 
 	public Link withInnerHtml(String innerHtml) {
-		this.innerHtml = innerHtml;
+		setInnerHtml(innerHtml);
 		return this;
 	}
 
 	public Link withModelEvent(Class<? extends ModelEvent> modelEvent) {
-		this.modelEvent = modelEvent;
+		setModelEvent(modelEvent);
 		return this;
 	}
 
@@ -286,8 +286,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	}
 
 	public Link withNonstandardObjectAction(
-			Class<? extends PermissibleAction> clazz) {
-		this.nonStandardObjectAction = clazz;
+			Class<? extends PermissibleAction> nonStandardObjectAction) {
+		setNonStandardObjectAction(nonStandardObjectAction);
 		return this;
 	}
 
@@ -297,12 +297,12 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	}
 
 	public Link withTag(String tag) {
-		this.tag = tag;
+		setTag(tag);
 		return this;
 	}
 
 	public Link withTarget(String target) {
-		this.target = target;
+		setTarget(target);
 		return this;
 	}
 
@@ -311,17 +311,17 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	}
 
 	public Link withText(String text) {
-		this.text = text;
+		setText(text);
 		return this;
 	}
 
 	public Link withTextFromModelEvent() {
-		this.text = ModelEvent.staticDisplayName(modelEvent);
+		setText(ModelEvent.staticDisplayName(modelEvent));
 		return this;
 	}
 
 	public Link withTitle(String title) {
-		this.title = title;
+		setTitle(title);
 		return this;
 	}
 

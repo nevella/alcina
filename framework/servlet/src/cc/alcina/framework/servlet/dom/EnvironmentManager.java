@@ -131,14 +131,22 @@ public class EnvironmentManager {
 	}
 
 	public static class Credentials {
+		/*
+		 * For single-client/environment jdks, this can be used to define the
+		 * client uuid
+		 */
+		public static String uuid;
+
 		public static Credentials createUnique() {
 			ClientInstance serverAsClientInstance = EntityLayerObjects.get()
 					.getServerAsClientInstance();
 			return new Credentials(
-					Ax.format("%s-%s-%s", EntityLayerUtils.getLocalHostName(),
-							serverAsClientInstance == null ? 0
-									: serverAsClientInstance.getId(),
-							SEUtilities.generatePrettyUuid()),
+					uuid != null ? uuid
+							: Ax.format("%s-%s-%s",
+									EntityLayerUtils.getLocalHostName(),
+									serverAsClientInstance == null ? 0
+											: serverAsClientInstance.getId(),
+									SEUtilities.generatePrettyUuid()),
 					SEUtilities.generatePrettyUuid());
 		}
 

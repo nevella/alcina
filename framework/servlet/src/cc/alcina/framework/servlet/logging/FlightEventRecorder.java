@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.logging;
 
+import java.io.File;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,6 +17,8 @@ import cc.alcina.framework.servlet.LifecycleService;
 @Registration.Singleton
 public class FlightEventRecorder extends LifecycleService.AlsoDev
 		implements ProcessObserver<FlightEvent> {
+	String path;
+
 	@Override
 	public void onApplicationStartup() {
 		if (!Configuration.is("enabled")) {
@@ -31,9 +34,14 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 		String dateSessionId = sessionIdDateSession.computeIfAbsent(
 				message.event.getSessionId(), sessionId -> Ax.format("%s.%s",
 						Ax.timestampYmd(new Date()), sessionId));
-		String path = Ax.format("%s/%s/%s.json", Configuration.get("path"),
-				dateSessionId, message.eventId);
-		Io.write().asReflectiveSerialized(true).object(message)
-				.withEnsureParents(true).toPath(path);
+		String folderPath = Ax.format("%s/%s", Configuration.get("path"),
+				dateSessionId);
+		File folder = new File(folderPath);
+		if (!folder.exists()) {
+			folder.mkdirs();
+			Ax.out("FlightEventRecorder :: recording to %s", folderPath);
+		}
+		String path = Ax.format("%s/%s.json", folderPath, message.eventId);
+		Io.write().asReflectiveSerialized(true).object(message).toPath(path);
 	}
 }

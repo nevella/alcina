@@ -99,6 +99,8 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	protected Ref<Consumer<Runnable>> dispatch = null;
 
+	protected boolean resolveModelAscends = true;
+
 	protected Map<Class<? extends ContextService>, Optional<? extends ContextService>> services = AlcinaCollections
 			.newUnqiueMap();
 
@@ -325,10 +327,19 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 * change the tag of all links in a subtree
 	 * 
 	 * <p>
-	 * Or - forbid access to a model if it
+	 * Or - forbid access to a model if it fails permissions tests
+	 * <p>
+	 * 
+	 */
+	/*
+	 * TODO - use ContextService rather than resolveModelAscends
 	 */
 	protected Object resolveModel(Object model) {
-		return parent == null ? model : parent.resolveModel(model);
+		if (resolveModelAscends && parent != null) {
+			return parent.resolveModel(model);
+		} else {
+			return model;
+		}
 	}
 
 	// FIXME - dirndl 1x2 - remove
@@ -393,6 +404,12 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		}
 	}
 
+	/*
+	 * Half-baked (but promising) implementation of composable resolvers -
+	 * essentially a child can choose to only override/implement specific
+	 * resolver services (ContextService) and optionally delegate to a parent
+	 * via ancestorService
+	 */
 	public interface ContextService<T extends ContextService> {
 		void register(ContextResolver resolver);
 
@@ -462,5 +479,11 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		 */
 		@Property.Not
 		ContextResolver getContextResolver(AnnotationLocation location);
+	}
+
+	public static class WithoutResolveModelAscends extends ContextResolver {
+		public WithoutResolveModelAscends() {
+			resolveModelAscends = false;
+		}
 	}
 }

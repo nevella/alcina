@@ -1,10 +1,14 @@
 package cc.alcina.framework.entity.gwt.reflection.jdk;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
@@ -41,10 +45,20 @@ class BuildtimeTypeProvider implements TypeOracle.TypeProvider {
 		jdkReflectionClassNames.addAll(CommonUtils.CORE_CLASS_NAMES);
 		jdkReflectionClassNames
 				.addAll(CommonUtils.PRIMITIVE_WRAPPER_CLASS_NAMES);
+		Set<String> exceptions = new LinkedHashSet<>();
 		List<JClassType> types = Stream
 				.concat(scannerClassNames, jdkReflectionClassNames.stream())
-				.filter(this::checkFilter).map(typeOracle::findType)
-				.collect(Collectors.toList());
+				.filter(this::checkFilter).map(t -> {
+					try {
+						return typeOracle.findType(t);
+					} catch (Throwable e) {
+						String msg = CommonUtils.toSimpleExceptionMessage(e);
+						if (exceptions.add(msg)) {
+							Ax.err(msg);
+						}
+						return null;
+					}
+				}).filter(Objects::nonNull).collect(Collectors.toList());
 		return types.toArray(new JClassType[types.size()]);
 	}
 
