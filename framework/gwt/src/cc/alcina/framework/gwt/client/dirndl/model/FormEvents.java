@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableRow;
 
 public class FormEvents {
 	/*
@@ -121,6 +122,18 @@ public class FormEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onValidationResult(ValidationResultEvent event);
+		}
+	}
+
+	public static class RowClicked
+			extends ModelEvent<TableRow, RowClicked.Handler> {
+		@Override
+		public void dispatch(RowClicked.Handler handler) {
+			handler.onRowClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onRowClicked(RowClicked event);
 		}
 	}
 }

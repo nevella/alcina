@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
@@ -53,7 +54,7 @@ public class Tables {
 	}
 
 	@Directed
-	static class ColumnName extends Model.Fields {
+	public static class ColumnName extends Model.Fields {
 		@Binding(type = Type.INNER_TEXT)
 		String text;
 
@@ -61,7 +62,7 @@ public class Tables {
 		@Binding(type = Type.PROPERTY)
 		String name;
 
-		ColumnName(String name) {
+		public ColumnName(String name) {
 			this.name = name;
 			this.text = name;
 		}
@@ -112,21 +113,21 @@ public class Tables {
 			return new IntermediateModel(t);
 		}
 
-		@Directed(
-			bindings = @Binding(
-				from = "gridTemplateColumns",
-				type = Type.STYLE_ATTRIBUTE))
-		public class IntermediateModel extends Model
+		@Directed
+		class IntermediateModel extends Model.All
 				implements Directed.NonClassTag {
-			private String gridTemplateColumns;
+			@Binding(type = Type.STYLE_ATTRIBUTE)
+			String gridTemplateColumns;
 
-			private List<ColumnName> columnNames;
+			@Directed.Wrap("column-names")
+			List<ColumnName> columnNames;
 
-			private String gridColumnWidth;
+			List<? extends Model> rows;
 
-			private List<? extends Model> rows;
+			@Directed.Exclude
+			String gridColumnWidth;
 
-			public IntermediateModel(List<? extends Model> rows) {
+			IntermediateModel(List<? extends Model> rows) {
 				ColumnWidth defaultWidth = node.annotationLocation
 						.getAnnotation(ColumnWidth.class);
 				gridColumnWidth = defaultWidth != null ? defaultWidth.value()
@@ -162,24 +163,6 @@ public class Tables {
 									}).collect(Collectors.joining(" "));
 				}
 			}
-
-			@Directed.Wrap("column-names")
-			public List<ColumnName> getColumnNames() {
-				return this.columnNames;
-			}
-
-			public String getGridColumnWidth() {
-				return this.gridColumnWidth;
-			}
-
-			public String getGridTemplateColumns() {
-				return this.gridTemplateColumns;
-			}
-
-			@Directed
-			public List<? extends Model> getRows() {
-				return this.rows;
-			}
 		}
 	}
 
@@ -208,6 +191,7 @@ public class Tables {
 				List<Property> properties = Reflections.at(model).properties();
 				result.rows = properties.stream()
 						.filter(Property::provideNotDefaultIgnoreable)
+						.filter(p -> !p.has(Directed.Exclude.class))
 						.map(r -> new Row(r, model))
 						.collect(Collectors.toList());
 				return result;
@@ -232,10 +216,18 @@ public class Tables {
 			}
 
 			@Directed(tag = "tr")
-			public static class Row extends Model.Fields {
-				private String key;
+			@TypeSerialization(
+				reflectiveSerializable = false,
+				flatSerializable = false)
+			public static class Row extends Model.All {
+				@Directed(tag = "th")
+				String key;
 
-				private Object value;
+				@Directed.Wrap("td")
+				Object value;
+
+				@Binding(type = Type.PROPERTY)
+				String name;
 
 				public Row() {
 				}
@@ -258,21 +250,13 @@ public class Tables {
 					} else {
 						value = propertyValue.toString();
 					}
+					this.name = property.getName();
 				}
 
 				public Row(String key, String value) {
 					this.key = key;
 					this.value = value;
-				}
-
-				@Directed(tag = "th")
-				public String getKey() {
-					return this.key;
-				}
-
-				@Directed.Wrap("td")
-				public Object getValue() {
-					return this.value;
+					this.name = key;
 				}
 			}
 		}

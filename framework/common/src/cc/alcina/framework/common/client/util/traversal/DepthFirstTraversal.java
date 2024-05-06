@@ -87,7 +87,8 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 
 	@Override
 	public Iterator<T> iterator() {
-		Preconditions.checkState(!iteratorConsumed);
+		Preconditions.checkState(!iteratorConsumed,
+				"Stream/iterator has already been traversed");
 		iteratorConsumed = true;
 		return this;
 	}

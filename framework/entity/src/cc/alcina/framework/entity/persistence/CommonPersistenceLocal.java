@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.log.ILogRecord;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
@@ -70,6 +71,11 @@ public interface CommonPersistenceLocal {
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
 
+	// use pretty much only for RollingData - everything else should use custom
+	// queries or the domainstore
+	<E extends Entity> List<? extends E> listEntities(Class<E> clazz,
+			long fromId, long toId);
+
 	public long log(String message, String componentKey);
 
 	public long log(String message, String componentKey, String data);
@@ -105,4 +111,6 @@ public interface CommonPersistenceLocal {
 	 * 
 	 */
 	public TransformCache warmupTransformCache();
+
+	public long getMaxId(Class<? extends Entity> clazz);
 }

@@ -34,6 +34,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer;
+import cc.alcina.framework.servlet.logging.FlightEventJettyHandler;
 
 @Registration.Singleton(DevConsoleRemote.class)
 public class DevConsoleRemote {
@@ -179,6 +180,12 @@ public class DevConsoleRemote {
 					"/remote-console.do");
 			protocolHandler.setAllowNullPathInfo(true);
 			protocolHandler.setHandler(new DevConsoleProtocolHandler(this));
+		}
+		{
+			ContextHandler protocolHandler = new ContextHandler(handlers,
+					"/flight");
+			protocolHandler.setAllowNullPathInfo(true);
+			protocolHandler.setHandler(new FlightEventJettyHandler());
 		}
 		{
 			ContextHandler protocolHandler = new ContextHandler(handlers,

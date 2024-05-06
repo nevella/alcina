@@ -97,6 +97,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
+import cc.alcina.framework.common.client.util.CommonUtils.MonthResolver;
 import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -2082,6 +2083,17 @@ public class SEUtilities {
 		public synchronized int getYear(Date d) {
 			calendar.setTime(d);
 			return calendar.get(Calendar.YEAR);
+		}
+	}
+
+	@Registration.Singleton(MonthResolver.class)
+	public static class MonthResolverImpl implements MonthResolver {
+		private Calendar calendar = new GregorianCalendar();
+
+		@Override
+		public synchronized int getMonth(Date d) {
+			calendar.setTime(d);
+			return calendar.get(Calendar.MONTH);
 		}
 	}
 

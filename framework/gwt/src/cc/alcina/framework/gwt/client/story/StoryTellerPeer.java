@@ -24,7 +24,7 @@ public class StoryTellerPeer implements TellerContext {
 		@Override
 		public void topicPublished(StoryTeller.BeforeVisit beforeVisit) {
 			Visit visit = beforeVisit.getVisit();
-			if (visit.isResultFiltered()) {
+			if (visit.result.isFiltered()) {
 				return;
 			}
 			visit.result.logEntry().template("> %s").args(visit.displayName())

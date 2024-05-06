@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
-import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -72,9 +71,5 @@ public class HeaderContent extends Model {
 		public BoundToPageCssClass() {
 			bindings().add("className", PageCssClass.get(), "pageClassName");
 		}
-	}
-
-	public enum Property implements PropertyEnum {
-		className
 	}
 }

@@ -41,6 +41,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	inheritance = { Inheritance.PROPERTY, Inheritance.ERASED_PROPERTY },
 	mergeStrategy = Display.MergeStrategy.class)
 public @interface Display {
+	public static final int DISPLAY_NONE = 0;
+
 	public static final int DISPLAY_AS_PROPERTY = 1;
 
 	public static final int DISPLAY_AS_TREE_NODE = 2;

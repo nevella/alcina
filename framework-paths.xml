@@ -34,8 +34,8 @@
 			<include name="**/*.jar" />
 		</fileset>
 		<fileset dir="${extras.google.lib.dir}">
-					<include name="**/*.jar" />
-				</fileset>
+			<include name="**/*.jar" />
+		</fileset>
 	</path>
 	<path id="extras.cluster.lib.path">
 		<fileset dir="${extras.cluster.lib.dir}">
@@ -43,10 +43,10 @@
 		</fileset>
 	</path>
 	<path id="extras.wd.lib.path">
-	        <fileset dir="${extras.wd.lib.dir}">
-	            <include name="**/*.jar" />
-	        </fileset>
-	    </path>
+		<fileset dir="${extras.wd.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
 	<path id="framework.impl.jboss-hibernate.lib.path">
 		<fileset dir="${framework.impl.jboss-hibernate.lib.dir}">
 			<include name="**/*.jar" />
