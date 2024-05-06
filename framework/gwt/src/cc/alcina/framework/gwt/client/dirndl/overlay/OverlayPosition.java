@@ -150,4 +150,8 @@ public class OverlayPosition {
 	public enum Position {
 		START, CENTER, END
 	}
+
+	public void viewportBottom(boolean b) {
+		// TODO Auto-generated method stub
+	}
 }

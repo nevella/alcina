@@ -142,10 +142,14 @@ public class EnvironmentRegistry extends Registry {
 	}
 
 	static boolean hasEnvironmentSingleton(Class<?> type) {
-		boolean hasEnvironmentSingleton = classEnvironmentSingleton
-				.computeIfAbsent(type, clazz -> Reflections.at(clazz)
-						.has(Registration.EnvironmentSingleton.class));
-		return hasEnvironmentSingleton;
+		try {
+			boolean hasEnvironmentSingleton = classEnvironmentSingleton
+					.computeIfAbsent(type, clazz -> Reflections.at(clazz)
+							.has(Registration.EnvironmentSingleton.class));
+			return hasEnvironmentSingleton;
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	class EnvironmentSingletons extends Singletons {

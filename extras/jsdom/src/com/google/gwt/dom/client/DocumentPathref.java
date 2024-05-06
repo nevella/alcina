@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
@@ -588,7 +589,8 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	}
 
 	public void flushSinkEventsQueue() {
-		sinkEventsQueue.stream().toList().forEach(Runnable::run);
+		sinkEventsQueue.stream().collect(Collectors.toList())
+				.forEach(Runnable::run);
 		sinkEventsQueue.clear();
 	}
 

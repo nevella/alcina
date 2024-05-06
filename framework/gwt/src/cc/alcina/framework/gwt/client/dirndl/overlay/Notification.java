@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -201,6 +202,7 @@ public class Notification extends Model {
 		}
 	}
 
+	@Reflected
 	public enum VariantStyle {
 		notification, caught, warn, model, dialog
 	}

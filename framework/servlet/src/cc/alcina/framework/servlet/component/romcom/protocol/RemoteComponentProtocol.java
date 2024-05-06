@@ -243,13 +243,20 @@ public class RemoteComponentProtocol {
 		 * Sent by the client on startup, to initialise the server dom
 		 */
 		public static class Startup extends Message {
+			public String settingsException;
+
 			public static Startup forClient() {
 				Startup result = new Startup();
 				result.maxCharsPerTextNode = LocalDom.maxCharsPerTextNode;
 				result.domMutations = LocalDom.pathRefRepresentations()
 						.domAsMutations();
 				result.locationMutation = LocationMutation.ofWindow(true);
-				result.settings = RemoteComponentSettings.getSettings();
+				try {
+					result.settings = RemoteComponentSettings.getSettings();
+				} catch (Exception e) {
+					result.settingsException = CommonUtils
+							.getFullExceptionMessage(e);
+				}
 				return result;
 			}
 

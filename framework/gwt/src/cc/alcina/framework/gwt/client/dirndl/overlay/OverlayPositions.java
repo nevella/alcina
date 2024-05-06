@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.overlay;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -43,7 +44,7 @@ public class OverlayPositions {
 	}
 
 	public void closeAll() {
-		openOverlays.keySet().stream().toList()
+		openOverlays.keySet().stream().collect(Collectors.toList())
 				.forEach(m -> this.hide((Overlay) m));
 	}
 
