@@ -6,6 +6,8 @@ $box-shadow-bottom: theme.$app-suggestor-box-shadow-bottom
 $suggestor-width: theme.$app-suggestor-width
 $first-weight: theme.$app-suggestor-first-weight
 $font-size: theme.$app-suggestor-font-size
+$first-color: theme.$app-suggestor-first-color
+$second-color: theme.$app-suggestor-second-color
 
 @mixin results
   display: block
@@ -24,9 +26,9 @@ $font-size: theme.$app-suggestor-font-size
       grid-template-columns: 1fr 10px  
       gap: 1em
       width: 100%  
-      color: #555
       line-height: 1.5em
       padding: 0.2em 0
+      color: $first-color
       
       > contents
         > first,
@@ -37,7 +39,7 @@ $font-size: theme.$app-suggestor-font-size
           font-weight: $first-weight
 
         > second   
-          color: #777 
+          color: $second-color
           padding-left: 1em
 
         > options
