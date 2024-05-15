@@ -4,9 +4,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.LooseContextInstance.Frame;
@@ -29,6 +29,9 @@ import cc.alcina.framework.common.client.util.TopicListener;
  *
  */
 public class ProcessObservers {
+	/*
+	 * A simple switch to turn ProcessObservers off for client optimisation
+	 */
 	public static boolean enabled = true;
 
 	private static ProcessObservers instance = new ProcessObservers();
@@ -74,7 +77,8 @@ public class ProcessObservers {
 			Class<O> observableClass, TopicListener<O> listener,
 			boolean register) {
 		if (perObservableTopics == null) {
-			perObservableTopics = new ConcurrentHashMap<>();
+			perObservableTopics = (Map) CollectionCreators.Bootstrap
+					.createConcurrentClassMap();
 		}
 		perObservableTopics
 				.computeIfAbsent(observableClass, clazz -> Topic.create())

@@ -24,13 +24,6 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 @Registration(BasePlaceTokenizer.class)
 public abstract class BasePlaceTokenizer<P extends Place>
 		implements PlaceTokenizer<P>, Registration.Ensure {
-	/**
-	 * If true, the token will be a combined path (slash-separated) and
-	 * querystring (?) string, with path mapping to parts and querystring to
-	 * params
-	 */
-	public static boolean pathQuerystring;
-
 	protected StringBuilder tokenBuilder;
 
 	protected String[] parts;

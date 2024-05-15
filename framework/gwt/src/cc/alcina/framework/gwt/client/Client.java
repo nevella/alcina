@@ -152,6 +152,10 @@ public abstract class Client implements ContextFrame {
 
 		private static boolean complete;
 
+		/*
+		 * Called by client-side Client apps only (server-side, init is mostly
+		 * once-per-jvm)
+		 */
 		public static void init() {
 			preRegistry();
 			registry();

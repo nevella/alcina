@@ -77,7 +77,7 @@ public abstract class DocumentSelection extends MeasureSelection
 	}
 
 	public static class DocumentToken implements Measure.Token {
-		public static DocumentToken TYPE = new DocumentToken();
+		public static final DocumentToken TYPE = new DocumentToken();
 
 		private DocumentToken() {
 		}
