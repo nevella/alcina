@@ -170,7 +170,7 @@ public class TaskSetupAlcinaGwt extends PerformerTask {
 			toSync = pairs.values().stream().filter(p -> p.alcina != null
 					&& (p.gwt != null || (p.alcina.packageName
 							.startsWith("com.google.gwt") && !p.alcina.emul)))
-					.toList();
+					.collect(Collectors.toList());
 		}
 
 		void setupDirs() {

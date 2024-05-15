@@ -329,8 +329,8 @@ public class Configuration {
 		}
 
 		/**
-		 * This sets the contex property, not the configuration property. TODO -
-		 * should probably *not* do this
+		 * This sets the context property, not the configuration property. TODO
+		 * - should probably *not* do this
 		 *
 		 */
 		public void set(String value) {

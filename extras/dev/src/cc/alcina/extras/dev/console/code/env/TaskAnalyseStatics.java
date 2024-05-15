@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -36,7 +37,8 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 	@Override
 	public void run() throws Exception {
 		List<String> seedNames = Arrays.stream(classList.split("\n"))
-				.filter(n -> n.matches(classNameFilter)).toList();
+				.filter(n -> n.matches(classNameFilter))
+				.collect(Collectors.toList());
 		seedNames.forEach(n -> {
 			Class clazz = null;
 			try {
@@ -149,7 +151,7 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 
 		public PersistentResult(Result result) {
 			entries = result.list.stream().filter(ClassStatics::hasStatics)
-					.map(Entry::new).toList();
+					.map(Entry::new).collect(Collectors.toList());
 		}
 
 		public String toCsvString() {
