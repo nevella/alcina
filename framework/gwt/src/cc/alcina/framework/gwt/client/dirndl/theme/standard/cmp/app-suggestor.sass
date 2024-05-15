@@ -5,9 +5,11 @@
 $box-shadow-bottom: theme.$app-suggestor-box-shadow-bottom
 $suggestor-width: theme.$app-suggestor-width
 $first-weight: theme.$app-suggestor-first-weight
+$font-size: theme.$app-suggestor-font-size
 
 @mixin results
   display: block
+  font-size: $font-size
 
   > spinner
     margin: theme.$app-suggestor-spinner-margin
@@ -62,7 +64,7 @@ $first-weight: theme.$app-suggestor-first-weight
       padding: theme.$app-suggestor-input-padding
       border: none
       min-width: 95%
-      font-size: 1rem
+      font-size: $font-size
       line-height: 1.5rem
       outline: none  
       font-family: Arial

@@ -32,8 +32,11 @@ public class FlightEventHandler {
 
 	public synchronized void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
-		File tmpFolder = new File(Ax.format("/tmp/tmp.flight-event-assembly-%s",
-				Ax.timestamp(new Date())));
+		File tmpFolder = SEUtilities.getChildFile(
+				new File(eventRootPath).getParentFile(),
+				Ax.format("tmp.flight-event-assembly-%s",
+						Ax.timestamp(new Date())));
+		Ax.out("tmpfolder: %s", tmpFolder);
 		try {
 			String actionParam = request.getParameter("action");
 			String sessionParam = request.getParameter("session");
