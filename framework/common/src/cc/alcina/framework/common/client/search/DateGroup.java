@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DateUtil;
 
 @TypeSerialization(flatSerializable = false)
 public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
@@ -30,8 +30,8 @@ public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 
 	public DateGroup(Date fromDate, Date toDate) {
 		this();
-		CommonUtils.roundDate(fromDate, false);
-		CommonUtils.roundDate(toDate, true);
+		DateUtil.roundDate(fromDate, false);
+		DateUtil.roundDate(toDate, true);
 		AbstractDateCriterion dc = new DateCriterion("From",
 				Direction.ASCENDING);
 		dc.setValue(fromDate);

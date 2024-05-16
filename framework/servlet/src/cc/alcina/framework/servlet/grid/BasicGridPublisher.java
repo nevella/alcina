@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
@@ -56,9 +56,9 @@ public class BasicGridPublisher {
 			SearchDefinition def = contentDefinition.getSearchDefinition();
 			def.setResultsPerPage(PUB_MAX_RESULTS);
 			String defName = def.toString();
-			defName = Ax.blankTo(defName, () -> Ax.format("%s-%s",
-					def.getClass().getSimpleName(),
-					CommonUtils.formatDate(new Date(), DateStyle.TIMESTAMP)));
+			defName = Ax.blankTo(defName,
+					() -> Ax.format("%s-%s", def.getClass().getSimpleName(),
+							DateStyle.TIMESTAMP.format(new Date())));
 			if (def instanceof SingleTableSearchDefinition) {
 				deliveryModel.setSuggestedFileName(SEUtilities
 						.sanitiseFileName(defName.replace(" ", "_")));
@@ -70,9 +70,10 @@ public class BasicGridPublisher {
 				BindableSearchDefinition bdef = (BindableSearchDefinition) def;
 				deliveryModel.setSuggestedFileName(SEUtilities
 						.sanitiseFileName(defName.replace(" ", "_")));
-				defName = Ax.blankTo(defName, () -> Ax.format("%s-%s",
-						bdef.getClass().getSimpleName(), CommonUtils
-								.formatDate(new Date(), DateStyle.TIMESTAMP)));
+				defName = Ax.blankTo(defName,
+						() -> Ax.format("%s-%s",
+								bdef.getClass().getSimpleName(),
+								DateStyle.TIMESTAMP.format(new Date())));
 				ModelSearchResults modelSearchResults = Registry
 						.impl(CommonRemoteServletProvider.class)
 						.getCommonRemoteServiceServlet().searchModel(bdef);

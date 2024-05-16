@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
@@ -235,7 +235,7 @@ public class TaskLogJobDetails extends PerformerTask {
 	}
 
 	String timestamp(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP_HUMAN);
+		return DateStyle.TIMESTAMP_HUMAN.format(date);
 	}
 
 	private TaskLogJobDetails withDetails(boolean details) {

@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -131,8 +131,7 @@ public class ProcessMetric extends Model implements ProcessObservable {
 		FormatBuilder fb = new FormatBuilder().separator(" ");
 		fb.format("Metric: %s",
 				CommonUtils.padStringRight(type.toString(), 16, ' '));
-		fb.format("%s   ", CommonUtils.formatDate(new Date(time),
-				DateStyle.TIMESTAMP_NO_DAY));
+		fb.format("%s   ", DateStyle.TIMESTAMP_NO_DAY.format(new Date(time)));
 		fb.appendPadRight(16, name == null ? "" : name);
 		fb.conditionalFormat(size != 0, "size: %s ", size);
 		fb.conditionalFormat(!end, "[start] ");

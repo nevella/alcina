@@ -8,8 +8,7 @@ import com.google.gwt.core.shared.GWT;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 
 public class RemoteConsoleRequest extends Bindable {
 	private transient static String generatedClientInstanceUid;
@@ -17,8 +16,8 @@ public class RemoteConsoleRequest extends Bindable {
 	public static RemoteConsoleRequest create() {
 		Preconditions.checkArgument(GWT.isClient());
 		if (generatedClientInstanceUid == null) {
-			generatedClientInstanceUid = Ax.format("%s__%s", CommonUtils
-					.formatDate(new Date(), DateStyle.TIMESTAMP_HUMAN),
+			generatedClientInstanceUid = Ax.format("%s__%s",
+					DateStyle.TIMESTAMP_HUMAN.format(new Date()),
 					Math.random());
 		}
 		RemoteConsoleRequest consoleRequest = new RemoteConsoleRequest();

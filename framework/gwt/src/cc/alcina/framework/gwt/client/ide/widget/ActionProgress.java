@@ -37,8 +37,7 @@ import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.widget.Link;
 
@@ -367,11 +366,11 @@ public class ActionProgress extends Composite
 	private void updateProgress() {
 		jobName.setText(tracker.getJobName());
 		String time = tracker.getStartTime() == null ? ""
-				: "Start: " + CommonUtils.formatDate(tracker.getStartTime(),
-						DateStyle.AU_DATE_TIME_MS);
+				: "Start: " + DateStyle.AU_DATE_TIME_MS
+						.format(tracker.getStartTime());
 		if (tracker.getEndTime() != null) {
-			time += "<br>End: " + CommonUtils.formatDate(tracker.getEndTime(),
-					DateStyle.AU_DATE_TIME_MS);
+			time += "<br>End: "
+					+ DateStyle.AU_DATE_TIME_MS.format(tracker.getEndTime());
 		}
 		times.setHTML(time);
 		String msg = tracker.getProgressMessage();

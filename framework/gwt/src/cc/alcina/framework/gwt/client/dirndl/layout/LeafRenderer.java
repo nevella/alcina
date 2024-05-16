@@ -10,8 +10,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasStringValue;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -81,8 +80,7 @@ public abstract class LeafRenderer extends DirectedRenderer {
 		public static class ShortMonth extends Text {
 			@Override
 			protected String getModelText(Object model) {
-				return CommonUtils.formatDate((Date) model,
-						DateStyle.AU_SHORT_MONTH);
+				return DateStyle.AU_SHORT_MONTH.format((Date) model);
 			}
 		}
 	}

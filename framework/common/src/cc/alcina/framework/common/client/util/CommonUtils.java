@@ -50,14 +50,12 @@ import org.slf4j.LoggerFactory;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.BidiConverter;
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -131,8 +129,6 @@ public class CommonUtils {
 					Void.class)
 			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
-	private static DateAdjustment dateAdjustment;
-
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {
 			l.add(o);
@@ -184,29 +180,6 @@ public class CommonUtils {
 
 	public static Class classOrSelf(Object o) {
 		return o instanceof Class ? (Class) o : o.getClass();
-	}
-
-	public static Date cloneDate(Date date) {
-		return date == null ? null : new Date(date.getTime());
-	}
-
-	public static boolean closeDates(Date d1, Date d2, long ms) {
-		if (d1 == null || d2 == null) {
-			return d1 == d2;
-		}
-		return Math.abs(d1.getTime() - d2.getTime()) < ms;
-	}
-
-	public static LinkedHashMap<Integer, Integer>
-			collateHashes(Collection<?> collection) {
-		Multimap<Integer, ?> map = collection.stream()
-				.collect(AlcinaCollectors.toKeyMultimap(Object::hashCode));
-		LinkedHashMap<Integer, Integer> linkedHashMap = map.asCountingMap()
-				.toLinkedHashMap(true);
-		Integer key = linkedHashMap.entrySet().iterator().next().getKey();
-		List list = map.get(key);
-		list.get(0).equals(list.get(1));
-		return linkedHashMap;
 	}
 
 	// assume slash-delineated
@@ -437,15 +410,6 @@ public class CommonUtils {
 
 	public static boolean currencyEquals(double d1, double d2) {
 		return Math.abs(d1 - d2) < 0.005;
-	}
-
-	@SuppressWarnings("deprecation")
-	public static String dateStampMillis() {
-		Date d = new Date();
-		return format("%s%s%s%s%s%s", padFour(d.getYear() + 1900),
-				padTwo(d.getMonth() + 1), padTwo(d.getDate()),
-				padTwo(d.getHours()), padTwo(d.getMinutes()),
-				padTwo(d.getSeconds()), padThree((int) (d.getTime() % 1000)));
 	}
 
 	public static List dedupe(List objects) {
@@ -800,149 +764,6 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
-	public static String formatDate(Date date, DateStyle style) {
-		return formatDate(date, style, " ");
-	}
-
-	public static String formatDate(Date date, DateStyle style,
-			String nullMarker) {
-		return formatDate(date, style, nullMarker, null);
-	}
-
-	@SuppressWarnings("deprecation")
-	private static String formatDate(Date date, DateStyle style,
-			String nullMarker, DateAdjustmentModifier dateAdjustmentModifier) {
-		if (date == null) {
-			return nullMarker;
-		}
-		DateAdjustment dateAdjustment = getDateAdjustment();
-		if (dateAdjustment != null
-				&& dateAdjustmentModifier != DateAdjustmentModifier.LOCAL_TZ) {
-			switch (style) {
-			case AU_DATE_TIME_TZ:
-				if (dateAdjustmentModifier == null) {
-					String local = formatDate(date, style, nullMarker,
-							DateAdjustmentModifier.LOCAL_TZ);
-					String adjustTo = formatDate(date, style, nullMarker,
-							DateAdjustmentModifier.ADJUST_TO_TZ);
-					return Ax.format("%s\n%s", adjustTo, local);
-				}
-			default:
-				break;
-			}
-			date = dateAdjustment.adjust(date, true);
-		}
-		switch (style) {
-		case AU_DATE_SLASH:
-			return format("%s/%s/%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
-		case US_DATE_SLASH:
-			return format("%s/%s/%s", padTwo(date.getMonth() + 1),
-					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
-		case AU_DATE_SLASH_MONTH:
-			return format("%s/%s", padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_DOT:
-			return format("%s.%s.%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
-		case AU_DATE_TIME:
-			return format("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()));
-		case AU_DATE_TIME_TZ: {
-			String formatted = format("%s/%s/%s - %s:%s:%s",
-					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900), padTwo(date.getHours()),
-					padTwo(date.getMinutes()), padTwo(date.getSeconds()));
-			String suffix = dateAdjustment == null ? ""
-					: dateAdjustment.toSuffix(dateAdjustmentModifier);
-			String prefix = dateAdjustment == null ? ""
-					: dateAdjustment.toPrefix(dateAdjustmentModifier);
-			return prefix + formatted + suffix;
-		}
-		case AU_DATE_TIME_HUMAN:
-			return formatDate(date, DateStyle.AU_LONG_DAY) + format(
-					" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1),
-					padTwo(date.getMinutes()),
-					date.getHours() < 12 ? "AM" : "PM");
-		case NAMED_MONTH_DATE_TIME_HUMAN:
-			return formatDate(date, DateStyle.NAMED_MONTH_DAY) + format(
-					" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1),
-					padTwo(date.getMinutes()),
-					date.getHours() < 12 ? "AM" : "PM");
-		case NAMED_MONTH_DAY:
-			return format("%s, %s %s %s", DAY_NAMES[date.getDay()],
-					MONTH_NAMES[date.getMonth() + 1], padTwo(date.getDate()),
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_TIME_MS:
-			return format("%s/%s/%s - %s:%s:%s:%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()),
-					padThree((int) (date.getTime() % 1000)));
-		case AU_DATE_MONTH:
-			return format("%s %s %s", padTwo(date.getDate()),
-					MONTH_NAMES[date.getMonth() + 1],
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_MONTH_NO_PAD_DAY:
-			return format("%s %s %s", date.getDate(),
-					MONTH_NAMES[date.getMonth() + 1],
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_MONTH_DAY:
-			return format("%s %s, %s", MONTH_NAMES[date.getMonth() + 1],
-					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
-		case AU_SHORT_MONTH:
-			return format("%s %s %s", date.getDate(),
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
-					padTwo(date.getYear() + 1900));
-		case AU_SHORT_MONTH_SLASH:
-			return format("%s/%s/%s", padTwo(date.getDate()),
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
-					padTwo(date.getYear() + 1900));
-		case AU_SHORT_DAY:
-			return format("%s - %s.%s.%s",
-					DAY_NAMES[date.getDay()].substring(0, 3),
-					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900));
-		case AU_LONG_DAY:
-			return format("%s, %s.%s.%s", DAY_NAMES[date.getDay()],
-					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
-					padTwo(date.getYear() + 1900));
-		case TIMESTAMP:
-			return format("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()),
-					padThree((int) (date.getTime() % 1000)));
-		case TIMESTAMP_HUMAN:
-			return format("%s.%s.%s %s:%s:%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()));
-		case TIMESTAMP_NO_DAY:
-			return format("%s:%s:%s,%s", padTwo(date.getHours()),
-					padTwo(date.getMinutes()), padTwo(date.getSeconds()),
-					padThree((int) (date.getTime() % 1000)));
-		case AU_SHORT_MONTH_NO_DAY:
-			return format("%s %s",
-					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
-					padTwo(date.getYear() + 1900));
-		case AU_DATE_TIME_SHORT:
-			return format("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()));
-		case DATESTAMP_HUMAN:
-			return format("%s.%s.%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()));
-		case DATESTAMP_DASHED:
-			return format("%s-%s-%s", padTwo(date.getYear() + 1900),
-					padTwo(date.getMonth() + 1), padTwo(date.getDate()));
-		}
-		return date.toString();
-	}
-
 	public static String formatNumbered(String source, Object... args) {
 		String[] strs = source.split("%");
 		String s;
@@ -954,10 +775,6 @@ public class CommonUtils {
 			}
 		}
 		return join(strs, "");
-	}
-
-	public static void formatOut(String string, Object... objects) {
-		System.out.println(format(string, objects));
 	}
 
 	public static String friendlyConstant(Object o) {
@@ -1008,10 +825,6 @@ public class CommonUtils {
 	public static Class getComparableType(Object o) {
 		Class<? extends Object> clazz = o.getClass();
 		return isEnumSubclass(clazz) ? clazz.getSuperclass() : clazz;
-	}
-
-	public static DateAdjustment getDateAdjustment() {
-		return dateAdjustment;
 	}
 
 	public static Class<? extends Enum> getEnumType(Enum e) {
@@ -1137,28 +950,6 @@ public class CommonUtils {
 			return Character.class;
 		}
 		return null;
-	}
-
-	@SuppressWarnings("deprecation")
-	public static int getYear(Date d) {
-		if (GWT.isClient()) {
-			return d.getYear() + 1900;
-		} else {
-			return Registry.impl(YearResolver.class).getYear(d);
-		}
-	}
-
-	/**
-	 * @param d
-	 * @return the month (zero-based)
-	 */
-	@SuppressWarnings("deprecation")
-	public static int getMonth(Date d) {
-		if (GWT.isClient()) {
-			return d.getMonth();
-		} else {
-			return Registry.impl(MonthResolver.class).getMonth(d);
-		}
 	}
 
 	public static String hangingIndent(String text, boolean noTabsFirstLine,
@@ -1579,7 +1370,7 @@ public class CommonUtils {
 
 	@SuppressWarnings("deprecation")
 	public static Date monthsFromNow(int months) {
-		Date d = roundDate(new Date(), false);
+		Date d = DateUtil.roundDate(new Date(), false);
 		int m = d.getMonth() + months;
 		d.setMonth(m % 12);
 		d.setYear(d.getYear() + m / 12);
@@ -1622,16 +1413,6 @@ public class CommonUtils {
 
 	public static String nullToEmpty(String s) {
 		return s == null ? "" : s;
-	}
-
-	@SuppressWarnings("deprecation")
-	public static Date oldDate(int year, int month, int dayOfMonth) {
-		Date date = new Date();
-		date.setYear(year - 1900);
-		date.setMonth(month - 1);
-		date.setDate(dayOfMonth);
-		date = CommonUtils.roundDate(date, false);
-		return date;
 	}
 
 	public static <T extends Comparable> List<T>
@@ -1818,16 +1599,6 @@ public class CommonUtils {
 		return s.substring(0, len - places) + "." + s.substring(len - places);
 	}
 
-	// to 00.00:00 or 23:59.59
-	@SuppressWarnings("deprecation")
-	public static Date roundDate(Date d, boolean up) {
-		d.setHours(up ? 23 : 0);
-		d.setMinutes(up ? 59 : 0);
-		d.setSeconds(up ? 59 : 0);
-		d.setTime(d.getTime() - d.getTime() % 1000);
-		return d;
-	}
-
 	public static double roundNumeric(double d, int places) {
 		int multiplier = 1;
 		// cos Math.round((1.005 ) * 100) / 100 = 1, not 1.01
@@ -1868,14 +1639,6 @@ public class CommonUtils {
 		} catch (Exception e) {
 			return "Exception in toString() - " + e.getMessage();
 		}
-	}
-
-	/*
-	 * This controls how dates are *rendered* (including in editors) - not their
-	 * general representation
-	 */
-	public static void setDateAdjustment(DateAdjustment dateAdjustment) {
-		CommonUtils.dateAdjustment = dateAdjustment;
 	}
 
 	public static <T> Set<T> setOf(T... values) {
@@ -2187,13 +1950,6 @@ public class CommonUtils {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	public static String toYearMonth(Date date) {
-		return date == null ? null
-				: format("%sM%s", padFour(1900 + date.getYear()),
-						padTwo(date.getMonth() + 1));
-	}
-
 	public static String trimIgnoreWs(String s, int length) {
 		return Ax.isBlank(s) || s.length() < length ? s
 				: s.substring(0, length);
@@ -2405,18 +2161,6 @@ public class CommonUtils {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
-	public static Date yearAsDate(Integer year) {
-		if (year == null) {
-			year = 0;
-		}
-		Date d = new Date(0);
-		d.setYear(year - 1900);
-		d.setMonth(0);
-		d.setDate(1);
-		return d;
-	}
-
 	public static Long zeroToNull(Long id) {
 		return id != null && id == 0 ? null : id;
 	}
@@ -2443,97 +2187,6 @@ public class CommonUtils {
 				return true;
 			}
 		}
-	}
-
-	public static class DateAdjustment implements BidiConverter<Date, Date> {
-		public TimezoneData localData;
-
-		public TimezoneData adjustToData;
-
-		public DateAdjustment(TimezoneData localData,
-				TimezoneData adjustToData) {
-			this.localData = localData;
-			this.adjustToData = adjustToData;
-		}
-
-		public Date adjust(Date date, boolean toAdjustTz) {
-			// Null dates adjust to null dates
-			if (date == null) {
-				return null;
-			}
-			return toAdjustTz
-					? new Date(date.getTime()
-							+ localData.getUtcMinutes()
-									* TimeConstants.ONE_MINUTE_MS
-							- adjustToData.getUtcMinutes()
-									* TimeConstants.ONE_MINUTE_MS)
-					: new Date(date.getTime()
-							- localData.getUtcMinutes()
-									* TimeConstants.ONE_MINUTE_MS
-							+ adjustToData.getUtcMinutes()
-									* TimeConstants.ONE_MINUTE_MS);
-		}
-
-		@Override
-		public Date leftToRight(Date date) {
-			return adjust(date, true);
-		}
-
-		@Override
-		public Date rightToLeft(Date date) {
-			return adjust(date, false);
-		}
-
-		public String toPrefix(DateAdjustmentModifier dateAdjustmentModifier) {
-			if (dateAdjustmentModifier == null) {
-				return "";
-			}
-			switch (dateAdjustmentModifier) {
-			case LOCAL_TZ:
-				return Ax.format("local: ", localData);
-			case ADJUST_TO_TZ:
-				return Ax.format("server: ", adjustToData);
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-
-		public String toSuffix(DateAdjustmentModifier dateAdjustmentModifier) {
-			if (dateAdjustmentModifier == null) {
-				return "";
-			}
-			switch (dateAdjustmentModifier) {
-			case LOCAL_TZ:
-				return Ax.format(" (%s)", localData);
-			case ADJUST_TO_TZ:
-				return Ax.format(" (%s)", adjustToData);
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-
-		public String toUiIndicatorLabel() {
-			return Ax.format("TZ: %s", adjustToData.getTimeZone());
-		}
-
-		public String toUiIndicatorTitle() {
-			return Ax.format("Current time :: %s",
-					formatDate(new Date(), DateStyle.AU_DATE_TIME_TZ));
-		}
-	}
-
-	enum DateAdjustmentModifier {
-		LOCAL_TZ, ADJUST_TO_TZ
-	}
-
-	public enum DateStyle {
-		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
-		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
-		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
-		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
-		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
-		AU_DATE_MONTH_NO_PAD_DAY, AU_DATE_TIME_SHORT, DATESTAMP_HUMAN,
-		AU_DATE_TIME_TZ, DATESTAMP_DASHED
 	}
 
 	public static class DeduplicatePredicate<C, K> implements Predicate<C> {
@@ -2602,14 +2255,6 @@ public class CommonUtils {
 			return format("First: %s\nBoth: %s\nSecond: %s", firstOnly,
 					intersection, secondOnly);
 		}
-	}
-
-	public static interface YearResolver {
-		int getYear(Date d);
-	}
-
-	public static interface MonthResolver {
-		int getMonth(Date d);
 	}
 
 	public static String getFullExceptionMessage(Throwable t) {

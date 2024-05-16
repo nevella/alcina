@@ -1,0 +1,156 @@
+package cc.alcina.framework.common.client.util;
+
+import java.util.Date;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.datepicker.client.CalendarUtil;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.DateTzAdjustment.DateAdjustmentModifier;
+
+/**
+ * Interchangable because this (gwt-compat) version is weak compared to real,
+ * calendar based implementations
+ *
+ *
+ */
+@SuppressWarnings("deprecation")
+@Reflected
+@Registration.Singleton
+public class DateUtil {
+	public interface YearResolver {
+		int getYear(Date d);
+	}
+
+	public interface MonthResolver {
+		int getMonth(Date d);
+	}
+
+	private static DateUtil singleton;
+
+	public static int ageInDays(Date date) {
+		return get().ageInDays0(date);
+	}
+
+	public static int ageInMinutes(Date date) {
+		return get().ageInMinutes0(date);
+	}
+
+	public static DateUtil get() {
+		if (singleton == null) {
+			singleton = Registry.impl(DateUtil.class);
+		}
+		return singleton;
+	}
+
+	protected int ageInDays0(Date date) {
+		return (int) (date == null ? 0
+				: (System.currentTimeMillis() - date.getTime())
+						/ TimeConstants.ONE_DAY_MS);
+	}
+
+	protected int ageInMinutes0(Date date) {
+		return (int) (date == null ? 0
+				: (System.currentTimeMillis() - date.getTime())
+						/ TimeConstants.ONE_MINUTE_MS);
+	}
+
+	public DatePair getYearRange(int startingMonth, int yearOffset) {
+		DatePair result = new DatePair(new Date(), new Date());
+		toMonth(result.d1, startingMonth - 1);
+		if (result.d1.after(new Date())) {
+			CalendarUtil.addMonthsToDate(result.d1, -12);
+		}
+		CalendarUtil.addMonthsToDate(result.d1, 12 * yearOffset);
+		result.d2 = new Date(result.d1.getTime());
+		CalendarUtil.addMonthsToDate(result.d2, 12);
+		return result;
+	}
+
+	private void toMonth(Date d, int month) {
+		d.setMonth(month);
+		CalendarUtil.setToFirstDayOfMonth(d);
+		DateUtil.roundDate(d, false);
+	}
+
+	public static String toYearMonth(Date date) {
+		return date == null ? null
+				: CommonUtils.format("%sM%s",
+						CommonUtils.padFour(1900 + date.getYear()),
+						CommonUtils.padTwo(date.getMonth() + 1));
+	}
+
+	public static Date yearAsDate(Integer year) {
+		if (year == null) {
+			year = 0;
+		}
+		Date d = new Date(0);
+		d.setYear(year - 1900);
+		d.setMonth(0);
+		d.setDate(1);
+		return d;
+	}
+
+	// to 00.00:00 or 23:59.59
+	public static Date roundDate(Date d, boolean up) {
+		d.setHours(up ? 23 : 0);
+		d.setMinutes(up ? 59 : 0);
+		d.setSeconds(up ? 59 : 0);
+		d.setTime(d.getTime() - d.getTime() % 1000);
+		return d;
+	}
+
+	public static boolean areCloseDates(Date d1, Date d2, long ms) {
+		if (d1 == null || d2 == null) {
+			return d1 == d2;
+		}
+		return Math.abs(d1.getTime() - d2.getTime()) < ms;
+	}
+
+	public static Date cloneDate(Date date) {
+		return date == null ? null : new Date(date.getTime());
+	}
+
+	public static String dateStampMillis() {
+		Date d = new Date();
+		return CommonUtils.format("%s%s%s%s%s%s",
+				CommonUtils.padFour(d.getYear() + 1900),
+				CommonUtils.padTwo(d.getMonth() + 1),
+				CommonUtils.padTwo(d.getDate()),
+				CommonUtils.padTwo(d.getHours()),
+				CommonUtils.padTwo(d.getMinutes()),
+				CommonUtils.padTwo(d.getSeconds()),
+				CommonUtils.padThree((int) (d.getTime() % 1000)));
+	}
+
+	public static Date oldDate(int year, int month, int dayOfMonth) {
+		Date date = new Date();
+		date.setYear(year - 1900);
+		date.setMonth(month - 1);
+		date.setDate(dayOfMonth);
+		date = DateUtil.roundDate(date, false);
+		return date;
+	}
+
+	public static int getYear(Date d) {
+		if (GWT.isClient()) {
+			return d.getYear() + 1900;
+		} else {
+			return Registry.impl(YearResolver.class).getYear(d);
+		}
+	}
+
+	/**
+	 * @param d
+	 * @return the month (zero-based)
+	 */
+	public static int getMonth(Date d) {
+		if (GWT.isClient()) {
+			return d.getMonth();
+		} else {
+			return Registry.impl(MonthResolver.class).getMonth(d);
+		}
+	}
+}

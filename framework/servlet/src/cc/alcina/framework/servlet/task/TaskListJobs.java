@@ -23,9 +23,8 @@ import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
@@ -365,7 +364,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 	}
 
 	String timestamp(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP_HUMAN);
+		return DateStyle.TIMESTAMP_HUMAN.format(date);
 	}
 
 	class Filter implements Predicate<Job> {

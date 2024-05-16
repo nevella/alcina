@@ -17,7 +17,7 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DateUtil;
 
 /**
  *
@@ -87,7 +87,7 @@ public class AbstractDateCriterion extends SearchCriterion
 	}
 
 	public AbstractDateCriterion withDate(int year, int month, int dayOfMonth) {
-		setValue(CommonUtils.oldDate(year, month, dayOfMonth));
+		setValue(DateUtil.oldDate(year, month, dayOfMonth));
 		return this;
 	}
 

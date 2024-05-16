@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
@@ -596,7 +596,7 @@ public class DevConsoleCommandTransforms {
 		public String format(ResultSet rs, int columnIndex)
 				throws SQLException {
 			Timestamp ts = rs.getTimestamp(columnIndex);
-			return CommonUtils.formatDate(ts, DateStyle.AU_DATE_TIME_HUMAN);
+			return DateStyle.AU_DATE_TIME_HUMAN.format(ts);
 		}
 	}
 
