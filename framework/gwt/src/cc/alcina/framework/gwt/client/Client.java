@@ -194,6 +194,9 @@ public abstract class Client implements ContextFrame {
 			Window.Navigator.contextProvider = ContextProvider.createProvider(
 					ctx -> new Window.Navigator(), null, null,
 					Window.Navigator.class, false);
+			Window.Resources.contextProvider = ContextProvider.createProvider(
+					ctx -> new Window.Resources(), null, null,
+					Window.Resources.class, false);
 		}
 
 		public static boolean isComplete() {

@@ -24,6 +24,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.Window.Resources;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
@@ -284,6 +285,8 @@ public class Environment {
 
 	Window.Navigator navigator;
 
+	Window.Resources windowResources;
+
 	final Credentials credentials;
 
 	SchedulerFrame scheduler;
@@ -369,6 +372,8 @@ public class Environment {
 			location = Window.Location.contextProvider.createFrame(null);
 			navigator = Window.Navigator.contextProvider.createFrame(null);
 			history = History.contextProvider.createFrame(null);
+			windowResources = Window.Resources.contextProvider
+					.createFrame(null);
 			History.addValueChangeHandler(this::onHistoryChange);
 			client = Client.contextProvider.createFrame(ui);
 			client.getPlaceController();
@@ -509,6 +514,7 @@ public class Environment {
 				History.contextProvider.registerFrame(history);
 				Window.Location.contextProvider.registerFrame(location);
 				Window.Navigator.contextProvider.registerFrame(navigator);
+				Window.Resources.contextProvider.registerFrame(windowResources);
 				SchedulerFrame.contextProvider.registerFrame(scheduler);
 				Document.contextProvider.registerFrame(document);
 				Runnable cmd = () -> {

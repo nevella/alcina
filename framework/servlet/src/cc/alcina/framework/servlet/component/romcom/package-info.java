@@ -43,5 +43,10 @@
  * <ul>
  * <li>Client sends a POST containing a json-serialized RemoteComponentRequest
  * </ul>
+ * <h4>Limitations
+ * <ul>
+ * <li>Drag/capture is not supported (this is one place where you really want
+ * client-side handling)
+ * </ul>
  */
 package cc.alcina.framework.servlet.component.romcom;

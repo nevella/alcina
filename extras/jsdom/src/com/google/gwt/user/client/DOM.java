@@ -35,6 +35,7 @@ import com.google.gwt.dom.client.SelectElement;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
+import com.google.gwt.user.client.Window.Resources;
 import com.google.gwt.user.client.impl.DOMImpl;
 
 /**
@@ -44,18 +45,7 @@ import com.google.gwt.user.client.impl.DOMImpl;
  * events}.
  */
 public class DOM {
-	// The current event being fired
-	private static Event currentEvent = null;
-
 	static final DOMImpl impl = GWT.create(DOMImpl.class);
-
-	private static Element sCaptureElem;
-
-	private static Element eventCurrentTarget;
-
-	// need to keep recent dispatches, otherwise a::click -> dialog::focus ->
-	// a.parent::click (bubble) gets misinterpreted
-	static List<DispatchInfo> recentDispatches = new ArrayList<>();
 
 	/**
 	 * Adds an event preview to the preview stack. As long as this preview
@@ -463,34 +453,36 @@ public class DOM {
 			EventListener listener) {
 		// Preserve the current event in case we are in a reentrant event
 		// dispatch.
-		Event prevCurrentEvent = currentEvent;
-		currentEvent = evt;
+		Resources windowResources = Window.Resources.get();
+		Event prevCurrentEvent = windowResources.currentEvent;
+		windowResources.currentEvent = evt;
 		dispatchEventImpl(evt, elem, listener);
-		currentEvent = prevCurrentEvent;
+		windowResources.currentEvent = prevCurrentEvent;
 	}
 
 	private static void dispatchEventImpl(Event event, Element elem,
 			EventListener listener) {
+		Resources windowResources = Window.Resources.get();
 		// If this element has capture...
-		if (elem == sCaptureElem) {
+		if (elem == windowResources.sCaptureElem) {
 			// ... and it's losing capture, clear sCaptureElem.
 			if (eventGetType(event) == Event.ONLOSECAPTURE) {
-				sCaptureElem = null;
+				windowResources.sCaptureElem = null;
 			}
 		}
 		EventTarget eventTarget = event.getEventTarget();
 		String lcType = event.getType().toLowerCase();
 		int eventTypeInt = Event.getTypeInt(lcType);
 		DispatchInfo dispatchInfo = null;
-		Optional<DispatchInfo> first = recentDispatches.stream()
+		Optional<DispatchInfo> first = windowResources.recentDispatches.stream()
 				.filter(di -> di.isForEvent(event)).findFirst();
 		if (first.isPresent()) {
 			dispatchInfo = first.get();
 		} else {
 			dispatchInfo = new DispatchInfo(event);
-			recentDispatches.add(dispatchInfo);
-			if (recentDispatches.size() > 10) {
-				recentDispatches.remove(0);
+			windowResources.recentDispatches.add(dispatchInfo);
+			if (windowResources.recentDispatches.size() > 10) {
+				windowResources.recentDispatches.remove(0);
 			}
 		}
 		/*
@@ -527,7 +519,7 @@ public class DOM {
 				childElement = childElement.getParentElement();
 			}
 			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
-				eventCurrentTarget = entry.getKey();
+				windowResources.eventCurrentTarget = entry.getKey();
 				EventListener dispatchListener = entry.getValue();
 				Element dispatchElement = entry.getKey();
 				if (dispatchElement.eventListener != null
@@ -542,10 +534,11 @@ public class DOM {
 			dispatchInfo.willDispatchTo(Element.as(eventTarget));
 		}
 		if (Element.is(event.getCurrentEventTarget())) {
-			eventCurrentTarget = event.getCurrentEventTarget().cast();
-			dispatchInfo.willDispatchTo(eventCurrentTarget);
+			windowResources.eventCurrentTarget = event.getCurrentEventTarget()
+					.cast();
+			dispatchInfo.willDispatchTo(windowResources.eventCurrentTarget);
 		} else {
-			eventCurrentTarget = null;
+			windowResources.eventCurrentTarget = null;
 		}
 		// Pass the event to the listener.
 		listener.onBrowserEvent(event);
@@ -639,7 +632,7 @@ public class DOM {
 	 * @return the current event
 	 */
 	public static Event eventGetCurrentEvent() {
-		return currentEvent;
+		return Window.Resources.get().currentEvent;
 	}
 
 	/**
@@ -654,7 +647,7 @@ public class DOM {
 	 */
 	public static Element eventGetCurrentTarget(Event evt) {
 		// return evt.getCurrentEventTarget().cast();
-		return eventCurrentTarget;
+		return Window.Resources.get().eventCurrentTarget;
 	}
 
 	/**
@@ -933,7 +926,7 @@ public class DOM {
 	 *         exists
 	 */
 	public static Element getCaptureElement() {
-		return asOld(sCaptureElem);
+		return asOld(Window.Resources.get().sCaptureElem);
 	}
 
 	/**
@@ -1350,8 +1343,10 @@ public class DOM {
 	 * @see #setCapture(Element)
 	 */
 	public static void releaseCapture(Element elem) {
-		if ((sCaptureElem != null) && elem == sCaptureElem) {
-			sCaptureElem = null;
+		Resources resources = Window.Resources.get();
+		if ((resources.sCaptureElem != null)
+				&& elem == resources.sCaptureElem) {
+			resources.sCaptureElem = null;
 		}
 		impl.releaseCapture(elem);
 	}
@@ -1462,7 +1457,7 @@ public class DOM {
 	 *            the element on which to set mouse/touch/gesture capture
 	 */
 	public static void setCapture(Element elem) {
-		sCaptureElem = elem;
+		Window.Resources.get().sCaptureElem = elem;
 		impl.setCapture(elem);
 	}
 
@@ -1793,7 +1788,8 @@ public class DOM {
 		}
 
 		public static void remove(EventPreview listener) {
-			baseRemove(Event.handlers, listener, NativePreviewEvent.getType());
+			baseRemove(Window.Resources.get().nativePreviewEventHandlers,
+					listener, NativePreviewEvent.getType());
 		}
 
 		private NativePreview(EventPreview listener) {

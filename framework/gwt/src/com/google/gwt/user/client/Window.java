@@ -38,6 +38,9 @@ import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.http.client.UrlBuilder;
+import com.google.gwt.user.client.DOM.DispatchInfo;
+import com.google.gwt.user.client.Event.NativePreviewEvent;
+import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.impl.WindowImpl;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
@@ -66,6 +69,61 @@ public class Window {
 	private static final WindowImpl impl = GWT.create(WindowImpl.class);
 
 	public static final Topic<IntPair> topicScrollTo = Topic.create();
+
+	/*
+	 * All per-window package statics are gathered here (in a ContextFrame),
+	 * moved from classes such as NativeEvent
+	 */
+	public static class Resources implements ContextFrame {
+		public static ContextProvider<Void, Resources> contextProvider;
+
+		static Resources get() {
+			return contextProvider.contextFrame();
+		}
+
+		/**
+		 * The list of {@link NativePreviewHandler}. We use a list instead of a
+		 * handler manager for efficiency and because we want to fire the
+		 * handlers in reverse order. When the last handler is removed, handlers
+		 * is reset to null.
+		 * 
+		 * (NR - note the GWT doc is wrong - it was copied from
+		 * NativePreviewHandler)
+		 * 
+		 * (Moved from Event.handlers)
+		 */
+		HandlerManager nativePreviewEventHandlers;
+
+		/**
+		 * (Moved from NativePreviewEvent.singleton)
+		 * 
+		 * The singleton instance of {@link NativePreviewEvent}.
+		 */
+		NativePreviewEvent nativePreviewEventSingleton;
+
+		HandlerManager ensureNativeEventPreviewHandlers() {
+			if (nativePreviewEventHandlers == null) {
+				nativePreviewEventHandlers = new HandlerManager(null, true);
+				nativePreviewEventSingleton = new NativePreviewEvent();
+			}
+			return nativePreviewEventHandlers;
+		}
+
+		/*
+		 * Moved from com.google.gwt.user.client.DOM
+		 */
+		// The current event being fired
+		Event currentEvent = null;
+
+		com.google.gwt.dom.client.Element sCaptureElem;
+
+		com.google.gwt.dom.client.Element eventCurrentTarget;
+
+		// need to keep recent dispatches, otherwise a::click -> dialog::focus
+		// ->
+		// a.parent::click (bubble) gets misinterpreted
+		List<DispatchInfo> recentDispatches = new ArrayList<>();
+	}
 
 	/**
 	 * Adds a {@link CloseEvent} handler.

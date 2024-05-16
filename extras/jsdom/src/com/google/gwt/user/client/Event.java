@@ -212,14 +212,6 @@ public class Event extends NativeEvent {
 	public static final int UNDEFINED = 0;
 
 	/**
-	 * The list of {@link NativePreviewHandler}. We use a list instead of a
-	 * handler manager for efficiency and because we want to fire the handlers
-	 * in reverse order. When the last handler is removed, handlers is reset to
-	 * null.
-	 */
-	static HandlerManager handlers;
-
-	/**
 	 * Adds an event preview to the preview stack. As long as this preview
 	 * remains on the top of the stack, it will receive all events before they
 	 * are fired to their listeners. Note that the event preview will receive
@@ -267,10 +259,8 @@ public class Event extends NativeEvent {
 		DOM.maybeInitializeEventSystem();
 		// Initialize the type
 		NativePreviewEvent.getType();
-		if (handlers == null) {
-			handlers = new HandlerManager(null, true);
-			NativePreviewEvent.singleton = new NativePreviewEvent();
-		}
+		HandlerManager handlers = Window.Resources.get()
+				.ensureNativeEventPreviewHandlers();
 		return handlers.addHandler(NativePreviewEvent.TYPE, handler);
 	}
 
@@ -292,7 +282,8 @@ public class Event extends NativeEvent {
 	 * @return true to fire the event normally, false to cancel the event
 	 */
 	public static boolean fireNativePreviewEvent(NativeEvent nativeEvent) {
-		return NativePreviewEvent.fire(handlers, nativeEvent);
+		return NativePreviewEvent.fire(
+				Window.Resources.get().nativePreviewEventHandlers, nativeEvent);
 	}
 
 	/**
@@ -524,7 +515,9 @@ public class Event extends NativeEvent {
 		/**
 		 * The singleton instance of {@link NativePreviewEvent}.
 		 */
-		protected static NativePreviewEvent singleton;
+		protected static NativePreviewEvent singleton() {
+			return Window.Resources.get().nativePreviewEventSingleton;
+		}
 
 		/**
 		 * Fire a {@link NativePreviewEvent} for the native event.
@@ -542,6 +535,7 @@ public class Event extends NativeEvent {
 				// Cache the current values in the singleton in case we are in
 				// the
 				// middle of handling another event.
+				NativePreviewEvent singleton = singleton();
 				boolean lastIsCanceled = singleton.isCanceled;
 				boolean lastIsConsumed = singleton.isConsumed;
 				boolean lastIsFirstHandler = singleton.isFirstHandler;
@@ -622,7 +616,7 @@ public class Event extends NativeEvent {
 		@Override
 		protected void dispatch(NativePreviewHandler handler) {
 			handler.onPreviewNativeEvent(this);
-			singleton.isFirstHandler = false;
+			singleton().isFirstHandler = false;
 		}
 
 		@Override

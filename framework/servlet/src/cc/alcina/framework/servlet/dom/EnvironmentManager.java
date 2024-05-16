@@ -84,6 +84,9 @@ public class EnvironmentManager {
 		Window.Navigator.contextProvider = ContextProvider.createProvider(
 				ctx -> new Window.Navigator(), null, null,
 				Window.Navigator.class, true);
+		Window.Resources.contextProvider = ContextProvider.createProvider(
+				ctx -> new Window.Resources(), null, null,
+				Window.Resources.class, true);
 		flightRecordingEnabled = Configuration.is("flightRecordingEnabled");
 		if (flightRecordingEnabled) {
 			startFlightRecording();
