@@ -154,7 +154,7 @@ public class BeanFields {
 		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
-			return d == null ? "" : DateStyle.DM_DATE_TIME.format(d);
+			return d == null ? "" : DateStyle.DATE_TIME.format(d);
 		}
 	};
 
@@ -162,7 +162,7 @@ public class BeanFields {
 		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
-			return d == null ? "" : DateStyle.DM_DATE_TIME_TZ.format(d);
+			return d == null ? "" : DateStyle.DATE_TIME_TZ.format(d);
 		}
 	};
 
@@ -170,7 +170,7 @@ public class BeanFields {
 		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
-			return d == null ? null : DateStyle.DM_DATE_SLASH.format(d);
+			return d == null ? null : DateStyle.DATE_SLASH.format(d);
 		}
 	};
 

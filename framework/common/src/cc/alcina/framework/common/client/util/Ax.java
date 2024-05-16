@@ -64,11 +64,11 @@ public class Ax {
 	}
 
 	public static String dateSlash(Date date) {
-		return DateStyle.DM_DATE_SLASH.format(date);
+		return DateStyle.DATE_SLASH.format(date);
 	}
 
 	public static String dateTimeSlash(Date date) {
-		return DateStyle.DM_DATE_TIME.format(date);
+		return DateStyle.DATE_TIME.format(date);
 	}
 
 	public static String displayName(Object object) {
@@ -256,7 +256,7 @@ public class Ax {
 	}
 
 	public static String timestamp(Date date) {
-		return DateStyle.DM_DATE_TIME_MS.format(date);
+		return DateStyle.DATE_TIME_MS.format(date);
 	}
 
 	public static String timestampYmd(Date date) {

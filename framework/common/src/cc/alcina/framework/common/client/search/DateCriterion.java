@@ -67,7 +67,7 @@ public class DateCriterion extends AbstractDateCriterion {
 				: getDirection() == Direction.ASCENDING ? "from" : "to";
 		return withDisplayName
 				? Ax.format("%s %s", displayName,
-						DateStyle.DM_DATE_SLASH.format(getValue()))
-				: DateStyle.DM_DATE_SLASH.format(getValue());
+						DateStyle.DATE_SLASH.format(getValue()))
+				: DateStyle.DATE_SLASH.format(getValue());
 	}
 }

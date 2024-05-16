@@ -227,7 +227,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	public void log(String s, String category) {
 		if (logString.length() < 30000) {
-			logString += DateStyle.DM_DATE_TIME_MS.format(new Date()) + ": " + s
+			logString += DateStyle.DATE_TIME_MS.format(new Date()) + ": " + s
 					+ "\n";
 		}
 		consoleLog(s);

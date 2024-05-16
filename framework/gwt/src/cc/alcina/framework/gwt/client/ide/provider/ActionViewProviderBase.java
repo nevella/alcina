@@ -128,7 +128,7 @@ public abstract class ActionViewProviderBase
 		ActionLogItemVisualiser(JobTracker tracker, boolean first) {
 			this.vp = new VerticalPanel();
 			this.link = new Link(
-					DateStyle.DM_DATE_TIME.format(tracker.getEndTime()) + " - "
+					DateStyle.DATE_TIME.format(tracker.getEndTime()) + " - "
 							+ tracker.getJobResult());
 			link.addClickHandler(this);
 			String actionLog = tracker.getLog();

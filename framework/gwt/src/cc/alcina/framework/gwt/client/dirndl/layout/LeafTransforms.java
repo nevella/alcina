@@ -9,7 +9,7 @@ public class LeafTransforms {
 	public static class DateDot extends AbstractModelTransform<Date, String> {
 		@Override
 		public String apply(Date t) {
-			return DateStyle.DM_DATE_DOT.format(t);
+			return DateStyle.DATE_DOT.format(t);
 		}
 	}
 }

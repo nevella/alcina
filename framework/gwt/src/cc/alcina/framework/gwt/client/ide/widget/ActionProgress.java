@@ -366,11 +366,11 @@ public class ActionProgress extends Composite
 	private void updateProgress() {
 		jobName.setText(tracker.getJobName());
 		String time = tracker.getStartTime() == null ? ""
-				: "Start: " + DateStyle.DM_DATE_TIME_MS
-						.format(tracker.getStartTime());
+				: "Start: "
+						+ DateStyle.DATE_TIME_MS.format(tracker.getStartTime());
 		if (tracker.getEndTime() != null) {
 			time += "<br>End: "
-					+ DateStyle.DM_DATE_TIME_MS.format(tracker.getEndTime());
+					+ DateStyle.DATE_TIME_MS.format(tracker.getEndTime());
 		}
 		times.setHTML(time);
 		String msg = tracker.getProgressMessage();

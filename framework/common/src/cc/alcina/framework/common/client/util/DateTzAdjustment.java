@@ -101,7 +101,7 @@ public class DateTzAdjustment implements BidiConverter<Date, Date> {
 
 	public String toUiIndicatorTitle() {
 		return Ax.format("Current time :: %s",
-				DateStyle.DM_DATE_TIME_TZ.format(new Date()));
+				DateStyle.DATE_TIME_TZ.format(new Date()));
 	}
 
 	public static DateTzAdjustment getDateTzAdjustment() {
