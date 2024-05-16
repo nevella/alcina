@@ -3,7 +3,8 @@ package cc.alcina.framework.common.client.util;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.collections.BidiConverter;
-import cc.alcina.framework.common.client.util.DateTzAdjustment.DateAdjustmentModifier;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*
  * This controls how dates are *rendered* (including in editors) - not their
@@ -21,7 +22,15 @@ public class DateTzAdjustment implements BidiConverter<Date, Date> {
 
 	TimezoneData adjustToData;
 
-	static DateTzAdjustment dateTzAdjustment;
+	@Registration.Singleton
+	@Registration.EnvironmentSingleton
+	public static class ContextAdjustment {
+		public DateTzAdjustment dateTzAdjustment;
+
+		public static ContextAdjustment get() {
+			return Registry.impl(ContextAdjustment.class);
+		}
+	}
 
 	public DateTzAdjustment(TimezoneData localData, TimezoneData adjustToData) {
 		this.localData = localData;
@@ -95,15 +104,7 @@ public class DateTzAdjustment implements BidiConverter<Date, Date> {
 				DateStyle.DM_DATE_TIME_TZ.format(new Date()));
 	}
 
-	/*
-	 * This controls how dates are *rendered* (including in editors) - not their
-	 * general representation
-	 */
-	public static void setDateTzAdjustment(DateTzAdjustment dateAdjustment) {
-		DateTzAdjustment.dateTzAdjustment = dateAdjustment;
-	}
-
 	public static DateTzAdjustment getDateTzAdjustment() {
-		return DateTzAdjustment.dateTzAdjustment;
+		return ContextAdjustment.get().dateTzAdjustment;
 	}
 }
