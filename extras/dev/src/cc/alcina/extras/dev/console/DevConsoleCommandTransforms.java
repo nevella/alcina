@@ -596,7 +596,7 @@ public class DevConsoleCommandTransforms {
 		public String format(ResultSet rs, int columnIndex)
 				throws SQLException {
 			Timestamp ts = rs.getTimestamp(columnIndex);
-			return DateStyle.AU_DATE_TIME_HUMAN.format(ts);
+			return DateStyle.DM_DATE_TIME_HUMAN.format(ts);
 		}
 	}
 

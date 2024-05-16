@@ -80,7 +80,7 @@ public abstract class LeafRenderer extends DirectedRenderer {
 		public static class ShortMonth extends Text {
 			@Override
 			protected String getModelText(Object model) {
-				return DateStyle.AU_SHORT_MONTH.format((Date) model);
+				return DateStyle.DM_SHORT_MONTH.format((Date) model);
 			}
 		}
 	}

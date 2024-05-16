@@ -98,7 +98,7 @@ public class PropertyModificationLogItem {
 	public String toString() {
 		return Ax.format("%s\t%s\t%s",
 				CommonUtils.padStringRight(source, 20, ' '),
-				DateStyle.AU_DATE_TIME_HUMAN.format(new Date(modificationTime)),
+				DateStyle.DM_DATE_TIME_HUMAN.format(new Date(modificationTime)),
 				value);
 	};
 }
