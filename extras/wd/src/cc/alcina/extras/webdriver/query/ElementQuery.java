@@ -15,6 +15,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Ref;
 
 public class ElementQuery {
@@ -318,5 +319,10 @@ public class ElementQuery {
 
 	public static ElementQuery xpath(WebDriver webDriver, String xpath) {
 		return new ElementQuery(webDriver).withXpath(xpath);
+	}
+
+	public void awaitAttributePresent(String attrName) {
+		withPredicate(elem -> Ax.notBlank(elem.getAttribute(attrName)))
+				.getElement();
 	}
 }

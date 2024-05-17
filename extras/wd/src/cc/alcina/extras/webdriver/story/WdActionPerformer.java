@@ -171,5 +171,19 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 					wdPerformer.wdContext.token.getWebDriver(),
 					location.getText());
 		}
+
+		public static class AwaitAttributePresent implements
+				TypedPerformer<Story.Action.Ui.AwaitAttributePresent> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.AwaitAttributePresent action)
+					throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				String text = action.getText();
+				query.awaitAttributePresent(text);
+				wdPerformer.context.log("AwaitAttributePresent [%s] --> %s",
+						text, query);
+			}
+		}
 	}
 }

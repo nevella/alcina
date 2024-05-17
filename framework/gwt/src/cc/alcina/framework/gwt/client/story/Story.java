@@ -374,6 +374,24 @@ public interface Story {
 					}
 				}
 
+				/** An AwaitAttributePresent action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(Action.UI.class)
+				public @interface AwaitAttributePresent {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<AwaitAttributePresent> {
+						@Override
+						public Story.Action convert(AwaitAttributePresent ann) {
+							return new Story.Action.Ui.AwaitAttributePresent()
+									.withText(ann.value());
+						}
+					}
+				}
+
 				public interface Navigation {
 					/** A go-to-url action */
 					@Retention(RetentionPolicy.RUNTIME)
@@ -728,6 +746,9 @@ public interface Story {
 			}
 
 			public static class SelectByValue extends ActionWithText {
+			}
+
+			public static class AwaitAttributePresent extends ActionWithText {
 			}
 		}
 
