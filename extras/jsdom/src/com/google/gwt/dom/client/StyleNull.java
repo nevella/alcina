@@ -709,4 +709,8 @@ public class StyleNull implements ClientDomStyle {
 	public Style styleObject() {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void removeProperty(String key) {
+	}
 }

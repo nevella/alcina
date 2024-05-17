@@ -632,8 +632,8 @@ public class Style implements ClientDomStyle {
 
 	// FIXME - dirndl - these should be completely removed
 	public void removeProperty(String name) {
-		local().setProperty(name, "");
-		sync(() -> remote().setProperty(name, ""));
+		local().removeProperty(name);
+		sync(() -> remote().removeProperty(name));
 	}
 
 	void resetRemote() {

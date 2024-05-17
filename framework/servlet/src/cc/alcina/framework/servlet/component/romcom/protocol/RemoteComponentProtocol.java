@@ -247,7 +247,7 @@ public class RemoteComponentProtocol {
 
 			public static Startup forClient() {
 				Startup result = new Startup();
-				result.maxCharsPerTextNode = LocalDom.maxCharsPerTextNode;
+				result.maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
 				result.domMutations = LocalDom.pathRefRepresentations()
 						.domAsMutations();
 				result.locationMutation = LocationMutation.ofWindow(true);

@@ -23,6 +23,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
@@ -87,6 +88,8 @@ public class EnvironmentManager {
 		Window.Resources.contextProvider = ContextProvider.createProvider(
 				ctx -> new Window.Resources(), null, null,
 				Window.Resources.class, true);
+		EventFrame.contextProvider = ContextProvider.createProvider(
+				ctx -> new EventFrame(), null, null, EventFrame.class, true);
 		flightRecordingEnabled = Configuration.is("flightRecordingEnabled");
 		if (flightRecordingEnabled) {
 			startFlightRecording();

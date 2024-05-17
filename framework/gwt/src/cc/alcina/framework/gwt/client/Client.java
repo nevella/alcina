@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Url;
+import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
@@ -197,6 +198,9 @@ public abstract class Client implements ContextFrame {
 			Window.Resources.contextProvider = ContextProvider.createProvider(
 					ctx -> new Window.Resources(), null, null,
 					Window.Resources.class, false);
+			EventFrame.contextProvider = ContextProvider.createProvider(
+					ctx -> new EventFrame(), null, null, EventFrame.class,
+					false);
 		}
 
 		public static boolean isComplete() {

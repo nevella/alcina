@@ -825,4 +825,10 @@ public class StylePathref implements ClientDomStyle {
 	public Style styleObject() {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void removeProperty(String key) {
+		element.invokeStyle("removeProperty", List.of(String.class),
+				List.of(key));
+	}
 }

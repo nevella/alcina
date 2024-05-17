@@ -62,6 +62,7 @@ import com.google.gwt.util.tools.Utility;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.DateTzAdjustment;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.jscodeserver.JsCodeServerHttp;
@@ -333,6 +334,9 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 									new TimerJvm.Provider());
 							Registry.register().singleton(XhrTcpBridge.class,
 									new XhrTcpBridge());
+							Registry.register().singleton(
+									DateTzAdjustment.ContextAdjustment.class,
+									new DateTzAdjustment.ContextAdjustment());
 							codeServerHttp
 									.start(options.getCodeServerPort() + 1);
 						} catch (Throwable e) {

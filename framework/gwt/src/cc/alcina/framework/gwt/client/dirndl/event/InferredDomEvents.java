@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.BrowserEvents;
@@ -30,7 +29,6 @@ import com.google.gwt.user.client.Event.NativePreviewHandler;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.TopicListener;
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -183,8 +181,6 @@ public class InferredDomEvents {
 	 */
 	static abstract class EventRelativeBinding<E extends NodeEvent>
 			extends DomBinding<E> implements NativePreviewHandler {
-		static boolean mobile = GWT.isClient() && BrowserMod.isMobile();
-
 		protected boolean modal;
 
 		Element element;
@@ -241,6 +237,7 @@ public class InferredDomEvents {
 			EventTarget eTarget = nativeEvent.getEventTarget();
 			boolean eventTargetsScrollBar = Element.is(eTarget) && Element
 					.as(eTarget).getTagName().equalsIgnoreCase("html");
+			boolean mobile = EventFrame.get().mobile;
 			boolean wasTouchMaybeDrag = mobile && (BrowserEvents.TOUCHSTART
 					.equals(nativeEvent.getType())
 					|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())

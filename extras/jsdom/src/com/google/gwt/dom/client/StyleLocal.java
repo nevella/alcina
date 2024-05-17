@@ -553,7 +553,8 @@ public class StyleLocal implements ClientDomStyle {
 		return properties.isEmpty();
 	}
 
-	void removeProperty(String key) {
+	@Override
+	public void removeProperty(String key) {
 		properties.remove(key);
 	}
 

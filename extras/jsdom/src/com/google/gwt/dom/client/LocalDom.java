@@ -28,7 +28,6 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.RemoteMutations;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
@@ -78,15 +77,13 @@ import cc.alcina.framework.gwt.client.logic.ClientProperties;
  */
 public class LocalDom implements ContextFrame {
 	// FIXME - remcom - move to Document
-	public static int maxCharsPerTextNode = 65536;
+	public int maxCharsPerTextNode = 65536;
 
-	public static Topic<Exception> topicPublishException;
+	public Topic<Exception> topicPublishException;
 
-	public static Topic<String> topicUnableToParse;
+	public Topic<String> topicUnableToParse;
 
-	static Topic<Exception> topicReportException;
-
-	private static LocalDomContextProvider contextProvider;
+	Topic<Exception> topicReportException;
 
 	private static LocalDomCollections collections;
 
@@ -94,7 +91,7 @@ public class LocalDom implements ContextFrame {
 
 	private static boolean disableRemoteWrite;
 
-	// FIXME - localdom - remove
+	// FIXME - localdom - remove (once there's better general logging)
 	private static boolean logParseAndMutationIssues;
 
 	private static Map<String, Supplier<Element>> elementCreators;
@@ -203,11 +200,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public static void initalize() {
-		Preconditions.checkState(topicPublishException == null);
 		disableRemoteWrite = !GWT.isClient();
-		topicPublishException = Topic.create();
-		topicReportException = Topic.create();
-		topicUnableToParse = Topic.create();
 		if (GWT.isScript()) {
 			JavascriptKeyableLookup.initJs();
 			collections = new LocalDomCollections_Script();
@@ -377,11 +370,6 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	public static void
-			registerContextProvider(LocalDomContextProvider contextProvider) {
-		LocalDom.contextProvider = contextProvider;
-	}
-
 	public static Node resolveExternal(NodeJso nodeJso) {
 		return get().resolveExternal0(nodeJso);
 	}
@@ -406,7 +394,8 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public static void triggerLocalDomException() {
-		topicReportException.publish(new Exception("test exception trigger"));
+		get().topicReportException
+				.publish(new Exception("test exception trigger"));
 	}
 
 	public static String validateHtml(String html) {
@@ -422,7 +411,7 @@ public class LocalDom implements ContextFrame {
 			get().remoteMutations.verifyDomEquivalence();
 		} catch (Exception e) {
 			e.printStackTrace();
-			topicReportException.publish(e);
+			get().topicReportException.publish(e);
 		} finally {
 			if (fromUserGesture) {
 				get().loggingConfiguration.logEvents = logEvents;
@@ -481,6 +470,9 @@ public class LocalDom implements ContextFrame {
 		} else {
 			remoteLookup = AlcinaCollections.newWeakMap();
 		}
+		topicPublishException = Topic.create();
+		topicReportException = Topic.create();
+		topicUnableToParse = Topic.create();
 		topicReportException.add(this::handleReportedException);
 	}
 
@@ -1183,7 +1175,7 @@ public class LocalDom implements ContextFrame {
 							+ "\n\tchildNodesLengthHtmlOperation: %s\n\tmaxCharsPerTextNode: %s",
 					lengthTest.length(), childNodesLengthNodeOperation,
 					childNodesLengthHtmlOperation, maxCharsPerTextNode);
-			LocalDom.maxCharsPerTextNode = maxCharsPerTextNode;
+			LocalDom.setMaxCharsPerTextNode(maxCharsPerTextNode);
 		}
 	}
 
@@ -1202,10 +1194,6 @@ public class LocalDom implements ContextFrame {
 		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
 			return JsUniqueMap.create();
 		}
-	}
-
-	public interface LocalDomContextProvider {
-		LocalDom contextInstance();
 	}
 
 	public static class LoggingConfiguration {
@@ -1379,5 +1367,21 @@ public class LocalDom implements ContextFrame {
 		public List<MutationRecord> nodeAsMutations(Node node) {
 			return remoteMutations.nodeAsMutations(node);
 		}
+	}
+
+	public static int getMaxCharsPerTextNode() {
+		return get().maxCharsPerTextNode;
+	}
+
+	public static void setMaxCharsPerTextNode(int maxCharsPerTextNode) {
+		get().maxCharsPerTextNode = maxCharsPerTextNode;
+	}
+
+	public static Topic<Exception> topicPublishException() {
+		return get().topicPublishException;
+	}
+
+	public static Topic<String> topicUnableToParse() {
+		return get().topicUnableToParse;
 	}
 }

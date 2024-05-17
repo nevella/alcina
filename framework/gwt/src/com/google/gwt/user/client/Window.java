@@ -53,22 +53,13 @@ import cc.alcina.framework.common.client.util.Topic;
  * events.
  */
 public class Window {
-	// Package protected for testing.
-	static WindowHandlers handlers;
-
 	private static boolean closeHandlersInitialized;
 
 	private static boolean scrollHandlersInitialized;
 
 	private static boolean resizeHandlersInitialized;
 
-	private static int lastResizeWidth;
-
-	private static int lastResizeHeight;
-
 	private static final WindowImpl impl = GWT.create(WindowImpl.class);
-
-	public static final Topic<IntPair> topicScrollTo = Topic.create();
 
 	/*
 	 * All per-window package statics are gathered here (in a ContextFrame),
@@ -123,6 +114,27 @@ public class Window {
 		// ->
 		// a.parent::click (bubble) gets misinterpreted
 		List<DispatchInfo> recentDispatches = new ArrayList<>();
+
+		// Package protected for testing.
+		WindowHandlers handlers;
+
+		int lastResizeWidth;
+
+		int lastResizeHeight;
+
+		Topic<IntPair> topicScrollTo = Topic.create();
+
+		void onResize() {
+			// On webkit and IE we sometimes get duplicate window resize events.
+			// Here, we manually filter them.
+			int width = getClientWidth();
+			int height = getClientHeight();
+			if (lastResizeWidth != width || lastResizeHeight != height) {
+				lastResizeWidth = width;
+				lastResizeHeight = height;
+				ResizeEvent.fire(ensureHandlers(), width, height);
+			}
+		}
 	}
 
 	/**
@@ -163,7 +175,7 @@ public class Window {
 	 */
 	private static <H extends EventHandler> HandlerRegistration
 			addHandler(GwtEvent.Type<H> type, final H handler) {
-		return getHandlers().addHandler(type, handler);
+		return ensureHandlers().addHandler(type, handler);
 	}
 
 	/**
@@ -286,9 +298,13 @@ public class Window {
 	 *            the event
 	 */
 	private static void fireEvent(GwtEvent<?> event) {
-		if (handlers != null) {
-			handlers.fireEvent(event);
+		if (handlers() != null) {
+			handlers().fireEvent(event);
 		}
+	}
+
+	static WindowHandlers handlers() {
+		return Resources.get().handlers;
 	}
 
 	/**
@@ -311,11 +327,11 @@ public class Window {
 		return Document.get().getClientWidth();
 	}
 
-	private static WindowHandlers getHandlers() {
-		if (handlers == null) {
-			handlers = new WindowHandlers();
+	private static WindowHandlers ensureHandlers() {
+		if (handlers() == null) {
+			Resources.get().handlers = new WindowHandlers();
 		}
-		return handlers;
+		return handlers();
 	}
 
 	/**
@@ -403,7 +419,7 @@ public class Window {
 
 	static void onClosed() {
 		if (closeHandlersInitialized) {
-			CloseEvent.fire(getHandlers(), null);
+			CloseEvent.fire(ensureHandlers(), null);
 		}
 	}
 
@@ -422,15 +438,7 @@ public class Window {
 
 	static void onResize() {
 		if (resizeHandlersInitialized) {
-			// On webkit and IE we sometimes get duplicate window resize events.
-			// Here, we manually filter them.
-			int width = getClientWidth();
-			int height = getClientHeight();
-			if (lastResizeWidth != width || lastResizeHeight != height) {
-				lastResizeWidth = width;
-				lastResizeHeight = height;
-				ResizeEvent.fire(getHandlers(), width, height);
-			}
+			Resources.get().onResize();
 		}
 	}
 
@@ -488,7 +496,7 @@ public class Window {
 	 */
 	@Deprecated
 	public static void removeWindowCloseListener(WindowCloseListener listener) {
-		BaseListenerWrapper.WrapWindowClose.remove(handlers, listener);
+		BaseListenerWrapper.WrapWindowClose.remove(handlers(), listener);
 	}
 
 	/**
@@ -500,7 +508,7 @@ public class Window {
 	@Deprecated
 	public static void
 			removeWindowResizeListener(WindowResizeListener listener) {
-		BaseListenerWrapper.WrapWindowResize.remove(handlers, listener);
+		BaseListenerWrapper.WrapWindowResize.remove(handlers(), listener);
 	}
 
 	/**
@@ -512,7 +520,7 @@ public class Window {
 	@Deprecated
 	public static void
 			removeWindowScrollListener(WindowScrollListener listener) {
-		BaseListenerWrapper.WrapWindowScroll.remove(handlers, listener);
+		BaseListenerWrapper.WrapWindowScroll.remove(handlers(), listener);
 	}
 
 	/**
@@ -564,11 +572,16 @@ public class Window {
 		scrollTo(left, top, false);
 	}
 
+	public static Topic<IntPair> topicScrollTo() {
+		return Resources.get().topicScrollTo;
+	}
+
 	public static void scrollTo(int left, int top, boolean smooth) {
-		topicScrollTo.publish(new IntPair(left, top));
+		topicScrollTo().publish(new IntPair(left, top));
 		scrollTo0(left, top, smooth);
 	}
 
+	// TODO - romcom - implement [DocumentPathref - null Node --> window]
 	private static native void scrollTo0(int left, int top, boolean smooth) /*-{
     var args = {
       'left' : left,
