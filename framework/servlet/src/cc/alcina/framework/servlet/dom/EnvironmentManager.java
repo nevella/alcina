@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
@@ -38,6 +39,7 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
  * <i>sources</i>
  */
 @Registration.Singleton
+@Feature.Ref(Feature_EnvironmentManager.class)
 public class EnvironmentManager {
 	public static EnvironmentManager get() {
 		return Registry.impl(EnvironmentManager.class);

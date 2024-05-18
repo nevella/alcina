@@ -23,6 +23,7 @@
  * these immutables?</li>
  * </ul>
  *
- * @see doc/dirndl-cookbook.html
+ * <p>
+ * see also doc/cookbook.html
  */
 package cc.alcina.framework.gwt.client.dirndl.layout;

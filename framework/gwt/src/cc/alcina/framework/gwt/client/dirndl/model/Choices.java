@@ -453,6 +453,22 @@ public abstract class Choices<T> extends Model implements
 
 		protected T lastSelectedValue;
 
+		/**
+		 * TODO - dirndl - add inner classes Enumeration and
+		 * Enumeration.WithNull - to change
+		 * 
+		 * <pre>
+		 * <code>
+		 * 
+		&#64;Directed.Transform(Choices.Single.To.class)
+		&#64;Choices.EnumValues(InputOutputDisplayMode.class)
+		
+		to
+		
+		&#64;Directed.Transform(Choices.Single.To.Enumeration.class)
+		 * </code>
+		 * </pre>
+		 */
 		public static class To implements ModelTransform<Object, Single<?>> {
 			@Override
 			public Single<?> apply(Object t) {
