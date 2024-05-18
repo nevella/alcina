@@ -1187,7 +1187,7 @@ public abstract class Job extends VersionableEntity<Job>
 		@Override
 		public String toString() {
 			return Ax.format("%s::%s - Acquired: %s - Antecedent: %s",
-					getClassName().replaceFirst("(.+)(\\..+)", "$2"), getPath(),
+					getClassName().replaceFirst("(.+)\\.(.+)", "$2"), getPath(),
 					isAcquired(), isAcquiredFromAntecedent());
 		}
 	}

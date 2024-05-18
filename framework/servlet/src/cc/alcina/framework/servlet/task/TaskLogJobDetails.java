@@ -19,8 +19,11 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.JobStateMessage;
+import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -166,9 +169,30 @@ public class TaskLogJobDetails extends PerformerTask {
 				DomNode resourcesTd = builder.row().cell("Resources").append();
 				resourcesTd.setClassName("resources");
 				if (processState != null) {
-					processState.getResources().stream().map(Object::toString)
-							.forEach(t -> resourcesTd.builder().tag("div")
-									.text(t).append());
+					processState.getResources().stream().forEach(res -> {
+						Class<? extends JobResource> resourceClass = Reflections
+								.forName(res.getClassName());
+						DomNode tdDiv = resourcesTd.builder().tag("div")
+								.append();
+						tdDiv.builder().tag("span").text(res.toString())
+								.append();
+						if (JobResource.Deletable.class
+								.isAssignableFrom(resourceClass)) {
+							String deleteHref = JobServlet
+									.createTaskUrl(new TaskDeleteJobResource()
+											.withJobId(active.getId())
+											.withResourceClass(
+													res.getClassName())
+											.withResourcePath(res.getPath()));
+							tdDiv.builder().tag("a").attr("target", "_blank")
+									.attr("onclick", Ax.format(
+											"return window.confirm('Are you sure you want to delete resource :: %s ::?')",
+											res.getPath()))
+									.attr("href", deleteHref).text("[Delete]")
+									.style("margin-left:1rem; display:inline-block")
+									.append();
+						}
+					});
 				}
 				builder.row().cell("Stack").className("stack-trace")
 						.cell(messageState.getStackTrace());

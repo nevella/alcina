@@ -22,7 +22,7 @@ class Dotburger extends Model.Fields {
 
 	Menu menu;
 
-	class Menu extends Model.All implements ValueChange.Container {
+	static class Menu extends Model.All implements ValueChange.Container {
 		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_Menu;
 
 		Heading section1 = new Heading("Selection type");
