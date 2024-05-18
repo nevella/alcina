@@ -13,6 +13,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.story.Story.Decl.Action.DeclarativeAction;
+import cc.alcina.framework.gwt.client.story.Story.Decl.Location.DeclarativeLocation;
 
 public class Waypoint implements Story.Point {
 	public static abstract class Code extends Waypoint
@@ -26,9 +28,16 @@ public class Waypoint implements Story.Point {
 	protected class ConditionalImpl implements Story.Conditional {
 		Set<Class<? extends Story.Point>> exitOkOnFalse = Set.of();
 
+		Set<Class<? extends Story.Point>> exitOkOnTrue = Set.of();
+
 		@Override
 		public Set<Class<? extends Story.Point>> exitOkOnFalse() {
 			return exitOkOnFalse;
+		}
+
+		@Override
+		public Set<Class<? extends Story.Point>> exitOkOnTrue() {
+			return exitOkOnTrue;
 		}
 	}
 
@@ -180,8 +189,10 @@ public class Waypoint implements Story.Point {
 			}
 		}
 		if (action == null) {
-			Annotation actionAnnotation = Story.Decl.Action.actionAnnotations
-					.stream().map(clazz -> reflector.annotation(clazz))
+			Annotation actionAnnotation = Registry
+					.query(DeclarativeAction.class).untypedRegistrations()
+					.map(clazz -> reflector
+							.annotation((Class<? extends Annotation>) clazz))
 					.filter(Objects::nonNull).findFirst().orElse(null);
 			if (actionAnnotation != null) {
 				Story.Decl.Action.Converter converter = Registry.impl(
@@ -191,8 +202,10 @@ public class Waypoint implements Story.Point {
 			}
 		}
 		if (location == null) {
-			Annotation locationAnnotation = Story.Decl.Location.locationAnnotations
-					.stream().map(clazz -> reflector.annotation(clazz))
+			Annotation locationAnnotation = Registry
+					.query(DeclarativeLocation.class).untypedRegistrations()
+					.map(clazz -> reflector
+							.annotation((Class<? extends Annotation>) clazz))
 					.filter(Objects::nonNull).findFirst().orElse(null);
 			if (locationAnnotation != null) {
 				Story.Decl.Location.Converter converter = Registry.impl(
@@ -207,6 +220,11 @@ public class Waypoint implements Story.Point {
 					.annotation(Story.Decl.Conditional.ExitOkOnFalse.class);
 			if (exitOkOnFalseAnn != null) {
 				conditional.exitOkOnFalse = Set.of(exitOkOnFalseAnn.value());
+			}
+			Story.Decl.Conditional.ExitOkOnTrue exitOkOnTrueAnn = reflector
+					.annotation(Story.Decl.Conditional.ExitOkOnTrue.class);
+			if (exitOkOnTrueAnn != null) {
+				conditional.exitOkOnTrue = Set.of(exitOkOnTrueAnn.value());
 			}
 		}
 	}

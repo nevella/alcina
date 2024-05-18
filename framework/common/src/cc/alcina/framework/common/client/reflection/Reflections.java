@@ -72,13 +72,7 @@ public class Reflections {
 	}
 
 	public static boolean isAssignableFrom(Class from, Class to) {
-		if (from == to) {
-			return true;
-		}
-		if (to.isPrimitive()) {
-			return false;
-		}
-		return get().hasReflectionMetadata(to) && at(to).isAssignableTo(from);
+		return get().assignableFrom.isAssignableFrom(from, to);
 	}
 
 	public static boolean isEffectivelyFinal(Class clazz) {
@@ -97,6 +91,28 @@ public class Reflections {
 
 	public static void setApplicationName(String applicationName) {
 		get().applicationName = applicationName;
+	}
+
+	private AssignableFrom assignableFrom = new AssignableFrom();
+
+	class AssignableFrom {
+		public boolean isAssignableFrom(Class from, Class to) {
+			if (from == to) {
+				return true;
+			}
+			if (to.isPrimitive()) {
+				return false;
+			}
+			Map<Class, Boolean> forClass = resolvedAssignable
+					.computeIfAbsent(from, clazz -> CollectionCreators.Bootstrap
+							.createConcurrentClassMap());
+			return forClass.computeIfAbsent(to,
+					clazz -> hasReflectionMetadata(to)
+							&& at(to).isAssignableTo(from));
+		}
+
+		Map<Class, Map<Class, Boolean>> resolvedAssignable = CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
 	}
 
 	private Map<Class, ClassReflector> reflectors = CollectionCreators.Bootstrap

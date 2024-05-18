@@ -185,5 +185,19 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 						text, query);
 			}
 		}
+
+		public static class TestAttributePresent implements
+				TypedPerformer<Story.Action.Ui.TestAttributePresent> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.TestAttributePresent action)
+					throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				String text = action.getText();
+				boolean present = query.isAttributePresent(text);
+				wdPerformer.context.log("TestAttributePresent [%s] --> %s",
+						text, query);
+			}
+		}
 	}
 }

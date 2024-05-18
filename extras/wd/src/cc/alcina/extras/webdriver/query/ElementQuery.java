@@ -85,10 +85,10 @@ public class ElementQuery {
 	}
 
 	public void awaitAbsent() {
-		if (!isPresent()) {
+		WebElement element = immediateGetElement();
+		if (element == null) {
 			return;
 		}
-		WebElement element = getElement();
 		awaitRemoval(element);
 	}
 
@@ -172,6 +172,10 @@ public class ElementQuery {
 
 	public boolean isPresent() {
 		return withTimeout(0).withRequired(false).getElement() != null;
+	}
+
+	public WebElement immediateGetElement() {
+		return withTimeout(0).withRequired(false).getElement();
 	}
 
 	public boolean isSelected(String optionText) {
@@ -324,5 +328,10 @@ public class ElementQuery {
 	public void awaitAttributePresent(String attrName) {
 		withPredicate(elem -> Ax.notBlank(elem.getAttribute(attrName)))
 				.getElement();
+	}
+
+	public boolean isAttributePresent(String text) {
+		WebElement elem = immediateGetElement();
+		return elem != null && Ax.notBlank(elem.getAttribute(text));
 	}
 }

@@ -5,6 +5,9 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 
+/**
+ * Note - an implementing type need not necessarily be an enum
+ */
 public interface PropertyEnum {
 	public static String asPropertyName(Object name) {
 		if (name == null) {
@@ -21,7 +24,6 @@ public interface PropertyEnum {
 	String name();
 
 	default Predicate<? super DomainTransformEvent> transformFilter() {
-		return event -> Objects.equals(event.getPropertyName(),
-				((Enum) this).name());
+		return event -> Objects.equals(event.getPropertyName(), name());
 	}
 }

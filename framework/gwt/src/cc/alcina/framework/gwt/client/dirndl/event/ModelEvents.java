@@ -490,7 +490,8 @@ public class ModelEvents {
 	 *
 	 */
 	public static class SelectionChanged
-			extends ModelEvent<Object, SelectionChanged.Handler> {
+			extends ModelEvent<Object, SelectionChanged.Handler>
+			implements ValueChange {
 		@Override
 		public void dispatch(SelectionChanged.Handler handler) {
 			handler.onSelectionChanged(this);

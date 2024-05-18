@@ -5,6 +5,7 @@ import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessView_DotBurger;
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessView_Header;
+import cc.alcina.framework.servlet.story.component.traversal.Header.Dotburger.EnsureShowing;
 
 @Decl.Feature(Feature_TraversalProcessView_Header.class)
 @Decl.Child(Header.Dotburger.class)
@@ -112,8 +113,6 @@ class Header extends Waypoint {
 		}
 
 		/*
-		 * TODO - to be idempotent, Check_DisplayMode_QuarterWidth_Selected
-		 * should -> EnsureQuarterWidth_Selected
 		 * 
 		 * This tests the change of DisplayMode from quarterwidth to halfwidth
 		 * (by reset/open, which causes a re-render)
@@ -123,18 +122,12 @@ class Header extends Waypoint {
 		 */
 		@Decl.Child(Reset.class)
 		@Decl.Child(Open.class)
-		@Decl.Child(DisplayMode.Check_DisplayMode_QuarterWidth_Selected.class)
+		@Decl.Child(EnsureDisplayMode_QuarterWidth_Selected.class)
 		@Decl.Child(DisplayMode.Click_DisplayMode_HalfWidth.class)
 		@Decl.Child(Reset.class)
 		@Decl.Child(Open.class)
 		@Decl.Child(DisplayMode.Check_DisplayMode_HalfWidth_Selected.class)
 		static class DisplayMode extends Waypoint {
-			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU_DISPLAY_MODE_QUARTER_WIDTH)
-			@Decl.Action.UI.AwaitAttributePresent("_selected")
-			static class Check_DisplayMode_QuarterWidth_Selected
-					extends Waypoint {
-			}
-
 			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU_DISPLAY_MODE_HALF_WIDTH)
 			@Decl.Action.UI.Click
 			static class Click_DisplayMode_HalfWidth extends Waypoint {
@@ -143,6 +136,31 @@ class Header extends Waypoint {
 			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU_DISPLAY_MODE_HALF_WIDTH)
 			@Decl.Action.UI.AwaitAttributePresent("_selected")
 			static class Check_DisplayMode_HalfWidth_Selected extends Waypoint {
+			}
+		}
+
+		@Decl.Conditional.ExitOkOnTrue(EnsureShowing.TestNotShowing.class)
+		@Decl.Child(EnsureDisplayMode_QuarterWidth_Selected.Test_DisplayMode_QuarterWidth_Selected.class)
+		@Decl.Child(EnsureDisplayMode_QuarterWidth_Selected.Click_DisplayMode_QuarterWidth.class)
+		@Decl.Child(Reset.class)
+		@Decl.Child(Open.class)
+		@Decl.Child(EnsureDisplayMode_QuarterWidth_Selected.Check_DisplayMode_QuarterWidth_Selected.class)
+		static class EnsureDisplayMode_QuarterWidth_Selected extends Waypoint {
+			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU_DISPLAY_MODE_QUARTER_WIDTH)
+			@Decl.Action.UI.TestAttributePresent("_selected")
+			static class Test_DisplayMode_QuarterWidth_Selected
+					extends Waypoint {
+			}
+
+			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU_DISPLAY_MODE_QUARTER_WIDTH)
+			@Decl.Action.UI.Click
+			static class Click_DisplayMode_QuarterWidth extends Waypoint {
+			}
+
+			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU_DISPLAY_MODE_QUARTER_WIDTH)
+			@Decl.Action.UI.AwaitAttributePresent("_selected")
+			static class Check_DisplayMode_QuarterWidth_Selected
+					extends Waypoint {
 			}
 		}
 	}

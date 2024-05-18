@@ -326,11 +326,16 @@ public class StoryTeller {
 		}
 
 		public boolean isExitChildSequence(Visit visit) {
-			if (visit.result.testResult == null || visit.result.testResult) {
+			if (visit.result.testResult == null) {
 				return false;
 			}
-			return getConditional().exitOkOnFalse()
-					.contains(visit.point.getClass());
+			if (visit.result.testResult) {
+				return getConditional().exitOkOnTrue()
+						.contains(visit.point.getClass());
+			} else {
+				return getConditional().exitOkOnFalse()
+						.contains(visit.point.getClass());
+			}
 		}
 
 		@Override
@@ -363,6 +368,35 @@ public class StoryTeller {
 
 		public Class<? extends Point> pointClass() {
 			return point.getClass();
+		}
+
+		public class Ancestors {
+			boolean includeSelf;
+
+			public Ancestors withIncludeSelf() {
+				includeSelf = true;
+				return this;
+			}
+
+			public Stream<Visit> stream() {
+				List<Visit> ancestors = new ArrayList<>();
+				Visit cursor = Visit.this;
+				while (cursor != null) {
+					if (includeSelf || cursor != Visit.this) {
+						ancestors.add(cursor);
+					}
+					cursor = cursor.getParent();
+				}
+				return ancestors.stream();
+			}
+
+			public boolean hasName(String name) {
+				return stream().anyMatch(v -> v.displayName().equals(name));
+			}
+		}
+
+		public Ancestors ancestors() {
+			return new Ancestors();
 		}
 	}
 
@@ -682,7 +716,8 @@ public class StoryTeller {
 	void performAction(Visit visit) {
 		new BeforePerformAction().publish();
 		visit.performAction();
-		if (visit.result.testResult != null && !visit.result.testResult) {
+		if ((visit.result.testResult != null && !visit.result.testResult)
+				|| visit.result.throwable != null) {
 			evaluateTestNotPassed(visit);
 		}
 		visit.afterActionPerformed();
@@ -690,7 +725,8 @@ public class StoryTeller {
 	}
 
 	void evaluateTestNotPassed(Visit visit) {
-		if (visit.getParent().isExitChildSequence(visit)) {
+		if (visit.result.throwable == null
+				&& visit.getParent().isExitChildSequence(visit)) {
 			return;
 		}
 		visit.result.ok = false;

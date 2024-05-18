@@ -54,6 +54,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices.EnumValues.EnumSupplier;
 
 @Directed(tag = "choices")
 /*
@@ -138,13 +139,36 @@ public abstract class Choices<T> extends Model implements
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface EnumValues {
+		Class<? extends Enum> value();
+
+		boolean withNull() default false;
+
+		@Reflected
+		public static class EnumSupplier
+				implements Function<EnumValues, List<?>> {
+			@Override
+			public List<?> apply(EnumValues v) {
+				List result = new ArrayList<>();
+				if (v.withNull()) {
+					result.add(null);
+				}
+				Arrays.stream(v.value().getEnumConstants())
+						.forEach(result::add);
+				return result;
+			}
+		}
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface Values {
 		/**
 		 * The values supplier
 		 */
 		Class<? extends Function<Values, List<?>>> value();
-
-		Class<? extends Enum> enumClass() default Enum.class;
 
 		boolean withNull() default false;
 
@@ -153,20 +177,6 @@ public abstract class Choices<T> extends Model implements
 			@Override
 			default List<?> apply(Values t) {
 				return get();
-			}
-		}
-
-		@Reflected
-		public static class EnumSupplier implements Function<Values, List<?>> {
-			@Override
-			public List<?> apply(Values v) {
-				List result = new ArrayList<>();
-				if (v.withNull()) {
-					result.add(null);
-				}
-				Arrays.stream(v.enumClass().getEnumConstants())
-						.forEach(result::add);
-				return result;
 			}
 		}
 	}
@@ -186,6 +196,8 @@ public abstract class Choices<T> extends Model implements
 	public void onBeforeRender(BeforeRender event) {
 		event.node.optional(Values.class).ifPresent(ann -> setValues(
 				(List<T>) Reflections.newInstance(ann.value()).apply(ann)));
+		event.node.optional(EnumValues.class).ifPresent(
+				ann -> setValues((List<T>) new EnumSupplier().apply(ann)));
 		super.onBeforeRender(event);
 	}
 
@@ -556,6 +568,10 @@ public abstract class Choices<T> extends Model implements
 			choices.forEach(c -> c.setSelected(Objects.equals(c.value, value)));
 			T newValue = getSelectedValue();
 			if (provideIsBound() && !Objects.equals(oldValue, newValue)) {
+				// FIXME - dirndl - probably can be replaced with
+				// ValueChange.Bind (in general, bound Choices should be
+				// constructed
+				// via a Directed.Transform, not imperatively)
 				firePropertyChange("selectedValue", oldValue, newValue);
 				firePropertyChange("value", oldValue, newValue);
 				NodeEvent.Context.fromNode(provideNode()).dispatch(

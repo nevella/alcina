@@ -7,6 +7,8 @@ public class TraversalSettings extends Bindable.Fields {
 		return TraversalProcessView.Ui.get().settings;
 	}
 
+	static PackageProperties._TraversalSettings properties = PackageProperties.traversalSettings;
+
 	public boolean descentSelectionIncludesSecondaryRelations = true;
 
 	public boolean showContainerLayers = false;
@@ -14,34 +16,6 @@ public class TraversalSettings extends Bindable.Fields {
 	public PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
 
 	public InputOutputDisplayMode inputOutputDisplayMode = InputOutputDisplayMode.INPUT_OUTPUT;
-
-	public void setInputOutputDisplayMode(
-			InputOutputDisplayMode inputOutputDisplayMode) {
-		set("inputOutputDisplayMode", this.inputOutputDisplayMode,
-				inputOutputDisplayMode,
-				() -> this.inputOutputDisplayMode = inputOutputDisplayMode);
-	}
-
-	public void setDescentSelectionIncludesSecondaryRelations(
-			boolean descentSelectionIncludesSecondaryRelations) {
-		set("descentSelectionIncludesSecondaryRelations",
-				this.descentSelectionIncludesSecondaryRelations,
-				descentSelectionIncludesSecondaryRelations,
-				() -> this.descentSelectionIncludesSecondaryRelations = descentSelectionIncludesSecondaryRelations);
-	}
-
-	public void setShowContainerLayers(boolean showContainerLayers) {
-		set("showContainerLayers", this.showContainerLayers,
-				showContainerLayers,
-				() -> this.showContainerLayers = showContainerLayers);
-	}
-
-	public void
-			setPropertyDisplayMode(PropertyDisplayMode propertyDisplayMode) {
-		set("propertyDisplayMode", this.propertyDisplayMode,
-				propertyDisplayMode,
-				() -> this.propertyDisplayMode = propertyDisplayMode);
-	}
 
 	public enum PropertyDisplayMode {
 		QUARTER_WIDTH, HALF_WIDTH, NONE
@@ -55,7 +29,7 @@ public class TraversalSettings extends Bindable.Fields {
 		PropertyDisplayMode next = PropertyDisplayMode
 				.values()[(propertyDisplayMode.ordinal() + 1)
 						% PropertyDisplayMode.values().length];
-		setPropertyDisplayMode(next);
+		properties.propertyDisplayMode.set(this, next);
 		return next;
 	}
 
@@ -63,7 +37,7 @@ public class TraversalSettings extends Bindable.Fields {
 		InputOutputDisplayMode next = InputOutputDisplayMode
 				.values()[(inputOutputDisplayMode.ordinal() + 1)
 						% InputOutputDisplayMode.values().length];
-		setInputOutputDisplayMode(next);
+		properties.inputOutputDisplayMode.set(this, next);
 		return next;
 	}
 }
