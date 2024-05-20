@@ -219,7 +219,7 @@ public class RemoteComponentProtocol {
 		 * Ignores reflective checks because serialization the field
 		 * protocolException would normally fail in the general case (here we
 		 * guarantee imperatively that the field instance is a subtype of
-		 * ProtocolException, anfd thus will succeed)
+		 * ProtocolException, and thus will succeed)
 		 */
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class ProcessingException extends Message {
