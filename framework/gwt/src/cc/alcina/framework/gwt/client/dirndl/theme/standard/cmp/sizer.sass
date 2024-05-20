@@ -1,0 +1,27 @@
+@mixin common
+  position: absolute
+  z-index: 1
+  background-color: #000
+  opacity: 0.0
+  transition: opacity 0.2s ease-in
+  cursor: grab
+
+  &:hover
+    opacity: 0.8
+
+@mixin horizontal
+  @include common
+  height: 6px
+  margin-top: -3px
+  left: 0
+  right: 0
+
+@mixin vertical
+  @include common
+  width: 6px
+  margin-left: -3px
+  top: 0
+  bottom: 0
+
+@mixin left
+  left: 0px

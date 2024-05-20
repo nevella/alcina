@@ -19,9 +19,9 @@ public class DoublePair implements Comparable<DoublePair> {
 	public DoublePair() {
 	}
 
-	public DoublePair(double i1, double i2) {
-		this.d1 = i1;
-		this.d2 = i2;
+	public DoublePair(double d1, double d2) {
+		this.d1 = d1;
+		this.d2 = d2;
 	}
 
 	public void add(DoublePair dp) {
@@ -115,5 +115,15 @@ public class DoublePair implements Comparable<DoublePair> {
 
 	public String toStringComma() {
 		return d1 + "," + d2;
+	}
+
+	public DoublePair clone() {
+		return new DoublePair(d1, d2);
+	}
+
+	public DoublePair minus(DoublePair o) {
+		DoublePair result = clone();
+		result.subtract(o);
+		return result;
 	}
 }
