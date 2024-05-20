@@ -28,7 +28,6 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.RemoteMutations;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
@@ -1315,51 +1314,66 @@ public class LocalDom implements ContextFrame {
 	 * LocalDom
 	 */
 	public class PathRefRepresentations {
+		boolean warnedEventException;
+
 		public void applyEvent(DomEventData eventData) {
-			if (eventData.preview) {
-				DOM.previewEvent(eventData.event);
-			} else {
-				if (eventData.window) {
-					Event event = eventData.event;
-					switch (event.getType()) {
-					case BrowserEvents.PAGEHIDE:
-						// since window isn't framed (yet)
-						// Window.onPageHide();
-						break;
-					default:
-						throw new UnsupportedOperationException();
-					}
+			try {
+				if (eventData.preview) {
+					DOM.previewEvent(eventData.event);
 				} else {
-					Element elem = (Element) eventData.firstReceiver.node();
-					if (eventData.eventValue() != null) {
-						elem.implAccess().pathrefRemote().value = eventData
-								.eventValue();
-					}
-					// FIXME - romcom - attach probably not being called
-					if (elem.eventListener == null) {
-						elem.eventListener = elem;
-					}
-					// um, is it that easy?
-					try {
+					if (eventData.window) {
+						Event event = eventData.event;
+						switch (event.getType()) {
+						case BrowserEvents.PAGEHIDE:
+							// since window isn't framed (yet)
+							// Window.onPageHide();
+							break;
+						default:
+							throw new UnsupportedOperationException();
+						}
+					} else {
+						Element elem = (Element) eventData.firstReceiver.node();
+						if (eventData.eventValue() != null) {
+							elem.implAccess().pathrefRemote().value = eventData
+									.eventValue();
+						}
+						// FIXME - romcom - attach probably not being called
+						if (elem.eventListener == null) {
+							elem.eventListener = elem;
+						}
+						// um, is it that easy?
 						DOM.dispatchEvent(eventData.event, elem,
 								elem.eventListener);
-					} catch (Exception e) {
-						/*
-						 * One unfinished business is event dispatch (client)
-						 * reaching server post dom-change (server)
-						 * 
-						 * For the moment, report - eventually there should be
-						 * some sort of transactional view of the dom (but even
-						 * so, this is a problem that can occur in a pure-client
-						 * system and isn't that easy to solve)
-						 * 
-						 * Note also that pathref is -not- as good as
-						 * element/node UID here
-						 */
-						e.printStackTrace();
 					}
 				}
+			} catch (RuntimeException e) {
+				if (e instanceof IndexOutOfBoundsException) {
+					/*
+					 * One unfinished business is event dispatch (client)
+					 * reaching server post dom-change (server)
+					 * 
+					 * For the moment, report - eventually there should be some
+					 * sort of transactional view of the dom (but even so, this
+					 * is a problem that can occur in a pure-client system and
+					 * isn't that easy to solve)
+					 * 
+					 * Note also that pathref is -not- as good as element/node
+					 * UID here
+					 */
+					maybeWarn(e);
+				}
 			}
+		}
+
+		// FIXME - romcom - switch from pathref to ref_id - (mostly), and then
+		// throw (or at least improve logging)
+		private void maybeWarn(Exception e) {
+			Ax.simpleExceptionOut(e);
+			if (warnedEventException) {
+				return;
+			}
+			e.printStackTrace();
+			warnedEventException = true;
 		}
 
 		public void applyMutations(List<MutationRecord> mutations,
