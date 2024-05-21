@@ -49,6 +49,7 @@ import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
+import cc.alcina.framework.servlet.job.JobRegistry.JobStateChangeObservable;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
@@ -628,6 +629,7 @@ public class JobContext {
 			job.setStartTime(new Date());
 			job.setState(JobState.PROCESSING);
 			job.setPerformerVersionNumber(performer.getVersionNumber());
+			new JobStateChangeObservable(job).publish();
 			persistMetadata();
 		}
 	}

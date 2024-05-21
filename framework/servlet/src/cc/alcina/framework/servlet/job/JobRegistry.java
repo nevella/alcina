@@ -64,6 +64,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -72,7 +73,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
@@ -208,6 +208,17 @@ public class JobRegistry {
 		}
 	}
 
+	/*
+	 * This info is also observable via JobDomain, but simpler here
+	 */
+	public static class JobStateChangeObservable implements ProcessObservable {
+		public Job job;
+
+		public JobStateChangeObservable(Job job) {
+			this.job = job;
+		}
+	}
+
 	public static Builder createBuilder() {
 		return new Builder();
 	}
@@ -263,8 +274,6 @@ public class JobRegistry {
 		return createBuilder().withTask(task).ensureConsistency(
 				JobDomain.DefaultConsistencyPriorities._default);
 	}
-
-	public Topic<Job> topicJobComplete = Topic.create();
 
 	private ConcurrentHashMap<Job, InMemoryResult> inMemoryResults = new ConcurrentHashMap<>();
 
@@ -766,7 +775,7 @@ public class JobRegistry {
 					if (trackInternalMetrics()) {
 						InternalMetrics.get().endTracker(job);
 					}
-					topicJobComplete.publish(job);
+					new JobStateChangeObservable(job).publish();
 				} catch (Throwable e) {
 					logger.warn("DEVEX::0 - JobRegistry.performJob0.finally",
 							e);
@@ -1009,6 +1018,7 @@ public class JobRegistry {
 			default:
 				throw new UnsupportedOperationException();
 			}
+			new JobStateChangeObservable(job).publish();
 			return job;
 		}
 
