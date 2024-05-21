@@ -5,10 +5,7 @@ import java.util.Date;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.datepicker.client.CalendarUtil;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.DateTzAdjustment.DateAdjustmentModifier;
 
 /**
  * Interchangable because this (gwt-compat) version is weak compared to real,
@@ -17,8 +14,6 @@ import cc.alcina.framework.common.client.util.DateTzAdjustment.DateAdjustmentMod
  *
  */
 @SuppressWarnings("deprecation")
-@Reflected
-@Registration.Singleton
 public class DateUtil {
 	public interface YearResolver {
 		int getYear(Date d);
@@ -28,30 +23,13 @@ public class DateUtil {
 		int getMonth(Date d);
 	}
 
-	private static DateUtil singleton;
-
 	public static int ageInDays(Date date) {
-		return get().ageInDays0(date);
-	}
-
-	public static int ageInMinutes(Date date) {
-		return get().ageInMinutes0(date);
-	}
-
-	public static DateUtil get() {
-		if (singleton == null) {
-			singleton = Registry.impl(DateUtil.class);
-		}
-		return singleton;
-	}
-
-	protected int ageInDays0(Date date) {
 		return (int) (date == null ? 0
 				: (System.currentTimeMillis() - date.getTime())
 						/ TimeConstants.ONE_DAY_MS);
 	}
 
-	protected int ageInMinutes0(Date date) {
+	public static int ageInMinutes(Date date) {
 		return (int) (date == null ? 0
 				: (System.currentTimeMillis() - date.getTime())
 						/ TimeConstants.ONE_MINUTE_MS);
