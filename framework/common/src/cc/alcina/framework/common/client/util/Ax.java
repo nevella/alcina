@@ -18,7 +18,6 @@ import java.util.stream.StreamSupport;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
 public class Ax {
 	private static boolean test;
@@ -65,11 +64,11 @@ public class Ax {
 	}
 
 	public static String dateSlash(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.AU_DATE_SLASH);
+		return DateStyle.DATE_SLASH.format(date);
 	}
 
 	public static String dateTimeSlash(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME);
+		return DateStyle.DATE_TIME.format(date);
 	}
 
 	public static String displayName(Object object) {
@@ -257,11 +256,11 @@ public class Ax {
 	}
 
 	public static String timestamp(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME_MS);
+		return DateStyle.DATE_TIME_MS.format(date);
 	}
 
 	public static String timestampYmd(Date date) {
-		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP);
+		return DateStyle.TIMESTAMP.format(date);
 	}
 
 	public static String transforms() {
@@ -322,6 +321,6 @@ public class Ax {
 	}
 
 	public static Date date(int year, int month, int dayOfMonth) {
-		return CommonUtils.oldDate(year, month, dayOfMonth);
+		return DateUtil.oldDate(year, month, dayOfMonth);
 	}
 }

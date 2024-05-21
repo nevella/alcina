@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
@@ -23,6 +24,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
@@ -37,6 +39,7 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
  * <i>sources</i>
  */
 @Registration.Singleton
+@Feature.Ref(Feature_EnvironmentManager.class)
 public class EnvironmentManager {
 	public static EnvironmentManager get() {
 		return Registry.impl(EnvironmentManager.class);
@@ -84,6 +87,11 @@ public class EnvironmentManager {
 		Window.Navigator.contextProvider = ContextProvider.createProvider(
 				ctx -> new Window.Navigator(), null, null,
 				Window.Navigator.class, true);
+		Window.Resources.contextProvider = ContextProvider.createProvider(
+				ctx -> new Window.Resources(), null, null,
+				Window.Resources.class, true);
+		EventFrame.contextProvider = ContextProvider.createProvider(
+				ctx -> new EventFrame(), null, null, EventFrame.class, true);
 		flightRecordingEnabled = Configuration.is("flightRecordingEnabled");
 		if (flightRecordingEnabled) {
 			startFlightRecording();

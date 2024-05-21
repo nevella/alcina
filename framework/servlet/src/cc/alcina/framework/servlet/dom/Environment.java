@@ -34,6 +34,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
@@ -284,6 +285,10 @@ public class Environment {
 
 	Window.Navigator navigator;
 
+	Window.Resources windowResources;
+
+	EventFrame eventFrame;
+
 	final Credentials credentials;
 
 	SchedulerFrame scheduler;
@@ -369,6 +374,9 @@ public class Environment {
 			location = Window.Location.contextProvider.createFrame(null);
 			navigator = Window.Navigator.contextProvider.createFrame(null);
 			history = History.contextProvider.createFrame(null);
+			windowResources = Window.Resources.contextProvider
+					.createFrame(null);
+			eventFrame = EventFrame.contextProvider.createFrame(null);
 			History.addValueChangeHandler(this::onHistoryChange);
 			client = Client.contextProvider.createFrame(ui);
 			client.getPlaceController();
@@ -509,7 +517,9 @@ public class Environment {
 				History.contextProvider.registerFrame(history);
 				Window.Location.contextProvider.registerFrame(location);
 				Window.Navigator.contextProvider.registerFrame(navigator);
+				Window.Resources.contextProvider.registerFrame(windowResources);
 				SchedulerFrame.contextProvider.registerFrame(scheduler);
+				EventFrame.contextProvider.registerFrame(eventFrame);
 				Document.contextProvider.registerFrame(document);
 				Runnable cmd = () -> {
 					runnable.run();

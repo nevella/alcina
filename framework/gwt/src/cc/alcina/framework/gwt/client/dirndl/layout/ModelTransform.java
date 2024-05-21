@@ -5,8 +5,7 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -62,7 +61,7 @@ public interface ModelTransform<A, B> extends Function<A, B> {
 			implements ModelTransform<Date, String> {
 		@Override
 		public String apply(Date t) {
-			return CommonUtils.formatDate(t, DateStyle.TIMESTAMP_HUMAN);
+			return DateStyle.TIMESTAMP_HUMAN.format(t);
 		}
 	}
 

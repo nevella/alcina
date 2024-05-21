@@ -5,7 +5,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DateUtil;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class SearchHandlerUtil {
@@ -15,7 +15,7 @@ public class SearchHandlerUtil {
 			return nullAsOk;
 		}
 		Date criterionDate = new Date(sc.getValue().getTime());
-		CommonUtils.roundDate(criterionDate,
+		DateUtil.roundDate(criterionDate,
 				sc.getDirection() == Direction.DESCENDING);
 		boolean eq = criterionDate.equals(date);
 		boolean lt = date.before(criterionDate);

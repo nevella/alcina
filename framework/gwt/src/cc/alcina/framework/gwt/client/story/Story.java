@@ -211,15 +211,17 @@ public interface Story {
 			String value();
 		}
 
-		/** Declarative actions */
+		/**
+		 * Declarative actions
+		 * 
+		 */
 		public interface Action {
-			public static List<Class<? extends Annotation>> actionAnnotations = (List) List
-					.of(Action.Code.class, Action.UI.Click.class,
-							Action.UI.Keys.class, Action.UI.Navigation.class,
-							Action.UI.Select.ByText.class,
-							Action.UI.Select.ByValue.class,
-							Action.UI.TestAbsent.class,
-							Action.UI.TestPresent.class);
+			/*
+			 * A marker - annotations registered at this key by this will be
+			 * used to populate declarative Points
+			 */
+			public interface DeclarativeAction {
+			}
 
 			@Registration.NonGenericSubtypes(Converter.class)
 			public interface Converter<A extends Annotation>
@@ -234,6 +236,7 @@ public interface Story {
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
+			@Registration(DeclarativeAction.class)
 			public @interface Code {
 				Class<? extends Story.Action.Code> value();
 			}
@@ -247,7 +250,7 @@ public interface Story {
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
-				@Registration(Action.UI.class)
+				@Registration(DeclarativeAction.class)
 				public @interface Click {
 					public static class ConverterImpl
 							implements Converter<Click> {
@@ -262,7 +265,8 @@ public interface Story {
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
-				@Registration(Action.UI.class)
+				@Registration(DeclarativeAction.class)
+				////
 				public @interface TestPresent {
 					public static class ConverterImpl
 							implements Converter<TestPresent> {
@@ -277,7 +281,7 @@ public interface Story {
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
-				@Registration(Action.UI.class)
+				@Registration(DeclarativeAction.class)
 				public @interface AwaitPresent {
 					public static class ConverterImpl
 							implements Converter<AwaitPresent> {
@@ -292,7 +296,7 @@ public interface Story {
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
-				@Registration(Action.UI.class)
+				@Registration(DeclarativeAction.class)
 				public @interface AwaitAbsent {
 					public static class ConverterImpl
 							implements Converter<AwaitAbsent> {
@@ -307,7 +311,7 @@ public interface Story {
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
-				@Registration(Action.UI.class)
+				@Registration(DeclarativeAction.class)
 				public @interface TestAbsent {
 					public static class ConverterImpl
 							implements Converter<TestAbsent> {
@@ -322,7 +326,7 @@ public interface Story {
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
-				@Registration(Action.UI.class)
+				@Registration(DeclarativeAction.class)
 				public @interface Keys {
 					String value();
 
@@ -341,7 +345,7 @@ public interface Story {
 					@Retention(RetentionPolicy.RUNTIME)
 					@Documented
 					@Target({ ElementType.TYPE })
-					@Registration(Action.UI.class)
+					@Registration(DeclarativeAction.class)
 					public @interface ByValue {
 						String value();
 
@@ -359,7 +363,7 @@ public interface Story {
 					@Retention(RetentionPolicy.RUNTIME)
 					@Documented
 					@Target({ ElementType.TYPE })
-					@Registration(Action.UI.class)
+					@Registration(DeclarativeAction.class)
 					public @interface ByText {
 						String value();
 
@@ -374,12 +378,48 @@ public interface Story {
 					}
 				}
 
+				/** An AwaitAttributePresent action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface AwaitAttributePresent {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<AwaitAttributePresent> {
+						@Override
+						public Story.Action convert(AwaitAttributePresent ann) {
+							return new Story.Action.Ui.AwaitAttributePresent()
+									.withText(ann.value());
+						}
+					}
+				}
+
+				/** An TestAttributePresent action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface TestAttributePresent {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<TestAttributePresent> {
+						@Override
+						public Story.Action convert(TestAttributePresent ann) {
+							return new Story.Action.Ui.TestAttributePresent()
+									.withText(ann.value());
+						}
+					}
+				}
+
 				public interface Navigation {
 					/** A go-to-url action */
 					@Retention(RetentionPolicy.RUNTIME)
 					@Documented
 					@Target({ ElementType.TYPE })
-					@Registration(Action.UI.class)
+					@Registration(DeclarativeAction.class)
 					public @interface Go {
 						public static class ConverterImpl
 								implements Converter<Go> {
@@ -394,7 +434,7 @@ public interface Story {
 					@Retention(RetentionPolicy.RUNTIME)
 					@Documented
 					@Target({ ElementType.TYPE })
-					@Registration(Action.UI.class)
+					@Registration(DeclarativeAction.class)
 					public @interface Refresh {
 						public static class ConverterImpl
 								implements Converter<Refresh> {
@@ -413,7 +453,7 @@ public interface Story {
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
-				@Registration(Action.UI.class)
+				@Registration(DeclarativeAction.class)
 				public @interface Mark {
 					String value();
 
@@ -431,9 +471,12 @@ public interface Story {
 
 		/** Declarative locations */
 		public interface Location {
-			public static List<Class<? extends Annotation>> locationAnnotations = (List) List
-					.of(Location.Xpath.class, Location.Url.class,
-							Location.Marked.class);
+			/*
+			 * A marker - annotations registered at this key by this will be
+			 * used to populate declarative Points
+			 */
+			public interface DeclarativeLocation {
+			}
 
 			@Registration.NonGenericSubtypes(Converter.class)
 			public interface Converter<A extends Annotation>
@@ -445,6 +488,7 @@ public interface Story {
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
+			@Registration(DeclarativeLocation.class)
 			public @interface Xpath {
 				String value();
 
@@ -461,6 +505,7 @@ public interface Story {
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
+			@Registration(DeclarativeLocation.class)
 			public @interface Marked {
 				String value();
 
@@ -477,6 +522,7 @@ public interface Story {
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
+			@Registration(DeclarativeLocation.class)
 			public @interface Url {
 				String value();
 
@@ -531,6 +577,18 @@ public interface Story {
 			@Documented
 			@Target({ ElementType.TYPE })
 			public @interface ExitOkOnFalse {
+				Class<? extends Story.Point> value();
+			}
+
+			/**
+			 * Child traversal will skip subsequent dep.resolution and actions
+			 * if the conditional (test) child specified by value() returns true
+			 * [and will not throw]
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface ExitOkOnTrue {
 				Class<? extends Story.Point> value();
 			}
 
@@ -729,6 +787,12 @@ public interface Story {
 
 			public static class SelectByValue extends ActionWithText {
 			}
+
+			public static class AwaitAttributePresent extends ActionWithText {
+			}
+
+			public static class TestAttributePresent extends ActionWithText {
+			}
 		}
 
 		/*
@@ -806,5 +870,7 @@ public interface Story {
 	 */
 	public interface Conditional {
 		Set<Class<? extends Point>> exitOkOnFalse();
+
+		Set<Class<? extends Point>> exitOkOnTrue();
 	}
 }

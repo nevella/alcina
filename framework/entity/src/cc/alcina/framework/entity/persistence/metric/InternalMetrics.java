@@ -38,7 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ResettingCounter;
 import cc.alcina.framework.entity.Configuration;
@@ -71,8 +71,8 @@ public class InternalMetrics {
 	}
 
 	public static String profilerFolder(Date date) {
-		return Ax.format("profiler/%s", CommonUtils
-				.formatDate(date, DateStyle.TIMESTAMP).substring(0, 8));
+		return Ax.format("profiler/%s",
+				DateStyle.TIMESTAMP.format(date).substring(0, 8));
 	}
 
 	private Timer timer;

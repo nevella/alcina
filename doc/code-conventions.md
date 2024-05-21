@@ -33,3 +33,9 @@ class Cooking{
 ## Rather than a.b.c.method() - consider creating a.method() which calls b.c
 
 This aids encapsulation
+
+## Don't prefix inner classes
+
+- Top-level `Feature_ContextMenu` is fine (encouraged) (and note the underscore - indiciates namespacing prefix).
+  But inner classes of `Feature_ContextMenu` should be `Copy` - not `Feature_Copy`. This is a compromise between
+  IDE ease-of-location and keep-names-non-redundant (the prefix aids the former)

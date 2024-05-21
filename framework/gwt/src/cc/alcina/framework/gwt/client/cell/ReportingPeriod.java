@@ -5,8 +5,8 @@ import java.util.Date;
 import com.google.gwt.user.datepicker.client.CalendarUtil;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DatePair;
+import cc.alcina.framework.common.client.util.DateUtil;
 
 @Reflected
 public enum ReportingPeriod {
@@ -17,7 +17,7 @@ public enum ReportingPeriod {
 		Date start = new Date(date.getTime());
 		Date end = null;
 		start.setDate(1);
-		start = CommonUtils.roundDate(start, false);
+		start = DateUtil.roundDate(start, false);
 		switch (this) {
 		case MONTH:
 			end = new Date(start.getTime());

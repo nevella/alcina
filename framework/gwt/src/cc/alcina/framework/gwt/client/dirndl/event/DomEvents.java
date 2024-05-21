@@ -18,6 +18,7 @@ import com.google.gwt.event.dom.client.InputEvent;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.MouseDownEvent;
+import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseUpEvent;
@@ -281,6 +282,25 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onMouseDown(MouseDown event);
+		}
+	}
+
+	public static class MouseMove extends NodeEvent<MouseMove.Handler> {
+		@Override
+		public void dispatch(MouseMove.Handler handler) {
+			handler.onMouseMove(this);
+		}
+
+		public static class BindingImpl extends DomBinding<MouseMove> {
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::fireEvent,
+						MouseMoveEvent.getType());
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onMouseMove(MouseMove event);
 		}
 	}
 

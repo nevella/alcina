@@ -97,8 +97,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
-import cc.alcina.framework.common.client.util.CommonUtils.MonthResolver;
-import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
+import cc.alcina.framework.common.client.util.DateUtil;
+import cc.alcina.framework.common.client.util.DateUtil.MonthResolver;
+import cc.alcina.framework.common.client.util.DateUtil.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -2075,8 +2076,8 @@ public class SEUtilities {
 		}
 	}
 
-	@Registration.Singleton(YearResolver.class)
-	public static class YearResolverImpl implements YearResolver {
+	@Registration.Singleton(DateUtil.YearResolver.class)
+	public static class YearResolverImpl implements DateUtil.YearResolver {
 		private Calendar calendar = new GregorianCalendar();
 
 		@Override
@@ -2086,8 +2087,8 @@ public class SEUtilities {
 		}
 	}
 
-	@Registration.Singleton(MonthResolver.class)
-	public static class MonthResolverImpl implements MonthResolver {
+	@Registration.Singleton(DateUtil.MonthResolver.class)
+	public static class MonthResolverImpl implements DateUtil.MonthResolver {
 		private Calendar calendar = new GregorianCalendar();
 
 		@Override

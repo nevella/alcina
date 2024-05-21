@@ -181,7 +181,7 @@ public class TaskAnalyseStatics extends PerformerTask.Fields {
 			// tricky...
 			TODO, TO_FRAME,
 			// fixed (by changing)
-			FIXED
+			FIXED, JVM_ONLY
 		}
 
 		public static class Entry {

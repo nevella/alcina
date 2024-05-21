@@ -91,7 +91,7 @@ public abstract class DecoratorChooser extends Model.Fields
 	public void onClosed(ModelEvents.Closed event) {
 		this.contentDecorator.chooser = null;
 		if (event != null) {
-			event.getContext().bubble();
+			event.bubble();
 		}
 	}
 

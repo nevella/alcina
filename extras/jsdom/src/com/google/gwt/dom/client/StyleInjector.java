@@ -15,43 +15,17 @@
  */
 package com.google.gwt.dom.client;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-
-/**
- * Needless set of optimisations, since handled by localdom batching anyway
+/*
+ * These were optimised to batch element creation - that's redundant, since
+ * localdom does that at a lower level
  */
 public class StyleInjector {
-	private static List<String> pending = new ArrayList<>();
-
-	private static ScheduledCommand flusher = new ScheduledCommand() {
-		@Override
-		public void execute() {
-			if (needsInjection) {
-				flush();
-			}
-		}
-	};
-
-	private static boolean needsInjection = false;
-
 	public static StyleElement createAndAttachElement(String contents) {
 		StyleElement style = Document.get().createStyleElement();
 		style.setPropertyString("language", "text/css");
 		setContents(style, contents);
 		getHead().appendChild(style);
 		return style;
-	}
-
-	public static void flush() {
-		String contents = pending.stream().collect(Collectors.joining(""));
-		StyleElement style = createAndAttachElement(contents);
-		pending.clear();
-		needsInjection = false;
 	}
 
 	private static HeadElement getHead() {
@@ -63,20 +37,11 @@ public class StyleInjector {
 	}
 
 	public static void inject(String contents) {
-		pending.add(contents);
-		schedule();
+		createAndAttachElement(contents);
 	}
 
 	public static void injectNow(String contents) {
-		pending.add(contents);
-		flush();
-	}
-
-	private static void schedule() {
-		if (!needsInjection) {
-			needsInjection = true;
-			Scheduler.get().scheduleFinally(flusher);
-		}
+		inject(contents);
 	}
 
 	public static void setContents(StyleElement style, String contents) {

@@ -113,10 +113,14 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		 * 'public') . But given any registered classes must have accessible
 		 * public methods - except in the rare case that everything registered
 		 * (and the consumer) is in the package - sticking with public
+		 * 
+		 * Annotation types - not having subtypes/superinterfaces - *are*
+		 * registrable
 		 */
 		boolean registrable = Modifier.isPublic(clazz.getModifiers())
 				&& !Modifier.isAbstract(clazz.getModifiers())
 				&& !clazz.isInterface();
+		registrable |= clazz.isAnnotation();
 		registrable |= Registration.AllSubtypes.class.isAssignableFrom(clazz);
 		if (registrable) {
 			List<Registration> registrations = Annotations

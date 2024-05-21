@@ -44,10 +44,13 @@ public class DOMImplHeadless extends DOMImpl {
 
 	@Override
 	public void releaseCapture(Element elem) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void setCapture(Element elem) {
+		throw new UnsupportedOperationException(
+				"Requires js client (performance)");
 	}
 
 	@Override

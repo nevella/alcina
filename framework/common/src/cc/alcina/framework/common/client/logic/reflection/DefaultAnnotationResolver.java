@@ -17,6 +17,10 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
+/**
+ * The default declarative information resolver. It respects
+ * {@link MergeStrategy} type annotations
+ */
 @Reflected
 @Registration.Singleton(Resolver.class)
 public class DefaultAnnotationResolver extends Resolver {

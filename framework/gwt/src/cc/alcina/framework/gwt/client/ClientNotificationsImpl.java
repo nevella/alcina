@@ -51,7 +51,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -227,8 +227,8 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	public void log(String s, String category) {
 		if (logString.length() < 30000) {
-			logString += CommonUtils.formatDate(new Date(),
-					DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
+			logString += DateStyle.DATE_TIME_MS.format(new Date()) + ": " + s
+					+ "\n";
 		}
 		consoleLog(s);
 		if (logToSysOut) {

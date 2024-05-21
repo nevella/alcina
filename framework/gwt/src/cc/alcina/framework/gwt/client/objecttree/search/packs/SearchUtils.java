@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.search.TextCriterion.TextCriterionType;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DateUtil;
 
 public class SearchUtils {
 	static SearchUtilsIdsHelper idsHelper;
@@ -128,7 +128,7 @@ public class SearchUtils {
 		MatchResult result;
 		Date date = null;
 		if ((result = regExp.exec(text)) != null) {
-			date = CommonUtils.yearAsDate(Integer.parseInt(result.getGroup(3)));
+			date = DateUtil.yearAsDate(Integer.parseInt(result.getGroup(3)));
 			CalendarUtil.addMonthsToDate(date,
 					Integer.parseInt(result.getGroup(2)) - 1);
 			CalendarUtil.addDaysToDate(date,

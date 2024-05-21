@@ -8,11 +8,22 @@ public interface JobResource extends Lockable {
 		return Collections.singletonList(this);
 	}
 
+	default String getId() {
+		return null;
+	}
+
 	default boolean isSharedWithChildren() {
 		return false;
 	}
 
 	default boolean isSharedWithSubsequents() {
 		return false;
+	}
+
+	/*
+	 * The resource can be deleted
+	 */
+	public interface Deletable {
+		String preDeletionText();
 	}
 }

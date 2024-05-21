@@ -171,9 +171,13 @@ public abstract class DOMImplStandard extends DOMImpl {
 																};
 																}-*/;
 
+	// dev mode perf improvement, but prevents drag suport
 	private static EventMap getCaptureEventDispatchers() {
 		return getCaptureEventDispatchers0(
-				!com.google.gwt.core.shared.GWT.isScript());
+				// !com.google.gwt.core.shared.GWT.isScript()
+				false
+		//
+		);
 	}
 
 	private static native EventMap

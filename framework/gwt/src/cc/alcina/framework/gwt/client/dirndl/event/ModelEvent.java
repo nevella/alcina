@@ -121,7 +121,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 
 	public boolean checkReemitted(HasNode hasNode) {
 		if (wasReemitted(hasNode.provideNode())) {
-			getContext().bubble();
+			bubble();
 			return true;
 		} else {
 			return false;

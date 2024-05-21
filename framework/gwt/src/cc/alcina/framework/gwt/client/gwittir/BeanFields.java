@@ -67,7 +67,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser;
@@ -154,8 +154,7 @@ public class BeanFields {
 		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
-			return d == null ? ""
-					: CommonUtils.formatDate(d, DateStyle.AU_DATE_TIME);
+			return d == null ? "" : DateStyle.DATE_TIME.format(d);
 		}
 	};
 
@@ -163,8 +162,7 @@ public class BeanFields {
 		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
-			return d == null ? ""
-					: CommonUtils.formatDate(d, DateStyle.AU_DATE_TIME_TZ);
+			return d == null ? "" : DateStyle.DATE_TIME_TZ.format(d);
 		}
 	};
 
@@ -172,8 +170,7 @@ public class BeanFields {
 		@Override
 		public Object render(Object o) {
 			Date d = (Date) o;
-			return d == null ? null
-					: CommonUtils.formatDate(d, DateStyle.AU_DATE_SLASH);
+			return d == null ? null : DateStyle.DATE_SLASH.format(d);
 		}
 	};
 

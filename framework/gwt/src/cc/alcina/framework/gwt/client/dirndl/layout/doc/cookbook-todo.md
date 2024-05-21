@@ -6,7 +6,7 @@
 
 If two child properties fire the same event (say two Choices properties), there are two options:
 
-* Differentiate handling based on the firer:
+- Differentiate handling based on the firer:
 
 ```
 @Override
@@ -15,24 +15,24 @@ public void onSelectionChanged(SelectionChanged event) {
 	}
 	..else model1
 	{
-	
+
 	}
 
 ```
 
-* Wrap one or more properties in a @Directed.Delegating wrapper (essentially just a listener)
+- Wrap one or more properties in a @Directed.Delegating wrapper (essentially just a listener)
 
 ```
 @Directed(renderer=DirectedRenderer.Delegating.class,receives=ModelEvents.SelectionChanged.class)
 public static class Foo extends Model implements SelectionChanged.Handler{
-	
+
 	@Override
 	public void onSelectionChanged(SelectionChanged event) {
 	}
 }
 ```
 
-This is, admittedly, more verbose than listeners-as-lambdas -- but so far in 3 large applications I've had to 
+This is, admittedly, more verbose than listeners-as-lambdas -- but so far in 3 large applications I've had to
 do this exactly once
 
 ### Re-emission of a received event
@@ -48,6 +48,13 @@ public void onSelected(Selected event) {
 		return;
 	}
 ```
+
+### Property bindings
+
+Notes:
+
+- Generally use ValueChange.Container (sooo simple)(see `cc.alcina.framework.servlet.component.traversal.Dotburger.Menu`)
+- Describe TypedProperty usage and generation (the docs should also go to the Manifesto)
 
 ### Dialogs
 

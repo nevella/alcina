@@ -48,14 +48,14 @@ public class HtmlParser {
 		}
 		int idx = 0;
 		int length = string.length();
-		if (length <= LocalDom.maxCharsPerTextNode || singleNode) {
+		int maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
+		if (length <= maxCharsPerTextNode || singleNode) {
 			Text text = document.createTextNode(string);
 			element.appendChild(text);
 		} else {
 			while (idx < length) {
 				int segmentLength = length - idx;
-				segmentLength = Math.min(segmentLength,
-						LocalDom.maxCharsPerTextNode);
+				segmentLength = Math.min(segmentLength, maxCharsPerTextNode);
 				String segment = string.substring(idx, idx + segmentLength);
 				Text text = document.createTextNode(segment);
 				element.appendChild(text);

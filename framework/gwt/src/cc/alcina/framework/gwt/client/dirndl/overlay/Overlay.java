@@ -271,7 +271,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		}
 		// custom reemission because node will be detached from layout
 		if (reemittingClose) {
-			event.getContext().bubble();
+			event.bubble();
 			return;
 		}
 		if (modalClosedHandler != null) {

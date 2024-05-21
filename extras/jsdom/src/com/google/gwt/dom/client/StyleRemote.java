@@ -819,4 +819,10 @@ public final class StyleRemote extends JavaScriptObject
 	public final Style styleObject() {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public final native void removeProperty(String key) /*-{
+    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
+     this.removeProperty(key);
+	}-*/;
 }

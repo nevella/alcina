@@ -490,7 +490,8 @@ public class ModelEvents {
 	 *
 	 */
 	public static class SelectionChanged
-			extends ModelEvent<Object, SelectionChanged.Handler> {
+			extends ModelEvent<Object, SelectionChanged.Handler>
+			implements ValueChange {
 		@Override
 		public void dispatch(SelectionChanged.Handler handler) {
 			handler.onSelectionChanged(this);
@@ -541,8 +542,9 @@ public class ModelEvents {
 	 */
 	public static class TopLevelMissedEvent extends
 			DescendantEvent<ModelEvent, TopLevelMissedEvent.Handler, TopLevelMissedEvent.Emitter> {
-		public static Topic<TopLevelMissedEvent> topicNotHandled = Topic
-				.create();
+		public static Topic<TopLevelMissedEvent> topicNotHandled() {
+			return EventFrame.get().topicTopLevelMissedEvent;
+		}
 
 		boolean handled;
 
@@ -560,7 +562,7 @@ public class ModelEvents {
 		@Override
 		protected void onDispatchComplete() {
 			if (!handled) {
-				topicNotHandled.publish(this);
+				topicNotHandled().publish(this);
 			}
 		}
 

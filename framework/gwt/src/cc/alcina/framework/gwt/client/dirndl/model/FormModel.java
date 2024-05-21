@@ -266,7 +266,7 @@ public class FormModel extends Model
 				categoryNamePlace.go();
 			}
 		});
-		event.getContext().bubble();
+		event.bubble();
 	}
 
 	// FIXME - dirndl 1x1h - not sure where to put the handlers here. On the
@@ -558,7 +558,7 @@ public class FormModel extends Model
 		public void onPropertyValidationChange(
 				FormEvents.PropertyValidationChange event) {
 			setInvalid(!event.isValid());
-			event.getContext().bubble();
+			event.bubble();
 		}
 
 		public FormValueModel provideValueModel() {

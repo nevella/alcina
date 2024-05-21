@@ -51,8 +51,7 @@ import cc.alcina.framework.common.client.logic.HasParameters;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
@@ -128,8 +127,9 @@ public abstract class ActionViewProviderBase
 
 		ActionLogItemVisualiser(JobTracker tracker, boolean first) {
 			this.vp = new VerticalPanel();
-			this.link = new Link(CommonUtils.formatDate(tracker.getEndTime(),
-					DateStyle.AU_DATE_TIME) + " - " + tracker.getJobResult());
+			this.link = new Link(
+					DateStyle.DATE_TIME.format(tracker.getEndTime()) + " - "
+							+ tracker.getJobResult());
 			link.addClickHandler(this);
 			String actionLog = tracker.getLog();
 			if (actionLog == null) {

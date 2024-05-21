@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
@@ -21,30 +22,35 @@ class Dotburger extends Model.Fields {
 
 	Menu menu;
 
-	class Menu extends Model.All {
+	static class Menu extends Model.All implements ValueChange.Container {
+		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_Menu;
+
 		Heading section1 = new Heading("Selection type");
 
 		@Directed.Transform(Choices.Single.To.class)
-		@Choices.Values(
-			value = Choices.Values.EnumSupplier.class,
-			enumClass = SelectionType.class)
+		@Choices.EnumValues(SelectionType.class)
 		SelectionType selectionType = SelectionType.VIEW;
 
 		Heading section2 = new Heading("Property display mode");
 
 		@Directed.Transform(Choices.Single.To.class)
-		@Choices.Values(
-			value = Choices.Values.EnumSupplier.class,
-			enumClass = PropertyDisplayMode.class)
+		@Choices.EnumValues(PropertyDisplayMode.class)
 		PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
 
 		Heading section3 = new Heading("I/O display mode");
 
 		@Directed.Transform(Choices.Single.To.class)
-		@Choices.Values(
-			value = Choices.Values.EnumSupplier.class,
-			enumClass = InputOutputDisplayMode.class)
+		@Choices.EnumValues(InputOutputDisplayMode.class)
 		InputOutputDisplayMode ioDisplayMode = InputOutputDisplayMode.INPUT_OUTPUT;
+
+		Menu() {
+			bindings().from(TraversalSettings.get())
+					.on(TraversalSettings.properties.inputOutputDisplayMode)
+					.to(this).on(properties.ioDisplayMode).bidi();
+			bindings().from(TraversalSettings.get())
+					.on(TraversalSettings.properties.propertyDisplayMode)
+					.to(this).on(properties.propertyDisplayMode).bidi();
+		}
 	}
 
 	Dotburger() {

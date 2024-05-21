@@ -799,4 +799,6 @@ public interface ClientDomStyle {
 	void setZIndex(int value);
 
 	Style styleObject();
+
+	void removeProperty(String key);
 }

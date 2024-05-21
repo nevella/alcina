@@ -36,8 +36,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
@@ -181,8 +180,8 @@ public class UserStories {
 					break;
 				}
 				DomNodeHtmlTableRowBuilder row = builder.row();
-				String timestamp = CommonUtils.formatDate(record.getTime(),
-						DateStyle.TIMESTAMP_NO_DAY);
+				String timestamp = DateStyle.TIMESTAMP_NO_DAY
+						.format(record.getTime());
 				row.cell().text(timestamp).nowrap().cell();
 				String topic = Ax.friendly(record.getTopic());
 				row.cell(topic);

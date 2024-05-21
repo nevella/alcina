@@ -11,8 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.gwt.dev.shell.JsCodeserverTcpClientJava;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 
@@ -66,9 +65,8 @@ public class XhrTcpSession {
 		// client.getLastMessageName());
 		if (messageId % messageLogPer == 0) {
 			Ax.out("%s :: %s :: %s :: %s",
-					CommonUtils.formatDate(new Date(),
-							DateStyle.TIMESTAMP_NO_DAY),
-					messageId, client.getLastMessageName(),
+					DateStyle.TIMESTAMP_NO_DAY.format(new Date()), messageId,
+					client.getLastMessageName(),
 					client.getLastMessageDetails());
 		}
 		response.setHeader(XhrTcpBridge.HEADER_HANDLE_ID,

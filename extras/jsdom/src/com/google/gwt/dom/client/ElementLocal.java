@@ -134,8 +134,10 @@ public class ElementLocal extends NodeLocal
 	}
 
 	private void checkSplitTextNodesForBrowserCompatibility() {
-		if (getChildren().stream().noneMatch(t -> t.getNodeValue()
-				.length() > LocalDom.maxCharsPerTextNode)) {
+		int maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
+		if (getChildren().stream().noneMatch(t -> {
+			return t.getNodeValue().length() > maxCharsPerTextNode;
+		})) {
 			return;
 		}
 		List<NodeLocal> toReplace = new ArrayList<>(getChildren());
@@ -150,8 +152,7 @@ public class ElementLocal extends NodeLocal
 			int length = string.length();
 			while (idx < length) {
 				int segmentLength = length - idx;
-				segmentLength = Math.min(segmentLength,
-						LocalDom.maxCharsPerTextNode);
+				segmentLength = Math.min(segmentLength, maxCharsPerTextNode);
 				String segment = idx == 0 && segmentLength == length ? string
 						: string.substring(idx, idx + segmentLength);
 				Text text = Document.get().createTextNode(segment);

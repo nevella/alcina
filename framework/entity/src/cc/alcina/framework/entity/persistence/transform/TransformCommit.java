@@ -49,7 +49,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
@@ -138,8 +138,8 @@ public class TransformCommit {
 			// save a copy of the records
 			{
 				String folderName = Ax.format("cli_%s_time_%s",
-						records.get(0).getClientInstanceId(), CommonUtils
-								.formatDate(new Date(), DateStyle.TIMESTAMP));
+						records.get(0).getClientInstanceId(),
+						DateStyle.TIMESTAMP.format(new Date()));
 				File offlineDir = DataFolderProvider.get()
 						.getChildFile(OFFLINE_TRANSFORMS_PARTIAL);
 				File saveDir = SEUtilities.getChildFile(offlineDir, folderName);

@@ -5,7 +5,7 @@ import java.util.Date;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.DateStyle;
 
 @Bean
 public class PropertyModificationLogItem {
@@ -98,8 +98,7 @@ public class PropertyModificationLogItem {
 	public String toString() {
 		return Ax.format("%s\t%s\t%s",
 				CommonUtils.padStringRight(source, 20, ' '),
-				CommonUtils.formatDate(new Date(modificationTime),
-						DateStyle.AU_DATE_TIME_HUMAN),
+				DateStyle.DATE_TIME_HUMAN.format(new Date(modificationTime)),
 				value);
 	};
 }
