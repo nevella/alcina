@@ -4,7 +4,16 @@ import cc.alcina.framework.common.client.flight.FlightEvent;
 
 public interface ReplayEventProcessor {
 	public interface EmissionFilter {
+		boolean test(FlightEvent event);
 	}
 
-	public void replay(FlightEvent next);
+	EmissionFilter getEmissionFilter();
+
+	default void replay(FlightEvent event) {
+		if (getEmissionFilter().test(event)) {
+			doReplay(event);
+		}
+	}
+
+	void doReplay(FlightEvent event);
 }
