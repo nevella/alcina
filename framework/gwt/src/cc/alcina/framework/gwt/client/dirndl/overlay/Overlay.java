@@ -170,7 +170,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		 */
 		NodeEvent.Context.fromEvent(from, node)
 				.dispatch(ModelEvents.BeforeClosed.class, null);
-		OverlayPositions.get().hide(this);
+		OverlayPositions.get().hide(this, true);
 		/*
 		 * node will be removed from the layout at this point, but its parent
 		 * refs will still be valid - a little dodgy, but it works
@@ -252,6 +252,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		}
 		if (event.isBound()) {
 			event.reemitAs(this, ModelEvents.Opened.class);
+		} else {
 		}
 	}
 

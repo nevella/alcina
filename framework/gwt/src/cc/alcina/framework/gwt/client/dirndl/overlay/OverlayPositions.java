@@ -25,7 +25,7 @@ public class OverlayPositions {
 
 	Map<Model, RenderedOverlay> openOverlays = AlcinaCollections.newUnqiueMap();
 
-	void hide(Overlay model) {
+	void hide(Overlay model, boolean allowReentrant) {
 		RenderedOverlay overlay = openOverlays.remove(model);
 		if (overlay != null) {
 			/*
@@ -39,15 +39,19 @@ public class OverlayPositions {
 				overlay.remove();
 			}
 		} else {
-			throw new IllegalStateException(
-					Ax.format("Removing previously removed overlay - %s",
-							model.getContents()));
+			if (allowReentrant) {
+				// Overlay.remove will call back to here
+			} else {
+				throw new IllegalStateException(
+						Ax.format("Removing previously removed overlay - %s",
+								model.getContents()));
+			}
 		}
 	}
 
 	public void closeAll() {
 		openOverlays.keySet().stream().collect(Collectors.toList())
-				.forEach(m -> this.hide((Overlay) m));
+				.forEach(m -> this.hide((Overlay) m, false));
 	}
 
 	void show(Overlay model, ContainerOptions containerOptions) {
@@ -56,7 +60,8 @@ public class OverlayPositions {
 		Rendered rendered = layout
 				.render(new OverlayContainer(model, containerOptions))
 				.getRendered();
-		RenderedOverlay renderedOverlay = new RenderedOverlay(layout, rendered);
+		RenderedOverlay renderedOverlay = new RenderedOverlay(layout, rendered,
+				model);
 		openOverlays.put(model, renderedOverlay);
 		rendered.appendToRoot();
 	}
@@ -90,12 +95,17 @@ public class OverlayPositions {
 
 		Rendered rendered;
 
-		RenderedOverlay(DirectedLayout layout, Rendered rendered) {
+		Overlay overlay;
+
+		RenderedOverlay(DirectedLayout layout, Rendered rendered,
+				Overlay overlay) {
 			this.layout = layout;
 			this.rendered = rendered;
+			this.overlay = overlay;
 		}
 
 		void remove() {
+			overlay.close(null, false);
 			layout.remove();
 		}
 	}
