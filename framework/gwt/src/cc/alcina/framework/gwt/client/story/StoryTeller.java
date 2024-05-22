@@ -330,8 +330,7 @@ public class StoryTeller {
 				return false;
 			}
 			if (visit.result.testResult) {
-				return getConditional().exitOkOnTrue()
-						.contains(visit.point.getClass());
+				return false;
 			} else {
 				return getConditional().exitOkOnFalse()
 						.contains(visit.point.getClass());

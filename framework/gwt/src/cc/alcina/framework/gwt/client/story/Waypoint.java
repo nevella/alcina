@@ -28,16 +28,9 @@ public class Waypoint implements Story.Point {
 	protected class ConditionalImpl implements Story.Conditional {
 		Set<Class<? extends Story.Point>> exitOkOnFalse = Set.of();
 
-		Set<Class<? extends Story.Point>> exitOkOnTrue = Set.of();
-
 		@Override
 		public Set<Class<? extends Story.Point>> exitOkOnFalse() {
 			return exitOkOnFalse;
-		}
-
-		@Override
-		public Set<Class<? extends Story.Point>> exitOkOnTrue() {
-			return exitOkOnTrue;
 		}
 	}
 
@@ -220,11 +213,6 @@ public class Waypoint implements Story.Point {
 					.annotation(Story.Decl.Conditional.ExitOkOnFalse.class);
 			if (exitOkOnFalseAnn != null) {
 				conditional.exitOkOnFalse = Set.of(exitOkOnFalseAnn.value());
-			}
-			Story.Decl.Conditional.ExitOkOnTrue exitOkOnTrueAnn = reflector
-					.annotation(Story.Decl.Conditional.ExitOkOnTrue.class);
-			if (exitOkOnTrueAnn != null) {
-				conditional.exitOkOnTrue = Set.of(exitOkOnTrueAnn.value());
 			}
 		}
 	}

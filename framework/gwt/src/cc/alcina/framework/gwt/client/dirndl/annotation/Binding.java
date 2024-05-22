@@ -21,6 +21,13 @@ import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
+/*
+ * FIXME - dirndl - extend again - allow on a type, if on a type or the
+ * type/property has an effective @directed annotation, apply to the property
+ * node (not the parent directed).
+ * 
+ * Note for properties the bindings must in that case be literals
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 // Use as a field of @Directed, or on a property

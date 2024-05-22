@@ -5,7 +5,6 @@ import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessView_DotBurger;
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessView_Header;
-import cc.alcina.framework.servlet.story.component.traversal.Header.Dotburger.EnsureShowing;
 
 @Decl.Feature(Feature_TraversalProcessView_Header.class)
 @Decl.Child(Header.Dotburger.class)
@@ -139,7 +138,6 @@ class Header extends Waypoint {
 			}
 		}
 
-		@Decl.Conditional.ExitOkOnTrue(EnsureShowing.TestNotShowing.class)
 		@Decl.Child(EnsureDisplayMode_QuarterWidth_Selected.Test_DisplayMode_QuarterWidth_Selected.class)
 		@Decl.Child(EnsureDisplayMode_QuarterWidth_Selected.Click_DisplayMode_QuarterWidth.class)
 		@Decl.Child(Reset.class)

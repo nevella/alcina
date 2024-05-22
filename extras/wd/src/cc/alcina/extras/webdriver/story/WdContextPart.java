@@ -2,6 +2,9 @@ package cc.alcina.extras.webdriver.story;
 
 import cc.alcina.framework.gwt.client.story.TellerContext;
 
+/*
+ * wd/story configuration
+ */
 public class WdContextPart implements TellerContext.Part {
 	boolean shouldMaximiseTab;
 

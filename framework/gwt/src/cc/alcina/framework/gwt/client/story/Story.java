@@ -8,8 +8,10 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -490,13 +492,14 @@ public interface Story {
 			@Target({ ElementType.TYPE })
 			@Registration(DeclarativeLocation.class)
 			public @interface Xpath {
-				String value();
+				String[] value();
 
 				public static class ConverterImpl implements Converter<Xpath> {
 					@Override
 					public Story.Action.Location convert(Xpath ann) {
 						return new Story.Action.Location.Xpath()
-								.withText(ann.value());
+								.withText(Arrays.stream(ann.value())
+										.collect(Collectors.joining()));
 					}
 				}
 			}
@@ -577,18 +580,6 @@ public interface Story {
 			@Documented
 			@Target({ ElementType.TYPE })
 			public @interface ExitOkOnFalse {
-				Class<? extends Story.Point> value();
-			}
-
-			/**
-			 * Child traversal will skip subsequent dep.resolution and actions
-			 * if the conditional (test) child specified by value() returns true
-			 * [and will not throw]
-			 */
-			@Retention(RetentionPolicy.RUNTIME)
-			@Documented
-			@Target({ ElementType.TYPE })
-			public @interface ExitOkOnTrue {
 				Class<? extends Story.Point> value();
 			}
 
@@ -870,7 +861,5 @@ public interface Story {
 	 */
 	public interface Conditional {
 		Set<Class<? extends Point>> exitOkOnFalse();
-
-		Set<Class<? extends Point>> exitOkOnTrue();
 	}
 }
