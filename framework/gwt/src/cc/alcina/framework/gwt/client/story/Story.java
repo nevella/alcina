@@ -53,7 +53,8 @@ import cc.alcina.framework.gwt.client.util.LineCallback;
   - the readme:
     - always use a ui action (rather than say going to a url) if possible - helps the story, even if the 
 	  test could be done with a url
-	- naming - public names should be prefixed, package should not (so Feature_ is prefixed, generally Point_ is not)
+	- naming - top-level names should be prefixed, inner should not (so Feature_X is prefixed, 
+	  Feature_X.Feature_XY is discouraged, Feature_X.Y better. See Alcina code-conventions.md)
   
 
  * </code>
