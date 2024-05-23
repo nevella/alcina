@@ -42,6 +42,7 @@ public class FlightEventStreamProviderZip {
 						.listFilesRecursive(outputFolder, null).stream()
 						.filter(f -> f.isFile())
 						.map(f -> Io.read().file(f).asString())
+						.map(this::trackRefactoring)
 						.<FlightEvent> map(ReflectiveSerializer::deserialize)
 						.sorted().collect(Collectors.toList());
 				return new ReplayStream(events);
@@ -49,5 +50,9 @@ public class FlightEventStreamProviderZip {
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}
+	}
+
+	String trackRefactoring(String serialized) {
+		return serialized;
 	}
 }
