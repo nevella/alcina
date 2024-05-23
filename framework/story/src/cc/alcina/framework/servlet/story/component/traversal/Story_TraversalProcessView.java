@@ -36,7 +36,7 @@ public class Story_TraversalProcessView implements Story {
 	/*
 	 * Children
 	 */
-	@Decl.Child(Header.class)
+	@Decl.Child(_Header.class)
 	static class Top extends Waypoint {
 	}
 

@@ -7,8 +7,8 @@ import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessV
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessView_Header;
 
 @Decl.Feature(Feature_TraversalProcessView_Header.class)
-@Decl.Child(Header.Dotburger.class)
-class Header extends Waypoint {
+@Decl.Child(_Header.Dotburger.class)
+class _Header extends Waypoint {
 	static final String XPATH_DOTBURGER_ICON = "//header/right/dropdown/button[@class='dotburger']";
 
 	static final String XPATH_DOTBURGER_MENU = "//overlay[@class='dotburger dropdown overlay menu']";

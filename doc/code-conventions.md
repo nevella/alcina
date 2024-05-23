@@ -39,3 +39,8 @@ This aids encapsulation
 - Top-level `Feature_ContextMenu` is fine (encouraged) (and note the underscore - indiciates namespacing prefix).
   But inner classes of `Feature_ContextMenu` should be `Copy` - not `Feature_Copy`. This is a compromise between
   IDE ease-of-location and keep-names-non-redundant (the prefix aids the former)
+
+  Inner classes _may_ be prefixed with \_ if the class is the same name as a UI class (dev call, depends how
+  often the UI class would be navigated to by name)
+
+- Package-level (non-public) classes follow the same rules as inner classes - avoid full prefixing
