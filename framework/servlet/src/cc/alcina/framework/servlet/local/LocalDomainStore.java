@@ -133,28 +133,32 @@ public class LocalDomainStore {
 		collation.allEntityCollations()
 				.filter(ec -> ec.getTransforms().size() > 0).forEach(ec -> {
 					/*
-					 * LocalDomainStores don't allow deletion
-					 */
-					Preconditions.checkArgument(!ec.isDeleted());
-					/*
 					 * only de-index if created prior to this request
 					 */
 					if (!ec.isCreated()) {
-						List<DomainTransformEvent> transforms = ec
-								.getTransforms();
-						TransformManager.get().replayLocalEvents(transforms,
-								true);
-						index(ec.getEntity(), false, ec, true);
-						TransformManager.get().replayLocalEvents(transforms,
-								false);
-						TransformManager.get().setIgnorePropertyChanges(false);
+						try {
+							TransformManager
+									.get().allowApplyTransformsToDeletedEntities = true;
+							List<DomainTransformEvent> transforms = ec
+									.getTransforms();
+							TransformManager.get().replayLocalEvents(transforms,
+									true);
+							index(ec.getEntity(), false, ec, true);
+							TransformManager.get().replayLocalEvents(transforms,
+									false);
+							TransformManager.get()
+									.setIgnorePropertyChanges(false);
+						} finally {
+							TransformManager
+									.get().allowApplyTransformsToDeletedEntities = false;
+						}
 					}
 				});
 		/*
 		 * Index
 		 */
 		collation.allEntityCollations()
-				.filter(ec -> ec.getTransforms().size() > 0)
+				.filter(ec -> ec.getTransforms().size() > 0 && !ec.isDeleted())
 				.forEach(ec -> index(ec.getEntity(), true, ec, true));
 	}
 
@@ -316,7 +320,6 @@ public class LocalDomainStore {
 
 		@Override
 		public void deregister(Entity entity) {
-			domain.getCache().remove(entity);
 		}
 
 		@Override
