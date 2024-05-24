@@ -2,11 +2,14 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
@@ -143,7 +146,8 @@ public class ClientRpc {
 		}
 
 		void maybeEnqueueAwaitRemote() {
-			if (!(inFlightComponentRequest.protocolMessage instanceof AwaitRemote)) {
+			if (inFlightComponentRequest != null
+					&& !(inFlightComponentRequest.protocolMessage instanceof AwaitRemote)) {
 				return;
 			}
 			enqueueWhenVisible();
@@ -162,6 +166,9 @@ public class ClientRpc {
 		}
 
 		void enqueueWhenVisible() {
+			if (timerQueued) {
+				return;
+			}
 			if (Document.get().getVisibilityState().equals("visible")) {
 				if (awaitDelay == 0) {
 					submit(new AwaitRemote());
@@ -174,8 +181,10 @@ public class ClientRpc {
 						@Override
 						public void run() {
 							submit(new AwaitRemote());
+							timerQueued = false;
 						}
 					}.schedule(awaitDelay);
+					timerQueued = true;
 					awaitDelay = Math.min(1000, awaitDelay + 100);
 				}
 			} else {
@@ -183,11 +192,14 @@ public class ClientRpc {
 					@Override
 					public void run() {
 						enqueueWhenVisible();
-						;
+						timerQueued = false;
 					}
 				}.schedule(100);
+				timerQueued = true;
 			}
 		}
+
+		boolean timerQueued = false;
 	}
 
 	static BrowserDispatchQueue submitQueue = new BrowserDispatchQueue();
@@ -195,6 +207,8 @@ public class ClientRpc {
 	static BrowserDispatchQueue acceptorQueue = new BrowserDispatchQueue();
 
 	static int clientServerMessageCounter = 0;
+
+	static ExceptionHandler exceptionHandler = new ExceptionHandler();
 
 	static Request submitRequest(RemoteComponentRequest request,
 			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
@@ -206,7 +220,7 @@ public class ClientRpc {
 		RequestCallback callback = new RequestCallback() {
 			@Override
 			public void onError(Request httpRequest, Throwable exception) {
-				new ExceptionHandler().accept(request, exception);
+				exceptionHandler.accept(request, exception);
 				signalCalled(httpRequest);
 			}
 
@@ -225,6 +239,7 @@ public class ClientRpc {
 					signalCalled(httpRequest);
 					return;
 				}
+				exceptionHandler.onSuccessReceived();
 				String text = httpResponse.getText();
 				RemoteComponentResponse response = text.isEmpty() ? null
 						: ReflectiveSerializer.deserialize(text);
@@ -255,6 +270,10 @@ public class ClientRpc {
 							 * thus the client's dom can be behind the server's,
 							 * it's not necessarily true that invalid pathrefs
 							 * *should* be fatal. but handling is complex
+							 * 
+							 * that said, only extensions are going to cause
+							 * issues here, it's server-side handling of client
+							 * events that will suffer from out-of-sync
 							 */
 							Window.alert(
 									CommonUtils.toSimpleExceptionMessage(e));
@@ -284,13 +303,67 @@ public class ClientRpc {
 				switch (statusCode) {
 				case 0:
 				case 404:
+					setState(State.err_recoverable);
 					awaitDelay++;
 					break;
 				default:
+					setState(State.err_finished);
 					RemoteObjectModelComponentState.get().finished = true;
 					break;
 				}
 			}
+		}
+
+		enum State {
+			ok, err_recoverable, err_finished
+		}
+
+		State state = State.ok;
+
+		void setState(State state) {
+			State old_state = this.state;
+			this.state = state;
+			if (state != old_state) {
+				if (notificationElement != null) {
+					notificationElement.removeFromParent();
+					notificationElement = null;
+				}
+				String message = null;
+				switch (state) {
+				case ok:
+					// just remove, as above
+					break;
+				case err_finished:
+					message = "Unrecoverable exception";
+					break;
+				case err_recoverable:
+					message = "Network/host unreachable";
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
+				if (message != null) {
+					notificationElement = Document.get()
+							.createElement("romcom-notification");
+					notificationElement.setTextContent(message);
+					Document.get().getBody().appendChild(notificationElement);
+					LocalDom.flush();
+					String display = notificationElement.implAccess()
+							.ensureJsoRemote().getComputedStyle().getDisplay();
+					if (Objects.equals(display, "inline")) {
+						// not set by the app, add our own
+						notificationElement.setAttribute("style",
+								"position: absolute; top:5px; left: 5px; padding: 0.5rem 1rem; "
+										+ "display: block; background-color: #333; border: solid 1px #ccc; color: #cc5; z-index: 999");
+					}
+				}
+			}
+		}
+
+		Element notificationElement;
+
+		void onSuccessReceived() {
+			setState(State.ok);
 		}
 	}
 

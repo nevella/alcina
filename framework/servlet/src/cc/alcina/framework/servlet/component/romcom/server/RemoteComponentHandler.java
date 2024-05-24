@@ -84,7 +84,8 @@ class RemoteComponentHandler {
 		String method = request.getMethod();
 		switch (method) {
 		case "GET":
-			if (Ax.notBlank(request.getQueryString())) {
+			if (Ax.notBlank(request.getQueryString())
+					&& !request.getQueryString().matches("gwt.l")) {
 				serveQuery(request, response);
 			} else {
 				serveFile(request, response);
