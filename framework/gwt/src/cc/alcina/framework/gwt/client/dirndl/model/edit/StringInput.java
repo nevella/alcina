@@ -75,7 +75,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(type = Type.PROPERTY, from = "spellcheck"),
 			@Binding(type = Type.PROPERTY, from = "autocomplete"),
 			@Binding(type = Type.PROPERTY, from = "rows"),
-			@Binding(type = Type.PROPERTY, from = "disabled") },
+			@Binding(type = Type.PROPERTY, from = "disabled"),
+			@Binding(type = Type.PROPERTY, from = "title") },
 	emits = { ModelEvents.Change.class, ModelEvents.Input.class,
 			ModelEvents.Commit.class })
 @Registration({ Model.Value.class, FormModel.Editor.class, String.class })
@@ -116,6 +117,16 @@ public class StringInput extends Model.Value<String>
 	private boolean commitOnEnter;
 
 	private boolean disabled;
+
+	private String title;
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		set("title", this.title, title, () -> this.title = title);
+	}
 
 	public StringInput() {
 	}
