@@ -152,10 +152,15 @@ public class Shell {
 
 	public Output runBashScript(String script, boolean logCmd)
 			throws Exception {
+		return runBashScript(script, logCmd, null);
+	}
+
+	public Output runBashScript(String script, boolean logCmd,
+			String logProgressPrompt) throws Exception {
 		File tmp = File.createTempFile("shell", getScriptExtension());
 		tmp.deleteOnExit();
 		Io.write().string(script).toFile(tmp);
-		Output output = runShell(tmp.getPath(), "/bin/bash");
+		Output output = runShell(tmp.getPath(), "/bin/bash", logProgressPrompt);
 		tmp.delete();
 		return output;
 	}
@@ -203,11 +208,20 @@ public class Shell {
 	}
 
 	public Output runShell(String argString, String shellCmd) throws Exception {
+		return runShell(argString, shellCmd, null);
+	}
+
+	public Output runShell(String argString, String shellCmd,
+			String logProgressPrompt) throws Exception {
 		List<String> args = new ArrayList<String>();
 		args.add(shellCmd);
 		args.addAll(Arrays.asList(argString.split(" ")));
 		String[] argv = (String[]) args.toArray(new String[args.size()]);
-		return runProcessCatchOutputAndWait(argv);
+		if (logProgressPrompt != null) {
+			return runProcessCatchOutputAndWaitPrompt(logProgressPrompt, argv);
+		} else {
+			return runProcessCatchOutputAndWait(argv);
+		}
 	}
 
 	public void terminateProcess() {
