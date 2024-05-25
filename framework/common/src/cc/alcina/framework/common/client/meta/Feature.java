@@ -156,6 +156,11 @@ public interface Feature extends Registration.AllSubtypes {
 
 	}
 
+	/*
+	 * FIXME - meta - This should probably go - it's only used for support feature to track UI features, and would be better with typed Ref
+	 * 
+	 * (Ref should by default have type 'context')
+	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented

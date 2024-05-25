@@ -123,7 +123,8 @@
  * system (Widget or Elemnent) can be used. It ain't pretty, but it's required
  * until Widget is removed from the codebase
  *
- *
+ * <p>
+ * See also {@link Pathref}
  *
  */
 package com.google.gwt.dom.client;

@@ -12,9 +12,20 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 
 /**
+ * <p>
  * Models a reference to a DOM node (attached to root) via its path
  * 
+ * <h3>Plans</h3>
+ * <ul>
+ * <li>Switch to *mostly* numeric node id, not pathref.
+ * <li>Pathref is still required for cross-session node referencing (viz
+ * romcom/tab reload)
+ * <li>Move element.local-id attr to a dom node expando (out of the attrs) -
+ * value should be an arr containing the (int/Number) id
+ * <li>Mutations?
+ * <li>Romcom - propagate mutation html add/removes as single node changes
  * 
+ * </ul>
  *
  */
 @Bean(PropertySource.FIELDS)
