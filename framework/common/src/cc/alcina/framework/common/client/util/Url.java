@@ -37,6 +37,14 @@ public class Url {
 		this.queryString = queryString;
 		this.hash = hash;
 		this.strUrl = strUrl;
+		StringMap queryParameters = new StringMap();
+		if (queryString != null) {
+			// no encoding (yet)
+			String transformedQueryString = queryString.replace("&", "\n");
+			queryParameters = StringMap
+					.fromPropertyString(transformedQueryString);
+		}
+		this.queryParameters = queryParameters;
 	}
 
 	public final String protocol;
@@ -52,6 +60,8 @@ public class Url {
 	public final String hash;
 
 	public final String strUrl;
+
+	public final StringMap queryParameters;
 
 	@Override
 	public String toString() {

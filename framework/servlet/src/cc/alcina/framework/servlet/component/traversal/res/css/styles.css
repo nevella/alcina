@@ -572,6 +572,7 @@ body > page > layers > layers {
 }
 body > page > layers > layers > layer-selections {
   display: contents;
+  position: relative;
 }
 body > page > layers > layers > layer-selections .bordered-area {
   border: solid 1px #ccc;
@@ -588,6 +589,10 @@ body > page > layers > layers > layer-selections[empty=true] .bordered-area {
 body > page > layers > layers > layer-selections > name-area {
   display: block;
   background: #f7fffe;
+  position: sticky;
+  top: 0;
+  left: 0;
+  align-self: start;
 }
 body > page > layers > layers > layer-selections > name-area > * {
   display: inline-block;
@@ -657,6 +662,12 @@ body > page > properties bean-editor form-element[name=markup] > value > value, 
   white-space: pre;
   font-family: "Courier New", couriter, monospace;
 }
+body > page > properties bean-editor form-element[name=extended] table th {
+  text-align: left;
+}
+body > page > properties bean-editor form-element[name=extended] table th, body > page > properties bean-editor form-element[name=extended] table td {
+  vertical-align: top;
+}
 body > page > selections {
   display: block;
 }
@@ -693,7 +704,7 @@ app-suggestor > editor > input {
   padding: 0.2rem 0.75rem;
   border: none;
   min-width: 95%;
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1.5rem;
   outline: none;
   font-family: Arial;
@@ -704,6 +715,7 @@ app-suggestor > editor > input::placeholder {
 }
 app-suggestor > results {
   display: block;
+  font-size: 1.1rem;
 }
 app-suggestor > results > spinner {
   margin: 1rem;
@@ -724,9 +736,9 @@ app-suggestor > results > choice > suggestion > app-suggestion {
   grid-template-columns: 1fr 10px;
   gap: 1em;
   width: 100%;
-  color: #555;
   line-height: 1.5em;
   padding: 0.2em 0;
+  color: #444;
 }
 app-suggestor > results > choice > suggestion > app-suggestion > contents > first,
 app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
@@ -745,6 +757,7 @@ app-suggestor > results > choice > suggestion > app-suggestion > contents > opti
 
 overlay.app-suggestor > results {
   display: block;
+  font-size: 1.1rem;
   width: 34rem;
   border: solid 1px #d0d0d0;
   background: white;
@@ -768,9 +781,9 @@ overlay.app-suggestor > results > choice > suggestion > app-suggestion {
   grid-template-columns: 1fr 10px;
   gap: 1em;
   width: 100%;
-  color: #555;
   line-height: 1.5em;
   padding: 0.2em 0;
+  color: #444;
 }
 overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > first,
 overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > second {

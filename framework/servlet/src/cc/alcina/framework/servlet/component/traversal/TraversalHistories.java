@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.traversal.TraversalContext;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -58,12 +59,23 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 	}
 
 	void onTraversalComplete(SelectionTraversal traversal) {
-		observables.publish(null, traversal);
+		if (traversal
+				.context(TraversalDoesNotPublishNullObservable.class) == null) {
+			observables.publish(null, traversal);
+		}
 		observables.publish(traversal.id, traversal);
 	}
 
 	public ListenerReference subscribe(String traversalKey,
 			TopicListener<RemoteComponentObservables<SelectionTraversal>.ObservableHistory> subscriber) {
 		return observables.subscribe(traversalKey, subscriber);
+	}
+
+	/*
+	 * Marker, if the TraversalContext implements this then a null-topic
+	 * completion obsevable will not be published
+	 */
+	public interface TraversalDoesNotPublishNullObservable
+			extends TraversalContext {
 	}
 }

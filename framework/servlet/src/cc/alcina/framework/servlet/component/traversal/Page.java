@@ -92,10 +92,19 @@ class Page extends Model.All
 		// a prebind (setleft) phase....maybe? that might be a bit too
 		// tree-shaped, even for me
 		bindings().addBindHandler(this::bindKeyboardShortcuts);
+		/*
+		 * The traversl path can be specified by say the url
+		 * /traversal?path=/traversal/0.1
+		 */
+		String traversalPath = Ui.get().getTraversalPath();
 		// one-off (to get the initial value)
-		TraversalHistories.get().subscribe(null, this::setHistory).remove();
-		bindings().addListener(() -> TraversalHistories.get().subscribe(null,
-				this::setHistory));
+		TraversalHistories.get().subscribe(traversalPath, this::setHistory)
+				.remove();
+		bindings().addListener(() -> TraversalHistories.get()
+				.subscribe(traversalPath, this::setHistory));
+		// place selections will be invalid if history changes
+		bindings().from(this).on(Property.history)
+				.signal(this::clearPlaceSelections);
 		bindings().from(this).on(Property.history).value(this)
 				.map(SelectionLayers::new).accept(this::setLayers);
 		bindings().from(this).on(Property.history).value(this)
@@ -117,6 +126,7 @@ class Page extends Model.All
 		PlaceChangeEvent.Handler handler = evt -> {
 			if (evt.getNewPlace() instanceof TraversalPlace) {
 				setPlace((TraversalPlace) evt.getNewPlace());
+				Ui.get().setPlace(this.place);
 			}
 		};
 		Place place = Client.currentPlace();
@@ -187,6 +197,12 @@ class Page extends Model.All
 			styleElement = StyleInjector.createAndAttachElement(text);
 		} else {
 			((Text) styleElement.getChild(0)).setTextContent(text);
+		}
+	}
+
+	void clearPlaceSelections() {
+		if (this.place != null) {
+			this.place.clearSelections();
 		}
 	}
 

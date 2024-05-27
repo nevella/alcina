@@ -36,6 +36,9 @@ import cc.alcina.framework.servlet.dom.SettingsSupport;
  * <ul>
  * <li>A traversal place will not be consistent (so will not, for instance, work
  * on app refresh) if the traversal is performed in parallel.
+ * <li>A process view is linked to a specific traversal path if there's a ?path
+ * querystring parameter in the accessing url - otherwise it's 'most recent',
+ * and will update when that changes
  * </ul>
  *
  */
@@ -139,6 +142,20 @@ public class TraversalProcessView {
 
 		public void setEnvironment(Environment environment) {
 			this.environment = environment;
+		}
+
+		public String getTraversalPath() {
+			String sessionPath = getEnvironment().getSessionPath();
+			return sessionPath == null ? null
+					: sessionPath.replaceFirst("/.+?/", "");
+		}
+
+		public boolean isUseSelectionSegmentPath() {
+			return false;
+		}
+
+		public void setPlace(TraversalPlace place) {
+			// for subclasses
 		}
 	}
 }

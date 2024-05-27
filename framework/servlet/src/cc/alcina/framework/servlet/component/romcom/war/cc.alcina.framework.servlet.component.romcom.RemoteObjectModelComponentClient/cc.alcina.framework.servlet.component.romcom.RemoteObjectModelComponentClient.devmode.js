@@ -1,4 +1,28 @@
-var $wnd = $wnd || window.parent;var __gwtModuleFunction = $wnd.cc_alcina_framework_servlet_component_romcom_RemoteObjectModelComponentClient;var $sendStats = __gwtModuleFunction.__sendStats;$sendStats('moduleStartup', 'moduleEvalStart');var $gwt_version = "0.0.0";var $strongName = '';var $gwt = {};var $doc = $wnd.document;var $moduleName, $moduleBase;function __gwtStartLoadingFragment(frag) {var fragFile = 'deferredjs/' + $strongName + '/' + frag + '.cache.js';return __gwtModuleFunction.__startLoadingFragment(fragFile);}function __gwtInstallCode(code) {return __gwtModuleFunction.__installRunAsyncCode(code);}function __gwt_isKnownPropertyValue(propName, propValue) {return __gwtModuleFunction.__gwt_isKnownPropertyValue(propName, propValue);}function __gwt_getMetaProperty(name) {return __gwtModuleFunction.__gwt_getMetaProperty(name);}var $stats = $wnd.__gwtStatsEvent ? function(a) {return $wnd.__gwtStatsEvent && $wnd.__gwtStatsEvent(a);} : null;var $sessionId = $wnd.__gwtStatsSessionId ? $wnd.__gwtStatsSessionId : null;/******************************************************************************
+var $wnd = $wnd || window.parent;
+var __gwtModuleFunction = $wnd.cc_alcina_framework_servlet_component_romcom_RemoteObjectModelComponentClient;
+var $sendStats = __gwtModuleFunction.__sendStats;
+$sendStats('moduleStartup', 'moduleEvalStart');
+var $gwt_version = "0.0.0";
+var $strongName = '';
+var $gwt = {};
+var $doc = $wnd.document;
+var $moduleName, $moduleBase;
+function __gwtStartLoadingFragment(frag) {
+var fragFile = 'deferredjs/' + $strongName + '/' + frag + '.cache.js';
+return __gwtModuleFunction.__startLoadingFragment(fragFile);
+}
+function __gwtInstallCode(code) {return __gwtModuleFunction.__installRunAsyncCode(code);}
+function __gwt_isKnownPropertyValue(propName, propValue) {
+return __gwtModuleFunction.__gwt_isKnownPropertyValue(propName, propValue);
+}
+function __gwt_getMetaProperty(name) {
+return __gwtModuleFunction.__gwt_getMetaProperty(name);
+}
+var $stats = $wnd.__gwtStatsEvent ? function(a) {
+return $wnd.__gwtStatsEvent && $wnd.__gwtStatsEvent(a);
+} : null;
+var $sessionId = $wnd.__gwtStatsSessionId ? $wnd.__gwtStatsSessionId : null;
+/******************************************************************************
  * Variables used by the Plugin
  *****************************************************************************/
 var $entry;
@@ -2149,6 +2173,9 @@ class WebSocketTransportClient extends WebSocketTransport {
     }
 
 }
-$sendStats('moduleStartup', 'moduleEvalEnd');gwtOnLoad(__gwtModuleFunction.__errFn, __gwtModuleFunction.__moduleName, __gwtModuleFunction.__moduleBase, __gwtModuleFunction.__softPermutationId,__gwtModuleFunction.__computePropValue);$sendStats('moduleStartup', 'end');$gwt && $gwt.permProps && __gwtModuleFunction.__moduleStartupDone($gwt.permProps);
+$sendStats('moduleStartup', 'moduleEvalEnd');
+gwtOnLoad(__gwtModuleFunction.__errFn, __gwtModuleFunction.__moduleName, __gwtModuleFunction.__moduleBase, __gwtModuleFunction.__softPermutationId,__gwtModuleFunction.__computePropValue);
+$sendStats('moduleStartup', 'end');
+$gwt && $gwt.permProps && __gwtModuleFunction.__moduleStartupDone($gwt.permProps);
 //# sourceURL=cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient-0.js
 

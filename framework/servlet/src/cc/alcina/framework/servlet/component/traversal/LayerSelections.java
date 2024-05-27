@@ -231,6 +231,10 @@ class LayerSelections extends Model.All {
 				SelectionPath selectionPath = new TraversalPlace.SelectionPath();
 				selectionPath.selection = selection;
 				selectionPath.path = selection.processNode().treePath();
+				if (TraversalProcessView.Ui.get().isUseSelectionSegmentPath()) {
+					selectionPath.segmentPath = selection.fullPath()
+							.replace("/", ".");
+				}
 				selectionPath.type = selectionType;
 				event.reemitAs(this, TraversalEvents.SelectionSelected.class,
 						selectionPath);

@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRe
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Timer;
+import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.util.TimerJvm;
@@ -41,6 +42,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
 import cc.alcina.framework.servlet.dom.EnvironmentManager.Credentials;
 
@@ -56,6 +58,9 @@ import cc.alcina.framework.servlet.dom.EnvironmentManager.Credentials;
  * needed) synchronized. This will probably change to 'yes, single-threaded' -
  * on the ClientExecutionQueue loop/dispatch thread (update - yes, it's
  * single-threaded on the queue thread)
+ * 
+ * Other notes: dirndl event binding causes changes propagation to run in the
+ * appropriate environment context via RemoteResolver
  */
 public class Environment {
 	public static class TimerProvider implements Timer.Provider {
@@ -306,6 +311,8 @@ public class Environment {
 
 	AtomicInteger serverClientMessageCounter = new AtomicInteger();
 
+	Session session;
+
 	public void clientStarted() {
 		clientStarted = true;
 		scheduler.setClientStarted(true);
@@ -365,6 +372,7 @@ public class Environment {
 	}
 
 	public void initialiseClient(RemoteComponentProtocol.Session session) {
+		this.session = session;
 		try {
 			LooseContext.push();
 			LooseContext.set(CONTEXT_ENVIRONMENT, this);
@@ -526,8 +534,10 @@ public class Environment {
 					// TODO - romcom - use normal scheduler call
 					LocalDom.flush();
 				};
+				ui.onBeforeEnterFrame();
 				enter(cmd);
 			} finally {
+				ui.onExitFrame();
 				LooseContext.pop();
 			}
 		}
@@ -559,5 +569,10 @@ public class Environment {
 
 	public int nextServerClientMessageId() {
 		return serverClientMessageCounter.getAndIncrement();
+	}
+
+	public String getSessionPath() {
+		Url url = Url.parse(session.url);
+		return url.queryParameters.get("path");
 	}
 }

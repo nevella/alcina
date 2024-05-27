@@ -9,12 +9,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.NativeEvent.Modifier;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -37,12 +39,21 @@ public @interface KeyBinding {
 
 	NativeEvent.Modifier[] modifiers() default {};
 
+	/*
+	 * default signifies no filter
+	 */
+	Class<? extends Filter> filter() default Filter.class;
+
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE })
 	public @interface Keybindings {
 		KeyBinding[] value();
+	}
+
+	@Reflected
+	public interface Filter extends Predicate<Class<? extends ModelEvent>> {
 	}
 
 	public static class MatchData {
@@ -147,6 +158,19 @@ public @interface KeyBinding {
 				}
 				return result;
 			});
+		}
+
+		public static boolean testFilter(Class<? extends ModelEvent> eventType,
+				KeyBinding keyBinding) {
+			Class<? extends Filter> filterClass = keyBinding.filter();
+			if (filterClass != KeyBinding.Filter.class) {
+				boolean test = Reflections.newInstance(filterClass)
+						.test(eventType);
+				if (!test) {
+					return false;
+				}
+			}
+			return true;
 		}
 	}
 }
