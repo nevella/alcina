@@ -301,4 +301,14 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		return paths.stream().anyMatch(p -> p.type == SelectionType.VIEW
 				&& p.selection() == selection);
 	}
+
+	public TraversalPlace appendSelections(List<Selection> selections) {
+		TraversalPlace place = copy();
+		SelectionPath path = place.ensurePath(SelectionType.VIEW);
+		for (Selection selection : selections) {
+			path.path += ".0";
+			path.segmentPath += "." + selection.getPathSegment();
+		}
+		return place;
+	}
 }

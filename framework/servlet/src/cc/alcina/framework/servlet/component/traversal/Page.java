@@ -129,6 +129,7 @@ class Page extends Model.All
 				Ui.get().setPlace(this.place);
 			}
 		};
+		this.place = Ui.get().place();
 		Place place = Client.currentPlace();
 		if (place instanceof TraversalPlace) {
 			this.place = (TraversalPlace) place;

@@ -17,6 +17,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerSupplier;
 import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
@@ -116,6 +117,10 @@ public class EntityGraphView {
 				}
 			}
 			this.currentPlace = place;
+		}
+
+		public AnswerSupplier createAnswerSupplier() {
+			return new AnswerSupplierImpl();
 		}
 
 		class EntityPeer implements TraversalContext,

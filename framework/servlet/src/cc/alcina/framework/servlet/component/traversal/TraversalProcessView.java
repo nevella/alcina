@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 
@@ -14,6 +15,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerSupplier;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -156,6 +158,19 @@ public class TraversalProcessView {
 
 		public void setPlace(TraversalPlace place) {
 			// for subclasses
+		}
+
+		public AnswerSupplier createAnswerSupplier() {
+			return new AnswerSupplierImpl();
+		}
+
+		public TraversalPlace place() {
+			Place place = Client.currentPlace();
+			if (place instanceof TraversalPlace) {
+				return (TraversalPlace) place;
+			} else {
+				return new TraversalPlace();
+			}
 		}
 	}
 }
