@@ -1,0 +1,8 @@
+heading {
+  font-weight: bold;
+  display: block;
+}
+entries {
+  display: flex;
+  flex-direction: column;
+}

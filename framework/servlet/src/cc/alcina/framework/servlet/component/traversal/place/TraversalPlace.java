@@ -33,6 +33,10 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		return super.copy();
 	}
 
+	public void clearSelections() {
+		paths.forEach(SelectionPath::clearSelection);
+	}
+
 	SelectionPath ensurePath(SelectionType type) {
 		return paths.stream().filter(p -> p.type == type).findFirst()
 				.orElseGet(() -> {
@@ -46,6 +50,10 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	public SelectionType firstSelectionType() {
 		return paths.stream().findFirst().map(SelectionPath::type)
 				.orElse(SelectionType.VIEW);
+	}
+
+	public SelectionPath firstSelectionPath() {
+		return paths.stream().findFirst().orElse(null);
 	}
 
 	public SelectionType lastSelectionType() {
@@ -89,6 +97,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		}
 		ensurePath(SelectionType.VIEW).selection = selectionPath.selection;
 		ensurePath(SelectionType.VIEW).path = selectionPath.path;
+		ensurePath(SelectionType.VIEW).segmentPath = selectionPath.segmentPath;
 		return this;
 	}
 
@@ -135,13 +144,19 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 	public static class SelectionPath extends Bindable.Fields
 			implements TreeSerializable {
+		void clearSelection() {
+			selection = null;
+		}
+
 		public String path;
 
 		public transient Selection selection;
 
 		private transient boolean selectionFromPathAttempted;
 
-		public SelectionType type;
+		public SelectionType type = SelectionType.VIEW;
+
+		public String segmentPath;
 
 		@Override
 		public int hashCode() {
@@ -202,6 +217,15 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 		public SelectionType type() {
 			return type;
+		}
+
+		public boolean nthSegmentPathIs(int depth, String pathSegment) {
+			String[] parts = this.segmentPath.split("\\.");
+			return parts.length > depth && parts[depth].equals(pathSegment);
+		}
+
+		public int segmentCount() {
+			return this.segmentPath.split("\\.").length;
 		}
 	}
 
@@ -276,5 +300,15 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	public boolean isSelected(Selection selection) {
 		return paths.stream().anyMatch(p -> p.type == SelectionType.VIEW
 				&& p.selection() == selection);
+	}
+
+	public TraversalPlace appendSelections(List<Selection> selections) {
+		TraversalPlace place = copy();
+		SelectionPath path = place.ensurePath(SelectionType.VIEW);
+		for (Selection selection : selections) {
+			path.path += ".0";
+			path.segmentPath += "." + selection.getPathSegment();
+		}
+		return place;
 	}
 }

@@ -308,6 +308,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return selections;
 	}
 
+	default String toFilterString() {
+		return getPathSegment();
+	}
+
 	default String toDebugString() {
 		return CommonUtils.joinWithNewlines(
 				ancestorSelections().collect(Collectors.toList()));

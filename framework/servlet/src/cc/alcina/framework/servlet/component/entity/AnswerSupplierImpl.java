@@ -1,0 +1,159 @@
+package cc.alcina.framework.servlet.component.entity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.StringMatches;
+import cc.alcina.framework.common.client.util.StringMatches.PartialSubstring;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerImpl.Invocation;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.CommandNode;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.MatchStyle;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui;
+import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
+import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
+import cc.alcina.framework.servlet.component.traversal.TraversalViewContext;
+import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
+import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
+
+class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
+	static AppSuggestion createSuggestion(CommandNode node) {
+		AppSuggestionEntry suggestion = new AppSuggestionEntry();
+		suggestion.modelEvent = (Class<? extends ModelEvent>) node.eventClass;
+		suggestion.match = node.toPath();
+		suggestion.secondary = node.command.description();
+		return suggestion;
+	}
+
+	protected AsyncCallback runningCallback = null;
+
+	@Override
+	public void begin(Invocation invocation) {
+		List<AppSuggestion> suggestions = new InvocationHandler(invocation)
+				.handle();
+		AppSuggestorRequest request = new AppSuggestorRequest();
+		String query = invocation.ask.getValue();
+		request.setQuery(query);
+		request.commandContexts.add(TraversalViewContext.class);
+		processResults(invocation, suggestions);
+	}
+
+	static class InvocationHandler {
+		@Registration.NonGenericSubtypes(TypeSuggestor.class)
+		static abstract class TypeSuggestor<S extends Selection>
+				implements Registration.AllSubtypes {
+			InvocationHandler handler;
+
+			String[] parts;
+
+			abstract void propose(Selection selection);
+
+			<T extends Selection> List<T> matches(Class<T> clazz, String part) {
+				List<T> selections = Ui.cast().peer.traversal
+						.getSelections(clazz);
+				return new StringMatches.PartialSubstring<T>()
+						.match(selections, Selection::toFilterString, part)
+						.stream().map(PartialSubstring.Match::getValue)
+						.toList();
+			}
+
+			static class _Domain extends TypeSuggestor<DomainGraphSelection> {
+				long id = 0;
+
+				@Override
+				public void propose(Selection selection) {
+					if (parts.length < 1 || parts.length > 2) {
+						return;
+					}
+					if (parts.length == 2) {
+						if (parts[1].matches("\\d+")) {
+							id = Long.parseLong(parts[1]);
+						} else {
+							return;
+						}
+					}
+					matches(TypeSelection.class, parts[0]).forEach(sel -> {
+						List<Selection> selections = new ArrayList<>();
+						selections.add(sel);
+						AppSuggestionEntry suggestion = new AppSuggestionEntry();
+						suggestion.match = sel.get().getSimpleName();
+						if (id != 0) {
+							Entity entity = Domain.find(sel.get(), id);
+							if (entity != null) {
+								selections.add(
+										new EntityTypeLayer.EntitySelection(sel,
+												entity));
+								suggestion.match = Ax.format("%s - %s - %s",
+										sel.get().getSimpleName(), id,
+										entity.toString());
+							} else {
+								suggestion.match = Ax.format(
+										"%s - %s - [no match]",
+										sel.get().getSimpleName(), id);
+							}
+						}
+						TraversalPlace place = Ui.cast().place()
+								.appendSelections(selections);
+						suggestion.url = place.toHrefString();
+						handler.suggestions.add(suggestion);
+					});
+				}
+			}
+		}
+
+		AppSuggestorRequest request = new AppSuggestorRequest();
+
+		Invocation invocation;
+
+		String query;
+
+		List<AppSuggestion> suggestions;
+
+		InvocationHandler(Invocation invocation) {
+			this.invocation = invocation;
+			query = invocation.ask.getValue();
+			request.setQuery(query);
+			request.commandContexts.add(TraversalViewContext.class);
+			suggestions = new ArrayList<>();
+		}
+
+		void proposePlaceContextSuggestions() {
+			TraversalPlace place = Ui.get().place();
+			SelectionPath firstSelectionPath = place.firstSelectionPath();
+			Selection selection = firstSelectionPath == null
+					? Ui.cast().peer.traversal.getRootSelection()
+					: firstSelectionPath.selection;
+			TypeSuggestor typeSuggestor = Registry.impl(TypeSuggestor.class,
+					selection.getClass());
+			typeSuggestor.handler = this;
+			typeSuggestor.parts = query.split(" ");
+			typeSuggestor.propose(selection);
+		}
+
+		List<AppSuggestion> handle() {
+			proposePlaceContextSuggestions();
+			proposeCommandSuggestions();
+			return suggestions;
+		}
+
+		void proposeCommandSuggestions() {
+			List<CommandNode> commandNodes = AppSuggestorCommands.get()
+					.getCommandNodes(request, MatchStyle.any_substring);
+			commandNodes.stream().map(AnswerSupplierImpl::createSuggestion)
+					.forEach(suggestions::add);
+		}
+	}
+}

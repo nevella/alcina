@@ -34,14 +34,14 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 		request.setQuery(query);
 		request.commandContexts.add(TraversalViewContext.class);
 		List<AppSuggestion> suggestions = new ArrayList<>();
-		List<CommandNode> commandNodes = AppSuggestorCommands.get()
-				.getCommandNodes(request, MatchStyle.any_substring);
 		AppSuggestionEntry suggestion = new AppSuggestionEntry();
 		suggestion.match = Ax.format("Filter: '%s'", query);
 		suggestion.modelEvent = TraversalEvents.FilterSelections.class;
 		suggestion.eventData = query;
 		// suggestion.
 		suggestions.add(suggestion);
+		List<CommandNode> commandNodes = AppSuggestorCommands.get()
+				.getCommandNodes(request, MatchStyle.any_substring);
 		commandNodes.stream().map(AnswerSupplierImpl::createSuggestion)
 				.forEach(suggestions::add);
 		processResults(invocation, suggestions);

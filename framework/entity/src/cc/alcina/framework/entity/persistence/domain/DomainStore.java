@@ -187,6 +187,13 @@ public class DomainStore implements IDomainStore {
 	public static final Topic<DomainStoreUpdateException> topicUpdateException = Topic
 			.create();
 
+	public static final Topic<Void> topicStoreLoaded = Topic.create();
+
+	/*
+	 * App-specific (allows for post-load configuration)
+	 */
+	public static Topic<Void> topicStoreLoadingComplete = Topic.create();
+
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -1094,6 +1101,7 @@ public class DomainStore implements IDomainStore {
 		domainDescriptor.onWarmupComplete(this);
 		MetricLogging.get().end("domainStore.warmup");
 		new StatCategory_DomainStore.Warmup.End().emit(isWritable());
+		topicStoreLoaded.signal();
 	}
 
 	private class AssociationIdProvider implements IndexedValueProvider {

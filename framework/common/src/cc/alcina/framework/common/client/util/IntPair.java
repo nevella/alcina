@@ -54,13 +54,7 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 
 	public static boolean containedInRanges(List<IntPair> ranges,
 			IntPair range) {
-		for (IntPair intPair : ranges) {
-			IntPair intersection = range.intersection(intPair);
-			if (intersection != null && !intersection.isPoint()) {
-				return true;
-			}
-		}
-		return false;
+		return intersection(ranges, range) != null;
 	}
 
 	public static boolean isContinuous(List<IntPair> pairs) {
@@ -116,6 +110,16 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 			result.i2 = Math.max(ip.i2, result.i2);
 		});
 		return result;
+	}
+
+	public static IntPair intersection(List<IntPair> ranges, IntPair range) {
+		for (IntPair intPair : ranges) {
+			IntPair intersection = range.intersection(intPair);
+			if (intersection != null && !intersection.isPoint()) {
+				return intersection;
+			}
+		}
+		return null;
 	}
 
 	public int i1;

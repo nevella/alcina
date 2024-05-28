@@ -3,6 +3,8 @@ package cc.alcina.framework.servlet.component.romcom.server;
 import javax.servlet.http.HttpServletRequest;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.dom.EnvironmentManager;
@@ -20,6 +22,9 @@ public interface RemoteComponent {
 		session.id = credentials.id;
 		session.auth = credentials.auth;
 		session.url = request.getRequestURL().toString();
+		if (Ax.notBlank(request.getQueryString())) {
+			session.url += "?" + request.getQueryString();
+		}
 		session.componentClassName = ui.getClass().getName();
 		return session;
 	}
@@ -31,4 +36,8 @@ public interface RemoteComponent {
 	}
 
 	Class<? extends RemoteUi> getUiType();
+
+	public static class EnvironmentPath extends Model.All {
+		public String id;
+	}
 }

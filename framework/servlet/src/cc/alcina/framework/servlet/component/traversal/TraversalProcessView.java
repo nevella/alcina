@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 
@@ -14,6 +15,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerSupplier;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -36,6 +38,9 @@ import cc.alcina.framework.servlet.dom.SettingsSupport;
  * <ul>
  * <li>A traversal place will not be consistent (so will not, for instance, work
  * on app refresh) if the traversal is performed in parallel.
+ * <li>A process view is linked to a specific traversal path if there's a ?path
+ * querystring parameter in the accessing url - otherwise it's 'most recent',
+ * and will update when that changes
  * </ul>
  *
  */
@@ -139,6 +144,33 @@ public class TraversalProcessView {
 
 		public void setEnvironment(Environment environment) {
 			this.environment = environment;
+		}
+
+		public String getTraversalPath() {
+			String sessionPath = getEnvironment().getSessionPath();
+			return sessionPath == null ? null
+					: sessionPath.replaceFirst("/.+?/", "");
+		}
+
+		public boolean isUseSelectionSegmentPath() {
+			return false;
+		}
+
+		public void setPlace(TraversalPlace place) {
+			// for subclasses
+		}
+
+		public AnswerSupplier createAnswerSupplier() {
+			return new AnswerSupplierImpl();
+		}
+
+		public TraversalPlace place() {
+			Place place = Client.currentPlace();
+			if (place instanceof TraversalPlace) {
+				return (TraversalPlace) place;
+			} else {
+				return new TraversalPlace();
+			}
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.dom;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -24,7 +25,11 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
+import cc.alcina.framework.gwt.client.dirndl.model.Heading;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
@@ -45,6 +50,9 @@ public class EnvironmentManager {
 		return Registry.impl(EnvironmentManager.class);
 	}
 
+	/*
+	 * Environments by id
+	 */
 	private ConcurrentMap<String, Environment> environments = new ConcurrentHashMap<>();
 
 	/*
@@ -55,9 +63,12 @@ public class EnvironmentManager {
 	public static class EnvironmentSource {
 		String path;
 
-		public EnvironmentSource(String path) {
+		public EnvironmentSource(String path, String href) {
 			this.path = path;
+			this.href = href;
 		}
+
+		String href;
 	}
 
 	public void registerSource(EnvironmentSource source) {
@@ -175,6 +186,34 @@ public class EnvironmentManager {
 				}
 				environmentSources.wait(timeout.remaining());
 			}
+		}
+	}
+
+	/*
+	 * For servlet rendering
+	 */
+	public EnvironmentList getEnvironmentList() {
+		return new EnvironmentList();
+	}
+
+	@Directed
+	public class EnvironmentList extends Model.All {
+		class Entry extends Model.All {
+			Link id;
+
+			Entry(EnvironmentSource env) {
+				id = new Link().withText(env.path).withHref(env.href);
+			}
+		}
+
+		Heading heading = new Heading("Environment list");
+
+		@Directed.Wrap("entries")
+		List<Entry> entries;
+
+		EnvironmentList() {
+			entries = environmentSources.values().stream().map(Entry::new)
+					.toList();
 		}
 	}
 }

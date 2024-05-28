@@ -178,6 +178,8 @@ public class Tables {
 				return IntermediateModel.ofBindable((Bindable) t);
 			} else if (t instanceof KeyValues) {
 				return IntermediateModel.ofKeyValues((KeyValues) t);
+			} else if (t instanceof PropertyValues) {
+				return IntermediateModel.ofPropertyValues((PropertyValues) t);
 			} else {
 				throw new UnsupportedOperationException();
 			}
@@ -201,6 +203,15 @@ public class Tables {
 				IntermediateModel result = new IntermediateModel();
 				result.rows = kvs.elements.stream()
 						.map(kv -> new Row(kv.key, kv.value))
+						.collect(Collectors.toList());
+				return result;
+			}
+
+			public static IntermediateModel
+					ofPropertyValues(PropertyValues pvs) {
+				IntermediateModel result = new IntermediateModel();
+				result.rows = pvs.elements.stream()
+						.map(kv -> new Row(kv.key.getName(), kv.value))
 						.collect(Collectors.toList());
 				return result;
 			}
@@ -253,7 +264,7 @@ public class Tables {
 					this.name = property.getName();
 				}
 
-				public Row(String key, String value) {
+				public Row(String key, Object value) {
 					this.key = key;
 					this.value = value;
 					this.name = key;
@@ -264,7 +275,7 @@ public class Tables {
 		public static class KeyValues {
 			List<Element> elements = new ArrayList<>();
 
-			void add(String key, Object value) {
+			public void add(String key, Object value) {
 				elements.add(new Element(key, value.toString()));
 			}
 
@@ -274,6 +285,26 @@ public class Tables {
 				String value;
 
 				Element(String key, String value) {
+					super();
+					this.key = key;
+					this.value = value;
+				}
+			}
+		}
+
+		public static class PropertyValues {
+			List<Element> elements = new ArrayList<>();
+
+			public void add(Property key, Model value) {
+				elements.add(new Element(key, value));
+			}
+
+			static class Element {
+				Property key;
+
+				Model value;
+
+				Element(Property key, Model value) {
 					super();
 					this.key = key;
 					this.value = value;

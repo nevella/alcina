@@ -1222,7 +1222,7 @@ public class Document extends Node
 			if (currentNode.getPreviousSibling() != null) {
 				return currentNode = lastChildBreadthFirst(previousSibling());
 			}
-			return currentNode = getParentNode();
+			return currentNode = currentNode.getParentNode();
 		}
 
 		@Override

@@ -555,6 +555,13 @@ public class Location implements Comparable<Location> {
 			return new Range(modifiedStart, end);
 		}
 
+		public Range merge(Range other) {
+			Location mergedStart = start.isBefore(other.start) ? start
+					: other.start;
+			Location mergedEnd = end.isAfter(other.end) ? end : other.end;
+			return new Range(mergedStart, mergedEnd);
+		}
+
 		class Itr implements Iterator<Location> {
 			Location cursor;
 

@@ -5,10 +5,12 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 
 @Directed(tag = "layers")
@@ -26,6 +28,7 @@ class SelectionLayers extends Model.Fields {
 	TraversalPlace place;
 
 	SelectionLayers(Page page) {
+		Ax.out("History delta - id %s", Ui.get().getEnvironment().uid);
 		this.page = page;
 		this.place = page.place;
 		render();

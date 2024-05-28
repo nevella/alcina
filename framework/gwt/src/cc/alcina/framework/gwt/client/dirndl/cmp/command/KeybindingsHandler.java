@@ -76,13 +76,25 @@ public class KeybindingsHandler implements KeyboardShortcuts.Handler {
 					.findFirst().map(MatchData::getEventType);
 			if (match.isPresent()) {
 				Class<? extends ModelEvent> eventType = match.get();
-				AppSuggestorCommand command = Reflections.at(eventType)
-						.annotation(AppSuggestorCommand.class);
-				if (command != null) {
-					Class<? extends AppSuggestorEvent> suggestorEventType = (Class<? extends AppSuggestorEvent>) eventType;
-					if (!AppSuggestorCommand.Support
-							.testFilter(suggestorEventType, command)) {
-						return;
+				{
+					AppSuggestorCommand command = Reflections.at(eventType)
+							.annotation(AppSuggestorCommand.class);
+					if (command != null) {
+						Class<? extends AppSuggestorEvent> suggestorEventType = (Class<? extends AppSuggestorEvent>) eventType;
+						if (!AppSuggestorCommand.Support
+								.testFilter(suggestorEventType, command)) {
+							return;
+						}
+					}
+				}
+				{
+					KeyBinding keyBinding = Reflections.at(eventType)
+							.annotation(KeyBinding.class);
+					if (keyBinding != null) {
+						if (!KeyBinding.Support.testFilter(eventType,
+								keyBinding)) {
+							return;
+						}
 					}
 				}
 				nativeEvent.stopPropagation();

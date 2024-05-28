@@ -400,8 +400,10 @@ public class SelectionTraversal
 	}
 
 	public void traverse() {
-		id = Ax.format("%s.%s", ClientInstance.self() == null ? 0
-				: ClientInstance.self().getId(), counter.nextId());
+		if (id == null) {
+			id = Ax.format("%s.%s", ClientInstance.self() == null ? 0
+					: ClientInstance.self().getId(), counter.nextId());
+		}
 		state.layerTraversal = new DepthFirstTraversal<Layer>(state.rootLayer,
 				Layer::getChildren);
 		/*

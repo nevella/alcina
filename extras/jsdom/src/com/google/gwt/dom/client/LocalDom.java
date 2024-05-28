@@ -1350,6 +1350,9 @@ public class LocalDom implements ContextFrame {
 					 * UID here
 					 */
 					maybeWarn(e);
+				} else {
+					// handler exception
+					e.printStackTrace();
 				}
 			}
 		}

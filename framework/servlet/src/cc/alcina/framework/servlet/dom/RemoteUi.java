@@ -93,4 +93,10 @@ public interface RemoteUi {
 		Window.addPageHideHandler(
 				evt -> EnvironmentManager.get().deregister(this));
 	}
+
+	default void onBeforeEnterFrame() {
+	}
+
+	default void onExitFrame() {
+	}
 }

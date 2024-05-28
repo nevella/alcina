@@ -123,11 +123,15 @@ public class RemoteComponentObservables<T> {
 		}
 
 		public EnvironmentSource toEnvironmentSource() {
-			return new EnvironmentSource(this.getPath());
+			return new EnvironmentSource(getPath(), getHref());
 		}
 
 		String getPath() {
 			return Ax.format("%s/%s", path, id);
+		}
+
+		String getHref() {
+			return Ax.format("%s?path=%s/%s", path, path, id);
 		}
 
 		public String displayName() {

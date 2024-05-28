@@ -307,6 +307,10 @@ public class DomNode {
 		return (com.google.gwt.dom.client.Node) node;
 	}
 
+	public com.google.gwt.dom.client.Element gwtElement() {
+		return (com.google.gwt.dom.client.Element) node;
+	}
+
 	public boolean has(String name) {
 		if (!isElement()) {
 			return false;
@@ -1032,6 +1036,10 @@ public class DomNode {
 				trs = xpath("./TBODY/TR").nodes();
 			}
 			return trs;
+		}
+
+		public Optional<DomNode> getContainingBlock() {
+			return style().containingBlock();
 		}
 	}
 

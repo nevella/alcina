@@ -31,7 +31,9 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
 import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.dom.EnvironmentManager;
+import cc.alcina.framework.servlet.dom.EnvironmentManager.EnvironmentList;
 import cc.alcina.framework.servlet.dom.RemoteUi;
+import cc.alcina.framework.servlet.publication.DirndlRenderer;
 
 /*
  * Provides common implementation for jetty/servlet remotecomponent handling
@@ -84,7 +86,9 @@ class RemoteComponentHandler {
 		String method = request.getMethod();
 		switch (method) {
 		case "GET":
-			if (Ax.notBlank(request.getQueryString())) {
+			if (Ax.notBlank(request.getQueryString())
+					&& !request.getQueryString().matches("gwt.l")
+					&& Ax.notBlank(request.getParameter("action"))) {
 				serveQuery(request, response);
 			} else {
 				serveFile(request, response);
@@ -134,7 +138,20 @@ class RemoteComponentHandler {
 				writeTextResponse("Component %s/%s available",
 						component.getPath(), path);
 				break;
+			case list:
+				renderEnvironmentList();
+				break;
 			}
+		}
+
+		void renderEnvironmentList() throws IOException {
+			EnvironmentList list = EnvironmentManager.get()
+					.getEnvironmentList();
+			String html = DirndlRenderer.instance().withRenderable(list)
+					.addStyleFile(getClass(), "EnvironmentList.css")
+					.asDocument().html().toHtml();
+			response.setContentType("text/html");
+			Io.write().string(html).toStream(response.getOutputStream());
 		}
 
 		void writeTextResponse(String template, Object... args)
@@ -145,7 +162,7 @@ class RemoteComponentHandler {
 		}
 
 		enum Action {
-			await
+			await, list
 		}
 	}
 
