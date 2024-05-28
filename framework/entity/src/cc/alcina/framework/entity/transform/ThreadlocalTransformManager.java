@@ -522,7 +522,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 	 * persisted (to not leak)
 	 */
 	public void evictNonPromotedLocals(List<Entity> createdLocals) {
-		if (LooseContext.is(CONTEXT_DISABLE_EVICTION)) {
+		if (LooseContext.is(CONTEXT_DISABLE_EVICTION)
+				|| AppPersistenceBase.isInstanceReadOnly()) {
 			return;
 		}
 		DomainStore store = DomainStore.writableStore();
@@ -539,7 +540,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 					} else {
 						logger.warn("Invalid eviction: {}", e);
 						logger.warn("Invalid eviction: ", new Exception());
-						if (EntityLayerUtils.isTestOrTestServer()) {
+						if (EntityLayerUtils.isTestOrTestServer()
+								&& !AppPersistenceBase.isInstanceReadOnly()) {
 							throw new RuntimeException();
 						}
 					}
