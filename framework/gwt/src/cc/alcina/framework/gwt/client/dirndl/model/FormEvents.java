@@ -125,6 +125,18 @@ public class FormEvents {
 		}
 	}
 
+	public static class ValidationFailed
+			extends ModelEvent<String, ValidationFailed.Handler> {
+		@Override
+		public void dispatch(ValidationFailed.Handler handler) {
+			handler.onValidationFailed(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onValidationFailed(ValidationFailed event);
+		}
+	}
+
 	public static class RowClicked
 			extends ModelEvent<TableRow, RowClicked.Handler> {
 		@Override

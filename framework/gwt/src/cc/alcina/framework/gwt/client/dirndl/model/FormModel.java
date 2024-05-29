@@ -205,6 +205,8 @@ public class FormModel extends Model
 		case INVALID:
 			formValidationFeedback.handleException(null,
 					new ValidationException(result.exceptionMessage));
+			result.originatingEvent.reemitAs(this,
+					FormEvents.ValidationFailed.class, result.exceptionMessage);
 			return;
 		}// VALID - handle success
 		if (getState().model instanceof Entity) {
@@ -400,6 +402,8 @@ public class FormModel extends Model
 
 	public static class EntityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
+		public boolean lifecycleControls;
+
 		@Override
 		public FormModel apply(
 				DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
@@ -412,6 +416,7 @@ public class FormModel extends Model
 			state.model = entity;
 			state.adjunct = state.editable
 					&& ClientTransformManager.cast().isProvisionalEditing();
+			state.lifecycleControls = lifecycleControls;
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
 		}
@@ -602,16 +607,21 @@ public class FormModel extends Model
 		class ValidationImpl extends Validation {
 			private Feedback feedback;
 
+			boolean hasWidgetFeedback;
+
 			ValidationImpl() {
-				feedback = (Feedback) field.getFeedback();
-				if (feedback != null) {
+				if (field.getFeedback() instanceof Feedback) {
+					feedback = (Feedback) field.getFeedback();
 					feedback.topicValidationChange
 							.add(this::onFeedbackValidationChanged);
+				} else if (field.getFeedback() != null) {
+					hasWidgetFeedback = true;
 				}
 			}
 
+			@Override
 			public void validate() {
-				if (feedback != null) {
+				if (feedback != null || hasWidgetFeedback) {
 					super.validate();
 				} else {
 					setResult(new ValidationResult(ValidationState.VALID));
@@ -623,6 +633,7 @@ public class FormModel extends Model
 				setResult(validationResult);
 			}
 
+			@Override
 			public String getMessage() {
 				return feedback == null ? null : feedback.getMessage();
 			};
@@ -634,16 +645,31 @@ public class FormModel extends Model
 
 			@Override
 			public Validator getValidator() {
-				// the validator should not be accessed directly, rather it's
-				// triggered by binding.set()
-				throw new UnsupportedOperationException();
+				if (hasWidgetFeedback) {
+					return field.getValidator();
+				} else {
+					// the validator should not be accessed directly, rather
+					// it's
+					// triggered by binding.set()
+					throw new UnsupportedOperationException();
+				}
 			}
 
 			@Override
 			public Object getValidationInput() {
-				// the validator should not be accessed directly, rather it's
-				// triggered by binding.set()
-				throw new UnsupportedOperationException();
+				if (hasWidgetFeedback) {
+					Binding elementBinding = formBinding.getChildren().stream()
+							.filter(b -> b.getRight().property == field
+									.getProperty())
+							.findFirst().get();
+					return elementBinding.getLeft().property
+							.get(elementBinding.getLeft().object);
+				} else {
+					// the validator should not be accessed directly, rather
+					// it's
+					// triggered by binding.set()
+					throw new UnsupportedOperationException();
+				}
 			}
 
 			@Override
