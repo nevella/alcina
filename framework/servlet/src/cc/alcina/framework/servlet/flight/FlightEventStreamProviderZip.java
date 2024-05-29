@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.flight;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -22,8 +23,12 @@ public class FlightEventStreamProviderZip {
 
 	String outputFolder;
 
-	public FlightEventStreamProviderZip(String eventZipPath) {
+	Function<String, String> serializationRefactoringHandler;
+
+	public FlightEventStreamProviderZip(String eventZipPath,
+			Function<String, String> serializationRefactoringHandler) {
 		this.eventZipPath = eventZipPath;
+		this.serializationRefactoringHandler = serializationRefactoringHandler;
 	}
 
 	public ReplayStream getReplayStream() {
@@ -42,6 +47,7 @@ public class FlightEventStreamProviderZip {
 						.listFilesRecursive(outputFolder, null).stream()
 						.filter(f -> f.isFile())
 						.map(f -> Io.read().file(f).asString())
+						.map(this::trackRefactoring)
 						.<FlightEvent> map(ReflectiveSerializer::deserialize)
 						.sorted().collect(Collectors.toList());
 				return new ReplayStream(events);
@@ -49,5 +55,9 @@ public class FlightEventStreamProviderZip {
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}
+	}
+
+	String trackRefactoring(String serialized) {
+		return serializationRefactoringHandler.apply(serialized);
 	}
 }

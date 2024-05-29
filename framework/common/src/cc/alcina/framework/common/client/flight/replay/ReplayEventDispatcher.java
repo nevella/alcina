@@ -12,7 +12,7 @@ public class ReplayEventDispatcher {
 
 	ReplayStream replayStream;
 
-	ReplayEventProcessor processor;
+	public ReplayEventProcessor processor;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -28,13 +28,10 @@ public class ReplayEventDispatcher {
 	public void replay() {
 		while (replayStream.itr.hasNext()) {
 			FlightEvent next = replayStream.itr.next();
-			if (!filter.isReplayableType(next)) {
-				continue;
-			}
-			logger.info("[replay] {}", next);
 			if (!filter.isReplayable(next)) {
 				continue;
 			}
+			logger.info("[replay] {}", next);
 			timing.await(next);
 			processor.replay(next);
 		}
@@ -42,15 +39,9 @@ public class ReplayEventDispatcher {
 
 	public interface DispatchFilter {
 		/*
-		 * An initial filter, to remove events that are not of a
-		 * replayable/awaitable type
-		 */
-		boolean isReplayableType(FlightEvent event);
-
-		/*
-		 * During event replay, skip this particular event. It may be used as an
-		 * 'await' (replay should wait until the Processor has emitted a
-		 * congruent event)
+		 * During event replay, skip this particular event (if false). It may be
+		 * used as an 'await' (replay should wait until the Processor has
+		 * emitted a congruent event)
 		 */
 		boolean isReplayable(FlightEvent event);
 	}
