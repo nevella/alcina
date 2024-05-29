@@ -615,7 +615,7 @@ body > page > layers > layers > layer-selections > selections-area > selection-a
 body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=DESCENT] {
   background: #ddf;
 }
-body > page > layers > layers > layer-selections > selections-area > selection-area[secondary-descendant-relation] {
+body > page > layers > layers > layer-selections > selections-area > selection-area[secondary-descendant-relation], body > page > layers > layers > layer-selections > selections-area > selection-area[ancestor-of-selected] {
   background: #eaeafa;
 }
 body > page > layers > layers > layer-selections > selections-area > selection-area[selected] {

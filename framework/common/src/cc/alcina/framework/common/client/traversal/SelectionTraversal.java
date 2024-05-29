@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -924,5 +925,9 @@ public class SelectionTraversal
 	}
 
 	public class TraversalComplete implements ProcessObservable {
+	}
+
+	public Stream<Selection> getAllSelections() {
+		return state.selections.selectionLayer.keySet().stream();
 	}
 }

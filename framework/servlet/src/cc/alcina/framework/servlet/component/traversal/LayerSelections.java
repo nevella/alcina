@@ -206,6 +206,15 @@ class LayerSelections extends Model.All {
 			@Binding(type = Type.PROPERTY)
 			boolean selected;
 
+			@Binding(type = Type.PROPERTY)
+			boolean ancestorOfSelected;
+
+			public void setAncestorOfSelected(boolean ancestorOfSelected) {
+				set("ancestorOfSelected", this.ancestorOfSelected,
+						ancestorOfSelected,
+						() -> this.ancestorOfSelected = ancestorOfSelected);
+			}
+
 			void setSelected(boolean selected) {
 				set("selected", this.selected, selected,
 						() -> this.selected = selected);
@@ -220,6 +229,7 @@ class LayerSelections extends Model.All {
 				selectionType = Page.traversalPlace().selectionType(selection);
 				secondaryDescendantRelation = Page.traversalPlace()
 						.isSecondaryDescendantRelation(selection);
+				updateSelected();
 			}
 
 			@Override
@@ -232,8 +242,7 @@ class LayerSelections extends Model.All {
 				selectionPath.selection = selection;
 				selectionPath.path = selection.processNode().treePath();
 				if (TraversalProcessView.Ui.get().isUseSelectionSegmentPath()) {
-					selectionPath.segmentPath = selection.fullPath()
-							.replace("/", ".");
+					selectionPath.segmentPath = selection.fullPath();
 				}
 				selectionPath.type = selectionType;
 				event.reemitAs(this, TraversalEvents.SelectionSelected.class,
@@ -242,6 +251,8 @@ class LayerSelections extends Model.All {
 
 			void updateSelected() {
 				setSelected(Page.traversalPlace().isSelected(selection));
+				setAncestorOfSelected(
+						Page.traversalPlace().isAncestorOfSelected(selection));
 			}
 		}
 	}
