@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -79,5 +80,10 @@ public class GridData extends Model.All {
 						.collect(Collectors.joining(" "));
 			}
 		}
+	}
+
+	public List<List<String>> toLists() {
+		return Stream.concat(Stream.of(header.toStringList()),
+				rows.stream().map(Row::toStringList)).toList();
 	}
 }

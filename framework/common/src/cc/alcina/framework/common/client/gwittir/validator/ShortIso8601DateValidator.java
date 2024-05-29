@@ -19,6 +19,9 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DateUtil;
 
 /**
  * 
@@ -26,7 +29,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  * 
  */
 @Reflected
-public class ShortIso8601DateValidator implements Validator {
+@SuppressWarnings("deprecation")
+public class ShortIso8601DateValidator implements Validator.Bidi {
 	public static final ShortIso8601DateValidator INSTANCE = new ShortIso8601DateValidator();
 
 	public static final transient String ERR_FMT = "Dates must be "
@@ -38,7 +42,6 @@ public class ShortIso8601DateValidator implements Validator {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
 	public Object validate(Object value) throws ValidationException {
 		if (value == null || value.toString().length() == 0) {
 			return null;
@@ -59,6 +62,25 @@ public class ShortIso8601DateValidator implements Validator {
 			return result;
 		} catch (Exception e) {
 			throw new ValidationException(ERR_INVALID);
+		}
+	}
+
+	@Override
+	public Validator inverseValidator() {
+		return new _Inverse();
+	}
+
+	static class _Inverse implements Validator {
+		@Override
+		public Object validate(Object value) throws ValidationException {
+			if (value == null) {
+				return null;
+			}
+			Date date = (Date) value;
+			return Ax.format("%s-%s-%s",
+					CommonUtils.padFour(DateUtil.getYear(date)),
+					CommonUtils.padTwo(date.getMonth() + 1),
+					CommonUtils.padTwo(date.getDate()));
 		}
 	}
 }

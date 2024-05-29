@@ -32,6 +32,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 		literal = "checkbox"),
 	emits = { ModelEvents.Change.class })
 @Registration({ Model.Value.class, FormModel.Editor.class, Boolean.class })
+@Registration({ Model.Value.class, FormModel.Editor.class, boolean.class })
 public class CheckboxInput extends Model.Value<Boolean>
 		implements DomEvents.Change.Handler {
 	public static final transient String VALUE = "value";

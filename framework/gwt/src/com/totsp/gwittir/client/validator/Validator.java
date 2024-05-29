@@ -33,6 +33,10 @@ public interface Validator {
 		Validator getValidator();
 	}
 
+	public interface Bidi extends Validator {
+		Validator inverseValidator();
+	}
+
 	/**
 	 * A noop implementation for sync validators, this allows async validation
 	 * to exit the sync validation process and reenter once complete

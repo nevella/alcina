@@ -72,8 +72,9 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Cancel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirndlAccess;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.BeanEditor.ActionsProviderType;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanForm.ActionsProviderType;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.PropertyValidationChange;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.QueryValidity;
 import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResult;
@@ -693,16 +694,20 @@ public class FormModel extends Model
 				return formModel;
 			}
 			{
-				BeanEditor.Actions actions = node
-						.annotation(BeanEditor.Actions.class);
+				BeanForm.Actions actions = node
+						.annotation(BeanForm.Actions.class);
+				if (node.has(BeanForm.ActionsFromParent.class)) {
+					actions = DirndlAccess.parentAnnotation(node,
+							BeanForm.Actions.class);
+				}
 				if (actions != null) {
 					Arrays.stream(actions.value()).map(Link::of)
 							.forEach(formModel.actions::add);
 				}
 			}
 			{
-				BeanEditor.ActionsProvider actionsProvider = node
-						.annotation(BeanEditor.ActionsProvider.class);
+				BeanForm.ActionsProvider actionsProvider = node
+						.annotation(BeanForm.ActionsProvider.class);
 				if (actionsProvider != null) {
 					ActionsProviderType transform = Reflections
 							.newInstance(actionsProvider.value());

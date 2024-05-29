@@ -9,8 +9,8 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.BeanEditor;
-import cc.alcina.framework.gwt.client.dirndl.model.BeanEditor.ClassName;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanForm;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanForm.ClassName;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -52,8 +52,8 @@ class Properties extends Model.Fields {
 	}
 
 	@Directed(className = "", bindToModel = false)
-	@Directed.Transform(BeanEditor.Viewer.class)
-	@BeanEditor.Classes({ ClassName.vertical })
+	@Directed.Transform(BeanForm.Viewer.class)
+	@BeanForm.Classes({ ClassName.vertical })
 	@Display.AllProperties
 	@PropertyOrder(fieldOrder = true)
 	static class SelectionArea extends Model.All

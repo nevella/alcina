@@ -184,4 +184,12 @@ public class Field {
 	public String toString() {
 		return Ax.format("Field: %s", getPropertyName());
 	}
+
+	public Validator provideReverseValidator() {
+		if (validator instanceof Validator.Bidi) {
+			return ((Validator.Bidi) validator).inverseValidator();
+		} else {
+			return null;
+		}
+	}
 }
