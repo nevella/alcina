@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -55,6 +56,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		}
 
 		@Bean(PropertySource.FIELDS)
+		@ReflectiveSerializer.Checks(ignore = true)
 		public static abstract class Attribute implements TreeSerializable {
 		}
 

@@ -952,7 +952,9 @@ public class FlatTreeSerializer {
 					if (isValueType(clazz)) {
 						collection.add(synthesiseSimpleValue(clazz));
 					} else {
-						collection.add(Reflections.newInstance(clazz));
+						if (!Reflections.at(clazz).isAbstract()) {
+							collection.add(Reflections.newInstance(clazz));
+						}
 					}
 				}
 			} else {
