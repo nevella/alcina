@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
@@ -87,11 +86,11 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 				SelectionTraversal traversal = Ui.cast().peer.traversal;
 				place = place.appendSelections(selections);
 				// all appended selections should go at the start of layers
-				selections.forEach(sel -> {
-					Layer layer = traversal.getLayer(sel);
-					place.ensureAttributes(layer).put(
+				int idx = place.getLayerCount();
+				for (Selection sel : selections) {
+					place.ensureAttributes(idx++).put(
 							new StandardLayerAttributes.SortSelectedFirst());
-				});
+				}
 				suggestion.url = place.toTokenString();
 				handler.suggestions.add(suggestion);
 			}
@@ -185,8 +184,9 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 			TraversalPlace place = Ui.get().place();
 			SelectionPath firstSelectionPath = place.firstSelectionPath();
 			Selection selection = firstSelectionPath == null
-					? Ui.cast().peer.traversal.getRootSelection()
-					: firstSelectionPath.selection();
+					|| firstSelectionPath.selection() == null
+							? Ui.cast().peer.traversal.getRootSelection()
+							: firstSelectionPath.selection();
 			TypeSuggestor typeSuggestor = Registry.impl(TypeSuggestor.class,
 					selection.getClass());
 			typeSuggestor.handler = this;

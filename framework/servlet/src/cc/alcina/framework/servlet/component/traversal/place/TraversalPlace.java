@@ -208,6 +208,10 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		}
 	}
 
+	public int getLayerCount() {
+		return ensurePath(SelectionType.VIEW).segmentCount();
+	}
+
 	public static class SelectionPath extends Bindable.Fields
 			implements TreeSerializable {
 		void clearSelection() {
@@ -397,16 +401,20 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 	public boolean isAncestorOfSelected(Selection selection) {
 		Selection viewSelection = ensurePath(SelectionType.VIEW).selection();
-		return viewSelection != selection
+		return viewSelection != null && viewSelection != selection
 				&& viewSelection.isContainedBy(selection);
 	}
 
 	public LayerAttributes ensureAttributes(Layer layer) {
-		return layers.computeIfAbsent(layer.depth(), LayerAttributes::new);
+		return ensureAttributes(layer.depth());
 	}
 
 	public LayerAttributes attributesOrEmpty(Layer layer) {
 		return layers.getOrDefault(layer.depth(),
 				new LayerAttributes(layer.depth()));
+	}
+
+	public LayerAttributes ensureAttributes(int depth) {
+		return layers.computeIfAbsent(depth, LayerAttributes::new);
 	}
 }
