@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
@@ -117,6 +118,20 @@ class LayerSelections extends Model.All {
 			testHistory.beforeFilter();
 			List<Selection> filteredSelections = stream.filter(this::test)
 					.limit(maxRenderedSelections).toList();
+			boolean sortSelectedFirst = Ui.get().place()
+					.attributesOrEmpty(layer)
+					.has(StandardLayerAttributes.SortSelectedFirst.class);
+			if (sortSelectedFirst) {
+				Selection selection = Ui.get().place()
+						.provideSelection(SelectionType.VIEW);
+				Selection inSelectionPath = filteredSelections.stream()
+						.filter(s -> s.isSelfOrAncestor(selection, false))
+						.findFirst().orElse(null);
+				if (inSelectionPath != null) {
+					filteredSelections.remove(inSelectionPath);
+					filteredSelections.add(0, inSelectionPath);
+				}
+			}
 			filtered = filteredSelections.stream().map(SelectionArea::new)
 					.toList();
 			empty = filtered.isEmpty();

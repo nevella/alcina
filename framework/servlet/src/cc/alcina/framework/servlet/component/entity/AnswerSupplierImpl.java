@@ -12,7 +12,9 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMatches;
 import cc.alcina.framework.common.client.util.StringMatches.PartialSubstring;
@@ -30,6 +32,7 @@ import cc.alcina.framework.servlet.component.entity.EntityTypeLayer.EntitySelect
 import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
 import cc.alcina.framework.servlet.component.entity.QueryLayer.PropertySelection;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
+import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalViewContext;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
@@ -64,6 +67,8 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 
 			String[] parts;
 
+			private TraversalPlace place;
+
 			abstract void propose(S selection);
 
 			<T extends Selection> List<T> matches(Class<T> clazz, String part) {
@@ -78,8 +83,15 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 			void addSuggestion(List<Selection> selections, String match) {
 				AppSuggestionEntry suggestion = new AppSuggestionEntry();
 				suggestion.match = match;
-				TraversalPlace place = Ui.cast().place()
-						.appendSelections(selections);
+				place = Ui.cast().place();
+				SelectionTraversal traversal = Ui.cast().peer.traversal;
+				place = place.appendSelections(selections);
+				// all appended selections should go at the start of layers
+				selections.forEach(sel -> {
+					Layer layer = traversal.getLayer(sel);
+					place.ensureAttributes(layer).put(
+							new StandardLayerAttributes.SortSelectedFirst());
+				});
 				suggestion.url = place.toTokenString();
 				handler.suggestions.add(suggestion);
 			}

@@ -1,7 +1,9 @@
 package cc.alcina.framework.servlet.component.traversal.place;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -11,8 +13,10 @@ import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
@@ -27,6 +31,48 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	String textFilter;
 
 	List<SelectionPath> paths = new ArrayList<>();
+
+	Map<Integer, LayerAttributes> layers = new LinkedHashMap<>();
+
+	@Bean(PropertySource.FIELDS)
+	public static class LayerAttributes implements TreeSerializable {
+		public int index;
+
+		/*
+		 * will contain only one attribute per attibute (sub)-type
+		 */
+		public List<Attribute> attributes = new ArrayList<>();
+
+		public LayerAttributes() {
+		}
+
+		public LayerAttributes(int index) {
+			this.index = index;
+		}
+
+		public int index() {
+			return index;
+		}
+
+		@Bean(PropertySource.FIELDS)
+		public static abstract class Attribute implements TreeSerializable {
+		}
+
+		@Property.Not
+		public Attribute get(Class<? extends Attribute> type) {
+			return attributes.stream().filter(a -> a.getClass() == type)
+					.findFirst().orElse(null);
+		}
+
+		public boolean has(Class<? extends Attribute> type) {
+			return get(type) != null;
+		}
+
+		public void put(Attribute attr) {
+			attributes.removeIf(a -> a.getClass() == attr.getClass());
+			attributes.add(attr);
+		}
+	}
 
 	transient SelectionPath viewPath;
 
@@ -142,6 +188,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			Data data = new Data();
 			data.textFilter = place.textFilter;
 			data.paths = place.paths;
+			data.layers = place.layers.values().stream().toList();
 			return data;
 		}
 
@@ -149,9 +196,13 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 		List<SelectionPath> paths = new ArrayList<>();
 
+		List<LayerAttributes> layers = new ArrayList<>();
+
 		public void copyTo(TraversalPlace place) {
 			place.textFilter = textFilter;
 			place.paths = paths;
+			place.layers = layers.stream()
+					.collect(AlcinaCollectors.toKeyMap(LayerAttributes::index));
 		}
 	}
 
@@ -346,5 +397,14 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		Selection viewSelection = ensurePath(SelectionType.VIEW).selection();
 		return viewSelection != selection
 				&& viewSelection.isContainedBy(selection);
+	}
+
+	public LayerAttributes ensureAttributes(Layer layer) {
+		return layers.computeIfAbsent(layer.depth(), LayerAttributes::new);
+	}
+
+	public LayerAttributes attributesOrEmpty(Layer layer) {
+		return layers.getOrDefault(layer.depth(),
+				new LayerAttributes(layer.depth()));
 	}
 }
