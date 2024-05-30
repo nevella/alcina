@@ -142,7 +142,10 @@
           > label 
             white-space: nowrap
             padding-right: 2em
-   
+    &.tight-rows
+      line-height: 1.2
+      > form > section > form-element > value
+        display: flex
 
   &.over-only > form
     @include over-only
@@ -180,7 +183,7 @@
   &[inert] > form
     opacity: 0.7
 
-  > header 
+  > heading 
     font-weight: 500
     padding-bottom: 0.2em
     padding-left: 3px

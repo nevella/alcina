@@ -1,7 +1,9 @@
 package cc.alcina.framework.servlet.component.traversal.place;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -10,9 +12,12 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
@@ -28,6 +33,51 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 	List<SelectionPath> paths = new ArrayList<>();
 
+	Map<Integer, LayerAttributes> layers = new LinkedHashMap<>();
+
+	@Bean(PropertySource.FIELDS)
+	public static class LayerAttributes implements TreeSerializable {
+		public int index;
+
+		/*
+		 * will contain only one attribute per attibute (sub)-type
+		 */
+		public List<Attribute> attributes = new ArrayList<>();
+
+		public LayerAttributes() {
+		}
+
+		public LayerAttributes(int index) {
+			this.index = index;
+		}
+
+		public int index() {
+			return index;
+		}
+
+		@Bean(PropertySource.FIELDS)
+		@ReflectiveSerializer.Checks(ignore = true)
+		public static abstract class Attribute implements TreeSerializable {
+		}
+
+		@Property.Not
+		public Attribute get(Class<? extends Attribute> type) {
+			return attributes.stream().filter(a -> a.getClass() == type)
+					.findFirst().orElse(null);
+		}
+
+		public boolean has(Class<? extends Attribute> type) {
+			return get(type) != null;
+		}
+
+		public void put(Attribute attr) {
+			attributes.removeIf(a -> a.getClass() == attr.getClass());
+			attributes.add(attr);
+		}
+	}
+
+	transient SelectionPath viewPath;
+
 	@Override
 	public TraversalPlace copy() {
 		return super.copy();
@@ -38,6 +88,17 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	SelectionPath ensurePath(SelectionType type) {
+		if (type == SelectionType.VIEW) {
+			if (viewPath == null) {
+				viewPath = ensurePath0(type);
+			}
+			return viewPath;
+		} else {
+			return ensurePath0(type);
+		}
+	}
+
+	SelectionPath ensurePath0(SelectionType type) {
 		return paths.stream().filter(p -> p.type == type).findFirst()
 				.orElseGet(() -> {
 					SelectionPath selectionPath = new SelectionPath();
@@ -129,6 +190,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			Data data = new Data();
 			data.textFilter = place.textFilter;
 			data.paths = place.paths;
+			data.layers = place.layers.values().stream().toList();
 			return data;
 		}
 
@@ -136,9 +198,13 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 		List<SelectionPath> paths = new ArrayList<>();
 
+		List<LayerAttributes> layers = new ArrayList<>();
+
 		public void copyTo(TraversalPlace place) {
 			place.textFilter = textFilter;
 			place.paths = paths;
+			place.layers = layers.stream()
+					.collect(AlcinaCollectors.toKeyMap(LayerAttributes::index));
 		}
 	}
 
@@ -146,6 +212,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			implements TreeSerializable {
 		void clearSelection() {
 			selection = null;
+			selectionFromPathAttempted = false;
 		}
 
 		public String path;
@@ -178,18 +245,27 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 					|| type == SelectionType.DESCENT;
 		}
 
-		Selection selection() {
+		public Selection selection() {
 			if (selection == null && !selectionFromPathAttempted) {
-				if (path != null
+				if ((path != null || segmentPath != null)
 						&& TraversalProcessView.Ui.get().getHistory() != null) {
-					SelectionTraversal observable = TraversalProcessView.Ui
-							.get().getHistory().observable;
-					if (observable.getRootSelection() != null) {
-						selection = (Selection) observable.getRootSelection()
-								.processNode().nodeForTreePath(path)
-								.map(Node::getValue).orElse(null);
+					SelectionTraversal traversal = TraversalProcessView.Ui.get()
+							.getHistory().observable;
+					if (traversal.getRootSelection() != null) {
+						if (segmentPath != null) {
+							selection = traversal.getAllSelections().filter(
+									sel -> segmentPath.equals(sel.fullPath()))
+									.findFirst().orElse(null);
+						} else {
+							selection = (Selection) traversal.getRootSelection()
+									.processNode().nodeForTreePath(path)
+									.map(Node::getValue).orElse(null);
+						}
 						selectionFromPathAttempted = true;
 					}
+				}
+				if (selection == null) {
+					int debug = 3;
 				}
 			}
 			return selection;
@@ -227,13 +303,22 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		public int segmentCount() {
 			return this.segmentPath.split("\\.").length;
 		}
+
+		void appendSegment(String pathSegment) {
+			if (Ax.isBlank(segmentPath)) {
+				segmentPath = pathSegment;
+			} else {
+				segmentPath += "." + pathSegment;
+			}
+		}
 	}
 
 	public enum SelectionType {
 		VIEW,
 		// is selection B descended from A (via selection ancestry)
 		DESCENT,
-		// is selection B contained in A (i.e. via document range containment)
+		// is selection B contained in A (i.e. via document range
+		// containment)
 		CONTAINMENT
 	}
 
@@ -298,17 +383,30 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	public boolean isSelected(Selection selection) {
-		return paths.stream().anyMatch(p -> p.type == SelectionType.VIEW
-				&& p.selection() == selection);
+		return ensurePath(SelectionType.VIEW).selection() == selection;
 	}
 
 	public TraversalPlace appendSelections(List<Selection> selections) {
 		TraversalPlace place = copy();
 		SelectionPath path = place.ensurePath(SelectionType.VIEW);
 		for (Selection selection : selections) {
-			path.path += ".0";
-			path.segmentPath += "." + selection.getPathSegment();
+			path.appendSegment(selection.getPathSegment());
 		}
 		return place;
+	}
+
+	public boolean isAncestorOfSelected(Selection selection) {
+		Selection viewSelection = ensurePath(SelectionType.VIEW).selection();
+		return viewSelection != selection
+				&& viewSelection.isContainedBy(selection);
+	}
+
+	public LayerAttributes ensureAttributes(Layer layer) {
+		return layers.computeIfAbsent(layer.depth(), LayerAttributes::new);
+	}
+
+	public LayerAttributes attributesOrEmpty(Layer layer) {
+		return layers.getOrDefault(layer.depth(),
+				new LayerAttributes(layer.depth()));
 	}
 }

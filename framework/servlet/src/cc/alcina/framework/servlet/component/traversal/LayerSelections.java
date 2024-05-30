@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
@@ -117,6 +118,20 @@ class LayerSelections extends Model.All {
 			testHistory.beforeFilter();
 			List<Selection> filteredSelections = stream.filter(this::test)
 					.limit(maxRenderedSelections).toList();
+			boolean sortSelectedFirst = Ui.get().place()
+					.attributesOrEmpty(layer)
+					.has(StandardLayerAttributes.SortSelectedFirst.class);
+			if (sortSelectedFirst) {
+				Selection selection = Ui.get().place()
+						.provideSelection(SelectionType.VIEW);
+				Selection inSelectionPath = filteredSelections.stream()
+						.filter(s -> s.isSelfOrAncestor(selection, false))
+						.findFirst().orElse(null);
+				if (inSelectionPath != null) {
+					filteredSelections.remove(inSelectionPath);
+					filteredSelections.add(0, inSelectionPath);
+				}
+			}
 			filtered = filteredSelections.stream().map(SelectionArea::new)
 					.toList();
 			empty = filtered.isEmpty();
@@ -206,6 +221,15 @@ class LayerSelections extends Model.All {
 			@Binding(type = Type.PROPERTY)
 			boolean selected;
 
+			@Binding(type = Type.PROPERTY)
+			boolean ancestorOfSelected;
+
+			public void setAncestorOfSelected(boolean ancestorOfSelected) {
+				set("ancestorOfSelected", this.ancestorOfSelected,
+						ancestorOfSelected,
+						() -> this.ancestorOfSelected = ancestorOfSelected);
+			}
+
 			void setSelected(boolean selected) {
 				set("selected", this.selected, selected,
 						() -> this.selected = selected);
@@ -220,6 +244,7 @@ class LayerSelections extends Model.All {
 				selectionType = Page.traversalPlace().selectionType(selection);
 				secondaryDescendantRelation = Page.traversalPlace()
 						.isSecondaryDescendantRelation(selection);
+				updateSelected();
 			}
 
 			@Override
@@ -232,8 +257,7 @@ class LayerSelections extends Model.All {
 				selectionPath.selection = selection;
 				selectionPath.path = selection.processNode().treePath();
 				if (TraversalProcessView.Ui.get().isUseSelectionSegmentPath()) {
-					selectionPath.segmentPath = selection.fullPath()
-							.replace("/", ".");
+					selectionPath.segmentPath = selection.fullPath();
 				}
 				selectionPath.type = selectionType;
 				event.reemitAs(this, TraversalEvents.SelectionSelected.class,
@@ -242,6 +266,8 @@ class LayerSelections extends Model.All {
 
 			void updateSelected() {
 				setSelected(Page.traversalPlace().isSelected(selection));
+				setAncestorOfSelected(
+						Page.traversalPlace().isAncestorOfSelected(selection));
 			}
 		}
 	}

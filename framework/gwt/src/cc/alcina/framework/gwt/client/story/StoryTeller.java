@@ -89,11 +89,16 @@ public class StoryTeller {
 			return node;
 		}
 
-		void performAction() {
+		/*
+		 * return true if the action was performed
+		 */
+		boolean performAction() {
 			if (result.isFiltered()) {
+				return false;
 				//
 			} else {
 				new StoryActionPerformer().perform(this);
+				return true;
 			}
 		}
 
@@ -714,12 +719,13 @@ public class StoryTeller {
 
 	void performAction(Visit visit) {
 		new BeforePerformAction().publish();
-		visit.performAction();
-		if ((visit.result.testResult != null && !visit.result.testResult)
-				|| visit.result.throwable != null) {
-			evaluateTestNotPassed(visit);
+		if (visit.performAction()) {
+			if ((visit.result.testResult != null && !visit.result.testResult)
+					|| visit.result.throwable != null) {
+				evaluateTestNotPassed(visit);
+			}
+			visit.afterActionPerformed();
 		}
-		visit.afterActionPerformed();
 		new AfterPerformAction().publish();
 	}
 

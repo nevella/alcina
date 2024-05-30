@@ -6,6 +6,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Date;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
@@ -19,6 +20,7 @@ import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -79,8 +81,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(type = Type.PROPERTY, from = "title") },
 	emits = { ModelEvents.Change.class, ModelEvents.Input.class,
 			ModelEvents.Commit.class })
-@Registration({ Model.Value.class, FormModel.Editor.class, String.class })
-@Registration({ Model.Value.class, FormModel.Editor.class, Number.class })
+@TypeSerialization(reflectiveSerializable = false)
 public class StringInput extends Model.Value<String>
 		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
 		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
@@ -469,5 +470,23 @@ public class StringInput extends Model.Value<String>
 	@Override
 	public void onFormElementLabelClicked(FormElementLabelClicked event) {
 		focus();
+	}
+
+	@Registration({ Model.Value.class, FormModel.Editor.class, Date.class })
+	public static class DateInput extends StringInput {
+		public DateInput() {
+			setType("date");
+		}
+
+		@Override
+		public void setType(String type) {
+			Preconditions.checkArgument(type.equals("date"));
+			super.setType(type);
+		}
+	}
+
+	@Registration({ Model.Value.class, FormModel.Editor.class, String.class })
+	@Registration({ Model.Value.class, FormModel.Editor.class, Number.class })
+	public static class Editor extends StringInput {
 	}
 }

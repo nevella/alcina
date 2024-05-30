@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.lang.annotation.Annotation;
+
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -24,5 +26,10 @@ public class DirndlAccess {
 			}
 			return null;
 		}
+	}
+
+	public static <A extends Annotation> A parentAnnotation(Node n,
+			Class<A> clazz) {
+		return n.parent.annotation(clazz);
 	}
 }

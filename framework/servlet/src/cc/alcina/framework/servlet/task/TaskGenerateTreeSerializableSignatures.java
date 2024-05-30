@@ -99,6 +99,9 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 				Class<? extends TreeSerializable> clazz = itr.next();
 				itr.remove();
 				reachables.traversed.add(clazz);
+				if (Reflections.at(clazz).isAbstract()) {
+					continue;
+				}
 				FlatTreeSerializer.serialize(Reflections.newInstance(clazz),
 						new SerializerOptions().withElideDefaults(false)
 								.withShortPaths(true).withTestSerialized(true)

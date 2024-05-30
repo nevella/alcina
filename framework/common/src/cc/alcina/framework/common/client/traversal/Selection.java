@@ -82,7 +82,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			segments.add(0, cursor.getPathSegment());
 			cursor = cursor.parentSelection();
 		}
-		return segments.stream().collect(Collectors.joining("/"));
+		return segments.stream().collect(Collectors.joining("."));
 	}
 
 	/*

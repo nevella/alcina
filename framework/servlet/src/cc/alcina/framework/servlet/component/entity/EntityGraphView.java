@@ -110,11 +110,8 @@ public class EntityGraphView {
 
 		@Override
 		public void setPlace(TraversalPlace place) {
-			if (this.currentPlace == null) {
-			} else {
-				if (!Objects.equals(place, this.currentPlace)) {
-					traverse();
-				}
+			if (!Objects.equals(place, this.currentPlace)) {
+				traverse();
 			}
 			this.currentPlace = place;
 		}

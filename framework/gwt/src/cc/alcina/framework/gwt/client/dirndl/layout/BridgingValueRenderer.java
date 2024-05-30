@@ -138,7 +138,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 	Binding setupBinding(SourcesPropertyChangeEvents target) {
 		Binding binding = new Binding(target, "value", field.getValidator(),
 				field.getFeedback(), valueModel.getBindable(),
-				field.getPropertyName(), null, null);
+				field.getPropertyName(), field.provideReverseValidator(), null);
 		if (field.getConverter() != null) {
 			binding.getRight().converter = field.getConverter();
 		}
@@ -151,10 +151,10 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		return binding;
 	}
 
-	public static class RenderingModelTransform extends
-			AbstractContextSensitiveModelTransform<Object, Model.Value> {
+	public static class RenderingModelTransform
+			extends AbstractContextSensitiveModelTransform<Object, Model> {
 		@Override
-		public Model.Value apply(Object t) {
+		public Model apply(Object t) {
 			NodeEditorContext editorContext = getEditorContext(node);
 			Property property = ((ValueResolver) node.resolver).valueLocation.property;
 			Class marker = editorContext.isEditable() ? FormModel.Editor.class

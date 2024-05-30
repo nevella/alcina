@@ -22,12 +22,12 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
 
 @Directed(tag = "bean-editor")
-public class BeanEditor extends Model {
-	private String header;
+public class BeanForm extends Model {
+	private String heading;
 
 	private String description;
 
@@ -53,8 +53,8 @@ public class BeanEditor extends Model {
 	}
 
 	@Directed
-	public String getHeader() {
-		return this.header;
+	public String getHeading() {
+		return this.heading;
 	}
 
 	@Binding(type = Type.PROPERTY)
@@ -84,8 +84,8 @@ public class BeanEditor extends Model {
 		this.description = description;
 	}
 
-	public void setHeader(String header) {
-		this.header = header;
+	public void setHeading(String heading) {
+		this.heading = heading;
 	}
 
 	public void setInert(boolean inert) {
@@ -103,7 +103,7 @@ public class BeanEditor extends Model {
 	@Reflected
 	public enum ClassName {
 		grid, wide, horizontal_validation, vertical_validation, vertical,
-		label_over
+		label_over, tight_rows
 	}
 
 	/**
@@ -144,6 +144,26 @@ public class BeanEditor extends Model {
 		Class<? extends ModelEvent>[] value();
 	}
 
+	/*
+	 * FIXME - dirndl general 'from parent' directed.passparent(Actions.class)
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+	public @interface ActionsFromParent {
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+	public @interface Headings {
+		String heading();
+
+		String description() default "";
+	}
+
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -156,7 +176,7 @@ public class BeanEditor extends Model {
 			extends AbstractContextSensitiveModelTransform<Object, List<Link>> {
 	}
 
-	public static class NonAdjunct extends BeanEditor {
+	public static class NonAdjunct extends BeanForm {
 		@Override
 		@BeanViewModifiers(adjunct = false)
 		public Bindable getBindable() {
@@ -164,18 +184,79 @@ public class BeanEditor extends Model {
 		}
 	}
 
-	public static class Viewer extends BeanEditor
-			implements ModelTransform<Bindable, Viewer> {
+	public static class Viewer extends BeanForm
+			implements ContextSensitiveTransform<Bindable, Viewer> {
 		@Override
 		public Viewer apply(Bindable t) {
 			setBindable(t);
+			transformSupport.applyAnnotations();
 			return this;
 		}
 
 		@Override
 		@BeanViewModifiers(editable = false, nodeEditors = true)
+		@BeanForm.ActionsFromParent
 		public Bindable getBindable() {
 			return super.getBindable();
+		}
+
+		TransformSupport transformSupport = new TransformSupport(this);
+
+		@Override
+		public ContextSensitiveTransform<Bindable, Viewer>
+				withContextNode(Node contextNode) {
+			transformSupport.withContextNode(contextNode);
+			return this;
+		}
+	}
+
+	static class TransformSupport {
+		BeanForm beanForm;
+
+		Node contextNode;
+
+		TransformSupport(BeanForm beanForm) {
+			this.beanForm = beanForm;
+		}
+
+		void withContextNode(Node contextNode) {
+			this.contextNode = contextNode;
+		}
+
+		void applyAnnotations() {
+			Headings headings = contextNode.annotation(Headings.class);
+			if (headings != null) {
+				beanForm.setHeading(headings.heading());
+				if (headings.description().length() > 0) {
+					beanForm.setDescription(headings.description());
+				}
+			}
+		}
+	}
+
+	public static class Editor extends BeanForm
+			implements ContextSensitiveTransform<Bindable, Editor> {
+		@Override
+		public Editor apply(Bindable t) {
+			setBindable(t);
+			transformSupport.applyAnnotations();
+			return this;
+		}
+
+		TransformSupport transformSupport = new TransformSupport(this);
+
+		@Override
+		@BeanViewModifiers(editable = true, nodeEditors = true)
+		@BeanForm.ActionsFromParent
+		public Bindable getBindable() {
+			return super.getBindable();
+		}
+
+		@Override
+		public ContextSensitiveTransform<Bindable, Editor>
+				withContextNode(Node contextNode) {
+			transformSupport.withContextNode(contextNode);
+			return this;
 		}
 	}
 }

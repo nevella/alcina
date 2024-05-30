@@ -19,11 +19,14 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.OptionElement;
 import com.google.gwt.dom.client.SelectElement;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -48,6 +51,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -192,12 +196,16 @@ public abstract class Choices<T> extends Model implements
 		Class<? extends Function<?, ?>> value();
 	}
 
+	void populateValuesFromNodeContext(Node node) {
+		node.optional(Values.class).ifPresent(ann -> setValues(
+				(List<T>) Reflections.newInstance(ann.value()).apply(ann)));
+		node.optional(EnumValues.class).ifPresent(
+				ann -> setValues((List<T>) new EnumSupplier().apply(ann)));
+	}
+
 	@Override
 	public void onBeforeRender(BeforeRender event) {
-		event.node.optional(Values.class).ifPresent(ann -> setValues(
-				(List<T>) Reflections.newInstance(ann.value()).apply(ann)));
-		event.node.optional(EnumValues.class).ifPresent(
-				ann -> setValues((List<T>) new EnumSupplier().apply(ann)));
+		populateValuesFromNodeContext(event.node);
 		super.onBeforeRender(event);
 	}
 
@@ -236,6 +244,8 @@ public abstract class Choices<T> extends Model implements
 
 		private final T value;
 
+		boolean multipleSelect;
+
 		public Choice(T value) {
 			this.value = value;
 		}
@@ -257,6 +267,9 @@ public abstract class Choices<T> extends Model implements
 
 		@Override
 		public void onClick(Click event) {
+			if (multipleSelect) {
+				return;
+			}
 			event.reemitAs(this, ModelEvents.Selected.class, this);
 		}
 
@@ -275,6 +288,67 @@ public abstract class Choices<T> extends Model implements
 		public void setSelected(boolean selected) {
 			set("selected", this.selected, selected,
 					() -> this.selected = selected);
+		}
+	}
+
+	@Directed(tag = "select")
+	@DirectedContextResolver(SelectResolver.class)
+	@Bean(PropertySource.FIELDS)
+	public static class MultipleSelect<T> extends Multiple<T>
+			implements DomEvents.Change.Handler {
+		@Binding(type = Type.PROPERTY)
+		public final boolean multiple = true;
+
+		public static class To
+				implements ModelTransform<List, MultipleSelect<?>> {
+			@Override
+			public MultipleSelect<?> apply(List t) {
+				MultipleSelect<List> select = new MultipleSelect<>();
+				select.setSelectedValues(t);
+				return select;
+			}
+		}
+
+		@Override
+		public void onChange(Change event) {
+			DirectedLayout.Node node = provideNode()
+					.provideMostSpecificNodeForModel();
+			SelectElement selectElement = (SelectElement) node.getRendered()
+					.asElement();
+			List<OptionElement> options = selectElement.getOptions().stream()
+					.toList();
+			List<T> selectedValues = new ArrayList<>();
+			List<Choice<T>> selectedChoices = new ArrayList<>();
+			for (int idx = 0; idx < options.size(); idx++) {
+				OptionElement optionElement = options.get(idx);
+				if (optionElement.isSelected()) {
+					Choice<T> choice = choices.get(idx);
+					selectedChoices.add(choice);
+					selectedValues.add(choice.getValue());
+				}
+			}
+			setSelectedValues(selectedValues);
+			event.reemitAs(this, ModelEvents.SelectionChanged.class,
+					selectedChoices);
+		}
+
+		@Override
+		public void setSelectedValues(List<T> values) {
+			super.setSelectedValues(values);
+			if (provideIsBound()) {
+				DirectedLayout.Node node = provideNode()
+						.provideMostSpecificNodeForModel();
+				SelectElement selectElement = (SelectElement) node.getRendered()
+						.asElement();
+				List<OptionElement> options = selectElement.getOptions()
+						.stream().toList();
+				List<T> selectedValues = new ArrayList<>();
+				for (int idx = 0; idx < options.size(); idx++) {
+					OptionElement optionElement = options.get(idx);
+					Choice<T> choice = choices.get(idx);
+					optionElement.setSelected(choice.isSelected());
+				}
+			}
 		}
 	}
 
@@ -408,6 +482,14 @@ public abstract class Choices<T> extends Model implements
 			@Binding(type = Type.PROPERTY)
 			public boolean isSelected() {
 				return super.isSelected();
+			}
+
+			@Override
+			public void onClick(Click event) {
+			}
+
+			@Override
+			public void onMouseDown(MouseDown event) {
 			}
 
 			public static class Transform extends
@@ -650,6 +732,45 @@ public abstract class Choices<T> extends Model implements
 		@Override
 		public void setValue(T t) {
 			setSelectedValue(t);
+		}
+	}
+
+	@Directed.Delegating
+	@Registration({ Model.Value.class, FormModel.Editor.class, List.class })
+	@Bean(PropertySource.FIELDS)
+	public static class ListEditor<T> extends Model.Value<List<T>>
+			implements ModelEvents.SelectionChanged.Handler {
+		@Directed
+		public MultipleSelect<T> select;
+
+		private List<T> value;
+
+		public ListEditor() {
+		}
+
+		@Override
+		public void onBeforeRender(BeforeRender event) {
+			select = new MultipleSelect<>();
+			// populate the delegate values from this node's AnnotationLocation
+			select.populateValuesFromNodeContext(event.node);
+			value = select.getSelectedValues();
+			;
+			super.onBeforeRender(event);
+		}
+
+		@Override
+		public List<T> getValue() {
+			return value;
+		}
+
+		@Override
+		public void setValue(List<T> value) {
+			set("value", this.value, value, () -> this.value = value);
+		}
+
+		@Override
+		public void onSelectionChanged(SelectionChanged event) {
+			setValue(select.getSelectedValues());
 		}
 	}
 }

@@ -172,5 +172,11 @@ public class TraversalProcessView {
 				return new TraversalPlace();
 			}
 		}
+
+		public SelectionTraversal traversal() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'traversal'");
+		}
 	}
 }
