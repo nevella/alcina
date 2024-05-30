@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -80,6 +81,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(type = Type.PROPERTY, from = "title") },
 	emits = { ModelEvents.Change.class, ModelEvents.Input.class,
 			ModelEvents.Commit.class })
+@TypeSerialization(reflectiveSerializable = false)
 public class StringInput extends Model.Value<String>
 		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
 		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
