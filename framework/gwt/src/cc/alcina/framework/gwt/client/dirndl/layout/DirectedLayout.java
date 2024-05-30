@@ -1070,10 +1070,6 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		public <T> T resolveRenderContextProperty(String key) {
-			return getResolver().resolveRenderContextProperty(key);
-		}
-
 		/*
 		 * Either self.optionalRendered, or
 		 * sum(children.resolveRenderedRendereds()), recursive

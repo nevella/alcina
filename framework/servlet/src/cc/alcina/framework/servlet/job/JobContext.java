@@ -663,7 +663,8 @@ public class JobContext {
 		threadStartName = thread.getName();
 		if (job.provideIsNotComplete()) {
 			String contextThreadName = Ax.format("%s::%s::%s",
-					job.provideTaskClass().getSimpleName(), job.getId(),
+					job.provideTaskClass().getSimpleName(),
+					job.toLocator().toIdOrNegativeLocalIdString(),
 					threadStartName);
 			thread.setName(contextThreadName);
 		}
