@@ -531,7 +531,8 @@ public class FormatBuilder {
 		}
 	}
 
-	public void withTrackNewlines(boolean trackNewlines) {
+	public FormatBuilder withTrackNewlines(boolean trackNewlines) {
 		this.trackNewlines = trackNewlines;
+		return this;
 	}
 }
