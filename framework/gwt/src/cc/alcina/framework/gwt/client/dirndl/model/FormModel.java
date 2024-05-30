@@ -977,6 +977,7 @@ public class FormModel extends Model
 					state.expectsModel = false;
 				}
 			}
+			state.lifecycleControls = true;
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
 		}
