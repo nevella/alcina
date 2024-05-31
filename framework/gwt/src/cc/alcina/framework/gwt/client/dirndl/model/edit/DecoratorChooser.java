@@ -55,13 +55,14 @@ public abstract class DecoratorChooser extends Model.Fields
 		init();
 	}
 
-	protected Suggestor.Attributes createSuggestorBuilder() {
-		Suggestor.Attributes builder = Suggestor.builder();
-		builder.withFocusOnBind(true);
-		builder.withSuggestionXAlign(Position.END);
-		builder.withSuggestOnBind(true);
-		builder.withEditorSupplier(() -> tagEditor);
-		return builder;
+	protected Suggestor.Attributes createSuggestorAttributes() {
+		Suggestor.Attributes attributes = Suggestor.attributes();
+		attributes.withFocusOnBind(true);
+		attributes.withNonOverlaySuggestionResults(true);
+		attributes.withSuggestionXAlign(Position.END);
+		attributes.withSuggestOnBind(true);
+		attributes.withEditorSupplier(() -> tagEditor);
+		return attributes;
 	}
 
 	protected TagEditor createTagEditor() {
@@ -73,7 +74,7 @@ public abstract class DecoratorChooser extends Model.Fields
 
 	protected void init() {
 		tagEditor = createTagEditor();
-		suggestor = createSuggestorBuilder().build();
+		suggestor = createSuggestorAttributes().create();
 		bindings().addListener(
 				() -> this.contentDecorator.topicInput.add(tagEditor::onInput));
 	}

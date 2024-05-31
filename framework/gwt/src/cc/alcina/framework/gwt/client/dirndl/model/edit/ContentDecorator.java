@@ -294,7 +294,6 @@ public class ContentDecorator<T>
 		DomNode parent = decorator.parent();
 		if (parent.tagIs("font")) {
 			// Webkit style-preserving?
-			parent.strip();
 		}
 		Overlay.Builder builder = Overlay.builder();
 		Element domElement = (Element) decorator.w3cElement();

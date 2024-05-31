@@ -52,7 +52,7 @@ public class Suggestor extends Model
 		implements SuggestorEvents.EditorAsk.Handler,
 		ModelEvents.SelectionChanged.Handler, HasSelectedValue,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler {
-	public static Attributes builder() {
+	public static Attributes attributes() {
 		return new Attributes();
 	}
 
@@ -299,7 +299,7 @@ public class Suggestor extends Model
 		 */
 		int showSpinnerDelay = 1000;
 
-		public Suggestor build() {
+		public Suggestor create() {
 			return new Suggestor(this);
 		}
 

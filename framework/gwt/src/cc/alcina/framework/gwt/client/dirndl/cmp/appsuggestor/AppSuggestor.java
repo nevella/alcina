@@ -39,7 +39,7 @@ public class AppSuggestor extends Model.Fields
 	public AppSuggestor(AppSuggestor.Attributes attributes) {
 		this.attributes = attributes;
 		Suggestor.Attributes suggestorAttributes = createSuggestorAttributes();
-		suggestor = suggestorAttributes.build();
+		suggestor = suggestorAttributes.create();
 	}
 
 	public static class Attributes {
@@ -51,7 +51,7 @@ public class AppSuggestor extends Model.Fields
 	}
 
 	protected Suggestor.Attributes createSuggestorAttributes() {
-		Suggestor.Attributes attributes = Suggestor.builder();
+		Suggestor.Attributes attributes = Suggestor.attributes();
 		attributes.withFocusOnBind(true);
 		attributes.withSelectAllOnFocus(true);
 		attributes.withSuggestionXAlign(Position.CENTER);
