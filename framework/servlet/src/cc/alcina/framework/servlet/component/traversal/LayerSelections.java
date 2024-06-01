@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -23,8 +24,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
@@ -80,10 +83,14 @@ class LayerSelections extends Model.All {
 	}
 
 	@Directed(className = "bordered-area")
-	class NameArea extends Model.Fields {
+	class NameArea extends Model.All {
 		@Directed
 		LeafModel.TextTitle key;
 
+		@Directed
+		Filter filter;
+
+		@Directed.Exclude
 		String outputs;
 
 		NameArea() {
@@ -94,6 +101,30 @@ class LayerSelections extends Model.All {
 			outputs = computeOutputs();
 			key = new TextTitle(keyString,
 					Ax.format("%s : %s", keyString, outputs));
+			filter = new Filter();
+		}
+
+		class Filter implements DomEvents.Click.Handler {
+			// TODO - dirndl - maybe a lightweight singleton Action? Although
+			// this works well enough
+			Link button;
+
+			String existing;
+
+			Filter() {
+				button = Link.of(ModelEvents.Filter.class).withText("");
+				StandardLayerAttributes.Filter attr = Ui.place()
+						.ensureAttributes(layer.index)
+						.get(StandardLayerAttributes.Filter.class);
+				if (attr != null) {
+					this.existing = attr.toString();
+				}
+			}
+
+			@Override
+			public void onClick(Click event) {
+				Window.alert("edit");
+			}
 		}
 	}
 
