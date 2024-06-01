@@ -25,18 +25,19 @@ import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteCo
 
 public class RemoteComponentProtocol {
 	@Bean
-	public static class InvalidAuthenticationException extends Exception
-			implements ProtocolException {
-		@AlcinaTransient
-		@Override
-		public StackTraceElement[] getStackTrace() {
-			return super.getStackTrace();
+	public static class InvalidAuthenticationException
+			extends ProtocolException {
+	}
+
+	@Bean
+	public static class ServerProcessingException extends ProtocolException {
+		public ServerProcessingException(String message) {
+			super(message);
 		}
 	}
 
 	@Bean(PropertySource.FIELDS)
-	public static class InvalidClientException extends Exception
-			implements ProtocolException {
+	public static class InvalidClientException extends ProtocolException {
 		public Action action;
 
 		public transient String uiType;
@@ -49,12 +50,6 @@ public class RemoteComponentProtocol {
 			super(message);
 			this.action = action;
 			this.uiType = uiType;
-		}
-
-		@AlcinaTransient
-		@Override
-		public StackTraceElement[] getStackTrace() {
-			return super.getStackTrace();
 		}
 
 		@Reflected
@@ -216,20 +211,16 @@ public class RemoteComponentProtocol {
 		/*
 		 * Models an exception during message processing;
 		 *
-		 * Ignores reflective checks because serialization the field
-		 * protocolException would normally fail in the general case (here we
-		 * guarantee imperatively that the field instance is a subtype of
-		 * ProtocolException, and thus will succeed)
 		 */
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class ProcessingException extends Message {
-			public Exception protocolException;
+			public ProtocolException protocolException;
 
 			public String exceptionClassName;
 
 			public String exceptionMessage;
 
-			public Class<? extends Exception> exceptionClass() {
+			public Class<? extends ProtocolException> exceptionClass() {
 				try {
 					return Reflections.forName(exceptionClassName);
 				} catch (Exception e) {
@@ -280,7 +271,20 @@ public class RemoteComponentProtocol {
 	 *
 	 *
 	 */
-	public interface ProtocolException {
+	@Bean(PropertySource.FIELDS)
+	public static abstract class ProtocolException extends Exception {
+		public ProtocolException() {
+		}
+
+		public ProtocolException(String message) {
+			super(message);
+		}
+
+		@AlcinaTransient
+		@Override
+		public StackTraceElement[] getStackTrace() {
+			return super.getStackTrace();
+		}
 	}
 
 	@Bean(PropertySource.FIELDS)

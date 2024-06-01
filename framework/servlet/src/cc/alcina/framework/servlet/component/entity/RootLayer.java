@@ -11,9 +11,8 @@ import cc.alcina.framework.servlet.component.traversal.TraversalHistories.RootLa
 public class RootLayer extends Layer<DomainGraphSelection> {
 	public RootLayer() {
 		addChild(new EntityTypesLayer());
-		addChild(new EntityTypeLayer());
 		int depth = EntityGraphView.peer().queryDepth();
-		for (int idx = 2; idx < depth; idx++) {
+		for (int idx = 1; idx < depth; idx++) {
 			addChild(new QueryLayer());
 		}
 	}

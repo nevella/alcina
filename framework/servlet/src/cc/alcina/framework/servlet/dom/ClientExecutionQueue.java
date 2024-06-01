@@ -160,6 +160,9 @@ class ClientExecutionQueue implements Runnable {
 			token.messageHandler.handle(token.request, token.response,
 					environment, token.request.protocolMessage);
 			handleFromClientMessageAcceptor(token.messageHandler);
+		} catch (Exception e) {
+			token.response.putException(e);
+			logger.warn("Exception in server queue", e);
 		} finally {
 			environment.runInFrameWithoutSync = false;
 		}

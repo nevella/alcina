@@ -16,14 +16,12 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.ProtocolException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -286,15 +284,7 @@ class RemoteComponentHandler {
 					} else {
 						e.printStackTrace();
 					}
-					Message.ProcessingException processingException = new Message.ProcessingException();
-					processingException.exceptionClassName = e.getClass()
-							.getName();
-					processingException.exceptionMessage = CommonUtils
-							.toSimpleExceptionMessage(e);
-					if (e instanceof ProtocolException) {
-						processingException.protocolException = e;
-					}
-					response.protocolMessage = processingException;
+					response.putException(e);
 				}
 				if (response.protocolMessage != null && env != null) {
 					response.protocolMessage.messageId = env

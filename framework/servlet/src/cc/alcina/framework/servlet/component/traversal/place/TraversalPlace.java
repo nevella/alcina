@@ -12,20 +12,35 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
-import cc.alcina.framework.common.client.traversal.Layer;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
+import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
 
-/*
- * This is designed to record multiple selections (SelectionPath entries in the
- * paths field), but currently implementation is only tested against one path
+/**
+ * <p>
+ * ...this is all very notey
+ * <h2>Paths</h2>
+ * <p>
+ * Models at least the selected element (VIEW) and possibly the filtering
+ * element (DESCENT)
+ * <h2>Indicies vs segments</h2>
+ * <p>
+ * Indicies are simple but brittle - segments (if consistent in the traversal)
+ * are better
+ * <h2>Layer attributes</h2>
+ * <p>
+ * e.g layer filters, layer rendering instructions
+ * 
+ * 
  */
 @Bean(PropertySource.FIELDS)
 public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
@@ -35,7 +50,22 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 	Map<Integer, LayerAttributes> layers = new LinkedHashMap<>();
 
+	/**
+	 * <p>
+	 * This class is a compromise - ideally any Attribute subtype would be
+	 * serializable, but FlatTreeSerializer needs to know the type range.
+	 * 
+	 * <p>
+	 * Actually....not hard, just use the Registry, and if types is
+	 * single-abstract-element, populate with registered subtypes
+	 */
 	@Bean(PropertySource.FIELDS)
+	@TypeSerialization(
+		properties = { @PropertySerialization(
+			name = "attributes",
+			types = { StandardLayerAttributes.SortSelectedFirst.class,
+					StandardLayerAttributes.Filter.class },
+			defaultProperty = true) })
 	public static class LayerAttributes implements TreeSerializable {
 		public int index;
 
@@ -61,8 +91,8 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		}
 
 		@Property.Not
-		public Attribute get(Class<? extends Attribute> type) {
-			return attributes.stream().filter(a -> a.getClass() == type)
+		public <A extends Attribute> A get(Class<? extends A> type) {
+			return (A) attributes.stream().filter(a -> a.getClass() == type)
 					.findFirst().orElse(null);
 		}
 
@@ -156,9 +186,10 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			paths.add(selectionPath);
 			break;
 		}
-		ensurePath(SelectionType.VIEW).selection = selectionPath.selection;
-		ensurePath(SelectionType.VIEW).path = selectionPath.path;
-		ensurePath(SelectionType.VIEW).segmentPath = selectionPath.segmentPath;
+		viewPath();
+		viewPath.selection = selectionPath.selection;
+		viewPath.path = selectionPath.path;
+		viewPath.segmentPath = selectionPath.segmentPath;
 		return this;
 	}
 
@@ -191,6 +222,11 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			data.textFilter = place.textFilter;
 			data.paths = place.paths;
 			data.layers = place.layers.values().stream().toList();
+			if (data.layers.size() > 0) {
+				String serializeSingleLine = FlatTreeSerializer
+						.serializeSingleLine(data);
+				int debug = 3;
+			}
 			return data;
 		}
 
@@ -209,7 +245,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	public int getLayerCount() {
-		return ensurePath(SelectionType.VIEW).segmentCount();
+		return viewPath().segmentCount();
 	}
 
 	public static class SelectionPath extends Bindable.Fields
@@ -300,12 +336,17 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		}
 
 		public boolean nthSegmentPathIs(int depth, String pathSegment) {
+			return Ax.equals(nthSegmentPath(depth), pathSegment);
+		}
+
+		public String nthSegmentPath(int depth) {
 			String[] parts = this.segmentPath.split("\\.");
-			return parts.length > depth && parts[depth].equals(pathSegment);
+			return parts.length > depth ? parts[depth] : null;
 		}
 
 		public int segmentCount() {
-			return this.segmentPath.split("\\.").length;
+			return Ax.isBlank(this.segmentPath) ? 0
+					: this.segmentPath.split("\\.").length;
 		}
 
 		void appendSegment(String pathSegment) {
@@ -387,12 +428,12 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	public boolean isSelected(Selection selection) {
-		return ensurePath(SelectionType.VIEW).selection() == selection;
+		return viewPath().selection() == selection;
 	}
 
 	public TraversalPlace appendSelections(List<Selection> selections) {
 		TraversalPlace place = copy();
-		SelectionPath path = place.ensurePath(SelectionType.VIEW);
+		SelectionPath path = place.viewPath();
 		for (Selection selection : selections) {
 			path.appendSegment(selection.getPathSegment());
 		}
@@ -400,21 +441,20 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	}
 
 	public boolean isAncestorOfSelected(Selection selection) {
-		Selection viewSelection = ensurePath(SelectionType.VIEW).selection();
+		Selection viewSelection = viewPath().selection();
 		return viewSelection != null && viewSelection != selection
 				&& viewSelection.isContainedBy(selection);
 	}
 
-	public LayerAttributes ensureAttributes(Layer layer) {
-		return ensureAttributes(layer.depth());
-	}
-
-	public LayerAttributes attributesOrEmpty(Layer layer) {
-		return layers.getOrDefault(layer.depth(),
-				new LayerAttributes(layer.depth()));
+	public LayerAttributes attributesOrEmpty(int depth) {
+		return layers.getOrDefault(depth, new LayerAttributes(depth));
 	}
 
 	public LayerAttributes ensureAttributes(int depth) {
 		return layers.computeIfAbsent(depth, LayerAttributes::new);
+	}
+
+	public SelectionPath viewPath() {
+		return ensurePath(SelectionType.VIEW);
 	}
 }

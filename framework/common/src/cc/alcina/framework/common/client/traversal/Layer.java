@@ -47,6 +47,9 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 	private String _toString;
 
+	// set by traversal on first visit
+	public int index = -1;
+
 	public SelectionTraversal getTraversal() {
 		return state.getTraversal();
 	}
@@ -164,6 +167,10 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 	public String getName() {
 		return NestedName.get(this);
+	}
+
+	public Collection<Selection> getSelections() {
+		return state.traversalState.getSelections(this);
 	}
 
 	public <S1 extends Selection> Stream<S1> getSelections(Class<S1> clazz) {

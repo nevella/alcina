@@ -117,12 +117,12 @@ class LayerSelections extends Model.All {
 			}
 			testHistory.beforeFilter();
 			List<Selection> filteredSelections = stream.filter(this::test)
-					.limit(maxRenderedSelections).toList();
-			boolean sortSelectedFirst = Ui.get().place()
-					.attributesOrEmpty(layer)
+					.limit(maxRenderedSelections).collect(Collectors.toList());
+			boolean sortSelectedFirst = Ui.place()
+					.attributesOrEmpty(layer.index)
 					.has(StandardLayerAttributes.SortSelectedFirst.class);
 			if (sortSelectedFirst) {
-				Selection selection = Ui.get().place()
+				Selection selection = Ui.place()
 						.provideSelection(SelectionType.VIEW);
 				Selection inSelectionPath = filteredSelections.stream()
 						.filter(s -> s.isSelfOrAncestor(selection, false))

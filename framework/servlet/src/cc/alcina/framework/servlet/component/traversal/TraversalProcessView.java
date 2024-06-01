@@ -164,7 +164,7 @@ public class TraversalProcessView {
 			return new AnswerSupplierImpl();
 		}
 
-		public TraversalPlace place() {
+		public static TraversalPlace place() {
 			Place place = Client.currentPlace();
 			if (place instanceof TraversalPlace) {
 				return (TraversalPlace) place;
@@ -173,10 +173,12 @@ public class TraversalProcessView {
 			}
 		}
 
-		public SelectionTraversal traversal() {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'traversal'");
+		protected SelectionTraversal traversal0() {
+			return page.history.observable;
+		}
+
+		public static SelectionTraversal traversal() {
+			return get().traversal0();
 		}
 	}
 }

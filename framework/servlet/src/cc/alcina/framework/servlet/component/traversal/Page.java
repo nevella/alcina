@@ -116,8 +116,8 @@ class Page extends Model.All
 				.map(o -> new RenderedSelections(this, false))
 				.accept(this::setOutput);
 		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
-				.filter(this::placeChangeCausesSelectionLayersChange)
-				.value(this).map(SelectionLayers::new).accept(this::setLayers);
+				.filter(this::filterRedundantPlaceChange).value(this)
+				.map(SelectionLayers::new).accept(this::setLayers);
 		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
@@ -129,7 +129,7 @@ class Page extends Model.All
 				Ui.get().setPlace(this.place);
 			}
 		};
-		this.place = Ui.get().place();
+		this.place = Ui.place();
 		Place place = Client.currentPlace();
 		if (place instanceof TraversalPlace) {
 			this.place = (TraversalPlace) place;
@@ -207,9 +207,14 @@ class Page extends Model.All
 		}
 	}
 
-	boolean placeChangeCausesSelectionLayersChange(TraversalPlace place) {
+	boolean filterRedundantPlaceChange(TraversalPlace place) {
 		if (layers != null) {
-			return layers.placeChangeCausesChange(place);
+			if (layers.traversal != Ui.traversal()) {
+				// layers will be changed anyway by traversal change, redundant
+				return false;
+			} else {
+				return layers.placeChangeCausesChange(place);
+			}
 		} else {
 			return true;
 		}
