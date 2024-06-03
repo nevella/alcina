@@ -278,8 +278,8 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		return this;
 	}
 
-	public Link withNoLink(boolean noLink) {
-		if (noLink) {
+	public Link withoutHref(boolean withoutHref) {
+		if (withoutHref) {
 			setHref("");
 		}
 		return this;

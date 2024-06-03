@@ -1,4 +1,7 @@
 @use '../../theme/theme'
+@use '../../dirndl/cmp/action'
+@use '../../dirndl/cmp/context-menu'
+@use '../multi/icons/filter-circle-outline.svg.data-url-rule' as filter-circle
 
 @mixin contents
   display: block
@@ -33,16 +36,26 @@
         min-height: 1rem
 
       > name-area
-        display: block
+        display: flex
+        flex-direction: column
         background: #f7fffe
         position: sticky
         top: 0
         left: 0
         align-self: start
 
-        > *
-          display: inline-block
-          padding-right: 1rem
+        > filter
+          display: flex
+          gap: 4px
+
+          > a.filter
+            @include action.content(16px)
+            @include filter-circle.content
+            margin-top: 1px
+
+        &:not([has-filter]):not(:hover)
+          > filter
+            visibility: hidden
 
       > selections-area
         display: contents
@@ -67,3 +80,7 @@
           &[selected]
             background: #e3fae3
 
+
+overlay-container overlay.filter-suggestor > suggestor > results
+  @include context-menu.dropdown-choices
+  

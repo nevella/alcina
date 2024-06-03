@@ -52,7 +52,7 @@ public class StreamBuffer implements Runnable {
 					line = new StringBuilder();
 				}
 			}
-			if (!line.isEmpty()) {
+			if (line.length() > 0) {
 				lineCallback.accept(line.toString());
 			}
 			closed = true;

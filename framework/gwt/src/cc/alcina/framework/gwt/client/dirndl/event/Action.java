@@ -21,8 +21,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 /**
  * <p>
  * Action implements a simple action/handler pattern ideal for context menus and
- * dropdowns. The action defines its visual elemets (name, description, css) and
- * code to execute onclick (perform())
+ * dropdowns. The action defines its visual elements (name, description, css)
+ * and code to execute onclick (perform())
  *
  * <p>
  * The parent container (say a dropdown) receives the click->ActionEvent

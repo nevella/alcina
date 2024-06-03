@@ -90,8 +90,9 @@ public class WdExec {
 		throw new TimedOutException();
 	}
 
-	public void clear() {
+	public WdExec clear() {
 		getElement().clear();
+		return this;
 	}
 
 	public void clearAndEnterText(String string) {

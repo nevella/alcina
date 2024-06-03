@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -21,11 +22,21 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerImpl;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AppSuggestionView;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.SuggestionSelected;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
@@ -80,10 +91,17 @@ class LayerSelections extends Model.All {
 	}
 
 	@Directed(className = "bordered-area")
-	class NameArea extends Model.Fields {
+	class NameArea extends Model.All {
 		@Directed
 		LeafModel.TextTitle key;
 
+		@Binding(type = Type.PROPERTY)
+		boolean hasFilter;
+
+		@Directed
+		Filter filter;
+
+		@Directed.Exclude
 		String outputs;
 
 		NameArea() {
@@ -94,6 +112,77 @@ class LayerSelections extends Model.All {
 			outputs = computeOutputs();
 			key = new TextTitle(keyString,
 					Ax.format("%s : %s", keyString, outputs));
+			filter = new Filter();
+			hasFilter = Ax.notBlank(filter.existing);
+		}
+
+		class Filter extends Model.All implements DomEvents.Click.Handler {
+			// TODO - dirndl - maybe a lightweight singleton Action? Although
+			// this works well enough
+			Link button;
+
+			String existing;
+
+			Filter() {
+				button = Link.of(ModelEvents.Filter.class).withoutHref(true)
+						.withClassName("filter").withText("");
+				StandardLayerAttributes.Filter attr = Ui.place()
+						.ensureAttributes(layer.index)
+						.get(StandardLayerAttributes.Filter.class);
+				if (attr != null) {
+					this.existing = attr.toString();
+				}
+			}
+
+			@Override
+			public void onClick(Click event) {
+				WidgetUtils.squelchCurrentEvent();
+				FilterSuggestor suggestor = new FilterSuggestor();
+				Overlay overlay = Overlay.builder()
+						.dropdown(Position.START,
+								provideElement().getBoundingClientRect(), this,
+								new FilterSuggestor())
+						.build();
+				overlay.open();
+			}
+
+			@Directed.Delegating
+			class FilterSuggestor extends Model.All
+					implements ModelEvents.SelectionChanged.Handler {
+				Suggestor suggestor;
+
+				FilterSuggestor() {
+					Suggestor.Attributes attributes = Suggestor.attributes();
+					attributes.withFocusOnBind(true);
+					attributes.withSuggestionXAlign(Position.CENTER);
+					attributes.withLogicalAncestors(
+							List.of(FilterSuggestor.class));
+					TraversalPlace fromPlace = Ui.place()
+							.truncateTo(layer.index);
+					attributes.withAnswer(new AnswerImpl(
+							Ui.get().createAnswerSupplier(fromPlace)));
+					attributes.withNonOverlaySuggestionResults(true);
+					attributes.withInputPrompt("Filter layer");
+					suggestor = attributes.create();
+				}
+
+				// copied from appsuggestor - that's ok, these really *are*
+				// contextualised app suggestions
+				@Override
+				public void onSelectionChanged(SelectionChanged event) {
+					AppSuggestionView suggestion = (AppSuggestionView) suggestor
+							.provideSelectedValue();
+					if (suggestion.suggestion.url() != null) {
+						History.newItem(suggestion.suggestion.url());
+					} else {
+						event.reemitAs(this, suggestion.suggestion.modelEvent(),
+								suggestion.suggestion.eventData());
+					}
+					suggestor.closeSuggestions();
+					suggestor.setValue(null);
+					event.reemitAs(this, SuggestionSelected.class);
+				}
+			}
 		}
 	}
 
@@ -117,12 +206,12 @@ class LayerSelections extends Model.All {
 			}
 			testHistory.beforeFilter();
 			List<Selection> filteredSelections = stream.filter(this::test)
-					.limit(maxRenderedSelections).toList();
-			boolean sortSelectedFirst = Ui.get().place()
-					.attributesOrEmpty(layer)
+					.limit(maxRenderedSelections).collect(Collectors.toList());
+			boolean sortSelectedFirst = Ui.place()
+					.attributesOrEmpty(layer.index)
 					.has(StandardLayerAttributes.SortSelectedFirst.class);
 			if (sortSelectedFirst) {
-				Selection selection = Ui.get().place()
+				Selection selection = Ui.place()
 						.provideSelection(SelectionType.VIEW);
 				Selection inSelectionPath = filteredSelections.stream()
 						.filter(s -> s.isSelfOrAncestor(selection, false))

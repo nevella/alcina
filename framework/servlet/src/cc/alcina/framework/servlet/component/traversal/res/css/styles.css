@@ -234,6 +234,12 @@ bean-editor.grid > form > section > div > label, bean-editor.grid > form > secti
   white-space: nowrap;
   padding-right: 2em;
 }
+bean-editor.grid.tight-rows {
+  line-height: 1.2;
+}
+bean-editor.grid.tight-rows > form > section > form-element > value {
+  display: flex;
+}
 bean-editor.over-only > form input:not(:hover):not(:focus), bean-editor.over-only > form input[readonly],
 bean-editor.over-only > form select:not(:hover):not(:focus),
 bean-editor.over-only > form select[readonly],
@@ -318,7 +324,7 @@ bean-editor.tight230 form-element > label.ol-label {
 bean-editor[inert] > form {
   opacity: 0.7;
 }
-bean-editor > header {
+bean-editor > heading {
   font-weight: 500;
   padding-bottom: 0.2em;
   padding-left: 3px;
@@ -392,6 +398,29 @@ edit-value textarea {
  *
  *  TODO - move some/most to dropdown
  * */
+overlay-container overlay.filter-suggestor > suggestor > results {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+overlay-container overlay.filter-suggestor > suggestor > results > results {
+  display: contents;
+}
+overlay-container overlay.filter-suggestor > suggestor > results > results > choice {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+}
+overlay-container overlay.filter-suggestor > suggestor > results > results > choice:hover, overlay-container overlay.filter-suggestor > suggestor > results > results > choice[index-selected] {
+  background-color: #00000010;
+}
+
 overlay > menu {
   background: white;
   user-select: none;
@@ -540,6 +569,7 @@ body > page > header > right > dropdown {
   height: 20px;
 }
 body > page > header > right > dropdown > button {
+  filter: invert(1);
   display: inline-block;
   width: 20px;
   height: 20px;
@@ -547,7 +577,6 @@ body > page > header > right > dropdown > button {
   background-position: center;
   border: none;
   background-color: transparent;
-  filter: invert(1);
 }
 body > page > header > right > dropdown > button:hover {
   filter: invert(0.5);
@@ -587,16 +616,34 @@ body > page > layers > layers > layer-selections[empty=true] .bordered-area {
   min-height: 1rem;
 }
 body > page > layers > layers > layer-selections > name-area {
-  display: block;
+  display: flex;
+  flex-direction: column;
   background: #f7fffe;
   position: sticky;
   top: 0;
   left: 0;
   align-self: start;
 }
-body > page > layers > layers > layer-selections > name-area > * {
+body > page > layers > layers > layer-selections > name-area > filter {
+  display: flex;
+  gap: 4px;
+}
+body > page > layers > layers > layer-selections > name-area > filter > a.filter {
   display: inline-block;
-  padding-right: 1rem;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNNDQ4LDI1NmMwLTEwNi04Ni0xOTItMTkyLTE5MlM2NCwxNTAsNjQsMjU2czg2LDE5MiwxOTIsMTkyUzQ0OCwzNjIsNDQ4LDI1NloiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjMyIi8+PGxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMzIiIHgxPSIxNDQiIHgyPSIzNjgiIHkxPSIyMDgiIHkyPSIyMDgiLz48bGluZSBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgeDE9IjE3NiIgeDI9IjMzNiIgeTE9IjI3MiIgeTI9IjI3MiIvPjxsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjMyIiB4MT0iMjI0IiB4Mj0iMjg4IiB5MT0iMzM2IiB5Mj0iMzM2Ii8+PC9zdmc+");
+  margin-top: 1px;
+}
+body > page > layers > layers > layer-selections > name-area > filter > a.filter:hover {
+  filter: invert(0.5);
+}
+body > page > layers > layers > layer-selections > name-area:not([has-filter]):not(:hover) > filter {
+  visibility: hidden;
 }
 body > page > layers > layers > layer-selections > selections-area {
   display: contents;

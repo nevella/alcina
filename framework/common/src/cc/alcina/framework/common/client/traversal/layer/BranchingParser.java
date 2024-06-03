@@ -77,7 +77,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * Determining the next L -- that's strategy-based, but the next value should at
  * least be > L
  * 
- * 
+ * FIXME - parser - this doesn't need to be tied to SelectionTraversal/Layer -
+ * refactor out for reuse
  * 
  * 
  */

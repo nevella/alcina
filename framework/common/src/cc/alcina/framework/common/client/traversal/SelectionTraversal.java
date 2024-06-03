@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.web.bindery.event.shared.UmbrellaException;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
@@ -312,6 +313,9 @@ public class SelectionTraversal
 						.publish(new SelectionException(selection, e));
 				logger.warn(Ax.format("Selection exception :: %s",
 						Ax.trimForLogging(selection)), e);
+				if (context(TraversalContext.ThrowOnException.class) != null) {
+					throw WrappedRuntimeException.wrap(e);
+				}
 			} finally {
 				layer.onAfterProcess(selection);
 			}
@@ -730,6 +734,8 @@ public class SelectionTraversal
 
 		Layer rootLayer;
 
+		Map<Layer, Integer> visitedLayers = new LinkedHashMap<>();
+
 		public Selections selections = new Selections();
 
 		Map<Class<? extends Selection>, SelectionLayers> layersByInput = new LinkedHashMap<>();
@@ -776,6 +782,9 @@ public class SelectionTraversal
 		}
 
 		void onBeforeLayerTraversal() {
+			Integer index = state.visitedLayers.computeIfAbsent(currentLayer,
+					l -> state.visitedLayers.size());
+			currentLayer.index = index;
 			if (!(currentLayer instanceof InputsFromPreviousSibling)) {
 				Class<?> inputType = currentLayer.inputType;
 				if (Reflections.isAssignableFrom(EmittedBySoleLayer.class,
@@ -929,5 +938,9 @@ public class SelectionTraversal
 
 	public Stream<Selection> getAllSelections() {
 		return state.selections.selectionLayer.keySet().stream();
+	}
+
+	public List<Layer> getVisistedLayers() {
+		return state.visitedLayers.keySet().stream().toList();
 	}
 }

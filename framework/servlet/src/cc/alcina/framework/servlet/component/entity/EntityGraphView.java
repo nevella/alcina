@@ -1,28 +1,34 @@
 package cc.alcina.framework.servlet.component.entity;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 import com.google.gwt.dom.client.StyleInjector;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.TreeProcess;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerSupplier;
 import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
+import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
+import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.dom.RemoteUi;
@@ -112,15 +118,34 @@ public class EntityGraphView {
 		public void setPlace(TraversalPlace place) {
 			if (!Objects.equals(place, this.currentPlace)) {
 				traverse();
+				// if the filter matches exactly one entity, append it to the
+				// place + re-set
+				Layer lastLayer = Ax.last(traversal().getVisistedLayers());
+				if (place.attributesOrEmpty(lastLayer.index)
+						.has(StandardLayerAttributes.Filter.class)) {
+					Collection<Selection> selections = lastLayer
+							.getSelections();
+					if (selections.size() == 1) {
+						Selection next = selections.iterator().next();
+						if (next.get() instanceof Entity) {
+							place = place.appendSelections(List.of(next));
+							Client.eventBus().queued().deferred()
+									.lambda(place::go).dispatch();
+							return;
+						}
+					}
+				}
 			}
 			this.currentPlace = place;
 		}
 
-		public AnswerSupplier createAnswerSupplier() {
-			return new AnswerSupplierImpl();
+		public TraversalAnswerSupplier
+				createAnswerSupplier(TraversalPlace fromPlace) {
+			return new EntityAnswers(fromPlace);
 		}
 
-		class EntityPeer implements TraversalContext,
+		class EntityPeer
+				implements TraversalContext, TraversalContext.ThrowOnException,
 				TraversalDoesNotPublishNullObservable {
 			SelectionTraversal traversal;
 
@@ -157,6 +182,10 @@ public class EntityGraphView {
 		@Override
 		public boolean isUseSelectionSegmentPath() {
 			return true;
+		}
+
+		protected SelectionTraversal traversal0() {
+			return peer().traversal;
 		}
 	}
 }

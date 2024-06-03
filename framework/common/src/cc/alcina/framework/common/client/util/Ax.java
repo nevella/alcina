@@ -193,8 +193,8 @@ public class Ax {
 		return TextUtils.normalizeWhitespaceAndTrim(s);
 	}
 
-	public static String ntrim(String s, int maxLength) {
-		return trim(ntrim(s), maxLength);
+	public static String ntrim(Object o, int maxLength) {
+		return trim(ntrim(String.valueOf(o)), maxLength);
 	}
 
 	public static String nullSafe(String string) {

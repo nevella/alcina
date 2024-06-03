@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerSupplier;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -160,11 +160,12 @@ public class TraversalProcessView {
 			// for subclasses
 		}
 
-		public AnswerSupplier createAnswerSupplier() {
-			return new AnswerSupplierImpl();
+		public TraversalAnswerSupplier
+				createAnswerSupplier(TraversalPlace fromPlace) {
+			return new TraversalAnswers(fromPlace);
 		}
 
-		public TraversalPlace place() {
+		public static TraversalPlace place() {
 			Place place = Client.currentPlace();
 			if (place instanceof TraversalPlace) {
 				return (TraversalPlace) place;
@@ -173,10 +174,21 @@ public class TraversalProcessView {
 			}
 		}
 
-		public SelectionTraversal traversal() {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'traversal'");
+		protected SelectionTraversal traversal0() {
+			return page.history.observable;
 		}
+
+		public static SelectionTraversal traversal() {
+			return get().traversal0();
+		}
+	}
+
+	public static abstract class TraversalAnswerSupplier
+			implements AppSuggestor.AnswerSupplier {
+		public TraversalAnswerSupplier(TraversalPlace fromPlace) {
+			this.fromPlace = fromPlace;
+		}
+
+		public TraversalPlace fromPlace;
 	}
 }

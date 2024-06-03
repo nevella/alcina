@@ -1,12 +1,11 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -28,7 +27,8 @@ class SelectionLayers extends Model.Fields {
 	TraversalPlace place;
 
 	SelectionLayers(Page page) {
-		Ax.out("History delta - id %s", Ui.get().getEnvironment().uid);
+		Ax.out("History delta - id %s - %s", Ui.get().getEnvironment().uid,
+				Ax.ntrim(Ui.place(), 30));
 		this.page = page;
 		this.place = page.place;
 		render();
@@ -38,10 +38,8 @@ class SelectionLayers extends Model.Fields {
 		if (page.history == null) {
 			return;
 		}
-		traversal = page.history.observable;
-		DepthFirstTraversal<Layer> renderTraversal = new DepthFirstTraversal<Layer>(
-				traversal.getRootLayer(), Layer::getChildren, false);
-		List<LayerSelections> layers = renderTraversal.stream()
+		traversal = Ui.traversal();
+		List<LayerSelections> layers = traversal.getVisistedLayers().stream()
 				.map(layer -> new LayerSelections(this, layer))
 				.collect(Collectors.toList());
 		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers
@@ -54,6 +52,8 @@ class SelectionLayers extends Model.Fields {
 	}
 
 	boolean placeChangeCausesChange(TraversalPlace newPlace) {
-		return !place.equivalentFilterTo(newPlace);
+		return !place.equivalentFilterTo(newPlace)
+				|| !Objects.equals(place.viewPath().segmentPath,
+						newPlace.viewPath().segmentPath);
 	}
 }
