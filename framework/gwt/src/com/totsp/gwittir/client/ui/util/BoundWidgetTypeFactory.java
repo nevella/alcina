@@ -25,7 +25,6 @@ import java.util.HashMap;
 import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Label;
 
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox.DateBoxProvider;
 
@@ -85,8 +84,10 @@ public class BoundWidgetTypeFactory {
 	public BoundWidgetProvider getWidgetProvider(Class<?> type) {
 		if (type.isEnum()) {
 			return new ListBoxEnumProvider((Class<? extends Enum>) type,
-					LooseContext.is(CONTEXT_WITH_ENUM_NULL));
+					DEFAULT_ENUM_SELECTOR_WITH_NULL);
 		}
 		return registry.get(type);
 	}
+
+	public static boolean DEFAULT_ENUM_SELECTOR_WITH_NULL = true;
 }
