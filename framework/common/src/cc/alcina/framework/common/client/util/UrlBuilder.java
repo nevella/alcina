@@ -84,6 +84,9 @@ public class UrlBuilder {
 	}
 
 	public UrlBuilder protocol(String protocol) {
+		if (protocol.endsWith(":")) {
+			protocol = protocol.substring(0, protocol.length() - 1);
+		}
 		this.protocol = protocol;
 		return this;
 	}

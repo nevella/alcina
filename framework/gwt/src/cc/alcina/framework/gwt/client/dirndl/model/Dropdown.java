@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Builder;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * <p>
@@ -147,6 +148,7 @@ public class Dropdown extends Model
 
 	@Override
 	public void onDropdownButtonClicked(DropdownButtonClicked event) {
+		WidgetUtils.squelchCurrentEvent();
 		if (!isOpen()) {
 			if (closedOverlayData != null
 					&& closedOverlayData.isSuppress(event)) {
