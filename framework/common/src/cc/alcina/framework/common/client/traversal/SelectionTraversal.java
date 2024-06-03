@@ -941,6 +941,7 @@ public class SelectionTraversal
 	}
 
 	public List<Layer> getVisistedLayers() {
-		return state.visitedLayers.keySet().stream().toList();
+		return state.visitedLayers.keySet().stream()
+				.collect(Collectors.toList());
 	}
 }

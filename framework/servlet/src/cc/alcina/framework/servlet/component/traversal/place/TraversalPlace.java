@@ -223,7 +223,8 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			Data data = new Data();
 			data.textFilter = place.textFilter;
 			data.paths = place.paths;
-			data.layers = place.layers.values().stream().toList();
+			data.layers = place.layers.values().stream()
+					.collect(Collectors.toList());
 			if (data.layers.size() > 0) {
 				String serializeSingleLine = FlatTreeSerializer
 						.serializeSingleLine(data);

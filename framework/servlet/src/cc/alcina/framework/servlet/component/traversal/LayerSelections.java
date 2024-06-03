@@ -222,7 +222,7 @@ class LayerSelections extends Model.All {
 				}
 			}
 			filtered = filteredSelections.stream().map(SelectionArea::new)
-					.toList();
+					.collect(Collectors.toList());
 			empty = filtered.isEmpty();
 			selections = filtered.stream().collect(Collectors.toList());
 			for (int idx = selections

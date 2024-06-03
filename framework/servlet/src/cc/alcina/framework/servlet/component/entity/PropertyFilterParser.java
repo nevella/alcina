@@ -25,13 +25,10 @@ import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.F
 class PropertyFilterParser {
 	List<StandardLayerAttributes.Filter>
 			proposeFilters(Class<? extends Entity> entityType, String query) {
-		if (query.equals("10")) {
-			int debug = 3;
-		}
 		List<Filter> list = Registry.query(MatcherPart.class).implementations()
 				.flatMap(
 						part -> part.proposeFilters(entityType, query).stream())
-				.toList();
+				.collect(Collectors.toList());
 		return list;
 	}
 
@@ -63,13 +60,14 @@ class PropertyFilterParser {
 				FilterOperator op, String propertyValuePart) {
 			List<Property> properties = Reflections.at(entityType).properties()
 					.stream().sorted(Comparator.comparing(Property::getName))
-					.toList();
+					.collect(Collectors.toList());
 			List<Property> candidates = new StringMatches.PartialSubstring<Property>()
 					.match(properties, Property::getName, propertyNamePart)
-					.stream().map(PartialSubstring.Match::getValue).toList();
+					.stream().map(PartialSubstring.Match::getValue)
+					.collect(Collectors.toList());
 			return candidates.stream()
 					.flatMap(p -> propertyFilter(p, op, propertyValuePart))
-					.filter(Objects::nonNull).toList();
+					.filter(Objects::nonNull).collect(Collectors.toList());
 		}
 
 		Stream<StandardLayerAttributes.Filter> propertyFilter(Property property,

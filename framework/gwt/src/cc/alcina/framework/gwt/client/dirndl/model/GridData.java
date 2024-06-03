@@ -85,7 +85,9 @@ public class GridData extends Model.All {
 	}
 
 	public List<List<String>> toLists() {
-		return Stream.concat(Stream.of(header.toStringList()),
-				rows.stream().map(Row::toStringList)).toList();
+		return Stream
+				.concat(Stream.of(header.toStringList()),
+						rows.stream().map(Row::toStringList))
+				.collect(Collectors.toList());
 	}
 }
