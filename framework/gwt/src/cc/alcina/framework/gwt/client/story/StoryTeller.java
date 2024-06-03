@@ -169,7 +169,8 @@ public class StoryTeller {
 		List<Visit> getInitialChildren() {
 			if (initialChildren == null) {
 				initialChildren = processNode().getChildren().stream()
-						.map(n -> (Visit) n.getValue()).toList();
+						.map(n -> (Visit) n.getValue())
+						.collect(Collectors.toList());
 			}
 			return initialChildren;
 		}

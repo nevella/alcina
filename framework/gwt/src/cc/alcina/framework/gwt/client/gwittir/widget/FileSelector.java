@@ -63,6 +63,12 @@ public class FileSelector extends AbstractBoundWidget<FileData>
 
 	@Override
 	public void onChange(ChangeEvent event) {
+		updateValue(true);
+	}
+
+	// this code is to handle webdriver not firing a change event when the input
+	// is modified via sendKeys (otherwise it'd just be in the onChange handler)
+	private void updateValue(boolean fire) {
 		Html5File[] files = base.getFiles();
 		if (files.length == 1) {
 			Html5File file = files[0];
@@ -73,7 +79,9 @@ public class FileSelector extends AbstractBoundWidget<FileData>
 					oldValue.topicClear().remove(clearListener);
 				}
 				this.value = fileData;
-				changes.firePropertyChange("value", oldValue, fileData);
+				if (fire) {
+					changes.firePropertyChange("value", oldValue, fileData);
+				}
 			});
 		}
 	}

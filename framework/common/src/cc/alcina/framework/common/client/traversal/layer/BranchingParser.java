@@ -908,7 +908,7 @@ public class BranchingParser {
 			LookaheadMatches() {
 				matches = primitiveInitialTokens.stream()
 						.map(parserState::match).filter(Objects::nonNull)
-						.sorted().toList();
+						.sorted().collect(Collectors.toList());
 				next = Ax.first(matches);
 				if (next != null) {
 					Location after = nextLocationAfterNoMatch();

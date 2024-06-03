@@ -151,13 +151,15 @@ public class MeasureContainment {
 		void ensureImmediateChildSelections() {
 			if (immediateChildren == null) {
 				immediateChildren = descendants.stream()
-						.filter(this::isImmediateChild).sorted().toList();
+						.filter(this::isImmediateChild).sorted()
+						.collect(Collectors.toList());
 			}
 		}
 
 		public List<Containment> getChildContainments() {
 			ensureImmediateChildSelections();
-			return immediateChildren.stream().map(containments::get).toList();
+			return immediateChildren.stream().map(containments::get)
+					.collect(Collectors.toList());
 		}
 
 		public Containment

@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class StringMatches {
 	public static class PartialSubstring<T> {
@@ -122,7 +123,8 @@ public class StringMatches {
 		public List<Match> match(List<T> values, Function<T, String> toString,
 				String query) {
 			return values.stream().map(v -> match(v, toString, query))
-					.filter(Objects::nonNull).sorted().toList();
+					.filter(Objects::nonNull).sorted()
+					.collect(Collectors.toList());
 		}
 
 		Match match(T v, Function<T, String> toString, String query) {
