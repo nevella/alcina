@@ -56,7 +56,7 @@ public class AppSuggestor extends Model.Fields
 		attributes.withSelectAllOnFocus(true);
 		attributes.withSuggestionXAlign(Position.CENTER);
 		attributes.withLogicalAncestors(List.of(AppSuggestor.class));
-		attributes.withAnswer(new AnswerImpl());
+		attributes.withAnswer(new AnswerImpl(this.attributes.answerSupplier));
 		attributes.withNonOverlaySuggestionResults(true);
 		return attributes;
 	}
@@ -158,7 +158,13 @@ public class AppSuggestor extends Model.Fields
 	 * Gets a list of SuggestionModel objects (wrapping OmniSuggestion objects)
 	 * that match the decorator text
 	 */
-	public class AnswerImpl implements Answer<StringAsk> {
+	public static class AnswerImpl implements Answer<StringAsk> {
+		AnswerSupplier answerSupplier;
+
+		public AnswerImpl(AnswerSupplier answerSupplier) {
+			this.answerSupplier = answerSupplier;
+		}
+
 		public class Invocation {
 			public final StringAsk ask;
 
@@ -174,7 +180,7 @@ public class AppSuggestor extends Model.Fields
 			}
 
 			void invoke() {
-				attributes.answerSupplier.begin(this);
+				answerSupplier.begin(this);
 			}
 
 			void processResults(List<? extends AppSuggestion> appSuggestions) {

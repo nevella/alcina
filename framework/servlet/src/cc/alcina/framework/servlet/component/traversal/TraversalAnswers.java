@@ -8,15 +8,20 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
-import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerImpl.Invocation;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.CommandNode;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.MatchStyle;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
+import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 
-class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
+class TraversalAnswers extends TraversalAnswerSupplier {
+	public TraversalAnswers(TraversalPlace fromPlace) {
+		super(fromPlace);
+	}
+
 	static AppSuggestion createSuggestion(CommandNode node) {
 		AppSuggestionEntry suggestion = new AppSuggestionEntry();
 		suggestion.modelEvent = (Class<? extends ModelEvent>) node.eventClass;
@@ -42,7 +47,7 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 		suggestions.add(suggestion);
 		List<CommandNode> commandNodes = AppSuggestorCommands.get()
 				.getCommandNodes(request, MatchStyle.any_substring);
-		commandNodes.stream().map(AnswerSupplierImpl::createSuggestion)
+		commandNodes.stream().map(TraversalAnswers::createSuggestion)
 				.forEach(suggestions::add);
 		processResults(invocation, suggestions);
 	}

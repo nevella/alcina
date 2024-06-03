@@ -22,13 +22,13 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerSupplier;
 import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
+import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.dom.RemoteUi;
@@ -139,8 +139,9 @@ public class EntityGraphView {
 			this.currentPlace = place;
 		}
 
-		public AnswerSupplier createAnswerSupplier() {
-			return new AnswerSupplierImpl();
+		public TraversalAnswerSupplier
+				createAnswerSupplier(TraversalPlace fromPlace) {
+			return new EntityAnswers(fromPlace);
 		}
 
 		class EntityPeer

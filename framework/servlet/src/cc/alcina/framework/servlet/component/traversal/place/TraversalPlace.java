@@ -1,10 +1,12 @@
 package cc.alcina.framework.servlet.component.traversal.place;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -335,18 +337,26 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			return type;
 		}
 
-		public boolean nthSegmentPathIs(int depth, String pathSegment) {
-			return Ax.equals(nthSegmentPath(depth), pathSegment);
+		public boolean nthSegmentPathIs(int index, String pathSegment) {
+			return Ax.equals(nthSegmentPath(index), pathSegment);
 		}
 
-		public String nthSegmentPath(int depth) {
-			String[] parts = this.segmentPath.split("\\.");
-			return parts.length > depth ? parts[depth] : null;
+		void truncateTo(int index) {
+			this.segmentPath = Arrays.stream(segmentParts()).limit(index + 1)
+					.collect(Collectors.joining("."));
+		}
+
+		public String nthSegmentPath(int index) {
+			String[] parts = segmentParts();
+			return parts.length > index ? parts[index] : null;
+		}
+
+		private String[] segmentParts() {
+			return this.segmentPath.split("\\.");
 		}
 
 		public int segmentCount() {
-			return Ax.isBlank(this.segmentPath) ? 0
-					: this.segmentPath.split("\\.").length;
+			return Ax.isBlank(this.segmentPath) ? 0 : segmentParts().length;
 		}
 
 		void appendSegment(String pathSegment) {
@@ -456,5 +466,12 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 
 	public SelectionPath viewPath() {
 		return ensurePath(SelectionType.VIEW);
+	}
+
+	public TraversalPlace truncateTo(int index) {
+		TraversalPlace result = copy();
+		result.layers.keySet().removeIf(layerIndex -> layerIndex > index);
+		result.viewPath.truncateTo(index);
+		return result;
 	}
 }

@@ -21,7 +21,6 @@ import cc.alcina.framework.common.client.util.StringMatches;
 import cc.alcina.framework.common.client.util.StringMatches.PartialSubstring;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
-import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerImpl.Invocation;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.CommandNode;
@@ -34,11 +33,16 @@ import cc.alcina.framework.servlet.component.entity.QueryLayer.EntitySelection;
 import cc.alcina.framework.servlet.component.entity.QueryLayer.PropertySelection;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
+import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
 import cc.alcina.framework.servlet.component.traversal.TraversalViewContext;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 
-class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
+class EntityAnswers extends TraversalAnswerSupplier {
+	public EntityAnswers(TraversalPlace fromPlace) {
+		super(fromPlace);
+	}
+
 	static AppSuggestion createSuggestion(CommandNode node) {
 		AppSuggestionEntry suggestion = new AppSuggestionEntry();
 		suggestion.modelEvent = (Class<? extends ModelEvent>) node.eventClass;
@@ -51,8 +55,10 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 
 	@Override
 	public void begin(Invocation invocation) {
-		List<AppSuggestion> suggestions = new InvocationHandler(invocation)
-				.handle();
+		TraversalPlace fromPlace = this.fromPlace != null ? this.fromPlace
+				: Ui.place();
+		List<AppSuggestion> suggestions = new InvocationHandler(invocation,
+				fromPlace).handle();
 		AppSuggestorRequest request = new AppSuggestorRequest();
 		String query = invocation.ask.getValue();
 		request.setQuery(query);
@@ -69,8 +75,11 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 
 		List<AppSuggestion> suggestions;
 
-		InvocationHandler(Invocation invocation) {
+		TraversalPlace fromPlace;
+
+		InvocationHandler(Invocation invocation, TraversalPlace fromPlace) {
 			this.invocation = invocation;
+			this.fromPlace = fromPlace;
 			query = invocation.ask.getValue();
 			request.setQuery(query);
 			request.commandContexts.add(TraversalViewContext.class);
@@ -78,8 +87,7 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 		}
 
 		void proposePlaceContextSuggestions() {
-			TraversalPlace place = Ui.place();
-			SelectionPath firstSelectionPath = place.firstSelectionPath();
+			SelectionPath firstSelectionPath = fromPlace.firstSelectionPath();
 			Selection selection = firstSelectionPath == null
 					|| firstSelectionPath.selection() == null
 							? Ui.traversal().getRootSelection()
@@ -101,7 +109,7 @@ class AnswerSupplierImpl implements AppSuggestor.AnswerSupplier {
 		void proposeCommandSuggestions() {
 			List<CommandNode> commandNodes = AppSuggestorCommands.get()
 					.getCommandNodes(request, MatchStyle.any_substring);
-			commandNodes.stream().map(AnswerSupplierImpl::createSuggestion)
+			commandNodes.stream().map(EntityAnswers::createSuggestion)
 					.forEach(suggestions::add);
 		}
 	}

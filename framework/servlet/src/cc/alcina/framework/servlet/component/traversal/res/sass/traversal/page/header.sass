@@ -3,6 +3,7 @@
 @use '../../dirndl/cmp/context-menu'
 @use '../../dirndl/cmp/choices'
 @use '../../dirndl/cmp/heading'
+@use '../../dirndl/cmp/action'
 
 $header-height: 50px
 $font-family: Arial
@@ -68,17 +69,8 @@ $item-gap: 0.5rem
       height: 20px
 
       > button
-        display: inline-block
-        width: 20px
-        height: 20px
-        background-repeat: no-repeat
-        background-position: center
-        border: none
-        background-color: transparent
         filter: invert(1)
-
-        &:hover
-          filter: invert(0.5)
+        @include action.content
 
         &.dotburger
           @include ellipsis-vertical.content
