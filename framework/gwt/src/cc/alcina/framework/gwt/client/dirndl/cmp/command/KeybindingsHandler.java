@@ -57,7 +57,7 @@ public class KeybindingsHandler implements KeyboardShortcuts.Handler {
 				.map(clazz -> (Class<? extends ModelEvent>) clazz)
 				.map(MatchData::new).collect(Collectors.toList());
 		List<String> invalid = boundEvents.stream().map(MatchData::checkInvalid)
-				.filter(Objects::nonNull).toList();
+				.filter(Objects::nonNull).collect(Collectors.toList());
 		if (invalid.size() > 0) {
 			Ax.err(invalid);
 			throw new IllegalStateException();

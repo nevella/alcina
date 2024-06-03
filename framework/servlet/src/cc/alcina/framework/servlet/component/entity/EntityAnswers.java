@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -130,7 +131,8 @@ class EntityAnswers extends TraversalAnswerSupplier {
 		<T extends Selection> List<T> matches(List<T> selections, String part) {
 			return new StringMatches.PartialSubstring<T>()
 					.match(selections, Selection::toFilterString, part).stream()
-					.map(PartialSubstring.Match::getValue).toList();
+					.map(PartialSubstring.Match::getValue)
+					.collect(Collectors.toList());
 		}
 
 		void addSuggestion(String match, List<Selection> selections,
@@ -189,7 +191,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 						.at(selection.entityType()).properties().stream()
 						.sorted(Comparator.comparing(Property::getName))
 						.map(prop -> new PropertySelection(selection, prop))
-						.toList();
+						.collect(Collectors.toList());
 				matches(candidates, parts[0]).forEach(prop -> {
 					String valueStr = Ax.ntrim(prop.get().get(selection.get()),
 							30);

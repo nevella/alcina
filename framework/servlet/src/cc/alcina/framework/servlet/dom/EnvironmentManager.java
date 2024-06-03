@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.History;
@@ -213,7 +214,7 @@ public class EnvironmentManager {
 
 		EnvironmentList() {
 			entries = environmentSources.values().stream().map(Entry::new)
-					.toList();
+					.collect(Collectors.toList());
 		}
 	}
 }

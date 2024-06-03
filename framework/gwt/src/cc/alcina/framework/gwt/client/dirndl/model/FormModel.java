@@ -359,6 +359,8 @@ public class FormModel extends Model
 
 	public static class BindableFormModelTransformer extends
 			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
+		public boolean lifecycleControls;
+
 		@Override
 		public FormModel apply(Bindable bindable) {
 			FormModelState attributes = new FormModelState();
@@ -370,6 +372,7 @@ public class FormModel extends Model
 			attributes.model = bindable;
 			attributes.adjunct = true;
 			attributes.nodeEditors = false;
+			attributes.lifecycleControls = lifecycleControls;
 			BeanViewModifiers args = node.annotation(BeanViewModifiers.class);
 			if (args != null) {
 				attributes.adjunct = args.adjunct();
@@ -977,6 +980,7 @@ public class FormModel extends Model
 					state.expectsModel = false;
 				}
 			}
+			state.lifecycleControls = true;
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
 		}

@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HtmlParser;
@@ -192,7 +193,7 @@ public class SelectionMarkupSingle extends SelectionMarkup {
 				int index = n.asDomNode().asLocation().index;
 				return n.isText() && index >= truncated.start.index
 						&& index < truncated.end.index;
-			}).toList();
+			}).collect(Collectors.toList());
 			wrap.forEach(t -> t.builder().tag("span")
 					.className("__traversal_markup_selected").wrap());
 			markup = parsed.getInnerHTML();

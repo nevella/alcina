@@ -316,7 +316,7 @@ public abstract class Choices<T> extends Model implements
 			SelectElement selectElement = (SelectElement) node.getRendered()
 					.asElement();
 			List<OptionElement> options = selectElement.getOptions().stream()
-					.toList();
+					.collect(Collectors.toList());
 			List<T> selectedValues = new ArrayList<>();
 			List<Choice<T>> selectedChoices = new ArrayList<>();
 			for (int idx = 0; idx < options.size(); idx++) {
@@ -341,7 +341,7 @@ public abstract class Choices<T> extends Model implements
 				SelectElement selectElement = (SelectElement) node.getRendered()
 						.asElement();
 				List<OptionElement> options = selectElement.getOptions()
-						.stream().toList();
+						.stream().collect(Collectors.toList());
 				List<T> selectedValues = new ArrayList<>();
 				for (int idx = 0; idx < options.size(); idx++) {
 					OptionElement optionElement = options.get(idx);

@@ -62,7 +62,8 @@ public class GridData extends Model.All {
 
 				RowData(Row row) {
 					cells = row.toStringList().stream()
-							.map(s -> new TagText("cell", s, s)).toList();
+							.map(s -> new TagText("cell", s, s))
+							.collect(Collectors.toList());
 				}
 			}
 
@@ -71,7 +72,8 @@ public class GridData extends Model.All {
 
 			IntermediateModel(GridData data) {
 				gridColumnWidth = "auto";
-				this.rows = data.rows.stream().map(RowData::new).toList();
+				this.rows = data.rows.stream().map(RowData::new)
+						.collect(Collectors.toList());
 				columnNames = data.header.toStringList().stream()
 						.map(ColumnName::new).collect(Collectors.toList());
 				ColumnsWidth columnsWidth = node.annotation(ColumnsWidth.class);
@@ -83,7 +85,9 @@ public class GridData extends Model.All {
 	}
 
 	public List<List<String>> toLists() {
-		return Stream.concat(Stream.of(header.toStringList()),
-				rows.stream().map(Row::toStringList)).toList();
+		return Stream
+				.concat(Stream.of(header.toStringList()),
+						rows.stream().map(Row::toStringList))
+				.collect(Collectors.toList());
 	}
 }

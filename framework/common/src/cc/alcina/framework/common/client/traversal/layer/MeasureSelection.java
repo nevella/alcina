@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
@@ -20,8 +21,8 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	 */
 	public static List<MeasureSelection> fromMeasures(List<Measure> measures) {
 		DetachedRootSelection root = new DetachedRootSelection();
-		IntPair union = IntPair
-				.unionOf(measures.stream().map(Measure::toIntPair).toList());
+		IntPair union = IntPair.unionOf(measures.stream()
+				.map(Measure::toIntPair).collect(Collectors.toList()));
 		Stream<Measure> stream = measures.stream();
 		if (measures.stream().map(Measure::toIntPair)
 				.noneMatch(p -> p.equals(union))) {
@@ -32,7 +33,8 @@ public class MeasureSelection extends AbstractSelection<Measure>
 							Measure.Token.Generic.TYPE);
 			stream = Stream.concat(stream, Stream.of(unionMeasure));
 		}
-		return stream.map(m -> new MeasureSelection(root, m)).toList();
+		return stream.map(m -> new MeasureSelection(root, m))
+				.collect(Collectors.toList());
 	}
 
 	private boolean omit;
