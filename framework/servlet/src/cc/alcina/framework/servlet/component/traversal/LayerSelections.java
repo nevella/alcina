@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -22,6 +23,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerImpl;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AppSuggestionView;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.SuggestionSelected;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -163,10 +166,21 @@ class LayerSelections extends Model.All {
 					suggestor = attributes.create();
 				}
 
+				// copied from appsuggestor - that's ok, these really *are*
+				// contextualised app suggestions
 				@Override
 				public void onSelectionChanged(SelectionChanged event) {
-					throw new UnsupportedOperationException(
-							"Unimplemented method 'onSelectionChanged'");
+					AppSuggestionView suggestion = (AppSuggestionView) suggestor
+							.provideSelectedValue();
+					if (suggestion.suggestion.url() != null) {
+						History.newItem(suggestion.suggestion.url());
+					} else {
+						event.reemitAs(this, suggestion.suggestion.modelEvent(),
+								suggestion.suggestion.eventData());
+					}
+					suggestor.closeSuggestions();
+					suggestor.setValue(null);
+					event.reemitAs(this, SuggestionSelected.class);
 				}
 			}
 		}

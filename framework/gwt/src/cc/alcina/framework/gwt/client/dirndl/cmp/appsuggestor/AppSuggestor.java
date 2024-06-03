@@ -107,7 +107,7 @@ public class AppSuggestor extends Model.Fields
 	@Directed(tag = "app-suggestion")
 	@TypeSerialization(reflectiveSerializable = false)
 	public static class AppSuggestionView extends Model.Fields {
-		private AppSuggestion suggestion;
+		public AppSuggestion suggestion;
 
 		@Directed
 		Contents contents;

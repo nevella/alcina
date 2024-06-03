@@ -342,8 +342,9 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		}
 
 		void truncateTo(int index) {
-			this.segmentPath = Arrays.stream(segmentParts()).limit(index + 1)
-					.collect(Collectors.joining("."));
+			this.segmentPath = this.segmentPath == null ? null
+					: Arrays.stream(segmentParts()).limit(index + 1)
+							.collect(Collectors.joining("."));
 		}
 
 		public String nthSegmentPath(int index) {
@@ -471,7 +472,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 	public TraversalPlace truncateTo(int index) {
 		TraversalPlace result = copy();
 		result.layers.keySet().removeIf(layerIndex -> layerIndex > index);
-		result.viewPath.truncateTo(index);
+		result.viewPath().truncateTo(index);
 		return result;
 	}
 }

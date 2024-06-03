@@ -398,6 +398,29 @@ edit-value textarea {
  *
  *  TODO - move some/most to dropdown
  * */
+overlay-container overlay.filter-suggestor > suggestor > results {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+overlay-container overlay.filter-suggestor > suggestor > results > results {
+  display: contents;
+}
+overlay-container overlay.filter-suggestor > suggestor > results > results > choice {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+}
+overlay-container overlay.filter-suggestor > suggestor > results > results > choice:hover, overlay-container overlay.filter-suggestor > suggestor > results > results > choice[index-selected] {
+  background-color: #00000010;
+}
+
 overlay > menu {
   background: white;
   user-select: none;
