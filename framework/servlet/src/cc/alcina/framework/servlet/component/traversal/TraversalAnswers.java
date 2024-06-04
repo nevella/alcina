@@ -15,11 +15,10 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorComman
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 
 class TraversalAnswers extends TraversalAnswerSupplier {
-	public TraversalAnswers(TraversalPlace fromPlace) {
-		super(fromPlace);
+	public TraversalAnswers(int forLayer) {
+		super(forLayer);
 	}
 
 	static AppSuggestion createSuggestion(CommandNode node) {

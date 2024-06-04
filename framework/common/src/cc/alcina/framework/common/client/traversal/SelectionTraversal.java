@@ -562,6 +562,12 @@ public class SelectionTraversal
 	public class Selections {
 		Selection rootSelection;
 
+		// these selections can be inputs to subsequent, type-specific layers
+		// (so are not populated by outputs which are ambiguous for receiving
+		// layers)
+		Multiset<Class<? extends Selection>, Set<Selection>> byClassInputs = new Multiset<>();
+
+		// all selectioons, by type
 		Multiset<Class<? extends Selection>, Set<Selection>> byClass = new Multiset<>();
 
 		Map<Layer, Map<Selection, Integer>> byLayer = AlcinaCollections
@@ -592,11 +598,12 @@ public class SelectionTraversal
 			byCurrentLayer.put(selection, byCurrentLayer.size());
 			byLayerSegments.put(currentLayer(), selection.getPathSegment(),
 					selection);
+			byClass.add(selection.getClass(), selection);
 			selectionLayer.put(selection, currentLayer());
 			boolean add = true;
 			if (isLayerOnly()) {
 			} else {
-				add = byClass.add(selection.getClass(), selection);
+				add = byClassInputs.add(selection.getClass(), selection);
 				byClassSegments.put(selection.getClass(),
 						selection.getPathSegment(), selection);
 			}
@@ -661,6 +668,33 @@ public class SelectionTraversal
 						.collect(Collectors.toList());
 			} else {
 				return (List<S>) byClass.getAndEnsure(clazz).stream()
+						.collect(Collectors.toList());
+			}
+		}
+
+		/**
+		 * Return all potential input selections (see above for info about input
+		 * filtering) matching a given type - either an exact class match to S,
+		 * or any subtype of S (if includeSubclasses is true)
+		 * 
+		 * @param <S>
+		 *            The filtering {@link Selection} subtype
+		 * @param clazz
+		 *            The filtering {@link Selection} subtype
+		 * @param includeSubclasses
+		 *            Whether to return all matching subtypes of S
+		 * @return The matching Selection instances
+		 */
+		public synchronized <S extends Selection> List<S>
+				getInputs(Class<? extends S> clazz, boolean includeSubclasses) {
+			if (includeSubclasses) {
+				return (List<S>) byClassInputs.keySet().stream()
+						.filter(selectionClass -> Reflections.at(selectionClass)
+								.isAssignableTo(clazz))
+						.map(byClassInputs::get).flatMap(Collection::stream)
+						.collect(Collectors.toList());
+			} else {
+				return (List<S>) byClassInputs.getAndEnsure(clazz).stream()
 						.collect(Collectors.toList());
 			}
 		}

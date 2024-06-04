@@ -145,7 +145,7 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 				if (Entity.class.isAssignableFrom(type)) {
 					return Domain.find(type, value);
 				} else {
-					return false;
+					return value;
 				}
 			case BOOLEAN:
 				return Boolean.parseBoolean(propertyValuePart);
@@ -228,6 +228,8 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 			}
 
 			static class EntityExtended extends Model.All {
+				String id;
+
 				@Directed.Transform(Tables.Single.class)
 				Tables.Single.PropertyValues propertyValues = new Tables.Single.PropertyValues();
 
@@ -237,6 +239,7 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 						return;
 					}
 					entity.domain().ensurePopulated();
+					id = entity.toStringId();
 					Reflections.at(selection.entityType()).properties().stream()
 							.sorted(Comparator.comparing(Property::getName))
 							.map(p -> new PropertyValue(selection, p))

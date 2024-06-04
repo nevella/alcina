@@ -299,6 +299,12 @@ public class Suggestor extends Model
 		 */
 		int showSpinnerDelay = 1000;
 
+		String inputText;
+
+		public String getInputText() {
+			return inputText;
+		}
+
 		public Suggestor create() {
 			return new Suggestor(this);
 		}
@@ -363,6 +369,11 @@ public class Suggestor extends Model
 
 		public Attributes withInputPrompt(String inputPrompt) {
 			this.inputPrompt = inputPrompt;
+			return this;
+		}
+
+		public Attributes withInputText(String inputText) {
+			this.inputText = inputText;
 			return this;
 		}
 

@@ -139,9 +139,8 @@ public class EntityGraphView {
 			this.currentPlace = place;
 		}
 
-		public TraversalAnswerSupplier
-				createAnswerSupplier(TraversalPlace fromPlace) {
-			return new EntityAnswers(fromPlace);
+		public TraversalAnswerSupplier createAnswerSupplier(int forLayer) {
+			return new EntityAnswers(forLayer);
 		}
 
 		class EntityPeer

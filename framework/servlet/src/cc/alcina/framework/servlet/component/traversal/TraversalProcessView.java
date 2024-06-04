@@ -160,9 +160,8 @@ public class TraversalProcessView {
 			// for subclasses
 		}
 
-		public TraversalAnswerSupplier
-				createAnswerSupplier(TraversalPlace fromPlace) {
-			return new TraversalAnswers(fromPlace);
+		public TraversalAnswerSupplier createAnswerSupplier(int forLayer) {
+			return new TraversalAnswers(forLayer);
 		}
 
 		public static TraversalPlace place() {
@@ -185,10 +184,10 @@ public class TraversalProcessView {
 
 	public static abstract class TraversalAnswerSupplier
 			implements AppSuggestor.AnswerSupplier {
-		public TraversalAnswerSupplier(TraversalPlace fromPlace) {
-			this.fromPlace = fromPlace;
+		public TraversalAnswerSupplier(int forLayer) {
+			this.forLayer = forLayer;
 		}
 
-		public TraversalPlace fromPlace;
+		public int forLayer;
 	}
 }

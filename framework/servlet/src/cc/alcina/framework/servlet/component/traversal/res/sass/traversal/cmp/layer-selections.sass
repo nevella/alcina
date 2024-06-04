@@ -52,6 +52,12 @@
             @include action.content(16px)
             @include filter-circle.content
             margin-top: 1px
+          
+          > existing
+            max-width: 80%
+
+        &[filter-editor-open] > filter > existing
+          visibility: hidden
 
         &:not([has-filter]):not(:hover)
           > filter
@@ -81,6 +87,15 @@
             background: #e3fae3
 
 
-overlay-container overlay.filter-suggestor > suggestor > results
+overlay-container overlay.filter-suggestor > suggestor
   @include context-menu.dropdown-choices
+  padding: 0
+  position: relative
+  margin-top: -20px
+  margin-left: 18px
+
+  input
+    line-height: 24px
+    font-size: 18px
+    width: 250px
   

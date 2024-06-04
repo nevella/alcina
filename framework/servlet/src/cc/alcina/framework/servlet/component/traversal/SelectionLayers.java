@@ -43,7 +43,8 @@ class SelectionLayers extends Model.Fields {
 				.map(layer -> new LayerSelections(this, layer))
 				.collect(Collectors.toList());
 		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers
-				&& layer.unfiliteredSelectionCount() == 0);
+				&& layer.unfiliteredSelectionCount() == 0
+				&& !layer.nameArea.hasFilter);
 		setLayers(layers);
 	}
 

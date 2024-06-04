@@ -398,7 +398,7 @@ edit-value textarea {
  *
  *  TODO - move some/most to dropdown
  * */
-overlay-container overlay.filter-suggestor > suggestor > results {
+overlay-container overlay.filter-suggestor > suggestor {
   background: white;
   user-select: none;
   padding: 1rem 0;
@@ -407,18 +407,27 @@ overlay-container overlay.filter-suggestor > suggestor > results {
   border-radius: 4px;
   display: flex;
   flex-direction: column;
+  padding: 0;
+  position: relative;
+  margin-top: -20px;
+  margin-left: 18px;
 }
-overlay-container overlay.filter-suggestor > suggestor > results > results {
+overlay-container overlay.filter-suggestor > suggestor > results {
   display: contents;
 }
-overlay-container overlay.filter-suggestor > suggestor > results > results > choice {
+overlay-container overlay.filter-suggestor > suggestor > results > choice {
   padding: 0.4rem 1rem;
   /* use padding, not line-height, so hover bkg is vertically centered*/
   line-height: 2;
   cursor: pointer;
 }
-overlay-container overlay.filter-suggestor > suggestor > results > results > choice:hover, overlay-container overlay.filter-suggestor > suggestor > results > results > choice[index-selected] {
+overlay-container overlay.filter-suggestor > suggestor > results > choice:hover, overlay-container overlay.filter-suggestor > suggestor > results > choice[index-selected] {
   background-color: #00000010;
+}
+overlay-container overlay.filter-suggestor > suggestor input {
+  line-height: 24px;
+  font-size: 18px;
+  width: 250px;
 }
 
 overlay > menu {
@@ -641,6 +650,12 @@ body > page > layers > layers > layer-selections > name-area > filter > a.filter
 }
 body > page > layers > layers > layer-selections > name-area > filter > a.filter:hover {
   filter: invert(0.5);
+}
+body > page > layers > layers > layer-selections > name-area > filter > existing {
+  max-width: 80%;
+}
+body > page > layers > layers > layer-selections > name-area[filter-editor-open] > filter > existing {
+  visibility: hidden;
 }
 body > page > layers > layers > layer-selections > name-area:not([has-filter]):not(:hover) > filter {
   visibility: hidden;

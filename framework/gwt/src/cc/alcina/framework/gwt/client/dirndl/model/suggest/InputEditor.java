@@ -104,6 +104,9 @@ public class InputEditor extends Model implements Suggestor.Editor,
 		input = new StringInput();
 		Suggestor.Attributes attributes = suggestor.getAttributes();
 		input.setPlaceholder(attributes.getInputPrompt());
+		if (Ax.notBlank(attributes.getInputText())) {
+			input.setValue(attributes.getInputText());
+		}
 		input.setFocusOnBind(attributes.isFocusOnBind());
 		input.setSelectAllOnFocus(attributes.isSelectAllOnFocus());
 		if (attributes.isInputEditorKeyboardNavigationEnabled()) {
