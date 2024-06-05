@@ -1386,4 +1386,9 @@ public class JobRegistry {
 			}
 		}
 	}
+
+	public String debugOrphanage(long jobId) {
+		logger.info("Debug orphanage :: {}", jobId);
+		return scheduler.debugOrphanage(jobId);
+	}
 }

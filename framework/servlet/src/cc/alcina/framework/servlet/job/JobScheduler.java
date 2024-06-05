@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -233,29 +234,75 @@ public class JobScheduler {
 				});
 	}
 
-	public Stream<Job> getToAbortOrReassign(
-			List<ClientInstance> activeInstances, String visibleInstanceRegex,
-			Date cutoff) {
+	// used to debug the job abort logic
+	public static class AbortFilterCauses {
+		FormatBuilder log = new FormatBuilder();
+
+		boolean intercept = true;
+
+		boolean log(String message, boolean result) {
+			if (intercept) {
+				log.line("%s :: %s", message, result);
+			}
+			return result;
+		}
+	}
+
+	String debugOrphanage(long jobId) {
+		String visibleInstanceRegex = Configuration.get("visibleInstanceRegex");
+		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
+				.getActiveServers();
+		Date cutoff = SEUtilities
+				.toOldDate(LocalDateTime.now().minusMinutes(0));
+		AbortFilterCauses causes = new AbortFilterCauses();
+		causes.intercept = true;
+		getToAbortOrReassign(activeInstances, visibleInstanceRegex, cutoff,
+				Stream.of(Job.byId(jobId)), causes).findFirst();
+		return causes.log.toString();
+	}
+
+	Stream<Job> getToAbortOrReassign(List<ClientInstance> activeInstances,
+			String visibleInstanceRegex, Date cutoff) {
+		return getToAbortOrReassign(activeInstances, visibleInstanceRegex,
+				cutoff, JobDomain.get().getIncompleteJobs(),
+				new AbortFilterCauses());
+	}
+
+	Stream<Job> getToAbortOrReassign(List<ClientInstance> activeInstances,
+			String visibleInstanceRegex, Date cutoff, Stream<Job> jobs,
+			AbortFilterCauses causes) {
 		Date consistencyCutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(120));
-		return JobDomain.get().getIncompleteJobs()
-				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
-				.filter(job -> job.getCreator().toString()
-						.matches(visibleInstanceRegex))
-				.filter(job -> job.getConsistencyPriority() == null
-						|| (job.getStartTime() != null && job.getStartTime()
-								.before(consistencyCutoff)))
-				.filter(job -> (job.getPerformer() == null
-						&& !activeInstances.contains(job.getCreator())
-						&& /*
-							 * don't abort if the creator has moved on but we
-							 * have a still-active related processor (edge case)
-							 */
-						!job.provideRelatedSequential().stream()
-								.anyMatch(relatedJob -> activeInstances
-										.contains(relatedJob.getPerformer())))
-						|| (job.getPerformer() != null && !activeInstances
-								.contains(job.getPerformer())));
+		return jobs
+				.filter(job -> causes.log("before-cutoff",
+						job.provideCreationDateOrNow().before(cutoff)))
+				.filter(job -> causes.log("matchesVisibleInstances",
+						job.getCreator().toString()
+								.matches(visibleInstanceRegex)))
+				.filter(job -> causes.log("consistency-permits",
+						job.getConsistencyPriority() == null
+								|| (job.getStartTime() != null
+										&& job.getStartTime()
+												.before(consistencyCutoff))))
+				.filter(job -> {
+					boolean noPerformerCreatorTerminated = job
+							.getPerformer() == null
+							&& !activeInstances.contains(job.getCreator())
+							&& /*
+								 * don't abort if the creator has moved on but
+								 * we have a still-active related processor
+								 * (edge case)
+								 */
+							!job.provideRelatedSequential().stream().anyMatch(
+									relatedJob -> activeInstances.contains(
+											relatedJob.getPerformer()));
+					causes.log("noPerformerCreatorTerminated",
+							noPerformerCreatorTerminated);
+					boolean performerTerminated = job.getPerformer() != null
+							&& !activeInstances.contains(job.getPerformer());
+					causes.log("performerTerminated", performerTerminated);
+					return noPerformerCreatorTerminated || performerTerminated;
+				});
 	}
 
 	private void processEvent(ScheduleEvent event) {
@@ -344,8 +391,7 @@ public class JobScheduler {
 		}
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();
-		logger.debug("Process orphans - visible instances: {}",
-				activeInstances);
+		logger.info("Process orphans - visible instances: {}", activeInstances);
 		/*
 		 * handle flaky health/instances
 		 */
