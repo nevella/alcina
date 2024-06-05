@@ -196,17 +196,34 @@ public class JobScheduler {
 				.filter(SchedulingPermissions::canModifyFuture).forEach(job -> {
 					Class<? extends Task> key = job.provideTaskClass();
 					Schedule schedule = Schedule.forTaskClass(key);
-					Optional<Job> earliestIncompleteScheduled = JobDomain.get()
+					Job earliestIncompleteScheduled = JobDomain.get()
 							.getEarliestIncompleteScheduled(key,
-									schedule.isVmLocal());
+									schedule.isVmLocal())
+							.orElse(null);
 					if (schedule != null
-							&& earliestIncompleteScheduled.isPresent()
-							&& earliestIncompleteScheduled.get() != job
+							&& earliestIncompleteScheduled != null) {
+						// FIXME - jobs - this should never happen (but clearly
+						// does...)
+						if (earliestIncompleteScheduled.provideIsPending()) {
+							logger.info(
+									"Job scheduler - future-to-pending - ABORTED-STUCK - {} ",
+									earliestIncompleteScheduled);
+							doAbort(Stream.of(earliestIncompleteScheduled),
+									new Date());
+							Transaction.commit();
+							earliestIncompleteScheduled = JobDomain.get()
+									.getEarliestIncompleteScheduled(key,
+											schedule.isVmLocal())
+									.orElse(null);
+						}
+					}
+					if (schedule != null && earliestIncompleteScheduled != null
+							&& earliestIncompleteScheduled != job
 							&& schedule.isCancelIfExistingIncomplete()) {
 						job.setState(JobState.ABORTED);
 						logger.info(
 								"Job scheduler - future-to-pending - ABORTED - {} - existingIncomplete - {}",
-								job, earliestIncompleteScheduled.get());
+								job, earliestIncompleteScheduled);
 					} else {
 						job.setPerformer(ClientInstance.self());
 						job.setState(JobState.PENDING);
@@ -362,28 +379,7 @@ public class JobScheduler {
 						Stream<Job> doubleChecked = getToAbortOrReassign(
 								activeInstances, visibleInstanceRegex, cutoff)
 										.limit(200);
-						doubleChecked.forEach(job -> {
-							if (job.provideIsComplete()) {
-								logger.warn(
-										"Not aborting job {} - already complete",
-										job);
-								return;
-							}
-							logger.warn(
-									"Aborting job {} (inactive client creator: {} - performer: {})",
-									job, job.getCreator(), job.getPerformer());
-							if (Configuration.is("abortDisabled")) {
-								logger.warn(
-										"(Would abort job - but abortDisabled)");
-								return;
-							}
-							/* resubmit, then abort */
-							ResubmitPolicy policy = ResubmitPolicy.forJob(job);
-							policy.visit(job);
-							job.setState(JobState.ABORTED);
-							job.setEndTime(abortTime);
-							job.setResultType(JobResultType.DID_NOT_COMPLETE);
-						});
+						doAbort(doubleChecked, abortTime);
 						logger.warn("Aborting jobs - committing transforms");
 						int committed = Transaction.commit();
 						if (committed == 0) {
@@ -397,6 +393,28 @@ public class JobScheduler {
 						}
 					});
 		}
+	}
+
+	void doAbort(Stream<Job> jobs, Date abortTime) {
+		jobs.forEach(job -> {
+			if (job.provideIsComplete()) {
+				logger.warn("Not aborting job {} - already complete", job);
+				return;
+			}
+			logger.warn(
+					"Aborting job {} (inactive client creator: {} - performer: {})",
+					job, job.getCreator(), job.getPerformer());
+			if (Configuration.is("abortDisabled")) {
+				logger.warn("(Would abort job - but abortDisabled)");
+				return;
+			}
+			/* resubmit, then abort */
+			ResubmitPolicy policy = ResubmitPolicy.forJob(job);
+			policy.visit(job);
+			job.setState(JobState.ABORTED);
+			job.setEndTime(abortTime);
+			job.setResultType(JobResultType.DID_NOT_COMPLETE);
+		});
 	}
 
 	private void refreshFutures(ScheduleEvent event) {
