@@ -16,16 +16,18 @@ public interface RemoteComponent {
 			createEnvironment(HttpServletRequest request) {
 		Credentials credentials = Credentials.createUnique();
 		RemoteUi ui = getUiInstance();
-		Environment environment = EnvironmentManager.get().register(ui,
-				credentials);
 		RemoteComponentProtocol.Session session = new RemoteComponentProtocol.Session();
 		session.id = credentials.id;
 		session.auth = credentials.auth;
 		session.url = request.getRequestURL().toString();
+		session.remoteAddress = request.getRemoteAddr();
+		session.startTime = System.currentTimeMillis();
 		if (Ax.notBlank(request.getQueryString())) {
 			session.url += "?" + request.getQueryString();
 		}
 		session.componentClassName = ui.getClass().getName();
+		Environment environment = EnvironmentManager.get().register(ui,
+				session);
 		return session;
 	}
 

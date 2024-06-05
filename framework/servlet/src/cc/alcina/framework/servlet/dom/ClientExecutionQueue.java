@@ -50,8 +50,7 @@ class ClientExecutionQueue implements Runnable {
 	}
 
 	void start() {
-		String threadName = Ax.format("remcom-env-%s",
-				environment.credentials.id);
+		String threadName = Ax.format("remcom-env-%s", environment.session.id);
 		Thread thread = new Thread(this, threadName);
 		thread.setDaemon(true);
 		thread.start();
@@ -202,6 +201,13 @@ class ClientExecutionQueue implements Runnable {
 		synchronized (this) {
 			asyncEventQueue.add(new AsyncEvent(runnable));
 			notify();
+		}
+	}
+
+	void stop() {
+		finished = true;
+		synchronized (this) {
+			notifyAll();
 		}
 	}
 }

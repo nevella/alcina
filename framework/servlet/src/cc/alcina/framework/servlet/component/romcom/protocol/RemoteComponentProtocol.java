@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.romcom.protocol;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
@@ -14,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -296,5 +298,16 @@ public class RemoteComponentProtocol {
 		public String url;
 
 		public String componentClassName;
+
+		// ipv4 address
+		@Property.Not
+		public transient String remoteAddress;
+
+		@Property.Not
+		public transient long startTime;
+
+		public boolean provideIsLocalHost() {
+			return Objects.equals(remoteAddress, "127.0.0.1");
+		}
 	}
 }

@@ -90,8 +90,7 @@ public interface RemoteUi {
 	}
 
 	default void addLifecycleHandlers() {
-		Window.addPageHideHandler(
-				evt -> EnvironmentManager.get().deregister(this));
+		Window.addPageHideHandler(evt -> getEnvironment().end());
 	}
 
 	default void onBeforeEnterFrame() {

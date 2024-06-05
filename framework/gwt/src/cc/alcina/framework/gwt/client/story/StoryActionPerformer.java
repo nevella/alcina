@@ -75,6 +75,12 @@ public class StoryActionPerformer {
 				getAttribute(Class<? extends Attribute<V>> clazz) {
 			return visit.teller().state.getAttribute(clazz);
 		}
+
+		@Override
+		public <V> void setAttribute(Class<? extends Attribute<V>> clazz,
+				V value) {
+			visit.teller().state.setAttribute(clazz, value);
+		}
 	}
 
 	public void perform(Visit visit) {

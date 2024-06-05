@@ -273,8 +273,8 @@ class RemoteComponentHandler {
 						if (e instanceof InvalidClientException) {
 							InvalidClientException clex = (InvalidClientException) e;
 							if (clex.action == Action.REFRESH) {
-								Ax.out("Refreshing remotecomponent '%s' ",
-										clex.uiType);
+								Ax.out("Refreshing remotecomponent '%s' - client %s",
+										clex.uiType, request.session.id);
 								handled = true;
 							}
 						}

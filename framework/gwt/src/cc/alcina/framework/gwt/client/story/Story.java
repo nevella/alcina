@@ -826,6 +826,8 @@ public interface Story {
 
 			<V> Attribute.Entry<V, Attribute<V>>
 					getAttribute(Class<? extends Attribute<V>> clazz);
+
+			<V> void setAttribute(Class<? extends Attribute<V>> clazz, V value);
 		}
 
 		default Class<? extends Action> getActionClass() {

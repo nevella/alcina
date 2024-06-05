@@ -1149,6 +1149,17 @@ public class JobRegistry {
 			this.task = task;
 			return this;
 		}
+
+		public Job ensureScheduled() {
+			Preconditions.checkState(runAt != null);
+			Optional<Job> earliestFuture = JobDomain.get()
+					.getEarliestFuture(task.getClass(), false);
+			if (earliestFuture.isPresent()) {
+				return null;
+			} else {
+				return create();
+			}
+		}
 	}
 
 	static class ContextAwaiter {

@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
@@ -44,7 +45,6 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
-import cc.alcina.framework.servlet.dom.EnvironmentManager.Credentials;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -294,7 +294,7 @@ public class Environment {
 
 	EventFrame eventFrame;
 
-	final Credentials credentials;
+	final Session session;
 
 	SchedulerFrame scheduler;
 
@@ -311,16 +311,16 @@ public class Environment {
 
 	AtomicInteger serverClientMessageCounter = new AtomicInteger();
 
-	Session session;
+	long lastPacketsReceived;
 
 	public void clientStarted() {
 		clientStarted = true;
 		scheduler.setClientStarted(true);
 	}
 
-	Environment(RemoteUi ui, Credentials credentials) {
+	Environment(RemoteUi ui, Session session) {
 		this.ui = ui;
-		this.credentials = credentials;
+		this.session = session;
 		this.uid = SEUtilities.generatePrettyUuid();
 		this.eventCollator = new EventCollator<Object>(5, this::emitMutations);
 		startQueue();
@@ -372,7 +372,7 @@ public class Environment {
 	}
 
 	public void initialiseClient(RemoteComponentProtocol.Session session) {
-		this.session = session;
+		Preconditions.checkState(Objects.equals(session.id, this.session.id));
 		try {
 			LooseContext.push();
 			LooseContext.set(CONTEXT_ENVIRONMENT, this);
@@ -433,13 +433,12 @@ public class Environment {
 
 	@Override
 	public String toString() {
-		return Ax.format("env::%s [%s/%s]", uid, credentials.id,
-				credentials.auth);
+		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
 	}
 
 	public void validateSession(RemoteComponentProtocol.Session session,
 			boolean validateClientInstanceUid) throws Exception {
-		if (!Objects.equals(session.auth, credentials.auth)) {
+		if (!Objects.equals(session.auth, session.auth)) {
 			throw new RemoteComponentProtocol.InvalidAuthenticationException();
 		}
 		connectedClientUid = session.id;
@@ -543,7 +542,7 @@ public class Environment {
 		}
 	}
 
-	private void startQueue() {
+	void startQueue() {
 		queue = new ClientExecutionQueue(this);
 		queue.start();
 	}
@@ -552,6 +551,7 @@ public class Environment {
 			throws Exception {
 		validateSession(token.request.session,
 				token.messageHandler.isValidateClientInstanceUid());
+		lastPacketsReceived = System.currentTimeMillis();
 		queue.handleFromClientMessage(token);
 	}
 
@@ -574,5 +574,10 @@ public class Environment {
 	public String getSessionPath() {
 		Url url = Url.parse(session.url);
 		return url.queryParameters.get("path");
+	}
+
+	void end() {
+		queue.stop();
+		EnvironmentManager.get().deregister(this);
 	}
 }
