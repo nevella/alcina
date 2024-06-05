@@ -27,6 +27,14 @@ public class PropertiesDomain {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
+	public <P extends UserPropertyPersistable> Optional<UserProperty<?>>
+			getUserPropertyContainer(Class<P> clazz) {
+		IUser user = PersistentSingleton.class.isAssignableFrom(clazz)
+				? new UserlandProvider().getSystemUser()
+				: PermissionsManager.get().getUser();
+		return UserProperty.byUserClass(user, clazz);
+	}
+
 	public <P extends UserPropertyPersistable> P getProperties(Class<P> clazz) {
 		IUser user = PersistentSingleton.class.isAssignableFrom(clazz)
 				? new UserlandProvider().getSystemUser()
@@ -55,8 +63,20 @@ public class PropertiesDomain {
 				lock.release();
 			}
 		}
-		return (P) byUserClass.get().ensureUserPropertySupport()
+		P persistable = null;
+		UserProperty userProperty = byUserClass.get();
+		persistable = (P) userProperty.ensureUserPropertySupport()
 				.getPersistable();
+		if (persistable == null) {
+			// deserialization
+			if (UserPropertyPersistable.ResetOnSerializationException.class
+					.isAssignableFrom(clazz)) {
+				logger.info("Replacing persistable - {} {}", clazz, user);
+				persistable = Reflections.newInstance(clazz);
+				userProperty.replacePersistable(persistable);
+			}
+		}
+		return persistable;
 	}
 
 	@Registration.Singleton

@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Ui;
+import cc.alcina.framework.gwt.client.story.StoryActionPerformer;
 import cc.alcina.framework.gwt.client.story.StoryActionPerformer.ActionTypePerformer;
 
 /*
@@ -148,6 +149,10 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 				ElementQuery query = createQuery(wdPerformer);
 				String text = action.getText();
 				query.sendKeys(text);
+				if (query.getElement().getAttribute("type").equals("file")) {
+					// handle chrome weirdness
+					query.emitChangeEvent();
+				}
 				wdPerformer.context.log("Keys :: '%s' --> %s", text, query);
 			}
 		}
@@ -167,9 +172,13 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 		static ElementQuery createQuery(WdActionPerformer wdPerformer) {
 			Story.Action.Location.Xpath location = wdPerformer.context
 					.getLocation(Story.Action.Location.Axis.DOCUMENT);
-			return ElementQuery.xpath(
-					wdPerformer.wdContext.token.getWebDriver(),
-					location.getText());
+			int timeout = wdPerformer.context.getAttribute(
+					StoryActionPerformer.PerformerAttribute.Timeout.class)
+					.orElse(5);
+			return ElementQuery
+					.xpath(wdPerformer.wdContext.token.getWebDriver(),
+							location.getText())
+					.withTimeout(timeout);
 		}
 
 		public static class AwaitAttributePresent implements

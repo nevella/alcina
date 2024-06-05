@@ -119,6 +119,10 @@ public interface Story {
 			public V get() {
 				return value;
 			}
+
+			public V orElse(V _default) {
+				return value != null ? value : _default;
+			}
 		}
 	}
 
@@ -136,22 +140,6 @@ public interface Story {
 	 * is for annotation readability
 	 */
 	public interface Decl {
-		/** Declaratively define a point. This may end up going unused */
-		@Retention(RetentionPolicy.RUNTIME)
-		@Documented
-		@Target({ ElementType.TYPE })
-		@Repeatable(Points.class)
-		public @interface Point {
-			Decl.Action.Code[] code() default {};
-		}
-
-		@Retention(RetentionPolicy.RUNTIME)
-		@Documented
-		@Target({ ElementType.TYPE })
-		public @interface Points {
-			Point[] value();
-		}
-
 		@Retention(RetentionPolicy.RUNTIME)
 		@Documented
 		@Target({ ElementType.TYPE })
@@ -173,21 +161,6 @@ public interface Story {
 		@Repeatable(Children.class)
 		public @interface Child {
 			Class<? extends Story.Point> value();
-		}
-
-		/**
-		 * <p>
-		 * DO NOT USE (yet) -- Class.getDeclaredClasses() order is undefined in
-		 * the JDK.
-		 * 
-		 * <p>
-		 * The plan is to use javaparser to derive ordering from source ordering
-		 */
-		@Deprecated
-		@Retention(RetentionPolicy.RUNTIME)
-		@Documented
-		@Target({ ElementType.TYPE })
-		public @interface ChildrenFromNestedTypes {
 		}
 
 		@Retention(RetentionPolicy.RUNTIME)
@@ -828,6 +801,8 @@ public interface Story {
 					getAttribute(Class<? extends Attribute<V>> clazz);
 
 			<V> void setAttribute(Class<? extends Attribute<V>> clazz, V value);
+
+			void clearAttribute(Class<? extends Attribute<?>> clazz);
 		}
 
 		default Class<? extends Action> getActionClass() {

@@ -1150,6 +1150,10 @@ public class JobRegistry {
 			return this;
 		}
 
+		/*
+		 * Ensures a job of the task class is scheduled (the method will only
+		 * create a Job if there's no scheduled job of this task class)
+		 */
 		public Job ensureScheduled() {
 			Preconditions.checkState(runAt != null);
 			Optional<Job> earliestFuture = JobDomain.get()

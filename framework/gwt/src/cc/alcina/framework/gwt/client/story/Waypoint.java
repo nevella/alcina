@@ -7,8 +7,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -32,19 +30,6 @@ public class Waypoint implements Story.Point {
 		public Set<Class<? extends Story.Point>> exitOkOnFalse() {
 			return exitOkOnFalse;
 		}
-	}
-
-	/*
-	 * Possibly unused
-	 */
-	public static Story.Point toStoryPoint(Story.Decl.Point declPoint) {
-		Waypoint waypoint = new Waypoint();
-		Story.Decl.Action.Code[] code = declPoint.code();
-		Preconditions.checkArgument(code.length < 2);
-		if (code.length == 1) {
-			waypoint.action = Reflections.newInstance(code[0].value());
-		}
-		return waypoint;
 	}
 
 	protected String name;
@@ -147,28 +132,6 @@ public class Waypoint implements Story.Point {
 							.map(Reflections::newInstance)
 							.collect(Collectors.toList());
 				}
-			}
-			if (children == null) {
-				List<Story.Decl.Point> points = reflector
-						.annotations(Story.Decl.Point.class);
-				if (points.size() > 0) {
-					children = points.stream().map(Waypoint::toStoryPoint)
-							.collect(Collectors.toList());
-				}
-			}
-			if (children == null) {
-				// if (reflector.has(Story.Decl.ChildrenFromNestedTypes.class))
-				// {
-				// children = reflector.getClasses().stream().map(t -> {
-				// if (Reflections.isAssignableFrom(Waypoint.class, t)) {
-				// Class<? extends Waypoint> clazz = (Class<? extends Waypoint>)
-				// t;
-				// return Reflections.newInstance(clazz);
-				// } else {
-				// return null;
-				// }
-				// }).filter(Objects::nonNull).collect(Collectors.toList());
-				// }
 			}
 			if (children == null) {
 				children = new ArrayList<>();

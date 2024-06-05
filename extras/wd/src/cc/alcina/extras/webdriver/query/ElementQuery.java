@@ -334,4 +334,10 @@ public class ElementQuery {
 		WebElement elem = immediateGetElement();
 		return elem != null && Ax.notBlank(elem.getAttribute(text));
 	}
+
+	public void emitChangeEvent() {
+		((org.openqa.selenium.JavascriptExecutor) drivers.get()).executeScript(
+				"arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }))",
+				getElement());
+	}
 }
