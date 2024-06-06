@@ -811,13 +811,6 @@ public interface Story {
 							intf))
 					.findFirst().get();
 		}
-
-		/*
-		 * The action performer must set the Context.Visit.Result.testResult to
-		 * true or false
-		 */
-		public interface Test {
-		}
 	}
 
 	/**

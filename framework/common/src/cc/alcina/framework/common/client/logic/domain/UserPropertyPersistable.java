@@ -9,12 +9,12 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.serializer.Serializers;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public interface UserPropertyPersistable
 		extends Serializable, SourcesPropertyChangeEvents, TreeSerializable {
@@ -113,7 +113,7 @@ public interface UserPropertyPersistable
 		}
 	}
 
-	public abstract static class Base extends Bindable.Fields
+	public abstract static class Base extends Model.Fields
 			implements UserPropertyPersistable {
 		private UserPropertyPersistable.Support userPropertySupport;
 

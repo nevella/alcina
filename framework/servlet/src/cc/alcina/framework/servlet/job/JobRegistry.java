@@ -18,8 +18,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -80,7 +78,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -296,10 +293,6 @@ public class JobRegistry {
 	private AtomicInteger consoleJobIdCounter = new AtomicInteger();
 
 	JobEnvironment environment = new JobEnvironmentTx();
-
-	static ThreadPoolExecutor checkCancelledExecutor = (ThreadPoolExecutor) Executors
-			.newCachedThreadPool(new NamedThreadFactory(
-					"alcina-job-registry-check-cancelled"));
 
 	public JobRegistry() {
 	}

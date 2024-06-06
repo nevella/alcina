@@ -40,6 +40,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelC
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
@@ -488,5 +489,12 @@ public class StringInput extends Model.Value<String>
 	@Registration({ Model.Value.class, FormModel.Editor.class, String.class })
 	@Registration({ Model.Value.class, FormModel.Editor.class, Number.class })
 	public static class Editor extends StringInput {
+	}
+
+	public static class To implements ModelTransform<String, StringInput> {
+		@Override
+		public StringInput apply(String t) {
+			return new StringInput(t);
+		}
 	}
 }
