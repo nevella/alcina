@@ -86,6 +86,15 @@ public class JobScheduler {
 	private TopicListener<Void> futureConsistencyEventListener = v -> enqueueEvent(
 			new ScheduleEvent(ScheduleEventType.FUTURE_CONSISTENCY_EVENT));
 
+	private TopicListener<Job> futureJobListener = j -> {
+		timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				fireWakeup();
+			}
+		}, j.getRunAt());
+	};
+
 	Map<Job, JobAllocator> allocators = new ConcurrentHashMap<>();
 
 	private ExecutorService allocatorService = Executors.newCachedThreadPool();
@@ -100,6 +109,7 @@ public class JobScheduler {
 		JobDomain.get().queueEvents.add(queueEventListener);
 		JobDomain.get().futureConsistencyEvents
 				.add(futureConsistencyEventListener);
+		JobDomain.get().futureJob.add(futureJobListener);
 		JobDomain.get().fireInitialAllocatorQueueCreationEvents();
 		thread = new ScheduleJobsThread();
 		thread.start();

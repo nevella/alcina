@@ -165,6 +165,8 @@ public class JobDomain {
 
 	public Topic<Void> futureConsistencyEvents = Topic.create();
 
+	public Topic<Job> futureJob = Topic.create();
+
 	public Topic<List<JobStateMessage>> stateMessageEvents = Topic.create();
 
 	private Class<? extends JobRelation> jobRelationImplClass;
@@ -1133,6 +1135,9 @@ public class JobDomain {
 
 			@Override
 			public void insert(Job t) {
+				if (t.getRunAt() != null && t.getState() == JobState.FUTURE) {
+					futureJob.publish(t);
+				}
 				if (!t.provideIsComplete()) {
 					return;
 				}
