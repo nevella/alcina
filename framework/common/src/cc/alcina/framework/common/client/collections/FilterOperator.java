@@ -55,6 +55,12 @@ public enum FilterOperator {
 			return "[matches]";
 		}
 	},
+	CONTAINS {
+		@Override
+		public String operationText() {
+			return "[contains]";
+		}
+	},
 	IN {
 		@Override
 		public String operationText() {

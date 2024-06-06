@@ -227,6 +227,8 @@ public class StringInput extends Model.Value<String>
 				autocomplete -> setAutocomplete(autocomplete.value()));
 		event.node.optional(FocusOnBind.class)
 				.ifPresent(ann -> setFocusOnBind(true));
+		event.node.optional(TextArea.class)
+				.ifPresent(ann -> setTag("textarea"));
 		super.onBeforeRender(event);
 	}
 
@@ -408,6 +410,13 @@ public class StringInput extends Model.Value<String>
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface FocusOnBind {
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface TextArea {
 	}
 
 	@ClientVisible

@@ -147,6 +147,9 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 			public void perform(WdActionPerformer wdPerformer,
 					Story.Action.Ui.Keys action) throws Exception {
 				ElementQuery query = createQuery(wdPerformer);
+				if (action.isClear()) {
+					query.clear();
+				}
 				String text = action.getText();
 				query.sendKeys(text);
 				if (query.getElement().getAttribute("type").equals("file")) {

@@ -56,8 +56,7 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 				? Domain.find(selection.get(), Long.parseLong(segmentPath))
 				: null;
 		Stream<Entity> stream = Stream
-				.concat(Stream.of(selected),
-						Domain.stream(selection.get()).limit(25))
+				.concat(Stream.of(selected), Domain.stream(selection.get()))
 				.distinct().filter(Objects::nonNull);
 		addStream(selection, stream);
 	}

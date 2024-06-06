@@ -306,11 +306,14 @@ public interface Story {
 				public @interface Keys {
 					String value();
 
+					boolean clear() default true;
+
 					public static class ConverterImpl
 							implements Converter<Keys> {
 						@Override
 						public Story.Action convert(Keys ann) {
 							return new Story.Action.Ui.Keys()
+									.withClear(ann.clear())
 									.withText(ann.value());
 						}
 					}
@@ -741,6 +744,20 @@ public interface Story {
 			}
 
 			public static class Keys extends ActionWithText {
+				boolean clear;
+
+				public boolean isClear() {
+					return clear;
+				}
+
+				public void setClear(boolean clear) {
+					this.clear = clear;
+				}
+
+				public Keys withClear(boolean clear) {
+					setClear(clear);
+					return this;
+				}
 			}
 
 			// Note - not implemented in WD yet
