@@ -54,6 +54,16 @@ public class JobTracker extends Model implements TreeSerializable {
 
 	private String serializedResult;
 
+	private String leafCount;
+
+	public String getLeafCount() {
+		return leafCount;
+	}
+
+	public void setLeafCount(String leafCount) {
+		this.leafCount = leafCount;
+	}
+
 	public JobTracker() {
 	}
 
@@ -228,5 +238,9 @@ public class JobTracker extends Model implements TreeSerializable {
 		public void setTrackers(List<JobTracker> trackers) {
 			this.trackers = trackers;
 		}
+	}
+
+	public String toProgressMessageWithLeafCount() {
+		return Ax.format("%s :: [%s]", progressMessage, leafCount);
 	}
 }

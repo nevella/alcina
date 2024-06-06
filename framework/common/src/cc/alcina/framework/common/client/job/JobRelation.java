@@ -79,7 +79,9 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 
 	@Reflected
 	public static enum JobRelationType {
-		PARENT_CHILD, SEQUENCE, RESUBMIT;
+		PARENT_CHILD, SEQUENCE, RESUBMIT,
+		// a job awaited (but non-child) during performance of another job
+		AWAITED;
 
 		// sequential from POV of sequence resolution. Is there a better term?
 		boolean isSequential() {
@@ -88,6 +90,7 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 			case SEQUENCE:
 				return true;
 			case RESUBMIT:
+			case AWAITED:
 				return false;
 			default:
 				throw new UnsupportedOperationException();
