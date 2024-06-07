@@ -12,11 +12,11 @@ public class Waypoints {
 	static final String NAME_BODY = "Waypoints/Body";
 
 	@Decl.Location.Xpath(XPATH_BODY)
-	@Decl.Action.UI.Mark(NAME_BODY)
+	@Decl.Action.UI.Mark
 	public static class MarkBody extends Waypoint {
 	}
 
-	@Decl.Location.Marked(NAME_BODY)
+	@Decl.Location.Marked
 	@Decl.Action.UI.AwaitAbsent
 	public static class AwaitBodyRemoval extends Waypoint {
 	}

@@ -556,6 +556,7 @@ public class StoryTeller {
 		}
 
 		public void updateLocationAxis(Location location) {
+			locations.clear();
 			locations.put(location.getAxis(), location);
 		}
 
@@ -571,7 +572,7 @@ public class StoryTeller {
 			return entry;
 		}
 
-		public void clearAttribute(Class<? extends Attribute<?>> clazz) {
+		public void removeAttribute(Class<? extends Attribute<?>> clazz) {
 			attributes.remove(clazz);
 		}
 	}

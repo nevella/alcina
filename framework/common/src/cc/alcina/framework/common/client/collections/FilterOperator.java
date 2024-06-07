@@ -1,16 +1,28 @@
 package cc.alcina.framework.common.client.collections;
 
+import java.util.Objects;
+
 public enum FilterOperator {
 	EQ {
 		@Override
 		public String operationText() {
 			return "=";
 		}
+
+		@Override
+		public boolean test(Object left, Object right) {
+			return Objects.equals(left, right);
+		}
 	},
 	NE {
 		@Override
 		public String operationText() {
 			return "!=";
+		}
+
+		@Override
+		public boolean test(Object left, Object right) {
+			return !Objects.equals(left, right);
 		}
 	},
 	GT {
@@ -67,6 +79,10 @@ public enum FilterOperator {
 			return "[in]";
 		}
 	};
+
+	public boolean test(Object left, Object right) {
+		throw new UnsupportedOperationException();
+	}
 
 	public abstract String operationText();
 }

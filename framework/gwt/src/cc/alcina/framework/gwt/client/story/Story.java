@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -193,6 +194,15 @@ public interface Story {
 		 */
 		public interface Action {
 			/*
+			 * Invert the action result
+			 */
+			@Retention(RetentionPolicy.RUNTIME)
+			@Documented
+			@Target({ ElementType.TYPE })
+			public @interface Invert {
+			}
+
+			/*
 			 * A marker - annotations registered at this key by this will be
 			 * used to populate declarative Points
 			 */
@@ -203,18 +213,6 @@ public interface Story {
 			public interface Converter<A extends Annotation>
 					extends Registration.AllSubtypes {
 				Story.Action convert(A ann);
-			}
-
-			/*
-			 * Possibly unused
-			 */
-			/** Declaratively define a code action */
-			@Retention(RetentionPolicy.RUNTIME)
-			@Documented
-			@Target({ ElementType.TYPE })
-			@Registration(DeclarativeAction.class)
-			public @interface Code {
-				Class<? extends Story.Action.Code> value();
 			}
 
 			/**
@@ -393,6 +391,56 @@ public interface Story {
 					}
 				}
 
+				/** An TestAttributeValue action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface TestAttributeValue {
+					String name();
+
+					String value();
+
+					FilterOperator operator() default FilterOperator.EQ;
+
+					public static class ConverterImpl
+							implements Converter<TestAttributeValue> {
+						@Override
+						public Story.Action convert(TestAttributeValue ann) {
+							Story.Action.Ui.TestAttributeValue action = new Story.Action.Ui.TestAttributeValue();
+							action.withName(ann.name());
+							action.withText(ann.value());
+							action.operator = ann.operator();
+							return action;
+						}
+					}
+				}
+
+				/** An AwaitAttributeValue action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface AwaitAttributeValue {
+					String name();
+
+					String value();
+
+					FilterOperator operator() default FilterOperator.EQ;
+
+					public static class ConverterImpl
+							implements Converter<AwaitAttributeValue> {
+						@Override
+						public Story.Action convert(AwaitAttributeValue ann) {
+							Story.Action.Ui.AwaitAttributeValue action = new Story.Action.Ui.AwaitAttributeValue();
+							action.withName(ann.name());
+							action.withText(ann.value());
+							action.operator = ann.operator();
+							return action;
+						}
+					}
+				}
+
 				public interface Navigation {
 					/** A go-to-url action */
 					@Retention(RetentionPolicy.RUNTIME)
@@ -426,22 +474,19 @@ public interface Story {
 				}
 
 				/**
-				 * A mark action - stores an element ref under a name key for
-				 * later awaitremoval
+				 * A mark action - stores an element ref (one only) for later
+				 * awaitremoval
 				 */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
 				@Registration(DeclarativeAction.class)
 				public @interface Mark {
-					String value();
-
 					public static class ConverterImpl
 							implements Converter<Mark> {
 						@Override
 						public Story.Action convert(Mark ann) {
-							return new Story.Action.Ui.Mark()
-									.withText(ann.value());
+							return new Story.Action.Ui.Mark();
 						}
 					}
 				}
@@ -481,19 +526,16 @@ public interface Story {
 				}
 			}
 
-			/** Define a marked location */
+			/** Reference marked location */
 			@Retention(RetentionPolicy.RUNTIME)
 			@Documented
 			@Target({ ElementType.TYPE })
 			@Registration(DeclarativeLocation.class)
 			public @interface Marked {
-				String value();
-
 				public static class ConverterImpl implements Converter<Marked> {
 					@Override
 					public Story.Action.Location convert(Marked ann) {
-						return new Story.Action.Location.Marked()
-								.withText(ann.value());
+						return new Story.Action.Location.Marked();
 					}
 				}
 			}
@@ -670,10 +712,15 @@ public interface Story {
 				}
 			}
 
-			public static class Marked extends LocWithText {
+			public static class Marked implements Location {
 				@Override
 				public Axis getAxis() {
 					return Axis.MARK;
+				}
+
+				@Override
+				public String getText() {
+					return "[marked]";
 				}
 			}
 
@@ -743,6 +790,23 @@ public interface Story {
 				}
 			}
 
+			abstract static class ActionWithNameText extends ActionWithText {
+				String name;
+
+				public String getName() {
+					return name;
+				}
+
+				public void setName(String name) {
+					this.name = name;
+				}
+
+				public Ui withName(String name) {
+					setName(name);
+					return this;
+				}
+			}
+
 			public static class Keys extends ActionWithText {
 				boolean clear;
 
@@ -760,8 +824,7 @@ public interface Story {
 				}
 			}
 
-			// Note - not implemented in WD yet
-			public static class Mark extends ActionWithText {
+			public static class Mark implements Ui {
 			}
 
 			public static class SelectByText extends ActionWithText {
@@ -774,6 +837,14 @@ public interface Story {
 			}
 
 			public static class TestAttributePresent extends ActionWithText {
+			}
+
+			public static class TestAttributeValue extends ActionWithNameText {
+				public FilterOperator operator;
+			}
+
+			public static class AwaitAttributeValue extends ActionWithNameText {
+				public FilterOperator operator;
 			}
 		}
 
@@ -810,7 +881,7 @@ public interface Story {
 				}
 			}
 
-			<L extends Location> L getLocation(Axis url);
+			<L extends Location> L getLocation(Axis axis);
 
 			TellerContext tellerContext();
 
@@ -819,7 +890,7 @@ public interface Story {
 
 			<V> void setAttribute(Class<? extends Attribute<V>> clazz, V value);
 
-			void clearAttribute(Class<? extends Attribute<?>> clazz);
+			void removeAttribute(Class<? extends Attribute<?>> clazz);
 		}
 
 		default Class<? extends Action> getActionClass() {

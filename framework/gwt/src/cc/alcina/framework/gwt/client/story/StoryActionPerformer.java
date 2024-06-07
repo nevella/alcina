@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class StoryActionPerformer {
 	public interface PerformerAttribute<T> extends Story.Attribute<T> {
-		public static interface Timeout extends Attribute<Integer> {
+		public static interface Timeout extends PerformerAttribute<Integer> {
 		}
 	}
 
@@ -88,8 +88,8 @@ public class StoryActionPerformer {
 		}
 
 		@Override
-		public void clearAttribute(Class<? extends Attribute<?>> clazz) {
-			visit.teller().state.clearAttribute(clazz);
+		public void removeAttribute(Class<? extends Attribute<?>> clazz) {
+			visit.teller().state.removeAttribute(clazz);
 		}
 	}
 
