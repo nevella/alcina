@@ -93,12 +93,45 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 		});
 	}
 
-	private Stream applyFilter(Stream stream, Filter filter) {
-		return stream.filter(new StreamFilter(filter));
+	Stream applyFilter(Stream stream, Filter filter) {
+		stream = stream.filter(new StreamFilter(filter));
+		return filter.sortKey == null ? stream
+				: stream.sorted(new StreamSort(filter));
+	}
+
+	class StreamSort implements Comparator {
+		Filter filter;
+
+		Comparator cmp;
+
+		StreamSort(Filter filter) {
+			this.filter = filter;
+			cmp = Comparator.nullsFirst(Comparator.naturalOrder());
+		}
+
+		@Override
+		public int compare(Object o1, Object o2) {
+			Object v1 = getValue(o1);
+			Object v2 = getValue(o2);
+			if (v1 != null && !(v1 instanceof Comparable)) {
+				return 0;
+			}
+			if (v2 != null && !(v2 instanceof Comparable)) {
+				return 0;
+			}
+			//
+			int direction = filter.sortDirection.toComparatorMultiplier();
+			return cmp.compare((Comparable) v1, (Comparable) v2) * direction;
+		}
+
+		Object getValue(Object o) {
+			Property property = Reflections.at(o).property(filter.sortKey);
+			return property.get(o);
+		}
 	}
 
 	class StreamFilter implements Predicate {
-		private Filter filter;
+		Filter filter;
 
 		StreamFilter(Filter filter) {
 			this.filter = filter;
@@ -113,19 +146,19 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 				if (string == null) {
 					return false;
 				}
-				return matchesOrContains(string, filter.value);
+				return matchesOrContains(string, filter.normalisedValue());
 			} else {
-				Entity entity = (Entity) o;
-				Property property = Reflections.at(entity).property(filter.key);
-				Object propertyValue = property.get(entity);
+				Property property = Reflections.at(o).property(filter.key);
+				Object propertyValue = property.get(o);
 				if (propertyValue == null) {
 					return false;
 				}
 				if (filter.op == FilterOperator.MATCHES) {
 					return matchesOrContains(propertyValue.toString(),
-							filter.value);
+							filter.normalisedValue());
 				}
-				Object value = getTypedValue(property, filter.value);
+				Object value = getTypedValue(property,
+						filter.normalisedValue());
 				return Objects.equals(value, propertyValue);
 			}
 		}

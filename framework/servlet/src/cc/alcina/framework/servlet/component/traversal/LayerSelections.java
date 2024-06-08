@@ -175,6 +175,7 @@ class LayerSelections extends Model.All {
 							Ui.get().createAnswerSupplier(layer.index - 1)));
 					attributes.withNonOverlaySuggestionResults(true);
 					attributes.withInputPrompt("Filter layer");
+					attributes.withInputExpandable(true);
 					attributes.withInputText(
 							filter.existing != null ? filter.existing.text
 									: null);

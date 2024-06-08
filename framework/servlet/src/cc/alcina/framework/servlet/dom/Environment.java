@@ -576,7 +576,9 @@ public class Environment {
 		return url.queryParameters.get("path");
 	}
 
-	void end() {
+	void end(String reason) {
+		logger.info("Stopping env [{}] :: {}", reason, session.id);
+		ui.end();
 		queue.stop();
 		EnvironmentManager.get().deregister(this);
 	}

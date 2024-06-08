@@ -28,6 +28,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.RemoteMutations;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
@@ -1314,8 +1315,7 @@ public class LocalDom implements ContextFrame {
 						Event event = eventData.event;
 						switch (event.getType()) {
 						case BrowserEvents.PAGEHIDE:
-							// since window isn't framed (yet)
-							// Window.onPageHide();
+							Window.onPageHide();
 							break;
 						default:
 							throw new UnsupportedOperationException();

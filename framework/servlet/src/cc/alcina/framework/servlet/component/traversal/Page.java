@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -81,6 +82,9 @@ class Page extends Model.All
 
 	@Directed.Exclude
 	TraversalPlace place;
+
+	@cc.alcina.framework.common.client.reflection.Property.Not
+	TopicListener<RemoteComponentObservables<SelectionTraversal>.ObservableHistory> historySubsciption = this::setHistory;
 
 	Page() {
 		header = new Header(this);

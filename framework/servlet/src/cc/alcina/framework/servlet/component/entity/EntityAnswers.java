@@ -152,7 +152,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 			AppSuggestionEntry suggestion = new AppSuggestionEntry();
 			suggestion.match = match;
 			SelectionTraversal traversal = Ui.traversal();
-			int idx = traversal.getVisistedLayers().size() - 1;
+			int idx = place.getLayerCount();
 			Preconditions.checkArgument(selections.isEmpty() || filter == null);
 			place = place.appendSelections(selections);
 			if (selections.size() > 0) {

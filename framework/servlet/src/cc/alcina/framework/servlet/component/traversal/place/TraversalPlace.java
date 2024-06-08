@@ -225,11 +225,6 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			data.paths = place.paths;
 			data.layers = place.layers.values().stream()
 					.collect(Collectors.toList());
-			if (data.layers.size() > 0) {
-				String serializeSingleLine = FlatTreeSerializer
-						.serializeSingleLine(data);
-				int debug = 3;
-			}
 			return data;
 		}
 
@@ -292,8 +287,8 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			if (selection == null && !selectionFromPathAttempted) {
 				if ((path != null || segmentPath != null)
 						&& TraversalProcessView.Ui.get().getHistory() != null) {
-					SelectionTraversal traversal = TraversalProcessView.Ui.get()
-							.getHistory().observable;
+					SelectionTraversal traversal = TraversalProcessView.Ui
+							.traversal();
 					if (traversal.getRootSelection() != null) {
 						if (segmentPath != null) {
 							selection = traversal.getAllSelections().filter(

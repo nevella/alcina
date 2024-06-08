@@ -206,6 +206,9 @@ class ClientExecutionQueue implements Runnable {
 
 	void stop() {
 		finished = true;
+		if (this.fromClientMessageAcceptor != null) {
+			this.fromClientMessageAcceptor.accept(null);
+		}
 		synchronized (this) {
 			notifyAll();
 		}

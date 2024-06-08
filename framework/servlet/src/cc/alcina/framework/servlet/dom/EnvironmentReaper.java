@@ -51,8 +51,7 @@ class EnvironmentReaper {
 			reap = true;
 		}
 		if (reap) {
-			logger.info("Reaping [inactivity] {}", env.session.id);
-			env.end();
+			env.end("reap/inactive");
 		}
 	}
 

@@ -114,7 +114,7 @@ public class StringInput extends Model.Value<String>
 
 	private String rows;
 
-	private boolean ensureAllLinesVisible;
+	private boolean ensureContentVisible;
 
 	private boolean commitOnEnter;
 
@@ -198,8 +198,8 @@ public class StringInput extends Model.Value<String>
 		return disabled;
 	}
 
-	public boolean isEnsureAllLinesVisible() {
-		return ensureAllLinesVisible;
+	public boolean isEnsureContentVisible() {
+		return ensureContentVisible;
 	}
 
 	@Override
@@ -235,6 +235,7 @@ public class StringInput extends Model.Value<String>
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
+		updateSize();
 	}
 
 	@Override
@@ -281,7 +282,7 @@ public class StringInput extends Model.Value<String>
 	public void onInput(Input event) {
 		currentValue = elementValue();
 		WidgetUtils.squelchCurrentEvent();
-		updateHeight();
+		updateSize();
 		event.reemitAs(this, ModelEvents.Input.class, currentValue);
 	}
 
@@ -318,8 +319,8 @@ public class StringInput extends Model.Value<String>
 		this.disabled = disabled;
 	}
 
-	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
-		this.ensureAllLinesVisible = ensureAllLinesVisible;
+	public void setEnsureContentVisible(boolean ensureContentVisible) {
+		this.ensureContentVisible = ensureContentVisible;
 	}
 
 	public void setFocusOnBind(boolean focusOnBind) {
@@ -370,35 +371,46 @@ public class StringInput extends Model.Value<String>
 		set("value", this.value, value, () -> this.value = value);
 	}
 
-	void updateHeight() {
-		if (ensureAllLinesVisible) {
+	void updateSize() {
+		if (ensureContentVisible) {
 			Scheduler.get().scheduleDeferred(() -> {
+				if (!provideIsBound()) {
+					return;
+				}
 				Element element = provideElement();
-				element.getStyle().setProperty("height", "auto");
-				String paddingTop = WidgetUtils.getComputedStyle(element,
-						"paddingTop");
-				String paddingBottom = WidgetUtils.getComputedStyle(element,
-						"paddingBottom");
-				String computedHeight = WidgetUtils.getComputedStyle(element,
-						"height");
-				double paddingTopPx = paddingTop.endsWith("px")
-						? Double.parseDouble(paddingTop.replace("px", ""))
-						: 0;
-				double paddingBottomPx = paddingBottom.endsWith("px")
-						? Double.parseDouble(paddingBottom.replace("px", ""))
-						: 0;
-				double computedHeightPx = computedHeight.endsWith("px")
-						? Double.parseDouble(computedHeight.replace("px", ""))
-						: 0;
-				int scrollHeight = element.getScrollHeight();
-				if (scrollHeight != 0) {
-					if (scrollHeight == computedHeightPx + paddingBottomPx
-							+ paddingTopPx) {
-						// no need to change
-					} else {
-						element.getStyle().setHeight(scrollHeight,
-								// - paddingTopPx - paddingBottomPx,
-								Unit.PX);
+				if (tag.equals("input")) {
+					element.getStyle().setProperty("minWidth",
+							Ax.format("%sch", getCurrentValue().length() + 2));
+				} else {
+					// textarea
+					element.getStyle().setProperty("height", "auto");
+					String paddingTop = WidgetUtils.getComputedStyle(element,
+							"paddingTop");
+					String paddingBottom = WidgetUtils.getComputedStyle(element,
+							"paddingBottom");
+					String computedHeight = WidgetUtils
+							.getComputedStyle(element, "height");
+					double paddingTopPx = paddingTop.endsWith("px")
+							? Double.parseDouble(paddingTop.replace("px", ""))
+							: 0;
+					double paddingBottomPx = paddingBottom.endsWith("px")
+							? Double.parseDouble(
+									paddingBottom.replace("px", ""))
+							: 0;
+					double computedHeightPx = computedHeight.endsWith("px")
+							? Double.parseDouble(
+									computedHeight.replace("px", ""))
+							: 0;
+					int scrollHeight = element.getScrollHeight();
+					if (scrollHeight != 0) {
+						if (scrollHeight == computedHeightPx + paddingBottomPx
+								+ paddingTopPx) {
+							// no need to change
+						} else {
+							element.getStyle().setHeight(scrollHeight,
+									// - paddingTopPx - paddingBottomPx,
+									Unit.PX);
+						}
 					}
 				}
 			});

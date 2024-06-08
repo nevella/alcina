@@ -36,6 +36,14 @@ caught {
   white-space: pre-wrap;
 }
 
+status-reason {
+  display: block;
+}
+status-reason.ERROR {
+  color: #c33;
+  white-space: pre-wrap;
+}
+
 body > .overlay-container {
   position: absolute;
   z-index: 100;

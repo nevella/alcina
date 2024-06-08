@@ -26,6 +26,7 @@ import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui.EntityPee
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
+import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
@@ -103,9 +104,16 @@ public class EntityGraphView {
 		}
 
 		void traverse() {
+			evictPeer();
 			peer = new EntityPeer();
 			peer.initialiseTraversal();
 			peer.traversal.traverse();
+		}
+
+		void evictPeer() {
+			if (peer != null) {
+				TraversalHistories.get().evict(peer.traversal);
+			}
 		}
 
 		@Override
@@ -120,7 +128,7 @@ public class EntityGraphView {
 				traverse();
 				// if the filter matches exactly one entity, append it to the
 				// place + re-set
-				Layer lastLayer = Ax.last(traversal().getVisistedLayers());
+				Layer lastLayer = Ax.last(traversal().getVisitedLayers());
 				if (place.attributesOrEmpty(lastLayer.index)
 						.has(StandardLayerAttributes.Filter.class)) {
 					Collection<Selection> selections = lastLayer
@@ -137,6 +145,12 @@ public class EntityGraphView {
 				}
 			}
 			this.currentPlace = place;
+		}
+
+		@Override
+		public void end() {
+			super.end();
+			evictPeer();
 		}
 
 		public TraversalAnswerSupplier createAnswerSupplier(int forLayer) {

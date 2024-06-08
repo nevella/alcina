@@ -11,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
+import cc.alcina.framework.servlet.dom.Environment;
 
 @Directed(tag = "layers")
 class SelectionLayers extends Model.Fields {
@@ -27,7 +28,7 @@ class SelectionLayers extends Model.Fields {
 	TraversalPlace place;
 
 	SelectionLayers(Page page) {
-		Ax.out("History delta - id %s - %s", Ui.get().getEnvironment().uid,
+		Ax.out("History delta - id %s - %s", Environment.get().uid,
 				Ax.ntrim(Ui.place(), 30));
 		this.page = page;
 		this.place = page.place;
@@ -39,7 +40,7 @@ class SelectionLayers extends Model.Fields {
 			return;
 		}
 		traversal = Ui.traversal();
-		List<LayerSelections> layers = traversal.getVisistedLayers().stream()
+		List<LayerSelections> layers = traversal.getVisitedLayers().stream()
 				.map(layer -> new LayerSelections(this, layer))
 				.collect(Collectors.toList());
 		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers
