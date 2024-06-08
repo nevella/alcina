@@ -55,7 +55,8 @@ class LayerSelections extends Model.All {
 
 	private SelectionLayers selectionLayers;
 
-	private int maxRenderedSelections = 250;
+	private int maxRenderedSelections = Configuration
+			.getInt("maxRenderedSelections");
 
 	public LayerSelections(SelectionLayers selectionLayers, Layer layer) {
 		this.selectionLayers = selectionLayers;

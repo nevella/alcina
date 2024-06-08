@@ -30,6 +30,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.entity.SEUtilities;
@@ -171,6 +172,7 @@ public class Environment {
 			 */
 			queue.onInvokedSync();
 			boolean timedOut = false;
+			long start = System.currentTimeMillis();
 			do {
 				try {
 					timedOut = !handler.latch.await(1, TimeUnit.SECONDS);
@@ -180,7 +182,8 @@ public class Environment {
 				if (timedOut) {
 					Ax.out("invokesync - timedout");
 				}
-			} while (timedOut);
+			} while (timedOut && TimeConstants.within(start,
+					30 * TimeConstants.ONE_SECOND_MS));
 			if (handler.response.exception == null) {
 				return (T) handler.response.response;
 			} else {
@@ -578,7 +581,7 @@ public class Environment {
 
 	void end(String reason) {
 		logger.info("Stopping env [{}] :: {}", reason, session.id);
-		ui.end();
+		runInClientFrame(() -> ui.end());
 		queue.stop();
 		EnvironmentManager.get().deregister(this);
 	}
