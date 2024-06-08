@@ -49,7 +49,7 @@ public class RemoteComponentServlet extends AlcinaServlet {
 		this.requiresAdmin = requiresAdminStr == null
 				|| Boolean.valueOf(requiresAdminStr);
 		RemoteComponent component = Reflections.newInstance(componentClassName);
-		handler = new RemoteComponentHandler(component, featurePath);
+		handler = new RemoteComponentHandler(component, featurePath, false);
 	}
 
 	@Override

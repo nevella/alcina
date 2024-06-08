@@ -63,8 +63,8 @@ public class RemoteComponentProtocolServer {
 		RemoteComponentHandler handler;
 
 		public ServerHandler(RemoteComponent component) {
-			handler = new RemoteComponentHandler(component,
-					component.getPath());
+			handler = new RemoteComponentHandler(component, component.getPath(),
+					true);
 		}
 
 		@Override

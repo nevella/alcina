@@ -17,14 +17,17 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
@@ -107,7 +110,10 @@ public class EntityGraphView {
 			evictPeer();
 			peer = new EntityPeer();
 			peer.initialiseTraversal();
-			peer.traversal.traverse();
+			MethodContext.instance().withContextValue(
+					RemoteComponentObservables.CONTEXT_OVERRIDE_EVICTION_TIME,
+					TimeConstants.ONE_HOUR_MS)
+					.run(() -> peer.traversal.traverse());
 		}
 
 		void evictPeer() {

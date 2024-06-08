@@ -104,6 +104,15 @@ public class ClientRpc {
 		List<RemoteComponentRequest> requestQueue = new ArrayList<>();
 
 		void submit(Message message) {
+			if (!message.sync) {
+				// first, try to merge (particularly important for multiple
+				// mousemove dispatch)
+				RemoteComponentRequest last = Ax.last(requestQueue);
+				if (last != null && last.protocolMessage.canMerge(message)) {
+					last.protocolMessage.merge(message);
+					return;
+				}
+			}
 			RemoteComponentRequest request = createRequest();
 			request.protocolMessage = message;
 			if (message.sync) {
@@ -120,8 +129,12 @@ public class ClientRpc {
 
 		RemoteComponentRequest inFlightComponentRequest = null;
 
+		RemoteComponentRequest queueingComponentRequest = null;
+
 		Request inFlightHttpRequest;
 
+		// this defers dispatch by (heuristic) 10ms to collect related events
+		// (e.g. mousedown/up/click)
 		void maybeDispatch() {
 			if (inFlightComponentRequest != null) {
 				return;
@@ -129,11 +142,21 @@ public class ClientRpc {
 			if (requestQueue.isEmpty()) {
 				return;
 			}
-			inFlightComponentRequest = requestQueue.remove(0);
-			Topic<Request> calledSignal = Topic.create();
-			calledSignal.add(this);
-			inFlightHttpRequest = submitRequest(inFlightComponentRequest, null,
-					calledSignal);
+			if (queueingComponentRequest != null) {
+				return;
+			}
+			queueingComponentRequest = requestQueue.get(0);
+			new Timer() {
+				@Override
+				public void run() {
+					inFlightComponentRequest = requestQueue.remove(0);
+					queueingComponentRequest = null;
+					Topic<Request> calledSignal = Topic.create();
+					calledSignal.add(BrowserDispatchQueue.this);
+					inFlightHttpRequest = submitRequest(
+							inFlightComponentRequest, null, calledSignal);
+				}
+			}.schedule(10);
 		}
 
 		@Override
