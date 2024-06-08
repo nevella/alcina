@@ -581,7 +581,9 @@ public class Environment {
 
 	void end(String reason) {
 		logger.info("Stopping env [{}] :: {}", reason, session.id);
-		runInClientFrame(() -> ui.end());
+		if (clientStarted) {
+			runInClientFrame(() -> ui.end());
+		}
 		queue.stop();
 		EnvironmentManager.get().deregister(this);
 	}

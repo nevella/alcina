@@ -56,8 +56,10 @@ public class RemoteComponentObservables<T> {
 	void evict(Map.Entry<String, Topic<ObservableHistory>> entry) {
 		ObservableHistory published = entry.getValue().getPublished();
 		entry.getValue().clearPublished();
-		EnvironmentManager.get()
-				.deregisterSource(published.toEnvironmentSource());
+		if (published != null) {
+			EnvironmentManager.get()
+					.deregisterSource(published.toEnvironmentSource());
+		}
 	}
 
 	Map<String, Topic<ObservableHistory>> histories = new LinkedHashMap<>();
