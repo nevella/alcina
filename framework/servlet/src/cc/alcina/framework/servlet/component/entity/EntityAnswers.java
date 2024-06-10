@@ -158,6 +158,10 @@ class EntityAnswers extends TraversalAnswerSupplier {
 			if (selections.size() > 0) {
 				// all appended selections should go at the start of layers
 				for (Selection sel : selections) {
+					if (idx == 0) {
+						idx++;
+						continue;
+					}
 					place.ensureAttributes(idx++)
 							.put(new StandardLayerAttributes.SortSelectedFirst(
 									true));

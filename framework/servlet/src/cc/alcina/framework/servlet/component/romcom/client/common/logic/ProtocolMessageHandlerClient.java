@@ -118,7 +118,6 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		if (preview) {
 			switch (event.getType().toLowerCase()) {
 			case "mouseout":
-			case "mousedown":
 			case "mouseenter":
 			case "mouseleave":
 			case "mousemove":
