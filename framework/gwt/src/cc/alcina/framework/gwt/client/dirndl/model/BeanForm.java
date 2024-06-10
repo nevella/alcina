@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -130,9 +131,25 @@ public class BeanForm extends Model {
 			return delegate.withContextNode(node);
 		}
 
-		@Registration(Impl.class)
 		public abstract static class Impl extends
 				AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable> {
+		}
+
+		@Reflected
+		@Registration(Impl.class)
+		public static class BasicFormTransform
+				extends BeanForm.FormTransform.Impl {
+			@Override
+			public Bindable apply(BaseSourcesPropertyChangeEvents model) {
+				AbstractContextSensitiveModelTransform transformer = new FormModel.BindableFormModelTransformer();
+				if (model instanceof DirectedEntityActivity) {
+					transformer = new FormModel.EntityTransformer();
+				}
+				transformer.withContextNode(node);
+				FormModel formModel = (FormModel) transformer.apply(model);
+				formModel.setSubmitTextBoxesOnEnter(true);
+				return formModel;
+			}
 		}
 	}
 

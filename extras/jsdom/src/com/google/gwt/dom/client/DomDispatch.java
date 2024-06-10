@@ -18,6 +18,8 @@ package com.google.gwt.dom.client;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 
+import cc.alcina.framework.common.client.util.Al;
+
 /*
  * FIXME - dom - could possibly be package-protected
  */
@@ -30,8 +32,12 @@ public class DomDispatch implements DomDispatchContract {
 	public DomDispatch() {
 		if (GWT.isClient()) {
 			local = new DomDispatchLocal();
-			remote = new DomDispatchJso();
-			dispatchJso().domImpl = GWT.create(DOMImpl.class);
+			if (Al.isBrowser()) {
+				remote = new DomDispatchJso();
+				dispatchJso().domImpl = GWT.create(DOMImpl.class);
+			} else {
+				remote = new DomDispatchNull();
+			}
 		} else {
 			local = new DomDispatchNull();
 			remote = new DomDispatchNull();

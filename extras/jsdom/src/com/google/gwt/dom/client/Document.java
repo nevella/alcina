@@ -68,7 +68,11 @@ public class Document extends Node
 	}
 
 	private static void registerWithLocalDom() {
-		LocalDom.register(Document.get());
+		Document doc = Document.get();
+		if (doc.remoteType == RemoteType.NONE || doc.remoteType == null) {
+			return;
+		}
+		LocalDom.register(doc);
 	}
 
 	RemoteType remoteType;
@@ -260,9 +264,10 @@ public class Document extends Node
 
 	public Element createDocumentElement(String markup,
 			boolean attachToParent) {
-		documentElement = new HtmlParser().parse(markup, null, false);
+		documentElement = new HtmlParser().parse(markup, null, true);
 		if (attachToParent) {
 			documentElement.local().parentNode = this.local();
+			documentElement.setAttached(true);
 		}
 		return documentElement;
 	}

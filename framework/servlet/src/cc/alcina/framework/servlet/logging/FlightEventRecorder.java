@@ -6,10 +6,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.flight.FlightEvent;
+import cc.alcina.framework.common.client.flight.HasSessionId;
+import cc.alcina.framework.common.client.flight.HasSessionId.FlightExceptionMessage;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.LifecycleService;
@@ -31,17 +34,35 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 
 	@Override
 	public void topicPublished(FlightEvent message) {
-		String dateSessionId = sessionIdDateSession.computeIfAbsent(
-				message.event.getSessionId(), sessionId -> Ax.format("%s.%s",
-						Ax.timestampYmd(new Date()), sessionId));
-		String folderPath = Ax.format("%s/%s", Configuration.get("path"),
-				dateSessionId);
-		File folder = new File(folderPath);
-		if (!folder.exists()) {
-			folder.mkdirs();
-			Ax.out("FlightEventRecorder :: recording to %s", folderPath);
+		String path = null;
+		try {
+			String dateSessionId = sessionIdDateSession.computeIfAbsent(
+					message.event.getSessionId(),
+					sessionId -> Ax.format("%s.%s", Ax.timestampYmd(new Date()),
+							sessionId));
+			String folderPath = Ax.format("%s/%s", Configuration.get("path"),
+					dateSessionId);
+			File folder = new File(folderPath);
+			if (!folder.exists()) {
+				folder.mkdirs();
+				Ax.out("FlightEventRecorder :: recording to %s", folderPath);
+			}
+			path = Ax.format("%s/%s.json", folderPath, message.eventId);
+			Io.write().asReflectiveSerialized(true).object(message)
+					.toPath(path);
+		} catch (Exception e) {
+			e.printStackTrace();
+			if (path != null) {
+				try {
+					FlightExceptionMessage flightExceptionMessage = new HasSessionId.FlightExceptionMessage(
+							message.event.getSessionId(),
+							CommonUtils.getFullExceptionMessage(e));
+					Io.write().asReflectiveSerialized(true)
+							.object(flightExceptionMessage).toPath(path);
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
+			}
 		}
-		String path = Ax.format("%s/%s.json", folderPath, message.eventId);
-		Io.write().asReflectiveSerialized(true).object(message).toPath(path);
 	}
 }

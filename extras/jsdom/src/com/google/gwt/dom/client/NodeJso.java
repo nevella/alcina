@@ -3,7 +3,7 @@ package com.google.gwt.dom.client;
 import com.google.gwt.core.client.JavaScriptObject;
 
 public abstract class NodeJso extends JavaScriptObject
-		implements ClientDomNode {
+		implements ClientDomNode, NodeRemote {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -151,11 +151,20 @@ public abstract class NodeJso extends JavaScriptObject
     return this.nextSibling;
 	}-*/;
 
+	static int counter = 0;
+
+	@Override
+	public final String getNodeName() {
+		if (counter++ % 100 == 0) {
+			new Exception().printStackTrace();
+		}
+		return getNodeName0();
+	}
+
 	/**
 	 * The name of this node, depending on its type; see the table above.
 	 */
-	@Override
-	public final native String getNodeName() /*-{
+	public final native String getNodeName0() /*-{
     return this.nodeName;
 	}-*/;
 
@@ -300,6 +309,11 @@ public abstract class NodeJso extends JavaScriptObject
 	@Override
 	public final boolean isJso() {
 		return true;
+	}
+
+	@Override
+	public final boolean isPathref() {
+		return false;
 	}
 
 	/**

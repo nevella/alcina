@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.PerDocumentSupplierGwtImpl;
@@ -30,6 +31,8 @@ import cc.alcina.framework.common.client.reflection.ModuleReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
+import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.Al.Context;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
@@ -213,6 +216,15 @@ public abstract class Client implements ContextFrame {
 			if (GWT.isScript()) {
 				Registry.Internals
 						.setDelegateCreator(new JsRegistryDelegateCreator());
+				Al.context = Context.gwt_script;
+			} else {
+				switch (GWT.getVersion()) {
+				case "headless":
+					Preconditions.checkState(Al.context != Context.not_set);
+					break;
+				default:
+					Al.context = Context.gwt_dev;
+				}
 			}
 			JavascriptKeyableLookup.initJs();
 			Reflections.init();

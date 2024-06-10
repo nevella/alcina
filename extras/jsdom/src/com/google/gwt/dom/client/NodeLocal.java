@@ -115,7 +115,9 @@ public abstract class NodeLocal implements LocalDomNode {
 
 	@Override
 	public Element getParentElement() {
-		return parentNode == null ? null : (Element) parentNode.node();
+		return parentNode == null
+				|| parentNode.getNodeType() != Node.ELEMENT_NODE ? null
+						: (Element) parentNode.node();
 	}
 
 	@Override
@@ -125,8 +127,9 @@ public abstract class NodeLocal implements LocalDomNode {
 
 	@Override
 	public Node getPreviousSibling() {
-		return nodeFor(CommonUtils
-				.indexedOrNullWithDelta(parentNode.getChildren(), this, -1));
+		return parentNode == null ? null
+				: nodeFor(CommonUtils.indexedOrNullWithDelta(
+						parentNode.getChildren(), this, -1));
 	}
 
 	@Override
@@ -170,6 +173,11 @@ public abstract class NodeLocal implements LocalDomNode {
 
 	@Override
 	public boolean isJso() {
+		return false;
+	}
+
+	@Override
+	public boolean isPathref() {
 		return false;
 	}
 

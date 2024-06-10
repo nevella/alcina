@@ -98,6 +98,8 @@ public interface ClientDomNode {
 
 	boolean isJso();
 
+	boolean isPathref();
+
 	boolean isOrHasChild(Node child);
 
 	Node node();

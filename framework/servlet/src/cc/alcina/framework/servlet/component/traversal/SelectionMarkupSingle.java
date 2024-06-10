@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -62,7 +63,15 @@ public class SelectionMarkupSingle extends SelectionMarkup {
 
 	@Override
 	protected Model getModel(Query query) {
-		return new ModelBuilder(query).model;
+		Model model = null;
+		try {
+			model = new ModelBuilder(query).model;
+		} catch (Exception e) {
+			model = new LeafModel.TextTitle(
+					Ax.format("Selection markup exception: %s",
+							CommonUtils.toSimpleExceptionMessage(e)));
+		}
+		return model;
 	}
 
 	class ModelBuilder {

@@ -17,6 +17,7 @@ import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
 import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
 import com.google.gwt.dom.client.DomEventData;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodePathref;
 import com.google.gwt.dom.client.Pathref;
@@ -34,6 +35,7 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.gwt.client.Client;
@@ -216,14 +218,12 @@ public class Environment {
 
 		@Override
 		public void onSinkBitlessEvent(Pathref from, String eventTypeName) {
-			runWithMutations(() -> mutations.eventMutations
-					.add(new EventSystemMutation(from, eventTypeName)));
+			addEventMutation(new EventSystemMutation(from, eventTypeName));
 		}
 
 		@Override
 		public void onSinkEvents(Pathref from, int eventBits) {
-			runWithMutations(() -> mutations.eventMutations
-					.add(new EventSystemMutation(from, eventBits)));
+			addEventMutation(new EventSystemMutation(from, eventBits));
 		}
 
 		// run the runnable in a mutation-processing context
@@ -233,6 +233,16 @@ public class Environment {
 			}
 			runnable.run();
 			eventCollator.eventOccurred();
+		}
+
+		void addEventMutation(EventSystemMutation eventSystemMutation) {
+			runWithMutations(() -> {
+				// FIXME - pathref - check can be removed
+				Element elem = (Element) eventSystemMutation.path.node();
+				if (elem.provideIsAttachedToDocument()) {
+					mutations.eventMutations.add(eventSystemMutation);
+				}
+			});
 		}
 	}
 
@@ -395,7 +405,7 @@ public class Environment {
 			scheduler = SchedulerFrame.contextProvider.createFrame(null);
 			scheduler.commandExecutor = new CommandExecutorImpl();
 			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
-			document.createDocumentElement("<html/>");
+			document.createDocumentElement("<html/>", true);
 			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
 			document.implAccess().pathrefRemote().invokeProxy = invokeProxy;
 			LocalDom.initalizeDetachedSync();
@@ -531,15 +541,12 @@ public class Environment {
 				SchedulerFrame.contextProvider.registerFrame(scheduler);
 				EventFrame.contextProvider.registerFrame(eventFrame);
 				Document.contextProvider.registerFrame(document);
-				Runnable cmd = () -> {
-					runnable.run();
-					// TODO - romcom - use normal scheduler call
-					LocalDom.flush();
-				};
+				GWTBridgeHeadless.inClient.set(true);
 				ui.onBeforeEnterFrame();
-				enter(cmd);
+				enter(runnable::run);
 			} finally {
 				ui.onExitFrame();
+				GWTBridgeHeadless.inClient.set(false);
 				LooseContext.pop();
 			}
 		}

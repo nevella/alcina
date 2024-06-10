@@ -76,7 +76,7 @@ public abstract class Node
     }
 	}-*/;
 
-	private int syncId;
+	protected int syncId;
 
 	protected Node() {
 	}
@@ -344,6 +344,11 @@ public abstract class Node
 	}
 
 	@Override
+	public boolean isPathref() {
+		return false;
+	}
+
+	@Override
 	public boolean isOrHasChild(Node child) {
 		return local().isOrHasChild(child);
 	}
@@ -590,6 +595,10 @@ public abstract class Node
 
 		public boolean isJsoRemote() {
 			return remote().isJso();
+		}
+
+		public boolean isPathrefRemote() {
+			return remote().isPathref();
 		}
 
 		public NodeJso jsoRemote() {

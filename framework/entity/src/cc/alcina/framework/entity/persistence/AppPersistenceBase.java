@@ -9,6 +9,8 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.Al.Context;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.persistence.updater.DbUpdateRunner;
@@ -60,6 +62,8 @@ public abstract class AppPersistenceBase {
 
 	public static void setTestServer(boolean testServer) {
 		AppPersistenceBase.testServer = testServer;
+		Al.context = testServer ? Context.test_webapp
+				: Context.production_webapp;
 	}
 
 	protected CommonPersistenceLocal commonPersistence;

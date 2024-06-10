@@ -11,7 +11,6 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
@@ -24,6 +23,7 @@ import com.google.gwt.dom.client.NodePathref;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -70,9 +70,14 @@ class SyncMutations {
 					}
 				}
 				record.apply(ApplyTo.local);
+				if (record.type == MutationRecord.Type.innerMarkup) {
+					if (!Al.isBrowser()) {
+						NodePathref.ensurePathrefRemote(record.target.node());
+					}
+				}
 				record.addedNodes.forEach(added -> {
 					record.connectMutationNodeRef(added);
-					if (!GWT.isClient()) {
+					if (!Al.isBrowser()) {
 						added.node.implAccess()
 								.putRemote(NodePathref.create(added.node));
 					}

@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 @Bean(PropertySource.FIELDS)
-public class EventSystemMutation {
+public final class EventSystemMutation {
 	public Pathref path;
 
 	public int eventBits = -1;

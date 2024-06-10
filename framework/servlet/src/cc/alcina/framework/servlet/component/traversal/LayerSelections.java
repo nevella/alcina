@@ -248,8 +248,9 @@ class LayerSelections extends Model.All {
 					.collect(Collectors.toList());
 			empty = filtered.isEmpty();
 			selections = filtered.stream().collect(Collectors.toList());
-			for (int idx = selections
-					.size(); idx < maxRenderedSelections; idx++) {
+			for (int idx = selections.size(); idx <
+			// hardcoded, matches the css grid
+					250; idx++) {
 				selections.add(new Spacer());
 			}
 			bindings().from(selectionLayers.page).on(Page.Property.place)

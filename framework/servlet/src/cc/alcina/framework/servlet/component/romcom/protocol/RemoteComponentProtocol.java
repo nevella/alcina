@@ -206,6 +206,8 @@ public class RemoteComponentProtocol {
 				return result;
 			}
 
+			// TODO - romcom/ref.ser, serialized, there should be no classname
+			// (but there is)
 			public List<MutationRecord> domMutations = new ArrayList<>();
 
 			public List<EventSystemMutation> eventMutations = new ArrayList<>();

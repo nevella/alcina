@@ -111,6 +111,11 @@ public abstract class NodeLocalNull implements ClientDomNode {
 	}
 
 	@Override
+	public boolean isPathref() {
+		return false;
+	}
+
+	@Override
 	public boolean isOrHasChild(Node child) {
 		throw new UnsupportedOperationException();
 	}

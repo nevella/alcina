@@ -50,9 +50,11 @@ import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
@@ -890,6 +892,7 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	void pendingSync() {
+		Preconditions.checkState(syncId == 0);
 		this.pendingSync = true;
 	}
 
@@ -911,7 +914,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	protected void putRemote(ClientDomNode remote, boolean synced) {
-		if (!GWT.isScript() && GWT.isClient()) {
+		if (!GWT.isScript() && GWT.isClient() && Al.isBrowser()) {
 			// hosted mode (dev) check
 			String nodeName = remote.getNodeName();
 			Preconditions
@@ -1008,6 +1011,18 @@ public class Element extends Node implements ClientDomElement,
 
 	public void resolvePendingSync() {
 		pendingSync = false;
+		if (implAccess().isPathrefRemote()) {
+			/*
+			 * all descendants are pathref remotes
+			 */
+			try {
+				LooseContext.push();
+				LooseContext.set(DOM.CONTEXT_SINK_PATHREF_PENDING, this);
+				NodePathref.ensurePathrefRemote(this);
+			} finally {
+				LooseContext.pop();
+			}
+		}
 	}
 
 	public boolean resolveRemoteDefined() {
@@ -1506,5 +1521,9 @@ public class Element extends Node implements ClientDomElement,
 			return invokeReflective(elem, methodName, argumentTypes, arguments,
 					flags);
 		}
+	}
+
+	public boolean provideIsAttachedToDocument() {
+		return provideRoot() == getOwnerDocument().getDocumentElement();
 	}
 }

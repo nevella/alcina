@@ -11,7 +11,6 @@ import com.google.gwt.core.shared.GWT;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Containment;
 
 /*
  * FIXME - dirndl 1x3 - cleanup? Also move refs to CollectionCreators.Bootstrap
@@ -60,7 +59,7 @@ public class AlcinaCollections {
 		return CollectionCreators.Bootstrap.getLinkedMapCreator().create();
 	}
 
-	public static Set<Containment> newLinkedHashSet() {
+	public static <T> Set<T> newLinkedHashSet() {
 		return new LinkedHashSet<>();
 	}
 

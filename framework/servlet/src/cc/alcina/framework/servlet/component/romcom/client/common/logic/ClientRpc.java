@@ -156,6 +156,8 @@ public class ClientRpc {
 					inFlightHttpRequest = submitRequest(
 							inFlightComponentRequest, null, calledSignal);
 				}
+				// TODO - if there's a mousedown, possibly delay a little longer
+				// (depending on latency) to get the corresonding up/click
 			}.schedule(10);
 		}
 

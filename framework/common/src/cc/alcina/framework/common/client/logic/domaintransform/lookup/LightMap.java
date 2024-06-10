@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.domain.DomainCollections;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  *
@@ -337,6 +338,11 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 			public V setValue(V value) {
 				elementData[entryIdx * 2 + 1] = value;
 				return value;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s:%s", getKey(), getValue());
 			}
 		}
 	}

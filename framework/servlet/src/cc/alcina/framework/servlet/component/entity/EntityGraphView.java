@@ -107,6 +107,7 @@ public class EntityGraphView {
 		}
 
 		void traverse() {
+			long start = System.currentTimeMillis();
 			evictPeer();
 			peer = new EntityPeer();
 			peer.initialiseTraversal();
@@ -114,6 +115,8 @@ public class EntityGraphView {
 					RemoteComponentObservables.CONTEXT_OVERRIDE_EVICTION_TIME,
 					TimeConstants.ONE_HOUR_MS)
 					.run(() -> peer.traversal.traverse());
+			long end = System.currentTimeMillis();
+			Ax.out("egv/traverse: %sms", end - start);
 		}
 
 		void evictPeer() {
