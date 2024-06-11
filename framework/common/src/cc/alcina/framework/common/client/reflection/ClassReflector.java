@@ -120,11 +120,11 @@ public class ClassReflector<T> implements HasAnnotations {
 		copyProperties(from, to, list::contains);
 	}
 
-	public static ClassReflector<?> emptyReflector(Class clazz) {
+	public static ClassReflector<?> emptyReflector(Class clazz,
+			List<Class> interfaces) {
 		return new ClassReflector<>(clazz, Collections.emptyList(),
 				Collections.emptyMap(), new AnnotationProvider.EmptyProvider(),
-				null, t -> false, Collections.emptyList(), null,
-				Collections.emptyList(),
+				null, t -> false, interfaces, null, Collections.emptyList(),
 				// may in fact be true, but unused
 				false, false);
 	}

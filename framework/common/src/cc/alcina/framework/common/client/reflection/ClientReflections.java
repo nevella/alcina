@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.RandomAccess;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -65,7 +66,15 @@ public class ClientReflections {
 					|| emptyReflectorClasses.containsKey(clazz)) {
 				// non-public internal class, either GWT or JDK, e.g.
 				// Arrays$ArrayList - or primitive
-				return ClassReflector.emptyReflector(clazz);
+				// add a few hardcoded internal jdk classes to help
+				// serialization
+				List<Class> interfaces = List.of();
+				switch (clazz.getName()) {
+				case "java.util.ImmutableCollections$AbstractImmutableList":
+					interfaces = List.of(List.class, RandomAccess.class);
+					break;
+				}
+				return ClassReflector.emptyReflector(clazz, interfaces);
 			}
 			throw new NoSuchElementException(Ax.format(
 					"No reflector for %s - check it or a superclass has the @Bean or @Reflected annotation",

@@ -121,7 +121,7 @@ import elemental.json.impl.JsonUtil;
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
 	// FIXME - reflection - jsclassmap if client (and general switch to Maps)
-	private static Map<Class, TypeSerializerLocation> typeSerializers = Registry
+	private static Map<Class, TypeSerializerForType> typeSerializers = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
 	public static <T> T clone(T object) {
@@ -171,14 +171,14 @@ public class ReflectiveSerializer {
 		return JsonSerialNode.getValueSerializer(type) != null;
 	}
 
-	static TypeSerializerLocation resolveSerializer(Class clazz) {
+	static TypeSerializerForType resolveSerializer(Class clazz) {
 		if (typeSerializers.isEmpty()) {
 			synchronized (typeSerializers) {
 				if (typeSerializers.isEmpty()) {
 					Registry.query(TypeSerializer.class).implementations()
 							.forEach(typeSerializer -> typeSerializer
 									.handlesTypes().forEach(handled -> {
-										TypeSerializerLocation location = new TypeSerializerLocation(
+										TypeSerializerForType location = new TypeSerializerForType(
 												handled, typeSerializer);
 										typeSerializers.put(handled, location);
 									}));
@@ -215,7 +215,7 @@ public class ReflectiveSerializer {
 								ReflectiveSerializable.class, lookupClass);
 			}
 			if (resolveWithReflectiveTypeSerializer) {
-				return new TypeSerializerLocation(null,
+				return new TypeSerializerForType(null,
 						new ReflectiveTypeSerializer());
 			}
 			throw new IllegalArgumentException(
@@ -1060,7 +1060,7 @@ public class ReflectiveSerializer {
 	static class TypeNode {
 		Class<? extends Object> type;
 
-		TypeSerializerLocation serializerLocation;
+		TypeSerializerForType serializerLocation;
 
 		List<PropertyNode> properties = new ArrayList<>();
 
@@ -1146,27 +1146,27 @@ public class ReflectiveSerializer {
 				SerialNode serialNode);
 	}
 
-	static class TypeSerializerLocation {
-		Class location;
+	static class TypeSerializerForType {
+		Class actualType;
 
 		TypeSerializer typeSerializer;
 
-		public TypeSerializerLocation(Class location,
+		public TypeSerializerForType(Class actualType,
 				TypeSerializer typeSerializer) {
-			this.location = location;
+			this.actualType = actualType;
 			this.typeSerializer = typeSerializer;
 		}
 
 		public void verifyType(Class declaredType) {
 			if (declaredType != null
 					&& !typeSerializer.handlesDeclaredTypeSubclasses()) {
-				if (location != Enum.class && location != Entity.class
+				if (actualType != Enum.class && actualType != Entity.class
 				// i.e. declaredtype is a supertype of serializertype
 						&& !Reflections.isAssignableFrom(declaredType,
-								location)) {
+								actualType)) {
 					throw new IllegalStateException(Ax.format(
 							"Declared type %s cannot be serialized by resolved serializer for type %s",
-							declaredType, location));
+							declaredType, actualType));
 				}
 			}
 		}

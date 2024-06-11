@@ -207,8 +207,13 @@ class RemoteComponentHandler {
 		if (injectSession) {
 			String bootstrapHtml = Io.read().fromStream(url.openStream())
 					.asString();
-			RemoteComponentProtocol.Session session = component
-					.createEnvironment(request);
+			RemoteComponentProtocol.Session session = null;
+			Exception sessionCreationException = null;
+			try {
+				session = component.createEnvironment(request);
+			} catch (Exception e) {
+				sessionCreationException = e;
+			}
 			if (session != null) {
 				String sessionJson = StringEscapeUtils.escapeJavaScript(
 						ReflectiveSerializer.serialize(session));
@@ -233,7 +238,7 @@ class RemoteComponentHandler {
 						.toStream(response.getOutputStream());
 			} else {
 				response.setContentType("text/plain");
-				Io.write().string("Application not ready")
+				Io.write().string(sessionCreationException.getMessage())
 						.toStream(response.getOutputStream());
 			}
 		} else {
