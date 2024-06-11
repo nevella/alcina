@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.RandomAccess;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -71,10 +71,16 @@ public class ClientReflections {
 				List<Class> interfaces = List.of();
 				switch (clazz.getName()) {
 				case "java.util.ImmutableCollections$AbstractImmutableList":
-					interfaces = List.of(List.class, RandomAccess.class);
-					break;
 				case "java.util.Collections$UnmodifiableList":
+				case "java.util.Collections$SingletonList":
+				case "java.util.Collections$EmptyList":
 					interfaces = List.of(List.class);
+					break;
+				case "java.util.ImmutableCollections$AbstractImmutableMap":
+					interfaces = List.of(Map.class);
+					break;
+				case "java.util.ImmutableCollections$AbstractImmutableSet":
+					interfaces = List.of(Set.class);
 					break;
 				}
 				return ClassReflector.emptyReflector(clazz, interfaces);
