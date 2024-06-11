@@ -201,25 +201,33 @@ class RemoteComponentHandler {
 					.asString();
 			RemoteComponentProtocol.Session session = component
 					.createEnvironment(request);
-			String sessionJson = StringEscapeUtils
-					.escapeJavaScript(ReflectiveSerializer.serialize(session));
-			URL nocacheJsUrl = getResourceUrl(
-					"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.nocache.js");
-			String nocacheJs = Io.read().fromStream(nocacheJsUrl.openStream())
-					.asString();
-			String websocketTransportClientPrefix = featurePath.substring(1);
-			bootstrapHtml = bootstrapHtml.replace("%%SESSION_JSON%%",
-					sessionJson);
-			bootstrapHtml = bootstrapHtml.replace("%%NOCACHE_JS%%", nocacheJs);
-			bootstrapHtml = bootstrapHtml.replace("%%FEATURE_PATH%%",
-					featurePath);
-			bootstrapHtml = bootstrapHtml.replace(
-					"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
-					websocketTransportClientPrefix);
-			bootstrapHtml = bootstrapHtml.replace("%%LOAD_INDICATOR_HTML%%",
-					loadIndicatorHtml);
-			Io.write().string(bootstrapHtml)
-					.toStream(response.getOutputStream());
+			if (session != null) {
+				String sessionJson = StringEscapeUtils.escapeJavaScript(
+						ReflectiveSerializer.serialize(session));
+				URL nocacheJsUrl = getResourceUrl(
+						"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.nocache.js");
+				String nocacheJs = Io.read()
+						.fromStream(nocacheJsUrl.openStream()).asString();
+				String websocketTransportClientPrefix = featurePath
+						.substring(1);
+				bootstrapHtml = bootstrapHtml.replace("%%SESSION_JSON%%",
+						sessionJson);
+				bootstrapHtml = bootstrapHtml.replace("%%NOCACHE_JS%%",
+						nocacheJs);
+				bootstrapHtml = bootstrapHtml.replace("%%FEATURE_PATH%%",
+						featurePath);
+				bootstrapHtml = bootstrapHtml.replace(
+						"%%WEBSOCKET_TRANSPORT_CLIENT_PREFIX%%",
+						websocketTransportClientPrefix);
+				bootstrapHtml = bootstrapHtml.replace("%%LOAD_INDICATOR_HTML%%",
+						loadIndicatorHtml);
+				Io.write().string(bootstrapHtml)
+						.toStream(response.getOutputStream());
+			} else {
+				response.setContentType("text/plain");
+				Io.write().string("Application not ready")
+						.toStream(response.getOutputStream());
+			}
 		} else {
 			Io.read().fromStream(url.openStream()).write()
 					.toStream(response.getOutputStream());
