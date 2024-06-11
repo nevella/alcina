@@ -73,6 +73,9 @@ public class ClientReflections {
 				case "java.util.ImmutableCollections$AbstractImmutableList":
 					interfaces = List.of(List.class, RandomAccess.class);
 					break;
+				case "java.util.Collections$UnmodifiableList":
+					interfaces = List.of(List.class);
+					break;
 				}
 				return ClassReflector.emptyReflector(clazz, interfaces);
 			}
