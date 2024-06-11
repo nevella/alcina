@@ -28,6 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.Sugge
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
@@ -54,7 +55,8 @@ class LayerSelections extends Model.All {
 
 	private SelectionLayers selectionLayers;
 
-	private int maxRenderedSelections = 250;
+	private int maxRenderedSelections = Configuration
+			.getInt("maxRenderedSelections");
 
 	public LayerSelections(SelectionLayers selectionLayers, Layer layer) {
 		this.selectionLayers = selectionLayers;
@@ -91,12 +93,20 @@ class LayerSelections extends Model.All {
 	}
 
 	@Directed(className = "bordered-area")
-	class NameArea extends Model.All {
+	class NameArea extends Model.All implements ModelEvents.Closed.Handler {
 		@Directed
 		LeafModel.TextTitle key;
 
 		@Binding(type = Type.PROPERTY)
 		boolean hasFilter;
+
+		@Binding(type = Type.PROPERTY)
+		boolean filterEditorOpen;
+
+		public void setFilterEditorOpen(boolean filterEditorOpen) {
+			set("filterEditorOpen", this.filterEditorOpen, filterEditorOpen,
+					() -> this.filterEditorOpen = filterEditorOpen);
+		}
 
 		@Directed
 		Filter filter;
@@ -113,7 +123,7 @@ class LayerSelections extends Model.All {
 			key = new TextTitle(keyString,
 					Ax.format("%s : %s", keyString, outputs));
 			filter = new Filter();
-			hasFilter = Ax.notBlank(filter.existing);
+			hasFilter = filter.existing != null;
 		}
 
 		class Filter extends Model.All implements DomEvents.Click.Handler {
@@ -121,7 +131,10 @@ class LayerSelections extends Model.All {
 			// this works well enough
 			Link button;
 
-			String existing;
+			@Directed(tag = "existing")
+			LeafModel.TextTitle existing;
+
+			private Overlay overlay;
 
 			Filter() {
 				button = Link.of(ModelEvents.Filter.class).withoutHref(true)
@@ -130,7 +143,7 @@ class LayerSelections extends Model.All {
 						.ensureAttributes(layer.index)
 						.get(StandardLayerAttributes.Filter.class);
 				if (attr != null) {
-					this.existing = attr.toString();
+					this.existing = new TextTitle(attr.toString());
 				}
 			}
 
@@ -138,11 +151,12 @@ class LayerSelections extends Model.All {
 			public void onClick(Click event) {
 				WidgetUtils.squelchCurrentEvent();
 				FilterSuggestor suggestor = new FilterSuggestor();
-				Overlay overlay = Overlay.builder()
+				overlay = Overlay.builder()
 						.dropdown(Position.START,
 								provideElement().getBoundingClientRect(), this,
 								new FilterSuggestor())
 						.build();
+				setFilterEditorOpen(true);
 				overlay.open();
 			}
 
@@ -154,15 +168,18 @@ class LayerSelections extends Model.All {
 				FilterSuggestor() {
 					Suggestor.Attributes attributes = Suggestor.attributes();
 					attributes.withFocusOnBind(true);
+					attributes.withSelectAllOnFocus(true);
 					attributes.withSuggestionXAlign(Position.CENTER);
 					attributes.withLogicalAncestors(
 							List.of(FilterSuggestor.class));
-					TraversalPlace fromPlace = Ui.place()
-							.truncateTo(layer.index);
 					attributes.withAnswer(new AnswerImpl(
-							Ui.get().createAnswerSupplier(fromPlace)));
+							Ui.get().createAnswerSupplier(layer.index - 1)));
 					attributes.withNonOverlaySuggestionResults(true);
 					attributes.withInputPrompt("Filter layer");
+					attributes.withInputExpandable(true);
+					attributes.withInputText(
+							filter.existing != null ? filter.existing.text
+									: null);
 					suggestor = attributes.create();
 				}
 
@@ -179,10 +196,16 @@ class LayerSelections extends Model.All {
 								suggestion.suggestion.eventData());
 					}
 					suggestor.closeSuggestions();
+					overlay.close(null, false);
 					suggestor.setValue(null);
 					event.reemitAs(this, SuggestionSelected.class);
 				}
 			}
+		}
+
+		@Override
+		public void onClosed(Closed event) {
+			setFilterEditorOpen(false);
 		}
 	}
 
@@ -225,8 +248,9 @@ class LayerSelections extends Model.All {
 					.collect(Collectors.toList());
 			empty = filtered.isEmpty();
 			selections = filtered.stream().collect(Collectors.toList());
-			for (int idx = selections
-					.size(); idx < maxRenderedSelections; idx++) {
+			for (int idx = selections.size(); idx <
+			// hardcoded, matches the css grid
+					250; idx++) {
 				selections.add(new Spacer());
 			}
 			bindings().from(selectionLayers.page).on(Page.Property.place)

@@ -61,9 +61,21 @@ public interface Feature extends Registration.AllSubtypes {
 	@Target({ ElementType.METHOD, ElementType.TYPE })
 	@Repeatable(Refs.class)
 	@interface Ref {
-		Class<? extends Type>[] types() default {};
+		Class<? extends Ref.Type>[] types() default {};
 
 		Class<? extends Feature>[] value();
+
+		public interface Type {
+			/*
+			 * The feature is logically also visible here (say 'geting started'
+			 * as well as its logical ui parent)
+			 */
+			public interface Secondary_parent extends Type {
+			}
+
+			public interface See_also extends Type {
+			}
+		}
 	}
 
 	/**
@@ -168,6 +180,7 @@ public interface Feature extends Registration.AllSubtypes {
 	@interface Track {
 		Class<? extends Feature> value();
 	}
+
 	public interface Type{
 		public interface Backend_model extends Type{}
 		public interface Backend_report extends Type{}
@@ -178,10 +191,7 @@ public interface Feature extends Registration.AllSubtypes {
 		@interface Ref {
 			Class<? extends Feature.Type> value();
 		}
-		/*
-		 * The feature is logically also visible here (say 'geting started' as well as its logical ui parent)
-		 */
-		public interface Secondary_parent extends Type{}
+		
 		/*
 		 * A restriction on a ui feature implementation, worth tracking (and/or testing) separately
 		 */

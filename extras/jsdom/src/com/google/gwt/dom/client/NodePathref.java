@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * 
  *
  */
-public abstract class NodePathref implements ClientDomNode {
+public abstract class NodePathref implements ClientDomNode, NodeRemote {
 	public static NodePathref create(Node node) {
 		switch (node.getNodeType()) {
 		case Node.ELEMENT_NODE:
@@ -48,11 +48,11 @@ public abstract class NodePathref implements ClientDomNode {
 		}
 	}
 
-	static void ensurePathrefRemote(Node child) {
-		if (!child.linkedToRemote()) {
-			child.putRemote(create(child), false);
+	public static void ensurePathrefRemote(Node node) {
+		if (!node.linkedToRemote()) {
+			node.putRemote(create(node), false);
 		}
-		child.streamChildren().forEach(NodePathref::ensurePathrefRemote);
+		node.streamChildren().forEach(NodePathref::ensurePathrefRemote);
 	}
 
 	protected Node node;
@@ -63,12 +63,32 @@ public abstract class NodePathref implements ClientDomNode {
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
-		ensurePathrefRemote(newChild);
-		// emit the entire subtree as a sequence of mutations
-		LocalDom.pathRefRepresentations().nodeAsMutations(newChild)
+		if (LocalDom.isPending(this)) {
+			return null;
+		}
+		NodePathref toAppend = resolvedOrPending(newChild);
+		LocalDom.pathRefRepresentations().nodeAsMutations(newChild, false)
 				.forEach(this::emitMutation);
-		LocalDom.wasSynced((Element) node());
 		return newChild;
+	}
+
+	/**
+	 * Link remote to [remote or local]
+	 */
+	private NodePathref resolvedOrPending(Node node) {
+		if (node == null) {
+			return null;
+		}
+		if (node.linkedToRemote()) {
+			return node.remote();
+		} else {
+			if (node.wasSynced()) {
+				LocalDom.ensureRemote(node);
+				return node.remote();
+			} else {
+				return LocalDom.ensureRemoteNodeMaybePendingSync(node);
+			}
+		}
 	}
 
 	@Override
@@ -161,11 +181,12 @@ public abstract class NodePathref implements ClientDomNode {
 
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
-		ensurePathrefRemote(newChild);
-		// emit the entire subtree as a sequence of mutations
-		LocalDom.pathRefRepresentations().nodeAsMutations(newChild)
+		if (LocalDom.isPending(this)) {
+			return null;
+		}
+		NodePathref toInsert = resolvedOrPending(newChild);
+		LocalDom.pathRefRepresentations().nodeAsMutations(newChild, false)
 				.forEach(this::emitMutation);
-		LocalDom.wasSynced((Element) node());
 		return newChild;
 	}
 
@@ -177,6 +198,11 @@ public abstract class NodePathref implements ClientDomNode {
 	@Override
 	public boolean isJso() {
 		return false;
+	}
+
+	@Override
+	public boolean isPathref() {
+		return true;
 	}
 
 	@Override
@@ -225,5 +251,14 @@ public abstract class NodePathref implements ClientDomNode {
 	@Override
 	public String toString() {
 		return Ax.format("%s: %s", getClass().getSimpleName(), node);
+	}
+
+	@Override
+	public void setRefId(int id) {
+	}
+
+	@Override
+	public int getRefId() {
+		return node().getRefId();
 	}
 }

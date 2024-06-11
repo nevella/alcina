@@ -52,12 +52,12 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 
 	public void emitSinkBitlessEvent(String eventTypeName) {
 		getOwnerDocument().implAccess().pathrefRemote()
-				.emitSinkBitlessEvent(this, eventTypeName);
+				.emitSinkBitlessEvent(elementFor(), eventTypeName);
 	}
 
 	public void emitSinkEvents(int eventBits) {
-		getOwnerDocument().implAccess().pathrefRemote().emitSinkEvents(this,
-				eventBits);
+		getOwnerDocument().implAccess().pathrefRemote()
+				.emitSinkEvents(elementFor(), eventBits);
 	}
 
 	@Override

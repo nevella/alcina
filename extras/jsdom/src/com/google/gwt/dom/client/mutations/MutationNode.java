@@ -120,9 +120,11 @@ public final class MutationNode {
 		this.nodeValue = clientDomNode.getNodeValue();
 		this.parent = parent;
 		if (parent != null) {
+			// debug only, parent.childNodes is being constructed
 			this.parent = parent;
 			ordinal = parent.childNodes.size();
-			path = parent.path.append(ordinal);
+			// -1 is a dummy idS
+			path = parent.path.append(ordinal, clientDomNode.getRefId());
 		}
 		if (nodeType == Node.ELEMENT_NODE) {
 			ClientDomElement elem = (ClientDomElement) clientDomNode;

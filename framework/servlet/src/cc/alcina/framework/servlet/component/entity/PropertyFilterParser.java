@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMatches;
@@ -57,7 +58,8 @@ class PropertyFilterParser {
 	static class PropertyProposer {
 		List<StandardLayerAttributes.Filter> proposePropertyFilters(
 				Class<? extends Entity> entityType, String propertyNamePart,
-				FilterOperator op, String propertyValuePart) {
+				FilterOperator op, String propertyValuePart, String sortKey,
+				Direction sortDirection) {
 			List<Property> properties = Reflections.at(entityType).properties()
 					.stream().sorted(Comparator.comparing(Property::getName))
 					.collect(Collectors.toList());
@@ -65,9 +67,20 @@ class PropertyFilterParser {
 					.match(properties, Property::getName, propertyNamePart)
 					.stream().map(PartialSubstring.Match::getValue)
 					.collect(Collectors.toList());
-			return candidates.stream()
+			List<Property> sortCandidates = sortKey == null ? List.of()
+					: new StringMatches.PartialSubstring<Property>()
+							.match(properties, Property::getName, sortKey)
+							.stream().map(PartialSubstring.Match::getValue)
+							.limit(3).collect(Collectors.toList());
+			List<Filter> filters = candidates.stream()
 					.flatMap(p -> propertyFilter(p, op, propertyValuePart))
 					.filter(Objects::nonNull).collect(Collectors.toList());
+			if (sortCandidates.size() > 0) {
+				filters = filters.stream().flatMap(f -> sortCandidates.stream()
+						.map(sort -> f.withSort(sort.getName(), sortDirection)))
+						.toList();
+			}
+			return filters;
 		}
 
 		Stream<StandardLayerAttributes.Filter> propertyFilter(Property property,
@@ -170,6 +183,31 @@ class PropertyFilterParser {
 			}
 		}
 
+		static class _PropOpValueSort extends MatcherPart {
+			@Override
+			Pattern getPattern() {
+				String ops = Arrays.stream(FilterOperator.values())
+						.map(Object::toString).collect(Collectors.joining("|"));
+				return Pattern.compile(Ax.format(
+						"(?i)(\\S.*) (%s) (\\S.*) sort (\\S.*) (desc|asc)",
+						ops));
+			}
+
+			@Override
+			List<Filter> proposeFilters(Class<? extends Entity> entityType,
+					String query) {
+				Matcher matcher = getPattern().matcher(query);
+				if (!matcher.matches()) {
+					return List.of();
+				}
+				return proposePropertyFilters(entityType, matcher.group(1),
+						CommonUtils.getEnumValueOrNull(FilterOperator.class,
+								matcher.group(2)),
+						matcher.group(3), matcher.group(4),
+						Direction.valueOfAbbrev(matcher.group(5)));
+			}
+		}
+
 		static class _PropValue extends MatcherPart {
 			@Override
 			Pattern getPattern() {
@@ -191,8 +229,16 @@ class PropertyFilterParser {
 		List<Filter> proposePropertyFilters(Class<? extends Entity> entityType,
 				String propertyNamePart, FilterOperator op,
 				String propertyValuePart) {
+			return proposePropertyFilters(entityType, propertyNamePart, op,
+					propertyValuePart, null, null);
+		}
+
+		List<Filter> proposePropertyFilters(Class<? extends Entity> entityType,
+				String propertyNamePart, FilterOperator op,
+				String propertyValuePart, String sortKey, Direction direction) {
 			return new PropertyProposer().proposePropertyFilters(entityType,
-					propertyNamePart, op, propertyValuePart);
+					propertyNamePart, op, propertyValuePart, sortKey,
+					direction);
 		}
 	}
 }

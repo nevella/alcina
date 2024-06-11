@@ -71,7 +71,7 @@ class RenderedSelections extends Model.Fields {
 		}
 		// workaround for vs.code (or eclipse) compilation issue - the local
 		// traversal variable is a required intermediate
-		SelectionTraversal traversal = page.history.observable;
+		SelectionTraversal traversal = page.history.getObservable();
 		SelectionMarkup.Has markupProvider = traversal
 				.context(SelectionMarkup.Has.class);
 		if (markupProvider == null) {

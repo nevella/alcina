@@ -43,9 +43,13 @@ class RemoteComponentHandler {
 
 	String featurePath;
 
-	RemoteComponentHandler(RemoteComponent component, String featurePath) {
+	boolean addOriginHeaders;
+
+	RemoteComponentHandler(RemoteComponent component, String featurePath,
+			boolean addOriginHeaders) {
 		this.component = component;
 		this.featurePath = featurePath;
+		this.addOriginHeaders = addOriginHeaders;
 		URL url = getResourceUrl("/rc.html");
 		if (url == null) {
 			throw new RuntimeException("Unable to find resource directory");
@@ -177,8 +181,12 @@ class RemoteComponentHandler {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
-		response.addHeader("Cross-Origin-Opener-Policy", "same-origin");
-		response.addHeader("Cross-Origin-Embedder-Policy", "require-corp");
+		if (addOriginHeaders) {
+			// persuade the browser (at least Chrome) to allow GWT dev mode/ws
+			// (sharedarraybuffer)
+			response.addHeader("Cross-Origin-Opener-Policy", "same-origin");
+			response.addHeader("Cross-Origin-Embedder-Policy", "require-corp");
+		}
 		String suffix = path.replaceFirst(".+\\.(.+)", "$1");
 		switch (suffix) {
 		case "html":
@@ -281,8 +289,8 @@ class RemoteComponentHandler {
 						if (e instanceof InvalidClientException) {
 							InvalidClientException clex = (InvalidClientException) e;
 							if (clex.action == Action.REFRESH) {
-								Ax.out("Refreshing remotecomponent '%s' ",
-										clex.uiType);
+								Ax.out("Refreshing remotecomponent '%s' - client %s",
+										clex.uiType, request.session.id);
 								handled = true;
 							}
 						}

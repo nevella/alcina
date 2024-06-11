@@ -50,9 +50,11 @@ import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
@@ -163,8 +165,6 @@ public class Element extends Node implements ClientDomElement,
 	public Object uiObject;
 
 	private boolean pendingSync;
-
-	boolean attached;
 
 	private HandlerManager handlerManager;
 
@@ -838,8 +838,7 @@ public class Element extends Node implements ClientDomElement,
 					: this;
 		}
 		DOM.setEventListener(this, eventListener);
-		streamChildren().filter(Node::provideIsElement)
-				.forEach(n -> ((Element) n).setAttached(true));
+		super.onAttach();
 	}
 
 	@Override
@@ -881,8 +880,7 @@ public class Element extends Node implements ClientDomElement,
 		 * is just concerned with listener attach/detach)
 		 */
 		DOM.setEventListener(this, null);
-		streamChildren().filter(Node::provideIsElement)
-				.forEach(n -> ((Element) n).setAttached(false));
+		super.onDetach();
 	}
 
 	protected ElementPathref pathrefRemote() {
@@ -890,6 +888,7 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	void pendingSync() {
+		Preconditions.checkState(syncId == 0);
 		this.pendingSync = true;
 	}
 
@@ -911,7 +910,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	protected void putRemote(ClientDomNode remote, boolean synced) {
-		if (!GWT.isScript() && GWT.isClient()) {
+		if (!GWT.isScript() && GWT.isClient() && Al.isBrowser()) {
 			// hosted mode (dev) check
 			String nodeName = remote.getNodeName();
 			Preconditions
@@ -1008,6 +1007,18 @@ public class Element extends Node implements ClientDomElement,
 
 	public void resolvePendingSync() {
 		pendingSync = false;
+		if (implAccess().isPathrefRemote()) {
+			/*
+			 * all descendants are pathref remotes
+			 */
+			try {
+				LooseContext.push();
+				LooseContext.set(DOM.CONTEXT_SINK_PATHREF_PENDING, this);
+				NodePathref.ensurePathrefRemote(this);
+			} finally {
+				LooseContext.pop();
+			}
+		}
 	}
 
 	public boolean resolveRemoteDefined() {
@@ -1043,18 +1054,6 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void scrollIntoView() {
 		runIfWithRemote(true, () -> remote().scrollIntoView());
-	}
-
-	void setAttached(boolean attached) {
-		if (attached == this.attached) {
-			return;
-		}
-		this.attached = attached;
-		if (attached) {
-			onAttach();
-		} else {
-			onDetach();
-		}
 	}
 
 	@Override
@@ -1506,5 +1505,9 @@ public class Element extends Node implements ClientDomElement,
 			return invokeReflective(elem, methodName, argumentTypes, arguments,
 					flags);
 		}
+	}
+
+	public DomIds.IdList getSubtreeIds() {
+		return getOwnerDocument().localDom.domIds.getSubtreeIds(this);
 	}
 }

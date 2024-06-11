@@ -328,13 +328,8 @@ public class Configuration {
 			return this;
 		}
 
-		/**
-		 * This sets the context property, not the configuration property. TODO
-		 * - should probably *not* do this
-		 *
-		 */
-		public void set(String value) {
-			LooseContext.set(toString(), value);
+		public void set(Object value) {
+			properties.set(clazz, keyPart, String.valueOf(value));
 		}
 
 		@Override

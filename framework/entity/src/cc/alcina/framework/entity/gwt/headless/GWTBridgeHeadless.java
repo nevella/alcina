@@ -422,12 +422,12 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 	@Override
 	public String getVersion() {
-		return null;
+		return "headless";
 	}
 
 	@Override
 	public boolean isClient() {
-		return false;
+		return inClient.get();
 	}
 
 	@Override
@@ -439,4 +439,10 @@ public class GWTBridgeHeadless extends GWTBridge {
 			e.printStackTrace();
 		}
 	}
+
+	public static ThreadLocal<Boolean> inClient = new ThreadLocal<>() {
+		protected Boolean initialValue() {
+			return false;
+		};
+	};
 }

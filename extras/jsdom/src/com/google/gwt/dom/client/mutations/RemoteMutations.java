@@ -3,11 +3,12 @@ package com.google.gwt.dom.client.mutations;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
@@ -16,10 +17,20 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 public class RemoteMutations {
+	/*
+	 * Dom inserts can be modelled as a series of inserts (one per node, incl
+	 * attributes) - or as the outer markup of the inserted node.
+	 * 
+	 * Default to the latter for performance (although slightly riskier for
+	 * non-standard dom/browser parsing)
+	 * 
+	 * FIMXE - romcom.2.1 - hookup to generalised docs re
+	 * mutation/transport/browser parsing/xhtml etc
+	 */
 	MutationsAccess mutationsAccess;
 
 	private JavaScriptObject observer = null;
@@ -129,13 +140,21 @@ public class RemoteMutations {
 		LocalDom.log(error ? Level.WARNING : Level.INFO, message);
 	}
 
-	public List<MutationRecord> nodeAsMutations(Node node) {
+	public List<MutationRecord> nodeAsMutations(Node node, boolean deep) {
 		List<MutationRecord> records = new ArrayList<>();
-		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
-				node,
-				n -> n.getChildNodes().stream().collect(Collectors.toList()));
-		traversal.forEach(
-				n -> MutationRecord.generateInsertMutations(n, records));
+		if (deep) {
+			try {
+				LooseContext.push();
+				MutationRecord.deltaFlag(
+						MutationRecord.FlagTransportMarkupTree.class, true);
+				MutationRecord.generateInsertMutations(node, records);
+			} finally {
+				LooseContext.pop();
+			}
+		} else {
+			// just this one, no inner markup
+			MutationRecord.generateInsertMutations(node, records);
+		}
 		return records;
 	}
 
@@ -249,5 +268,11 @@ public class RemoteMutations {
 		public boolean provideIsObserveHistory() {
 			return logDoms || logEvents;
 		}
+	}
+
+	public void emitInnerMarkupMutation(Element elem) {
+		MutationRecord mutation = MutationRecord
+				.generateMarkupMutationRecord(elem);
+		Document.get().implAccess().pathrefRemote().emitMutation(mutation);
 	}
 }

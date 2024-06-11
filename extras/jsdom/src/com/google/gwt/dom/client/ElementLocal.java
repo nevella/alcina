@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,6 +23,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntCounter;
 
 // FIXME - dirndl - move all event code from Element to here?
@@ -567,6 +569,9 @@ public class ElementLocal extends NodeLocal
 		this.element = element;
 	}
 
+	/*
+	 * FIXME - pathref - Rarely used - possibly never (with ids)
+	 */
 	public ClientDomNode queryRelativePath(Pathref path) {
 		ClientDomNode cursor = this;
 		for (Integer childOrdinal : path.childOrdinals()) {
@@ -641,7 +646,8 @@ public class ElementLocal extends NodeLocal
 				builder.append(html);
 				builder.append(outerHtml.substring(idx));
 				try {
-					new HtmlParser().parse(builder.toString(), element, false);
+					new HtmlParser().parse(builder.toString(), element,
+							hasTagName("html"));
 				} catch (Exception e) {
 					if (Document.get().remote instanceof NodeJso) {
 						html = LocalDom.safeParseByBrowser(html);
@@ -653,7 +659,8 @@ public class ElementLocal extends NodeLocal
 					builder.append(outerHtml.substring(0, idx));
 					builder.append(html);
 					builder.append(outerHtml.substring(idx));
-					new HtmlParser().parse(builder.toString(), element, false);
+					new HtmlParser().parse(builder.toString(), element,
+							hasTagName("html"));
 				}
 			}
 		}
@@ -829,7 +836,19 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public String toString() {
-		return super.toString() + "\n\t" + getTagName();
+		FormatBuilder format = new FormatBuilder();
+		format.append("[local]: ");
+		format.append(getTagName());
+		if (Ax.notBlank(getClassName())) {
+			format.format(".%s", getClassName());
+		}
+		List<Entry<String, String>> attrs = getAttributeMap().entrySet()
+				.stream().filter(e -> !Objects.equals("class", e.getKey()))
+				.collect(Collectors.toList());
+		if (attrs.size() > 0) {
+			format.format(" %s", attrs);
+		}
+		return format.toString();
 	}
 
 	class AttributeMap implements NamedNodeMap {

@@ -244,6 +244,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Method method = handler.getClass()
 					.getMethod(payload.getMethodName(), methodArgumentTypes);
 			method.setAccessible(true);
+			WebMethod webMethod = method.getAnnotation(WebMethod.class);
+			if (webMethod != null) {
+				String checkResult = checkWebMethod(webMethod, method);
+				if (checkResult != null) {
+					throw new RuntimeException(checkResult);
+				}
+			}
 			String key = Ax.format("callRpc::%s.%s",
 					handler.getClass().getSimpleName(), method.getName());
 			try {
@@ -783,28 +790,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							.robustGetRemoteAddress(threadLocalRequest));
 			try {
 				if (webMethod != null) {
-					AnnotatedPermissible ap = new AnnotatedPermissible(
-							webMethod.customPermission());
-					if (!PermissionsManager.get().isPermitted(ap)) {
-						WebException wex = new WebException(
-								"Action not permitted: " + method.toString());
-						logRpcException(wex,
-								LogMessageType.PERMISSIONS_EXCEPTION
-										.toString());
-						return RPC.encodeResponseForFailure(null, wex);
-					}
-					if (!webMethod.readonlyPermitted()) {
-						try {
-							AppPersistenceBase.checkNotReadOnly();
-						} catch (ReadOnlyException e) {
-							ExceptionMessage exceptionMessage = new OutOfBandMessage.ExceptionMessage();
-							exceptionMessage.setMessageHtml(
-									ReadonlySupportServletLayer.get()
-											.getNotPerformedBecauseReadonlyMessage());
-							OutOfBandMessages.get()
-									.addMessage(exceptionMessage);
-							throw e;
-						}
+					String checkResult = checkWebMethod(webMethod, method);
+					if (checkResult != null) {
+						return checkResult;
 					}
 				}
 			} catch (SecurityException ex) {
@@ -856,6 +844,31 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				}
 			}
 		}
+	}
+
+	String checkWebMethod(WebMethod webMethod, Method method)
+			throws SerializationException {
+		AnnotatedPermissible ap = new AnnotatedPermissible(
+				webMethod.customPermission());
+		if (!PermissionsManager.get().isPermitted(ap)) {
+			WebException wex = new WebException(
+					"Action not permitted: " + method.toString());
+			logRpcException(wex,
+					LogMessageType.PERMISSIONS_EXCEPTION.toString());
+			return RPC.encodeResponseForFailure(null, wex);
+		}
+		if (!webMethod.readonlyPermitted()) {
+			try {
+				AppPersistenceBase.checkNotReadOnly();
+			} catch (ReadOnlyException e) {
+				ExceptionMessage exceptionMessage = new OutOfBandMessage.ExceptionMessage();
+				exceptionMessage.setMessageHtml(ReadonlySupportServletLayer
+						.get().getNotPerformedBecauseReadonlyMessage());
+				OutOfBandMessages.get().addMessage(exceptionMessage);
+				throw e;
+			}
+		}
+		return null;
 	}
 
 	public PublicationResult

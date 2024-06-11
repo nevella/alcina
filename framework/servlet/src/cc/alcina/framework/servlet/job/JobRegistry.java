@@ -18,8 +18,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -80,7 +78,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -297,10 +294,6 @@ public class JobRegistry {
 
 	JobEnvironment environment = new JobEnvironmentTx();
 
-	static ThreadPoolExecutor checkCancelledExecutor = (ThreadPoolExecutor) Executors
-			.newCachedThreadPool(new NamedThreadFactory(
-					"alcina-job-registry-check-cancelled"));
-
 	public JobRegistry() {
 	}
 
@@ -363,6 +356,10 @@ public class JobRegistry {
 	}
 
 	public Job await(Job job, long maxTime) throws InterruptedException {
+		if (JobContext.has()) {
+			Job contextJob = JobContext.get().getJob();
+			contextJob.createRelation(job, JobRelationType.AWAITED);
+		}
 		ContextAwaiter awaiter = ensureAwaiter(job);
 		TransactionEnvironment.get().commit();
 		awaiter.await(maxTime);
@@ -1149,6 +1146,21 @@ public class JobRegistry {
 			this.task = task;
 			return this;
 		}
+
+		/*
+		 * Ensures a job of the task class is scheduled (the method will only
+		 * create a Job if there's no scheduled job of this task class)
+		 */
+		public Job ensureScheduled() {
+			Preconditions.checkState(runAt != null);
+			Optional<Job> earliestFuture = JobDomain.get()
+					.getEarliestFuture(task.getClass(), false);
+			if (earliestFuture.isPresent()) {
+				return null;
+			} else {
+				return create();
+			}
+		}
 	}
 
 	static class ContextAwaiter {
@@ -1374,5 +1386,10 @@ public class JobRegistry {
 				JobDomain.get().stateMessageEvents.remove(listener);
 			}
 		}
+	}
+
+	public String debugOrphanage(long jobId) {
+		logger.info("Debug orphanage :: {}", jobId);
+		return scheduler.debugOrphanage(jobId);
 	}
 }

@@ -202,4 +202,17 @@ public abstract class UserProperty<T extends UserProperty>
 			}
 		}
 	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s - %s - %s - user: %s - %s", toStringEntity(),
+				getCategory(), getKey(), getUser(), Ax.ntrim(getValue(), 100));
+	}
+
+	public <P extends UserPropertyPersistable> void
+			replacePersistable(P newInstance) {
+		setValue(null);
+		userPropertySupport = null;
+		ensureUserPropertySupport().setPersistable(newInstance);
+	}
 }

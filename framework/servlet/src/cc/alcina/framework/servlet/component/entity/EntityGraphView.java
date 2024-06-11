@@ -17,15 +17,19 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
+import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
@@ -103,9 +107,22 @@ public class EntityGraphView {
 		}
 
 		void traverse() {
+			long start = System.currentTimeMillis();
+			evictPeer();
 			peer = new EntityPeer();
 			peer.initialiseTraversal();
-			peer.traversal.traverse();
+			MethodContext.instance().withContextValue(
+					RemoteComponentObservables.CONTEXT_OVERRIDE_EVICTION_TIME,
+					TimeConstants.ONE_HOUR_MS)
+					.run(() -> peer.traversal.traverse());
+			long end = System.currentTimeMillis();
+			Ax.out("egv/traverse: %sms", end - start);
+		}
+
+		void evictPeer() {
+			if (peer != null) {
+				TraversalHistories.get().evict(peer.traversal);
+			}
 		}
 
 		@Override
@@ -120,7 +137,7 @@ public class EntityGraphView {
 				traverse();
 				// if the filter matches exactly one entity, append it to the
 				// place + re-set
-				Layer lastLayer = Ax.last(traversal().getVisistedLayers());
+				Layer lastLayer = Ax.last(traversal().getVisitedLayers());
 				if (place.attributesOrEmpty(lastLayer.index)
 						.has(StandardLayerAttributes.Filter.class)) {
 					Collection<Selection> selections = lastLayer
@@ -139,9 +156,14 @@ public class EntityGraphView {
 			this.currentPlace = place;
 		}
 
-		public TraversalAnswerSupplier
-				createAnswerSupplier(TraversalPlace fromPlace) {
-			return new EntityAnswers(fromPlace);
+		@Override
+		public void end() {
+			super.end();
+			evictPeer();
+		}
+
+		public TraversalAnswerSupplier createAnswerSupplier(int forLayer) {
+			return new EntityAnswers(forLayer);
 		}
 
 		class EntityPeer

@@ -76,6 +76,8 @@ public class ResponseHeaderFilter implements Filter {
 					".*gwt.codesvr.*")
 					|| Ax.matches(request.getHeader("Referer"), ".*gwt.l.*"));
 			if (usesCodeserver) {
+				// persuade the browser (at least Chrome) to allow GWT dev
+				// mode/ws (sharedarraybuffer)
 				response.addHeader("Cross-Origin-Embedder-Policy",
 						"require-corp");
 				response.addHeader("Cross-Origin-Opener-Policy", "same-origin");

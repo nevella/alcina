@@ -41,6 +41,12 @@
  * <li>If a new local element is attached to an existing remote element, a
  * corresponding 'pending resolution' element is created and the local html tree
  * flushed at the end of the Scheduler event loop
+ * <ul>
+ * <li>The implementation tracks the 'syncId' of each localnode, when a subtree
+ * is synced each node is assigned that sync value. Nodes can only be synced
+ * once (via tree sync), all subsequent operations must be immediate writes -
+ * the sync operations verify this constraint.
+ * </ul>
  * <li>If a node with a real remote node is attached to a local-only node, that
  * local-only node (and its local-only parents) must be immediately flushed.
  * This is checked for prior to all writes on main-tree nodes

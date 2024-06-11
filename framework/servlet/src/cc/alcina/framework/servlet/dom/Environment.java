@@ -11,11 +11,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentPathref;
 import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
 import com.google.gwt.dom.client.DomEventData;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodePathref;
 import com.google.gwt.dom.client.Pathref;
@@ -29,9 +31,11 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.gwt.client.Client;
@@ -44,7 +48,6 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
-import cc.alcina.framework.servlet.dom.EnvironmentManager.Credentials;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -171,6 +174,7 @@ public class Environment {
 			 */
 			queue.onInvokedSync();
 			boolean timedOut = false;
+			long start = System.currentTimeMillis();
 			do {
 				try {
 					timedOut = !handler.latch.await(1, TimeUnit.SECONDS);
@@ -180,7 +184,8 @@ public class Environment {
 				if (timedOut) {
 					Ax.out("invokesync - timedout");
 				}
-			} while (timedOut);
+			} while (timedOut && TimeConstants.within(start,
+					30 * TimeConstants.ONE_SECOND_MS));
 			if (handler.response.exception == null) {
 				return (T) handler.response.response;
 			} else {
@@ -213,14 +218,12 @@ public class Environment {
 
 		@Override
 		public void onSinkBitlessEvent(Pathref from, String eventTypeName) {
-			runWithMutations(() -> mutations.eventMutations
-					.add(new EventSystemMutation(from, eventTypeName)));
+			addEventMutation(new EventSystemMutation(from, eventTypeName));
 		}
 
 		@Override
 		public void onSinkEvents(Pathref from, int eventBits) {
-			runWithMutations(() -> mutations.eventMutations
-					.add(new EventSystemMutation(from, eventBits)));
+			addEventMutation(new EventSystemMutation(from, eventBits));
 		}
 
 		// run the runnable in a mutation-processing context
@@ -230,6 +233,16 @@ public class Environment {
 			}
 			runnable.run();
 			eventCollator.eventOccurred();
+		}
+
+		void addEventMutation(EventSystemMutation eventSystemMutation) {
+			runWithMutations(() -> {
+				// FIXME - pathref - check can be removed
+				Element elem = (Element) eventSystemMutation.path.node();
+				if (elem.isAttached()) {
+					mutations.eventMutations.add(eventSystemMutation);
+				}
+			});
 		}
 	}
 
@@ -294,7 +307,7 @@ public class Environment {
 
 	EventFrame eventFrame;
 
-	final Credentials credentials;
+	final Session session;
 
 	SchedulerFrame scheduler;
 
@@ -311,16 +324,16 @@ public class Environment {
 
 	AtomicInteger serverClientMessageCounter = new AtomicInteger();
 
-	Session session;
+	long lastPacketsReceived;
 
 	public void clientStarted() {
 		clientStarted = true;
 		scheduler.setClientStarted(true);
 	}
 
-	Environment(RemoteUi ui, Credentials credentials) {
+	Environment(RemoteUi ui, Session session) {
 		this.ui = ui;
-		this.credentials = credentials;
+		this.session = session;
 		this.uid = SEUtilities.generatePrettyUuid();
 		this.eventCollator = new EventCollator<Object>(5, this::emitMutations);
 		startQueue();
@@ -372,7 +385,7 @@ public class Environment {
 	}
 
 	public void initialiseClient(RemoteComponentProtocol.Session session) {
-		this.session = session;
+		Preconditions.checkState(Objects.equals(session.id, this.session.id));
 		try {
 			LooseContext.push();
 			LooseContext.set(CONTEXT_ENVIRONMENT, this);
@@ -392,7 +405,7 @@ public class Environment {
 			scheduler = SchedulerFrame.contextProvider.createFrame(null);
 			scheduler.commandExecutor = new CommandExecutorImpl();
 			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
-			document.createDocumentElement("<html/>");
+			document.createDocumentElement("<html/>", true);
 			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
 			document.implAccess().pathrefRemote().invokeProxy = invokeProxy;
 			LocalDom.initalizeDetachedSync();
@@ -433,13 +446,12 @@ public class Environment {
 
 	@Override
 	public String toString() {
-		return Ax.format("env::%s [%s/%s]", uid, credentials.id,
-				credentials.auth);
+		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
 	}
 
 	public void validateSession(RemoteComponentProtocol.Session session,
 			boolean validateClientInstanceUid) throws Exception {
-		if (!Objects.equals(session.auth, credentials.auth)) {
+		if (!Objects.equals(session.auth, session.auth)) {
 			throw new RemoteComponentProtocol.InvalidAuthenticationException();
 		}
 		connectedClientUid = session.id;
@@ -529,21 +541,18 @@ public class Environment {
 				SchedulerFrame.contextProvider.registerFrame(scheduler);
 				EventFrame.contextProvider.registerFrame(eventFrame);
 				Document.contextProvider.registerFrame(document);
-				Runnable cmd = () -> {
-					runnable.run();
-					// TODO - romcom - use normal scheduler call
-					LocalDom.flush();
-				};
+				GWTBridgeHeadless.inClient.set(true);
 				ui.onBeforeEnterFrame();
-				enter(cmd);
+				enter(runnable::run);
 			} finally {
 				ui.onExitFrame();
+				GWTBridgeHeadless.inClient.set(false);
 				LooseContext.pop();
 			}
 		}
 	}
 
-	private void startQueue() {
+	void startQueue() {
 		queue = new ClientExecutionQueue(this);
 		queue.start();
 	}
@@ -552,6 +561,7 @@ public class Environment {
 			throws Exception {
 		validateSession(token.request.session,
 				token.messageHandler.isValidateClientInstanceUid());
+		lastPacketsReceived = System.currentTimeMillis();
 		queue.handleFromClientMessage(token);
 	}
 
@@ -574,5 +584,14 @@ public class Environment {
 	public String getSessionPath() {
 		Url url = Url.parse(session.url);
 		return url.queryParameters.get("path");
+	}
+
+	void end(String reason) {
+		logger.info("Stopping env [{}] :: {}", reason, session.id);
+		if (clientStarted) {
+			runInClientFrame(() -> ui.end());
+		}
+		queue.stop();
+		EnvironmentManager.get().deregister(this);
 	}
 }

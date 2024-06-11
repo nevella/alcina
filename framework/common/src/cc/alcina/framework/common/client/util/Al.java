@@ -20,4 +20,23 @@ public class Al {
 			return false;
 		}
 	}
+
+	public static boolean isBrowser() {
+		switch (context) {
+		case gwt_dev:
+		case gwt_script:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	public static boolean isScript() {
+		switch (context) {
+		case gwt_script:
+			return true;
+		default:
+			return false;
+		}
+	}
 }

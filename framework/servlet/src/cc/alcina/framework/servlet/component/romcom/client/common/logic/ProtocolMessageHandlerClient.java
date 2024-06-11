@@ -115,6 +115,16 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		/*
 		 * FIXME - shouldn't need to dedpue
 		 */
+		if (preview) {
+			switch (event.getType().toLowerCase()) {
+			case "mouseout":
+			case "mouseenter":
+			case "mouseleave":
+			case "mousemove":
+			case "mouseover":
+				return;
+			}
+		}
 		if (currentEventMessage == null) {
 			currentEventMessage = new Message.DomEventMessage();
 			Scheduler.get().scheduleDeferred(() -> {
@@ -131,6 +141,13 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		eventData.event = event.serializableForm();
 		eventData.preview = preview;
 		eventData.window = window;
+		/*
+		 * Unused, informative only. This is the element that has a browser
+		 * listener - but those will mostly be coalesced.
+		 * 
+		 * The element that the event will be fired from (server-side) is the
+		 * eventData.eventTarget
+		 */
 		eventData.firstReceiver = listenerElement == null ? null
 				: Pathref.forNode(listenerElement);
 		String eventType = event.getType();

@@ -19,6 +19,20 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Ref;
 
 public class ElementQuery {
+	public interface DriverProvider {
+		public static DriverProvider get() {
+			return Registry.impl(DriverProvider.class);
+		}
+
+		WebDriver getDriver();
+	}
+
+	class RequiredElementNotFoundException extends RuntimeException {
+		RequiredElementNotFoundException() {
+			super(String.format("Timed out - %s", ElementQuery.this));
+		}
+	}
+
 	private static ThreadLocal<WebDriver> drivers = new ThreadLocal<>();
 
 	public static boolean forceTimeout = false;
@@ -44,6 +58,18 @@ public class ElementQuery {
 				.withXpath(xpath);
 	}
 
+	public static ElementQuery xpath(WebDriver webDriver, String xpath) {
+		return new ElementQuery(webDriver).withXpath(xpath);
+	}
+
+	public static ElementQuery fromElement(WebElement markedElement) {
+		ElementQuery query = new ElementQuery(null);
+		query.markedElement = markedElement;
+		return query;
+	}
+
+	WebElement markedElement;
+
 	final SearchContext context;
 
 	String xpath;
@@ -56,7 +82,7 @@ public class ElementQuery {
 
 	double timeout = 5.0;
 
-	private String css;
+	String css;
 
 	public ElementQuery(SearchContext context) {
 		this.context = context;
@@ -120,12 +146,6 @@ public class ElementQuery {
 		sendKeys(searchString);
 	}
 
-	void clearLocatorFields() {
-		this.css = null;
-		this.id = null;
-		this.xpath = null;
-	}
-
 	public void click() {
 		withElement(WebElement::click);
 	}
@@ -137,6 +157,7 @@ public class ElementQuery {
 		copy.timeout = timeout;
 		copy.xpath = xpath;
 		copy.id = id;
+		copy.markedElement = markedElement;
 		return copy;
 	}
 
@@ -182,18 +203,6 @@ public class ElementQuery {
 		return getSelectOption(optionText).isSelected();
 	}
 
-	By locator() {
-		if (xpath != null) {
-			return By.xpath(xpath);
-		} else if (id != null) {
-			return By.id(id);
-		} else if (css != null) {
-			return By.cssSelector(css);
-		} else {
-			throw new IllegalStateException("No locator parameter set");
-		}
-	}
-
 	public String outerHtml() {
 		return (String) ((org.openqa.selenium.JavascriptExecutor) drivers.get())
 				.executeScript("return arguments[0].outerHTML;", getElement());
@@ -216,7 +225,8 @@ public class ElementQuery {
 
 	@Override
 	public String toString() {
-		return String.format("Query %s : %s", context, locator());
+		return String.format("Query %s : %s", context,
+				markedElement != null ? "[marked]" : locator());
 	}
 
 	public WebElement waitlessGetElement() {
@@ -228,51 +238,6 @@ public class ElementQuery {
 		clone.clearLocatorFields();
 		clone.css = css;
 		return clone;
-	}
-
-	void withElement(Consumer<WebElement> consumer) {
-		Consumer<List<WebElement>> intermediate = list -> consumer
-				.accept(list.get(0));
-		withElements(intermediate);
-	}
-
-	void withElements(Consumer<List<WebElement>> consumer) {
-		long start = System.currentTimeMillis();
-		drivers.get().manage().timeouts().implicitlyWait(Duration.ZERO);
-		Exception lastException = null;
-		while (System.currentTimeMillis() - start < timeout * 1000
-				|| timeout == 0.0) {
-			if (forceTimeout) {
-				throw new RuntimeException("forced timeout");
-			}
-			try {
-				List<WebElement> elements = context.findElements(locator());
-				if (elements.size() > 0) {
-					if (predicate == null || predicate.test(elements.get(0))) {
-						consumer.accept(elements);
-						return;
-					}
-				}
-			} catch (Exception e) {
-				lastException = e;
-				if (e instanceof InvalidSelectorException) {
-					throw e;
-				}
-			}
-			if (timeout == 0.0) {
-				break;
-			}
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-			}
-		}
-		if (required) {
-			throw new RequiredElementNotFoundException();
-		} else {
-			consumer.accept(new ArrayList<>());
-			return;
-		}
 	}
 
 	public ElementQuery withId(String id) {
@@ -307,24 +272,6 @@ public class ElementQuery {
 		return clone;
 	}
 
-	public interface DriverProvider {
-		public static DriverProvider get() {
-			return Registry.impl(DriverProvider.class);
-		}
-
-		WebDriver getDriver();
-	}
-
-	class RequiredElementNotFoundException extends RuntimeException {
-		RequiredElementNotFoundException() {
-			super(String.format("Timed out - %s", ElementQuery.this));
-		}
-	}
-
-	public static ElementQuery xpath(WebDriver webDriver, String xpath) {
-		return new ElementQuery(webDriver).withXpath(xpath);
-	}
-
 	public void awaitAttributePresent(String attrName) {
 		withPredicate(elem -> Ax.notBlank(elem.getAttribute(attrName)))
 				.getElement();
@@ -333,5 +280,90 @@ public class ElementQuery {
 	public boolean isAttributePresent(String text) {
 		WebElement elem = immediateGetElement();
 		return elem != null && Ax.notBlank(elem.getAttribute(text));
+	}
+
+	public void emitChangeEvent() {
+		((org.openqa.selenium.JavascriptExecutor) drivers.get()).executeScript(
+				"arguments[0].dispatchEvent(new Event('change', { 'bubbles': true }))",
+				getElement());
+	}
+
+	public String getAttributeValue(String name) {
+		return getElement().getAttribute(name);
+	}
+
+	public String immediateGetAttributeValue(String name) {
+		WebElement elem = immediateGetElement();
+		return elem == null ? null : elem.getAttribute(name);
+	}
+
+	void clearLocatorFields() {
+		this.css = null;
+		this.id = null;
+		this.xpath = null;
+	}
+
+	By locator() {
+		if (xpath != null) {
+			return By.xpath(xpath);
+		} else if (id != null) {
+			return By.id(id);
+		} else if (css != null) {
+			return By.cssSelector(css);
+		} else {
+			throw new IllegalStateException("No locator parameter set");
+		}
+	}
+
+	void withElement(Consumer<WebElement> consumer) {
+		Consumer<List<WebElement>> intermediate = list -> consumer
+				.accept(list.get(0));
+		withElements(intermediate);
+	}
+
+	void withElements(Consumer<List<WebElement>> consumer) {
+		long start = System.currentTimeMillis();
+		if (markedElement == null) {
+			drivers.get().manage().timeouts().implicitlyWait(Duration.ZERO);
+		}
+		Exception lastException = null;
+		while (System.currentTimeMillis() - start < timeout * 1000
+				|| timeout == 0.0) {
+			if (forceTimeout) {
+				throw new RuntimeException("forced timeout");
+			}
+			try {
+				List<WebElement> elements = null;
+				if (markedElement != null) {
+					elements = List.of(markedElement);
+				} else {
+					elements = context.findElements(locator());
+				}
+				if (elements.size() > 0) {
+					if (predicate == null || predicate.test(elements.get(0))) {
+						consumer.accept(elements);
+						return;
+					}
+				}
+			} catch (Exception e) {
+				lastException = e;
+				if (e instanceof InvalidSelectorException) {
+					throw e;
+				}
+			}
+			if (timeout == 0.0) {
+				break;
+			}
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+			}
+		}
+		if (required) {
+			throw new RequiredElementNotFoundException();
+		} else {
+			consumer.accept(new ArrayList<>());
+			return;
+		}
 	}
 }

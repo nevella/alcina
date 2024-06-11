@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.ClientDomElement;
+import com.google.gwt.dom.client.DomIds;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
@@ -34,7 +35,7 @@ import elemental.json.JsonValue;
 @Bean(PropertySource.FIELDS)
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 @SuppressWarnings("deprecation")
-public class MutationRecord {
+public final class MutationRecord {
 	static final transient String CONTEXT_FLAGS = MutationRecord.class.getName()
 			+ ".CONTEXT_FLAGS";
 
@@ -70,20 +71,26 @@ public class MutationRecord {
 	}
 
 	/**
-	 * Creates a list of mutations which would recreate the (shallow) node
+	 * Creates a list of mutations which would recreate the (shallow or deep,
+	 * depends on the flag) node
 	 *
 	 * This includes creating an insert mutation IFF the node has a parent
 	 * element
+	 * 
+	 * Note that if the node is the root, and the representation is 'as markup
+	 * tree', a combination of *inner* markup and attr mutations will be sent,
 	 */
 	public static void generateInsertMutations(Node node,
 			List<MutationRecord> records) {
 		Element parentElement = node.getParentElement();
 		MutationRecord creationRecord = null;
-		if (parentElement != null
-				|| hasContextFlag(FlagTransportMarkupTree.class)) {
+		boolean writeAsMarkupTree = hasContextFlag(
+				FlagTransportMarkupTree.class);
+		if (parentElement != null) {
 			creationRecord = new MutationRecord();
 		} else {
-			// node is the root, just send attr mods
+			// node is the root, just send attr mods (and markup tree if so
+			// flagged)
 		}
 		if (creationRecord != null) {
 			creationRecord.target = MutationNode.pathref(parentElement);
@@ -94,11 +101,12 @@ public class MutationRecord {
 				creationRecord.previousSibling = MutationNode
 						.pathref(previousSibling);
 			}
-			if (hasContextFlag(FlagTransportMarkupTree.class)
-					&& node.getNodeType() == Node.ELEMENT_NODE) {
-				creationRecord.newValue = ((Element) node).getOuterHtml();
-			}
 			records.add(creationRecord);
+		}
+		if (writeAsMarkupTree && node.getNodeType() == Node.ELEMENT_NODE
+				&& node.getChildCount() > 0) {
+			MutationRecord markupRecord = generateMarkupMutationRecord(node);
+			records.add(markupRecord);
 		}
 		switch (node.getNodeType()) {
 		case Node.ELEMENT_NODE: {
@@ -125,6 +133,16 @@ public class MutationRecord {
 		default:
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	static MutationRecord generateMarkupMutationRecord(Node node) {
+		Element elem = (Element) node;
+		MutationRecord markupRecord = new MutationRecord();
+		markupRecord.type = Type.innerMarkup;
+		markupRecord.newValue = elem.getInnerHTML();
+		markupRecord.target = MutationNode.pathref(node);
+		markupRecord.refIds = elem.getSubtreeIds();
+		return markupRecord;
 	}
 
 	/**
@@ -198,6 +216,12 @@ public class MutationRecord {
 	 */
 	public String newValue;
 
+	/**
+	 * For dom trees, this carries the tree node ids (which are not carried by
+	 * the markup)
+	 */
+	public DomIds.IdList refIds;
+
 	public transient List<Class<? extends Flag>> flags;
 
 	// for serialization
@@ -270,6 +294,7 @@ public class MutationRecord {
 			}
 			MutationNode predecessor = previousSibling;
 			for (MutationNode node : addedNodes) {
+				target.node().getOwnerDocument().setNextAttachId(node.path.id);
 				target.insertAfter(predecessor, node, applyTo);
 				predecessor = node;
 			}
@@ -308,6 +333,14 @@ public class MutationRecord {
 			}
 			break;
 		}
+		case innerMarkup:
+			// not used for syncmutations, only for remote transport (so
+			// bypass most of the mutations infrastructure)
+			Element elem = (Element) target.node();
+			elem.setInnerHTML(newValue);
+			break;
+		default:
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -405,6 +438,6 @@ public class MutationRecord {
 
 	@Reflected
 	public enum Type {
-		attributes, characterData, childList
+		attributes, characterData, childList, innerMarkup
 	}
 }

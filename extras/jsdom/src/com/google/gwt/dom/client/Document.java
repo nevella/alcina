@@ -68,7 +68,11 @@ public class Document extends Node
 	}
 
 	private static void registerWithLocalDom() {
-		LocalDom.register(Document.get());
+		Document doc = Document.get();
+		if (doc.remoteType == RemoteType.NONE || doc.remoteType == null) {
+			return;
+		}
+		LocalDom.register(doc);
 	}
 
 	RemoteType remoteType;
@@ -99,6 +103,16 @@ public class Document extends Node
 			break;
 		}
 		localDom = new LocalDom();
+	}
+
+	@Override
+	protected void onAttach() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void onDetach() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -260,9 +274,10 @@ public class Document extends Node
 
 	public Element createDocumentElement(String markup,
 			boolean attachToParent) {
-		documentElement = new HtmlParser().parse(markup, null, false);
+		documentElement = new HtmlParser().parse(markup, null, true);
 		if (attachToParent) {
 			documentElement.local().parentNode = this.local();
+			documentElement.setAttached(true);
 		}
 		return documentElement;
 	}
@@ -1106,6 +1121,13 @@ public class Document extends Node
 		public DocumentPathref pathrefRemote() {
 			return remote();
 		}
+
+		public Node getNode(Pathref pathref) {
+			// WIP
+			// return localDom.domIds.getNode(pathref);
+			return getDocumentElement().implAccess().local()
+					.queryRelativePath(pathref).node();
+		}
 	}
 
 	@Registration.Singleton(DomDocument.PerDocumentSupplier.class)
@@ -1235,5 +1257,13 @@ public class Document extends Node
 				throws DOMException {
 			this.currentNode = currentNode;
 		}
+	}
+
+	/*
+	 * For communication between different doms, to ensure creates apply the
+	 * same ids
+	 */
+	public void setNextAttachId(int id) {
+		localDom.domIds.setNextAttachId(id);
 	}
 }

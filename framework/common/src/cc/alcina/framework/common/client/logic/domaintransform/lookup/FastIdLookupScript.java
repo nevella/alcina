@@ -8,11 +8,12 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class FastIdLookupScript implements FastIdLookup {
-	private JavascriptIntLookup idLookup = JavascriptIntLookup.create();
+	private JavascriptIntLookup<Entity> idLookup = JavascriptIntLookup.create();
 
-	private JavascriptIntLookup localIdLookup = JavascriptIntLookup.create();
+	private JavascriptIntLookup<Entity> localIdLookup = JavascriptIntLookup
+			.create();
 
-	private JavascriptIntLookup localIdToPromoted = JavascriptIntLookup
+	private JavascriptIntLookup<Entity> localIdToPromoted = JavascriptIntLookup
 			.create();
 
 	private FastIdLookupScriptValues values;

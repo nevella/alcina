@@ -78,4 +78,8 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 	public interface TraversalDoesNotPublishNullObservable
 			extends TraversalContext {
 	}
+
+	public void evict(SelectionTraversal traversal) {
+		observables.evict(traversal.id);
+	}
 }

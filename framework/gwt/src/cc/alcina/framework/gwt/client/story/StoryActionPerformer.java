@@ -16,6 +16,11 @@ import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
 public class StoryActionPerformer {
+	public interface PerformerAttribute<T> extends Story.Attribute<T> {
+		public static interface Timeout extends PerformerAttribute<Integer> {
+		}
+	}
+
 	private ContextImpl context;
 
 	public class ContextImpl implements Story.Action.Context {
@@ -74,6 +79,17 @@ public class StoryActionPerformer {
 		public <V> Entry<V, Attribute<V>>
 				getAttribute(Class<? extends Attribute<V>> clazz) {
 			return visit.teller().state.getAttribute(clazz);
+		}
+
+		@Override
+		public <V> void setAttribute(Class<? extends Attribute<V>> clazz,
+				V value) {
+			visit.teller().state.setAttribute(clazz, value);
+		}
+
+		@Override
+		public void removeAttribute(Class<? extends Attribute<?>> clazz) {
+			visit.teller().state.removeAttribute(clazz);
 		}
 	}
 

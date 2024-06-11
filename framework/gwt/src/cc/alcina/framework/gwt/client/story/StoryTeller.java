@@ -556,6 +556,7 @@ public class StoryTeller {
 		}
 
 		public void updateLocationAxis(Location location) {
+			locations.clear();
 			locations.put(location.getAxis(), location);
 		}
 
@@ -566,18 +567,13 @@ public class StoryTeller {
 		<V> Attribute.Entry<V, Attribute<V>>
 				getAttribute(Class<? extends Attribute<V>> clazz) {
 			V value = (V) attributes.get(clazz);
-			if (value == null) {
-				Class firstGenericBound = Reflections.at(clazz)
-						.firstGenericBound();
-				if (firstGenericBound == Boolean.class) {
-					value = (V) Boolean.FALSE;
-				} else {
-					throw new UnsupportedOperationException();
-				}
-			}
 			Attribute.Entry<V, Attribute<V>> entry = new Attribute.Entry<>(
 					value);
 			return entry;
+		}
+
+		public void removeAttribute(Class<? extends Attribute<?>> clazz) {
+			attributes.remove(clazz);
 		}
 	}
 

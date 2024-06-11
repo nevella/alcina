@@ -81,6 +81,11 @@ public class PropertyFilter<T> implements Predicate<T> {
 				return false;
 			}
 			return propertyValue.toString().matches(tupleValue.toString());
+		case CONTAINS:
+			if (propertyValue == null) {
+				return false;
+			}
+			return tupleValue.toString().contains(propertyValue.toString());
 		case IN: {
 			if (propertyValue == null) {
 				return false;

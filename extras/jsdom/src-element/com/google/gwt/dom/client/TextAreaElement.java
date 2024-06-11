@@ -136,7 +136,7 @@ public class TextAreaElement extends Element {
 		ensureRemoteCheck();
 		if ("value".equals(name)) {
 			if (linkedToRemote()) {
-				return jsoRemote().getPropertyString(name);
+				return remote().getPropertyString(name);
 			} else {
 				return getInnerText();
 			}

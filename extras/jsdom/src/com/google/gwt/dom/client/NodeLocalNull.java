@@ -111,6 +111,11 @@ public abstract class NodeLocalNull implements ClientDomNode {
 	}
 
 	@Override
+	public boolean isPathref() {
+		return false;
+	}
+
+	@Override
 	public boolean isOrHasChild(Node child) {
 		throw new UnsupportedOperationException();
 	}
@@ -150,5 +155,14 @@ public abstract class NodeLocalNull implements ClientDomNode {
 	public String toString() {
 		return Ax.format("%s: null::remote-placeholder",
 				getClass().getSimpleName());
+	}
+
+	@Override
+	public void setRefId(int id) {
+	}
+
+	@Override
+	public int getRefId() {
+		return node().getRefId();
 	}
 }

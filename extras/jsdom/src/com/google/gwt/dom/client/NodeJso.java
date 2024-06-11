@@ -3,7 +3,7 @@ package com.google.gwt.dom.client;
 import com.google.gwt.core.client.JavaScriptObject;
 
 public abstract class NodeJso extends JavaScriptObject
-		implements ClientDomNode {
+		implements ClientDomNode, NodeRemote {
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -151,11 +151,17 @@ public abstract class NodeJso extends JavaScriptObject
     return this.nextSibling;
 	}-*/;
 
+	static int counter = 0;
+
+	@Override
+	public final String getNodeName() {
+		return getNodeName0();
+	}
+
 	/**
 	 * The name of this node, depending on its type; see the table above.
 	 */
-	@Override
-	public final native String getNodeName() /*-{
+	public final native String getNodeName0() /*-{
     return this.nodeName;
 	}-*/;
 
@@ -302,6 +308,11 @@ public abstract class NodeJso extends JavaScriptObject
 		return true;
 	}
 
+	@Override
+	public final boolean isPathref() {
+		return false;
+	}
+
 	/**
 	 * Determine whether a node is equal to, or the child of, this node.
 	 *
@@ -434,5 +445,19 @@ public abstract class NodeJso extends JavaScriptObject
 	public final native void setNodeValue(String nodeValue) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.nodeValue = nodeValue;
+	}-*/;
+
+	@Override
+	public final native void setRefId(int id) /*-{
+	if(id==0){
+		delete this.__alc_dom_id;
+	}else{
+		this.__alc_dom_id = id;
+	}
+	}-*/;
+
+	@Override
+	public final native int getRefId() /*-{
+	return this.hasOwnProperty('__alc_dom_id') ? this.__alc_dom_id : 0;
 	}-*/;
 }

@@ -32,17 +32,24 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
 
-/*
+/**
+ * <p>
  * The EnvironmentManager maintains mappings of credentials (per-browser-tab) to
  * Environment instances (essentially server-side client apps with an associated
  * DOM + trimmings). An Environment instance is essentially the OM in ROM - it's
  * remote from the POV of the client
  * 
+ * <p>
  * The EnvironmentManager also maintains a list of named environment
  * <i>sources</i>
+ * 
+ * <p>
+ * And, thirdly, the EnvironmentManager is the access point for reaping of
+ * environments
  */
 @Registration.Singleton
 @Feature.Ref(Feature_EnvironmentManager.class)
@@ -54,7 +61,7 @@ public class EnvironmentManager {
 	/*
 	 * Environments by id
 	 */
-	private ConcurrentMap<String, Environment> environments = new ConcurrentHashMap<>();
+	ConcurrentMap<String, Environment> environments = new ConcurrentHashMap<>();
 
 	/*
 	 * Since this is awaited, it's easier to manage synchronization manually
@@ -108,6 +115,7 @@ public class EnvironmentManager {
 		if (flightRecordingEnabled) {
 			startFlightRecording();
 		}
+		new EnvironmentReaper().start();
 	}
 
 	boolean flightRecordingEnabled;
@@ -138,9 +146,9 @@ public class EnvironmentManager {
 		return environments.size() == 1;
 	}
 
-	public Environment register(RemoteUi ui, Credentials credentials) {
-		Environment environment = new Environment(ui, credentials);
-		environments.put(credentials.id, environment);
+	public Environment register(RemoteUi ui, Session session) {
+		Environment environment = new Environment(ui, session);
+		environments.put(session.id, environment);
 		ui.setEnvironment(environment);
 		return environment;
 	}
@@ -172,8 +180,8 @@ public class EnvironmentManager {
 		}
 	}
 
-	public void deregister(RemoteUi remoteUi) {
-		environments.remove(remoteUi.getEnvironment().credentials.id);
+	public void deregister(Environment environment) {
+		environments.remove(environment.session.id);
 	}
 
 	public void await(RemoteComponent component, String path)

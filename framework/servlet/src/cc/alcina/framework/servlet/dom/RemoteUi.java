@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
 /**
  * <p>
@@ -23,8 +24,6 @@ public interface RemoteUi {
 	default Client createClient() {
 		return Registry.impl(ClientRemoteImpl.class);
 	}
-
-	Environment getEnvironment();
 
 	void init();
 
@@ -39,10 +38,10 @@ public interface RemoteUi {
 		return new RemoteResolver();
 	}
 
-	void setEnvironment(Environment environment);
-
 	public static abstract class Abstract implements RemoteUi {
-		public Environment environment;
+		DirectedLayout layout;
+
+		Environment environment;
 
 		public Environment getEnvironment() {
 			return environment;
@@ -55,7 +54,26 @@ public interface RemoteUi {
 		@Override
 		public String toString() {
 			return Ax.format("%s::%s", NestedName.get(this),
-					environment.connectedClientUid);
+					Environment.get().connectedClientUid);
+		}
+
+		@Override
+		public final void render() {
+			layout = render0();
+		}
+
+		protected abstract DirectedLayout render0();
+
+		@Override
+		public void end() {
+			if (layout != null) {
+				try {
+					layout.remove();
+					layout = null;
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 
@@ -90,8 +108,7 @@ public interface RemoteUi {
 	}
 
 	default void addLifecycleHandlers() {
-		Window.addPageHideHandler(
-				evt -> EnvironmentManager.get().deregister(this));
+		Window.addPageHideHandler(evt -> Environment.get().end("pagehide"));
 	}
 
 	default void onBeforeEnterFrame() {
@@ -99,4 +116,15 @@ public interface RemoteUi {
 
 	default void onExitFrame() {
 	}
+
+	void end();
+
+	/*
+	 * In most cases Environment.get() will also give access to the environment
+	 * - but in cases where (say) an off-thread event is being processed, this
+	 * access to the environment must be used
+	 */
+	Environment getEnvironment();
+
+	void setEnvironment(Environment environment);
 }

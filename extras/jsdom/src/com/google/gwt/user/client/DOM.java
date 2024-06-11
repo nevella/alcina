@@ -15,12 +15,9 @@
  */
 package com.google.gwt.user.client;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -38,6 +35,10 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Window.Resources;
 import com.google.gwt.user.client.impl.DOMImpl;
 
+import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
+
 /**
  * This class provides a set of static methods that allow you to manipulate the
  * browser's Document Object Model (DOM). It contains methods for manipulating
@@ -45,6 +46,10 @@ import com.google.gwt.user.client.impl.DOMImpl;
  * events}.
  */
 public class DOM {
+	// FIXME - pathref - remove (the whole 'activate pathref') should not be?
+	public static final String CONTEXT_SINK_PATHREF_PENDING = DOM.class
+			.getName() + ".CONTEXT_SINK_PATHREF_PENDING";
+
 	static final DOMImpl impl = GWT.create(DOMImpl.class);
 
 	/**
@@ -485,15 +490,6 @@ public class DOM {
 				windowResources.recentDispatches.remove(0);
 			}
 		}
-		/*
-		 * This is not a patch - it recognises that we can get a multiple fire
-		 * of the same event due to dom bubbling, but we implement our own
-		 * bubbling handling in the local dom so don't want/need the non-first
-		 * dom events
-		 */
-		if (elem.eventListener != null && dispatchInfo.wasDispatchedTo(elem)) {
-			return;
-		}
 		if (Element.is(eventTarget)) {
 			Element childElement = Element.as(eventTarget);
 			// get the listeners early, to prevent overwrite. Note that this
@@ -501,47 +497,29 @@ public class DOM {
 			// ideally there'd be an is-still-in-chain check for bubbling
 			//
 			// actually - is it not 'perfect'?
-			Map<Element, EventListener> forDispatch = new LinkedHashMap<>();
 			while (childElement != elem && childElement != null) {
-				if (childElement.eventListener != null
-						&& !dispatchInfo.wasDispatchedTo(childElement)) {
+				if (childElement.eventListener != null) {
 					// FIXME - dirndl 1x1e - does this handle bitless events
 					// - i.e. touch events? Also this code is dense (works),
 					// could self-document better. Ditto JSO casting
 					int bitsSunk = childElement.localEventBitsSunk();
 					if (eventTypeInt != -1 && (bitsSunk & eventTypeInt) == 0) {
 					} else {
-						dispatchInfo.willDispatchTo(childElement);
-						forDispatch.put(childElement,
+						dispatchInfo.queue(childElement,
 								childElement.eventListener);
 					}
 				}
 				childElement = childElement.getParentElement();
 			}
-			for (Entry<Element, EventListener> entry : forDispatch.entrySet()) {
-				windowResources.eventCurrentTarget = entry.getKey();
-				EventListener dispatchListener = entry.getValue();
-				Element dispatchElement = entry.getKey();
-				if (dispatchElement.eventListener != null
-						&& dispatchInfo.wasDispatchedTo(dispatchElement)) {
-					continue;
-				}
-				dispatchListener.onBrowserEvent(event);
-				if (LocalDom.isStopPropagation(event)) {
-					return;
-				}
-			}
-			dispatchInfo.willDispatchTo(Element.as(eventTarget));
 		}
+		dispatchInfo.queue(elem, listener);
+		dispatchInfo.dispatch();
 		if (Element.is(event.getCurrentEventTarget())) {
 			windowResources.eventCurrentTarget = event.getCurrentEventTarget()
 					.cast();
-			dispatchInfo.willDispatchTo(windowResources.eventCurrentTarget);
 		} else {
 			windowResources.eventCurrentTarget = null;
 		}
-		// Pass the event to the listener.
-		listener.onBrowserEvent(event);
 	}
 
 	/**
@@ -1661,7 +1639,10 @@ public class DOM {
 	 *            name of the event to sink on this element
 	 */
 	public static void sinkBitlessEvent(Element elem, String eventTypeName) {
-		if (elem.implAccess().linkedToRemote()) {
+		boolean directSync = elem.implAccess().linkedToRemote();
+		Element pathrefPending = LooseContext.get(CONTEXT_SINK_PATHREF_PENDING);
+		directSync &= (pathrefPending == null || pathrefPending == elem);
+		if (directSync) {
 			impl.sinkBitlessEvent(elem, eventTypeName);
 		} else {
 			Element attachedAncestor = (Element) elem.implAccess()
@@ -1701,7 +1682,10 @@ public class DOM {
 	 *            possible values are described in {@link Event})
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
-		if (elem.implAccess().linkedToRemote()) {
+		boolean directSync = elem.implAccess().linkedToRemote();
+		Element pathrefPending = LooseContext.get(CONTEXT_SINK_PATHREF_PENDING);
+		directSync &= (pathrefPending == null || pathrefPending == elem);
+		if (directSync) {
 			impl.sinkEvents(elem, eventBits);
 		} else {
 			Element attachedAncestor = (Element) elem.implAccess()
@@ -1715,14 +1699,19 @@ public class DOM {
 			// }
 			// }
 			if (attachToAncestor) {
-				impl.sinkEvents(attachedAncestor,
-						DOM.getEventsSunk(attachedAncestor) | eventBits);
+				int existingEventsSunk = DOM.getEventsSunk(attachedAncestor);
+				int updatedEventsSunk = DOM.getEventsSunk(attachedAncestor)
+						| eventBits;
+				if (existingEventsSunk != updatedEventsSunk) {
+					impl.sinkEvents(attachedAncestor, updatedEventsSunk);
+				}
 			} else {
 			}
 			if (attachedAncestor != elem) {
 				elem.sinkEvents(eventBits);
 				// since sinking normally takes place only onAttach, should
-				// maybe throw an exception here (except, see celltable hack)
+				// maybe throw an exception here (except, see celltable
+				// hack)
 			}
 		}
 	}
@@ -1757,25 +1746,74 @@ public class DOM {
 		return Window.getClientWidth();
 	}
 
+	/*
+	 * This class orders bubbling dispatch, prevents duplicate fires of the same
+	 * events to the same listeners, and handles "event.currentTarget" during
+	 * bubble
+	 */
 	static class DispatchInfo {
 		Event event;
 
-		List<Element> dispatchedToElements = new ArrayList<>();
+		Set<Element> dispatchedToElements = AlcinaCollections
+				.newLinkedHashSet();
+
+		class ElementListenerTuple {
+			Element elem;
+
+			EventListener listener;
+
+			ElementListenerTuple(Element elem, EventListener listener) {
+				this.elem = elem;
+				this.listener = listener;
+			}
+		}
+
+		Map<Element, ElementListenerTuple> dispatchQueue = AlcinaCollections
+				.newLinkedHashMap();
 
 		public DispatchInfo(Event event) {
 			this.event = event;
+		}
+
+		public void dispatch() {
+			Resources windowResources = Window.Resources.get();
+			for (ElementListenerTuple tuple : dispatchQueue.values()) {
+				if (LocalDom.isStopPropagation(event)) {
+					return;
+				}
+				windowResources.eventCurrentTarget = tuple.elem;
+				tuple.listener.onBrowserEvent(event);
+				dispatchedToElements.add(tuple.elem);
+			}
+			if (Element.is(event.getCurrentEventTarget())) {
+				windowResources.eventCurrentTarget = event
+						.getCurrentEventTarget().cast();
+			} else {
+				windowResources.eventCurrentTarget = null;
+			}
+		}
+
+		public void queue(Element elem, EventListener listener) {
+			/*
+			 * This is not a patch - it recognises that we can get a multiple
+			 * fire of the same event due to dom bubbling, but we implement our
+			 * own bubbling handling in the local dom so don't want/need the
+			 * non-first dom events
+			 */
+			if (dispatchedToElements.contains(elem)) {
+				return;
+			}
+			dispatchQueue.put(elem, new ElementListenerTuple(elem, listener));
 		}
 
 		public boolean isForEvent(Event event) {
 			return event.isIdenticalTo(this.event);
 		}
 
-		public boolean wasDispatchedTo(Element element) {
-			return dispatchedToElements.contains(element);
-		}
-
-		public void willDispatchTo(Element childElement) {
-			dispatchedToElements.add(childElement);
+		@Override
+		public String toString() {
+			return Ax.format("dispatchinfo - jsoid %s - %s - dispatchedto: %s",
+					event.getId(), dispatchQueue, dispatchedToElements);
 		}
 	}
 

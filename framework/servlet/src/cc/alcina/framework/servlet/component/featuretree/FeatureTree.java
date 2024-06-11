@@ -77,20 +77,14 @@ public class FeatureTree {
 		}
 	}
 
-	public static class Ui implements RemoteUi {
+	public static class Ui extends RemoteUi.Abstract {
 		public static Ui get() {
 			return (Ui) Environment.get().ui;
 		}
 
-		Environment environment;
-
 		@Override
 		public Client createClient() {
 			return new ClientImpl();
-		}
-
-		public Environment getEnvironment() {
-			return environment;
 		}
 
 		public String getMainCaption() {
@@ -102,15 +96,12 @@ public class FeatureTree {
 		}
 
 		@Override
-		public void render() {
+		protected DirectedLayout render0() {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
-			new DirectedLayout().render(new Page()).getRendered()
-					.appendToRoot();
-		}
-
-		public void setEnvironment(Environment environment) {
-			this.environment = environment;
+			DirectedLayout layout = new DirectedLayout();
+			layout.render(new Page()).getRendered().appendToRoot();
+			return layout;
 		}
 	}
 }

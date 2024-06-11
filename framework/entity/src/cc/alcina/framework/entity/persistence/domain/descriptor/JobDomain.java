@@ -161,9 +161,16 @@ public class JobDomain {
 	 */
 	private Map<Job, AllocationQueue> queues = new ConcurrentHashMap<>();
 
+	/*
+	 * Used for cross-thread job completion tracking
+	 */
+	private Map<Long, Boolean> completed = new ConcurrentHashMap<>();
+
 	public Topic<AllocationQueue.Event> queueEvents = Topic.create();
 
 	public Topic<Void> futureConsistencyEvents = Topic.create();
+
+	public Topic<Job> futureJob = Topic.create();
 
 	public Topic<List<JobStateMessage>> stateMessageEvents = Topic.create();
 
@@ -1112,6 +1119,10 @@ public class JobDomain {
 			projections.add(futureConsistencyTaskProjection);
 		}
 
+		/*
+		 * This projection is also used to populate a few internal structures
+		 * (futures, completion)
+		 */
 		private class CompletedReverseDateProjection
 				extends ReverseDateProjection<Job> {
 			private boolean topLevel;
@@ -1133,9 +1144,13 @@ public class JobDomain {
 
 			@Override
 			public void insert(Job t) {
+				if (t.getRunAt() != null && t.getState() == JobState.FUTURE) {
+					futureJob.publish(t);
+				}
 				if (!t.provideIsComplete()) {
 					return;
 				}
+				completed.put(t.getId(), true);
 				if (t.provideIsTopLevel() ^ topLevel) {
 					return;
 				}
@@ -1405,5 +1420,9 @@ public class JobDomain {
 
 	public static enum SubqueuePhase {
 		Self, Child, Sequence, Complete
+	}
+
+	public static boolean isComplete(Job cursor) {
+		return get().completed.containsKey(cursor.getId());
 	}
 }

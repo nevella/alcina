@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
@@ -42,9 +43,15 @@ public interface ValueChange {
 	 * must have a @Bind annotation) sets the property value to the the change
 	 * value
 	 */
-	public interface Container extends SelectionChanged.Handler {
+	public interface Container extends ModelEvents.SelectionChanged.Handler,
+			ModelEvents.Change.Handler {
 		@Override
 		default void onSelectionChanged(SelectionChanged event) {
+			Support.propagateChange(this, event);
+		}
+
+		@Override
+		default void onChange(Change event) {
 			Support.propagateChange(this, event);
 		}
 

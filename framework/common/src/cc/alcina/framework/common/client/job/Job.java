@@ -165,6 +165,11 @@ public abstract class Job extends VersionableEntity<Job>
 		tracker.setPercentComplete(completion);
 		tracker.setProgressMessage(statusMessage);
 		tracker.setStartTime(startTime);
+		// compute leafProgress
+		long completedTreeCount = provideDescendantsAndSubsequentsAndAwaited()
+				.filter(Job::provideIsComplete).count();
+		long treeCount = provideDescendantsAndSubsequentsAndAwaited().count();
+		tracker.setLeafCount(Ax.format("%s/%s", completedTreeCount, treeCount));
 		if (tracker.isComplete()) {
 			if (!LooseContext
 					.is(CONTEXT_DO_NOT_POPULATE_DURING_TRACKER_CREATION)) {
@@ -196,15 +201,16 @@ public abstract class Job extends VersionableEntity<Job>
 	public void createRelation(Job to, JobRelationType type) {
 		String invalidMessage = null;
 		Preconditions.checkArgument(to != domainIdentity());
-		if (type == JobRelationType.RESUBMIT) {
-			if (to.provideToResubmitRelation().isPresent()) {
-				invalidMessage = "to has existing incoming resubmit relation";
-			}
-		} else {
+		if (type.isSequential()) {
 			if (to.provideToAntecedentRelation().isPresent()) {
 				invalidMessage = Ax.format(
 						"to has existing incoming antecedent relation: %s",
 						to.provideToAntecedentRelation().get());
+			}
+		} else {
+			if (to.provideToRelation(type).isPresent()) {
+				invalidMessage = Ax
+						.format("to has existing incoming %s relation", type);
 			}
 		}
 		Job from = domainIdentity();
@@ -216,8 +222,9 @@ public abstract class Job extends VersionableEntity<Job>
 				from = next.get().getTo();
 			}
 		}
-		if (type != JobRelationType.PARENT_CHILD && from.getFromRelations()
-				.stream().anyMatch(r -> r.getType() == type)) {
+		if (type != JobRelationType.PARENT_CHILD
+				&& type != JobRelationType.AWAITED && from.getFromRelations()
+						.stream().anyMatch(r -> r.getType() == type)) {
 			invalidMessage = Ax.format(
 					"from has existing outgoing relation: %s",
 					from.getFromRelations().stream()
@@ -419,16 +426,19 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
-	public Stream<Job> provideChildren() {
+	private Stream<Job> provideToRelated(JobRelationType type) {
 		if (getFromRelations().isEmpty()) {
 			return Stream.empty();
 		}
 		/*
 		 * requires the final filter for indexing during a deletion cycle
 		 */
-		return getFromRelations().stream()
-				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
+		return getFromRelations().stream().filter(rel -> rel.getType() == type)
 				.map(JobRelation::getTo).filter(Objects::nonNull);
+	}
+
+	public Stream<Job> provideChildren() {
+		return provideToRelated(JobRelationType.PARENT_CHILD);
 	}
 
 	public String provideConsistencyPriority() {
@@ -457,6 +467,19 @@ public abstract class Job extends VersionableEntity<Job>
 		Stream s2 = Stream.concat(provideSubsequents(), provideSubsequents()
 				.flatMap(Job::provideDescendantsAndSubsequents));
 		return Stream.concat(s1, s2);
+	}
+
+	public Stream<Job> provideDescendantsAndSubsequentsAndAwaited() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		Stream s1 = Stream.concat(provideChildren(), provideChildren()
+				.flatMap(Job::provideDescendantsAndSubsequentsAndAwaited));
+		Stream s2 = Stream.concat(provideSubsequents(), provideSubsequents()
+				.flatMap(Job::provideDescendantsAndSubsequentsAndAwaited));
+		Stream s3 = Stream.concat(provideAwaiteds(), provideAwaiteds()
+				.flatMap(Job::provideDescendantsAndSubsequentsAndAwaited));
+		return Stream.concat(s1, Stream.concat(s2, s3)).distinct();
 	}
 
 	public boolean provideEquivalentTask(Job other) {
@@ -699,15 +722,11 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public Stream<Job> provideSubsequents() {
-		if (getFromRelations().isEmpty()) {
-			return Stream.empty();
-		}
-		/*
-		 * requires the final filter for indexing during a deletion cycle
-		 */
-		return getFromRelations().stream()
-				.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
-				.map(JobRelation::getTo).filter(Objects::nonNull);
+		return provideToRelated(JobRelationType.SEQUENCE);
+	}
+
+	public Stream<Job> provideAwaiteds() {
+		return provideToRelated(JobRelationType.AWAITED);
 	}
 
 	public Class<? extends Task> provideTaskClass() {
@@ -723,8 +742,7 @@ public abstract class Job extends VersionableEntity<Job>
 			return Optional.empty();
 		}
 		return getToRelations().stream()
-				.filter(rel -> rel.getType() != JobRelationType.RESUBMIT)
-				.findFirst();
+				.filter(rel -> rel.getType().isSequential()).findFirst();
 	}
 
 	public Job provideTopLevelAncestor() {
@@ -732,12 +750,12 @@ public abstract class Job extends VersionableEntity<Job>
 				: provideParent().get().provideTopLevelAncestor();
 	}
 
-	private Optional<? extends JobRelation> provideToResubmitRelation() {
+	private Optional<? extends JobRelation>
+			provideToRelation(JobRelationType type) {
 		if (getToRelations().isEmpty()) {
 			return Optional.empty();
 		}
-		return getToRelations().stream()
-				.filter(rel -> rel.getType() == JobRelationType.RESUBMIT)
+		return getToRelations().stream().filter(rel -> rel.getType() == type)
 				.findFirst();
 	}
 

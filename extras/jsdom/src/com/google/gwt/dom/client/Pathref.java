@@ -49,9 +49,11 @@ public class Pathref {
 		Collections.reverse(ordinals);
 		result.path = ordinals.stream().map(String::valueOf)
 				.collect(Collectors.joining("."));
+		result.id = node.getRefId();
 		return result;
 	}
 
+	// FIXME - pathref - remove
 	public static void onPreRemove(Node node) {
 		if (preRemovalPaths == null) {
 			synchronized (Pathref.class) {
@@ -67,15 +69,18 @@ public class Pathref {
 	// FIXME - refser - final
 	public String path;
 
+	public int id;
+
 	public Pathref() {
 	}
 
-	public Pathref(String path) {
+	Pathref(String path, int id) {
 		this.path = path;
+		this.id = id;
 	}
 
-	public Pathref append(int ordinal) {
-		return new Pathref(path + "." + ordinal);
+	public Pathref append(int ordinal, int id) {
+		return new Pathref(path + "." + ordinal, id);
 	}
 
 	public List<Integer> childOrdinals() {
@@ -86,8 +91,7 @@ public class Pathref {
 	}
 
 	public Node node() {
-		return Document.get().getDocumentElement().implAccess().local()
-				.queryRelativePath(this).node();
+		return Document.get().implAccess().getNode(this);
 	}
 
 	@Override

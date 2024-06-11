@@ -43,6 +43,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils.LogMuter;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityBrowser;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -1151,6 +1153,26 @@ public abstract class DevConsole implements ClipboardOwner {
 		@Override
 		public void muteAllLogging(boolean muteAll) {
 			instance.setConsoleOuputMuted(muteAll);
+		}
+	}
+
+	@Registration.Singleton(
+		value = EntityBrowser.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class EntityBrowser_DevConsole implements EntityBrowser {
+		@Override
+		public void browse(Entity entity) {
+			try {
+				int port = Configuration.getInt(DevConsoleRemote.class, "port");
+				String strUrl = Ax.format(
+						"http://127.0.0.1:%s/entity#traversal/layers.index=1:layers.sort-selected-first.present=true:layers-1.index=2:layers-1.sort-selected-first.present=true:layers-2.index=3:layers-2.sort-selected-first.present=true:paths.segmentPath=domain.%s.%s",
+						port, Domain.resolveEntityClass(entity.getClass())
+								.getSimpleName().toLowerCase(),
+						entity.getId());
+				Shell.exec("open %s", strUrl);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
 		}
 	}
 }

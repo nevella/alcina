@@ -147,7 +147,7 @@ class Story_ConsoleImpl {
 			boolean restart = context
 					.getAttribute(
 							Story_Console.Attribute.ConsoleShouldRestart.class)
-					.get();
+					.orElse(false);
 			if (restart) {
 				context.getVisit().addRequires(
 						Story_Console.State.ConsoleNotRunning.class);

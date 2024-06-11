@@ -40,6 +40,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelC
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
@@ -113,7 +114,7 @@ public class StringInput extends Model.Value<String>
 
 	private String rows;
 
-	private boolean ensureAllLinesVisible;
+	private boolean ensureContentVisible;
 
 	private boolean commitOnEnter;
 
@@ -197,8 +198,8 @@ public class StringInput extends Model.Value<String>
 		return disabled;
 	}
 
-	public boolean isEnsureAllLinesVisible() {
-		return ensureAllLinesVisible;
+	public boolean isEnsureContentVisible() {
+		return ensureContentVisible;
 	}
 
 	@Override
@@ -226,12 +227,15 @@ public class StringInput extends Model.Value<String>
 				autocomplete -> setAutocomplete(autocomplete.value()));
 		event.node.optional(FocusOnBind.class)
 				.ifPresent(ann -> setFocusOnBind(true));
+		event.node.optional(TextArea.class)
+				.ifPresent(ann -> setTag("textarea"));
 		super.onBeforeRender(event);
 	}
 
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
+		updateSize();
 	}
 
 	@Override
@@ -278,7 +282,7 @@ public class StringInput extends Model.Value<String>
 	public void onInput(Input event) {
 		currentValue = elementValue();
 		WidgetUtils.squelchCurrentEvent();
-		updateHeight();
+		updateSize();
 		event.reemitAs(this, ModelEvents.Input.class, currentValue);
 	}
 
@@ -315,8 +319,8 @@ public class StringInput extends Model.Value<String>
 		this.disabled = disabled;
 	}
 
-	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
-		this.ensureAllLinesVisible = ensureAllLinesVisible;
+	public void setEnsureContentVisible(boolean ensureContentVisible) {
+		this.ensureContentVisible = ensureContentVisible;
 	}
 
 	public void setFocusOnBind(boolean focusOnBind) {
@@ -367,35 +371,46 @@ public class StringInput extends Model.Value<String>
 		set("value", this.value, value, () -> this.value = value);
 	}
 
-	void updateHeight() {
-		if (ensureAllLinesVisible) {
+	void updateSize() {
+		if (ensureContentVisible) {
 			Scheduler.get().scheduleDeferred(() -> {
+				if (!provideIsBound()) {
+					return;
+				}
 				Element element = provideElement();
-				element.getStyle().setProperty("height", "auto");
-				String paddingTop = WidgetUtils.getComputedStyle(element,
-						"paddingTop");
-				String paddingBottom = WidgetUtils.getComputedStyle(element,
-						"paddingBottom");
-				String computedHeight = WidgetUtils.getComputedStyle(element,
-						"height");
-				double paddingTopPx = paddingTop.endsWith("px")
-						? Double.parseDouble(paddingTop.replace("px", ""))
-						: 0;
-				double paddingBottomPx = paddingBottom.endsWith("px")
-						? Double.parseDouble(paddingBottom.replace("px", ""))
-						: 0;
-				double computedHeightPx = computedHeight.endsWith("px")
-						? Double.parseDouble(computedHeight.replace("px", ""))
-						: 0;
-				int scrollHeight = element.getScrollHeight();
-				if (scrollHeight != 0) {
-					if (scrollHeight == computedHeightPx + paddingBottomPx
-							+ paddingTopPx) {
-						// no need to change
-					} else {
-						element.getStyle().setHeight(scrollHeight,
-								// - paddingTopPx - paddingBottomPx,
-								Unit.PX);
+				if (tag.equals("input")) {
+					element.getStyle().setProperty("minWidth",
+							Ax.format("%sch", getCurrentValue().length() + 2));
+				} else {
+					// textarea
+					element.getStyle().setProperty("height", "auto");
+					String paddingTop = WidgetUtils.getComputedStyle(element,
+							"paddingTop");
+					String paddingBottom = WidgetUtils.getComputedStyle(element,
+							"paddingBottom");
+					String computedHeight = WidgetUtils
+							.getComputedStyle(element, "height");
+					double paddingTopPx = paddingTop.endsWith("px")
+							? Double.parseDouble(paddingTop.replace("px", ""))
+							: 0;
+					double paddingBottomPx = paddingBottom.endsWith("px")
+							? Double.parseDouble(
+									paddingBottom.replace("px", ""))
+							: 0;
+					double computedHeightPx = computedHeight.endsWith("px")
+							? Double.parseDouble(
+									computedHeight.replace("px", ""))
+							: 0;
+					int scrollHeight = element.getScrollHeight();
+					if (scrollHeight != 0) {
+						if (scrollHeight == computedHeightPx + paddingBottomPx
+								+ paddingTopPx) {
+							// no need to change
+						} else {
+							element.getStyle().setHeight(scrollHeight,
+									// - paddingTopPx - paddingBottomPx,
+									Unit.PX);
+						}
 					}
 				}
 			});
@@ -407,6 +422,13 @@ public class StringInput extends Model.Value<String>
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface FocusOnBind {
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface TextArea {
 	}
 
 	@ClientVisible
@@ -488,5 +510,12 @@ public class StringInput extends Model.Value<String>
 	@Registration({ Model.Value.class, FormModel.Editor.class, String.class })
 	@Registration({ Model.Value.class, FormModel.Editor.class, Number.class })
 	public static class Editor extends StringInput {
+	}
+
+	public static class To implements ModelTransform<String, StringInput> {
+		@Override
+		public StringInput apply(String t) {
+			return new StringInput(t);
+		}
 	}
 }

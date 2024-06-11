@@ -28,16 +28,17 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.RemoteMutations;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.gwt.client.logic.ClientProperties;
 
 /**
  * <p>
@@ -73,6 +74,10 @@ import cc.alcina.framework.gwt.client.logic.ClientProperties;
  * <li>edgecase - setting a localdom unconnected Text node to >65536 chars will
  * desync
  *
+ * <p>
+ * WIP - the maps may all go away if DomIds turns up trumps. Note that all elt
+ * id refs must be cleared on onDetach - which may make SyncMutations harder
+ * (since it'll need to be able to track exactly which subtrees were mutated)
  *
  */
 public class LocalDom implements ContextFrame {
@@ -296,8 +301,8 @@ public class LocalDom implements ContextFrame {
 		return get().isApplyToRemote0();
 	}
 
-	public static boolean isPending(NodeJso nodeJso) {
-		return get().isPending0(nodeJso);
+	public static boolean isPending(NodeRemote nodeRemote) {
+		return get().isPending0(nodeRemote);
 	}
 
 	public static boolean isStopPropagation(NativeEvent evt) {
@@ -319,7 +324,9 @@ public class LocalDom implements ContextFrame {
 		} else {
 			Ax.out(message);
 		}
-		consoleLog(message, error);
+		if (Al.isBrowser()) {
+			consoleLog(message, error);
+		}
 	}
 
 	public static <T extends Node> T nodeFor(JavaScriptObject jso) {
@@ -464,6 +471,8 @@ public class LocalDom implements ContextFrame {
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
+	DomIds domIds;
+
 	LocalDom() {
 		if (GWT.isScript()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
@@ -474,6 +483,7 @@ public class LocalDom implements ContextFrame {
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
 		topicReportException.add(this::handleReportedException);
+		domIds = new DomIds();
 	}
 
 	void applyContiguousTextNodesToLocal(ContiguousTextNodes contiguous) {
@@ -549,9 +559,8 @@ public class LocalDom implements ContextFrame {
 		Preconditions.checkState(node.linkedToRemote());
 		Element element = (Element) node;
 		if (element.isPendingSync()) {
-			ElementJso remote = (ElementJso) node.remote();
 			ClientDomElement local = node.local();
-			localToRemote(element, remote, local);
+			localToRemote(element, node.remote(), local);
 		}
 	}
 
@@ -724,6 +733,7 @@ public class LocalDom implements ContextFrame {
 		remoteMutations = new RemoteMutations(new MutationsAccess(),
 				new RemoteMutations.LoggingConfiguration());
 		localMutations = new LocalMutations(new MutationsAccess());
+		loggingConfiguration = new LoggingConfiguration();
 	}
 
 	private void initalizeRemoteSync(Document doc) {
@@ -763,9 +773,9 @@ public class LocalDom implements ContextFrame {
 		return Document.get().remoteType == RemoteType.PATHREF;
 	}
 
-	private boolean isPending0(NodeJso nodeJso) {
+	private boolean isPending0(NodeRemote nodeRemote) {
 		return pendingSync.size() > 0
-				&& pendingSync.stream().anyMatch(n -> n.remote() == nodeJso);
+				&& pendingSync.stream().anyMatch(n -> n.remote() == nodeRemote);
 	}
 
 	private boolean isStopPropagation0(NativeEvent evt) {
@@ -779,27 +789,36 @@ public class LocalDom implements ContextFrame {
 		remoteLookup.put(remote, node);
 	}
 
-	private void localToRemote(Element element, ElementJso remote,
+	private void localToRemote(Element element, ElementRemote remote,
 			ClientDomElement local) {
-		String innerHTML = local.getInnerHTML();
-		remote.setInnerHTML(innerHTML);
-		ElementJso f_remote = remote;
-		// doesn't include style
-		local.getAttributeMap().entrySet().forEach(e -> {
-			String value = e.getValue();
-			switch (e.getKey()) {
-			case "text":
-				f_remote.setPropertyString(e.getKey(), value);
-				break;
-			default:
-				f_remote.setAttribute(e.getKey(), value);
-				break;
+		pendingSync.remove(element);
+		if (remote instanceof ElementJso) {
+			String innerMarkup = local.getInnerHTML();
+			remote.setInnerHTML(innerMarkup);
+			ElementJso j_remote = (ElementJso) remote;
+			// doesn't include style
+			local.getAttributeMap().entrySet().forEach(e -> {
+				String value = e.getValue();
+				switch (e.getKey()) {
+				case "text":
+					j_remote.setPropertyString(e.getKey(), value);
+					break;
+				default:
+					j_remote.setAttribute(e.getKey(), value);
+					break;
+				}
+			});
+			local.getStyle().getProperties().entrySet().forEach(e -> {
+				StyleRemote remoteStyle = j_remote.getStyle0();
+				remoteStyle.setProperty(e.getKey(), e.getValue());
+			});
+		} else {
+			if (!element.isAttached()) {
+				return;
+			} else {
+				remoteMutations.emitInnerMarkupMutation(element);
 			}
-		});
-		local.getStyle().getProperties().entrySet().forEach(e -> {
-			StyleRemote remoteStyle = f_remote.getStyle0();
-			remoteStyle.setProperty(e.getKey(), e.getValue());
-		});
+		}
 		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
 		bits |= DOM.getEventsSunk(element);
 		DOM.sinkEvents(element, bits);
@@ -809,7 +828,6 @@ public class LocalDom implements ContextFrame {
 		bitlessEventsSunk.forEach(eventTypeName -> {
 			DOM.sinkBitlessEvent(element, eventTypeName);
 		});
-		pendingSync.remove(element);
 		element.resolvePendingSync();
 		wasSynced0(element);
 	}
@@ -1199,21 +1217,21 @@ public class LocalDom implements ContextFrame {
 	public static class LoggingConfiguration {
 		public boolean mutationLogDoms;
 
-		public boolean mutationLogEvents;
+		public boolean mutationLogEvents = !!GWT.isScript();
 
-		public boolean logEvents;
+		public boolean logEvents = !GWT.isScript();
 
-		public boolean logHistoryOnEception;
+		public boolean logHistoryOnEception = true;
 
 		public LoggingConfiguration() {
-			mutationLogDoms = ClientProperties.is(LocalDom.class,
-					"mutationLogDoms", false);
-			mutationLogEvents = ClientProperties.is(LocalDom.class,
-					"mutationLogEvents", !GWT.isScript());
-			logEvents = ClientProperties.is(LocalDom.class, "logEvents",
-					!GWT.isScript());
-			logHistoryOnEception = ClientProperties.is(LocalDom.class,
-					"logHistoryOnEception", true);
+			// mutationLogDoms = ClientProperties.is(LocalDom.class,
+			// "mutationLogDoms", false);
+			// mutationLogEvents = ClientProperties.is(LocalDom.class,
+			// "mutationLogEvents", !GWT.isScript());
+			// logEvents = ClientProperties.is(LocalDom.class, "logEvents",
+			// !GWT.isScript());
+			// logHistoryOnEception = ClientProperties.is(LocalDom.class,
+			// "logHistoryOnEception", true);
 		}
 
 		public RemoteMutations.LoggingConfiguration asMutationsConfiguration() {
@@ -1314,25 +1332,26 @@ public class LocalDom implements ContextFrame {
 						Event event = eventData.event;
 						switch (event.getType()) {
 						case BrowserEvents.PAGEHIDE:
-							// since window isn't framed (yet)
-							// Window.onPageHide();
+							Window.onPageHide();
 							break;
 						default:
 							throw new UnsupportedOperationException();
 						}
 					} else {
-						Element elem = (Element) eventData.firstReceiver.node();
+						Element firstReceiver = (Element) eventData.firstReceiver
+								.node();
 						if (eventData.eventValue() != null) {
-							elem.implAccess().pathrefRemote().value = eventData
-									.eventValue();
+							firstReceiver.implAccess()
+									.pathrefRemote().value = eventData
+											.eventValue();
 						}
 						// FIXME - romcom - attach probably not being called
-						if (elem.eventListener == null) {
-							elem.eventListener = elem;
+						if (firstReceiver.eventListener == null) {
+							firstReceiver.eventListener = firstReceiver;
 						}
 						// um, is it that easy?
-						DOM.dispatchEvent(eventData.event, elem,
-								elem.eventListener);
+						DOM.dispatchEvent(eventData.event, firstReceiver,
+								firstReceiver.eventListener);
 					}
 				}
 			} catch (RuntimeException e) {
@@ -1379,11 +1398,11 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public List<MutationRecord> domAsMutations() {
-			return nodeAsMutations(Document.get().getDocumentElement());
+			return nodeAsMutations(Document.get().getDocumentElement(), true);
 		}
 
-		public List<MutationRecord> nodeAsMutations(Node node) {
-			return remoteMutations.nodeAsMutations(node);
+		public List<MutationRecord> nodeAsMutations(Node node, boolean deep) {
+			return remoteMutations.nodeAsMutations(node, deep);
 		}
 	}
 
@@ -1401,5 +1420,13 @@ public class LocalDom implements ContextFrame {
 
 	public static Topic<String> topicUnableToParse() {
 		return get().topicUnableToParse;
+	}
+
+	void onAttach(Node node) {
+		domIds.onAttach(node);
+	}
+
+	void onDetach(Node node) {
+		domIds.onDetach(node);
 	}
 }

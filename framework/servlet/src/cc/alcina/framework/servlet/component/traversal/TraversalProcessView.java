@@ -92,24 +92,18 @@ public class TraversalProcessView {
 		}
 	}
 
-	public static class Ui implements RemoteUi {
+	public static class Ui extends RemoteUi.Abstract {
 		public static Ui get() {
 			return (Ui) Environment.get().ui;
 		}
 
 		Page page;
 
-		Environment environment;
-
 		public TraversalSettings settings;
 
 		@Override
 		public Client createClient() {
 			return new ClientImpl();
-		}
-
-		public Environment getEnvironment() {
-			return environment;
 		}
 
 		public RemoteComponentObservables<SelectionTraversal>.ObservableHistory
@@ -134,20 +128,17 @@ public class TraversalProcessView {
 		}
 
 		@Override
-		public void render() {
+		protected DirectedLayout render0() {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
 			page = new Page();
-			new DirectedLayout().render(resolver(), page).getRendered()
-					.appendToRoot();
-		}
-
-		public void setEnvironment(Environment environment) {
-			this.environment = environment;
+			DirectedLayout layout = new DirectedLayout();
+			layout.render(resolver(), page).getRendered().appendToRoot();
+			return layout;
 		}
 
 		public String getTraversalPath() {
-			String sessionPath = getEnvironment().getSessionPath();
+			String sessionPath = Environment.get().getSessionPath();
 			return sessionPath == null ? null
 					: sessionPath.replaceFirst("/.+?/", "");
 		}
@@ -160,9 +151,8 @@ public class TraversalProcessView {
 			// for subclasses
 		}
 
-		public TraversalAnswerSupplier
-				createAnswerSupplier(TraversalPlace fromPlace) {
-			return new TraversalAnswers(fromPlace);
+		public TraversalAnswerSupplier createAnswerSupplier(int forLayer) {
+			return new TraversalAnswers(forLayer);
 		}
 
 		public static TraversalPlace place() {
@@ -175,7 +165,7 @@ public class TraversalProcessView {
 		}
 
 		protected SelectionTraversal traversal0() {
-			return page.history.observable;
+			return page.history.getObservable();
 		}
 
 		public static SelectionTraversal traversal() {
@@ -185,10 +175,10 @@ public class TraversalProcessView {
 
 	public static abstract class TraversalAnswerSupplier
 			implements AppSuggestor.AnswerSupplier {
-		public TraversalAnswerSupplier(TraversalPlace fromPlace) {
-			this.fromPlace = fromPlace;
+		public TraversalAnswerSupplier(int forLayer) {
+			this.forLayer = forLayer;
 		}
 
-		public TraversalPlace fromPlace;
+		public int forLayer;
 	}
 }

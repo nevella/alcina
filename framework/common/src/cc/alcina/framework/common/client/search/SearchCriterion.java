@@ -166,6 +166,42 @@ public abstract class SearchCriterion extends Bindable
 	 */
 	@Reflected
 	public enum Direction {
-		ASCENDING, DESCENDING
+		ASCENDING, DESCENDING;
+
+		public static Direction valueOfAbbrev(String string) {
+			if (string == null) {
+				return null;
+			}
+			switch (string.toLowerCase()) {
+			case "asc":
+				return ASCENDING;
+			case "desc":
+				return DESCENDING;
+			default:
+				return null;
+			}
+		}
+
+		public String toAbbrevString() {
+			switch (this) {
+			case ASCENDING:
+				return "asc";
+			case DESCENDING:
+				return "desc";
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		public int toComparatorMultiplier() {
+			switch (this) {
+			case ASCENDING:
+				return 1;
+			case DESCENDING:
+				return -1;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 }

@@ -3,13 +3,18 @@ package cc.alcina.extras.webdriver.story;
 import java.util.Objects;
 
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.extras.webdriver.query.ElementQuery;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
+import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Ui;
+import cc.alcina.framework.gwt.client.story.StoryActionPerformer;
 import cc.alcina.framework.gwt.client.story.StoryActionPerformer.ActionTypePerformer;
 
 /*
@@ -20,6 +25,14 @@ import cc.alcina.framework.gwt.client.story.StoryActionPerformer.ActionTypePerfo
  * context) is maintained via the context
  */
 public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
+	public interface PerformerAttribute<T> extends Story.Attribute<T> {
+		// Note that this is single use - it's de-reffed once the value is
+		// retrieved
+		public static interface MarkedElement
+				extends PerformerAttribute<WebElement> {
+		}
+	}
+
 	Context context;
 
 	Ui action;
@@ -146,8 +159,15 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 			public void perform(WdActionPerformer wdPerformer,
 					Story.Action.Ui.Keys action) throws Exception {
 				ElementQuery query = createQuery(wdPerformer);
+				if (action.isClear()) {
+					query.clear();
+				}
 				String text = action.getText();
 				query.sendKeys(text);
+				if (query.getElement().getAttribute("type").equals("file")) {
+					// handle chrome weirdness
+					query.emitChangeEvent();
+				}
 				wdPerformer.context.log("Keys :: '%s' --> %s", text, query);
 			}
 		}
@@ -165,11 +185,26 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 		}
 
 		static ElementQuery createQuery(WdActionPerformer wdPerformer) {
-			Story.Action.Location.Xpath location = wdPerformer.context
-					.getLocation(Story.Action.Location.Axis.DOCUMENT);
-			return ElementQuery.xpath(
-					wdPerformer.wdContext.token.getWebDriver(),
-					location.getText());
+			Location mark = wdPerformer.context
+					.getLocation(Story.Action.Location.Axis.MARK);
+			if (mark != null) {
+				WebElement markedElement = wdPerformer.context
+						.getAttribute(PerformerAttribute.MarkedElement.class)
+						.get();
+				wdPerformer.context.removeAttribute(
+						PerformerAttribute.MarkedElement.class);
+				return ElementQuery.fromElement(markedElement);
+			} else {
+				Story.Action.Location.Xpath location = wdPerformer.context
+						.getLocation(Story.Action.Location.Axis.DOCUMENT);
+				int timeout = wdPerformer.context.getAttribute(
+						StoryActionPerformer.PerformerAttribute.Timeout.class)
+						.orElse(5);
+				return ElementQuery
+						.xpath(wdPerformer.wdContext.token.getWebDriver(),
+								location.getText())
+						.withTimeout(timeout);
+			}
 		}
 
 		public static class AwaitAttributePresent implements
@@ -195,8 +230,59 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 				ElementQuery query = createQuery(wdPerformer);
 				String text = action.getText();
 				boolean present = query.isAttributePresent(text);
+				wdPerformer.context.getVisit().onActionTestResult(present);
 				wdPerformer.context.log("TestAttributePresent [%s] --> %s",
 						text, query);
+			}
+		}
+
+		public static class TestAttributeValue
+				implements TypedPerformer<Story.Action.Ui.TestAttributeValue> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.TestAttributeValue action)
+					throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				String text = action.getText();
+				String name = action.getName();
+				String value = query.getAttributeValue(name);
+				boolean test = action.operator.test(value, text);
+				wdPerformer.context.getVisit().onActionTestResult(test);
+				wdPerformer.context.log(
+						"TestAttributeValue [%s %s '%s'] --> %s", name,
+						action.operator, text, query);
+			}
+		}
+
+		public static class AwaitAttributeValue
+				implements TypedPerformer<Story.Action.Ui.AwaitAttributeValue> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.AwaitAttributeValue action)
+					throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				String text = action.getText();
+				String name = action.getName();
+				String value = query.getAttributeValue(name);
+				boolean test = action.operator.test(value, text);
+				wdPerformer.context.getVisit().onActionTestResult(test);
+				wdPerformer.context.log(
+						"TestAttributeValue [%s %s '%s'] --> %s", name,
+						action.operator, text, query);
+			}
+		}
+
+		public static class Mark
+				implements TypedPerformer<Story.Action.Ui.Mark> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.Mark action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				WebElement elem = query.getElement();
+				Preconditions.checkNotNull(elem);
+				wdPerformer.context.setAttribute(
+						PerformerAttribute.MarkedElement.class, elem);
+				wdPerformer.context.log("Mark [%s]", query);
 			}
 		}
 	}

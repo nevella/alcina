@@ -67,8 +67,7 @@ public abstract class TraversalCommands<T, H extends NodeEvent.Handler>
 	@AppSuggestorCommand(
 		parent = TraversalCommands.class,
 		name = "clear filter",
-		description = "Clear the filter",
-		filter = AppSuggestorCommand.Filter.IsConsole.class)
+		description = "Clear the filter")
 	@KeyBinding(key = "C")
 	public static class ClearFilter
 			extends TraversalCommands<Object, ClearFilter.Handler> {

@@ -39,4 +39,19 @@ public class SuggestorEvents {
 			void onShowingSuggestions(SuggestionsVisible event);
 		}
 	}
+
+	public static class FocusInPageSuggestor extends
+			ModelEvent.DescendantEvent<Object, FocusInPageSuggestor.Handler, FocusInPageSuggestor.Emitter> {
+		@Override
+		public void dispatch(FocusInPageSuggestor.Handler handler) {
+			handler.onFocusInPageSuggestor(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFocusInPageSuggestor(FocusInPageSuggestor event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
 }

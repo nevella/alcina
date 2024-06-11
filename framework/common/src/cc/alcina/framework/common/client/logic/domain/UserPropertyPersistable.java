@@ -4,6 +4,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -12,6 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.serializer.Serializers;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public interface UserPropertyPersistable
 		extends Serializable, SourcesPropertyChangeEvents, TreeSerializable {
@@ -24,6 +27,10 @@ public interface UserPropertyPersistable
 	public UserPropertyPersistable.Support getUserPropertySupport();
 
 	public void setUserPropertySupport(UserPropertyPersistable.Support support);
+
+	// marker
+	public interface ResetOnSerializationException {
+	}
 
 	@Bean
 	public static class Support
@@ -85,6 +92,10 @@ public interface UserPropertyPersistable
 
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
+			persist();
+		}
+
+		public void persist() {
 			property.serializeObject(persistable);
 		}
 
@@ -99,6 +110,26 @@ public interface UserPropertyPersistable
 
 		public void setProperty(UserProperty property) {
 			this.property = property;
+		}
+	}
+
+	public abstract static class Base extends Model.Fields
+			implements UserPropertyPersistable {
+		private UserPropertyPersistable.Support userPropertySupport;
+
+		@Override
+		@AlcinaTransient(unless = AlcinaTransient.TransienceContext.CLIENT)
+		@XmlTransient
+		public UserPropertyPersistable.Support getUserPropertySupport() {
+			if (this.userPropertySupport != null) {
+				this.userPropertySupport.ensureListeners();
+			}
+			return this.userPropertySupport;
+		}
+
+		@Override
+		public void setUserPropertySupport(Support userPropertySupport) {
+			this.userPropertySupport = userPropertySupport;
 		}
 	}
 }

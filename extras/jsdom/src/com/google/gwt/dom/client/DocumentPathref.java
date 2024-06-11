@@ -568,19 +568,32 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	}
 
 	@Override
-	void emitMutation(MutationRecord mutation) {
+	public void emitMutation(MutationRecord mutation) {
 		mutationProxy.onMutation(mutation);
 	}
 
-	public void emitSinkBitlessEvent(ElementPathref elementPathref,
-			String eventTypeName) {
-		sinkEventsQueue.add(() -> mutationProxy.onSinkBitlessEvent(
-				Pathref.forNode(elementPathref.node()), eventTypeName));
+	void addSunkEvent(Runnable runnable) {
+		if (sinkEventsQueue.size() > 100) {
+			int debug = 3;
+		}
+		sinkEventsQueue.add(runnable);
 	}
 
-	public void emitSinkEvents(ElementPathref elementPathref, int eventBits) {
-		sinkEventsQueue.add(() -> mutationProxy.onSinkEvents(
-				Pathref.forNode(elementPathref.node()), eventBits));
+	public void emitSinkBitlessEvent(Element elem, String eventTypeName) {
+		addSunkEvent(() -> {
+			if (elem.isAttached()) {
+				mutationProxy.onSinkBitlessEvent(Pathref.forNode(elem),
+						eventTypeName);
+			}
+		});
+	}
+
+	public void emitSinkEvents(Element elem, int eventBits) {
+		addSunkEvent(() -> {
+			if (elem.isAttached()) {
+				mutationProxy.onSinkEvents(Pathref.forNode(elem), eventBits);
+			}
+		});
 	}
 
 	@Override
@@ -589,9 +602,10 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	}
 
 	public void flushSinkEventsQueue() {
-		sinkEventsQueue.stream().collect(Collectors.toList())
-				.forEach(Runnable::run);
+		List<Runnable> list = sinkEventsQueue.stream()
+				.collect(Collectors.toList());
 		sinkEventsQueue.clear();
+		list.forEach(Runnable::run);
 	}
 
 	@Override

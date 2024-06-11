@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PermissionRule;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -314,6 +315,14 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 	}
 
+	public interface EntityBrowser {
+		public static EntityBrowser get() {
+			return Registry.impl(EntityBrowser.class);
+		}
+
+		void browse(Entity entity);
+	}
+
 	public class DomainSupport {
 		public <V extends Entity> void addToProperty(String propertyName, V v) {
 			TransformManager.get().modifyCollectionProperty(Entity.this,
@@ -384,6 +393,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 		public void log(String... paths) {
 			Domain.logTree(Entity.this, paths);
+		}
+
+		public void browse() {
+			EntityBrowser.get().browse(Entity.this);
 		}
 
 		public boolean notRemoved() {

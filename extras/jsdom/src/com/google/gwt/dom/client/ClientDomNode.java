@@ -98,6 +98,8 @@ public interface ClientDomNode {
 
 	boolean isJso();
 
+	boolean isPathref();
+
 	boolean isOrHasChild(Node child);
 
 	Node node();
@@ -116,4 +118,8 @@ public interface ClientDomNode {
 	Node replaceChild(Node newChild, Node oldChild);
 
 	void setNodeValue(String nodeValue);
+
+	void setRefId(int id);
+
+	int getRefId();
 }

@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.romcom.server;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TimerTask;
 import java.util.function.Function;
 
@@ -55,11 +56,21 @@ public class RemoteComponentObservables<T> {
 	void evict(Map.Entry<String, Topic<ObservableHistory>> entry) {
 		ObservableHistory published = entry.getValue().getPublished();
 		entry.getValue().clearPublished();
-		EnvironmentManager.get()
-				.deregisterSource(published.toEnvironmentSource());
+		if (published != null) {
+			EnvironmentManager.get()
+					.deregisterSource(published.toEnvironmentSource());
+		}
 	}
 
 	Map<String, Topic<ObservableHistory>> histories = new LinkedHashMap<>();
+
+	public void evict(String key) {
+		synchronized (histories) {
+			histories.entrySet().stream()
+					.filter(e -> Objects.equals(e.getKey(), key))
+					.forEach(this::evict);
+		}
+	}
 
 	public RemoteComponentObservables(
 			Class<? extends RemoteComponent> componentClass,
@@ -100,7 +111,12 @@ public class RemoteComponentObservables<T> {
 	}
 
 	public class ObservableHistory {
-		public T observable;
+		T observable;
+
+		public T getObservable() {
+			lastAccessed = System.currentTimeMillis();
+			return observable;
+		}
 
 		long lastAccessed;
 

@@ -69,8 +69,7 @@ class _Header extends Waypoint {
 
 			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU)
 			@Decl.Action.UI.TestPresent
-			static class TestShowing extends Waypoint
-					implements Story.Action.Test {
+			static class TestShowing extends Waypoint {
 			}
 
 			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU)
@@ -80,8 +79,7 @@ class _Header extends Waypoint {
 
 			@Decl.Location.Xpath(XPATH_DOTBURGER_MENU)
 			@Decl.Action.UI.AwaitPresent
-			static class AwaitShowing extends Waypoint
-					implements Story.Action.Test {
+			static class AwaitShowing extends Waypoint {
 			}
 		}
 

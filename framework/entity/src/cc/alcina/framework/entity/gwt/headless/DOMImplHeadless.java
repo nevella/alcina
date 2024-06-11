@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.gwt.headless;
 
-import com.google.gwt.dom.client.ClientDomElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.impl.DOMImpl;
@@ -55,13 +54,11 @@ public class DOMImplHeadless extends DOMImpl {
 
 	@Override
 	public void sinkBitlessEvent(Element elem, String eventTypeName) {
-		ClientDomElement remote = elem.implAccess().remote();
 		elem.implAccess().emitSinkBitlessEvent(eventTypeName);
 	}
 
 	@Override
 	public void sinkEvents(Element elem, int eventBits) {
-		ClientDomElement remote = elem.implAccess().remote();
 		elem.implAccess().emitSinkEvents(eventBits);
 	}
 }

@@ -7,14 +7,12 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.CollectionCreators;
-import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.LinkedHashMapCreatorJvm;
-import cc.alcina.framework.entity.util.TimerJvm;
 import elemental.json.impl.JsonUtil;
 
 @SuppressWarnings("deprecation")
@@ -37,8 +35,13 @@ public class JvmReflections {
 	}
 
 	public static void initJvmServices() {
-		Registry.register().singleton(Timer.Provider.class,
-				new TimerJvm.Provider());
+		/*
+		 * This needs to be done servlet (app) layer, since
+		 * AppLifecycleServletBase requires an Environment timer provider
+		 * 
+		 * Registry.register().singleton(Timer.Provider.class, new
+		 * TimerJvm.Provider());
+		 */
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		GWT.setBridge(new GWTBridgeHeadless());
 		JsonUtil.FAST_STRINGIFY = true;

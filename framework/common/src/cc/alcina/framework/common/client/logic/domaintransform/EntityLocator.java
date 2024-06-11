@@ -163,7 +163,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	public boolean equals(Object obj) {
 		if (obj instanceof EntityLocator) {
 			EntityLocator o = (EntityLocator) obj;
-			if (localId != 0 && o.localId != 0) {
+			if (id == 0 && localId != 0 && o.localId != 0) {
 				return localId == o.localId && clazz == o.clazz;
 			}
 			return id == o.id && getClazz() == o.getClazz();

@@ -33,7 +33,8 @@ public enum Status implements ProvidesStatus {
 	}
 
 	@Directed
-	public static class StatusReason extends Model implements ProvidesStatus {
+	public static class StatusReason extends Model.Fields
+			implements ProvidesStatus {
 		public static StatusReason check(boolean condition,
 				String successReason, String failureReason) {
 			if (condition) {
@@ -118,6 +119,8 @@ public enum Status implements ProvidesStatus {
 			this.value = value;
 		}
 
+		public static transient int DEFAULT_MAX_CHARS = -1;
+
 		@Binding(from = "displayText", type = Type.INNER_TEXT)
 		public Object getDisplayText() {
 			String text = "[null]";
@@ -126,7 +129,8 @@ public enum Status implements ProvidesStatus {
 			} else if (reason != null) {
 				text = reason;
 			}
-			return CommonUtils.trimToWsChars(text, 60, true);
+			return DEFAULT_MAX_CHARS == -1 ? text
+					: CommonUtils.trimToWsChars(text, DEFAULT_MAX_CHARS, true);
 		}
 
 		@Binding(to = "title", type = Type.PROPERTY)

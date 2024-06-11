@@ -7,7 +7,8 @@ import java.util.NoSuchElementException;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayInteger;
 
-public final class JavascriptIntLookup extends JavaScriptObject {
+public final class JavascriptIntLookup<V> extends JavaScriptObject
+		implements IntLookup<V> {
 	public static native JavascriptIntLookup create()/*-{
     var obj = {
       length : 0,
@@ -20,7 +21,7 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 	protected JavascriptIntLookup() {
 	}
 
-	public native <V> V get(int key)/*-{
+	public native V get(int key)/*-{
     return this.valueLookup[key];
 	}-*/;
 
@@ -38,7 +39,7 @@ public final class JavascriptIntLookup extends JavaScriptObject {
     return this.modCount;
 	}-*/;
 
-	public native void put(int key, Object value)/*-{
+	public native void put(int key, V value)/*-{
     if (this.valueLookup[key] === undefined) {
       this.length++;
       this.modCount++;

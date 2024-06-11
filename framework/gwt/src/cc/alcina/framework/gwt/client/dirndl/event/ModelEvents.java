@@ -101,7 +101,7 @@ public class ModelEvents {
 	}
 
 	public static class Change extends ModelEvent<Object, Change.Handler>
-			implements NoHandlerRequired {
+			implements NoHandlerRequired, ValueChange {
 		@Override
 		public void dispatch(Change.Handler handler) {
 			handler.onChange(this);
