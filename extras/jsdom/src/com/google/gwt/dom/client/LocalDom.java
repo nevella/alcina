@@ -74,6 +74,10 @@ import cc.alcina.framework.common.client.util.Topic;
  * <li>edgecase - setting a localdom unconnected Text node to >65536 chars will
  * desync
  *
+ * <p>
+ * WIP - the maps may all go away if DomIds turns up trumps. Note that all elt
+ * id refs must be cleared on onDetach - which may make SyncMutations harder
+ * (since it'll need to be able to track exactly which subtrees were mutated)
  *
  */
 public class LocalDom implements ContextFrame {
@@ -467,6 +471,8 @@ public class LocalDom implements ContextFrame {
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
+	DomIds domIds;
+
 	LocalDom() {
 		if (GWT.isScript()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
@@ -477,6 +483,7 @@ public class LocalDom implements ContextFrame {
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
 		topicReportException.add(this::handleReportedException);
+		domIds = new DomIds();
 	}
 
 	void applyContiguousTextNodesToLocal(ContiguousTextNodes contiguous) {
@@ -806,7 +813,7 @@ public class LocalDom implements ContextFrame {
 				remoteStyle.setProperty(e.getKey(), e.getValue());
 			});
 		} else {
-			if (!element.provideIsAttachedToDocument()) {
+			if (!element.isAttached()) {
 				return;
 			} else {
 				remoteMutations.emitInnerMarkupMutation(element);
@@ -1413,5 +1420,13 @@ public class LocalDom implements ContextFrame {
 
 	public static Topic<String> topicUnableToParse() {
 		return get().topicUnableToParse;
+	}
+
+	void onAttach(Node node) {
+		domIds.onAttach(node);
+	}
+
+	void onDetach(Node node) {
+		domIds.onDetach(node);
 	}
 }

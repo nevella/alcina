@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.ClientDomElement;
+import com.google.gwt.dom.client.DomIds;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
@@ -135,10 +136,12 @@ public final class MutationRecord {
 	}
 
 	static MutationRecord generateMarkupMutationRecord(Node node) {
+		Element elem = (Element) node;
 		MutationRecord markupRecord = new MutationRecord();
 		markupRecord.type = Type.innerMarkup;
-		markupRecord.newValue = ((Element) node).getInnerHTML();
+		markupRecord.newValue = elem.getInnerHTML();
 		markupRecord.target = MutationNode.pathref(node);
+		markupRecord.refIds = elem.getSubtreeIds();
 		return markupRecord;
 	}
 
@@ -213,6 +216,12 @@ public final class MutationRecord {
 	 */
 	public String newValue;
 
+	/**
+	 * For dom trees, this carries the tree node ids (which are not carried by
+	 * the markup)
+	 */
+	public DomIds.IdList refIds;
+
 	public transient List<Class<? extends Flag>> flags;
 
 	// for serialization
@@ -285,6 +294,7 @@ public final class MutationRecord {
 			}
 			MutationNode predecessor = previousSibling;
 			for (MutationNode node : addedNodes) {
+				target.node().getOwnerDocument().setNextAttachId(node.path.id);
 				target.insertAfter(predecessor, node, applyTo);
 				predecessor = node;
 			}
@@ -326,7 +336,8 @@ public final class MutationRecord {
 		case innerMarkup:
 			// not used for syncmutations, only for remote transport (so
 			// bypass most of the mutations infrastructure)
-			((Element) target.node()).setInnerHTML(newValue);
+			Element elem = (Element) target.node();
+			elem.setInnerHTML(newValue);
 			break;
 		default:
 			throw new UnsupportedOperationException();

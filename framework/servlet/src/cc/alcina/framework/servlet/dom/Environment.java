@@ -239,7 +239,7 @@ public class Environment {
 			runWithMutations(() -> {
 				// FIXME - pathref - check can be removed
 				Element elem = (Element) eventSystemMutation.path.node();
-				if (elem.provideIsAttachedToDocument()) {
+				if (elem.isAttached()) {
 					mutations.eventMutations.add(eventSystemMutation);
 				}
 			});

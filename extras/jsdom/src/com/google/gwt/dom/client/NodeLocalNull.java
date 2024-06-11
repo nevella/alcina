@@ -156,4 +156,13 @@ public abstract class NodeLocalNull implements ClientDomNode {
 		return Ax.format("%s: null::remote-placeholder",
 				getClass().getSimpleName());
 	}
+
+	@Override
+	public void setRefId(int id) {
+	}
+
+	@Override
+	public int getRefId() {
+		return node().getRefId();
+	}
 }

@@ -252,4 +252,13 @@ public abstract class NodePathref implements ClientDomNode, NodeRemote {
 	public String toString() {
 		return Ax.format("%s: %s", getClass().getSimpleName(), node);
 	}
+
+	@Override
+	public void setRefId(int id) {
+	}
+
+	@Override
+	public int getRefId() {
+		return node().getRefId();
+	}
 }

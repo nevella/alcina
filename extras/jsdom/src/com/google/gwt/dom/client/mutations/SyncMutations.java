@@ -71,8 +71,9 @@ class SyncMutations {
 				}
 				record.apply(ApplyTo.local);
 				if (record.type == MutationRecord.Type.innerMarkup) {
+					Element elem = (Element) record.target.node();
 					if (!Al.isBrowser()) {
-						NodePathref.ensurePathrefRemote(record.target.node());
+						NodePathref.ensurePathrefRemote(elem);
 					}
 				}
 				record.addedNodes.forEach(added -> {

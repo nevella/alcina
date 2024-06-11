@@ -569,6 +569,9 @@ public class ElementLocal extends NodeLocal
 		this.element = element;
 	}
 
+	/*
+	 * FIXME - pathref - Rarely used - possibly never (with ids)
+	 */
 	public ClientDomNode queryRelativePath(Pathref path) {
 		ClientDomNode cursor = this;
 		for (Integer childOrdinal : path.childOrdinals()) {

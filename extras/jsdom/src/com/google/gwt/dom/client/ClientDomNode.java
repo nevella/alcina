@@ -118,4 +118,8 @@ public interface ClientDomNode {
 	Node replaceChild(Node newChild, Node oldChild);
 
 	void setNodeValue(String nodeValue);
+
+	void setRefId(int id);
+
+	int getRefId();
 }

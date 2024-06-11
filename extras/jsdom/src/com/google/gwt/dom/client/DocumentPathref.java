@@ -581,7 +581,7 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 
 	public void emitSinkBitlessEvent(Element elem, String eventTypeName) {
 		addSunkEvent(() -> {
-			if (elem.provideIsAttachedToDocument()) {
+			if (elem.isAttached()) {
 				mutationProxy.onSinkBitlessEvent(Pathref.forNode(elem),
 						eventTypeName);
 			}
@@ -590,7 +590,7 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 
 	public void emitSinkEvents(Element elem, int eventBits) {
 		addSunkEvent(() -> {
-			if (elem.provideIsAttachedToDocument()) {
+			if (elem.isAttached()) {
 				mutationProxy.onSinkEvents(Pathref.forNode(elem), eventBits);
 			}
 		});

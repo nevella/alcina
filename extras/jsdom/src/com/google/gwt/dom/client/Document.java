@@ -106,6 +106,16 @@ public class Document extends Node
 	}
 
 	@Override
+	protected void onAttach() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void onDetach() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public org.w3c.dom.Node adoptNode(org.w3c.dom.Node arg0)
 			throws DOMException {
 		throw new UnsupportedOperationException();
@@ -1111,6 +1121,13 @@ public class Document extends Node
 		public DocumentPathref pathrefRemote() {
 			return remote();
 		}
+
+		public Node getNode(Pathref pathref) {
+			// WIP
+			// return localDom.domIds.getNode(pathref);
+			return getDocumentElement().implAccess().local()
+					.queryRelativePath(pathref).node();
+		}
 	}
 
 	@Registration.Singleton(DomDocument.PerDocumentSupplier.class)
@@ -1240,5 +1257,13 @@ public class Document extends Node
 				throws DOMException {
 			this.currentNode = currentNode;
 		}
+	}
+
+	/*
+	 * For communication between different doms, to ensure creates apply the
+	 * same ids
+	 */
+	public void setNextAttachId(int id) {
+		localDom.domIds.setNextAttachId(id);
 	}
 }

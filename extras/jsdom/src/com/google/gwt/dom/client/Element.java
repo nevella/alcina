@@ -166,8 +166,6 @@ public class Element extends Node implements ClientDomElement,
 
 	private boolean pendingSync;
 
-	boolean attached;
-
 	private HandlerManager handlerManager;
 
 	protected Element() {
@@ -840,8 +838,7 @@ public class Element extends Node implements ClientDomElement,
 					: this;
 		}
 		DOM.setEventListener(this, eventListener);
-		streamChildren().filter(Node::provideIsElement)
-				.forEach(n -> ((Element) n).setAttached(true));
+		super.onAttach();
 	}
 
 	@Override
@@ -883,8 +880,7 @@ public class Element extends Node implements ClientDomElement,
 		 * is just concerned with listener attach/detach)
 		 */
 		DOM.setEventListener(this, null);
-		streamChildren().filter(Node::provideIsElement)
-				.forEach(n -> ((Element) n).setAttached(false));
+		super.onDetach();
 	}
 
 	protected ElementPathref pathrefRemote() {
@@ -1058,18 +1054,6 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void scrollIntoView() {
 		runIfWithRemote(true, () -> remote().scrollIntoView());
-	}
-
-	void setAttached(boolean attached) {
-		if (attached == this.attached) {
-			return;
-		}
-		this.attached = attached;
-		if (attached) {
-			onAttach();
-		} else {
-			onDetach();
-		}
 	}
 
 	@Override
@@ -1523,7 +1507,7 @@ public class Element extends Node implements ClientDomElement,
 		}
 	}
 
-	public boolean provideIsAttachedToDocument() {
-		return provideRoot() == getOwnerDocument().getDocumentElement();
+	public DomIds.IdList getSubtreeIds() {
+		return getOwnerDocument().localDom.domIds.getSubtreeIds(this);
 	}
 }

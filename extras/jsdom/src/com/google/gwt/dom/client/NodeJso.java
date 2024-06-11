@@ -155,9 +155,6 @@ public abstract class NodeJso extends JavaScriptObject
 
 	@Override
 	public final String getNodeName() {
-		if (counter++ % 100 == 0) {
-			new Exception().printStackTrace();
-		}
 		return getNodeName0();
 	}
 
@@ -448,5 +445,19 @@ public abstract class NodeJso extends JavaScriptObject
 	public final native void setNodeValue(String nodeValue) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.nodeValue = nodeValue;
+	}-*/;
+
+	@Override
+	public final native void setRefId(int id) /*-{
+	if(id==0){
+		delete this.__alc_dom_id;
+	}else{
+		this.__alc_dom_id = id;
+	}
+	}-*/;
+
+	@Override
+	public final native int getRefId() /*-{
+	return this.hasOwnProperty('__alc_dom_id') ? this.__alc_dom_id : 0;
 	}-*/;
 }

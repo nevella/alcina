@@ -284,4 +284,13 @@ public abstract class NodeLocal implements LocalDomNode {
 			getChildren().get(idx).walk(consumer);
 		}
 	}
+
+	@Override
+	public void setRefId(int id) {
+	}
+
+	@Override
+	public int getRefId() {
+		return node().getRefId();
+	}
 }
