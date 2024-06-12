@@ -40,6 +40,7 @@ public abstract class NodeJso extends JavaScriptObject
 			return null;
 		}
 		NodeJso toAppend = resolvedOrPending(newChild);
+		toAppend.setRefId(newChild.refId);
 		return (T) nodeFor(appendChild0(toAppend));
 	}
 
@@ -278,6 +279,7 @@ public abstract class NodeJso extends JavaScriptObject
 		}
 		NodeJso newChildDom = resolvedOrPending(newChild);
 		NodeJso refChildDom = resolvedOrPending(refChild);
+		newChildDom.setRefId(newChild.refId);
 		return nodeFor(insertBefore0(newChildDom, refChildDom));
 	}
 

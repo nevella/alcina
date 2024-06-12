@@ -97,6 +97,6 @@ public class TextLocal extends NodeLocal implements ClientDomText {
 
 	@Override
 	public String toString() {
-		return Ax.format("#TEXT[%s]", getData());
+		return Ax.format("@%s #TEXT[%s]", getRefId(), getData());
 	}
 }

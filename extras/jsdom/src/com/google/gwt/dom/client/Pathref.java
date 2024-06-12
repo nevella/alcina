@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * <p>
@@ -25,6 +26,13 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  * <li>Mutations?
  * <li>Romcom - propagate mutation html add/removes as single node changes
  * 
+ * </ul>
+ * <h3>Implementations
+ * <h3>
+ * <ul>
+ * <li>Node refid is generated on node attach, normally from the local dom's
+ * counter (even for server, odd for browser)
+ * <li>When propagating from one to the other,
  * </ul>
  *
  */
@@ -96,6 +104,6 @@ public class Pathref {
 
 	@Override
 	public String toString() {
-		return path;
+		return Ax.format("%s/%s", path, id);
 	}
 }

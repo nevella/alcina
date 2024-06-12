@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,19 +13,25 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
-/*
+/**
+ * <p>
  * Used for tree syncing. The node id will be stored in the __alc_dom_id
  * property of the jso dom node on attach (and removed on detach)
  * 
+ * <p>
  * Client ids are odd, server ids are even
+ * 
+ * <h3>Implementations</h3>
+ * <ul>
+ * <li>Node refid is generated on node attach, normally from the local dom's
+ * counter (even for server, odd for browser)
+ * <li>When propagating from one dom to the other, {@link #setNextAttachId} is
+ * called before local node creation
+ * </ul>
  */
 public class DomIds {
 	int counter = Al.isBrowser() ? 1 : 2;
 
-	/*
-	 * Can be optimised (e.g. JavascriptIntLookup - but a list is probably fine
-	 * given expected add/remove patterns)
-	 */
 	IntLookup<Node> byId = IntLookup.Support.create();
 
 	int nextAttachId;
@@ -82,5 +89,27 @@ public class DomIds {
 
 	public Node getNode(Pathref pathref) {
 		return byId.get(pathref.id);
+	}
+
+	public void applySubtreeIds(Element elem, IdList refIds) {
+		// if this subtree is being applied to the root, update this (root)
+		// refId as well - otherwise this node's id must already be correct
+		boolean root = elem == elem.getOwnerDocument().documentElement;
+		List<Integer> ids = refIds.ids;
+		int idx = 0;
+		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
+				elem,
+				n -> n.getChildNodes().stream().collect(Collectors.toList()));
+		Iterator<Node> itr = traversal.iterator();
+		while (itr.hasNext()) {
+			Node node = itr.next();
+			int id = ids.get(idx);
+			if (!root && idx == 0) {
+				Preconditions.checkState(id == node.getRefId());
+			} else {
+				node.setRefId(id);
+			}
+			idx++;
+		}
 	}
 }

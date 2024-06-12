@@ -338,6 +338,7 @@ public final class MutationRecord {
 			// bypass most of the mutations infrastructure)
 			Element elem = (Element) target.node();
 			elem.setInnerHTML(newValue);
+			elem.applySubtreeRefIds(refIds);
 			break;
 		default:
 			throw new UnsupportedOperationException();

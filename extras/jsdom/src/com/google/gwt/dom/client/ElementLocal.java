@@ -837,8 +837,7 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public String toString() {
 		FormatBuilder format = new FormatBuilder();
-		format.append("[local]: ");
-		format.append(getTagName());
+		format.format("@%s %s ", node().getRefId(), getTagName());
 		if (Ax.notBlank(getClassName())) {
 			format.format(".%s", getClassName());
 		}

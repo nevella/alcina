@@ -795,6 +795,9 @@ public class LocalDom implements ContextFrame {
 		if (remote instanceof ElementJso) {
 			String innerMarkup = local.getInnerHTML();
 			remote.setInnerHTML(innerMarkup);
+			// FIXME - dom-node-identity - setrefids. first with java, then an
+			// optimised devmode version
+			// that traversal will also coalesce text nodes
 			ElementJso j_remote = (ElementJso) remote;
 			// doesn't include style
 			local.getAttributeMap().entrySet().forEach(e -> {

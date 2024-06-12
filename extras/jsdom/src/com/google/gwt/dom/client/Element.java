@@ -34,6 +34,7 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
 import com.google.gwt.dom.client.DocumentPathref.InvokeProxy.Flag;
+import com.google.gwt.dom.client.DomIds.IdList;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -1509,5 +1510,9 @@ public class Element extends Node implements ClientDomElement,
 
 	public DomIds.IdList getSubtreeIds() {
 		return getOwnerDocument().localDom.domIds.getSubtreeIds(this);
+	}
+
+	public void applySubtreeRefIds(IdList refIds) {
+		getOwnerDocument().localDom.domIds.applySubtreeIds(this, refIds);
 	}
 }
