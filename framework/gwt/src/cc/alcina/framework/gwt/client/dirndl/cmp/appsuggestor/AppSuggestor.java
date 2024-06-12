@@ -8,6 +8,8 @@ import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerImpl.Invocation;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
@@ -23,14 +25,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOnBind;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 
 @Directed(renderer = DirectedRenderer.Delegating.class)
 @TypeSerialization(reflectiveSerializable = false)
-public class AppSuggestor extends Model.Fields
-		implements ModelEvents.SelectionChanged.Handler,
-		ModelEvents.Closed.Handler, ModelEvents.Opened.Handler {
+public class AppSuggestor extends Model.Fields implements
+		ModelEvents.SelectionChanged.Handler, ModelEvents.Closed.Handler,
+		ModelEvents.Opened.Handler, AppSuggestorEvents.Close.Handler {
 	@Directed(tag = "app-suggestor")
 	public Suggestor suggestor;
 
@@ -54,6 +57,7 @@ public class AppSuggestor extends Model.Fields
 		Suggestor.Attributes attributes = Suggestor.attributes();
 		attributes.withFocusOnBind(true);
 		attributes.withSelectAllOnFocus(true);
+		attributes.withSuggestOnBind(SuggestOnBind.NON_EMPTY_VALUE);
 		attributes.withSuggestionXAlign(Position.CENTER);
 		attributes.withLogicalAncestors(List.of(AppSuggestor.class));
 		attributes.withAnswer(new AnswerImpl(this.attributes.answerSupplier));
@@ -91,14 +95,21 @@ public class AppSuggestor extends Model.Fields
 
 	@Override
 	public void onSelectionChanged(SelectionChanged event) {
-		AppSuggestionView suggestion = (AppSuggestionView) suggestor
+		AppSuggestionView view = (AppSuggestionView) suggestor
 				.provideSelectedValue();
-		if (suggestion.suggestion.url() != null) {
-			History.newItem(suggestion.suggestion.url());
+		if (view.overrideSuggestionSelected()) {
 		} else {
-			event.reemitAs(this, suggestion.suggestion.modelEvent(),
-					suggestion.suggestion.eventData());
+			if (view.suggestion.url() != null) {
+				History.newItem(view.suggestion.url());
+			} else {
+				event.reemitAs(this, view.suggestion.modelEvent(),
+						view.suggestion.eventData());
+			}
 		}
+		closeAndCleanup(event);
+	}
+
+	protected void closeAndCleanup(ModelEvent event) {
 		suggestor.closeSuggestions();
 		suggestor.setValue(null);
 		event.reemitAs(this, SuggestionSelected.class);
@@ -109,19 +120,27 @@ public class AppSuggestor extends Model.Fields
 	public static class AppSuggestionView extends Model.Fields {
 		public AppSuggestion suggestion;
 
-		@Directed
-		Contents contents;
+		public boolean overrideSuggestionSelected() {
+			return false;
+		}
 
 		@Directed
-		Object options = LeafRenderer.OBJECT_INSTANCE;
+		public Contents contents;
 
-		AppSuggestionView(AppSuggestion suggestion) {
+		@Directed
+		public Object options = LeafRenderer.OBJECT_INSTANCE;
+
+		@Binding(type = Type.PROPERTY)
+		public AppSuggestionCategory category;
+
+		public AppSuggestionView(AppSuggestion suggestion) {
 			this.suggestion = suggestion;
 			this.contents = new Contents();
+			this.category = suggestion.category();
 		}
 
 		@Directed.AllProperties
-		class Contents extends Model.Fields {
+		public class Contents extends Model.Fields {
 			String first = suggestion.provideFirst();
 
 			String second = suggestion.secondary();
@@ -205,5 +224,10 @@ public class AppSuggestor extends Model.Fields
 			}
 			new Invocation(ask, answersHandler, exceptionHandler).invoke();
 		}
+	}
+
+	@Override
+	public void onClose(AppSuggestorEvents.Close event) {
+		closeAndCleanup(event);
 	}
 }

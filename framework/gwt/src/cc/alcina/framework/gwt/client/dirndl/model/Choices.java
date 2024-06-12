@@ -49,6 +49,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
@@ -196,16 +197,29 @@ public abstract class Choices<T> extends Model implements
 		Class<? extends Function<?, ?>> value();
 	}
 
-	void populateValuesFromNodeContext(Node node) {
-		node.optional(Values.class).ifPresent(ann -> setValues(
-				(List<T>) Reflections.newInstance(ann.value()).apply(ann)));
-		node.optional(EnumValues.class).ifPresent(
-				ann -> setValues((List<T>) new EnumSupplier().apply(ann)));
+	void populateValuesFromNodeContext(Node node, Predicate<T> valueFilter) {
+		if (node == null) {
+			return;
+		}
+		node.optional(Values.class).ifPresent(ann -> setValues(filter(
+				(List<T>) Reflections.newInstance(ann.value()).apply(ann),
+				valueFilter)));
+		node.optional(EnumValues.class).ifPresent(ann -> setValues(
+				filter((List<T>) new EnumSupplier().apply(ann), valueFilter)));
+	}
+
+	List<T> filter(List<T> list, Predicate<T> valueFilter) {
+		if (valueFilter == null) {
+			return list;
+		} else {
+			return list.stream().filter(valueFilter)
+					.collect(Collectors.toList());
+		}
 	}
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
-		populateValuesFromNodeContext(event.node);
+		populateValuesFromNodeContext(event.node, null);
 		super.onBeforeRender(event);
 	}
 
@@ -227,6 +241,21 @@ public abstract class Choices<T> extends Model implements
 	}
 
 	/*
+	 * Fired by a child of a choice to indicate the choice has been selected
+	 */
+	public static class ChoiceSelected
+			extends ModelEvent<Object, ChoiceSelected.Handler> {
+		@Override
+		public void dispatch(ChoiceSelected.Handler handler) {
+			handler.onChoiceSelected(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onChoiceSelected(ChoiceSelected event);
+		}
+	}
+
+	/*
 	 * It is possible to bind just to isSelected here (with a delegating
 	 * renderer) - but the css for decoration of the choice becomes a lot
 	 * simpler if there _is_ a choice > model structure, so Choice remains a
@@ -237,7 +266,8 @@ public abstract class Choices<T> extends Model implements
 	 */
 	@Directed(emits = ModelEvents.Selected.class)
 	public static class Choice<T> extends Model
-			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler {
+			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler,
+			ChoiceSelected.Handler {
 		private boolean selected;
 
 		private boolean indexSelected;
@@ -288,6 +318,11 @@ public abstract class Choices<T> extends Model implements
 		public void setSelected(boolean selected) {
 			set("selected", this.selected, selected,
 					() -> this.selected = selected);
+		}
+
+		@Override
+		public void onChoiceSelected(ChoiceSelected event) {
+			event.reemitAs(this, ModelEvents.Selected.class, this);
 		}
 	}
 
@@ -735,6 +770,10 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
+	/*
+	 * Dirndl docs - this is the basic pattern for a bound widget -- delegate,
+	 * hold the value in the outer container and bind
+	 */
 	@Directed.Delegating
 	@Registration({ Model.Value.class, FormModel.Editor.class, List.class })
 	@Bean(PropertySource.FIELDS)
@@ -752,9 +791,8 @@ public abstract class Choices<T> extends Model implements
 		public void onBeforeRender(BeforeRender event) {
 			select = new MultipleSelect<>();
 			// populate the delegate values from this node's AnnotationLocation
-			select.populateValuesFromNodeContext(event.node);
+			select.populateValuesFromNodeContext(event.node, null);
 			value = select.getSelectedValues();
-			;
 			super.onBeforeRender(event);
 		}
 

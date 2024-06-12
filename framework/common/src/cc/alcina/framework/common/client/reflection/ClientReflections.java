@@ -10,6 +10,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class ClientReflections {
 	public static final String DEV_MODE_REFLECTOR = ClientReflections.class
@@ -60,6 +61,9 @@ public class ClientReflections {
 				.map(mr -> mr.getClassReflector(clazz)).filter(Objects::nonNull)
 				.findFirst();
 		if (optional.isEmpty()) {
+			if (CommonUtils.isEnumSubclass(clazz)) {
+				return getClassReflector(clazz.getSuperclass());
+			}
 			if (clazz.getName().startsWith("java.") || clazz.isPrimitive()
 					|| (clazz.isArray()
 							&& clazz.getComponentType().isPrimitive())

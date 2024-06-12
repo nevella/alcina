@@ -8,9 +8,19 @@ import cc.alcina.framework.gwt.client.story.TellerContext;
 public class WdContextPart implements TellerContext.Part {
 	boolean shouldMaximiseTab;
 
+	boolean shouldFocusTab;
+
 	boolean reuseSession = true;
 
 	int defaultTimeout = 5;
+
+	public boolean isShouldFocusTab() {
+		return shouldFocusTab;
+	}
+
+	public void setShouldFocusTab(boolean shouldFocusTab) {
+		this.shouldFocusTab = shouldFocusTab;
+	}
 
 	public int getDefaultTimeout() {
 		return defaultTimeout;

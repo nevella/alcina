@@ -109,4 +109,10 @@ public class TagEditor extends Model implements Suggestor.Editor,
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'setFilterText'");
 	}
+
+	@Override
+	public boolean hasNonEmptyInput() {
+		// is not an 'input'
+		return false;
+	}
 }

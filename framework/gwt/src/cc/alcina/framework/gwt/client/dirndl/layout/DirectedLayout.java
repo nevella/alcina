@@ -1890,8 +1890,8 @@ public class DirectedLayout implements AlcinaProcess {
 			this.model = resolver.resolveModel(model);
 			if (this.model != model) {
 				if (this.model instanceof Model.ResetDirecteds) {
-					location = new AnnotationLocation(model.getClass(), null,
-							resolver);
+					location = new AnnotationLocation(this.model.getClass(),
+							null, resolver);
 				}
 			}
 			this.location = location;

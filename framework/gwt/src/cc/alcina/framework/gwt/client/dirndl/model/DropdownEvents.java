@@ -39,4 +39,28 @@ public class DropdownEvents {
 			void onOutsideDropdownClicked(OutsideDropdownClicked event);
 		}
 	}
+
+	public static class ArrowClicked
+			extends ModelEvent<Object, ArrowClicked.Handler> {
+		@Override
+		public void dispatch(ArrowClicked.Handler handler) {
+			handler.onArrowClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onArrowClicked(ArrowClicked event);
+		}
+	}
+
+	public static class ComboLabelSelected
+			extends ModelEvent<Object, ComboLabelSelected.Handler> {
+		@Override
+		public void dispatch(ComboLabelSelected.Handler handler) {
+			handler.onComboLabelSelected(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onComboLabelSelected(ComboLabelSelected event);
+		}
+	}
 }

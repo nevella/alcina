@@ -11,7 +11,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public class LeafModel {
+// LeafModel itself is just a naming container
+public abstract class LeafModel {
 	@Directed(tag = "div")
 	public static class HtmlBlock extends Model implements HasValue<String> {
 		public String value;

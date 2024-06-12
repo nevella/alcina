@@ -122,6 +122,10 @@ public class Suggestor extends Model
 		IntPair getResultRange();
 	}
 
+	public enum SuggestOnBind {
+		NO, YES, NON_EMPTY_VALUE
+	}
+
 	public static class Attributes {
 		String inputPrompt;
 
@@ -135,7 +139,7 @@ public class Suggestor extends Model
 
 		OverlayPosition.Position suggestionXAlign = Position.START;
 
-		boolean suggestOnBind;
+		SuggestOnBind suggestOnBind = SuggestOnBind.NO;
 
 		Supplier<? extends Editor> editorSupplier = InputEditor::new;
 
@@ -202,7 +206,7 @@ public class Suggestor extends Model
 			return this.selectAllOnFocus;
 		}
 
-		public boolean isSuggestOnBind() {
+		public SuggestOnBind getSuggestOnBind() {
 			return this.suggestOnBind;
 		}
 
@@ -276,7 +280,7 @@ public class Suggestor extends Model
 			return this;
 		}
 
-		public Attributes withSuggestOnBind(boolean suggestOnBind) {
+		public Attributes withSuggestOnBind(SuggestOnBind suggestOnBind) {
 			this.suggestOnBind = suggestOnBind;
 			return this;
 		}
@@ -301,6 +305,8 @@ public class Suggestor extends Model
 		void withSuggestor(Suggestor suggestor);
 
 		void setFilterText(String filterText);
+
+		boolean hasNonEmptyInput();
 	}
 
 	public enum Property implements PropertyEnum {
@@ -519,7 +525,16 @@ public class Suggestor extends Model
 		if (!event.isBound()) {
 			suggestions.toState(State.UNBOUND);
 		} else {
-			if (attributes.isSuggestOnBind()) {
+			boolean suggest = false;
+			switch (attributes.getSuggestOnBind()) {
+			case YES:
+				suggest = true;
+				break;
+			case NON_EMPTY_VALUE:
+				suggest = editor.hasNonEmptyInput();
+				break;
+			}
+			if (suggest) {
 				Client.eventBus().queued().lambda(() -> editor.emitAsk())
 						.dispatch();
 			}

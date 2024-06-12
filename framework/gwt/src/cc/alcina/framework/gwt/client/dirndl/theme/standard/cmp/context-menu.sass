@@ -38,8 +38,8 @@
   > results 
     display: contents
 
-    > choice
-      @include dropdown-list-item
+  > choice, > results > choice
+    @include dropdown-list-item
 
 @mixin context-menu()
   @include dropdown-list

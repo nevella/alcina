@@ -24,6 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.CtrlEnterPr
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.EscapePressed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.MouseDownOutside;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
@@ -78,8 +79,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
-		InferredDomEvents.MouseDownOutside.Handler, Model.RerouteBubbledEvents,
-		ModelEvents.Submit.Handler, ModelEvents.Closed.Handler {
+		InferredDomEvents.MouseDownOutside.Handler, ModelEvents.Submit.Handler,
+		ModelEvents.Closed.Handler {
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -100,7 +101,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	private String cssClass;
 
-	private Model logicalParent;
+	Model logicalParent;
 
 	private List<Class<? extends Model>> logicalAncestors;
 
@@ -336,11 +337,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		open = true;
 	}
 
-	@Override
-	public Model rerouteBubbledEventsTo() {
-		return logicalParent;
-	}
-
 	private boolean selfOrDescendantOverlayContains(Element element) {
 		if (provideElement().provideIsAncestorOf(element, true)) {
 			return true;
@@ -515,6 +511,18 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 				withRemoveOnMouseDownOutside(boolean removeOnMouseDownOutside) {
 			this.removeOnMouseDownOutside = removeOnMouseDownOutside;
 			return this;
+		}
+	}
+
+	public static class Positioned
+			extends ModelEvent<OverlayContainer, Positioned.Handler> {
+		@Override
+		public void dispatch(Positioned.Handler handler) {
+			handler.onPositioned(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPositioned(Positioned event);
 		}
 	}
 }

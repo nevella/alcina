@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.NativePreviewEventAsync;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
@@ -43,9 +44,9 @@ public class Dropdown extends Model
 		implements DropdownButtonClicked.Handler, ModelEvents.Closed.Handler {
 	private boolean open;
 
-	private Model button;
+	protected Model button;
 
-	private Model dropdown;
+	protected Model dropdown;
 
 	private Overlay overlay;
 
@@ -59,6 +60,9 @@ public class Dropdown extends Model
 
 	private Model logicalParent;
 
+	protected Dropdown() {
+	}
+
 	public Dropdown(Model button, Model dropdown) {
 		this.button = button;
 		setDropdown(dropdown);
@@ -67,9 +71,38 @@ public class Dropdown extends Model
 	public Dropdown(Model button, Supplier<Model> dropdownSupplier) {
 		this.button = button;
 		this.dropdownSupplier = dropdownSupplier;
-		// the dropdown will be regenerated on show, this instnce acts as a
+		// the dropdown will be regenerated on show, this instance acts as a
 		// placeholder for the dropdown stack
 		setDropdown(dropdownSupplier.get());
+	}
+
+	static class LabelArrow extends Model.All
+			implements DomEvents.Click.Handler {
+		@Directed(
+			reemits = { DomEvents.Click.class,
+					DropdownEvents.ComboLabelSelected.class })
+		Object label;
+
+		public void setLabel(Object label) {
+			set("label", this.label, label, () -> this.label = label);
+		}
+
+		@Directed(
+			reemits = { DomEvents.Click.class,
+					DropdownEvents.DropdownButtonClicked.class })
+		Arrow arrow = new Arrow();
+
+		public static class Arrow extends Model {
+		}
+
+		LabelArrow(Model label) {
+			this.label = label;
+		}
+
+		@Override
+		public void onClick(Click event) {
+			// squelch any border clicks
+		}
 	}
 
 	@Directed(

@@ -45,6 +45,10 @@ public class AppSuggestionEntry<C extends AppSuggestionCategory>
 		return match;
 	}
 
+	public C category() {
+		return category;
+	}
+
 	@Override
 	public String toString() {
 		FormatBuilder format = new FormatBuilder().separator(" - ");

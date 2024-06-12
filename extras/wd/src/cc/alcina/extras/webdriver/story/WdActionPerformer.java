@@ -2,6 +2,7 @@ package cc.alcina.extras.webdriver.story;
 
 import java.util.Objects;
 
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -62,8 +63,8 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 			@Override
 			public void perform(WdActionPerformer wdPerformer,
 					Story.Action.Ui.Go action) throws Exception {
-				Story.Action.Location.Url location = wdPerformer.context
-						.getLocation(Story.Action.Location.Axis.URL);
+				Location.Url location = wdPerformer.context
+						.getLocation(Location.Axis.URL);
 				WdContext wdContext = wdPerformer.wdContext;
 				WebDriver webDriver = wdContext.token.getWebDriver();
 				String currentUrl = webDriver.getCurrentUrl();
@@ -85,8 +86,8 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 			@Override
 			public void perform(WdActionPerformer wdPerformer,
 					Story.Action.Ui.Refresh action) throws Exception {
-				Story.Action.Location.Url location = wdPerformer.context
-						.getLocation(Story.Action.Location.Axis.URL);
+				Location.Url location = wdPerformer.context
+						.getLocation(Location.Axis.URL);
 				WdContext wdContext = wdPerformer.wdContext;
 				WebDriver webDriver = wdContext.token.getWebDriver();
 				String currentUrl = webDriver.getCurrentUrl();
@@ -185,8 +186,9 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 		}
 
 		static ElementQuery createQuery(WdActionPerformer wdPerformer) {
-			Location mark = wdPerformer.context
-					.getLocation(Story.Action.Location.Axis.MARK);
+			Location mark = wdPerformer.context.getLocation(Location.Axis.MARK);
+			Location.Xpath xpath = wdPerformer.context
+					.getLocation(Location.Axis.DOCUMENT);
 			if (mark != null) {
 				WebElement markedElement = wdPerformer.context
 						.getAttribute(PerformerAttribute.MarkedElement.class)
@@ -194,16 +196,16 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 				wdPerformer.context.removeAttribute(
 						PerformerAttribute.MarkedElement.class);
 				return ElementQuery.fromElement(markedElement);
-			} else {
-				Story.Action.Location.Xpath location = wdPerformer.context
-						.getLocation(Story.Action.Location.Axis.DOCUMENT);
+			} else if (xpath != null) {
 				int timeout = wdPerformer.context.getAttribute(
 						StoryActionPerformer.PerformerAttribute.Timeout.class)
 						.orElse(5);
 				return ElementQuery
 						.xpath(wdPerformer.wdContext.token.getWebDriver(),
-								location.getText())
+								xpath.getText())
 						.withTimeout(timeout);
+			} else {
+				return null;
 			}
 		}
 
@@ -283,6 +285,19 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 				wdPerformer.context.setAttribute(
 						PerformerAttribute.MarkedElement.class, elem);
 				wdPerformer.context.log("Mark [%s]", query);
+			}
+		}
+
+		public static class Script
+				implements TypedPerformer<Story.Action.Ui.Script> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.Script action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				WebElement elem = query == null ? null : query.getElement();
+				JavascriptExecutor executor = (JavascriptExecutor) wdPerformer.wdContext.token
+						.getWebDriver();
+				executor.executeScript(action.getText(), elem);
 			}
 		}
 	}

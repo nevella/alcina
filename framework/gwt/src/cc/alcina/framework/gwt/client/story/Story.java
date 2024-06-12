@@ -317,6 +317,24 @@ public interface Story {
 					}
 				}
 
+				/** Define a script action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface Script {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<Script> {
+						@Override
+						public Story.Action convert(Script ann) {
+							return new Story.Action.Ui.Script()
+									.withText(ann.value());
+						}
+					}
+				}
+
 				public interface Select {
 					/** Define a select-by-value action */
 					@Retention(RetentionPolicy.RUNTIME)
@@ -845,6 +863,9 @@ public interface Story {
 
 			public static class AwaitAttributeValue extends ActionWithNameText {
 				public FilterOperator operator;
+			}
+
+			public static class Script extends ActionWithText {
 			}
 		}
 
