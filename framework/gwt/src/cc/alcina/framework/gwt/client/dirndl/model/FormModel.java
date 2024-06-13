@@ -382,8 +382,6 @@ public class FormModel extends Model
 			}
 			try {
 				LooseContext.push();
-				// FIXME - dirndl - cleanup GwittirBridge calling (use a
-				// builder)
 				if (attributes.nodeEditors) {
 					LooseContext.setTrue(
 							BeanFields.CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS);

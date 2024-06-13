@@ -411,8 +411,10 @@ public class BeanFields {
 				bwp = customiser.getProvider(fieldEditable, domainType,
 						query.multiple, customiserInfo, propertyLocation);
 			}
-			if (bwp != null || LooseContext
-					.is(CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS)) {
+			if (bwp != null
+					|| LooseContext
+							.is(CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS)
+					|| query.allowNullWidgetProviders) {
 				ValidationFeedback validationFeedback = null;
 				Validator validator = null;
 				if (fieldEditable) {
@@ -583,7 +585,8 @@ public class BeanFields {
 			boolean editableField = query.editable
 					&& query.editableNamePredicate.test(propertyName);
 			FieldQuery perFieldQuery = query.clone().asEditable(editableField)
-					.forPropertyName(propertyName);
+					.forPropertyName(propertyName).withAllowNullWidgetProviders(
+							query.allowNullWidgetProviders);
 			return getField(perFieldQuery);
 		}).filter(Objects::nonNull).sorted(new FieldOrdering(classReflector))
 				.collect(Collectors.toList());
@@ -705,6 +708,8 @@ public class BeanFields {
 
 		ValidationFeedback.Provider validationFeedbackProvider;
 
+		private boolean allowNullWidgetProviders;
+
 		public FieldQuery asAdjunctEditor(boolean adjunct) {
 			this.adjunct = adjunct;
 			return this;
@@ -773,6 +778,12 @@ public class BeanFields {
 			if (resolver != null) {
 				this.resolver = resolver;
 			}
+			return this;
+		}
+
+		public FieldQuery
+				withAllowNullWidgetProviders(boolean allowNullWidgetProviders) {
+			this.allowNullWidgetProviders = allowNullWidgetProviders;
 			return this;
 		}
 
