@@ -9,6 +9,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.gwittir.validator.Validation;
 import cc.alcina.framework.common.client.gwittir.validator.ValidationState;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -132,7 +133,7 @@ public class FormValidation {
 		topicValidationResult
 				.publish(new ValidationResult(ValidationState.VALIDATING));
 		try {
-			if (!WidgetUtils.docHasFocus()) {
+			if (Al.isBrowser() && !WidgetUtils.docHasFocus()) {
 				GwittirUtils
 						.commitAllTextBoxes(formModel.getState().formBinding);
 			}
