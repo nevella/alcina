@@ -358,7 +358,9 @@ public class JobRegistry {
 	public Job await(Job job, long maxTime) throws InterruptedException {
 		if (JobContext.has()) {
 			Job contextJob = JobContext.get().getJob();
-			contextJob.createRelation(job, JobRelationType.AWAITED);
+			if (contextJob.provideDescendants().noneMatch(j -> j == job)) {
+				contextJob.createRelation(job, JobRelationType.AWAITED);
+			}
 		}
 		ContextAwaiter awaiter = ensureAwaiter(job);
 		TransactionEnvironment.get().commit();
