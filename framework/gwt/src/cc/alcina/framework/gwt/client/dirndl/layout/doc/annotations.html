@@ -1,7 +1,9 @@
 <html>
+
 <head>
-<link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
+
 <body class="doc-body">
 	<h2>Dirndl annotations</h2>
 	<p>One of the primary goals of dirndl is infinite customisability. It's achieved to a fair
@@ -79,5 +81,56 @@ public class LoginAreaCustom extends LoginArea {
 
 		</code>
 </pre>
+	<h3>Notes on annotation resolution debugging</h3>
+	<p>Debugging override of <code>@DirectedContextResolver</code></p>
+	<p>To start, I wrote a ContextResolver.AnnotationCustomiser subtype with the following:
+	</p>
+	<pre>
+		<code>
+resolve(AppSuggestorJade.class, null, DirectedContextResolver.class)
+	.as(new DirectedContextResolver.Impl()
+		.withValue(AppSuggestorResolver.class));
+					</code>
+				</pre>
+	<p>That didn't work, so I instrumented AnnotationCustomiser to list every location it resolved:</p>
+
+	<pre>
+			<code>
+Set<HasAnnotations> locations = new HashSet<>();
+
+@Override
+public &lt;A extends Annotation&gt; A contextAnnotation(HasAnnotations reflector,
+		Class&lt;A&gt; clazz, ResolutionContext resolutionContext) {
+	if (locations.add(reflector)) {
+		Ax.out(reflector);
+	}
+	return super.contextAnnotation(reflector, clazz, resolutionContext);
+}
+</code>
+</pre>
+	<p>....ok, OverlayContainer.contents : Model was tested - but not AppSuggestor. </p>
+	<p>(this would be better with an observer...but meanwhile...add a debug point to DirectedLayout)</p>
+	<pre>
+	<code>
+//cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput.init
+if (newResolver == null) {
+if (location.classLocation.getName().contains("AppSuggestor")) {
+int debugPoint = 3;
+}
+DirectedContextResolver resolverAnnotation = location
+	.getAnnotation(DirectedContextResolver.class);
+	</code>
+</pre>
+	<p>
+		This annotation (<code>DirectedContextResolver</code>)is has a mergestrategy - so add a breakpoint to
+		<code>cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver.resolveAnnotations0</code>
+
+	</p>
+	<p>Trace through, mergeStrategy.resolveClass is returning the annotation on AppSuggestor - not the customised
+		resolver annotation (and not calling through to the resolver)</p>
+	<p>Ahhh...only the directed merge strategy was using <code>contextAnnotation</code> - rework AbstractMergeStrategy
+		to also use it</p>
+	<p>....worked</p>
 </body>
+
 </html>

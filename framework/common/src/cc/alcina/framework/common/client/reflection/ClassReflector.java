@@ -355,4 +355,12 @@ public class ClassReflector<T> implements HasAnnotations {
 			throw new UnsupportedOperationException();
 		}
 	}
+
+	@Override
+	public boolean isClass(Class locationClass, String propertyName) {
+		if (propertyName != null) {
+			return false;
+		}
+		return locationClass == reflectedClass;
+	}
 }

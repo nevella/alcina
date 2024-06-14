@@ -89,6 +89,27 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * Allow the selected object to react to selection (say by keyboard
+	 * selection) prior to dispatch
+	 */
+	public static class BeforeSelectionChangedDispatchDescent extends
+			ModelEvent.DescendantEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Emitter> {
+		@Override
+		public void dispatch(
+				BeforeSelectionChangedDispatchDescent.Handler handler) {
+			handler.onBeforeSelectionChangedDispatchDescent(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBeforeSelectionChangedDispatchDescent(
+					BeforeSelectionChangedDispatchDescent event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
+
 	public static class Cancel extends ModelEvent<Object, Cancel.Handler> {
 		@Override
 		public void dispatch(Cancel.Handler handler) {
@@ -272,18 +293,6 @@ public class ModelEvents {
 		}
 	}
 
-	public static class LabelClicked
-			extends ModelEvent<Object, LabelClicked.Handler> {
-		@Override
-		public void dispatch(LabelClicked.Handler handler) {
-			handler.onLabelClicked(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onLabelClicked(LabelClicked event);
-		}
-	}
-
 	public interface FilterContentsElement {
 		boolean matchesFilter(String filterString);
 	}
@@ -354,6 +363,18 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onInsert(Insert event);
+		}
+	}
+
+	public static class LabelClicked
+			extends ModelEvent<Object, LabelClicked.Handler> {
+		@Override
+		public void dispatch(LabelClicked.Handler handler) {
+			handler.onLabelClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onLabelClicked(LabelClicked event);
 		}
 	}
 
@@ -510,6 +531,24 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onSelectionChanged(SelectionChanged event);
+		}
+	}
+
+	/**
+	 * When a suggestor/choices contains complex models, the model may itself
+	 * handle a selection (click on it). But the container should still be
+	 * cleaned up (e.g. overlay dismissed), so this event indiciates "don't
+	 * perform the default selection *consequence* action, but do cleanup"
+	 */
+	public static class SelectionHandled
+			extends ModelEvent<Object, SelectionHandled.Handler> {
+		@Override
+		public void dispatch(SelectionHandled.Handler handler) {
+			handler.onSelectionHandled(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionHandled(SelectionHandled event);
 		}
 	}
 
