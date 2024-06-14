@@ -105,9 +105,9 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	private List<Class<? extends Model>> logicalAncestors;
 
-	private ModelEvents.Submit.Handler modalSubmitHandler;
+	private ModelEvents.Submit.Handler submitHandler;
 
-	private ModelEvents.Closed.Handler modalClosedHandler;
+	private ModelEvents.Closed.Handler closedHandler;
 
 	/*
 	 * Don't close this overlay if the child is the event target
@@ -125,8 +125,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		removeOnMouseDownOutside = builder.removeOnMouseDownOutside;
 		logicalParent = builder.logicalParent;
 		logicalAncestors = builder.logicalAncestors;
-		modalSubmitHandler = builder.modalSubmitHandler;
-		modalClosedHandler = builder.modalClosedHandler;
+		submitHandler = builder.submitHandler;
+		closedHandler = builder.closedHandler;
 		cssClassParameter = builder.cssClass;
 		computeCssClass();
 	}
@@ -276,8 +276,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			event.bubble();
 			return;
 		}
-		if (modalClosedHandler != null) {
-			modalClosedHandler.onClosed(event);
+		if (closedHandler != null) {
+			closedHandler.onClosed(event);
 		}
 		try {
 			reemittingClose = true;
@@ -324,8 +324,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		if (event.checkReemitted(this)) {
 			return;
 		}
-		if (modalSubmitHandler != null) {
-			modalSubmitHandler.onSubmit(event);
+		if (submitHandler != null) {
+			submitHandler.onSubmit(event);
 		}
 		event.reemit();
 	}
@@ -421,9 +421,9 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		Model logicalParent;
 
-		ModelEvents.Submit.Handler modalSubmitHandler;
+		ModelEvents.Submit.Handler submitHandler;
 
-		ModelEvents.Closed.Handler modalClosedHandler;
+		ModelEvents.Closed.Handler closedHandler;
 
 		String cssClass;
 
@@ -490,15 +490,15 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			return this;
 		}
 
-		public Builder withModalClosedHandler(
-				ModelEvents.Closed.Handler modalClosedHandler) {
-			this.modalClosedHandler = modalClosedHandler;
+		public Builder
+				withClosedHandler(ModelEvents.Closed.Handler closedHandler) {
+			this.closedHandler = closedHandler;
 			return this;
 		}
 
-		public Builder withModalSubmitHandler(
-				ModelEvents.Submit.Handler modalSubmitHandler) {
-			this.modalSubmitHandler = modalSubmitHandler;
+		public Builder
+				withSubmitHandler(ModelEvents.Submit.Handler submitHandler) {
+			this.submitHandler = submitHandler;
 			return this;
 		}
 
