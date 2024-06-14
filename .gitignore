@@ -12,3 +12,4 @@
 /extras/jsdom/build*
 /extras/rpc/client/build
 /extras/rpc/servlet/build
+hs_err*.log
