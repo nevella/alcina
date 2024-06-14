@@ -20,7 +20,9 @@ import java.io.PrintStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -82,10 +84,12 @@ import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitLigh
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitPostObjectServices;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRunner;
 import cc.alcina.framework.entity.util.BiPrintStream;
-import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
+import cc.alcina.framework.entity.util.BiPrintStream.StreamNumber;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
+import cc.alcina.framework.entity.util.TerminalStreams;
+import cc.alcina.framework.entity.util.TerminalStreams.TerminalStream;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -114,32 +118,10 @@ FIXME - console - search for "FIXME - console" in markdown files
  */
 @Registration.Singleton
 public abstract class DevConsole implements ClipboardOwner {
-	private static BiPrintStream out;
-
-	private static BiPrintStream err;
-
-	private static BiPrintStream devErr;
-
-	private static BiPrintStream devOut;
-
 	private static long startupTime;
 	// has to happen early, otherwise can never redirect
 	static {
 		startupTime = System.currentTimeMillis();
-		err = new BiPrintStream(new ByteArrayOutputStream());
-		devErr = new BiPrintStream(new ByteArrayOutputStream());
-		err.s1 = System.err;
-		err.s2 = devErr;
-		devErr.s1 = new NullPrintStream();
-		devErr.s2 = new NullPrintStream();
-		out = new BiPrintStream(new ByteArrayOutputStream());
-		devOut = new BiPrintStream(new ByteArrayOutputStream());
-		out.s1 = System.out;
-		out.s2 = devOut;
-		devOut.s1 = new NullPrintStream();
-		devOut.s2 = new NullPrintStream();
-		System.setErr(err);
-		System.setOut(out);
 		// headless
 		System.setProperty("java.awt.headless", "true");
 		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
@@ -165,11 +147,6 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	public static DevConsole getInstance() {
 		return instance;
-	}
-
-	public static void stdSysOut() {
-		System.setErr(err.s1);
-		System.setOut(out.s1);
 	}
 
 	private boolean initialised;
@@ -232,7 +209,11 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	LinkedList<DevConsoleRunnable> currentRunnables = new LinkedList<>();
 
-	private boolean noHistory;
+	boolean noHistory;
+
+	File consoleOutputFile;
+
+	int consoleOutputFileMark;
 
 	public DevConsole(String[] args) {
 		if (args.length == 0) {
@@ -241,17 +222,19 @@ public abstract class DevConsole implements ClipboardOwner {
 				args = propertyArgs.split(";");
 			}
 		}
-		File consoleOutputFile = new File(
+		consoleOutputFile = new File(
 				Ax.format("/tmp/log/console/%s.log", getLogFilePrefix()));
 		consoleOutputFile.delete();
 		consoleOutputFile.getParentFile().mkdirs();
 		String loggingPropertiesPath = null;
 		try {
-			consoleOutputFile.createNewFile();
-			devOut.s2 = new PrintStream(new FileOutputStream(consoleOutputFile),
-					true);
-			devErr.s2 = new PrintStream(new FileOutputStream(consoleOutputFile),
-					true);
+			boolean createNewFile = consoleOutputFile.createNewFile();
+			PrintStream fileOutPrintStream = new PrintStream(
+					new FileOutputStream(consoleOutputFile), true);
+			TerminalStreams.get().redirect(TerminalStream.out, StreamNumber._2,
+					fileOutPrintStream);
+			TerminalStreams.get().redirect(TerminalStream.err, StreamNumber._2,
+					fileOutPrintStream);
 			InputStream s1 = DevConsole.class
 					.getResourceAsStream("logging.properties");
 			// will be a bufferedinputstream wrapping a fileinputstream
@@ -397,10 +380,11 @@ public abstract class DevConsole implements ClipboardOwner {
 	}
 
 	public String endRecordingSysout() {
-		out.s2.flush();
-		String result = new String(recordOut.toByteArray());
-		out.s2 = oldS2;
-		return result;
+		int mark = (int) consoleOutputFile.length();
+		byte[] bytes = Io.read().file(consoleOutputFile).asBytes();
+		byte[] recorded = Arrays.copyOfRange(bytes, consoleOutputFileMark,
+				mark);
+		return new String(recorded, StandardCharsets.UTF_8);
 	}
 
 	public abstract void ensureDomainStore() throws Exception;
@@ -539,10 +523,12 @@ public abstract class DevConsole implements ClipboardOwner {
 		} else {
 			remote.start();
 			this.headless = remote.isHasRemote();
-			devOut.s1 = new PrintStream(
-					new WriterOutputStream(remote.getOutWriter()));
-			devErr.s1 = new PrintStream(
-					new WriterOutputStream(remote.getErrWriter()));
+			TerminalStreams.get().redirect(TerminalStream.out,
+					BiPrintStream.StreamNumber._1, new PrintStream(
+							new WriterOutputStream(remote.getOutWriter())));
+			TerminalStreams.get().redirect(TerminalStream.err,
+					BiPrintStream.StreamNumber._1, new PrintStream(
+							new WriterOutputStream(remote.getErrWriter())));
 		}
 		if (!headless) {
 			throw new UnsupportedOperationException();
@@ -610,7 +596,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		try {
 			state = getDevHelper().readObject(getState());
 		} catch (Exception e) {
-			DevConsole.stdSysOut();
+			TerminalStreams.get().stdSysOut();
 			FileNotFoundException fnfe = CommonUtils.extractCauseOfClass(e,
 					FileNotFoundException.class);
 			if (fnfe == null) {
@@ -877,25 +863,6 @@ public abstract class DevConsole implements ClipboardOwner {
 		}
 	}
 
-	public void pipeOutput(String outDumpFileName) {
-		pipeOutput(outDumpFileName, true);
-	}
-
-	public void pipeOutput(String outDumpFileName, boolean mute) {
-		if (outDumpFileName != null) {
-			startRecordingSysout(mute);
-			this.outDumpFileName = outDumpFileName;
-		} else {
-			try {
-				Io.write().string(endRecordingSysout())
-						.toPath(this.outDumpFileName);
-				this.outDumpFileName = null;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
 	public void popSubshell() {
 		shells.pop();
 		loadCommandMap();
@@ -1049,8 +1016,9 @@ public abstract class DevConsole implements ClipboardOwner {
 	}
 
 	public void setConsoleOuputMuted(boolean muted) {
-		out.setMuted(muted);
-		err.setMuted(muted);
+		// currently not implemented
+		// out.setMuted(muted);
+		// err.setMuted(muted);
 	}
 
 	public void setNextCommand(String cmd) {
@@ -1089,21 +1057,7 @@ public abstract class DevConsole implements ClipboardOwner {
 	}
 
 	public void startRecordingSysout(boolean mute) {
-		oldS2 = out.s2;
-		PrintStream s2 = out.s2;
-		recordOut = new ByteArrayOutputStream();
-		PrintStream outStream = new PrintStream(recordOut);
-		if (mute) {
-			out.s2 = outStream;
-			ByteArrayOutputStream nullOut = new ByteArrayOutputStream();
-			out.s1 = new PrintStream(nullOut);
-		} else {
-			BiPrintStream s2repl = new BiPrintStream(
-					new ByteArrayOutputStream());
-			s2repl.s1 = s2;
-			s2repl.s2 = outStream;
-			out.s2 = s2repl;
-		}
+		consoleOutputFileMark = (int) consoleOutputFile.length();
 	}
 
 	public enum DevConsoleStyle {

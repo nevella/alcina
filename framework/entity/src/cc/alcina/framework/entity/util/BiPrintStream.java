@@ -2,7 +2,6 @@ package cc.alcina.framework.entity.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Locale;
@@ -20,14 +19,8 @@ public class BiPrintStream extends PrintStream {
 
 	private PrintStream[] restoreStreams = null;
 
-	/*
-	 * The ignore parameter is ignored by this class (it's just to make the
-	 * super constructor happy)
-	 * 
-	 * FIXME - clean - should be able to remove
-	 */
-	public BiPrintStream(OutputStream ignore) {
-		super(ignore);
+	public BiPrintStream() {
+		super(new ByteArrayOutputStream());
 	}
 
 	@Override
@@ -288,6 +281,28 @@ public class BiPrintStream extends PrintStream {
 	public static class NullPrintStream extends PrintStream {
 		public NullPrintStream() {
 			super(new ByteArrayOutputStream());
+		}
+	}
+
+	public static BiPrintStream swappablePrintStreams() {
+		BiPrintStream result = new BiPrintStream();
+		result.s1 = SwappableOutputStream.swappablePrintStream();
+		result.s2 = SwappableOutputStream.swappablePrintStream();
+		return result;
+	}
+
+	public enum StreamNumber {
+		_1, _2
+	}
+
+	void redirect(StreamNumber streamNumber, PrintStream printStream) {
+		switch (streamNumber) {
+		case _1:
+			s1 = SwappableOutputStream.swapPrintStream(s1, printStream);
+			break;
+		case _2:
+			s2 = SwappableOutputStream.swapPrintStream(s2, printStream);
+			break;
 		}
 	}
 }
