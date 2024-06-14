@@ -1341,11 +1341,14 @@ public class LocalDom implements ContextFrame {
 						Element firstReceiver = (Element) eventData.firstReceiver
 								.node();
 						if (eventData.eventValue() != null) {
-							firstReceiver.implAccess()
+							Element target = Element
+									.as(eventData.event.getEventTarget());
+							target.implAccess()
 									.pathrefRemote().value = eventData
 											.eventValue();
 						}
-						// FIXME - romcom - attach probably not being called
+						// FIXME - romcom - attach probably not being called.
+						// This can probably be removed
 						if (firstReceiver.eventListener == null) {
 							firstReceiver.eventListener = firstReceiver;
 						}

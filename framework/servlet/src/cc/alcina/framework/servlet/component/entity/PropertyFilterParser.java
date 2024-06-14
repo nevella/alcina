@@ -78,7 +78,7 @@ class PropertyFilterParser {
 			if (sortCandidates.size() > 0) {
 				filters = filters.stream().flatMap(f -> sortCandidates.stream()
 						.map(sort -> f.withSort(sort.getName(), sortDirection)))
-						.toList();
+						.collect(Collectors.toList());
 			}
 			return filters;
 		}
