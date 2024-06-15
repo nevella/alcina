@@ -19,6 +19,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilterPeer;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityLinkerPeer;
+import cc.alcina.framework.entity.util.FileUtils;
 
 public class JdkReflectionGenerator {
 	public static Attributes attributes() {
@@ -117,7 +118,7 @@ public class JdkReflectionGenerator {
 
 		File generationDataFolder() {
 			if (generationDataFolder == null) {
-				generationDataFolder = SEUtilities.getChildFile(dataFolder(),
+				generationDataFolder = FileUtils.child(dataFolder(),
 						"data");
 				generationDataFolder.mkdirs();
 			}
@@ -126,7 +127,7 @@ public class JdkReflectionGenerator {
 
 		File generationSrcFolder() {
 			if (generationSrcFolder == null) {
-				generationSrcFolder = SEUtilities.getChildFile(dataFolder(),
+				generationSrcFolder = FileUtils.child(dataFolder(),
 						"src");
 				generationSrcFolder.mkdirs();
 			}

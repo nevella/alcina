@@ -79,6 +79,7 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -562,7 +563,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					Configuration.properties.register(
 							Io.read().file(propertiesFile).asString());
 				} else {
-					File propertiesListFile = SEUtilities.getChildFile(
+					File propertiesListFile = FileUtils.child(
 							propertiesFile.getParentFile(),
 							"alcina-properties-files.txt");
 					if (propertiesListFile.exists()) {

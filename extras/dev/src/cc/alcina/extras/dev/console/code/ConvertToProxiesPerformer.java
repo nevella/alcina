@@ -56,6 +56,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 
@@ -233,7 +234,7 @@ public class ConvertToProxiesPerformer
 				.get().getNameAsString().replace(".", "/"));
 		File packageFolder = new File(packagePath);
 		packageFolder.mkdirs();
-		File outFile = SEUtilities.getChildFile(packageFolder,
+		File outFile = FileUtils.child(packageFolder,
 				declaration.getNameAsString() + ".java");
 		try {
 			Io.write().string(unit.toString()).toFile(outFile);

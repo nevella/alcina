@@ -68,6 +68,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.servlet.task.TaskDomainQuery;
@@ -382,9 +383,9 @@ public abstract class DevConsoleCommand {
 			}
 			boolean load = argv[0].equals("load");
 			String name = argv[1];
-			File profile = SEUtilities.getChildFile(console.profileFolder,
+			File profile = FileUtils.child(console.profileFolder,
 					name);
-			File profileSer = SEUtilities.getChildFile(profile, "ser");
+			File profileSer = FileUtils.child(profile, "ser");
 			File testFolder = console.getDevHelper().getTestFolder();
 			if (load) {
 				if (!profile.exists()) {
@@ -395,13 +396,13 @@ public abstract class DevConsoleCommand {
 					SEUtilities.copyFile(profileSer, testFolder);
 					SEUtilities
 							.copyFile(
-									SEUtilities.getChildFile(profile,
+									FileUtils.child(profile,
 											console.consolePropertiesFile
 													.getName()),
 									console.consolePropertiesFile);
 					SEUtilities
 							.copyFile(
-									SEUtilities.getChildFile(profile,
+									FileUtils.child(profile,
 											console.consoleHistoryFile
 													.getName()),
 									console.consoleHistoryFile);
@@ -411,10 +412,10 @@ public abstract class DevConsoleCommand {
 			} else {
 				SEUtilities.copyFile(testFolder, profileSer);
 				SEUtilities.copyFile(console.consolePropertiesFile,
-						SEUtilities.getChildFile(profile,
+						FileUtils.child(profile,
 								console.consolePropertiesFile.getName()));
 				SEUtilities.copyFile(console.consoleHistoryFile,
-						SEUtilities.getChildFile(profile,
+						FileUtils.child(profile,
 								console.consoleHistoryFile.getName()));
 			}
 			return load ? String.format("Loaded config from profile '%s'", name)

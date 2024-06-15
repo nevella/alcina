@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 
 public class CompilationUnits {
@@ -353,7 +354,7 @@ public class CompilationUnits {
 			if (outDir == null) {
 				outDir = getFile().getParentFile();
 			}
-			File outFile = SEUtilities.getChildFile(outDir,
+			File outFile = FileUtils.child(outDir,
 					getFile().getName());
 			try {
 				String modified = mapper == null

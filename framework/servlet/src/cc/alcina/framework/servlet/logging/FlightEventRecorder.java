@@ -9,18 +9,27 @@ import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.flight.HasSessionId;
 import cc.alcina.framework.common.client.flight.HasSessionId.FlightExceptionMessage;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.servlet.LifecycleService;
 
 @Registration.Singleton
 public class FlightEventRecorder extends LifecycleService.AlsoDev
 		implements ProcessObserver<FlightEvent> {
-	String path;
+	File eventsFolder;
+
+	String sessionId;
+
+	public static FlightEventRecorder get() {
+		return Registry.impl(FlightEventRecorder.class);
+	}
 
 	@Override
 	public void onApplicationStartup() {
@@ -33,36 +42,52 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 	Map<String, String> sessionIdDateSession = new ConcurrentHashMap<>();
 
 	@Override
-	public void topicPublished(FlightEvent message) {
-		String path = null;
+	public synchronized void topicPublished(FlightEvent message) {
+		File writeTo = null;
 		try {
-			String dateSessionId = sessionIdDateSession.computeIfAbsent(
-					message.event.getSessionId(),
-					sessionId -> Ax.format("%s.%s", Ax.timestampYmd(new Date()),
-							sessionId));
-			String folderPath = Ax.format("%s/%s", Configuration.get("path"),
-					dateSessionId);
-			File folder = new File(folderPath);
-			if (!folder.exists()) {
-				folder.mkdirs();
-				Ax.out("FlightEventRecorder :: recording to %s", folderPath);
+			if (sessionId == null) {
+				sessionId = message.event.getSessionId();
 			}
-			path = Ax.format("%s/%s.json", folderPath, message.eventId);
+			ensureEventsFolder();
+			writeTo = FileUtils.child(eventsFolder,
+					String.valueOf(message.eventId));
 			Io.write().asReflectiveSerialized(true).object(message)
-					.toPath(path);
+					.toFile(writeTo);
 		} catch (Exception e) {
 			e.printStackTrace();
-			if (path != null) {
+			if (writeTo != null) {
 				try {
 					FlightExceptionMessage flightExceptionMessage = new HasSessionId.FlightExceptionMessage(
 							message.event.getSessionId(),
 							CommonUtils.getFullExceptionMessage(e));
 					Io.write().asReflectiveSerialized(true)
-							.object(flightExceptionMessage).toPath(path);
+							.object(flightExceptionMessage).toFile(writeTo);
 				} catch (Exception e2) {
 					e2.printStackTrace();
 				}
 			}
 		}
+	}
+
+	void ensureEventsFolder() {
+		if (sessionId == null || eventsFolder != null) {
+			return;
+		}
+		String dateSessionId = sessionIdDateSession.computeIfAbsent(sessionId,
+				sessionId -> Ax.format("%s.%s", Ax.timestampYmd(new Date()),
+						sessionId));
+		String appId = Configuration.get("appId");
+		appId = Ax.blankTo(appId, EntityLayerUtils.getLocalHostName());
+		String folderPath = Ax.format("%s/flight-%s-%s",
+				Configuration.get("path"), appId, dateSessionId);
+		eventsFolder = new File(folderPath);
+		eventsFolder.mkdirs();
+		Ax.out("FlightEventRecorder :: recording to %s", folderPath);
+	}
+
+	public synchronized File rollover() {
+		eventsFolder = null;
+		ensureEventsFolder();
+		return eventsFolder;
 	}
 }

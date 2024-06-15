@@ -10,13 +10,13 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.TypeOracle;
 import cc.alcina.framework.entity.gwt.reflection.jdk.ValidityScanner.ValidityMetadata;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
+import cc.alcina.framework.entity.util.FileUtils;
 
 class BuildtimeTypeProvider implements TypeOracle.TypeProvider {
 	JdkReflectionGenerator jdkReflectionGenerator;
@@ -66,7 +66,7 @@ class BuildtimeTypeProvider implements TypeOracle.TypeProvider {
 		EntityLayerObjects.get().setDataFolder(
 				jdkReflectionGenerator.attributes.generationDataFolder());
 		ValidityScanner validityScanner = new ValidityScanner();
-		validityScanner.cacheFile = SEUtilities.getChildFile(
+		validityScanner.cacheFile = FileUtils.child(
 				jdkReflectionGenerator.attributes.generationDataFolder(),
 				"validity-scanner.dat");
 		dataCache = validityScanner

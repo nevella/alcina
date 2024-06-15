@@ -48,6 +48,7 @@ public class TerminalStreams {
 		System.setOut(out.s1);
 	}
 
+	@SuppressWarnings("resource")
 	public void redirect(TerminalStream terminalStream,
 			StreamNumber streamNumber, PrintStream printStream) {
 		BiPrintStream bps = terminalStream == TerminalStream.out ? this.out

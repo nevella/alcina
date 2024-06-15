@@ -856,11 +856,6 @@ public class SEUtilities {
 		return cal;
 	}
 
-	public static File getChildFile(File folder, String childFileName) {
-		return new File(
-				String.format("%s/%s", folder.getPath(), childFileName));
-	}
-
 	public static String getCurrentThreadStacktraceSlice() {
 		return getStacktraceSlice(Thread.currentThread(), 35, 0);
 	}

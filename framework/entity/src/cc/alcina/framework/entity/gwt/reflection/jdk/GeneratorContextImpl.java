@@ -20,8 +20,8 @@ import com.google.gwt.dev.resource.ResourceOracle;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.TypeOracle;
+import cc.alcina.framework.entity.util.FileUtils;
 
 class GeneratorContextImpl implements GeneratorContext {
 	JdkReflectionGenerator generator;
@@ -102,11 +102,11 @@ class GeneratorContextImpl implements GeneratorContext {
 	public PrintWriter tryCreate(TreeLogger logger, String packageName,
 			String simpleName) {
 		File generationSrcFolder = generator.attributes.generationSrcFolder();
-		File packageFolder = SEUtilities.getChildFile(generationSrcFolder,
+		File packageFolder = FileUtils.child(generationSrcFolder,
 				packageName.replace(".", "/"));
 		packageFolder.mkdirs();
 		String unitFileName = Ax.format("%s.java", simpleName);
-		File unitFile = SEUtilities.getChildFile(packageFolder, unitFileName);
+		File unitFile = FileUtils.child(packageFolder, unitFileName);
 		StringWriter stringWriter = new StringWriter();
 		try {
 			printWriterPaths.add(unitFile.getCanonicalPath());

@@ -19,6 +19,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
@@ -100,7 +101,7 @@ public class TaskSetupAlcinaGwt extends PerformerTask {
 				if (Objects.equals(relativeSegment, alcina.path)) {
 					throw new IllegalStateException("Path: " + alcina.path);
 				}
-				File to = SEUtilities.getChildFile(targetBase, relativeSegment);
+				File to = FileUtils.child(targetBase, relativeSegment);
 				to.getParentFile().mkdirs();
 				Io.read().path(alcina.path).write().toFile(to);
 				if (gwt != null) {
@@ -174,13 +175,13 @@ public class TaskSetupAlcinaGwt extends PerformerTask {
 		}
 
 		void setupDirs() {
-			alcinaDevSrcTargetFolder = SEUtilities.getChildFile(gwtRepoFolder,
+			alcinaDevSrcTargetFolder = FileUtils.child(gwtRepoFolder,
 					"dev/alcina/src");
-			alcinaUserSrcTargetFolder = SEUtilities.getChildFile(gwtRepoFolder,
+			alcinaUserSrcTargetFolder = FileUtils.child(gwtRepoFolder,
 					"user/alcina/src");
-			gwtDevCoreSrcFolder = SEUtilities.getChildFile(gwtRepoFolder,
+			gwtDevCoreSrcFolder = FileUtils.child(gwtRepoFolder,
 					"dev/core/src");
-			gwtUserSrcFolder = SEUtilities.getChildFile(gwtRepoFolder,
+			gwtUserSrcFolder = FileUtils.child(gwtRepoFolder,
 					"user/src");
 			// could also modify the build.xml targets - but doing that by hand
 			// for the mo'
@@ -261,8 +262,8 @@ public class TaskSetupAlcinaGwt extends PerformerTask {
 	public void run() throws Exception {
 		EntityLayerLogging.setLevel(MetricLogging.class, Level.DEBUG);
 		folder = new File(path);
-		gwtRepoFolder = SEUtilities.getChildFile(folder, "gwt");
-		gwtToolsFolder = SEUtilities.getChildFile(folder, "tools");
+		gwtRepoFolder = FileUtils.child(folder, "gwt");
+		gwtToolsFolder = FileUtils.child(folder, "tools");
 		if (clean) {
 			SEUtilities.deleteDirectory(folder);
 		}

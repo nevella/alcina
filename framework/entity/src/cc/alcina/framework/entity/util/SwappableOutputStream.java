@@ -77,6 +77,7 @@ class SwappableOutputStream extends OutputStream {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+		from.close();
 		return to;
 	}
 }

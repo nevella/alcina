@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.HasLocalDelivery;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
@@ -51,7 +51,7 @@ public class ContentDeliveryLocalFilesystem implements ContentDelivery {
 		}
 		File file = suggestedFileName.startsWith("/")
 				? new File(suggestedFileName)
-				: SEUtilities.getChildFile(folder, suggestedFileName);
+				: FileUtils.child(folder, suggestedFileName);
 		Io.Streams.copy(convertedContent, new FileOutputStream(file));
 		logger.info("Wrote publication to local path: {}", file);
 		logger.info("  --  ", file);

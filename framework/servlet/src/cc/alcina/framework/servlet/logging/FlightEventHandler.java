@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.ZipUtil;
 
 /*
@@ -32,7 +33,7 @@ public class FlightEventHandler {
 
 	public synchronized void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
-		File tmpFolder = SEUtilities.getChildFile(
+		File tmpFolder = FileUtils.child(
 				new File(eventRootPath).getParentFile(),
 				Ax.format("tmp.flight-event-assembly-%s",
 						Ax.timestamp(new Date())));
@@ -63,16 +64,16 @@ public class FlightEventHandler {
 			}
 			case download: {
 				tmpFolder.mkdirs();
-				SEUtilities.deleteDirectory(tmpFolder, true);
 				String path = Ax.format("%s/%s", eventRootPath, sessionFolder);
 				Stream.of(new File(path).listFiles())
 						.sorted(Comparator.comparing(File::lastModified))
 						.forEach(f -> Io.read().file(f).write()
-								.toFile(SEUtilities.getChildFile(tmpFolder,
+								.toFile(FileUtils.child(tmpFolder,
 										f.getName())));
 				File toZip = File.createTempFile("log-download", "zip");
 				new ZipUtil().createZip(toZip, tmpFolder,
 						new LinkedHashMap<>());
+				SEUtilities.deleteDirectory(tmpFolder);
 				byte[] bytes = Io.read().file(toZip).asBytes();
 				response.setContentType("application/zip");
 				response.setContentLength(bytes.length);

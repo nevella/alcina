@@ -54,10 +54,10 @@ import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.StreamBuffer;
@@ -660,7 +660,7 @@ public class DevConsoleDebugCommands {
 				throws Exception {
 			DevConsoleDebugPaths paths = getPeer().getPaths(console.getProps());
 			File devFolder = console.getDevHelper().getDevFolder();
-			File gwtSymbols = SEUtilities.getChildFile(devFolder,
+			File gwtSymbols = FileUtils.child(devFolder,
 					"gwt-symbols");
 			gwtSymbols.mkdir();
 			module = new File(String.format("%s/%s.cache.js",
