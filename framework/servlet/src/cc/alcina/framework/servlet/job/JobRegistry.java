@@ -367,7 +367,8 @@ public class JobRegistry {
 		contextAwaiters.remove(job);
 		jobContext.awaitSequenceCompletion();
 		DomainStore.waitUntilCurrentRequestsProcessed();
-		return job.domain().ensurePopulated();
+		return TransactionEnvironment
+				.withDomain(() -> job.domain().ensurePopulated());
 	}
 
 	public String dumpActiveJobsThisInstance() {
@@ -428,7 +429,8 @@ public class JobRegistry {
 	}
 
 	public Stream<? extends Job> getActiveConsistencyJobs() {
-		return scheduler.aMoreDesirableSituation.getActiveJobs();
+		return scheduler.aMoreDesirableSituation == null ? Stream.of()
+				: scheduler.aMoreDesirableSituation.getActiveJobs();
 	}
 
 	/*
@@ -610,7 +612,8 @@ public class JobRegistry {
 							task, JobContext.get().getJob());
 				}
 			}
-			Job job = createBuilder().withTask(task).withAwaiter().create();
+			Job job = TransactionEnvironment.withDomain(() -> createBuilder()
+					.withTask(task).withAwaiter().create());
 			if (LooseContext.has(CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET)) {
 				// FIXME - use job creation/completion topics
 				launchedFromControlServlet = job;

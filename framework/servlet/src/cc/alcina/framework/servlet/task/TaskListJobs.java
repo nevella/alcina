@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -70,13 +71,11 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
 					.filter(textFilter).filter(sectionFilter);
 			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
-			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
-					() -> streamRef.get().collect(Collectors.toList()),
-					streamRef, true);
+			List<Job> jobs = query(streamRef, true);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(String.valueOf(job.getId()))
-						.cell(job.provideName()).accept(Utils::large)
+						.cell(String.valueOf(id(job))).cell(job.provideName())
+						.accept(Utils::large)
 						.cell(timestamp(job.getStartTime()))
 						.cell(JobRegistry.get().getPerformerThreadName(job))
 						.accept(Utils::medium).cell(job.getPerformer())
@@ -84,17 +83,29 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 				DomNode td = cellBuilder.append();
 				{
 					String href = JobServlet.createTaskUrl(
-							new TaskLogJobDetails().withJobId(job.getId()));
+							new TaskLogJobDetails().withJobId(id(job)));
 					td.html().addLink("Details", href, "_blank");
 				}
 				td.builder().text(" - ").tag("span").append();
 				{
 					String href = JobServlet.createTaskUrl(
-							new TaskCancelJob().withJobId(job.getId()));
+							new TaskCancelJob().withJobId(id(job)));
 					td.html().addLink("Cancel", href, "_blank");
 				}
 			});
 		}
+	}
+
+	private long id(Job job) {
+		return job.domain().getIdOrLocalIdIfZero();
+	}
+
+	List<Job> query(Ref<Stream<? extends Entity>> streamRef, boolean parallel) {
+		return DomainStore.hasStores()
+				? (List<Job>) DomainStore.queryPool().call(
+						() -> streamRef.get().collect(Collectors.toList()),
+						streamRef, true)
+				: (List<Job>) streamRef.get().collect(Collectors.toList());
 	}
 
 	protected void addCompleted(DomDocument doc, String sectionFilterName,
@@ -132,20 +143,18 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 				parallel = true;
 			}
 			Ref<Stream<? extends Entity>> streamRef = Ref.of(stream);
-			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
-					() -> streamRef.get().collect(Collectors.toList()),
-					streamRef, parallel);
+			List<Job> jobs = query(streamRef, parallel);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(String.valueOf(job.getId()))
-						.cell(job.provideName()).accept(Utils::large)
+						.cell(String.valueOf(id(job))).cell(job.provideName())
+						.accept(Utils::large)
 						.accept(b -> this.applyCompletedResultStyle(b, job))
 						.cell(timestamp(job.getStartTime()))
 						.cell(timestamp(job.getEndTime()))
 						.cell(job.getPerformer()).accept(Utils::instance);
 				DomNode td = cellBuilder.append();
 				String href = JobServlet.createTaskUrl(
-						new TaskLogJobDetails().withJobId(job.getId()));
+						new TaskLogJobDetails().withJobId(id(job)));
 				td.html().addLink("Details", href, "_blank");
 			});
 		}
@@ -194,21 +203,20 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 					return;
 				}
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(String.valueOf(job.getId()))
-						.cell(job.provideName()).accept(Utils::large)
-						.cell(job.getCreationDate()).accept(Utils::date)
-						.cell(job.getConsistencyPriority()).cell(job.getCause())
-						.accept(Utils::large);
+						.cell(String.valueOf(id(job))).cell(job.provideName())
+						.accept(Utils::large).cell(job.getCreationDate())
+						.accept(Utils::date).cell(job.getConsistencyPriority())
+						.cell(job.getCause()).accept(Utils::large);
 				DomNode td = cellBuilder.append();
 				{
 					String href = JobServlet.createTaskUrl(
-							new TaskLogJobDetails().withJobId(job.getId()));
+							new TaskLogJobDetails().withJobId(id(job)));
 					td.html().addLink("Details", href, "_blank");
 				}
 				td.builder().text(" - ").tag("span").append();
 				{
 					String href = JobServlet.createTaskUrl(
-							new TaskCancelJob().withJobId(job.getId()));
+							new TaskCancelJob().withJobId(id(job)));
 					td.html().addLink("Cancel", href, "_blank");
 				}
 			});
@@ -277,6 +285,10 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 
 	@Override
 	public void run() throws Exception {
+		TransactionEnvironment.withDomainTxThrowing(this::run0);
+	}
+
+	void run0() throws Exception {
 		filter = new Filter();
 		DomDocument doc = DomDocument.basicHtmlDoc();
 		String css = Io.read().resource("res/TaskListJobs.css").asString();
@@ -341,6 +353,8 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 		addConsistency(doc);
 		JobContext.get().getJob().setLargeResult(doc.prettyToString());
 		logger.info("Log output to job.largeResult");
+		// FIXME - localdomain.mvcc - remove
+		TransactionEnvironment.get().commit();
 	}
 
 	public void setFilterText(String filterText) {

@@ -207,6 +207,11 @@ public class DomainStore implements IDomainStore {
 		return queryPool;
 	}
 
+	// FIXME - localdomain.mvcc - remove (and refs)
+	public static boolean hasStores() {
+		return domainStores != null;
+	}
+
 	public static DomainStores stores() {
 		synchronized (DomainStores.class) {
 			if (domainStores == null) {
@@ -223,6 +228,10 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public static void waitUntilCurrentRequestsProcessed() {
+		// FIXME - localdomain.mvcc - remove
+		if (!hasStores()) {
+			return;
+		}
 		Transaction.ensureBegun();
 		writableStore().getPersistenceEvents().getQueue()
 				.waitUntilCurrentRequestsProcessed();

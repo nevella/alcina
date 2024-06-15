@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.actions.ServerControlAction;
 import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -97,7 +98,9 @@ public class JobHandler implements HttpWriteUtils {
 			}
 			break;
 		}
-		job = job.domain().ensurePopulated();
+		Job f_job = job;
+		job = TransactionEnvironment
+				.withDomain(() -> f_job.domain().ensurePopulated());
 		if (job.getResultType().isFail() || job.getLargeResult() == null) {
 			String message = Ax.blankTo(job.getLog(),
 					Ax.format("Job %s - complete", job));

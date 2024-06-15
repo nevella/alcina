@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
@@ -29,6 +30,7 @@ import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.servlet.job.JobContext;
@@ -203,11 +205,14 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	@Override
 	public void run() throws Exception {
+		TransactionEnvironment.withDomainTxThrowing(this::run0);
+	}
+
+	void run0() throws Exception {
 		Job job = Job.byId(jobId);
 		if (job == null) {
 			JobContext.info("Job {} does not exist", jobId);
 		} else {
-			List<Job> threadData = JobRegistry.get().getThreadData(job);
 			job.domain().ensurePopulated();
 			if (job.getLargeResult() != null) {
 				if (details) {
@@ -242,11 +247,16 @@ public class TaskLogJobDetails extends PerformerTask {
 						.withJobId(job.getId()).withDetails(true));
 				div.html().addLink("Large result/details", href, "");
 			}
-			processData(threadData, body);
+			if (DomainStore.hasStores()) {
+				List<Job> threadData = JobRegistry.get().getThreadData(job);
+				processData(threadData, body);
+			}
 			descendantAndSubsequentJobs(job, body);
 			fields(job, body);
 			JobContext.get().getJob().setLargeResult(doc.fullToString());
 			logger.info("Details output to job.largeResult");
+			// FIXME - localdomain.mvcc - remove
+			TransactionEnvironment.get().commit();
 		}
 	}
 

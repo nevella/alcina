@@ -29,12 +29,14 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
@@ -248,6 +250,10 @@ public class LocalDomainStore {
 			// only explicit commits supported
 			return true;
 		}
+
+		public void dumpTransformQueue() {
+			Ax.out(transformQueue);
+		}
 	}
 
 	class DomainHandlerLds implements Domain.DomainHandler {
@@ -264,7 +270,7 @@ public class LocalDomainStore {
 
 		@Override
 		public <V extends Entity> V find(Class clazz, long id) {
-			throw new UnsupportedOperationException();
+			return domain.getCache().get(new EntityLocator(clazz, 0, id));
 		}
 
 		@Override
@@ -457,5 +463,9 @@ public class LocalDomainStore {
 				boolean fromPropertyChange) {
 			// NOOP - FIXME - adjunct - remove this method (belongs in store)
 		}
+	}
+
+	public void dumpCommitQueue() {
+		commitToStorageTransformListener.dumpTransformQueue();
 	}
 }

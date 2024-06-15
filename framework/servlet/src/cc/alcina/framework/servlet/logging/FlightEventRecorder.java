@@ -2,8 +2,6 @@ package cc.alcina.framework.servlet.logging;
 
 import java.io.File;
 import java.util.Date;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.flight.HasSessionId;
@@ -39,8 +37,6 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 		ProcessObservers.observe(this, true);
 	}
 
-	Map<String, String> sessionIdDateSession = new ConcurrentHashMap<>();
-
 	@Override
 	public synchronized void topicPublished(FlightEvent message) {
 		File writeTo = null;
@@ -73,9 +69,8 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 		if (sessionId == null || eventsFolder != null) {
 			return;
 		}
-		String dateSessionId = sessionIdDateSession.computeIfAbsent(sessionId,
-				sessionId -> Ax.format("%s.%s", Ax.timestampYmd(new Date()),
-						sessionId));
+		String dateSessionId = Ax.format("%s.%s", Ax.timestampYmd(new Date()),
+				sessionId);
 		String appId = Configuration.get("appId");
 		appId = Ax.blankTo(appId, EntityLayerUtils.getLocalHostName());
 		String folderPath = Ax.format("%s/flight-%s-%s",

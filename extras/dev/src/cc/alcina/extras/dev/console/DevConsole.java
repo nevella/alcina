@@ -125,6 +125,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		// headless
 		System.setProperty("java.awt.headless", "true");
 		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
+		TerminalStreams.get().start();
 		File devConsoleRegistry = new File(
 				"/g/alcina/extras/dev/bin/registry.properties");
 		if (!devConsoleRegistry.exists()
