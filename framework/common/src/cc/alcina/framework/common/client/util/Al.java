@@ -7,7 +7,7 @@ package cc.alcina.framework.common.client.util;
 public class Al {
 	public enum Context {
 		not_set, console, gwt_dev, gwt_script, test_webapp, production_webapp,
-		android_shell, android_app
+		android_shell, android_app_dev, android_app_production
 	}
 
 	public static Context context = Context.not_set;
@@ -37,6 +37,17 @@ public class Al {
 			return true;
 		default:
 			return false;
+		}
+	}
+
+	public static boolean isNonProduction() {
+		switch (context) {
+		case gwt_script:
+		case production_webapp:
+		case android_app_production:
+			return false;
+		default:
+			return true;
 		}
 	}
 }

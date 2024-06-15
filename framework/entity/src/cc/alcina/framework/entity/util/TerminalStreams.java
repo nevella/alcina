@@ -51,8 +51,9 @@ public class TerminalStreams {
 	@SuppressWarnings("resource")
 	public void redirect(TerminalStream terminalStream,
 			StreamNumber streamNumber, PrintStream printStream) {
-		BiPrintStream bps = terminalStream == TerminalStream.out ? this.out
-				: this.err;
+		BiPrintStream bps = terminalStream == TerminalStream.out
+				? (BiPrintStream) this.out.s2
+				: (BiPrintStream) this.err.s2;
 		bps.redirect(streamNumber, printStream);
 	}
 }
