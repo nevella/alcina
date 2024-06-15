@@ -50,14 +50,7 @@ public class TaskLogJobDetails extends PerformerTask {
 		return builder;
 	}
 
-	protected void descendantAndSubsequentJobs(Job top, DomNode body) {
-		body.builder().tag("h2").text("Child/Subsequent jobs").append();
-		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
-		builder.row().cell("Id").accept(this::numeric).cell("Name")
-				.accept(Utils::large).cell("State").cell("Result")
-				.cell("Started").accept(this::date).cell("Finished")
-				.accept(this::date).cell("Performer").accept(Utils::instance)
-				.cell("Link").accept(Utils::links);
+	protected void renderRelated(Job top, DomNode body) {
 		Stream<Job> relatedProcessing = top.provideDescendantsAndSubsequents()
 				.filter(j -> j.getState() == JobState.PROCESSING)
 				.sorted(EntityComparator.INSTANCE).limit(50);
@@ -65,7 +58,24 @@ public class TaskLogJobDetails extends PerformerTask {
 				.provideDescendantsAndSubsequents()
 				.filter(j -> j.getState() != JobState.PROCESSING)
 				.sorted(EntityComparator.INSTANCE).limit(50);
-		Stream.concat(relatedProcessing, relatedNonProcessing).forEach(job -> {
+		Stream<Job> childAndSubsequentJobs = Stream.concat(relatedProcessing,
+				relatedNonProcessing);
+		renderRelatedSection(body, "Child/Subsequent jobs",
+				childAndSubsequentJobs);
+		renderRelatedSection(body, "Awaited jobs", top.provideAwaitedSubtree()
+				.sorted(EntityComparator.INSTANCE).limit(50));
+	}
+
+	protected void renderRelatedSection(DomNode body, String title,
+			Stream<Job> jobs) {
+		body.builder().tag("h2").text(title).append();
+		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
+		builder.row().cell("Id").accept(this::numeric).cell("Name")
+				.accept(Utils::large).cell("State").cell("Result")
+				.cell("Started").accept(this::date).cell("Finished")
+				.accept(this::date).cell("Performer").accept(Utils::instance)
+				.cell("Link").accept(Utils::links);
+		jobs.forEach(job -> {
 			DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 					.cell(String.valueOf(job.getId())).cell(job.provideName())
 					.accept(Utils::large).cell(job.getState())
@@ -251,7 +261,7 @@ public class TaskLogJobDetails extends PerformerTask {
 				List<Job> threadData = JobRegistry.get().getThreadData(job);
 				processData(threadData, body);
 			}
-			descendantAndSubsequentJobs(job, body);
+			renderRelated(job, body);
 			fields(job, body);
 			JobContext.get().getJob().setLargeResult(doc.fullToString());
 			logger.info("Details output to job.largeResult");

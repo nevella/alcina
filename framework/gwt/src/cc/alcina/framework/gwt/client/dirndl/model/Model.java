@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
@@ -31,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -506,6 +508,13 @@ public abstract class Model extends Bindable implements
 					FocusImpl.getFocusImplForWidget().focus(
 							event.getContext().node.getRendered().asElement());
 				});
+				// double-fire for overlay positioning. FIXME - probably fire a
+				// descendant OverlayPositioned event , and this listens
+				Timer.Provider.get().getTimer(() -> {
+					Element elem = event.getContext().node.getRendered()
+							.asElement();
+					FocusImpl.getFocusImplForWidget().focus(elem);
+				}).schedule(500);
 			}
 		}
 	}

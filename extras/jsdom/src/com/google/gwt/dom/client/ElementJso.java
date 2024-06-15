@@ -16,7 +16,6 @@ import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -253,19 +252,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * Gives keyboard focus to this element.
 	 */
 	@Override
-	public final void focus() {
-		new Timer() {
-			@Override
-			public void run() {
-				focus0();
-			}
-		}.schedule(10);
-	}
-
-	/**
-	 * Gives keyboard focus to this element.
-	 */
-	public final native void focus0() /*-{
+	public final native void focus() /*-{
     this.focus();
 	}-*/;
 

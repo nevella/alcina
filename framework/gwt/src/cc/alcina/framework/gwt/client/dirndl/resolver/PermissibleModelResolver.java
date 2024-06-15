@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.resolver;
 
 import java.util.Map;
+import java.util.function.Function;
 
 import com.google.gwt.core.client.GWT;
 
@@ -14,25 +15,46 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class PermissibleModelResolver extends ContextResolver {
-	Map<Class, Boolean> hasPermissions = AlcinaCollections.newUnqiueMap();
+	PermissibleModelResolver.Support support;
+
+	public PermissibleModelResolver() {
+		support = new Support(super::resolveModel);
+	}
 
 	@Override
 	protected Object resolveModel(Object model) {
-		if (model == null) {
-			return super.resolveModel(model);
+		return support.resolveModel(model);
+	}
+
+	/*
+	 * Factors out the guts so the behaviour can be reused in a mixin
+	 */
+	public static class Support {
+		Map<Class, Boolean> hasPermissions = AlcinaCollections.newUnqiueMap();
+
+		Function superResolveModel;
+
+		public Support(Function superResolveModel) {
+			this.superResolveModel = superResolveModel;
 		}
-		Class<? extends Object> modelClass = model.getClass();
-		boolean hasPermission = hasPermissions.computeIfAbsent(modelClass,
-				clazz -> Reflections.at(clazz).has(Permission.class));
-		if (!hasPermission) {
-			return model;
+
+		public Object resolveModel(Object model) {
+			if (model == null) {
+				return superResolveModel.apply(model);
+			}
+			Class<? extends Object> modelClass = model.getClass();
+			boolean hasPermission = hasPermissions.computeIfAbsent(modelClass,
+					clazz -> Reflections.at(clazz).has(Permission.class));
+			if (!hasPermission) {
+				return model;
+			}
+			Permission permission = Reflections.at(modelClass)
+					.annotation(Permission.class);
+			if (!PermissionsManager.isPermitted(model)) {
+				return new AccessDenied(model);
+			}
+			return superResolveModel.apply(model);
 		}
-		Permission permission = Reflections.at(modelClass)
-				.annotation(Permission.class);
-		if (!PermissionsManager.isPermitted(model)) {
-			return new AccessDenied(model);
-		}
-		return super.resolveModel(model);
 	}
 
 	@Directed(tag = "acccess-denied")

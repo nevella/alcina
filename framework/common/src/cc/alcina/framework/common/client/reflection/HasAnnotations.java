@@ -8,9 +8,25 @@ public interface HasAnnotations {
 
 	<A extends Annotation> List<A> annotations(Class<A> annotationClass);
 
+	/**
+	 * 
+	 * @param owningType
+	 * @param propertyName
+	 * @return true if the type is a PropertyReflector and is the reflector for
+	 *         owningType.propertyName
+	 */
 	boolean isProperty(Class<?> owningType, String propertyName);
 
 	default Property asProperty() {
 		return (Property) this;
 	}
+
+	/**
+	 * 
+	 * @param locationClass
+	 * @param propertyName
+	 * @return true if the type is a ClassReflector amd is the reflector for
+	 *         locationClass
+	 */
+	boolean isClass(Class locationClass, String propertyName);
 }

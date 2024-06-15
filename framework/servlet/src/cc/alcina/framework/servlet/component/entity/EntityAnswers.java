@@ -40,8 +40,8 @@ import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 
 class EntityAnswers extends TraversalAnswerSupplier {
-	public EntityAnswers(int forLayer) {
-		super(forLayer);
+	public EntityAnswers(int fromLayer) {
+		super(fromLayer);
 	}
 
 	static AppSuggestion createSuggestion(CommandNode node) {
@@ -57,7 +57,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 	@Override
 	public void begin(Invocation invocation) {
 		List<AppSuggestion> suggestions = new InvocationHandler(invocation,
-				Ui.place(), this.forLayer).handle();
+				Ui.place(), this.fromLayer).handle();
 		AppSuggestorRequest request = new AppSuggestorRequest();
 		String query = invocation.ask.getValue();
 		request.setQuery(query);
@@ -74,21 +74,21 @@ class EntityAnswers extends TraversalAnswerSupplier {
 
 		List<AppSuggestion> suggestions;
 
-		TraversalPlace forPlace;
+		TraversalPlace fromPlace;
 
-		int forLayer;
+		int fromLayer;
 
 		boolean withCommandSuggestions;
 
-		InvocationHandler(Invocation invocation, TraversalPlace forPlace,
-				int forLayer) {
+		InvocationHandler(Invocation invocation, TraversalPlace fromPlace,
+				int fromLayer) {
 			this.invocation = invocation;
-			this.forLayer = forLayer;
-			if (forLayer == -1) {
+			this.fromLayer = fromLayer;
+			if (fromLayer == -1) {
 				this.withCommandSuggestions = true;
-				this.forPlace = forPlace;
+				this.fromPlace = fromPlace;
 			} else {
-				this.forPlace = forPlace.truncateTo(forLayer);
+				this.fromPlace = fromPlace.truncateTo(fromLayer);
 			}
 			query = invocation.ask.getValue();
 			request.setQuery(query);
@@ -97,7 +97,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 		}
 
 		void proposePlaceContextSuggestions() {
-			SelectionPath firstSelectionPath = forPlace.firstSelectionPath();
+			SelectionPath firstSelectionPath = fromPlace.firstSelectionPath();
 			Selection selection = firstSelectionPath == null
 					|| firstSelectionPath.selection() == null
 							? Ui.traversal().getRootSelection()
@@ -107,7 +107,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 			typeSuggestor.handler = this;
 			typeSuggestor.query = query;
 			typeSuggestor.parts = query.split(" ");
-			typeSuggestor.place = forPlace;
+			typeSuggestor.fromPlace = fromPlace;
 			typeSuggestor.propose(selection);
 		}
 
@@ -134,7 +134,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 
 		String[] parts;
 
-		TraversalPlace place;
+		TraversalPlace fromPlace;
 
 		String query;
 
@@ -152,8 +152,9 @@ class EntityAnswers extends TraversalAnswerSupplier {
 			AppSuggestionEntry suggestion = new AppSuggestionEntry();
 			suggestion.match = match;
 			SelectionTraversal traversal = Ui.traversal();
-			int idx = place.getLayerCount();
+			int idx = fromPlace.getLayerCount();
 			Preconditions.checkArgument(selections.isEmpty() || filter == null);
+			TraversalPlace place = fromPlace.copy();
 			place = place.appendSelections(selections);
 			if (selections.size() > 0) {
 				// all appended selections should go at the start of layers

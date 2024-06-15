@@ -30,7 +30,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
-import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -79,9 +78,27 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices.EnumValues.EnumSuppli
  *
  * FIXME - dirndl 1x1e - Now that overlay events are routed to logical parents,
  * it may be possible to cleanup event handling in this class
+ * 
+ * Note (docs) the dispatch order - the two 'before' events provide a lot of scope for customised handling:
+ * 
+ @formatter:off
+
+	firePropertyChange("selectedValue", oldValue, newValue);
+	firePropertyChange("value", oldValue, newValue);
+	emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class,
+			newValue);
+	emitEvent(
+			ModelEvents.BeforeSelectionChangedDispatchDescent.class,
+			newValue);
+	emitEvent(ModelEvents.SelectionChanged.class, newValue);
+	selectionChanged.signal();
+
+@formatter:on
+ * 
  */
 public abstract class Choices<T> extends Model implements
-		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has {
+		ModelEvents.Selected.Handler, HasSelectedValue, ContextResolver.Has,
+		ModelEvents.BeforeSelectionChangedDispatchDescent.Emitter {
 	protected List<Choices.Choice<T>> choices;
 
 	private List<T> values;
@@ -109,24 +126,10 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
-	class ValueTransformerResolver extends ContextResolver {
-		Class<T> valueType;
-
+	class ValueTransformerResolver
+			extends ContextResolver.AnnotationCustomiser {
 		ValueTransformerResolver() {
-			valueType = Reflections.at(valueTransformer)
-					.getGenericBounds().bounds.get(0);
-		}
-
-		@Override
-		public <A extends Annotation> A contextAnnotation(
-				HasAnnotations reflector, Class<A> clazz,
-				ResolutionContext resolutionContext) {
-			if (reflector.isProperty(Choice.class, "value")
-					&& clazz == Directed.Transform.class) {
-				return (A) new Directed.Transform.Impl()
-						.withValue(valueTransformer);
-			}
-			return super.contextAnnotation(reflector, clazz, resolutionContext);
+			resolveTransform(Choice.class, "value").with(valueTransformer);
 		}
 	}
 
@@ -195,6 +198,24 @@ public abstract class Choices<T> extends Model implements
 		 * The values supplier
 		 */
 		Class<? extends Function<?, ?>> value();
+
+		public static class Impl implements ValueTransformer {
+			Class<? extends Function<?, ?>> value;
+
+			public Impl(Class<? extends Function<?, ?>> value) {
+				this.value = value;
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return ValueTransformer.class;
+			}
+
+			@Override
+			public Class<? extends Function<?, ?>> value() {
+				return value;
+			}
+		}
 	}
 
 	void populateValuesFromNodeContext(Node node, Predicate<T> valueFilter) {
@@ -432,8 +453,12 @@ public abstract class Choices<T> extends Model implements
 			choices.forEach(c -> c.setSelected(valuesSet.contains(c.value)));
 			List<T> newValues = getSelectedValues();
 			if (!Objects.equals(oldValues, newValues)) {
-				NodeEvent.Context.fromNode(provideNode()).dispatch(
-						ModelEvents.SelectionChanged.class, newValues);
+				emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class,
+						newValues);
+				emitEvent(
+						ModelEvents.BeforeSelectionChangedDispatchDescent.class,
+						newValues);
+				emitEvent(ModelEvents.SelectionChanged.class, newValues);
 			}
 		}
 	}
@@ -707,11 +732,12 @@ public abstract class Choices<T> extends Model implements
 				// via a Directed.Transform, not imperatively)
 				firePropertyChange("selectedValue", oldValue, newValue);
 				firePropertyChange("value", oldValue, newValue);
-				NodeEvent.Context.fromNode(provideNode()).dispatch(
-						ModelEvents.BeforeSelectionChangedDispatch.class,
+				emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class,
 						newValue);
-				NodeEvent.Context.fromNode(provideNode())
-						.dispatch(ModelEvents.SelectionChanged.class, newValue);
+				emitEvent(
+						ModelEvents.BeforeSelectionChangedDispatchDescent.class,
+						newValue);
+				emitEvent(ModelEvents.SelectionChanged.class, newValue);
 				selectionChanged.signal();
 			}
 		}

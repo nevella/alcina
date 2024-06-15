@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.annotation;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -39,5 +40,36 @@ public @interface DirectedContextResolver {
 	@Reflected
 	public static class MergeStrategy extends
 			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOrClass<DirectedContextResolver> {
+	}
+
+	public static class Impl implements DirectedContextResolver {
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return DirectedContextResolver.class;
+		}
+
+		boolean includeSelf;
+
+		public Impl withIncludeSelf(boolean includeSelf) {
+			this.includeSelf = includeSelf;
+			return this;
+		}
+
+		Class<? extends ContextResolver> value;
+
+		public Impl withValue(Class<? extends ContextResolver> value) {
+			this.value = value;
+			return this;
+		}
+
+		@Override
+		public boolean includeSelf() {
+			return includeSelf;
+		}
+
+		@Override
+		public Class<? extends ContextResolver> value() {
+			return value;
+		}
 	}
 }

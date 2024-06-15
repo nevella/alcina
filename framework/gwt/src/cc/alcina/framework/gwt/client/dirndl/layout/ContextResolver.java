@@ -30,10 +30,12 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -484,6 +486,91 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	public static class WithoutResolveModelAscends extends ContextResolver {
 		public WithoutResolveModelAscends() {
 			resolveModelAscends = false;
+		}
+	}
+
+	public abstract static class AnnotationCustomiser extends ContextResolver {
+		public static class Customisation<A extends Annotation> {
+			Class locationClass;
+
+			String propertyName;
+
+			Class<A> annotationClass;
+
+			A replacementValue;
+
+			Customisation(Class locationClass, String propertyName,
+					Class<A> annotationClass) {
+				this.locationClass = locationClass;
+				this.propertyName = propertyName;
+				this.annotationClass = annotationClass;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s.%s [%s] -> %s",
+						NestedName.get(locationClass), propertyName,
+						NestedName.get(annotationClass), replacementValue);
+			}
+
+			public void as(A replacementValue) {
+				this.replacementValue = replacementValue;
+			}
+
+			public boolean matches(HasAnnotations reflector, Class<?> clazz) {
+				return clazz == annotationClass && (reflector
+						.isProperty(locationClass, propertyName)
+						|| reflector.isClass(locationClass, propertyName));
+			}
+
+			public static class Transform
+					extends Customisation<Directed.Transform> {
+				Transform(Class locationClass, String propertyName) {
+					super(locationClass, propertyName,
+							Directed.Transform.class);
+				}
+
+				public void
+						with(Class<? extends ModelTransform> transformerClass) {
+					as(new Directed.Transform.Impl()
+							.withValue(transformerClass));
+				}
+			}
+		}
+
+		List<Customisation<?>> customisations = new ArrayList<>();
+
+		protected <A extends Annotation> Customisation<A> resolve(
+				Class locationClass, String propertyName,
+				Class<A> annotationClass) {
+			Customisation<A> customisation = new Customisation<>(locationClass,
+					propertyName, annotationClass);
+			customisations.add(customisation);
+			return customisation;
+		}
+
+		protected Customisation.Transform resolveTransform(Class locationClass,
+				String propertyName) {
+			Customisation.Transform customisation = new Customisation.Transform(
+					locationClass, propertyName);
+			customisations.add(customisation);
+			return customisation;
+		}
+
+		public AnnotationCustomiser() {
+			resolveModelAscends = false;
+		}
+
+		@Override
+		public <A extends Annotation> A contextAnnotation(
+				HasAnnotations reflector, Class<A> clazz,
+				ResolutionContext resolutionContext) {
+			for (Customisation<?> customisation : customisations) {
+				if (customisation.matches(reflector, clazz)) {
+					return (A) customisation.replacementValue;
+				}
+			}
+			return super.contextAnnotation(reflector, clazz, resolutionContext);
 		}
 	}
 }

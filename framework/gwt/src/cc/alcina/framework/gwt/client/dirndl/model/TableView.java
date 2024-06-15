@@ -36,6 +36,7 @@ public class TableView extends
 			Class<? extends Bindable> resultClass = first.getClass();
 			List<Field> fields = BeanFields.query().forClass(resultClass)
 					.forMultipleWidgetContainer(true).forBean(first)
+					.withAllowNullWidgetProviders(true)
 					.withResolver(node.getResolver()).listFields();
 			fields.stream().map(TableColumn::new)
 					.forEach(tableModel.header.getColumns()::add);

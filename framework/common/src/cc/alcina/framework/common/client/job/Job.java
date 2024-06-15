@@ -477,9 +477,13 @@ public abstract class Job extends VersionableEntity<Job>
 				.flatMap(Job::provideDescendantsAndSubsequentsAndAwaited));
 		Stream s2 = Stream.concat(provideSubsequents(), provideSubsequents()
 				.flatMap(Job::provideDescendantsAndSubsequentsAndAwaited));
-		Stream s3 = Stream.concat(provideAwaiteds(), provideAwaiteds()
-				.flatMap(Job::provideDescendantsAndSubsequentsAndAwaited));
+		Stream s3 = provideAwaitedSubtree();
 		return Stream.concat(s1, Stream.concat(s2, s3)).distinct();
+	}
+
+	public Stream<Job> provideAwaitedSubtree() {
+		return Stream.concat(provideAwaiteds(), provideAwaiteds()
+				.flatMap(Job::provideDescendantsAndSubsequentsAndAwaited));
 	}
 
 	public boolean provideEquivalentTask(Job other) {

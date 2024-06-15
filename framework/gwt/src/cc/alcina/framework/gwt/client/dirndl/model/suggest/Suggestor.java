@@ -12,6 +12,7 @@ import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.Client;
@@ -392,13 +393,14 @@ public class Suggestor extends Model
 		}
 
 		@Directed(tag = "suggestion")
+		@TypeSerialization(reflectiveSerializable = false)
 		public static class ModelSuggestion extends Model.Fields
 				implements Suggestion {
-			public Model model;
+			public Object model;
 
 			public boolean match;
 
-			public ModelSuggestion(Model model) {
+			public ModelSuggestion(Object model) {
 				this.model = model;
 			}
 

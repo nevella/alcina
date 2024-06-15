@@ -176,9 +176,9 @@ public class TraversalProcessView {
 	public static abstract class TraversalAnswerSupplier
 			implements AppSuggestor.AnswerSupplier {
 		public TraversalAnswerSupplier(int forLayer) {
-			this.forLayer = forLayer;
+			this.fromLayer = forLayer;
 		}
 
-		public int forLayer;
+		public int fromLayer;
 	}
 }

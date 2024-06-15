@@ -23,7 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerImpl;
-import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AppSuggestionView;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AppSuggestionArea;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.SuggestionSelected;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
@@ -187,7 +187,7 @@ class LayerSelections extends Model.All {
 				// contextualised app suggestions
 				@Override
 				public void onSelectionChanged(SelectionChanged event) {
-					AppSuggestionView suggestion = (AppSuggestionView) suggestor
+					AppSuggestionArea suggestion = (AppSuggestionArea) suggestor
 							.provideSelectedValue();
 					if (suggestion.suggestion.url() != null) {
 						History.newItem(suggestion.suggestion.url());
