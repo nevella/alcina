@@ -87,7 +87,7 @@ public class FmsForm {
 	@Reflected
 	@Registration(
 		value = BeanForm.FormTransform.Impl.class,
-		priority = Priority.PREFERRED_LIBRARY)
+		priority = Priority.REMOVE)
 	public static class FmsFormTransform extends BeanForm.FormTransform.Impl {
 		@Override
 		public Bindable apply(BaseSourcesPropertyChangeEvents model) {

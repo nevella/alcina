@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -710,12 +711,31 @@ public class FormModel extends Model
 		}
 	}
 
+	/*
+	 * Override (in the environment) to provide a custom formmodel
+	 */
+	@Registration.Singleton
+	@EnvironmentSingleton
+	public static class FormModelProvider {
+		public static FormModel.FormModelProvider get() {
+			return Registry.impl(FormModel.FormModelProvider.class);
+		}
+
+		public Class<? extends FormModel> explicitClass;
+
+		public FormModel createFormModel() {
+			return explicitClass != null
+					? Reflections.newInstance(explicitClass)
+					: Registry.impl(FormModel.class);
+		}
+	}
+
 	@Reflected
 	public static class FormModelTransformer extends
 			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
 		public FormModel apply(FormModelState state) {
-			FormModel formModel = Registry.impl(FormModel.class);
+			FormModel formModel = FormModelProvider.get().createFormModel();
 			formModel.state = state;
 			if (state.model == null && state.expectsModel) {
 				return formModel;

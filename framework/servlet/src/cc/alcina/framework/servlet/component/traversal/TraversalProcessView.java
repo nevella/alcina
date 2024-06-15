@@ -16,7 +16,9 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
+import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm.FmsFormModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormModelProvider;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
@@ -131,6 +133,7 @@ public class TraversalProcessView {
 		protected DirectedLayout render0() {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
+			FormModelProvider.get().explicitClass = FmsFormModel.class;
 			page = new Page();
 			DirectedLayout layout = new DirectedLayout();
 			layout.render(resolver(), page).getRendered().appendToRoot();
