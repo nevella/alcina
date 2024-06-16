@@ -54,6 +54,11 @@ import cc.alcina.framework.servlet.local.LocalDomainStore.DomainHandlerLds.Query
  * A non-persistent entity store. Copies some tx-based environment behaviours
  * (e.g. 'commit') to a non-tx environment, using single-threaded access to
  * control concurrency
+ * 
+ * Deletion is handled fairly brusquely - basically deletion events are collated
+ * then applied right at the end of the transform processing
+ * 
+ * This will all go away with localdomain.mvcc (the real solution)
  */
 public class LocalDomainStore {
 	private static LocalDomainStore instance;
@@ -81,9 +86,10 @@ public class LocalDomainStore {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	private DomainTransformPersistenceListener indexingListener = evt -> {
+	// apply commits to the graph (index)
+	private DomainTransformPersistenceListener applyListener = evt -> {
 		if (evt.getPersistenceEventType() == DomainTransformPersistenceEventType.COMMIT_OK) {
-			this.index(evt);
+			this.apply(evt);
 		}
 	};
 
@@ -102,8 +108,7 @@ public class LocalDomainStore {
 		singleThreadedTransformManager.initObjectStore();
 		LocalDomainStore.instance = this;
 		Domain.registerHandler(new DomainHandlerLds());
-		persistenceEvents
-				.addDomainTransformPersistenceListener(indexingListener);
+		persistenceEvents.addDomainTransformPersistenceListener(applyListener);
 		Registry.register().singleton(TransactionEnvironment.class,
 				new TransactionEnvironmentNonTx());
 		JobDomain.get().onDomainWarmupComplete(persistenceEvents);
@@ -126,7 +131,7 @@ public class LocalDomainStore {
 		return singleThreadedTransformManager;
 	}
 
-	void index(DomainTransformPersistenceEvent evt) {
+	void apply(DomainTransformPersistenceEvent evt) {
 		AdjunctTransformCollation collation = evt.getTransformPersistenceToken()
 				.getTransformCollation();
 		/*
@@ -162,6 +167,9 @@ public class LocalDomainStore {
 		collation.allEntityCollations()
 				.filter(ec -> ec.getTransforms().size() > 0 && !ec.isDeleted())
 				.forEach(ec -> index(ec.getEntity(), true, ec, true));
+		// at the end remove deleted from the graph
+		collation.allEntityCollations().filter(ec -> ec.isDeleted())
+				.forEach(ec -> domain.getCache().removeLocal(ec.getEntity()));
 	}
 
 	void index(Entity entity, boolean add, EntityCollation entityCollation,
@@ -326,6 +334,7 @@ public class LocalDomainStore {
 
 		@Override
 		public void deregister(Entity entity) {
+			// domain.getCache().removeLocal(entity);
 		}
 
 		@Override
@@ -462,6 +471,22 @@ public class LocalDomainStore {
 				Class<? extends Object> collectionClass,
 				boolean fromPropertyChange) {
 			// NOOP - FIXME - adjunct - remove this method (belongs in store)
+		}
+
+		@Override
+		public <T extends Entity> T registerDomainObject(T entity) {
+			if (getObjectStore() != null && entity != null) {
+				if (entity.getId() == 0) {
+					Entity createdObject = getObjectStore().getObject(entity);
+					if (createdObject != null) {
+						// not sure this should be called anywhere - but
+						// certainly not here
+						// getObjectStore().deregister(createdObject);
+					}
+				}
+				getObjectStore().mapObject(entity);
+			}
+			return entity;
 		}
 	}
 

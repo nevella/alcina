@@ -66,6 +66,10 @@ public class TaskLogJobDetails extends PerformerTask {
 				.sorted(EntityComparator.INSTANCE).limit(50));
 	}
 
+	long id(Job job) {
+		return job.domain().getIdOrLocalIdIfZero();
+	}
+
 	protected void renderRelatedSection(DomNode body, String title,
 			Stream<Job> jobs) {
 		body.builder().tag("h2").text(title).append();
@@ -77,15 +81,15 @@ public class TaskLogJobDetails extends PerformerTask {
 				.cell("Link").accept(Utils::links);
 		jobs.forEach(job -> {
 			DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-					.cell(String.valueOf(job.getId())).cell(job.provideName())
+					.cell(String.valueOf(id(job))).cell(job.provideName())
 					.accept(Utils::large).cell(job.getState())
 					.cell(job.getResultType())
 					.cell(timestamp(job.getStartTime()))
 					.cell(timestamp(job.getEndTime())).cell(job.getPerformer())
 					.accept(Utils::instance);
 			DomNode td = cellBuilder.append();
-			String href = JobServlet.createTaskUrl(
-					new TaskLogJobDetails().withJobId(job.getId()));
+			String href = JobServlet
+					.createTaskUrl(new TaskLogJobDetails().withJobId(id(job)));
 			td.html().addLink("Details", href, "_blank");
 		});
 		body.builder().tag("hr").append();
@@ -192,7 +196,7 @@ public class TaskLogJobDetails extends PerformerTask {
 								.isAssignableFrom(resourceClass)) {
 							String deleteHref = JobServlet
 									.createTaskUrl(new TaskDeleteJobResource()
-											.withJobId(active.getId())
+											.withJobId(id(active))
 											.withResourceClass(
 													res.getClassName())
 											.withResourcePath(res.getPath()));
@@ -254,7 +258,7 @@ public class TaskLogJobDetails extends PerformerTask {
 			if (job.getLargeResult() != null) {
 				DomNode div = body.builder().tag("div").append();
 				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
-						.withJobId(job.getId()).withDetails(true));
+						.withJobId(id(job)).withDetails(true));
 				div.html().addLink("Large result/details", href, "");
 			}
 			if (DomainStore.hasStores()) {

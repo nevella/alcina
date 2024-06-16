@@ -96,7 +96,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 		}
 	}
 
-	private long id(Job job) {
+	long id(Job job) {
 		return job.domain().getIdOrLocalIdIfZero();
 	}
 
