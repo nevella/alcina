@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.traversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Button;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
@@ -55,7 +56,9 @@ class Dotburger extends Model.Fields {
 
 	Dotburger() {
 		menu = new Menu();
-		dropdown = new Dropdown(new LeafModel.Button("dotburger"), menu)
+		Button button = new LeafModel.Button();
+		button.className = "dotburger";
+		dropdown = new Dropdown(button, menu)
 				.withLogicalAncestor(Dotburger.class).withXalign(Position.END);
 	}
 }

@@ -59,7 +59,7 @@ public class OverlayContainer extends Model
 		return this.contents;
 	}
 
-	public boolean getViewportCentered() {
+	public boolean isViewportCentered() {
 		return containerOptions.position.viewportCentered;
 	}
 
