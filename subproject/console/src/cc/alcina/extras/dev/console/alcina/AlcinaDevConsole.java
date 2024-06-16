@@ -3,6 +3,7 @@ package cc.alcina.extras.dev.console.alcina;
 import javax.xml.bind.UnmarshalException;
 
 import cc.alcina.extras.dev.console.DevConsole;
+import cc.alcina.framework.entity.util.TerminalStreams;
 
 public class AlcinaDevConsole extends DevConsole {
 	/**
@@ -13,7 +14,7 @@ public class AlcinaDevConsole extends DevConsole {
 			System.setProperty("jsse.enableSNIExtension", "false");
 			new AlcinaDevConsole(args).init();
 		} catch (Throwable e) {
-			stdSysOut();
+			TerminalStreams.get().stdSysOut();
 			e.printStackTrace();
 			if (e instanceof UnmarshalException) {
 				((UnmarshalException) e).getLinkedException().printStackTrace();
