@@ -359,7 +359,11 @@ public class JobRegistry {
 		if (JobContext.has()) {
 			Job contextJob = JobContext.get().getJob();
 			if (contextJob.provideDescendants().noneMatch(j -> j == job)) {
-				contextJob.createRelation(job, JobRelationType.AWAITED);
+				TransactionEnvironment.withDomain(() -> {
+					TransactionEnvironment.get().ensureBegun();
+					contextJob.createRelation(job, JobRelationType.AWAITED);
+					TransactionEnvironment.get().commit();
+				});
 			}
 		}
 		ContextAwaiter awaiter = ensureAwaiter(job);
