@@ -1106,7 +1106,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		boolean alreadyWritten = false;
 
-		private Multiset<JClassType, Set<JClassType>> subtypes;
+		private Multiset<JClassType, Set<JClassType>> descendantTypes;
 
 		protected ModuleReflectionGenerator(String implementationName,
 				JClassType superClassOrInterfaceType) {
@@ -1119,13 +1119,13 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				computeAsyncSerializableArguments(JClassType type) {
 			JClassType asyncCallbackType = getType(
 					AsyncCallback.class.getCanonicalName());
-			return Arrays.stream(type.getMethods())
-					.flatMap(m -> Arrays.stream(m.getParameterTypes())
-							.filter(t -> t instanceof JParameterizedType
-									&& ((JParameterizedType) t)
-											.getBaseType() == asyncCallbackType)
-							.flatMap(t -> ReachabilityData
-									.toReachableConcreteTypes(t, subtypes)))
+			return Arrays.stream(type.getMethods()).flatMap(m -> Arrays
+					.stream(m.getParameterTypes())
+					.filter(t -> t instanceof JParameterizedType
+							&& ((JParameterizedType) t)
+									.getBaseType() == asyncCallbackType)
+					.flatMap(t -> ReachabilityData.toReachableConcreteTypes(t,
+							descendantTypes)))
 					.filter(t -> t != asyncCallbackType.getErasedType())
 					.filter(ReachabilityData::excludeJavaType)
 					.collect(AlcinaCollectors.toLinkedHashSet());
@@ -1157,9 +1157,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		Stream<TypeHierarchy> computeReflectableTypes() {
-			subtypes = computeSubtypes();
+			descendantTypes = computeDescendantTypes();
 			Multiset<JClassType, Set<JClassType>> asyncSerializableTypes = computeAsyncSerializableTypes(
-					subtypes);
+					descendantTypes);
 			Multiset<JClassType, Set<JClassType>> settableTypes = computeSettableTypes();
 			return Arrays.stream(context.getTypeOracle().getTypes())
 					.filter(t -> isReflectable(t))
@@ -1169,7 +1169,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.filter(t -> !t.getQualifiedSourceName()
 							.equals(Object.class.getCanonicalName()))
 					.filter(this::isProtectionVisible)
-					.map(t -> new TypeHierarchy(t, subtypes,
+					.map(t -> new TypeHierarchy(t, descendantTypes,
 							asyncSerializableTypes, settableTypes));
 		}
 
@@ -1212,19 +1212,20 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					.filter(PropertyReflection::isSerializable)
 					.map(PropertyReflection::getPropertyType)
 					.flatMap(t -> ReachabilityData.toReachableConcreteTypes(t,
-							subtypes))
+							descendantTypes))
 					.filter(ReachabilityData::excludeJavaType)
 					.collect(AlcinaCollectors.toLinkedHashSet());
 			return computed;
 		}
 
-		private Multiset<JClassType, Set<JClassType>> computeSubtypes() {
+		private Multiset<JClassType, Set<JClassType>> computeDescendantTypes() {
 			Multiset<JClassType, Set<JClassType>> result = new Multiset<>();
 			Arrays.stream(context.getTypeOracle().getTypes())
 					.map(JClassType::getErasedType).distinct().forEach(t -> {
 						Set<? extends JClassType> supertypeHierarchy = t
 								.getFlattenedSupertypeHierarchy();
 						supertypeHierarchy.stream()
+								.map(JClassType::getErasedType)
 								.forEach(st -> result.add(st, t));
 					});
 			return result;
