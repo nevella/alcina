@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -312,6 +313,24 @@ class ReachabilityData {
 		List<TypeHierarchy> typeHierarchies = new ArrayList<>();
 
 		transient Map<Type, TypeHierarchy> byType;
+
+		Stream<Type> allSubTypes(TypeHierarchy hier) {
+			if (hier.descendantTypes == null) {
+				Set<Type> pending = new LinkedHashSet<>();
+				hier.descendantTypes = new LinkedHashSet<>();
+				pending.add(hier.type);
+				while (pending.size() > 0) {
+					Iterator<Type> itr = pending.iterator();
+					Type type = itr.next();
+					itr.remove();
+					hier.descendantTypes.add(type);
+					byType.get(type).subtypes()
+							.filter(t -> !hier.descendantTypes.contains(t))
+							.forEach(pending::add);
+				}
+			}
+			return hier.descendantTypes.stream();
+		}
 
 		void addType(TypeHierarchy t) {
 			typeHierarchies.add(t);
@@ -647,6 +666,11 @@ class ReachabilityData {
 		List<Type> typeAndSuperTypes;
 
 		List<Type> subtypes;
+
+		/*
+		 * generated on-demand by container (AppReflectableTypes)
+		 */
+		Set<Type> descendantTypes;
 
 		/*
 		 * Types which are either arguments or parameterized type arguments of

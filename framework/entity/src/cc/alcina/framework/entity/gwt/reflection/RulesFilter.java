@@ -111,7 +111,7 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 			this.subtypeHierarchyTypes = Arrays.stream(condition.subtypes())
 					.map(Type::get).filter(Objects::nonNull)
 					.map(reflectableTypes.byType::get).filter(Objects::nonNull)
-					.flatMap(TypeHierarchy::subtypes)
+					.flatMap(reflectableTypes::allSubTypes)
 					.collect(Collectors.toSet());
 		}
 
