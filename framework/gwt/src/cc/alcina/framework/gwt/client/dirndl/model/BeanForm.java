@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -136,7 +135,6 @@ public class BeanForm extends Model {
 		}
 
 		@Reflected
-		@Registration(Impl.class)
 		public static class BasicFormTransform
 				extends BeanForm.FormTransform.Impl {
 			@Override
