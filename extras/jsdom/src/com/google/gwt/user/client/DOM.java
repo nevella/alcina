@@ -1785,6 +1785,7 @@ public class DOM {
 				tuple.listener.onBrowserEvent(event);
 				dispatchedToElements.add(tuple.elem);
 			}
+			dispatchQueue.clear();
 			if (Element.is(event.getCurrentEventTarget())) {
 				windowResources.eventCurrentTarget = event
 						.getCurrentEventTarget().cast();

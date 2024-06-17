@@ -58,4 +58,12 @@ public class NativeEventJso extends JavaScriptObject {
 	public final native String getKey() /*-{
     return this.key;
 	}-*/;
+
+	public final native int getLcldId(int id) /*-{
+		if(this.hasOwnProperty("_lcld_id")){
+			return this._lcld_id;
+		}
+		this._lcld_id=id;
+		return id;
+	}-*/;
 }
