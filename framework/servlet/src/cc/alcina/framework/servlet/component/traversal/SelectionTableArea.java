@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.traversal;
 import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -16,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableView;
  * TODO - extend the heck out of this
  */
 @DirectedContextResolver(FmsContentCells.FmsCellsContextResolver.class)
+@TypeSerialization(reflectiveSerializable = false)
 public class SelectionTableArea extends Model.Fields {
 	public interface HasTableRepresentation {
 		List<? extends Bindable> getSelectionBindables();
