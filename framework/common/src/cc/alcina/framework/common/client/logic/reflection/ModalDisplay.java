@@ -92,7 +92,6 @@ public @interface ModalDisplay {
 	}
 
 	@Reflected
-	@Registration(ModeTransformer.class)
 	public static class ModeTransformer implements Function<Mode, Mode> {
 		@Override
 		public Mode apply(Mode mode) {

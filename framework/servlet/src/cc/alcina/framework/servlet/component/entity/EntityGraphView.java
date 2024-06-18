@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
-import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Io;
@@ -127,6 +126,7 @@ public class EntityGraphView {
 
 		@Override
 		public void init() {
+			super.init();
 		}
 
 		TraversalPlace currentPlace;
@@ -172,8 +172,6 @@ public class EntityGraphView {
 			SelectionTraversal traversal;
 
 			RootLayer rootLayer;
-
-			SelectionMarkup selectionMarkup;
 
 			void initialiseTraversal() {
 				traversal = new SelectionTraversal(this);

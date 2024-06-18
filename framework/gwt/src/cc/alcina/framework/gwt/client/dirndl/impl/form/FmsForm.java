@@ -8,6 +8,7 @@ import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.ModalDisplay;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -37,6 +38,8 @@ public class FmsForm {
 				FmsFormTransform.class);
 		FormModelProvider.get().register(FormModel.LabelModel.class,
 				FmsLabelModel.class);
+		FormModelProvider.get().register(ModalDisplay.ModeTransformer.class,
+				ModalDisplay.ModeTransformer.class);
 	}
 
 	// FIXME - ol.dirndl.1d - sass!

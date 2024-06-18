@@ -627,53 +627,32 @@ public class BeanFields {
 		}
 	}
 
+	/*
+	 * Class properties are already ordered (if there's a PropertyOrder
+	 * annotation), this just adds @Display (orderingHint) if it exists
+	 */
 	public static class FieldOrdering implements Comparator<Field> {
-		private final ClassReflector<?> classReflector;
+		ClassReflector<?> classReflector;
 
-		private PropertyOrder propertyOrder;
+		boolean ignoreHints;
 
 		FieldOrdering(ClassReflector<?> classReflector) {
 			this.classReflector = classReflector;
-			this.propertyOrder = classReflector.annotation(PropertyOrder.class);
+			PropertyOrder propertyOrder = classReflector
+					.annotation(PropertyOrder.class);
+			ignoreHints = PropertyOrder.Support.hasCustomOrder(propertyOrder);
 		}
 
 		@Override
 		public int compare(Field o1, Field o2) {
-			if (propertyOrder != null) {
-				int idx1 = Arrays.asList(propertyOrder.value())
-						.indexOf(o1.getPropertyName());
-				int idx2 = Arrays.asList(propertyOrder.value())
-						.indexOf(o2.getPropertyName());
-				if (propertyOrder.fieldOrder()) {
-					idx1 = classReflector.properties().indexOf(
-							classReflector.property(o1.getPropertyName()));
-					idx2 = classReflector.properties().indexOf(
-							classReflector.property(o2.getPropertyName()));
-				}
-				if (idx1 == -1) {
-					if (idx2 == -1) {
-						// fall through
-					} else {
-						return 1;
-					}
-				} else {
-					if (idx2 == -1) {
-						return -1;
-					} else {
-						return idx1 - idx2;
-					}
-				}
+			if (ignoreHints) {
+				return 0;
 			}
 			Property p1 = classReflector.property(o1.getPropertyName());
 			Property p2 = classReflector.property(o2.getPropertyName());
 			int orderingHint1 = RenderedProperty.orderingHint(p1);
 			int orderingHint2 = RenderedProperty.orderingHint(p2);
-			int i = CommonUtils.compareInts(orderingHint1, orderingHint2);
-			if (i != 0) {
-				return i;
-			}
-			return RenderedProperty.displayName(p1)
-					.compareToIgnoreCase(RenderedProperty.displayName(p2));
+			return CommonUtils.compareInts(orderingHint1, orderingHint2);
 		}
 	}
 
@@ -723,7 +702,7 @@ public class BeanFields {
 		@Override
 		public FieldQuery clone() {
 			return new FieldQuery().asAdjunctEditor(adjunct)
-					.asEditable(editable).forClass(clazz).forBean(bean)
+					.asEditable(editable).forBean(bean).forClass(clazz)
 					.forPropertyName(propertyName)
 					.forMultipleWidgetContainer(multiple)
 					.withEditableNamePredicate(editableNamePredicate)

@@ -19,11 +19,14 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -52,23 +55,45 @@ public @interface PropertyOrder {
 	String[] value() default {};
 
 	@Reflected
-	public static abstract class Custom implements Comparator<String> {
-		public static class Default extends PropertyOrder.Custom {
+	public interface Custom extends Comparator<String> {
+		public static class Default implements PropertyOrder.Custom {
 			@Override
 			public int compare(String o1, String o2) {
 				return 0;
 			}
 		}
+
+		public abstract class Defined implements PropertyOrder.Custom {
+			Map<String, Integer> ordinals = AlcinaCollections
+					.newLinkedHashMap();
+
+			public Defined(PropertyEnum... propertyRefs) {
+				Arrays.stream(propertyRefs).forEach(p -> {
+					ordinals.put(p.name(), ordinals.size());
+				});
+			}
+
+			@Override
+			public int compare(String o1, String o2) {
+				int i1 = ordinals.computeIfAbsent(o1, s -> Integer.MAX_VALUE);
+				int i2 = ordinals.computeIfAbsent(o2, s -> Integer.MAX_VALUE);
+				return i1 - i2;
+			}
+		}
 	}
 
 	public static class Support {
+		public static boolean hasCustomOrder(PropertyOrder propertyOrder) {
+			return propertyOrder != null
+					&& propertyOrder.custom() != Custom.Default.class;
+		}
+
 		public static PropertyOrder.Custom customOrder(
 				PropertyOrder propertyOrder,
 				Function<Class, Object> instantiator) {
-			return propertyOrder == null
-					|| propertyOrder.custom() == Custom.Default.class ? null
-							: (Custom) instantiator
-									.apply(propertyOrder.custom());
+			return hasCustomOrder(propertyOrder)
+					? (Custom) instantiator.apply(propertyOrder.custom())
+					: null;
 		}
 	}
 }

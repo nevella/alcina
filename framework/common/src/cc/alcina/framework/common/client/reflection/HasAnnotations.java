@@ -29,4 +29,8 @@ public interface HasAnnotations {
 	 *         locationClass
 	 */
 	boolean isClass(Class locationClass, String propertyName);
+
+	default boolean isOrIsPropertyAncestor(Property property) {
+		return false;
+	}
 }
