@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 
 class SerializationSupport {
@@ -106,7 +107,7 @@ class SerializationSupport {
 	}
 
 	private List<Property> getProperties0(Class forClass) {
-		Class clazz = Domain.resolveEntityClass(forClass);
+		Class clazz = ClassUtil.resolveEnumSubclassAndSynthetic(forClass);
 		return serializationProperties.computeIfAbsent(clazz, valueClass -> {
 			ClassReflector<?> classReflector = Reflections.at(valueClass);
 			return classReflector.properties().stream()
