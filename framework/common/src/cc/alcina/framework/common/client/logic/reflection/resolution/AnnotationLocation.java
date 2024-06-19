@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
@@ -69,7 +69,7 @@ public class AnnotationLocation {
 
 	public AnnotationLocation(Class clazz, Property property,
 			Resolver resolver) {
-		if (CommonUtils.isEnumSubclass(clazz)) {
+		if (ClassUtil.isEnumSubclass(clazz)) {
 			int debug = 3;
 		}
 		Preconditions.checkArgument(clazz != null || property != null);

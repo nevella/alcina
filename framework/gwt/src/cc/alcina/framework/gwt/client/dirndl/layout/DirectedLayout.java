@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
@@ -556,11 +557,8 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		private void bindEvents() {
-			if (model == null) {
-				return;
-			}
 			ReceivesEmitsEvents.ClassData classData = ReceivesEmitsEvents
-					.get(model.getClass());
+					.get(ClassUtil.resolveEnumSubclassAndSynthetic(model));
 			if (classData.receives.isEmpty()
 					&& classData.emitsDescendant.isEmpty()
 					&& directed.reemits().length == 0) {

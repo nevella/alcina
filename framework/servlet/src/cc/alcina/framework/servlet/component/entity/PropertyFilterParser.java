@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMatches;
 import cc.alcina.framework.common.client.util.StringMatches.PartialSubstring;
@@ -46,7 +47,7 @@ class PropertyFilterParser {
 		if (type == Boolean.class || type == boolean.class) {
 			return PropertyValueType.BOOLEAN;
 		}
-		if (CommonUtils.isEnumOrEnumSubclass(type)) {
+		if (ClassUtil.isEnumOrEnumSubclass(type)) {
 			return PropertyValueType.ENUM;
 		}
 		if (type == String.class) {

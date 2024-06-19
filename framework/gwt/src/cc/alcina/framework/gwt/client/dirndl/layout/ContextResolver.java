@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -129,7 +130,8 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	}
 
 	public List<Binding> getBindings(Directed directed, Object model) {
-		return bindingsCache.getBindings(directed, model.getClass());
+		return bindingsCache.getBindings(directed,
+				ClassUtil.resolveEnumSubclassAndSynthetic(model));
 	}
 
 	public <T> T getRootModel() {
@@ -607,7 +609,8 @@ public class ContextResolver extends AnnotationLocation.Resolver
 							.at(reflectedClass).properties().stream()
 							.filter(p -> p.getDeclaringType() == reflectedClass
 									&& p.has(Display.class))
-							.toList();
+							// ignore "id" (often has an ordering)
+							.filter(p -> !p.getName().equals("id")).toList();
 					if (explicitlySet.isEmpty()) {
 						return (List<A>) List
 								.of(new Display.AllProperties.Impl());

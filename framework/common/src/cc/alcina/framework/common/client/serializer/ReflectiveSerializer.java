@@ -43,8 +43,8 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import elemental.js.json.JsJsonFactory;
@@ -581,7 +581,7 @@ public class ReflectiveSerializer {
 				getValueSerializer(Class<? extends Object> valueType) {
 			ValueSerializer valueSerializer = valueSerializers.get(valueType);
 			if (valueSerializer == null) {
-				if (CommonUtils.isEnumOrEnumSubclass(valueType)) {
+				if (ClassUtil.isEnumOrEnumSubclass(valueType)) {
 					valueType = Enum.class;
 				}
 				if (Reflections.isAssignableFrom(BasePlace.class, valueType)) {
@@ -1040,8 +1040,7 @@ public class ReflectiveSerializer {
 		}
 
 		TypeNode typeNode(Class type) {
-			type = CommonUtils.isEnumSubclass(type) ? type.getSuperclass()
-					: type;
+			type = ClassUtil.isEnumSubclass(type) ? type.getSuperclass() : type;
 			TypeNode typeNode = typeNodes.get(type);
 			if (typeNode == null) {
 				typeNode = new TypeNode(type);

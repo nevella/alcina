@@ -808,7 +808,6 @@ body > page > selections > selection-table-area > table td > * {
   overflow-x: scroll;
   display: inline-block;
   max-width: 14rem;
-  max-height: 1rem;
 }
 body > page > selections > selection-table-area > table td > *:not(:first-child) {
   display: none;

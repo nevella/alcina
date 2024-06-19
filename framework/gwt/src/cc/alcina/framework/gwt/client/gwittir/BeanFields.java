@@ -66,7 +66,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -341,6 +341,9 @@ public class BeanFields {
 		boolean isDomainClass = Reflections.isAssignableFrom(Entity.class,
 				domainType);
 		if (propertyLocation.hasAnnotation(Display.Exclude.class)) {
+			return null;
+		}
+		if (property.isWriteOnly()) {
 			return null;
 		}
 		if (display != null) {
@@ -717,7 +720,8 @@ public class BeanFields {
 		public FieldQuery forBean(Object bean) {
 			this.bean = bean;
 			if (bean != null) {
-				forClass(Ax.resolveSyntheticClass(bean.getClass()));
+				forClass(ClassUtil
+						.resolveEnumSubclassAndSynthetic(bean.getClass()));
 			}
 			return this;
 		}
