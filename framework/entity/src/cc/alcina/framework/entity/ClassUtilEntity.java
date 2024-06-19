@@ -1,12 +1,11 @@
 package cc.alcina.framework.entity;
 
 import java.lang.reflect.Constructor;
-import java.util.Comparator;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
-public class ClassUtil {
+public class ClassUtilEntity {
 	public static final Function<Class, Object> NO_ARGS_INSTANTIATOR = clazz -> {
 		try {
 			Constructor ctr = clazz.getDeclaredConstructor();
@@ -21,12 +20,5 @@ public class ClassUtil {
 		return clazz.getProtectionDomain().getCodeSource().getLocation()
 				.toString()//
 				.replaceFirst("(file:)(.+)", "$2");
-	}
-
-	public static class SimpleNameComparator implements Comparator<Class> {
-		@Override
-		public int compare(Class o1, Class o2) {
-			return o1.getSimpleName().compareTo(o2.getSimpleName());
-		}
 	}
 }

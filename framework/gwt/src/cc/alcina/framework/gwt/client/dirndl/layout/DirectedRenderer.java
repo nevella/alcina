@@ -221,8 +221,8 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesPropertyInputs {
 		default void generatePropertyInputs(RendererInput input) {
-			for (Property property : Reflections.at((input.model))
-					.properties()) {
+			for (Property property : Reflections
+					.at(CommonUtils.resolve(input.model)).properties()) {
 				Property directedProperty = input.resolver
 						.resolveDirectedProperty(property);
 				if (directedProperty != null) {

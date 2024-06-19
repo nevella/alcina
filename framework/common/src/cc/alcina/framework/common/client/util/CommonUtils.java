@@ -1111,7 +1111,8 @@ public class CommonUtils {
 	}
 
 	public static boolean isEnumSubclass(Class c) {
-		return c.getSuperclass() != null && c.getSuperclass().isEnum();
+		return c == null ? false
+				: c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 
 	@SuppressWarnings("deprecation")

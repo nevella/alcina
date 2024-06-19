@@ -5,7 +5,6 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DoublePair;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseMove;
@@ -112,18 +111,12 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 				DoublePair dragPosition = new DoublePair(
 						nativeEvent.getClientX() - elem.getAbsoluteLeft(),
 						nativeEvent.getClientY() - elem.getAbsoluteTop());
-				onSplitterResize(dragPosition);
 				nativeEvent.preventDefault();
 				DoublePair totalDelta = dragPosition.minus(startPosition);
 				DoublePair moveDelta = dragPosition.minus(lastPosition);
 				event.reemitAs(model, Dragged.class,
 						new Dragged.Data(moveDelta, totalDelta));
 			}
-		}
-
-		void onSplitterResize(DoublePair dragPosition) {
-			Ax.out("%s :: %s", dragPosition, startPosition);
-			int debug = 3;
 		}
 
 		@Override

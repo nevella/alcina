@@ -407,7 +407,7 @@ public class Binding {
 		}
 		for (int i = 0; (children != null) && (i < children.size()); i++) {
 			Binding child = children.get(i);
-			child.detached = detached;
+			child.detached |= detached;
 			child.bind();
 		}
 		this.bound = true;

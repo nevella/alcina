@@ -423,13 +423,13 @@ overlay-container overlay.filter-suggestor > suggestor {
 overlay-container overlay.filter-suggestor > suggestor > results {
   display: contents;
 }
-overlay-container overlay.filter-suggestor > suggestor > results > choice {
+overlay-container overlay.filter-suggestor > suggestor > choice, overlay-container overlay.filter-suggestor > suggestor > results > choice {
   padding: 0.4rem 1rem;
   /* use padding, not line-height, so hover bkg is vertically centered*/
   line-height: 2;
   cursor: pointer;
 }
-overlay-container overlay.filter-suggestor > suggestor > results > choice:hover, overlay-container overlay.filter-suggestor > suggestor > results > choice[index-selected] {
+overlay-container overlay.filter-suggestor > suggestor > choice:hover, overlay-container overlay.filter-suggestor > suggestor > choice[index-selected], overlay-container overlay.filter-suggestor > suggestor > results > choice:hover, overlay-container overlay.filter-suggestor > suggestor > results > choice[index-selected] {
   background-color: #00000010;
 }
 overlay-container overlay.filter-suggestor > suggestor input {
@@ -752,6 +752,73 @@ body > page > selections.input {
 }
 body > page > selections.output {
   grid-area: output;
+}
+body > page > selections > selection-area {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+body > page > selections > selection-area[selectionType=VIEW] {
+  background: #fdd;
+}
+body > page > selections > selection-area[selectionType=CONTAINMENT] {
+  background: #dfd;
+}
+body > page > selections > selection-area[selectionType=DESCENT] {
+  background: #ddf;
+}
+body > page > selections > selection-area[secondary-descendant-relation], body > page > selections > selection-area[ancestor-of-selected] {
+  background: #eaeafa;
+}
+body > page > selections > selection-area[selected] {
+  background: #e3fae3;
+}
+body > page > selections > selection-table-area {
+  display: block;
+  width: 100%;
+  overflow-x: scroll;
+}
+body > page > selections > selection-table-area > table {
+  border-spacing: 0;
+}
+body > page > selections > selection-table-area > table > tbody > tr:nth-of-type(even) {
+  background-color: #f3f3fa;
+}
+body > page > selections > selection-table-area > table > tbody > tr:nth-of-type(1) td {
+  padding-top: 8px;
+}
+body > page > selections > selection-table-area > table > thead > tr > th {
+  border-bottom: solid 1px #bbb;
+  cursor: pointer;
+  white-space: nowrap;
+}
+body > page > selections > selection-table-area > table td, body > page > selections > selection-table-area > table th {
+  padding: 6px 2px;
+}
+body > page > selections > selection-table-area > table td > value.numeric {
+  text-align: right;
+  display: block;
+  padding-right: 1rem;
+}
+body > page > selections > selection-table-area > table td > value.nowrap {
+  white-space: nowrap;
+}
+body > page > selections > selection-table-area > table td > * {
+  white-space: nowrap;
+  overflow-x: scroll;
+  display: inline-block;
+  max-width: 14rem;
+  max-height: 1rem;
+}
+body > page > selections > selection-table-area > table td > *:not(:first-child) {
+  display: none;
+}
+body > page > selections > selection-table-area > table th {
+  text-align: left;
+  padding-right: 2rem;
+}
+body > page > selections > selection-table-area > table td > *.wide {
+  max-width: 28rem;
 }
 
 app-suggestor {

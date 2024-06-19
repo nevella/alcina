@@ -4,6 +4,7 @@
 @use '../../dirndl/cmp/app-suggestor'
 @use '../cmp/layer-selections'
 @use '../cmp/properties'
+@use '../cmp/selections'
 @use '../../dirndl/cmp/status'
 @use '../../dirndl/cmp/overlay'
 
@@ -53,19 +54,7 @@ body > page
     @include properties.contents
     
   > selections
-    display: block
-
-    > selection-markup-area
-      display: block
-      padding: 0 0.5em
-      max-height: calc(100% - 2.2rem)
-      overflow: scroll
-
-    &.input
-      grid-area: input
-
-    &.output
-      grid-area: output
+    @include selections.contents
 
 @include app-suggestor.contents
 

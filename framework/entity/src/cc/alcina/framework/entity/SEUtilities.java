@@ -98,8 +98,6 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.DateUtil;
-import cc.alcina.framework.common.client.util.DateUtil.MonthResolver;
-import cc.alcina.framework.common.client.util.DateUtil.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -1059,7 +1057,7 @@ public class SEUtilities {
 							.getAnnotation(PropertyOrder.class);
 					PropertyOrder.Custom customOrder = PropertyOrder.Support
 							.customOrder(propertyOrder,
-									ClassUtil.NO_ARGS_INSTANTIATOR);
+									ClassUtilEntity.NO_ARGS_INSTANTIATOR);
 					Comparator<PropertyDescriptor> pdComparator = new Comparator<PropertyDescriptor>() {
 						@Override
 						public int compare(PropertyDescriptor o1,

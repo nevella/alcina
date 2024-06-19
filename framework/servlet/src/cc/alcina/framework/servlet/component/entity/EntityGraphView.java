@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.StyleInjector;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.Layer;
@@ -23,6 +24,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
@@ -116,6 +118,16 @@ public class EntityGraphView {
 					.run(() -> peer.traversal.traverse());
 			long end = System.currentTimeMillis();
 			Ax.out("egv/traverse: %sms", end - start);
+		}
+
+		@Override
+		protected DirectedLayout render0() {
+			try {
+				PermissionsManager.get().pushSystemUser();
+				return super.render0();
+			} finally {
+				PermissionsManager.get().popSystemUser();
+			}
 		}
 
 		void evictPeer() {
