@@ -940,7 +940,8 @@ public class SEUtilities {
 		List<String> simpleNames = new ArrayList<>();
 		Class cursor = clazz;
 		do {
-			simpleNames.add(cursor.getSimpleName());
+			simpleNames.add(cursor.isAnonymousClass() ? "[anon]"
+					: cursor.getSimpleName());
 		} while ((cursor = cursor.getEnclosingClass()) != null);
 		Collections.reverse(simpleNames);
 		return simpleNames.stream().collect(Collectors.joining("."));
