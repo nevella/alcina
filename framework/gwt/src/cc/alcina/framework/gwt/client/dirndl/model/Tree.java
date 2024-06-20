@@ -11,10 +11,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focus;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.IntersectionObserved;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
@@ -339,12 +339,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 
 		@Override
-		public void onBind(Bind event) {
-			int debug = 3;
-			super.onBind(event);
-		}
-
-		@Override
 		public void onIntersectionObserved(IntersectionObserved event) {
 			if (event.isIntersecting() && !fired) {
 				fired = true;
@@ -396,7 +390,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		className = "node",
 		reemits = { LabelClicked.class, NodeLabelClicked.class,
 				ToggleButtonClicked.class, NodeToggleButtonClicked.class })
-	public static class TreeNode<NM extends TreeNode> extends Model {
+	public static class TreeNode<NM extends TreeNode> extends Model
+			implements DomEvents.Focus.Handler {
 		public transient boolean populated;
 
 		private boolean open;
@@ -576,6 +571,11 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			public void setText(String text) {
 				this.text = text;
 			}
+		}
+
+		@Override
+		public void onFocus(Focus event) {
+			event.reemitAs(this, KeyboardSelectNode.class, this);
 		}
 	}
 }

@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.util.HasUrl;
 
 public abstract class AbstractUrlMeasureSelection extends AbstractUrlSelection
 		implements HasUrl {
-	private final Measure measure;
+	private Measure measure;
 
 	public AbstractUrlMeasureSelection(Selection parent, Measure measure,
 			String url) {

@@ -11,10 +11,8 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -25,6 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormModelProvider;
 
 @Directed(tag = "bean-editor")
 public class BeanForm extends Model {
@@ -117,7 +116,8 @@ public class BeanForm extends Model {
 		private Impl delegate;
 
 		public FormTransform() {
-			delegate = Registry.impl(Impl.class);
+			delegate = FormModelProvider.get()
+					.impl(BeanForm.FormTransform.Impl.class);
 		}
 
 		@Override
@@ -136,7 +136,6 @@ public class BeanForm extends Model {
 		}
 
 		@Reflected
-		@Registration(Impl.class)
 		public static class BasicFormTransform
 				extends BeanForm.FormTransform.Impl {
 			@Override

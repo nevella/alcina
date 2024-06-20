@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JTypeParameter;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesJavaType;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection.ProvidesTypeBounds;
-import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyAccessor.Field;
 
 /**
  * FIXME - reflection - as per policy, should not expose public fields as
@@ -119,8 +118,10 @@ public class PropertyReflection extends ReflectionElement
 					return;
 				}
 				String message = Ax.format(
-						"Duplicate (overriding/shadowed) field accessors:\n\t%s\n\t%s",
-						addedFieldMethods.get(0), fieldAccessor);
+						"Duplicate (overriding/shadowed) field accessors:\n\t%s - %s\n\t%s - %s",
+						addedFieldMethods.get(0),
+						addedFieldMethods.get(0).getEnclosingType(),
+						fieldAccessor, fieldAccessor.getEnclosingType());
 				throw new IllegalStateException(message);
 			}
 			addedFieldMethods.add(fieldAccessor);

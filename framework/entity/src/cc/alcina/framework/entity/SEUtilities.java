@@ -91,15 +91,12 @@ import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyExceptio
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.DateUtil;
-import cc.alcina.framework.common.client.util.DateUtil.MonthResolver;
-import cc.alcina.framework.common.client.util.DateUtil.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -1059,7 +1056,7 @@ public class SEUtilities {
 							.getAnnotation(PropertyOrder.class);
 					PropertyOrder.Custom customOrder = PropertyOrder.Support
 							.customOrder(propertyOrder,
-									ClassUtil.NO_ARGS_INSTANTIATOR);
+									ClassUtilEntity.NO_ARGS_INSTANTIATOR);
 					Comparator<PropertyDescriptor> pdComparator = new Comparator<PropertyDescriptor>() {
 						@Override
 						public int compare(PropertyDescriptor o1,
@@ -1785,10 +1782,6 @@ public class SEUtilities {
 		value = NestedName.class,
 		priority = Priority.PREFERRED_LIBRARY)
 	public static class NestedNameJvm extends NestedName {
-		public static NestedName get() {
-			return Registry.impl(NestedName.class);
-		}
-
 		Map<Class, String> map = CollectionCreators.Bootstrap
 				.createConcurrentClassMap();
 

@@ -46,7 +46,7 @@ import cc.alcina.framework.gwt.client.gwittir.BeanFields;
  * The transformation also changes the annotation resolution location to that of
  * the Bean.Property that's being rendered so - if rendering a
  * Croissaint.filling in a table or form, the declarative resolution (render
- * customization) comes from there, not the geneerating table/form structure.
+ * customization) comes from there, not the generating table/form structure.
  * This allows concise rendering customization
  * 
  * <p>
@@ -147,6 +147,10 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;
 		}
+		if (editorContext.isDetached()) {
+			int debug = 3;
+		}
+		binding.setDetached(editorContext.isDetached());
 		valueModel.onChildBindingCreated(binding);
 		return binding;
 	}
@@ -200,7 +204,13 @@ public class BridgingValueRenderer extends DirectedRenderer {
 					resolutionContext);
 			if (clazz == Directed.Transform.class) {
 				// assume this is not circular
-				if (reflector == valueLocation.property) {
+				// if (reflector == valueLocation.property) {
+				/*
+				 * because of de-duping in
+				 * AbstractMergeStrategy.resolveProperty(, the check needs to be
+				 * more elaborate
+				 */
+				if (reflector.isOrIsPropertyAncestor(valueLocation.property)) {
 					if (contextAnnotation == null) {
 						Directed.Transform.Impl impl = new Directed.Transform.Impl();
 						impl.withValue(RenderingModelTransform.class);

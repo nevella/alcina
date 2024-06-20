@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.logic.reflection;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -102,6 +103,12 @@ public @interface Display {
 	@Inherited
 	@Target({ ElementType.TYPE })
 	public @interface AllProperties {
+		public static class Impl implements AllProperties {
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return AllProperties.class;
+			}
+		}
 	}
 
 	@Reflected
@@ -152,5 +159,18 @@ public @interface Display {
 			return name.isEmpty() ? CommonUtils.deInfix(property.getName())
 					: name;
 		}
+	}
+
+	/**
+	 *
+	 * Exclude this property from the displayed fields (alt for
+	 * Directed/Bridging renderer)
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	@ClientVisible
+	public static @interface Exclude {
 	}
 }

@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -83,6 +84,11 @@ boolean enabled = Configuration.is(Foo.class,"enabled");
  *
  * <p>
  * Instead, set defaults in an app-level configuration properties file
+ * <h3>Ongoing</h3>
+ * <p>
+ * FIXME - config - I'm moving from stringRepresentation to
+ * nestedStringRepresentation - to do a complete move, I'll need to migrate
+ * existing configuration + write a checking tool
  */
 public class Configuration {
 	public final static Properties properties = new Properties();
@@ -93,7 +99,12 @@ public class Configuration {
 	public static boolean useStackTraceCallingClass;
 
 	public static String get(Class clazz, String key) {
-		return properties.get(new Key(clazz, key));
+		String value = properties.get(new Key(clazz, key));
+		if (value == null) {
+			Ax.sysLogHigh("Warning - no configuration for class/key %s.%s",
+					NestedName.get(clazz), key);
+		}
+		return value;
 	}
 
 	public static String get(String key) {
@@ -268,6 +279,8 @@ public class Configuration {
 
 		String stringRepresentation;
 
+		String nestedStringRepresentation;
+
 		private Key(Class clazz, String keyPart, boolean allowNullClass) {
 			Preconditions.checkState(clazz != null || allowNullClass);
 			this.clazz = clazz;
@@ -275,6 +288,8 @@ public class Configuration {
 			stringRepresentation = clazz == null ? keyPart
 					: Ax.format("%s.%s", GraphProjection.classSimpleName(clazz),
 							keyPart);
+			nestedStringRepresentation = clazz == null ? keyPart
+					: Ax.format("%s.%s", NestedName.get(clazz), keyPart);
 		}
 
 		Key(Class clazz, String keyPart) {
@@ -334,7 +349,7 @@ public class Configuration {
 
 		@Override
 		public String toString() {
-			return stringRepresentation;
+			return nestedStringRepresentation;
 		}
 
 		public Key withContextOverride(boolean contextOverride) {
@@ -463,7 +478,7 @@ public class Configuration {
 		}
 
 		public String set(Class clazz, String key, String value) {
-			return set(new Key(clazz, key).stringRepresentation, value);
+			return set(new Key(clazz, key).nestedStringRepresentation, value);
 		}
 
 		public String set(String key, String value) {
@@ -600,7 +615,11 @@ public class Configuration {
 							ensureBundles(cursor, cursor == key);
 						}
 						propertyValues = keyValues
-								.get(cursor.stringRepresentation);
+								.get(cursor.nestedStringRepresentation);
+						if (propertyValues == null) {
+							propertyValues = keyValues
+									.get(cursor.stringRepresentation);
+						}
 						if (propertyValues != null) {
 							if (cursor != key) {
 								keyValues.put(stringKey,

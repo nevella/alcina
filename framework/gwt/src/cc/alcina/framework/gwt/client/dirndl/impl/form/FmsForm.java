@@ -8,6 +8,7 @@ import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.ModalDisplay;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -23,6 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsValida
 import cc.alcina.framework.gwt.client.dirndl.model.BeanForm;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormElement;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormModelProvider;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.LabelModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -30,6 +32,16 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.OneToManyCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.OneToManyMultipleSummaryCustomiser;
 
 public class FmsForm {
+	public static void registerImplementations() {
+		FormModelProvider.get().register(FormModel.class, FmsFormModel.class);
+		FormModelProvider.get().register(BeanForm.FormTransform.Impl.class,
+				FmsFormTransform.class);
+		FormModelProvider.get().register(FormModel.LabelModel.class,
+				FmsLabelModel.class);
+		FormModelProvider.get().register(ModalDisplay.ModeTransformer.class,
+				ModalDisplay.ModeTransformer.class);
+	}
+
 	// FIXME - ol.dirndl.1d - sass!
 	@Directed(
 		tag = "form-element",
@@ -129,9 +141,6 @@ public class FmsForm {
 		bindings = { @Binding(from = "for", type = Type.PROPERTY),
 				@Binding(from = "text", type = Type.INNER_TEXT),
 				@Binding(from = "title", type = Type.PROPERTY) })
-	@Registration(
-		value = LabelModel.class,
-		priority = Priority.INTERMEDIATE_LIBRARY)
 	public static class FmsLabelModel extends LabelModel {
 		public FmsLabelModel() {
 		}

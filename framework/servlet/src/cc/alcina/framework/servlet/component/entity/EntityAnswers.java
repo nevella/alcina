@@ -30,8 +30,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorReques
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui;
 import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
-import cc.alcina.framework.servlet.component.entity.QueryLayer.EntitySelection;
-import cc.alcina.framework.servlet.component.entity.QueryLayer.PropertySelection;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;

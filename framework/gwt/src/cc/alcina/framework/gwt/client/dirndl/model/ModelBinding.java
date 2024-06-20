@@ -124,7 +124,7 @@ public class ModelBinding<T> {
 					.asBinding();
 			listener.bind();
 		} else {
-			throw new UnsupportedOperationException();
+			// noop (from is null)
 		}
 	}
 
@@ -216,7 +216,7 @@ public class ModelBinding<T> {
 				} else if (fromTopic != null) {
 					fromTopic.fireIfPublished((Consumer) consumer);
 				} else {
-					throw new UnsupportedOperationException();
+					// noop - from is null
 				}
 			}
 		} catch (Exception e) {
@@ -254,7 +254,9 @@ public class ModelBinding<T> {
 	}
 
 	void unbind() {
-		listener.unbind();
+		if (listener != null) {
+			listener.unbind();
+		}
 	}
 
 	/**

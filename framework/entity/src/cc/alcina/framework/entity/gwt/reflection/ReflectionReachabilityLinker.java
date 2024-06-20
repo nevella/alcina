@@ -391,7 +391,7 @@ public class ReflectionReachabilityLinker extends Linker {
 				asyncReachableTypes.stream().filter(reflectableTypes::contains)
 						.map(reflectableTypes::typeHierarchy)
 						.flatMap(h -> Stream.concat(h.settableTypes.stream(),
-								h.subtypes.stream()))
+								h.descendantTypes.stream()))
 						.forEach(passTypes::add);
 				passDelta = passTypes.size() - asyncReachableTypes.size();
 				asyncReachableTypes = passTypes;

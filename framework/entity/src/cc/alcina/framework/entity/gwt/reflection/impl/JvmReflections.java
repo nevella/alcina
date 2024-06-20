@@ -7,6 +7,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.entity.SEUtilities.NestedNameJvm;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
@@ -27,6 +29,7 @@ public class JvmReflections {
 		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
 		CollectionCreators.Bootstrap
 				.setLinkedMapCreator(new LinkedHashMapCreatorJvm());
+		NestedName.instance = new NestedNameJvm();
 	}
 
 	public static void init() {

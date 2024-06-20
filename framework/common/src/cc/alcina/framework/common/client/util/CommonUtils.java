@@ -687,7 +687,7 @@ public class CommonUtils {
 	public static <T extends Throwable> T
 			extractCauseOfClass(Throwable throwable, Class<T> throwableClass) {
 		while (true) {
-			if (isDerivedFrom(throwable, throwableClass)) {
+			if (ClassUtil.isDerivedFrom(throwable, throwableClass)) {
 				return (T) throwable;
 			}
 			if (throwable.getCause() == throwable
@@ -824,7 +824,7 @@ public class CommonUtils {
 
 	public static Class getComparableType(Object o) {
 		Class<? extends Object> clazz = o.getClass();
-		return isEnumSubclass(clazz) ? clazz.getSuperclass() : clazz;
+		return ClassUtil.isEnumSubclass(clazz) ? clazz.getSuperclass() : clazz;
 	}
 
 	public static Class<? extends Enum> getEnumType(Enum e) {
@@ -1087,43 +1087,6 @@ public class CommonUtils {
 		return false;
 	}
 
-	public static boolean isDerivedFrom(Object o, Class c) {
-		if (o == null) {
-			return false;
-		}
-		Class c2 = o.getClass();
-		while (c2 != Object.class) {
-			if (c2 == c) {
-				return true;
-			}
-			c2 = c2.getSuperclass();
-		}
-		return false;
-	}
-
-	public static boolean isEnumish(Object test) {
-		Class<? extends Object> clazz = test.getClass();
-		return clazz.isEnum() || isEnumSubclass(clazz);
-	}
-
-	public static boolean isEnumOrEnumSubclass(Class c) {
-		return c.isEnum() || isEnumSubclass(c);
-	}
-
-	public static boolean isEnumSubclass(Class c) {
-		return c.getSuperclass() != null && c.getSuperclass().isEnum();
-	}
-
-	@SuppressWarnings("deprecation")
-	public static boolean isInCurrentMonth(Date date) {
-		if (date == null) {
-			return false;
-		}
-		Date now = new Date();
-		return now.getYear() == date.getYear()
-				&& now.getMonth() == date.getMonth();
-	}
-
 	public static boolean isLetterOnly(String string) {
 		return string.matches("[a-zA-Z]+");
 	}
@@ -1169,7 +1132,7 @@ public class CommonUtils {
 
 	public static boolean isStandardJavaClassOrEnum(Class clazz) {
 		return isStandardJavaClass(clazz) || clazz.isEnum()
-				|| isEnumSubclass(clazz);
+				|| ClassUtil.isEnumSubclass(clazz);
 	}
 
 	public static boolean isWholeNumber(double d) {

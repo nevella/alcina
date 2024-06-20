@@ -92,6 +92,9 @@ public class ModelEvents {
 	/**
 	 * Allow the selected object to react to selection (say by keyboard
 	 * selection) prior to dispatch
+	 * 
+	 * Note, the receiver must check that the model is itself (i.e. the
+	 * Choice.value)
 	 */
 	public static class BeforeSelectionChangedDispatchDescent extends
 			ModelEvent.DescendantEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Emitter> {

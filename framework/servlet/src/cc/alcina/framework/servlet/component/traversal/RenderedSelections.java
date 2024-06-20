@@ -39,6 +39,14 @@ class RenderedSelections extends Model.Fields {
 	@Directed
 	SelectionMarkupArea selectionMarkup;
 
+	@Directed
+	SelectionTableArea selectionTable;
+
+	public void setSelectionTable(SelectionTableArea selectionTable) {
+		set("selectionTable", this.selectionTable, selectionTable,
+				() -> this.selectionTable = selectionTable);
+	}
+
 	Selection<?> selection;
 
 	boolean input;
@@ -72,6 +80,20 @@ class RenderedSelections extends Model.Fields {
 		// workaround for vs.code (or eclipse) compilation issue - the local
 		// traversal variable is a required intermediate
 		SelectionTraversal traversal = page.history.getObservable();
+		conditionallyPopulateMarkup(traversal);
+		conditionallyPopulateTable(traversal);
+	}
+
+	void conditionallyPopulateTable(SelectionTraversal traversal) {
+		if (input) {
+			return;
+		}
+		if (selection instanceof SelectionTableArea.HasTableRepresentation) {
+			setSelectionTable(new SelectionTableArea(selection));
+		}
+	}
+
+	void conditionallyPopulateMarkup(SelectionTraversal traversal) {
 		SelectionMarkup.Has markupProvider = traversal
 				.context(SelectionMarkup.Has.class);
 		if (markupProvider == null) {

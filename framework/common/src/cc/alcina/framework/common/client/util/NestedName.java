@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @Registration.Singleton
 public class NestedName {
-	private static NestedName instance;
+	public static NestedName instance;
 
 	private static NestedName get() {
 		if (instance == null) {

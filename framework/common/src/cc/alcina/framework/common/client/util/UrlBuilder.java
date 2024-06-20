@@ -96,8 +96,8 @@ public class UrlBuilder {
 		return this;
 	}
 
-	public UrlBuilder qsParam(String key, String value) {
-		qsParams.put(key, value);
+	public UrlBuilder qsParam(String key, Object value) {
+		qsParams.put(key, value.toString());
 		return this;
 	}
 

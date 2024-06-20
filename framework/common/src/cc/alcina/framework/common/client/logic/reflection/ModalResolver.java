@@ -11,13 +11,13 @@ import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.Modal;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.Mode;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModeTransformer;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.RequireSpecified;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormModelProvider;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
 /**
@@ -50,7 +50,8 @@ public class ModalResolver extends ContextResolver implements FormModel.Has {
 		super();
 		init(node);
 		this.node = node;
-		this.mode = Registry.impl(ModeTransformer.class).apply(mode);
+		this.mode = FormModelProvider.get().impl(ModeTransformer.class)
+				.apply(mode);
 	}
 
 	@Override

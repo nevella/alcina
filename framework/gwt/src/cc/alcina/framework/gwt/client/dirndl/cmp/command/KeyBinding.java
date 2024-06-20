@@ -12,8 +12,10 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.NativeEvent.Modifier;
+import com.google.gwt.event.dom.client.KeyCodes;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -24,6 +26,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
  * Models a keybinding, e.g. META-SHIFT-F7
@@ -36,6 +39,8 @@ public @interface KeyBinding {
 	Class<? extends CommandContext>[] context() default {};
 
 	String key();
+
+	int keyCode() default -1;
 
 	NativeEvent.Modifier[] modifiers() default {};
 
@@ -82,8 +87,8 @@ public @interface KeyBinding {
 		}
 
 		boolean matches(Set<Class<? extends CommandContext>> contexts,
-				Set<Modifier> modifiers, String key) {
-			return entries.get(0).matches(contexts, modifiers, key);
+				NativeEvent nativeEvent) {
+			return entries.get(0).matches(contexts, nativeEvent);
 		}
 
 		@Override
@@ -108,12 +113,36 @@ public @interface KeyBinding {
 			}
 
 			boolean matches(Set<Class<? extends CommandContext>> contexts,
-					Set<Modifier> modifiers, String key) {
+					NativeEvent nativeEvent) {
 				if (contexts.stream()
 						.anyMatch(ctx -> this.contexts.contains(ctx))) {
-					boolean matches = key.equalsIgnoreCase(binding.key())
-							&& modifiers.equals(this.modifiers);
-					return matches;
+					Set<Modifier> modifiers = nativeEvent.getModifiers();
+					if (binding.key().length() > 0) {
+						String key = nativeEvent.getKey();
+						if (!key.equalsIgnoreCase(binding.key())) {
+							return false;
+						}
+					} else {
+						Preconditions.checkArgument(binding.keyCode() != 0);
+						if (nativeEvent.getKeyCode() != binding.keyCode()) {
+							return false;
+						}
+						switch (binding.keyCode()) {
+						case KeyCodes.KEY_TAB:
+						case KeyCodes.KEY_ENTER:
+						case KeyCodes.KEY_SPACE:
+							// these have focus meanings, so don't fire if an
+							// element has focus
+							if (WidgetUtils
+									.getFocussedDocumentElement() != null) {
+								return false;
+							}
+						}
+					}
+					if (!modifiers.equals(this.modifiers)) {
+						return false;
+					}
+					return true;
 				} else {
 					return false;
 				}
@@ -130,8 +159,7 @@ public @interface KeyBinding {
 		public static boolean matches(
 				Set<Class<? extends CommandContext>> contexts,
 				MatchData matchData, NativeEvent nativeEvent) {
-			return matchData.matches(contexts, nativeEvent.getModifiers(),
-					nativeEvent.getKey());
+			return matchData.matches(contexts, nativeEvent);
 		}
 
 		static Map<Class<? extends ModelEvent>, Set<Class<? extends CommandContext>>> classContexts = AlcinaCollections
