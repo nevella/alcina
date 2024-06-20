@@ -12,6 +12,8 @@ import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserResul
  * 
  */
 public abstract class ParserLayer<S extends MeasureSelection> extends Layer<S> {
+	public boolean detachMeasures = true;
+
 	protected abstract LayerParserPeer createParserPeer(S selection);
 
 	@Override
@@ -20,7 +22,9 @@ public abstract class ParserLayer<S extends MeasureSelection> extends Layer<S> {
 				createParserPeer(selection));
 		layerParser.parse();
 		processParserResults(selection, layerParser.getParserResults());
-		layerParser.detachMeasures();
+		if (detachMeasures) {
+			layerParser.detachMeasures();
+		}
 	}
 
 	protected abstract void processParserResults(S selection,
