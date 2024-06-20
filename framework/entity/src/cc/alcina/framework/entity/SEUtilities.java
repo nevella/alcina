@@ -91,7 +91,6 @@ import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyExceptio
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -1783,10 +1782,6 @@ public class SEUtilities {
 		value = NestedName.class,
 		priority = Priority.PREFERRED_LIBRARY)
 	public static class NestedNameJvm extends NestedName {
-		public static NestedName get() {
-			return Registry.impl(NestedName.class);
-		}
-
 		Map<Class, String> map = CollectionCreators.Bootstrap
 				.createConcurrentClassMap();
 
