@@ -1401,4 +1401,28 @@ public class JobRegistry {
 		logger.info("Debug orphanage :: {}", jobId);
 		return scheduler.debugOrphanage(jobId);
 	}
+
+	public boolean waitForZeroPendingOrInActiveJobs(long maxTime) {
+		long start = System.currentTimeMillis();
+		while (TimeConstants.within(start, maxTime)) {
+			long incompleteOrPending = TransactionEnvironment.withDomain(() -> {
+				try {
+					TransactionEnvironment.get().ensureBegun();
+					List<QueueStat> queueStats = JobRegistry.get()
+							.getActiveQueueStats().toList();
+					Long active = queueStats.stream()
+							.collect(Collectors.summingLong(qs -> qs.active));
+					Long pending = queueStats.stream()
+							.collect(Collectors.summingLong(qs -> qs.pending));
+					return active + pending;
+				} finally {
+					TransactionEnvironment.get().end();
+				}
+			});
+			if (incompleteOrPending == 0) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
