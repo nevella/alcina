@@ -14,11 +14,13 @@ import com.google.gwt.user.client.History;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.View;
+import cc.alcina.framework.common.client.traversal.Selection.ViewAsync;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -350,6 +352,16 @@ class LayerSelections extends Model.All {
 
 			SelectionArea(Selection selection) {
 				this.selection = selection;
+				View view = selection.view();
+				if (view instanceof ViewAsync) {
+					Client.eventBus().queued().lambda(this::render).deferred()
+							.dispatch();
+				} else {
+					render();
+				}
+			}
+
+			void render() {
 				View view = selection.view();
 				pathSegment = view.getPathSegment(selection);
 				text = view.getText(selection);

@@ -544,6 +544,10 @@ public class Environment {
 				GWTBridgeHeadless.inClient.set(true);
 				ui.onBeforeEnterFrame();
 				enter(runnable::run);
+			} catch (Throwable t) {
+				Ax.err("Exception in frame");
+				Ax.simpleExceptionOut(t);
+				throw t;
 			} finally {
 				ui.onExitFrame();
 				GWTBridgeHeadless.inClient.set(false);

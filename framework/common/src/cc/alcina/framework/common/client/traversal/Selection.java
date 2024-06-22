@@ -357,4 +357,11 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			return null;
 		}
 	}
+
+	/*
+	 * Marker, view should be lazy-loaded. It's not an inner interface of view
+	 * to avoid class structure cycles
+	 */
+	public interface ViewAsync {
+	}
 }

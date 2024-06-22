@@ -819,6 +819,12 @@ body > page > selections > selection-table-area > table th {
 body > page > selections > selection-table-area > table td > *.wide {
   max-width: 28rem;
 }
+body > page > selections > selection-table-area > table tr:hover {
+  cursor: pointer;
+}
+body > page > selections > selection-table-area > table tr:hover > td {
+  background-color: #eee;
+}
 
 app-suggestor {
   display: block;

@@ -167,7 +167,7 @@ public class TraversalProcessView {
 		}
 
 		protected SelectionTraversal traversal0() {
-			return page.history.getObservable();
+			return page.history == null ? null : page.history.getObservable();
 		}
 
 		public static SelectionTraversal traversal() {

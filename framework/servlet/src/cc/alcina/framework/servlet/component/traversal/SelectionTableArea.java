@@ -13,15 +13,19 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
+import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 
 /*
  * TODO - extend the heck out of this
  */
 @DirectedContextResolver(FmsContentCells.FmsCellsContextResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
-public class SelectionTableArea extends Model.Fields {
+public class SelectionTableArea extends Model.Fields
+		implements FormEvents.RowClicked.Handler {
 	public interface HasTableRepresentation {
 		List<? extends Bindable> getSelectionBindables();
 
@@ -54,7 +58,17 @@ public class SelectionTableArea extends Model.Fields {
 					return null;
 				}
 			}
+
+			@Override
+			default Selection selectionFor(Bindable bindable) {
+				Selection selection = (Selection) this;
+				return selection.processNode().getChildren().stream()
+						.map(pn -> ((Selection) pn.getValue()))
+						.filter(sel -> sel.get() == bindable).findFirst().get();
+			}
 		}
+
+		Selection selectionFor(Bindable bindable);
 	}
 
 	@Directed.Transform(TableView.class)
@@ -78,5 +92,13 @@ public class SelectionTableArea extends Model.Fields {
 			return mixinResult != null ? mixinResult
 					: super.resolveAnnotations0(annotationClass, location);
 		}
+	}
+
+	@Override
+	public void onRowClicked(RowClicked event) {
+		Ui.place()
+				.appendSelections(List.of(
+						hasTable.selectionFor(event.getModel().getBindable())))
+				.go();
 	}
 }
