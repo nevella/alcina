@@ -502,7 +502,8 @@ public class JobContext {
 		}
 		updateStatusDebouncer.cancel();
 		if (job.provideIsNotComplete()) {
-			// occurs just before end, since possibly on a different thread
+			// occurs just before end, since this method is possibly called on a
+			// different thread to the logbuffer context
 			// log = Registry.impl(PerThreadLogging.class).endBuffer();
 			int maxChars = LooseContext
 					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(5000000);

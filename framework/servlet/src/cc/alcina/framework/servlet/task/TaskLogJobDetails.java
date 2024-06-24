@@ -97,6 +97,7 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	protected void fields(Job job, DomNode body)
 			throws IllegalAccessException, InvocationTargetException {
+		job.domain().ensurePopulated();
 		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 		builder.row().cell("Field").cell("Value");
 		List<PropertyDescriptor> pds = SEUtilities
