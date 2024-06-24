@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -78,7 +79,7 @@ public class SourceFolder implements Predicate<File> {
 
 		public List<File> listFiles() {
 			return Arrays.stream(file.listFiles()).filter(SourceFolder.this)
-					.toList();
+					.collect(Collectors.toList());
 		}
 	}
 

@@ -64,7 +64,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 						.map(unitWrapper -> event.context.units.compilationUnits
 								.ensure(PackagePropertiesUnitData.class,
 										unitWrapper.getFile()))
-						.toList();
+						.collect(Collectors.toList());
 		try {
 			new PackagePropertiesWriter(event.sourcePackage,
 					packageTypeMetadataList).write();
@@ -120,7 +120,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			List<TypeWriter> typeWriters = packageTypeMetadataList.stream()
 					.flatMap(list -> list.declarationPropertiesList.stream())
 					.filter(DeclarationProperties::hasTypedProperties).sorted()
-					.map(TypeWriter::new).toList();
+					.map(TypeWriter::new).collect(Collectors.toList());
 			imports.add(TypedProperty.class.getName());
 			typeWriters.forEach(TypeWriter::addImports);
 			imports.forEach(composerFactory::addImport);

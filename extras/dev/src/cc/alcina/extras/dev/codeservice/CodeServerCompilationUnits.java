@@ -3,6 +3,7 @@ package cc.alcina.extras.dev.codeservice;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.extras.dev.codeservice.CodeService.Event;
@@ -30,7 +31,7 @@ public class CodeServerCompilationUnits implements CodeService.Handler {
 	CodeServerCompilationUnits(CodeService codeService) {
 		this.codeService = codeService;
 		sourceFolders = codeService.sourceFolderPaths.stream()
-				.map(SourceFolder::new).toList();
+				.map(SourceFolder::new).collect(Collectors.toList());
 		compilationUnits = new CompilationUnits();
 		File cacheFolder = DataFolderProvider.get()
 				.getChildFile(getClass().getName());
@@ -46,7 +47,8 @@ public class CodeServerCompilationUnits implements CodeService.Handler {
 		PackageUnits(SourcePackage sourcePackage) {
 			this.sourcePackage = sourcePackage;
 			units = sourcePackage.listFiles().stream()
-					.map(compilationUnits::ensureUnit).toList();
+					.map(compilationUnits::ensureUnit)
+					.collect(Collectors.toList());
 		}
 
 		public List<CompilationUnitWrapper> units;

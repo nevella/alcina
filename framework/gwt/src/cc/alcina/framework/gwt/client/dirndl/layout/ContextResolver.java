@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -610,7 +611,8 @@ public class ContextResolver extends AnnotationLocation.Resolver
 							.filter(p -> p.getDeclaringType() == reflectedClass
 									&& p.has(Display.class))
 							// ignore "id" (often has an ordering)
-							.filter(p -> !p.getName().equals("id")).toList();
+							.filter(p -> !p.getName().equals("id"))
+							.collect(Collectors.toList());
 					if (explicitlySet.isEmpty()) {
 						return (List<A>) List
 								.of(new Display.AllProperties.Impl());

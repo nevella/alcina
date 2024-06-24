@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -38,7 +39,8 @@ public class SelectionTableArea extends Model.Fields
 			default List<? extends Bindable> getSelectionBindables() {
 				Selection selection = (Selection) this;
 				List list = selection.processNode().getChildren().stream()
-						.map(pn -> ((Selection) pn.getValue()).get()).toList();
+						.map(pn -> ((Selection) pn.getValue()).get())
+						.collect(Collectors.toList());
 				Ref<Class> sameTypeCheck = Ref.empty();
 				if (list.stream().allMatch(o -> {
 					if (!(o instanceof Bindable)) {

@@ -1409,7 +1409,7 @@ public class JobRegistry {
 				try {
 					TransactionEnvironment.get().ensureBegun();
 					List<QueueStat> queueStats = JobRegistry.get()
-							.getActiveQueueStats().toList();
+							.getActiveQueueStats().collect(Collectors.toList());
 					Long active = queueStats.stream()
 							.collect(Collectors.summingLong(qs -> qs.active));
 					Long pending = queueStats.stream()
