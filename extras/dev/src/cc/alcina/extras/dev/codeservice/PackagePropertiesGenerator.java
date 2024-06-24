@@ -2,7 +2,13 @@ package cc.alcina.extras.dev.codeservice;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
@@ -18,8 +24,14 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.PersistentUnitData;
 import cc.alcina.extras.dev.console.code.UnitType;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.entity.ClassUtilEntity;
 import cc.alcina.framework.entity.util.FileUtils;
 
 /**
@@ -81,47 +93,125 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 
 		PrintWriter printWriter;
 
+		ClassSourceFileComposerFactory composerFactory;
+
+		Set<String> imports = new TreeSet<>();
+
+		void addImport(Class clazz) {
+			clazz = CommonUtils.getWrapperType(clazz);
+			Class topLevel = ClassUtilEntity.getTopLevelType(clazz);
+			String name = topLevel.getName();
+			imports.add(name);
+		}
+
+		String resolvedTypeName(Class clazz) {
+			clazz = CommonUtils.getWrapperType(clazz);
+			return NestedName.get(clazz);
+		}
+
 		void write() throws Exception {
 			if (packageTypeMetadataList.stream()
 					.noneMatch(PackagePropertiesUnitData::hasTypedProperties)) {
-				file().delete();
+				// file().delete();
 				return;
 			}
-			ClassSourceFileComposerFactory composerFactory = new ClassSourceFileComposerFactory(
+			composerFactory = new ClassSourceFileComposerFactory(
 					sourcePackage.packageName, "PackageProperties");
-			composerFactory.addImport(TypedProperty.class.getName());
+			List<TypeWriter> typeWriters = packageTypeMetadataList.stream()
+					.flatMap(list -> list.declarationPropertiesList.stream())
+					.filter(DeclarationProperties::hasTypedProperties).sorted()
+					.map(TypeWriter::new).toList();
+			imports.add(TypedProperty.class.getName());
+			typeWriters.forEach(TypeWriter::addImports);
+			imports.forEach(composerFactory::addImport);
 			printWriter = new PrintWriter(file());
 			sourceWriter = composerFactory.createSourceWriter(printWriter);
-			sourceWriter.println();
+			sourceWriter.indent();
 			sourceWriter.println("// auto-generated, do not modify");
-			sourceWriter.println("class PackageProperties {");
-			packageTypeMetadataList.stream()
-					.flatMap(list -> list.declarationPropertiesList.stream())
-					.map(TypeWriter::new).forEach(TypeWriter::write);
+			sourceWriter.println("//@formatter:off");
+			sourceWriter.println();
+			typeWriters.forEach(TypeWriter::writeField);
+			sourceWriter.println();
+			typeWriters.forEach(TypeWriter::write);
+			sourceWriter.outdent();
 			closeClassBody();
 		}
 
-		class TypeWriter {
+		class TypeWriter implements Comparable<TypeWriter> {
 			DeclarationProperties declarationProperties;
+
+			Class<?> clazz;
+
+			String modifier;
 
 			TypeWriter(DeclarationProperties declarationProperties) {
 				this.declarationProperties = declarationProperties;
+				clazz = Reflections
+						.forName(declarationProperties.qualifiedBinaryName);
+				modifier = Modifier.isPublic(clazz.getModifiers()) ? "public "
+						: "";
 			}
 
 			void write() {
-				int debug = 3;
+				String containerTypeName = getContainerTypeName();
+				sourceWriter.println(
+						"%sstatic class %s implements TypedProperty.Container {",
+						modifier, containerTypeName);
+				sourceWriter.indent();
+				Reflections.at(clazz).properties().stream()
+						.sorted(Comparator.comparing(Property::getName))
+						.forEach(this::writeProperty);
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.println();
+			}
+
+			private String getContainerTypeName() {
+				return "_" + NestedName.get(clazz).replace(".", "_");
+			}
+
+			void writeField() {
+				String containerTypeName = getContainerTypeName();
+				String fieldName = Arrays
+						.stream(containerTypeName.substring(1).split("_"))
+						.map(CommonUtils::lcFirst)
+						.collect(Collectors.joining("_"));
+				sourceWriter.println("%sstatic %s %s = new %s();", modifier,
+						containerTypeName, fieldName, containerTypeName);
+			}
+
+			void writeProperty(Property property) {
+				String containingTypeName = resolvedTypeName(
+						property.getOwningType());
+				String propertyTypeName = resolvedTypeName(property.getType());
+				sourceWriter.println(
+						"%sTypedProperty<%s, %s> %s = new TypedProperty<>(%s.class, \"%s\");",
+						modifier, containingTypeName, propertyTypeName,
+						property.getName(), containingTypeName,
+						property.getName());
+			}
+
+			void addImports() {
+				Reflections.at(clazz).properties()
+						.forEach(p -> addImport(p.getType()));
+			}
+
+			@Override
+			public int compareTo(TypeWriter o) {
+				return NestedName.get(clazz).compareTo(NestedName.get(o.clazz));
 			}
 		}
 
 		void closeClassBody() {
 			sourceWriter.outdent();
+			sourceWriter.println("//@formatter:on");
 			sourceWriter.println("}");
 			printWriter.close();
 		}
 	}
 
 	static class PackagePropertiesUnitData extends PersistentUnitData {
-		public static final int VERSION = 1;
+		public static final transient int VERSION = 1;
 
 		@Override
 		public int currentVersion() {
@@ -137,19 +227,23 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 
 		@Override
 		protected void compute(File file, CompilationUnits compilationUnits) {
-			CompilationUnitWrapper unit = compilationUnits
-					.ensureUnitWrapper(file);
+			putFile(file);
+			CompilationUnitWrapper unit = compilationUnits.ensureUnit(file);
 			declarationPropertiesList = unit.unitTypes.stream()
-					.map(unitType -> new DeclarationProperties(unitType,
+					.map(unitType -> new DeclarationProperties(unitType, unit,
 							compilationUnits))
-					.toList();
+					.collect(Collectors.toList());
+			updateMetadata();
 		}
 
-		static class DeclarationProperties {
+		static class DeclarationProperties
+				implements Comparable<DeclarationProperties> {
 			DeclarationProperties() {
 			}
 
 			boolean hasTypedProperties;
+
+			String exception;
 
 			boolean hasTypedProperties() {
 				return hasTypedProperties;
@@ -157,19 +251,44 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 
 			String qualifiedBinaryName;
 
+			transient Class clazz;
+
+			Class clazz() {
+				if (clazz == null) {
+					clazz = Reflections.forName(qualifiedBinaryName);
+				}
+				return clazz;
+			}
+
 			DeclarationProperties(UnitType unitType,
-					CompilationUnits compilationUnits) {
+					CompilationUnitWrapper unit, CompilationUnits units) {
 				ClassOrInterfaceDeclaration decl = unitType.getDeclaration();
 				/*
 				 * initial impl - use JDK reflection. pure-sure reflection wd be
 				 * nice, but (again) basically involve a reimplementation of the
 				 * JDK class model...a bit
 				 */
-				Class<?> clazz = unitType.clazz();
-				ClassReflector classReflector = ClassReflectorProvider
-						.getClassReflector(clazz);
-				qualifiedBinaryName = clazz.getName();
-				hasTypedProperties = classReflector.has(TypedProperties.class);
+				if (unitType.provideIsLocal()) {
+					return;
+				}
+				try {
+					Class<?> clazz = unitType.clazz();
+					ClassReflector classReflector = ClassReflectorProvider
+							.getClassReflector(clazz);
+					qualifiedBinaryName = clazz.getName();
+					hasTypedProperties = classReflector
+							.has(TypedProperties.class);
+				} catch (Throwable e) {
+					// e.printStackTrace();
+					exception = CommonUtils.toSimpleExceptionMessage(e);
+					Ax.err("%s :: %s", unitType.qualifiedBinaryName, exception);
+				}
+			}
+
+			@Override
+			public int compareTo(DeclarationProperties o) {
+				return NestedName.get(clazz())
+						.compareTo(NestedName.get(o.clazz()));
 			}
 		}
 	}

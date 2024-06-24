@@ -180,7 +180,7 @@ public class CodeService {
 	}
 
 	void handleEvent(Event event) {
-		Context context = new Context();
+		this.context = new Context();
 		new SourceFolderScanner().handle(event);
 		compilationUnits.handle(event);
 		for (Class<? extends Handler> handlerType : handlerTypes) {
@@ -197,10 +197,12 @@ public class CodeService {
 	void onEmptyQueue() {
 		if (!publishedInitialStats) {
 			FormatBuilder format = new FormatBuilder();
-			format.line("Initial queue stats:");
+			format.line("\nInitial queue stats: [%s ms]",
+					System.currentTimeMillis() - queue.startTime);
 			queue.eventHisto.toLinkedHashMap(true).entrySet()
 					.forEach(e -> format.line("%s=%s",
 							NestedName.get(e.getKey()), e.getValue()));
+			format.newLine();
 			format.out();
 		}
 	}

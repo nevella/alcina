@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.extras.dev.codeservice.CodeService.Event;
 import cc.alcina.framework.common.client.util.CountingMap;
 
@@ -32,17 +35,27 @@ class EventQueue implements Runnable {
 				keyEvents.put(key, event);
 				queue.add(event);
 				eventHisto.add(event.getClass());
+				added++;
 				queue.notify();
 			}
 		}
 	}
 
 	void start() {
+		startTime = System.currentTimeMillis();
 		String threadName = "codeservice-eventqueue";
 		Thread thread = new Thread(this, threadName);
 		thread.setDaemon(true);
 		thread.start();
 	}
+
+	int processed = 0;
+
+	int added = 0;
+
+	long startTime;
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Override
 	public void run() {
@@ -61,6 +74,9 @@ class EventQueue implements Runnable {
 			}
 			if (event != null) {
 				codeService.handleEvent(event);
+				if (processed++ % 100 == 0) {
+					logger.info("Processed: {}/{}", processed, added);
+				}
 			}
 		}
 	}

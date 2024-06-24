@@ -28,6 +28,11 @@ public class SourceFolder implements Predicate<File> {
 	}
 
 	@Override
+	public String toString() {
+		return sourceFolderPath;
+	}
+
+	@Override
 	public boolean test(File t) {
 		return t.isFile() && t.getName().matches("[A-Za-z0-9_]+.java");
 	}
@@ -103,6 +108,9 @@ public class SourceFolder implements Predicate<File> {
 	}
 
 	public SourcePackage sourcePackage(File file) {
+		if (file.isFile()) {
+			file = file.getParentFile();
+		}
 		return new SourcePackage(file);
 	}
 }

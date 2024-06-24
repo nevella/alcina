@@ -255,7 +255,7 @@ class LayerSelections extends Model.All {
 					250; idx++) {
 				selections.add(new Spacer());
 			}
-			bindings().from(selectionLayers.page).on(Page.Property.place)
+			bindings().from(selectionLayers.page).on(Page.properties.place)
 					.signal(this::updateSelected);
 		}
 

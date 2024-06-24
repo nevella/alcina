@@ -14,7 +14,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
 
-import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
@@ -67,11 +67,13 @@ class Page extends Model.All
 		return Ui.get().page.place;
 	}
 
+	static PackageProperties._Page properties = PackageProperties.page;
+
 	Header header;
 
 	SelectionLayers layers;
 
-	Properties properties;
+	PropertiesArea propertiesArea;
 
 	@Directed(className = "input")
 	RenderedSelections input;
@@ -109,22 +111,22 @@ class Page extends Model.All
 		bindings().addListener(() -> TraversalHistories.get()
 				.subscribe(traversalPath, this::setHistory));
 		// place selections will be invalid if history changes
-		bindings().from(this).on(Property.history)
+		bindings().from(this).on(properties.history)
 				.signal(this::clearPlaceSelections);
-		bindings().from(this).on(Property.history).value(this)
+		bindings().from(this).on(properties.history).value(this)
 				.map(SelectionLayers::new).accept(this::setLayers);
-		bindings().from(this).on(Property.history).value(this)
-				.map(Properties::new).accept(this::setProperties);
-		bindings().from(this).on(Property.history)
+		bindings().from(this).on(properties.history).value(this)
+				.map(PropertiesArea::new).accept(this::setPropertiesArea);
+		bindings().from(this).on(properties.history)
 				.map(o -> new RenderedSelections(this, true))
 				.accept(this::setInput);
-		bindings().from(this).on(Property.history)
+		bindings().from(this).on(properties.history)
 				.map(o -> new RenderedSelections(this, false))
 				.accept(this::setOutput);
-		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
+		bindings().from(this).on(properties.place).typed(TraversalPlace.class)
 				.filter(this::filterRedundantPlaceChange).value(this)
 				.map(SelectionLayers::new).accept(this::setLayers);
-		bindings().from(this).on(Property.place).typed(TraversalPlace.class)
+		bindings().from(this).on(properties.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
 		bindings().from(TraversalProcessView.Ui.get().settings)
@@ -226,6 +228,7 @@ class Page extends Model.All
 		}
 	}
 
+	@Property.Not
 	KeyboardShortcuts shortcuts;
 
 	void goPreserveScrollPosition(TraversalPlace place) {
@@ -294,7 +297,7 @@ class Page extends Model.All
 
 	void setHistory(
 			RemoteComponentObservables<SelectionTraversal>.ObservableHistory history) {
-		set(Property.history, this.history, history,
+		set(properties.history, this.history, history,
 				() -> this.history = history);
 	}
 
@@ -314,13 +317,9 @@ class Page extends Model.All
 		set("place", this.place, place, () -> this.place = place);
 	}
 
-	public void setProperties(Properties properties) {
-		set("properties", this.properties, properties,
-				() -> this.properties = properties);
-	}
-
-	enum Property implements PropertyEnum {
-		history, place
+	public void setPropertiesArea(PropertiesArea properties) {
+		set("properties", this.propertiesArea, properties,
+				() -> this.propertiesArea = properties);
 	}
 
 	@Override

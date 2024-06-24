@@ -46,7 +46,7 @@ public class CodeServerCompilationUnits implements CodeService.Handler {
 		PackageUnits(SourcePackage sourcePackage) {
 			this.sourcePackage = sourcePackage;
 			units = sourcePackage.listFiles().stream()
-					.map(compilationUnits::ensureUnitWrapper).toList();
+					.map(compilationUnits::ensureUnit).toList();
 		}
 
 		public List<CompilationUnitWrapper> units;

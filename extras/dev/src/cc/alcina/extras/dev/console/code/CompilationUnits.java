@@ -67,8 +67,17 @@ public class CompilationUnits {
 		protected PersistentUnitData() {
 		}
 
-		public PersistentUnitData(String path) {
+		protected void putFile(File file) {
+			putPath(file.getPath());
+		}
+
+		protected void putPath(String path) {
 			this.version = currentVersion();
+			this.path = path;
+		}
+
+		public PersistentUnitData(String path) {
+			putPath(path);
 		}
 
 		public PersistentUnitData(File file) {
@@ -76,6 +85,9 @@ public class CompilationUnits {
 		}
 
 		public boolean isCurrent() {
+			if (path == null) {
+				return false;
+			}
 			File file = getFile();
 			return fileSize == file.length()
 					&& fileModificationTime == file.lastModified()
@@ -86,6 +98,7 @@ public class CompilationUnits {
 			File file = getFile();
 			fileSize = file.length();
 			fileModificationTime = file.lastModified();
+			version = currentVersion();
 		}
 
 		protected File getFile() {
@@ -347,8 +360,11 @@ public class CompilationUnits {
 		return cache.ensure(clazz, file, this);
 	}
 
-	public CompilationUnitWrapper ensureUnitWrapper(File file) {
-		return ensure(CompilationUnitWrapper.class, file);
+	public CompilationUnitWrapper ensureUnit(File file) {
+		CompilationUnitWrapper wrapper = ensure(CompilationUnitWrapper.class,
+				file);
+		wrapper.ensureUnitTypeDeclarations();
+		return wrapper;
 	}
 
 	public interface CompilationUnitCache {
@@ -393,6 +409,7 @@ public class CompilationUnits {
 									cacheRoot, clazz, path -> {
 										return null;
 									});
+							newCache.returnNullOnDeserializationException = true;
 							return newCache;
 						});
 				return (FsObjectCache<T>) cache;
@@ -490,7 +507,7 @@ public class CompilationUnits {
 			}
 		}
 
-		public static final int VERSION = 2;
+		public static final transient int VERSION = 3;
 
 		@Override
 		public int currentVersion() {
@@ -498,9 +515,46 @@ public class CompilationUnits {
 		}
 
 		@Override
-		protected void compute(File file, CompilationUnits compilationUnits) {
+		protected void compute(File file, CompilationUnits units) {
 			this.path = file.getPath();
-			unit();
+			ensureUnitTypeDeclarations();
+			synchronized (units) {
+				units.units.add(this);
+				unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
+					units.declarations.put(d.qualifiedSourceName, d);
+				});
+				unitTypes.forEach(d -> units.declarationsByName.add(d.name, d));
+			}
+			updateMetadata();
+		}
+
+		class EnsureUnitTypesAdapter extends VoidVisitorAdapter<Void> {
+			@Override
+			public void visit(ClassOrInterfaceDeclaration n, Void arg) {
+				if (n.isInterface()) {
+					return;
+				}
+				CompilationUnitWrapper wrapper = CompilationUnitWrapper.this;
+				UnitType type = wrapper.ensureUnitType(n);
+				type.setDeclaration(n);
+				super.visit(n, arg);
+			}
+		}
+
+		void ensureUnitTypeDeclarations() {
+			unit().accept(new EnsureUnitTypesAdapter(), null);
+		}
+
+		UnitType ensureUnitType(ClassOrInterfaceDeclaration decl) {
+			String fqbn = CompilationUnits.fqn(this, decl, true);
+			UnitType type = unitTypes.stream()
+					.filter(ut -> ut.qualifiedBinaryName.equals(fqbn))
+					.findFirst().orElse(null);
+			if (type == null) {
+				type = new UnitType(this, decl);
+				unitTypes.add(type);
+			}
+			return type;
 		}
 	}
 

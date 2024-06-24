@@ -17,7 +17,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
-class Properties extends Model.Fields {
+@Directed(tag = "properties")
+class PropertiesArea extends Model.Fields {
 	@Directed
 	Heading header = new Heading("Properties");
 
@@ -32,15 +33,15 @@ class Properties extends Model.Fields {
 
 	Page page;
 
-	Properties(Page page) {
+	PropertiesArea(Page page) {
 		this.page = page;
 		this.filter = new Choices.Single<>(
 				TraversalPlace.SelectionType.values());
-		bindings().from(page).on(Page.Property.place)
+		bindings().from(page).on(Page.properties.place)
 				.typed(TraversalPlace.class)
 				.map(p -> p.provideSelection(SelectionType.VIEW))
 				.accept(this::setSelection);
-		bindings().from(page).on(Page.Property.place)
+		bindings().from(page).on(Page.properties.place)
 				.typed(TraversalPlace.class)
 				.map(TraversalPlace::firstSelectionType)
 				.accept(filter::setSelectedValue);

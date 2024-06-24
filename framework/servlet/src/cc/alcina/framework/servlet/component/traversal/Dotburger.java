@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -23,8 +24,9 @@ class Dotburger extends Model.Fields {
 
 	Menu menu;
 
+	@TypedProperties
 	static class Menu extends Model.All implements ValueChange.Container {
-		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_Menu;
+		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_menu;
 
 		Heading section1 = new Heading("Selection type");
 

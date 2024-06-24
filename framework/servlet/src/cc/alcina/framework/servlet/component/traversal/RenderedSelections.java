@@ -55,7 +55,7 @@ class RenderedSelections extends Model.Fields {
 		this.page = page;
 		this.input = input;
 		this.heading = new Heading(input ? "Input" : "Output");
-		bindings().from(page).on(Page.Property.place)
+		bindings().from(page).on(Page.properties.place)
 				.typed(TraversalPlace.class)
 				.map(p -> p.provideSelection(SelectionType.VIEW))
 				.accept(this::setSelection);

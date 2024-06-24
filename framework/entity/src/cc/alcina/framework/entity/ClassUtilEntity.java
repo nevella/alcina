@@ -21,4 +21,12 @@ public class ClassUtilEntity {
 				.toString()//
 				.replaceFirst("(file:)(.+)", "$2");
 	}
+
+	public static Class getTopLevelType(Class clazz) {
+		Class cursor = clazz;
+		while (cursor.getEnclosingClass() != null) {
+			cursor = cursor.getEnclosingClass();
+		}
+		return cursor;
+	}
 }
