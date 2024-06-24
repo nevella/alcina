@@ -137,7 +137,7 @@ public class TaskRefactorPropertySerialization extends PerformerTask {
 			if (!node.isInterface()) {
 				UnitType type = new UnitType(unit, node);
 				type.setDeclaration(node);
-				unit.declarations.add(type);
+				unit.unitTypes.add(type);
 				boolean hasAnnotation = node.getMethods().stream()
 						.anyMatch(this::hasAnnotation);
 				if (hasAnnotation) {

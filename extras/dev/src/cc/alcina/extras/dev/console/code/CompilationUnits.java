@@ -27,13 +27,16 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderType
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FileUtils;
+import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 
 public class CompilationUnits {
@@ -44,6 +47,54 @@ public class CompilationUnits {
 
 	public static final transient String CONTEXT_LOG_SUPERCLASS_FQN_EXCEPTIONS = CompilationUnits.class
 			.getName() + ".CONTEXT_LOG_SUPERCLASS_FQN_EXCEPTIONS";
+
+	/*
+	 * Marker interface - computed data associated with a persistent unit,
+	 * invalidated on change
+	 */
+	public static abstract class PersistentUnitData {
+		public long fileSize;
+
+		public long fileModificationTime;
+
+		public int version;
+
+		public String path;
+
+		public abstract int currentVersion();
+
+		// for serialization
+		protected PersistentUnitData() {
+		}
+
+		public PersistentUnitData(String path) {
+			this.version = currentVersion();
+		}
+
+		public PersistentUnitData(File file) {
+			this(file.getPath());
+		}
+
+		public boolean isCurrent() {
+			File file = getFile();
+			return fileSize == file.length()
+					&& fileModificationTime == file.lastModified()
+					&& version == currentVersion();
+		}
+
+		public void updateMetadata() {
+			File file = getFile();
+			fileSize = file.length();
+			fileModificationTime = file.lastModified();
+		}
+
+		protected File getFile() {
+			return new File(path);
+		}
+
+		protected abstract void compute(File file,
+				CompilationUnits compilationUnits);
+	}
 
 	static String fqn(CompilationUnitWrapper unit, ClassOrInterfaceType n) {
 		try {
@@ -194,21 +245,11 @@ public class CompilationUnits {
 			for (File file : files) {
 				if (!file.isDirectory()) {
 					try {
-						CompilationUnitWrapper unit = new CompilationUnitWrapper(
-								file);
+						CompilationUnitWrapper unit = new CompilationUnitWrapper();
+						unit.compute(file, null);
 						unit.unit().accept(visitorCreator.apply(units, unit),
 								null);
-						synchronized (units) {
-							units.units.add(unit);
-							unit.declarations.stream().filter(d -> d.hasFlags())
-									.forEach(d -> {
-										units.declarations
-												.put(d.qualifiedSourceName, d);
-									});
-							unit.declarations
-									.forEach(d -> units.declarationsByName
-											.add(d.name, d));
-						}
+						units.addUnit(unit);
 					} catch (Throwable e) {
 						Ax.out(e);
 						Ax.err("Could not load unit: %s", file);
@@ -222,9 +263,36 @@ public class CompilationUnits {
 		return units;
 	}
 
+	void addUnit(CompilationUnitWrapper unit) {
+		synchronized (units) {
+			if (fileUnits.containsKey(unit.getFile())) {
+				return;
+			}
+			fileUnits.put(unit.getFile(), unit);
+			units.add(unit);
+			unit.unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
+				declarations.put(d.qualifiedSourceName, d);
+			});
+			unit.unitTypes.forEach(d -> declarationsByName.add(d.name, d));
+		}
+	}
+
+	synchronized void removeUnit(CompilationUnitWrapper unit) {
+		synchronized (units) {
+			units.remove(unit);
+			fileUnits.remove(unit.getFile());
+			unit.unitTypes.stream().filter(d -> d.hasFlags()).forEach(d -> {
+				declarations.remove(d.qualifiedSourceName, d);
+			});
+			unit.unitTypes.forEach(d -> declarationsByName.remove(d.name, d));
+		}
+	}
+
 	public transient JavaParserFacade solver;
 
 	public List<CompilationUnitWrapper> units = new ArrayList<>();
+
+	public Map<File, CompilationUnitWrapper> fileUnits = new LinkedHashMap<>();
 
 	public Map<String, UnitType> declarations = new LinkedHashMap<>();
 
@@ -272,10 +340,74 @@ public class CompilationUnits {
 		writeDirty(test, null, writeLimit);
 	}
 
-	public static class CompilationUnitWrapper {
-		public String path;
+	/*
+	 * return the persistent data, if valid
+	 */
+	public <T extends PersistentUnitData> T ensure(Class<T> clazz, File file) {
+		return cache.ensure(clazz, file, this);
+	}
 
-		public List<UnitType> declarations = new ArrayList<>();
+	public CompilationUnitWrapper ensureUnitWrapper(File file) {
+		return ensure(CompilationUnitWrapper.class, file);
+	}
+
+	public interface CompilationUnitCache {
+		<T extends PersistentUnitData> T ensure(Class<T> clazz, File file,
+				CompilationUnits compilationUnits);
+
+		public static class Fs implements CompilationUnitCache {
+			Map<Class<? extends PersistentUnitData>, FsObjectCache<? extends PersistentUnitData>> caches = new LinkedHashMap<>();
+
+			public Fs(File root) {
+				this.root = root;
+				root.mkdirs();
+			}
+
+			public File root;
+
+			@Override
+			public <T extends PersistentUnitData> T ensure(Class<T> clazz,
+					File file, CompilationUnits compilationUnits) {
+				FsObjectCache<T> cache = getCache(clazz);
+				T instance = (T) cache.get(file.getPath());
+				if (instance != null) {
+					if (!instance.isCurrent()) {
+						instance = null;
+					}
+				}
+				if (instance == null) {
+					instance = Reflections.newInstance(clazz);
+					instance.compute(file, compilationUnits);
+					cache.persist(file.getPath(), instance);
+				}
+				return instance;
+			}
+
+			private <T extends PersistentUnitData> FsObjectCache<T>
+					getCache(Class<T> clazz) {
+				FsObjectCache<? extends PersistentUnitData> cache = caches
+						.computeIfAbsent(clazz, key -> {
+							File cacheRoot = FileUtils.child(root,
+									NestedName.get(clazz));
+							FsObjectCache<? extends PersistentUnitData> newCache = new FsObjectCache<>(
+									cacheRoot, clazz, path -> {
+										return null;
+									});
+							return newCache;
+						});
+				return (FsObjectCache<T>) cache;
+			}
+		}
+	}
+
+	public CompilationUnitCache cache;
+
+	/*
+	 * A utility wrapper around a javaparser CompilationUnit, which handles
+	 * caching
+	 */
+	public static class CompilationUnitWrapper extends PersistentUnitData {
+		public List<UnitType> unitTypes = new ArrayList<>();
 
 		public transient CompilationUnit unit;
 
@@ -284,10 +416,6 @@ public class CompilationUnits {
 		transient boolean preparedForModification;
 
 		public CompilationUnitWrapper() {
-		}
-
-		public CompilationUnitWrapper(File file) {
-			this.setFile(file);
 		}
 
 		public void ensureImport(Class<?> clazz) {
@@ -307,11 +435,11 @@ public class CompilationUnits {
 		}
 
 		public boolean hasFlag(TypeFlag flag) {
-			return declarations.stream().anyMatch(w -> w.hasFlag(flag));
+			return unitTypes.stream().anyMatch(w -> w.hasFlag(flag));
 		}
 
 		public boolean hasFlags() {
-			return declarations.stream().anyMatch(UnitType::hasFlags);
+			return unitTypes.stream().anyMatch(UnitType::hasFlags);
 		}
 
 		void prepareForModification() {
@@ -327,13 +455,9 @@ public class CompilationUnits {
 					.forEach(ImportDeclaration::remove);
 		}
 
-		public void setFile(File file) {
-			this.path = file.getAbsolutePath();
-		}
-
 		public UnitType typeFor(ClassOrInterfaceDeclaration n) {
 			unit();
-			return declarations.stream().filter(
+			return unitTypes.stream().filter(
 					d -> d.qualifiedSourceName.endsWith(n.getNameAsString()))
 					.findFirst().get();
 		}
@@ -354,8 +478,7 @@ public class CompilationUnits {
 			if (outDir == null) {
 				outDir = getFile().getParentFile();
 			}
-			File outFile = FileUtils.child(outDir,
-					getFile().getName());
+			File outFile = FileUtils.child(outDir, getFile().getName());
 			try {
 				String modified = mapper == null
 						? LexicalPreservingPrinter.print(unit)
@@ -365,6 +488,19 @@ public class CompilationUnits {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		public static final int VERSION = 2;
+
+		@Override
+		public int currentVersion() {
+			return VERSION;
+		}
+
+		@Override
+		protected void compute(File file, CompilationUnits compilationUnits) {
+			this.path = file.getPath();
+			unit();
 		}
 	}
 

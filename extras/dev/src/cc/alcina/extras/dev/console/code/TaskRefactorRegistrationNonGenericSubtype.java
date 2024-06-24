@@ -328,7 +328,7 @@ public class TaskRefactorRegistrationNonGenericSubtype extends PerformerTask {
 				UnitType type = new UnitType(unit, node);
 				String nameAsString = type.getDeclaration().getNameAsString();
 				type.setDeclaration(node);
-				unit.declarations.add(type);
+				unit.unitTypes.add(type);
 				if (hasTwoKeyAnnotation(node)) {
 					type.setFlag(Type.TwoKeyRegistration);
 				}

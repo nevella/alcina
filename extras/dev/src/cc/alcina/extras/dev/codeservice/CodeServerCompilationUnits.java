@@ -1,0 +1,73 @@
+package cc.alcina.extras.dev.codeservice;
+
+import java.io.File;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
+
+import cc.alcina.extras.dev.codeservice.CodeService.Event;
+import cc.alcina.extras.dev.codeservice.CodeService.PackageEvent;
+import cc.alcina.extras.dev.codeservice.SourceFolder.SourcePackage;
+import cc.alcina.extras.dev.console.code.CompilationUnits;
+import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitCache;
+import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
+import cc.alcina.extras.dev.console.code.UnitType;
+import cc.alcina.framework.entity.util.DataFolderProvider;
+
+/*
+ * Models access to the source models (acts as a wrapper to CompilationUnits,
+ * and tracks all source files)
+ */
+public class CodeServerCompilationUnits implements CodeService.Handler {
+	CodeService codeService;
+
+	List<SourceFolder> sourceFolders;
+
+	ConcurrentHashMap<SourcePackage, PackageUnits> packageUnits = new ConcurrentHashMap<>();
+
+	CompilationUnits compilationUnits;
+
+	CodeServerCompilationUnits(CodeService codeService) {
+		this.codeService = codeService;
+		sourceFolders = codeService.sourceFolderPaths.stream()
+				.map(SourceFolder::new).toList();
+		compilationUnits = new CompilationUnits();
+		File cacheFolder = DataFolderProvider.get()
+				.getChildFile(getClass().getName());
+		compilationUnits.cache = new CompilationUnitCache.Fs(cacheFolder);
+	}
+
+	/*
+	 * Models info such as "what .java files are in this package"
+	 */
+	class PackageUnits {
+		SourcePackage sourcePackage;
+
+		PackageUnits(SourcePackage sourcePackage) {
+			this.sourcePackage = sourcePackage;
+			units = sourcePackage.listFiles().stream()
+					.map(compilationUnits::ensureUnitWrapper).toList();
+		}
+
+		public List<CompilationUnitWrapper> units;
+
+		public Stream<UnitType> declaredTypes() {
+			return units.stream().flatMap(cuw -> cuw.unitTypes.stream());
+		}
+	}
+
+	@Override
+	public void handle(Event event) {
+		if (event instanceof PackageEvent) {
+			handlePackageEvent((PackageEvent) event);
+		}
+	}
+
+	void handlePackageEvent(PackageEvent event) {
+		packageUnits.remove(event.sourcePackage);
+	}
+
+	public PackageUnits getPackageUnits(SourcePackage sourcePackage) {
+		return packageUnits.computeIfAbsent(sourcePackage, PackageUnits::new);
+	}
+}

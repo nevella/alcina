@@ -139,7 +139,7 @@ public class TaskRefactorDisplayName extends PerformerTask {
 			if (!node.isInterface()) {
 				UnitType type = new UnitType(unit, node);
 				type.setDeclaration(node);
-				unit.declarations.add(type);
+				unit.unitTypes.add(type);
 				boolean hasDisplayAnnotation = hasDisplayAnnotation(node)
 						|| node.getMethods().stream()
 								.anyMatch(this::hasDisplayAnnotation);

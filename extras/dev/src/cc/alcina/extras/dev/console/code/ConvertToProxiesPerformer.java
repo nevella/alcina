@@ -163,7 +163,7 @@ public class ConvertToProxiesPerformer
 	}
 
 	void instrumentClass(CompilationUnitWrapper unit) {
-		for (UnitType decl : unit.declarations) {
+		for (UnitType decl : unit.unitTypes) {
 			RedirectVisitor visitor = new RedirectVisitor(unit);
 			decl.getDeclaration().accept(visitor, null);
 		}
@@ -266,7 +266,7 @@ public class ConvertToProxiesPerformer
 					return;
 				}
 				type.setDeclaration(node);
-				unit.declarations.add(type);
+				unit.unitTypes.add(type);
 			}
 			super.visit(node, arg);
 		}

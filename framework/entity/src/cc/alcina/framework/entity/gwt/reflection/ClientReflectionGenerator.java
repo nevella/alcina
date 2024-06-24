@@ -1576,10 +1576,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			return printWriter != null;
 		}
 
-		protected void createSourceWriter(String packageName,
-				String className) {
-		}
-
 		protected String implementationFqn() {
 			return packageName + "." + implementationName;
 		}

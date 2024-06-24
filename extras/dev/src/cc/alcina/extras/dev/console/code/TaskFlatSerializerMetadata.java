@@ -373,7 +373,7 @@ public class TaskFlatSerializerMetadata extends PerformerTask {
 			if (!node.isInterface()) {
 				UnitType type = new UnitType(unit, node);
 				type.setDeclaration(node);
-				unit.declarations.add(type);
+				unit.unitTypes.add(type);
 				if (type.isAssignableFrom(DomainCriterionHandler.class)) {
 					type.setFlag(Type.DomainCriterionHandler);
 				}

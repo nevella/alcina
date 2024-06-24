@@ -535,4 +535,8 @@ public class FormatBuilder {
 		this.trackNewlines = trackNewlines;
 		return this;
 	}
+
+	public void out() {
+		Ax.out(this);
+	}
 }
