@@ -131,6 +131,10 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		computeCssClass();
 	}
 
+	public boolean close() {
+		return close(null, false);
+	}
+
 	/**
 	 * @return true if closed
 	 */
