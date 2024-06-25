@@ -26,7 +26,7 @@ public class SourceFolderScanner extends CodeService.Handler.Abstract {
 			return;
 		}
 		SEUtilities.listFilesRecursive(folder.getPath(), null, true).stream()
-				.filter(sourceFolder).forEach(file -> event.context
-						.submitFileEvent(sourceFolder, file));
+				.forEach(file -> event.context.submitFileEvent(file));
+		event.context.watchFolder(folder);
 	}
 }

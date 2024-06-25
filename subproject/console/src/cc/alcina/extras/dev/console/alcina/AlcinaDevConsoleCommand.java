@@ -98,7 +98,7 @@ public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 			CodeService codeService = new CodeService();
 			// the listpath file might contain - say -
 			// /g/alcina/framework/servlet
-			codeService.sourceFolderPaths = Io.read()
+			codeService.sourceAndClassPaths = Io.read()
 					.resource("codeserver-paths.local.txt").asList();
 			codeService.handlerTypes = List
 					.of(PackagePropertiesGenerator.class);

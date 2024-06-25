@@ -193,6 +193,7 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 					ENTRY_DELETE, ENTRY_MODIFY);
 		}
 		MacOsWatchKey nioKey = new MacOsWatchKey(path, this);
+		watchKeys.add(nioKey);
 		return nioKey;
 	}
 

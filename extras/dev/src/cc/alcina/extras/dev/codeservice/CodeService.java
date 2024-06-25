@@ -1,6 +1,10 @@
 package cc.alcina.extras.dev.codeservice;
 
+import static java.nio.file.StandardWatchEventKinds.*;
+
 import java.io.File;
+import java.net.URL;
+import java.nio.file.WatchService;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -9,11 +13,13 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.extras.dev.codeservice.CodeServerCompilationUnits.PackageUnits;
 import cc.alcina.extras.dev.codeservice.SourceFolder.SourceFile;
 import cc.alcina.extras.dev.codeservice.SourceFolder.SourcePackage;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.entity.util.fs.FsUtils;
 
 /**
  * <h2>Implementation sketch</h2>
@@ -51,14 +57,17 @@ import cc.alcina.framework.common.client.util.NestedName;
  */
 @Feature.Ref(Feature_CodeService.class)
 public class CodeService {
-	public List<String> sourceFolderPaths;
+	public List<String> sourceAndClassPaths;
 
 	public String sourceFilterRegex = ".+\\.java";
 
 	public List<Class<? extends Handler>> handlerTypes;
 
+	WatchService watchService;
+
 	public CodeService() {
 		context = new Context();
+		watchService = FsUtils.watchServiceFor(getClass());
 	}
 
 	/*
@@ -68,10 +77,13 @@ public class CodeService {
 	abstract class Event {
 		protected abstract Object key();
 
+		long time;
+
 		Context context;
 
 		Event() {
 			this.context = getContext();
+			this.time = System.currentTimeMillis();
 		}
 
 		@Override
@@ -155,6 +167,15 @@ public class CodeService {
 		}
 	}
 
+	void watchFolder(File folder) {
+		try {
+			FsUtils.toWatchablePath(folder.toPath()).register(watchService,
+					ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
 	/*
 	 * Provides services to event handlers. For the moment, it's just a single
 	 * instance per CodeService
@@ -162,14 +183,66 @@ public class CodeService {
 	class Context {
 		CodeServerCompilationUnits units;
 
+		void watchFolder(File folder) {
+			CodeService.this.watchFolder(folder);
+		}
+
 		Context() {
 			this.units = compilationUnits;
 		}
 
-		void submitFileEvent(SourceFolder sourceFolder, File file) {
+		void submitFileEvent(File file) {
+			SourceFolder sourceFolder = compilationUnits
+					.getSourceFolderFor(file);
+			if (sourceFolder == null) {
+				// not canonically owned by the sourcefolder (a symlink) --
+				// ignore
+				return;
+			}
+			if (!sourceFolder.test(file)) {
+				return;
+			}
+			if (publishedInitialStats) {
+				Ax.out("File event: %s", file);
+			}
 			queue.add(new FileEvent(sourceFolder.sourceFile(file)));
-			queue.add(new PackageEvent(sourceFolder.sourcePackage(file)));
+			if (sourceFolder.testGeneratePackageEvent(file)) {
+				queue.add(new PackageEvent(sourceFolder.sourcePackage(file)));
+			}
 		}
+
+		public boolean isInSourcePath(String name) {
+			return compilationUnits.isInSourcePath(name);
+		}
+
+		public URL[] getClassPathUrls() {
+			List<URL> urls = compilationUnits.sourceFolders.stream()
+					.map(sf -> sf.classPathFolderCanonicalPath).map(File::new)
+					.map(File::toURI).map(uri -> {
+						try {
+							return uri.toURL();
+						} catch (Exception e) {
+							throw WrappedRuntimeException.wrap(e);
+						}
+					}).toList();
+			return urls.toArray(new URL[urls.size()]);
+		}
+	}
+
+	static Class forName(String qualifiedBinaryName) {
+		Class clazz = null;
+		ClassLoader contextClassLoader = Thread.currentThread()
+				.getContextClassLoader();
+		if (contextClassLoader == null) {
+			clazz = Reflections.forName(qualifiedBinaryName);
+		} else {
+			try {
+				clazz = contextClassLoader.loadClass(qualifiedBinaryName);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+		return clazz;
 	}
 
 	Context context;
@@ -181,6 +254,20 @@ public class CodeService {
 
 	void handleEvent(Event event) {
 		this.context = new Context();
+		if (publishedInitialStats) {
+			long elapsed = System.currentTimeMillis() - event.time;
+			if (elapsed < 2000) {
+				// allow IDE codegen. Todo - listen on IDE build products, not
+				// source changes
+				try {
+					Thread.sleep(2000 - elapsed);
+				} catch (Exception e) {
+				}
+				Thread.currentThread()
+						.setContextClassLoader(new DispClassLoader(context,
+								getClass().getClassLoader()));
+			}
+		}
 		new SourceFolderScanner().handle(event);
 		compilationUnits.handle(event);
 		for (Class<? extends Handler> handlerType : handlerTypes) {
@@ -196,6 +283,7 @@ public class CodeService {
 
 	void onEmptyQueue() {
 		if (!publishedInitialStats) {
+			publishedInitialStats = true;
 			FormatBuilder format = new FormatBuilder();
 			format.line("\nInitial queue stats: [%s ms]",
 					System.currentTimeMillis() - queue.startTime);

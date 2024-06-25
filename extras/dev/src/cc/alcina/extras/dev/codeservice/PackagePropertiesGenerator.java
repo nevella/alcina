@@ -1,14 +1,18 @@
 package cc.alcina.extras.dev.codeservice;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintWriter;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+
+import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
@@ -32,6 +36,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.ClassUtilEntity;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.FileUtils;
 
 /**
@@ -109,6 +114,8 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			return NestedName.get(clazz);
 		}
 
+		List<Class> possibleInvalidClassFiles = new ArrayList<>();;
+
 		void write() throws Exception {
 			if (packageTypeMetadataList.stream()
 					.noneMatch(PackagePropertiesUnitData::hasTypedProperties)) {
@@ -124,7 +131,8 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			imports.add(TypedProperty.class.getName());
 			typeWriters.forEach(TypeWriter::addImports);
 			imports.forEach(composerFactory::addImport);
-			printWriter = new PrintWriter(file());
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			printWriter = new PrintWriter(baos);
 			sourceWriter = composerFactory.createSourceWriter(printWriter);
 			sourceWriter.indent();
 			sourceWriter.println("// auto-generated, do not modify");
@@ -135,6 +143,16 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			typeWriters.forEach(TypeWriter::write);
 			sourceWriter.outdent();
 			closeClassBody();
+			if (possibleInvalidClassFiles.size() > 0) {
+				LoggerFactory.getLogger(getClass())
+						.warn("Not writing - possible invalid files :: \n{}",
+								possibleInvalidClassFiles.stream()
+										.map(NestedName::get)
+										.collect(Collectors.joining("\n")));
+			} else {
+				Io.write().bytes(baos.toByteArray()).withNoUpdateIdentical(true)
+						.toFile(file());
+			}
 		}
 
 		class TypeWriter implements Comparable<TypeWriter> {
@@ -146,7 +164,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 
 			TypeWriter(DeclarationProperties declarationProperties) {
 				this.declarationProperties = declarationProperties;
-				clazz = Reflections
+				clazz = CodeService
 						.forName(declarationProperties.qualifiedBinaryName);
 				modifier = Modifier.isPublic(clazz.getModifiers()) ? "public "
 						: "";
@@ -158,9 +176,14 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 						"%sstatic class %s implements TypedProperty.Container {",
 						modifier, containerTypeName);
 				sourceWriter.indent();
-				Reflections.at(clazz).properties().stream()
+				List<Property> properties = Reflections.at(clazz).properties()
+						.stream()
 						.sorted(Comparator.comparing(Property::getName))
-						.forEach(this::writeProperty);
+						.collect(Collectors.toList());
+				if (properties.isEmpty()) {
+					possibleInvalidClassFiles.add(clazz);
+				}
+				properties.forEach(this::writeProperty);
 				sourceWriter.outdent();
 				sourceWriter.println("}");
 				sourceWriter.println();
@@ -229,6 +252,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 		protected void compute(File file, CompilationUnits compilationUnits) {
 			putFile(file);
 			CompilationUnitWrapper unit = compilationUnits.ensureUnit(file);
+			unit.ensureUnitTypeDeclarations();
 			declarationPropertiesList = unit.unitTypes.stream()
 					.map(unitType -> new DeclarationProperties(unitType, unit,
 							compilationUnits))
@@ -255,7 +279,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 
 			Class clazz() {
 				if (clazz == null) {
-					clazz = Reflections.forName(qualifiedBinaryName);
+					clazz = CodeService.forName(qualifiedBinaryName);
 				}
 				return clazz;
 			}
@@ -264,20 +288,21 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 					CompilationUnitWrapper unit, CompilationUnits units) {
 				ClassOrInterfaceDeclaration decl = unitType.getDeclaration();
 				/*
-				 * initial impl - use JDK reflection. pure-sure reflection wd be
-				 * nice, but (again) basically involve a reimplementation of the
-				 * JDK class model...a bit
+				 * initial impl - use JDK reflection. pure-source reflection wd
+				 * be nice, but (again) basically involve a reimplementation of
+				 * the JDK class model...a bit.
 				 */
 				if (unitType.provideIsLocal()) {
 					return;
 				}
 				try {
-					Class<?> clazz = unitType.clazz();
+					qualifiedBinaryName = unitType.qualifiedBinaryName;
+					Class<?> clazz = clazz();
 					ClassReflector classReflector = ClassReflectorProvider
 							.getClassReflector(clazz);
-					qualifiedBinaryName = clazz.getName();
 					hasTypedProperties = classReflector
 							.has(TypedProperties.class);
+					int debug = 3;
 				} catch (Throwable e) {
 					// e.printStackTrace();
 					exception = CommonUtils.toSimpleExceptionMessage(e);

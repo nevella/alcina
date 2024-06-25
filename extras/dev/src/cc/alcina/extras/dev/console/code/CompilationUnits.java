@@ -363,7 +363,6 @@ public class CompilationUnits {
 	public CompilationUnitWrapper ensureUnit(File file) {
 		CompilationUnitWrapper wrapper = ensure(CompilationUnitWrapper.class,
 				file);
-		wrapper.ensureUnitTypeDeclarations();
 		return wrapper;
 	}
 
@@ -541,7 +540,7 @@ public class CompilationUnits {
 			}
 		}
 
-		void ensureUnitTypeDeclarations() {
+		public void ensureUnitTypeDeclarations() {
 			unit().accept(new EnsureUnitTypesAdapter(), null);
 		}
 

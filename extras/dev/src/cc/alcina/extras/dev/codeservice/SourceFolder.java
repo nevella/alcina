@@ -18,10 +18,21 @@ public class SourceFolder implements Predicate<File> {
 
 	public String sourceFolderCanonicalPath;
 
-	public SourceFolder(String sourceFolderPath) {
+	public String classPathFolderPath;
+
+	public String classPathFolderCanonicalPath;
+
+	public boolean containsPath(String canonicalPath) {
+		return canonicalPath.startsWith(sourceFolderCanonicalPath);
+	}
+
+	public SourceFolder(String sourceFolderPath, String classPathFolderPath) {
 		this.sourceFolderPath = sourceFolderPath;
+		this.classPathFolderPath = classPathFolderPath;
 		try {
 			this.sourceFolderCanonicalPath = new File(sourceFolderPath)
+					.getCanonicalPath();
+			this.classPathFolderCanonicalPath = new File(classPathFolderPath)
 					.getCanonicalPath();
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
@@ -54,14 +65,21 @@ public class SourceFolder implements Predicate<File> {
 		}
 	}
 
-	public class SourcePackage {
+	public static class SourcePackage {
 		String packageName;
 
 		File file;
 
-		public SourcePackage(File file) {
+		SourceFolder sourceFolder;
+
+		public SourcePackage(SourceFolder sourceFolder, File file) {
+			this.sourceFolder = sourceFolder;
 			this.file = file;
-			this.packageName = getPackageName(file);
+			this.packageName = sourceFolder.getPackageName(file);
+		}
+
+		public SourcePackage(String packageName) {
+			this.packageName = packageName;
 		}
 
 		@Override
@@ -78,7 +96,7 @@ public class SourceFolder implements Predicate<File> {
 		}
 
 		public List<File> listFiles() {
-			return Arrays.stream(file.listFiles()).filter(SourceFolder.this)
+			return Arrays.stream(file.listFiles()).filter(sourceFolder)
 					.collect(Collectors.toList());
 		}
 	}
@@ -112,6 +130,10 @@ public class SourceFolder implements Predicate<File> {
 		if (file.isFile()) {
 			file = file.getParentFile();
 		}
-		return new SourcePackage(file);
+		return new SourcePackage(this, file);
+	}
+
+	public boolean testGeneratePackageEvent(File file) {
+		return !file.getName().equals("PackageProperties.java");
 	}
 }
