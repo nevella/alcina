@@ -37,4 +37,9 @@ public interface FragmentNodeOps {
 				this, fn -> fn.children().collect(Collectors.toList())).stream()
 						.filter(n -> n instanceof FragmentNode);
 	}
+
+	default List<Class<? extends FragmentNode>> types() {
+		return stream().map(FragmentNode::getClass).distinct()
+				.collect(Collectors.toList());
+	}
 }
