@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
@@ -104,12 +105,12 @@ public class ModelEvents {
 			handler.onBeforeSelectionChangedDispatchDescent(this);
 		}
 
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
 		public interface Handler extends NodeEvent.Handler {
 			void onBeforeSelectionChangedDispatchDescent(
 					BeforeSelectionChangedDispatchDescent event);
-		}
-
-		public interface Emitter extends ModelEvent.Emitter {
 		}
 	}
 
@@ -281,21 +282,6 @@ public class ModelEvents {
 		}
 	}
 
-	public static class FormElementLabelClicked extends
-			ModelEvent.DescendantEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
-		@Override
-		public void dispatch(FormElementLabelClicked.Handler handler) {
-			handler.onFormElementLabelClicked(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onFormElementLabelClicked(FormElementLabelClicked event);
-		}
-
-		public interface Emitter extends ModelEvent.Emitter {
-		}
-	}
-
 	public interface FilterContentsElement {
 		boolean matchesFilter(String filterString);
 	}
@@ -320,6 +306,21 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onFind(Find event);
+		}
+	}
+
+	public static class FormElementLabelClicked extends
+			ModelEvent.DescendantEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
+		@Override
+		public void dispatch(FormElementLabelClicked.Handler handler) {
+			handler.onFormElementLabelClicked(this);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFormElementLabelClicked(FormElementLabelClicked event);
 		}
 	}
 
@@ -477,11 +478,28 @@ public class ModelEvents {
 			handler.onSearching(this);
 		}
 
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
 		public interface Handler extends NodeEvent.Handler {
 			void onSearching(Searching event);
 		}
+	}
 
-		public interface Emitter extends ModelEvent.Emitter {
+	public static class SearchResultsReturned extends
+			ModelEvent<ModelSearchResults, SearchResultsReturned.Handler> {
+		@Override
+		public void dispatch(SearchResultsReturned.Handler handler) {
+			handler.onSearchResultsReturned(this);
+		}
+
+		@Override
+		public Class<SearchResultsReturned.Handler> getHandlerClass() {
+			return SearchResultsReturned.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSearchResultsReturned(SearchResultsReturned event);
 		}
 	}
 

@@ -6,6 +6,7 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.WatchService;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -224,7 +225,7 @@ public class CodeService {
 						} catch (Exception e) {
 							throw WrappedRuntimeException.wrap(e);
 						}
-					}).toList();
+					}).collect(Collectors.toList());
 			return urls.toArray(new URL[urls.size()]);
 		}
 	}

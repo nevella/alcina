@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -48,8 +49,11 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 					setSearchResults(results);
 					if (provideIsBound()) {
 						// search result rendering is normally tree-shaped
-						provideNode().dispatch(
-								ModelEvents.TransformSourceModified.class,
+						Node node = provideNode();
+						node.dispatch(ModelEvents.SearchResultsReturned.class,
+								results);
+						// note this may cause node to become unbound
+						node.dispatch(ModelEvents.TransformSourceModified.class,
 								results);
 					}
 				}));

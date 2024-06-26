@@ -46,6 +46,10 @@ public class BaseLongComparatorCriterionPack {
 						return p_d == p_value;
 					case DOES_NOT_EQUAL:
 						return p_d != p_value;
+					case GREATER_THAN_OR_EQUAL_TO:
+						return p_d >= p_value;
+					case LESS_THAN_OR_EQUAL_TO:
+						return p_d <= p_value;
 					default:
 						return false;
 					}
