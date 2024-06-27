@@ -30,6 +30,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -131,6 +133,11 @@ public class ReflectiveSerializer {
 	public static <T> T deserialize(String value) {
 		DeserializerOptions options = new DeserializerOptions();
 		return deserialize(value, options);
+	}
+
+	public static void registerClientDeserialization() {
+		SerializationSupport.deserializationInstance.types = new TransienceContext[] {
+				TransienceContext.CLIENT };
 	}
 
 	public static <T> T deserialize(String value, DeserializerOptions options) {

@@ -25,7 +25,8 @@ class SerializationSupport {
 			.impl(ConcurrentMapCreator.class).create();
 
 	// Optimisation: share support for all deserializers - they don't use
-	// context transience.
+	// context transience. Note that on the client this will have context
+	// (CLIENT) transience set to avoid unncessary reflection
 	static SerializationSupport deserializationInstance = new SerializationSupport();
 
 	static PropertySerialization getPropertySerialization(Property property) {
@@ -97,7 +98,7 @@ class SerializationSupport {
 	private Map<Class, Map<String, Property>> serializationPropertiesByName = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	private TransienceContext[] types;
+	TransienceContext[] types;
 
 	private SerializationSupport() {
 	}

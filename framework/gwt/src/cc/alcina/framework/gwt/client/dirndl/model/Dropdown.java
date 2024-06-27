@@ -60,6 +60,19 @@ public class Dropdown extends Model
 
 	private Model logicalParent;
 
+	private boolean display = true;
+
+	@Binding(
+		transform = Binding.DisplayBlankNone.class,
+		type = Type.STYLE_ATTRIBUTE)
+	public boolean isDisplay() {
+		return display;
+	}
+
+	public void setDisplay(boolean display) {
+		set("display", this.display, display, () -> this.display = display);
+	}
+
 	protected Dropdown() {
 	}
 

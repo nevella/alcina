@@ -509,7 +509,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 	}
 
-	public static interface Ownership {
+	public interface Ownership {
 		@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 		public static Stream<Property> getOwnerReflectors(Class<?> beanClass) {
 			return Reflections.at(beanClass).properties().stream()
