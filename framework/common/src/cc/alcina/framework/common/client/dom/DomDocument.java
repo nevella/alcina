@@ -34,11 +34,20 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.Topic;
 
-public class DomDocument extends DomNode {
+public class DomDocument extends DomNode implements Cloneable {
+	// for server-side code to link w3c docs to the DomDocument
+	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
+
 	private static transient PerDocumentSupplier perDocumentSupplier;
 
 	public static DomDocument basicHtmlDoc() {
 		return DomDocument.from("<html><head></head><body></body></html>");
+	}
+
+	public DomDocument clone() {
+		DomDocument clone = from(fullToString());
+		clone.setReadonly(isReadonly());
+		return clone;
 	}
 
 	public static DomNode createDocumentElement(String tag) {
@@ -99,17 +108,19 @@ public class DomDocument extends DomNode {
 		this.documentElementDomNode = documentElementDomNode;
 	}
 
-	private DomDocument(Document domDocument) {
+	private DomDocument(Document w3cDocument) {
 		super(null, null);
 		initNodes(1000);
-		this.node = domDocument;
+		this.node = w3cDocument;
 		nodes.put(this.node, this);
 		this.document = this;
+		topicDocumentCreated.publish(this);
 	}
 
 	private DomDocument(String xml) {
 		super(null, null);
 		loadFromXml(xml);
+		topicDocumentCreated.publish(this);
 	}
 
 	Multimap<String, List<DomNode>> byId() {

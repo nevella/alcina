@@ -1281,6 +1281,9 @@ public class DirectedLayout implements AlcinaProcess {
 					// literatl
 					return;
 				}
+				if (property.isReadOnly()) {
+					return;
+				}
 				String stringValue = null;
 				Rendered rendered = verifySingleRendered();
 				Element element = rendered.isElement() ? rendered.asElement()
