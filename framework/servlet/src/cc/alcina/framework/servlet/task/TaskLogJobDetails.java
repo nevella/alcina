@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.task;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
@@ -29,7 +28,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
@@ -100,24 +98,24 @@ public class TaskLogJobDetails extends PerformerTask {
 		job.domain().ensurePopulated();
 		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 		builder.row().cell("Field").cell("Value");
-		List<PropertyDescriptor> pds = SEUtilities
-				.getPropertyDescriptorsSortedByField(job.entityClass());
-		pds.removeIf(pd -> pd.getName().matches(
-				"largeResult|largeResultSerialized|result|resultSerialized|"
-						+ "processStateSerialized|processSerialized|cachedDisplayName"));
-		for (PropertyDescriptor pd : pds) {
-			DomNodeHtmlTableRowBuilder row = builder.row();
-			Object fieldValue = pd.getReadMethod().invoke(job, new Object[0]);
-			String fieldText = null;
-			if (fieldValue == null) {
-			} else if (fieldValue instanceof Collection) {
-				fieldText = CommonUtils.toLimitedCollectionString(
-						(Collection<?>) fieldValue, 50);
-			} else {
-				fieldText = fieldValue.toString();
-			}
-			row.cell(pd.getName()).cell(fieldText).style("whitespace:pre-wrap");
-		}
+		Reflections.at(job.entityClass()).properties().stream()
+				.filter(p -> !p.getName().matches(
+						"largeResult|largeResultSerialized|result|resultSerialized|"
+								+ "processStateSerialized|processSerialized|cachedDisplayName"))
+				.forEach(p -> {
+					DomNodeHtmlTableRowBuilder row = builder.row();
+					Object fieldValue = p.get(job);
+					String fieldText = null;
+					if (fieldValue == null) {
+					} else if (fieldValue instanceof Collection) {
+						fieldText = CommonUtils.toLimitedCollectionString(
+								(Collection<?>) fieldValue, 50);
+					} else {
+						fieldText = fieldValue.toString();
+					}
+					row.cell(p.getName()).cell(fieldText)
+							.style("whitespace:pre-wrap");
+				});
 	}
 
 	public long getJobId() {

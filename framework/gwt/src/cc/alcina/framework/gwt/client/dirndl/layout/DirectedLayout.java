@@ -557,6 +557,9 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		private void bindEvents() {
+			if (model == null) {
+				return;
+			}
 			ReceivesEmitsEvents.ClassData classData = ReceivesEmitsEvents
 					.get(ClassUtil.resolveEnumSubclassAndSynthetic(model));
 			if (classData.receives.isEmpty()
