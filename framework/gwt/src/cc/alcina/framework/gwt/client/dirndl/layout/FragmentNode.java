@@ -99,6 +99,7 @@ public abstract class FragmentNode extends Model.Fields
 		return domNode;
 	}
 
+	@Override
 	public void ensureComputedNodes() {
 		fragmentModel().ensureComputedNodes(this);
 	}
@@ -441,11 +442,11 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public FragmentNode firstChild() {
-			return Ax.first(children().toList());
+			return children().findFirst().orElse(null);
 		}
 
 		public FragmentNode lastChild() {
-			return Ax.last(children().toList());
+			return children().reduce(Ax.last()).orElse(null);
 		}
 	}
 
