@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.dom.DomEnvironment;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -72,7 +73,12 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 
 	@Override
 	public String prettyPrint(Document domDoc) {
-		return XmlUtils.prettyPrintWithDOM3LS(domDoc);
+		try {
+			return XmlUtils.prettyPrintWithDOM3LS(domDoc);
+		} catch (Exception e) {
+			Ax.simpleExceptionOut(e);
+			return XmlUtils.streamXML(domDoc);
+		}
 	}
 
 	@Override
