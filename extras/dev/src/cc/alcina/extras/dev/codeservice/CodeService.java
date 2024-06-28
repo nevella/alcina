@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.util.fs.FsUtils;
 
 /**
@@ -66,6 +67,8 @@ public class CodeService {
 
 	WatchService watchService;
 
+	public boolean blockStartThread;
+
 	public CodeService() {
 		context = new Context();
 		watchService = FsUtils.watchServiceFor(getClass());
@@ -103,6 +106,15 @@ public class CodeService {
 		compilationUnits.sourceFolders.stream().map(SourceFolderEvent::new)
 				.forEach(queue::add);
 		queue.start();
+		if (blockStartThread) {
+			for (;;) {
+				try {
+					Thread.sleep(TimeConstants.ONE_HOUR_MS);
+				} catch (Exception e) {
+					Ax.simpleExceptionOut(e);
+				}
+			}
+		}
 	}
 
 	/*

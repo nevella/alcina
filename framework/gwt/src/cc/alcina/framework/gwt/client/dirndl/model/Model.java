@@ -428,7 +428,7 @@ public abstract class Model extends Bindable implements
 			return binding.from(source);
 		}
 
-		public <TE> ModelBinding<TE> from(Topic<TE> topic) {
+		public <TE> ModelBinding<TE> fromTopic(Topic<TE> topic) {
 			ModelBinding binding = new ModelBinding(this);
 			modelBindings.add(binding);
 			return binding.from(topic);

@@ -7,6 +7,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -65,5 +66,12 @@ public class CheckboxInput extends Model.Value<Boolean>
 	@Override
 	public void setValue(Boolean value) {
 		set(VALUE, this.value, value, () -> this.value = value);
+	}
+
+	public static class To implements ModelTransform<Boolean, CheckboxInput> {
+		@Override
+		public CheckboxInput apply(Boolean t) {
+			return new CheckboxInput(t);
+		}
 	}
 }
