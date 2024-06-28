@@ -48,6 +48,14 @@ public interface TransactionEnvironment {
 		return get().withDomainAccess0(supplier);
 	}
 
+	public static <T> T withDomainCommitting(Supplier<T> supplier) {
+		return withDomain(() -> {
+			T result = supplier.get();
+			get().commit();
+			return result;
+		});
+	}
+
 	public void begin();
 
 	public void commit();
