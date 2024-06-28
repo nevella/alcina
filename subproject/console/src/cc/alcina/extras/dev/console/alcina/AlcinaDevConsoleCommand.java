@@ -4,6 +4,7 @@ import java.util.List;
 
 import cc.alcina.extras.dev.codeservice.CodeService;
 import cc.alcina.extras.dev.codeservice.PackagePropertiesGenerator;
+import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsoleCommand;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
@@ -102,6 +103,8 @@ public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 					.resource("codeserver-paths.local.txt").asList();
 			codeService.handlerTypes = List
 					.of(PackagePropertiesGenerator.class);
+			codeService.blockStartThread = DevConsole.getInstance()
+					.isExitAfterCommand();
 			codeService.start();
 			return "started";
 		}

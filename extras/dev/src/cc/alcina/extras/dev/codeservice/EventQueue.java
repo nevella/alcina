@@ -112,6 +112,7 @@ class EventQueue implements Runnable {
 			if (eventKind == OVERFLOW) {
 				logger.error("Fatal exception - watch service overflow");
 				finished = true;
+				System.exit(1);
 				return;
 			}
 			Path child = parentDir.resolve((Path) watchEvent.context());

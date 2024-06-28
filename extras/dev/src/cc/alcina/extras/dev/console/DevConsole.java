@@ -1065,6 +1065,10 @@ public abstract class DevConsole implements ClipboardOwner {
 		NORMAL, OK, ERR, COMMAND
 	}
 
+	public boolean isExitAfterCommand() {
+		return launchConfiguration.exitAfterCommand;
+	}
+
 	static class LaunchConfiguration {
 		boolean noHttpServer;
 
