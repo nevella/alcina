@@ -6,6 +6,7 @@ import org.w3c.dom.Document;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomDocument.PerDocumentSupplier;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @Registration.Singleton(
 	value = PerDocumentSupplier.class,
@@ -14,7 +15,25 @@ public class PerDocumentSupplierCoreDocument implements PerDocumentSupplier {
 	public static final transient String CORE_DOCUMENT_DOM_DOC_KEY = PerDocumentSupplierCoreDocument.class
 			.getName() + ".CORE_DOCUMENT_DOM_DOC_KEY";
 
+	public static PerDocumentSupplierCoreDocument cast() {
+		return (PerDocumentSupplierCoreDocument) Registry
+				.impl(PerDocumentSupplier.class);
+	}
+
+	// called by a Lifecycle service subtype in the servlet layer
+	public void onAppStartup() {
+		DomDocument.topicDocumentCreated.add(this::register);
+	}
+
 	public PerDocumentSupplierCoreDocument() {
+	}
+
+	void register(DomDocument createdDoc) {
+		Document doc = (Document) createdDoc.w3cNode();
+		if (doc instanceof CoreDocumentImpl) {
+			CoreDocumentImpl impl = (CoreDocumentImpl) doc;
+			impl.setUserData(impl, CORE_DOCUMENT_DOM_DOC_KEY, createdDoc, null);
+		}
 	}
 
 	@Override

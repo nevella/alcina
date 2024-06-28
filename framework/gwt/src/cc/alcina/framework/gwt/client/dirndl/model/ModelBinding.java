@@ -15,6 +15,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
@@ -198,6 +199,14 @@ public class ModelBinding<T> {
 	public <P> ModelBinding<P> on(PropertyEnum fromPropertyName) {
 		this.on = fromPropertyName;
 		return (ModelBinding<P>) this;
+	}
+
+	/**
+	 * The name of the property to bind to, or null for any property change
+	 */
+	public <PT> ModelBinding<PT> on(TypedProperty<?, PT> typedProperty) {
+		this.on = typedProperty;
+		return (ModelBinding<PT>) this;
 	}
 
 	/**

@@ -27,7 +27,10 @@ class DispClassLoader extends URLClassLoader {
 				.startsWith("cc.alcina.extras.dev.codeservice");
 		resolveWithParent |= name
 				.startsWith("cc.alcina.framework.common.client.reflection");
+		resolveWithParent |= name.startsWith(
+				"cc.alcina.framework.common.client.logic.reflection");
 		resolveWithParent |= name.startsWith("com.google");
+		resolveWithParent |= name.startsWith("org.w3c");
 		if (resolveWithParent) {
 			return super.loadClass(name, resolve);
 		} else {
