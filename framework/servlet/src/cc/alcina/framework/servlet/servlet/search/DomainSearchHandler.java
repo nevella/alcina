@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Ref;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilterWithCache;
@@ -188,6 +189,9 @@ public class DomainSearchHandler {
 			// result set
 			// size without collecting (i.e. index-only)
 			Ref<Stream<? extends Entity>> streamRef = Ref.of(search);
+			if (Configuration.is("serialQuery")) {
+				LooseContext.setTrue(DomainStore.CONTEXT_SERIAL_QUERY);
+			}
 			List<Entity> rows = DomainStore.queryPool().call(
 					() -> streamRef.get().collect(Collectors.toList()),
 					streamRef, true);
