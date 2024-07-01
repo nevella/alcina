@@ -59,12 +59,14 @@ public class UrlBuilder {
 				String v = e.getValue();
 				sb.append(k == firstKey ? "?" : "&");
 				sb.append(k);
-				sb.append("=");
-				try {
-					sb.append(
-							Registry.impl(UrlComponentEncoder.class).encode(v));
-				} catch (Exception ex) {
-					throw new WrappedRuntimeException(ex);
+				if (v != null) {
+					sb.append("=");
+					try {
+						sb.append(Registry.impl(UrlComponentEncoder.class)
+								.encode(v));
+					} catch (Exception ex) {
+						throw new WrappedRuntimeException(ex);
+					}
 				}
 			});
 		}

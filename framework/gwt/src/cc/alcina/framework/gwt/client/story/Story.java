@@ -266,6 +266,21 @@ public interface Story {
 					}
 				}
 
+				/** An ScrollIntoView action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface ScrollIntoView {
+					public static class ConverterImpl
+							implements Converter<ScrollIntoView> {
+						@Override
+						public Story.Action convert(ScrollIntoView ann) {
+							return new Story.Action.Ui.ScrollIntoView();
+						}
+					}
+				}
+
 				/** An AwaitAbsent action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -758,6 +773,9 @@ public interface Story {
 				return null;
 			}
 
+			/**
+			 * Click the located element
+			 */
 			public static class Click implements Ui {
 			}
 
@@ -765,6 +783,12 @@ public interface Story {
 			 * Await the presence of the document locator
 			 */
 			public static class AwaitPresent implements Ui {
+			}
+
+			/**
+			 * Scroll the located element into view
+			 */
+			public static class ScrollIntoView implements Ui {
 			}
 
 			/**

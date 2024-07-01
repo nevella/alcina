@@ -69,14 +69,17 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 				WebDriver webDriver = wdContext.token.getWebDriver();
 				String currentUrl = webDriver.getCurrentUrl();
 				String to = location.getText();
-				if (Objects.equals(currentUrl, to)) {
+				String toUrl = wdPerformer.context
+						.performerResource(UrlRouter.class).route(to);
+				wdPerformer.context.performerResource(UrlRouter.class);
+				if (Objects.equals(currentUrl, toUrl)) {
 					if (!wdContext.alwaysRefresh
 							&& wdContext.navigationPerformed) {
 						return;
 					}
 				}
-				webDriver.navigate().to(to);
-				wdPerformer.context.log("Navigate --> %s", to);
+				webDriver.navigate().to(toUrl);
+				wdPerformer.context.log("Navigate --> %s", toUrl);
 				wdContext.navigationPerformed = true;
 			}
 		}
@@ -298,6 +301,20 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 				JavascriptExecutor executor = (JavascriptExecutor) wdPerformer.wdContext.token
 						.getWebDriver();
 				executor.executeScript(action.getText(), elem);
+			}
+		}
+
+		public static class ScrollIntoView
+				implements TypedPerformer<Story.Action.Ui.ScrollIntoView> {
+			@Override
+			public void perform(WdActionPerformer wdPerformer,
+					Story.Action.Ui.ScrollIntoView action) throws Exception {
+				ElementQuery query = createQuery(wdPerformer);
+				WebElement elem = query.getElement();
+				Preconditions.checkNotNull(elem);
+				JavascriptExecutor executor = (JavascriptExecutor) wdPerformer.wdContext.token
+						.getWebDriver();
+				executor.executeScript("arguments[0].scrollIntoView()", elem);
 			}
 		}
 	}

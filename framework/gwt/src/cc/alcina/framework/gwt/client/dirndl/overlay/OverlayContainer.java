@@ -31,8 +31,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 				to = "visibility",
 				transform = Binding.VisibilityVisibleHidden.class,
 				type = Type.STYLE_ATTRIBUTE) })
-public class OverlayContainer extends Model
-		implements HasTag, Model.RerouteBubbledEvents {
+public class OverlayContainer extends Model implements HasTag,
+		Model.RerouteBubbledEvents, Overlay.PositionedDescendants.Emitter {
 	private final Overlay contents;
 
 	private final ContainerOptions containerOptions;
@@ -103,6 +103,7 @@ public class OverlayContainer extends Model
 	void position() {
 		containerOptions.position.toElement(provideElement()).apply();
 		emitEvent(Overlay.Positioned.class, this);
+		emitEvent(Overlay.PositionedDescendants.class, this);
 		Scheduler.get().scheduleFinally(() -> setVisible(true));
 	}
 }

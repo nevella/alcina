@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
@@ -32,7 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
-import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -43,6 +41,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.PositionedDescendants;
 
 /**
  * <p>
@@ -491,8 +491,17 @@ public abstract class Model extends Bindable implements
 	public abstract static class Fields extends Model {
 	}
 
-	public interface FocusOnBind {
+	public interface FocusOnBind extends Overlay.PositionedDescendants.Handler {
 		boolean isFocusOnBind();
+
+		// double-fire for overlay positioning. note this is deferred to allow
+		// flush() [which also sets the overlay to visible]
+		@Override
+		default void onPositionedDescendants(PositionedDescendants event) {
+			Scheduler.get().scheduleDeferred(
+					() -> FocusImpl.getFocusImplForWidget().focus(
+							event.getContext().node.getRendered().asElement()));
+		}
 
 		default void onBind(FocusOnBind dispatchMarker, Bind event) {
 			if (event.isBound() && isFocusOnBind()) {
@@ -504,17 +513,9 @@ public abstract class Model extends Bindable implements
 				//
 				// Essentially, the DOM of the input needs to exist before
 				// execution
-				Scheduler.get().scheduleDeferred(() -> {
-					FocusImpl.getFocusImplForWidget().focus(
-							event.getContext().node.getRendered().asElement());
-				});
-				// double-fire for overlay positioning. FIXME - probably fire a
-				// descendant OverlayPositioned event , and this listens
-				Timer.Provider.get().getTimer(() -> {
-					Element elem = event.getContext().node.getRendered()
-							.asElement();
-					FocusImpl.getFocusImplForWidget().focus(elem);
-				}).schedule(500);
+				Scheduler.get().scheduleDeferred(() -> FocusImpl
+						.getFocusImplForWidget().focus(event.getContext().node
+								.getRendered().asElement()));
 			}
 		}
 	}

@@ -529,4 +529,19 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			void onPositioned(Positioned event);
 		}
 	}
+
+	public static class PositionedDescendants extends
+			ModelEvent.DescendantEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Emitter> {
+		@Override
+		public void dispatch(PositionedDescendants.Handler handler) {
+			handler.onPositionedDescendants(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPositionedDescendants(PositionedDescendants event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
 }
