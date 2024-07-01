@@ -98,7 +98,7 @@ public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 		public String run(String[] argv) throws Exception {
 			CodeService codeService = new CodeService();
 			// the listpath file might contain - say -
-			// /g/alcina/framework/servlet
+			// /g/alcina/framework/servlet\n/g/alcina/bin
 			codeService.sourceAndClassPaths = Io.read()
 					.resource("codeserver-paths.local.txt").asList();
 			codeService.handlerTypes = List

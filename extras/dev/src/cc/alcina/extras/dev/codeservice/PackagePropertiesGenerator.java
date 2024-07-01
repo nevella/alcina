@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -109,6 +110,8 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			imports.add(name);
 		}
 
+		Logger logger = LoggerFactory.getLogger(getClass());
+
 		String resolvedTypeName(Class clazz) {
 			clazz = CommonUtils.getWrapperType(clazz);
 			return NestedName.get(clazz);
@@ -117,6 +120,20 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 		List<Class> possibleInvalidClassFiles = new ArrayList<>();;
 
 		void write() throws Exception {
+			if (packageTypeMetadataList.stream()
+					.anyMatch(PackagePropertiesUnitData::hasUnitException)) {
+				logger.info("Package exceptions: {}", sourcePackage);
+				packageTypeMetadataList.stream()
+						.filter(PackagePropertiesUnitData::hasUnitException)
+						.forEach(data -> data.declarationPropertiesList.stream()
+								.filter(list -> list.exception != null)
+								.forEach(list -> {
+									logger.info("\t{}\n\t{}",
+											new File(data.path).getName(),
+											list.exception.replaceFirst(
+													"(?s)([^\n]+).+", "$1"));
+								}));
+			}
 			if (packageTypeMetadataList.stream()
 					.noneMatch(PackagePropertiesUnitData::hasTypedProperties)) {
 				// file().delete();
@@ -152,6 +169,7 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 			} else {
 				Io.write().bytes(baos.toByteArray()).withNoUpdateIdentical(true)
 						.toFile(file());
+				logger.info("Wrote packageproperties: {}", sourcePackage);
 			}
 		}
 
@@ -239,6 +257,11 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 		@Override
 		public int currentVersion() {
 			return VERSION;
+		}
+
+		boolean hasUnitException() {
+			return declarationPropertiesList.stream()
+					.anyMatch(p -> Ax.notBlank(p.exception));
 		}
 
 		List<DeclarationProperties> declarationPropertiesList;

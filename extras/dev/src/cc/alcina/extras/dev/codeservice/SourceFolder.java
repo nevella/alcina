@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 
 /*
  * Allows code event handlers access to source files in a package, etc
@@ -23,7 +24,8 @@ public class SourceFolder implements Predicate<File> {
 	public String classPathFolderCanonicalPath;
 
 	public boolean containsPath(String canonicalPath) {
-		return canonicalPath.startsWith(sourceFolderCanonicalPath);
+		return canonicalPath.startsWith(sourceFolderCanonicalPath)
+				|| canonicalPath.startsWith(classPathFolderCanonicalPath);
 	}
 
 	public SourceFolder(String sourceFolderPath, String classPathFolderPath) {
@@ -99,6 +101,11 @@ public class SourceFolder implements Predicate<File> {
 			return Arrays.stream(file.listFiles()).filter(sourceFolder)
 					.collect(Collectors.toList());
 		}
+
+		@Override
+		public String toString() {
+			return packageName;
+		}
 	}
 
 	public class SourceFile {
@@ -135,5 +142,25 @@ public class SourceFolder implements Predicate<File> {
 
 	public boolean testGeneratePackageEvent(File file) {
 		return !file.getName().equals("PackageProperties.java");
+	}
+
+	public File translateClassPathFileToSourceFile(File file) {
+		try {
+			String canonicalPath = file.getCanonicalPath();
+			if (canonicalPath.startsWith(classPathFolderCanonicalPath)
+					&& canonicalPath.endsWith(".class")) {
+				String path = sourceFolderCanonicalPath + canonicalPath
+						.substring(classPathFolderCanonicalPath.length());
+				String folder = path.replaceFirst("(.+)/(.+)", "$1");
+				String classFileName = path.replaceFirst("(.+)/(.+)", "$2");
+				String sourceName = classFileName
+						.replaceFirst("(.+?)(\\$.+)?(\\.class)", "$1.java");
+				return new File(Ax.format("%s/%s", folder, sourceName));
+			} else {
+				return file;
+			}
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 }

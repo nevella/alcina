@@ -45,6 +45,7 @@ class EventQueue implements Runnable {
 				queue.add(event);
 				eventHisto.add(event.getClass());
 				added++;
+				lastEventSubmitted = System.currentTimeMillis();
 				queue.notify();
 			}
 		}
@@ -67,6 +68,8 @@ class EventQueue implements Runnable {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	boolean finished;
+
+	long lastEventSubmitted;
 
 	@Override
 	public void run() {

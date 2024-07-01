@@ -35,25 +35,28 @@ import cc.alcina.framework.entity.util.fs.FsUtils;
  * 
  	 CodeService codeService = new CodeService();
 	// the listpath file might contain - say -
-	// /g/alcina/framework/servlet
+	// // /g/alcina/framework/servlet\n/g/alcina/bin
 	codeService.sourceFolderPaths = Io.read()
 			.resource("codeserver-paths.local.txt").asList();
 	codeService.handlerTypes = List
 			.of(PackagePropertiesGenerator.class);
 	codeService.start();
+ * </code>
  * </pre>
  * <p>
  * The codeservice operates by creating a taskqueue with a set of initial tasks
  * - it's designed to operate with just one task executor thread (to minimise
  * resource use + simplify concurrency)
- * <ul>
- * <li>the instance creates the task queue, and submits an (initial list) of
- * SourceFolderEvent tasks. Those tasks are responsible for managing the
- * scanning of each folder
- * 
- * 
- * 
- * </ul>
+ * <p>
+ * The instance creates the task queue, and submits an (initial list) of
+ * SourceFolderEvent tasks. Those tasks are responsible for the initial scan of
+ * each folder and setting up FS watchers to track file modifications.
+ * <p>
+ * Current implementation actually tracks the compiled files - since it's easier
+ * to use JDK reflection than to setup a whole reflection metamodel (such as
+ * gWT), the services use Java reflection, but with a disposable classloader
+ * which enables reload of the metadata (e.g. annotations, properties) of
+ * changed classes.
  * 
  * 
  */
@@ -212,6 +215,7 @@ public class CodeService {
 				// ignore
 				return;
 			}
+			file = sourceFolder.translateClassPathFileToSourceFile(file);
 			if (!sourceFolder.test(file)) {
 				return;
 			}
@@ -268,18 +272,22 @@ public class CodeService {
 	void handleEvent(Event event) {
 		this.context = new Context();
 		if (publishedInitialStats) {
-			long elapsed = System.currentTimeMillis() - event.time;
-			if (elapsed < 2000) {
-				// allow IDE codegen. Todo - listen on IDE build products, not
-				// source changes
-				try {
-					Thread.sleep(2000 - elapsed);
-				} catch (Exception e) {
+			// await IDE codegen completion
+			for (;;) {
+				long delay = queue.lastEventSubmitted
+						+ 2 * TimeConstants.ONE_SECOND_MS
+						- System.currentTimeMillis();
+				if (delay <= 0) {
+					break;
+				} else {
+					try {
+						Thread.sleep(delay);
+					} catch (Exception e) {
+					}
 				}
-				Thread.currentThread()
-						.setContextClassLoader(new DispClassLoader(context,
-								getClass().getClassLoader()));
 			}
+			Thread.currentThread().setContextClassLoader(
+					new DispClassLoader(context, getClass().getClassLoader()));
 		}
 		new SourceFolderScanner().handle(event);
 		compilationUnits.handle(event);
