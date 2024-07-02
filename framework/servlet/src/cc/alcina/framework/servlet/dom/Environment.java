@@ -326,6 +326,8 @@ public class Environment {
 
 	long lastPacketsReceived;
 
+	long nonInteractionTimeout;
+
 	public void clientStarted() {
 		clientStarted = true;
 		scheduler.setClientStarted(true);
@@ -597,5 +599,9 @@ public class Environment {
 		}
 		queue.stop();
 		EnvironmentManager.get().deregister(this);
+	}
+
+	public void setNonInteractionTimeout(long nonInteractionTimeout) {
+		this.nonInteractionTimeout = nonInteractionTimeout;
 	}
 }

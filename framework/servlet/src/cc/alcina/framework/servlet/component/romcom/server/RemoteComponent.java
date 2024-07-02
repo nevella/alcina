@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.dom.Environment;
@@ -28,7 +29,13 @@ public interface RemoteComponent {
 		session.componentClassName = ui.getClass().getName();
 		Environment environment = EnvironmentManager.get().register(ui,
 				session);
+		environment.setNonInteractionTimeout(
+				getNonInteractionTimeout(environment));
 		return session;
+	}
+
+	default long getNonInteractionTimeout(Environment environment) {
+		return 5 * TimeConstants.ONE_MINUTE_MS;
 	}
 
 	String getPath();
