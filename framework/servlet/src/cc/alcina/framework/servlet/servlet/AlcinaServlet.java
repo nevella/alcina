@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
@@ -30,7 +29,8 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMet
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
-public abstract class AlcinaServlet extends HttpServlet {
+public abstract class AlcinaServlet extends HttpServlet
+		implements HttpWriteUtils {
 	private static final List<String> IGNORABLE_IO_EXCEPTIONS = Arrays.asList(
 			"Connection reset by peer", "Connection timed out", "Broken pipe");
 
@@ -162,38 +162,6 @@ public abstract class AlcinaServlet extends HttpServlet {
 				if (alcinaContext != null) {
 					alcinaContext.end();
 				}
-			}
-		}
-	}
-
-	public void writeAndClose(String s, HttpServletResponse response)
-			throws IOException {
-		response.setContentType("text/plain");
-		response.getWriter().write(s);
-		response.getWriter().close();
-	}
-
-	protected void writeHtmlResponse(HttpServletResponse response,
-			String string) throws IOException {
-		if (response == null) {
-			System.out.println(CommonUtils.trimToWsChars(string, 1000));
-		} else {
-			response.setContentType("text/html");
-			response.getWriter().write(string);
-		}
-	}
-
-	protected void writeTextResponse(HttpServletResponse response,
-			String string) throws IOException {
-		if (response == null) {
-			System.out.println(CommonUtils.trimToWsChars(string, 1000));
-		} else {
-			try {
-				response.setContentType("text/plain");
-				response.getWriter().write(string);
-			} catch (Exception e) {
-				Ax.out("Writing text response: ", string);
-				e.printStackTrace();
 			}
 		}
 	}

@@ -12,6 +12,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.stmt.LocalClassDeclarationStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
@@ -57,6 +58,11 @@ public class UnitType {
 	public UnitType() {
 	}
 
+	public boolean provideIsLocal() {
+		return declaration.getParentNode().get()
+				.getClass() == LocalClassDeclarationStmt.class;
+	}
+
 	public UnitType(CompilationUnitWrapper unit,
 			ClassOrInterfaceDeclaration n) {
 		this.unitWrapper = unit;
@@ -93,7 +99,12 @@ public class UnitType {
 	}
 
 	public Class<?> clazz() {
-		return Reflections.forName(qualifiedBinaryName);
+		try {
+			return Reflections.forName(qualifiedBinaryName);
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			throw (e);
+		}
 	}
 
 	private CompilationUnits compUnits() {

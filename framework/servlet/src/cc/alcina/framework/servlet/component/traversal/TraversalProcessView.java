@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
+import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -117,6 +118,7 @@ public class TraversalProcessView {
 
 		@Override
 		public void init() {
+			FmsForm.registerImplementations();
 			// FIXME - st - implement
 			// Registry.impl(TopLevelCatchallHandler.class).register(this);
 		}
@@ -165,7 +167,7 @@ public class TraversalProcessView {
 		}
 
 		protected SelectionTraversal traversal0() {
-			return page.history.getObservable();
+			return page.history == null ? null : page.history.getObservable();
 		}
 
 		public static SelectionTraversal traversal() {
@@ -176,9 +178,9 @@ public class TraversalProcessView {
 	public static abstract class TraversalAnswerSupplier
 			implements AppSuggestor.AnswerSupplier {
 		public TraversalAnswerSupplier(int forLayer) {
-			this.forLayer = forLayer;
+			this.fromLayer = forLayer;
 		}
 
-		public int forLayer;
+		public int fromLayer;
 	}
 }

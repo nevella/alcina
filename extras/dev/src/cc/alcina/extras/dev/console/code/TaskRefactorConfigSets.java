@@ -276,7 +276,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		private void visit0(ClassOrInterfaceDeclaration node, Void arg) {
 			UnitType type = new UnitType(unit, node);
 			type.setDeclaration(node);
-			unit.declarations.add(type);
+			unit.unitTypes.add(type);
 			boolean hasConfiguration = node.toString()
 					.contains("Configuration.");
 			if (hasConfiguration) {

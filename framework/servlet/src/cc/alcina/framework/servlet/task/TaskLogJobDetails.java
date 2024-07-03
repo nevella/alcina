@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.task;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
@@ -15,6 +14,7 @@ import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
+import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.servlet.job.JobContext;
@@ -48,14 +48,7 @@ public class TaskLogJobDetails extends PerformerTask {
 		return builder;
 	}
 
-	protected void descendantAndSubsequentJobs(Job top, DomNode body) {
-		body.builder().tag("h2").text("Child/Subsequent jobs").append();
-		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
-		builder.row().cell("Id").accept(this::numeric).cell("Name")
-				.accept(Utils::large).cell("State").cell("Result")
-				.cell("Started").accept(this::date).cell("Finished")
-				.accept(this::date).cell("Performer").accept(Utils::instance)
-				.cell("Link").accept(Utils::links);
+	protected void renderRelated(Job top, DomNode body) {
 		Stream<Job> relatedProcessing = top.provideDescendantsAndSubsequents()
 				.filter(j -> j.getState() == JobState.PROCESSING)
 				.sorted(EntityComparator.INSTANCE).limit(50);
@@ -63,17 +56,38 @@ public class TaskLogJobDetails extends PerformerTask {
 				.provideDescendantsAndSubsequents()
 				.filter(j -> j.getState() != JobState.PROCESSING)
 				.sorted(EntityComparator.INSTANCE).limit(50);
-		Stream.concat(relatedProcessing, relatedNonProcessing).forEach(job -> {
+		Stream<Job> childAndSubsequentJobs = Stream.concat(relatedProcessing,
+				relatedNonProcessing);
+		renderRelatedSection(body, "Child/Subsequent jobs",
+				childAndSubsequentJobs);
+		renderRelatedSection(body, "Awaited jobs", top.provideAwaitedSubtree()
+				.sorted(EntityComparator.INSTANCE).limit(50));
+	}
+
+	long id(Job job) {
+		return job.domain().getIdOrLocalIdIfZero();
+	}
+
+	protected void renderRelatedSection(DomNode body, String title,
+			Stream<Job> jobs) {
+		body.builder().tag("h2").text(title).append();
+		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
+		builder.row().cell("Id").accept(this::numeric).cell("Name")
+				.accept(Utils::large).cell("State").cell("Result")
+				.cell("Started").accept(this::date).cell("Finished")
+				.accept(this::date).cell("Performer").accept(Utils::instance)
+				.cell("Link").accept(Utils::links);
+		jobs.forEach(job -> {
 			DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-					.cell(String.valueOf(job.getId())).cell(job.provideName())
+					.cell(String.valueOf(id(job))).cell(job.provideName())
 					.accept(Utils::large).cell(job.getState())
 					.cell(job.getResultType())
 					.cell(timestamp(job.getStartTime()))
 					.cell(timestamp(job.getEndTime())).cell(job.getPerformer())
 					.accept(Utils::instance);
 			DomNode td = cellBuilder.append();
-			String href = JobServlet.createTaskUrl(
-					new TaskLogJobDetails().withJobId(job.getId()));
+			String href = JobServlet
+					.createTaskUrl(new TaskLogJobDetails().withJobId(id(job)));
 			td.html().addLink("Details", href, "_blank");
 		});
 		body.builder().tag("hr").append();
@@ -81,26 +95,27 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	protected void fields(Job job, DomNode body)
 			throws IllegalAccessException, InvocationTargetException {
+		job.domain().ensurePopulated();
 		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 		builder.row().cell("Field").cell("Value");
-		List<PropertyDescriptor> pds = SEUtilities
-				.getPropertyDescriptorsSortedByField(job.entityClass());
-		pds.removeIf(pd -> pd.getName().matches(
-				"largeResult|largeResultSerialized|result|resultSerialized|"
-						+ "processStateSerialized|processSerialized|cachedDisplayName"));
-		for (PropertyDescriptor pd : pds) {
-			DomNodeHtmlTableRowBuilder row = builder.row();
-			Object fieldValue = pd.getReadMethod().invoke(job, new Object[0]);
-			String fieldText = null;
-			if (fieldValue == null) {
-			} else if (fieldValue instanceof Collection) {
-				fieldText = CommonUtils.toLimitedCollectionString(
-						(Collection<?>) fieldValue, 50);
-			} else {
-				fieldText = fieldValue.toString();
-			}
-			row.cell(pd.getName()).cell(fieldText).style("whitespace:pre-wrap");
-		}
+		Reflections.at(job.entityClass()).properties().stream()
+				.filter(p -> !p.getName().matches(
+						"largeResult|largeResultSerialized|result|resultSerialized|"
+								+ "processStateSerialized|processSerialized|cachedDisplayName"))
+				.forEach(p -> {
+					DomNodeHtmlTableRowBuilder row = builder.row();
+					Object fieldValue = p.get(job);
+					String fieldText = null;
+					if (fieldValue == null) {
+					} else if (fieldValue instanceof Collection) {
+						fieldText = CommonUtils.toLimitedCollectionString(
+								(Collection<?>) fieldValue, 50);
+					} else {
+						fieldText = fieldValue.toString();
+					}
+					row.cell(p.getName()).cell(fieldText)
+							.style("whitespace:pre-wrap");
+				});
 	}
 
 	public long getJobId() {
@@ -180,7 +195,7 @@ public class TaskLogJobDetails extends PerformerTask {
 								.isAssignableFrom(resourceClass)) {
 							String deleteHref = JobServlet
 									.createTaskUrl(new TaskDeleteJobResource()
-											.withJobId(active.getId())
+											.withJobId(id(active))
 											.withResourceClass(
 													res.getClassName())
 											.withResourcePath(res.getPath()));
@@ -203,11 +218,14 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	@Override
 	public void run() throws Exception {
+		TransactionEnvironment.withDomainTxThrowing(this::run0);
+	}
+
+	void run0() throws Exception {
 		Job job = Job.byId(jobId);
 		if (job == null) {
 			JobContext.info("Job {} does not exist", jobId);
 		} else {
-			List<Job> threadData = JobRegistry.get().getThreadData(job);
 			job.domain().ensurePopulated();
 			if (job.getLargeResult() != null) {
 				if (details) {
@@ -239,14 +257,19 @@ public class TaskLogJobDetails extends PerformerTask {
 			if (job.getLargeResult() != null) {
 				DomNode div = body.builder().tag("div").append();
 				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
-						.withJobId(job.getId()).withDetails(true));
+						.withJobId(id(job)).withDetails(true));
 				div.html().addLink("Large result/details", href, "");
 			}
-			processData(threadData, body);
-			descendantAndSubsequentJobs(job, body);
+			if (DomainStore.hasStores()) {
+				List<Job> threadData = JobRegistry.get().getThreadData(job);
+				processData(threadData, body);
+			}
+			renderRelated(job, body);
 			fields(job, body);
 			JobContext.get().getJob().setLargeResult(doc.fullToString());
 			logger.info("Details output to job.largeResult");
+			// FIXME - localdomain.mvcc - remove
+			TransactionEnvironment.get().commit();
 		}
 	}
 

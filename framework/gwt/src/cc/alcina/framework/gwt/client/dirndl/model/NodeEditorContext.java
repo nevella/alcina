@@ -13,6 +13,10 @@ public interface NodeEditorContext {
 
 	boolean isEditable();
 
+	default boolean isDetached() {
+		return false;
+	}
+
 	boolean isRenderAsNodeEditors();
 
 	public interface Has {

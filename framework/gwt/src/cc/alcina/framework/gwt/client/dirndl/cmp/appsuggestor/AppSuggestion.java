@@ -14,4 +14,6 @@ public interface AppSuggestion extends SuggestOracle.Suggestion {
 	String secondary();
 
 	Object eventData();
+
+	AppSuggestionCategory category();
 }

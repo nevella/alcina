@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
@@ -89,10 +90,16 @@ public abstract class FragmentNode extends Model.Fields
 	public void copyFromExternal(FragmentNode external) {
 	}
 
+	/*
+	 * not nulled on detach, since the Fn/DomNode mapping is still correct
+	 */
+	DomNode domNode;
+
 	public DomNode domNode() {
-		return provideNode().getRendered().asDomNode();
+		return domNode;
 	}
 
+	@Override
 	public void ensureComputedNodes() {
 		fragmentModel().ensureComputedNodes(this);
 	}
@@ -153,6 +160,7 @@ public abstract class FragmentNode extends Model.Fields
 	public void onBind(Bind event) {
 		super.onBind(event);
 		if (event.isBound()) {
+			domNode = provideNode().getRendered().asDomNode();
 			// FIXME - use bindings() in constructor
 			provideNode().ensureChildren().topicNotifications
 					.add(this::onNotification);
@@ -431,6 +439,14 @@ public abstract class FragmentNode extends Model.Fields
 
 		public void strip() {
 			withMutating(() -> provideNode().strip());
+		}
+
+		public FragmentNode firstChild() {
+			return children().findFirst().orElse(null);
+		}
+
+		public FragmentNode lastChild() {
+			return children().reduce(Ax.last()).orElse(null);
 		}
 	}
 

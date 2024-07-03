@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.HtmlDefaultTags;
@@ -221,15 +222,14 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesPropertyInputs {
 		default void generatePropertyInputs(RendererInput input) {
-			for (Property property : Reflections.at((input.model))
-					.properties()) {
+			for (Property property : Reflections.at(input.model).properties()) {
 				Property directedProperty = input.resolver
 						.resolveDirectedProperty(property);
 				if (directedProperty != null) {
 					Object childModel = property.get(input.model);
 					// add input even if childModel==null
-					Class locationType = childModel == null ? void.class
-							: childModel.getClass();
+					Class locationType = ClassUtil
+							.resolveEnumSubclassAndSynthetic(childModel);
 					input.enqueueInput(input.resolver, childModel,
 							new AnnotationLocation(locationType,
 									directedProperty, input.resolver),

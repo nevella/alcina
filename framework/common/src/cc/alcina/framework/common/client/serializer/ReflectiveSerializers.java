@@ -147,8 +147,9 @@ public class ReflectiveSerializers {
 		public void writeValueOrContainer(GraphNode node,
 				SerialNode serialNode) {
 			if (Domain.isMvccObject((Entity) node.value)) {
-				throw new RuntimeException(
-						"Cannot serialize MVCC objects, project the object first");
+				throw new ReflectiveSerializer.SerializationException(node,
+						new IllegalArgumentException(
+								"Cannot serialize MVCC objects, project the object first"));
 			}
 			super.writeValueOrContainer(node, serialNode);
 		}

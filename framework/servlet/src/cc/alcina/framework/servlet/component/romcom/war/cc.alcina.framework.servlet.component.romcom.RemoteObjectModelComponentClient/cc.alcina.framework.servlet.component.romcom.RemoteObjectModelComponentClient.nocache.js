@@ -64,6 +64,7 @@ function cc_alcina_framework_servlet_component_romcom_RemoteObjectModelComponent
     }
     var scriptFrame = $doc_0.createElement('iframe');
     scriptFrame.id = 'cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient';
+    scriptFrame.title = 'Javascript container. No human-readable content';
     scriptFrame.style.cssText = 'position:absolute; width:0; height:0; border:none; left: -1000px;' + ' top: -1000px;';
     scriptFrame.tabIndex = -1;
     $doc_0.body.appendChild(scriptFrame);
@@ -334,7 +335,7 @@ function cc_alcina_framework_servlet_component_romcom_RemoteObjectModelComponent
     }
     var strongName;
     try {
-      strongName = '1D35A95D37D0AF69937806543DE80B0C';
+      strongName = 'EE912DFD20D513EFAA36F5DD89A61CB7';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);

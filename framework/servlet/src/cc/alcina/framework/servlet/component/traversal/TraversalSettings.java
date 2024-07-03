@@ -1,7 +1,9 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 
+@TypedProperties
 public class TraversalSettings extends Bindable.Fields {
 	public static TraversalSettings get() {
 		return TraversalProcessView.Ui.get().settings;

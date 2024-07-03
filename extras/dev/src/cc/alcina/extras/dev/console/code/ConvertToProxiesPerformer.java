@@ -56,6 +56,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 
@@ -162,7 +163,7 @@ public class ConvertToProxiesPerformer
 	}
 
 	void instrumentClass(CompilationUnitWrapper unit) {
-		for (UnitType decl : unit.declarations) {
+		for (UnitType decl : unit.unitTypes) {
 			RedirectVisitor visitor = new RedirectVisitor(unit);
 			decl.getDeclaration().accept(visitor, null);
 		}
@@ -233,7 +234,7 @@ public class ConvertToProxiesPerformer
 				.get().getNameAsString().replace(".", "/"));
 		File packageFolder = new File(packagePath);
 		packageFolder.mkdirs();
-		File outFile = SEUtilities.getChildFile(packageFolder,
+		File outFile = FileUtils.child(packageFolder,
 				declaration.getNameAsString() + ".java");
 		try {
 			Io.write().string(unit.toString()).toFile(outFile);
@@ -265,7 +266,7 @@ public class ConvertToProxiesPerformer
 					return;
 				}
 				type.setDeclaration(node);
-				unit.declarations.add(type);
+				unit.unitTypes.add(type);
 			}
 			super.visit(node, arg);
 		}

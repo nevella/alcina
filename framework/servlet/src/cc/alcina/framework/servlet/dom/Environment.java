@@ -326,6 +326,8 @@ public class Environment {
 
 	long lastPacketsReceived;
 
+	long nonInteractionTimeout;
+
 	public void clientStarted() {
 		clientStarted = true;
 		scheduler.setClientStarted(true);
@@ -544,6 +546,10 @@ public class Environment {
 				GWTBridgeHeadless.inClient.set(true);
 				ui.onBeforeEnterFrame();
 				enter(runnable::run);
+			} catch (Throwable t) {
+				Ax.err("Exception in frame");
+				Ax.simpleExceptionOut(t);
+				throw t;
 			} finally {
 				ui.onExitFrame();
 				GWTBridgeHeadless.inClient.set(false);
@@ -593,5 +599,9 @@ public class Environment {
 		}
 		queue.stop();
 		EnvironmentManager.get().deregister(this);
+	}
+
+	public void setNonInteractionTimeout(long nonInteractionTimeout) {
+		this.nonInteractionTimeout = nonInteractionTimeout;
 	}
 }

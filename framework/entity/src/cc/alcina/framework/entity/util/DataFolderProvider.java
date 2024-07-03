@@ -6,7 +6,6 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.SEUtilities;
 
 //
 // No registry annotation, register manually in
@@ -17,7 +16,7 @@ public abstract class DataFolderProvider {
 	}
 
 	public File getChildFile(String childFileName) {
-		return SEUtilities.getChildFile(getDataFolder(), childFileName);
+		return FileUtils.child(getDataFolder(), childFileName);
 	}
 
 	public File getClassDataFile(Object instance) {
@@ -37,6 +36,6 @@ public abstract class DataFolderProvider {
 
 	public File getSubFolderFile(String subFolderName, String fileName) {
 		File subFolder = getSubFolder(subFolderName);
-		return SEUtilities.getChildFile(subFolder, fileName);
+		return FileUtils.child(subFolder, fileName);
 	}
 }

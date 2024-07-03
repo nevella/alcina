@@ -56,7 +56,6 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -81,6 +80,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.DataFolderProvider;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.ProcessLogFolder;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
@@ -142,7 +142,7 @@ public class TransformCommit {
 						DateStyle.TIMESTAMP.format(new Date()));
 				File offlineDir = DataFolderProvider.get()
 						.getChildFile(OFFLINE_TRANSFORMS_PARTIAL);
-				File saveDir = SEUtilities.getChildFile(offlineDir, folderName);
+				File saveDir = FileUtils.child(offlineDir, folderName);
 				saveDir.mkdirs();
 				DeltaApplicationRecordSerializerImpl recordSerializer = new DeltaApplicationRecordSerializerImpl();
 				for (DeltaApplicationRecord record : records) {
@@ -150,7 +150,7 @@ public class TransformCommit {
 					long clientInstanceId = record.getClientInstanceId();
 					String fileName = String.format("%s_%s_ser.txt",
 							clientInstanceId, id);
-					File out = SEUtilities.getChildFile(saveDir, fileName);
+					File out = FileUtils.child(saveDir, fileName);
 					Io.write().string(recordSerializer.write(record))
 							.toFile(out);
 				}

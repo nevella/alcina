@@ -91,15 +91,12 @@ import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyExceptio
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.DateUtil;
-import cc.alcina.framework.common.client.util.DateUtil.MonthResolver;
-import cc.alcina.framework.common.client.util.DateUtil.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -856,11 +853,6 @@ public class SEUtilities {
 		return cal;
 	}
 
-	public static File getChildFile(File folder, String childFileName) {
-		return new File(
-				String.format("%s/%s", folder.getPath(), childFileName));
-	}
-
 	public static String getCurrentThreadStacktraceSlice() {
 		return getStacktraceSlice(Thread.currentThread(), 35, 0);
 	}
@@ -948,7 +940,8 @@ public class SEUtilities {
 		List<String> simpleNames = new ArrayList<>();
 		Class cursor = clazz;
 		do {
-			simpleNames.add(cursor.getSimpleName());
+			simpleNames.add(cursor.isAnonymousClass() ? "[anon]"
+					: cursor.getSimpleName());
 		} while ((cursor = cursor.getEnclosingClass()) != null);
 		Collections.reverse(simpleNames);
 		return simpleNames.stream().collect(Collectors.joining("."));
@@ -1064,7 +1057,7 @@ public class SEUtilities {
 							.getAnnotation(PropertyOrder.class);
 					PropertyOrder.Custom customOrder = PropertyOrder.Support
 							.customOrder(propertyOrder,
-									ClassUtil.NO_ARGS_INSTANTIATOR);
+									ClassUtilEntity.NO_ARGS_INSTANTIATOR);
 					Comparator<PropertyDescriptor> pdComparator = new Comparator<PropertyDescriptor>() {
 						@Override
 						public int compare(PropertyDescriptor o1,
@@ -1790,10 +1783,6 @@ public class SEUtilities {
 		value = NestedName.class,
 		priority = Priority.PREFERRED_LIBRARY)
 	public static class NestedNameJvm extends NestedName {
-		public static NestedName get() {
-			return Registry.impl(NestedName.class);
-		}
-
 		Map<Class, String> map = CollectionCreators.Bootstrap
 				.createConcurrentClassMap();
 

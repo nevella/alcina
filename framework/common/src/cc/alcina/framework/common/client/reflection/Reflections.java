@@ -6,8 +6,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.reflection.impl.ForName;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Reflections {
@@ -77,7 +77,7 @@ public class Reflections {
 
 	public static boolean isEffectivelyFinal(Class clazz) {
 		return ClassReflector.stdAndPrimitivesMap.containsKey(clazz.getName())
-				|| CommonUtils.isEnumOrEnumSubclass(clazz) || (clazz.isArray()
+				|| ClassUtil.isEnumOrEnumSubclass(clazz) || (clazz.isArray()
 						&& isEffectivelyFinal(clazz.getComponentType()));
 	}
 

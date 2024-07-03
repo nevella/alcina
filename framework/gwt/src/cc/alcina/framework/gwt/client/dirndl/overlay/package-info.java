@@ -37,6 +37,9 @@ overlays and events
     * bubble to originating model
 * popup (not modal) overlays are essentially
     * logically owned by their originating model or popup parent model
+	* so things like 'ContextResolver' come from the logicalparent (if the world were just, 
+	  an overlay would be a dom child of the parent - as it is, its *logical* dirndl aspects are 
+	  resolved up the parent chain, or at least intended to be.
 
 
 

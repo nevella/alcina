@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /**
@@ -113,7 +113,7 @@ public abstract class SingleTableSearchDefinition<R extends SearchResult>
 			return false;
 		}
 		Property property = provideProperty();
-		return CommonUtils.isEnumOrEnumSubclass(property.getType());
+		return ClassUtil.isEnumOrEnumSubclass(property.getType());
 	}
 
 	protected boolean provideIsStringOrderProperty() {

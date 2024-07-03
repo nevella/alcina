@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.meta.Feature_Ui_support;
  * ordering
  *
  * Also fixme/wd
+ * 
+ * [Note - implementation of this Feature is the {@link Feature_Story} class]
  */
 @Feature.Status.Ref(Feature.Status.Open.class)
 @Feature.Parent(Feature_Ui_support.class)

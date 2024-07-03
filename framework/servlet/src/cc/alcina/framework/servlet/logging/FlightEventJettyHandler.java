@@ -27,7 +27,8 @@ public class FlightEventJettyHandler extends AbstractHandler {
 			handler.handleRequest(request, response);
 		} catch (Exception e) {
 			throw new ServletException(e);
+		} finally {
+			baseRequest.setHandled(true);
 		}
-		baseRequest.setHandled(true);
 	}
 }

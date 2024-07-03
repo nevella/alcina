@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
@@ -560,7 +561,7 @@ public class DirectedLayout implements AlcinaProcess {
 				return;
 			}
 			ReceivesEmitsEvents.ClassData classData = ReceivesEmitsEvents
-					.get(model.getClass());
+					.get(ClassUtil.resolveEnumSubclassAndSynthetic(model));
 			if (classData.receives.isEmpty()
 					&& classData.emitsDescendant.isEmpty()
 					&& directed.reemits().length == 0) {
@@ -1283,6 +1284,9 @@ public class DirectedLayout implements AlcinaProcess {
 					// literatl
 					return;
 				}
+				if (property.isReadOnly()) {
+					return;
+				}
 				String stringValue = null;
 				Rendered rendered = verifySingleRendered();
 				Element element = rendered.isElement() ? rendered.asElement()
@@ -1890,8 +1894,8 @@ public class DirectedLayout implements AlcinaProcess {
 			this.model = resolver.resolveModel(model);
 			if (this.model != model) {
 				if (this.model instanceof Model.ResetDirecteds) {
-					location = new AnnotationLocation(model.getClass(), null,
-							resolver);
+					location = new AnnotationLocation(this.model.getClass(),
+							null, resolver);
 				}
 			}
 			this.location = location;

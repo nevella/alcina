@@ -358,7 +358,13 @@ public class JobRegistry {
 	public Job await(Job job, long maxTime) throws InterruptedException {
 		if (JobContext.has()) {
 			Job contextJob = JobContext.get().getJob();
-			contextJob.createRelation(job, JobRelationType.AWAITED);
+			if (contextJob.provideDescendants().noneMatch(j -> j == job)) {
+				TransactionEnvironment.withDomain(() -> {
+					TransactionEnvironment.get().ensureBegun();
+					contextJob.createRelation(job, JobRelationType.AWAITED);
+					TransactionEnvironment.get().commit();
+				});
+			}
 		}
 		ContextAwaiter awaiter = ensureAwaiter(job);
 		TransactionEnvironment.get().commit();
@@ -367,7 +373,8 @@ public class JobRegistry {
 		contextAwaiters.remove(job);
 		jobContext.awaitSequenceCompletion();
 		DomainStore.waitUntilCurrentRequestsProcessed();
-		return job.domain().ensurePopulated();
+		return TransactionEnvironment
+				.withDomain(() -> job.domain().ensurePopulated());
 	}
 
 	public String dumpActiveJobsThisInstance() {
@@ -428,7 +435,8 @@ public class JobRegistry {
 	}
 
 	public Stream<? extends Job> getActiveConsistencyJobs() {
-		return scheduler.aMoreDesirableSituation.getActiveJobs();
+		return scheduler.aMoreDesirableSituation == null ? Stream.of()
+				: scheduler.aMoreDesirableSituation.getActiveJobs();
 	}
 
 	/*
@@ -610,7 +618,8 @@ public class JobRegistry {
 							task, JobContext.get().getJob());
 				}
 			}
-			Job job = createBuilder().withTask(task).withAwaiter().create();
+			Job job = TransactionEnvironment.withDomain(() -> createBuilder()
+					.withTask(task).withAwaiter().create());
 			if (LooseContext.has(CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET)) {
 				// FIXME - use job creation/completion topics
 				launchedFromControlServlet = job;
@@ -1391,5 +1400,29 @@ public class JobRegistry {
 	public String debugOrphanage(long jobId) {
 		logger.info("Debug orphanage :: {}", jobId);
 		return scheduler.debugOrphanage(jobId);
+	}
+
+	public boolean waitForZeroPendingOrInActiveJobs(long maxTime) {
+		long start = System.currentTimeMillis();
+		while (TimeConstants.within(start, maxTime)) {
+			long incompleteOrPending = TransactionEnvironment.withDomain(() -> {
+				try {
+					TransactionEnvironment.get().ensureBegun();
+					List<QueueStat> queueStats = JobRegistry.get()
+							.getActiveQueueStats().collect(Collectors.toList());
+					Long active = queueStats.stream()
+							.collect(Collectors.summingLong(qs -> qs.active));
+					Long pending = queueStats.stream()
+							.collect(Collectors.summingLong(qs -> qs.pending));
+					return active + pending;
+				} finally {
+					TransactionEnvironment.get().end();
+				}
+			});
+			if (incompleteOrPending == 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

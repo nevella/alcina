@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
@@ -86,6 +87,30 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onBeforeSelectionChanged(BeforeSelectionChangedDispatch event);
+		}
+	}
+
+	/**
+	 * Allow the selected object to react to selection (say by keyboard
+	 * selection) prior to dispatch
+	 * 
+	 * Note, the receiver must check that the model is itself (i.e. the
+	 * Choice.value)
+	 */
+	public static class BeforeSelectionChangedDispatchDescent extends
+			ModelEvent.DescendantEvent<Object, BeforeSelectionChangedDispatchDescent.Handler, BeforeSelectionChangedDispatchDescent.Emitter> {
+		@Override
+		public void dispatch(
+				BeforeSelectionChangedDispatchDescent.Handler handler) {
+			handler.onBeforeSelectionChangedDispatchDescent(this);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBeforeSelectionChangedDispatchDescent(
+					BeforeSelectionChangedDispatchDescent event);
 		}
 	}
 
@@ -257,33 +282,6 @@ public class ModelEvents {
 		}
 	}
 
-	public static class FormElementLabelClicked extends
-			ModelEvent.DescendantEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
-		@Override
-		public void dispatch(FormElementLabelClicked.Handler handler) {
-			handler.onFormElementLabelClicked(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onFormElementLabelClicked(FormElementLabelClicked event);
-		}
-
-		public interface Emitter extends ModelEvent.Emitter {
-		}
-	}
-
-	public static class LabelClicked
-			extends ModelEvent<Object, LabelClicked.Handler> {
-		@Override
-		public void dispatch(LabelClicked.Handler handler) {
-			handler.onLabelClicked(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onLabelClicked(LabelClicked event);
-		}
-	}
-
 	public interface FilterContentsElement {
 		boolean matchesFilter(String filterString);
 	}
@@ -308,6 +306,21 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onFind(Find event);
+		}
+	}
+
+	public static class FormElementLabelClicked extends
+			ModelEvent.DescendantEvent<Object, FormElementLabelClicked.Handler, FormElementLabelClicked.Emitter> {
+		@Override
+		public void dispatch(FormElementLabelClicked.Handler handler) {
+			handler.onFormElementLabelClicked(this);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFormElementLabelClicked(FormElementLabelClicked event);
 		}
 	}
 
@@ -354,6 +367,18 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onInsert(Insert event);
+		}
+	}
+
+	public static class LabelClicked
+			extends ModelEvent<Object, LabelClicked.Handler> {
+		@Override
+		public void dispatch(LabelClicked.Handler handler) {
+			handler.onLabelClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onLabelClicked(LabelClicked event);
 		}
 	}
 
@@ -453,11 +478,28 @@ public class ModelEvents {
 			handler.onSearching(this);
 		}
 
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
 		public interface Handler extends NodeEvent.Handler {
 			void onSearching(Searching event);
 		}
+	}
 
-		public interface Emitter extends ModelEvent.Emitter {
+	public static class SearchResultsReturned extends
+			ModelEvent<ModelSearchResults, SearchResultsReturned.Handler> {
+		@Override
+		public void dispatch(SearchResultsReturned.Handler handler) {
+			handler.onSearchResultsReturned(this);
+		}
+
+		@Override
+		public Class<SearchResultsReturned.Handler> getHandlerClass() {
+			return SearchResultsReturned.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSearchResultsReturned(SearchResultsReturned event);
 		}
 	}
 
@@ -510,6 +552,24 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onSelectionChanged(SelectionChanged event);
+		}
+	}
+
+	/**
+	 * When a suggestor/choices contains complex models, the model may itself
+	 * handle a selection (click on it). But the container should still be
+	 * cleaned up (e.g. overlay dismissed), so this event indiciates "don't
+	 * perform the default selection *consequence* action, but do cleanup"
+	 */
+	public static class SelectionHandled
+			extends ModelEvent<Object, SelectionHandled.Handler> {
+		@Override
+		public void dispatch(SelectionHandled.Handler handler) {
+			handler.onSelectionHandled(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionHandled(SelectionHandled event);
 		}
 	}
 

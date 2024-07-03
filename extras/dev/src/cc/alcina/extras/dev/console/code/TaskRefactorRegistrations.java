@@ -152,7 +152,7 @@ public class TaskRefactorRegistrations extends PerformerTask {
 			if (!node.isInterface()) {
 				UnitType type = new UnitType(unit, node);
 				type.setDeclaration(node);
-				unit.declarations.add(type);
+				unit.unitTypes.add(type);
 				if (hasRegistryLocationAnnotations(type)) {
 					type.setFlag(Type.RegistryLocation);
 				}

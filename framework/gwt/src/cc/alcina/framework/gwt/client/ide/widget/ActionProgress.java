@@ -374,6 +374,9 @@ public class ActionProgress extends Composite
 		}
 		times.setHTML(time);
 		String msg = tracker.getProgressMessage();
+		if (useTreeProgress) {
+			msg = tracker.getLeafCount();
+		}
 		if (tracker.getJobResultType() == JobResultType.FAIL) {
 			msg = tracker.getJobResult();
 			message.addStyleName("error");
@@ -393,4 +396,6 @@ public class ActionProgress extends Composite
 					* tracker.getPercentComplete())) + "px");
 		}
 	}
+
+	public boolean useTreeProgress;
 }

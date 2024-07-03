@@ -7,10 +7,13 @@ import cc.alcina.extras.webdriver.WDConfiguration.WebDriverType;
 import cc.alcina.extras.webdriver.WDDriverHandler;
 import cc.alcina.extras.webdriver.WDToken;
 import cc.alcina.extras.webdriver.WdExec;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResource;
+import cc.alcina.framework.gwt.client.story.StoryTeller;
+import cc.alcina.framework.gwt.client.story.StoryTeller.AfterStory;
 
 public class WdContext implements PerformerResource {
 	public WDToken token;
@@ -21,10 +24,11 @@ public class WdContext implements PerformerResource {
 
 	boolean navigationPerformed = false;
 
+	private WdContextPart part;
+
 	@Override
 	public void initialise(Context context) {
-		WdContextPart part = context.tellerContext()
-				.getPart(WdContextPart.class);
+		part = context.tellerContext().getPart(WdContextPart.class);
 		WDConfiguration configuration = new WDConfiguration();
 		configuration.driverType = getDriverType();
 		token = new WDToken();
@@ -44,6 +48,18 @@ public class WdContext implements PerformerResource {
 		exec.token(token);
 		if (part.isShouldMaximiseTab()) {
 			token.getWebDriver().manage().window().maximize();
+		}
+		if (part.isShouldFocusTab()) {
+			new StoryAfterStoryObserver().bind();
+		}
+	}
+
+	class StoryAfterStoryObserver
+			implements ProcessObserver<StoryTeller.AfterStory> {
+		@Override
+		public void topicPublished(AfterStory action) {
+			token.getWebDriver().switchTo()
+					.window(token.getWebDriver().getWindowHandle());
 		}
 	}
 

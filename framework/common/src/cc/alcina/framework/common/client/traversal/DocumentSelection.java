@@ -108,4 +108,11 @@ public abstract class DocumentSelection extends MeasureSelection
 			select(transform.apply(selection));
 		}
 	}
+
+	/*
+	 * Marker, documentselection views shd be async
+	 */
+	public static class View<D extends DocumentSelection>
+			extends MeasureSelection.View<D> implements ViewAsync {
+	}
 }

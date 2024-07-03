@@ -28,4 +28,11 @@ public abstract class DomainCriterionHandler<SC extends SearchCriterion>
 	}
 
 	public abstract Class<? extends SearchDefinition> handlesSearchDefinition();
+
+	/*
+	 * non-graph handlers should return 1
+	 */
+	public int queryCost() {
+		return 0;
+	}
 }

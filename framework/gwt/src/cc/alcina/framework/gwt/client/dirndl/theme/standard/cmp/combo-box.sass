@@ -62,3 +62,23 @@ $editor-height: 39px
     z-index: 1
     left: 0
     border-top: none
+
+@mixin arrow
+  background-image: url("data:image/svg+xml;base64,PHN2ZyAgdmlld0JveD0iMCAwIDE3IDkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik04LjY3Nzc0IDlMMC43ODY4ODMgNC4zOTE1ZS0wN0wxNi41Njg2IDEuODAxOTRlLTA2TDguNjc3NzQgOVoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPg==")
+  background-repeat: no-repeat
+  display: inline-block
+  background-position: center
+  width: 16px
+  height: 16px
+
+@mixin arrow-dark
+  background-image: url("data:image/svg+xml;base64,PHN2ZyAgdmlld0JveD0iMCAwIDE3IDkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+UG9pbnRfU2VhcmNoX0pjdjIuPHBhdGggZD0iTTguNjc3NzQgOUwwLjc4Njg4MyA0LjM5MTVlLTA3TDE2LjU2ODYgMS44MDE5NGUtMDZMOC42Nzc3NCA5WiIgZmlsbD0iIzU1NSIvPjwvc3ZnPg==")
+
+@mixin combo
+  display: inline-grid
+  grid-template-columns: min-content min-content
+  gap: 1rem
+  cursor: pointer
+
+  > label
+    white-space: nowrap

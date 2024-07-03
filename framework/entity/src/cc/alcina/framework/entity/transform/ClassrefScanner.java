@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
@@ -93,7 +94,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 					Class type = field.getType();
 					Class checkType = null;
 					if (GraphProjection.isPrimitiveOrDataClass(type)) {
-						if (CommonUtils.isEnumOrEnumSubclass(type)) {
+						if (ClassUtil.isEnumOrEnumSubclass(type)) {
 							checkType = type;
 						}
 					} else if (Entity.class.isAssignableFrom(type)) {

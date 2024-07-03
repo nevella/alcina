@@ -15,6 +15,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
@@ -124,7 +125,7 @@ public class ModelBinding<T> {
 					.asBinding();
 			listener.bind();
 		} else {
-			throw new UnsupportedOperationException();
+			// noop (from is null)
 		}
 	}
 
@@ -203,6 +204,14 @@ public class ModelBinding<T> {
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
+	public <PT> ModelBinding<PT> on(TypedProperty<?, PT> typedProperty) {
+		this.on = typedProperty;
+		return (ModelBinding<PT>) this;
+	}
+
+	/**
+	 * The name of the property to bind to, or null for any property change
+	 */
 	public <P> ModelBinding<P> on(String fromPropertyName) {
 		this.on = fromPropertyName;
 		return (ModelBinding<P>) this;
@@ -216,7 +225,7 @@ public class ModelBinding<T> {
 				} else if (fromTopic != null) {
 					fromTopic.fireIfPublished((Consumer) consumer);
 				} else {
-					throw new UnsupportedOperationException();
+					// noop - from is null
 				}
 			}
 		} catch (Exception e) {
@@ -254,7 +263,9 @@ public class ModelBinding<T> {
 	}
 
 	void unbind() {
-		listener.unbind();
+		if (listener != null) {
+			listener.unbind();
+		}
 	}
 
 	/**

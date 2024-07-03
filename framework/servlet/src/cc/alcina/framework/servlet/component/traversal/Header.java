@@ -14,7 +14,7 @@ class Header extends Model.All {
 		}
 
 		Left() {
-			bindings().from(Header.this.page).on(Page.Property.history)
+			bindings().from(Header.this.page).on(Page.properties.history)
 					.typed(ObservableHistory.class).map(this::computeName)
 					.accept(this::setName);
 		}

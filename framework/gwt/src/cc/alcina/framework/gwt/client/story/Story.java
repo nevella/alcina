@@ -266,6 +266,21 @@ public interface Story {
 					}
 				}
 
+				/** An ScrollIntoView action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface ScrollIntoView {
+					public static class ConverterImpl
+							implements Converter<ScrollIntoView> {
+						@Override
+						public Story.Action convert(ScrollIntoView ann) {
+							return new Story.Action.Ui.ScrollIntoView();
+						}
+					}
+				}
+
 				/** An AwaitAbsent action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -312,6 +327,24 @@ public interface Story {
 						public Story.Action convert(Keys ann) {
 							return new Story.Action.Ui.Keys()
 									.withClear(ann.clear())
+									.withText(ann.value());
+						}
+					}
+				}
+
+				/** Define a script action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface Script {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<Script> {
+						@Override
+						public Story.Action convert(Script ann) {
+							return new Story.Action.Ui.Script()
 									.withText(ann.value());
 						}
 					}
@@ -740,6 +773,9 @@ public interface Story {
 				return null;
 			}
 
+			/**
+			 * Click the located element
+			 */
 			public static class Click implements Ui {
 			}
 
@@ -747,6 +783,12 @@ public interface Story {
 			 * Await the presence of the document locator
 			 */
 			public static class AwaitPresent implements Ui {
+			}
+
+			/**
+			 * Scroll the located element into view
+			 */
+			public static class ScrollIntoView implements Ui {
 			}
 
 			/**
@@ -845,6 +887,9 @@ public interface Story {
 
 			public static class AwaitAttributeValue extends ActionWithNameText {
 				public FilterOperator operator;
+			}
+
+			public static class Script extends ActionWithText {
 			}
 		}
 

@@ -100,7 +100,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
@@ -241,8 +240,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							new Class[payload.getMethodArgumentTypes().size()]);
 			Object[] methodArguments = (Object[]) payload.getMethodArguments()
 					.toArray(new Object[payload.getMethodArguments().size()]);
-			Method method = handler.getClass()
-					.getMethod(payload.getMethodName(), methodArgumentTypes);
+			String methodName = payload.getMethodName();
+			Method method = handler.getClass().getMethod(methodName,
+					methodArgumentTypes);
 			method.setAccessible(true);
 			WebMethod webMethod = method.getAnnotation(WebMethod.class);
 			if (webMethod != null) {
@@ -253,14 +253,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 			String key = Ax.format("callRpc::%s.%s",
 					handler.getClass().getSimpleName(), method.getName());
-			try {
-				MetricLogging.get().start(key);
-				Object result = method.invoke(handler, methodArguments);
-				return ReflectiveRemoteServiceHandler
-						.serializeForClient(result);
-			} finally {
-				MetricLogging.get().end(key);
+			long start = System.currentTimeMillis();
+			Object result = method.invoke(handler, methodArguments);
+			String serialized = ReflectiveRemoteServiceHandler
+					.serializeForClient(result);
+			if (methodName
+					.matches(Configuration.get("logRpcMetricMethodRegex"))) {
+				logger.info("Metric - {} - {} ms - {} bytes", methodName,
+						System.currentTimeMillis() - start,
+						serialized.length());
 			}
+			return serialized;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

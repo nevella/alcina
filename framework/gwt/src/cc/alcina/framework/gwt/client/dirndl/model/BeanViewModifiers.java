@@ -32,4 +32,9 @@ public @interface BeanViewModifiers {
 	 * render submit/cancel buttons
 	 */
 	boolean lifecycleControls() default true;
+
+	/*
+	 * do not bind to changes
+	 */
+	boolean detached() default false;
 }

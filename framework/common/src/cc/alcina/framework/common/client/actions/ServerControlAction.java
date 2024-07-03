@@ -3,10 +3,11 @@ package cc.alcina.framework.common.client.actions;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.csobjects.ServerControlParams;
+import cc.alcina.framework.common.client.job.Task;
 
 public class ServerControlAction
 		extends RemoteActionWithParameters<ServerControlParams>
-		implements Serializable, SynchronousAction {
+		implements Serializable, SynchronousAction, Task.RemotePerformable {
 	public ServerControlAction() {
 		setParameters(new ServerControlParams());
 	}

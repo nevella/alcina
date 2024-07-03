@@ -156,13 +156,16 @@ public class JobScheduler {
 		 * An issue - fallback on resubmit. FIXME - mvcc.jobs.2 - add logging
 		 * (is the event not received? out-of-order?)
 		 */
-		Transaction.ensureBegun();
-		ResubmitPolicy policy = ResubmitPolicy.forJob(job);
-		policy.visit(job);
-		job.setState(JobState.ABORTED);
-		job.setEndTime(new Date());
-		job.setResultType(JobResultType.DID_NOT_COMPLETE);
-		Transaction.commit();
+		TransactionEnvironment.withDomain(() -> {
+			Ax.sysLogHigh("Allocator timeout: %s", job);
+			Transaction.ensureBegun();
+			ResubmitPolicy policy = ResubmitPolicy.forJob(job);
+			policy.visit(job);
+			job.setState(JobState.ABORTED);
+			job.setEndTime(new Date());
+			job.setResultType(JobResultType.DID_NOT_COMPLETE);
+			Transaction.commit();
+		});
 		throw new RuntimeException("DEVEX::0 - awaitAllocator timeout");
 	}
 

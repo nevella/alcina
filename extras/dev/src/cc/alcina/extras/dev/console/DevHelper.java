@@ -77,6 +77,7 @@ import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
@@ -180,7 +181,7 @@ public abstract class DevHelper {
 	}
 
 	public void deleteClasspathCacheFiles() throws Exception {
-		File cacheFile = SEUtilities.getChildFile(getDataFolder(),
+		File cacheFile = FileUtils.child(getDataFolder(),
 				"servlet-classpath.ser");
 		cacheFile.delete();
 	}
@@ -294,7 +295,7 @@ public abstract class DevHelper {
 	public abstract File getDataFolder();
 
 	public File getDevFolder() {
-		File file = SEUtilities.getChildFile(getDataFolder(), "dev");
+		File file = FileUtils.child(getDataFolder(), "dev");
 		file.mkdirs();
 		return file;
 	}
@@ -333,7 +334,7 @@ public abstract class DevHelper {
 	}
 
 	public File getTestFolder() {
-		File file = SEUtilities.getChildFile(getDataFolder(), "ser");
+		File file = FileUtils.child(getDataFolder(), "ser");
 		file.mkdirs();
 		return file;
 	}

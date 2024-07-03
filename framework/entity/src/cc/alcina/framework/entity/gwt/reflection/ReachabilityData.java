@@ -646,7 +646,7 @@ class ReachabilityData {
 
 		List<Type> typeAndSuperTypes;
 
-		List<Type> subtypes;
+		List<Type> descendantTypes;
 
 		/*
 		 * Types which are either arguments or parameterized type arguments of
@@ -669,14 +669,14 @@ class ReachabilityData {
 		}
 
 		TypeHierarchy(JClassType classType,
-				Multiset<JClassType, Set<JClassType>> subtypes,
+				Multiset<JClassType, Set<JClassType>> descendantTypes,
 				Multiset<JClassType, Set<JClassType>> rpcSerializableTypes,
 				Multiset<JClassType, Set<JClassType>> settableTypes) {
 			type = Type.get(classType);
 			this.packageName = classType.getPackage().getName();
 			this.typeAndSuperTypes = classType.getFlattenedSupertypeHierarchy()
 					.stream().map(Type::get).collect(Collectors.toList());
-			this.subtypes = asList(classType, subtypes);
+			this.descendantTypes = asList(classType, descendantTypes);
 			this.settableTypes = asList(classType, settableTypes);
 			this.rpcSerializableTypes = asList(classType, rpcSerializableTypes);
 		}
@@ -688,8 +688,8 @@ class ReachabilityData {
 					: new ArrayList<>();
 		}
 
-		public Stream<Type> subtypes() {
-			return this.subtypes.stream();
+		public Stream<Type> descendantTypes() {
+			return this.descendantTypes.stream();
 		}
 
 		@Override

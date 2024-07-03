@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -57,8 +58,14 @@ public class OverlayPositions {
 	void show(Overlay model, ContainerOptions containerOptions) {
 		Preconditions.checkState(!openOverlays.containsKey(model));
 		DirectedLayout layout = new DirectedLayout();
+		ContextResolver resolver = ContextResolver.Default.get()
+				.createResolver();
+		if (model.logicalParent != null
+				&& model.logicalParent.provideIsBound()) {
+			resolver = model.logicalParent.provideNode().getResolver();
+		}
 		Rendered rendered = layout
-				.render(new OverlayContainer(model, containerOptions))
+				.render(resolver, new OverlayContainer(model, containerOptions))
 				.getRendered();
 		RenderedOverlay renderedOverlay = new RenderedOverlay(layout, rendered,
 				model);

@@ -86,6 +86,7 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 			if (oldService != null) {
 				try {
 					oldService.close();
+					oldService.watchedFiles.forEach(service::watch);
 				} catch (Exception e) {
 					throw WrappedRuntimeException.wrap(e);
 				}
@@ -192,7 +193,9 @@ class MacOsWatchService extends AbstractNonSunWatchService {
 			longestCommonKey = key.register(watcherThread.service, ENTRY_CREATE,
 					ENTRY_DELETE, ENTRY_MODIFY);
 		}
+		watcherThread.service.watch(file);
 		MacOsWatchKey nioKey = new MacOsWatchKey(path, this);
+		watchKeys.add(nioKey);
 		return nioKey;
 	}
 

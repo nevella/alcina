@@ -1,8 +1,10 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Button;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
@@ -22,8 +24,9 @@ class Dotburger extends Model.Fields {
 
 	Menu menu;
 
+	@TypedProperties
 	static class Menu extends Model.All implements ValueChange.Container {
-		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_Menu;
+		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_menu;
 
 		Heading section1 = new Heading("Selection type");
 
@@ -55,7 +58,9 @@ class Dotburger extends Model.Fields {
 
 	Dotburger() {
 		menu = new Menu();
-		dropdown = new Dropdown(new LeafModel.Button("dotburger"), menu)
+		Button button = new LeafModel.Button();
+		button.className = "dotburger";
+		dropdown = new Dropdown(button, menu)
 				.withLogicalAncestor(Dotburger.class).withXalign(Position.END);
 	}
 }

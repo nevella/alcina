@@ -53,6 +53,15 @@ public class DateUtil {
 		DateUtil.roundDate(d, false);
 	}
 
+	public static boolean isInCurrentMonth(Date date) {
+		if (date == null) {
+			return false;
+		}
+		Date now = new Date();
+		return now.getYear() == date.getYear()
+				&& now.getMonth() == date.getMonth();
+	}
+
 	public static String toYearMonth(Date date) {
 		return date == null ? null
 				: CommonUtils.format("%sM%s",

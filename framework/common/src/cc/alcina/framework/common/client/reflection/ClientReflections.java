@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 
 public class ClientReflections {
@@ -60,6 +61,9 @@ public class ClientReflections {
 				.map(mr -> mr.getClassReflector(clazz)).filter(Objects::nonNull)
 				.findFirst();
 		if (optional.isEmpty()) {
+			if (ClassUtil.isEnumSubclass(clazz)) {
+				return getClassReflector(clazz.getSuperclass());
+			}
 			if (clazz.getName().startsWith("java.") || clazz.isPrimitive()
 					|| (clazz.isArray()
 							&& clazz.getComponentType().isPrimitive())

@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
@@ -393,7 +394,7 @@ public class GraphProjection {
 				|| c == Character.class || c.isEnum() || c == Class.class
 				|| c == Enum.class || Number.class.isAssignableFrom(c)
 				|| Date.class.isAssignableFrom(c)
-				|| CommonUtils.isEnumOrEnumSubclass(c)
+				|| ClassUtil.isEnumOrEnumSubclass(c)
 				|| ProjectByValue.class.isAssignableFrom(c)
 				|| SafeHtml.class.isAssignableFrom(c);
 	}

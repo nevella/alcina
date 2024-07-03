@@ -212,4 +212,17 @@ public class Property implements HasAnnotations {
 		return owningType == this.owningType
 				&& Objects.equals(name, propertyName);
 	}
+
+	@Override
+	public boolean isClass(Class locationClass, String propertyName) {
+		return false;
+	}
+
+	public boolean isOrIsPropertyAncestor(Property property) {
+		if (property == this) {
+			return true;
+		}
+		return declaringType == property.declaringType
+				&& Objects.equals(getName(), property.getName());
+	}
 }

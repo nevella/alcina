@@ -7,4 +7,55 @@
 
     &:hover
       cursor: pointer
-      
+
+@mixin data-table
+  border-spacing: 0
+
+  > tbody > tr:nth-of-type(even) 
+    background-color:#f3f3fa
+
+  > tbody > tr:nth-of-type(1) td
+    padding-top: 8px
+  
+  > thead > tr > th
+    border-bottom: solid 1px #bbb
+    cursor: pointer
+    white-space: nowrap
+
+  td, th
+    padding: 6px 2px
+
+  td > value
+    &.numeric
+      text-align: right
+      display: block
+      padding-right: 1rem
+
+    &.nowrap
+      white-space: nowrap
+    
+@mixin no-wrap
+  td > *
+    white-space: nowrap
+    overflow-x: scroll
+    display: inline-block
+    max-width: 14rem
+
+  td > *:not(:first-child)
+    display: none
+
+  th
+    text-align: left
+    padding-right: 2rem
+
+  td > *.wide
+    max-width: 28rem
+
+@mixin clickable
+  tr:hover 
+    cursor: pointer
+    
+    > td
+      background-color: #eee
+
+

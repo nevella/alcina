@@ -34,8 +34,15 @@ public class TransactionEnvironmentNonTx implements TransactionEnvironment {
 
 	@Override
 	public void end() {
-		withDomainAccess0(() -> Preconditions
-				.checkState(LocalDomainStore.get().isEmptyCommitQueue()));
+		withDomainAccess0(() -> {
+			if (!LocalDomainStore.get().isEmptyCommitQueue()) {
+				LocalDomainStore.get().dumpCommitQueue();
+				throw new IllegalStateException(
+						"LocalDomainStore commit queue not empty");
+			}
+			Preconditions
+					.checkState(LocalDomainStore.get().isEmptyCommitQueue());
+		});
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 
 class SerializationSupport {
@@ -24,7 +25,8 @@ class SerializationSupport {
 			.impl(ConcurrentMapCreator.class).create();
 
 	// Optimisation: share support for all deserializers - they don't use
-	// context transience.
+	// context transience. Note that on the client this will have context
+	// (CLIENT) transience set to avoid unncessary reflection
 	static SerializationSupport deserializationInstance = new SerializationSupport();
 
 	static PropertySerialization getPropertySerialization(Property property) {
@@ -96,7 +98,7 @@ class SerializationSupport {
 	private Map<Class, Map<String, Property>> serializationPropertiesByName = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	private TransienceContext[] types;
+	TransienceContext[] types;
 
 	private SerializationSupport() {
 	}
@@ -106,7 +108,7 @@ class SerializationSupport {
 	}
 
 	private List<Property> getProperties0(Class forClass) {
-		Class clazz = Domain.resolveEntityClass(forClass);
+		Class clazz = ClassUtil.resolveEnumSubclassAndSynthetic(forClass);
 		return serializationProperties.computeIfAbsent(clazz, valueClass -> {
 			ClassReflector<?> classReflector = Reflections.at(valueClass);
 			return classReflector.properties().stream()

@@ -159,8 +159,10 @@ public class DownloadServlet extends HttpServlet {
 			Io.Streams.copy(new BufferedInputStream(new FileInputStream(f)),
 					response.getOutputStream());
 			TimerService.get().schedule(() -> {
-				items.remove(id);
-				f.delete();
+				DownloadItem toRemove = items.remove(id);
+				if (toRemove.deleteOnDownload) {
+					f.delete();
+				}
 			}, TimeConstants.ONE_MINUTE_MS);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -175,6 +177,8 @@ public class DownloadServlet extends HttpServlet {
 		private final String tmpFileName;
 
 		private String id;
+
+		public boolean deleteOnDownload = true;
 
 		public DownloadItem(String mimeType, String fileName,
 				String tmpFileName) {

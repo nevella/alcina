@@ -59,12 +59,14 @@ public class UrlBuilder {
 				String v = e.getValue();
 				sb.append(k == firstKey ? "?" : "&");
 				sb.append(k);
-				sb.append("=");
-				try {
-					sb.append(
-							Registry.impl(UrlComponentEncoder.class).encode(v));
-				} catch (Exception ex) {
-					throw new WrappedRuntimeException(ex);
+				if (v != null) {
+					sb.append("=");
+					try {
+						sb.append(Registry.impl(UrlComponentEncoder.class)
+								.encode(v));
+					} catch (Exception ex) {
+						throw new WrappedRuntimeException(ex);
+					}
 				}
 			});
 		}
@@ -96,8 +98,8 @@ public class UrlBuilder {
 		return this;
 	}
 
-	public UrlBuilder qsParam(String key, String value) {
-		qsParams.put(key, value);
+	public UrlBuilder qsParam(String key, Object value) {
+		qsParams.put(key, value.toString());
 		return this;
 	}
 

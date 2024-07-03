@@ -52,11 +52,13 @@ import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
@@ -88,7 +90,6 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 // FIXME - dirndl 1x1dz - actions - check validation, form submit
 @Directed
-@Registration(FormModel.class)
 public class FormModel extends Model
 		implements NodeEditorContext, DomEvents.Submit.Handler,
 		DomEvents.KeyDown.Handler, ModelEvents.Cancel.Handler,
@@ -382,14 +383,12 @@ public class FormModel extends Model
 			}
 			try {
 				LooseContext.push();
-				// FIXME - dirndl - cleanup GwittirBridge calling (use a
-				// builder)
 				if (attributes.nodeEditors) {
 					LooseContext.setTrue(
 							BeanFields.CONTEXT_ALLOW_NULL_BOUND_WIDGET_PROVIDERS);
 				}
-				return new FormModelTransformer().withContextNode(node)
-						.apply(attributes);
+				return new FormModelStateToFormModelTransformer()
+						.withContextNode(node).apply(attributes);
 			} finally {
 				LooseContext.pop();
 			}
@@ -421,8 +420,8 @@ public class FormModel extends Model
 			state.adjunct = state.editable
 					&& ClientTransformManager.cast().isProvisionalEditing();
 			state.lifecycleControls = lifecycleControls;
-			return new FormModelTransformer().withContextNode(node)
-					.apply(state);
+			return new FormModelStateToFormModelTransformer()
+					.withContextNode(node).apply(state);
 		}
 	}
 
@@ -526,7 +525,8 @@ public class FormModel extends Model
 			this.formBinding = formBinding;
 			this.bindable = bindable;
 			ContextResolver resolver = (ContextResolver) field.getResolver();
-			this.label = resolver.impl(LabelModel.class).withFormElement(this);
+			this.label = FormModelProvider.get().impl(LabelModel.class)
+					.withFormElement(this);
 			valueContainer = new ValueContainer();
 			valueContainer.value = new FormValueModel(this);
 			ValidationFeedback feedback = field.getFeedback();
@@ -712,12 +712,58 @@ public class FormModel extends Model
 		}
 	}
 
+	/*
+	 * Override (in the environment) to provide a custom formmodel
+	 * 
+	 * FIXME - dirndl - a lot of the complexity is because we don't have the
+	 * child resolver (say form resolver) available when populating the form,
+	 * because the node context is still the property containing the bindable
+	 * which is being transformed.
+	 * 
+	 * The solution is to move most form structure generation (FormElement etc)
+	 * to onBeforeRender for the formModel...for the moment, configurable form
+	 * contents are obtained via FormModelProvider.impl rather than (preferred)
+	 * resolver.impl
+	 */
+	@Registration.Singleton
+	@EnvironmentSingleton
+	public static class FormModelProvider {
+		public static FormModel.FormModelProvider get() {
+			return Registry.impl(FormModel.FormModelProvider.class);
+		}
+
+		public <T> Class<? extends T> resolve(Class<T> clazz) {
+			if (registrations == null) {
+				return clazz;
+			}
+			return registrations.computeIfAbsent(clazz, c -> c);
+		}
+
+		// only called in single-threaded env (so thread-safe)
+		public <T> void register(Class<T> registrationClass,
+				Class<? extends T> registeringClass) {
+			if (registrations == null) {
+				registrations = AlcinaCollections.newHashMap();
+			}
+			registrations.put(registrationClass, registeringClass);
+		}
+
+		Map<Class, Class> registrations;
+
+		/*
+		 * Note that the class *must* be registered
+		 */
+		public <T> T impl(Class<T> clazz) {
+			return (T) Reflections.newInstance(registrations.get(clazz));
+		}
+	}
+
 	@Reflected
-	public static class FormModelTransformer extends
+	public static class FormModelStateToFormModelTransformer extends
 			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
 		public FormModel apply(FormModelState state) {
-			FormModel formModel = Registry.impl(FormModel.class);
+			FormModel formModel = FormModelProvider.get().impl(FormModel.class);
 			formModel.state = state;
 			if (state.model == null && state.expectsModel) {
 				return formModel;
@@ -915,7 +961,6 @@ public class FormModel extends Model
 		public FormModel getFormModel();
 	}
 
-	@Registration(LabelModel.class)
 	public static class LabelModel extends Model {
 		protected FormElement formElement;
 
@@ -981,8 +1026,8 @@ public class FormModel extends Model
 				}
 			}
 			state.lifecycleControls = true;
-			return new FormModelTransformer().withContextNode(node)
-					.apply(state);
+			return new FormModelStateToFormModelTransformer()
+					.withContextNode(node).apply(state);
 		}
 	}
 

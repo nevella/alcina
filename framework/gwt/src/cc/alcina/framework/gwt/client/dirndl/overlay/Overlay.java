@@ -24,6 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.CtrlEnterPr
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.EscapePressed;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.MouseDownOutside;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Close;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
@@ -78,8 +79,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
-		InferredDomEvents.MouseDownOutside.Handler, Model.RerouteBubbledEvents,
-		ModelEvents.Submit.Handler, ModelEvents.Closed.Handler {
+		InferredDomEvents.MouseDownOutside.Handler, ModelEvents.Submit.Handler,
+		ModelEvents.Closed.Handler {
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -100,13 +101,13 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	private String cssClass;
 
-	private Model logicalParent;
+	Model logicalParent;
 
 	private List<Class<? extends Model>> logicalAncestors;
 
-	private ModelEvents.Submit.Handler modalSubmitHandler;
+	private ModelEvents.Submit.Handler submitHandler;
 
-	private ModelEvents.Closed.Handler modalClosedHandler;
+	private ModelEvents.Closed.Handler closedHandler;
 
 	/*
 	 * Don't close this overlay if the child is the event target
@@ -124,10 +125,14 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		removeOnMouseDownOutside = builder.removeOnMouseDownOutside;
 		logicalParent = builder.logicalParent;
 		logicalAncestors = builder.logicalAncestors;
-		modalSubmitHandler = builder.modalSubmitHandler;
-		modalClosedHandler = builder.modalClosedHandler;
+		submitHandler = builder.submitHandler;
+		closedHandler = builder.closedHandler;
 		cssClassParameter = builder.cssClass;
 		computeCssClass();
+	}
+
+	public boolean close() {
+		return close(null, false);
 	}
 
 	/**
@@ -275,8 +280,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			event.bubble();
 			return;
 		}
-		if (modalClosedHandler != null) {
-			modalClosedHandler.onClosed(event);
+		if (closedHandler != null) {
+			closedHandler.onClosed(event);
 		}
 		try {
 			reemittingClose = true;
@@ -323,8 +328,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		if (event.checkReemitted(this)) {
 			return;
 		}
-		if (modalSubmitHandler != null) {
-			modalSubmitHandler.onSubmit(event);
+		if (submitHandler != null) {
+			submitHandler.onSubmit(event);
 		}
 		event.reemit();
 	}
@@ -334,11 +339,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 				.withPosition(position);
 		OverlayPositions.get().show(this, options);
 		open = true;
-	}
-
-	@Override
-	public Model rerouteBubbledEventsTo() {
-		return logicalParent;
 	}
 
 	private boolean selfOrDescendantOverlayContains(Element element) {
@@ -425,9 +425,9 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		Model logicalParent;
 
-		ModelEvents.Submit.Handler modalSubmitHandler;
+		ModelEvents.Submit.Handler submitHandler;
 
-		ModelEvents.Closed.Handler modalClosedHandler;
+		ModelEvents.Closed.Handler closedHandler;
 
 		String cssClass;
 
@@ -494,15 +494,15 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			return this;
 		}
 
-		public Builder withModalClosedHandler(
-				ModelEvents.Closed.Handler modalClosedHandler) {
-			this.modalClosedHandler = modalClosedHandler;
+		public Builder
+				withClosedHandler(ModelEvents.Closed.Handler closedHandler) {
+			this.closedHandler = closedHandler;
 			return this;
 		}
 
-		public Builder withModalSubmitHandler(
-				ModelEvents.Submit.Handler modalSubmitHandler) {
-			this.modalSubmitHandler = modalSubmitHandler;
+		public Builder
+				withSubmitHandler(ModelEvents.Submit.Handler submitHandler) {
+			this.submitHandler = submitHandler;
 			return this;
 		}
 
@@ -515,6 +515,33 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 				withRemoveOnMouseDownOutside(boolean removeOnMouseDownOutside) {
 			this.removeOnMouseDownOutside = removeOnMouseDownOutside;
 			return this;
+		}
+	}
+
+	public static class Positioned
+			extends ModelEvent<OverlayContainer, Positioned.Handler> {
+		@Override
+		public void dispatch(Positioned.Handler handler) {
+			handler.onPositioned(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPositioned(Positioned event);
+		}
+	}
+
+	public static class PositionedDescendants extends
+			ModelEvent.DescendantEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Emitter> {
+		@Override
+		public void dispatch(PositionedDescendants.Handler handler) {
+			handler.onPositionedDescendants(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPositionedDescendants(PositionedDescendants event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
 		}
 	}
 }

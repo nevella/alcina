@@ -59,6 +59,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
+import cc.alcina.framework.entity.impl.PerDocumentSupplierCoreDocument;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -79,6 +80,7 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -562,7 +564,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					Configuration.properties.register(
 							Io.read().file(propertiesFile).asString());
 				} else {
-					File propertiesListFile = SEUtilities.getChildFile(
+					File propertiesListFile = FileUtils.child(
 							propertiesFile.getParentFile(),
 							"alcina-properties-files.txt");
 					if (propertiesListFile.exists()) {

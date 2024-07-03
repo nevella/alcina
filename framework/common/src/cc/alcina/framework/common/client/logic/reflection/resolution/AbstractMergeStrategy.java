@@ -14,6 +14,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver.ResolutionContext;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -146,7 +147,8 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			protected List<A> atClass(Class<A> annotationClass,
 					ClassReflector<?> reflector,
 					ClassReflector<?> resolvingReflector, Resolver resolver) {
-				A annotation = reflector.annotation(annotationClass);
+				A annotation = resolver.contextAnnotation(reflector,
+						annotationClass, ResolutionContext.Strategy);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);
 			}
@@ -170,7 +172,8 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			@Override
 			protected List<A> atProperty(Class<A> annotationClass,
 					Property property, Resolver resolver) {
-				A annotation = property.annotation(annotationClass);
+				A annotation = resolver.contextAnnotation(property,
+						annotationClass, ResolutionContext.Strategy);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);
 			}
@@ -182,7 +185,8 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			protected List<A> atClass(Class<A> annotationClass,
 					ClassReflector<?> reflector,
 					ClassReflector<?> resolvingReflector, Resolver resolver) {
-				A annotation = reflector.annotation(annotationClass);
+				A annotation = resolver.contextAnnotation(reflector,
+						annotationClass, ResolutionContext.Strategy);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);
 			}
@@ -190,7 +194,8 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			@Override
 			protected List<A> atProperty(Class<A> annotationClass,
 					Property property, Resolver resolver) {
-				A annotation = property.annotation(annotationClass);
+				A annotation = resolver.contextAnnotation(property,
+						annotationClass, ResolutionContext.Strategy);
 				return annotation == null ? Collections.emptyList()
 						: Collections.singletonList(annotation);
 			}

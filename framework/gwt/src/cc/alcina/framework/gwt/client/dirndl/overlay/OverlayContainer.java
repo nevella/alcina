@@ -31,7 +31,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 				to = "visibility",
 				transform = Binding.VisibilityVisibleHidden.class,
 				type = Type.STYLE_ATTRIBUTE) })
-public class OverlayContainer extends Model implements HasTag {
+public class OverlayContainer extends Model implements HasTag,
+		Model.RerouteBubbledEvents, Overlay.PositionedDescendants.Emitter {
 	private final Overlay contents;
 
 	private final ContainerOptions containerOptions;
@@ -48,12 +49,17 @@ public class OverlayContainer extends Model implements HasTag {
 				.addRegistration(() -> Window.addResizeHandler(this::onResize));
 	}
 
+	@Override
+	public Model rerouteBubbledEventsTo() {
+		return contents.logicalParent;
+	}
+
 	@Directed
 	public Model getContents() {
 		return this.contents;
 	}
 
-	public boolean getViewportCentered() {
+	public boolean isViewportCentered() {
 		return containerOptions.position.viewportCentered;
 	}
 
@@ -67,6 +73,18 @@ public class OverlayContainer extends Model implements HasTag {
 		if (event.isBound()) {
 			Scheduler.get().scheduleDeferred(this::position);
 		}
+	}
+
+	@Override
+	public String provideTag() {
+		// different tags (rather than css class) to support css
+		// last-of-type
+		return containerOptions.modal ? "overlay-container-modal"
+				: "overlay-container";
+	}
+
+	public void setVisible(boolean visible) {
+		set("visible", this.visible, visible, () -> this.visible = visible);
 	}
 
 	void onResize(ResizeEvent event) {
@@ -84,18 +102,8 @@ public class OverlayContainer extends Model implements HasTag {
 	 */
 	void position() {
 		containerOptions.position.toElement(provideElement()).apply();
-		setVisible(true);
-	}
-
-	@Override
-	public String provideTag() {
-		// different tags (rather than css class) to support css
-		// last-of-type
-		return containerOptions.modal ? "overlay-container-modal"
-				: "overlay-container";
-	}
-
-	public void setVisible(boolean visible) {
-		set("visible", this.visible, visible, () -> this.visible = visible);
+		emitEvent(Overlay.Positioned.class, this);
+		emitEvent(Overlay.PositionedDescendants.class, this);
+		Scheduler.get().scheduleFinally(() -> setVisible(true));
 	}
 }

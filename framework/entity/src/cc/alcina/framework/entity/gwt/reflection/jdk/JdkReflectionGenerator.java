@@ -14,11 +14,12 @@ import com.google.gwt.dev.util.log.PrintWriterTreeLogger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
-import cc.alcina.framework.entity.ClassUtil;
+import cc.alcina.framework.entity.ClassUtilEntity;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilterPeer;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityLinkerPeer;
+import cc.alcina.framework.entity.util.FileUtils;
 
 public class JdkReflectionGenerator {
 	public static Attributes attributes() {
@@ -117,8 +118,7 @@ public class JdkReflectionGenerator {
 
 		File generationDataFolder() {
 			if (generationDataFolder == null) {
-				generationDataFolder = SEUtilities.getChildFile(dataFolder(),
-						"data");
+				generationDataFolder = FileUtils.child(dataFolder(), "data");
 				generationDataFolder.mkdirs();
 			}
 			return generationDataFolder;
@@ -126,8 +126,7 @@ public class JdkReflectionGenerator {
 
 		File generationSrcFolder() {
 			if (generationSrcFolder == null) {
-				generationSrcFolder = SEUtilities.getChildFile(dataFolder(),
-						"src");
+				generationSrcFolder = FileUtils.child(dataFolder(), "src");
 				generationSrcFolder.mkdirs();
 			}
 			return generationSrcFolder;
@@ -136,7 +135,7 @@ public class JdkReflectionGenerator {
 		public void
 				loadClassDirectoryPaths(Class<?>... classpathDefiningClasses) {
 			classDirectoryPaths = Arrays.stream(classpathDefiningClasses)
-					.map(ClassUtil::getRootClasspathElement).distinct()
+					.map(ClassUtilEntity::getRootClasspathElement).distinct()
 					.collect(Collectors.toList());
 		}
 	}

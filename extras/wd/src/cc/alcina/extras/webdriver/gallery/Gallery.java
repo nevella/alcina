@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
 /**
@@ -205,8 +206,8 @@ public class Gallery {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		File toFileImage = SEUtilities.getChildFile(base, snapName + ".png");
-		File toFileHtml = SEUtilities.getChildFile(base, snapName + ".html");
+		File toFileImage = FileUtils.child(base, snapName + ".png");
+		File toFileHtml = FileUtils.child(base, snapName + ".html");
 		RemoteWebDriver remoteDriver = (RemoteWebDriver) driver;
 		try {
 			byte[] bytes = remoteDriver.getScreenshotAs(OutputType.BYTES);

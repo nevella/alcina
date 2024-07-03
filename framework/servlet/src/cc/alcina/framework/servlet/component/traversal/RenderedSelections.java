@@ -39,6 +39,14 @@ class RenderedSelections extends Model.Fields {
 	@Directed
 	SelectionMarkupArea selectionMarkup;
 
+	@Directed
+	SelectionTableArea selectionTable;
+
+	public void setSelectionTable(SelectionTableArea selectionTable) {
+		set("selectionTable", this.selectionTable, selectionTable,
+				() -> this.selectionTable = selectionTable);
+	}
+
 	Selection<?> selection;
 
 	boolean input;
@@ -47,7 +55,7 @@ class RenderedSelections extends Model.Fields {
 		this.page = page;
 		this.input = input;
 		this.heading = new Heading(input ? "Input" : "Output");
-		bindings().from(page).on(Page.Property.place)
+		bindings().from(page).on(Page.properties.place)
 				.typed(TraversalPlace.class)
 				.map(p -> p.provideSelection(SelectionType.VIEW))
 				.accept(this::setSelection);
@@ -72,6 +80,20 @@ class RenderedSelections extends Model.Fields {
 		// workaround for vs.code (or eclipse) compilation issue - the local
 		// traversal variable is a required intermediate
 		SelectionTraversal traversal = page.history.getObservable();
+		conditionallyPopulateMarkup(traversal);
+		conditionallyPopulateTable(traversal);
+	}
+
+	void conditionallyPopulateTable(SelectionTraversal traversal) {
+		if (input) {
+			return;
+		}
+		if (selection instanceof SelectionTableArea.HasTableRepresentation) {
+			setSelectionTable(new SelectionTableArea(selection));
+		}
+	}
+
+	void conditionallyPopulateMarkup(SelectionTraversal traversal) {
 		SelectionMarkup.Has markupProvider = traversal
 				.context(SelectionMarkup.Has.class);
 		if (markupProvider == null) {

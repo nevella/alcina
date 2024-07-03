@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -1499,7 +1500,7 @@ public class FlatTreeSerializer {
 					return EntityLocator.instanceLocator(entity)
 							.toRecoverableNumericString();
 				}
-			} else if (CommonUtils.isEnumish(value)) {
+			} else if (ClassUtil.isEnumish(value)) {
 				return normalizeEnumString(value);
 			} else if (value instanceof ExtensibleEnum) {
 				// same data as

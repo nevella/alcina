@@ -9,10 +9,10 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.MultipleImplementationsException;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.action.PlaceAction;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -37,6 +37,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * @param <P>
  */
 @Registration(DirectedActivity.class)
+@TypedProperties
 public class DirectedActivity<P extends BasePlace> extends Model
 		implements Activity, HasPlace<P> {
 	public static final Topic<DirectedActivity> topicActivityStarted = Topic
@@ -138,9 +139,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		return (DA) this;
 	}
 
-	public static enum PropertyName implements PropertyEnum {
-		place;
-	}
+	public static PackageProperties._DirectedActivity properties = PackageProperties.directedActivity;
 
 	@Registration.NonGenericSubtypes(Provider.class)
 	public static interface Provider<P extends Place> {

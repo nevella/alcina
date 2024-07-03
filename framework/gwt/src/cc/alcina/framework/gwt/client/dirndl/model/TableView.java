@@ -33,9 +33,9 @@ public class TableView extends
 					"No matching results found"));
 		} else {
 			Bindable first = bindables.iterator().next();
-			Class<? extends Bindable> resultClass = first.getClass();
-			List<Field> fields = BeanFields.query().forClass(resultClass)
+			List<Field> fields = BeanFields.query()
 					.forMultipleWidgetContainer(true).forBean(first)
+					.withAllowNullWidgetProviders(true)
 					.withResolver(node.getResolver()).listFields();
 			fields.stream().map(TableColumn::new)
 					.forEach(tableModel.header.getColumns()::add);

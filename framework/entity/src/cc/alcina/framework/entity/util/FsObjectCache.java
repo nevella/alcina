@@ -68,6 +68,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	private boolean createIfNonExistent;
 
+	public boolean returnNullOnDeserializationException;
+
 	public FsObjectCache(File root, Class<T> clazz,
 			ThrowingFunction<String, T> pathToValue) {
 		this.root = root;
@@ -180,6 +182,9 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 			}
 			return t;
 		} catch (Exception e) {
+			if (returnNullOnDeserializationException) {
+				return null;
+			}
 			if (!allowFromCachedObjects) {
 				throw e;
 			} else {
@@ -235,6 +240,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		try {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
+			cacheFile.getParentFile().mkdirs();
 			serializationStrategy.serializeToFile(t, cacheFile);
 			if (existsCache != null) {
 				existsCache.add(path);

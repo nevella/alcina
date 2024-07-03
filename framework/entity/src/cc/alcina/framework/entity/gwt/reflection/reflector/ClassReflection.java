@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.ClassUtil;
+import cc.alcina.framework.entity.ClassUtilEntity;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyAccessor;
 
@@ -486,7 +486,7 @@ public class ClassReflection extends ReflectionElement {
 					name -> fieldOrdinals.put(name, fieldOrdinals.size()));
 			propertyOrder = type.getAnnotation(PropertyOrder.class);
 			customOrder = PropertyOrder.Support.customOrder(propertyOrder,
-					ClassUtil.NO_ARGS_INSTANTIATOR);
+					ClassUtilEntity.NO_ARGS_INSTANTIATOR);
 		}
 
 		@Override

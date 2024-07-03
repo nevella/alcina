@@ -103,6 +103,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
@@ -207,6 +208,11 @@ public class DomainStore implements IDomainStore {
 		return queryPool;
 	}
 
+	// FIXME - localdomain.mvcc - remove (and refs)
+	public static boolean hasStores() {
+		return domainStores != null;
+	}
+
 	public static DomainStores stores() {
 		synchronized (DomainStores.class) {
 			if (domainStores == null) {
@@ -223,6 +229,10 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public static void waitUntilCurrentRequestsProcessed() {
+		// FIXME - localdomain.mvcc - remove
+		if (!hasStores()) {
+			return;
+		}
 		Transaction.ensureBegun();
 		writableStore().getPersistenceEvents().getQueue()
 				.waitUntilCurrentRequestsProcessed();
@@ -1949,7 +1959,7 @@ public class DomainStore implements IDomainStore {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 			case CHANGE_PROPERTY_REF:
-				return CommonUtils.isEnumOrEnumSubclass(evt.getValueClass())
+				return ClassUtil.isEnumOrEnumSubclass(evt.getValueClass())
 						|| domainDescriptor
 								.applyPostTransform(evt.getValueClass(), evt);
 			}

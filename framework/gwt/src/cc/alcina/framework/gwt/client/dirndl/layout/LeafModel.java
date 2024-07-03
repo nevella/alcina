@@ -9,9 +9,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer.HasDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public class LeafModel {
+// LeafModel itself is just a naming container
+public abstract class LeafModel {
 	@Directed(tag = "div")
 	public static class HtmlBlock extends Model implements HasValue<String> {
 		public String value;
@@ -197,13 +199,22 @@ public class LeafModel {
 		@Binding(type = Type.CLASS_PROPERTY)
 		public String className;
 
-		public Button(String className) {
-			this(className, null);
+		@Binding(type = Type.PROPERTY)
+		public String type = "button";
+
+		@Binding(type = Type.INNER_TEXT)
+		public String text;
+
+		public Button() {
 		}
 
-		public Button(String className, String title) {
-			this.className = className;
-			this.title = title;
+		public static class To<T> implements ModelTransform<T, Button> {
+			@Override
+			public Button apply(T t) {
+				Button button = new Button();
+				button.text = new HasDisplayNameRenderer().getModelText(t);
+				return button;
+			}
 		}
 	}
 }

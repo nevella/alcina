@@ -9,13 +9,13 @@ import com.google.gwt.dom.client.StyleInjector;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
-import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Io;
@@ -92,12 +92,14 @@ public class EntityGraphView {
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
+			PermissionsManager.get().pushSystemUser();
 			Transaction.ensureBegun();
 		}
 
 		@Override
 		public void onExitFrame() {
 			Transaction.end();
+			PermissionsManager.get().popSystemUser();
 		}
 
 		public String getTraversalPath() {
@@ -127,6 +129,7 @@ public class EntityGraphView {
 
 		@Override
 		public void init() {
+			super.init();
 		}
 
 		TraversalPlace currentPlace;
@@ -172,8 +175,6 @@ public class EntityGraphView {
 			SelectionTraversal traversal;
 
 			RootLayer rootLayer;
-
-			SelectionMarkup selectionMarkup;
 
 			void initialiseTraversal() {
 				traversal = new SelectionTraversal(this);

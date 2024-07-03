@@ -102,8 +102,14 @@ public class TableModel extends Model implements NodeEditorContext {
 			attributes.adjunct = args.adjunct();
 			attributes.nodeEditors = args.nodeEditors();
 			attributes.editable = args.editable();
+			attributes.detached = args.detached();
 		}
 		return resolver;
+	}
+
+	@Override
+	public boolean isDetached() {
+		return attributes.detached;
 	}
 
 	@Override
@@ -125,6 +131,8 @@ public class TableModel extends Model implements NodeEditorContext {
 	}
 
 	static class Attributes {
+		boolean detached;
+
 		boolean nodeEditors = true;
 
 		boolean editable;

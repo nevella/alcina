@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.R
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorChooser.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answer;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOnBind;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.TagEditor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 
@@ -60,7 +61,7 @@ public abstract class DecoratorChooser extends Model.Fields
 		attributes.withFocusOnBind(true);
 		attributes.withNonOverlaySuggestionResults(true);
 		attributes.withSuggestionXAlign(Position.END);
-		attributes.withSuggestOnBind(true);
+		attributes.withSuggestOnBind(SuggestOnBind.YES);
 		attributes.withEditorSupplier(() -> tagEditor);
 		return attributes;
 	}

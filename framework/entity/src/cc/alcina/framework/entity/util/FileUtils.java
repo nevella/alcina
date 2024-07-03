@@ -25,4 +25,9 @@ public class FileUtils {
 				relativeResourcePath.replaceFirst("(.+)/(.+)", "$2"));
 		return fileData;
 	}
+
+	public static File child(File folder, String childFileName) {
+		return new File(
+				String.format("%s/%s", folder.getPath(), childFileName));
+	}
 }

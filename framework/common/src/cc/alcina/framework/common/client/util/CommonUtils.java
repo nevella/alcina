@@ -687,7 +687,7 @@ public class CommonUtils {
 	public static <T extends Throwable> T
 			extractCauseOfClass(Throwable throwable, Class<T> throwableClass) {
 		while (true) {
-			if (isDerivedFrom(throwable, throwableClass)) {
+			if (ClassUtil.isDerivedFrom(throwable, throwableClass)) {
 				return (T) throwable;
 			}
 			if (throwable.getCause() == throwable
@@ -824,7 +824,7 @@ public class CommonUtils {
 
 	public static Class getComparableType(Object o) {
 		Class<? extends Object> clazz = o.getClass();
-		return isEnumSubclass(clazz) ? clazz.getSuperclass() : clazz;
+		return ClassUtil.isEnumSubclass(clazz) ? clazz.getSuperclass() : clazz;
 	}
 
 	public static Class<? extends Enum> getEnumType(Enum e) {
@@ -1026,6 +1026,42 @@ public class CommonUtils {
 		return list.get(idx);
 	}
 
+	// https://stackoverflow.com/questions/21341027/find-indexof-a-byte-array-within-another-byte-array
+	public static int indexOf(byte[] source, int sourceOffset, int sourceCount,
+			byte[] target, int targetOffset, int targetCount, int fromIndex) {
+		if (fromIndex >= sourceCount) {
+			return (targetCount == 0 ? sourceCount : -1);
+		}
+		if (fromIndex < 0) {
+			fromIndex = 0;
+		}
+		if (targetCount == 0) {
+			return fromIndex;
+		}
+		byte first = target[targetOffset];
+		int max = sourceOffset + (sourceCount - targetCount);
+		for (int i = sourceOffset + fromIndex; i <= max; i++) {
+			/* Look for first character. */
+			if (source[i] != first) {
+				while (++i <= max && source[i] != first)
+					;
+			}
+			/* Found first character, now look at the rest of v2 */
+			if (i <= max) {
+				int j = i + 1;
+				int end = j + targetCount - 1;
+				for (int k = targetOffset + 1; j < end
+						&& source[j] == target[k]; j++, k++)
+					;
+				if (j == end) {
+					/* Found whole string. */
+					return i - sourceOffset;
+				}
+			}
+		}
+		return -1;
+	}
+
 	public static int indexOf(Iterator iterator, Object obj) {
 		int i = 0;
 		while (iterator.hasNext()) {
@@ -1087,43 +1123,6 @@ public class CommonUtils {
 		return false;
 	}
 
-	public static boolean isDerivedFrom(Object o, Class c) {
-		if (o == null) {
-			return false;
-		}
-		Class c2 = o.getClass();
-		while (c2 != Object.class) {
-			if (c2 == c) {
-				return true;
-			}
-			c2 = c2.getSuperclass();
-		}
-		return false;
-	}
-
-	public static boolean isEnumish(Object test) {
-		Class<? extends Object> clazz = test.getClass();
-		return clazz.isEnum() || isEnumSubclass(clazz);
-	}
-
-	public static boolean isEnumOrEnumSubclass(Class c) {
-		return c.isEnum() || isEnumSubclass(c);
-	}
-
-	public static boolean isEnumSubclass(Class c) {
-		return c.getSuperclass() != null && c.getSuperclass().isEnum();
-	}
-
-	@SuppressWarnings("deprecation")
-	public static boolean isInCurrentMonth(Date date) {
-		if (date == null) {
-			return false;
-		}
-		Date now = new Date();
-		return now.getYear() == date.getYear()
-				&& now.getMonth() == date.getMonth();
-	}
-
 	public static boolean isLetterOnly(String string) {
 		return string.matches("[a-zA-Z]+");
 	}
@@ -1169,7 +1168,7 @@ public class CommonUtils {
 
 	public static boolean isStandardJavaClassOrEnum(Class clazz) {
 		return isStandardJavaClass(clazz) || clazz.isEnum()
-				|| isEnumSubclass(clazz);
+				|| ClassUtil.isEnumSubclass(clazz);
 	}
 
 	public static boolean isWholeNumber(double d) {

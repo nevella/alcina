@@ -132,4 +132,9 @@ public class InputEditor extends Model implements Suggestor.Editor,
 		ask.setValue(input.getCurrentValue());
 		return ask;
 	}
+
+	@Override
+	public boolean hasNonEmptyInput() {
+		return Ax.notBlank(input.getValue());
+	}
 }
