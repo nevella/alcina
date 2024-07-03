@@ -18,9 +18,15 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 public class BaseTextCriterionPack {
 	public interface BaseTextCriterionHandler<SC extends TextCriterion, T>
 			extends DomainCriterionFilter<SC> {
+		default boolean normaliseCase() {
+			return true;
+		}
+
 		@Override
 		default DomainFilter getFilter(SC sc) {
-			String text = TextUtils.normalisedLcKey(sc.getValue());
+			String text = normaliseCase()
+					? TextUtils.normalisedLcKey(sc.getValue())
+					: sc.getValue();
 			if (text.isEmpty()) {
 				return null;
 			}

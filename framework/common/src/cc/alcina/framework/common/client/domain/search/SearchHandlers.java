@@ -78,6 +78,16 @@ public class SearchHandlers {
 
 	static void processHandlers(SearchDefinition def,
 			Consumer<DomainFilter> filterConsumer) {
+		processHandlers(def, filterConsumer, 0);
+		processHandlers(def, filterConsumer, 1);
+	}
+
+	/*
+	 * The pass parameter is a very simple weighting - initially only ex-graph
+	 * filters will be 1, all others zero
+	 */
+	private static void processHandlers(SearchDefinition def,
+			Consumer<DomainFilter> filterConsumer, int pass) {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
 			if (!cg.provideIsEmpty()) {
@@ -93,6 +103,9 @@ public class SearchHandlers {
 								Ax.format("No handler for def/class %s - %s\n",
 										def.getClass().getSimpleName(),
 										sc.getClass().getSimpleName()));
+						continue;
+					}
+					if (handler.queryCost() != pass) {
 						continue;
 					}
 					DomainFilter filter = handler.getFilter(sc);

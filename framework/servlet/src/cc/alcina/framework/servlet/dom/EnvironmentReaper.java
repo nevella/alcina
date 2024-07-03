@@ -46,8 +46,8 @@ class EnvironmentReaper {
 				reap = true;
 			}
 		}
-		if (!TimeConstants.within(lastPacketReceived,
-				300 * TimeConstants.ONE_SECOND_MS)) {
+		if (env.nonInteractionTimeout != 0 && !TimeConstants
+				.within(lastPacketReceived, env.nonInteractionTimeout)) {
 			reap = true;
 		}
 		if (reap) {

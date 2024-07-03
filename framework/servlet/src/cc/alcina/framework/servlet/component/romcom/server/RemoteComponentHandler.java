@@ -2,6 +2,9 @@ package cc.alcina.framework.servlet.component.romcom.server;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -210,9 +213,15 @@ class RemoteComponentHandler {
 			RemoteComponentProtocol.Session session = null;
 			Exception sessionCreationException = null;
 			try {
+				List<String> headers = Collections
+						.list(request.getHeaderNames()).stream()
+						.map(n -> Ax.format("%s=%s", n, request.getHeader(n)))
+						.collect(Collectors.toList());
+				logger.info("Creating environment - http headers: {}", headers);
 				session = component.createEnvironment(request);
 			} catch (Exception e) {
 				sessionCreationException = e;
+				logger.warn("Exception creating session", e);
 			}
 			if (session != null) {
 				String sessionJson = StringEscapeUtils.escapeJavaScript(
