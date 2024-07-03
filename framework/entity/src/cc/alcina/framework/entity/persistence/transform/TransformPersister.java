@@ -50,6 +50,7 @@ public class TransformPersister {
 					LooseContext.pushWithTrue(
 							TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
 					LooseContext.set(CONTEXT_TRANSFORM_LAYER_WRAPPER, wrapper);
+					InFlightPersistence.get().register(token, true);
 					if (Configuration.is("logAllTransforms")) {
 						synchronized (TransformPersister.class) {
 							Ax.err("\n\n%s================",
@@ -70,6 +71,7 @@ public class TransformPersister {
 				} catch (RuntimeException ex) {
 					// TransformPersisterInPersistenceContext.ThreadData.get()
 					// .logLastFlushData();
+					InFlightPersistence.get().onThrowException(token, ex);
 					DeliberatelyThrownWrapperException dtwe = null;
 					if (ex instanceof DeliberatelyThrownWrapperException) {
 						dtwe = (DeliberatelyThrownWrapperException) ex;
@@ -88,6 +90,7 @@ public class TransformPersister {
 								.putExceptionInWrapper(token, ex, wrapper);
 					}
 				} finally {
+					InFlightPersistence.get().register(token, false);
 					LooseContext.pop();
 				}
 				if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
