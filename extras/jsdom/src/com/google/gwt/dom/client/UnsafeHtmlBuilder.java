@@ -55,10 +55,24 @@ public final class UnsafeHtmlBuilder {
 
 	private final StringBuilder sb = new StringBuilder();
 
+	/*
+	 * If true, tags such as <img> will not be closed - so <img src='xx'>, not
+	 * <img src='xx' />
+	 */
+	final boolean htmlTags;
+
+	final boolean pretty;
+
+	int depth;
+
 	/**
 	 * Constructs an empty UnsafeSafeHtmlBuilder.
+	 * 
+	 * @param pretty
 	 */
-	public UnsafeHtmlBuilder() {
+	public UnsafeHtmlBuilder(boolean htmlTags, boolean pretty) {
+		this.htmlTags = htmlTags;
+		this.pretty = pretty;
 	}
 
 	/*
@@ -338,6 +352,16 @@ public final class UnsafeHtmlBuilder {
 		@Override
 		public String toString() {
 			return "safe: \"" + asString() + "\"";
+		}
+	}
+
+	public void modifyDepth(int i) {
+		depth += i;
+		if (pretty) {
+			sb.append('\n');
+			for (int idx = 0; idx < depth; idx++) {
+				sb.append(' ');
+			}
 		}
 	}
 }

@@ -639,7 +639,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public String getOuterHtml() {
-		return local().getOuterHtml();
+		return getOuterHtml(false);
 	}
 
 	@Override
@@ -729,7 +729,19 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public String getTextContent() throws DOMException {
-		throw new UnsupportedOperationException();
+		StringBuilder builder = new StringBuilder();
+		getTextContent0(builder);
+		return builder.toString();
+	}
+
+	void getTextContent0(StringBuilder builder) throws DOMException {
+		streamChildren().forEach(n -> {
+			if (n.getNodeType() == Node.TEXT_NODE) {
+				builder.append(n.getNodeValue());
+			} else if (n.getNodeType() == Node.ELEMENT_NODE) {
+				((Element) n).getTextContent0(builder);
+			}
+		});
 	}
 
 	@Override
@@ -1509,5 +1521,9 @@ public class Element extends Node implements ClientDomElement,
 
 	public DomIds.IdList getSubtreeIds() {
 		return getOwnerDocument().localDom.domIds.getSubtreeIds(this);
+	}
+
+	public String getOuterHtml(boolean pretty) {
+		return local().getOuterHtml(pretty);
 	}
 }

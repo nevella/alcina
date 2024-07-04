@@ -41,7 +41,7 @@ public interface DomEnvironment {
 
 	public DomDocument loadFromUrl(String url);
 
-	public Node loadFromXml(String xml) throws Exception;
+	public Node loadFromXml(String xml, boolean gwtDocument) throws Exception;
 
 	public String log(DomNode xmlNode, boolean pretty);
 
