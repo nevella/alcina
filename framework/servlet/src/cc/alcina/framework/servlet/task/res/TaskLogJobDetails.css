@@ -1,21 +1,22 @@
 body {
-	font-family: 'serif';
+  font-family: "serif";
 }
 td {
-	padding: 2px 8px;
-	vertical-align: top;
-	max-height: 6em;
-	overflow:scroll;
-	white-space: pre-wrap;
-	max-width: calc(100vw - 200px);
-	word-break: break-all;
+  padding: 2px 8px;
+  vertical-align: top;
+  max-height: 6em;
+  overflow: auto;
+  white-space: pre-wrap;
+  max-width: calc(100vw - 200px);
+  word-break: break-all;
 }
 
-.allocation-queue,.stack-trace{
-	margin-bottom:1em;
-	white-space: pre;
-	font-family:Courier,fixed-width;
-	font-size: 14px;
-    font-weight: 100;
-    -webkit-font-smoothing: none;
+.allocation-queue,
+.stack-trace {
+  margin-bottom: 1em;
+  white-space: pre;
+  font-family: Courier, fixed-width;
+  font-size: 14px;
+  font-weight: 100;
+  -webkit-font-smoothing: none;
 }
