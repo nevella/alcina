@@ -1,13 +1,11 @@
 package com.google.gwt.dom.client;
 
-import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
-public class ElementNull extends NodeLocalNull
-		implements ClientDomElement, LocalDomElement {
+public class ElementNull extends NodeLocalNull implements ClientDomElement {
 	static final ElementNull INSTANCE = new ElementNull();
 
 	private ElementNull() {
@@ -25,11 +23,6 @@ public class ElementNull extends NodeLocalNull
 
 	@Override
 	public Node cloneNode(boolean deep) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Element createOrReturnChild(String tagName) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -110,11 +103,6 @@ public class ElementNull extends NodeLocalNull
 
 	@Override
 	public NodeList<Element> getElementsByTagName(String name) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int getEventBits() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -293,11 +281,6 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public List<LocalDomNode> localDomChildren() {
-		throw new UnsupportedOperationException();
-	}
-
 	int orSunkEventsOfAllChildren(int sunk) {
 		throw new UnsupportedOperationException();
 	}
@@ -362,10 +345,6 @@ public class ElementNull extends NodeLocalNull
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-	}
-
-	@Override
-	public void setOuterHtml(String html) {
 	}
 
 	@Override

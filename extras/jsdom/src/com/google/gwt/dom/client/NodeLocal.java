@@ -8,7 +8,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public abstract class NodeLocal implements LocalDomNode {
+public abstract class NodeLocal implements ClientDomNode {
 	private static Node nodeFor(NodeLocal nodeLocal) {
 		return nodeLocal == null ? null : nodeLocal.node();
 	}
@@ -191,11 +191,6 @@ public abstract class NodeLocal implements LocalDomNode {
 			cursor = cursor.parentNode;
 		}
 		return false;
-	}
-
-	@Override
-	public List<LocalDomNode> localDomChildren() {
-		return (List) getChildren();
 	}
 
 	@Override

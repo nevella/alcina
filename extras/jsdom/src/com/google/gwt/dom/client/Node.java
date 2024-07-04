@@ -472,7 +472,7 @@ public abstract class Node
 		if (domNode == null) {
 			return null;
 		}
-		if (domNode instanceof LocalDomNode) {
+		if (!(domNode instanceof NodeRemote)) {
 			return local();
 		} else {
 			return remote();

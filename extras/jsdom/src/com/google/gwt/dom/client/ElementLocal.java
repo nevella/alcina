@@ -27,8 +27,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntCounter;
 
 // FIXME - dirndl - move all event code from Element to here?
-public class ElementLocal extends NodeLocal
-		implements ClientDomElement, LocalDomElement {
+public class ElementLocal extends NodeLocal implements ClientDomElement {
 	static transient IntCounter _idCounter = new IntCounter(1);
 
 	private static final RegExp PERMITTED_TAGS = RegExp
@@ -195,7 +194,6 @@ public class ElementLocal extends NodeLocal
 		}
 	}
 
-	@Override
 	public Element createOrReturnChild(String tagName) {
 		Optional<Node> optional = node().getChildNodes().stream()
 				.filter(n -> n.getNodeName().equals(tagName)).findFirst();
@@ -318,7 +316,6 @@ public class ElementLocal extends NodeLocal
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
 	public int getEventBits() {
 		return this.eventBits;
 	}
@@ -690,7 +687,6 @@ public class ElementLocal extends NodeLocal
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
 	public void setOuterHtml(String html) {
 		RegExp tag = RegExp.compile("<([A-Za-z0-9_\\-.]+)( .+?)?>(.+)?</.+>",
 				"m");
