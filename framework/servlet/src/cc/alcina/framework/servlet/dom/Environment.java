@@ -64,6 +64,10 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * 
  * Other notes: dirndl event binding causes changes propagation to run in the
  * appropriate environment context via RemoteResolver
+ * 
+ * TODO - the syncing could (should) be simplified by only allowing
+ * clientexecutionqueue to call runinclientframe (all messages run in the client
+ * frame)
  */
 public class Environment {
 	public static class TimerProvider implements Timer.Provider {
@@ -595,7 +599,7 @@ public class Environment {
 	void end(String reason) {
 		logger.info("Stopping env [{}] :: {}", reason, session.id);
 		if (clientStarted) {
-			runInClientFrame(() -> ui.end());
+			dispatch(() -> ui.end());
 		}
 		queue.stop();
 		EnvironmentManager.get().deregister(this);

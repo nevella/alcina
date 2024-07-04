@@ -116,8 +116,10 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 			builder.appendHtmlConstantNoCheck("\"");
 		}
 		builder.appendHtmlConstantNoCheck(">");
+		builder.modifyDepth(1);
 		appendChildContents(builder);
-		if (!HtmlParser.isSelfClosingTag(tagName)) {
+		builder.modifyDepth(-1);
+		if (!(builder.htmlTags && HtmlParser.isSelfClosingTag(tagName))) {
 			builder.appendHtmlConstantNoCheck("</");
 			builder.appendHtmlConstant(tagName);
 			builder.appendHtmlConstantNoCheck(">");
@@ -342,7 +344,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	public String getInnerHTML() {
-		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder(
+				getOwnerDocument().htmlTags, false);
 		appendChildContents(builder);
 		return builder.toSafeHtml().asString();
 	}
@@ -421,7 +424,12 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	public String getOuterHtml() {
-		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder();
+		return getOuterHtml(false);
+	}
+
+	public String getOuterHtml(boolean pretty) {
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder(
+				getOwnerDocument().htmlTags, pretty);
 		appendOuterHtml(builder);
 		return builder.toSafeHtml().asString();
 	}

@@ -107,6 +107,9 @@ public abstract class LooseContext {
 		getContext().allowUnbalancedFrameRemoval(clazz, pushMethodName);
 	}
 
+	// FIXME - context - in general replace with copy/restore snapshot (which
+	// recovers from exceptions). *Possibly* not in methodcontext, for
+	// performance
 	public static void confirmDepth(int depth) {
 		if (depth != depth()) {
 			getContext().clearStack();
@@ -299,5 +302,14 @@ public abstract class LooseContext {
 	}
 
 	public static class LooseContextStackException extends RuntimeException {
+	}
+
+	/*
+	 * For framework calls where it's possible that a stack exception will
+	 * occur, but imperative that it not propagate, restore the context snapshot
+	 * in a finally block
+	 */
+	public static void restore(LooseContextInstance contextSnapshot) {
+		contextSnapshot.cloneFieldsTo(contextSnapshot);
 	}
 }

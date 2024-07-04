@@ -30,7 +30,7 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
-	public Node loadFromXml(String xml) throws Exception {
+	public Node loadFromXml(String xml, boolean gwtDocument) throws Exception {
 		throw new UnsupportedOperationException();
 	}
 
