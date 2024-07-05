@@ -37,13 +37,15 @@ public class MeasureContainment {
 
 	Containment root;
 
+	List<MeasureSelection> measures;
+
 	public MeasureContainment(Measure.Token.Order order,
 			Collection<? extends MeasureSelection> selections) {
 		MeasureTreeComparator comparator = new MeasureTreeComparator(
 				// this will also remove overlapping text nodes, so we
 				// need to relax a comparator constraint
 				order.copy().withIgnoreNoPossibleChildren());
-		List<MeasureSelection> measures = selections.stream().sorted(comparator)
+		measures = selections.stream().sorted(comparator)
 				.collect(Collectors.toList());
 		ContainmentComputation computation = new ContainmentComputation(
 				measures);
@@ -91,8 +93,10 @@ public class MeasureContainment {
 			if (includeSelf) {
 				ancestorList.add(this);
 			}
+			Set<Containment> visited = AlcinaCollections.newLinkedHashSet();
 			Set<Containment> pending = AlcinaCollections.newLinkedHashSet();
 			pending.add(this);
+			visited.add(this);
 			while (pending.size() > 0) {
 				Iterator<Containment> itr = pending.iterator();
 				Containment next = itr.next();
@@ -101,6 +105,9 @@ public class MeasureContainment {
 					Containment ancestorContainment = containments.get(c);
 					ancestorList.add(ancestorContainment);
 					pending.add(ancestorContainment);
+					if (!visited.add(ancestorContainment)) {
+						throw new IllegalStateException("Circular containment");
+					}
 				});
 			}
 			return ancestorList.stream().sorted();

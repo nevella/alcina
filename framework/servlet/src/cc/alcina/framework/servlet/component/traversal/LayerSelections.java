@@ -24,8 +24,10 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AnswerImpl;
-import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.AppSuggestionArea;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.SuggestionSelected;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
@@ -163,6 +165,7 @@ class LayerSelections extends Model.All {
 			}
 
 			@Directed.Delegating
+			@DirectedContextResolver(AppSuggestor.Resolver.class)
 			class FilterSuggestor extends Model.All
 					implements ModelEvents.SelectionChanged.Handler {
 				Suggestor suggestor;
@@ -189,13 +192,13 @@ class LayerSelections extends Model.All {
 				// contextualised app suggestions
 				@Override
 				public void onSelectionChanged(SelectionChanged event) {
-					AppSuggestionArea suggestion = (AppSuggestionArea) suggestor
+					AppSuggestionEntry suggestion = (AppSuggestionEntry) suggestor
 							.provideSelectedValue();
-					if (suggestion.suggestion.url() != null) {
-						History.newItem(suggestion.suggestion.url());
+					if (suggestion.url() != null) {
+						History.newItem(suggestion.url());
 					} else {
-						event.reemitAs(this, suggestion.suggestion.modelEvent(),
-								suggestion.suggestion.eventData());
+						event.reemitAs(this, suggestion.modelEvent(),
+								suggestion.eventData());
 					}
 					suggestor.closeSuggestions();
 					overlay.close(null, false);
