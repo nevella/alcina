@@ -375,6 +375,7 @@ public class Toolbar extends Composite
 									.getDataImages().downGrey());
 					dropDown = new StyledAWidget(aip.getHTML(), true);
 					dropDown.addStyleName("button-grey drop-down");
+					dropDown.setTitle("button-secondary-choices-dropdown");
 					sp.add(dropDown);
 					dropDown.addClickHandler(new ClickHandler() {
 						@Override

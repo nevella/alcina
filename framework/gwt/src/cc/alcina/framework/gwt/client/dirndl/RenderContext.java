@@ -192,7 +192,7 @@ public class RenderContext extends LooseContextInstance {
 	@Override
 	public RenderContext snapshot() {
 		RenderContext context = new RenderContext();
-		cloneToSnapshot(context);
+		cloneFieldsTo(context);
 		return context;
 	}
 }

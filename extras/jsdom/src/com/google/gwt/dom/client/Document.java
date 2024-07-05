@@ -89,6 +89,11 @@ public class Document extends Node
 
 	public boolean resolveSvgStyles = false;
 
+	/*
+	 * Guides how inner/outerhtml is generated (doesn't affect parsing)
+	 */
+	public boolean htmlTags = true;
+
 	protected Document(RemoteType remoteType) {
 		this.local = new DocumentLocal();
 		this.local.document = this;
@@ -1265,5 +1270,11 @@ public class Document extends Node
 	 */
 	public void setNextAttachId(int id) {
 		localDom.domIds.setNextAttachId(id);
+	}
+
+	public boolean isHtmlTags() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'isHtmlTags'");
 	}
 }

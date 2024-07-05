@@ -88,7 +88,7 @@ public abstract class Client implements ContextFrame {
 	}
 
 	public static boolean has() {
-		return contextProvider != null;
+		return contextProvider != null && contextProvider.hasFrame();
 	}
 
 	public static boolean isCurrentPlace(Place place) {

@@ -30,6 +30,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Map;
 
+import com.google.gwt.dev.DeletedFiles;
 import com.google.gwt.thirdparty.guava.common.collect.ArrayListMultimap;
 import com.google.gwt.thirdparty.guava.common.collect.Maps;
 import com.google.gwt.thirdparty.guava.common.collect.Multimap;
@@ -160,6 +161,7 @@ class ResourceAccumulator {
 
 	private void onRemovedPath(Path path) {
 		resolutionsByResource.remove(toFileResource(path));
+		DeletedFiles.topicFileDeleted.publish(path.toFile());
 		for (Path child : childPathsByParentPath.get(path)) {
 			onRemovedPath(child);
 		}

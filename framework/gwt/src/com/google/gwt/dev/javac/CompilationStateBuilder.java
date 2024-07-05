@@ -40,6 +40,7 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.dev.CompilerContext;
+import com.google.gwt.dev.DeletedFiles;
 import com.google.gwt.dev.javac.JdtCompiler.UnitProcessor;
 import com.google.gwt.dev.javac.typemodel.TypeOracle;
 import com.google.gwt.dev.jjs.CorrelationFactory.DummyCorrelationFactory;
@@ -111,6 +112,11 @@ public class CompilationStateBuilder {
 					.create(resource);
 			CompilationUnit cachedUnit = unitCache
 					.find(resource.getPathPrefix() + resource.getPath());
+			if (resource.getLocation().startsWith("file:/")) {
+				if (DeletedFiles.wasDeleted(resource.getLocation())) {
+					continue;
+				}
+			}
 			if (cachedUnit != null && cachedUnit.getLastModified() == resource
 					.getLastModified()) {
 				// As verification is costly, this only runs the check when

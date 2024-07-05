@@ -68,6 +68,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -726,8 +727,17 @@ public class JobRegistry {
 			withDomain(deferMetadataPersistence, () -> context.persistStart());
 			context.beginLogBuffer();
 			if (taskEnabled) {
-				acquireResources(job, performer.getResources());
-				performer.performAction((T) job.getTask());
+				LooseContextInstance contextSnapshot = LooseContext.getContext()
+						.snapshot();
+				try {
+					acquireResources(job, performer.getResources());
+					performer.performAction((T) job.getTask());
+				} finally {
+					// handle any unbalanced stack issues (which would generally
+					// be fatal to the job handling, causing indeterminate
+					// effects )
+					LooseContext.restore(contextSnapshot);
+				}
 			} else {
 				logger.info("Not performing {} (disabled)", job);
 			}

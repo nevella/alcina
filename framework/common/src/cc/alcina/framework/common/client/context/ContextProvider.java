@@ -76,6 +76,11 @@ public interface ContextProvider<C, F extends ContextFrame> {
 		public void registerFrame(F frame) {
 			LooseContext.set(contextKey, frame);
 		}
+
+		@Override
+		public boolean hasFrame() {
+			return LooseContext.has(contextKey);
+		}
 	}
 
 	/*
@@ -124,5 +129,12 @@ public interface ContextProvider<C, F extends ContextFrame> {
 		public void registerFrame(F frame) {
 			throw new UnsupportedOperationException();
 		}
+
+		@Override
+		public boolean hasFrame() {
+			return frame != null;
+		}
 	}
+
+	boolean hasFrame();
 }

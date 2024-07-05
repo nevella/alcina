@@ -6,6 +6,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
+/*
+ * To debug the stack,
+ * cc.alcina.framework.common.client.util.LooseContextInstance.stackDebug.
+ * debugCurrentThread()
+ * 
+ * then, in the logs look for "***unbalanced stack***"
+ */
 public class LooseContextInstance {
 	public static StackDebug stackDebug = new StackDebug("LooseContext");
 
@@ -54,8 +61,11 @@ public class LooseContextInstance {
 		}
 	}
 
-	protected void cloneToSnapshot(LooseContextInstance cloned) {
-		cloned.properties = new HashMap<String, Object>(properties);
+	protected void cloneFieldsTo(LooseContextInstance other) {
+		other.properties = new HashMap<String, Object>(properties);
+		other.stack = new Stack<>();
+		stack.forEach(frame -> other.stack.add(frame.clone()));
+		other.frame = frame.clone();
 	}
 
 	public boolean containsKey(String key) {
@@ -180,7 +190,7 @@ public class LooseContextInstance {
 
 	public LooseContextInstance snapshot() {
 		LooseContextInstance context = new LooseContextInstance();
-		cloneToSnapshot(context);
+		cloneFieldsTo(context);
 		return context;
 	}
 
@@ -201,6 +211,14 @@ public class LooseContextInstance {
 		Map<String, Object> properties;
 
 		int depth;
+
+		protected Frame clone() {
+			Frame frame = new Frame();
+			frame.properties = CollectionCreators.Bootstrap.getHashMapCreator()
+					.copy(properties);
+			frame.depth = depth;
+			return frame;
+		}
 
 		public boolean isActive() {
 			return frame == this || stack.contains(this);

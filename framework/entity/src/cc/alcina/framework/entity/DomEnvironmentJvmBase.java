@@ -8,6 +8,8 @@ import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.google.gwt.dom.client.Document.RemoteType;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomEnvironment;
@@ -40,12 +42,34 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	}
 
 	@Override
-	public Node loadFromXml(String xml) throws Exception {
-		return XmlUtils.loadDocument(xml, true);
+	public Node loadFromXml(String xml, boolean gwtDocument) throws Exception {
+		if (gwtDocument) {
+			com.google.gwt.dom.client.Document document = com.google.gwt.dom.client.Document.contextProvider
+					.createFrame(RemoteType.PATHREF);
+			document.createDocumentElement(xml, true);
+			return document;
+		} else {
+			return XmlUtils.loadDocument(xml, true);
+		}
+	}
+
+	boolean isGwtDocument(Document document) {
+		return document instanceof com.google.gwt.dom.client.Document;
+	}
+
+	com.google.gwt.dom.client.Document asGwtDocument(Document document) {
+		return (com.google.gwt.dom.client.Document) document;
 	}
 
 	@Override
 	public String log(DomNode xmlNode, boolean pretty) {
+		if (isGwtDocument(xmlNode.document.domDoc())) {
+			if (xmlNode.isElement()) {
+				return xmlNode.gwtElement().getOuterHtml(pretty);
+			} else {
+				return xmlNode.toString();
+			}
+		}
 		try {
 			LooseContext.pushWithTrue(XmlUtils.CONTEXT_MUTE_XML_SAX_EXCEPTIONS);
 			if (pretty) {
@@ -68,23 +92,32 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 
 	@Override
 	public String prettyPrint(Document w3cDoc) {
-		return XmlUtils.prettyPrintWithDOM3LS(w3cDoc);
+		if (isGwtDocument(w3cDoc)) {
+			return asGwtDocument(w3cDoc).getDocumentElement()
+					.getOuterHtml(true);
+		} else {
+			return XmlUtils.prettyPrintWithDOM3LS(w3cDoc);
+		}
 	}
 
 	@Override
 	public String prettyToString(DomNode xmlNode) {
-		Node node = xmlNode.w3cNode();
-		try {
-			if (node.getNodeType() == Node.DOCUMENT_FRAGMENT_NODE) {
-				return XmlUtils
-						.prettyPrintWithDOM3LSNode((DocumentFragment) node);
-			} else if (node.getNodeType() == Node.ELEMENT_NODE) {
-				return XmlUtils.prettyPrintWithDOM3LSNode((Element) node);
-			} else {
-				return XmlUtils.streamXML(node);
+		if (isGwtDocument(xmlNode.document.domDoc())) {
+			return log(xmlNode, true);
+		} else {
+			Node node = xmlNode.w3cNode();
+			try {
+				if (node.getNodeType() == Node.DOCUMENT_FRAGMENT_NODE) {
+					return XmlUtils
+							.prettyPrintWithDOM3LSNode((DocumentFragment) node);
+				} else if (node.getNodeType() == Node.ELEMENT_NODE) {
+					return XmlUtils.prettyPrintWithDOM3LSNode((Element) node);
+				} else {
+					return XmlUtils.streamXML(node);
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -119,13 +152,21 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 
 	@Override
 	public String toHtml(DomDocument doc, boolean pretty) {
-		String xml = pretty ? doc.prettyToString() : doc.fullToString();
-		xml = XmlUtils.expandEmptyElements(xml);
-		return XmlUtils.fixStyleNodeContents(xml);
+		if (isGwtDocument(doc.domDoc())) {
+			return log(doc, pretty);
+		} else {
+			String xml = pretty ? doc.prettyToString() : doc.fullToString();
+			xml = XmlUtils.expandEmptyElements(xml);
+			return XmlUtils.fixStyleNodeContents(xml);
+		}
 	}
 
 	@Override
 	public String toXml(Node node) {
-		return XmlUtils.streamXML(node);
+		if (isGwtDocument(node.getOwnerDocument())) {
+			return log(DomNode.from(node), true);
+		} else {
+			return XmlUtils.streamXML(node);
+		}
 	}
 }

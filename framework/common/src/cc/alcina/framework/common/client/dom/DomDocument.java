@@ -210,7 +210,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	private void loadFromXml(String xml) {
 		initNodes(xml.length());
 		try {
-			this.node = DomEnvironment.get().loadFromXml(xml);
+			this.node = DomEnvironment.get().loadFromXml(xml, false);
 			nodes.put(this.node, this);
 			this.document = this;
 		} catch (Exception e) {

@@ -164,7 +164,7 @@ public class TowardsAMoreDesirableSituation {
 				if (skipCount.get() > 0) {
 					try {
 						// let other cluster instances try
-						Thread.sleep(1000);
+						Thread.sleep(100);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
