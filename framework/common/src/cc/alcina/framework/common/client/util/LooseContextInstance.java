@@ -6,6 +6,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
+/*
+ * To debug the stack,
+ * cc.alcina.framework.common.client.util.LooseContextInstance.stackDebug.
+ * debugCurrentThread()
+ * 
+ * then, in the logs look for "***unbalanced stack***"
+ */
 public class LooseContextInstance {
 	public static StackDebug stackDebug = new StackDebug("LooseContext");
 
