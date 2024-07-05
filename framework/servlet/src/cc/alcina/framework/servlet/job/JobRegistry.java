@@ -64,7 +64,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -392,11 +391,11 @@ public class JobRegistry {
 
 	/*
 	 * Ensure there is exactly one pending job (which takes care of changes
-	 * affecting the model which will be missed by an in-glight)
+	 * affecting the model which will be missed by an in-flight)
 	 */
 	public Job ensureScheduled(Task task, boolean scheduleAfterInFlight) {
 		Ref<Job> jobRef = new Ref<>();
-		String serialized = FlatTreeSerializer.serialize(task);
+		String serialized = TransformManager.serialize(task, true);
 		withJobMetadataLock(task.getClass().getName(), () -> {
 			Optional<? extends Job> pending = JobDomain.get()
 					.getJobsForTask(task.getClass())
