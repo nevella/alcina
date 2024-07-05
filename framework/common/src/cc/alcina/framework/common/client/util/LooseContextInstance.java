@@ -54,7 +54,7 @@ public class LooseContextInstance {
 		}
 	}
 
-	protected final void cloneFieldsTo(LooseContextInstance other) {
+	protected void cloneFieldsTo(LooseContextInstance other) {
 		other.properties = new HashMap<String, Object>(properties);
 		other.stack = new Stack<>();
 		stack.forEach(frame -> other.stack.add(frame.clone()));

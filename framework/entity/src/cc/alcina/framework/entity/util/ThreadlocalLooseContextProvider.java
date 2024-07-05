@@ -92,6 +92,13 @@ public class ThreadlocalLooseContextProvider extends LooseContext {
 			}
 		}
 
+		@Override
+		protected void cloneFieldsTo(LooseContextInstance other) {
+			// does *not* clone any fields of this subclass (they're all
+			// debug-related)
+			super.cloneFieldsTo(other);
+		}
+
 		void beforeRemovePerContext() {
 			if (isDebugStackEntry() && pushCount != 0) {
 				Ax.sysLogHigh("Unbalanced stack");
