@@ -5,9 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -126,27 +123,6 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	 * population
 	 */
 	public void ensureChildren() {
-	}
-
-	Map<Class<? extends Selection>, Layer> selectionClassHandlingLayer;
-
-	public synchronized Layer
-			findHandlingLayer(Class<? extends Selection> clazz) {
-		if (selectionClassHandlingLayer == null) {
-			selectionClassHandlingLayer = AlcinaCollections.newLinkedHashMap();
-		}
-		return selectionClassHandlingLayer.computeIfAbsent(clazz, c -> {
-			Stack<Layer> layers = new Stack<>();
-			layers.push(this);
-			while (layers.size() > 0) {
-				Layer<?> layer = layers.pop();
-				if (layer.inputType == clazz) {
-					return layer;
-				}
-				layer.getChildren().forEach(layers::push);
-			}
-			return null;
-		});
 	}
 
 	public Layer firstLeaf() {

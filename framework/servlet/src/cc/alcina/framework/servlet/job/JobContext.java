@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timeout;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
@@ -259,37 +260,25 @@ public class JobContext {
 				? template = template.replace("{}", "%s")
 				: template;
 		String message = Ax.format(fixedTemplate, args);
-		setStatusMessage(() -> message);
+		setStatusMessage(() -> message, false);
 	}
 
-	public static void setStatusMessage(Supplier<String> messageSupplier) {
-		/*
-		 * see note in the class doc - the threading issues are just too
-		 * dangerous to put this supplier on another thread
-		 */
-		String message = messageSupplier.get();
+	/**
+	 * 
+	 * @param messageSupplier
+	 * @param debounceable
+	 *            indicates the caller is a treeprocess, messages can be
+	 *            debounced
+	 */
+	public static void setStatusMessage(Supplier<String> messageSupplier,
+			boolean debounceable) {
 		if (has()) {
-			get().setStatusMessage0(message);
+			get().updateStatusDebouncer.fireUpdateStatus(messageSupplier,
+					debounceable);
 		} else {
 			LoggerFactory.getLogger(JobContext.class)
 					.info("(no-job) status message: {}", messageSupplier.get());
 		}
-	}
-
-	void setStatusMessage0(String message) {
-		fireDebouncedUpdateStatus(() -> {
-			get().enqueue(() -> {
-				Job job = getJob();
-				job.setStatusMessage(message);
-				if (itemCount > 0 && itemsCompleted > 0) {
-					setCompletion(
-							((double) itemsCompleted) / ((double) itemCount));
-				}
-			});
-			MethodContext.instance().withThreadName(thread.getName())
-					.run(() -> LoggerFactory.getLogger(JobContext.class)
-							.info("status message: {}", message));
-		});
 	}
 
 	public static void warn(String template, Exception ex) {
@@ -311,9 +300,63 @@ public class JobContext {
 	Set<String> publishedMessages = Collections
 			.synchronizedSet(new LinkedHashSet<>());
 
-	private EventCollator<Runnable> updateStatusDebouncer = new EventCollator<Runnable>(
-			200, this::updateStatus).withMaxDelayFromFirstEvent(1)
-					.withMaxDelayFromFirstCollatedEvent(1000);
+	class UpdateStatusDebouncer {
+		EventCollator<Runnable> debouncer = new EventCollator<Runnable>(200,
+				JobContext.this::updateStatus).withMaxDelayFromFirstEvent(1)
+						.withMaxDelayFromFirstCollatedEvent(1000);
+
+		long lastMessageTime;
+
+		Supplier<String> debouncedSupplier;
+
+		void cancel() {
+			if (debouncedSupplier != null) {
+				debounceMessage(debouncedSupplier.get());
+				debouncedSupplier = null;
+			}
+			debouncer.cancel();
+		}
+
+		void fireUpdateStatus(Supplier<String> messageSupplier,
+				boolean debounceable) {
+			/*
+			 * see note in the class doc - the threading issues are just too
+			 * dangerous to put this supplier on another thread. But we can by
+			 * fiat say 'just replicate any message in the last 5ms *on* thread'
+			 * - good enough
+			 * 
+			 * 
+			 */
+			if (TimeConstants.within(lastMessageTime, 5) && debounceable) {
+				debouncedSupplier = messageSupplier;
+				return;
+			}
+			debouncedSupplier = null;
+			lastMessageTime = System.currentTimeMillis();
+			debounceMessage(messageSupplier.get());
+		}
+
+		void debounceMessage(String message) {
+			if (message.contains("SubHeadingLayer")) {
+				int debug = 3;
+			}
+			debouncer.eventOccurred(() -> {
+				get().enqueue(() -> {
+					Job job = getJob();
+					job.setStatusMessage(message);
+					if (itemCount > 0 && itemsCompleted > 0) {
+						setCompletion(((double) itemsCompleted)
+								/ ((double) itemCount));
+					}
+				});
+				MethodContext.instance().withThreadName(thread.getName())
+						.run(() -> LoggerFactory.getLogger(JobContext.class)
+								.info("status message: {}", message));
+			});
+		}
+	}
+
+	UpdateStatusDebouncer updateStatusDebouncer = new UpdateStatusDebouncer();
 
 	void updateStatus(EventCollator<Runnable> collator) {
 		/*
@@ -376,7 +419,7 @@ public class JobContext {
 		this.performer = performer;
 		treeProcess = new TreeProcess(performer);
 		treeProcess.topicPositionChangedMessage
-				.add(v -> JobContext.setStatusMessage(v));
+				.add(v -> JobContext.setStatusMessage(v, true));
 		this.launcherThreadState = launcherThreadState;
 		this.allocator = allocator;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
@@ -534,10 +577,6 @@ public class JobContext {
 		if (job.provideIsNotComplete()) {
 			log = Registry.impl(PerThreadLogging.class).endBuffer();
 		}
-	}
-
-	private void fireDebouncedUpdateStatus(Runnable runnable) {
-		updateStatusDebouncer.eventOccurred(runnable);
 	}
 
 	public ExecutionConstraints getExecutionConstraints() {

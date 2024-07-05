@@ -216,7 +216,7 @@ public class SelectionTraversal
 		List<Node> selectionPath = node.asNodePath();
 		Node last = CommonUtils.last(selectionPath);
 		Selection value = (Selection) last.getValue();
-		Layer layer = state.findLayerHandlingInput(value);
+		Layer layer = getLayer(value);
 		if (layer != null) {
 			position.format("Layer: [%s/%s]", layer.layerPath(),
 					layer.root().getChildren().size());
@@ -229,7 +229,7 @@ public class SelectionTraversal
 			return positionMessage;
 		}
 		// unsupported?
-		return "[Unknown position]";
+		return "[Root position]";
 	}
 
 	public String getDocumentMarkup(boolean input) {
@@ -254,7 +254,11 @@ public class SelectionTraversal
 	}
 
 	public Layer getLayer(Selection selection) {
-		return state.selections.getLayer(selection);
+		if (selection == getRootSelection()) {
+			return null;
+		} else {
+			return state.selections.getLayer(selection);
+		}
 	}
 
 	public Layer getRootLayer() {
@@ -778,10 +782,6 @@ public class SelectionTraversal
 
 		public <T> T context(Class<T> clazz) {
 			return SelectionTraversal.this.context(clazz);
-		}
-
-		public Layer findLayerHandlingInput(Selection value) {
-			return rootLayer.findHandlingLayer(value.getClass());
 		}
 
 		public <S extends Selection> List<S>
