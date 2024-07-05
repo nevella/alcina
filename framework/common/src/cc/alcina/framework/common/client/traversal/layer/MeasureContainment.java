@@ -75,6 +75,9 @@ public class MeasureContainment {
 
 		public List<MeasureSelection> descendants = new ArrayList<>();
 
+		/*
+		 * measures which at least partially contain this selection
+		 */
 		List<MeasureSelection> containers = new ArrayList<>();
 
 		/*
@@ -93,6 +96,8 @@ public class MeasureContainment {
 			if (includeSelf) {
 				ancestorList.add(this);
 			}
+			// the visited check prevents massive indent structures (due to
+			// broken markup) from causing exponential cost
 			Set<Containment> visited = AlcinaCollections.newLinkedHashSet();
 			Set<Containment> pending = AlcinaCollections.newLinkedHashSet();
 			pending.add(this);
@@ -101,14 +106,14 @@ public class MeasureContainment {
 				Iterator<Containment> itr = pending.iterator();
 				Containment next = itr.next();
 				itr.remove();
-				next.containers.forEach(c -> {
-					Containment ancestorContainment = containments.get(c);
+				for (MeasureSelection containingSelection : next.containers) {
+					Containment ancestorContainment = containments
+							.get(containingSelection);
 					ancestorList.add(ancestorContainment);
-					pending.add(ancestorContainment);
 					if (!visited.add(ancestorContainment)) {
-						throw new IllegalStateException("Circular containment");
+						pending.add(ancestorContainment);
 					}
-				});
+				}
 			}
 			return ancestorList.stream().sorted();
 		}
