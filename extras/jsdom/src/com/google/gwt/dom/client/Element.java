@@ -1034,6 +1034,7 @@ public class Element extends Node implements ClientDomElement,
 		}
 	}
 
+	// refid - remove (handled by mutations)
 	public boolean resolveRemoteDefined() {
 		try {
 			if (getClassName() != null

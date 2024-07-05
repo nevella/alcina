@@ -452,14 +452,14 @@ public abstract class NodeJso extends JavaScriptObject
 	@Override
 	public final native void setRefId(int id) /*-{
 	if(id==0){
-		delete this.__alc_dom_id;
+		delete this.__refid;
 	}else{
-		this.__alc_dom_id = id;
+		this.__refid = id;
 	}
 	}-*/;
 
 	@Override
 	public final native int getRefId() /*-{
-	return this.hasOwnProperty('__alc_dom_id') ? this.__alc_dom_id : 0;
+	return this.hasOwnProperty('__refid') ? this.__refid : 0;
 	}-*/;
 }

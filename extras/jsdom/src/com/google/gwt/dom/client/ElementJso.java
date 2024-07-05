@@ -1,12 +1,10 @@
 package com.google.gwt.dom.client;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
@@ -372,58 +370,6 @@ public class ElementJso extends NodeJso implements ElementRemote {
     return $wnd.getComputedStyle(this);
 	}-*/;
 
-	final List<ContiguousTextNodes> getContiguousTextContainers() {
-		List<ContiguousTextNodes> result = new ArrayList<>();
-		Stack<ElementJso> stack = new Stack<>();
-		stack.push(this);
-		while (!stack.isEmpty()) {
-			// breadth first is important here, because later application
-			// requires correct parent indicies (at time of application)
-			ElementJso elem = stack.remove(0);
-			List<NodeJso> list = new ArrayList<>();
-			NodeListJso<Node> childNodes = elem.getChildNodes0();
-			int length = childNodes.getLength();
-			int lastNodeType = -1;
-			NodeJso lastNode = null;
-			for (int idx = 0; idx < length; idx++) {
-				NodeJso node = childNodes.getItem0(idx);
-				int nodeType = node.getNodeType();
-				switch (nodeType) {
-				case Node.ELEMENT_NODE:
-					ElementJso elemChild = (ElementJso) node;
-					switch (elemChild.getNodeName().toLowerCase()) {
-					case "script":
-					case "style":
-						// not visual - and sometimes weird ("br" in script(!!))
-						// - don't descend
-						break;
-					default:
-						stack.push(elemChild);
-						break;
-					}
-					break;
-				case Node.TEXT_NODE:
-					if (lastNodeType == Node.TEXT_NODE) {
-						result.add(
-								new ContiguousTextNodes(idx, lastNode, node));
-					}
-					break;
-				case Node.COMMENT_NODE:
-					if (lastNodeType == Node.COMMENT_NODE) {
-						result.add(
-								new ContiguousTextNodes(idx, lastNode, node));
-					}
-					break;
-				default:
-					throw new UnsupportedOperationException();
-				}
-				lastNodeType = nodeType;
-				lastNode = node;
-			}
-		}
-		return result;
-	}
-
 	/**
 	 * Specifies the base direction of directionally neutral text and the
 	 * directionality of tables.
@@ -772,131 +718,10 @@ public class ElementJso extends NodeJso implements ElementRemote {
 		return Objects.equals(name, "class") ? "className" : name;
 	}
 
-	public final String provideRemoteDomTree() {
-		return provideRemoteDomTree0();
-	}
-
-	final native String provideRemoteDomTree0()/*-{
-    function addNode(node, buffer, depth) {
-      var buf = buffer.buf;
-      for (var idx = 0; idx < depth; idx++) {
-        buf += ' ';
-      }
-      buf += node.nodeType;
-      buf += ': ';
-      switch (node.nodeType) {
-      case 3:
-      case 8:
-        buf += '[';
-        buf += node.data.split('\n').join('\\n').split('\t').join('\\t').split(
-            '\r').join('\\r');
-        buf += ']';
-        break;
-      case 1:
-        buf += node.tagName;
-        buf += ' : ';
-        break;
-      }
-      buf += '\n';
-      buffer.buf = buf;
-      if (node.nodeType == 1) {
-        var idx = 0;
-        var size = node.childNodes.length;
-        for (; idx < size; idx++) {
-          var child = node.childNodes.item(idx);
-          addNode(child, buffer, depth + 1);
-        }
-      }
-    }
-    var buffer = {
-      buf : ''
-    };
-    addNode(this, buffer, 0);
-    return buffer.buf;
-	}-*/;
-
-	// FIXME - dirndl 1x1e - should also check tagname for really warped
-	// dom. unlikely to be an issue though. Also result should be a json form
-	// (JSO)
-	final native ElementJsoIndex provideRemoteIndex(boolean debug)/*-{
-    var result = {
-      hasNode : null,
-      root : null,
-      indicies : [],
-      ancestors : [],
-      sizes : [],
-      debugData : [],
-      remoteDefined : [],
-      debugLog : '',
-    };
-    var cursor = this;
-    while (true) {
-      var hasNode = @com.google.gwt.dom.client.LocalDom::hasNode(Lcom/google/gwt/core/client/JavaScriptObject;)(cursor);
-      if (hasNode) {
-        result.hasNode = cursor;
-        break;
-      }
-      var parent = cursor.parentElement;
-      if (parent == null) {
-        result.root = cursor;
-        break;
-      }
-      var idx = 0;
-      var size = parent.childNodes.length;
-      for (; idx < size; idx++) {
-        var node = parent.childNodes.item(idx);
-        if (debug) {
-          result.debugLog += "Checking node - depth: " + result.indicies.length;
-          result.debugLog += " - idx: " + idx;
-          result.debugLog += " - Node type: " + node.nodeType;
-          result.debugLog += " - Node name: " + node.nodeName;
-          result.debugLog += " - Cursor type: " + node.nodeType;
-          result.debugLog += " - Cursor name: " + node.nodeName;
-          result.debugLog += "\n";
-        }
-        if (node == cursor) {
-          result.indicies.push(idx);
-          result.ancestors.push(cursor);
-          var className = cursor.className;
-          if (!className.indexOf && typeof className.baseVal == 'string') {
-            className = className.baseVal;
-          }
-          result.remoteDefined
-              .push(className.indexOf(@Element::REMOTE_DEFINED) != -1);
-          break;
-        }
-      }
-      result.sizes.push(size);
-      if (debug) {
-        var buf = '';
-        var idx = 0;
-        for (; idx < size; idx++) {
-          var node = parent.childNodes.item(idx);
-          buf += node.nodeType;
-          buf += ': ';
-          switch (node.nodeType) {
-          case 3:
-          case 8:
-            buf += '[';
-            buf += node.data.split('\n').join('\\n').split('\t').join('\\t');
-            buf += ']';
-            break;
-          case 1:
-            buf += node.tagName;
-            buf += ' : ';
-            break;
-          }
-          buf += "\n";
-        }
-        result.debugData.push(buf);
-      }
-      cursor = parent;
-    }
-    return result;
-
-	}-*/;
-
-	/** only allow if telling all local nodes that they're detached **/
+	/**
+	 * only allowed (and only called) when telling all local nodes that they're
+	 * detached
+	 **/
 	final Node removeAllChildren0() {
 		LocalDom.verifyMutatingState();
 		setInnerHTML("");
@@ -1170,23 +995,6 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	@Override
 	public final void toggleClassName(String className) {
 		ClientDomElementStatic.toggleClassName(this, className);
-	}
-
-	static class ContiguousTextNodes {
-		NodeJso previous;
-
-		NodeJso node;
-
-		int idx;
-
-		ContiguousTextNodes(int idx, NodeJso previous, NodeJso node) {
-			this.idx = idx;
-			this.previous = previous;
-			this.node = node;
-		}
-
-		void applyToLocal() {
-		}
 	}
 
 	static class ElementJsoIndex extends JavaScriptObject {

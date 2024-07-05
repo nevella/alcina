@@ -2,6 +2,8 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * <h2>LocalDom 3.0</h2>
  * <p>
@@ -52,14 +54,67 @@ class MarkupJso {
 		String refIdArrayJson = builder.toString();
 		ElementJso remote = (ElementJso) container.remote();
 		remote.setInnerHTML(markup);
+		long start = System.currentTimeMillis();
 		boolean success = traverseAndMark(remote, refIdArrayJson);
+		long end = System.currentTimeMillis();
+		LocalDom.consoleLog(Ax.format("traverse-and-mark :: %s nodes - %sms",
+				refIds.size(), end - start), false);
+		if (!success) {
+			LocalDom.consoleLog("MarkupJso :: !!success", true);
+		}
 		return result;
 	}
 
 	final native boolean traverseAndMark(ElementJso container,
 			String refIdArrayJson) /*-{
-    @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
-      this.innerHTML = html || '';
-	  return true;
+		//traverse the node tree depth first, maintaining an array of cursors to track node position
+		var ids = JSON.parse(refIdArrayJson);
+		var idsIdx = 0;
+		var itr = document.createNodeIterator(container);
+		var coalesceLists = [];
+		for (; ;) {
+			var node = itr.nextNode();
+			if (node == null) {
+				break;
+			}
+			if (idsIdx == ids.length) {
+				return false;
+			}
+			node.__refid = ids[idsIdx++];
+			if (node.nodeType == Node.TEXT_NODE) {
+				var coalesceList = null;
+				var cursor = node;
+				for (; ;) {
+					var next = cursor.nextSibling;
+					if (next != null && next.nodeType == Node.TEXT_NODE ) {
+						if(coalesceList == null){
+							coalesceList = [];
+							coalesceLists.push(coalesceList);
+							coalesceList.push(node);
+						}
+						coalesceList.push(next);
+						itr.nextNode();
+						cursor = next;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+		//this optimises combining-multiple-nodes (to workaround webkit/style splitting of text nodes). 
+		// It may be better to use the create-style::-- create-text-node::flush -- text-node.setNodeValue:: flush
+		for (var idx=0; idx<coalesceLists.length; idx++) {
+			var coalesceList = coalesceLists[idx];
+			var content='';
+			for (var idx1=0; idx1<coalesceList.length; idx1++) {
+				var node = coalesceList[idx1];
+				content += node.nodeValue;
+				if(idx1>0){
+					node.remove();
+				}
+			}
+			coalesceList[0].nodeValue = content;
+		}
+		return idsIdx == ids.length;
 	}-*/;
 }

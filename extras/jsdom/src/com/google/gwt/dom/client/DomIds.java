@@ -15,8 +15,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
- * Used for tree syncing. The node id will be stored in the __alc_dom_id
- * property of the jso dom node on attach (and removed on detach)
+ * Used for tree syncing. The node id will be stored in the __refid property of
+ * the jso dom node on attach (and removed on detach)
  * 
  * <p>
  * Client ids are odd, server ids are even
@@ -105,9 +105,10 @@ public class DomIds {
 			Node node = itr.next();
 			int id = ids.get(idx);
 			if (!root && idx == 0) {
-				Preconditions.checkState(id == node.getRefId());
+				Preconditions.checkState(id != 0 && id == node.getRefId());
 			} else {
 				node.setRefId(id);
+				byId.put(id, node);
 			}
 			idx++;
 		}

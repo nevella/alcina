@@ -308,7 +308,10 @@ public final class MutationNode {
 			// because the non-local code could then reinsert parts of the
 			// local/remote synced structure, make sure all the subtree
 			// local/remote links are removed
-			sync.mutationsAccess.removeFromRemoteLookup(delta);
+			//
+			// FIMXE - refid - now we just need to remove local refids since
+			// refids are
+			// rewritten on attach
 			break;
 		}
 		}

@@ -156,6 +156,8 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 
 		boolean modifiedSinceLastNext = true;
 
+		int indexInParent = -1;
+
 		TraversalNode(T value) {
 			this.value = value;
 		}
@@ -169,6 +171,7 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 			if (children == null) {
 				children = new ArrayList<>();
 			}
+			node.indexInParent = children.size();
 			children.add(node);
 			if (lastFirst) {
 				childCursorPosition = children.size();
@@ -227,5 +230,9 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 			}
 			return null;
 		}
+	}
+
+	public int getIndexInParent() {
+		return current.indexInParent;
 	}
 }

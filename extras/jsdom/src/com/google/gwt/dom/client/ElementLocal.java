@@ -47,8 +47,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	boolean hasUnparsedStyle;
 
-	ElementLocal(DocumentLocal document_Jvm, String tagName) {
-		ownerDocument = document_Jvm;
+	ElementLocal(DocumentLocal documentLocal, String tagName) {
+		ownerDocument = documentLocal;
 		this.tagName = tagName;
 		if (!GWT.isScript() && GWT.isClient()) {
 			// . is legal - but gets very confusing with css, so don't permit

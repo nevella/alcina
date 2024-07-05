@@ -184,7 +184,8 @@ class RemoteComponentHandler {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
-		if (addOriginHeaders && request.isSecure()) {
+		if (addOriginHeaders && (request.isSecure()
+				|| request.getRemoteHost().equals("127.0.0.1"))) {
 			// persuade the browser (at least Chrome) to allow GWT dev mode/ws
 			// (sharedarraybuffer)
 			response.addHeader("Cross-Origin-Opener-Policy", "same-origin");

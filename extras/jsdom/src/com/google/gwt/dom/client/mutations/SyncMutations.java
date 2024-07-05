@@ -112,7 +112,8 @@ class SyncMutations {
 						Node removedNode = mutationsAccess
 								.nodeForNoResolve(removed.remoteNode());
 						if (removedNode != null) {
-							mutationsAccess.removeFromRemoteLookup(removedNode);
+							// FIXME - refid - remove the whole shebang
+							// mutationsAccess.removeFromRemoteLookup(removedNode);
 						}
 					});
 					return;
