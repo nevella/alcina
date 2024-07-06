@@ -60,7 +60,7 @@ public class CheckboxInput extends Model.Value<Boolean>
 	@Override
 	public void onChange(Change event) {
 		setValue(elementValue());
-		event.reemitAs(this, ModelEvents.Change.class);
+		event.reemitAs(this, ModelEvents.Change.class, getValue());
 	}
 
 	@Override

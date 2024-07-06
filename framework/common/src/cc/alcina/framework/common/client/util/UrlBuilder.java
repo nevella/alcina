@@ -99,7 +99,7 @@ public class UrlBuilder {
 	}
 
 	public UrlBuilder qsParam(String key, Object value) {
-		qsParams.put(key, value.toString());
+		qsParams.put(key, value == null ? null : value.toString());
 		return this;
 	}
 
