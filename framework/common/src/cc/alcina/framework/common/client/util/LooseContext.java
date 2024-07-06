@@ -310,6 +310,6 @@ public abstract class LooseContext {
 	 * in a finally block
 	 */
 	public static void restore(LooseContextInstance contextSnapshot) {
-		contextSnapshot.cloneFieldsTo(contextSnapshot);
+		contextSnapshot.cloneFieldsTo(getContext());
 	}
 }

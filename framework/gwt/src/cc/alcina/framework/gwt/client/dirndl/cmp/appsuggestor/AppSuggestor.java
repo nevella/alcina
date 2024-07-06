@@ -163,7 +163,7 @@ public class AppSuggestor extends Model.Fields
 		}
 	}
 
-	static class Resolver extends ContextResolver.AnnotationCustomiser {
+	public static class Resolver extends ContextResolver.AnnotationCustomiser {
 		Resolver() {
 			resolveTransform(ModelSuggestion.class, "model")
 					.with(AppSuggestionArea.Transform.class);

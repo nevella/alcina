@@ -108,15 +108,29 @@ public class Io {
 		}
 
 		/**
-		 * Return a domdocument generated from parsing the input as an HTML (not
-		 * XML) document
+		 * Return a domdocument generated from parsing the input (by default) as
+		 * an HTML (not XML) document
 		 */
 		public DomDocument asDomDocument() {
 			return DomDocument.from(asHtmlDocument());
 		}
 
+		/*
+		 * Will proccess as an HTML doc *unless* the doc begins with <?xml
+		 */
 		public Document asHtmlDocument() {
-			return loadDocument();
+			resource.replayable = true;
+			String markup = asString();
+			try {
+				resource.stream.reset();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+			if (markup.startsWith("<?xml")) {
+				return asXmlDocument();
+			} else {
+				return loadDocument();
+			}
 		}
 
 		public InputStream asInputStream() {
@@ -292,6 +306,8 @@ public class Io {
 
 			private String url;
 
+			boolean replayable;
+
 			public ReadOp bytes(byte[] bytes) {
 				this.stream = new ByteArrayInputStream(bytes);
 				return ReadOp.this;
@@ -340,6 +356,17 @@ public class Io {
 				stream = Io.Streams.maybeWrapInBufferedStream(stream);
 				if (decompress) {
 					stream = new GZIPInputStream(stream);
+				}
+				if (replayable) {
+					if (stream instanceof ByteArrayInputStream) {
+					} else {
+						int bufLength = stream.available() <= 1024 ? 1024 * 64
+								: stream.available();
+						ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(
+								bufLength);
+						Io.Streams.copy(stream, baos);
+						stream = new ByteArrayInputStream(baos.toByteArray());
+					}
 				}
 				return stream;
 			}

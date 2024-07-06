@@ -37,13 +37,15 @@ public class MeasureContainment {
 
 	Containment root;
 
+	List<MeasureSelection> measures;
+
 	public MeasureContainment(Measure.Token.Order order,
 			Collection<? extends MeasureSelection> selections) {
 		MeasureTreeComparator comparator = new MeasureTreeComparator(
 				// this will also remove overlapping text nodes, so we
 				// need to relax a comparator constraint
 				order.copy().withIgnoreNoPossibleChildren());
-		List<MeasureSelection> measures = selections.stream().sorted(comparator)
+		measures = selections.stream().sorted(comparator)
 				.collect(Collectors.toList());
 		ContainmentComputation computation = new ContainmentComputation(
 				measures);
@@ -73,6 +75,9 @@ public class MeasureContainment {
 
 		public List<MeasureSelection> descendants = new ArrayList<>();
 
+		/*
+		 * measures which at least partially contain this selection
+		 */
 		List<MeasureSelection> containers = new ArrayList<>();
 
 		/*
@@ -91,17 +96,24 @@ public class MeasureContainment {
 			if (includeSelf) {
 				ancestorList.add(this);
 			}
+			// the visited check prevents massive indent structures (due to
+			// broken markup) from causing exponential cost
+			Set<Containment> visited = AlcinaCollections.newLinkedHashSet();
 			Set<Containment> pending = AlcinaCollections.newLinkedHashSet();
 			pending.add(this);
+			visited.add(this);
 			while (pending.size() > 0) {
 				Iterator<Containment> itr = pending.iterator();
 				Containment next = itr.next();
 				itr.remove();
-				next.containers.forEach(c -> {
-					Containment ancestorContainment = containments.get(c);
+				for (MeasureSelection containingSelection : next.containers) {
+					Containment ancestorContainment = containments
+							.get(containingSelection);
 					ancestorList.add(ancestorContainment);
-					pending.add(ancestorContainment);
-				});
+					if (!visited.add(ancestorContainment)) {
+						pending.add(ancestorContainment);
+					}
+				}
 			}
 			return ancestorList.stream().sorted();
 		}

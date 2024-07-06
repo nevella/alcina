@@ -5,9 +5,12 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer.Text;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
@@ -37,6 +40,21 @@ public interface EntityDataObject {
 
 		protected abstract void decorate(E source, EDO dataObject,
 				ContextProjector projector);
+	}
+
+	@Registration({ DirectedRenderer.class, OneToManyMultipleSummary.class })
+	public static class OneToManyMultipleSummaryRenderer extends Text {
+		@Override
+		protected String getModelText(Object model) {
+			OneToManyMultipleSummary o = (OneToManyMultipleSummary) model;
+			if (o == null) {
+				return null;
+			}
+			String categoryString = o.getPlace() != null
+					? o.getPlace().provideCategoryString(o.getSize(), true)
+					: "";
+			return categoryString;
+		}
 	}
 
 	@Reflected

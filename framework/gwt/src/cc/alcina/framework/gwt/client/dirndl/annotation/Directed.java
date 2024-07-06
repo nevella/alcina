@@ -489,11 +489,24 @@ public @interface Directed {
 	 *
 	 *
 	 * <p>
-	 * In the absence of a @Directed annotation on the same code element, a
+	 * In the absence of a &#064;Directed annotation on the same code element, a
 	 * DirectedRenderer.TransformRenderer will be used to render the Directed
 	 * input
 	 *
-	 *
+	 * <p>
+	 * Dirndl 3.0 - support multiple transforms - say :
+	 * 
+	 * <pre>
+	<code>
+	 
+	&#064;LabelAndInput.Label("Has issues")
+	&#064;Directed.Transform(LabelAndInput.To.class)
+	&#064;Directed.Transform(CheckboxInput.To.class)
+	boolean hasIssues;
+	
+	  </code>
+	 * </pre>
+	 * 
 	 */
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
