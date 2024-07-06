@@ -29,10 +29,10 @@ import com.google.gwt.dom.client.Style.WhiteSpace;
  * TODO - romcom - style setters should really be batched, collated and flushed
  * as a multi-invoke
  */
-public class StylePathref implements ClientDomStyle {
-	ElementPathref element;
+public class StyleRefid implements ClientDomStyle {
+	ElementRefid element;
 
-	StylePathref(ElementPathref element) {
+	StyleRefid(ElementRefid element) {
 		this.element = element;
 	}
 

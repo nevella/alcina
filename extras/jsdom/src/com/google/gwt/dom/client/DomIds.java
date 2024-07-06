@@ -87,8 +87,8 @@ public class DomIds {
 		this.nextAttachId = nextAttachId;
 	}
 
-	public Node getNode(Pathref pathref) {
-		return byId.get(pathref.id);
+	public Node getNode(Refid refId) {
+		return byId.get(refId.id);
 	}
 
 	public void applySubtreeIds(Element elem, IdList refIds) {

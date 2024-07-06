@@ -1,7 +1,7 @@
 package com.google.gwt.dom.client;
 
-public class CommentPathref extends NodePathref implements ClientDomComment {
-	CommentPathref(Node node) {
+public class CommentRefid extends NodeRefid implements ClientDomComment {
+	CommentRefid(Node node) {
 		super(node);
 	}
 

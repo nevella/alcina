@@ -177,7 +177,7 @@ public abstract class NodeLocal implements ClientDomNode {
 	}
 
 	@Override
-	public boolean isPathref() {
+	public boolean isRefid() {
 		return false;
 	}
 

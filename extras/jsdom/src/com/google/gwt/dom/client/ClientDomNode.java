@@ -98,7 +98,11 @@ public interface ClientDomNode {
 
 	boolean isJso();
 
-	boolean isPathref();
+	/**
+	 * 
+	 * @return true if the node is a NodeRefid subtype
+	 */
+	boolean isRefid();
 
 	boolean isOrHasChild(Node child);
 

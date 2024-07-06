@@ -93,13 +93,13 @@ public final class MutationRecord {
 			// flagged)
 		}
 		if (creationRecord != null) {
-			creationRecord.target = MutationNode.pathref(parentElement);
+			creationRecord.target = MutationNode.refId(parentElement);
 			creationRecord.type = Type.childList;
-			creationRecord.addedNodes.add(MutationNode.pathref(node));
+			creationRecord.addedNodes.add(MutationNode.refId(node));
 			Node previousSibling = node.getPreviousSibling();
 			if (previousSibling != null) {
 				creationRecord.previousSibling = MutationNode
-						.pathref(previousSibling);
+						.refId(previousSibling);
 			}
 			records.add(creationRecord);
 		}
@@ -113,7 +113,7 @@ public final class MutationRecord {
 			ClientDomElement elem = (ClientDomElement) node;
 			elem.getAttributeMap().forEach((k, v) -> {
 				MutationRecord record = new MutationRecord();
-				record.target = MutationNode.pathref(node);
+				record.target = MutationNode.refId(node);
 				record.type = Type.attributes;
 				record.attributeName = k;
 				record.newValue = v;
@@ -124,7 +124,7 @@ public final class MutationRecord {
 		case Node.COMMENT_NODE:
 		case Node.TEXT_NODE: {
 			MutationRecord record = new MutationRecord();
-			record.target = MutationNode.pathref(node);
+			record.target = MutationNode.refId(node);
 			record.type = Type.characterData;
 			record.newValue = node.getNodeValue();
 			records.add(record);
@@ -140,7 +140,7 @@ public final class MutationRecord {
 		MutationRecord markupRecord = new MutationRecord();
 		markupRecord.type = Type.innerMarkup;
 		markupRecord.newValue = elem.getInnerHTML();
-		markupRecord.target = MutationNode.pathref(node);
+		markupRecord.target = MutationNode.refId(node);
 		markupRecord.refIds = elem.getSubtreeIds();
 		return markupRecord;
 	}
@@ -153,9 +153,9 @@ public final class MutationRecord {
 	public static MutationRecord generateRemoveMutation(Node parent,
 			Node oldChild) {
 		MutationRecord record = new MutationRecord();
-		record.target = MutationNode.pathref(parent);
+		record.target = MutationNode.refId(parent);
 		record.type = Type.childList;
-		record.removedNodes.add(MutationNode.pathref(oldChild));
+		record.removedNodes.add(MutationNode.refId(oldChild));
 		return record;
 	}
 
@@ -294,7 +294,7 @@ public final class MutationRecord {
 			}
 			MutationNode predecessor = previousSibling;
 			for (MutationNode node : addedNodes) {
-				target.node().getOwnerDocument().setNextAttachId(node.path.id);
+				target.node().getOwnerDocument().setNextAttachId(node.refId.id);
 				target.insertAfter(predecessor, node, applyTo);
 				predecessor = node;
 			}
@@ -350,7 +350,7 @@ public final class MutationRecord {
 			return;
 		}
 		try {
-			mutationNode.node = mutationNode.path.node();
+			mutationNode.node = mutationNode.refId.node();
 			mutationNode.sync = sync;
 		} catch (RuntimeException e) {
 			Ax.out("Issue connecting node: \n%s\nRecord:\n%s ", mutationNode,

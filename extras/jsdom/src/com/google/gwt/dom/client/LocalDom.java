@@ -336,8 +336,8 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	public static PathRefRepresentations pathRefRepresentations() {
-		return get().pathRefRepresentations;
+	public static RefidRepresentations refIdRepresentations() {
+		return get().refIdRepresentations;
 	}
 
 	public static void register(Document doc) {
@@ -405,7 +405,7 @@ public class LocalDom implements ContextFrame {
 		get().wasSynced0(elem);
 	}
 
-	private PathRefRepresentations pathRefRepresentations = new PathRefRepresentations();
+	private RefidRepresentations refIdRepresentations = new RefidRepresentations();
 
 	boolean applyToRemote = true;
 
@@ -505,12 +505,15 @@ public class LocalDom implements ContextFrame {
 	 * This method links node and all ancestors to the corresponding remote
 	 * nodes, by finding the unklinked nodes and walking the stack, linking to
 	 * the nth remote node (where n is the index of the stack elt)
+	 * 
+	 * FIXME - refid - only permit a call to this in jso devmode, all other dom
+	 * linking (local <-> remote) should occur as the ships come in
 	 */
 	private void ensureRemote0(Node node) {
-		if (isPathref()) {
-			// FIXME - localdom - factor a bunch of this out into
-			// LDjso/LDpathref classes
-			ensureRemote0Pathref(node);
+		if (isRefid()) {
+			// FIXME - refid - factor a bunch of this out into
+			// LDjso/LDrefId classes
+			ensureRemote0Refid(node);
 			return;
 		}
 		flush0(true);
@@ -544,13 +547,13 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	private void ensureRemote0Pathref(Node node) {
+	private void ensureRemote0Refid(Node node) {
 		Node cursor = node;
 		while (cursor != null) {
 			if (cursor.linkedToRemote()) {
 				break;
 			} else {
-				cursor.putRemote(NodePathref.create(node), cursor.wasSynced());
+				cursor.putRemote(NodeRefid.create(node), cursor.wasSynced());
 			}
 			cursor = cursor.getParentNode();
 		}
@@ -566,8 +569,8 @@ public class LocalDom implements ContextFrame {
 		switch (nodeType) {
 		case Node.ELEMENT_NODE:
 			Element element = (Element) node;
-			if (isPathref()) {
-				remote = NodePathref.create(node);
+			if (isRefid()) {
+				remote = NodeRefid.create(node);
 			} else {
 				remote = ((DomDispatchJso) DOMImpl.impl.remote())
 						.createElement(element.getTagName());
@@ -743,8 +746,8 @@ public class LocalDom implements ContextFrame {
 		return applyToRemote;
 	}
 
-	boolean isPathref() {
-		return Document.get().remoteType == RemoteType.PATHREF;
+	boolean isRefid() {
+		return Document.get().remoteType == RemoteType.REF_ID;
 	}
 
 	private boolean isPending0(NodeRemote nodeRemote) {
@@ -813,7 +816,7 @@ public class LocalDom implements ContextFrame {
 			return (T) Document.get();
 		} else {
 			int refId = remote.getRefId();
-			Node node = domIds.getNode(new Pathref(null, refId));
+			Node node = domIds.getNode(new Refid(null, refId));
 			if (node == null) {
 				throw new IllegalStateException(
 						"Remote should always be registered");
@@ -1031,12 +1034,14 @@ public class LocalDom implements ContextFrame {
 	}
 
 	/*
-	 * Bridging class between the server-side DetachedDom and the client-side
-	 * LocalDom
+	 * Bridging class between the server-side remote (NodeRefid) dom and the
+	 * client-side LocalDom
 	 */
-	public class PathRefRepresentations {
+	public class RefidRepresentations {
 		boolean warnedEventException;
 
+		// FIXME - refid - ignore events where the target (or another browser
+		// dom node) has been removed from the server dom
 		public void applyEvent(DomEventData eventData) {
 			try {
 				if (eventData.preview) {
@@ -1057,9 +1062,8 @@ public class LocalDom implements ContextFrame {
 						if (eventData.eventValue() != null) {
 							Element target = Element
 									.as(eventData.event.getEventTarget());
-							target.implAccess()
-									.pathrefRemote().value = eventData
-											.eventValue();
+							target.implAccess().refIdRemote().value = eventData
+									.eventValue();
 						}
 						// FIXME - romcom - attach probably not being called.
 						// This can probably be removed
@@ -1093,7 +1097,7 @@ public class LocalDom implements ContextFrame {
 			}
 		}
 
-		// FIXME - romcom - switch from pathref to ref_id - (mostly), and then
+		// FIXME - refId - switch from pathref to ref_id - (mostly), and then
 		// throw (or at least improve logging)
 		private void maybeWarn(Exception e) {
 			Ax.simpleExceptionOut(e);

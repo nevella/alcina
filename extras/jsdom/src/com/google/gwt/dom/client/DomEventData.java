@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 
 @Bean(PropertySource.FIELDS)
 public final class DomEventData {
-	public Pathref firstReceiver;
+	public Refid firstReceiver;
 
 	public String value;
 

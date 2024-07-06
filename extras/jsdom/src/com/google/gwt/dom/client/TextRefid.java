@@ -3,8 +3,8 @@ package com.google.gwt.dom.client;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
-public class TextPathref extends NodePathref implements ClientDomText {
-	TextPathref(Node node) {
+public class TextRefid extends NodeRefid implements ClientDomText {
+	TextRefid(Node node) {
 		super(node);
 	}
 
@@ -71,7 +71,7 @@ public class TextPathref extends NodePathref implements ClientDomText {
 	public void setNodeValue(String nodeValue) {
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.characterData;
-		record.target = MutationNode.pathref(node());
+		record.target = MutationNode.refId(node());
 		record.newValue = nodeValue;
 		emitMutation(record);
 	}

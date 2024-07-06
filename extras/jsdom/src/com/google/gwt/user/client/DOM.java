@@ -46,9 +46,9 @@ import cc.alcina.framework.common.client.util.LooseContext;
  * events}.
  */
 public class DOM {
-	// FIXME - pathref - remove (the whole 'activate pathref') should not be?
-	public static final String CONTEXT_SINK_PATHREF_PENDING = DOM.class
-			.getName() + ".CONTEXT_SINK_PATHREF_PENDING";
+	// FIXME - refId - remove (the whole 'activate refId') should not be?
+	public static final String CONTEXT_SINK_REF_ID_PENDING = DOM.class.getName()
+			+ ".CONTEXT_SINK_REF_ID_PENDING";
 
 	static final DOMImpl impl = GWT.create(DOMImpl.class);
 
@@ -1640,7 +1640,7 @@ public class DOM {
 	 */
 	public static void sinkBitlessEvent(Element elem, String eventTypeName) {
 		boolean directSync = elem.implAccess().linkedToRemote();
-		Element pathrefPending = LooseContext.get(CONTEXT_SINK_PATHREF_PENDING);
+		Element pathrefPending = LooseContext.get(CONTEXT_SINK_REF_ID_PENDING);
 		directSync &= (pathrefPending == null || pathrefPending == elem);
 		if (directSync) {
 			impl.sinkBitlessEvent(elem, eventTypeName);
@@ -1683,7 +1683,7 @@ public class DOM {
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
 		boolean directSync = elem.implAccess().linkedToRemote();
-		Element pathrefPending = LooseContext.get(CONTEXT_SINK_PATHREF_PENDING);
+		Element pathrefPending = LooseContext.get(CONTEXT_SINK_REF_ID_PENDING);
 		directSync &= (pathrefPending == null || pathrefPending == elem);
 		if (directSync) {
 			impl.sinkEvents(elem, eventBits);

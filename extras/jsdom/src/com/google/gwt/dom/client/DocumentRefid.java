@@ -15,7 +15,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
-public class DocumentPathref extends NodePathref implements ClientDomDocument {
+public class DocumentRefid extends NodeRefid implements ClientDomDocument {
 	Document document;
 
 	public MutationProxy mutationProxy;
@@ -26,7 +26,7 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	// time
 	List<Runnable> sinkEventsQueue = new ArrayList<>();
 
-	public DocumentPathref(Document document) {
+	public DocumentRefid(Document document) {
 		super(document);
 		this.document = document;
 	}
@@ -582,7 +582,7 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	public void emitSinkBitlessEvent(Element elem, String eventTypeName) {
 		addSunkEvent(() -> {
 			if (elem.isAttached()) {
-				mutationProxy.onSinkBitlessEvent(Pathref.forNode(elem),
+				mutationProxy.onSinkBitlessEvent(Refid.forNode(elem),
 						eventTypeName);
 			}
 		});
@@ -591,7 +591,7 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 	public void emitSinkEvents(Element elem, int eventBits) {
 		addSunkEvent(() -> {
 			if (elem.isAttached()) {
-				mutationProxy.onSinkEvents(Pathref.forNode(elem), eventBits);
+				mutationProxy.onSinkEvents(Refid.forNode(elem), eventBits);
 			}
 		});
 	}
@@ -769,15 +769,15 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 			invoke_on_element_style
 		}
 
-		void invoke(NodePathref node, String methodName,
+		void invoke(NodeRefid node, String methodName,
 				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 				AsyncCallback<?> callback);
 
-		<T> T invokeSync(NodePathref node, String methodName,
+		<T> T invokeSync(NodeRefid node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				List<InvokeProxy.Flag> flags);
 
-		default <T> T invokeSync(NodePathref node, String methodName) {
+		default <T> T invokeSync(NodeRefid node, String methodName) {
 			return invokeSync(node, methodName, null, null, null);
 		}
 	}
@@ -787,8 +787,8 @@ public class DocumentPathref extends NodePathref implements ClientDomDocument {
 
 		void onMutation(MutationRecord mutationRecord);
 
-		void onSinkBitlessEvent(Pathref from, String eventTypeName);
+		void onSinkBitlessEvent(Refid from, String eventTypeName);
 
-		void onSinkEvents(Pathref from, int eventBits);
+		void onSinkEvents(Refid from, int eventBits);
 	}
 }

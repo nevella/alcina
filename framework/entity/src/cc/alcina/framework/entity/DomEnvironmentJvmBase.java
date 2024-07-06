@@ -45,7 +45,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	public Node loadFromXml(String xml, boolean gwtDocument) throws Exception {
 		if (gwtDocument) {
 			com.google.gwt.dom.client.Document document = com.google.gwt.dom.client.Document.contextProvider
-					.createFrame(RemoteType.PATHREF);
+					.createFrame(RemoteType.REF_ID);
 			document.createDocumentElement(xml, true);
 			return document;
 		} else {

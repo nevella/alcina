@@ -34,30 +34,30 @@ import cc.alcina.framework.common.client.util.Ax;
  * 
  *
  */
-public abstract class NodePathref implements ClientDomNode, NodeRemote {
-	public static NodePathref create(Node node) {
+public abstract class NodeRefid implements ClientDomNode, NodeRemote {
+	public static NodeRefid create(Node node) {
 		switch (node.getNodeType()) {
 		case Node.ELEMENT_NODE:
-			return new ElementPathref(node);
+			return new ElementRefid(node);
 		case Node.TEXT_NODE:
-			return new TextPathref(node);
+			return new TextRefid(node);
 		case Node.COMMENT_NODE:
-			return new CommentPathref(node);
+			return new CommentRefid(node);
 		default:
 			throw new UnsupportedOperationException();
 		}
 	}
 
-	public static void ensurePathrefRemote(Node node) {
+	public static void ensureRefidRemote(Node node) {
 		if (!node.linkedToRemote()) {
 			node.putRemote(create(node), false);
 		}
-		node.streamChildren().forEach(NodePathref::ensurePathrefRemote);
+		node.streamChildren().forEach(NodeRefid::ensureRefidRemote);
 	}
 
 	protected Node node;
 
-	NodePathref(Node node) {
+	NodeRefid(Node node) {
 		this.node = node;
 	}
 
@@ -66,8 +66,8 @@ public abstract class NodePathref implements ClientDomNode, NodeRemote {
 		if (LocalDom.isPending(this)) {
 			return null;
 		}
-		NodePathref toAppend = resolvedOrPending(newChild);
-		LocalDom.pathRefRepresentations().nodeAsMutations(newChild, false)
+		NodeRefid toAppend = resolvedOrPending(newChild);
+		LocalDom.refIdRepresentations().nodeAsMutations(newChild, false)
 				.forEach(this::emitMutation);
 		return newChild;
 	}
@@ -75,7 +75,7 @@ public abstract class NodePathref implements ClientDomNode, NodeRemote {
 	/**
 	 * Link remote to [remote or local]
 	 */
-	private NodePathref resolvedOrPending(Node node) {
+	private NodeRefid resolvedOrPending(Node node) {
 		if (node == null) {
 			return null;
 		}
@@ -102,7 +102,7 @@ public abstract class NodePathref implements ClientDomNode, NodeRemote {
 	}
 
 	void emitMutation(MutationRecord mutation) {
-		getOwnerDocument().implAccess().pathrefRemote().emitMutation(mutation);
+		getOwnerDocument().implAccess().refIdRemote().emitMutation(mutation);
 	}
 
 	@Override
@@ -184,8 +184,8 @@ public abstract class NodePathref implements ClientDomNode, NodeRemote {
 		if (LocalDom.isPending(this)) {
 			return null;
 		}
-		NodePathref toInsert = resolvedOrPending(newChild);
-		LocalDom.pathRefRepresentations().nodeAsMutations(newChild, false)
+		NodeRefid toInsert = resolvedOrPending(newChild);
+		LocalDom.refIdRepresentations().nodeAsMutations(newChild, false)
 				.forEach(this::emitMutation);
 		return newChild;
 	}
@@ -201,7 +201,7 @@ public abstract class NodePathref implements ClientDomNode, NodeRemote {
 	}
 
 	@Override
-	public boolean isPathref() {
+	public boolean isRefid() {
 		return true;
 	}
 
@@ -217,7 +217,7 @@ public abstract class NodePathref implements ClientDomNode, NodeRemote {
 
 	@Override
 	public void preRemove(Node node) {
-		Pathref.onPreRemove(node);
+		Refid.onPreRemove(node);
 	}
 
 	@Override
@@ -227,9 +227,9 @@ public abstract class NodePathref implements ClientDomNode, NodeRemote {
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		ensurePathrefRemote(oldChild);
+		ensureRefidRemote(oldChild);
 		// emit the the remove mutation
-		List.of(LocalDom.pathRefRepresentations().asRemoveMutation(node(),
+		List.of(LocalDom.refIdRepresentations().asRemoveMutation(node(),
 				oldChild)).forEach(this::emitMutation);
 		return oldChild;
 	}

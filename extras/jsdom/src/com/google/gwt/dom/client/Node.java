@@ -43,7 +43,7 @@ public abstract class Node
 	/**
 	 * For subtypes, most of the methods assume the remote() is a NodeJso -
 	 * where that's not the case, the methods should return null if the remote
-	 * is a NodePathref subtype
+	 * is a NodeRefid subtype
 	 *
 	 * 
 	 *
@@ -58,8 +58,8 @@ public abstract class Node
 			return remote().isJso();
 		}
 
-		public boolean isPathrefRemote() {
-			return remote().isPathref();
+		public boolean isRefidRemote() {
+			return remote().isRefid();
 		}
 
 		public NodeJso jsoRemote() {
@@ -362,7 +362,7 @@ public abstract class Node
 	}
 
 	@Override
-	public boolean isPathref() {
+	public boolean isRefid() {
 		return false;
 	}
 

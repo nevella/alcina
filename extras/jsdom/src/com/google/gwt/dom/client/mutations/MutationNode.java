@@ -18,7 +18,7 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
-import com.google.gwt.dom.client.Pathref;
+import com.google.gwt.dom.client.Refid;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -52,20 +52,20 @@ public final class MutationNode {
 		return result;
 	}
 
-	public static MutationNode pathref(Node node) {
+	public static MutationNode refId(Node node) {
 		if (node == null) {
 			return null;
 		}
 		MutationNode result = new MutationNode();
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
-		result.path = Pathref.forNode(node);
+		result.refId = Refid.forNode(node);
 		return result;
 	}
 
 	public transient org.w3c.dom.Node w3cNode;
 
-	public Pathref path = new Pathref();
+	public Refid refId = new Refid();
 
 	public short nodeType;
 
@@ -124,7 +124,7 @@ public final class MutationNode {
 			this.parent = parent;
 			ordinal = parent.childNodes.size();
 			// -1 is a dummy idS
-			path = parent.path.append(ordinal, clientDomNode.getRefId());
+			refId = parent.refId.append(ordinal, clientDomNode.getRefId());
 		}
 		if (nodeType == Node.ELEMENT_NODE) {
 			ClientDomElement elem = (ClientDomElement) clientDomNode;
@@ -350,7 +350,7 @@ public final class MutationNode {
 		FormatBuilder format = new FormatBuilder().separator(" ");
 		format.appendPadRight(12, nodeName);
 		if (sync == null || id == -1) {
-			format.appendIfNotBlankKv("path", path);
+			format.appendIfNotBlankKv("path", refId);
 		} else {
 			format.appendIfNotBlankKv("id", id);
 		}
@@ -542,7 +542,7 @@ public final class MutationNode {
 				format.appendKeyValues("left", left, "right", right,
 						"equivalent", false, "inequivalenceReason",
 						firstInequivalent.inequivalenceReason,
-						"inequivalencePath", firstInequivalent.left.path,
+						"inequivalencePath", firstInequivalent.left.refId,
 						"parent", firstInequivalent.parent.left);
 			}
 			return format.toString();

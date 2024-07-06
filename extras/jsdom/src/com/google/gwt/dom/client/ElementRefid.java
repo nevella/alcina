@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
+import com.google.gwt.dom.client.DocumentRefid.InvokeProxy;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -19,8 +19,8 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  * That support could be generalised.
  */
-public class ElementPathref extends NodePathref implements ElementRemote {
-	ElementPathref(Node node) {
+public class ElementRefid extends NodeRefid implements ElementRemote {
+	ElementRefid(Node node) {
 		super(node);
 	}
 
@@ -51,12 +51,12 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 	}
 
 	public void emitSinkBitlessEvent(String eventTypeName) {
-		getOwnerDocument().implAccess().pathrefRemote()
+		getOwnerDocument().implAccess().refIdRemote()
 				.emitSinkBitlessEvent(elementFor(), eventTypeName);
 	}
 
 	public void emitSinkEvents(int eventBits) {
-		getOwnerDocument().implAccess().pathrefRemote()
+		getOwnerDocument().implAccess().refIdRemote()
 				.emitSinkEvents(elementFor(), eventBits);
 	}
 
@@ -355,7 +355,7 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 	public void setAttribute(String name, String value) {
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.attributes;
-		record.target = MutationNode.pathref(elementFor());
+		record.target = MutationNode.refId(elementFor());
 		record.attributeName = name;
 		record.newValue = value;
 		emitMutation(record);
@@ -488,15 +488,15 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 
 	<T> T invokeSync(String methodName, List<Class> argumentTypes,
 			List<?> arguments) {
-		return getOwnerDocument().implAccess().pathrefRemote().invokeProxy
-				.invokeSync(ElementPathref.this, methodName, argumentTypes,
+		return getOwnerDocument().implAccess().refIdRemote().invokeProxy
+				.invokeSync(ElementRefid.this, methodName, argumentTypes,
 						arguments, null);
 	}
 
 	<T> T invokeStyle(String methodName, List<Class> argumentTypes,
 			List<?> arguments) {
-		return getOwnerDocument().implAccess().pathrefRemote().invokeProxy
-				.invokeSync(ElementPathref.this, methodName, argumentTypes,
+		return getOwnerDocument().implAccess().refIdRemote().invokeProxy
+				.invokeSync(ElementRefid.this, methodName, argumentTypes,
 						arguments,
 						List.of(InvokeProxy.Flag.invoke_on_element_style));
 	}
@@ -527,6 +527,6 @@ public class ElementPathref extends NodePathref implements ElementRemote {
 
 	@Override
 	public ClientDomStyle getStyleRemote() {
-		return new StylePathref(this);
+		return new StyleRefid(this);
 	}
 }

@@ -32,8 +32,8 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
-import com.google.gwt.dom.client.DocumentPathref.InvokeProxy.Flag;
+import com.google.gwt.dom.client.DocumentRefid.InvokeProxy;
+import com.google.gwt.dom.client.DocumentRefid.InvokeProxy.Flag;
 import com.google.gwt.dom.client.DomIds.IdList;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.EventHandler;
@@ -154,7 +154,7 @@ public class Element extends Node implements ClientDomElement,
 	 * this.
 	 *
 	 * Every element is 'attached' - so this is only for dispatch to (widget;
-	 * pathref) listeers
+	 * refId) listeners
 	 *
 	 * Current hacky approach works - prettier is easy
 	 */
@@ -378,10 +378,10 @@ public class Element extends Node implements ClientDomElement,
 		return jsoRemote();
 	}
 
-	protected ElementPathref ensurePathrefRemote() {
+	protected ElementRefid ensureRefidRemote() {
 		LocalDom.flush();
 		LocalDom.ensureRemote(this);
-		return pathrefRemote();
+		return refIdRemote();
 	}
 
 	@Override
@@ -896,8 +896,8 @@ public class Element extends Node implements ClientDomElement,
 		super.onDetach();
 	}
 
-	protected ElementPathref pathrefRemote() {
-		return (ElementPathref) remote();
+	protected ElementRefid refIdRemote() {
+		return (ElementRefid) remote();
 	}
 
 	void pendingSync() {
@@ -1020,14 +1020,14 @@ public class Element extends Node implements ClientDomElement,
 
 	public void resolvePendingSync() {
 		pendingSync = false;
-		if (implAccess().isPathrefRemote()) {
+		if (implAccess().isRefidRemote()) {
 			/*
-			 * all descendants are pathref remotes
+			 * all descendants are refId remotes
 			 */
 			try {
 				LooseContext.push();
-				LooseContext.set(DOM.CONTEXT_SINK_PATHREF_PENDING, this);
-				NodePathref.ensurePathrefRemote(this);
+				LooseContext.set(DOM.CONTEXT_SINK_REF_ID_PENDING, this);
+				NodeRefid.ensureRefidRemote(this);
 			} finally {
 				LooseContext.pop();
 			}
@@ -1390,15 +1390,15 @@ public class Element extends Node implements ClientDomElement,
 
 		public void emitSinkBitlessEvent(String eventTypeName) {
 			ClientDomElement remote = remote();
-			if (remote instanceof ElementPathref) {
-				((ElementPathref) remote).emitSinkBitlessEvent(eventTypeName);
+			if (remote instanceof ElementRefid) {
+				((ElementRefid) remote).emitSinkBitlessEvent(eventTypeName);
 			}
 		}
 
 		public void emitSinkEvents(int eventBits) {
 			ClientDomElement remote = remote();
-			if (remote instanceof ElementPathref) {
-				((ElementPathref) remote).emitSinkEvents(eventBits);
+			if (remote instanceof ElementRefid) {
+				((ElementRefid) remote).emitSinkEvents(eventBits);
 			}
 		}
 
@@ -1406,8 +1406,8 @@ public class Element extends Node implements ClientDomElement,
 			return Element.this.ensureJsoRemote();
 		}
 
-		public ElementPathref ensurePathrefRemote() {
-			return Element.this.ensurePathrefRemote();
+		public ElementRefid ensureRefidRemote() {
+			return Element.this.ensureRefidRemote();
 		}
 
 		public NodeJso jsoChild(int index) {
@@ -1422,7 +1422,7 @@ public class Element extends Node implements ClientDomElement,
 		public ElementJso jsoRemoteOrNull() {
 			if (linkedToRemote()) {
 				ClientDomElement remote = remote();
-				if (remote instanceof NodePathref) {
+				if (remote instanceof NodeRefid) {
 					return null;
 				} else {
 					return (ElementJso) remote;
@@ -1441,8 +1441,8 @@ public class Element extends Node implements ClientDomElement,
 			return Element.this.local();
 		}
 
-		public ElementPathref pathrefRemote() {
-			return Element.this.pathrefRemote();
+		public ElementRefid refIdRemote() {
+			return Element.this.refIdRemote();
 		}
 
 		public Node provideSelfOrAncestorLinkedToRemote() {

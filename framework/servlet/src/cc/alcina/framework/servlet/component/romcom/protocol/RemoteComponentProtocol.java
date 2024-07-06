@@ -6,7 +6,7 @@ import java.util.Objects;
 
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.Pathref;
+import com.google.gwt.dom.client.Refid;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
@@ -132,7 +132,7 @@ public class RemoteComponentProtocol {
 		}
 
 		public static class Invoke extends Message {
-			public Pathref path;
+			public Refid path;
 
 			public String methodName;
 
@@ -253,7 +253,7 @@ public class RemoteComponentProtocol {
 			public static Startup forClient() {
 				Startup result = new Startup();
 				result.maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
-				result.domMutations = LocalDom.pathRefRepresentations()
+				result.domMutations = LocalDom.refIdRepresentations()
 						.domAsMutations();
 				result.locationMutation = LocationMutation.ofWindow(true);
 				try {

@@ -115,13 +115,13 @@
  * <li>This means that (in general) only one element requires remote writes -
  * the initial attach and the setInnerHtml performed by the flush task, which
  * writes the subtree html to the remote node
- * <li>(TODO) - pathref vs jso
+ * <li>(TODO) - refId vs jso
  * <li>(TODO) - model more formally (as an algorithm sketch)
  * </ul>
  * <h4>Widget -&gt; Element migration</h4>
  * <p>
  * In GWT, the Widget system is the point at which client code registers DOM
- * event listeners. Because Dirndl eschews widgest (as unnecessary),
+ * event listeners. Because Dirndl eschews widgets (as unnecessary),
  * {@link Element} now also contains a listener registration point
  * ({@link HandlerManager} and implements the same interfaces
  * ({@link HasHandlers}, {@link EventListener}) as Widget to allow _either_
@@ -130,7 +130,7 @@
  * until Widget is removed from the codebase
  *
  * <p>
- * See also {@link Pathref}
+ * See also {@link Refid}
  *
  */
 package com.google.gwt.dom.client;

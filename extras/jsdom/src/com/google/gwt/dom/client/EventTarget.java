@@ -46,7 +46,7 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		} else {
 			EventTarget result = new EventTarget();
 			if (target.isElement()) {
-				result.pathref = Pathref.forNode(target.asElement());
+				result.refId = Refid.forNode(target.asElement());
 			}
 			return result;
 		}
@@ -54,9 +54,9 @@ public class EventTarget implements JavascriptObjectEquivalent {
 
 	transient JavaScriptObject nativeTarget;
 
-	transient Node pathrefTarget;
+	transient Node refIdTarget;
 
-	Pathref pathref;
+	Refid refId;
 
 	public EventTarget() {
 	}
@@ -75,27 +75,32 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		if (ElementJso.is(nativeTarget)) {
 			return (T) LocalDom.nodeFor(nativeTarget);
 		}
-		ensurePathrefTarget();
-		if (pathrefTarget instanceof ClientDomElement) {
-			return (T) pathrefTarget;
+		ensureRefidTarget();
+		if (refIdTarget instanceof ClientDomElement) {
+			return (T) refIdTarget;
 		}
-		throw new FixmeUnsupportedOperationException();
+		// Note that is() only confirme Element.class for the moment
+		throw new IllegalStateException(
+				"Should oonly be called after is() confirms the type");
 	}
 
-	void ensurePathrefTarget() {
-		if (pathrefTarget == null && pathref != null
-				&& Document.get().remoteType == RemoteType.PATHREF) {
-			pathrefTarget = pathref.node();
+	void ensureRefidTarget() {
+		if (refIdTarget == null && refId != null
+				&& Document.get().remoteType == RemoteType.REF_ID) {
+			refIdTarget = refId.node();
 		}
 	}
 
 	public boolean is(Class<? extends JavascriptObjectEquivalent> clazz) {
+		// this does *not* support checking if the clazz is Window.class - if
+		// needed,
+		// implement
+		Preconditions.checkArgument(clazz == Element.class);
 		if (clazz == Element.class && ElementJso.is(nativeTarget)) {
 			return true;
 		}
-		ensurePathrefTarget();
-		if (clazz == Element.class
-				&& pathrefTarget instanceof ClientDomElement) {
+		ensureRefidTarget();
+		if (clazz == Element.class && refIdTarget instanceof ClientDomElement) {
 			return true;
 		}
 		return false;

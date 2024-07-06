@@ -364,7 +364,7 @@ public class DomDispatch implements DomDispatchContract {
 		case NONE:
 		case JSO:
 			return local;
-		case PATHREF:
+		case REF_ID:
 			return new DomDispatchLocal();
 		default:
 			throw new UnsupportedOperationException();
@@ -376,7 +376,7 @@ public class DomDispatch implements DomDispatchContract {
 		case NONE:
 		case JSO:
 			return remote;
-		case PATHREF:
+		case REF_ID:
 			return new DomDispatchLocal();
 		default:
 			throw new UnsupportedOperationException();

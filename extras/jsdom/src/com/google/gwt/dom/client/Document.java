@@ -103,8 +103,8 @@ public class Document extends Node
 		case JSO:
 			remote = DocumentJso.get();
 			break;
-		case PATHREF:
-			remote = new DocumentPathref(this);
+		case REF_ID:
+			remote = new DocumentRefid(this);
 			break;
 		}
 		localDom = new LocalDom();
@@ -1046,8 +1046,8 @@ public class Document extends Node
 		throw new UnsupportedOperationException();
 	}
 
-	public DocumentPathref pathrefRemote() {
-		return (DocumentPathref) remote;
+	public DocumentRefid refIdRemote() {
+		return (DocumentRefid) remote;
 	}
 
 	@Override
@@ -1123,15 +1123,12 @@ public class Document extends Node
 	}
 
 	public class DocumentImplAccess extends ImplAccess {
-		public DocumentPathref pathrefRemote() {
+		public DocumentRefid refIdRemote() {
 			return remote();
 		}
 
-		public Node getNode(Pathref pathref) {
-			// WIP
-			// return localDom.domIds.getNode(pathref);
-			return getDocumentElement().implAccess().local()
-					.queryRelativePath(pathref).node();
+		public Node getNode(Refid refId) {
+			return localDom.domIds.getNode(refId);
 		}
 	}
 
@@ -1145,7 +1142,7 @@ public class Document extends Node
 	}
 
 	public enum RemoteType {
-		NONE, JSO, PATHREF;
+		NONE, JSO, REF_ID;
 
 		boolean hasRemote() {
 			switch (this) {

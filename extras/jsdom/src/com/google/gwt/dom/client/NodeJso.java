@@ -311,7 +311,7 @@ public abstract class NodeJso extends JavaScriptObject
 	}
 
 	@Override
-	public final boolean isPathref() {
+	public final boolean isRefid() {
 		return false;
 	}
 

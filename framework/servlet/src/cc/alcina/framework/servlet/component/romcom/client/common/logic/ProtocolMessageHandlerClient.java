@@ -7,7 +7,7 @@ import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodeJso;
-import com.google.gwt.dom.client.Pathref;
+import com.google.gwt.dom.client.Refid;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
@@ -46,7 +46,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		@Override
 		public void handle(RemoteComponentResponse response,
 				Message.Invoke message) {
-			Pathref path = message.path;
+			Refid path = message.path;
 			Element elem = path == null ? null : (Element) path.node();
 			Message.InvokeResponse responseMessage = new Message.InvokeResponse();
 			responseMessage.id = message.id;
@@ -82,7 +82,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 
 			public Object asObject() {
 				if (node != null) {
-					return Pathref.forNode(node.node());
+					return Refid.forNode(node.node());
 				} else if (string != null) {
 					return string;
 				} else {
@@ -149,7 +149,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		 * eventData.eventTarget
 		 */
 		eventData.firstReceiver = listenerElement == null ? null
-				: Pathref.forNode(listenerElement);
+				: Refid.forNode(listenerElement);
 		String eventType = event.getType();
 		if (Element.is(event.getEventTarget())) {
 			Element elem = Element.as(event.getEventTarget());
@@ -188,8 +188,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		@Override
 		public void handle(RemoteComponentResponse response,
 				Message.Mutations message) {
-			LocalDom.pathRefRepresentations()
-					.applyMutations(message.domMutations, true);
+			LocalDom.refIdRepresentations().applyMutations(message.domMutations,
+					true);
 			message.eventMutations.forEach(m -> {
 				try {
 					Element elem = (Element) m.path.node();

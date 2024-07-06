@@ -14,37 +14,26 @@ import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * <p>
- * Models a reference to a DOM node (attached to root) via its path
+ * Models the identity of a DOM node (attached to root) with an integer id
+ * value. See {@link DomIds} for how these ids are populated.
  * 
- * <h3>Plans</h3>
- * <ul>
- * <li>Switch to *mostly* numeric node id, not pathref.
- * <li>Pathref is still required for cross-session node referencing (viz
- * romcom/tab reload)
- * <li>Move element.local-id attr to a dom node expando (out of the attrs) -
- * value should be an arr containing the (int/Number) id
- * <li>Mutations?
- * <li>Romcom - propagate mutation html add/removes as single node changes
+ * <p>
+ * It also contains accessor methods to access the referenced DOM node. It's the
+ * interchange/synchronization term used in communication between the server and
+ * client DOMs
  * 
- * </ul>
- * <h3>Implementations
- * <h3>
- * <ul>
- * <li>Node refid is generated on node attach, normally from the local dom's
- * counter (even for server, odd for browser)
- * <li>When propagating from one to the other,
- * </ul>
  *
+ * 
  */
 @Bean(PropertySource.FIELDS)
-public class Pathref {
-	private static transient Map<Node, Pathref> preRemovalPaths;
+public class Refid {
+	private static transient Map<Node, Refid> preRemovalPaths;
 
-	public static Pathref forNode(Node node) {
+	public static Refid forNode(Node node) {
 		if (preRemovalPaths != null && preRemovalPaths.containsKey(node)) {
 			return preRemovalPaths.remove(node);
 		}
-		Pathref result = new Pathref();
+		Refid result = new Refid();
 		Node cursor = node;
 		List<Integer> ordinals = new ArrayList<>();
 		do {
@@ -64,7 +53,7 @@ public class Pathref {
 	// FIXME - pathref - remove
 	public static void onPreRemove(Node node) {
 		if (preRemovalPaths == null) {
-			synchronized (Pathref.class) {
+			synchronized (Refid.class) {
 				if (preRemovalPaths == null) {
 					preRemovalPaths = Collections
 							.synchronizedMap(AlcinaCollections.newWeakMap());
@@ -79,16 +68,16 @@ public class Pathref {
 
 	public int id;
 
-	public Pathref() {
+	public Refid() {
 	}
 
-	Pathref(String path, int id) {
+	Refid(String path, int id) {
 		this.path = path;
 		this.id = id;
 	}
 
-	public Pathref append(int ordinal, int id) {
-		return new Pathref(path + "." + ordinal, id);
+	public Refid append(int ordinal, int id) {
+		return new Refid(path + "." + ordinal, id);
 	}
 
 	public List<Integer> childOrdinals() {

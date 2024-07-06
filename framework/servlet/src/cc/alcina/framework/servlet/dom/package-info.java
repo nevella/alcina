@@ -80,7 +80,7 @@
  * </pre>
  */
 /*
- * PathrefDom DOM(s) are a server-side dom pair (local, pathref) coupled to an
+ * RefidDom DOM(s) are a server-side dom pair (local, pathref) coupled to an
  * in-browser dom pair (local, remote) via rpc calls - the relationship is:
  *
  * Server.NodeLocal <--> Server.NodePathRef <==> Client.NodeLocal <-->

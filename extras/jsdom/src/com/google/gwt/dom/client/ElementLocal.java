@@ -562,9 +562,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 				((ElementLocal) child).orSunkBitlessEventsOfAllChildren(sunk);
 			}
 		}
-		if (tagName.equals("input")) {
-			int debug = 3;
-		}
 		if (bitlessEvents != null) {
 			sunk.addAll(bitlessEvents);
 		}
@@ -572,17 +569,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	public void putElement(Element element) {
 		this.element = element;
-	}
-
-	/*
-	 * FIXME - pathref - Rarely used - possibly never (with ids)
-	 */
-	public ClientDomNode queryRelativePath(Pathref path) {
-		ClientDomNode cursor = this;
-		for (Integer childOrdinal : path.childOrdinals()) {
-			cursor = cursor.getChild(childOrdinal);
-		}
-		return cursor;
 	}
 
 	@Override

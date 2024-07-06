@@ -273,6 +273,6 @@ public class RemoteMutations {
 	public void emitInnerMarkupMutation(Element elem) {
 		MutationRecord mutation = MutationRecord
 				.generateMarkupMutationRecord(elem);
-		Document.get().implAccess().pathrefRemote().emitMutation(mutation);
+		Document.get().implAccess().refIdRemote().emitMutation(mutation);
 	}
 }

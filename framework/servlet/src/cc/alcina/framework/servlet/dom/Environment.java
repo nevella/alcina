@@ -14,13 +14,13 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
-import com.google.gwt.dom.client.DocumentPathref;
-import com.google.gwt.dom.client.DocumentPathref.InvokeProxy;
+import com.google.gwt.dom.client.DocumentRefid;
+import com.google.gwt.dom.client.DocumentRefid.InvokeProxy;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.NodePathref;
-import com.google.gwt.dom.client.Pathref;
+import com.google.gwt.dom.client.NodeRefid;
+import com.google.gwt.dom.client.Refid;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -90,7 +90,7 @@ public class Environment {
 	 * FIXME - tricky - what to do with timeouts here - does this interact with
 	 * keep-alives, environmentmanager
 	 */
-	class InvokeProxyImpl implements DocumentPathref.InvokeProxy {
+	class InvokeProxyImpl implements DocumentRefid.InvokeProxy {
 		int invokeCounter = 0;
 
 		class ResponseHandler {
@@ -124,14 +124,14 @@ public class Environment {
 		Map<Integer, ResponseHandler> responseHandlers = new LinkedHashMap<>();
 
 		@Override
-		public void invoke(NodePathref node, String methodName,
+		public void invoke(NodeRefid node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				List<InvokeProxy.Flag> flags, AsyncCallback<?> callback) {
 			invoke0(node, methodName, argumentTypes, arguments, flags,
 					callback);
 		}
 
-		ResponseHandler invoke0(NodePathref node, String methodName,
+		ResponseHandler invoke0(NodeRefid node, String methodName,
 				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 				AsyncCallback<?> callback) {
 			// always emit mutations before proxy invoke
@@ -139,8 +139,7 @@ public class Environment {
 			ResponseHandler handler = new ResponseHandler(callback);
 			runInClientFrame(() -> {
 				Message.Invoke invoke = new Message.Invoke();
-				invoke.path = node == null ? null
-						: Pathref.forNode(node.node());
+				invoke.path = node == null ? null : Refid.forNode(node.node());
 				invoke.id = ++invokeCounter;
 				invoke.methodName = methodName;
 				invoke.argumentTypes = argumentTypes == null ? List.of()
@@ -163,7 +162,7 @@ public class Environment {
 		 * Unsurprisingly similar to the GWT devmode message send/await
 		 */
 		@Override
-		public <T> T invokeSync(NodePathref node, String methodName,
+		public <T> T invokeSync(NodeRefid node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				List<InvokeProxy.Flag> flags) {
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
@@ -208,7 +207,7 @@ public class Environment {
 		}
 	}
 
-	class MutationProxyImpl implements DocumentPathref.MutationProxy {
+	class MutationProxyImpl implements DocumentRefid.MutationProxy {
 		@Override
 		public void onLocationMutation(LocationMutation locationMutation) {
 			runWithMutations(
@@ -221,12 +220,12 @@ public class Environment {
 		}
 
 		@Override
-		public void onSinkBitlessEvent(Pathref from, String eventTypeName) {
+		public void onSinkBitlessEvent(Refid from, String eventTypeName) {
 			addEventMutation(new EventSystemMutation(from, eventTypeName));
 		}
 
 		@Override
-		public void onSinkEvents(Pathref from, int eventBits) {
+		public void onSinkEvents(Refid from, int eventBits) {
 			addEventMutation(new EventSystemMutation(from, eventBits));
 		}
 
@@ -347,7 +346,7 @@ public class Environment {
 
 	public void applyEvent(DomEventData eventData) {
 		runInClientFrame(
-				() -> LocalDom.pathRefRepresentations().applyEvent(eventData));
+				() -> LocalDom.refIdRepresentations().applyEvent(eventData));
 	}
 
 	public void applyLocationMutation(LocationMutation locationMutation,
@@ -376,7 +375,7 @@ public class Environment {
 	// TODO - threading - this should only occur on the ClientExecutionQueue, so
 	// probably dispatch should go via that
 	public void applyMutations(List<MutationRecord> mutations) {
-		runInClientFrame(() -> LocalDom.pathRefRepresentations()
+		runInClientFrame(() -> LocalDom.refIdRepresentations()
 				.applyMutations(mutations, false));
 	}
 
@@ -410,10 +409,10 @@ public class Environment {
 			client.setupPlaceMapping();
 			scheduler = SchedulerFrame.contextProvider.createFrame(null);
 			scheduler.commandExecutor = new CommandExecutorImpl();
-			document = Document.contextProvider.createFrame(RemoteType.PATHREF);
+			document = Document.contextProvider.createFrame(RemoteType.REF_ID);
 			document.createDocumentElement("<html/>", true);
-			document.implAccess().pathrefRemote().mutationProxy = mutationProxy;
-			document.implAccess().pathrefRemote().invokeProxy = invokeProxy;
+			document.implAccess().refIdRemote().mutationProxy = mutationProxy;
+			document.implAccess().refIdRemote().invokeProxy = invokeProxy;
 			LocalDom.initalizeDetachedSync();
 			enter(ui::init);
 		} finally {
@@ -509,7 +508,7 @@ public class Environment {
 	synchronized void emitMutations() {
 		if (mutations != null) {
 			runInClientFrame(() -> {
-				Document.get().pathrefRemote().flushSinkEventsQueue();
+				Document.get().refIdRemote().flushSinkEventsQueue();
 				queue.send(mutations);
 				mutations = null;
 			});
