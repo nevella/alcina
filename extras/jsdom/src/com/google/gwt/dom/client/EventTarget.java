@@ -95,6 +95,15 @@ public class EventTarget implements JavascriptObjectEquivalent {
 	@Override
 	public <T extends JavascriptObjectEquivalent> T cast() {
 		if (ElementJso.is(nativeTarget)) {
+			ElementJso remote = ElementJso.asRemote(nativeTarget);
+			if (remote.getRefId() == 0) {
+				// return null;
+				boolean connected = remote.isConnected();
+				// removed from local/browser dom
+				// this should not be possible (so probably isn't -- connected
+				// will probably be true, i.e. some propagation failed)
+				throw new IllegalStateException();
+			}
 			return (T) LocalDom.nodeFor(nativeTarget);
 		}
 		ensureRefidTarget();

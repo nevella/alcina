@@ -305,6 +305,10 @@ public abstract class NodeJso extends JavaScriptObject
 		throw new UnsupportedOperationException();
 	}
 
+	public final native boolean isConnected() /*-{
+    return this.isConnected;
+	}-*/;
+
 	@Override
 	public final boolean isJso() {
 		return true;

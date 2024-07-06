@@ -294,7 +294,7 @@ class RemoteComponentHandler {
 								request.session.componentClassName);
 					}
 					MessageHandlingToken token = new MessageHandlingToken(
-							request, response, messageHandler);
+							requestJson, request, response, messageHandler);
 					// http thread
 					messageHandler
 							.onBeforeMessageHandled(request.protocolMessage);

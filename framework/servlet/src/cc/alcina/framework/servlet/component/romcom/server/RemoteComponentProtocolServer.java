@@ -33,9 +33,13 @@ public class RemoteComponentProtocolServer {
 
 		public final CountDownLatch latch;
 
-		public MessageHandlingToken(RemoteComponentRequest request,
+		public final String requestJson;
+
+		public MessageHandlingToken(String requestJson,
+				RemoteComponentRequest request,
 				RemoteComponentResponse response,
 				MessageHandlerServer messageHandler) {
+			this.requestJson = requestJson;
 			this.request = request;
 			this.response = response;
 			this.messageHandler = messageHandler;

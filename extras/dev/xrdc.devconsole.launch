@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="com.gwtplugins.gdt.eclipse.suite.webapp">
     <stringAttribute key="bad_container_name" value="/opsol_server"/>
-    <booleanAttribute key="com.gwtplugins.gdt.eclipse.core.AUTO_PORT_SELECTION" value="true"/>
+    <booleanAttribute key="com.gwtplugins.gdt.eclipse.core.RUN_SERVER" value="false"/>
     <stringAttribute key="com.gwtplugins.gdt.eclipse.suiteMainTypeProcessor.PREVIOUSLY_SET_MAIN_TYPE_NAME" value="com.google.gwt.dev.DevMode"/>
-    <listAttribute key="com.gwtplugins.gwt.eclipse.core.ENTRY_POINT_MODULES">
-        <listEntry value="cc.alcina.extras.dev.console.remote.RemoteConsoleClient"/>
-        <listEntry value="cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient"/>
-    </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-        <listEntry value="/alcina"/>
+        <listEntry value="/com.apdm.mobilitylab.client"/>
     </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
         <listEntry value="4"/>
@@ -55,14 +51,13 @@
         <listEntry value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;runtimeClasspathEntry internalArchive=&quot;/alcina/lib/framework/gwt/gwt-user.jar&quot; path=&quot;3&quot; type=&quot;2&quot;/&gt;&#10;"/>
         <listEntry value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;runtimeClasspathEntry internalArchive=&quot;/alcina/lib/framework/gwt/gwt-dev-patch.jar&quot; path=&quot;3&quot; type=&quot;2&quot;/&gt;&#10;"/>
         <listEntry value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;runtimeClasspathEntry internalArchive=&quot;/alcina/lib/framework/gwt/gwt-dev.jar&quot; path=&quot;3&quot; type=&quot;2&quot;/&gt;&#10;"/>
-        <listEntry value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;runtimeClasspathEntry internalArchive=&quot;/alcina/extras/collections/src&quot; path=&quot;3&quot; type=&quot;2&quot;/&gt;&#10;"/>
         <listEntry value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#10;&lt;runtimeClasspathEntry path=&quot;3&quot; projectName=&quot;alcina&quot; type=&quot;1&quot;/&gt;&#10;"/>
     </listAttribute>
     <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="com.gwtplugins.gwt.eclipse.core.moduleClasspathProvider"/>
     <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.google.gwt.dev.DevMode"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="opsol_client"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-war /apdm/build/gwt.dev -gen /apdm/build/gen -remoteUI &quot;${gwt_remote_ui_server_port}:${unique_id}&quot; -codeServerPort 9997 -sourceLevel 11"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="alcina"/>
-    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx1g -Xmx2500m -XX:ReservedCodeCacheSize=500m --add-opens java.logging/java.util.logging=ALL-UNNAMED --add-opens java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-logLevel INFO -sourceLevel 11 -remoteUI 51342:2383895968324901 -noserver -codeServerPort 9997 -war /var/local/gwt/alcina/war -bindAddress 0.0.0.0 -gen /var/local/gwt/gen cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient com.ert.wearables.mx.MxClient"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="com.apdm.mobilitylab.client"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dgwt.usearchives=false -Xmx2500m -XX:ReservedCodeCacheSize=500m -Dcom.google.gwt.dev.DevMode.headless=true -Dfile.encoding=UTF-8 --add-opens java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED -Djava.net.preferIPv4Stack=true --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.logging/java.util.logging=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED"/>
 </launchConfiguration>

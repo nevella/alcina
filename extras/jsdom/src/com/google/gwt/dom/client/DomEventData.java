@@ -22,7 +22,8 @@ public final class DomEventData {
 	@Override
 	public String toString() {
 		return FormatBuilder.keyValues("type", event.getType(), "preview",
-				preview, "targetType", event.getEventTarget().type);
+				preview, "targetType", event.getEventTarget() == null ? null
+						: event.getEventTarget().type);
 	}
 
 	/*

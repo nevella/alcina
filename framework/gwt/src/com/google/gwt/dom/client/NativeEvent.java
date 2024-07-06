@@ -417,19 +417,28 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		DOMImpl.impl.eventPreventDefault(this);
 	}
 
+	/*
+	 * returns null if the event cannot be serialized (so should not be emitted)
+	 */
 	public <NE extends NativeEvent> NE serializableForm() {
 		NativeEvent event = Reflections.newInstance(getClass());
 		if (jso == null) {
 			event.data = data;
 		} else {
 			event.jso = jso;
-			event.serializableForm0();
+			if (!event.serializableForm0()) {
+				return null;
+			}
 			event.data.jsoId = getId();
 		}
 		return (NE) event;
 	}
 
-	void serializableForm0() {
+	/**
+	 * return false if the event cannot be serialized (refers to a removed dom
+	 * node)
+	 */
+	boolean serializableForm0() {
 		getAltKey();
 		getButton();
 		getCharCode();
@@ -450,8 +459,9 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		getCtrlKey();
 		getString();
 		getType();
-		data.toSerializableForm();
+		boolean result = data.toSerializableForm();
 		jso = null;
+		return result;
 	}
 
 	/**
@@ -523,12 +533,23 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 		String key;
 
-		void toSerializableForm() {
-			relatedEventTarget = EventTarget
-					.serializableForm(relatedEventTarget);
-			eventTarget = EventTarget.serializableForm(eventTarget);
-			currentEventTarget = EventTarget
-					.serializableForm(currentEventTarget);
+		boolean toSerializableForm() {
+			EventTarget eventTarget = EventTarget
+					.serializableForm(this.eventTarget);
+			EventTarget relatedEventTarget = EventTarget
+					.serializableForm(this.relatedEventTarget);
+			EventTarget currentEventTarget = EventTarget
+					.serializableForm(this.currentEventTarget);
+			if (eventTarget == null && this.eventTarget != null) {
+				return false;
+			}
+			if (relatedEventTarget == null && this.relatedEventTarget != null) {
+				return false;
+			}
+			if (currentEventTarget == null && this.currentEventTarget != null) {
+				return false;
+			}
+			return true;
 		}
 
 		void populateWrapperDefaults() {
