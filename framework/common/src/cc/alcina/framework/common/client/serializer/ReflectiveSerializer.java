@@ -8,6 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
@@ -30,7 +31,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -89,16 +90,19 @@ import elemental.json.impl.JsonUtil;
  * or for people who want clean json), add the following elision options:
  * <ul>
  * <li>Elide default implementation types (so type java.util.List,
- * implementation java.util.ArrayList not written)
+ * implementation java.util.ArrayList not written) (done - serializeForRpc(),
+ * deserializeRpc()
  * <li>Elide exact type (so if property type is nick.foo, implementation is of
  * type nick.foo, don't write, only write if implementation is
- * nick.foo_subclass)
+ * nick.foo_subclass) (harder - since requires lookahead. Probably don't do
+ * this, to elide, make the type final.)
  *
  * </ul>
  * <li>Server-side - rather than using elemental.json, use streams (and avoid
  * stringbuilder by writing utf-8 directly)
  * </ul>
  * </ul>
+ * 
  *
  * <h4>Notes - gotchas</h4>
  * <ul>
@@ -132,6 +136,12 @@ public class ReflectiveSerializer {
 
 	public static <T> T deserialize(String value) {
 		DeserializerOptions options = new DeserializerOptions();
+		return deserialize(value, options);
+	}
+
+	public static <T> T deserializeRpc(String value) {
+		DeserializerOptions options = new DeserializerOptions()
+				.withDefaultCollectionTypes(true);
 		return deserialize(value, options);
 	}
 
@@ -424,7 +434,7 @@ public class ReflectiveSerializer {
 					}
 				}
 				if (!hasFinalClass() && !state.serializerOptions
-						.elideTypeInfo(value.getClass())) {
+						.elideTypeInfo(propertyNode, value.getClass())) {
 					serialNode = parent.serialNode
 							.writeClassValueContainer(name());
 					consumedName = true;
@@ -817,6 +827,9 @@ public class ReflectiveSerializer {
 			}
 			if (state.deserializerOptions != null
 					&& state.deserializerOptions.defaultCollectionTypes) {
+				// must be synced with the the hardcoded handling in the
+				// SerializerOptions.elideTypeInfo()
+				// method
 				if (type == List.class) {
 					exactTypeNode = state.typeNode(ArrayList.class);
 				} else if (type == Map.class) {
@@ -831,6 +844,20 @@ public class ReflectiveSerializer {
 					&& propertySerialization.types().length == 1) {
 				exactChildTypeNode = state
 						.typeNode(propertySerialization.types()[0]);
+			} else {
+				if (Reflections.isAssignableFrom(Collection.class,
+						property.getType())) {
+					TypeBounds typeBounds = property.getTypeBounds();
+					if (typeBounds.bounds.size() == 1) {
+						Class<?> elementType = typeBounds.bounds.get(0);
+						Class soleImplementationType = SerializationSupport
+								.solePossibleImplementation(elementType);
+						if (soleImplementationType != null) {
+							exactChildTypeNode = state
+									.typeNode(soleImplementationType);
+						}
+					}
+				}
 			}
 		}
 
@@ -952,8 +979,45 @@ public class ReflectiveSerializer {
 
 		Set<Class> elideTypeInfo = Collections.emptySet();
 
-		boolean elideTypeInfo(Class<? extends Object> clazz) {
-			return !typeInfo || elideTypeInfo.contains(clazz);
+		boolean defaultCollectionTypes;
+
+		boolean elideTypeInfo(PropertyNode propertyNode,
+				Class<? extends Object> valueType) {
+			if (!typeInfo) {
+				return true;
+			}
+			if (elideTypeInfo.contains(valueType)) {
+				return true;
+			}
+			if (defaultCollectionTypes) {
+				if (propertyNode != null) {
+					// must be synced with the hardcoded handling in the
+					// PropertyNode constructor. Note that the various immutable
+					// collections/maps are allowed, and will be deserialized as
+					// the default (mutable) types on the other end
+					if (propertyNode.property.getType() == List.class) {
+						Preconditions.checkState(valueType == ArrayList.class
+								|| ClassUtil.isImmutableJdkCollectionType(
+										valueType));
+						return true;
+					}
+					if (propertyNode.property.getType() == Map.class) {
+						Preconditions.checkState(
+								valueType == LinkedHashMap.class || ClassUtil
+										.isImmutableJdkCollectionType(
+												valueType));
+						return true;
+					}
+					if (propertyNode.property.getType() == Set.class) {
+						Preconditions.checkState(
+								valueType == LinkedHashSet.class || ClassUtil
+										.isImmutableJdkCollectionType(
+												valueType));
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		public SerializerOptions withElideDefaults(boolean elideDefaults) {
@@ -963,6 +1027,12 @@ public class ReflectiveSerializer {
 
 		public SerializerOptions withElideTypeInfo(Set<Class> elideTypeInfo) {
 			this.elideTypeInfo = elideTypeInfo;
+			return this;
+		}
+
+		public SerializerOptions
+				withDefaultCollectionTypes(boolean defaultCollectionTypes) {
+			this.defaultCollectionTypes = defaultCollectionTypes;
 			return this;
 		}
 
@@ -1218,5 +1288,10 @@ public class ReflectiveSerializer {
 		public abstract List<Class> serializesTypes();
 
 		protected abstract JsonValue toJson(T object);
+	}
+
+	public static String serializeForRpc(Object object) {
+		return serialize(object, new SerializerOptions().withElideDefaults(true)
+				.withDefaultCollectionTypes(true));
 	}
 }

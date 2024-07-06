@@ -239,7 +239,7 @@ public class ClientRpc {
 			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
 			Topic<Request> calledSignal) {
 		request.protocolMessage.messageId = clientServerMessageCounter++;
-		String payload = ReflectiveSerializer.serialize(request);
+		String payload = ReflectiveSerializer.serializeForRpc(request);
 		String path = Window.Location.getPath();
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
 		RequestCallback callback = new RequestCallback() {
@@ -267,7 +267,7 @@ public class ClientRpc {
 				exceptionHandler.onSuccessReceived();
 				String text = httpResponse.getText();
 				RemoteComponentResponse response = text.isEmpty() ? null
-						: ReflectiveSerializer.deserialize(text);
+						: ReflectiveSerializer.deserializeRpc(text);
 				if (response != null) {
 					// reset delay (successful response)
 					awaitDelay = 0;

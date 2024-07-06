@@ -231,7 +231,7 @@ class RemoteComponentHandler {
 			}
 			if (session != null) {
 				String sessionJson = StringEscapeUtils.escapeJavaScript(
-						ReflectiveSerializer.serialize(session));
+						ReflectiveSerializer.serializeForRpc(session));
 				URL nocacheJsUrl = getResourceUrl(
 						"/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.nocache.js");
 				String nocacheJs = Io.read()
@@ -275,7 +275,7 @@ class RemoteComponentHandler {
 			if (requestJson.length() > 0) {
 				Environment env = null;
 				RemoteComponentRequest request = ReflectiveSerializer
-						.deserialize(requestJson);
+						.deserializeRpc(requestJson);
 				MessageHandlerServer messageHandler = Registry.impl(
 						MessageHandlerServer.class,
 						request.protocolMessage.getClass());
@@ -331,7 +331,7 @@ class RemoteComponentHandler {
 						NestedName.get(response.protocolMessage));
 				new RemoteComponentEvent(request, response).publish();
 				servletResponse.getWriter()
-						.write(ReflectiveSerializer.serialize(response));
+						.write(ReflectiveSerializer.serializeForRpc(response));
 			}
 			servletResponse.setStatus(HttpServletResponse.SC_OK);
 		} catch (Throwable e) {

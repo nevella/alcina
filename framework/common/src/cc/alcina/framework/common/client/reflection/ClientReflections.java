@@ -72,6 +72,10 @@ public class ClientReflections {
 				// Arrays$ArrayList - or primitive
 				// add a few hardcoded internal jdk classes to help
 				// serialization
+				/*
+				 * sync to cc.alcina.framework.common.client.util.ClassUtil.
+				 * isImmutableJdkCollectionType()
+				 */
 				List<Class> interfaces = List.of();
 				switch (clazz.getName()) {
 				case "java.util.ImmutableCollections$AbstractImmutableList":

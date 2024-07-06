@@ -25,7 +25,7 @@ public class RemoteComponentInit implements NativePreviewHandler {
 			}
 		});
 		ClientRpc.session = ReflectiveSerializer
-				.deserialize(ClientUtils.wndString(
+				.deserializeRpc(ClientUtils.wndString(
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
 		ClientRpc.send(Message.Startup.forClient());
 		initWindowListeners();

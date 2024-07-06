@@ -61,4 +61,26 @@ public class ClassUtil {
 		}
 		return false;
 	}
+
+	// sync to
+	// cc.alcina.framework.common.client.reflection.ClientReflections.getClassReflector(Class
+	// clazz)
+	public static boolean isImmutableJdkCollectionType(Class<?> clazz) {
+		Class<?> cursor = clazz;
+		while (cursor != null) {
+			switch (cursor.getName()) {
+			case "java.util.ImmutableCollections$AbstractImmutableList":
+			case "java.util.Collections$UnmodifiableList":
+			case "java.util.Collections$SingletonList":
+			case "java.util.Collections$EmptyList":
+				return true;
+			case "java.util.ImmutableCollections$AbstractImmutableMap":
+				return true;
+			case "java.util.ImmutableCollections$AbstractImmutableSet":
+				return true;
+			}
+			cursor = cursor.getSuperclass();
+		}
+		return false;
+	}
 }

@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
  * 
  */
 @Bean(PropertySource.FIELDS)
-public class Refid {
+public final class Refid {
 	public static Refid forNode(Node node) {
 		Refid result = new Refid();
 		result.id = node.getRefId();

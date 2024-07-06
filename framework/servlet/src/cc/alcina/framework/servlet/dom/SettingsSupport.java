@@ -12,7 +12,7 @@ public class SettingsSupport {
 		T result = null;
 		if (settings != null) {
 			try {
-				result = ReflectiveSerializer.deserialize(settings);
+				result = ReflectiveSerializer.deserializeRpc(settings);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
