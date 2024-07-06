@@ -31,10 +31,11 @@ public class RemoteComponentInit implements NativePreviewHandler {
 		initWindowListeners();
 	}
 
+	// FIXME - dirndl - this can just be sent via normal event creation (ehich
+	// now handles window events)
 	void onPageHideNativeEvent() {
 		Event event = new Event(BrowserEvents.PAGEHIDE);
-		ProtocolMessageHandlerClient.dispatchEventMessage(event, null, false,
-				true);
+		ProtocolMessageHandlerClient.dispatchEventMessage(event, null, false);
 	}
 
 	final native void initWindowListeners() /*-{
@@ -47,6 +48,6 @@ public class RemoteComponentInit implements NativePreviewHandler {
 	@Override
 	public void onPreviewNativeEvent(NativePreviewEvent event) {
 		ProtocolMessageHandlerClient.dispatchEventMessage(
-				(Event) event.getNativeEvent(), null, true, false);
+				(Event) event.getNativeEvent(), null, true);
 	}
 }

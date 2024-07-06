@@ -287,18 +287,14 @@ public class ClientRpc {
 									message, text);
 							e.printStackTrace();
 							/*
-							 * FIXME - devex - 0 this can range - but at least
-							 * initially includes invalid pathrefs (which are
-							 * basically fatal but continue during dev)
+							 * FIXME - devex - 0 - once syncmutations.3 is
+							 * stable, this should not occur (ha!)
 							 * 
-							 * correction - since client/server are async, and
-							 * thus the client's dom can be behind the server's,
-							 * it's not necessarily true that invalid pathrefs
-							 * *should* be fatal. but handling is complex
-							 * 
-							 * that said, only extensions are going to cause
-							 * issues here, it's server-side handling of client
-							 * events that will suffer from out-of-sync
+							 * Serious, the romcom client is a bounded piece of
+							 * code that just propagates server changes to the
+							 * client dom, so all exceptions *should* be
+							 * server-only (unless client dom is mashed by an
+							 * extension)
 							 */
 							Window.alert(
 									CommonUtils.toSimpleExceptionMessage(e));

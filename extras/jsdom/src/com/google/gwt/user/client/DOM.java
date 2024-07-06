@@ -47,6 +47,11 @@ import cc.alcina.framework.common.client.util.LooseContext;
  */
 public class DOM {
 	// FIXME - refId - remove (the whole 'activate refId') should not be?
+	/*
+	 * Not sure - this instructs DOM on where to sink bitted/bitless events. It
+	 * may be necessary (although a better place to put the sync-in-process-elem
+	 * would probably be LocalDom.get())
+	 */
 	public static final String CONTEXT_SINK_REF_ID_PENDING = DOM.class.getName()
 			+ ".CONTEXT_SINK_REF_ID_PENDING";
 
@@ -1640,8 +1645,8 @@ public class DOM {
 	 */
 	public static void sinkBitlessEvent(Element elem, String eventTypeName) {
 		boolean directSync = elem.implAccess().linkedToRemote();
-		Element pathrefPending = LooseContext.get(CONTEXT_SINK_REF_ID_PENDING);
-		directSync &= (pathrefPending == null || pathrefPending == elem);
+		Element refIdPending = LooseContext.get(CONTEXT_SINK_REF_ID_PENDING);
+		directSync &= (refIdPending == null || refIdPending == elem);
 		if (directSync) {
 			impl.sinkBitlessEvent(elem, eventTypeName);
 		} else {
@@ -1683,8 +1688,8 @@ public class DOM {
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
 		boolean directSync = elem.implAccess().linkedToRemote();
-		Element pathrefPending = LooseContext.get(CONTEXT_SINK_REF_ID_PENDING);
-		directSync &= (pathrefPending == null || pathrefPending == elem);
+		Element refIdPending = LooseContext.get(CONTEXT_SINK_REF_ID_PENDING);
+		directSync &= (refIdPending == null || refIdPending == elem);
 		if (directSync) {
 			impl.sinkEvents(elem, eventBits);
 		} else {

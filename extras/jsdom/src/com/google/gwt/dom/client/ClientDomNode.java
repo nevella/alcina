@@ -108,8 +108,6 @@ public interface ClientDomNode {
 
 	Node node();
 
-	void preRemove(Node node);
-
 	Node removeAllChildren();
 
 	Node removeChild(Node oldChild);

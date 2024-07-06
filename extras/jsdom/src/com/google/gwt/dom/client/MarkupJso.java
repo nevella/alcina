@@ -2,8 +2,6 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.Ax;
-
 /**
  * <h2>LocalDom 3.0</h2>
  * <p>
@@ -57,8 +55,9 @@ class MarkupJso {
 		long start = System.currentTimeMillis();
 		boolean success = traverseAndMark(remote, refIdArrayJson);
 		long end = System.currentTimeMillis();
-		LocalDom.consoleLog(Ax.format("traverse-and-mark :: %s nodes - %sms",
-				refIds.size(), end - start), false);
+		// FIXME - logging
+		// LocalDom.consoleLog(Ax.format("traverse-and-mark :: %s nodes - %sms",
+		// refIds.size(), end - start), false);
 		if (!success) {
 			LocalDom.consoleLog("MarkupJso :: !!success", true);
 		}

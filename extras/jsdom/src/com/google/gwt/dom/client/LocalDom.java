@@ -22,6 +22,7 @@ import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DomIds.IdList;
 import com.google.gwt.dom.client.ElementJso.ElementJsoIndex;
 import com.google.gwt.dom.client.mutations.LocalMutations;
+import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.RemoteMutations;
 import com.google.gwt.user.client.DOM;
@@ -651,6 +652,7 @@ public class LocalDom implements ContextFrame {
 				// noop, just trigger a finally flush of mutations
 			});
 		}
+		domIds.releaseRemoved();
 	}
 
 	void handleReportedException(Exception exception) {
@@ -812,11 +814,14 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private <T extends Node> T nodeFor0(NodeJso remote) {
+		if (remote == null) {
+			int debug = 3;
+		}
 		if (remote.getNodeType() == Node.DOCUMENT_NODE) {
 			return (T) Document.get();
 		} else {
 			int refId = remote.getRefId();
-			Node node = domIds.getNode(new Refid(null, refId));
+			Node node = domIds.getNode(new Refid(refId));
 			if (node == null) {
 				throw new IllegalStateException(
 						"Remote should always be registered");
@@ -1031,6 +1036,10 @@ public class LocalDom implements ContextFrame {
 		public NodeJso typedRemote(Node n) {
 			return n.jsoRemote();
 		}
+
+		public void applyPreRemovalRefId(MutationNode mutationNode) {
+			domIds.applyPreRemovalRefId(mutationNode.node, mutationNode.refId);
+		}
 	}
 
 	/*
@@ -1038,74 +1047,64 @@ public class LocalDom implements ContextFrame {
 	 * client-side LocalDom
 	 */
 	public class RefidRepresentations {
-		boolean warnedEventException;
-
-		// FIXME - refid - ignore events where the target (or another browser
-		// dom node) has been removed from the server dom
 		public void applyEvent(DomEventData eventData) {
 			try {
+				EventTarget eventTarget = eventData.event.getEventTarget();
+				switch (eventTarget.type) {
+				case window: {
+					if (eventData.preview) {
+						// as below, this special casing is just munge - remove
+						// (and handle non-element events as per element events)
+						return;//
+					}
+					Event event = eventData.event;
+					switch (event.getType()) {
+					case BrowserEvents.PAGEHIDE:
+						Window.onPageHide();
+						break;
+					default:
+						// ignore, could be implemented
+					}
+					return;
+				}
+				case document:
+				case other:
+					// not currently handled, could be implemented
+					return;
+				case element:
+					// continue method, most common case
+					break;
+				}
+				Element target = Element.as(eventTarget);
+				if (target == null) {
+					// event target (client) has been removed from the
+					// canonical dom (server)
+					return;
+				}
 				if (eventData.preview) {
 					DOM.previewEvent(eventData.event);
 				} else {
-					if (eventData.window) {
-						Event event = eventData.event;
-						switch (event.getType()) {
-						case BrowserEvents.PAGEHIDE:
-							Window.onPageHide();
-							break;
-						default:
-							throw new UnsupportedOperationException();
-						}
-					} else {
-						Element firstReceiver = (Element) eventData.firstReceiver
-								.node();
-						if (eventData.eventValue() != null) {
-							Element target = Element
-									.as(eventData.event.getEventTarget());
-							target.implAccess().refIdRemote().value = eventData
-									.eventValue();
-						}
-						// FIXME - romcom - attach probably not being called.
-						// This can probably be removed
-						if (firstReceiver.eventListener == null) {
-							firstReceiver.eventListener = firstReceiver;
-						}
-						// um, is it that easy?
-						DOM.dispatchEvent(eventData.event, firstReceiver,
-								firstReceiver.eventListener);
+					Element firstReceiver = (Element) eventData.firstReceiver
+							.node();
+					if (firstReceiver == null) {
+						return;
 					}
+					if (eventData.eventValue() != null) {
+						target.implAccess().refIdRemote().value = eventData
+								.eventValue();
+					}
+					// FIXME - romcom - attach probably not being called.
+					// This can probably be removed
+					Preconditions
+							.checkState(firstReceiver.eventListener != null);
+					// um, is it that easy?
+					DOM.dispatchEvent(eventData.event, firstReceiver,
+							firstReceiver.eventListener);
 				}
 			} catch (RuntimeException e) {
-				if (e instanceof IndexOutOfBoundsException) {
-					/*
-					 * One unfinished business is event dispatch (client)
-					 * reaching server post dom-change (server)
-					 * 
-					 * For the moment, report - eventually there should be some
-					 * sort of transactional view of the dom (but even so, this
-					 * is a problem that can occur in a pure-client system and
-					 * isn't that easy to solve)
-					 * 
-					 * Note also that pathref is -not- as good as element/node
-					 * UID here
-					 */
-					maybeWarn(e);
-				} else {
-					// handler exception
-					e.printStackTrace();
-				}
+				// handler exception
+				e.printStackTrace();
 			}
-		}
-
-		// FIXME - refId - switch from pathref to ref_id - (mostly), and then
-		// throw (or at least improve logging)
-		private void maybeWarn(Exception e) {
-			Ax.simpleExceptionOut(e);
-			if (warnedEventException) {
-				return;
-			}
-			e.printStackTrace();
-			warnedEventException = true;
 		}
 
 		public void applyMutations(List<MutationRecord> mutations,

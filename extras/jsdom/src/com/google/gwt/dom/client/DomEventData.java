@@ -19,12 +19,10 @@ public final class DomEventData {
 
 	public boolean preview;
 
-	public boolean window;
-
 	@Override
 	public String toString() {
 		return FormatBuilder.keyValues("type", event.getType(), "preview",
-				preview, "window", window);
+				preview, "targetType", event.getEventTarget().type);
 	}
 
 	/*

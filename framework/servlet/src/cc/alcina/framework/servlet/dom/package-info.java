@@ -80,14 +80,19 @@
  * </pre>
  */
 /*
- * RefidDom DOM(s) are a server-side dom pair (local, pathref) coupled to an
- * in-browser dom pair (local, remote) via rpc calls - the relationship is:
+ * RefIdDom DOM(s) are a server-side linked dom structure (NodeLooal, NodeRefId)
+ * coupled to an in-browser dom structure (NodeLooal, NodeJso) via rpc calls -
+ * the relationship is:
  *
- * Server.NodeLocal <--> Server.NodePathRef <==> Client.NodeLocal <-->
- * Client.NodeJso (Client.NodeJso being the 'real' browser dom)
+ * Server.NodeLocal <--> Server.NodeRefId <==> Client.NodeLooal <-->
+ * Client.NodeJso (Client.NodeJso being the 'real' browser dom). Essentially all
+ * the interest occurs in Server.NodeLocal and Client.NodeJso - the other two
+ * structures are used purely for synchronisation.
  *
- * 'PathRef' because the server has no object refs to client nodes, instead
- * using node (x.y.z) paths to transmit references
+ * 'NodeRefId' is so-called because the server has no object refs to client
+ * nodes, instead each created node is assigned a uniqueid - with disjoint id
+ * sequences for [created-server-nodelocal] and [created-client-nodejso] -
+ * except for the html documentElement (id === 1, both ends)
  * 
  * 
  */

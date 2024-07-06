@@ -22,6 +22,7 @@ import com.google.gwt.dom.client.Document.RemoteType;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 /**
  * Represents the target of a JavaScript event.
@@ -47,16 +48,37 @@ public class EventTarget implements JavascriptObjectEquivalent {
 			EventTarget result = new EventTarget();
 			if (target.isElement()) {
 				result.refId = Refid.forNode(target.asElement());
+				result.type = Type.element;
+			} else {
+				result.type = Type.valueOf(target.getNativeTargetType());
 			}
 			return result;
 		}
 	}
+
+	final native String getNativeTargetType()/*-{
+		var nativeTarget = this.@com.google.gwt.dom.client.EventTarget::nativeTarget;
+		if(nativeTarget==$wnd){
+		return 'window';
+		}else if(nativeTarget==$doc){
+		return 'document';
+		}else{
+		return 'other';
+		}
+		}-*/;
 
 	transient JavaScriptObject nativeTarget;
 
 	transient Node refIdTarget;
 
 	Refid refId;
+
+	Type type;
+
+	@Reflected
+	public enum Type {
+		element, window, document, other
+	}
 
 	public EventTarget() {
 	}

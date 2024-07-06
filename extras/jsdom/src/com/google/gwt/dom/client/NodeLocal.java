@@ -196,10 +196,6 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public abstract Node node();
 
-	@Override
-	public void preRemove(Node node) {
-	}
-
 	public final String provideLocalDomTree() {
 		return provideLocalDomTree0(new StringBuilder(), 0).toString();
 	}

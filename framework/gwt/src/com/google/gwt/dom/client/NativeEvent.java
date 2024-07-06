@@ -21,6 +21,7 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.core.client.JsArray;
+import com.google.gwt.dom.client.EventTarget.Type;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -77,6 +78,8 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		Preconditions.checkArgument(windowEventTypeName != null);
 		data.populateWrapperDefaults();
 		data.type = windowEventTypeName;
+		data.eventTarget = new EventTarget();
+		data.eventTarget.type = Type.window;
 	}
 
 	@Override

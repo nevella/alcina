@@ -184,12 +184,17 @@ class RemoteComponentHandler {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
-		if (addOriginHeaders && (request.isSecure()
-				|| request.getRemoteHost().equals("127.0.0.1"))) {
-			// persuade the browser (at least Chrome) to allow GWT dev mode/ws
-			// (sharedarraybuffer)
-			response.addHeader("Cross-Origin-Opener-Policy", "same-origin");
-			response.addHeader("Cross-Origin-Embedder-Policy", "require-corp");
+		if (addOriginHeaders) {
+			boolean isSecureLocalhost = Ax.matches(request.getHeader("host"),
+					"127.0.0.1(:\\d+)?");
+			if (request.isSecure() || isSecureLocalhost) {
+				// persuade the browser (at least Chrome) to allow GWT dev
+				// mode/ws
+				// (sharedarraybuffer)
+				response.addHeader("Cross-Origin-Opener-Policy", "same-origin");
+				response.addHeader("Cross-Origin-Embedder-Policy",
+						"require-corp");
+			}
 		}
 		String suffix = path.replaceFirst(".+\\.(.+)", "$1");
 		switch (suffix) {

@@ -189,10 +189,14 @@ public class Environment {
 				}
 			} while (timedOut && TimeConstants.within(start,
 					30 * TimeConstants.ONE_SECOND_MS));
-			if (handler.response.exception == null) {
-				return (T) handler.response.response;
+			if (timedOut) {
+				throw new InvokeException("Timed out");
 			} else {
-				throw new InvokeException(handler.response.exception);
+				if (handler.response.exception == null) {
+					return (T) handler.response.response;
+				} else {
+					throw new InvokeException(handler.response.exception);
+				}
 			}
 		}
 	}
@@ -240,11 +244,8 @@ public class Environment {
 
 		void addEventMutation(EventSystemMutation eventSystemMutation) {
 			runWithMutations(() -> {
-				// FIXME - pathref - check can be removed
 				Element elem = (Element) eventSystemMutation.path.node();
-				if (elem.isAttached()) {
-					mutations.eventMutations.add(eventSystemMutation);
-				}
+				mutations.eventMutations.add(eventSystemMutation);
 			});
 		}
 	}

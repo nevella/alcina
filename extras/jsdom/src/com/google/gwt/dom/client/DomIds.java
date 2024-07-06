@@ -3,6 +3,7 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -11,6 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.IntLookup;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
@@ -19,7 +21,9 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * the jso dom node on attach (and removed on detach)
  * 
  * <p>
- * Client ids are odd, server ids are even
+ * Client-created ids are odd, server-created ids are even, except that the
+ * [html] id is 1 for both (the server creates an html node on startup as the
+ * sync root)
  * 
  * <h3>Implementations</h3>
  * <ul>
@@ -30,9 +34,11 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * </ul>
  */
 public class DomIds {
-	int counter = Al.isBrowser() ? 1 : 2;
+	int counter = 1;
 
 	IntLookup<Node> byId = IntLookup.Support.create();
+
+	Map<Node, Integer> removed = AlcinaCollections.newUnqiueMap();
 
 	int nextAttachId;
 
@@ -50,14 +56,29 @@ public class DomIds {
 			nextAttachId = 0;
 		} else {
 			next = counter;
+			if (counter == 1 && !Al.isBrowser()) {
+				// server-side, html is created, now partition the server/client
+				// created id sets
+				counter--;
+			}
 			counter += 2;
 		}
 		return next;
 	}
 
+	int getRemovedId(Node node) {
+		return removed.get(node);
+	}
+
+	void releaseRemoved() {
+		removed.clear();
+	}
+
 	void onDetach(Node node) {
-		Preconditions.checkState(node.refId != 0);
-		byId.remove(node.refId);
+		int refId = node.refId;
+		Preconditions.checkState(refId != 0);
+		byId.remove(refId);
+		removed.put(node, refId);
 		node.setRefId(0);
 	}
 
@@ -112,5 +133,9 @@ public class DomIds {
 			}
 			idx++;
 		}
+	}
+
+	void applyPreRemovalRefId(Node node, Refid refId) {
+		refId.id = getRemovedId(node);
 	}
 }

@@ -60,6 +60,7 @@ public final class MutationNode {
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
 		result.refId = Refid.forNode(node);
+		result.node = node;
 		return result;
 	}
 
@@ -89,7 +90,7 @@ public final class MutationNode {
 
 	public int id = -1;
 
-	transient Node node;
+	public transient Node node;
 
 	transient NodeJso remoteNode;
 
@@ -120,11 +121,10 @@ public final class MutationNode {
 		this.nodeValue = clientDomNode.getNodeValue();
 		this.parent = parent;
 		if (parent != null) {
-			// debug only, parent.childNodes is being constructed
-			this.parent = parent;
-			ordinal = parent.childNodes.size();
-			// -1 is a dummy idS
-			refId = parent.refId.append(ordinal, clientDomNode.getRefId());
+			// FIXME - refid - remove?
+			// ordinal = parent.childNodes.size();
+			// // -1 is a dummy idS
+			// refId = parent.refId.append(ordinal, clientDomNode.getRefId());
 		}
 		if (nodeType == Node.ELEMENT_NODE) {
 			ClientDomElement elem = (ClientDomElement) clientDomNode;

@@ -399,10 +399,6 @@ public abstract class Node
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public void preRemove(Node node) {
-	}
-
 	public List<Node> provideChildNodeList() {
 		return new ChildNodeList();
 	}
@@ -424,7 +420,6 @@ public abstract class Node
 	@Override
 	public Node removeChild(Node oldChild) {
 		doPreTreeSync(oldChild);
-		sync(() -> remote().preRemove(oldChild));
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				oldChild, null, false));
 		Node result = local().removeChild(oldChild);
@@ -441,7 +436,6 @@ public abstract class Node
 	@Override
 	public void removeFromParent() {
 		ensureRemoteCheck();
-		sync(() -> remote().preRemove(this));
 		sync(() -> remote().removeFromParent());
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				this, null, false));
@@ -452,7 +446,6 @@ public abstract class Node
 	public Node replaceChild(Node newChild, Node oldChild) {
 		doPreTreeSync(oldChild);
 		doPreTreeSync(newChild);
-		sync(() -> remote().preRemove(oldChild));
 		sync(() -> remote().replaceChild(newChild, oldChild));
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				oldChild, null, false));

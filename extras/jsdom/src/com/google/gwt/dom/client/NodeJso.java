@@ -333,10 +333,6 @@ public abstract class NodeJso extends JavaScriptObject
 		return LocalDom.nodeFor(this);
 	}
 
-	@Override
-	public final void preRemove(Node node) {
-	}
-
 	final boolean provideIsElement() {
 		return getNodeType() == Node.ELEMENT_NODE;
 	}

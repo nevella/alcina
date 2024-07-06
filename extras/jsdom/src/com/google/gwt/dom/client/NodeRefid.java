@@ -216,11 +216,6 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 	}
 
 	@Override
-	public void preRemove(Node node) {
-		Refid.onPreRemove(node);
-	}
-
-	@Override
 	public Node removeAllChildren() {
 		throw new UnsupportedOperationException();
 	}

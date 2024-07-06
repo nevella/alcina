@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 import java.util.Objects;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
@@ -111,7 +112,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 	static DomEventMessage currentEventMessage = null;
 
 	static void dispatchEventMessage(Event event, Element listenerElement,
-			boolean preview, boolean window) {
+			boolean preview) {
 		/*
 		 * FIXME - shouldn't need to dedpue
 		 */
@@ -140,7 +141,6 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		currentEventMessage.events.add(eventData);
 		eventData.event = event.serializableForm();
 		eventData.preview = preview;
-		eventData.window = window;
 		/*
 		 * Unused, informative only. This is the element that has a browser
 		 * listener - but those will mostly be coalesced.
@@ -177,7 +177,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				eventData.inputValue = elem.getPropertyString("value");
 			}
 		}
-		if (window) {
+		if (event.getType().equals(BrowserEvents.PAGEHIDE)) {
+			// immediate dispatch
 			ClientRpc.send(currentEventMessage, true);
 			currentEventMessage = null;
 		}
@@ -224,7 +225,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 
 			@Override
 			public void onBrowserEvent(Event event) {
-				dispatchEventMessage(event, elem, false, false);
+				dispatchEventMessage(event, elem, false);
 			}
 		}
 	}

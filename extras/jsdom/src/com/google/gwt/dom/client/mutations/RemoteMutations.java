@@ -159,7 +159,11 @@ public class RemoteMutations {
 	}
 
 	public MutationRecord nodeAsRemoveMutation(Node parent, Node oldChild) {
-		return MutationRecord.generateRemoveMutation(parent, oldChild);
+		MutationRecord removeMutation = MutationRecord
+				.generateRemoveMutation(parent, oldChild);
+		mutationsAccess
+				.applyPreRemovalRefId(removeMutation.removedNodes.get(0));
+		return removeMutation;
 	}
 
 	public String serializeHistory() {
