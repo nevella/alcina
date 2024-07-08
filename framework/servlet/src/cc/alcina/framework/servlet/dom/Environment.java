@@ -68,6 +68,8 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * TODO - the syncing could (should) be simplified by only allowing
  * clientexecutionqueue to call runinclientframe (all messages run in the client
  * frame)
+ * 
+ * TOPICS Message loop and exception handling - see ClientExecutionQueue.loop
  */
 public class Environment {
 	public static class TimerProvider implements Timer.Provider {
@@ -134,22 +136,26 @@ public class Environment {
 		ResponseHandler invoke0(NodeRefid node, String methodName,
 				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 				AsyncCallback<?> callback) {
+			// check this is valid
+			if (node != null && Refid.forNode(node.node()).id == 0) {
+				throw new IllegalStateException(Ax.format(
+						"node %s is detached, cannot be remote-invoked",
+						node.node().getNodeName()));
+			}
 			// always emit mutations before proxy invoke
 			emitMutations();
 			ResponseHandler handler = new ResponseHandler(callback);
-			runInClientFrame(() -> {
-				Message.Invoke invoke = new Message.Invoke();
-				invoke.path = node == null ? null : Refid.forNode(node.node());
-				invoke.id = ++invokeCounter;
-				invoke.methodName = methodName;
-				invoke.argumentTypes = argumentTypes == null ? List.of()
-						: argumentTypes;
-				invoke.arguments = arguments == null ? List.of() : arguments;
-				invoke.flags = flags == null ? List.of() : flags;
-				invoke.sync = callback == null;
-				responseHandlers.put(invoke.id, handler);
-				queue.send(invoke);
-			});
+			Message.Invoke invoke = new Message.Invoke();
+			invoke.path = node == null ? null : Refid.forNode(node.node());
+			invoke.id = ++invokeCounter;
+			invoke.methodName = methodName;
+			invoke.argumentTypes = argumentTypes == null ? List.of()
+					: argumentTypes;
+			invoke.arguments = arguments == null ? List.of() : arguments;
+			invoke.flags = flags == null ? List.of() : flags;
+			invoke.sync = callback == null;
+			responseHandlers.put(invoke.id, handler);
+			queue.send(invoke);
 			return handler;
 		}
 
@@ -187,7 +193,7 @@ public class Environment {
 				if (timedOut) {
 					Ax.out("invokesync - timedout");
 				}
-			} while (timedOut && TimeConstants.within(start,
+			} while (timedOut && !queue.finished && TimeConstants.within(start,
 					30 * TimeConstants.ONE_SECOND_MS));
 			if (timedOut) {
 				throw new InvokeException("Timed out");
@@ -195,15 +201,20 @@ public class Environment {
 				if (handler.response.exception == null) {
 					return (T) handler.response.response;
 				} else {
-					throw new InvokeException(handler.response.exception);
+					String context = Ax.format(
+							"invoke-remote - node %s - method %s", node.node(),
+							methodName);
+					throw new InvokeException(context,
+							handler.response.exception);
 				}
 			}
 		}
 	}
 
 	static class InvokeException extends RuntimeException {
-		InvokeException(ExceptionTransport exception) {
-			super(exception.toExceptionString());
+		InvokeException(String context, ExceptionTransport exception) {
+			super(Ax.format("%s\n======================\n%s", context,
+					exception.toExceptionString()));
 		}
 
 		InvokeException(String message) {

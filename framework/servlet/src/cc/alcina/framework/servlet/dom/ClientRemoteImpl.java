@@ -4,11 +4,9 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-@Registration(ClientRemoteImpl.class)
 public class ClientRemoteImpl extends Client {
 	@Override
 	protected void createPlaceController() {

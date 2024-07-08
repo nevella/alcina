@@ -16,7 +16,7 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.servlet.story.StoryUtil;
 
 /*
- * Implementations of Story_TraversalProcessView action performers
+ * Implementations of Story_TraversalBrowser action performers
  */
 class Story_ConsoleImpl {
 	static final int CHECK_TIMEOUT = 20;

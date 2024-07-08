@@ -241,11 +241,6 @@ public class ElementJso extends NodeJso implements ElementRemote {
 		return LocalDom.nodeFor(this);
 	}
 
-	@Override
-	public final void ensureId() {
-		throw new UnsupportedOperationException();
-	}
-
 	/**
 	 * Gives keyboard focus to this element.
 	 */

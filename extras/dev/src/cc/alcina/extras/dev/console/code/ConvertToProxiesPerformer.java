@@ -144,9 +144,6 @@ public class ConvertToProxiesPerformer
 				reachable.add(field.getType());
 			}
 			for (Method method : clazz.getDeclaredMethods()) {
-				if (method.getName().equals("setLoggingLevel")) {
-					int debug = 3;
-				}
 				reachable.add(method.getReturnType());
 				Arrays.stream(method.getParameterTypes())
 						.forEach(reachable::add);
@@ -205,9 +202,6 @@ public class ConvertToProxiesPerformer
 					if (f.getName().endsWith(".java")) {
 						javaFileCount.incrementAndGet();
 						boolean found = false;
-						if (f.getName().contains("ApdmFileImportUtil")) {
-							int debug = 3;
-						}
 						String source = Io.read().file(f).asString();
 						if (source
 								.startsWith("package " + task.outputPackage)) {

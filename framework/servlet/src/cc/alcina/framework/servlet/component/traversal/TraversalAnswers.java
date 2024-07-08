@@ -3,8 +3,6 @@ package cc.alcina.framework.servlet.component.traversal;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
@@ -14,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorComman
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.MatchStyle;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
 
 class TraversalAnswers extends TraversalAnswerSupplier {
 	public TraversalAnswers(int forLayer) {
@@ -29,14 +27,12 @@ class TraversalAnswers extends TraversalAnswerSupplier {
 		return suggestion;
 	}
 
-	protected AsyncCallback runningCallback = null;
-
 	@Override
 	public void begin(Invocation invocation) {
 		AppSuggestorRequest request = new AppSuggestorRequest();
 		String query = invocation.ask.getValue();
 		request.setQuery(query);
-		request.commandContexts.add(TraversalViewContext.class);
+		request.commandContexts.add(TraversalBrowser.CommandContext.class);
 		List<AppSuggestion> suggestions = new ArrayList<>();
 		AppSuggestionEntry suggestion = new AppSuggestionEntry();
 		suggestion.match = Ax.format("Filter: '%s'", query);

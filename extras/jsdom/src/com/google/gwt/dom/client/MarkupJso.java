@@ -6,10 +6,10 @@ import java.util.List;
  * <h2>LocalDom 3.0</h2>
  * <p>
  * This class is responsible for writing markup chunks to the jso (browser) dom,
- * and ensuring the resultant remote dom *exactly* matches the browser dom. It
- * also marks each remote dom node with the ref id.
+ * and ensuring the resultant remote dom *exactly* matches the local dom. It
+ * also marks each remote dom node with the correct refid.
  * <p>
- * Unlike previous approaches, this means a little more (ont-time) up-front cost
+ * Unlike previous approaches, this means a little more (one-time) up-front cost
  * when rendering, but no more traversal-on-event, and a much simpler mutations
  * sync algorithm.
  * <p>
@@ -17,7 +17,7 @@ import java.util.List;
  * <ul>
  * <li>Takes a container remote node, a markup string and a list of ref-ids
  * <li>Sets the inner html of the remote node, and begins to iterate (in js)
- * with the refids (passed as a string if in gwt dev mode)
+ * with the refids (passed as a json string to avoid perf issues in devmode)
  * <li>As it iterates, any adjacent text nodes generated from the markup
  * (webkit/blink oddity) will be combined
  * <li>As it iterates, it applies the elements of the ref-id list/array to the
@@ -38,6 +38,12 @@ class MarkupJso {
 
 	MarkupResult markup(Element container, String markup,
 			List<Integer> refIds) {
+		ElementJso remote = (ElementJso) container.remote();
+		remote.setInnerHTML(markup);
+		return applyIds(refIds, remote);
+	}
+
+	MarkupResult applyIds(List<Integer> refIds, ElementJso remote) {
 		MarkupResult result = new MarkupResult();
 		// build the json refid array
 		StringBuilder builder = new StringBuilder();
@@ -50,8 +56,6 @@ class MarkupJso {
 		}
 		builder.append(']');
 		String refIdArrayJson = builder.toString();
-		ElementJso remote = (ElementJso) container.remote();
-		remote.setInnerHTML(markup);
 		long start = System.currentTimeMillis();
 		boolean success = traverseAndMark(remote, refIdArrayJson);
 		long end = System.currentTimeMillis();

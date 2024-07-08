@@ -11,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
@@ -55,7 +56,7 @@ class RenderedSelections extends Model.Fields {
 		this.page = page;
 		this.input = input;
 		this.heading = new Heading(input ? "Input" : "Output");
-		bindings().from(page).on(Page.properties.place)
+		bindings().from(page.ui).on(Ui.properties.place)
 				.typed(TraversalPlace.class)
 				.map(p -> p.provideSelection(SelectionType.VIEW))
 				.accept(this::setSelection);

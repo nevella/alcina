@@ -72,6 +72,10 @@ public class CodeService {
 
 	public boolean blockStartThread;
 
+	EventQueue queue;
+
+	CodeServerCompilationUnits compilationUnits;
+
 	public CodeService() {
 		context = new Context();
 		watchService = FsUtils.watchServiceFor(getClass());
@@ -98,10 +102,6 @@ public class CodeService {
 			return Ax.format("%s :: %s", NestedName.get(this), key());
 		}
 	}
-
-	EventQueue queue;
-
-	CodeServerCompilationUnits compilationUnits;
 
 	public void start() {
 		compilationUnits = new CodeServerCompilationUnits(this);
@@ -228,11 +228,11 @@ public class CodeService {
 			}
 		}
 
-		public boolean isInSourcePath(String name) {
+		boolean isInSourcePath(String name) {
 			return compilationUnits.isInSourcePath(name);
 		}
 
-		public URL[] getClassPathUrls() {
+		URL[] getClassPathUrls() {
 			List<URL> urls = compilationUnits.sourceFolders.stream()
 					.map(sf -> sf.classPathFolderCanonicalPath).map(File::new)
 					.map(File::toURI).map(uri -> {
@@ -243,6 +243,10 @@ public class CodeService {
 						}
 					}).collect(Collectors.toList());
 			return urls.toArray(new URL[urls.size()]);
+		}
+
+		boolean registerPath(File folder) {
+			return compilationUnits.watchedPaths.add(folder);
 		}
 	}
 
@@ -301,6 +305,8 @@ public class CodeService {
 	}
 
 	boolean publishedInitialStats;
+
+	public boolean clearCache;
 
 	void onEmptyQueue() {
 		if (!publishedInitialStats) {

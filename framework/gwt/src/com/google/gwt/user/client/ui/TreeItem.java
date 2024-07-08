@@ -272,10 +272,8 @@ public class TreeItem extends UIObject
 			return;
 		}
 		Element elem = Document.get().createDivElement();
-		elem.ensureId();
 		setElement(elem);
 		contentElem = Document.get().createDivElement();
-		contentElem.ensureId();
 		// The root item always has children.
 		if (isRoot) {
 			initChildren();

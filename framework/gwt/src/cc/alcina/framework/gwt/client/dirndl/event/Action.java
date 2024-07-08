@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseDown;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TagClass;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -142,7 +142,7 @@ public abstract class Action<T> implements Permissible {
 	}
 
 	public static class ActionTransform
-			extends AbstractModelTransform<Action, ActionArea> {
+			implements ModelTransform<Action, ActionArea> {
 		@Override
 		public ActionArea apply(Action t) {
 			return t.asArea();

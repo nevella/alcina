@@ -180,6 +180,7 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 				: i1 > ip.i1 ? 1 : i2 < ip.i2 ? -1 : i2 > ip.i2 ? 1 : 0;
 	}
 
+	// inclusive!
 	public boolean contains(int i) {
 		return i >= i1 && i <= i2;
 	}
@@ -416,5 +417,13 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 	public static enum IntPairRelation {
 		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
 		CONTAINS_END
+	}
+
+	public IntPair toLowestFirst() {
+		if (i1 <= i2) {
+			return this;
+		} else {
+			return of(i2, i1);
+		}
 	}
 }

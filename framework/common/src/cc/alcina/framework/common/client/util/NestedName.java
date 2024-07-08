@@ -45,4 +45,14 @@ public class NestedName {
 			return name.substring(idx + 1).replace("$", ".");
 		}
 	}
+
+	public static String getSimple(Object obj) {
+		if (obj == null) {
+			return "null";
+		}
+		if (obj instanceof Class) {
+			return ((Class) obj).getSimpleName();
+		}
+		return obj.getClass().getSimpleName();
+	}
 }

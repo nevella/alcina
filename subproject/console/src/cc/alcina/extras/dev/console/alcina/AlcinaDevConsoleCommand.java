@@ -10,7 +10,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
 import cc.alcina.framework.gwt.client.story.StoryTellerPeer;
 import cc.alcina.framework.servlet.example.traversal.recipe.markup.RecipeMarkupParser;
-import cc.alcina.framework.servlet.story.component.traversal.Story_TraversalProcessView;
+import cc.alcina.framework.servlet.story.component.traversal.Story_TraversalBrowser;
 
 public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 	public static class CmdTestLocal extends AlcinaDevConsoleCommand {
@@ -133,7 +133,7 @@ public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			Story_TraversalProcessView story = new Story_TraversalProcessView();
+			Story_TraversalBrowser story = new Story_TraversalBrowser();
 			StoryTellerPeer peer = new StoryTellerPeer();
 			StoryTeller teller = new StoryTeller(peer);
 			teller.tell(story);

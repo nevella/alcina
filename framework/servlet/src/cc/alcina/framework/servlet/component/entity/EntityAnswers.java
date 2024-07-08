@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -32,8 +31,8 @@ import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui;
 import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
-import cc.alcina.framework.servlet.component.traversal.TraversalViewContext;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 
@@ -50,8 +49,6 @@ class EntityAnswers extends TraversalAnswerSupplier {
 		return suggestion;
 	}
 
-	protected AsyncCallback runningCallback = null;
-
 	@Override
 	public void begin(Invocation invocation) {
 		List<AppSuggestion> suggestions = new InvocationHandler(invocation,
@@ -59,7 +56,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 		AppSuggestorRequest request = new AppSuggestorRequest();
 		String query = invocation.ask.getValue();
 		request.setQuery(query);
-		request.commandContexts.add(TraversalViewContext.class);
+		request.commandContexts.add(TraversalBrowser.CommandContext.class);
 		processResults(invocation, suggestions);
 	}
 
@@ -90,7 +87,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 			}
 			query = invocation.ask.getValue();
 			request.setQuery(query);
-			request.commandContexts.add(TraversalViewContext.class);
+			request.commandContexts.add(TraversalBrowser.CommandContext.class);
 			suggestions = new ArrayList<>();
 		}
 

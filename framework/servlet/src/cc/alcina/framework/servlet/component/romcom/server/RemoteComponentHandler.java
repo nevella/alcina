@@ -272,6 +272,7 @@ class RemoteComponentHandler {
 			servletResponse.setContentType("application/json");
 			String requestJson = Io.read()
 					.fromStream(servletRequest.getInputStream()).asString();
+			long start = System.currentTimeMillis();
 			if (requestJson.length() > 0) {
 				Environment env = null;
 				RemoteComponentRequest request = ReflectiveSerializer
@@ -329,7 +330,8 @@ class RemoteComponentHandler {
 				logger.debug("{} dispatched response #{} - {}", Ax.appMillis(),
 						response.requestId,
 						NestedName.get(response.protocolMessage));
-				new RemoteComponentEvent(request, response).publish();
+				new RemoteComponentEvent(request, response, start,
+						System.currentTimeMillis()).publish();
 				servletResponse.getWriter()
 						.write(ReflectiveSerializer.serializeForRpc(response));
 			}

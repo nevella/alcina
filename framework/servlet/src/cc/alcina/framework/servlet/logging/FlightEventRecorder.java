@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.flight.FlightEvent;
-import cc.alcina.framework.common.client.flight.HasSessionId;
-import cc.alcina.framework.common.client.flight.HasSessionId.FlightExceptionMessage;
+import cc.alcina.framework.common.client.flight.FlightEventWrappable;
+import cc.alcina.framework.common.client.flight.FlightEventWrappable.FlightExceptionMessage;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
@@ -53,7 +53,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 			e.printStackTrace();
 			if (writeTo != null) {
 				try {
-					FlightExceptionMessage flightExceptionMessage = new HasSessionId.FlightExceptionMessage(
+					FlightExceptionMessage flightExceptionMessage = new FlightEventWrappable.FlightExceptionMessage(
 							message.event.getSessionId(),
 							CommonUtils.getFullExceptionMessage(e));
 					Io.write().asReflectiveSerialized(true)

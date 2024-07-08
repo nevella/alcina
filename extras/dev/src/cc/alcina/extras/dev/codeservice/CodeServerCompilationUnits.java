@@ -2,7 +2,9 @@ package cc.alcina.extras.dev.codeservice;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -15,16 +17,21 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitCache;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.UnitType;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 
 /*
  * Models access to the source models (acts as a wrapper to CompilationUnits,
  * and tracks all source files)
+ * 
+ * It also acts as the primary state container for the CodeService
  */
 public class CodeServerCompilationUnits implements CodeService.Handler {
 	CodeService codeService;
 
 	List<SourceFolder> sourceFolders;
+
+	Set<File> watchedPaths;
 
 	ConcurrentHashMap<SourcePackage, PackageUnits> packageUnits = new ConcurrentHashMap<>();
 
@@ -33,6 +40,7 @@ public class CodeServerCompilationUnits implements CodeService.Handler {
 	CodeServerCompilationUnits(CodeService codeService) {
 		this.codeService = codeService;
 		sourceFolders = new ArrayList<>();
+		watchedPaths = new LinkedHashSet<>();
 		List<String> paths = codeService.sourceAndClassPaths;
 		for (int idx = 0; idx < paths.size(); idx += 2) {
 			sourceFolders
@@ -41,6 +49,9 @@ public class CodeServerCompilationUnits implements CodeService.Handler {
 		compilationUnits = new CompilationUnits();
 		File cacheFolder = DataFolderProvider.get()
 				.getChildFile(getClass().getName());
+		if (codeService.clearCache) {
+			SEUtilities.deleteDirectory(cacheFolder, true);
+		}
 		compilationUnits.cache = new CompilationUnitCache.Fs(cacheFolder);
 	}
 

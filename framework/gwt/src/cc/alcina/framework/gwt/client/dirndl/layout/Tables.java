@@ -186,6 +186,7 @@ public class Tables {
 		}
 
 		@Directed(tag = "table")
+		@Directed(tag = "tbody")
 		public static class IntermediateModel extends Model
 				implements Directed.NonClassTag {
 			public static IntermediateModel ofBindable(Bindable model) {

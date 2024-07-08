@@ -1,18 +1,24 @@
 package cc.alcina.framework.servlet.dom;
 
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.StyleInjector;
+import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceController;
+import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 /**
  * <p>
@@ -21,9 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
  * app-specific settings etc)
  */
 public interface RemoteUi {
-	default Client createClient() {
-		return Registry.impl(ClientRemoteImpl.class);
-	}
+	Client createClient();
 
 	void init();
 
@@ -38,42 +42,35 @@ public interface RemoteUi {
 		return new RemoteResolver();
 	}
 
-	public static abstract class Abstract implements RemoteUi {
-		DirectedLayout layout;
+	public static class TypedPlaceClient<P extends Place>
+			extends ClientRemoteImpl {
+		Class<P> permittedPlaceSupertype;
 
-		Environment environment;
+		Class<? extends P> defaultPlaceType;
 
-		public Environment getEnvironment() {
-			return environment;
-		}
-
-		public void setEnvironment(Environment environment) {
-			this.environment = environment;
+		@Override
+		protected void createPlaceController() {
+			placeController = new PlaceController(eventBus);
 		}
 
 		@Override
-		public String toString() {
-			return Ax.format("%s::%s", NestedName.get(this),
-					Environment.get().connectedClientUid);
+		public void setupPlaceMapping() {
+			RegistryHistoryMapper mapper = new RegistryHistoryMapper(
+					permittedPlaceSupertype);
+			Registry.register().singleton(RegistryHistoryMapper.class, mapper);
+			historyHandler = new PlaceHistoryHandler(mapper);
+			historyHandler.register(placeController, eventBus,
+					() -> Reflections.newInstance(defaultPlaceType));
 		}
 
-		@Override
-		public final void render() {
-			layout = render0();
+		public TypedPlaceClient(Class<P> permittedPlaceSupertype,
+				Class<? extends P> defaultPlaceType) {
+			this.permittedPlaceSupertype = permittedPlaceSupertype;
+			this.defaultPlaceType = defaultPlaceType;
 		}
 
-		protected abstract DirectedLayout render0();
-
-		@Override
-		public void end() {
-			if (layout != null) {
-				try {
-					layout.remove();
-					layout = null;
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
+		public TypedPlaceClient(Class<P> defaultPlaceType) {
+			this(defaultPlaceType, defaultPlaceType);
 		}
 	}
 

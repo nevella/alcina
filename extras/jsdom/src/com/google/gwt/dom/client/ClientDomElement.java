@@ -47,8 +47,6 @@ public interface ClientDomElement extends ClientDomNode {
 
 	Element elementFor();
 
-	void ensureId();
-
 	void focus();
 
 	int getAbsoluteBottom();

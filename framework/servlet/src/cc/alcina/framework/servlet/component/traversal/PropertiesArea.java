@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.BeanForm.ClassName;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
@@ -37,11 +38,11 @@ class PropertiesArea extends Model.Fields {
 		this.page = page;
 		this.filter = new Choices.Single<>(
 				TraversalPlace.SelectionType.values());
-		bindings().from(page).on(Page.properties.place)
+		bindings().from(page.ui).on(Ui.properties.place)
 				.typed(TraversalPlace.class)
 				.map(p -> p.provideSelection(SelectionType.VIEW))
 				.accept(this::setSelection);
-		bindings().from(page).on(Page.properties.place)
+		bindings().from(page.ui).on(Ui.properties.place)
 				.typed(TraversalPlace.class)
 				.map(TraversalPlace::firstSelectionType)
 				.accept(filter::setSelectedValue);

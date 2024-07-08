@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
@@ -45,7 +45,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
 public class ModelBinding<T> {
 	Bindings bindings;
 
-	SourcesPropertyChangeEvents fromPropertyChangeSource;
+	BaseSourcesPropertyChangeEvents fromPropertyChangeSource;
 
 	Object on;
 
@@ -175,7 +175,7 @@ public class ModelBinding<T> {
 	/**
 	 * The source of the binding property changes
 	 */
-	public ModelBinding<T> from(SourcesPropertyChangeEvents from) {
+	public ModelBinding<T> from(BaseSourcesPropertyChangeEvents from) {
 		this.fromPropertyChangeSource = from;
 		return this;
 	}
@@ -251,8 +251,9 @@ public class ModelBinding<T> {
 		this.consumer = t -> runnable.run();
 	}
 
-	public TargetBinding to(SourcesPropertyChangeEvents to) {
-		return new TargetBinding(to);
+	public <BSP extends BaseSourcesPropertyChangeEvents> TargetBinding<BSP, T>
+			to(BSP to) {
+		return new TargetBinding(this, to);
 	}
 
 	/**
@@ -306,25 +307,28 @@ public class ModelBinding<T> {
 		return this;
 	}
 
-	public class TargetBinding {
-		SourcesPropertyChangeEvents to;
+	public static class TargetBinding<BSP extends BaseSourcesPropertyChangeEvents, T2> {
+		BSP to;
 
 		Object on;
 
 		private Function map;
 
-		TargetBinding(SourcesPropertyChangeEvents to) {
+		ModelBinding<T2> binding;
+
+		TargetBinding(ModelBinding<T2> binding, BSP to) {
+			this.binding = binding;
 			this.to = to;
 		}
 
 		void acceptLeftToRight() {
-			accept(newValue -> {
+			binding.accept(newValue -> {
 				try {
 					Reflections.at(to).property(on).set(to, newValue);
 				} catch (Exception e) {
 					LoggerFactory.getLogger(getClass()).warn(
 							"Exception executing model binding on {} to {} :: {}",
-							NestedName.get(bindings.model()),
+							NestedName.get(binding.bindings.model()),
 							NestedName.get(to), on);
 					e.printStackTrace();
 					throw WrappedRuntimeException.wrap(e);
@@ -332,11 +336,11 @@ public class ModelBinding<T> {
 			});
 		}
 
-		public <T2> ModelBinding<T2> bidi() {
+		public ModelBinding<T2> bidi() {
 			acceptLeftToRight();
-			ModelBinding source = ModelBinding.this;
-			ModelBinding reverse = new ModelBinding<>(bindings);
-			bindings.modelBindings.add(reverse);
+			ModelBinding source = binding;
+			ModelBinding<?> reverse = new ModelBinding<>(binding.bindings);
+			binding.bindings.modelBindings.add(reverse);
 			reverse.fromPropertyChangeSource = to;
 			reverse.map = map;
 			reverse.on = on;
@@ -344,15 +348,20 @@ public class ModelBinding<T> {
 					.to(source.fromPropertyChangeSource);
 			reverseTargetBinding.on = source.on;
 			reverseTargetBinding.acceptLeftToRight();
-			return reverse;
+			return (ModelBinding<T2>) reverse;
 		}
 
-		public TargetBinding on(PropertyEnum on) {
+		public TargetBinding<BSP, ?> onUntyped(PropertyEnum on) {
 			this.on = on;
 			return this;
 		}
 
-		public <T2> TargetBinding map(Function<T, T2> map) {
+		public TargetBinding<BSP, T2> on(TypedProperty<BSP, T2> on) {
+			this.on = on;
+			return (TargetBinding<BSP, T2>) this;
+		}
+
+		public <T3> TargetBinding map(Function<T2, T3> map) {
 			this.map = (Function) map;
 			return this;
 		}

@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
 
 /**
  * <p>
@@ -45,7 +45,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
  * 
  */
 @Bean(PropertySource.FIELDS)
-public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
+public class TraversalPlace extends BasePlace {
 	String textFilter;
 
 	List<SelectionPath> paths = new ArrayList<>();
@@ -286,8 +286,8 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 		public Selection selection() {
 			if (selection == null && !selectionFromPathAttempted) {
 				if ((path != null || segmentPath != null)
-						&& TraversalProcessView.Ui.get().getHistory() != null) {
-					SelectionTraversal traversal = TraversalProcessView.Ui
+						&& TraversalBrowser.Ui.get().getHistory() != null) {
+					SelectionTraversal traversal = TraversalBrowser.Ui
 							.traversal();
 					if (traversal.getRootSelection() != null) {
 						if (segmentPath != null) {
@@ -314,7 +314,7 @@ public class TraversalPlace extends BasePlace implements TraversalProcessPlace {
 			if (this.selection == null) {
 				return true;
 			}
-			boolean descentSelectionIncludesSecondaryRelations = TraversalProcessView.Ui
+			boolean descentSelectionIncludesSecondaryRelations = TraversalBrowser.Ui
 					.get().settings.descentSelectionIncludesSecondaryRelations;
 			switch (type) {
 			case CONTAINMENT:

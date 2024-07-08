@@ -407,12 +407,6 @@ public class TaskRefactorConfigSets extends PerformerTask {
 						throw new UnsupportedOperationException();
 					} else {
 						if (classDeclByName == type) {
-							if (classDeclByName.toString()
-									.contains("Connection")
-									|| classDeclByName.toString()
-											.contains("DomainStoreLoader")) {
-								int debug = 3;
-							}
 							superfluousExplicitClass = true;
 							superfluousArgument = argument;
 						}

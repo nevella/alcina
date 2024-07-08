@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
@@ -29,6 +30,7 @@ public class RemoteComponentInit implements NativePreviewHandler {
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
 		ClientRpc.send(Message.Startup.forClient());
 		initWindowListeners();
+		LocalDom.setRemoteMirror(true);
 	}
 
 	// FIXME - dirndl - this can just be sent via normal event creation (ehich

@@ -37,4 +37,12 @@ public class WrappedRuntimeException extends RuntimeException {
 	public WrappedRuntimeException(Throwable cause) {
 		super(cause);
 	}
+
+	public static Throwable unwrap(RuntimeException e) {
+		if (e instanceof WrappedRuntimeException) {
+			return e.getCause();
+		} else {
+			return e;
+		}
+	}
 }

@@ -26,6 +26,7 @@ import java.util.function.Function;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -307,7 +308,25 @@ public class ReflectiveSerializer {
 					state.pending.pop();
 				}
 			} catch (RuntimeException e) {
-				throw new SerializationException(node, e);
+				if (node.state.deserializerOptions.continueOnException) {
+					Throwable ex = WrappedRuntimeException.unwrap(e);
+					if (node.parent != null
+							&& node.parent.value instanceof HandlesDeserializationException) {
+						String deserializationClassName = ex instanceof ClassNotFoundException
+								? ex.getMessage()
+								: null;
+						String json = node.serialNode.toJson(true);
+						DeserializationExceptionData deserializationExceptionData = new DeserializationExceptionData(
+								ex, deserializationClassName, json);
+						((HandlesDeserializationException) node.parent.value)
+								.handleDeserializationException(
+										deserializationExceptionData);
+					}
+					node.deserializationComplete();
+					state.pending.pop();
+				} else {
+					throw new SerializationException(node, e);
+				}
 			}
 		} while (state.pending.size() > 0);
 	}
@@ -368,11 +387,19 @@ public class ReflectiveSerializer {
 	}
 
 	public static class DeserializerOptions {
-		private boolean defaultCollectionTypes;
+		boolean continueOnException;
+
+		boolean defaultCollectionTypes;
 
 		public DeserializerOptions
 				withDefaultCollectionTypes(boolean defaultCollectionTypes) {
 			this.defaultCollectionTypes = defaultCollectionTypes;
+			return this;
+		}
+
+		public DeserializerOptions
+				withContinueOnException(boolean continueOnException) {
+			this.continueOnException = continueOnException;
 			return this;
 		}
 	}
@@ -1293,5 +1320,25 @@ public class ReflectiveSerializer {
 	public static String serializeForRpc(Object object) {
 		return serialize(object, new SerializerOptions().withElideDefaults(true)
 				.withDefaultCollectionTypes(true));
+	}
+
+	public interface HandlesDeserializationException {
+		void handleDeserializationException(
+				DeserializationExceptionData deserializationExceptionData);
+	}
+
+	public static class DeserializationExceptionData {
+		public Throwable throwable;
+
+		public String deserializationClassName;
+
+		public String json;
+
+		public DeserializationExceptionData(Throwable ex,
+				String deserializationClassName, String json) {
+			this.throwable = ex;
+			this.deserializationClassName = deserializationClassName;
+			this.json = json;
+		}
 	}
 }

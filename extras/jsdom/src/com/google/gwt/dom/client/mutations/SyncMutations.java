@@ -84,6 +84,10 @@ class SyncMutations {
 					}
 				});
 			});
+		} catch (Exception e) {
+			Ax.simpleExceptionOut(e);
+			// FIXME - refid - this is just tmp until the refid exchange is
+			// complete
 		} finally {
 			mutationsAccess.setApplyToRemote(true);
 		}

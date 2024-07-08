@@ -10,8 +10,6 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
-import com.google.gwt.place.shared.Place;
-import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.reflection.Property;
@@ -20,33 +18,31 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TopicListener;
-import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.traversal.TraversalCommands.ClearFilter;
-import cc.alcina.framework.servlet.component.traversal.TraversalCommands.FocusSearch;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFilter;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.InputOutputDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
-import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.InputOutputCycle;
-import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.PropertyDisplayCycle;
-import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelContainment;
-import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelDescendant;
-import cc.alcina.framework.servlet.component.traversal.TraversalViewCommands.SelectionFilterModelView;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.InputOutputCycle;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.PropertyDisplayCycle;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelContainment;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelDescendant;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelView;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
+import cc.alcina.framework.servlet.dom.AbstractUi;
 
 @Directed(
 	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
@@ -55,18 +51,13 @@ class Page extends Model.All
 		implements TraversalEvents.SelectionSelected.Handler,
 		TraversalEvents.SelectionTypeSelected.Handler,
 		TraversalEvents.FilterSelections.Handler,
-		TraversalCommands.ClearFilter.Handler,
-		TraversalViewCommands.SelectionFilterModelContainment.Handler,
-		TraversalViewCommands.SelectionFilterModelDescendant.Handler,
-		TraversalViewCommands.SelectionFilterModelView.Handler,
-		TraversalViewCommands.PropertyDisplayCycle.Handler,
-		TraversalViewCommands.InputOutputCycle.Handler,
-		TraversalCommands.FocusSearch.Handler {
-	// FIXME - traversal - resolver/descendant event
-	public static TraversalPlace traversalPlace() {
-		return Ui.get().page.place;
-	}
-
+		TraversalCommand.ClearFilter.Handler,
+		TraversalBrowserCommand.SelectionFilterModelContainment.Handler,
+		TraversalBrowserCommand.SelectionFilterModelDescendant.Handler,
+		TraversalBrowserCommand.SelectionFilterModelView.Handler,
+		TraversalBrowserCommand.PropertyDisplayCycle.Handler,
+		TraversalBrowserCommand.InputOutputCycle.Handler,
+		TraversalCommand.FocusSearch.Handler {
 	static PackageProperties._Page properties = PackageProperties.page;
 
 	Header header;
@@ -85,17 +76,20 @@ class Page extends Model.All
 	RemoteComponentObservables<SelectionTraversal>.ObservableHistory history;
 
 	@Directed.Exclude
-	TraversalPlace place;
+	Ui ui;
 
-	@cc.alcina.framework.common.client.reflection.Property.Not
-	TopicListener<RemoteComponentObservables<SelectionTraversal>.ObservableHistory> historySubsciption = this::setHistory;
+	private StyleElement styleElement;
+
+	private KeyboardShortcuts shortcuts;
+
+	private KeybindingsHandler keybindingsHandler = new KeybindingsHandler(
+			eventType -> {
+				provideNode().dispatch(eventType, null);
+			}, new CommandContextProviderImpl());
 
 	Page() {
 		header = new Header(this);
-		/*
-		 * FIXME - bindings - all these below - should be the children that bind
-		 * to a PageContext event
-		 */
+		this.ui = Ui.get();
 		// FIXME - dirndl - bindings - change addListener to a ModelBinding with
 		// a prebind (setleft) phase....maybe? that might be a bit too
 		// tree-shaped, even for me
@@ -114,43 +108,27 @@ class Page extends Model.All
 		bindings().from(this).on(properties.history)
 				.signal(this::clearPlaceSelections);
 		bindings().from(this).on(properties.history).value(this)
-				.map(SelectionLayers::new).accept(this::setLayers);
+				.map(SelectionLayers::new).to(this).on(properties.layers)
+				.oneWay();
 		bindings().from(this).on(properties.history).value(this)
-				.map(PropertiesArea::new).accept(this::setPropertiesArea);
+				.map(PropertiesArea::new).to(this).on(properties.propertiesArea)
+				.oneWay();
 		bindings().from(this).on(properties.history)
-				.map(o -> new RenderedSelections(this, true))
-				.accept(this::setInput);
+				.map(o -> new RenderedSelections(this, true)).to(this)
+				.on(properties.input).oneWay();
 		bindings().from(this).on(properties.history)
-				.map(o -> new RenderedSelections(this, false))
-				.accept(this::setOutput);
-		bindings().from(this).on(properties.place).typed(TraversalPlace.class)
+				.map(o -> new RenderedSelections(this, false)).to(this)
+				.on(properties.output).oneWay();
+		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.filter(this::filterRedundantPlaceChange).value(this)
-				.map(SelectionLayers::new).accept(this::setLayers);
-		bindings().from(this).on(properties.place).typed(TraversalPlace.class)
+				.map(SelectionLayers::new).to(this).on(properties.layers)
+				.oneWay();
+		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
-		bindings().from(TraversalProcessView.Ui.get().settings)
+		bindings().from(TraversalBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
-		PlaceChangeEvent.Handler handler = evt -> {
-			if (evt.getNewPlace() instanceof TraversalPlace) {
-				setPlace((TraversalPlace) evt.getNewPlace());
-				Ui.get().setPlace(this.place);
-			}
-		};
-		this.place = Ui.place();
-		Place place = Client.currentPlace();
-		if (place instanceof TraversalPlace) {
-			this.place = (TraversalPlace) place;
-		}
-		// FIXME - dirndl - bindings - should set startup
-		// (later - not sure what this means. probably that the an init
-		// PlaceChangeEvent should be fired on beforeRender/setleft, in addition
-		// to regular listening)
-		bindings().addRegistration(() -> Client.eventBus()
-				.addHandler(PlaceChangeEvent.TYPE, handler));
 	}
-
-	private StyleElement styleElement;
 
 	void updateStyles(TraversalSettings settings) {
 		FormatBuilder builder = new FormatBuilder();
@@ -209,10 +187,12 @@ class Page extends Model.All
 		}
 	}
 
+	TraversalPlace place() {
+		return Ui.place();
+	}
+
 	void clearPlaceSelections() {
-		if (this.place != null) {
-			this.place.clearSelections();
-		}
+		place().clearSelections();
 	}
 
 	boolean filterRedundantPlaceChange(TraversalPlace place) {
@@ -228,9 +208,6 @@ class Page extends Model.All
 		}
 	}
 
-	@Property.Not
-	KeyboardShortcuts shortcuts;
-
 	void goPreserveScrollPosition(TraversalPlace place) {
 		Element scrollableLayers = layers.provideElement().getChildElement(1);
 		int top = scrollableLayers.getScrollTop();
@@ -238,26 +215,10 @@ class Page extends Model.All
 		layers.provideElement().getChildElement(1).setScrollTop(top);
 	}
 
-	@Override
-	public void onBeforeRender(BeforeRender event) {
-		super.onBeforeRender(event);
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-	}
-
-	// needs fix
-	private KeybindingsHandler keybindingsHandler = new KeybindingsHandler(
-			eventType -> {
-				provideNode().dispatch(eventType, null);
-			}, new CommandContextProviderImpl());
-
 	public static class CommandContextProviderImpl
 			implements CommandContext.Provider {
 		Class<? extends CommandContext> appContext() {
-			return TraversalViewContext.class;
+			return TraversalBrowser.CommandContext.class;
 		}
 
 		@Override
@@ -278,7 +239,8 @@ class Page extends Model.All
 
 	@Override
 	public void onSelectionSelected(SelectionSelected event) {
-		goPreserveScrollPosition(place.copy().withSelection(event.getModel()));
+		goPreserveScrollPosition(
+				place().copy().withSelection(event.getModel()));
 	}
 
 	@Override
@@ -288,10 +250,10 @@ class Page extends Model.All
 	}
 
 	void changeSelectionType(SelectionType selectionType) {
-		if (place.lastSelectionType() == selectionType) {
+		if (Ui.place().lastSelectionType() == selectionType) {
 			return;
 		}
-		TraversalPlace to = place.copy().withSelectionType(selectionType);
+		TraversalPlace to = place().copy().withSelectionType(selectionType);
 		goPreserveScrollPosition(to);
 	}
 
@@ -301,30 +263,9 @@ class Page extends Model.All
 				() -> this.history = history);
 	}
 
-	public void setInput(RenderedSelections input) {
-		set("input", this.input, input, () -> this.input = input);
-	}
-
-	public void setLayers(SelectionLayers layers) {
-		set("layers", this.layers, layers, () -> this.layers = layers);
-	}
-
-	public void setOutput(RenderedSelections output) {
-		set("output", this.output, output, () -> this.output = output);
-	}
-
-	public void setPlace(TraversalPlace place) {
-		set("place", this.place, place, () -> this.place = place);
-	}
-
-	public void setPropertiesArea(PropertiesArea properties) {
-		set("properties", this.propertiesArea, properties,
-				() -> this.propertiesArea = properties);
-	}
-
 	@Override
 	public void onFilterSelections(FilterSelections event) {
-		place.copy().withTextFilter(event.getModel()).go();
+		place().copy().withTextFilter(event.getModel()).go();
 	}
 
 	@Override
@@ -352,7 +293,7 @@ class Page extends Model.All
 
 	@Override
 	public void onPropertyDisplayCycle(PropertyDisplayCycle event) {
-		TraversalSettings settings = TraversalProcessView.Ui.get().settings;
+		TraversalSettings settings = TraversalBrowser.Ui.get().settings;
 		PropertyDisplayMode next = settings.nextPropertyDisplayMode();
 		StatusModule.get().showMessageTransitional(
 				Ax.format("Property display mode -> %s", next));
@@ -365,7 +306,7 @@ class Page extends Model.All
 
 	@Override
 	public void onInputOutputCycle(InputOutputCycle event) {
-		TraversalSettings settings = TraversalProcessView.Ui.get().settings;
+		TraversalSettings settings = TraversalBrowser.Ui.get().settings;
 		InputOutputDisplayMode next = settings.nextInputOutputDisplayMode();
 		StatusModule.get().showMessageTransitional(
 				Ax.format("Input/Output display mode -> %s", next));

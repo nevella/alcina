@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.dom.Environment;
 
@@ -25,13 +25,13 @@ class SelectionLayers extends Model.Fields {
 
 	SelectionTraversal traversal;
 
-	TraversalPlace place;
+	TraversalPlace renderedPlace;
 
 	SelectionLayers(Page page) {
 		Ax.out("History delta - id %s - %s", Environment.get().uid,
 				Ax.ntrim(Ui.place(), 30));
 		this.page = page;
-		this.place = page.place;
+		this.renderedPlace = page.ui.place;
 		render();
 	}
 
@@ -54,8 +54,8 @@ class SelectionLayers extends Model.Fields {
 	}
 
 	boolean placeChangeCausesChange(TraversalPlace newPlace) {
-		return !place.equivalentFilterTo(newPlace)
-				|| !Objects.equals(place.viewPath().segmentPath,
+		return !renderedPlace.equivalentFilterTo(newPlace)
+				|| !Objects.equals(renderedPlace.viewPath().segmentPath,
 						newPlace.viewPath().segmentPath);
 	}
 }

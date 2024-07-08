@@ -5,10 +5,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 @Directed(renderer = DirectedRenderer.Delegating.class)
-@Feature.Ref(Feature_TraversalProcessView_AppSuggestorImplementation.class)
+@Feature.Ref(Feature_TraversalBrowser_AppSuggestorImplementation.class)
 public class AppSuggestorTraversal extends AppSuggestor {
 	public AppSuggestorTraversal() {
 		super(createAppAttributes());

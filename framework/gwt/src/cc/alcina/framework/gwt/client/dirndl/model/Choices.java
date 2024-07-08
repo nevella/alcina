@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -185,35 +184,6 @@ public abstract class Choices<T> extends Model implements
 			@Override
 			default List<?> apply(Values t) {
 				return get();
-			}
-		}
-	}
-
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.METHOD, ElementType.FIELD })
-	public @interface ValueTransformer {
-		/**
-		 * The values supplier
-		 */
-		Class<? extends Function<?, ?>> value();
-
-		public static class Impl implements ValueTransformer {
-			Class<? extends Function<?, ?>> value;
-
-			public Impl(Class<? extends Function<?, ?>> value) {
-				this.value = value;
-			}
-
-			@Override
-			public Class<? extends Annotation> annotationType() {
-				return ValueTransformer.class;
-			}
-
-			@Override
-			public Class<? extends Function<?, ?>> value() {
-				return value;
 			}
 		}
 	}

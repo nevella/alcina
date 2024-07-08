@@ -1,5 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -36,7 +43,9 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.DirectedEntitySearchActivityTransformer.TableContainer;
@@ -57,116 +66,17 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * The arbitrary case doesn't really need a supporting model - see (
  *
  * FIXME - dirndl - doc) this example of using transforms
+ * 
+ * <p>
+ * Because of descendant events, it'd be fairly easy to add a selectionmodel (a
+ * la gwt celltable)
  *
  *
  *
  */
 public class TableModel extends Model implements NodeEditorContext {
-	protected TableHeader header = new TableHeader();
-
-	protected List<TableRow> rows = new ArrayList<>();
-
-	protected List<Link> actions = new ArrayList<>();
-
-	private Model emptyResults;
-
-	private Attributes attributes;
-
-	public TableModel() {
-	}
-
-	public List<Link> getActions() {
-		return this.actions;
-	}
-
-	@Directed
-	public Model getEmptyResults() {
-		return emptyResults;
-	}
-
-	public TableHeader getHeader() {
-		return this.header;
-	}
-
-	public List<TableRow> getRows() {
-		return this.rows;
-	}
-
-	ModalResolver init(Node node) {
-		ModalResolver resolver = ModalResolver.multiple(node, true);
-		resolver.setTableModel(this);
-		node.setResolver(resolver);
-		attributes = new Attributes();
-		BeanViewModifiers args = node.annotation(BeanViewModifiers.class);
-		if (args != null) {
-			attributes.adjunct = args.adjunct();
-			attributes.nodeEditors = args.nodeEditors();
-			attributes.editable = args.editable();
-			attributes.detached = args.detached();
-		}
-		return resolver;
-	}
-
-	@Override
-	public boolean isDetached() {
-		return attributes.detached;
-	}
-
-	@Override
-	public boolean isEditable() {
-		return attributes.editable;
-	}
-
-	@Override
-	public boolean isRenderAsNodeEditors() {
-		return attributes.nodeEditors;
-	}
-
-	public void setEmptyResults(Model emptyResults) {
-		this.emptyResults = emptyResults;
-	}
-
-	public void setRows(List<TableRow> rows) {
-		set("rows", this.rows, rows, () -> this.rows = rows);
-	}
-
-	static class Attributes {
-		boolean detached;
-
-		boolean nodeEditors = true;
-
-		boolean editable;
-
-		boolean adjunct;
-	}
-
 	public static class DirectedCategoriesActivityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedCategoriesActivity<?>, TableModel> {
-		@Override
-		public TableModel apply(DirectedCategoriesActivity<?> activity) {
-			TableModel tableModel = new TableModel();
-			ModalResolver resolver = ModalResolver.multiple(node, true);
-			node.setResolver(resolver);
-			resolver.setTableModel(tableModel);
-			List<CategoryNamePlace> places = activity.getPlace()
-					.getNamedPlaces();
-			places.removeIf(p -> !isPermitted(p));
-			Class<? extends Bindable> resultClass = CategoryNamePlaceTableAdapter.class;
-			BeanFields.query().forClass(resultClass)
-					.forMultipleWidgetContainer(true)
-					.withResolver(node.getResolver()).listFields().stream()
-					.map(TableColumn::new)
-					.forEach(tableModel.header.columns::add);
-			places.stream().map(CategoryNamePlaceTableAdapter::new)
-					.map(bindable -> new TableRow(tableModel, bindable))
-					.forEach(tableModel.rows::add);
-			return tableModel;
-		}
-
-		protected boolean isPermitted(CategoryNamePlace place) {
-			return true;
-		}
-
 		@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE))
 		public static class CategoryNamePlaceTableAdapter extends Model
 				implements HasDisplayName {
@@ -197,50 +107,35 @@ public class TableModel extends Model implements NodeEditorContext {
 				return place;
 			}
 		}
+
+		@Override
+		public TableModel apply(DirectedCategoriesActivity<?> activity) {
+			TableModel tableModel = new TableModel();
+			ModalResolver resolver = ModalResolver.multiple(node, true);
+			node.setResolver(resolver);
+			resolver.setTableModel(tableModel);
+			List<CategoryNamePlace> places = activity.getPlace()
+					.getNamedPlaces();
+			places.removeIf(p -> !isPermitted(p));
+			Class<? extends Bindable> resultClass = CategoryNamePlaceTableAdapter.class;
+			BeanFields.query().forClass(resultClass)
+					.forMultipleWidgetContainer(true)
+					.withResolver(node.getResolver()).listFields().stream()
+					.map(TableColumn::new)
+					.forEach(tableModel.header.columns::add);
+			places.stream().map(CategoryNamePlaceTableAdapter::new).map(
+					bindable -> new TableModel.TableRow(tableModel, bindable))
+					.forEach(tableModel::addRow);
+			return tableModel;
+		}
+
+		protected boolean isPermitted(CategoryNamePlace place) {
+			return true;
+		}
 	}
 
 	public static class DirectedEntitySearchActivityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableContainer> {
-		@Override
-		public TableContainer apply(
-				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
-			TableModel tableModel = new TableModel();
-			TableContainer tableContainer = new TableContainer(tableModel);
-			if (activity.getSearchResults() == null) {
-				return tableContainer;
-			}
-			ModalResolver resolver = tableModel.init(node);
-			BindableSearchDefinition def = activity.getSearchResults().getDef();
-			String sortFieldName = def.getSearchOrders()
-					.provideSearchOrderFieldName();
-			SortDirection sortDirection = def.getSearchOrders()
-					.provideIsAscending() ? SortDirection.ASCENDING
-							: SortDirection.DESCENDING;
-			Class<? extends Bindable> resultClass = activity.getSearchResults()
-					.resultClass();
-			List<Field> fields = BeanFields.query().forClass(resultClass)
-					.forMultipleWidgetContainer(true).withResolver(resolver)
-					.listFields();
-			fields.stream().map(field -> {
-				SortDirection fieldDirection = field.getPropertyName()
-						.equals(sortFieldName) ? sortDirection : null;
-				return new TableColumn(field, fieldDirection);
-			}).forEach(tableModel.header.columns::add);
-			List<? extends Bindable> rowObjects = activity.getSearchResults()
-					.getQueriedResultObjects();
-			if (rowObjects.size() == 0) {
-				Registry.impl(EmptyResultHandler.class)
-						.getEmptyResultPlaceholder(fields)
-						.forEach(tableModel.rows::add);
-			} else {
-				rowObjects.stream()
-						.map(bindable -> new TableRow(tableModel, bindable))
-						.forEach(tableModel.rows::add);
-			}
-			// add actions if editable and adjunct
-			return tableContainer;
-		}
-
 		@Directed.Delegating
 		public class TableContainer extends Model.All
 				implements TableEvents.SortTable.Handler {
@@ -272,12 +167,84 @@ public class TableModel extends Model implements NodeEditorContext {
 				place.go();
 			}
 		}
+
+		@Override
+		public TableContainer apply(
+				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
+			TableModel tableModel = new TableModel();
+			TableContainer tableContainer = new TableContainer(tableModel);
+			if (activity.getSearchResults() == null) {
+				return tableContainer;
+			}
+			ModalResolver resolver = tableModel.init(node);
+			BindableSearchDefinition def = activity.getSearchResults().getDef();
+			String sortFieldName = def.getSearchOrders()
+					.provideSearchOrderFieldName();
+			SortDirection sortDirection = def.getSearchOrders()
+					.provideIsAscending() ? SortDirection.ASCENDING
+							: SortDirection.DESCENDING;
+			Class<? extends Bindable> resultClass = activity.getSearchResults()
+					.resultClass();
+			List<Field> fields = BeanFields.query().forClass(resultClass)
+					.forMultipleWidgetContainer(true).withResolver(resolver)
+					.listFields();
+			fields.stream().map(field -> {
+				SortDirection fieldDirection = field.getPropertyName()
+						.equals(sortFieldName) ? sortDirection : null;
+				return new TableColumn(field, fieldDirection);
+			}).forEach(tableModel.header.columns::add);
+			List<? extends Bindable> rowObjects = activity.getSearchResults()
+					.getQueriedResultObjects();
+			if (rowObjects.size() == 0) {
+				Registry.impl(EmptyResultHandler.class)
+						.getEmptyResultPlaceholder(fields)
+						.forEach(tableModel::addRow);
+			} else {
+				rowObjects.stream()
+						.map(bindable -> new TableModel.TableRow(tableModel,
+								bindable))
+						.forEach(tableModel::addRow);
+			}
+			// add actions if editable and adjunct
+			return tableContainer;
+		}
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface RowTransformer {
+		public static class Impl implements RowTransformer {
+			private Class<? extends ModelTransform> value;
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return RowTransformer.class;
+			}
+
+			@Override
+			public Class<? extends ModelTransform> value() {
+				return value;
+			}
+
+			public Impl withValue(Class<? extends ModelTransform> value) {
+				this.value = value;
+				return this;
+			}
+		}
+
+		/**
+		 * The transformer
+		 */
+		Class<? extends ModelTransform> value();
 	}
 
 	@Registration(EmptyResultHandler.class)
 	@Reflected
 	public static class EmptyResultHandler {
-		public List<TableRow> getEmptyResultPlaceholder(List<Field> fields) {
+		public List<TableModel.TableRow>
+				getEmptyResultPlaceholder(List<Field> fields) {
 			return Collections.emptyList();
 		}
 	}
@@ -293,12 +260,12 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		protected TableColumn column;
 
-		protected TableRow row;
+		protected TableModel.TableRow row;
 
 		public TableCell() {
 		}
 
-		public TableCell(TableColumn column, TableRow row) {
+		public TableCell(TableColumn column, TableModel.TableRow row) {
 			this.column = column;
 			this.row = row;
 			this.value = new TableValueModel(this);
@@ -391,18 +358,18 @@ public class TableModel extends Model implements NodeEditorContext {
 
 	public static class TableColumnClicked
 			extends ModelEvent<TableColumn, TableColumnClicked.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onTableColumnClicked(TableColumnClicked TableColumnClicked);
+		}
+
 		@Override
 		public void dispatch(TableColumnClicked.Handler handler) {
 			handler.onTableColumnClicked(this);
 		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onTableColumnClicked(TableColumnClicked TableColumnClicked);
-		}
 	}
 
 	public static class TableHeader extends Model {
-		private List<TableColumn> columns = new ArrayList<>();
+		List<TableColumn> columns = new ArrayList<>();
 
 		public TableHeader() {
 		}
@@ -410,32 +377,6 @@ public class TableModel extends Model implements NodeEditorContext {
 		@Directed
 		public List<TableColumn> getColumns() {
 			return this.columns;
-		}
-	}
-
-	@Directed(reemits = { DomEvents.Click.class, FormEvents.RowClicked.class })
-	public static class TableRow extends Model {
-		private List<TableCell> cells = new ArrayList<>();
-
-		private Bindable bindable;
-
-		public TableRow() {
-		}
-
-		public TableRow(TableModel model, Bindable bindable) {
-			this.bindable = bindable;
-			model.header.columns.stream()
-					.map(column -> new TableCell(column, this))
-					.forEach(cells::add);
-		}
-
-		public Bindable getBindable() {
-			return bindable;
-		}
-
-		@Directed
-		public List<TableCell> getCells() {
-			return this.cells;
 		}
 	}
 
@@ -451,7 +392,7 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		@Override
 		public Bindable getBindable() {
-			return cell.row.bindable;
+			return (Bindable) cell.row.rowModel;
 		}
 
 		@Override
@@ -472,5 +413,135 @@ public class TableModel extends Model implements NodeEditorContext {
 		public void onChildBindingCreated(Binding binding) {
 			// NOOP
 		}
+	}
+
+	@Directed(reemits = { DomEvents.Click.class, TableEvents.RowClicked.class })
+	public static class TableRow extends Model {
+		public int index;
+
+		List<TableCell> cells = new ArrayList<>();
+
+		Object rowModel;
+
+		Object originalRowModel;
+
+		public TableRow() {
+		}
+
+		public TableRow(TableModel model, Object originalRowModel) {
+			this.originalRowModel = originalRowModel;
+			this.rowModel = model.rowTransformer == null ? originalRowModel
+					: model.rowTransformer.apply(originalRowModel);
+			model.header.columns.stream()
+					.map(column -> new TableCell(column, this))
+					.forEach(cells::add);
+		}
+
+		public Object getRowModel() {
+			return rowModel;
+		}
+
+		public Object getOriginalRowModel() {
+			return originalRowModel;
+		}
+
+		@Directed
+		public List<TableCell> getCells() {
+			return this.cells;
+		}
+	}
+
+	static class Attributes {
+		boolean detached;
+
+		boolean nodeEditors = true;
+
+		boolean editable;
+
+		boolean adjunct;
+	}
+
+	protected TableHeader header = new TableHeader();
+
+	protected List<TableRow> rows = new ArrayList<>();
+
+	protected List<Link> actions = new ArrayList<>();
+
+	private Model emptyResults;
+
+	private Attributes attributes;
+
+	ModelTransform rowTransformer;
+
+	public TableModel() {
+	}
+
+	public void addRow(TableRow row) {
+		row.index = rows.size();
+		rows.add(row);
+	}
+
+	public List<Link> getActions() {
+		return this.actions;
+	}
+
+	@Directed
+	public Model getEmptyResults() {
+		return emptyResults;
+	}
+
+	public TableHeader getHeader() {
+		return this.header;
+	}
+
+	public List<TableModel.TableRow> getRows() {
+		return this.rows;
+	}
+
+	@Override
+	public boolean isDetached() {
+		return attributes.detached;
+	}
+
+	@Override
+	public boolean isEditable() {
+		return attributes.editable;
+	}
+
+	@Override
+	public boolean isRenderAsNodeEditors() {
+		return attributes.nodeEditors;
+	}
+
+	public void setEmptyResults(Model emptyResults) {
+		this.emptyResults = emptyResults;
+	}
+
+	public void setRows(List<TableModel.TableRow> rows) {
+		set("rows", this.rows, rows, () -> this.rows = rows);
+	}
+
+	ModalResolver init(Node node) {
+		RowTransformer rowTransformerAnn = node
+				.annotation(RowTransformer.class);
+		if (rowTransformerAnn != null) {
+			rowTransformer = Reflections.newInstance(rowTransformerAnn.value());
+			if (rowTransformer instanceof ContextSensitiveTransform) {
+				((ContextSensitiveTransform) rowTransformer)
+						.withContextNode(node);
+			}
+		}
+		ModalResolver resolver = ModalResolver.multiple(node, true);
+		resolver.setTableModel(this);
+		node.setResolver(resolver);
+		attributes = new Attributes();
+		BeanViewModifiers args = node.annotation(BeanViewModifiers.class);
+		if (args != null) {
+			attributes.adjunct = args.adjunct();
+			attributes.nodeEditors = args.nodeEditors();
+			attributes.editable = args.editable();
+			attributes.detached = args.detached();
+		}
+		return resolver;
 	}
 }

@@ -1,0 +1,26 @@
+@use '../../dirndl/multi/base'
+
+@mixin contents
+  display: grid
+  grid-template-rows: min-content min-content 1fr
+  grid-area: props
+  overflow: auto
+  padding: 0.5rem
+
+  > properties
+    > table
+      th
+        text-align: left
+        padding-right: 2rem
+        padding-left: 1rem
+
+  > string-representation
+    display: block
+    margin-top: 1rem
+    border-top: solid 1px #ccc
+    padding-top: 1rem
+    white-space: pre
+    overflow: auto
+
+    .__markup_highlight
+      background-color: yellow

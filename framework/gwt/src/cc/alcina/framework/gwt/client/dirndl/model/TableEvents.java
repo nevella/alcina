@@ -16,4 +16,16 @@ public class TableEvents {
 			void onSortTable(SortTable event);
 		}
 	}
+
+	public static class RowClicked
+			extends ModelEvent<TableModel.TableRow, RowClicked.Handler> {
+		@Override
+		public void dispatch(RowClicked.Handler handler) {
+			handler.onRowClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onRowClicked(RowClicked event);
+		}
+	}
 }

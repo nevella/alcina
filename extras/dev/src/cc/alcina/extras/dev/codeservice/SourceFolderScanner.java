@@ -2,6 +2,7 @@ package cc.alcina.extras.dev.codeservice;
 
 import java.io.File;
 
+import cc.alcina.extras.dev.codeservice.CodeService.Context;
 import cc.alcina.extras.dev.codeservice.CodeService.Event;
 import cc.alcina.extras.dev.codeservice.CodeService.FileEvent;
 import cc.alcina.extras.dev.codeservice.CodeService.SourceFolderEvent;
@@ -32,12 +33,20 @@ public class SourceFolderScanner extends CodeService.Handler.Abstract {
 					sourceFolder.classPathFolderPath);
 			return;
 		}
-		// use classpath (ide-compilation) files and file events to trigger code
+		// what are the source packages?
+		register(event.context, sourceFolderIoFolder);
+		// what are the compiled classes?
+		// use classpath (ide-compilation) files and file events to trigger
+		// code
 		// computation, since ops *currently* use compiled jvm classes
-		SEUtilities
-				.listFilesRecursive(classPathFolderIoFolder.getPath(), null,
-						true)
-				.stream().forEach(file -> event.context.submitFileEvent(file));
-		event.context.watchFolder(classPathFolderIoFolder);
+		register(event.context, classPathFolderIoFolder);
+	}
+
+	void register(Context context, File folder) {
+		if (context.registerPath(folder)) {
+			SEUtilities.listFilesRecursive(folder.getPath(), null, true)
+					.stream().forEach(file -> context.submitFileEvent(file));
+			context.watchFolder(folder);
+		}
 	}
 }

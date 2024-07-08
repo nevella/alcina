@@ -37,11 +37,6 @@ public class ElementNull extends NodeLocalNull implements ClientDomElement {
 	}
 
 	@Override
-	public void ensureId() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void focus() {
 		throw new UnsupportedOperationException();
 	}

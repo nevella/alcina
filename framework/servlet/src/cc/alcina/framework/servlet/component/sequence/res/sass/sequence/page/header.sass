@@ -1,0 +1,87 @@
+@use '../../theme/theme'
+@use '../multi/icons/ellipsis-vertical.svg.data-url-rule' as ellipsis-vertical
+@use '../../dirndl/cmp/context-menu'
+@use '../../dirndl/cmp/choices'
+@use '../../dirndl/cmp/heading'
+@use '../../dirndl/cmp/action'
+
+$header-height: 50px
+$font-family: Arial
+$background-color: #84A4FC
+$color: white
+$hover-color: black
+$padding: 0.5rem 2rem
+$item-gap: 2.5rem
+
+@mixin contents
+  width: 100%
+  height: $header-height
+  font-family: $font-family
+  display: grid
+  align-items: center
+  grid-template-columns: 1fr theme.$app-suggestor-width 1fr
+  grid-template-areas: "left mid right"
+  align-content: center
+  box-sizing: border-box
+  justify-self: center
+  position: sticky
+  top: 0
+  z-index: 2
+  background-color: $background-color
+  color: $color
+  padding: $padding
+  justify-self: stretch
+  grid-column: 1 / -1
+  column-gap: 1rem
+
+  a:hover, button:hover
+    color:  $hover-color
+
+
+  >left, >right
+    flex: 1
+
+    display: flex
+
+    align-items: center
+    gap: $item-gap
+
+
+  >left
+    justify-content: flex-start
+    grid-area: left
+
+    > name
+      white-space: nowrap
+
+  > mid
+    grid-area: mid
+    display: flex
+    justify-content: center
+
+  >right
+    justify-content: flex-end
+    grid-area: right
+
+    > dropdown
+      display: inline-block
+      width: 20px
+      height: 20px
+
+      > button
+        filter: invert(1)
+        @include action.content
+
+        &.dotburger
+          @include ellipsis-vertical.content
+
+overlay > menu
+  @include context-menu.context-menu-std-padding
+  @include context-menu.context-menu-text-only
+
+  > heading
+    @include heading.panel-2
+
+  > choices
+    @include choices.vertical
+    margin-bottom: 0.5rem

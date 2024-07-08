@@ -47,9 +47,7 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	 */
 	public ScrollPanel() {
 		this.scrollableElem = getElement();
-		scrollableElem.ensureId();
 		this.containerElem = Document.get().createDivElement();
-		containerElem.ensureId();
 		scrollableElem.appendChild(containerElem);
 		initialize();
 	}

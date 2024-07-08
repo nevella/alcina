@@ -239,6 +239,11 @@ public class BridgingValueRenderer extends DirectedRenderer {
 						Directed.Transform transform = (Transform) contextAnnotation;
 						List<Class> bounds = Reflections.at(transform.value())
 								.getGenericBounds().bounds;
+						/*
+						 * if you want to say transform a table column - say
+						 * date to string - use a @ValueTransformer, not
+						 * a @Directed.Transformer
+						 */
 						Preconditions.checkState(Reflections.isAssignableFrom(
 								HasValue.class, bounds.get(1)));
 						/*

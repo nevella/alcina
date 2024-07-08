@@ -365,13 +365,6 @@ public class Element extends Node implements ClientDomElement,
 				: handlerManager;
 	}
 
-	@Override
-	public void ensureId() {
-		if (!linkedToRemote()) {
-			local().ensureId();
-		}
-	}
-
 	protected ElementJso ensureJsoRemote() {
 		LocalDom.flush();
 		LocalDom.ensureRemote(this);
@@ -929,7 +922,10 @@ public class Element extends Node implements ClientDomElement,
 			Preconditions
 					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
 		}
-		Preconditions.checkState(wasSynced() == synced);
+		// FIXME - refid - the isRemoteMirror check works (sync is guaranteed)
+		// but it'd be nice if it didn't have to...
+		Preconditions
+				.checkState(wasSynced() == synced || LocalDom.isRemoteMirror());
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		Preconditions.checkState(remote != null);
@@ -1172,11 +1168,23 @@ public class Element extends Node implements ClientDomElement,
 				.collect(Collectors.toList());
 		removeAllChildren();
 		if (linkedAndNotPending()) {
-			remote().setInnerHTML(html);
-			// tbodies? foots? proudfeet?
-			String remoteHtml = jsoRemote().getInnerHTML0();
-			local().setInnerHTML(remoteHtml);
-			LocalDom.wasSynced(this);
+			/*
+			 * FIXME - refid - possibly use markupjso (or at least attempt it
+			 * first) - in fact, we can't do this (or we'd need to reverse sync
+			 * mutations) since the browser dom wd be ~= the server dom. So for
+			 * the moment just use markupJso - and swallow exceptions
+			 * 
+			 * (Originally this wrote to the jso, and applied the jso's (better
+			 * parsed) innerHtml )
+			 */
+			// remote().setInnerHTML(html);
+			// // tbodies? foots? proudfeet?
+			// String remoteHtml = jsoRemote().getInnerHTML0();
+			// local().setInnerHTML(remoteHtml);
+			// // this will create local refids, so apply then back
+			// LocalDom.wasSynced(this);
+			local().setInnerHTML(html);
+			LocalDom.localToRemoteInner(this, html);
 		} else {
 			local().setInnerHTML(html);
 		}
@@ -1496,6 +1504,10 @@ public class Element extends Node implements ClientDomElement,
 			case "focus":
 				Preconditions.checkArgument(argumentTypes.isEmpty());
 				elem.focus();
+				return null;
+			case "scrollIntoView":
+				Preconditions.checkArgument(argumentTypes.isEmpty());
+				elem.scrollIntoView();
 				return null;
 			case "getPropertyString":
 				if (argumentTypes.size() == 1) {

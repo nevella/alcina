@@ -197,7 +197,6 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		super();
 		Element implElement = impl.createElement();
 		super.getContainerElement().appendChild(implElement);
-		// implElement.ensureId();
 		// Default position of popup should be in the upper-left corner of the
 		// window. By setting a default position, the popup will not appear in
 		// an undefined location if it is shown before its position is set.

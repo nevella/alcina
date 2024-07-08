@@ -14,7 +14,7 @@
   > tbody > tr:nth-of-type(even) 
     background-color:#f3f3fa
 
-  > tbody > tr:nth-of-type(1) td
+  > tbody > tr:first-of-type td
     padding-top: 8px
   
   > thead > tr > th
@@ -26,9 +26,10 @@
     padding: 6px 2px
 
   td > value
+    display: block
+    
     &.numeric
       text-align: right
-      display: block
       padding-right: 1rem
 
     &.nowrap
@@ -58,4 +59,11 @@
     > td
       background-color: #eee
 
+@mixin bordered-pad-left
+  th:first-of-type, td:first-of-type
+    padding-left: 1rem
 
+@mixin more-horizontal-space
+  th, td
+    padding-left: 6px
+    padding-right: 6px

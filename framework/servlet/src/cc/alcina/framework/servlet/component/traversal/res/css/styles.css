@@ -708,6 +708,7 @@ body > page > properties > choices > choice[_selected], body > page > properties
 }
 body > page > properties > choices > choice {
   text-transform: lowercase;
+  cursor: pointer;
 }
 body > page > properties bean-editor {
   padding: 1rem;

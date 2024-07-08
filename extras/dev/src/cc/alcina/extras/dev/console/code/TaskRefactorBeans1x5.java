@@ -240,9 +240,6 @@ public class TaskRefactorBeans1x5 extends PerformerTask {
 						break;
 					}
 					case MANIFEST: {
-						if (type.name.contains("Left")) {
-							int debug = 3;
-						}
 						accessToPackage(type);
 						modelToModelFields(type);
 						removeDefaultPropertyMethods(type);

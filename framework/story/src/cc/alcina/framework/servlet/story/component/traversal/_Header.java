@@ -3,10 +3,10 @@ package cc.alcina.framework.servlet.story.component.traversal;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Decl;
 import cc.alcina.framework.gwt.client.story.Waypoint;
-import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessView_DotBurger;
-import cc.alcina.framework.servlet.component.traversal.Feature_TraversalProcessView_Header;
+import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_DotBurger;
+import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_Header;
 
-@Decl.Feature(Feature_TraversalProcessView_Header.class)
+@Decl.Feature(Feature_TraversalBrowser_Header.class)
 @Decl.Child(_Header.Dotburger.class)
 class _Header extends Waypoint {
 	static final String XPATH_DOTBURGER_ICON = "//header/right/dropdown/button[@class='dotburger']";
@@ -21,7 +21,7 @@ class _Header extends Waypoint {
 	@Decl.Label("Application menu")
 	@Decl.Description("The application menu provides access to application"
 			+ " settings such as window display and selection ancestry modes")
-	@Decl.Feature(Feature_TraversalProcessView_DotBurger.class)
+	@Decl.Feature(Feature_TraversalBrowser_DotBurger.class)
 	@Decl.Todo("Add reference links for the modes")
 	@Decl.Child(Dotburger.Reset.class)
 	@Decl.Child(Dotburger.DocOpen.class)

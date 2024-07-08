@@ -31,8 +31,8 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObserv
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.TraversalAnswerSupplier;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.dom.RemoteUi;
@@ -56,7 +56,7 @@ public class EntityGraphView {
 		return Ui.cast().peer;
 	}
 
-	public static class Ui extends TraversalProcessView.Ui {
+	public static class Ui extends TraversalBrowser.Ui {
 		String traversalId;
 
 		static CountDownLatch loadedLatch = new CountDownLatch(1);
@@ -74,8 +74,8 @@ public class EntityGraphView {
 
 		@Override
 		public void injectCss(String relativePath) {
-			StyleInjector.injectNow(
-					Io.read().relativeTo(TraversalProcessView.Ui.class)
+			StyleInjector
+					.injectNow(Io.read().relativeTo(TraversalBrowser.Ui.class)
 							.resource(relativePath).asString());
 		}
 
@@ -132,11 +132,9 @@ public class EntityGraphView {
 			super.init();
 		}
 
-		TraversalPlace currentPlace;
-
 		@Override
 		public void setPlace(TraversalPlace place) {
-			if (!Objects.equals(place, this.currentPlace)) {
+			if (!Objects.equals(place, this.place)) {
 				traverse();
 				// if the filter matches exactly one entity, append it to the
 				// place + re-set
@@ -151,12 +149,16 @@ public class EntityGraphView {
 							place = place.appendSelections(List.of(next));
 							Client.eventBus().queued().deferred()
 									.lambda(place::go).dispatch();
+							/*
+							 * do not fall through to super.setPlace (the place
+							 * will be replaced during the deferred place.go())
+							 */
 							return;
 						}
 					}
 				}
 			}
-			this.currentPlace = place;
+			super.setPlace(place);
 		}
 
 		@Override

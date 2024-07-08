@@ -19,13 +19,17 @@ public class SourceFolder implements Predicate<File> {
 
 	public String sourceFolderCanonicalPath;
 
+	public String sourceFolderCanonicalPathSlash;
+
 	public String classPathFolderPath;
 
 	public String classPathFolderCanonicalPath;
 
+	public String classPathFolderCanonicalPathSlash;
+
 	public boolean containsPath(String canonicalPath) {
-		return canonicalPath.startsWith(sourceFolderCanonicalPath)
-				|| canonicalPath.startsWith(classPathFolderCanonicalPath);
+		return canonicalPath.startsWith(sourceFolderCanonicalPathSlash)
+				|| canonicalPath.startsWith(classPathFolderCanonicalPathSlash);
 	}
 
 	public SourceFolder(String sourceFolderPath, String classPathFolderPath) {
@@ -34,8 +38,12 @@ public class SourceFolder implements Predicate<File> {
 		try {
 			this.sourceFolderCanonicalPath = new File(sourceFolderPath)
 					.getCanonicalPath();
+			this.sourceFolderCanonicalPathSlash = this.sourceFolderCanonicalPath
+					+ "/";
 			this.classPathFolderCanonicalPath = new File(classPathFolderPath)
 					.getCanonicalPath();
+			this.classPathFolderCanonicalPathSlash = this.classPathFolderCanonicalPath
+					+ "/";
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}

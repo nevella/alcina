@@ -39,6 +39,13 @@ public abstract class LeafModel {
 		public void setValue(String value) {
 			set("value", this.value, value, () -> this.value = value);
 		}
+
+		public static class To implements ModelTransform<String, HtmlBlock> {
+			@Override
+			public HtmlBlock apply(String t) {
+				return new HtmlBlock(t);
+			}
+		}
 	}
 
 	/*

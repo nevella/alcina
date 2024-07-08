@@ -299,6 +299,8 @@ public class DirectedLayout implements AlcinaProcess {
 		root = null;
 	}
 
+	public LayoutResult layoutResult;
+
 	/**
 	 * Render a model object and add top-level output widgets to the parent
 	 * widget
@@ -312,7 +314,8 @@ public class DirectedLayout implements AlcinaProcess {
 				null, resolver);
 		enqueueInput(resolver, model, location, null, null);
 		layout();
-		return new LayoutResult();
+		this.layoutResult = new LayoutResult();
+		return layoutResult;
 	}
 
 	public LayoutResult render(Object model) {

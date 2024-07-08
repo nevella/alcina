@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -421,7 +422,7 @@ public abstract class Model extends Bindable implements
 			bound = true;
 		}
 
-		public <T extends SourcesPropertyChangeEvents> ModelBinding<T>
+		public <T extends BaseSourcesPropertyChangeEvents> ModelBinding<T>
 				from(T source) {
 			ModelBinding binding = new ModelBinding(this);
 			modelBindings.add(binding);
@@ -499,8 +500,7 @@ public abstract class Model extends Bindable implements
 		@Override
 		default void onPositionedDescendants(PositionedDescendants event) {
 			Scheduler.get().scheduleDeferred(
-					() -> FocusImpl.getFocusImplForWidget().focus(
-							event.getContext().node.getRendered().asElement()));
+					() -> focusIfAttached(event.getContext().node));
 		}
 
 		default void onBind(FocusOnBind dispatchMarker, Bind event) {
@@ -513,10 +513,24 @@ public abstract class Model extends Bindable implements
 				//
 				// Essentially, the DOM of the input needs to exist before
 				// execution
-				Scheduler.get().scheduleDeferred(() -> FocusImpl
-						.getFocusImplForWidget().focus(event.getContext().node
-								.getRendered().asElement()));
+				Scheduler.get().scheduleDeferred(
+						() -> focusIfAttached(event.getContext().node));
 			}
+		}
+
+		static void focusIfAttached(DirectedLayout.Node node) {
+			Object model = node.getModel();
+			// it's pretty much certain to be so, but double-check
+			if (model instanceof Model) {
+				if (!((Model) model).provideIsBound()) {
+					// detached
+					Ax.out("[not emitting focus - model detached - %s]",
+							NestedName.get(model));
+					return;
+				}
+			}
+			FocusImpl.getFocusImplForWidget()
+					.focus(node.getRendered().asElement());
 		}
 	}
 

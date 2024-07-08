@@ -1,24 +1,21 @@
 package cc.alcina.framework.servlet.component.traversal;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
-import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
-import cc.alcina.framework.gwt.client.dirndl.model.FormEvents;
-import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 /*
  * TODO - extend the heck out of this
@@ -26,7 +23,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 @DirectedContextResolver(FmsContentCells.FmsCellsContextResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
 public class SelectionTableArea extends Model.Fields
-		implements FormEvents.RowClicked.Handler {
+		implements TableEvents.RowClicked.Handler {
 	public interface HasTableRepresentation {
 		List<? extends Bindable> getSelectionBindables();
 
@@ -62,15 +59,15 @@ public class SelectionTableArea extends Model.Fields
 			}
 
 			@Override
-			default Selection selectionFor(Bindable bindable) {
+			default Selection selectionFor(Object value) {
 				Selection selection = (Selection) this;
 				return selection.processNode().getChildren().stream()
 						.map(pn -> ((Selection) pn.getValue()))
-						.filter(sel -> sel.get() == bindable).findFirst().get();
+						.filter(sel -> sel.get() == value).findFirst().get();
 			}
 		}
 
-		Selection selectionFor(Bindable bindable);
+		Selection selectionFor(Object object);
 	}
 
 	@Directed.Transform(TableView.class)
@@ -85,22 +82,11 @@ public class SelectionTableArea extends Model.Fields
 		selectionBindables = hasTable.getSelectionBindables();
 	}
 
-	static class DisplayAllMixin extends FmsCellsContextResolver {
-		@Override
-		protected <A extends Annotation> List<A> resolveAnnotations0(
-				Class<A> annotationClass, AnnotationLocation location) {
-			List<A> mixinResult = DisplayAllPropertiesIfNoneExplicitlySet.Mixin
-					.resolveAnnotations0(annotationClass, location);
-			return mixinResult != null ? mixinResult
-					: super.resolveAnnotations0(annotationClass, location);
-		}
-	}
-
 	@Override
-	public void onRowClicked(RowClicked event) {
+	public void onRowClicked(TableEvents.RowClicked event) {
 		Ui.place()
-				.appendSelections(List.of(
-						hasTable.selectionFor(event.getModel().getBindable())))
+				.appendSelections(List.of(hasTable
+						.selectionFor(event.getModel().getOriginalRowModel())))
 				.go();
 	}
 }

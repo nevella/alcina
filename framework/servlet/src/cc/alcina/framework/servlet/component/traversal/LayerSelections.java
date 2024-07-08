@@ -42,10 +42,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
-import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
+import cc.alcina.framework.servlet.dom.AbstractUi;
 
 class LayerSelections extends Model.All {
 	@Binding(type = Type.PROPERTY)
@@ -258,7 +259,7 @@ class LayerSelections extends Model.All {
 					250; idx++) {
 				selections.add(new Spacer());
 			}
-			bindings().from(selectionLayers.page).on(Page.properties.place)
+			bindings().from(Ui.get()).on(Ui.properties.place)
 					.signal(this::updateSelected);
 		}
 
@@ -277,7 +278,7 @@ class LayerSelections extends Model.All {
 			boolean checkForExistingTest;
 
 			void beforeFilter() {
-				String incomingFilter = Page.traversalPlace().getTextFilter();
+				String incomingFilter = Ui.place().getTextFilter();
 				checkForExistingTest = Objects.equals(testFilter,
 						incomingFilter);
 				if (!checkForExistingTest) {
@@ -308,12 +309,12 @@ class LayerSelections extends Model.All {
 				try {
 					LooseContext.push();
 					LooseContext.putSnapshotProperties(snapshot);
-					result = Page.traversalPlace().test(selection);
+					result = Ui.place().test(selection);
 				} finally {
 					LooseContext.pop();
 				}
 			} else {
-				result = Page.traversalPlace().test(selection);
+				result = Ui.place().test(selection);
 			}
 			testHistory.put(selection, result);
 			return result;
@@ -369,8 +370,8 @@ class LayerSelections extends Model.All {
 				pathSegment = view.getPathSegment(selection);
 				text = view.getText(selection);
 				text = text == null ? "[gc]" : Ax.ntrim(Ax.trim(text, 100));
-				selectionType = Page.traversalPlace().selectionType(selection);
-				secondaryDescendantRelation = Page.traversalPlace()
+				selectionType = Ui.place().selectionType(selection);
+				secondaryDescendantRelation = Ui.place()
 						.isSecondaryDescendantRelation(selection);
 				updateSelected();
 			}
@@ -384,7 +385,7 @@ class LayerSelections extends Model.All {
 				SelectionPath selectionPath = new TraversalPlace.SelectionPath();
 				selectionPath.selection = selection;
 				selectionPath.path = selection.processNode().treePath();
-				if (TraversalProcessView.Ui.get().isUseSelectionSegmentPath()) {
+				if (TraversalBrowser.Ui.get().isUseSelectionSegmentPath()) {
 					selectionPath.segmentPath = selection.fullPath();
 				}
 				selectionPath.type = selectionType;
@@ -393,9 +394,9 @@ class LayerSelections extends Model.All {
 			}
 
 			void updateSelected() {
-				setSelected(Page.traversalPlace().isSelected(selection));
+				setSelected(Ui.place().isSelected(selection));
 				setAncestorOfSelected(
-						Page.traversalPlace().isAncestorOfSelected(selection));
+						Ui.place().isAncestorOfSelected(selection));
 			}
 		}
 	}

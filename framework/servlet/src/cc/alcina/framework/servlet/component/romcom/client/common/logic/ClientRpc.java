@@ -239,6 +239,8 @@ public class ClientRpc {
 			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
 			Topic<Request> calledSignal) {
 		request.protocolMessage.messageId = clientServerMessageCounter++;
+		Ax.out("dispatching request #%s - %s", request.requestId,
+				NestedName.get(request.protocolMessage));
 		String payload = ReflectiveSerializer.serializeForRpc(request);
 		String path = Window.Location.getPath();
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
@@ -272,9 +274,13 @@ public class ClientRpc {
 					// reset delay (successful response)
 					awaitDelay = 0;
 					Message message = response.protocolMessage;
-					Ax.out("dispatching: %s", NestedName.get(message));
-					Class<? extends Message> messageClass = request.protocolMessage
+					Class<? extends Message> requestMessageClass = request.protocolMessage
 							.getClass();
+					Ax.out("[server->client response] #%s :: [client message :: %s] ==> %s",
+							response.requestId,
+							NestedName.get(requestMessageClass),
+							message == null ? "[null response]"
+									: NestedName.get(message));
 					if (message != null) {
 						ProtocolMessageHandlerClient handler = Registry.impl(
 								ProtocolMessageHandlerClient.class,
@@ -304,6 +310,7 @@ public class ClientRpc {
 						// NestedName.get(messageClass));
 					}
 					signalCalled(httpRequest);
+				} else {
 				}
 			}
 		};

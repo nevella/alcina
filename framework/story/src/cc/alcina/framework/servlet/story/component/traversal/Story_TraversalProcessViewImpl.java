@@ -9,9 +9,9 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.servlet.story.console.Story_Console;
 
 /*
- * Implementations of Story_TraversalProcessView action performers
+ * Implementations of Story_TraversalBrowser action performers
  */
-class Story_TraversalProcessViewImpl {
+class Story_TraversalBrowserImpl {
 	static final int TIMEOUT = 5000;
 
 	/*
@@ -25,7 +25,7 @@ class Story_TraversalProcessViewImpl {
 	 */
 	static class EnsuresCroissanteriaTraversalPerformed extends Waypoint.Code
 			implements
-			Story.State.Provider<Story_TraversalProcessView.State.CroissanteriaTraversalPerformed> {
+			Story.State.Provider<Story_TraversalBrowser.State.CroissanteriaTraversalPerformed> {
 		@Override
 		public void perform(Context context) throws Exception {
 			String url = Ax.format(
@@ -44,7 +44,7 @@ class Story_TraversalProcessViewImpl {
 	/* Loads the traversal UI in the browser */
 
 	static class TraversalUiLoaded extends Waypoint implements
-			Story.State.Provider<Story_TraversalProcessView.State.TraversalUiLoaded> {
+			Story.State.Provider<Story_TraversalBrowser.State.TraversalUiLoaded> {
 		TraversalUiLoaded() {
 			String url = Ax.format("http://127.0.0.1:%s/traversal",
 					Story_Console.port());

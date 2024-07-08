@@ -32,8 +32,8 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.
  * respect the merge strategy
  * 
  * <p>
- * Other causes of client-side reflection are the presence of resolved @Bean
- * or @Registration annotations
+ * Other causes of client-side reflection generation are the presence of
+ * resolved @Bean or @Registration annotations
  * 
  *
  * 

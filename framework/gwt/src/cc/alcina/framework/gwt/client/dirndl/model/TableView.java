@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.ui.table.Field;
 
-import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -16,31 +15,33 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableRow;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView.TableContainer;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 
 @Directed
 public class TableView extends
-		AbstractContextSensitiveModelTransform<Collection<? extends Bindable>, TableContainer> {
+		AbstractContextSensitiveModelTransform<Collection<?>, TableContainer> {
 	@Override
-	public TableContainer apply(Collection<? extends Bindable> bindables) {
+	public TableContainer apply(Collection<?> rowModels) {
 		TableModel tableModel = new TableModel();
 		TableContainer tableContainer = new TableContainer(tableModel);
 		tableModel.init(node);
-		if (bindables.size() == 0) {
+		if (rowModels.size() == 0) {
 			tableModel.setEmptyResults(new LeafModel.TagText("empty-results",
 					"No matching results found"));
 		} else {
-			Bindable first = bindables.iterator().next();
+			Object first = rowModels.iterator().next();
+			if (tableModel.rowTransformer != null) {
+				first = tableModel.rowTransformer.apply(first);
+			}
 			List<Field> fields = BeanFields.query()
 					.forMultipleWidgetContainer(true).forBean(first)
 					.withAllowNullWidgetProviders(true)
 					.withResolver(node.getResolver()).listFields();
 			fields.stream().map(TableColumn::new)
 					.forEach(tableModel.header.getColumns()::add);
-			bindables.stream()
-					.map(bindable -> new TableRow(tableModel, bindable))
+			rowModels.stream().map(
+					rowModel -> new TableModel.TableRow(tableModel, rowModel))
 					.forEach(tableModel.rows::add);
 		}
 		return tableContainer;
@@ -73,15 +74,16 @@ public class TableView extends
 			}
 			int multiplier = sortedBy
 					.getSortDirection() == SortDirection.ASCENDING ? 1 : -1;
-			Comparator<TableRow> cmp = new Comparator<>() {
+			Comparator<TableModel.TableRow> cmp = new Comparator<>() {
 				@Override
-				public int compare(TableRow o1, TableRow o2) {
+				public int compare(TableModel.TableRow o1,
+						TableModel.TableRow o2) {
 					return CommonUtils.compareWithNullMinusOne(get(o1), get(o2))
 							* multiplier;
 				}
 
-				private Comparable get(TableRow row) {
-					Bindable o = row.getBindable();
+				private Comparable get(TableModel.TableRow row) {
+					Object o = row.getRowModel();
 					if (o == null) {
 						return null;
 					}
@@ -92,8 +94,8 @@ public class TableView extends
 					return value.toString();
 				}
 			};
-			List<TableRow> sorted = tableModel.rows.stream().sorted(cmp)
-					.collect(Collectors.toList());
+			List<TableModel.TableRow> sorted = tableModel.rows.stream()
+					.sorted(cmp).collect(Collectors.toList());
 			tableModel.setRows(sorted);
 		}
 	}

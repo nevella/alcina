@@ -21,7 +21,7 @@ class Header extends Model.All {
 
 		String computeName(ObservableHistory history) {
 			FormatBuilder format = new FormatBuilder().separator(" - ");
-			format.append(TraversalProcessView.Ui.get().getMainCaption());
+			format.append(TraversalBrowser.Ui.get().getMainCaption());
 			format.appendIfNonNull(history, ObservableHistory::displayName);
 			return format.toString();
 		}

@@ -530,9 +530,6 @@ public class CompilationUnits {
 		class EnsureUnitTypesAdapter extends VoidVisitorAdapter<Void> {
 			@Override
 			public void visit(ClassOrInterfaceDeclaration n, Void arg) {
-				if (n.isInterface()) {
-					return;
-				}
 				CompilationUnitWrapper wrapper = CompilationUnitWrapper.this;
 				UnitType type = wrapper.ensureUnitType(n);
 				type.setDeclaration(n);

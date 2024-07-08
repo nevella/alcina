@@ -209,8 +209,12 @@ public class Property implements HasAnnotations {
 
 	@Override
 	public boolean isProperty(Class<?> owningType, String propertyName) {
-		return owningType == this.owningType
-				&& Objects.equals(name, propertyName);
+		if (owningType == null) {
+			return Objects.equals("*", propertyName);
+		} else {
+			return owningType == this.owningType
+					&& Objects.equals(name, propertyName);
+		}
 	}
 
 	@Override

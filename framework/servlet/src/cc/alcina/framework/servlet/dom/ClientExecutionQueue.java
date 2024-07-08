@@ -63,11 +63,21 @@ class ClientExecutionQueue implements Runnable {
 		}
 	}
 
+	void onLoopException(Exception e) {
+		logger.warn("loop exception:\n=====================================",
+				e);
+	}
+
 	/*
 	 * The main client event loop - analagous to the js event loop
 	 * 
 	 * While waiting for a sync response from the clients, this loop will be
 	 * called re-entrantly with acceptClientEvents==false
+	 * 
+	 * Exceptions are --not-- fatal (message handler exceptions will propagate
+	 * to the loop, and are handled in targetted try/catch blocks) - that said,
+	 * if the exception occurs during dom mutation (server or client), it might
+	 * be better to refresh. WIP
 	 */
 	void loop(boolean acceptClientEvents) {
 		boolean delta = false;
@@ -75,7 +85,11 @@ class ClientExecutionQueue implements Runnable {
 			if (fromClientMessageAcceptor != null) {
 				Message message = syncEventQueue.poll();
 				if (message != null) {
-					fromClientMessageAcceptor.accept(message);
+					try {
+						fromClientMessageAcceptor.accept(message);
+					} catch (Exception e) {
+						onLoopException(e);
+					}
 					fromClientMessageAcceptor = null;
 					logger.debug("fromClientMessageAcceptor :: consumed");
 					delta = true;
@@ -88,7 +102,11 @@ class ClientExecutionQueue implements Runnable {
 						handleFromClientMessageSync(
 								asyncEvent.fromClientMessage);
 					} else {
-						asyncEvent.runnable.run();
+						try {
+							asyncEvent.runnable.run();
+						} catch (Exception e) {
+							onLoopException(e);
+						}
 					}
 					delta = true;
 				}
@@ -151,7 +169,7 @@ class ClientExecutionQueue implements Runnable {
 	 * when multiple client events are emitted, at least one of which causes a
 	 * server->client sync call
 	 */
-	private void handleFromClientMessageSync(MessageHandlingToken token) {
+	void handleFromClientMessageSync(MessageHandlingToken token) {
 		try {
 			if (token.request.protocolMessage.sync) {
 				environment.runInFrameWithoutSync = true;
@@ -161,7 +179,9 @@ class ClientExecutionQueue implements Runnable {
 			handleFromClientMessageAcceptor(token.messageHandler);
 		} catch (Exception e) {
 			token.response.putException(e);
-			logger.warn("Exception in server queue", e);
+			logger.warn(
+					"Exception in server queue (in response to invokesync)");
+			onLoopException(e);
 		} finally {
 			environment.runInFrameWithoutSync = false;
 		}

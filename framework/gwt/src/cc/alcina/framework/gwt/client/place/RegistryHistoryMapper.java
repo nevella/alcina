@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.ClientTopics;
@@ -43,9 +44,15 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	Map<Enum, BasePlace> placesBySubPlace = new LinkedHashMap<>();
 
-	boolean initialised = false;
-
 	public RegistryHistoryMapper() {
+		this(null);
+	}
+
+	Class<? extends Place> permittedPlaceSupertype;
+
+	public RegistryHistoryMapper(
+			Class<? extends Place> permittedPlaceSupertype) {
+		this.permittedPlaceSupertype = permittedPlaceSupertype;
 		ensurePlaceLookup();
 	}
 
@@ -64,11 +71,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		}
 	}
 
-	private synchronized void ensurePlaceLookup() {
-		if (initialised) {
-			return;
-		}
-		initialised = true;
+	// only during constructor
+	void ensurePlaceLookup() {
 		listTokenizers().forEach(tokenizer -> {
 			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
 			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
@@ -190,7 +194,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	protected Stream<BasePlaceTokenizer> listTokenizers() {
-		return Registry.query(BasePlaceTokenizer.class).implementations();
+		return Registry.query(BasePlaceTokenizer.class).implementations()
+				.filter(t -> permittedPlaceSupertype == null
+						|| Reflections.isAssignableFrom(permittedPlaceSupertype,
+								t.getTokenizedClass()));
 	}
 
 	/**

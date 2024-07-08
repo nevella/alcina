@@ -35,7 +35,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMa
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
@@ -406,7 +405,7 @@ public class LocalDom implements ContextFrame {
 		get().wasSynced0(elem);
 	}
 
-	private RefidRepresentations refIdRepresentations = new RefidRepresentations();
+	RefidRepresentations refIdRepresentations = new RefidRepresentations();
 
 	boolean applyToRemote = true;
 
@@ -414,11 +413,9 @@ public class LocalDom implements ContextFrame {
 
 	LocalMutations localMutations;
 
-	private LoggingConfiguration loggingConfiguration;
+	LoggingConfiguration loggingConfiguration;
 
-	public BrowserBehaviour browserBehaviour;
-
-	private DocumentJso docRemote;
+	DocumentJso docRemote;
 
 	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
 
@@ -426,15 +423,17 @@ public class LocalDom implements ContextFrame {
 
 	ScheduledCommand flushCommand = null;
 
-	private int syncEventId = 1;
+	int syncEventId = 1;
 
-	private boolean syncEventIdDirty;
+	boolean syncEventIdDirty;
 
 	boolean syncing;
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
 	DomIds domIds;
+
+	private boolean remoteMirror;
 
 	LocalDom() {
 		topicPublishException = Topic.create();
@@ -681,8 +680,6 @@ public class LocalDom implements ContextFrame {
 	private void initalizeRemoteSync(Document doc) {
 		docRemote = doc.jsoRemote();
 		loggingConfiguration = new LoggingConfiguration();
-		browserBehaviour = new BrowserBehaviour();
-		browserBehaviour.test();
 		linkRemote(docRemote, doc);
 		localMutations = new LocalMutations(new MutationsAccess());
 		ElementJso documentElementJso = docRemote.getDocumentElement0();
@@ -766,6 +763,15 @@ public class LocalDom implements ContextFrame {
 	// FIXME - refid - maybe remove? simplify call sites?
 	private void linkRemote(NodeJso remote, Node node) {
 		remote.setRefId(node.getRefId());
+	}
+
+	static void localToRemoteInner(Element element, String markup) {
+		get().localToRemoteInner0(element, markup);
+	}
+
+	void localToRemoteInner0(Element element, String markup) {
+		IdList subtreeIds = domIds.getSubtreeIds(element);
+		new MarkupJso().markup(element, markup, subtreeIds.ids);
 	}
 
 	void localToRemote(Element element, ElementRemote remote,
@@ -889,45 +895,6 @@ public class LocalDom implements ContextFrame {
 	private void wasSynced0(Element elem) {
 		elem.local().walk(nl -> nl.node().onSync(syncEventId));
 		syncEventIdDirty = true;
-	}
-
-	// refid - remove
-	public class BrowserBehaviour {
-		public int maxCharsPerTextNode = 65536;
-
-		/*
-		 * Try up to 2^20 chars
-		 */
-		public void test() {
-			// 16 chars
-			String seed = "0test1test2test3";
-			String lengthTest = seed;
-			int test = 1 << 20;
-			while (lengthTest.length() < test) {
-				lengthTest = lengthTest + lengthTest;
-			}
-			FormatBuilder format = new FormatBuilder();
-			ElementJso div = docRemote.createElementNode0("div");
-			TextJso text = docRemote.createTextNode0(lengthTest);
-			div.appendChild0(text);
-			int childNodesLengthNodeOperation = div.getChildNodes0()
-					.getLength();
-			div.setInnerHTML(lengthTest);
-			int childNodesLengthHtmlOperation = div.getChildNodes0()
-					.getLength();
-			if (childNodesLengthHtmlOperation == 1) {
-				maxCharsPerTextNode = Integer.MAX_VALUE;
-			} else {
-				maxCharsPerTextNode = div.getChildNodes0().getItem0(0)
-						.getNodeValue().length();
-			}
-			log(Level.INFO,
-					"test text length: %s\n\tchildNodesLengthNodeOperation: %s"
-							+ "\n\tchildNodesLengthHtmlOperation: %s\n\tmaxCharsPerTextNode: %s",
-					lengthTest.length(), childNodesLengthNodeOperation,
-					childNodesLengthHtmlOperation, maxCharsPerTextNode);
-			LocalDom.setMaxCharsPerTextNode(maxCharsPerTextNode);
-		}
 	}
 
 	public static class LocalDomCollections {
@@ -1075,12 +1042,12 @@ public class LocalDom implements ContextFrame {
 					// continue method, most common case
 					break;
 				}
-				Element target = Element.as(eventTarget);
-				if (target == null) {
+				if (!Element.is(eventTarget)) {
 					// event target (client) has been removed from the
 					// canonical dom (server)
 					return;
 				}
+				Element target = Element.as(eventTarget);
 				if (eventData.preview) {
 					DOM.previewEvent(eventData.event);
 				} else {
@@ -1150,5 +1117,13 @@ public class LocalDom implements ContextFrame {
 
 	void onDetach(Node node) {
 		domIds.onDetach(node);
+	}
+
+	public static void setRemoteMirror(boolean remoteMirror) {
+		get().remoteMirror = remoteMirror;
+	}
+
+	public static boolean isRemoteMirror() {
+		return get().remoteMirror;
 	}
 }

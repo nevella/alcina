@@ -426,19 +426,13 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 			event.data = data;
 		} else {
 			event.jso = jso;
-			if (!event.serializableForm0()) {
-				return null;
-			}
+			event.serializableForm0();
 			event.data.jsoId = getId();
 		}
 		return (NE) event;
 	}
 
-	/**
-	 * return false if the event cannot be serialized (refers to a removed dom
-	 * node)
-	 */
-	boolean serializableForm0() {
+	void serializableForm0() {
 		getAltKey();
 		getButton();
 		getCharCode();
@@ -459,9 +453,8 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		getCtrlKey();
 		getString();
 		getType();
-		boolean result = data.toSerializableForm();
+		data.toSerializableForm();
 		jso = null;
-		return result;
 	}
 
 	/**
@@ -533,23 +526,12 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 		String key;
 
-		boolean toSerializableForm() {
-			EventTarget eventTarget = EventTarget
-					.serializableForm(this.eventTarget);
-			EventTarget relatedEventTarget = EventTarget
+		void toSerializableForm() {
+			this.eventTarget = EventTarget.serializableForm(this.eventTarget);
+			this.relatedEventTarget = EventTarget
 					.serializableForm(this.relatedEventTarget);
-			EventTarget currentEventTarget = EventTarget
+			this.currentEventTarget = EventTarget
 					.serializableForm(this.currentEventTarget);
-			if (eventTarget == null && this.eventTarget != null) {
-				return false;
-			}
-			if (relatedEventTarget == null && this.relatedEventTarget != null) {
-				return false;
-			}
-			if (currentEventTarget == null && this.currentEventTarget != null) {
-				return false;
-			}
-			return true;
 		}
 
 		void populateWrapperDefaults() {

@@ -325,7 +325,6 @@ public class PackagePropertiesGenerator extends CodeService.Handler.Abstract {
 							.getClassReflector(clazz);
 					hasTypedProperties = classReflector
 							.has(TypedProperties.class);
-					int debug = 3;
 				} catch (Throwable e) {
 					// e.printStackTrace();
 					exception = CommonUtils.toSimpleExceptionMessage(e);

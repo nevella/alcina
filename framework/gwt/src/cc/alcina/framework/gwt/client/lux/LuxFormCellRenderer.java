@@ -50,7 +50,6 @@ public class LuxFormCellRenderer implements GridFormCellRenderer {
 				.withStyle(LuxFormStyle.LUX_FORM_ELEMENT).build();
 		FormLabel formLabel = LuxWidgets.with(new FormLabel(field.getLabel()))
 				.withStyle(LuxFormStyle.LUX_FORM_LABEL).build();
-		widget.getElement().ensureId();
 		String widgetId = widget.getElement().getId();
 		formLabel.setFor(widgetId);
 		container.add(widget);

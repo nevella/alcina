@@ -115,6 +115,16 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		initCaches();
 	}
 
+	/*
+	 * By default, *allow* parent access - we don't do this for nodes/models,
+	 * but resolvers are - by definition - where we drop out of declarative into
+	 * imperative. Of course, minimise use - but there are times when it's the
+	 * only options
+	 */
+	public ContextResolver parent() {
+		return parent;
+	}
+
 	public void appendToRoot(Rendered rendered) {
 		Registry.impl(RootModifier.class).appendToRoot(rendered);
 	}
@@ -510,6 +520,10 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 			A replacementValue;
 
+			/*
+			 * locationClass null matches all classes - propertyName '*' matches
+			 * all properties
+			 */
 			Customisation(Class locationClass, String propertyName,
 					Class<A> annotationClass) {
 				this.locationClass = locationClass;

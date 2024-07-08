@@ -61,11 +61,6 @@ public class ElementRefid extends NodeRefid implements ElementRemote {
 	}
 
 	@Override
-	public void ensureId() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void focus() {
 		invokeSync("focus");
 	}
@@ -348,7 +343,7 @@ public class ElementRefid extends NodeRefid implements ElementRemote {
 
 	@Override
 	public final void scrollIntoView() {
-		throw new UnsupportedOperationException();
+		invokeSync("scrollIntoView", List.of(), List.of());
 	}
 
 	@Override

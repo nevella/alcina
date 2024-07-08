@@ -11,9 +11,9 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableHeader;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableRow;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableValueModel;
 
 /*
@@ -61,11 +61,11 @@ public class FmsTable {
 		}
 
 		@Directed.Multiple({ @Directed(tag = "tbody"), @Directed(tag = "tr") })
-		public List<TableRow> getRows() {
+		public List<TableModel.TableRow> getRows() {
 			return null;
 		}
 
-		public void setRows(List<TableRow> rows) {
+		public void setRows(List<TableModel.TableRow> rows) {
 		}
 	}
 

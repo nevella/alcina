@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
-public class FeaturePlace extends BasePlace implements FeatureTreePlace {
+public class FeaturePlace extends BasePlace {
 	public Class<? extends Feature> feature;
 
 	public static class Tokenizer extends BasePlaceTokenizer<FeaturePlace> {

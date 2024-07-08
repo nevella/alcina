@@ -74,11 +74,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		if (eventBits != 0) {
-			// FIXME - dirndl 1x1e - can probably get the local element very
-			// quickly from [remote-index-in-parent] -- so remove (with LDM2)
-			ensureId();
-		}
 		builder.appendHtmlConstantNoCheck("<");
 		builder.appendHtmlConstant(tagName);
 		String styleAttributeValue = attributes.get("style");
@@ -215,13 +210,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	@Override
 	public Element elementFor() {
 		return element;
-	}
-
-	@Override
-	public void ensureId() {
-		if (getId().isEmpty()) {
-			setId("__localdom__" + (_idCounter.nextId()));
-		}
 	}
 
 	@Override

@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 @TypedProperties
 public class TraversalSettings extends Bindable.Fields {
 	public static TraversalSettings get() {
-		return TraversalProcessView.Ui.get().settings;
+		return TraversalBrowser.Ui.get().settings;
 	}
 
 	static PackageProperties._TraversalSettings properties = PackageProperties.traversalSettings;
