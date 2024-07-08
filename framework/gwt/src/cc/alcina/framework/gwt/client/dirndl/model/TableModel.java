@@ -413,7 +413,7 @@ public class TableModel extends Model implements NodeEditorContext {
 		}
 	}
 
-	@Directed(reemits = { DomEvents.Click.class, FormEvents.RowClicked.class })
+	@Directed(reemits = { DomEvents.Click.class, TableEvents.RowClicked.class })
 	public static class TableRow extends Model {
 		private List<TableCell> cells = new ArrayList<>();
 

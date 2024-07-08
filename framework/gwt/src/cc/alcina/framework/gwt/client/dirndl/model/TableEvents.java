@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableRow;
 
 public class TableEvents {
 	public static class SortTable
@@ -14,6 +15,18 @@ public class TableEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onSortTable(SortTable event);
+		}
+	}
+
+	public static class RowClicked
+			extends ModelEvent<TableRow, RowClicked.Handler> {
+		@Override
+		public void dispatch(RowClicked.Handler handler) {
+			handler.onRowClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onRowClicked(RowClicked event);
 		}
 	}
 }

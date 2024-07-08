@@ -196,7 +196,7 @@ public class ModelBinding<T> {
 	/**
 	 * The name of the property to bind to, or null for any property change
 	 */
-	public <P> ModelBinding<P> on(PropertyEnum fromPropertyName) {
+	public <P> ModelBinding<P> onUntyped(PropertyEnum fromPropertyName) {
 		this.on = fromPropertyName;
 		return (ModelBinding<P>) this;
 	}
@@ -347,7 +347,7 @@ public class ModelBinding<T> {
 			return reverse;
 		}
 
-		public TargetBinding on(PropertyEnum on) {
+		public TargetBinding onUntyped(PropertyEnum on) {
 			this.on = on;
 			return this;
 		}

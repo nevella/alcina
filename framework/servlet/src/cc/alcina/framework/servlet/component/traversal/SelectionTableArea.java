@@ -14,9 +14,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
-import cc.alcina.framework.gwt.client.dirndl.model.FormEvents;
-import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
 import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 
@@ -26,7 +25,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalProcessView.Ui;
 @DirectedContextResolver(FmsContentCells.FmsCellsContextResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
 public class SelectionTableArea extends Model.Fields
-		implements FormEvents.RowClicked.Handler {
+		implements TableEvents.RowClicked.Handler {
 	public interface HasTableRepresentation {
 		List<? extends Bindable> getSelectionBindables();
 
@@ -97,7 +96,7 @@ public class SelectionTableArea extends Model.Fields
 	}
 
 	@Override
-	public void onRowClicked(RowClicked event) {
+	public void onRowClicked(TableEvents.RowClicked event) {
 		Ui.place()
 				.appendSelections(List.of(
 						hasTable.selectionFor(event.getModel().getBindable())))

@@ -49,10 +49,10 @@ class Dotburger extends Model.Fields {
 		Menu() {
 			bindings().from(TraversalSettings.get())
 					.on(TraversalSettings.properties.inputOutputDisplayMode)
-					.to(this).on(properties.ioDisplayMode).bidi();
+					.to(this).onUntyped(properties.ioDisplayMode).bidi();
 			bindings().from(TraversalSettings.get())
 					.on(TraversalSettings.properties.propertyDisplayMode)
-					.to(this).on(properties.propertyDisplayMode).bidi();
+					.to(this).onUntyped(properties.propertyDisplayMode).bidi();
 		}
 	}
 

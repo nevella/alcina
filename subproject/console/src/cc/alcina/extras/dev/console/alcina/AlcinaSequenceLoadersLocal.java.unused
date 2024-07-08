@@ -1,0 +1,29 @@
+package cc.alcina.extras.dev.console.alcina;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.Comparator;
+
+import cc.alcina.framework.servlet.component.sequence.flight.FlightEventSequence;
+
+public class AlcinaSequenceLoadersLocal {
+	public static class Ma extends FlightEventSequence.Loader {
+		static String latestFlightFolder() {
+			return Arrays.stream(new File(
+					"/private/var/local/root/apdm/build/mobilia/shell/flight")
+							.listFiles())
+					.filter(f -> f.isDirectory() && !f.isHidden())
+					.sorted(Comparator.comparing(File::lastModified).reversed())
+					.findFirst().get().getPath();
+		}
+
+		public Ma() {
+			super(latestFlightFolder(), "mobilia-latest", s -> s);
+		}
+
+		@Override
+		public boolean handlesSequenceLocation(String location) {
+			return location.equals("ma");
+		}
+	}
+}
