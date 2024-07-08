@@ -16,6 +16,7 @@
 package com.google.gwt.user.client;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.NativeEventJso;
 import com.google.gwt.event.dom.client.HasNativeEvent;
@@ -705,5 +706,10 @@ public class Event extends NativeEvent {
 
 	public boolean isIdenticalTo(Event event) {
 		return getId() != 0 && getId() == event.getId();
+	}
+
+	public boolean targetWasRemoved() {
+		EventTarget eventTarget = getEventTarget();
+		return eventTarget.isElement() && eventTarget.wasRemoved();
 	}
 }

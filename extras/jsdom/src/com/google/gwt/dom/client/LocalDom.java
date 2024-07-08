@@ -433,8 +433,6 @@ public class LocalDom implements ContextFrame {
 
 	DomIds domIds;
 
-	private boolean remoteMirror;
-
 	LocalDom() {
 		topicPublishException = Topic.create();
 		topicReportException = Topic.create();
@@ -771,7 +769,10 @@ public class LocalDom implements ContextFrame {
 
 	void localToRemoteInner0(Element element, String markup) {
 		IdList subtreeIds = domIds.getSubtreeIds(element);
+		pendingSync.remove(element);
 		new MarkupJso().markup(element, markup, subtreeIds.ids);
+		element.resolvePendingSync();
+		wasSynced0(element);
 	}
 
 	void localToRemote(Element element, ElementRemote remote,
@@ -820,9 +821,6 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private <T extends Node> T nodeFor0(NodeJso remote) {
-		if (remote == null) {
-			int debug = 3;
-		}
 		if (remote.getNodeType() == Node.DOCUMENT_NODE) {
 			return (T) Document.get();
 		} else {
@@ -1119,11 +1117,21 @@ public class LocalDom implements ContextFrame {
 		domIds.onDetach(node);
 	}
 
-	public static void setRemoteMirror(boolean remoteMirror) {
-		get().remoteMirror = remoteMirror;
+	static boolean wasRemoved(ElementJso elemJso) {
+		return get().wasRemoved0(elemJso);
 	}
 
-	public static boolean isRemoteMirror() {
-		return get().remoteMirror;
+	boolean wasRemoved0(ElementJso elemJso) {
+		int refId = elemJso.getRefId();
+		Node node = domIds.getNode(new Refid(refId));
+		if (node == null) {
+			Preconditions.checkState(refId != 0);
+			// domIds.removed will *almost certainly* contain the refId, but
+			// because we're async and removed is flushed, it's possible that it
+			// wouldn't. so don't check
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

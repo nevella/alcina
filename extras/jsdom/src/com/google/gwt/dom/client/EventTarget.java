@@ -145,4 +145,15 @@ public class EventTarget implements JavascriptObjectEquivalent {
 	public String toString() {
 		return super.toString() + ":" + nativeTarget;
 	}
+
+	/*
+	 * If the (element) eventtarget was removed from the dom - say between
+	 * mousedown + mouseup (remotedom)
+	 */
+	public boolean wasRemoved() {
+		if (ElementJso.is(nativeTarget)) {
+			return LocalDom.wasRemoved((ElementJso) nativeTarget);
+		}
+		return false;
+	}
 }

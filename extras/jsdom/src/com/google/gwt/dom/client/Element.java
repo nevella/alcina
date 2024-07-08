@@ -836,6 +836,7 @@ public class Element extends Node implements ClientDomElement,
 	 * Note that element attach/detach is always called before Widget
 	 * attach/detach
 	 */
+	@Override
 	protected void onAttach() {
 		// Event hookup code
 		if (this.eventListener == null) {
@@ -879,6 +880,7 @@ public class Element extends Node implements ClientDomElement,
 	 * Note that element attach/detach is always called before Widget
 	 * attach/detach
 	 */
+	@Override
 	protected void onDetach() {
 		/*
 		 * Note that this doesn't use the same ordering as Widget (assumes no
@@ -922,10 +924,7 @@ public class Element extends Node implements ClientDomElement,
 			Preconditions
 					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
 		}
-		// FIXME - refid - the isRemoteMirror check works (sync is guaranteed)
-		// but it'd be nice if it didn't have to...
-		Preconditions
-				.checkState(wasSynced() == synced || LocalDom.isRemoteMirror());
+		Preconditions.checkState(wasSynced() == synced);
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		Preconditions.checkState(remote != null);

@@ -126,6 +126,9 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				return;
 			}
 		}
+		if (event.targetWasRemoved()) {
+			return;
+		}
 		if (currentEventMessage == null) {
 			currentEventMessage = new Message.DomEventMessage();
 			Scheduler.get().scheduleDeferred(() -> {
