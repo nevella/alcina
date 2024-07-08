@@ -1,14 +1,7 @@
 package cc.alcina.framework.servlet.component.romcom.server;
 
-import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,27 +53,6 @@ public class RemoteComponentProtocolServer {
 		}
 
 		public void onBeforeMessageHandled(PM message) {
-		}
-	}
-
-	public static class ServerHandler extends AbstractHandler {
-		RemoteComponentHandler handler;
-
-		public ServerHandler(RemoteComponent component) {
-			handler = new RemoteComponentHandler(component, component.getPath(),
-					true);
-		}
-
-		@Override
-		public void handle(String target, Request baseRequest,
-				HttpServletRequest request, HttpServletResponse response)
-				throws IOException, ServletException {
-			handler.handle(request, response);
-			baseRequest.setHandled(true);
-		}
-
-		public void setLoadIndicatorHtml(String loadIndicatorHtml) {
-			handler.setLoadIndicatorHtml(loadIndicatorHtml);
 		}
 	}
 }

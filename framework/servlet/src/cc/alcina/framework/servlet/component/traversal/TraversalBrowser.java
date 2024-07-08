@@ -1,8 +1,5 @@
 package cc.alcina.framework.servlet.component.traversal;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
