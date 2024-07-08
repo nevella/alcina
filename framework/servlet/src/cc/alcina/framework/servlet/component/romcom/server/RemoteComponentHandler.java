@@ -39,7 +39,7 @@ import cc.alcina.framework.servlet.publication.DirndlRenderer;
 /*
  * Provides common implementation for jetty/servlet remotecomponent handling
  */
-class RemoteComponentHandler {
+public class RemoteComponentHandler {
 	RemoteComponent component;
 
 	String loadIndicatorHtml = "";
@@ -48,7 +48,7 @@ class RemoteComponentHandler {
 
 	boolean addOriginHeaders;
 
-	RemoteComponentHandler(RemoteComponent component, String featurePath,
+	public RemoteComponentHandler(RemoteComponent component, String featurePath,
 			boolean addOriginHeaders) {
 		this.component = component;
 		this.featurePath = featurePath;
@@ -86,7 +86,7 @@ class RemoteComponentHandler {
 						warRelativePart));
 	}
 
-	void handle(HttpServletRequest request, HttpServletResponse response)
+	public void handle(HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
 		String method = request.getMethod();
 		switch (method) {

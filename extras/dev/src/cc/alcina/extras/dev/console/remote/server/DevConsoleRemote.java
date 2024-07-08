@@ -1,5 +1,6 @@
 package cc.alcina.extras.dev.console.remote.server;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
@@ -13,8 +14,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
@@ -33,7 +40,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentHandler;
 import cc.alcina.framework.servlet.logging.FlightEventJettyHandler;
 
 @Registration.Singleton(DevConsoleRemote.class)
@@ -147,8 +154,28 @@ public class DevConsoleRemote {
 			ContextHandler protocolHandler = new ContextHandler(handlers,
 					component.getPath());
 			protocolHandler.setAllowNullPathInfo(true);
-			protocolHandler.setHandler(
-					new RemoteComponentProtocolServer.ServerHandler(component));
+			protocolHandler.setHandler(new ServerHandler(component));
+		}
+	}
+
+	public static class ServerHandler extends AbstractHandler {
+		RemoteComponentHandler handler;
+
+		public ServerHandler(RemoteComponent component) {
+			handler = new RemoteComponentHandler(component, component.getPath(),
+					true);
+		}
+
+		@Override
+		public void handle(String target, Request baseRequest,
+				HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+			handler.handle(request, response);
+			baseRequest.setHandled(true);
+		}
+
+		public void setLoadIndicatorHtml(String loadIndicatorHtml) {
+			handler.setLoadIndicatorHtml(loadIndicatorHtml);
 		}
 	}
 
