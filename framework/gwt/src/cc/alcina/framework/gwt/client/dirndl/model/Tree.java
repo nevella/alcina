@@ -386,6 +386,18 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 	}
 
+	public static class ToggleButtonMouseDown
+			extends ModelEvent<Object, ToggleButtonMouseDown.Handler> {
+		@Override
+		public void dispatch(ToggleButtonMouseDown.Handler handler) {
+			handler.onToggleButtonMousedown(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onToggleButtonMousedown(ToggleButtonMouseDown event);
+		}
+	}
+
 	@Directed(
 		className = "node",
 		reemits = { LabelClicked.class, NodeLabelClicked.class,
@@ -513,7 +525,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 				to = "title",
 				type = Binding.Type.PROPERTY) })
 		@TypeSerialization(reflectiveSerializable = false)
-		public static class NodeLabel extends Model {
+		public static class NodeLabel extends Model
+				implements ToggleButtonMouseDown.Handler {
 			private Object toggle = new Object();
 
 			private Object label = "";
@@ -533,7 +546,9 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 			@Directed(
 				tag = "span",
-				reemits = { DomEvents.Click.class, ToggleButtonClicked.class })
+				reemits = { DomEvents.Click.class, ToggleButtonClicked.class,
+						DomEvents.MouseDown.class,
+						ToggleButtonMouseDown.class })
 			public Object getToggle() {
 				return this.toggle;
 			}
@@ -544,6 +559,11 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 			public void setTitle(String title) {
 				set("title", this.title, title, () -> this.title = title);
+			}
+
+			@Override
+			public void onToggleButtonMousedown(ToggleButtonMouseDown event) {
+				event.getContext().getOriginatingNativeEvent().preventDefault();
 			}
 		}
 
