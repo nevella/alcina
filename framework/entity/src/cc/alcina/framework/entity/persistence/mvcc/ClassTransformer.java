@@ -606,17 +606,27 @@ class ClassTransformer {
 
 			private void logSolverException(Expression expr,
 					RuntimeException e) {
+				// FIXME - domain - these are non-critical but should be fixed
 				if (expr.toString().matches("[A-Z].+?\\.[A-Z].+?")) {
 					// javaparser issue with nested static refs --
 					// TransformManager.Serializer.get() --
 					// ignore since we don't care about statics (much)
 				} else {
-					Ax.simpleExceptionOut(e);
-					Ax.sysLogHigh("%s:%s\nNot solved: %s", containingClassName,
-							(methodDeclaration == null ? null
-									: methodDeclaration.getName().toString()),
-							expr);
-					int debug = 3;
+					if (CommonUtils.toSimpleExceptionMessage(e)
+							.contains("Symbol resolution not configured")) {
+						// ignore
+					} else if (!Configuration.is(ClassTransform.class,
+							"logSolverExceptions")) {
+						// muted
+					} else {
+						Ax.simpleExceptionOut(e);
+						Ax.sysLogHigh("%s:%s\nNot solved: %s",
+								containingClassName,
+								(methodDeclaration == null ? null
+										: methodDeclaration.getName()
+												.toString()),
+								expr);
+					}
 				}
 			}
 
