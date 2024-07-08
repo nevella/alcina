@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.event;
 
+import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.DOM;
@@ -77,9 +78,10 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 			NativeEvent nativeEvent = event.getContext()
 					.getOriginatingNativeEvent();
 			Element elem = model.provideElement();
+			DomRect elemRect = elem.getBoundingClientRect();
 			startPosition = new DoublePair(
-					nativeEvent.getClientX() - elem.getAbsoluteLeft(),
-					nativeEvent.getClientY() - elem.getAbsoluteTop());
+					nativeEvent.getClientX() - elemRect.left,
+					nativeEvent.getClientY() - elemRect.top);
 			lastPosition = startPosition;
 			DOM.setCapture(elem);
 			nativeEvent.preventDefault();
@@ -108,6 +110,7 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 						.getOriginatingNativeEvent();
 				assert DOM.getCaptureElement() != null;
 				Element elem = model.provideElement();
+				DomRect elemRect = elem.getBoundingClientRect();
 				DoublePair dragPosition = new DoublePair(
 						nativeEvent.getClientX() - elem.getAbsoluteLeft(),
 						nativeEvent.getClientY() - elem.getAbsoluteTop());

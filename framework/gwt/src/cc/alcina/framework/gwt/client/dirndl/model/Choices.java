@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -247,6 +248,26 @@ public abstract class Choices<T> extends Model implements
 	}
 
 	/*
+	 * Fired by keyboard naviagation, allow choice renderers (custom) to handle
+	 * selection. If they handle, they must set the Ref<Boolean> event
+	 * model/payload to true
+	 */
+	public static class ChoiceSelectedDescent extends
+			ModelEvent.DescendantEvent<Ref<Boolean>, ChoiceSelectedDescent.Handler, ChoiceSelectedDescent.Emitter> {
+		@Override
+		public void dispatch(ChoiceSelectedDescent.Handler handler) {
+			handler.onChoiceSelectedDescent(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onChoiceSelectedDescent(ChoiceSelectedDescent event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
+
+	/*
 	 * It is possible to bind just to isSelected here (with a delegating
 	 * renderer) - but the css for decoration of the choice becomes a lot
 	 * simpler if there _is_ a choice > model structure, so Choice remains a
@@ -255,10 +276,11 @@ public abstract class Choices<T> extends Model implements
 	 * Note the preventDefault on mouseDown - which prevents (say) choices in a
 	 * ReferenceDecorator moving document focus
 	 */
-	@Directed(emits = ModelEvents.Selected.class)
+	@Directed(
+		emits = { ModelEvents.Selected.class, ChoiceSelectedDescent.class })
 	public static class Choice<T> extends Model
 			implements DomEvents.Click.Handler, DomEvents.MouseDown.Handler,
-			ChoiceSelected.Handler {
+			ChoiceSelected.Handler, ChoiceSelectedDescent.Emitter {
 		private boolean selected;
 
 		private boolean indexSelected;
@@ -650,7 +672,16 @@ public abstract class Choices<T> extends Model implements
 				int indexSelected = indexedSelection.getIndexSelected();
 				if (indexSelected != -1) {
 					event.consume();
-					setSelectedValue(getValues().get(indexSelected));
+					// first, allow the choice to handle the keyboard selection
+					// (custom)
+					Choice<T> selectedChoice = choices.get(indexSelected);
+					Ref<Boolean> handledMarker = Ref.of(false);
+					event.reemitAs(selectedChoice, ChoiceSelectedDescent.class,
+							handledMarker);
+					if (!handledMarker.get()) {
+						// not handled by the choice innards
+						setSelectedValue(getValues().get(indexSelected));
+					}
 					return;
 				}
 				break;
