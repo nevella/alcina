@@ -46,6 +46,7 @@ import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -609,5 +610,9 @@ public class ClientUtils {
 			this.wrapper = wrapper;
 			this.gdb = gdb;
 		}
+	}
+
+	public static void setTabIndexZero(Widget widget) {
+		widget.getElement().setTabIndex(0);
 	}
 }

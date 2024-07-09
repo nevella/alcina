@@ -33,6 +33,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEvent;
@@ -100,12 +101,11 @@ public class BreadcrumbBar extends Composite {
 		if (buttons == null) {
 			return;
 		}
-		for (int i = buttons.size() - 1; i >= 0; i--) {
-			Widget w = buttons.get(i);
+		buttons.forEach(w -> {
 			SimplePanelWrapper spw = new SimplePanelWrapper(w);
 			spw.setStyleName("right");
 			fp.add(spw);
-		}
+		});
 	}
 
 	public String getTitle() {
@@ -182,6 +182,8 @@ public class BreadcrumbBar extends Composite {
 					AbstractImagePrototype.create(images.minimise())
 							.createImage());
 			toggleButton.addStyleName("maximise");
+			toggleButton.setTitle("Maximise");
+			ClientUtils.setTabIndexZero(toggleButton);
 			toggleButton.addClickHandler(this);
 			initWidget(toggleButton);
 		}
