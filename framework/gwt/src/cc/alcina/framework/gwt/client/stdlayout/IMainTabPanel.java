@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.stdlayout;
 
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
 import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
+import com.google.gwt.event.logical.shared.HasBeforeSelectionHandlers;
+import com.google.gwt.event.logical.shared.HasSelectionHandlers;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.event.shared.EventHandler;
@@ -15,7 +17,8 @@ import com.google.gwt.user.client.ui.Widget;
 /*
  * Contract implemented by MainTabPanel and MainTabPanel2
  */
-public interface IMainTabPanel extends IsWidget {
+public interface IMainTabPanel extends IsWidget,
+		HasBeforeSelectionHandlers<Integer>, HasSelectionHandlers<Integer> {
 	Widget getDeckPanel();
 
 	<H extends EventHandler> HandlerRegistration addHandler(final H handler,
@@ -49,7 +52,7 @@ public interface IMainTabPanel extends IsWidget {
 
 	FlowPanel getToolbarHolder();
 
-	void add(Widget w, Widget tabWidget);
+	void add(Widget contentWidget, Widget tabWidget);
 
 	int getWidgetIndex(IsWidget w);
 

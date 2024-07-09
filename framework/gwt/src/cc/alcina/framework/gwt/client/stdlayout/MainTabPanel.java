@@ -263,22 +263,17 @@ public class MainTabPanel extends TabPanel implements IMainTabPanel {
 
 	@Override
 	public int getSelectedTab() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getSelectedTab'");
+		return getTabBar().getSelectedTab();
 	}
 
 	@Override
 	public int getTabBarOffsetHeight() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getTabBarOffsetHeight'");
+		return getTabBar().getOffsetHeight();
 	}
 
 	@Override
 	public void appendBar(Widget bar) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'appendBar'");
+		VerticalPanel vp = (VerticalPanel) getWidget();
+		vp.insert(bar, 1);
 	}
 }

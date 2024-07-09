@@ -13,6 +13,9 @@ public interface AlcinaResources extends ClientBundle {
 	@Source("Alcina.css")
 	public SimpleCssResource css();
 
+	@Source("Alcina24.css")
+	public SimpleCssResource css24();
+
 	@Source("Alcina-iepre9.css")
 	public TextResource cssIePre9();
 

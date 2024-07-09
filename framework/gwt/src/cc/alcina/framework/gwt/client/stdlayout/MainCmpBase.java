@@ -64,7 +64,7 @@ public abstract class MainCmpBase extends Composite
 
 	protected abstract void afterTabSelect(int tabIndex);
 
-	protected MainTabPanel createTabPanel() {
+	protected IMainTabPanel createTabPanel() {
 		return new MainTabPanel(buttons);
 	}
 

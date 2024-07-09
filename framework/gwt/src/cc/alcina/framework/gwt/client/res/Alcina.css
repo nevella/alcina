@@ -2048,23 +2048,3 @@ table.mainTabPanel,
 div.gwt-TabPanel {
   position: relative;
 }
-
-/*
-mainmenu2
-*/
-div.alcina-MainMenu2 {
-  display: grid;
-  grid-template-columns: min-content 1fr min-content;
-}
-div.alcina-MainMenu2 > div {
-  display: flex;
-}
-div.alcina-MainMenu2 > div.left {
-  justify-content: flex-start;
-}
-div.alcina-MainMenu2 > div.center {
-  justify-content: center;
-}
-div.alcina-MainMenu2 > div.right {
-  justify-content: flex-end;
-}
