@@ -48,7 +48,7 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
  *         It works...and a rewrite would be painful (and probably require a
  *         complete reimplementation)
  */
-public class MainTabPanel extends TabPanel {
+public class MainTabPanel extends TabPanel implements IMainTabPanel {
 	protected HorizontalPanel bp;
 
 	private FlowPanel toolbarHolder = new FlowPanel();
@@ -117,7 +117,7 @@ public class MainTabPanel extends TabPanel {
 		if (getToolbarHolder().isVisible()) {
 			availableHeight -= getToolbarHolder().getOffsetHeight();
 		}
-		int selectedTab = getTabBar().getSelectedTab();
+		int selectedTab = getSelectedTab();
 		// if (selectedTab == -1) {
 		// return availableHeight;
 		// }
@@ -162,7 +162,7 @@ public class MainTabPanel extends TabPanel {
 	}
 
 	public int getAdjustHeight() {
-		int selectedTab = getTabBar().getSelectedTab();
+		int selectedTab = getSelectedTab();
 		boolean fullTab = selectedTab != -1 && getDeckPanel()
 				.getWidget(selectedTab) instanceof TabDisplaysAsFullHeight;
 		return fullTab ? 0 : 50;
@@ -227,9 +227,8 @@ public class MainTabPanel extends TabPanel {
 		}
 	}
 
-	public SimplePanel setNotabContent(Widget w) {
+	public void setNotabContent(Widget w) {
 		noTabContentHolder.setWidget(w);
-		return noTabContentHolder;
 	}
 
 	public void setToolbarHolder(FlowPanel toolbarHolder) {
@@ -260,5 +259,26 @@ public class MainTabPanel extends TabPanel {
 				}
 			};
 		}
+	}
+
+	@Override
+	public int getSelectedTab() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getSelectedTab'");
+	}
+
+	@Override
+	public int getTabBarOffsetHeight() {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getTabBarOffsetHeight'");
+	}
+
+	@Override
+	public void appendBar(Widget bar) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'appendBar'");
 	}
 }

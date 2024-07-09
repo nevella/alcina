@@ -112,8 +112,8 @@ public interface Draggable extends DomEvents.MouseDown.Handler,
 				Element elem = model.provideElement();
 				DomRect elemRect = elem.getBoundingClientRect();
 				DoublePair dragPosition = new DoublePair(
-						nativeEvent.getClientX() - elem.getAbsoluteLeft(),
-						nativeEvent.getClientY() - elem.getAbsoluteTop());
+						nativeEvent.getClientX() - elemRect.left,
+						nativeEvent.getClientY() - elemRect.top);
 				nativeEvent.preventDefault();
 				DoublePair totalDelta = dragPosition.minus(startPosition);
 				DoublePair moveDelta = dragPosition.minus(lastPosition);

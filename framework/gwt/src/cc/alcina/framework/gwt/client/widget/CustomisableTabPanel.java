@@ -504,4 +504,8 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 			super.removeTab(index);
 		}
 	}
+
+	public int getSelectedTab() {
+		return tabBar.getSelectedTab();
+	}
 }
