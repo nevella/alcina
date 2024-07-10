@@ -615,4 +615,10 @@ public class ClientUtils {
 	public static void setTabIndexZero(Widget widget) {
 		widget.getElement().setTabIndex(0);
 	}
+
+	public static void setImageDescendantTitle(Widget widget, String title) {
+		widget.setTitle(title);
+		widget.getElement().asDomNode().stream().filter(n -> n.tagIs("img"))
+				.findFirst().get().setAttr("title", title);
+	}
 }

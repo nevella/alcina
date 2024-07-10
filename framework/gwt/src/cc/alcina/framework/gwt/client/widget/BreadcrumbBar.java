@@ -26,6 +26,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.ToggleButton;
@@ -176,13 +177,14 @@ public class BreadcrumbBar extends Composite {
 		private Widget widgetToMaximise;
 
 		public BreadcrumbBarMaximiseButton() {
-			this.toggleButton = new ToggleButton(
-					AbstractImagePrototype.create(images.maximise())
-							.createImage(),
-					AbstractImagePrototype.create(images.minimise())
-							.createImage());
+			Image i1 = AbstractImagePrototype.create(images.maximise())
+					.createImage();
+			Image i2 = AbstractImagePrototype.create(images.minimise())
+					.createImage();
+			this.toggleButton = new ToggleButton(i1, i2);
 			toggleButton.addStyleName("maximise");
-			toggleButton.setTitle("Maximise");
+			ClientUtils.setImageDescendantTitle(i1, "Maximise");
+			ClientUtils.setImageDescendantTitle(i2, "Maximise");
 			ClientUtils.setTabIndexZero(toggleButton);
 			toggleButton.addClickHandler(this);
 			initWidget(toggleButton);
@@ -240,16 +242,20 @@ public class BreadcrumbBar extends Composite {
 		private int left;
 
 		public BreadcrumbBarMaximiseButton2() {
-			this.toggleButton = new ToggleButton(
-					AbstractImagePrototype.create(images.maximise2())
-							.createImage(),
-					AbstractImagePrototype.create(images.minimise2())
-							.createImage());
+			String title = "Maximise";
+			Image i1 = AbstractImagePrototype.create(images.maximise2())
+					.createImage();
+			Image i2 = AbstractImagePrototype.create(images.minimise2())
+					.createImage();
+			this.toggleButton = new ToggleButton(i1, i2);
 			toggleButton.getUpHoveringFace().setImage(AbstractImagePrototype
 					.create(images.maximise2over()).createImage());
 			toggleButton.getDownHoveringFace().setImage(AbstractImagePrototype
 					.create(images.minimise2over()).createImage());
 			toggleButton.addClickHandler(this);
+			toggleButton.setTitle(title);
+			ClientUtils.setImageDescendantTitle(i1, title);
+			ClientUtils.setImageDescendantTitle(i2, title);
 			initWidget(toggleButton);
 		}
 

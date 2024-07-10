@@ -21,7 +21,7 @@ div.alcina-MainMenu2 > div.right {
   justify-content: flex-end;
 }
 div.alcina-MainMenu2 {
-  background: hsl(197.32deg 53.01% 44.12%) bottom left repeat-x;
+  background: hsl(197.32deg 53.01% 40.12%) bottom left repeat-x;
   height: 28px;
   border-top: 1px solid #b9deec;
   border-bottom: 4px solid #104860;
@@ -53,4 +53,82 @@ div.alcina-MainMenu2 .gwt-TabBarItem-selected {
 }
 div.mainTabPanel .gwt-TabPanelBottom {
   border: none;
+}
+a.button-grey,
+a.button-grey:active,
+a.button-grey:visited,
+a.button-grey.disabled:hover {
+  min-width: 25px;
+  text-align: center;
+  box-sizing: border-box;
+}
+div.gwt-TabBarFirst {
+  display: none;
+}
+div.gwt-TabBarRest {
+  display: none;
+}
+div.alcina-skipHolder {
+  position: absolute;
+  top: 1em;
+  left: 1em;
+  z-index: 9999;
+  border: solid 1px #cecece;
+  padding: 1em;
+  background-color: white;
+}
+
+.alcina-skipToMainContent {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1em;
+  background-color: white;
+  margin: 1em;
+  border: solid 1px #aaa;
+  opacity: 0;
+}
+.alcina-skipToMainContent:focus {
+  left: 0;
+  opacity: 1;
+}
+span.alcina-BuildVersion {
+  display: inline-block;
+  background-color: hsl(149 48% 34% / 1);
+  color: white;
+}
+
+a.b-save {
+  background: #e9e9e9 url(/_pix/icon-save.gif) 0 0 no-repeat;
+}
+a.b-save {
+  background: #e9e9e9 url(/_pix/icon-print.gif) 0 0 no-repeat;
+}
+a.b-visualisation {
+  background: #e9e9e9 url(/_pix/icon-visualisation.png) 0 0 no-repeat !important;
+}
+
+a.b-save,
+a.b-print,
+a.b-visualisation {
+  padding-left: 25px !important;
+  background-position: 5px 4px !important;
+}
+a.b-save span,
+a.b-print span,
+a.b-visualisation span {
+  background: #e9e9e9 !important;
+  padding-left: 0 !important;
+}
+div.alcina-BreadcrumbBar {
+  background: #efefef;
+}
+div.alcina-BreadcrumbBar p.breadcrumb {
+  color: #666;
+}
+div.alcina-BreadcrumbBar div.right {
+  background: none;
+}
+div.alcina-BreadcrumbBar div.right span {
+  background: #efefef;
 }

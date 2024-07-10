@@ -66,7 +66,6 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 				initWidget(childPanel);
 				setStyleName("left");
 				Roles.getTablistRole().set(getElement());
-				ClientUtils.setTabIndexZero(this);
 			}
 		}
 
@@ -182,6 +181,7 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 		panel.add(additionalPanelsCtr);
 		panel.add(toolbarContainer);
 		panel.add(deckContainer);
+		ClientUtils.setTabIndexZero(deckContainer);
 		setStyleName("alcina-MainMenu2");
 	}
 
@@ -234,6 +234,7 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 
 	@Override
 	public void add(Widget w, Widget tabWidget) {
+		Roles.getTabRole().set(tabWidget.getElement());
 		tabBar.add(w, tabWidget);
 	}
 
