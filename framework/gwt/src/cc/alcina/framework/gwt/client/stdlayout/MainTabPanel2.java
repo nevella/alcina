@@ -15,6 +15,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 // 14 years and change on, reimplement with 'modern' markup/css
 /*
@@ -50,7 +51,6 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 		Bar() {
 			initWidget(barPanel);
 			setStyleName("alcina-MainMenu2");
-			Roles.getTablistRole().set(getElement());
 			left = new Left();
 			center = new Center();
 			right = new Right();
@@ -65,6 +65,8 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 			Left() {
 				initWidget(childPanel);
 				setStyleName("left");
+				Roles.getTablistRole().set(getElement());
+				ClientUtils.setTabIndexZero(this);
 			}
 		}
 
