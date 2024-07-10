@@ -48,6 +48,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.logic.HasHref;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -376,6 +377,8 @@ public class Toolbar extends Composite
 					dropDown = new StyledAWidget(aip.getHTML(), true);
 					dropDown.addStyleName("button-grey drop-down");
 					dropDown.setTitle("button-secondary-choices-dropdown");
+					ClientUtils.setImageDescendantTitle(dropDown,
+							"button-secondary-choices-dropdown");
 					sp.add(dropDown);
 					dropDown.addClickHandler(new ClickHandler() {
 						@Override

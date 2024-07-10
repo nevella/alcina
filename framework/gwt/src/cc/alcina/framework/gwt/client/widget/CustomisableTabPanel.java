@@ -38,6 +38,7 @@ import com.google.gwt.user.client.ui.TabListenerCollection;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 /**
@@ -71,6 +72,8 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 		initWidget(panel);
 		setStyleName("gwt-TabPanel");
 		deck.setStyleName("gwt-TabPanelBottom");
+		ClientUtils.setTabIndexZero(deck);
+		ClientUtils.setTabIndexZero(this);
 		// Add a11y role "tabpanel"
 		Accessibility.setRole(deck.getElement(), Accessibility.ROLE_TABPANEL);
 	}
@@ -500,5 +503,9 @@ public class CustomisableTabPanel extends Composite implements TabListener,
 		public void removeTabProtected(int index) {
 			super.removeTab(index);
 		}
+	}
+
+	public int getSelectedTab() {
+		return tabBar.getSelectedTab();
 	}
 }

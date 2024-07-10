@@ -14,8 +14,11 @@
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.HasBlurHandlers;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
@@ -35,8 +38,9 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
  * 
  * @author Nick Reddel
  */
-public class Link<T> extends Widget implements HasHTML, HasEnabled,
-		HasClickHandlers, HasItem<T>, HasText, FluidWidget<Link> {
+public class Link<T> extends Widget
+		implements HasHTML, HasEnabled, HasClickHandlers, HasItem<T>, HasText,
+		FluidWidget<Link>, HasBlurHandlers {
 	public static Link createHashHref(String text, String token) {
 		return createHrefNoUnderline(text, "#" + token);
 	}
@@ -257,5 +261,10 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	public Link withTarget(String target) {
 		setTarget(target);
 		return this;
+	}
+
+	@Override
+	public HandlerRegistration addBlurHandler(BlurHandler handler) {
+		return addDomHandler(handler, BlurEvent.getType());
 	}
 }

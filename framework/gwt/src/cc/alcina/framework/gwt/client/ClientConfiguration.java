@@ -69,6 +69,7 @@ public class ClientConfiguration {
 
 	protected void initCss() {
 		StyleInjector.inject(AlcinaResources.INSTANCE.css().getText());
+		StyleInjector.inject(AlcinaResources.INSTANCE.css24().getText());
 	}
 
 	protected void initExceptionHandling() {
