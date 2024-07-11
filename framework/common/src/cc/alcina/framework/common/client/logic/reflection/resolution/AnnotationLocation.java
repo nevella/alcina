@@ -330,6 +330,10 @@ public class AnnotationLocation {
 		private MultikeyMap<List<? extends Annotation>> resolvedCache = new UnsortedMultikeyMap<>(
 				2);
 
+		protected MultikeyMap<List<? extends Annotation>> resolvedCache() {
+			return resolvedCache;
+		}
+
 		/*
 		 * For debugging
 		 */
@@ -358,7 +362,7 @@ public class AnnotationLocation {
 
 		public synchronized <A extends Annotation> List<A> resolveAnnotations(
 				Class<A> annotationClass, AnnotationLocation location) {
-			return (List<A>) resolvedCache.ensure(() -> {
+			return (List<A>) resolvedCache().ensure(() -> {
 				return resolveAnnotations0(annotationClass, location);
 			}, location, annotationClass);
 		}
@@ -376,5 +380,11 @@ public class AnnotationLocation {
 		public enum ResolutionContext {
 			Strategy
 		}
+	}
+
+	public AnnotationLocation copyWithResolver(Resolver replaceResolver) {
+		AnnotationLocation location = new AnnotationLocation(classLocation,
+				property, replaceResolver);
+		return location;
 	}
 }

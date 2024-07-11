@@ -19,7 +19,9 @@
  */
 package com.totsp.gwittir.client.ui.table;
 
+import java.lang.annotation.Annotation;
 import java.util.Comparator;
+import java.util.List;
 
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -29,6 +31,8 @@ import com.totsp.gwittir.client.validator.Validator;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 
 /**
  *
@@ -63,6 +67,26 @@ public class Field {
 	private AnnotationLocation.Resolver resolver;
 
 	private boolean editable;
+
+	/*
+	 * A key optimisation - share column annotation resolutions for tables
+	 */
+	public class SharedCacheResolver extends ContextResolver {
+		@Override
+		public MultikeyMap<List<? extends Annotation>> resolvedCache() {
+			return super.resolvedCache();
+		}
+
+		public BindingsCache bindingsCache() {
+			return bindingsCache;
+		}
+	}
+
+	private SharedCacheResolver sharedCacheResolver = new SharedCacheResolver();
+
+	public SharedCacheResolver getSharedAnnotationResolver() {
+		return sharedCacheResolver;
+	}
 
 	public Field(Property property, String label,
 			BoundWidgetProvider cellProvider, Validator validator,

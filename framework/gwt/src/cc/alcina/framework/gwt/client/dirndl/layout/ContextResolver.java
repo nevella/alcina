@@ -140,8 +140,12 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return dispatch;
 	}
 
+	protected BindingsCache bindingsCache() {
+		return bindingsCache;
+	}
+
 	public List<Binding> getBindings(Directed directed, Object model) {
-		return bindingsCache.getBindings(directed,
+		return bindingsCache().getBindings(directed,
 				ClassUtil.resolveEnumSubclassAndSynthetic(model));
 	}
 
@@ -370,7 +374,7 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		return null;
 	}
 
-	class BindingsCache {
+	public class BindingsCache {
 		Map<Key, List<Binding>> byKey = new LinkedHashMap<>();
 
 		List<Binding> computeBindings(Key key) {

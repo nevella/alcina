@@ -17,13 +17,13 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Transform;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.model.DelegatingValue;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -194,6 +194,25 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			this.parent = renderer.input.resolver;
 			annotationResolver = parent.annotationResolver;
 			bindingsCache = parent.bindingsCache;
+		}
+
+		@Override
+		protected MultikeyMap<List<? extends Annotation>> resolvedCache() {
+			return field.getSharedAnnotationResolver().resolvedCache();
+		}
+
+		public synchronized <A extends Annotation> List<A> resolveAnnotations(
+				Class<A> annotationClass, AnnotationLocation location) {
+			AnnotationLocation sharedLocation = location
+					.copyWithResolver(field.getSharedAnnotationResolver());
+			return (List<A>) resolvedCache().ensure(() -> {
+				return resolveAnnotations0(annotationClass, location);
+			}, sharedLocation, annotationClass);
+		}
+
+		@Override
+		protected BindingsCache bindingsCache() {
+			return field.getSharedAnnotationResolver().bindingsCache();
 		}
 
 		@Override

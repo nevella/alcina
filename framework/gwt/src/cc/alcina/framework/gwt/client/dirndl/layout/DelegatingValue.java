@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.dirndl.model;
+package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -6,8 +6,10 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.BridgingValueRenderer.ValueResolver;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 
 /*
  * Renders all non-editable fields (by default) as their 'natural' renderer.
@@ -45,6 +47,12 @@ public class DelegatingValue extends Model.Value<Object>
 	 */
 	class ValueTransformerResolver extends ContextResolver {
 		ValueTransformerResolver() {
+		}
+
+		@Override
+		protected BindingsCache bindingsCache() {
+			ValueResolver typedParent = (ValueResolver) parent;
+			return typedParent.bindingsCache();
 		}
 
 		@Override
