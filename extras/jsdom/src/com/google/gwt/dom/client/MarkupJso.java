@@ -2,6 +2,8 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * <h2>LocalDom 3.0</h2>
  * <p>
@@ -34,13 +36,27 @@ import java.util.List;
  */
 class MarkupJso {
 	static class MarkupResult {
+		boolean ok;
+
+		public String localMarkup;
+
+		public String remoteMarkup;
 	}
 
 	MarkupResult markup(Element container, String markup,
 			List<Integer> refIds) {
 		ElementJso remote = (ElementJso) container.remote();
 		remote.setInnerHTML(markup);
-		return applyIds(refIds, remote);
+		MarkupResult result = applyIds(refIds, remote);
+		if (!result.ok) {
+			result.localMarkup = markup;
+			result.remoteMarkup = remote.getInnerHTML0();
+			LocalDom.consoleLog(Ax.format("MarkupJso :: local ::\n%s",
+					result.localMarkup.replace("\n", "")), true);
+			LocalDom.consoleLog(Ax.format("MarkupJso :: remote ::\n%s",
+					result.remoteMarkup.replace("\n", "")), true);
+		}
+		return result;
 	}
 
 	MarkupResult applyIds(List<Integer> refIds, ElementJso remote) {
@@ -57,12 +73,12 @@ class MarkupJso {
 		builder.append(']');
 		String refIdArrayJson = builder.toString();
 		long start = System.currentTimeMillis();
-		boolean success = traverseAndMark(remote, refIdArrayJson);
+		result.ok = traverseAndMark(remote, refIdArrayJson);
 		long end = System.currentTimeMillis();
 		// FIXME - logging
 		// LocalDom.consoleLog(Ax.format("traverse-and-mark :: %s nodes - %sms",
 		// refIds.size(), end - start), false);
-		if (!success) {
+		if (!result.ok) {
 			LocalDom.consoleLog("MarkupJso :: !!success", true);
 		}
 		return result;

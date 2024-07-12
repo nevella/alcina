@@ -144,8 +144,12 @@ public @interface Directed {
 
 	/**
 	 *
-	 * Exclude this property from directed layout if @Directed.AllProperties
-	 * exists on the type
+	 * Exclude this property from directed layout. Use to exclude
+	 * if @Directed.AllProperties exists on the type, or to override a
+	 * parent @Directed
+	 * 
+	 * Note that this (property) annotation is *not* merged, so must be
+	 * reapplied to subtypes
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)

@@ -81,6 +81,9 @@ public class LogStoreInterceptors {
 			Element e = null;
 			try {
 				e = Element.as(eTarget);
+				if (e == null) {
+					return;
+				}
 			} catch (Exception e1) {
 				// FIXME - DEVEX:0 - some invalid tables happening?
 				Ax.simpleExceptionOut(e1);

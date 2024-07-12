@@ -103,7 +103,7 @@ public class LocalDom implements ContextFrame {
 		return collections;
 	}
 
-	static native void consoleLog(String message, boolean error) /*-{
+	static native void consoleLog0(String message, boolean error) /*-{
     if (error) {
       console.error(message);
     } else {
@@ -111,10 +111,10 @@ public class LocalDom implements ContextFrame {
     }
 	}-*/;;
 
-	native static void consoleLog0(String message) /*-{
-    console.log(message);
-
-	}-*/;
+	static void consoleLog(String message, boolean error) {
+		Ax.sysLogHigh(message);
+		consoleLog0(message, error);
+	}
 
 	static Element createElement(String tagName) {
 		return get().createElement0(tagName);
@@ -830,6 +830,11 @@ public class LocalDom implements ContextFrame {
 			int refId = remote.getRefId();
 			Node node = domIds.getNode(new Refid(refId));
 			if (node == null) {
+				if (domIds.wasRemoved(new Refid(refId))) {
+					// removed from localdom, but remotedom removal still
+					// pending
+					return null;
+				}
 				throw new IllegalStateException(
 						"Remote should always be registered");
 			} else {
