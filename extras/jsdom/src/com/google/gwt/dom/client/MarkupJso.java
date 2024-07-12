@@ -81,6 +81,7 @@ class MarkupJso {
 				break;
 			}
 			if (idsIdx == ids.length) {
+			debugger;
 				return false;
 			}
 			node.__refid = ids[idsIdx++];
@@ -117,6 +118,9 @@ class MarkupJso {
 				}
 			}
 			coalesceList[0].nodeValue = content;
+		}
+		if(idsIdx != ids.length){
+		debugger;
 		}
 		return idsIdx == ids.length;
 	}-*/;

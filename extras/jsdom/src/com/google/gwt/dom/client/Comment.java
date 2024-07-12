@@ -126,7 +126,7 @@ public class Comment extends Node
 	}
 
 	@Override
-	protected void resetRemote0() {
+	protected void resetRemote() {
 		this.remote = CommentNull.INSTANCE;
 	}
 
@@ -159,7 +159,7 @@ public class Comment extends Node
 		}
 
 		@Override
-		public void putRemote(ClientDomNode remote) {
+		public void putRemoteNoSideEffects(ClientDomNode remote) {
 			Comment.this.remote = (ClientDomComment) remote;
 		}
 

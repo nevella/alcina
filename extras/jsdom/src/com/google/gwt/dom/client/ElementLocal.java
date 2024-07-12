@@ -961,8 +961,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		}
 
 		@Override
-		protected void resetRemote0() {
-			throw new UnsupportedOperationException();
+		protected void resetRemote() {
 		}
 
 		@Override

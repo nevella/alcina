@@ -101,7 +101,7 @@ public class ProcessingInstruction extends Node implements
 	}
 
 	@Override
-	protected void resetRemote0() {
+	protected void resetRemote() {
 		this.remote = ProcessingInstructionNull.INSTANCE;
 	}
 
@@ -122,6 +122,11 @@ public class ProcessingInstruction extends Node implements
 		public ProcessingInstructionJso ensureRemote() {
 			ensureRemoteCheck();
 			return ProcessingInstruction.this.jsoRemote();
+		}
+
+		@Override
+		public void putRemoteNoSideEffects(ClientDomNode remote) {
+			ProcessingInstruction.this.remote = (ClientDomProcessingInstruction) remote;
 		}
 
 		public ProcessingInstructionJso typedRemote() {
