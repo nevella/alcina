@@ -425,7 +425,7 @@ public abstract class Node
 				oldChild, null, false));
 		Node result = local().removeChild(oldChild);
 		sync(() -> remote().removeChild(oldChild));
-		// oldChild.resetRemote();
+		oldChild.resetRemote();
 		return result;
 	}
 
@@ -442,7 +442,7 @@ public abstract class Node
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				this, null, false));
 		local().removeFromParent();
-		// resetRemote();
+		resetRemote();
 	}
 
 	@Override
@@ -455,7 +455,7 @@ public abstract class Node
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				newChild, newChild.getPreviousSibling(), true));
 		Node result = local().replaceChild(newChild, oldChild);
-		// oldChild.resetRemote();
+		oldChild.resetRemote();
 		return result;
 	}
 
@@ -513,7 +513,7 @@ public abstract class Node
 		getOwnerDocument().localDom.onDetach(this);
 		// note this will be undone for the top-of-the-detach-tree (see void
 		// setAttached(boolean attached) )
-		// resetRemote();
+		resetRemote();
 		streamChildren().forEach(n -> n.setAttached(false));
 	}
 
@@ -594,11 +594,16 @@ public abstract class Node
 	protected abstract void putRemote(ClientDomNode remote, boolean synced);
 
 	protected abstract <T extends ClientDomNode> T remote();
+
 	/*
 	 * Populates the remote on node creation or detach (with a null remote)
 	 */
+	final void resetRemote() {
+		resetRemote0();
+		syncId = 0;
+	}
 
-	protected abstract void resetRemote();
+	protected abstract void resetRemote0();
 
 	/**
 	 * Apply the runnable (to the remote dom) only if the node + dom states

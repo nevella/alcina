@@ -1006,7 +1006,7 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	@Override
-	protected void resetRemote() {
+	protected void resetRemote0() {
 		this.remote = ElementNull.INSTANCE;
 		if (this.hasStyle()) {
 			this.style.resetRemote();

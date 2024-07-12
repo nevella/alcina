@@ -139,7 +139,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	}
 
 	@Override
-	protected void resetRemote() {
+	protected void resetRemote0() {
 		this.remote = TextNull.INSTANCE;
 	}
 

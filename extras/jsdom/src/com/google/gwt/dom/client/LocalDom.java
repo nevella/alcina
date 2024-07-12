@@ -505,7 +505,8 @@ public class LocalDom implements ContextFrame {
 	 * the nth remote node (where n is the index of the stack elt)
 	 * 
 	 * FIXME - refid - only permit a call to this in jso devmode, all other dom
-	 * linking (local <-> remote) should occur as the ships come in
+	 * linking (local <-> remote) should occur as the ships come in - i.e.
+	 * markupjso will
 	 */
 	private void ensureRemote0(Node node) {
 		if (isRefid()) {
@@ -619,6 +620,8 @@ public class LocalDom implements ContextFrame {
 				syncEventId++;
 				syncEventIdDirty = false;
 			}
+			// clear nodes enqueued for sync, then removed
+			pendingSync.removeIf(n -> n.getParentNode() == null);
 			new ArrayList<>(pendingSync).stream()
 					.forEach(this::ensurePendingSynced);
 			if (syncEventIdDirty) {

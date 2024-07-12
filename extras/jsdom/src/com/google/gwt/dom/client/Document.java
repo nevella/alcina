@@ -1072,7 +1072,7 @@ public class Document extends Node
 	}
 
 	@Override
-	protected void resetRemote() {
+	protected void resetRemote0() {
 	}
 
 	@Override

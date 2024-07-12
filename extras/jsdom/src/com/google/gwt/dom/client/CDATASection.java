@@ -143,7 +143,7 @@ public class CDATASection extends Node
 	}
 
 	@Override
-	protected void resetRemote() {
+	protected void resetRemote0() {
 		this.remote = CDATASectionNull.INSTANCE;
 	}
 

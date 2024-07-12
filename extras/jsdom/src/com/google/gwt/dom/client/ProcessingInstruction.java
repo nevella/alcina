@@ -101,7 +101,7 @@ public class ProcessingInstruction extends Node implements
 	}
 
 	@Override
-	protected void resetRemote() {
+	protected void resetRemote0() {
 		this.remote = ProcessingInstructionNull.INSTANCE;
 	}
 

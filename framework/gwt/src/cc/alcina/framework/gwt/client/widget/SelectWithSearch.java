@@ -1018,6 +1018,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		if (recreateItemHolder) {
 			itemHolder.removeFromParent();
 			createItemHolder();
+			if (scroller != null && scroller.getParent() == null) {
+				scroller = new ScrollPanel();
+			}
 		}
 		HasWidgets itemHolder = itemHolderAsHasWidgets();
 		itemHolder.clear();

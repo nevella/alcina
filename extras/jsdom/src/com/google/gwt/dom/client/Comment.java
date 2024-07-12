@@ -126,7 +126,7 @@ public class Comment extends Node
 	}
 
 	@Override
-	protected void resetRemote() {
+	protected void resetRemote0() {
 		this.remote = CommentNull.INSTANCE;
 	}
 
@@ -153,6 +153,7 @@ public class Comment extends Node
 	}
 
 	public class CommentImplAccess extends Node.ImplAccess {
+		@Override
 		public CommentJso ensureRemote() {
 			ensureRemoteCheck();
 			return Comment.this.jsoRemote();
