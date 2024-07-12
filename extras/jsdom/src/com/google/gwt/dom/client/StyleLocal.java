@@ -476,7 +476,7 @@ public class StyleLocal implements ClientDomStyle {
 
 	@Override
 	public String getPropertyImpl(String name) {
-		return properties.computeIfAbsent(name, lambda_name -> "");
+		return properties.getOrDefault(name, "");
 	}
 
 	@Override
