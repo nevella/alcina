@@ -153,13 +153,14 @@ public class Comment extends Node
 	}
 
 	public class CommentImplAccess extends Node.ImplAccess {
+		@Override
 		public CommentJso ensureRemote() {
 			ensureRemoteCheck();
 			return Comment.this.jsoRemote();
 		}
 
 		@Override
-		public void putRemote(ClientDomNode remote) {
+		public void putRemoteNoSideEffects(ClientDomNode remote) {
 			Comment.this.remote = (ClientDomComment) remote;
 		}
 

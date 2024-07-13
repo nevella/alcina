@@ -103,7 +103,7 @@ public class LocalDom implements ContextFrame {
 		return collections;
 	}
 
-	static native void consoleLog(String message, boolean error) /*-{
+	static native void consoleLog0(String message, boolean error) /*-{
     if (error) {
       console.error(message);
     } else {
@@ -111,10 +111,10 @@ public class LocalDom implements ContextFrame {
     }
 	}-*/;;
 
-	native static void consoleLog0(String message) /*-{
-    console.log(message);
-
-	}-*/;
+	static void consoleLog(String message, boolean error) {
+		Ax.sysLogHigh(message);
+		consoleLog0(message, error);
+	}
 
 	static Element createElement(String tagName) {
 		return get().createElement0(tagName);
@@ -505,7 +505,8 @@ public class LocalDom implements ContextFrame {
 	 * the nth remote node (where n is the index of the stack elt)
 	 * 
 	 * FIXME - refid - only permit a call to this in jso devmode, all other dom
-	 * linking (local <-> remote) should occur as the ships come in
+	 * linking (local <-> remote) should occur as the ships come in - i.e.
+	 * markupjso will
 	 */
 	private void ensureRemote0(Node node) {
 		if (isRefid()) {
@@ -619,6 +620,8 @@ public class LocalDom implements ContextFrame {
 				syncEventId++;
 				syncEventIdDirty = false;
 			}
+			// clear nodes enqueued for sync, then removed
+			pendingSync.removeIf(n -> n.getParentNode() == null);
 			new ArrayList<>(pendingSync).stream()
 					.forEach(this::ensurePendingSynced);
 			if (syncEventIdDirty) {
@@ -827,6 +830,11 @@ public class LocalDom implements ContextFrame {
 			int refId = remote.getRefId();
 			Node node = domIds.getNode(new Refid(refId));
 			if (node == null) {
+				if (domIds.wasRemoved(new Refid(refId))) {
+					// removed from localdom, but remotedom removal still
+					// pending
+					return null;
+				}
 				throw new IllegalStateException(
 						"Remote should always be registered");
 			} else {

@@ -80,7 +80,7 @@ class SyncMutations {
 					record.connectMutationNodeRef(added);
 					if (!Al.isBrowser()) {
 						added.node.implAccess()
-								.putRemote(NodeRefid.create(added.node));
+								.putRemoteNoSideEffects(NodeRefid.create(added.node));
 					}
 				});
 			});

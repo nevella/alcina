@@ -70,7 +70,7 @@ public abstract class Node
 			return (E) Node.this.local();
 		}
 
-		public void putRemote(ClientDomNode remote) {
+		public void putRemoteNoSideEffects(ClientDomNode remote) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -137,6 +137,7 @@ public abstract class Node
 	int refId;
 
 	protected Node() {
+		resetRemote();
 	}
 
 	public boolean isAttached() {
@@ -424,6 +425,7 @@ public abstract class Node
 				oldChild, null, false));
 		Node result = local().removeChild(oldChild);
 		sync(() -> remote().removeChild(oldChild));
+		oldChild.resetRemote();
 		return result;
 	}
 
@@ -440,6 +442,7 @@ public abstract class Node
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				this, null, false));
 		local().removeFromParent();
+		resetRemote();
 	}
 
 	@Override
@@ -452,6 +455,7 @@ public abstract class Node
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				newChild, newChild.getPreviousSibling(), true));
 		Node result = local().replaceChild(newChild, oldChild);
+		oldChild.resetRemote();
 		return result;
 	}
 
@@ -507,9 +511,14 @@ public abstract class Node
 
 	protected void onDetach() {
 		getOwnerDocument().localDom.onDetach(this);
+		// note this will be undone for the top-of-the-detach-tree (see void
+		// setAttached(boolean attached) )
+		resetRemote();
 		streamChildren().forEach(n -> n.setAttached(false));
 	}
 
+	// FIXME - refid - with refid, this becomes simpler - just remove/reset any
+	// existing remote dom on attach
 	protected void doPreTreeSync(Node child) {
 		if (child != null) {
 			boolean ensureBecauseChildSynced = (child.wasSynced()
@@ -586,9 +595,12 @@ public abstract class Node
 
 	protected abstract <T extends ClientDomNode> T remote();
 
-	protected void resetRemote() {
-		clearSynced();
+	/*
+	 * Populates the remote on node creation or detach (with a null remote)
+	 */
+	final void resetRemote() {
 		resetRemote0();
+		syncId = 0;
 	}
 
 	protected abstract void resetRemote0();
@@ -624,14 +636,18 @@ public abstract class Node
 		if (attached) {
 			onAttach();
 		} else {
+			// clear all tree domNodes but relink this (top of removed tree)
+			// post onDetach
+			ClientDomNode remote = remote();
 			onDetach();
+			implAccess().putRemoteNoSideEffects(remote);
 		}
 	}
 
 	/**
 	 * only call on reparse
 	 */
-	void clearSynced() {
+	final void clearSynced() {
 		syncId = 0;
 	}
 
@@ -644,6 +660,7 @@ public abstract class Node
 		return syncId > 0;
 	}
 
+	@Override
 	public void setRefId(int id) {
 		this.refId = id;
 		remote().setRefId(id);

@@ -124,6 +124,11 @@ public class ProcessingInstruction extends Node implements
 			return ProcessingInstruction.this.jsoRemote();
 		}
 
+		@Override
+		public void putRemoteNoSideEffects(ClientDomNode remote) {
+			ProcessingInstruction.this.remote = (ClientDomProcessingInstruction) remote;
+		}
+
 		public ProcessingInstructionJso typedRemote() {
 			return ProcessingInstruction.this.jsoRemote();
 		}

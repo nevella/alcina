@@ -531,6 +531,13 @@ public abstract class Choices<T> extends Model implements
 			}
 
 			@Override
+			@Directed.Exclude
+			@Binding(type = Type.INNER_TEXT)
+			public String getValue() {
+				return super.getValue();
+			}
+
+			@Override
 			@Binding(type = Type.PROPERTY)
 			public boolean isSelected() {
 				return super.isSelected();

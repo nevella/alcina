@@ -170,9 +170,15 @@ public class CDATASection extends Node
 	}
 
 	public class CDATASectionImplAccess extends Node.ImplAccess {
+		@Override
 		public CDATASectionJso ensureRemote() {
 			ensureRemoteCheck();
 			return CDATASection.this.jsoRemote();
+		}
+
+		@Override
+		public void putRemoteNoSideEffects(ClientDomNode remote) {
+			CDATASection.this.remote = (ClientDomCDATASection) remote;
 		}
 
 		public CDATASectionJso typedRemote() {

@@ -83,14 +83,22 @@ public class DomIds {
 	}
 
 	/*
-	 * This class models the ids of all nodes in a subtree, in depth-first order
+	 * This class models the ids of all nodes in a subtree, in depth-first
+	 * order, for assigning post-set-innerhtml. This sets the text content of
+	 * empty nodes to " " - FIXME remove the space (but keep the remote node)
 	 */
 	public IdList getSubtreeIds(Node node) {
 		IdList list = new IdList();
 		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
 				node,
 				n -> n.getChildNodes().stream().collect(Collectors.toList()));
-		traversal.forEach(n -> list.ids.add(n.refId));
+		traversal.forEach(n -> {
+			if (n.getNodeType() == Node.TEXT_NODE
+					&& n.getNodeValue().isEmpty()) {
+				n.setNodeValue(" ");
+			}
+			list.ids.add(n.refId);
+		});
 		return list;
 	}
 
@@ -137,5 +145,9 @@ public class DomIds {
 
 	void applyPreRemovalRefId(Node node, Refid refId) {
 		refId.id = getRemovedId(node);
+	}
+
+	public boolean wasRemoved(Refid refid) {
+		return removed.values().contains(refid.id);
 	}
 }

@@ -126,6 +126,8 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 				.toArray(Empty.STRINGS);
 	}
 
+	int missingUrlResourceCount;
+
 	private String replaceWithDataUrls(ResourceContext context, String toWrite,
 			ResolveParent resolveParent) throws Exception {
 		Pattern urlPat = Pattern
@@ -171,12 +173,14 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 					continue;
 				} else {
 					if (!url.matches(ignoreMissingUrlResources)) {
-						System.out.println("missing url resource - " + url);
-						String[] pub = getAllPublicFiles(module);
-						for (String path : pub) {
-							if (path.contains(url)) {
-								System.out.format("Maybe - %s : %s\n", url,
-										path);
+						if (missingUrlResourceCount++ < 3) {
+							System.out.println("missing url resource - " + url);
+							String[] pub = getAllPublicFiles(module);
+							for (String path : pub) {
+								if (path.contains(url)) {
+									System.out.format("Maybe - %s : %s\n", url,
+											path);
+								}
 							}
 						}
 					}

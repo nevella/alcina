@@ -1,10 +1,10 @@
 package com.google.gwt.dom.client;
 
 /**
- * Naming note - this interface is the root of the three DOM-like hierarchies
- * (Node, NodeLocal, NodeJso) which collectively implement the local/remote (aka
- * virtural) DOM model. Named ClientDomNode to avoid collision with the
- * more-used (particularly by external code)
+ * Naming note - this interface is the root of the <strike>three</strike> four
+ * DOM-like hierarchies (Node, NodeLocal, NodeJso, NodeRefId) which collectively
+ * implement the local/remote (aka virtural) DOM model. Named ClientDomNode to
+ * avoid collision with the more-used (particularly by external code)
  * cc.alcina.framework.common.client.dom.DomNode)
  *
  * 

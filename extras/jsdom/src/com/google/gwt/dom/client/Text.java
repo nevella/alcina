@@ -40,7 +40,6 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	protected Text(TextLocal local) {
 		this.local = local;
-		this.remote = TextNull.INSTANCE;
 	}
 
 	@Override
@@ -171,13 +170,14 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	}
 
 	public class TextImplAccess extends Node.ImplAccess {
+		@Override
 		public TextJso ensureRemote() {
 			ensureRemoteCheck();
 			return Text.this.jsoRemote();
 		}
 
 		@Override
-		public void putRemote(ClientDomNode remote) {
+		public void putRemoteNoSideEffects(ClientDomNode remote) {
 			Text.this.remote = (ClientDomText) remote;
 		}
 

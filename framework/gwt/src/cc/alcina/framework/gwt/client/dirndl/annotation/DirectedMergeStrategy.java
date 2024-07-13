@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -109,17 +110,32 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 					typeReflector, Directed.AllProperties.class,
 					Resolver.ResolutionContext.Strategy);
 			if (allProperties != null) {
-				Directed.Exclude exclude = resolver.contextAnnotation(reflector,
-						Directed.Exclude.class,
-						Resolver.ResolutionContext.Strategy);
 				Binding binding = resolver.contextAnnotation(reflector,
 						Binding.class, Resolver.ResolutionContext.Strategy);
-				if (exclude == null && binding == null) {
+				if (binding == null) {
 					result.add(new Directed.Impl());
 				}
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public List<Directed> resolveProperty(Class<Directed> annotationClass,
+			Property property, List<Inheritance> inheritance,
+			Resolver resolver) {
+		if (property != null) {
+			// short circuit resolution
+			Directed.Exclude exclude = resolver.contextAnnotation(property,
+					Directed.Exclude.class,
+					Resolver.ResolutionContext.Strategy);
+			if (exclude != null) {
+				return List.of();
+			}
+		}
+		// TODO Auto-generated method stub
+		return super.resolveProperty(annotationClass, property, inheritance,
+				resolver);
 	}
 
 	@Override

@@ -15,11 +15,9 @@
  */
 package com.google.gwt.user.client.ui;
 
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Overflow;
-import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.ScrollHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -199,22 +197,8 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	 */
 	private void initialize() {
 		setAlwaysShowScrollBars(false);
-		// Prevent IE standard mode bug when a AbsolutePanel is contained.
-		scrollableElem.getStyle().setPosition(Position.RELATIVE);
-		containerElem.getStyle().setPosition(Position.RELATIVE);
-		// Hack to account for the IE6/7 scrolling bug described here:
-		// http://stackoverflow.com/questions/139000/div-with-overflowauto-and-a-100-wide-table-problem
-		// goodbye IE
-		// scrollableElem.getStyle().setProperty("zoom", "1");
-		// containerElem.getStyle().setProperty("zoom", "1");
-		// Enable touch scrolling.
 		setTouchScrollingDisabled(false);
-		// Initialize the scrollable element.
-		Scheduler.get().scheduleFinally(() -> {
-			scrollableElem.implAccess().ensureJsoRemote();
-			containerElem.implAccess().ensureJsoRemote();
-			ScrollImpl.get().initialize(scrollableElem, containerElem);
-		});
+		// all ie/trident code removed
 	}
 
 	/**

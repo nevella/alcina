@@ -144,10 +144,6 @@ public class FilterableTree extends Tree
 		filterText = filterText == null ? null : filterText.toLowerCase();
 		for (int i = 0; i < getItemCount(); i++) {
 			TreeItem child = getItem(i);
-			child.getElement().syncedToPending();
-		}
-		for (int i = 0; i < getItemCount(); i++) {
-			TreeItem child = getItem(i);
 			if (child instanceof VisualFilterable) {
 				VisualFilterable vf = (VisualFilterable) child;
 				boolean match = vf.filter(filterText);

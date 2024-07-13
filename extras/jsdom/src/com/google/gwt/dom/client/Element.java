@@ -1350,13 +1350,6 @@ public class Element extends Node implements ClientDomElement,
 		sync(() -> remote().sinkEvents(eventBits));
 	}
 
-	/**
-	 * When it's quicker to redraw the whole DOM. Tree filtering springs to mind
-	 */
-	public void syncedToPending() {
-		implAccess().syncedToPending();
-	}
-
 	@Override
 	public void toggleClassName(String className) {
 		ensureRemoteCheck();
@@ -1457,24 +1450,13 @@ public class Element extends Node implements ClientDomElement,
 		}
 
 		@Override
-		public void putRemote(ClientDomNode remote) {
+		public void putRemoteNoSideEffects(ClientDomNode remote) {
 			Element.this.remote = (ClientDomElement) remote;
 		}
 
 		@Override
 		public ClientDomElement remote() {
 			return Element.this.remote();
-		}
-
-		public void syncedToPending() {
-			if (linkedToRemote()) {
-				ElementJso oldRemote = jsoRemote();
-				sync(() -> oldRemote.removeAllChildren0());
-				local().walk(ln -> ln.node().resetRemote());
-				resetRemote();
-				LocalDom.ensureRemoteNodeMaybePendingSync(Element.this);
-				oldRemote.replaceWith(jsoRemote());
-			}
 		}
 
 		public boolean wasSynced() {

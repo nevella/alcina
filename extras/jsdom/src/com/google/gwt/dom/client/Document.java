@@ -1073,7 +1073,6 @@ public class Document extends Node
 
 	@Override
 	protected void resetRemote0() {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
