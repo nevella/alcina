@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.aria.client.Roles;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -40,12 +38,9 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Accessibility;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
-import com.google.gwt.user.client.ui.SourcesClickEvents;
 import com.google.gwt.user.client.ui.TabListener;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
@@ -260,19 +255,11 @@ public class FlowTabBar extends Composite
 		Widget tabWidget = null;
 		if (widget.getElement().hasTagName("a")) {
 			tabWidget = widget;
-			Roles.getTabRole().set(widget.getElement());
 		} else {
-			// probably never
-			ClickDelegatePanel delWidget = new ClickDelegatePanel(widget);
-			delWidget.addClickHandler(this);
-			delWidget.addKeyDownHandler(this);
-			delWidget.setStyleName(STYLENAME_DEFAULT);
-			// Add a11y role "tab"
-			SimplePanel focusablePanel = delWidget.getFocusablePanel();
-			Accessibility.setRole(focusablePanel.getElement(),
-					Accessibility.ROLE_TAB);
-			tabWidget = delWidget;
+			tabWidget = new TabButton(widget);
 		}
+		Roles.getTabRole().set(tabWidget.getElement());
+		tabWidget.addStyleName("gwt-TabBarItem");
 		if (beforeIndex == tabs.size()) {
 			panel2.add(tabWidget);
 		} else {
@@ -282,6 +269,22 @@ public class FlowTabBar extends Composite
 		tabs.add(tabWidget);
 		setStyleName(DOM.getParent(tabWidget.getElement()),
 				STYLENAME_DEFAULT + "-wrapper", true);
+	}
+
+	class TabButton extends SimplePanel
+			implements HasClickHandlers, HasKeyDownHandlers {
+		public TabButton(Widget widget) {
+			super(DOM.createButton());
+			setWidget(widget);
+		}
+
+		public HandlerRegistration addClickHandler(ClickHandler handler) {
+			return addDomHandler(handler, ClickEvent.getType());
+		}
+
+		public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
+			return addDomHandler(handler, KeyDownEvent.getType());
+		}
 	}
 
 	public void onClick(ClickEvent event) {
@@ -408,62 +411,5 @@ public class FlowTabBar extends Composite
 	 */
 	public void setTabText(int index, String text) {
 		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * <code>ClickDelegatePanel</code> decorates any widget with the minimal
-	 * amount of machinery to receive clicks for delegation to the parent.
-	 * {@link SourcesClickEvents} is not implemented due to the fact that only a
-	 * single observer is needed.
-	 */
-	private class ClickDelegatePanel extends Composite
-			implements HasClickHandlers, HasKeyDownHandlers {
-		private SimplePanel focusablePanel;
-
-		ClickDelegatePanel(Widget child) {
-			focusablePanel = new FocusPanel();
-			// allows wrapping
-			Element span = createHiddenSpan();
-			DOM.insertChild(focusablePanel.getElement(), span, 2);
-			Element spacer = new InlineLabel(" ").getElement();
-			DOM.insertChild(focusablePanel.getElement(), spacer, 3);
-			focusablePanel.setWidget(child);
-			SimplePanel wrapperWidget = createTabTextWrapper();
-			if (wrapperWidget == null) {
-				initWidget(focusablePanel);
-			} else {
-				wrapperWidget.setWidget(focusablePanel);
-				initWidget(wrapperWidget);
-			}
-			sinkEvents(Event.ONCLICK | Event.ONKEYDOWN);
-		}
-
-		public HandlerRegistration addClickHandler(ClickHandler handler) {
-			return addDomHandler(handler, ClickEvent.getType());
-		}
-
-		public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
-			return addDomHandler(handler, KeyDownEvent.getType());
-		}
-
-		protected Element createHiddenSpan() {
-			return Document.get().createSpanElement();
-		}
-
-		protected native Element createHiddenSpan0() /*-{
-														var span = $doc.createElement('span');
-														span.style.width = span.style.height = 0;
-														span.style.opacity = 0;
-														span.style.zIndex = -1;
-														span.style.height = '1px';
-														span.style.width = '1px';
-														span.style.overflow = 'hidden';
-														span.style.position = 'absolute';
-														return span;
-														}-*/;
-
-		public SimplePanel getFocusablePanel() {
-			return focusablePanel;
-		}
 	}
 }
