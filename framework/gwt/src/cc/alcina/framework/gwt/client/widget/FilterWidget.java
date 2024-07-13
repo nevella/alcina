@@ -68,8 +68,6 @@ public class FilterWidget extends Composite
 
 	private VisualFilterable vf;
 
-	private boolean hintWasCleared;
-
 	private boolean focusOnAttach;
 
 	private FlowPanel holder;
@@ -174,10 +172,6 @@ public class FilterWidget extends Composite
 
 	public boolean isHinted() {
 		return hint != null && textBox.getText().equals(hint);
-	}
-
-	public boolean isHintWasCleared() {
-		return this.hintWasCleared;
 	}
 
 	public boolean isQueueing() {

@@ -690,7 +690,7 @@ public class WidgetUtils {
 		return false;
 	}
 
-	static boolean isEditable(Element element) {
+	public static boolean isEditable(Element element) {
 		return element.hasTagName("input") || element.hasTagName("textarea")
 				|| Objects.equals(getComputedStyle(element, "contentEditable"),
 						"true");

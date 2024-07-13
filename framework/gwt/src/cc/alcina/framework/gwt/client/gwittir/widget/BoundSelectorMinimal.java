@@ -71,9 +71,6 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	protected void addItems(Collection<?> items) {
 		super.addItems(items);
-		if (search.getFilter().isHintWasCleared()) {
-			search.getFilter().getTextBox().setText("");
-		}
 	}
 
 	@Override

@@ -305,7 +305,7 @@ class ClientDomStyleStatic {
 	}
 
 	public static void clearProperty(ClientDomStyle domStyle, String name) {
-		domStyle.setProperty(name, "");
+		domStyle.removeProperty(name);
 	}
 
 	/**
