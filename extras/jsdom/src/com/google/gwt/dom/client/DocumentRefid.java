@@ -573,9 +573,6 @@ public class DocumentRefid extends NodeRefid implements ClientDomDocument {
 	}
 
 	void addSunkEvent(Runnable runnable) {
-		if (sinkEventsQueue.size() > 100) {
-			int debug = 3;
-		}
 		sinkEventsQueue.add(runnable);
 	}
 

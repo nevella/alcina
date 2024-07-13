@@ -30,6 +30,7 @@ import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * The Node interface is the primary datatype for the entire Document Object
@@ -669,5 +670,9 @@ public abstract class Node
 	@Override
 	public int getRefId() {
 		return this.refId;
+	}
+
+	public String toNameRefId() {
+		return Ax.format("%s::%s", getNodeName(), getRefId());
 	}
 }

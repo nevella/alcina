@@ -67,11 +67,11 @@ public class DomIds {
 	}
 
 	int getRemovedId(Node node) {
-		return removed.get(node);
+		return removed.getOrDefault(node, -1);
 	}
 
 	void releaseRemoved() {
-		removed.clear();
+		// removed.clear();
 	}
 
 	void onDetach(Node node) {
@@ -85,7 +85,8 @@ public class DomIds {
 	/*
 	 * This class models the ids of all nodes in a subtree, in depth-first
 	 * order, for assigning post-set-innerhtml. This sets the text content of
-	 * empty nodes to " " - FIXME remove the space (but keep the remote node)
+	 * empty nodes to " " - FIXME - refid - later - remove the space (but keep
+	 * the remote node)
 	 */
 	public IdList getSubtreeIds(Node node) {
 		IdList list = new IdList();

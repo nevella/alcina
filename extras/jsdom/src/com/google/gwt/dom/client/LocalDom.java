@@ -120,10 +120,6 @@ public class LocalDom implements ContextFrame {
 		return get().createElement0(tagName);
 	}
 
-	public static void debug(ElementJso elementJso) {
-		get().debug0(elementJso);
-	}
-
 	synchronized static String declarativeCssName(String key) {
 		return declarativeCssNames.computeIfAbsent(key, k -> {
 			String lcKey = k.toLowerCase();
@@ -155,7 +151,7 @@ public class LocalDom implements ContextFrame {
 
 	static <C extends ClientDomNode> C
 			ensureRemoteNodeMaybePendingSync(Node node) {
-		return (C) get().ensureRemoteNodeMaybePendingSync0(node);
+		return (C) get().ensureRemoteNodeMaybePendingSync0(node, true);
 	}
 
 	public static void eventMod(NativeEvent evt, String eventName) {
@@ -479,10 +475,6 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	private void debug0(ElementJso elementJso) {
-		int debug = 4;
-	}
-
 	private void ensureFlush() {
 		if (flushCommand == null && GWT.isClient()) {
 			flushCommand = () -> flush();
@@ -513,6 +505,12 @@ public class LocalDom implements ContextFrame {
 			// FIXME - refid - factor a bunch of this out into
 			// LDjso/LDrefId classes
 			ensureRemote0Refid(node);
+			return;
+		}
+		// temp - flush during large mutation application has unwanted side
+		// effects, don't verify tree linkage if node is already linked
+		if (node.linkedToRemote()) {
+			// this may have side-effects - but most of this is going away
 			return;
 		}
 		flush0(true);
@@ -558,11 +556,14 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	private ClientDomNode ensureRemoteNodeMaybePendingSync0(Node node) {
+	ClientDomNode ensureRemoteNodeMaybePendingSync0(Node node,
+			boolean ensureFlush) {
 		if (node.linkedToRemote()) {
 			return node.remote();
 		}
-		ensureFlush();
+		if (ensureFlush) {
+			ensureFlush();
+		}
 		ClientDomNode remote = null;
 		int nodeType = node.getNodeType();
 		switch (nodeType) {
@@ -782,26 +783,38 @@ public class LocalDom implements ContextFrame {
 			ClientDomElement local) {
 		pendingSync.remove(element);
 		if (remote instanceof ElementJso) {
-			String innerMarkup = local.getInnerHTML();
-			IdList subtreeIds = domIds.getSubtreeIds(element);
-			new MarkupJso().markup(element, innerMarkup, subtreeIds.ids);
-			ElementJso j_remote = (ElementJso) remote;
-			// doesn't include style
-			local.getAttributeMap().entrySet().forEach(e -> {
-				String value = e.getValue();
-				switch (e.getKey()) {
-				case "text":
-					j_remote.setPropertyString(e.getKey(), value);
-					break;
-				default:
-					j_remote.setAttribute(e.getKey(), value);
-					break;
-				}
-			});
-			local.getStyle().getProperties().entrySet().forEach(e -> {
-				StyleRemote remoteStyle = j_remote.getStyle0();
-				remoteStyle.setProperty(e.getKey(), e.getValue());
-			});
+			ElementJso jsoRemote = (ElementJso) remote;
+			if (local.getChildCount() == 1
+					&& local.getFirstChild().getNodeType() == Node.TEXT_NODE) {
+				// avoid webkit rewriting as multiple text nodes (if large)
+				Text text = (Text) element.getFirstChild();
+				ensureRemoteNodeMaybePendingSync0(text, false);
+				TextJso textJso = text.implAccess().ensureRemote();
+				jsoRemote.appendChild0(textJso);
+				textJso.setData(text.getData());
+				int childCount = remote.getChildCount();
+				Preconditions.checkState(childCount == 1);
+			} else {
+				String innerMarkup = local.getInnerHTML();
+				IdList subtreeIds = domIds.getSubtreeIds(element);
+				new MarkupJso().markup(element, innerMarkup, subtreeIds.ids);
+				// doesn't include style
+				local.getAttributeMap().entrySet().forEach(e -> {
+					String value = e.getValue();
+					switch (e.getKey()) {
+					case "text":
+						jsoRemote.setPropertyString(e.getKey(), value);
+						break;
+					default:
+						jsoRemote.setAttribute(e.getKey(), value);
+						break;
+					}
+				});
+				local.getStyle().getProperties().entrySet().forEach(e -> {
+					StyleRemote remoteStyle = jsoRemote.getStyle0();
+					remoteStyle.setProperty(e.getKey(), e.getValue());
+				});
+			}
 		} else {
 			// ElementRefId
 			if (!element.isAttached()) {
