@@ -40,6 +40,7 @@ public class HighlightModel {
 
 	Function<Object, Object> toHasStringRepresentation;
 
+	// the key is the sequence element
 	Multimap<Object, List<Match>> elementMatches = new Multimap<>();
 
 	List<Match> matches = new ArrayList<>();

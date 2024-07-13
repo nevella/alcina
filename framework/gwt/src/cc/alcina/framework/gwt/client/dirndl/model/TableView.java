@@ -42,7 +42,7 @@ public class TableView extends
 					.forEach(tableModel.header.getColumns()::add);
 			rowModels.stream().map(
 					rowModel -> new TableModel.TableRow(tableModel, rowModel))
-					.forEach(tableModel.rows::add);
+					.forEach(tableModel::addRow);
 		}
 		return tableContainer;
 	}

@@ -632,6 +632,12 @@ body > page > sequence > table th, body > page > sequence > table td {
   padding-left: 6px;
   padding-right: 6px;
 }
+body > page > sequence > table tr.matches > td {
+  background-color: yellow;
+}
+body > page > sequence > table tr.selected > td {
+  background-color: #84A4FC;
+}
 body > page > detail {
   display: grid;
   grid-template-rows: min-content min-content 1fr;

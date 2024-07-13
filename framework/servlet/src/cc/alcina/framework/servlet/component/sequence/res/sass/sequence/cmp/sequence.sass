@@ -16,3 +16,10 @@
     @include table.clickable
     @include table.bordered-pad-left
     @include table.more-horizontal-space
+
+    tr
+      &.matches > td
+        background-color: yellow
+
+      &.selected > td
+        background-color: #84A4FC

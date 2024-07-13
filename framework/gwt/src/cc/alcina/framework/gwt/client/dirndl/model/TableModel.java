@@ -11,9 +11,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.place.shared.Place;
-import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -33,13 +35,19 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActivity;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -47,6 +55,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.DirectedEntitySearchActivityTransformer.TableContainer;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -69,7 +79,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * 
  * <p>
  * Because of descendant events, it'd be fairly easy to add a selectionmodel (a
- * la gwt celltable)
+ * la gwt celltable) ... in fact, see RowsModel below
  *
  *
  *
@@ -210,6 +220,9 @@ public class TableModel extends Model implements NodeEditorContext {
 		}
 	}
 
+	/**
+	 * Define a table row transformer
+	 */
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -238,6 +251,130 @@ public class TableModel extends Model implements NodeEditorContext {
 		 * The transformer
 		 */
 		Class<? extends ModelTransform> value();
+	}
+
+	/**
+	 * Models row selection + styling. Because it's really adjunct to the dom
+	 * structure, it doesn't fire directed events - except onBind, when its
+	 * _existence_ is announced via an event. Note that the underlying rows (the
+	 * array of models rendered as rows) does not change during the lifetime of
+	 * the tablemodel, rather the tablemodel is replaced if the rows change
+	 */
+	public static class RowsModel {
+		public class RowMeta implements TableEvents.RowClicked.Handler {
+			public TableRow row;
+
+			private boolean selected;
+
+			public boolean isSelected() {
+				return selected;
+			}
+
+			Set<Object> flags = AlcinaCollections.newUniqueSet();
+
+			public void setFlag(Object flag, boolean present) {
+				if (present) {
+					flags.add(flag);
+				} else {
+					flags.remove(flag);
+				}
+				updateRow();
+			}
+
+			void updateRow() {
+				String className = null;
+				if (!flags.isEmpty()) {
+					className = flags.stream().map(Object::toString)
+							.collect(Collectors.joining(" "));
+				}
+				row.setClassName(className);
+			}
+
+			RowMeta(TableRow row) {
+				this.row = row;
+				row.rowMeta = this;
+				this.index = meta.size();
+			}
+
+			int index;
+
+			public void onRowClicked(RowClicked event) {
+				int currentIndex = getSelectedRowIndex();
+				int toIndex = event.getModel().rowMeta.index;
+				boolean shiftKey = event.getContext()
+						.getOriginatingNativeEvent().getShiftKey();
+				if (shiftKey && currentIndex != -1) {
+					IntPair pair = new IntPair(toIndex, currentIndex)
+							.toLowestFirst();
+					meta.forEach(r -> r.setSelected(pair.contains(r.index)));
+					// does not change selectedRowIndex
+				} else {
+					select(toIndex);
+				}
+			}
+
+			public void setSelected(boolean selected) {
+				this.selected = selected;
+				setFlag("selected", selected);
+			}
+		}
+
+		public int getSelectedRowIndex() {
+			return selectedRowIndex;
+		}
+
+		int selectedRowIndex = -1;
+
+		public Topic<Void> topicSelectedRowsChanged = Topic.create();
+
+		public void addRow(TableRow row) {
+			meta.add(new RowMeta(row));
+		}
+
+		public List<RowMeta> meta = new ArrayList<>();
+
+		public IntPair getSelectedRowsRange() {
+			int i1 = -1;
+			int i2 = -1;
+			for (RowMeta rm : meta) {
+				if (rm.selected) {
+					if (i1 == -1) {
+						i1 = rm.index;
+					}
+					i2 = rm.index;
+				} else {
+					if (i1 == -1) {
+						//
+					} else {
+						break;
+					}
+				}
+			}
+			if (i1 == -1) {
+				return null;
+			} else {
+				return new IntPair(i1, i2);
+			}
+		}
+
+		public void select(int selectedIndex) {
+			if (selectedRowIndex == selectedIndex) {
+				return;
+			}
+			meta.forEach(r -> r.setSelected(false));
+			meta.get(selectedIndex).setSelected(true);
+			this.selectedRowIndex = selectedIndex;
+			topicSelectedRowsChanged.signal();
+		}
+
+		public void scrollSelectedIntoView() {
+			Scheduler.get().scheduleDeferred(() -> {
+				TableRow row = meta.get(selectedRowIndex).row;
+				if (row.provideIsBound()) {
+					row.provideElement().scrollIntoView();
+				}
+			});
+		}
 	}
 
 	@Registration(EmptyResultHandler.class)
@@ -276,6 +413,16 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		public TableValueModel getValue() {
 			return this.value;
+		}
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			event.reemitAs(this, RowsModelAttached.class, rowsModel);
+			// a dirndl theme - fire an initialising event on attach
+			rowsModel.topicSelectedRowsChanged.signal();
 		}
 	}
 
@@ -410,20 +557,34 @@ public class TableModel extends Model implements NodeEditorContext {
 		}
 
 		@Override
-		public void onChildBindingCreated(Binding binding) {
+		public void onChildBindingCreated(
+				com.totsp.gwittir.client.beans.Binding binding) {
 			// NOOP
 		}
 	}
 
 	@Directed(reemits = { DomEvents.Click.class, TableEvents.RowClicked.class })
-	public static class TableRow extends Model {
-		public int index;
-
+	public static class TableRow extends Model
+			implements TableEvents.RowClicked.Handler {
 		List<TableCell> cells = new ArrayList<>();
 
 		Object rowModel;
 
 		Object originalRowModel;
+
+		public RowsModel.RowMeta rowMeta;
+
+		String className;
+
+		@Binding(type = Type.CLASS_PROPERTY)
+		public String getClassName() {
+			return className;
+		}
+
+		public void setClassName(String className) {
+			set("className", this.className, className,
+					() -> this.className = className);
+		}
 
 		public TableRow() {
 		}
@@ -449,6 +610,12 @@ public class TableModel extends Model implements NodeEditorContext {
 		public List<TableCell> getCells() {
 			return this.cells;
 		}
+
+		@Override
+		public void onRowClicked(RowClicked event) {
+			rowMeta.onRowClicked(event);
+			event.bubble();
+		}
 	}
 
 	static class Attributes {
@@ -473,12 +640,14 @@ public class TableModel extends Model implements NodeEditorContext {
 
 	ModelTransform rowTransformer;
 
+	protected RowsModel rowsModel = new RowsModel();
+
 	public TableModel() {
 	}
 
 	public void addRow(TableRow row) {
-		row.index = rows.size();
 		rows.add(row);
+		rowsModel.addRow(row);
 	}
 
 	public List<Link> getActions() {

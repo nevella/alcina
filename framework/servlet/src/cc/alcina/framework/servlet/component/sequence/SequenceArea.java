@@ -14,7 +14,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.RowsModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
 
 @Directed(tag = "sequence")
@@ -22,7 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableView;
 // (via the resolver)
 @DirectedContextResolver(FmsCellsContextResolver.class)
 class SequenceArea extends Model.Fields
-		implements TableEvents.RowClicked.Handler {
+		implements TableEvents.RowsModelAttached.Handler {
 	@Directed
 	Heading header;
 
@@ -58,7 +60,6 @@ class SequenceArea extends Model.Fields
 		filteredElements = page.filteredSequenceElements;
 	}
 
-	@Override
 	public void onRowClicked(RowClicked event) {
 		Object rowModel = event.getModel().getOriginalRowModel();
 		int index = page.sequence.getElements().indexOf(rowModel);
@@ -71,6 +72,40 @@ class SequenceArea extends Model.Fields
 			}
 		} else {
 			page.ui.place.copy().withSelectedElementIdx(index).go();
+		}
+	}
+
+	RowsModel rowsModel;
+
+	@Override
+	public void onRowsModelAttached(RowsModelAttached event) {
+		this.rowsModel = event.getModel();
+		this.rowsModel.topicSelectedRowsChanged
+				.add(this::onSelectedRowsChanged);
+		page.highlightModel.elementMatches.keySet().forEach(sequenceElement -> {
+			int visibleRowIndex = filteredElements.indexOf(sequenceElement);
+			if (visibleRowIndex != -1) {
+				rowsModel.meta.get(visibleRowIndex).setFlag("matches", true);
+			}
+		});
+		if (page.ui.place.selectedElementIdx != -1) {
+			Object selectedElement = page.sequence.getElements()
+					.get(page.ui.place.selectedElementIdx);
+			int visibleRowIndex = filteredElements.indexOf(selectedElement);
+			rowsModel.select(visibleRowIndex);
+			rowsModel.scrollSelectedIntoView();
+		}
+	}
+
+	void onSelectedRowsChanged() {
+		IntPair selected = rowsModel.getSelectedRowsRange();
+		if (selected != null) {
+			if (selected.isPoint()) {
+				page.ui.place.copy().withSelectedElementIdx(selected.i1).go();
+			} else {
+				page.ui.place.copy().withSelectedElementIdx(selected.i1)
+						.withSelectedRange(selected).go();
+			}
 		}
 	}
 }
