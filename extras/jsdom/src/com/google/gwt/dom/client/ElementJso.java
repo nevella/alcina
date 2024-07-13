@@ -321,6 +321,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 		return result;
 	}
 
+	@Override
 	public final native DomRect getBoundingClientRect()/*-{
 		var rect = this.getBoundingClientRect();
 		return @com.google.gwt.dom.client.DomRect::new(Lcom/google/gwt/dom/client/DomRectJso;)(rect);
@@ -628,6 +629,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
     return this.style;
 	}-*/;
 
+	@Override
 	public final StyleRemote getStyleRemote() {
 		return getStyle0();
 	}

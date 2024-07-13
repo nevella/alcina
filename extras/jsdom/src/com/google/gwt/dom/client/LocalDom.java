@@ -798,23 +798,23 @@ public class LocalDom implements ContextFrame {
 				String innerMarkup = local.getInnerHTML();
 				IdList subtreeIds = domIds.getSubtreeIds(element);
 				new MarkupJso().markup(element, innerMarkup, subtreeIds.ids);
-				// doesn't include style
-				local.getAttributeMap().entrySet().forEach(e -> {
-					String value = e.getValue();
-					switch (e.getKey()) {
-					case "text":
-						jsoRemote.setPropertyString(e.getKey(), value);
-						break;
-					default:
-						jsoRemote.setAttribute(e.getKey(), value);
-						break;
-					}
-				});
-				local.getStyle().getProperties().entrySet().forEach(e -> {
-					StyleRemote remoteStyle = jsoRemote.getStyle0();
-					remoteStyle.setProperty(e.getKey(), e.getValue());
-				});
 			}
+			// doesn't include style
+			local.getAttributeMap().entrySet().forEach(e -> {
+				String value = e.getValue();
+				switch (e.getKey()) {
+				case "text":
+					jsoRemote.setPropertyString(e.getKey(), value);
+					break;
+				default:
+					jsoRemote.setAttribute(e.getKey(), value);
+					break;
+				}
+			});
+			local.getStyle().getProperties().entrySet().forEach(e -> {
+				StyleRemote remoteStyle = jsoRemote.getStyle0();
+				remoteStyle.setProperty(e.getKey(), e.getValue());
+			});
 		} else {
 			// ElementRefId
 			if (!element.isAttached()) {
@@ -846,6 +846,10 @@ public class LocalDom implements ContextFrame {
 				if (domIds.wasRemoved(new Refid(refId))) {
 					// removed from localdom, but remotedom removal still
 					// pending
+					return null;
+				}
+				if (remote.wasRemoved()) {
+					// removed from both systems
 					return null;
 				}
 				throw new IllegalStateException(
@@ -1146,6 +1150,9 @@ public class LocalDom implements ContextFrame {
 		int refId = elemJso.getRefId();
 		Node node = domIds.getNode(new Refid(refId));
 		if (node == null) {
+			if (elemJso.wasRemoved()) {
+				return true;
+			}
 			Preconditions.checkState(refId != 0);
 			// domIds.removed will *almost certainly* contain the refId, but
 			// because we're async and removed is flushed, it's possible that it

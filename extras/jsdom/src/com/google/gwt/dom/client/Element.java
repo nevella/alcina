@@ -1222,7 +1222,9 @@ public class Element extends Node implements ClientDomElement,
 				.collect(Collectors.toList());
 		removeAllChildren();
 		if (linkedAndNotPending()) {
-			remote().setInnerText(text);
+			if (attached) {
+				remote().setInnerText(text);
+			}
 			local().setInnerText(text);
 			LocalDom.wasSynced(this);
 		} else {

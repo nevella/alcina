@@ -15,11 +15,13 @@ package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 /**
  * 
  * @author Nick Reddel
  */
+@TypeSerialization("longvalue")
 public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 	private Long value;
 

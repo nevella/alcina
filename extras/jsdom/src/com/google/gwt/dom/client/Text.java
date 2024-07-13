@@ -102,7 +102,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	protected boolean linkedToRemote() {
-		return remote != TextNull.INSTANCE;
+		return remote != TextNull.INSTANCE && remote != null;
 	}
 
 	@Override

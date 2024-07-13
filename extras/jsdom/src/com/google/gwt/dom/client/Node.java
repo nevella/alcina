@@ -23,7 +23,6 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.UserDataHandler;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
@@ -325,8 +324,8 @@ public abstract class Node
 		try {
 			// new child first
 			validateInsert(newChild);
-			doPreTreeSync(newChild);
 			doPreTreeSync(refChild);
+			doPreTreeSync(newChild);
 			Node result = local().insertBefore(newChild, refChild);
 			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
 					this, newChild, newChild.getPreviousSibling(), true));
@@ -653,7 +652,8 @@ public abstract class Node
 	}
 
 	void onSync(int syncId) {
-		Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
+		// FIXME - refid
+		// Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
 		this.syncId = syncId;
 	}
 

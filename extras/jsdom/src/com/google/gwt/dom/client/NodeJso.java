@@ -453,6 +453,8 @@ public abstract class NodeJso extends JavaScriptObject
 	public final native void setRefId(int id) /*-{
 	if(id==0){
 		delete this.__refid;
+		//this is at least short-term-necessary to track removal when processing events on removed elements
+		this.__refid_was_removed = true;
 	}else{
 		this.__refid = id;
 	}
@@ -462,4 +464,8 @@ public abstract class NodeJso extends JavaScriptObject
 	public final native int getRefId() /*-{
 	return this.hasOwnProperty('__refid') ? this.__refid : 0;
 	}-*/;
+
+	final native boolean wasRemoved()/*-{
+     return this.hasOwnProperty('__refid_was_removed') ;
+		}-*/;
 }
