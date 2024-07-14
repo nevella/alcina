@@ -168,3 +168,28 @@ a.b-delete-small {
   padding-left: 18px !important;
   background-position: 3px 3px !important;
 }
+table.gwittir-BoundTable tr.header {
+  background-image: none;
+}
+table.gwittir-BoundTable th,
+table.gwittir-BoundTable td {
+  padding: 3px 8px 3px 4px;
+  height: 16px;
+}
+table.gwittir-BoundTable tr.odd {
+  background-color: #f3f7fb;
+}
+
+.alcina-BreadcrumbBar a:link,
+.alcina-BreadcrumbBar a:visited,
+.alcina-BreadcrumbBar a:active {
+  color: #666;
+  text-decoration: none;
+}
+div.alcina-ObjectTree input[type="text"] {
+  background-image: none !important;
+}
+div.alcina-BreadcrumbBar p span {
+  display: inline-block;
+  background-color: #efefef;
+}
