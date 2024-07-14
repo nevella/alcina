@@ -176,6 +176,7 @@ table.gwittir-BoundTable td,
 table.gwittir-BoundTable tr.header td {
   padding: 3px 8px 3px 4px;
   height: 16px;
+  background-image: none;
 }
 table.gwittir-BoundTable tr.odd {
   background-color: #f3f7fb;
@@ -193,4 +194,13 @@ div.alcina-ObjectTree input[type="text"] {
 div.alcina-BreadcrumbBar p span {
   display: inline-block;
   background-color: #efefef;
+}
+div.alcina-BreadcrumbBar p.breadcrumb-next {
+  background-image: none !important;
+  float: none;
+}
+input.alcina-Filter {
+  background-image: none;
+  height: 20px;
+  padding: 4px;
 }
