@@ -347,8 +347,14 @@ public abstract class UIObject implements HasVisibility {
 		if (!visible) {
 			String originalDisplayValue = elem.getStyle()
 					.getProperty("display");
-			elem.setPropertyString(propNameOriginalDisplayValue,
-					originalDisplayValue);
+			if (Ax.isBlank(originalDisplayValue)
+					|| originalDisplayValue.equals("none")) {
+				// no info, so when setting to 'visible' just remove display
+				// property
+			} else {
+				elem.setPropertyString(propNameOriginalDisplayValue,
+						originalDisplayValue);
+			}
 		}
 		String to = visible
 				? elem.getPropertyString(propNameOriginalDisplayValue)

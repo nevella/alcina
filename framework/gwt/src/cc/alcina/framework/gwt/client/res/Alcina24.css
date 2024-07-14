@@ -172,7 +172,8 @@ table.gwittir-BoundTable tr.header {
   background-image: none;
 }
 table.gwittir-BoundTable th,
-table.gwittir-BoundTable td {
+table.gwittir-BoundTable td,
+table.gwittir-BoundTable tr.header td {
   padding: 3px 8px 3px 4px;
   height: 16px;
 }
