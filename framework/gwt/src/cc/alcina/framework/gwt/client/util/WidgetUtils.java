@@ -359,7 +359,8 @@ public class WidgetUtils {
 
 	private static int getBestOffsetHeight(Element e, boolean parentPass,
 			boolean allowParentPass) {
-		int h = e.getPropertyInt("offsetHeight");
+		e.implAccess().ensureRemote();
+		int h = e.getOffsetHeight();
 		if (h != 0 || e.getParentElement() == null) {
 			return h;
 		}
