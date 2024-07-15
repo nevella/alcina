@@ -619,6 +619,8 @@ public class ClientUtils {
 	public static void setImageDescendantTitle(Widget widget, String title) {
 		widget.setTitle(title);
 		widget.getElement().asDomNode().stream().filter(n -> n.tagIs("img"))
-				.forEach(img -> img.setAttr("title", title));
+				.forEach(img -> {
+					img.setAttr("alt", title);
+				});
 	}
 }

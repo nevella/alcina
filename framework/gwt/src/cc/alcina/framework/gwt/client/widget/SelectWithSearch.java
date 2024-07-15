@@ -86,6 +86,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName.HasDisplayNameRende
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -1389,6 +1390,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 					.create(StandardDataImageProvider.get().getDataImages()
 							.deleteItem());
 			hl = new Link(aip.getHTML(), true);
+			ClientUtils.setImageDescendantTitle(hl, "delete selected item");
 			hl.setUserObject(item);
 			add(label);
 			add(hl);

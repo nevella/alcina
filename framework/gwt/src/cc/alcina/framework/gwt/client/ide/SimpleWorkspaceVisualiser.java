@@ -99,6 +99,7 @@ public class SimpleWorkspaceVisualiser extends Composite
 		verticalPanel.add(hsp);
 		initWidget(verticalPanel);
 		resetHsbPos();
+		hsp.getElement().getStyle().setProperty("width", "100vw");
 	}
 
 	protected void createContentContainer(SplitLayoutPanel hsp) {

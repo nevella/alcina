@@ -104,19 +104,18 @@ a.b-save {
 a.b-print {
   background: #e9e9e9 url(/_pix/icon-print.gif) 0 0 no-repeat;
 }
-a.b-visualisation {
-  background: #e9e9e9 url(/_pix/icon-visualisation.png) 0 0 no-repeat !important;
-}
+
 a.b-next-page {
   background: #e9e9e9 url(/_pix/icon-next.gif) 0 0 no-repeat !important;
 }
 a.b-previous-page {
   background: #e9e9e9 url(/_pix/icon-prev.gif) 0 0 no-repeat !important;
 }
-
+a.b-previous-page {
+  background: #e9e9e9 url(/_pix/icon-prev.gif) 0 0 no-repeat !important;
+}
 a.b-save,
 a.b-print,
-a.b-visualisation,
 a.b-previous-page {
   padding-left: 25px !important;
   background-position: 5px 4px !important;
@@ -127,7 +126,6 @@ a.b-next-page {
 }
 a.b-save span,
 a.b-print span,
-a.b-visualisation span,
 a.b-previous-page span {
   background: #e9e9e9 !important;
   padding-left: 0 !important;
@@ -147,4 +145,62 @@ div.alcina-BreadcrumbBar div.right {
 }
 div.alcina-BreadcrumbBar div.right span {
   background: #efefef;
+}
+
+a.b-color-small {
+  background: #e9e9e9 url(/_pix/icon-color-small.gif) 0 0 no-repeat !important;
+}
+a.b-delete-small {
+  background: #e9e9e9 url(/_pix/icon-delete-small.gif) 0 0 no-repeat !important;
+}
+a.b-share-small {
+  background: #e9e9e9 url(/_pix/icon-share-small.gif) 0 0 no-repeat !important;
+}
+a.b-color-small span,
+a.b-share-small span,
+a.b-delete-small span {
+  background: #e9e9e9 !important;
+  padding-left: 0 !important;
+}
+a.b-color-small,
+a.b-share-small,
+a.b-delete-small {
+  padding-left: 18px !important;
+  background-position: 3px 3px !important;
+}
+table.gwittir-BoundTable tr.header {
+  background-image: none;
+}
+table.gwittir-BoundTable th,
+table.gwittir-BoundTable td,
+table.gwittir-BoundTable tr.header td {
+  padding: 3px 8px 3px 4px;
+  height: 16px;
+  background-image: none;
+}
+table.gwittir-BoundTable tr.odd {
+  background-color: #f3f7fb;
+}
+
+.alcina-BreadcrumbBar a:link,
+.alcina-BreadcrumbBar a:visited,
+.alcina-BreadcrumbBar a:active {
+  color: #666;
+  text-decoration: none;
+}
+div.alcina-ObjectTree input[type="text"] {
+  background-image: none !important;
+}
+div.alcina-BreadcrumbBar p span {
+  display: inline-block;
+  background-color: #efefef;
+}
+div.alcina-BreadcrumbBar p.breadcrumb-next {
+  background-image: none !important;
+  float: none;
+}
+input.alcina-Filter {
+  background-image: none;
+  height: 20px;
+  padding: 4px;
 }

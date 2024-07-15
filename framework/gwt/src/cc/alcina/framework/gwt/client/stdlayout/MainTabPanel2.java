@@ -66,6 +66,7 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 				initWidget(childPanel);
 				setStyleName("left");
 				Roles.getTablistRole().set(getElement());
+				ClientUtils.setTabIndexZero(this);
 			}
 		}
 
