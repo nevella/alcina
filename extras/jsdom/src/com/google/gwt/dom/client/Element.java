@@ -199,7 +199,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public boolean addClassName(String className) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		boolean result = local().addClassName(className);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "class", local().getClassName()));
@@ -783,7 +783,7 @@ public class Element extends Node implements ClientDomElement,
 		if (!wasSynced()) {
 			return local();
 		}
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		if (linkedToRemote()) {
 			return remote();
 		} else {
@@ -896,7 +896,7 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	void pendingSync() {
-		Preconditions.checkState(syncId == 0);
+		Preconditions.checkState(!synced);
 		this.pendingSync = true;
 	}
 
@@ -957,7 +957,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void removeAttribute(String name) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().removeAttribute(name);
 		// FIXME - dirndl - dodesn't actually remove
 		notify(() -> LocalDom.getLocalMutations()
@@ -978,7 +978,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public boolean removeClassName(String className) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		boolean result = local().removeClassName(className);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "class", local().getClassName()));
@@ -988,7 +988,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void replaceClassName(String oldClassName, String newClassName) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().replaceClassName(oldClassName, newClassName);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "class", local().getClassName()));
@@ -1071,7 +1071,7 @@ public class Element extends Node implements ClientDomElement,
 		if (Objects.equals(current, value)) {
 			return;
 		}
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setAttribute(name, value);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, name, value));
@@ -1100,7 +1100,7 @@ public class Element extends Node implements ClientDomElement,
 		if (Objects.equals(current, className)) {
 			return;
 		}
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setClassName(className);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "class", local().getClassName()));
@@ -1117,7 +1117,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setDir(String dir) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setDir(dir);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "dir", local().getDir()));
@@ -1126,7 +1126,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setDraggable(String draggable) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setDraggable(draggable);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "draggable", local().getDraggable()));
@@ -1135,7 +1135,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setId(String id) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setId(id);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "id", local().getId()));
@@ -1161,7 +1161,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerHTML(String html) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
@@ -1195,7 +1195,7 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	protected void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
@@ -1216,7 +1216,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerText(String text) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
@@ -1232,7 +1232,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setLang(String lang) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setLang(lang);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "lang", local().getLang()));
@@ -1241,7 +1241,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		// ensureRemoteCheck();
+		// validateRemoteStatePreMutation();
 		// local().setNodeValue(nodeValue);
 		// sync(() -> remote().setNodeValue(nodeValue));
 		throw new UnsupportedOperationException();
@@ -1254,7 +1254,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setPropertyBoolean(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1263,7 +1263,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyDouble(String name, double value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setPropertyDouble(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1272,7 +1272,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyInt(String name, int value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setPropertyInt(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1281,13 +1281,13 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyJSO(String name, JavaScriptObject value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		sync(() -> remote().setPropertyJSO(name, value));
 	}
 
 	@Override
 	public void setPropertyObject(String name, Object value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setPropertyObject(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1296,7 +1296,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setPropertyString(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1315,7 +1315,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setTabIndex(int tabIndex) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setTabIndex(tabIndex);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "tabIndex", String.valueOf(tabIndex)));
@@ -1331,7 +1331,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setTitle(String title) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setTitle(title);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "title", title));
@@ -1352,7 +1352,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void toggleClassName(String className) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().toggleClassName(className);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "class", getClassName()));

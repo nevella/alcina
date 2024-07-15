@@ -23,7 +23,6 @@ import org.w3c.dom.DOMException;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.UserDataHandler;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
@@ -33,10 +32,16 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
+ * <p>
  * The Node interface is the primary datatype for the entire Document Object
  * Model. It represents a single node in the document tree. While all objects
  * implementing the Node interface expose methods for dealing with children, not
  * all objects implementing the Node interface may have children.
+ * 
+ * <p>
+ * Nodes have two boolean states - {@link #attached} - attached to the document
+ * element and {@link #synced} - synced to the remote. These could be
+ * represented by a 4-state enum - I think it's clearer this way
  */
 @Reflected
 public abstract class Node
@@ -128,12 +133,12 @@ public abstract class Node
     }
 	}-*/;
 
-	protected int syncId;
-
 	boolean attached;
 
+	boolean synced;
+
 	/*
-	 * Attached nodes will have a non-zero refId, whihc is used for tree sync
+	 * Attached nodes will have a non-zero refId, which is used for tree sync
 	 */
 	int refId;
 
@@ -154,7 +159,7 @@ public abstract class Node
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		validateInsert(newChild);
-		doPreTreeSync(newChild);
+		validateRemoteStatePreTreeMutation(newChild);
 		T node = local().appendChild(newChild);
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				node, node.getPreviousSibling(), true));
@@ -325,8 +330,8 @@ public abstract class Node
 		try {
 			// new child first
 			validateInsert(newChild);
-			doPreTreeSync(newChild);
-			doPreTreeSync(refChild);
+			validateRemoteStatePreTreeMutation(newChild);
+			validateRemoteStatePreTreeMutation(refChild);
 			Node result = local().insertBefore(newChild, refChild);
 			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
 					this, newChild, newChild.getPreviousSibling(), true));
@@ -415,13 +420,13 @@ public abstract class Node
 
 	@Override
 	public Node removeAllChildren() {
-		getChildNodes().forEach(n -> doPreTreeSync(n));
+		getChildNodes().forEach(n -> validateRemoteStatePreTreeMutation(n));
 		return ClientDomNodeStatic.removeAllChildren(this);
 	}
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		doPreTreeSync(oldChild);
+		validateRemoteStatePreTreeMutation(oldChild);
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				oldChild, null, false));
 		Node result = local().removeChild(oldChild);
@@ -438,7 +443,7 @@ public abstract class Node
 
 	@Override
 	public void removeFromParent() {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		sync(() -> remote().removeFromParent());
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				this, null, false));
@@ -448,8 +453,8 @@ public abstract class Node
 
 	@Override
 	public Node replaceChild(Node newChild, Node oldChild) {
-		doPreTreeSync(oldChild);
-		doPreTreeSync(newChild);
+		validateRemoteStatePreTreeMutation(oldChild);
+		validateRemoteStatePreTreeMutation(newChild);
 		sync(() -> remote().replaceChild(newChild, oldChild));
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				oldChild, null, false));
@@ -479,7 +484,7 @@ public abstract class Node
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setNodeValue(nodeValue);
 		notify(() -> LocalDom.getLocalMutations().notifyCharacterData(this,
 				nodeValue));
@@ -518,42 +523,21 @@ public abstract class Node
 		streamChildren().forEach(n -> n.setAttached(false));
 	}
 
-	// FIXME - refid - with refid, this becomes simpler - just remove/reset any
-	// existing remote dom on attach
-	protected void doPreTreeSync(Node child) {
-		if (child != null) {
-			boolean ensureBecauseChildSynced = (child.wasSynced()
-					|| child.linkedToRemote())
-					&& (!linkedToRemote() || isPendingSync());
-			if (ensureBecauseChildSynced) {
-				LocalDom.ensureRemote(this);
-			}
-			boolean linkedBecauseFlushed = ensureRemoteCheck();
-			if (linkedToRemote() && (wasSynced() || child.wasSynced())) {
-				if (child.wasSynced()) {
-					LocalDom.ensureRemote(child);
-				} else {
-					LocalDom.ensureRemoteNodeMaybePendingSync(child);
-				}
-			}
+	protected void validateRemoteStatePreTreeMutation(Node incomingChild) {
+		if (synced) {
+			LocalDom.ensureRemote(this);
+			LocalDom.ensureRemoteNodeMaybePendingSync(incomingChild);
 		}
 	}
 
 	/**
-	 * If the node was flushed (i.e. part of a tree that was flushed, has a
-	 * non-zero syncEventId), then we need to link it to the remote (or our
-	 * local/remote will be inconsistent)
+	 * Priot to all mutations, if the node was synced, we need to make sure the
+	 * remote is the actual remote to keep the trees consistent
 	 *
 	 */
-	protected boolean ensureRemoteCheck() {
-		if (!linkedToRemote() && wasSynced()
-				&& provideSelfOrAncestorLinkedToRemote() != null
-				&& getOwnerDocument().remoteType.hasRemote()
-				&& (provideIsText() || provideIsElement())) {
+	protected void validateRemoteStatePreMutation() {
+		if (synced) {
 			LocalDom.ensureRemote(this);
-			return true;
-		} else {
-			return false;
 		}
 	}
 
@@ -601,7 +585,7 @@ public abstract class Node
 	 */
 	final void resetRemote() {
 		resetRemote0();
-		syncId = 0;
+		synced = false;
 	}
 
 	protected abstract void resetRemote0();
@@ -649,16 +633,17 @@ public abstract class Node
 	 * only call on reparse
 	 */
 	final void clearSynced() {
-		syncId = 0;
+		// syncId = 0;
 	}
 
 	void onSync(int syncId) {
-		Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
-		this.syncId = syncId;
+		// Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
+		// this.syncId = syncId;
 	}
 
 	boolean wasSynced() {
-		return syncId > 0;
+		// return syncId > 0;
+		return false;
 	}
 
 	@Override

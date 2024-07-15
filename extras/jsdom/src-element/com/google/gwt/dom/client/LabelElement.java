@@ -106,7 +106,7 @@ public class LabelElement extends Element {
 
 	@Override
 	public String getPropertyString(String name) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		if ("htmlFor".equals(name)) {
 			if (linkedToRemote()) {
 				return jsoRemote().getPropertyString(name);
@@ -142,7 +142,7 @@ public class LabelElement extends Element {
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		if ("htmlFor".equals(name)) {
 			local().setAttribute("for", value);
 		} else {

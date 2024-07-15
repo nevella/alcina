@@ -82,7 +82,7 @@ public class Comment extends Node
 
 	@Override
 	public void insertData(int offset, String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().insertData(offset, data);
 		sync(() -> remote().insertData(offset, data));
 	}
@@ -108,8 +108,8 @@ public class Comment extends Node
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasSynced() == resolved);
+	protected void putRemote(ClientDomNode remote, boolean synced) {
+		Preconditions.checkState(wasSynced() == synced);
 		this.remote = (ClientDomComment) remote;
 	}
 
@@ -120,7 +120,7 @@ public class Comment extends Node
 
 	@Override
 	public void replaceData(int offset, int length, String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().replaceData(offset, length, data);
 		sync(() -> remote().replaceData(offset, length, data));
 	}
@@ -132,7 +132,7 @@ public class Comment extends Node
 
 	@Override
 	public void setData(String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setData(data);
 		sync(() -> remote().setData(data));
 	}
@@ -155,7 +155,7 @@ public class Comment extends Node
 	public class CommentImplAccess extends Node.ImplAccess {
 		@Override
 		public CommentJso ensureRemote() {
-			ensureRemoteCheck();
+			validateRemoteStatePreMutation();
 			return Comment.this.jsoRemote();
 		}
 

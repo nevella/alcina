@@ -87,7 +87,7 @@ public class CDATASection extends Node
 
 	@Override
 	public void insertData(int offset, String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().insertData(offset, data);
 		sync(() -> remote().insertData(offset, data));
 	}
@@ -118,8 +118,8 @@ public class CDATASection extends Node
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasSynced() == resolved);
+	protected void putRemote(ClientDomNode remote, boolean synced) {
+		Preconditions.checkState(wasSynced() == synced);
 		this.remote = (ClientDomCDATASection) remote;
 	}
 
@@ -130,7 +130,7 @@ public class CDATASection extends Node
 
 	@Override
 	public void replaceData(int offset, int length, String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().replaceData(offset, length, data);
 		sync(() -> remote().replaceData(offset, length, data));
 	}
@@ -149,7 +149,7 @@ public class CDATASection extends Node
 
 	@Override
 	public void setData(String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setData(data);
 		sync(() -> remote().setData(data));
 	}
@@ -172,7 +172,7 @@ public class CDATASection extends Node
 	public class CDATASectionImplAccess extends Node.ImplAccess {
 		@Override
 		public CDATASectionJso ensureRemote() {
-			ensureRemoteCheck();
+			validateRemoteStatePreMutation();
 			return CDATASection.this.jsoRemote();
 		}
 

@@ -623,7 +623,7 @@ public class Style implements ClientDomStyle {
 	}
 
 	protected ClientDomStyle remote() {
-		element.ensureRemoteCheck();
+		element.validateRemoteStatePreMutation();
 		if (!linkedToRemote() && element.linkedToRemote()) {
 			remote = element.ensureRemote().getStyleRemote();
 		}

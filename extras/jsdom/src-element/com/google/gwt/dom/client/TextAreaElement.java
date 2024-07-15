@@ -133,7 +133,7 @@ public class TextAreaElement extends Element {
 
 	@Override
 	public String getPropertyString(String name) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		if ("value".equals(name)) {
 			if (linkedToRemote()) {
 				return remote().getPropertyString(name);
@@ -164,12 +164,12 @@ public class TextAreaElement extends Element {
 	}
 
 	public int getSelectionEnd() {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		return this.getPropertyInt("selectionEnd");
 	}
 
 	public int getSelectionStart() {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		return this.getPropertyInt("selectionStart");
 	}
 
@@ -279,7 +279,7 @@ public class TextAreaElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		if ((name.equals("readOnly") || name.equals("disabled")) && !value) {
 			local().removeAttribute(name);
 		} else {
@@ -290,7 +290,7 @@ public class TextAreaElement extends Element {
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		if ("value".equals(name)) {
 			local().setInnerText(value);
 		} else {

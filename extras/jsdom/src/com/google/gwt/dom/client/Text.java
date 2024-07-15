@@ -85,7 +85,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	public void insertData(int offset, String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().insertData(offset, data);
 		sync(() -> remote().insertData(offset, data));
 	}
@@ -116,8 +116,8 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasSynced() == resolved);
+	protected void putRemote(ClientDomNode remote, boolean synced) {
+		Preconditions.checkState(wasSynced() == synced);
 		this.remote = (ClientDomText) remote;
 	}
 
@@ -128,7 +128,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	public void replaceData(int offset, int length, String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().replaceData(offset, length, data);
 		sync(() -> remote().replaceData(offset, length, data));
 	}
@@ -145,7 +145,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	public void setData(String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setData(data);
 		sync(() -> remote().setData(data));
 	}
@@ -172,7 +172,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	public class TextImplAccess extends Node.ImplAccess {
 		@Override
 		public TextJso ensureRemote() {
-			ensureRemoteCheck();
+			validateRemoteStatePreMutation();
 			return Text.this.jsoRemote();
 		}
 

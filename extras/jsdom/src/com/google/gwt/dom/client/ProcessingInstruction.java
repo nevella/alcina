@@ -90,8 +90,8 @@ public class ProcessingInstruction extends Node implements
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
-		Preconditions.checkState(wasSynced() == resolved);
+	protected void putRemote(ClientDomNode remote, boolean synced) {
+		Preconditions.checkState(wasSynced() == synced);
 		this.remote = (ClientDomProcessingInstruction) remote;
 	}
 
@@ -107,7 +107,7 @@ public class ProcessingInstruction extends Node implements
 
 	@Override
 	public void setData(String data) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		local().setData(data);
 		sync(() -> remote().setData(data));
 	}
@@ -120,7 +120,7 @@ public class ProcessingInstruction extends Node implements
 	public class ProcessingInstructionImplAccess extends Node.ImplAccess {
 		@Override
 		public ProcessingInstructionJso ensureRemote() {
-			ensureRemoteCheck();
+			validateRemoteStatePreMutation();
 			return ProcessingInstruction.this.jsoRemote();
 		}
 

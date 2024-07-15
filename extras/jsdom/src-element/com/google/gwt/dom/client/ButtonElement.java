@@ -204,7 +204,7 @@ public class ButtonElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		ensureRemoteCheck();
+		validateRemoteStatePreMutation();
 		if (name.equals("disabled") && !Boolean.valueOf(value)) {
 			local().removeAttribute(name);
 		} else {

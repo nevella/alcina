@@ -409,7 +409,7 @@ public class DomDispatch implements DomDispatchContract {
 
 	@Override
 	public void selectClear(SelectElement select) {
-		select.ensureRemoteCheck();
+		select.validateRemoteStatePreMutation();
 		remote().selectClear(select);
 		local().selectClear(select);
 	}
@@ -425,7 +425,7 @@ public class DomDispatch implements DomDispatchContract {
 
 	@Override
 	public void selectRemoveOption(SelectElement select, int index) {
-		select.ensureRemoteCheck();
+		select.validateRemoteStatePreMutation();
 		remote().selectRemoveOption(select, index);
 		local().selectRemoveOption(select, index);
 	}
