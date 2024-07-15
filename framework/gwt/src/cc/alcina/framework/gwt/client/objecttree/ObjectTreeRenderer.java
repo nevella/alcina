@@ -121,6 +121,9 @@ public class ObjectTreeRenderer {
 				return;
 			}
 		}
+		if (renderable instanceof TreeRenderable.NotRendered) {
+			return;
+		}
 		TreeRenderer node = TreeRenderingInfoProvider.get()
 				.getForRenderable(renderable, parent, renderContext);
 		node.setParentRenderer(parent);

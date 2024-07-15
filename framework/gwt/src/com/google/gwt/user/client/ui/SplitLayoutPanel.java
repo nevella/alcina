@@ -88,6 +88,12 @@ public class SplitLayoutPanel extends DockLayoutPanel {
 		}
 	}
 
+	@Override
+	public void setHeight(String height) {
+		super.setHeight(height);
+		getElement().getStyle().setProperty("height", "calc(100vh - 100px)");
+	}
+
 	abstract class Splitter extends Widget {
 		protected final Widget target;
 

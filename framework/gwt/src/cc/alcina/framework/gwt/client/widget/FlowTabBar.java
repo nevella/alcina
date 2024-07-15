@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.aria.client.Roles;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -49,9 +50,25 @@ import com.google.gwt.user.client.ui.Widget;
  * Mostly lifted from GWT TabBar class
  */
 @SuppressWarnings("deprecation")
-public class FlowTabBar extends Composite
-		implements HasBeforeSelectionHandlers<Integer>,
-		HasSelectionHandlers<Integer>, ClickHandler, KeyDownHandler {
+public class FlowTabBar extends Composite implements
+		HasBeforeSelectionHandlers<Integer>, HasSelectionHandlers<Integer>,
+		ClickHandler, KeyDownHandler, HasClickHandlers {
+	class TabButton extends SimplePanel
+			implements HasClickHandlers, HasKeyDownHandlers {
+		public TabButton(Widget widget) {
+			super(DOM.createButton());
+			setWidget(widget);
+		}
+
+		public HandlerRegistration addClickHandler(ClickHandler handler) {
+			return addDomHandler(handler, ClickEvent.getType());
+		}
+
+		public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
+			return addDomHandler(handler, KeyDownEvent.getType());
+		}
+	}
+
 	private static final String STYLENAME_DEFAULT = "gwt-TabBarItem";
 
 	private FlowPanel panel2 = new FlowPanel();
@@ -66,6 +83,7 @@ public class FlowTabBar extends Composite
 	public FlowTabBar() {
 		initWidget(panel2);
 		sinkEvents(Event.ONCLICK);
+		addClickHandler(this);
 		setStyleName("gwt-TabBar");
 		// Add a11y role "tablist"
 		Accessibility.setRole(panel2.getElement(), Accessibility.ROLE_TABLIST);
@@ -125,29 +143,6 @@ public class FlowTabBar extends Composite
 			tabs.get(0).addStyleName("TabBarFirst");
 			tabs.get(getTabCount() - 1).addStyleName("TabBarLast");
 		}
-	}
-
-	private void checkInsertBeforeTabIndex(int beforeIndex) {
-		if ((beforeIndex < 0) || (beforeIndex > getTabCount())) {
-			throw new IndexOutOfBoundsException();
-		}
-	}
-
-	private void checkTabIndex(int index) {
-		if ((index < -1) || (index >= getTabCount())) {
-			throw new IndexOutOfBoundsException();
-		}
-	}
-
-	/**
-	 * Create a {@link SimplePanel} that will wrap the contents in a tab.
-	 * Subclasses can use this method to wrap tabs in decorator panels.
-	 * 
-	 * @return a {@link SimplePanel} to wrap the tab contents, or null to leave
-	 *         tabs unwrapped
-	 */
-	protected SimplePanel createTabTextWrapper() {
-		return null;
 	}
 
 	/**
@@ -242,67 +237,12 @@ public class FlowTabBar extends Composite
 		insertTabWidget(widget, beforeIndex);
 	}
 
-	/**
-	 * Inserts a new tab at the specified index.
-	 * 
-	 * @param widget
-	 *            widget to be used in the new tab.
-	 * @param beforeIndex
-	 *            the index before which this tab will be inserted.
-	 */
-	protected void insertTabWidget(Widget widget, int beforeIndex) {
-		checkInsertBeforeTabIndex(beforeIndex);
-		Widget tabWidget = null;
-		if (widget.getElement().hasTagName("a")) {
-			tabWidget = widget;
-		} else {
-			tabWidget = new TabButton(widget);
-		}
-		Roles.getTabRole().set(tabWidget.getElement());
-		tabWidget.addStyleName("gwt-TabBarItem");
-		if (beforeIndex == tabs.size()) {
-			panel2.add(tabWidget);
-		} else {
-			panel2.insert(tabWidget,
-					panel2.getWidgetIndex(tabs.get(beforeIndex)));
-		}
-		tabs.add(tabWidget);
-		setStyleName(DOM.getParent(tabWidget.getElement()),
-				STYLENAME_DEFAULT + "-wrapper", true);
-	}
-
-	class TabButton extends SimplePanel
-			implements HasClickHandlers, HasKeyDownHandlers {
-		public TabButton(Widget widget) {
-			super(DOM.createButton());
-			setWidget(widget);
-		}
-
-		public HandlerRegistration addClickHandler(ClickHandler handler) {
-			return addDomHandler(handler, ClickEvent.getType());
-		}
-
-		public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
-			return addDomHandler(handler, KeyDownEvent.getType());
-		}
-	}
-
 	public void onClick(ClickEvent event) {
-		selectTabByTabWidget((Widget) event.getSource());
-	}
-
-	/**
-	 * <b>Affected Elements:</b>
-	 * <ul>
-	 * <li>-tab# = The element containing the contents of the tab.</li>
-	 * <li>-tab-wrapper# = The cell containing the tab at the index.</li>
-	 * </ul>
-	 * 
-	 * @see UIObject#onEnsureDebugId(String)
-	 */
-	@Override
-	protected void onEnsureDebugId(String baseID) {
-		super.onEnsureDebugId(baseID);
+		Element element = Element.as(event.getNativeEvent().getEventTarget());
+		Widget tab = tabs.stream()
+				.filter(t -> t.getElement().isOrHasChild(element)).findFirst()
+				.orElse(null);
+		selectTabByTabWidget(tab);
 	}
 
 	public void onKeyDown(KeyDownEvent event) {
@@ -354,6 +294,105 @@ public class FlowTabBar extends Composite
 	}
 
 	/**
+	 * Sets a tab's contents via HTML.
+	 * 
+	 * Use care when setting an object's HTML; it is an easy way to expose
+	 * script-based security problems. Consider using
+	 * {@link #setTabText(int, String)} whenever possible.
+	 * 
+	 * @param index
+	 *            the index of the tab whose HTML is to be set
+	 * @param html
+	 *            the tab new HTML
+	 */
+	public void setTabHTML(int index, String html) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Sets a tab's text contents.
+	 * 
+	 * @param index
+	 *            the index of the tab whose text is to be set
+	 * @param text
+	 *            the object's new text
+	 */
+	public void setTabText(int index, String text) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addHandler(handler, ClickEvent.getType());
+	}
+
+	/**
+	 * Create a {@link SimplePanel} that will wrap the contents in a tab.
+	 * Subclasses can use this method to wrap tabs in decorator panels.
+	 * 
+	 * @return a {@link SimplePanel} to wrap the tab contents, or null to leave
+	 *         tabs unwrapped
+	 */
+	protected SimplePanel createTabTextWrapper() {
+		return null;
+	}
+
+	/**
+	 * Inserts a new tab at the specified index.
+	 * 
+	 * @param widget
+	 *            widget to be used in the new tab.
+	 * @param beforeIndex
+	 *            the index before which this tab will be inserted.
+	 */
+	protected void insertTabWidget(Widget widget, int beforeIndex) {
+		checkInsertBeforeTabIndex(beforeIndex);
+		Widget tabWidget = null;
+		if (widget.getElement().hasTagName("a")) {
+			tabWidget = widget;
+		} else {
+			tabWidget = new TabButton(widget);
+		}
+		Roles.getTabRole().set(tabWidget.getElement());
+		tabWidget.addStyleName("gwt-TabBarItem");
+		if (beforeIndex == tabs.size()) {
+			panel2.add(tabWidget);
+		} else {
+			panel2.insert(tabWidget,
+					panel2.getWidgetIndex(tabs.get(beforeIndex)));
+		}
+		tabs.add(tabWidget);
+		setStyleName(DOM.getParent(tabWidget.getElement()),
+				STYLENAME_DEFAULT + "-wrapper", true);
+	}
+
+	/**
+	 * <b>Affected Elements:</b>
+	 * <ul>
+	 * <li>-tab# = The element containing the contents of the tab.</li>
+	 * <li>-tab-wrapper# = The cell containing the tab at the index.</li>
+	 * </ul>
+	 * 
+	 * @see UIObject#onEnsureDebugId(String)
+	 */
+	@Override
+	protected void onEnsureDebugId(String baseID) {
+		super.onEnsureDebugId(baseID);
+	}
+
+	private void checkInsertBeforeTabIndex(int beforeIndex) {
+		if ((beforeIndex < 0) || (beforeIndex > getTabCount())) {
+			throw new IndexOutOfBoundsException();
+		}
+	}
+
+	private void checkTabIndex(int index) {
+		if ((index < -1) || (index >= getTabCount())) {
+			throw new IndexOutOfBoundsException();
+		}
+	}
+
+	/**
 	 * Selects the tab corresponding to the widget for the tab. To be clear the
 	 * widget for the tab is not the widget INSIDE of the tab; it is the widget
 	 * used to represent the tab itself.
@@ -383,33 +422,5 @@ public class FlowTabBar extends Composite
 						"gwt-TabBarItem-wrapper-selected", false);
 			}
 		}
-	}
-
-	/**
-	 * Sets a tab's contents via HTML.
-	 * 
-	 * Use care when setting an object's HTML; it is an easy way to expose
-	 * script-based security problems. Consider using
-	 * {@link #setTabText(int, String)} whenever possible.
-	 * 
-	 * @param index
-	 *            the index of the tab whose HTML is to be set
-	 * @param html
-	 *            the tab new HTML
-	 */
-	public void setTabHTML(int index, String html) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * Sets a tab's text contents.
-	 * 
-	 * @param index
-	 *            the index of the tab whose text is to be set
-	 * @param text
-	 *            the object's new text
-	 */
-	public void setTabText(int index, String text) {
-		throw new UnsupportedOperationException();
 	}
 }
