@@ -282,6 +282,11 @@ public class LocalDomainStore {
 		}
 
 		@Override
+		public <V extends Entity> V find(EntityLocator locator) {
+			return domain.getCache().get(locator);
+		}
+
+		@Override
 		public <V extends Entity> V find(V v) {
 			LocalDomainQueue.checkOnDomainThread();
 			return domain.getCache().get(v.toLocator());
