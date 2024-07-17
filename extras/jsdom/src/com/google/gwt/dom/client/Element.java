@@ -924,7 +924,8 @@ public class Element extends Node implements ClientDomElement,
 			Preconditions
 					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
 		}
-		Preconditions.checkState(wasSynced() == synced);
+		// refid2 - ignored
+		// Preconditions.checkState(wasSynced() == synced);
 		Preconditions.checkState(
 				this.remote == ElementNull.INSTANCE || remote == this.remote);
 		Preconditions.checkState(remote != null);

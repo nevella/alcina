@@ -3,7 +3,8 @@ package cc.alcina.framework.servlet.component.romcom.client;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
-import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.impl.JavaScriptObjectList;
+import com.google.gwt.dom.client.ElementJso;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
@@ -38,7 +39,21 @@ public class RemoteObjectModelComponentClient implements EntryPoint {
 
 	@Override
 	public void onModuleLoad() {
+		JavaScriptObjectList list = new JavaScriptObjectList();
+		populate(list);
+		ElementJso e0 = list.javaArray[0].cast();
+		ElementJso e1 = list.javaArray[1].cast();
 		Client.Init.init();
-		Scheduler.get().scheduleDeferred(() -> init0());
 	}
+
+	native void populate(JavaScriptObjectList list) /*-{
+		var arr = [];
+		arr.push($doc.head);
+		arr.push($doc.body);
+		list.__gwt_java_js_object_array=arr;
+		//side effect of this assignment (in devmode) will be population of the JavascriptObjectList.javaArray 
+		// (since list will be marshalled when calling back to the jdk)
+		list.@com.google.gwt.core.client.impl.JavaScriptObjectList::jsArray = arr;
+		return list;
+	}-*/;
 }

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.gwt.core.client.impl.JavaScriptIntList;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.HelpInfo;
 import com.google.gwt.dev.shell.BrowserChannel.SessionHandler.ExceptionOrReturnValue;
@@ -126,11 +127,12 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 		} else if (jsval.isWrappedJavaObject()) {
 			assert localObjects != null;
 			DispatchObject javaObj = jsval.getJavaObjectWrapper();
-			value.setJavaObject(new JavaObjectRef(localObjects.add(javaObj)));
+			value.setJavaObject(new JavaObjectRef(localObjects.add(javaObj),
+					javaObj.getTarget()));
 		} else if (jsval.isWrappedJavaFunction()) {
 			assert localObjects != null;
 			value.setJavaObject(new JavaObjectRef(
-					localObjects.add(jsval.getWrappedJavaFunction())));
+					localObjects.add(jsval.getWrappedJavaFunction()), null));
 		} else {
 			throw new RuntimeException("Unknown JsValue type " + jsval);
 		}
@@ -184,9 +186,29 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 			jsval.setJavascriptObject(val.getJsObject());
 			break;
 		case JAVA_OBJECT:
+		case JS_INT_ARRAY:
+		case JS_OBJECT_ARRAY:
 			assert ccl != null && localObjects != null;
-			jsval.setWrappedJavaObject(ccl,
-					localObjects.get(val.getJavaObject().getRefid()));
+			Object dispatchObject = localObjects
+					.get(val.getJavaObject().getRefid());
+			jsval.setWrappedJavaObject(ccl, dispatchObject);
+			switch (val.getType()) {
+			case JAVA_OBJECT:
+				break;
+			case JS_OBJECT_ARRAY: {
+				int[] arrayValues = val.getJavaObject().getArrayValues();
+				Object javaObject = ((DispatchObject) dispatchObject)
+						.getTarget();
+				ccl.writeToJavaScriptObjectList(arrayValues, javaObject);
+				break;
+			}
+			case JS_INT_ARRAY: {
+				JavaScriptIntList list = (JavaScriptIntList) dispatchObject;
+				int[] arrayValues = val.getJavaObject().getArrayValues();
+				list.javaArray = arrayValues;
+				break;
+			}
+			}
 			break;
 		}
 	}

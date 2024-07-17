@@ -56,7 +56,7 @@ class gwt_hm_HostChannel {
 				return false;
 		}
 		var self = this;
-		window.addEventListener("unload", function(event) {
+		window.addEventListener("unload", function (event) {
 			self.disconnectFromHost();
 		});
 		return true;
@@ -241,8 +241,22 @@ class gwt_hm_HostChannel {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT: {
 				var val = this.readInt();
 				value.setJsObjectId(val);
-			}
 				return value;
+			}
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY: {
+				var val = this.readInt();
+				value.setJavaObjectId(val);
+				var len = this.readInt();
+				//tmp - only support zerolen
+				value.setJavaObjectLength(len);
+				if (len != 0) {
+					throw "unsupported non-zero length";
+				}
+				return value;
+			}
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY: {
+				throw "unsupported VALUE_TYPE_JS_INT_ARRAY";
+			}
 			default:
 				throw "Unhandled value type sent from server: " + type;
 		}
@@ -277,6 +291,17 @@ class gwt_hm_HostChannel {
 				return this.sendInt(value.getJsObjectId());
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
 				return this.sendInt(value.getJavaObjectId());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+				this.sendInt(value.getJavaObjectId());
+				var arr = value.getArray();
+				this.sendInt(arr.length);
+				for (var idx = 0; idx < arr.length; idx++) {
+					var refId = arr[idx];
+					this.sendInt(refId);
+				}
+				return;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
+				throw "unsupported";
 			default:
 				throw "Unhandled value type sent to server: " + type;
 		}

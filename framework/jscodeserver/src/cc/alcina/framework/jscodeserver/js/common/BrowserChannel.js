@@ -39,3 +39,6 @@ gwt_hm_BrowserChannel.VALUE_TYPE_STRING = 9
 gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT = 10
 gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT = 11
 gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED = 12
+gwt_hm_BrowserChannel.VALUE_TYPE_UNUSED = 13
+gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY = 14
+gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY = 15

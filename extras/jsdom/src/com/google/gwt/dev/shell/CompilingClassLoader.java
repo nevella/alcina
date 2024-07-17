@@ -22,6 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -40,6 +41,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.core.client.GwtScriptOnly;
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.impl.JavaScriptIntList;
+import com.google.gwt.core.client.impl.JavaScriptObjectList;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JArrayType;
@@ -55,6 +59,9 @@ import com.google.gwt.dev.javac.CompilationUnit;
 import com.google.gwt.dev.javac.CompiledClass;
 import com.google.gwt.dev.javac.JsniMethod;
 import com.google.gwt.dev.jjs.InternalCompilerException;
+import com.google.gwt.dev.shell.BrowserChannel.JavaObjectRef;
+import com.google.gwt.dev.shell.BrowserChannel.JavaObjectRef.Special;
+import com.google.gwt.dev.shell.BrowserChannel.JsObjectRef;
 import com.google.gwt.dev.shell.rewrite.HasAnnotation;
 import com.google.gwt.dev.shell.rewrite.HostedModeClassRewriter;
 import com.google.gwt.dev.shell.rewrite.HostedModeClassRewriter.InstanceMethodOracle;
@@ -72,6 +79,8 @@ import com.google.gwt.thirdparty.guava.common.collect.ImmutableMap;
 import com.google.gwt.thirdparty.guava.common.collect.MapMaker;
 import com.google.gwt.thirdparty.guava.common.primitives.Primitives;
 import com.google.gwt.util.tools.Utility;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 /**
  * An isolated {@link ClassLoader} for running all user code. All user files are
@@ -1539,5 +1548,89 @@ public final class CompilingClassLoader extends ClassLoader
 		public Set<String> getSingleJsoIntfTypes() {
 			return unmodifiableIntfNames;
 		}
+	}
+
+	class JavascriptLists {
+		Class<?> clazzJavaScriptIntList;
+
+		Class<?> clazzJavaScriptObjectList;
+
+		Class<?> clazzJavaScriptObject;
+
+		Field clazzJavaScriptObjectListListField;
+
+		JavascriptLists() {
+			try {
+				clazzJavaScriptObjectList = loadClass(
+						JavaScriptObjectList.class.getName(), true);
+				clazzJavaScriptIntList = loadClass(
+						JavaScriptIntList.class.getName(), true);
+				clazzJavaScriptObject = loadClass(
+						JavaScriptObject.class.getName(), true);
+				clazzJavaScriptObjectListListField = clazzJavaScriptObjectList
+						.getDeclaredField("javaArray");
+				clazzJavaScriptObjectListListField.setAccessible(true);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		JavaObjectRef.Special getSpecial0(Object wrapped) {
+			if (wrapped.getClass() == clazzJavaScriptIntList) {
+				return Special.JS_INT_ARRAY;
+			} else if (wrapped.getClass() == clazzJavaScriptObjectList) {
+				return Special.JS_OBJECT_ARRAY;
+			} else {
+				return null;
+			}
+		}
+
+		public void writeToJavaScriptObjectList(int[] arrayValues,
+				Object javaObject) {
+			CompilingClassLoader ccl = CompilingClassLoader.this;
+			try {
+				Object[] javaArray = (Object[]) Array
+						.newInstance(clazzJavaScriptObject, arrayValues.length);
+				for (int idx = 0; idx < arrayValues.length; idx++) {
+					int refId = arrayValues[idx];
+					JsObjectRef memberRef = new JsObjectRef(refId);
+					JsValueOOPHM jsValueOOPHM = new JsValueOOPHM();
+					jsValueOOPHM.setJavascriptObject(memberRef);
+					Object jso = JsValueGlue
+							.createJavaScriptObject(jsValueOOPHM, ccl);
+					javaArray[idx] = jso;
+				}
+				clazzJavaScriptObjectListListField.set(javaObject, javaArray);
+			} catch (Throwable e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+	}
+
+	JavascriptLists lists;
+
+	JavascriptLists ensureLists() {
+		if (lists == null) {
+			lists = new JavascriptLists();
+		}
+		return lists;
+	}
+
+	public static JavaObjectRef.Special getSpecial(Object wrapped) {
+		if (wrapped == null) {
+			return null;
+		}
+		ClassLoader classLoader = wrapped.getClass().getClassLoader();
+		if (classLoader instanceof CompilingClassLoader) {
+			return ((CompilingClassLoader) classLoader).ensureLists()
+					.getSpecial0(wrapped);
+		} else {
+			return null;
+		}
+	}
+
+	public void writeToJavaScriptObjectList(int[] arrayValues,
+			Object javaObject) {
+		ensureLists().writeToJavaScriptObjectList(arrayValues, javaObject);
 	}
 }

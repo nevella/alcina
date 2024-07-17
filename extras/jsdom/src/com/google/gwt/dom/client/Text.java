@@ -17,8 +17,6 @@ package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -117,7 +115,8 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	protected void putRemote(ClientDomNode remote, boolean synced) {
-		Preconditions.checkState(wasSynced() == synced);
+		// refid2 - disabled
+		// Preconditions.checkState(wasSynced() == synced);
 		this.remote = (ClientDomText) remote;
 	}
 

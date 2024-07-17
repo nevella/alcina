@@ -94,7 +94,7 @@ class gwt_hm_ScriptableInstance {
 			val.setString(value);
 		} else if (typeof value == "object" || typeof value == "function") {
 			if (unwrapJava && gwt_hm_JavaObject.isInstance(value)) {
-				val.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(value));
+				gwt_hm_JavaObject.wrapJavaObject(val, value, this);
 			} else {
 				val.setJsObjectId(scriptInstance.getLocalObjectRef(value));
 			}
@@ -129,9 +129,12 @@ class gwt_hm_ScriptableInstance {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
 				return val.getString();
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
 				var id = val.getJavaObjectId();
 				if (!this.javaObjects.has(id)) {
-					this.javaObjects.set(id, gwt_hm_JavaObject.create(this, id));
+					var javaObject = gwt_hm_JavaObject.create(this, id, val.type);
+					this.javaObjects.set(id, javaObject);
 				}
 				return this.javaObjects.get(id);
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
@@ -154,7 +157,7 @@ class gwt_hm_ScriptableInstance {
 		var retArr = [];
 		if (ret == null) {
 			//connection closed
-			return 	retArr;
+			return retArr;
 		}
 		retArr.push(ret.isException);
 		retArr.push(this.resolveLocal(ret.retValue));

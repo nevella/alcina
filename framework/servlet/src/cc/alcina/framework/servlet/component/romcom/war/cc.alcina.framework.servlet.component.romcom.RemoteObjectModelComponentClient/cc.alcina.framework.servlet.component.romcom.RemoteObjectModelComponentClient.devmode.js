@@ -569,66 +569,96 @@ gwt_hm_BrowserChannel.VALUE_TYPE_STRING = 9
 gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT = 10
 gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT = 11
 gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED = 12
+gwt_hm_BrowserChannel.VALUE_TYPE_UNUSED = 13
+gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY = 14
+gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY = 15
 
 //just statics - we need a function with extras
-class gwt_hm_JavaObject {}
-gwt_hm_JavaObject.isInstance = function(javaObject) {
-    return (javaObject) && javaObject.hasOwnProperty("__gwt_java_object_id");
+class gwt_hm_JavaObject { }
+gwt_hm_JavaObject.isInstance = function (javaObject) {
+	return (javaObject) && javaObject.hasOwnProperty("__gwt_java_object_id");
 }
-gwt_hm_JavaObject.getJavaObjectId = function(javaObject) {
-    return javaObject.__gwt_java_object_id;
+gwt_hm_JavaObject.getJavaObjectId = function (javaObject) {
+	return javaObject.__gwt_java_object_id;
 }
-gwt_hm_JavaObject.dispatch = function(javaObject, sourceArguments) {
-    var args = [];
-    for (var idx = 2; idx < sourceArguments.length; idx++) {
-        args.push(sourceArguments[idx]);
-    }
-    var dispId = sourceArguments[0];
-    var objectId = gwt_hm_JavaObject.getJavaObjectId(javaObject);
-    var thisObj = sourceArguments[1];
-    if (gwt_hm_JavaObject.isInstance(thisObj)) {
-        objectId = gwt_hm_JavaObject.getJavaObjectId(thisObj);
-    }
-    return javaObject.__gwt_plugin.javaObjectInvoke(objectId, dispId, args, args.length);
+gwt_hm_JavaObject.dispatch = function (javaObject, sourceArguments) {
+	var args = [];
+	for (var idx = 2; idx < sourceArguments.length; idx++) {
+		args.push(sourceArguments[idx]);
+	}
+	var dispId = sourceArguments[0];
+	var objectId = gwt_hm_JavaObject.getJavaObjectId(javaObject);
+	var thisObj = sourceArguments[1];
+	if (gwt_hm_JavaObject.isInstance(thisObj)) {
+		objectId = gwt_hm_JavaObject.getJavaObjectId(thisObj);
+	}
+	return javaObject.__gwt_plugin.javaObjectInvoke(objectId, dispId, args, args.length);
 }
 gwt_hm_JavaObject.propertyDispatcher = {
-    set: function(javaObject, prop, value) {
-        var objectId = javaObject.__gwt_java_object_id;
-        var dispId = prop;
-        return javaObject.__gwt_plugin.javaObjectSet(objectId, dispId, value);
-    },
-    get: function(javaObject, prop) {
-        var objectId = javaObject.__gwt_java_object_id;
-        var dispId = prop;
-        if (isNaN(parseInt(dispId))) {
-            // string-valued -- e.g. hasOwnProperty
-            return javaObject[prop];
-        }
-        return javaObject.__gwt_plugin.javaObjectGet(objectId, dispId);
-    },
-    has: function(javaObject, prop) {
-        throw "nope";
-        return javaObject.hasOwnProperty(prop);
-    }
+	set: function (javaObject, prop, value) {
+		var objectId = javaObject.__gwt_java_object_id;
+		var dispId = prop;
+		if (isNaN(parseInt(dispId))) {
+			// string-valued -- e.g. __gwt_java_js_object_array
+			javaObject[prop] = value;
+			return;
+		}
+		return javaObject.__gwt_plugin.javaObjectSet(objectId, dispId, value);
+	},
+	get: function (javaObject, prop) {
+		var objectId = javaObject.__gwt_java_object_id;
+		var dispId = prop;
+		if (isNaN(parseInt(dispId))) {
+			// string-valued -- e.g. hasOwnProperty
+			return javaObject[prop];
+		}
+		return javaObject.__gwt_plugin.javaObjectGet(objectId, dispId);
+	},
+	has: function (javaObject, prop) {
+		throw "nope";
+		return javaObject.hasOwnProperty(prop);
+	}
 };
-gwt_hm_JavaObject.create = function(plugin, id) {
-    var dispatcher = function() {
-        // we use a function rather than an object because the original NPAPI impl
-        // expects a "default" call target:
-        //
-        // e.g. __static(55) and not __static.callRemote(55)
-        //
-        // we then use power-of-js to add properties to the function (and then
-        // proxy...lordy)
-        //
-        // works though. could rewrite without function/proxy by rewriting
-        // generated js in hostedmode -
-        // but no need, that would be for pre-proxy js engines
-        return gwt_hm_JavaObject.dispatch(arguments.callee, arguments);
-    }
-    dispatcher.__gwt_java_object_id = id;
-    dispatcher.__gwt_plugin = plugin;
-    return new Proxy(dispatcher, gwt_hm_JavaObject.propertyDispatcher);
+gwt_hm_JavaObject.create = function (plugin, id, type) {
+	var dispatcher = function () {
+		// we use a function rather than an object because the original NPAPI impl
+		// expects a "default" call target:
+		//
+		// e.g. __static(55) and not __static.callRemote(55)
+		//
+		// we then use power-of-js to add properties to the function (and then
+		// proxy...lordy)
+		//
+		// works though. could rewrite without function/proxy by rewriting
+		// generated js in hostedmode -
+		// but no need, that would be for pre-proxy js engines
+		return gwt_hm_JavaObject.dispatch(arguments.callee, arguments);
+	}
+	dispatcher.__gwt_java_object_id = id;
+	dispatcher.__gwt_plugin = plugin;
+	switch (type) {
+		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+			//note that the value of the property can be replaced - its presence is what determines the JAVA_OBJECT subtype
+			dispatcher.__gwt_java_js_object_array = [];
+			break;
+		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
+			dispatcher.__gwt_java_js_int_array = [];
+			break;
+	}
+	return new Proxy(dispatcher, gwt_hm_JavaObject.propertyDispatcher);
+}
+gwt_hm_JavaObject.wrapJavaObject = function (ret, javaObject, scriptableInstance) {
+	ret.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
+	if (javaObject.hasOwnProperty("__gwt_java_js_object_array")) {
+		var arr = javaObject.__gwt_java_js_object_array;
+		ret.setJavaObjectLength(arr.length);
+		for (var idx = 0; idx < arr.length; idx++) {
+			var obj = arr[idx];
+			ret.addJsObjectId(scriptableInstance.getLocalObjectRef(obj));
+		}
+	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_array")) {
+		throw "unsuuppported";
+	}
 }
 
 class gwt_hm_ScriptableInstance {
@@ -727,7 +757,7 @@ class gwt_hm_ScriptableInstance {
 			val.setString(value);
 		} else if (typeof value == "object" || typeof value == "function") {
 			if (unwrapJava && gwt_hm_JavaObject.isInstance(value)) {
-				val.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(value));
+				gwt_hm_JavaObject.wrapJavaObject(val, value, this);
 			} else {
 				val.setJsObjectId(scriptInstance.getLocalObjectRef(value));
 			}
@@ -762,9 +792,12 @@ class gwt_hm_ScriptableInstance {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
 				return val.getString();
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
 				var id = val.getJavaObjectId();
 				if (!this.javaObjects.has(id)) {
-					this.javaObjects.set(id, gwt_hm_JavaObject.create(this, id));
+					var javaObject = gwt_hm_JavaObject.create(this, id, val.type);
+					this.javaObjects.set(id, javaObject);
 				}
 				return this.javaObjects.get(id);
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
@@ -787,7 +820,7 @@ class gwt_hm_ScriptableInstance {
 		var retArr = [];
 		if (ret == null) {
 			//connection closed
-			return 	retArr;
+			return retArr;
 		}
 		retArr.push(ret.isException);
 		retArr.push(this.resolveLocal(ret.retValue));
@@ -1011,7 +1044,7 @@ class gwt_hm_HostChannel {
 				return false;
 		}
 		var self = this;
-		window.addEventListener("unload", function(event) {
+		window.addEventListener("unload", function (event) {
 			self.disconnectFromHost();
 		});
 		return true;
@@ -1196,8 +1229,22 @@ class gwt_hm_HostChannel {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT: {
 				var val = this.readInt();
 				value.setJsObjectId(val);
-			}
 				return value;
+			}
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY: {
+				var val = this.readInt();
+				value.setJavaObjectId(val);
+				var len = this.readInt();
+				//tmp - only support zerolen
+				value.setJavaObjectLength(len);
+				if (len != 0) {
+					throw "unsupported non-zero length";
+				}
+				return value;
+			}
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY: {
+				throw "unsupported VALUE_TYPE_JS_INT_ARRAY";
+			}
 			default:
 				throw "Unhandled value type sent from server: " + type;
 		}
@@ -1232,6 +1279,17 @@ class gwt_hm_HostChannel {
 				return this.sendInt(value.getJsObjectId());
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
 				return this.sendInt(value.getJavaObjectId());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+				this.sendInt(value.getJavaObjectId());
+				var arr = value.getArray();
+				this.sendInt(arr.length);
+				for (var idx = 0; idx < arr.length; idx++) {
+					var refId = arr[idx];
+					this.sendInt(refId);
+				}
+				return;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
+				throw "unsupported";
 			default:
 				throw "Unhandled value type sent to server: " + type;
 		}
@@ -1635,225 +1693,258 @@ gwt_hm_LoadJsniMessage.receive = function(channel) {
 }
 
 class gwt_hm_Value {
-    type;
-    boolValue;
-    byteValue;
-    charValue;
-    doubleValue;
-    floatValue;
-    intValue;
-    longValue;
-    shortValue;
-    stringValue;
-    constructor() {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
-    }
-    getBoolean() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN);
-        return this.boolValue;
-    }
-    getByte() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_BYTE);
-        return this.byteValue;
-    }
-    getChar() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_CHAR);
-        return this.charValue;
-    }
-    getDouble() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE);
-        return this.doubleValue;
-    }
-    getFloat() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT);
-        return this.floatValue;
-    }
-    getInt() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_INT);
-        return this.intValue;
-    }
-    getJavaObjectId() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT);
-        return this.intValue;
-    }
-    getJsObjectId() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT);
-        return this.intValue;
-    }
-    getLong() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_LONG);
-        return this.longValue;
-    }
-    getShort() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_SHORT);
-        return this.shortValue;
-    }
-    getString() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_STRING);
-        return this.stringValue;
-    }
-    getType() {
-        return type;
-    }
-    isBoolean() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN;
-    }
-    isByte() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_BYTE;
-    }
-    isChar() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_CHAR;
-    }
-    isDouble() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
-    }
-    isFloat() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT;
-    }
-    isInt() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_INT;
-    }
-    isJavaObject() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT;
-    }
-    isJsObject() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
-    }
-    isLong() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_LONG;
-    }
-    isNull() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_NULL;
-    }
-    isNumber() {
-        switch (this.type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                return true;
-            default:
-                return false;
-        }
-    }
-    isPrimitive() {
-        switch (this.type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                return true;
-            default:
-                return false;
-        }
-    }
-    isShort() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_SHORT;
-    }
-    isString() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_STRING;
-    }
-    isUndefined() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
-    }
-    setBoolean(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN;
-        this.boolValue = val;
-    }
-    setByte(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_BYTE;
-        this.byteValue = val;
-    }
-    setChar(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_CHAR;
-        this.charValue = val;
-    }
-    setDouble(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
-        this.doubleValue = val;
-    }
-    setDouble(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
-        this.doubleValue = val;
-    }
-    setFloat(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT;
-        this.floatValue = val;
-    }
-    setInt(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_INT;
-        this.intValue = val;
-    }
-    setJavaObjectId(objectId) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT;
-        this.intValue = objectId;
-    }
-    setJsObjectId(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
-        this.intValue = val;
-    }
-    setLong(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_LONG;
-        this.longValue = val;
-    }
-    setNull() {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_NULL;
-    }
-    setShort(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_SHORT;
-        this.shortValue = val;
-    }
-    setString(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_STRING;
-        this.stringValue = val;
-    }
-    setUndefined() {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
-    }
-    assertType(reqType) {
-        if (this.type != reqType) {
-            throw "Value::assertType - expecting type " + reqType;
-        }
-    }
-    toString() {
-        switch (this.type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
-                return `boolean: ${this.getBoolean()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-                return `byte: ${this.getByte()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-                return `char: ${this.getChar()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-                return `double: ${this.getDouble()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
-                return `float: ${this.getFloat()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-                return `int: ${this.getInt()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-                return `long: ${this.getLong()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                return `short: ${this.getShort()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
-                return "null";
-            case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
-                return `string: ${this.getString()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
-                return `javaobj: ${this.getJavaObjectId()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
-                return `jsobj: ${this.getJsObjectId()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
-                return "undefined";
-            default:
-                return "Unknown type";
-        }
-    }
+	type;
+	boolValue;
+	byteValue;
+	charValue;
+	doubleValue;
+	floatValue;
+	intValue;
+	longValue;
+	shortValue;
+	stringValue;
+	arrayValue;
+	constructor() {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
+	}
+	getBoolean() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN);
+		return this.boolValue;
+	}
+	getByte() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_BYTE);
+		return this.byteValue;
+	}
+	getChar() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_CHAR);
+		return this.charValue;
+	}
+	getDouble() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE);
+		return this.doubleValue;
+	}
+	getFloat() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT);
+		return this.floatValue;
+	}
+	getInt() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_INT);
+		return this.intValue;
+	}
+	getJavaObjectId() {
+		if (this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY) {
+			//allowed
+		} else {
+			this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT);
+		}
+		return this.intValue;
+	}
+	getJsObjectId() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT);
+		return this.intValue;
+	}
+	getLong() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_LONG);
+		return this.longValue;
+	}
+	getShort() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_SHORT);
+		return this.shortValue;
+	}
+	getString() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_STRING);
+		return this.stringValue;
+	}
+	getArray() {
+		if (this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY) {
+			//allowed
+		} else {
+			this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY);
+		}
+		return this.arrayValue;
+	}
+	getType() {
+		return type;
+	}
+	isBoolean() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN;
+	}
+	isByte() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_BYTE;
+	}
+	isChar() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_CHAR;
+	}
+	isDouble() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
+	}
+	isFloat() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT;
+	}
+	isInt() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_INT;
+	}
+	isJavaObject() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT;
+	}
+	isJsObject() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
+	}
+	isLong() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_LONG;
+	}
+	isNull() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_NULL;
+	}
+	isNumber() {
+		switch (this.type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+				return true;
+			default:
+				return false;
+		}
+	}
+	isPrimitive() {
+		switch (this.type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+				return true;
+			default:
+				return false;
+		}
+	}
+	isShort() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_SHORT;
+	}
+	isString() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_STRING;
+	}
+	isUndefined() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
+	}
+	setBoolean(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN;
+		this.boolValue = val;
+	}
+	setByte(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_BYTE;
+		this.byteValue = val;
+	}
+	setChar(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_CHAR;
+		this.charValue = val;
+	}
+	setDouble(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
+		this.doubleValue = val;
+	}
+	setDouble(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
+		this.doubleValue = val;
+	}
+	setFloat(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT;
+		this.floatValue = val;
+	}
+	setInt(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_INT;
+		this.intValue = val;
+	}
+	setJavaObjectId(objectId) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT;
+		this.intValue = objectId;
+	}
+	setJsObjectId(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
+		this.intValue = val;
+	}
+	setJavaObjectLength(jsObjectLength) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY;
+		this.arrayValue = [];
+	}
+	setJavaIntLength(intObjectLength) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY;
+		this.arrayValue = [];
+	}
+	addJsObjectId(val) {
+		this.arrayValue.push(val);
+	}
+	addJsInt(val) {
+		this.arrayValue.push(val);
+	}
+	setLong(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_LONG;
+		this.longValue = val;
+	}
+	setNull() {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_NULL;
+	}
+	setShort(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_SHORT;
+		this.shortValue = val;
+	}
+	setString(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_STRING;
+		this.stringValue = val;
+	}
+	setUndefined() {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
+	}
+	assertType(reqType) {
+		if (this.type != reqType) {
+			throw "Value::assertType - expecting type " + reqType;
+		}
+	}
+	toString() {
+		switch (this.type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
+				return `boolean: ${this.getBoolean()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+				return `byte: ${this.getByte()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+				return `char: ${this.getChar()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+				return `double: ${this.getDouble()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+				return `float: ${this.getFloat()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+				return `int: ${this.getInt()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+				return `long: ${this.getLong()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+				return `short: ${this.getShort()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
+				return "null";
+			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
+				return `string: ${this.getString()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+				return `javaobj: ${this.getJavaObjectId()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
+				return `jsobj: ${this.getJsObjectId()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
+				return "undefined";
+			case gwt_hm_BrowserChannel.VALUE_TYPE_UNUSED:
+				return "unused";
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+				return `jsobj[]: ${this.getJsObjectId()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
+				return `int[]: ${this.getJsObjectId()}`;
+			default:
+				return "Unknown type";
+		}
+	}
 }
 
 class gwt_hm_CheckVersionsMessage extends gwt_hm_Message {

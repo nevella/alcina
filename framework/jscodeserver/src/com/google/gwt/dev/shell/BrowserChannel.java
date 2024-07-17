@@ -26,6 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.util.Set;
 
+import com.google.gwt.dev.shell.BrowserChannel.JavaObjectRef.Special;
 import com.google.gwt.dev.shell.BrowserChannel.SessionHandler.ExceptionOrReturnValue;
 import com.google.gwt.dev.shell.BrowserChannel.SessionHandler.SpecialDispatchId;
 import com.google.gwt.dev.shell.BrowserChannel.Value.ValueType;
@@ -78,8 +79,20 @@ public abstract class BrowserChannel {
 
 	protected static void writeJavaObject(DataOutputStream stream,
 			JavaObjectRef value) throws IOException {
-		stream.writeByte(ValueType.JAVA_OBJECT.getTag());
-		stream.writeInt(value.getRefid());
+		if (value.getSpecial() != null) {
+			switch (value.getSpecial()) {
+			case JS_OBJECT_ARRAY:
+				stream.writeByte(ValueType.JS_OBJECT_ARRAY.getTag());
+				stream.writeInt(value.getRefid());
+				stream.writeInt(0);
+				break;
+			case JS_INT_ARRAY:
+				throw new UnsupportedOperationException();
+			}
+		} else {
+			stream.writeByte(ValueType.JAVA_OBJECT.getTag());
+			stream.writeInt(value.getRefid());
+		}
 	}
 
 	protected static void writeJsObject(DataOutputStream stream,
@@ -251,6 +264,28 @@ public abstract class BrowserChannel {
 			value.setJavaObject(
 					objectRefFactory.getJavaObjectRef(stream.readInt()));
 			break;
+		case JS_OBJECT_ARRAY:
+		case JS_INT_ARRAY:
+			JavaObjectRef javaObjectRef = objectRefFactory
+					.getJavaObjectRef(stream.readInt());
+			value.setJavaObject(javaObjectRef);
+			int len = stream.readInt();
+			int[] array = new int[len];
+			for (int idx = 0; idx < len; idx++) {
+				array[idx] = stream.readInt();
+			}
+			javaObjectRef.setArrayValues(array);
+			switch (tag) {
+			case JS_OBJECT_ARRAY:
+				javaObjectRef.special = Special.JS_OBJECT_ARRAY;
+				value.type = ValueType.JS_OBJECT_ARRAY;
+				break;
+			case JS_INT_ARRAY:
+				javaObjectRef.special = Special.JS_INT_ARRAY;
+				value.type = ValueType.JS_INT_ARRAY;
+				break;
+			}
+			break;
 		default:
 			throw new IllegalArgumentException("Unexpected type: " + tag);
 		}
@@ -279,6 +314,10 @@ public abstract class BrowserChannel {
 		} else if (value.isJsObject()) {
 			writeJsObject(stream, value.getJsObject());
 		} else if (value.isJavaObject()) {
+			writeJavaObject(stream, value.getJavaObject());
+		} else if (value.isJsObjectArray()) {
+			writeJavaObject(stream, value.getJavaObject());
+		} else if (value.isJsIntArray()) {
 			writeJavaObject(stream, value.getJavaObject());
 		} else if (value.isBoolean()) {
 			writeTaggedBoolean(stream, value.getBoolean());
@@ -663,13 +702,40 @@ public abstract class BrowserChannel {
 	}
 
 	/**
-	 * Class representing a reference to a Java object.
+	 * Class representing a reference to a Java object. The #special and
+	 * #arrayValues fields are used for bulk array transfer, the #arrayValues
+	 * field is nulled at the end of each protocol/value transfer
 	 */
 	public static class JavaObjectRef implements RemoteObjectRef {
+		public enum Special {
+			JS_OBJECT_ARRAY, JS_INT_ARRAY;
+		}
+
 		private int refId;
 
+		private Special special;
+
+		public Special getSpecial() {
+			return special;
+		}
+
+		private int[] arrayValues;
+
+		public int[] getArrayValues() {
+			return arrayValues;
+		}
+
+		public void setArrayValues(int[] arrayValues) {
+			this.arrayValues = arrayValues;
+		}
+
 		public JavaObjectRef(int refId) {
+			this(refId, null);
+		}
+
+		public JavaObjectRef(int refId, Object wrapped) {
 			this.refId = refId;
+			special = CompilingClassLoader.getSpecial(wrapped);
 		}
 
 		@Override
@@ -1483,6 +1549,14 @@ public abstract class BrowserChannel {
 			return type == ValueType.JAVA_OBJECT;
 		}
 
+		public boolean isJsObjectArray() {
+			return type == ValueType.JS_OBJECT_ARRAY;
+		}
+
+		public boolean isJsIntArray() {
+			return type == ValueType.JS_INT_ARRAY;
+		}
+
 		public boolean isJsObject() {
 			return type == ValueType.JS_OBJECT;
 		}
@@ -1612,7 +1686,20 @@ public abstract class BrowserChannel {
 			/**
 			 * A Javascript undef value, also used for void returns.
 			 */
-			UNDEFINED(12);
+			UNDEFINED(12),
+			/**
+			 * Because birds + early spring
+			 */
+			UNUSED(13),
+			/**
+			 * A special dispatch object for bulk transfer of js object ref
+			 * arrays
+			 */
+			JS_OBJECT_ARRAY(14),
+			/**
+			 * A special dispatch object for bulk transfer of int arrays
+			 */
+			JS_INT_ARRAY(15);
 
 			private final int id;
 
