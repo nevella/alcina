@@ -42,6 +42,13 @@ import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
 /*
  * Start the wrapped thread either on creation - if a 'self-starter' (top-level,
  * first in sequence), or once the job has reached stage 'processing'
+ * 
+ * TODO - childcompletionlatch is only counted down if there's a subsequent -
+ * but I'm not sure of the locking there.
+ * 
+ * Possibly childcompletionlatch should not be used, rather an atomicint
+ * (counter) of children - or some other *domain* structure. Workaround is the
+ * backup recalc during the loop
  */
 class JobAllocator {
 	private static void commit() {
@@ -119,11 +126,13 @@ class JobAllocator {
 			TransactionEnvironment.get().ensureEnded();
 			ensureStarted();
 			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
+				TransactionEnvironment.get().endAndBeginNew();
 				if (enqueuedStatusMessage != null) {
-					TransactionEnvironment.get().endAndBeginNew();
 					TransactionEnvironment.withDomain(this::applyStatusMessage);
-					TransactionEnvironment.get().end();
 				}
+				TransactionEnvironment
+						.withDomain(this::doubleCheckChildCompletion);
+				TransactionEnvironment.get().end();
 			}
 			TransactionEnvironment.get().endAndBeginNew();
 			new StatusMessage().publish();
@@ -673,6 +682,16 @@ class JobAllocator {
 						* TimeConstants.ONE_SECOND_MS;
 			}
 			return true;
+		}
+	}
+
+	void doubleCheckChildCompletion() {
+		if (queue.job.provideChildren().count() > 0 && queue.job
+				.provideChildren().allMatch(Job::provideIsComplete)) {
+			Ax.err("DEVEX-0 -- Marking as children complete - latch issue - %s",
+					queue.job);
+			Ax.out(queue.job.provideChildren().collect(Collectors.toList()));
+			childCompletionLatch.countDown();
 		}
 	}
 }
