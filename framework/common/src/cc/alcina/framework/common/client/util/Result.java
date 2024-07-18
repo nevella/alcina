@@ -7,8 +7,11 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @Bean(PropertySource.FIELDS)
+@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 public class Result<T, E> {
 	T t;
 
@@ -57,6 +60,7 @@ public class Result<T, E> {
 		}
 	}
 
+	@Property.Not
 	public T getOk() {
 		Preconditions.checkState(ok);
 		return t;
