@@ -686,11 +686,13 @@ class JobAllocator {
 	}
 
 	void doubleCheckChildCompletion() {
-		if (queue.job.provideChildren().count() > 0 && queue.job
-				.provideChildren().allMatch(Job::provideIsComplete)) {
+		if (queue.job.provideChildren().count() > 0
+				&& queue.job.provideChildrenAndChildSubsequents()
+						.allMatch(Job::provideIsComplete)) {
 			Ax.err("DEVEX-0 -- Marking as children complete - latch issue - %s",
 					queue.job);
-			Ax.out(queue.job.provideChildren().collect(Collectors.toList()));
+			Ax.out(queue.job.provideChildrenAndChildSubsequents()
+					.collect(Collectors.toList()));
 			childCompletionLatch.countDown();
 		}
 	}
