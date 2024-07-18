@@ -81,13 +81,16 @@ public abstract class BrowserChannel {
 			JavaObjectRef value) throws IOException {
 		if (value.getSpecial() != null) {
 			switch (value.getSpecial()) {
-			case JS_OBJECT_ARRAY:
-				stream.writeByte(ValueType.JS_OBJECT_ARRAY.getTag());
+			case JS_OBJECT_LIST:
+			case JS_INT_LIST:
+				stream.writeByte(value.getSpecial().getValueType().getTag());
 				stream.writeInt(value.getRefid());
 				stream.writeInt(0);
+				int[] arrayValues = value.getArrayValues();
+				for (int i : arrayValues) {
+					stream.writeInt(i);
+				}
 				break;
-			case JS_INT_ARRAY:
-				throw new UnsupportedOperationException();
 			}
 		} else {
 			stream.writeByte(ValueType.JAVA_OBJECT.getTag());
@@ -264,8 +267,8 @@ public abstract class BrowserChannel {
 			value.setJavaObject(
 					objectRefFactory.getJavaObjectRef(stream.readInt()));
 			break;
-		case JS_OBJECT_ARRAY:
-		case JS_INT_ARRAY:
+		case JS_OBJECT_LIST:
+		case JS_INT_LIST:
 			JavaObjectRef javaObjectRef = objectRefFactory
 					.getJavaObjectRef(stream.readInt());
 			value.setJavaObject(javaObjectRef);
@@ -275,14 +278,13 @@ public abstract class BrowserChannel {
 				array[idx] = stream.readInt();
 			}
 			javaObjectRef.setArrayValues(array);
+			value.type = tag;
 			switch (tag) {
-			case JS_OBJECT_ARRAY:
-				javaObjectRef.special = Special.JS_OBJECT_ARRAY;
-				value.type = ValueType.JS_OBJECT_ARRAY;
+			case JS_OBJECT_LIST:
+				javaObjectRef.special = Special.JS_OBJECT_LIST;
 				break;
-			case JS_INT_ARRAY:
-				javaObjectRef.special = Special.JS_INT_ARRAY;
-				value.type = ValueType.JS_INT_ARRAY;
+			case JS_INT_LIST:
+				javaObjectRef.special = Special.JS_INT_LIST;
 				break;
 			}
 			break;
@@ -708,7 +710,18 @@ public abstract class BrowserChannel {
 	 */
 	public static class JavaObjectRef implements RemoteObjectRef {
 		public enum Special {
-			JS_OBJECT_ARRAY, JS_INT_ARRAY;
+			JS_OBJECT_LIST, JS_INT_LIST;
+
+			ValueType getValueType() {
+				switch (this) {
+				case JS_OBJECT_LIST:
+					return ValueType.JS_OBJECT_LIST;
+				case JS_INT_LIST:
+					return ValueType.JS_INT_LIST;
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
 		}
 
 		private int refId;
@@ -1550,11 +1563,11 @@ public abstract class BrowserChannel {
 		}
 
 		public boolean isJsObjectArray() {
-			return type == ValueType.JS_OBJECT_ARRAY;
+			return type == ValueType.JS_OBJECT_LIST;
 		}
 
 		public boolean isJsIntArray() {
-			return type == ValueType.JS_INT_ARRAY;
+			return type == ValueType.JS_INT_LIST;
 		}
 
 		public boolean isJsObject() {
@@ -1695,11 +1708,11 @@ public abstract class BrowserChannel {
 			 * A special dispatch object for bulk transfer of js object ref
 			 * arrays
 			 */
-			JS_OBJECT_ARRAY(14),
+			JS_OBJECT_LIST(14),
 			/**
 			 * A special dispatch object for bulk transfer of int arrays
 			 */
-			JS_INT_ARRAY(15);
+			JS_INT_LIST(15);
 
 			private final int id;
 

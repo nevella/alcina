@@ -106,6 +106,9 @@ class gwt_hm_ScriptableInstance {
 	getLocalObjectRef(obj) {
 		return this.localObjects.ensureObjectRef(obj);
 	}
+	getLocalObject(refId) {
+		return this.localObjects.getById(refId);
+	}
 	resolveLocal(val) {
 		switch (val.type) {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
@@ -129,14 +132,16 @@ class gwt_hm_ScriptableInstance {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
 				return val.getString();
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
 				var id = val.getJavaObjectId();
 				if (!this.javaObjects.has(id)) {
 					var javaObject = gwt_hm_JavaObject.create(this, id, val.type);
 					this.javaObjects.set(id, javaObject);
 				}
-				return this.javaObjects.get(id);
+				var javaObject = this.javaObjects.get(id);
+				gwt_hm_JavaObject.unwrapJavaObject(val, javaObject, this);
+				return javaObject;
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
 				return this.localObjects.getById(val.getJsObjectId());
 			case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:

@@ -1,6 +1,8 @@
 package com.google.gwt.dom.client;
 
-import java.util.List;
+import com.google.gwt.core.client.impl.JavaScriptIntList;
+import com.google.gwt.core.client.impl.JavaScriptObjectList;
+import com.google.gwt.dom.client.DomIds.IdList;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -35,69 +37,76 @@ import cc.alcina.framework.common.client.util.Ax;
  * </ul>
  */
 class MarkupJso {
-	static class MarkupResult {
+	/*
+	 * Because of the nature of the dev protocol, this i/o token object must be
+	 * passed into the #markup call (rather than with discrete input/output
+	 * parameters)
+	 * 
+	 */
+	static class MarkupToken {
 		boolean ok;
 
-		public String localMarkup;
+		Element container;
 
-		public String remoteMarkup;
+		ElementJso remote;
+
+		MarkupToken(Element container, String localMarkup, IdList idList) {
+			this.container = container;
+			this.localMarkup = localMarkup;
+			localRefIds.javaArray = idList.toIntArray();
+		}
+
+		String localMarkup;
+
+		String remoteMarkup;
+
+		JavaScriptObjectList createdJsos = new JavaScriptObjectList();
+
+		JavaScriptIntList localRefIds = new JavaScriptIntList();
 	}
 
-	MarkupResult markup(Element container, String markup,
-			List<Integer> refIds) {
-		ElementJso remote = (ElementJso) container.remote();
-		remote.setInnerHTML(markup);
-		MarkupResult result = applyIds(refIds, remote);
-		if (!result.ok) {
-			result.localMarkup = markup;
-			result.remoteMarkup = remote.getInnerHTML0();
+	void markup(MarkupToken token) {
+		token.remote = (ElementJso) token.container.remote();
+		markup0(token);
+		if (!token.ok) {
+			token.remoteMarkup = token.remote.getInnerHTML0();
 			LocalDom.consoleLog(Ax.format("MarkupJso :: local ::\n%s",
-					result.localMarkup.replace("\n", "")), true);
+					token.localMarkup.replace("\n", "")), true);
 			LocalDom.consoleLog(Ax.format("MarkupJso :: remote ::\n%s",
-					result.remoteMarkup.replace("\n", "")), true);
+					token.remoteMarkup.replace("\n", "")), true);
 		}
-		return result;
 	}
 
-	MarkupResult applyIds(List<Integer> refIds, ElementJso remote) {
-		MarkupResult result = new MarkupResult();
+	void markup0(MarkupToken token) {
+		token.remote.setInnerHTML(token.localMarkup);
 		// build the json refid array
-		StringBuilder builder = new StringBuilder();
-		builder.append('[');
-		for (int idx = 0; idx < refIds.size(); idx++) {
-			if (idx > 0) {
-				builder.append(',');
-			}
-			builder.append(refIds.get(idx));
-		}
-		builder.append(']');
-		String refIdArrayJson = builder.toString();
 		long start = System.currentTimeMillis();
-		result.ok = traverseAndMark(remote, refIdArrayJson);
+		token.ok = traverseAndMark(token.remote, token.createdJsos,
+				token.localRefIds);
 		long end = System.currentTimeMillis();
 		// FIXME - logging
 		// LocalDom.consoleLog(Ax.format("traverse-and-mark :: %s nodes - %sms",
 		// refIds.size(), end - start), false);
-		if (!result.ok) {
+		if (!token.ok) {
 			LocalDom.consoleLog("MarkupJso :: !!success", true);
 		}
-		return result;
 	}
 
 	final native boolean traverseAndMark(ElementJso container,
-			String refIdArrayJson) /*-{
+			JavaScriptObjectList createdJsos, JavaScriptIntList refIdList) /*-{
 		//traverse the node tree depth first, maintaining an array of cursors to track node position
-		var ids = JSON.parse(refIdArrayJson);
+		var resultJsos = createdJsos.@com.google.gwt.core.client.impl.JavaScriptObjectList::ensureJsArray()();
+		var ids = refIdList.@com.google.gwt.core.client.impl.JavaScriptIntList::ensureJsArray()();
 		var idsIdx = 0;
 		var itr = document.createNodeIterator(container);
 		var coalesceLists = [];
 		for (; ;) {
 			var node = itr.nextNode();
+			resultJsos.push(node);
 			if (node == null) {
 				break;
 			}
 			if (idsIdx == ids.length) {
-			debugger;
 				return false;
 			}
 			node.__refid = ids[idsIdx++];
@@ -123,6 +132,8 @@ class MarkupJso {
 		}
 		//this optimises combining-multiple-nodes (to workaround webkit/style splitting of text nodes). 
 		// It may be better to use the create-style::-- create-text-node::flush -- text-node.setNodeValue:: flush
+		// note that large text node creation is normally injection of a style or script node, and those do not use 
+		// this codepath
 		for (var idx=0; idx<coalesceLists.length; idx++) {
 			var coalesceList = coalesceLists[idx];
 			var content='';

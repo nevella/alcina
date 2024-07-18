@@ -1577,9 +1577,9 @@ public final class CompilingClassLoader extends ClassLoader
 
 		JavaObjectRef.Special getSpecial0(Object wrapped) {
 			if (wrapped.getClass() == clazzJavaScriptIntList) {
-				return Special.JS_INT_ARRAY;
+				return Special.JS_INT_LIST;
 			} else if (wrapped.getClass() == clazzJavaScriptObjectList) {
-				return Special.JS_OBJECT_ARRAY;
+				return Special.JS_OBJECT_LIST;
 			} else {
 				return null;
 			}

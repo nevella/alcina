@@ -111,6 +111,14 @@ public class DomIds {
 		}
 
 		public List<Integer> ids = new ArrayList<>();
+
+		public int[] toIntArray() {
+			int[] result = new int[ids.size()];
+			for (int idx = 0; idx < result.length; idx++) {
+				result[idx] = ids.get(idx);
+			}
+			return result;
+		}
 	}
 
 	public void setNextAttachId(int nextAttachId) {

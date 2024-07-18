@@ -24,7 +24,7 @@ gwt_hm_JavaObject.propertyDispatcher = {
 		var objectId = javaObject.__gwt_java_object_id;
 		var dispId = prop;
 		if (isNaN(parseInt(dispId))) {
-			// string-valued -- e.g. __gwt_java_js_object_array
+			// string-valued -- e.g. __gwt_java_js_object_list
 			javaObject[prop] = value;
 			return;
 		}
@@ -62,26 +62,45 @@ gwt_hm_JavaObject.create = function (plugin, id, type) {
 	dispatcher.__gwt_java_object_id = id;
 	dispatcher.__gwt_plugin = plugin;
 	switch (type) {
-		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
 			//note that the value of the property can be replaced - its presence is what determines the JAVA_OBJECT subtype
-			dispatcher.__gwt_java_js_object_array = [];
+			dispatcher.__gwt_java_js_object_list = [];
 			break;
-		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
-			dispatcher.__gwt_java_js_int_array = [];
+		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
+			//note that the value of the property can be replaced - its presence is what determines the JAVA_OBJECT subtype
+			dispatcher.__gwt_java_js_int_list = [];
 			break;
 	}
 	return new Proxy(dispatcher, gwt_hm_JavaObject.propertyDispatcher);
 }
-gwt_hm_JavaObject.wrapJavaObject = function (ret, javaObject, scriptableInstance) {
-	ret.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
-	if (javaObject.hasOwnProperty("__gwt_java_js_object_array")) {
-		var arr = javaObject.__gwt_java_js_object_array;
-		ret.setJavaObjectLength(arr.length);
+gwt_hm_JavaObject.wrapJavaObject = function (valueObj, javaObject, scriptableInstance) {
+	valueObj.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
+	if (javaObject.hasOwnProperty("__gwt_java_js_object_list")) {
+		var arr = javaObject.__gwt_java_js_object_list;
+		valueObj.setJavaObjectLength(arr.length);
 		for (var idx = 0; idx < arr.length; idx++) {
 			var obj = arr[idx];
-			ret.addJsObjectId(scriptableInstance.getLocalObjectRef(obj));
+			valueObj.addJsObjectId(scriptableInstance.getLocalObjectRef(obj));
 		}
-	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_array")) {
-		throw "unsuuppported";
+	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
+		var arr = javaObject.__gwt_java_js_int_list;
+		valueObj.setJavaObjectLength(arr.length);
+		for (var idx = 0; idx < arr.length; idx++) {
+			var iValue = arr[idx];
+			valueObj.addJsInt(iValue);
+		}
+	}
+}
+gwt_hm_JavaObject.unwrapJavaObject = function (valueObj, javaObject, scriptableInstance) {
+	ret.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
+	if (javaObject.hasOwnProperty("__gwt_java_js_object_list")) {
+		javaObject.__gwt_java_js_object_list = [];
+		var intArray = valueObj.getArray();
+		for (var idx = 0; idx < ret.length; idx++) {
+			var refId = arr[idx];
+			javaObject.__gwt_java_js_object_list.push(scriptableInstance.getLocalObject(refId));
+		}
+	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
+		javaObject.__gwt_java_js_object_list = valueObj.getArray();
 	}
 }

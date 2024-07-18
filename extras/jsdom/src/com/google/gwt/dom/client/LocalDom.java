@@ -21,6 +21,7 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DomIds.IdList;
 import com.google.gwt.dom.client.ElementJso.ElementJsoIndex;
+import com.google.gwt.dom.client.MarkupJso.MarkupToken;
 import com.google.gwt.dom.client.mutations.LocalMutations;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
@@ -774,7 +775,8 @@ public class LocalDom implements ContextFrame {
 	void localToRemoteInner0(Element element, String markup) {
 		IdList subtreeIds = domIds.getSubtreeIds(element);
 		pendingSync.remove(element);
-		new MarkupJso().markup(element, markup, subtreeIds.ids);
+		MarkupToken markupToken = new MarkupToken(element, markup, subtreeIds);
+		new MarkupJso().markup(markupToken);
 		element.resolvePendingSync();
 		wasSynced0(element);
 	}

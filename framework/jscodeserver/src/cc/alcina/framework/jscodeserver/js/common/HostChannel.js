@@ -243,19 +243,25 @@ class gwt_hm_HostChannel {
 				value.setJsObjectId(val);
 				return value;
 			}
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY: {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST: {
 				var val = this.readInt();
 				value.setJavaObjectId(val);
 				var len = this.readInt();
-				//tmp - only support zerolen
 				value.setJavaObjectLength(len);
-				if (len != 0) {
-					throw "unsupported non-zero length";
+				for (var idx = 0; idx < len; idx++) {
+					value.addJsObjectId(this.readInt());
 				}
 				return value;
 			}
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY: {
-				throw "unsupported VALUE_TYPE_JS_INT_ARRAY";
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST: {
+				var val = this.readInt();
+				value.setJavaObjectId(val);
+				var len = this.readInt();
+				value.setJavaObjectLength(len);
+				for (var idx = 0; idx < len; idx++) {
+					value.addJsInt(this.readInt());
+				}
+				return value;
 			}
 			default:
 				throw "Unhandled value type sent from server: " + type;
@@ -291,17 +297,16 @@ class gwt_hm_HostChannel {
 				return this.sendInt(value.getJsObjectId());
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
 				return this.sendInt(value.getJavaObjectId());
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
 				this.sendInt(value.getJavaObjectId());
 				var arr = value.getArray();
 				this.sendInt(arr.length);
 				for (var idx = 0; idx < arr.length; idx++) {
-					var refId = arr[idx];
-					this.sendInt(refId);
+					var intValue = arr[idx];
+					this.sendInt(intValue);
 				}
 				return;
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
-				throw "unsupported";
 			default:
 				throw "Unhandled value type sent to server: " + type;
 		}

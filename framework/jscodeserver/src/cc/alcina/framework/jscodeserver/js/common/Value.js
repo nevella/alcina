@@ -38,7 +38,7 @@ class gwt_hm_Value {
 		return this.intValue;
 	}
 	getJavaObjectId() {
-		if (this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY) {
+		if (this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST) {
 			//allowed
 		} else {
 			this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT);
@@ -62,10 +62,10 @@ class gwt_hm_Value {
 		return this.stringValue;
 	}
 	getArray() {
-		if (this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY) {
+		if (this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST) {
 			//allowed
 		} else {
-			this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY);
+			this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST);
 		}
 		return this.arrayValue;
 	}
@@ -177,11 +177,13 @@ class gwt_hm_Value {
 		this.intValue = val;
 	}
 	setJavaObjectLength(jsObjectLength) {
-		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY;
+		//the length parameter is unused (setting the js array length would require different handling)
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST;
 		this.arrayValue = [];
 	}
 	setJavaIntLength(intObjectLength) {
-		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY;
+		//the length parameter is unused (setting the js array length would require different handling)
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST;
 		this.arrayValue = [];
 	}
 	addJsObjectId(val) {
@@ -243,9 +245,9 @@ class gwt_hm_Value {
 				return "undefined";
 			case gwt_hm_BrowserChannel.VALUE_TYPE_UNUSED:
 				return "unused";
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_ARRAY:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
 				return `jsobj[]: ${this.getJsObjectId()}`;
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_ARRAY:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
 				return `int[]: ${this.getJsObjectId()}`;
 			default:
 				return "Unknown type";

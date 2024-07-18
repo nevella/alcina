@@ -186,8 +186,8 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 			jsval.setJavascriptObject(val.getJsObject());
 			break;
 		case JAVA_OBJECT:
-		case JS_INT_ARRAY:
-		case JS_OBJECT_ARRAY:
+		case JS_INT_LIST:
+		case JS_OBJECT_LIST:
 			assert ccl != null && localObjects != null;
 			Object dispatchObject = localObjects
 					.get(val.getJavaObject().getRefid());
@@ -195,14 +195,14 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 			switch (val.getType()) {
 			case JAVA_OBJECT:
 				break;
-			case JS_OBJECT_ARRAY: {
+			case JS_OBJECT_LIST: {
 				int[] arrayValues = val.getJavaObject().getArrayValues();
 				Object javaObject = ((DispatchObject) dispatchObject)
 						.getTarget();
 				ccl.writeToJavaScriptObjectList(arrayValues, javaObject);
 				break;
 			}
-			case JS_INT_ARRAY: {
+			case JS_INT_LIST: {
 				JavaScriptIntList list = (JavaScriptIntList) dispatchObject;
 				int[] arrayValues = val.getJavaObject().getArrayValues();
 				list.javaArray = arrayValues;
