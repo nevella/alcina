@@ -1039,6 +1039,9 @@ public class LocalDom implements ContextFrame {
 	public class RefidRepresentations {
 		public void applyEvent(DomEventData eventData) {
 			try {
+				if (eventData.event.getType().equals("click")) {
+					int debug = 3;
+				}
 				EventTarget eventTarget = eventData.event.getEventTarget();
 				switch (eventTarget.type) {
 				case window: {

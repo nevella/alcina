@@ -164,10 +164,12 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				if (eventType.equals("keydown") && event.getKeyCode() == 13) {
 					event.preventDefault();
 				}
-				if (eventType.equals("click")) {
-					if (!(elem.hasAttribute("href") && elem.hasTagName("a"))) {
-						event.preventDefault();
-					}
+			}
+			// prevent click
+			if (eventType.equals("click")) {
+				if (!(Ax.notBlank(elem.getAttribute("href"))
+						&& elem.hasTagName("a"))) {
+					event.preventDefault();
 				}
 			}
 			/*
