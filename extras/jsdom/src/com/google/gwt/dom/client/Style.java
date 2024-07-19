@@ -624,7 +624,7 @@ public class Style implements ClientDomStyle {
 
 	protected ClientDomStyle remote() {
 		element.validateRemoteStatePreMutation();
-		if (!linkedToRemote() && element.linkedToRemote()) {
+		if (!linkedToRemote() && element.hasRemote()) {
 			remote = element.ensureRemote().getStyleRemote();
 		}
 		return remote;
@@ -993,9 +993,10 @@ public class Style implements ClientDomStyle {
 	}
 
 	protected void sync(Runnable runnable) {
-		if (remote() instanceof StyleNull) {
+		if (remote == null) {
 			return;
 		}
+		// FIXME - refid2 - setsyncing??
 		try {
 			LocalDom.setSyncing(true);
 			runnable.run();

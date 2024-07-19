@@ -77,13 +77,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	}
 
 	@Override
-	public TextImplAccess implAccess() {
-		return new TextImplAccess();
-	}
-
-	@Override
 	public void insertData(int offset, String data) {
-		validateRemoteStatePreMutation();
 		local().insertData(offset, data);
 		sync(() -> remote().insertData(offset, data));
 	}
@@ -94,12 +88,12 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	}
 
 	@Override
-	protected TextJso jsoRemote() {
+	public TextJso jsoRemote() {
 		return (TextJso) remote();
 	}
 
 	@Override
-	protected boolean linkedToRemote() {
+	protected boolean hasRemote() {
 		return remote != TextNull.INSTANCE;
 	}
 
@@ -114,9 +108,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean synced) {
-		// refid2 - disabled
-		// Preconditions.checkState(wasSynced() == synced);
+	protected void putRemote(ClientDomNode remote) {
 		this.remote = (ClientDomText) remote;
 	}
 
@@ -127,7 +119,6 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	public void replaceData(int offset, int length, String data) {
-		validateRemoteStatePreMutation();
 		local().replaceData(offset, length, data);
 		sync(() -> remote().replaceData(offset, length, data));
 	}
@@ -144,7 +135,6 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	public void setData(String data) {
-		validateRemoteStatePreMutation();
 		local().setData(data);
 		sync(() -> remote().setData(data));
 	}
@@ -166,22 +156,5 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 	@Override
 	public String toString() {
 		return Ax.format("#TEXT[%s]", local().getData());
-	}
-
-	public class TextImplAccess extends Node.ImplAccess {
-		@Override
-		public TextJso ensureRemote() {
-			validateRemoteStatePreMutation();
-			return Text.this.jsoRemote();
-		}
-
-		@Override
-		public void putRemoteNoSideEffects(ClientDomNode remote) {
-			Text.this.remote = (ClientDomText) remote;
-		}
-
-		public TextJso typedRemote() {
-			return Text.this.jsoRemote();
-		}
 	}
 }

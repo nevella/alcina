@@ -354,7 +354,7 @@ public abstract class NodeJso extends JavaScriptObject
 	@Override
 	public final Node removeChild(Node oldChild) {
 		// removed node should never be used - so can optimise as follows
-		if (oldChild.linkedToRemote()) {
+		if (oldChild.hasRemote()) {
 			removeChild0(oldChild.remote());
 		}
 		return null;
@@ -427,7 +427,7 @@ public abstract class NodeJso extends JavaScriptObject
 		if (node == null) {
 			return null;
 		}
-		if (node.linkedToRemote()) {
+		if (node.hasRemote()) {
 			return node.remote();
 		} else {
 			if (node.wasSynced()) {

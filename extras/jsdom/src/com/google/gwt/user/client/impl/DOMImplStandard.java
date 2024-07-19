@@ -358,7 +358,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	@Override
 	public void sinkBitlessEvent(Element elem, String eventTypeName) {
 		maybeInitializeEventSystem();
-		if (elem.implAccess().linkedToRemote()) {
+		if (elem.implAccess().hasRemote()) {
 			sinkBitlessEventImpl(elem.implAccess().jsoRemote(), eventTypeName);
 		}
 	}
@@ -373,7 +373,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	@Override
 	public void sinkEvents(Element elem, int bits) {
 		maybeInitializeEventSystem();
-		if (elem.implAccess().linkedToRemote()) {
+		if (elem.implAccess().hasRemote()) {
 			sinkEventsImpl(elem.implAccess().jsoRemote(), bits);
 		}
 	}

@@ -31,7 +31,6 @@ import org.w3c.dom.TypeInfo;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
-import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DocumentRefid.InvokeProxy;
 import com.google.gwt.dom.client.DocumentRefid.InvokeProxy.Flag;
 import com.google.gwt.dom.client.DomIds.IdList;
@@ -51,12 +50,9 @@ import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * All HTML element interfaces derive from this class.
@@ -68,11 +64,8 @@ import cc.alcina.framework.common.client.util.TextUtils;
  */
 public class Element extends Node implements ClientDomElement,
 		org.w3c.dom.Element, EventListener, HasHandlers {
-	public static final String REMOTE_DEFINED = "__localdom-remote-defined";
-
-	public static final Predicate<Element> DISPLAY_NONE = e -> e.implAccess()
-			.ensureJsoRemote().getComputedStyle()
-			.getDisplayTyped() == Style.Display.NONE;
+	public static final Predicate<Element> DISPLAY_NONE = e -> e.jsoRemote()
+			.getComputedStyle().getDisplayTyped() == Style.Display.NONE;
 
 	/**
 	 * Constant returned from {@link #getDraggable()}.
@@ -199,7 +192,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public boolean addClassName(String className) {
-		validateRemoteStatePreMutation();
 		boolean result = local().addClassName(className);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "class", local().getClassName()));
@@ -258,16 +250,12 @@ public class Element extends Node implements ClientDomElement,
 		runIfWithRemote(false, () -> remote().blur());
 	}
 
-	ElementRemote ensureRemote() {
-		return implAccess().ensureRemote();
-	}
-
-	private <T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
+	<T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
 			T defaultValue) {
-		if (!linkedToRemote() && flush) {
-			ensureJsoRemote();
+		if (!hasRemote() && flush) {
+			jsoRemote();
 		}
-		if (linkedToRemote()) {
+		if (hasRemote()) {
 			return supplier.get();
 		} else {
 			return defaultValue;
@@ -294,56 +282,6 @@ public class Element extends Node implements ClientDomElement,
 		remote().dispatchEvent(evt);
 	}
 
-	public String dump(boolean linkToRemote) {
-		// Ax.out("\n\n**dump:\n");
-		// if (linkedToRemote()) {
-		// Ax.out("Outer html: \n%s\n\n", typedRemote().getOuterHtml());
-		// }
-		StringBuilder stringBuilder = new StringBuilder();
-		dumpLocal0(0, "0", linkToRemote, stringBuilder);
-		return stringBuilder.toString();
-	}
-
-	private void dumpLocal0(int depth, String prefix, boolean linkToRemote,
-			StringBuilder stringBuilder) {
-		String indent = CommonUtils.padStringLeft("", depth * 2, ' ');
-		String paadedPrefix = CommonUtils.padStringRight(prefix, 30, ' ');
-		if (!linkedToRemote() && linkToRemote) {
-			implAccess().ensureJsoRemote();
-		}
-		String code = !linkedToRemote() ? "f" : "t";
-		if (linkedToRemote()) {
-			if (local().getChildren().size() != jsoRemote().getChildNodes0()
-					.getLength()) {
-				code = "x";
-			}
-		}
-		String message = Ax.format("%s%s%s [%s]: ", prefix, indent,
-				getTagName(), code);
-		stringBuilder.append(message);
-		stringBuilder.append("\n");
-		int idx = 0;
-		for (Node node : getChildNodes()) {
-			switch (node.getNodeType()) {
-			case Node.TEXT_NODE:
-				message = Ax
-						.format("%s%s%s [t]: %s", prefix, indent, getNodeName(),
-								CommonUtils.trimToWsChars(
-										TextUtils.normalizeWhitespace(
-												node.getNodeValue()),
-										50, true));
-				stringBuilder.append(message);
-				stringBuilder.append("\n");
-				Ax.out(stringBuilder);
-				break;
-			case Node.ELEMENT_NODE:
-				((Element) node).dumpLocal0(depth + 1, prefix + "." + (idx++),
-						linkToRemote, stringBuilder);
-				break;
-			}
-		}
-	}
-
 	@Override
 	public Element elementFor() {
 		return node();
@@ -363,18 +301,6 @@ public class Element extends Node implements ClientDomElement,
 		return handlerManager == null
 				? handlerManager = new HandlerManager(this)
 				: handlerManager;
-	}
-
-	protected ElementJso ensureJsoRemote() {
-		LocalDom.flush();
-		LocalDom.ensureRemote(this);
-		return jsoRemote();
-	}
-
-	protected ElementRefid ensureRefidRemote() {
-		LocalDom.flush();
-		LocalDom.ensureRemote(this);
-		return refIdRemote();
 	}
 
 	@Override
@@ -399,27 +325,31 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void focus() {
-		((ClientDomElement) implAccess().ensureRemote()).focus();
+		runIfWithRemote(true, () -> remote().focus());
 	}
 
 	@Override
 	public int getAbsoluteBottom() {
-		return ensureJsoRemote().getAbsoluteBottom();
+		return callWithRemoteOrDefault(true, () -> remote().getAbsoluteBottom(),
+				0);
 	}
 
 	@Override
 	public int getAbsoluteLeft() {
-		return ensureJsoRemote().getAbsoluteLeft();
+		return callWithRemoteOrDefault(true, () -> remote().getAbsoluteLeft(),
+				0);
 	}
 
 	@Override
 	public int getAbsoluteRight() {
-		return ensureJsoRemote().getAbsoluteRight();
+		return callWithRemoteOrDefault(true, () -> remote().getAbsoluteRight(),
+				0);
 	}
 
 	@Override
 	public int getAbsoluteTop() {
-		return ensureJsoRemote().getAbsoluteTop();
+		return callWithRemoteOrDefault(true, () -> remote().getAbsoluteTop(),
+				0);
 	}
 
 	@Override
@@ -454,7 +384,8 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	public DomRect getBoundingClientRect() {
-		return ensureRemote().getBoundingClientRect();
+		return callWithRemoteOrDefault(true,
+				() -> remote().getBoundingClientRect(), null);
 	}
 
 	@Override
@@ -483,7 +414,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public String getClassName() {
-		if (Document.get().resolveSvgStyles && linkedToRemote()) {
+		if (Document.get().resolveSvgStyles && hasRemote()) {
 			return getClassNameSvg();
 		} else {
 			return local().getClassName();
@@ -531,10 +462,10 @@ public class Element extends Node implements ClientDomElement,
 		return remote().getDraggable();
 	}
 
+	@Deprecated
 	@Override
 	public NodeList<Element> getElementsByTagName(String name) {
-		ensureJsoRemote();
-		return remote().getElementsByTagName(name);
+		return jsoRemote().getElementsByTagName(name);
 	}
 
 	@Override
@@ -768,23 +699,14 @@ public class Element extends Node implements ClientDomElement,
 		return local().hasTagName(tagName);
 	}
 
-	@Override
-	public ElementImplAccess implAccess() {
-		return new ElementImplAccess();
-	}
-
 	private ClientDomElement implForPropertyName(String name) {
 		switch (name) {
 		case "clientWidth":
 		case "offsetWidth":
 			// TODO - warn maybe? non optimal. SliderBar one major cause
-			return ensureRemote();
+			return jsoRemote();
 		}
-		if (!wasSynced()) {
-			return local();
-		}
-		validateRemoteStatePreMutation();
-		if (linkedToRemote()) {
+		if (hasRemote()) {
 			return remote();
 		} else {
 			return local();
@@ -795,21 +717,17 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	protected boolean isPendingSync() {
-		return this.pendingSync;
+		return LocalDom.isPendingSync(this);
 	}
 
 	@Override
-	protected ElementJso jsoRemote() {
+	public ElementJso jsoRemote() {
+		LocalDom.flush();
 		return (ElementJso) remote();
 	}
 
 	private boolean linkedAndNotPending() {
-		return linkedToRemote() && !isPendingSync();
-	}
-
-	@Override
-	protected boolean linkedToRemote() {
-		return remote() != ElementNull.INSTANCE;
+		return hasRemote() && !isPendingSync();
 	}
 
 	@Override
@@ -892,12 +810,8 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	protected ElementRefid refIdRemote() {
+		LocalDom.flush();
 		return (ElementRefid) remote();
-	}
-
-	void pendingSync() {
-		Preconditions.checkState(!synced);
-		this.pendingSync = true;
 	}
 
 	public boolean provideIsAncestorOf(Element potentialChild,
@@ -912,36 +826,23 @@ public class Element extends Node implements ClientDomElement,
 		Preconditions.checkState(this.local == null);
 		this.local = local;
 		local.putElement(this);
-		this.remote = ElementNull.INSTANCE;
+		resetRemote();
 		return this;
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean synced) {
-		if (!GWT.isScript() && GWT.isClient() && Al.isBrowser()) {
-			// hosted mode (dev) check
-			String nodeName = remote.getNodeName();
-			Preconditions
-					.checkState(nodeName.equalsIgnoreCase(local.getNodeName()));
-		}
-		// refid2 - ignored
-		// Preconditions.checkState(wasSynced() == synced);
-		Preconditions.checkState(
-				this.remote == ElementNull.INSTANCE || remote == this.remote);
-		Preconditions.checkState(remote != null);
-		if (this.remote == ElementNull.INSTANCE) {
-			this.remote = (ClientDomElement) remote;
-			if (remote != null) {
-				if (local() != null) {
-					if (local().getEventBits() != 0) {
-						int existingBits = DOM.getEventsSunk(this);
-						DOM.sinkEvents(this,
-								existingBits | local().getEventBits());
-					}
-					if (local().bitlessEvents != null) {
-						local().bitlessEvents.forEach(eventTypeName -> DOM
-								.sinkBitlessEvent(this, eventTypeName));
-					}
+	protected void putRemote(ClientDomNode remote) {
+		Preconditions.checkState(this.remote == null || remote == null);
+		this.remote = (ClientDomElement) remote;
+		if (remote != null) {
+			if (local() != null) {
+				if (local().getEventBits() != 0) {
+					int existingBits = DOM.getEventsSunk(this);
+					DOM.sinkEvents(this, existingBits | local().getEventBits());
+				}
+				if (local().bitlessEvents != null) {
+					local().bitlessEvents.forEach(eventTypeName -> DOM
+							.sinkBitlessEvent(this, eventTypeName));
 				}
 			}
 		}
@@ -949,16 +850,11 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	protected ClientDomElement remote() {
-		if (getOwnerDocument().remoteType.hasRemote()) {
-			return remote;
-		} else {
-			return ElementNull.INSTANCE;
-		}
+		return remote;
 	}
 
 	@Override
 	public void removeAttribute(String name) {
-		validateRemoteStatePreMutation();
 		local().removeAttribute(name);
 		// FIXME - dirndl - dodesn't actually remove
 		notify(() -> LocalDom.getLocalMutations()
@@ -979,7 +875,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public boolean removeClassName(String className) {
-		validateRemoteStatePreMutation();
 		boolean result = local().removeClassName(className);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "class", local().getClassName()));
@@ -989,7 +884,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void replaceClassName(String oldClassName, String newClassName) {
-		validateRemoteStatePreMutation();
 		local().replaceClassName(oldClassName, newClassName);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "class", local().getClassName()));
@@ -1008,15 +902,23 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	protected void resetRemote0() {
-		this.remote = ElementNull.INSTANCE;
+		this.remote = null;
 		if (this.hasStyle()) {
 			this.style.resetRemote();
 		}
 	}
 
+	boolean isRefidRemote() {
+		return remote != null && remote().isRefid();
+	}
+
+	boolean isJsoRemote() {
+		return remote != null && remote().isJso();
+	}
+
 	public void resolvePendingSync() {
 		pendingSync = false;
-		if (implAccess().isRefidRemote()) {
+		if (isRefidRemote()) {
 			/*
 			 * all descendants are refId remotes
 			 */
@@ -1030,33 +932,11 @@ public class Element extends Node implements ClientDomElement,
 		}
 	}
 
-	// refid - remove (handled by mutations)
-	public boolean resolveRemoteDefined() {
-		try {
-			if (getClassName() != null
-					&& getClassName().contains(REMOTE_DEFINED)) {
-				Ax.out("resolve remote defined: %s", hashCode());
-				ensureJsoRemote();
-				LocalDom.syncToRemote(this);
-				UIObject.setStyleName(this, REMOTE_DEFINED, false);
-				return true;
-			} else {
-				return false;
-			}
-		} catch (Exception e) {
-			// FIXME - dirndl 1x1e - localdom - probably get a sample of these.
-			// For
-			// some apps, there are a lot - but correlated to
-			// LOCALDOM_UNABLE_TO_PARSE_ISSUE
-			return false;
-		}
-	}
-
 	private void runIfWithRemote(boolean flush, Runnable runnable) {
-		if (!linkedToRemote() && flush) {
-			ensureJsoRemote();
+		if (!hasRemote() && flush) {
+			LocalDom.flush();
 		}
-		if (linkedToRemote()) {
+		if (hasRemote()) {
 			runnable.run();
 		}
 	}
@@ -1072,7 +952,6 @@ public class Element extends Node implements ClientDomElement,
 		if (Objects.equals(current, value)) {
 			return;
 		}
-		validateRemoteStatePreMutation();
 		local().setAttribute(name, value);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, name, value));
@@ -1101,7 +980,6 @@ public class Element extends Node implements ClientDomElement,
 		if (Objects.equals(current, className)) {
 			return;
 		}
-		validateRemoteStatePreMutation();
 		local().setClassName(className);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "class", local().getClassName()));
@@ -1118,7 +996,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setDir(String dir) {
-		validateRemoteStatePreMutation();
 		local().setDir(dir);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "dir", local().getDir()));
@@ -1127,7 +1004,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setDraggable(String draggable) {
-		validateRemoteStatePreMutation();
 		local().setDraggable(draggable);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "draggable", local().getDraggable()));
@@ -1136,7 +1012,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setId(String id) {
-		validateRemoteStatePreMutation();
 		local().setId(id);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "id", local().getId()));
@@ -1162,8 +1037,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerHTML(String html) {
-		validateRemoteStatePreMutation();
-		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
@@ -1196,8 +1069,6 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	protected void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
-		validateRemoteStatePreMutation();
-		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		if (withPreRemove) {
@@ -1217,8 +1088,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerText(String text) {
-		validateRemoteStatePreMutation();
-		clearSynced();
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
@@ -1233,7 +1102,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setLang(String lang) {
-		validateRemoteStatePreMutation();
 		local().setLang(lang);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "lang", local().getLang()));
@@ -1242,20 +1110,16 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		// validateRemoteStatePreMutation();
-		// local().setNodeValue(nodeValue);
-		// sync(() -> remote().setNodeValue(nodeValue));
 		throw new UnsupportedOperationException();
 	}
 
 	public void setOuterHtml(String html) {
-		Preconditions.checkState(!linkedToRemote());
+		Preconditions.checkState(!hasRemote());
 		local().setOuterHtml(html);
 	}
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		validateRemoteStatePreMutation();
 		local().setPropertyBoolean(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1264,7 +1128,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyDouble(String name, double value) {
-		validateRemoteStatePreMutation();
 		local().setPropertyDouble(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1273,7 +1136,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyInt(String name, int value) {
-		validateRemoteStatePreMutation();
 		local().setPropertyInt(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1282,13 +1144,11 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyJSO(String name, JavaScriptObject value) {
-		validateRemoteStatePreMutation();
 		sync(() -> remote().setPropertyJSO(name, value));
 	}
 
 	@Override
 	public void setPropertyObject(String name, Object value) {
-		validateRemoteStatePreMutation();
 		local().setPropertyObject(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1297,7 +1157,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		validateRemoteStatePreMutation();
 		local().setPropertyString(name, value);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, name, String.valueOf(value)));
@@ -1306,17 +1165,16 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setScrollLeft(int scrollLeft) {
-		ensureRemote().setScrollLeft(scrollLeft);
+		runIfWithRemote(true, () -> remote().setScrollLeft(scrollLeft));
 	}
 
 	@Override
 	public void setScrollTop(int scrollTop) {
-		ensureRemote().setScrollTop(scrollTop);
+		runIfWithRemote(true, () -> remote().setScrollTop(scrollTop));
 	}
 
 	@Override
 	public void setTabIndex(int tabIndex) {
-		validateRemoteStatePreMutation();
 		local().setTabIndex(tabIndex);
 		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
 				this, "tabIndex", String.valueOf(tabIndex)));
@@ -1332,7 +1190,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setTitle(String title) {
-		validateRemoteStatePreMutation();
 		local().setTitle(title);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "title", title));
@@ -1353,7 +1210,6 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void toggleClassName(String className) {
-		validateRemoteStatePreMutation();
 		local().toggleClassName(className);
 		notify(() -> LocalDom.getLocalMutations()
 				.notifyAttributeModification(this, "class", getClassName()));
@@ -1383,12 +1239,7 @@ public class Element extends Node implements ClientDomElement,
 	 *
 	 *
 	 */
-	public class ElementImplAccess extends Node.ImplAccess {
-		public void appendChildLocalOnly(Element localOnly) {
-			// IE special case
-			local.getChildren().add(localOnly.local);
-		}
-
+	public class ElementImplAccess {
 		public void emitSinkBitlessEvent(String eventTypeName) {
 			ClientDomElement remote = remote();
 			if (remote instanceof ElementRefid) {
@@ -1403,21 +1254,8 @@ public class Element extends Node implements ClientDomElement,
 			}
 		}
 
-		public ElementJso ensureJsoRemote() {
-			return Element.this.ensureJsoRemote();
-		}
-
-		public ElementRefid ensureRefidRemote() {
-			return Element.this.ensureRefidRemote();
-		}
-
 		public NodeJso jsoChild(int index) {
-			return ensureJsoRemote().getChildNodes0().getItem0(index);
-		}
-
-		@Override
-		public ElementJso jsoRemote() {
-			return Element.this.jsoRemote();
+			return jsoRemote().getChildNodes0().getItem0(index);
 		}
 
 		public ElementJso jsoRemoteOrNull() {
@@ -1434,10 +1272,9 @@ public class Element extends Node implements ClientDomElement,
 		}
 
 		public boolean linkedToRemote() {
-			return Element.this.linkedToRemote();
+			return Element.this.hasRemote();
 		}
 
-		@Override
 		public ElementLocal local() {
 			return Element.this.local();
 		}
@@ -1450,23 +1287,13 @@ public class Element extends Node implements ClientDomElement,
 			return Element.this.provideSelfOrAncestorLinkedToRemote();
 		}
 
-		@Override
-		public void putRemoteNoSideEffects(ClientDomNode remote) {
-			Element.this.remote = (ClientDomElement) remote;
-		}
-
-		@Override
 		public ClientDomElement remote() {
 			return Element.this.remote();
-		}
-
-		public boolean wasSynced() {
-			return Element.this.wasSynced();
 		}
 	}
 
 	public void setSelectionRange(int pos, int length) {
-		ensureRemote().setSelectionRange(pos, length);
+		jsoRemote().setSelectionRange(pos, length);
 	}
 
 	/*

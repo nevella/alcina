@@ -423,7 +423,7 @@ public class ClientUtils {
 	}-*/;
 
 	public static void setElementStyle(Element eltMulti, String css) {
-		if (eltMulti.implAccess().linkedToRemote()) {
+		if (eltMulti.implAccess().hasRemote()) {
 			setElementStyle0(eltMulti, css);
 		} else {
 			eltMulti.setAttribute("style", css);

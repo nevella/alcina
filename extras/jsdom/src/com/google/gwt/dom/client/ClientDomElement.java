@@ -309,4 +309,6 @@ public interface ClientDomElement extends ClientDomNode {
 	 *            the class name to be toggled
 	 */
 	void toggleClassName(String className);
+
+	DomRect getBoundingClientRect();
 }

@@ -39,52 +39,31 @@ import cc.alcina.framework.common.client.util.Ax;
  * all objects implementing the Node interface may have children.
  * 
  * <p>
- * Nodes have two boolean states - {@link #attached} - attached to the document
- * element and {@link #synced} - synced to the remote. These could be
- * represented by a 4-state enum - I think it's clearer this way
+ * Nodes are manipulated and modelled primarily by their {@link NodeLocal}
+ * children, and then synced to the "real" DOM tree modelled by their
+ * {@link NodeRemote} children
+ * <p>
+ * Nodes have three boolean states:
+ * </p>
+ * <ul>
+ * <li>{@link #attached} - attached to the document element. This is stored in a
+ * boolean field on {@link Node} and corresponds to browser DOM isConnected()
+ * <li>{@link #isSynced()} - synced to the remote DOM, modelled by the presence
+ * of a value in the remote field of the contract type
+ * <li>{@link #isPending()} - ({@link Element} only) synced to the remote DOM,
+ * but all children are *not* and will be synced at the end of the current event
+ * loop cycle via (effectively) {@link Element#setInnerHTML(String)}. This is
+ * modelled by the presence of the element in the {@link LocalDom#pendingSync}
+ * list
+ * </ul>
+ * <p>
+ * For sync, note that {@link Element} has a {@link Style} child which has the
+ * same pattern of client-visible model type with a local and remote
+ * implementation field
  */
 @Reflected
 public abstract class Node
 		implements JavascriptObjectEquivalent, ClientDomNode, org.w3c.dom.Node {
-	/**
-	 * For subtypes, most of the methods assume the remote() is a NodeJso -
-	 * where that's not the case, the methods should return null if the remote
-	 * is a NodeRefid subtype
-	 *
-	 * 
-	 *
-	 */
-	public class ImplAccess {
-		public <E extends ClientDomNode> E ensureRemote() {
-			LocalDom.ensureRemote(Node.this);
-			return remote();
-		}
-
-		public boolean isJsoRemote() {
-			return remote().isJso();
-		}
-
-		public boolean isRefidRemote() {
-			return remote().isRefid();
-		}
-
-		public NodeJso jsoRemote() {
-			return remote();
-		}
-
-		public <E extends ClientDomNode> E local() {
-			return (E) Node.this.local();
-		}
-
-		public void putRemoteNoSideEffects(ClientDomNode remote) {
-			throw new UnsupportedOperationException();
-		}
-
-		public <E extends ClientDomNode> E remote() {
-			return (E) Node.this.remote();
-		}
-	}
-
 	class ChildNodeList extends AbstractList<Node> {
 		@Override
 		public Node get(int index) {
@@ -135,15 +114,12 @@ public abstract class Node
 
 	boolean attached;
 
-	boolean synced;
-
 	/*
 	 * Attached nodes will have a non-zero refId, which is used for tree sync
 	 */
 	int refId;
 
 	protected Node() {
-		resetRemote();
 	}
 
 	public boolean isAttached() {
@@ -309,10 +285,6 @@ public abstract class Node
 	@Override
 	public boolean hasParentElement() {
 		return ClientDomNodeStatic.hasParentElement(this);
-	}
-
-	public ImplAccess implAccess() {
-		return new ImplAccess();
 	}
 
 	@Override
@@ -484,7 +456,6 @@ public abstract class Node
 
 	@Override
 	public void setNodeValue(String nodeValue) {
-		validateRemoteStatePreMutation();
 		local().setNodeValue(nodeValue);
 		notify(() -> LocalDom.getLocalMutations().notifyCharacterData(this,
 				nodeValue));
@@ -530,24 +501,15 @@ public abstract class Node
 		}
 	}
 
-	/**
-	 * Priot to all mutations, if the node was synced, we need to make sure the
-	 * remote is the actual remote to keep the trees consistent
-	 *
-	 */
-	protected void validateRemoteStatePreMutation() {
-		if (synced) {
-			LocalDom.ensureRemote(this);
-		}
-	}
-
 	protected boolean isPendingSync() {
 		return false;
 	}
 
-	protected abstract NodeJso jsoRemote();
+	public abstract NodeJso jsoRemote();
 
-	protected abstract boolean linkedToRemote();
+	protected final boolean hasRemote() {
+		return remote() != null;
+	}
 
 	protected abstract <T extends NodeLocal> T local();
 
@@ -567,7 +529,7 @@ public abstract class Node
 	}
 
 	protected Node provideSelfOrAncestorLinkedToRemote() {
-		if (linkedToRemote()) {
+		if (hasRemote()) {
 			return this;
 		}
 		if (getParentElement() != null) {
@@ -576,7 +538,7 @@ public abstract class Node
 		return null;
 	}
 
-	protected abstract void putRemote(ClientDomNode remote, boolean synced);
+	protected abstract void putRemote(ClientDomNode remote);
 
 	protected abstract <T extends ClientDomNode> T remote();
 
@@ -585,7 +547,6 @@ public abstract class Node
 	 */
 	final void resetRemote() {
 		resetRemote0();
-		synced = false;
 	}
 
 	protected abstract void resetRemote0();
@@ -595,7 +556,7 @@ public abstract class Node
 	 * require it
 	 */
 	protected void sync(Runnable runnable) {
-		if (remote() instanceof NodeLocalNull || !LocalDom.isApplyToRemote()) {
+		if (remote() == null || !LocalDom.isApplyToRemote()) {
 			return;
 		}
 		try {
@@ -622,28 +583,11 @@ public abstract class Node
 			onAttach();
 		} else {
 			// clear all tree domNodes but relink this (top of removed tree)
-			// post onDetach
+			// post onDetach so that calling code can remove from remote dom
 			ClientDomNode remote = remote();
 			onDetach();
-			implAccess().putRemoteNoSideEffects(remote);
+			putRemote(remote, synced);
 		}
-	}
-
-	/**
-	 * only call on reparse
-	 */
-	final void clearSynced() {
-		// syncId = 0;
-	}
-
-	void onSync(int syncId) {
-		// Preconditions.checkState(this.syncId == 0 || this.syncId == syncId);
-		// this.syncId = syncId;
-	}
-
-	boolean wasSynced() {
-		// return syncId > 0;
-		return false;
 	}
 
 	@Override

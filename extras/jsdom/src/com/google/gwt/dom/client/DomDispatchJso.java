@@ -6,7 +6,7 @@ public class DomDispatchJso implements DomDispatchContract {
 
 	@Override
 	public void buttonClick(ButtonElement button) {
-		domImpl.buttonClick(button.implAccess().ensureJsoRemote());
+		domImpl.buttonClick(button.jsoRemote());
 	}
 
 	public ElementJso createElement(String tagName) {
@@ -45,7 +45,7 @@ public class DomDispatchJso implements DomDispatchContract {
 	@Override
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
-		if (select.linkedToRemote()) {
+		if (select.hasRemote()) {
 			domImpl.selectAdd(select.jsoRemote(), option.jsoRemote(),
 					before == null ? null : before.jsoRemote());
 		}
@@ -53,14 +53,14 @@ public class DomDispatchJso implements DomDispatchContract {
 
 	@Override
 	public void selectClear(SelectElement select) {
-		if (select.linkedToRemote()) {
+		if (select.hasRemote()) {
 			domImpl.selectClear(select.jsoRemote());
 		}
 	}
 
 	@Override
 	public void selectRemoveOption(SelectElement select, int index) {
-		if (select.linkedToRemote()) {
+		if (select.hasRemote()) {
 			domImpl.selectRemoveOption(select.jsoRemote(), index);
 		}
 	}

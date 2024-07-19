@@ -20,7 +20,6 @@ import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DomIds.IdList;
-import com.google.gwt.dom.client.ElementJso.ElementJsoIndex;
 import com.google.gwt.dom.client.MarkupJso.MarkupToken;
 import com.google.gwt.dom.client.mutations.LocalMutations;
 import com.google.gwt.dom.client.mutations.MutationNode;
@@ -34,6 +33,7 @@ import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
@@ -418,13 +418,9 @@ public class LocalDom implements ContextFrame {
 
 	List<Node> pendingSync = new ArrayList<>();
 
+	Set<Node> pendingSyncSet = AlcinaCollections.newUniqueSet();
+
 	ScheduledCommand flushCommand = null;
-
-	int syncEventId = 1;
-
-	boolean syncEventIdDirty;
-
-	boolean syncing;
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
@@ -484,7 +480,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public void ensurePendingSynced(Node node) {
-		Preconditions.checkState(node.linkedToRemote());
+		Preconditions.checkState(node.hasRemote());
 		Element element = (Element) node;
 		if (element.isPendingSync()) {
 			ClientDomElement local = node.local();
@@ -510,7 +506,7 @@ public class LocalDom implements ContextFrame {
 		}
 		// temp - flush during large mutation application has unwanted side
 		// effects, don't verify tree linkage if node is already linked
-		if (node.linkedToRemote()) {
+		if (node.hasRemote()) {
 			// this may have side-effects - but most of this is going away
 			return;
 		}
@@ -519,7 +515,7 @@ public class LocalDom implements ContextFrame {
 		Node cursor = node;
 		Node withRemote = null;
 		while (cursor != null) {
-			if (cursor.linkedToRemote()) {
+			if (cursor.hasRemote()) {
 				withRemote = cursor;
 				break;
 			} else {
@@ -548,7 +544,7 @@ public class LocalDom implements ContextFrame {
 	private void ensureRemote0Refid(Node node) {
 		Node cursor = node;
 		while (cursor != null) {
-			if (cursor.linkedToRemote()) {
+			if (cursor.hasRemote()) {
 				break;
 			} else {
 				cursor.putRemote(NodeRefid.create(node), cursor.wasSynced());
@@ -559,7 +555,7 @@ public class LocalDom implements ContextFrame {
 
 	ClientDomNode ensureRemoteNodeMaybePendingSync0(Node node,
 			boolean ensureFlush) {
-		if (node.linkedToRemote()) {
+		if (node.hasRemote()) {
 			return node.remote();
 		}
 		if (ensureFlush) {
@@ -608,6 +604,9 @@ public class LocalDom implements ContextFrame {
 		flush0(false);
 	}
 
+	// FIXME - refid2 - is this needed? verifyMutatingState0?
+	boolean syncing;
+
 	void flush0(boolean force) {
 		if (syncing) {
 			return;
@@ -618,22 +617,15 @@ public class LocalDom implements ContextFrame {
 		flushCommand = null;
 		try {
 			syncing = true;
-			if (syncEventIdDirty) {
-				syncEventId++;
-				syncEventIdDirty = false;
-			}
+			pendingSyncSet.clear();
 			// clear nodes enqueued for sync, then removed
 			pendingSync.removeIf(n -> n.getParentNode() == null);
 			new ArrayList<>(pendingSync).stream()
 					.forEach(this::ensurePendingSynced);
-			if (syncEventIdDirty) {
-				syncEventId++;
-			}
 		} catch (RuntimeException re) {
 			topicReportException.publish(re);
 			throw re;
 		} finally {
-			syncEventIdDirty = false;
 			syncing = false;
 		}
 		/*
@@ -791,15 +783,17 @@ public class LocalDom implements ContextFrame {
 				// avoid webkit rewriting as multiple text nodes (if large)
 				Text text = (Text) element.getFirstChild();
 				ensureRemoteNodeMaybePendingSync0(text, false);
-				TextJso textJso = text.implAccess().ensureRemote();
+				TextJso textJso = text.jsoRemote();
 				jsoRemote.appendChild0(textJso);
 				textJso.setData(text.getData());
 				int childCount = remote.getChildCount();
 				Preconditions.checkState(childCount == 1);
 			} else {
-				String innerMarkup = local.getInnerHTML();
+				String localMarkup = local.getInnerHTML();
 				IdList subtreeIds = domIds.getSubtreeIds(element);
-				new MarkupJso().markup(element, innerMarkup, subtreeIds.ids);
+				MarkupToken markupToken = new MarkupToken(element, localMarkup,
+						subtreeIds);
+				new MarkupJso().markup(markupToken);
 				// doesn't include style
 				local.getAttributeMap().entrySet().forEach(e -> {
 					String value = e.getValue();
@@ -858,64 +852,10 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	private void putRemote0(Element element, ElementJso remote) {
-		flush();
-		syncEventId++;
-		wasSynced(element);
-		element.putRemote(remote, true);
-	}
-
-	private boolean shouldTryReparseFromRemote(ElementJso elem, Element hasNode,
-			ElementJsoIndex remoteIndex) {
-		if (remoteIndex.hasRemoteDefined()) {
-			return false;
-		}
-		List<Integer> sizes = remoteIndex.sizes();
-		List<Integer> indicies = remoteIndex.indicies();
-		boolean sizesMatch = true;
-		Element cursor = hasNode;
-		for (int idx = sizes.size() - 1; idx >= 0; idx--) {
-			int size = sizes.get(idx);
-			if (cursor.getChildCount() != size) {
-				sizesMatch = false;
-				break;
-			}
-			int nodeIndex = indicies.get(idx);
-			Node node = cursor.getChild(nodeIndex);
-			if (node.getNodeType() != Node.ELEMENT_NODE) {
-				return true;
-			}
-			cursor = (Element) node;
-		}
-		if (sizesMatch) {
-			return false;
-		}
-		return true;
-	}
-
-	// refid - fix
-	private String validateHtml0(String html) {
-		DivElement div = Document.get().createDivElement();
-		ensureRemote(div);
-		ElementJso typedRemote = div.implAccess().jsoRemote();
-		typedRemote.setInnerHTML(html);
-		try {
-			return typedRemote.getInnerHTML0();
-		} catch (Exception e) {
-			topicReportException.publish(e);
-			return html;
-		}
-	}
-
 	private void verifyMutatingState0() {
 		Preconditions
 				.checkArgument(syncing || (remoteMutations.isObserverConnected()
 						|| !remoteMutations.isEnabled()));
-	}
-
-	private void wasSynced0(Element elem) {
-		elem.local().walk(nl -> nl.node().onSync(syncEventId));
-		syncEventIdDirty = true;
 	}
 
 	public static class LocalDomCollections {
@@ -1156,5 +1096,13 @@ public class LocalDom implements ContextFrame {
 		} else {
 			return false;
 		}
+	}
+
+	public static boolean isPendingSync(Element element) {
+		return get().isPendingSync0(element);
+	}
+
+	boolean isPendingSync0(Element element) {
+		return pendingSyncSet.contains(element);
 	}
 }

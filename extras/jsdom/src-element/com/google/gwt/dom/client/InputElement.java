@@ -79,7 +79,7 @@ public class InputElement extends Element {
 	}
 
 	public final void click() {
-		click0(ensureJsoRemote());
+		click0(jsoRemote());
 	}
 
 	/**
@@ -410,14 +410,13 @@ public class InputElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		validateRemoteStatePreMutation();
 		if ((name.equals("checked") || name.equals("defaultChecked")
 				|| name.equals("disabled")) && !Boolean.valueOf(value)) {
 			local().removeAttribute(name);
 		} else {
 			local().setPropertyBoolean(name, value);
 		}
-		remote().setPropertyBoolean(name, value);
+		sync(() -> remote().setPropertyBoolean(name, value));
 	}
 
 	/**

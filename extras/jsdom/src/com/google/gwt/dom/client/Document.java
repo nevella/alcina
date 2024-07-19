@@ -1000,11 +1000,6 @@ public class Document extends Node
 	}
 
 	@Override
-	public DocumentImplAccess implAccess() {
-		return new DocumentImplAccess();
-	}
-
-	@Override
 	public void importNode(Node node, boolean deep) {
 		local.importNode(node, deep);
 		remote.importNode(node, deep);
@@ -1027,11 +1022,6 @@ public class Document extends Node
 	}
 
 	@Override
-	protected boolean linkedToRemote() {
-		return true;
-	}
-
-	@Override
 	protected DocumentLocal local() {
 		return local;
 	}
@@ -1051,7 +1041,7 @@ public class Document extends Node
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean resolved) {
+	protected void putRemote(ClientDomNode remote) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -1119,16 +1109,6 @@ public class Document extends Node
 		Document contextDocument();
 
 		void registerCreatedDocument(Document document);
-	}
-
-	public class DocumentImplAccess extends ImplAccess {
-		public DocumentRefid refIdRemote() {
-			return remote();
-		}
-
-		public Node getNode(Refid refId) {
-			return localDom.domIds.getNode(refId);
-		}
 	}
 
 	@Registration.Singleton(DomDocument.PerDocumentSupplier.class)

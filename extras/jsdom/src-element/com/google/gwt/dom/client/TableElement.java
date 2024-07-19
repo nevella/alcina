@@ -95,7 +95,7 @@ public class TableElement extends Element {
 																	}-*/;
 
 	public TableSectionElement createTFoot() {
-		Preconditions.checkState(!linkedToRemote());
+		Preconditions.checkState(!hasRemote());
 		return (TableSectionElement) local().createOrReturnChild("tfoot");
 	}
 
@@ -109,7 +109,7 @@ public class TableElement extends Element {
 																	}-*/;
 
 	public TableSectionElement createTHead() {
-		Preconditions.checkState(!linkedToRemote());
+		Preconditions.checkState(!hasRemote());
 		return (TableSectionElement) local().createOrReturnChild("thead");
 		// else case remote to TableElementJso, write there
 	}
@@ -252,7 +252,7 @@ public class TableElement extends Element {
 	 * Returns a collection of the table bodies (including implicit ones).
 	 */
 	public NodeList<TableSectionElement> getTBodies() {
-		Preconditions.checkState(!linkedToRemote());
+		Preconditions.checkState(!hasRemote());
 		TableSectionElement body = (TableSectionElement) local()
 				.createOrReturnChild("tbody");
 		return new NodeList<>(

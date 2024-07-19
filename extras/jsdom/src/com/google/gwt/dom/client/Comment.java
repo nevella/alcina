@@ -17,8 +17,6 @@ package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -41,7 +39,6 @@ public class Comment extends Node
 
 	protected Comment(CommentLocal local) {
 		this.local = local;
-		this.remote = CommentNull.INSTANCE;
 	}
 
 	@Override
@@ -76,25 +73,14 @@ public class Comment extends Node
 	}
 
 	@Override
-	public CommentImplAccess implAccess() {
-		return new CommentImplAccess();
-	}
-
-	@Override
 	public void insertData(int offset, String data) {
-		validateRemoteStatePreMutation();
 		local().insertData(offset, data);
 		sync(() -> remote().insertData(offset, data));
 	}
 
 	@Override
-	protected CommentJso jsoRemote() {
+	public CommentJso jsoRemote() {
 		return (CommentJso) remote();
-	}
-
-	@Override
-	protected boolean linkedToRemote() {
-		return remote != CommentNull.INSTANCE;
 	}
 
 	@Override
@@ -108,8 +94,7 @@ public class Comment extends Node
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean synced) {
-		Preconditions.checkState(wasSynced() == synced);
+	protected void putRemote(ClientDomNode remote) {
 		this.remote = (ClientDomComment) remote;
 	}
 
@@ -120,19 +105,17 @@ public class Comment extends Node
 
 	@Override
 	public void replaceData(int offset, int length, String data) {
-		validateRemoteStatePreMutation();
 		local().replaceData(offset, length, data);
 		sync(() -> remote().replaceData(offset, length, data));
 	}
 
 	@Override
 	protected void resetRemote0() {
-		this.remote = CommentNull.INSTANCE;
+		this.remote = null;
 	}
 
 	@Override
 	public void setData(String data) {
-		validateRemoteStatePreMutation();
 		local().setData(data);
 		sync(() -> remote().setData(data));
 	}
@@ -150,22 +133,5 @@ public class Comment extends Node
 	@Override
 	public String toString() {
 		return Ax.format("#COMMENT[%s]", local().getData());
-	}
-
-	public class CommentImplAccess extends Node.ImplAccess {
-		@Override
-		public CommentJso ensureRemote() {
-			validateRemoteStatePreMutation();
-			return Comment.this.jsoRemote();
-		}
-
-		@Override
-		public void putRemoteNoSideEffects(ClientDomNode remote) {
-			Comment.this.remote = (ClientDomComment) remote;
-		}
-
-		public CommentJso typedRemote() {
-			return Comment.this.jsoRemote();
-		}
 	}
 }

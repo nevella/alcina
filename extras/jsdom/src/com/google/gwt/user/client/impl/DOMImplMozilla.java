@@ -60,7 +60,7 @@ class DOMImplMozilla extends DOMImplStandard {
 	@Override
 	public void sinkEvents(Element elem, int bits) {
 		super.sinkEvents(elem, bits);
-		if (elem.implAccess().linkedToRemote()) {
+		if (elem.implAccess().hasRemote()) {
 			sinkEventsMozilla(elem.implAccess().jsoRemoteOrNull(), bits);
 		}
 	}

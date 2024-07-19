@@ -901,12 +901,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		}
 
 		@Override
-		protected NodeJso jsoRemote() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		protected boolean linkedToRemote() {
+		public NodeJso jsoRemote() {
 			throw new UnsupportedOperationException();
 		}
 
@@ -920,8 +915,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 			throw new UnsupportedOperationException();
 		}
 
-		@Override
-		protected void putRemote(ClientDomNode remote, boolean synced) {
+		protected void putRemote(ClientDomNode remote) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -942,5 +936,11 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	enum AttrParseState {
 		START, NAME, EQ, VALUE
+	}
+
+	@Override
+	public DomRect getBoundingClientRect() {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'getBoundingClientRect'");
 	}
 }

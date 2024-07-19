@@ -107,8 +107,7 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 				.nextTextNode(true).get();
 		Node cursorNode = cursorTarget.domNode().gwtNode();
 		SelectionJso selection = Document.get().jsoRemote().getSelection();
-		cursorNode.implAccess().ensureRemote();
-		NodeJso remote = cursorNode.implAccess().jsoRemote();
+		NodeJso remote = cursorNode.jsoRemote();
 		NodeJso rr1 = remote.getParentNodeJso();
 		selection.collapse(remote, 1);// after zws
 	}
@@ -254,8 +253,7 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 			LocalDom.flush();
 			SelectionJso selection = Document.get().jsoRemote().getSelection();
 			Text text = (Text) splits.contents.w3cNode();
-			selection.collapse(text.implAccess().ensureRemote(),
-					text.getLength());
+			selection.collapse(text.jsoRemote(), text.getLength());
 			return created;
 		}
 

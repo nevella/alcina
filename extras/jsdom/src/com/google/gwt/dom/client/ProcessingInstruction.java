@@ -17,8 +17,6 @@ package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -65,17 +63,12 @@ public class ProcessingInstruction extends Node implements
 	}
 
 	@Override
-	public ProcessingInstructionImplAccess implAccess() {
-		return new ProcessingInstructionImplAccess();
-	}
-
-	@Override
-	protected ProcessingInstructionJso jsoRemote() {
+	public ProcessingInstructionJso jsoRemote() {
 		return (ProcessingInstructionJso) remote();
 	}
 
 	@Override
-	protected boolean linkedToRemote() {
+	protected boolean hasRemote() {
 		return remote != ProcessingInstructionNull.INSTANCE;
 	}
 
@@ -90,8 +83,7 @@ public class ProcessingInstruction extends Node implements
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean synced) {
-		Preconditions.checkState(wasSynced() == synced);
+	protected void putRemote(ClientDomNode remote) {
 		this.remote = (ClientDomProcessingInstruction) remote;
 	}
 
@@ -107,7 +99,6 @@ public class ProcessingInstruction extends Node implements
 
 	@Override
 	public void setData(String data) {
-		validateRemoteStatePreMutation();
 		local().setData(data);
 		sync(() -> remote().setData(data));
 	}
@@ -115,22 +106,5 @@ public class ProcessingInstruction extends Node implements
 	@Override
 	public String toString() {
 		return Ax.format("<?%s %s?>", local().getTarget(), local().getData());
-	}
-
-	public class ProcessingInstructionImplAccess extends Node.ImplAccess {
-		@Override
-		public ProcessingInstructionJso ensureRemote() {
-			validateRemoteStatePreMutation();
-			return ProcessingInstruction.this.jsoRemote();
-		}
-
-		@Override
-		public void putRemoteNoSideEffects(ClientDomNode remote) {
-			ProcessingInstruction.this.remote = (ClientDomProcessingInstruction) remote;
-		}
-
-		public ProcessingInstructionJso typedRemote() {
-			return ProcessingInstruction.this.jsoRemote();
-		}
 	}
 }

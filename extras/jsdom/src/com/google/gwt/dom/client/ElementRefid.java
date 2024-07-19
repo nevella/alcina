@@ -51,13 +51,13 @@ public class ElementRefid extends NodeRefid implements ElementRemote {
 	}
 
 	public void emitSinkBitlessEvent(String eventTypeName) {
-		getOwnerDocument().implAccess().refIdRemote()
-				.emitSinkBitlessEvent(elementFor(), eventTypeName);
+		getOwnerDocument().refIdRemote().emitSinkBitlessEvent(elementFor(),
+				eventTypeName);
 	}
 
 	public void emitSinkEvents(int eventBits) {
-		getOwnerDocument().implAccess().refIdRemote()
-				.emitSinkEvents(elementFor(), eventBits);
+		getOwnerDocument().refIdRemote().emitSinkEvents(elementFor(),
+				eventBits);
 	}
 
 	@Override

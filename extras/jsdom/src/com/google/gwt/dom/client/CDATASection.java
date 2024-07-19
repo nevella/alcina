@@ -17,8 +17,6 @@ package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -41,7 +39,6 @@ public class CDATASection extends Node
 
 	protected CDATASection(CDATASectionLocal local) {
 		this.local = local;
-		this.remote = CDATASectionNull.INSTANCE;
 	}
 
 	@Override
@@ -81,13 +78,7 @@ public class CDATASection extends Node
 	}
 
 	@Override
-	public CDATASectionImplAccess implAccess() {
-		return new CDATASectionImplAccess();
-	}
-
-	@Override
 	public void insertData(int offset, String data) {
-		validateRemoteStatePreMutation();
 		local().insertData(offset, data);
 		sync(() -> remote().insertData(offset, data));
 	}
@@ -98,13 +89,8 @@ public class CDATASection extends Node
 	}
 
 	@Override
-	protected CDATASectionJso jsoRemote() {
+	public CDATASectionJso jsoRemote() {
 		return (CDATASectionJso) remote();
-	}
-
-	@Override
-	protected boolean linkedToRemote() {
-		return remote != CDATASectionNull.INSTANCE;
 	}
 
 	@Override
@@ -118,8 +104,7 @@ public class CDATASection extends Node
 	}
 
 	@Override
-	protected void putRemote(ClientDomNode remote, boolean synced) {
-		Preconditions.checkState(wasSynced() == synced);
+	protected void putRemote(ClientDomNode remote) {
 		this.remote = (ClientDomCDATASection) remote;
 	}
 
@@ -130,7 +115,6 @@ public class CDATASection extends Node
 
 	@Override
 	public void replaceData(int offset, int length, String data) {
-		validateRemoteStatePreMutation();
 		local().replaceData(offset, length, data);
 		sync(() -> remote().replaceData(offset, length, data));
 	}
@@ -138,18 +122,16 @@ public class CDATASection extends Node
 	@Override
 	public org.w3c.dom.Text replaceWholeText(String content)
 			throws DOMException {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	protected void resetRemote0() {
-		this.remote = CDATASectionNull.INSTANCE;
+		this.remote = null;
 	}
 
 	@Override
 	public void setData(String data) {
-		validateRemoteStatePreMutation();
 		local().setData(data);
 		sync(() -> remote().setData(data));
 	}
@@ -167,22 +149,5 @@ public class CDATASection extends Node
 	@Override
 	public String toString() {
 		return Ax.format("#TEXT[%s]", local().getData());
-	}
-
-	public class CDATASectionImplAccess extends Node.ImplAccess {
-		@Override
-		public CDATASectionJso ensureRemote() {
-			validateRemoteStatePreMutation();
-			return CDATASection.this.jsoRemote();
-		}
-
-		@Override
-		public void putRemoteNoSideEffects(ClientDomNode remote) {
-			CDATASection.this.remote = (ClientDomCDATASection) remote;
-		}
-
-		public CDATASectionJso typedRemote() {
-			return CDATASection.this.jsoRemote();
-		}
 	}
 }

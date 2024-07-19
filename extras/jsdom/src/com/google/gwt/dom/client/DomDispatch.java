@@ -395,13 +395,13 @@ public class DomDispatch implements DomDispatchContract {
 	@Override
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
-		if (select.linkedToRemote()) {
-			select.ensureJsoRemote();
-			option.ensureJsoRemote();
-			if (before != null) {
-				before.ensureJsoRemote();
-			}
-		}
+		// if (select.hasRemote()) {
+		// select.ensureJsoRemote();
+		// option.ensureJsoRemote();
+		// if (before != null) {
+		// before.ensureJsoRemote();
+		// }
+		// }
 		// remote before local - otherwise the indicies will be out
 		remote().selectAdd(select, option, before);
 		local().selectAdd(select, option, before);
@@ -409,7 +409,6 @@ public class DomDispatch implements DomDispatchContract {
 
 	@Override
 	public void selectClear(SelectElement select) {
-		select.validateRemoteStatePreMutation();
 		remote().selectClear(select);
 		local().selectClear(select);
 	}
@@ -425,18 +424,15 @@ public class DomDispatch implements DomDispatchContract {
 
 	@Override
 	public void selectRemoveOption(SelectElement select, int index) {
-		select.validateRemoteStatePreMutation();
 		remote().selectRemoveOption(select, index);
 		local().selectRemoveOption(select, index);
 	}
 
 	public void setDraggable(Element elem, String draggable) {
-		elem.ensureJsoRemote();
 		jsoImpl().setDraggable(elem.jsoRemote(), draggable);
 	}
 
 	public void setInnerText(Element elem, String text) {
-		elem.ensureJsoRemote();
 		jsoImpl().setInnerText(elem.jsoRemote(), text);
 	}
 
@@ -446,7 +442,6 @@ public class DomDispatch implements DomDispatchContract {
 	}
 
 	public void setScrollLeft(Element elem, int left) {
-		elem.ensureJsoRemote();
 		jsoImpl().setScrollLeft(elem, left);
 	}
 

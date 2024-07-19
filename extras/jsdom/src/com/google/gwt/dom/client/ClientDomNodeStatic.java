@@ -79,7 +79,7 @@ class ClientDomNodeStatic {
 			return "(null)";
 		}
 		String remoteHash = "";
-		if (node.node().linkedToRemote()) {
+		if (node.node().hasRemote()) {
 			remoteHash = String.valueOf(node.node().remote().hashCode());
 		}
 		return Ax

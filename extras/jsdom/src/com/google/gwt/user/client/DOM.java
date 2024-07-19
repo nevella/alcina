@@ -1647,7 +1647,7 @@ public class DOM {
 	 *            name of the event to sink on this element
 	 */
 	public static void sinkBitlessEvent(Element elem, String eventTypeName) {
-		boolean directSync = elem.implAccess().linkedToRemote();
+		boolean directSync = elem.implAccess().hasRemote();
 		Element refIdPending = LooseContext.get(CONTEXT_SINK_REF_ID_PENDING);
 		directSync &= (refIdPending == null || refIdPending == elem);
 		if (directSync) {
@@ -1690,7 +1690,7 @@ public class DOM {
 	 *            possible values are described in {@link Event})
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
-		boolean directSync = elem.implAccess().linkedToRemote();
+		boolean directSync = elem.implAccess().hasRemote();
 		Element refIdPending = LooseContext.get(CONTEXT_SINK_REF_ID_PENDING);
 		directSync &= (refIdPending == null || refIdPending == elem);
 		if (directSync) {

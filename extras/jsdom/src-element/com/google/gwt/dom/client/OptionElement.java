@@ -188,13 +188,12 @@ public class OptionElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		validateRemoteStatePreMutation();
 		if (name.equals("selected") && !Boolean.valueOf(value)) {
 			local().removeAttribute(name);
 		} else {
 			local().setPropertyBoolean(name, value);
 		}
-		remote().setPropertyBoolean(name, value);
+		sync(() -> remote().setPropertyBoolean(name, value));
 	}
 
 	/**

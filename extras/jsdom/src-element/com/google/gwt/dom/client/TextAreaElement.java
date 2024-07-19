@@ -133,9 +133,8 @@ public class TextAreaElement extends Element {
 
 	@Override
 	public String getPropertyString(String name) {
-		validateRemoteStatePreMutation();
 		if ("value".equals(name)) {
-			if (linkedToRemote()) {
+			if (hasRemote()) {
 				return remote().getPropertyString(name);
 			} else {
 				return getInnerText();
@@ -164,12 +163,10 @@ public class TextAreaElement extends Element {
 	}
 
 	public int getSelectionEnd() {
-		validateRemoteStatePreMutation();
 		return this.getPropertyInt("selectionEnd");
 	}
 
 	public int getSelectionStart() {
-		validateRemoteStatePreMutation();
 		return this.getPropertyInt("selectionStart");
 	}
 
@@ -214,7 +211,7 @@ public class TextAreaElement extends Element {
 	}
 
 	public final void select() {
-		select0(ensureJsoRemote());
+		select0(jsoRemote());
 	}
 
 	/**
@@ -279,24 +276,22 @@ public class TextAreaElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		validateRemoteStatePreMutation();
 		if ((name.equals("readOnly") || name.equals("disabled")) && !value) {
 			local().removeAttribute(name);
 		} else {
 			local().setPropertyBoolean(name, value);
 		}
-		remote().setPropertyBoolean(name, value);
+		sync(() -> remote().setPropertyBoolean(name, value));
 	}
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		validateRemoteStatePreMutation();
 		if ("value".equals(name)) {
 			local().setInnerText(value);
 		} else {
 			local().setPropertyString(name, value);
 		}
-		remote().setPropertyString(name, value);
+		sync(() -> remote().setPropertyString(name, value));
 	}
 
 	/**

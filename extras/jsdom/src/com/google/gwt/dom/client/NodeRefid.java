@@ -49,7 +49,7 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 	}
 
 	public static void ensureRefidRemote(Node node) {
-		if (!node.linkedToRemote()) {
+		if (!node.hasRemote()) {
 			node.putRemote(create(node), false);
 		}
 		node.streamChildren().forEach(NodeRefid::ensureRefidRemote);
@@ -79,7 +79,7 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 		if (node == null) {
 			return null;
 		}
-		if (node.linkedToRemote()) {
+		if (node.hasRemote()) {
 			return node.remote();
 		} else {
 			if (node.wasSynced()) {

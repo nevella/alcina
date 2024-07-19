@@ -273,24 +273,22 @@ public class SelectElement extends Element {
 
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
-		validateRemoteStatePreMutation();
 		if (name.equals("multiple") && !value) {
 			local().removeAttribute("multiple");
 		} else {
 			local().setPropertyBoolean(name, value);
 		}
-		remote().setPropertyBoolean(name, value);
+		sync(() -> remote().setPropertyBoolean(name, value));
 	}
 
 	@Override
 	public void setPropertyString(String name, String value) {
-		validateRemoteStatePreMutation();
 		if (name.equals("multiple") && !Boolean.valueOf(value)) {
 			local().removeAttribute("multiple");
 		} else {
 			local().setPropertyString(name, value);
 		}
-		remote().setPropertyString(name, value);
+		sync(() -> remote().setPropertyString(name, value));
 	}
 
 	/**
