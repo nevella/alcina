@@ -55,6 +55,11 @@ public class FlowPanel extends ComplexPanel implements InsertPanel.ForIsWidget {
 	}
 
 	@Override
+	public WidgetCollection getChildren() {
+		return super.getChildren();
+	}
+
+	@Override
 	public void clear() {
 		try {
 			doLogicalClear();

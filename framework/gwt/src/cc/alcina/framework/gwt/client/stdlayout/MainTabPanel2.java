@@ -141,7 +141,8 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 			setSelectionStyle(getSelectedTabWidget(), false);
 			selectedTabIndex = index;
 			if (selectedTabIndex == -1) {
-				deckContainer.setWidget(null);
+				// this would override notabcontent
+				// deckContainer.setWidget(null);
 				return;
 			}
 			setSelectionStyle(getSelectedTabWidget(), true);
