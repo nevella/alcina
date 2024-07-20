@@ -311,4 +311,6 @@ public interface ClientDomElement extends ClientDomNode {
 	void toggleClassName(String className);
 
 	DomRect getBoundingClientRect();
+
+	ClientDomStyle getStyleRemote();
 }

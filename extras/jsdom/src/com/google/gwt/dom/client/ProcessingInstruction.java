@@ -39,7 +39,6 @@ public class ProcessingInstruction extends Node implements
 
 	protected ProcessingInstruction(ProcessingInstructionLocal local) {
 		this.local = local;
-		this.remote = ProcessingInstructionNull.INSTANCE;
 	}
 
 	@Override
@@ -68,11 +67,6 @@ public class ProcessingInstruction extends Node implements
 	}
 
 	@Override
-	protected boolean hasRemote() {
-		return remote != ProcessingInstructionNull.INSTANCE;
-	}
-
-	@Override
 	protected ProcessingInstructionLocal local() {
 		return local;
 	}
@@ -94,7 +88,7 @@ public class ProcessingInstruction extends Node implements
 
 	@Override
 	protected void resetRemote0() {
-		this.remote = ProcessingInstructionNull.INSTANCE;
+		this.remote = null;
 	}
 
 	@Override

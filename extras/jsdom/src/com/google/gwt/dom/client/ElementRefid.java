@@ -483,17 +483,15 @@ public class ElementRefid extends NodeRefid implements ElementRemote {
 
 	<T> T invokeSync(String methodName, List<Class> argumentTypes,
 			List<?> arguments) {
-		return getOwnerDocument().implAccess().refIdRemote().invokeProxy
-				.invokeSync(ElementRefid.this, methodName, argumentTypes,
-						arguments, null);
+		return getOwnerDocument().refIdRemote().invokeProxy.invokeSync(
+				ElementRefid.this, methodName, argumentTypes, arguments, null);
 	}
 
 	<T> T invokeStyle(String methodName, List<Class> argumentTypes,
 			List<?> arguments) {
-		return getOwnerDocument().implAccess().refIdRemote().invokeProxy
-				.invokeSync(ElementRefid.this, methodName, argumentTypes,
-						arguments,
-						List.of(InvokeProxy.Flag.invoke_on_element_style));
+		return getOwnerDocument().refIdRemote().invokeProxy.invokeSync(
+				ElementRefid.this, methodName, argumentTypes, arguments,
+				List.of(InvokeProxy.Flag.invoke_on_element_style));
 	}
 
 	<T> T invokeSync(String methodName) {

@@ -9,12 +9,16 @@ public class RemoteComponentReflectionFilterPeer
 		implements ClientReflectionFilterPeer {
 	/**
 	 * Normally, use reachability. Returning non-null (generally fixing dev
-	 * relection issues) is a temporary fix
+	 * reflection issues) is a temporary fix
 	 */
 	@Override
 	public Boolean emitType(JClassType type, String moduleName) {
 		if (type.getQualifiedSourceName()
 				.startsWith("cc.alcina.framework.servlet.component")) {
+			return true;
+		}
+		if (type.getQualifiedSourceName().equals(
+				"cc.alcina.framework.common.client.util.CollectionCreators.HashSetCreator")) {
 			return true;
 		}
 		return ClientReflectionFilterPeer.super.emitType(type, moduleName);

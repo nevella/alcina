@@ -37,307 +37,534 @@ import com.google.gwt.util.tools.Utility;
  */
 public abstract class BrowserChannel {
 	/**
-	 * The current version of the protocol.
+	 * Class representing a reference to a Java object. The #special and
+	 * #arrayValues fields are used for bulk array transfer, the #arrayValues
+	 * field is nulled at the end of each protocol/value transfer
 	 */
-	public static final int PROTOCOL_VERSION_CURRENT = 3;
+	public static class JavaObjectRef implements RemoteObjectRef {
+		public enum Special {
+			JS_OBJECT_LIST, JS_INT_LIST;
 
-	/**
-	 * The oldest protocol version supported by this code.
-	 */
-	public static final int PROTOCOL_VERSION_OLDEST = 2;
-
-	/**
-	 * The protocol version that added the GetIcon message.
-	 */
-	public static final int PROTOCOL_VERSION_GET_ICON = 3;
-
-	public static final int SPECIAL_CLIENTMETHODS_OBJECT = 0;
-
-	public static final int SPECIAL_SERVERMETHODS_OBJECT = 0;
-
-	protected static JavaObjectRef getJavaObjectRef(int refId) {
-		return new JavaObjectRef(refId);
-	}
-
-	protected static String readUtf8String(DataInputStream stream)
-			throws IOException {
-		final int len = stream.readInt();
-		final byte[] data = new byte[len];
-		stream.readFully(data);
-		return new String(data, "UTF8");
-	}
-
-	protected static ValueType readValueType(DataInputStream stream)
-			throws IOException, BrowserChannelException {
-		int type = stream.readByte();
-		ValueType[] types = ValueType.values();
-		if (type < 0 || type >= types.length) {
-			throw new BrowserChannelException("Invalid value type " + type);
-		}
-		return types[type];
-	}
-
-	protected static void writeJavaObject(DataOutputStream stream,
-			JavaObjectRef value) throws IOException {
-		if (value.getSpecial() != null) {
-			switch (value.getSpecial()) {
-			case JS_OBJECT_LIST:
-			case JS_INT_LIST:
-				stream.writeByte(value.getSpecial().getValueType().getTag());
-				stream.writeInt(value.getRefid());
-				stream.writeInt(0);
-				int[] arrayValues = value.getArrayValues();
-				for (int i : arrayValues) {
-					stream.writeInt(i);
+			ValueType getValueType() {
+				switch (this) {
+				case JS_OBJECT_LIST:
+					return ValueType.JS_OBJECT_LIST;
+				case JS_INT_LIST:
+					return ValueType.JS_INT_LIST;
+				default:
+					throw new UnsupportedOperationException();
 				}
-				break;
 			}
-		} else {
-			stream.writeByte(ValueType.JAVA_OBJECT.getTag());
-			stream.writeInt(value.getRefid());
 		}
-	}
 
-	protected static void writeJsObject(DataOutputStream stream,
-			JsObjectRef value) throws IOException {
-		stream.writeByte(ValueType.JS_OBJECT.getTag());
-		stream.writeInt(value.getRefid());
-	}
+		private int refId;
 
-	protected static void writeNull(DataOutputStream stream)
-			throws IOException {
-		stream.writeByte(ValueType.NULL.getTag());
-	}
+		private Special special;
 
-	protected static void writeTaggedBoolean(DataOutputStream stream,
-			boolean value) throws IOException {
-		stream.writeByte(ValueType.BOOLEAN.getTag());
-		stream.writeBoolean(value);
-	}
+		private int[] arrayValues;
 
-	protected static void writeTaggedByte(DataOutputStream stream, byte value)
-			throws IOException {
-		stream.writeByte(ValueType.BYTE.getTag());
-		stream.writeByte(value);
-	}
-
-	protected static void writeTaggedChar(DataOutputStream stream, char value)
-			throws IOException {
-		stream.writeByte(ValueType.CHAR.getTag());
-		stream.writeChar(value);
-	}
-
-	protected static void writeTaggedDouble(DataOutputStream stream,
-			double value) throws IOException {
-		stream.writeByte(ValueType.DOUBLE.getTag());
-		stream.writeDouble(value);
-	}
-
-	protected static void writeTaggedInt(DataOutputStream stream, int value)
-			throws IOException {
-		stream.writeByte(ValueType.INT.getTag());
-		stream.writeInt(value);
-	}
-
-	protected static void writeTaggedShort(DataOutputStream stream, short value)
-			throws IOException {
-		stream.writeByte(ValueType.SHORT.getTag());
-		stream.writeShort(value);
-	}
-
-	protected static void writeTaggedString(DataOutputStream stream,
-			String data) throws IOException {
-		stream.writeByte(ValueType.STRING.getTag());
-		writeUtf8String(stream, data);
-	}
-
-	private static void writeUndefined(DataOutputStream stream)
-			throws IOException {
-		stream.writeByte(ValueType.UNDEFINED.getTag());
-	}
-
-	protected static void writeUtf8String(DataOutputStream stream, String data)
-			throws IOException {
-		try {
-			final byte[] bytes = data.getBytes("UTF8");
-			stream.writeInt(bytes.length);
-			stream.write(bytes);
-		} catch (UnsupportedEncodingException e) {
-			// TODO: Add description.
-			throw new RuntimeException();
+		public JavaObjectRef(int refId) {
+			this(refId, null);
 		}
-	}
 
-	private final ObjectRefFactory objectRefFactory;
+		public JavaObjectRef(int refId, Object wrapped) {
+			this.refId = refId;
+			special = CompilingClassLoader.getSpecial(wrapped);
+			if (special != null) {
+				setArrayValues(CompilingClassLoader.getArrayValues(wrapped));
+			}
+		}
 
-	private Socket socket;
+		public Special getSpecial() {
+			return special;
+		}
 
-	private final DataInputStream streamFromOtherSide;
+		public int[] getArrayValues() {
+			return arrayValues;
+		}
 
-	private final DataOutputStream streamToOtherSide;
+		public void setArrayValues(int[] arrayValues) {
+			this.arrayValues = arrayValues;
+		}
 
-	protected BrowserChannel(InputStream inputStream, OutputStream outputStream,
-			ObjectRefFactory objectRefFactory) {
-		streamFromOtherSide = new DataInputStream(inputStream);
-		streamToOtherSide = new DataOutputStream(outputStream);
-		socket = null;
-		this.objectRefFactory = objectRefFactory;
-	}
+		@Override
+		public int getRefid() {
+			return Math.abs(refId);
+		}
 
-	public BrowserChannel(Socket socket, ObjectRefFactory objectRefFactory)
-			throws IOException {
-		this(new BufferedInputStream(socket.getInputStream()),
-				new BufferedOutputStream(socket.getOutputStream()),
-				objectRefFactory);
-		this.socket = socket;
-	}
+		@Override
+		public int hashCode() {
+			return refId;
+		}
 
-	public void endSession() {
-		Utility.close(streamFromOtherSide);
-		Utility.close(streamToOtherSide);
-		Utility.close(socket);
+		public boolean isException() {
+			return refId < 0;
+		}
+
+		@Override
+		public String toString() {
+			return "JavaObjectRef(ref=" + refId + ")";
+		}
 	}
 
 	/**
-	 * @return a set of remote object reference IDs to be freed.
+	 * Class representing a reference to a JS object.
 	 */
-	public Set<Integer> getRefIdsForCleanup() {
-		return objectRefFactory.getRefIdsForCleanup();
-	}
+	public static class JsObjectRef implements RemoteObjectRef {
+		private int refId;
 
-	public String getRemoteEndpoint() {
-		if (socket == null) {
-			return "";
+		public JsObjectRef(int refId) {
+			this.refId = refId;
 		}
-		return socket.getInetAddress().getCanonicalHostName() + ":"
-				+ socket.getPort();
-	}
 
-	protected DataInputStream getStreamFromOtherSide() {
-		return streamFromOtherSide;
-	}
-
-	protected DataOutputStream getStreamToOtherSide() {
-		return streamToOtherSide;
-	}
-
-	protected Value readValue(DataInputStream stream) throws IOException {
-		ValueType tag;
-		try {
-			tag = readValueType(stream);
-		} catch (BrowserChannelException e) {
-			IOException ee = new IOException();
-			ee.initCause(e);
-			throw ee;
+		@Override
+		public boolean equals(Object o) {
+			return (o instanceof JsObjectRef)
+					&& ((JsObjectRef) o).refId == refId;
 		}
-		Value value = new Value();
-		switch (tag) {
-		case NULL:
-			value.setNull();
-			break;
-		case UNDEFINED:
-			value.setUndefined();
-			break;
-		case BOOLEAN:
-			value.setBoolean(stream.readByte() != 0);
-			break;
-		case BYTE:
-			value.setByte(stream.readByte());
-			break;
-		case CHAR:
-			value.setChar(stream.readChar());
-			break;
-		case INT:
-			value.setInt(stream.readInt());
-			break;
-		case DOUBLE:
-			value.setDouble(stream.readDouble());
-			break;
-		case SHORT:
-			value.setShort(stream.readShort());
-			break;
-		case STRING:
-			value.setString(readUtf8String(stream));
-			break;
-		case JS_OBJECT:
-			value.setJsObject(
-					objectRefFactory.getJsObjectRef(stream.readInt()));
-			break;
-		case JAVA_OBJECT:
-			value.setJavaObject(
-					objectRefFactory.getJavaObjectRef(stream.readInt()));
-			break;
-		case JS_OBJECT_LIST:
-		case JS_INT_LIST:
-			JavaObjectRef javaObjectRef = objectRefFactory
-					.getJavaObjectRef(stream.readInt());
-			value.setJavaObject(javaObjectRef);
-			int len = stream.readInt();
-			int[] array = new int[len];
-			for (int idx = 0; idx < len; idx++) {
-				array[idx] = stream.readInt();
+
+		@Override
+		public int getRefid() {
+			// exceptions are negative, so we get the absolute value
+			return Math.abs(refId);
+		}
+
+		@Override
+		public int hashCode() {
+			return refId;
+		}
+
+		public boolean isException() {
+			return refId < 0;
+		}
+
+		@Override
+		public String toString() {
+			return "JsObjectRef(" + refId + ")";
+		}
+	}
+
+	/**
+	 * Enumeration of message type ids.
+	 *
+	 * <p>
+	 * Ids are used instead of relying on the ordinal to avoid sychronization
+	 * problems with the client.
+	 */
+	public enum MessageType {
+		/**
+		 * A message to invoke a method on the other side of the wire. Note that
+		 * the messages are asymmetric -- see {@link InvokeOnClientMessage} and
+		 * {@link InvokeOnServerMessage}.
+		 */
+		INVOKE(0),
+		/**
+		 * Returns the result of an INVOKE, INVOKE_SPECIAL, or LOAD_MODULE
+		 * message.
+		 */
+		RETURN(1),
+		/**
+		 * v1 LOAD_MODULE message.
+		 */
+		OLD_LOAD_MODULE(2),
+		/**
+		 * Normal closure of the connection.
+		 */
+		QUIT(3),
+		/**
+		 * A request by the server to load JSNI source into the client's JS
+		 * engine.
+		 */
+		LOAD_JSNI(4), INVOKE_SPECIAL(5), FREE_VALUE(6),
+		/**
+		 * Abnormal termination of the connection.
+		 */
+		FATAL_ERROR(7), CHECK_VERSIONS(8), PROTOCOL_VERSION(9),
+		CHOOSE_TRANSPORT(10), SWITCH_TRANSPORT(11), LOAD_MODULE(12),
+		REQUEST_ICON(13), USER_AGENT_ICON(14), REQUEST_PLUGIN(15);
+
+		private final int id;
+
+		private MessageType(int id) {
+			this.id = id;
+		}
+
+		public int getId() {
+			return id;
+		}
+	}
+
+	/**
+	 * An error indicating that the remote side died and we should unroll the
+	 * call stack as painlessly as possible to allow cleanup.
+	 */
+	public static class RemoteDeathError extends Error {
+		public RemoteDeathError(Throwable cause) {
+			super("Remote connection lost", cause);
+		}
+	}
+
+	/**
+	 * Represents an object on the other side of the channel, known to this side
+	 * by an reference ID.
+	 */
+	public interface RemoteObjectRef {
+		/**
+		 * @return the reference ID for this object.
+		 */
+		int getRefid();
+	}
+
+	/**
+	 * Hook interface for responding to messages.
+	 */
+	public abstract static class SessionHandler<T extends BrowserChannel> {
+		/**
+		 * Wrapper to return both a return value/exception and a flag as to
+		 * whether an exception was thrown or not.
+		 */
+		public static class ExceptionOrReturnValue {
+			private final boolean isException;
+
+			private final Value returnValue;
+
+			public ExceptionOrReturnValue(boolean isException,
+					Value returnValue) {
+				this.isException = isException;
+				this.returnValue = returnValue;
 			}
-			javaObjectRef.setArrayValues(array);
-			value.type = tag;
-			switch (tag) {
-			case JS_OBJECT_LIST:
-				javaObjectRef.special = Special.JS_OBJECT_LIST;
-				break;
-			case JS_INT_LIST:
-				javaObjectRef.special = Special.JS_INT_LIST;
-				break;
+
+			public Value getReturnValue() {
+				return returnValue;
 			}
-			break;
-		default:
-			throw new IllegalArgumentException("Unexpected type: " + tag);
+
+			public boolean isException() {
+				return isException;
+			}
 		}
-		return value;
+
+		/**
+		 * Enumeration of dispatch IDs on object 0 (the ServerMethods object).
+		 *
+		 * <p>
+		 * Ids are set specifically rather than relying on the ordinal to avoid
+		 * synchronization problems with the client.
+		 *
+		 * TODO: hasMethod/hasProperty no longer used, remove them!
+		 */
+		public enum SpecialDispatchId {
+			HasMethod(0), HasProperty(1), GetProperty(2), SetProperty(3);
+
+			private final int id;
+
+			private SpecialDispatchId(int id) {
+				this.id = id;
+			}
+
+			public int getId() {
+				return id;
+			}
+		}
+
+		public abstract void freeValue(T channel, int[] ids);
 	}
 
-	protected void sendFreedValues() throws IOException {
-		Set<Integer> freed = objectRefFactory.getRefIdsForCleanup();
-		int n = freed.size();
-		if (n > 0) {
-			int[] ids = new int[n];
-			int i = 0;
-			for (Integer id : freed) {
-				ids[i++] = id;
-			}
-			FreeMessage.send(this, ids);
-		}
-	}
+	/**
+	 * Represents a value for BrowserChannel.
+	 */
+	public static class Value {
+		/**
+		 * Enum of type tags sent across the wire.
+		 */
+		public enum ValueType {
+			/**
+			 * Primitive values.
+			 */
+			NULL(0), BOOLEAN(1), BYTE(2), CHAR(3), SHORT(4), INT(5),
+			LONG_UNUSED(6), FLOAT_UNUSED(7), DOUBLE(8), STRING(9),
+			/**
+			 * Representations of Java or JS objects, sent as an index into a
+			 * table kept on the side holding the actual object.
+			 */
+			JAVA_OBJECT(10), JS_OBJECT(11),
+			/**
+			 * A Javascript undef value, also used for void returns.
+			 */
+			UNDEFINED(12),
+			/**
+			 * Because birds + early spring
+			 */
+			UNUSED(13),
+			/**
+			 * A special dispatch object for bulk transfer of js object ref
+			 * arrays
+			 */
+			JS_OBJECT_LIST(14),
+			/**
+			 * A special dispatch object for bulk transfer of int arrays
+			 */
+			JS_INT_LIST(15);
 
-	protected void writeValue(DataOutputStream stream, Value value)
-			throws IOException {
-		if (value.isNull()) {
-			writeNull(stream);
-		} else if (value.isUndefined()) {
-			writeUndefined(stream);
-		} else if (value.isJsObject()) {
-			writeJsObject(stream, value.getJsObject());
-		} else if (value.isJavaObject()) {
-			writeJavaObject(stream, value.getJavaObject());
-		} else if (value.isJsObjectArray()) {
-			writeJavaObject(stream, value.getJavaObject());
-		} else if (value.isJsIntArray()) {
-			writeJavaObject(stream, value.getJavaObject());
-		} else if (value.isBoolean()) {
-			writeTaggedBoolean(stream, value.getBoolean());
-		} else if (value.isByte()) {
-			writeTaggedByte(stream, value.getByte());
-		} else if (value.isChar()) {
-			writeTaggedChar(stream, value.getChar());
-		} else if (value.isShort()) {
-			writeTaggedShort(stream, value.getShort());
-		} else if (value.isDouble()) {
-			writeTaggedDouble(stream, value.getDouble());
-		} else if (value.isInt()) {
-			writeTaggedInt(stream, value.getInt());
-		} else if (value.isString()) {
-			writeTaggedString(stream, value.getString());
-		} else {
-			throw new IllegalArgumentException(
-					"Unexpected type: " + value.getType());
+			private final int id;
+
+			private ValueType(int id) {
+				this.id = id;
+			}
+
+			byte getTag() {
+				return (byte) id;
+			}
+		}
+
+		/**
+		 * Type tag value.
+		 */
+		private ValueType type = ValueType.UNDEFINED;
+
+		/**
+		 * Represents a value sent/received across the wire.
+		 */
+		private Object value = null;
+
+		public Value() {
+		}
+
+		public Value(Object obj) {
+			convertFromJavaValue(obj);
+		}
+
+		/**
+		 * Convert a Java object to a value. Objects must be primitive wrappers,
+		 * Strings, or JsObjectRef/JavaObjectRef instances.
+		 *
+		 * @param obj
+		 *            value to convert.
+		 */
+		public void convertFromJavaValue(Object obj) {
+			if (obj == null) {
+				type = ValueType.NULL;
+			} else if (obj instanceof Boolean) {
+				type = ValueType.BOOLEAN;
+			} else if (obj instanceof Byte) {
+				type = ValueType.BYTE;
+			} else if (obj instanceof Character) {
+				type = ValueType.CHAR;
+			} else if (obj instanceof Double) {
+				type = ValueType.DOUBLE;
+			} else if (obj instanceof Integer) {
+				type = ValueType.INT;
+			} else if (obj instanceof Short) {
+				type = ValueType.SHORT;
+			} else if (obj instanceof String) {
+				type = ValueType.STRING;
+			} else if (obj instanceof JsObjectRef) {
+				// TODO: exception handling?
+				type = ValueType.JS_OBJECT;
+			} else if (obj instanceof JavaObjectRef) {
+				// TODO: exception handling?
+				type = ValueType.JAVA_OBJECT;
+			} else {
+				throw new IllegalArgumentException(
+						"Unexpected type: " + obj.getClass());
+			}
+			value = obj;
+		}
+
+		public boolean getBoolean() {
+			assert type == ValueType.BOOLEAN;
+			return ((Boolean) value).booleanValue();
+		}
+
+		public byte getByte() {
+			assert type == ValueType.BYTE;
+			return ((Byte) value).byteValue();
+		}
+
+		public char getChar() {
+			assert type == ValueType.CHAR;
+			return ((Character) value).charValue();
+		}
+
+		public double getDouble() {
+			assert type == ValueType.DOUBLE;
+			return ((Double) value).doubleValue();
+		}
+
+		public int getInt() {
+			assert type == ValueType.INT;
+			return ((Integer) value).intValue();
+		}
+
+		public JavaObjectRef getJavaObject() {
+			assert type == ValueType.JAVA_OBJECT;
+			return (JavaObjectRef) value;
+		}
+
+		public JsObjectRef getJsObject() {
+			assert type == ValueType.JS_OBJECT;
+			return (JsObjectRef) value;
+		}
+
+		public short getShort() {
+			assert type == ValueType.SHORT;
+			return ((Short) value).shortValue();
+		}
+
+		public String getString() {
+			assert type == ValueType.STRING;
+			return (String) value;
+		}
+
+		public ValueType getType() {
+			return type;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		public boolean isBoolean() {
+			return type == ValueType.BOOLEAN;
+		}
+
+		public boolean isByte() {
+			return type == ValueType.BYTE;
+		}
+
+		public boolean isChar() {
+			return type == ValueType.CHAR;
+		}
+
+		public boolean isDouble() {
+			return type == ValueType.DOUBLE;
+		}
+
+		public boolean isInt() {
+			return type == ValueType.INT;
+		}
+
+		public boolean isJavaObject() {
+			return type == ValueType.JAVA_OBJECT;
+		}
+
+		public boolean isJsObjectArray() {
+			return type == ValueType.JS_OBJECT_LIST;
+		}
+
+		public boolean isJsIntArray() {
+			return type == ValueType.JS_INT_LIST;
+		}
+
+		public boolean isJsObject() {
+			return type == ValueType.JS_OBJECT;
+		}
+
+		public boolean isNull() {
+			return type == ValueType.NULL;
+		}
+
+		public boolean isNumber() {
+			switch (type) {
+			case BYTE:
+			case CHAR:
+			case DOUBLE:
+			case INT:
+			case SHORT:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		public boolean isPrimitive() {
+			switch (type) {
+			case BOOLEAN:
+			case BYTE:
+			case CHAR:
+			case DOUBLE:
+			case INT:
+			case SHORT:
+				return true;
+			default:
+				return false;
+			}
+		}
+
+		public boolean isShort() {
+			return type == ValueType.SHORT;
+		}
+
+		public boolean isString() {
+			return type == ValueType.STRING;
+		}
+
+		public boolean isUndefined() {
+			return type == ValueType.UNDEFINED;
+		}
+
+		public void setBoolean(boolean val) {
+			type = ValueType.BOOLEAN;
+			value = Boolean.valueOf(val);
+		}
+
+		public void setByte(byte val) {
+			type = ValueType.BYTE;
+			value = Byte.valueOf(val);
+		}
+
+		public void setChar(char val) {
+			type = ValueType.CHAR;
+			value = Character.valueOf(val);
+		}
+
+		public void setDouble(double val) {
+			type = ValueType.DOUBLE;
+			value = Double.valueOf(val);
+		}
+
+		public void setInt(int val) {
+			type = ValueType.INT;
+			value = Integer.valueOf(val);
+		}
+
+		public void setJavaObject(JavaObjectRef val) {
+			type = ValueType.JAVA_OBJECT;
+			value = val;
+		}
+
+		public void setJsObject(JsObjectRef val) {
+			type = ValueType.JS_OBJECT;
+			value = val;
+		}
+
+		public void setLong(long val) {
+			type = ValueType.BOOLEAN;
+			value = Long.valueOf(val);
+		}
+
+		public void setNull() {
+			type = ValueType.NULL;
+			value = null;
+		}
+
+		public void setShort(short val) {
+			type = ValueType.SHORT;
+			value = Short.valueOf(val);
+		}
+
+		public void setString(String val) {
+			type = ValueType.STRING;
+			value = val;
+		}
+
+		public void setUndefined() {
+			type = ValueType.UNDEFINED;
+			value = null;
+		}
+
+		@Override
+		public String toString() {
+			return type + ": " + value;
 		}
 	}
 
@@ -704,111 +931,6 @@ public abstract class BrowserChannel {
 	}
 
 	/**
-	 * Class representing a reference to a Java object. The #special and
-	 * #arrayValues fields are used for bulk array transfer, the #arrayValues
-	 * field is nulled at the end of each protocol/value transfer
-	 */
-	public static class JavaObjectRef implements RemoteObjectRef {
-		public enum Special {
-			JS_OBJECT_LIST, JS_INT_LIST;
-
-			ValueType getValueType() {
-				switch (this) {
-				case JS_OBJECT_LIST:
-					return ValueType.JS_OBJECT_LIST;
-				case JS_INT_LIST:
-					return ValueType.JS_INT_LIST;
-				default:
-					throw new UnsupportedOperationException();
-				}
-			}
-		}
-
-		private int refId;
-
-		private Special special;
-
-		public Special getSpecial() {
-			return special;
-		}
-
-		private int[] arrayValues;
-
-		public int[] getArrayValues() {
-			return arrayValues;
-		}
-
-		public void setArrayValues(int[] arrayValues) {
-			this.arrayValues = arrayValues;
-		}
-
-		public JavaObjectRef(int refId) {
-			this(refId, null);
-		}
-
-		public JavaObjectRef(int refId, Object wrapped) {
-			this.refId = refId;
-			special = CompilingClassLoader.getSpecial(wrapped);
-		}
-
-		@Override
-		public int getRefid() {
-			return Math.abs(refId);
-		}
-
-		@Override
-		public int hashCode() {
-			return refId;
-		}
-
-		public boolean isException() {
-			return refId < 0;
-		}
-
-		@Override
-		public String toString() {
-			return "JavaObjectRef(ref=" + refId + ")";
-		}
-	}
-
-	/**
-	 * Class representing a reference to a JS object.
-	 */
-	public static class JsObjectRef implements RemoteObjectRef {
-		private int refId;
-
-		public JsObjectRef(int refId) {
-			this.refId = refId;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			return (o instanceof JsObjectRef)
-					&& ((JsObjectRef) o).refId == refId;
-		}
-
-		@Override
-		public int getRefid() {
-			// exceptions are negative, so we get the absolute value
-			return Math.abs(refId);
-		}
-
-		@Override
-		public int hashCode() {
-			return refId;
-		}
-
-		public boolean isException() {
-			return refId < 0;
-		}
-
-		@Override
-		public String toString() {
-			return "JsObjectRef(" + refId + ")";
-		}
-	}
-
-	/**
 	 * A message sending JSNI code to be evaluated. Note that there is no
 	 * response to this message, and this must only be sent immediately before
 	 * an Invoke or Return message.
@@ -992,56 +1114,6 @@ public abstract class BrowserChannel {
 	}
 
 	/**
-	 * Enumeration of message type ids.
-	 *
-	 * <p>
-	 * Ids are used instead of relying on the ordinal to avoid sychronization
-	 * problems with the client.
-	 */
-	public enum MessageType {
-		/**
-		 * A message to invoke a method on the other side of the wire. Note that
-		 * the messages are asymmetric -- see {@link InvokeOnClientMessage} and
-		 * {@link InvokeOnServerMessage}.
-		 */
-		INVOKE(0),
-		/**
-		 * Returns the result of an INVOKE, INVOKE_SPECIAL, or LOAD_MODULE
-		 * message.
-		 */
-		RETURN(1),
-		/**
-		 * v1 LOAD_MODULE message.
-		 */
-		OLD_LOAD_MODULE(2),
-		/**
-		 * Normal closure of the connection.
-		 */
-		QUIT(3),
-		/**
-		 * A request by the server to load JSNI source into the client's JS
-		 * engine.
-		 */
-		LOAD_JSNI(4), INVOKE_SPECIAL(5), FREE_VALUE(6),
-		/**
-		 * Abnormal termination of the connection.
-		 */
-		FATAL_ERROR(7), CHECK_VERSIONS(8), PROTOCOL_VERSION(9),
-		CHOOSE_TRANSPORT(10), SWITCH_TRANSPORT(11), LOAD_MODULE(12),
-		REQUEST_ICON(13), USER_AGENT_ICON(14), REQUEST_PLUGIN(15);
-
-		private final int id;
-
-		private MessageType(int id) {
-			this.id = id;
-		}
-
-		public int getId() {
-			return id;
-		}
-	}
-
-	/**
 	 * Provides a way of allocating JS and Java object ids without knowing which
 	 * one is the remote type, so code can be shared between client and server.
 	 */
@@ -1164,27 +1236,6 @@ public abstract class BrowserChannel {
 	}
 
 	/**
-	 * An error indicating that the remote side died and we should unroll the
-	 * call stack as painlessly as possible to allow cleanup.
-	 */
-	public static class RemoteDeathError extends Error {
-		public RemoteDeathError(Throwable cause) {
-			super("Remote connection lost", cause);
-		}
-	}
-
-	/**
-	 * Represents an object on the other side of the channel, known to this side
-	 * by an reference ID.
-	 */
-	public interface RemoteObjectRef {
-		/**
-		 * @return the reference ID for this object.
-		 */
-		int getRefid();
-	}
-
-	/**
 	 * A message asking the client to send an icon suitable for use in the UI.
 	 * <p>
 	 * See {@link UserAgentIconMessage}.
@@ -1266,60 +1317,6 @@ public abstract class BrowserChannel {
 		@Override
 		public void send() throws IOException {
 			send(getBrowserChannel(), isException, returnValue);
-		}
-	}
-
-	/**
-	 * Hook interface for responding to messages.
-	 */
-	public abstract static class SessionHandler<T extends BrowserChannel> {
-		public abstract void freeValue(T channel, int[] ids);
-
-		/**
-		 * Wrapper to return both a return value/exception and a flag as to
-		 * whether an exception was thrown or not.
-		 */
-		public static class ExceptionOrReturnValue {
-			private final boolean isException;
-
-			private final Value returnValue;
-
-			public ExceptionOrReturnValue(boolean isException,
-					Value returnValue) {
-				this.isException = isException;
-				this.returnValue = returnValue;
-			}
-
-			public Value getReturnValue() {
-				return returnValue;
-			}
-
-			public boolean isException() {
-				return isException;
-			}
-		}
-
-		/**
-		 * Enumeration of dispatch IDs on object 0 (the ServerMethods object).
-		 *
-		 * <p>
-		 * Ids are set specifically rather than relying on the ordinal to avoid
-		 * synchronization problems with the client.
-		 *
-		 * TODO: hasMethod/hasProperty no longer used, remove them!
-		 */
-		public enum SpecialDispatchId {
-			HasMethod(0), HasProperty(1), GetProperty(2), SetProperty(3);
-
-			private final int id;
-
-			private SpecialDispatchId(int id) {
-				this.id = id;
-			}
-
-			public int getId() {
-				return id;
-			}
 		}
 	}
 
@@ -1428,301 +1425,307 @@ public abstract class BrowserChannel {
 	}
 
 	/**
-	 * Represents a value for BrowserChannel.
+	 * The current version of the protocol.
 	 */
-	public static class Value {
-		/**
-		 * Type tag value.
-		 */
-		private ValueType type = ValueType.UNDEFINED;
+	public static final int PROTOCOL_VERSION_CURRENT = 3;
 
-		/**
-		 * Represents a value sent/received across the wire.
-		 */
-		private Object value = null;
+	/**
+	 * The oldest protocol version supported by this code.
+	 */
+	public static final int PROTOCOL_VERSION_OLDEST = 2;
 
-		public Value() {
+	/**
+	 * The protocol version that added the GetIcon message.
+	 */
+	public static final int PROTOCOL_VERSION_GET_ICON = 3;
+
+	public static final int SPECIAL_CLIENTMETHODS_OBJECT = 0;
+
+	public static final int SPECIAL_SERVERMETHODS_OBJECT = 0;
+
+	protected static JavaObjectRef getJavaObjectRef(int refId) {
+		return new JavaObjectRef(refId);
+	}
+
+	protected static String readUtf8String(DataInputStream stream)
+			throws IOException {
+		final int len = stream.readInt();
+		final byte[] data = new byte[len];
+		stream.readFully(data);
+		return new String(data, "UTF8");
+	}
+
+	protected static ValueType readValueType(DataInputStream stream)
+			throws IOException, BrowserChannelException {
+		int type = stream.readByte();
+		ValueType[] types = ValueType.values();
+		if (type < 0 || type >= types.length) {
+			throw new BrowserChannelException("Invalid value type " + type);
 		}
+		return types[type];
+	}
 
-		public Value(Object obj) {
-			convertFromJavaValue(obj);
-		}
-
-		/**
-		 * Convert a Java object to a value. Objects must be primitive wrappers,
-		 * Strings, or JsObjectRef/JavaObjectRef instances.
-		 *
-		 * @param obj
-		 *            value to convert.
-		 */
-		public void convertFromJavaValue(Object obj) {
-			if (obj == null) {
-				type = ValueType.NULL;
-			} else if (obj instanceof Boolean) {
-				type = ValueType.BOOLEAN;
-			} else if (obj instanceof Byte) {
-				type = ValueType.BYTE;
-			} else if (obj instanceof Character) {
-				type = ValueType.CHAR;
-			} else if (obj instanceof Double) {
-				type = ValueType.DOUBLE;
-			} else if (obj instanceof Integer) {
-				type = ValueType.INT;
-			} else if (obj instanceof Short) {
-				type = ValueType.SHORT;
-			} else if (obj instanceof String) {
-				type = ValueType.STRING;
-			} else if (obj instanceof JsObjectRef) {
-				// TODO: exception handling?
-				type = ValueType.JS_OBJECT;
-			} else if (obj instanceof JavaObjectRef) {
-				// TODO: exception handling?
-				type = ValueType.JAVA_OBJECT;
-			} else {
-				throw new IllegalArgumentException(
-						"Unexpected type: " + obj.getClass());
+	protected static void writeJavaObject(DataOutputStream stream,
+			JavaObjectRef value) throws IOException {
+		if (value.getSpecial() != null) {
+			switch (value.getSpecial()) {
+			case JS_OBJECT_LIST:
+			case JS_INT_LIST:
+				stream.writeByte(value.getSpecial().getValueType().getTag());
+				stream.writeInt(value.getRefid());
+				int[] arrayValues = value.getArrayValues();
+				stream.writeInt(arrayValues.length);
+				for (int i : arrayValues) {
+					stream.writeInt(i);
+				}
+				break;
 			}
-			value = obj;
+		} else {
+			stream.writeByte(ValueType.JAVA_OBJECT.getTag());
+			stream.writeInt(value.getRefid());
 		}
+	}
 
-		public boolean getBoolean() {
-			assert type == ValueType.BOOLEAN;
-			return ((Boolean) value).booleanValue();
+	protected static void writeJsObject(DataOutputStream stream,
+			JsObjectRef value) throws IOException {
+		stream.writeByte(ValueType.JS_OBJECT.getTag());
+		stream.writeInt(value.getRefid());
+	}
+
+	protected static void writeNull(DataOutputStream stream)
+			throws IOException {
+		stream.writeByte(ValueType.NULL.getTag());
+	}
+
+	protected static void writeTaggedBoolean(DataOutputStream stream,
+			boolean value) throws IOException {
+		stream.writeByte(ValueType.BOOLEAN.getTag());
+		stream.writeBoolean(value);
+	}
+
+	protected static void writeTaggedByte(DataOutputStream stream, byte value)
+			throws IOException {
+		stream.writeByte(ValueType.BYTE.getTag());
+		stream.writeByte(value);
+	}
+
+	protected static void writeTaggedChar(DataOutputStream stream, char value)
+			throws IOException {
+		stream.writeByte(ValueType.CHAR.getTag());
+		stream.writeChar(value);
+	}
+
+	protected static void writeTaggedDouble(DataOutputStream stream,
+			double value) throws IOException {
+		stream.writeByte(ValueType.DOUBLE.getTag());
+		stream.writeDouble(value);
+	}
+
+	protected static void writeTaggedInt(DataOutputStream stream, int value)
+			throws IOException {
+		stream.writeByte(ValueType.INT.getTag());
+		stream.writeInt(value);
+	}
+
+	protected static void writeTaggedShort(DataOutputStream stream, short value)
+			throws IOException {
+		stream.writeByte(ValueType.SHORT.getTag());
+		stream.writeShort(value);
+	}
+
+	protected static void writeTaggedString(DataOutputStream stream,
+			String data) throws IOException {
+		stream.writeByte(ValueType.STRING.getTag());
+		writeUtf8String(stream, data);
+	}
+
+	protected static void writeUtf8String(DataOutputStream stream, String data)
+			throws IOException {
+		try {
+			final byte[] bytes = data.getBytes("UTF8");
+			stream.writeInt(bytes.length);
+			stream.write(bytes);
+		} catch (UnsupportedEncodingException e) {
+			// TODO: Add description.
+			throw new RuntimeException();
 		}
+	}
 
-		public byte getByte() {
-			assert type == ValueType.BYTE;
-			return ((Byte) value).byteValue();
+	private static void writeUndefined(DataOutputStream stream)
+			throws IOException {
+		stream.writeByte(ValueType.UNDEFINED.getTag());
+	}
+
+	private final ObjectRefFactory objectRefFactory;
+
+	private Socket socket;
+
+	private final DataInputStream streamFromOtherSide;
+
+	private final DataOutputStream streamToOtherSide;
+
+	public BrowserChannel(Socket socket, ObjectRefFactory objectRefFactory)
+			throws IOException {
+		this(new BufferedInputStream(socket.getInputStream()),
+				new BufferedOutputStream(socket.getOutputStream()),
+				objectRefFactory);
+		this.socket = socket;
+	}
+
+	protected BrowserChannel(InputStream inputStream, OutputStream outputStream,
+			ObjectRefFactory objectRefFactory) {
+		streamFromOtherSide = new DataInputStream(inputStream);
+		streamToOtherSide = new DataOutputStream(outputStream);
+		socket = null;
+		this.objectRefFactory = objectRefFactory;
+	}
+
+	public void endSession() {
+		Utility.close(streamFromOtherSide);
+		Utility.close(streamToOtherSide);
+		Utility.close(socket);
+	}
+
+	/**
+	 * @return a set of remote object reference IDs to be freed.
+	 */
+	public Set<Integer> getRefIdsForCleanup() {
+		return objectRefFactory.getRefIdsForCleanup();
+	}
+
+	public String getRemoteEndpoint() {
+		if (socket == null) {
+			return "";
 		}
+		return socket.getInetAddress().getCanonicalHostName() + ":"
+				+ socket.getPort();
+	}
 
-		public char getChar() {
-			assert type == ValueType.CHAR;
-			return ((Character) value).charValue();
+	protected DataInputStream getStreamFromOtherSide() {
+		return streamFromOtherSide;
+	}
+
+	protected DataOutputStream getStreamToOtherSide() {
+		return streamToOtherSide;
+	}
+
+	protected Value readValue(DataInputStream stream) throws IOException {
+		ValueType tag;
+		try {
+			tag = readValueType(stream);
+		} catch (BrowserChannelException e) {
+			IOException ee = new IOException();
+			ee.initCause(e);
+			throw ee;
 		}
-
-		public double getDouble() {
-			assert type == ValueType.DOUBLE;
-			return ((Double) value).doubleValue();
-		}
-
-		public int getInt() {
-			assert type == ValueType.INT;
-			return ((Integer) value).intValue();
-		}
-
-		public JavaObjectRef getJavaObject() {
-			assert type == ValueType.JAVA_OBJECT;
-			return (JavaObjectRef) value;
-		}
-
-		public JsObjectRef getJsObject() {
-			assert type == ValueType.JS_OBJECT;
-			return (JsObjectRef) value;
-		}
-
-		public short getShort() {
-			assert type == ValueType.SHORT;
-			return ((Short) value).shortValue();
-		}
-
-		public String getString() {
-			assert type == ValueType.STRING;
-			return (String) value;
-		}
-
-		public ValueType getType() {
-			return type;
-		}
-
-		public Object getValue() {
-			return value;
-		}
-
-		public boolean isBoolean() {
-			return type == ValueType.BOOLEAN;
-		}
-
-		public boolean isByte() {
-			return type == ValueType.BYTE;
-		}
-
-		public boolean isChar() {
-			return type == ValueType.CHAR;
-		}
-
-		public boolean isDouble() {
-			return type == ValueType.DOUBLE;
-		}
-
-		public boolean isInt() {
-			return type == ValueType.INT;
-		}
-
-		public boolean isJavaObject() {
-			return type == ValueType.JAVA_OBJECT;
-		}
-
-		public boolean isJsObjectArray() {
-			return type == ValueType.JS_OBJECT_LIST;
-		}
-
-		public boolean isJsIntArray() {
-			return type == ValueType.JS_INT_LIST;
-		}
-
-		public boolean isJsObject() {
-			return type == ValueType.JS_OBJECT;
-		}
-
-		public boolean isNull() {
-			return type == ValueType.NULL;
-		}
-
-		public boolean isNumber() {
-			switch (type) {
-			case BYTE:
-			case CHAR:
-			case DOUBLE:
-			case INT:
-			case SHORT:
-				return true;
-			default:
-				return false;
+		Value value = new Value();
+		switch (tag) {
+		case NULL:
+			value.setNull();
+			break;
+		case UNDEFINED:
+			value.setUndefined();
+			break;
+		case BOOLEAN:
+			value.setBoolean(stream.readByte() != 0);
+			break;
+		case BYTE:
+			value.setByte(stream.readByte());
+			break;
+		case CHAR:
+			value.setChar(stream.readChar());
+			break;
+		case INT:
+			value.setInt(stream.readInt());
+			break;
+		case DOUBLE:
+			value.setDouble(stream.readDouble());
+			break;
+		case SHORT:
+			value.setShort(stream.readShort());
+			break;
+		case STRING:
+			value.setString(readUtf8String(stream));
+			break;
+		case JS_OBJECT:
+			value.setJsObject(
+					objectRefFactory.getJsObjectRef(stream.readInt()));
+			break;
+		case JAVA_OBJECT:
+			value.setJavaObject(
+					objectRefFactory.getJavaObjectRef(stream.readInt()));
+			break;
+		case JS_OBJECT_LIST:
+		case JS_INT_LIST:
+			JavaObjectRef javaObjectRef = objectRefFactory
+					.getJavaObjectRef(stream.readInt());
+			value.setJavaObject(javaObjectRef);
+			int len = stream.readInt();
+			int[] array = new int[len];
+			for (int idx = 0; idx < len; idx++) {
+				array[idx] = stream.readInt();
 			}
-		}
-
-		public boolean isPrimitive() {
-			switch (type) {
-			case BOOLEAN:
-			case BYTE:
-			case CHAR:
-			case DOUBLE:
-			case INT:
-			case SHORT:
-				return true;
-			default:
-				return false;
+			javaObjectRef.setArrayValues(array);
+			value.type = tag;
+			switch (tag) {
+			case JS_OBJECT_LIST:
+				javaObjectRef.special = Special.JS_OBJECT_LIST;
+				break;
+			case JS_INT_LIST:
+				javaObjectRef.special = Special.JS_INT_LIST;
+				break;
 			}
+			break;
+		default:
+			throw new IllegalArgumentException("Unexpected type: " + tag);
 		}
+		return value;
+	}
 
-		public boolean isShort() {
-			return type == ValueType.SHORT;
-		}
-
-		public boolean isString() {
-			return type == ValueType.STRING;
-		}
-
-		public boolean isUndefined() {
-			return type == ValueType.UNDEFINED;
-		}
-
-		public void setBoolean(boolean val) {
-			type = ValueType.BOOLEAN;
-			value = Boolean.valueOf(val);
-		}
-
-		public void setByte(byte val) {
-			type = ValueType.BYTE;
-			value = Byte.valueOf(val);
-		}
-
-		public void setChar(char val) {
-			type = ValueType.CHAR;
-			value = Character.valueOf(val);
-		}
-
-		public void setDouble(double val) {
-			type = ValueType.DOUBLE;
-			value = Double.valueOf(val);
-		}
-
-		public void setInt(int val) {
-			type = ValueType.INT;
-			value = Integer.valueOf(val);
-		}
-
-		public void setJavaObject(JavaObjectRef val) {
-			type = ValueType.JAVA_OBJECT;
-			value = val;
-		}
-
-		public void setJsObject(JsObjectRef val) {
-			type = ValueType.JS_OBJECT;
-			value = val;
-		}
-
-		public void setLong(long val) {
-			type = ValueType.BOOLEAN;
-			value = Long.valueOf(val);
-		}
-
-		public void setNull() {
-			type = ValueType.NULL;
-			value = null;
-		}
-
-		public void setShort(short val) {
-			type = ValueType.SHORT;
-			value = Short.valueOf(val);
-		}
-
-		public void setString(String val) {
-			type = ValueType.STRING;
-			value = val;
-		}
-
-		public void setUndefined() {
-			type = ValueType.UNDEFINED;
-			value = null;
-		}
-
-		@Override
-		public String toString() {
-			return type + ": " + value;
-		}
-
-		/**
-		 * Enum of type tags sent across the wire.
-		 */
-		public enum ValueType {
-			/**
-			 * Primitive values.
-			 */
-			NULL(0), BOOLEAN(1), BYTE(2), CHAR(3), SHORT(4), INT(5),
-			LONG_UNUSED(6), FLOAT_UNUSED(7), DOUBLE(8), STRING(9),
-			/**
-			 * Representations of Java or JS objects, sent as an index into a
-			 * table kept on the side holding the actual object.
-			 */
-			JAVA_OBJECT(10), JS_OBJECT(11),
-			/**
-			 * A Javascript undef value, also used for void returns.
-			 */
-			UNDEFINED(12),
-			/**
-			 * Because birds + early spring
-			 */
-			UNUSED(13),
-			/**
-			 * A special dispatch object for bulk transfer of js object ref
-			 * arrays
-			 */
-			JS_OBJECT_LIST(14),
-			/**
-			 * A special dispatch object for bulk transfer of int arrays
-			 */
-			JS_INT_LIST(15);
-
-			private final int id;
-
-			private ValueType(int id) {
-				this.id = id;
+	protected void sendFreedValues() throws IOException {
+		Set<Integer> freed = objectRefFactory.getRefIdsForCleanup();
+		int n = freed.size();
+		if (n > 0) {
+			int[] ids = new int[n];
+			int i = 0;
+			for (Integer id : freed) {
+				ids[i++] = id;
 			}
+			FreeMessage.send(this, ids);
+		}
+	}
 
-			byte getTag() {
-				return (byte) id;
-			}
+	protected void writeValue(DataOutputStream stream, Value value)
+			throws IOException {
+		if (value.isNull()) {
+			writeNull(stream);
+		} else if (value.isUndefined()) {
+			writeUndefined(stream);
+		} else if (value.isJsObject()) {
+			writeJsObject(stream, value.getJsObject());
+		} else if (value.isJavaObject()) {
+			writeJavaObject(stream, value.getJavaObject());
+		} else if (value.isJsObjectArray()) {
+			writeJavaObject(stream, value.getJavaObject());
+		} else if (value.isJsIntArray()) {
+			writeJavaObject(stream, value.getJavaObject());
+		} else if (value.isBoolean()) {
+			writeTaggedBoolean(stream, value.getBoolean());
+		} else if (value.isByte()) {
+			writeTaggedByte(stream, value.getByte());
+		} else if (value.isChar()) {
+			writeTaggedChar(stream, value.getChar());
+		} else if (value.isShort()) {
+			writeTaggedShort(stream, value.getShort());
+		} else if (value.isDouble()) {
+			writeTaggedDouble(stream, value.getDouble());
+		} else if (value.isInt()) {
+			writeTaggedInt(stream, value.getInt());
+		} else if (value.isString()) {
+			writeTaggedString(stream, value.getString());
+		} else {
+			throw new IllegalArgumentException(
+					"Unexpected type: " + value.getType());
 		}
 	}
 }

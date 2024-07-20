@@ -1,5 +1,6 @@
 package com.google.gwt.dom.client;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.impl.JavaScriptIntList;
 import com.google.gwt.core.client.impl.JavaScriptObjectList;
 import com.google.gwt.dom.client.DomIds.IdList;
@@ -79,7 +80,6 @@ class MarkupJso {
 
 	void markup0(MarkupToken token) {
 		token.remote.setInnerHTML(token.localMarkup);
-		// build the json refid array
 		long start = System.currentTimeMillis();
 		token.ok = traverseAndMark(token.remote, token.createdJsos,
 				token.localRefIds);

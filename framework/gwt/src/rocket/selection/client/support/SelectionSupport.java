@@ -41,8 +41,7 @@ abstract public class SelectionSupport {
 	public static final Topic<Integer> topicSelectionDebug = Topic.create();
 
 	native static TextJso remote(Text text)/*-{
-    var implAccess = text.@com.google.gwt.dom.client.Text::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Text.TextImplAccess::ensureRemote()();
+    var remote = implAccess.@com.google.gwt.dom.client.Text::remote()();
     return remote;
 	}-*/;
 

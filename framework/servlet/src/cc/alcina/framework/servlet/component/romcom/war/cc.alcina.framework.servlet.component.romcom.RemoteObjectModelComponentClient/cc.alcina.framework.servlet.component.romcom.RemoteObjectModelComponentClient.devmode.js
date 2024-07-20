@@ -8,18 +8,18 @@ var $gwt = {};
 var $doc = $wnd.document;
 var $moduleName, $moduleBase;
 function __gwtStartLoadingFragment(frag) {
-	var fragFile = 'deferredjs/' + $strongName + '/' + frag + '.cache.js';
-	return __gwtModuleFunction.__startLoadingFragment(fragFile);
+var fragFile = 'deferredjs/' + $strongName + '/' + frag + '.cache.js';
+return __gwtModuleFunction.__startLoadingFragment(fragFile);
 }
-function __gwtInstallCode(code) { return __gwtModuleFunction.__installRunAsyncCode(code); }
+function __gwtInstallCode(code) {return __gwtModuleFunction.__installRunAsyncCode(code);}
 function __gwt_isKnownPropertyValue(propName, propValue) {
-	return __gwtModuleFunction.__gwt_isKnownPropertyValue(propName, propValue);
+return __gwtModuleFunction.__gwt_isKnownPropertyValue(propName, propValue);
 }
 function __gwt_getMetaProperty(name) {
-	return __gwtModuleFunction.__gwt_getMetaProperty(name);
+return __gwtModuleFunction.__gwt_getMetaProperty(name);
 }
-var $stats = $wnd.__gwtStatsEvent ? function (a) {
-	return $wnd.__gwtStatsEvent && $wnd.__gwtStatsEvent(a);
+var $stats = $wnd.__gwtStatsEvent ? function(a) {
+return $wnd.__gwtStatsEvent && $wnd.__gwtStatsEvent(a);
 } : null;
 var $sessionId = $wnd.__gwtStatsSessionId ? $wnd.__gwtStatsSessionId : null;
 /******************************************************************************
@@ -465,67 +465,67 @@ function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePro
 }
 
 class GwtJsPlugin {
-	constructor() {
+    constructor() {
 
-	};
-	init(win) {
-		this.win = win;
-		return true;
-	};
-	connect(url, sessionId, codeServer, moduleName,
-		hostedHtmlVersion) {
-		this.url = url;
-		this.sessionId = sessionId;
-		this.codeServer = codeServer;
-		this.moduleName = moduleName;
-		this.hostedHtmlVersion = hostedHtmlVersion;
-		let codeServerWs = null;
-		//
-		// always use codeServerWs
-		//
-		//
-		//        if (window.location.search.indexOf("gwt.ws.server=") != -1) {
-		//            codeServerWs = window.location.search.replace(/.*gwt.ws.server=([a-zA-Z0-9_:]+).*/, "$1");
-		//        }
-		let regexp = /(.+):([0-9]+)/;
-		codeServerWs = codeServer.replace(regexp, "$1") + ":" + (parseInt(codeServer.replace(regexp, "$2")) + 1);
-		this.codeServerWs = codeServerWs;
-		var self = this;
-		if (typeof gwt_hm_Message != "undefined") {
-			self.connectAfterLoad.apply(self);
-			return true;
-		}
-		var scriptNames = ["common/Message.js", "common/BrowserChannel.js", "impl/JavaObject.js", "impl/ScriptableInstance.js", "impl/LocalObjectTable.js", "common/ieee754.js", "common/Platform.js", "common/HashMap.js", "common/FatalErrorMessage.js", "common/HostChannel.js", "common/InvokeMessage.js", "common/LoadModuleMessage.js", "common/InvokeSpecialMessage.js", "common/AllowedConnections.js", "common/DebugLevel.js", "common/Socket.js", "common/Debug.js", "common/QuitMessage.js", "common/SwitchTransportMessage.js", "common/ProtocolVersionMessage.js", "common/ChooseTransportMessage.js", "common/SessionHandler.js", "common/ByteOrder.js", "common/ReturnMessage.js", "common/ServerMethods.js", "common/LoadJsniMessage.js", "common/Value.js", "common/CheckVersionsMessage.js", "common/FreeValueMessage.js", "common/WebSocketTransport.js", "common/WebSocketTransportClient.js"];
-		scriptNames.forEach(function (scriptName) {
-			var script = $doc.createElement('script');
-			script.src = `/jscodeserver/${scriptName}`;
-			document.getElementsByTagName('head')[0].appendChild(script);
-		});
-		window.setTimeout(function () {
-			self.connectAfterLoad.apply(self);
-		}, 250);
-		return true;
-	};
-	connectAfterLoad() {
-		this.scriptableInstance = new gwt_hm_ScriptableInstance();
-		this.scriptableInstance.init(this.win);
-		this.scriptableInstance.connect(this.url, this.sessionId, this.codeServer, this.moduleName,
-			this.hostedHtmlVersion, this.codeServerWs);
-	}
+    };
+    init(win) {
+        this.win = win;
+        return true;
+    };
+    connect(url, sessionId, codeServer, moduleName,
+        hostedHtmlVersion) {
+        this.url = url;
+        this.sessionId = sessionId;
+        this.codeServer = codeServer;
+        this.moduleName = moduleName;
+        this.hostedHtmlVersion = hostedHtmlVersion;
+        let codeServerWs = null;
+        //
+        // always use codeServerWs
+        //
+        //
+        //        if (window.location.search.indexOf("gwt.ws.server=") != -1) {
+        //            codeServerWs = window.location.search.replace(/.*gwt.ws.server=([a-zA-Z0-9_:]+).*/, "$1");
+        //        }
+        let regexp = /(.+):([0-9]+)/;
+        codeServerWs = codeServer.replace(regexp, "$1") + ":" + (parseInt(codeServer.replace(regexp, "$2")) + 1);
+        this.codeServerWs = codeServerWs;
+        var self = this;
+        if (typeof gwt_hm_Message != "undefined") {
+            self.connectAfterLoad.apply(self);
+            return true;
+        }
+        var scriptNames = ["common/Message.js", "common/BrowserChannel.js", "impl/JavaObject.js", "impl/ScriptableInstance.js", "impl/LocalObjectTable.js", "common/ieee754.js", "common/Platform.js", "common/HashMap.js", "common/FatalErrorMessage.js", "common/HostChannel.js", "common/InvokeMessage.js", "common/LoadModuleMessage.js", "common/InvokeSpecialMessage.js", "common/AllowedConnections.js", "common/DebugLevel.js", "common/Socket.js", "common/Debug.js", "common/QuitMessage.js", "common/SwitchTransportMessage.js", "common/ProtocolVersionMessage.js", "common/ChooseTransportMessage.js", "common/SessionHandler.js", "common/ByteOrder.js", "common/ReturnMessage.js", "common/ServerMethods.js", "common/LoadJsniMessage.js", "common/Value.js", "common/CheckVersionsMessage.js", "common/FreeValueMessage.js", "common/WebSocketTransport.js", "common/WebSocketTransportClient.js"];
+        scriptNames.forEach(function(scriptName) {
+            var script = $doc.createElement('script');
+            script.src = `/jscodeserver/${scriptName}`;
+            document.getElementsByTagName('head')[0].appendChild(script);
+        });
+        window.setTimeout(function() {
+            self.connectAfterLoad.apply(self);
+        }, 250);
+        return true;
+    };
+    connectAfterLoad() {
+        this.scriptableInstance = new gwt_hm_ScriptableInstance();
+        this.scriptableInstance.init(this.win);
+        this.scriptableInstance.connect(this.url, this.sessionId, this.codeServer, this.moduleName,
+            this.hostedHtmlVersion, this.codeServerWs);
+    }
 
 }
 var __gwt_jsCodeServerPlugin = new GwtJsPlugin();
 
 class gwt_hm_Message {
-	constructor() {
+    constructor() {
 
-	}
-	getType() {
-		throw "abstract";
-	}
-	isAsynchronous() {
-		return false;
-	}
+    }
+    getType() {
+        throw "abstract";
+    }
+    isAsynchronous() {
+        return false;
+    }
 }
 
 /* from BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION */
@@ -599,7 +599,7 @@ gwt_hm_JavaObject.propertyDispatcher = {
 		var objectId = javaObject.__gwt_java_object_id;
 		var dispId = prop;
 		if (isNaN(parseInt(dispId))) {
-			// string-valued -- e.g. __gwt_java_js_object_array
+			// string-valued -- e.g. __gwt_java_js_object_list
 			javaObject[prop] = value;
 			return;
 		}
@@ -639,25 +639,43 @@ gwt_hm_JavaObject.create = function (plugin, id, type) {
 	switch (type) {
 		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
 			//note that the value of the property can be replaced - its presence is what determines the JAVA_OBJECT subtype
-			dispatcher.__gwt_java_js_object_array = [];
+			dispatcher.__gwt_java_js_object_list = [];
 			break;
 		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
-			dispatcher.__gwt_java_js_int_array = [];
+			//note that the value of the property can be replaced - its presence is what determines the JAVA_OBJECT subtype
+			dispatcher.__gwt_java_js_int_list = [];
 			break;
 	}
 	return new Proxy(dispatcher, gwt_hm_JavaObject.propertyDispatcher);
 }
-gwt_hm_JavaObject.wrapJavaObject = function (ret, javaObject, scriptableInstance) {
-	ret.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
-	if (javaObject.hasOwnProperty("__gwt_java_js_object_array")) {
-		var arr = javaObject.__gwt_java_js_object_array;
-		ret.setJavaObjectLength(arr.length);
+gwt_hm_JavaObject.wrapJavaObject = function (valueObj, javaObject, scriptableInstance) {
+	valueObj.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
+	if (javaObject.hasOwnProperty("__gwt_java_js_object_list")) {
+		var arr = javaObject.__gwt_java_js_object_list;
+		valueObj.setJavaObjectLength(arr.length);
 		for (var idx = 0; idx < arr.length; idx++) {
 			var obj = arr[idx];
-			ret.addJsObjectId(scriptableInstance.getLocalObjectRef(obj));
+			valueObj.addJsObjectId(scriptableInstance.getLocalObjectRef(obj));
 		}
-	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_array")) {
-		throw "unsuuppported";
+	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
+		var objArray = javaObject.__gwt_java_js_int_list;
+		valueObj.setJavaObjectLength(objArray.length);
+		for (var idx = 0; idx < objArray.length; idx++) {
+			var iValue = objArray[idx];
+			valueObj.addJsInt(iValue);
+		}
+	}
+}
+gwt_hm_JavaObject.unwrapJavaObject = function (valueObj, javaObject, scriptableInstance) {
+	if (javaObject.hasOwnProperty("__gwt_java_js_object_list")) {
+		javaObject.__gwt_java_js_object_list = [];
+		var intArray = valueObj.getArray();
+		for (var idx = 0; idx < intArray.length; idx++) {
+			var refId = intArray[idx];
+			javaObject.__gwt_java_js_object_list.push(scriptableInstance.getLocalObject(refId));
+		}
+	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
+		javaObject.__gwt_java_js_int_list = valueObj.getArray();
 	}
 }
 
@@ -769,6 +787,9 @@ class gwt_hm_ScriptableInstance {
 	getLocalObjectRef(obj) {
 		return this.localObjects.ensureObjectRef(obj);
 	}
+	getLocalObject(refId) {
+		return this.localObjects.getById(refId);
+	}
 	resolveLocal(val) {
 		switch (val.type) {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
@@ -799,7 +820,9 @@ class gwt_hm_ScriptableInstance {
 					var javaObject = gwt_hm_JavaObject.create(this, id, val.type);
 					this.javaObjects.set(id, javaObject);
 				}
-				return this.javaObjects.get(id);
+				var javaObject = this.javaObjects.get(id);
+				gwt_hm_JavaObject.unwrapJavaObject(val, javaObject, this);
+				return javaObject;
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
 				return this.localObjects.getById(val.getJsObjectId());
 			case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
@@ -844,140 +867,140 @@ class gwt_hm_ScriptableInstance {
 }
 
 class gwt_hm_LocalObjectTable {
-	objects = new Map();
-	ids = new Map();
-	nextId = 0;
-	dontFree = false;
-	jsIdentitySafe = true;
-	constructor() { }
-	setFree(id) {
-		var obj = this.getById(id);
-		this.objects.remove(id);
-		this.ids.remove(obj);
-	}
-	add(obj) {
-		var id = this.nextId++;
-		this.set(id, obj);
-		if (!this.jsIdentitySafe) {
-			throw "not implemented";
-		}
-	}
-	set(id, obj) {
-		if (!this.jsIdentitySafe) {
-			throw "not implemented";
-		}
-		this.objects.set(id, obj);
-		this.ids.set(obj, id);
-	}
-	freeAll() {
-		this.objects.clear();
-		this.ids.clear();
-	}
-	getById(id) {
-		if (!this.objects.has(id)) {
-			throw `Object not found: ${id}`;
-		}
-		return this.objects.get(id);
-	}
-	getObjectId(object) {
-		if (!this.ids.has(object)) {
-			throw `Id not found: ${object}`;
-		}
-		return this.ids.get(object);
-	}
-	ensureObjectRef(obj) {
-		if (!this.ids.has(obj)) {
-			this.add(obj);
-		}
-		return this.ids.get(obj);
-	}
+    objects = new Map();
+    ids = new Map();
+    nextId = 0;
+    dontFree = false;
+    jsIdentitySafe = true;
+    constructor() {}
+    setFree(id) {
+        var obj = this.getById(id);
+        this.objects.remove(id);
+        this.ids.remove(obj);
+    }
+    add(obj) {
+        var id = this.nextId++;
+        this.set(id, obj);
+        if (!this.jsIdentitySafe) {
+            throw "not implemented";
+        }
+    }
+    set(id, obj) {
+        if (!this.jsIdentitySafe) {
+            throw "not implemented";
+        }
+        this.objects.set(id, obj);
+        this.ids.set(obj, id);
+    }
+    freeAll() {
+        this.objects.clear();
+        this.ids.clear();
+    }
+    getById(id) {
+        if (!this.objects.has(id)) {
+            throw `Object not found: ${id}`;
+        }
+        return this.objects.get(id);
+    }
+    getObjectId(object) {
+        if (!this.ids.has(object)) {
+            throw `Id not found: ${object}`;
+        }
+        return this.ids.get(object);
+    }
+    ensureObjectRef(obj) {
+        if (!this.ids.has(obj)) {
+            this.add(obj);
+        }
+        return this.ids.get(obj);
+    }
 
 }
 
 var ieee754 = {}
-ieee754.read = function (buffer, offset, isLE, mLen, nBytes) {
-	var e, m
-	var eLen = (nBytes * 8) - mLen - 1
-	var eMax = (1 << eLen) - 1
-	var eBias = eMax >> 1
-	var nBits = -7
-	var i = isLE ? (nBytes - 1) : 0
-	var d = isLE ? -1 : 1
-	var s = buffer[offset + i]
+ieee754.read = function(buffer, offset, isLE, mLen, nBytes) {
+    var e, m
+    var eLen = (nBytes * 8) - mLen - 1
+    var eMax = (1 << eLen) - 1
+    var eBias = eMax >> 1
+    var nBits = -7
+    var i = isLE ? (nBytes - 1) : 0
+    var d = isLE ? -1 : 1
+    var s = buffer[offset + i]
 
-	i += d
+    i += d
 
-	e = s & ((1 << (-nBits)) - 1)
-	s >>= (-nBits)
-	nBits += eLen
-	for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) { }
+    e = s & ((1 << (-nBits)) - 1)
+    s >>= (-nBits)
+    nBits += eLen
+    for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
 
-	m = e & ((1 << (-nBits)) - 1)
-	e >>= (-nBits)
-	nBits += mLen
-	for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) { }
+    m = e & ((1 << (-nBits)) - 1)
+    e >>= (-nBits)
+    nBits += mLen
+    for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
 
-	if (e === 0) {
-		e = 1 - eBias
-	} else if (e === eMax) {
-		return m ? NaN : ((s ? -1 : 1) * Infinity)
-	} else {
-		m = m + Math.pow(2, mLen)
-		e = e - eBias
-	}
-	return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+    if (e === 0) {
+        e = 1 - eBias
+    } else if (e === eMax) {
+        return m ? NaN : ((s ? -1 : 1) * Infinity)
+    } else {
+        m = m + Math.pow(2, mLen)
+        e = e - eBias
+    }
+    return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
 }
 
-ieee754.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-	var e, m, c
-	var eLen = (nBytes * 8) - mLen - 1
-	var eMax = (1 << eLen) - 1
-	var eBias = eMax >> 1
-	var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-	var i = isLE ? 0 : (nBytes - 1)
-	var d = isLE ? 1 : -1
-	var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+ieee754.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+    var e, m, c
+    var eLen = (nBytes * 8) - mLen - 1
+    var eMax = (1 << eLen) - 1
+    var eBias = eMax >> 1
+    var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+    var i = isLE ? 0 : (nBytes - 1)
+    var d = isLE ? 1 : -1
+    var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
 
-	value = Math.abs(value)
+    value = Math.abs(value)
 
-	if (isNaN(value) || value === Infinity) {
-		m = isNaN(value) ? 1 : 0
-		e = eMax
-	} else {
-		e = Math.floor(Math.log(value) / Math.LN2)
-		if (value * (c = Math.pow(2, -e)) < 1) {
-			e--
-			c *= 2
-		}
-		if (e + eBias >= 1) {
-			value += rt / c
-		} else {
-			value += rt * Math.pow(2, 1 - eBias)
-		}
-		if (value * c >= 2) {
-			e++
-			c /= 2
-		}
+    if (isNaN(value) || value === Infinity) {
+        m = isNaN(value) ? 1 : 0
+        e = eMax
+    } else {
+        e = Math.floor(Math.log(value) / Math.LN2)
+        if (value * (c = Math.pow(2, -e)) < 1) {
+            e--
+            c *= 2
+        }
+        if (e + eBias >= 1) {
+            value += rt / c
+        } else {
+            value += rt * Math.pow(2, 1 - eBias)
+        }
+        if (value * c >= 2) {
+            e++
+            c /= 2
+        }
 
-		if (e + eBias >= eMax) {
-			m = 0
-			e = eMax
-		} else if (e + eBias >= 1) {
-			m = ((value * c) - 1) * Math.pow(2, mLen)
-			e = e + eBias
-		} else {
-			m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-			e = 0
-		}
-	}
+        if (e + eBias >= eMax) {
+            m = 0
+            e = eMax
+        } else if (e + eBias >= 1) {
+            m = ((value * c) - 1) * Math.pow(2, mLen)
+            e = e + eBias
+        } else {
+            m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+            e = 0
+        }
+    }
 
-	for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) { }
+    for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
 
-	e = (e << mLen) | m
-	eLen += mLen
-	for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) { }
+    e = (e << mLen) | m
+    eLen += mLen
+    for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
 
-	buffer[offset + i - d] |= s * 128
+    buffer[offset + i - d] |= s * 128
 }
 
 
@@ -1235,15 +1258,21 @@ class gwt_hm_HostChannel {
 				var val = this.readInt();
 				value.setJavaObjectId(val);
 				var len = this.readInt();
-				//tmp - only support zerolen
-				value.setJavaObjectLength(len);
-				if (len != 0) {
-					throw "unsupported non-zero length";
+				value.setJavaObjectListLength(len);
+				for (var idx = 0; idx < len; idx++) {
+					value.addJsObjectId(this.readInt());
 				}
 				return value;
 			}
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST: {
-				throw "unsupported VALUE_TYPE_JS_INT_LIST";
+				var val = this.readInt();
+				value.setJavaObjectId(val);
+				var len = this.readInt();
+				value.setJavaIntListLength(len);
+				for (var idx = 0; idx < len; idx++) {
+					value.addJsInt(this.readInt());
+				}
+				return value;
 			}
 			default:
 				throw "Unhandled value type sent from server: " + type;
@@ -1280,16 +1309,15 @@ class gwt_hm_HostChannel {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
 				return this.sendInt(value.getJavaObjectId());
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
 				this.sendInt(value.getJavaObjectId());
 				var arr = value.getArray();
 				this.sendInt(arr.length);
 				for (var idx = 0; idx < arr.length; idx++) {
-					var refId = arr[idx];
-					this.sendInt(refId);
+					var intValue = arr[idx];
+					this.sendInt(intValue);
 				}
 				return;
-			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
-				throw "unsupported";
 			default:
 				throw "Unhandled value type sent to server: " + type;
 		}
@@ -1469,102 +1497,102 @@ gwt_hm_HostChannel.long_MASK = (1 << gwt_hm_HostChannel.long_BITS) - 1;
 gwt_hm_HostChannel.long_MASK_2 = (1 << gwt_hm_HostChannel.long_BITS2) - 1;
 
 class gwt_hm_InvokeMessage extends gwt_hm_Message {
-	thisRef;
-	methodName;
-	numArgs;
-	args;
-	constructor(thisRef, methodName,
-		numArgs, args) {
-		super();
-		this.thisRef = thisRef;
-		this.methodName = methodName;
-		this.numArgs = numArgs;
-		this.args = args;
-	}
+    thisRef;
+    methodName;
+    numArgs;
+    args;
+    constructor(thisRef, methodName,
+        numArgs, args) {
+        super();
+        this.thisRef = thisRef;
+        this.methodName = methodName;
+        this.numArgs = numArgs;
+        this.args = args;
+    }
 }
 gwt_hm_InvokeMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE;
-gwt_hm_InvokeMessage.receive = function (channel) {
-	var methodName = channel.readString();
-	var thisRef = channel.readValue();
-	var numArgs = channel.readInt();
-	var args = [];
-	for (var idx = 0; idx < numArgs; idx++) {
-		var val = channel.readValue();
-		args.push(val);
-	}
-	return new gwt_hm_InvokeMessage(thisRef, methodName, numArgs, args);
+gwt_hm_InvokeMessage.receive = function(channel) {
+    var methodName = channel.readString();
+    var thisRef = channel.readValue();
+    var numArgs = channel.readInt();
+    var args = [];
+    for (var idx = 0; idx < numArgs; idx++) {
+        var val = channel.readValue();
+        args.push(val);
+    }
+    return new gwt_hm_InvokeMessage(thisRef, methodName, numArgs, args);
 }
-gwt_hm_InvokeMessage.send = function (channel, thisRef, methodDispatchId, numArgs, args) {
-	channel.ensureClear();
-	channel.sendByte(gwt_hm_InvokeMessage.TYPE);
-	channel.sendInt(methodDispatchId)
-	channel.sendValue(thisRef)
-	channel.sendInt(numArgs)
-	for (var i = 0; i < numArgs; ++i) {
-		channel.sendValue(args[i])
-	}
+gwt_hm_InvokeMessage.send = function(channel, thisRef, methodDispatchId, numArgs, args) {
+    channel.ensureClear();
+    channel.sendByte(gwt_hm_InvokeMessage.TYPE);
+    channel.sendInt(methodDispatchId)
+    channel.sendValue(thisRef)
+    channel.sendInt(numArgs)
+    for (var i = 0; i < numArgs; ++i) {
+        channel.sendValue(args[i])
+    }
 }
 
 class gwt_hm_LoadModuleMessage extends gwt_hm_Message {
-	version;
-	constructor(version) {
-		super();
-		this.version = version;
-	}
+    version;
+    constructor(version) {
+        super();
+        this.version = version;
+    }
 }
 gwt_hm_LoadModuleMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_LOAD_MODULE;
-gwt_hm_LoadModuleMessage.send = function (channel, url, tabKey, sessionKey, moduleName, userAgent, handler) {
-	channel.sendByte(gwt_hm_LoadModuleMessage.TYPE);
-	channel.sendString(url);
-	channel.sendString(tabKey);
-	channel.sendString(sessionKey);
-	channel.sendString(moduleName);
-	channel.sendString(userAgent);
-	var ret = channel.reactToMessagesWhileWaitingForReturn(
-		handler);
+gwt_hm_LoadModuleMessage.send = function(channel, url, tabKey, sessionKey, moduleName, userAgent, handler) {
+    channel.sendByte(gwt_hm_LoadModuleMessage.TYPE);
+    channel.sendString(url);
+    channel.sendString(tabKey);
+    channel.sendString(sessionKey);
+    channel.sendString(moduleName);
+    channel.sendString(userAgent);
+    var ret = channel.reactToMessagesWhileWaitingForReturn(
+        handler);
 }
 
 class gwt_hm_InvokeSpecialMessage extends gwt_hm_Message {
-	dispatchId;
-	numArgs;
-	args;
-	constructor(dispatchId, numArgs, args) {
-		super();
-		this.dispatchId = dispatchId;
-		this.numArgs = numArgs;
-		this.args = args;
-	}
+    dispatchId;
+    numArgs;
+    args;
+    constructor(dispatchId, numArgs, args) {
+        super();
+        this.dispatchId = dispatchId;
+        this.numArgs = numArgs;
+        this.args = args;
+    }
 }
 gwt_hm_InvokeSpecialMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL;
-gwt_hm_InvokeSpecialMessage.receive = function (channel) {
-	var dispatchId = channel.readByte();
-	var numArgs = channel.readInt();
-	var args = [];
-	for (var idx = 0; idx < numArgs; idx++) {
-		var val = channel.readValue();
-		args.push(val);
-	}
-	return new gwt_hm_InvokeSpecialMessage(dispatchId, numArgs, args);
+gwt_hm_InvokeSpecialMessage.receive = function(channel) {
+    var dispatchId = channel.readByte();
+    var numArgs = channel.readInt();
+    var args = [];
+    for (var idx = 0; idx < numArgs; idx++) {
+        var val = channel.readValue();
+        args.push(val);
+    }
+    return new gwt_hm_InvokeSpecialMessage(dispatchId, numArgs, args);
 }
-gwt_hm_InvokeSpecialMessage.send = function (channel, dispatchId, numArgs, args) {
-	channel.ensureClear();
-	channel.sendByte(gwt_hm_InvokeSpecialMessage.TYPE);
-	channel.sendByte(dispatchId)
-	channel.sendInt(numArgs)
-	for (var i = 0; i < numArgs; ++i) {
-		channel.sendValue(args[i])
-	}
+gwt_hm_InvokeSpecialMessage.send = function(channel, dispatchId, numArgs, args) {
+    channel.ensureClear();
+    channel.sendByte(gwt_hm_InvokeSpecialMessage.TYPE);
+    channel.sendByte(dispatchId)
+    channel.sendInt(numArgs)
+    for (var i = 0; i < numArgs; ++i) {
+        channel.sendValue(args[i])
+    }
 }
 
 class gwt_hm_AllowedConnections {
-	/*
-	 * static bool matchesRule(const std::string& webHost, const std::string&
-	 * codeServer, bool* allowed);
-	 */
+    /*
+     * static bool matchesRule(const std::string& webHost, const std::string&
+     * codeServer, bool* allowed);
+     */
 
-	matchesRule(webHost, codeServer) {
-		return true;
-	}
+    matchesRule(webHost, codeServer) {
+        return true;
+    }
 
 }
 
@@ -1575,36 +1603,36 @@ class gwt_hm_AllowedConnections {
 
 
 class gwt_hm_QuitMessage extends gwt_hm_Message {
-	version;
-	constructor(version) {
-		super();
-		this.version = version;
-	}
+    version;
+    constructor(version) {
+        super();
+        this.version = version;
+    }
 }
 gwt_hm_QuitMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT;
-gwt_hm_QuitMessage.send = function (channel) {
-	channel.closeSocket = true;
-	channel.sendByte(gwt_hm_QuitMessage.TYPE);
-	channel.flush();
+gwt_hm_QuitMessage.send = function(channel) {
+    channel.closeSocket = true;
+    channel.sendByte(gwt_hm_QuitMessage.TYPE);
+    channel.flush();
 }
 
 
 
 class gwt_hm_ProtocolVersionMessage extends gwt_hm_Message {
-	version;
-	constructor(version) {
-		super();
-		this.version = version;
-	}
+    version;
+    constructor(version) {
+        super();
+        this.version = version;
+    }
 }
 gwt_hm_ProtocolVersionMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION;
-gwt_hm_ProtocolVersionMessage.send = function (channel, version) {
-	channel.sendByte(gwt_hm_ProtocolVersionMessage.TYPE);
-	channel.sendInt(version);
+gwt_hm_ProtocolVersionMessage.send = function(channel, version) {
+    channel.sendByte(gwt_hm_ProtocolVersionMessage.TYPE);
+    channel.sendInt(version);
 }
-gwt_hm_ProtocolVersionMessage.receive = function (channel) {
-	var version = channel.readInt();
-	return new gwt_hm_ProtocolVersionMessage(version);
+gwt_hm_ProtocolVersionMessage.receive = function(channel) {
+    var version = channel.readInt();
+    return new gwt_hm_ProtocolVersionMessage(version);
 }
 
 
@@ -1613,83 +1641,83 @@ gwt_hm_ProtocolVersionMessage.receive = function (channel) {
 
 class gwt_hm_ByteOrder {
 
-	//TODO-jscs- 
-	floatFromBytes(bytes) {
-		throw "nope";
-		return 0.0;
-	}
-	doubleFromBytes(bytes) {
-		throw "nope";
-		return 0.0;
-	}
-	bytesFromDouble(double) {
-		throw "nope";
-		return [];
-	}
-	bytesFromFloat(float) {
-		throw "nope";
-		return [];
-	}
+    //TODO-jscs- 
+    floatFromBytes(bytes) {
+        throw "nope";
+        return 0.0;
+    }
+    doubleFromBytes(bytes) {
+        throw "nope";
+        return 0.0;
+    }
+    bytesFromDouble(double) {
+        throw "nope";
+        return [];
+    }
+    bytesFromFloat(float) {
+        throw "nope";
+        return [];
+    }
 }
 
 class gwt_hm_ReturnMessage extends gwt_hm_Message {
-	isException;
-	retValue;
-	constructor(isException, retValue) {
-		super();
-		this.isException = isException;
-		this.retValue = retValue;
-	}
+    isException;
+    retValue;
+    constructor(isException, retValue) {
+        super();
+        this.isException = isException;
+        this.retValue = retValue;
+    }
 }
 gwt_hm_ReturnMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN;
-gwt_hm_ReturnMessage.receive = function (channel) {
-	var isException = channel.readByte();
-	var retValue = channel.readValue();
-	return new gwt_hm_ReturnMessage(isException != 0, retValue);
+gwt_hm_ReturnMessage.receive = function(channel) {
+    var isException = channel.readByte();
+    var retValue = channel.readValue();
+    return new gwt_hm_ReturnMessage(isException != 0, retValue);
 }
-gwt_hm_ReturnMessage.send = function (channel, isException, retValue) {
-	channel.sendByte(gwt_hm_ReturnMessage.TYPE);
-	channel.sendByte(isException ? 1 : 0);
-	channel.sendValue(retValue);
+gwt_hm_ReturnMessage.send = function(channel, isException, retValue) {
+    channel.sendByte(gwt_hm_ReturnMessage.TYPE);
+    channel.sendByte(isException ? 1 : 0);
+    channel.sendValue(retValue);
 }
 
 class gwt_hm_ServerMethods {
-	constructor() { }
+    constructor() {}
 }
-gwt_hm_ServerMethods.freeJava = function (channel, handler, idCount, ids) {
-	gwt_hm_FreeValueMessage.send(idCount, ids);
+gwt_hm_ServerMethods.freeJava = function(channel, handler, idCount, ids) {
+    gwt_hm_FreeValueMessage.send(idCount, ids);
 }
-gwt_hm_ServerMethods.setProperty = function (channel, handler, objectId, dispId, value) {
-	let args = [];
-	args[0] = new gwt_hm_Value();
-	args[1] = new gwt_hm_Value();
-	args[2] = value;
-	args[0].setInt(objectId);
-	args[1].setInt(dispId);
-	gwt_hm_InvokeSpecialMessage.send(channel, gwt_hm_BrowserChannel.SPECIAL_SET_PROPERTY, 3, args);
-	return channel.reactToMessagesWhileWaitingForReturn(handler);
+gwt_hm_ServerMethods.setProperty = function(channel, handler, objectId, dispId, value) {
+    let args = [];
+    args[0] = new gwt_hm_Value();
+    args[1] = new gwt_hm_Value();
+    args[2] = value;
+    args[0].setInt(objectId);
+    args[1].setInt(dispId);
+    gwt_hm_InvokeSpecialMessage.send(channel, gwt_hm_BrowserChannel.SPECIAL_SET_PROPERTY, 3, args);
+    return channel.reactToMessagesWhileWaitingForReturn(handler);
 }
-gwt_hm_ServerMethods.getProperty = function (channel, handler, objectId, dispId) {
-	let args = [];
-	args[0] = new gwt_hm_Value();
-	args[1] = new gwt_hm_Value();
-	args[0].setInt(objectId);
-	args[1].setInt(dispId);
-	gwt_hm_InvokeSpecialMessage.send(channel, gwt_hm_BrowserChannel.SPECIAL_GET_PROPERTY, 2, args);
-	return channel.reactToMessagesWhileWaitingForReturn(handler);
+gwt_hm_ServerMethods.getProperty = function(channel, handler, objectId, dispId) {
+    let args = [];
+    args[0] = new gwt_hm_Value();
+    args[1] = new gwt_hm_Value();
+    args[0].setInt(objectId);
+    args[1].setInt(dispId);
+    gwt_hm_InvokeSpecialMessage.send(channel, gwt_hm_BrowserChannel.SPECIAL_GET_PROPERTY, 2, args);
+    return channel.reactToMessagesWhileWaitingForReturn(handler);
 }
 
 class gwt_hm_LoadJsniMessage extends gwt_hm_Message {
-	js;
-	constructor(js) {
-		super();
-		this.js = js;
-	}
+    js;
+    constructor(js) {
+        super();
+        this.js = js;
+    }
 }
 gwt_hm_LoadJsniMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI;
-gwt_hm_LoadJsniMessage.receive = function (channel) {
-	var js = channel.readString();
-	return new gwt_hm_LoadJsniMessage(js);
+gwt_hm_LoadJsniMessage.receive = function(channel) {
+    var js = channel.readString();
+    return new gwt_hm_LoadJsniMessage(js);
 }
 
 class gwt_hm_Value {
@@ -1870,11 +1898,13 @@ class gwt_hm_Value {
 		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
 		this.intValue = val;
 	}
-	setJavaObjectLength(jsObjectLength) {
+	setJavaObjectListLength(jsObjectLength) {
+		//the length parameter is unused (setting the js array length would require different handling)
 		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST;
 		this.arrayValue = [];
 	}
-	setJavaIntLength(intObjectLength) {
+	setJavaIntListLength(intObjectLength) {
+		//the length parameter is unused (setting the js array length would require different handling)
 		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST;
 		this.arrayValue = [];
 	}
@@ -1948,57 +1978,57 @@ class gwt_hm_Value {
 }
 
 class gwt_hm_CheckVersionsMessage extends gwt_hm_Message {
-	minVersion;
-	maxVersion;
-	hostedHtmlVersion;
-	constructor(minVersion, maxVersion, hostedHtmlVersion) {
-		super();
-		this.minVersion = minVersion;
-		this.maxVersion = maxVersion;
-		this.hostedHtmlVersion = hostedHtmlVersion;
-	}
+    minVersion;
+    maxVersion;
+    hostedHtmlVersion;
+    constructor(minVersion, maxVersion, hostedHtmlVersion) {
+        super();
+        this.minVersion = minVersion;
+        this.maxVersion = maxVersion;
+        this.hostedHtmlVersion = hostedHtmlVersion;
+    }
 }
 gwt_hm_CheckVersionsMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_CHECK_VERSIONS;
-gwt_hm_CheckVersionsMessage.receive = function (channel) {
-	var minVersion = channel.readInt();
-	var maxVersion = channel.readInt();
-	var hostedHtmlVersion = channel.readString();
-	return new gwt_hm_CheckVersionsMessage(minVersion, maxVersion, hostedHtmlVersion);
+gwt_hm_CheckVersionsMessage.receive = function(channel) {
+    var minVersion = channel.readInt();
+    var maxVersion = channel.readInt();
+    var hostedHtmlVersion = channel.readString();
+    return new gwt_hm_CheckVersionsMessage(minVersion, maxVersion, hostedHtmlVersion);
 }
-gwt_hm_CheckVersionsMessage.send = function (channel, minVersion, maxVersion,
-	hostedHtmlVersion) {
-	channel.sendByte(gwt_hm_CheckVersionsMessage.TYPE);
-	channel.sendInt(minVersion);
-	channel.sendInt(maxVersion);
-	channel.sendString(hostedHtmlVersion);
-	channel.flush();
+gwt_hm_CheckVersionsMessage.send = function(channel, minVersion, maxVersion,
+    hostedHtmlVersion) {
+    channel.sendByte(gwt_hm_CheckVersionsMessage.TYPE);
+    channel.sendInt(minVersion);
+    channel.sendInt(maxVersion);
+    channel.sendString(hostedHtmlVersion);
+    channel.flush();
 }
 
 class gwt_hm_FreeValueMessage extends gwt_hm_Message {
-	idCount;
-	ids;
-	constructor(idCount, ids) {
-		super();
-		this.idCount = idCount;
-		this.ids = ids;
-	}
+    idCount;
+    ids;
+    constructor(idCount, ids) {
+        super();
+        this.idCount = idCount;
+        this.ids = ids;
+    }
 }
 gwt_hm_FreeValueMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE;
-gwt_hm_FreeValueMessage.receive = function (channel) {
-	var idCount = channel.readInt();
-	var ids = [];
-	for (var idx = 0; idx < idCount; idx++) {
-		ids.push(channel.readInt());
-	}
-	return new gwt_hm_FreeValueMessage(idCount, ids);
+gwt_hm_FreeValueMessage.receive = function(channel) {
+    var idCount = channel.readInt();
+    var ids = [];
+    for (var idx = 0; idx < idCount; idx++) {
+        ids.push(channel.readInt());
+    }
+    return new gwt_hm_FreeValueMessage(idCount, ids);
 }
-gwt_hm_FreeValueMessage.send = function (channel, idCount, ids) {
-	channel.sendByte(gwt_hm_FreeValueMessage.TYPE);
-	channel.sendInt(idCount);
-	for (var idx = 0; idx < idCount; idx++) {
-		channel.sendInt(ids[idx]);
-	}
-	channel.flush();
+gwt_hm_FreeValueMessage.send = function(channel, idCount, ids) {
+    channel.sendByte(gwt_hm_FreeValueMessage.TYPE);
+    channel.sendInt(idCount);
+    for (var idx = 0; idx < idCount; idx++) {
+        channel.sendInt(ids[idx]);
+    }
+    channel.flush();
 }
 
 /*
@@ -2216,56 +2246,56 @@ var WebSocketTransport_is_worker = typeof WorkerGlobalScope !== 'undefined' && s
 WebSocketTransport_maybeStartWorker();
 
 class WebSocketTransportClient extends WebSocketTransport {
-	connected;
-	constructor(codeServer, codeServerWs, moduleName) {
-		super();
-		this.codeServer = codeServer;
-		this.codeServerWs = codeServerWs;
-		this.moduleName = moduleName;
-	}
-	connect(onConnect) {
-		/*
-		 * load socket worker, wait for connect event
-		 */
-		this.setBuffers(new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE), new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE));
-		var clientPrefix = $wnd._alc_websocket_transport_client_prefix;
-		var pathPrefix = typeof clientPrefix == 'undefined' ? '' : clientPrefix;
-		this.socketWorker = new Worker(`/${pathPrefix}${this.moduleName}/WebSocketTransport.js`);
+    connected;
+    constructor(codeServer, codeServerWs, moduleName) {
+        super();
+        this.codeServer = codeServer;
+        this.codeServerWs = codeServerWs;
+        this.moduleName = moduleName;
+    }
+    connect(onConnect) {
+        /*
+         * load socket worker, wait for connect event
+         */
+        this.setBuffers(new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE), new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE));
+        var clientPrefix = $wnd._alc_websocket_transport_client_prefix;
+        var pathPrefix = typeof clientPrefix == 'undefined' ? '' : clientPrefix;
+        this.socketWorker = new Worker(`/${pathPrefix}${this.moduleName}/WebSocketTransport.js`);
 
-		this.socketWorker.postMessage({
-			message: "start",
-			codeServerWs: this.codeServerWs,
-			codeServer: this.codeServer,
-			inBuffer: this.outBuffer,
-			outBuffer: this.inBuffer
-		});
-		this.socketWorker.onmessage = e => {
-			switch (e.data.message) {
-				case "connected":
-					this.connected = true;
-					console.log("websocket connect message received from worker by transport client");
-					onConnect();
-					break;
-				case "closed":
-					break;
-				case "exception":
-					console.log(e.data.exception);
-					break;
-			}
-		};
-	}
-	//override (need to send a message to the worker that there's a packet ready)
-	sendPacket(message, data) {
-		this.outBuffer.write(message, data);
-		this.socketWorker.postMessage({
-			message: "data"
-		});
-		return this.read(WebSocketTransport.READ_TIMEOUT);
-	}
+        this.socketWorker.postMessage({
+            message: "start",
+            codeServerWs: this.codeServerWs,
+            codeServer: this.codeServer,
+            inBuffer: this.outBuffer,
+            outBuffer: this.inBuffer
+        });
+        this.socketWorker.onmessage = e => {
+            switch (e.data.message) {
+                case "connected":
+                    this.connected = true;
+                    console.log("websocket connect message received from worker by transport client");
+                    onConnect();
+                    break;
+                case "closed":
+                    break;
+                case "exception":
+                    console.log(e.data.exception);
+                    break;
+            }
+        };
+    }
+    //override (need to send a message to the worker that there's a packet ready)
+    sendPacket(message, data) {
+        this.outBuffer.write(message, data);
+        this.socketWorker.postMessage({
+            message: "data"
+        });
+        return this.read(WebSocketTransport.READ_TIMEOUT);
+    }
 
 }
 $sendStats('moduleStartup', 'moduleEvalEnd');
-gwtOnLoad(__gwtModuleFunction.__errFn, __gwtModuleFunction.__moduleName, __gwtModuleFunction.__moduleBase, __gwtModuleFunction.__softPermutationId, __gwtModuleFunction.__computePropValue);
+gwtOnLoad(__gwtModuleFunction.__errFn, __gwtModuleFunction.__moduleName, __gwtModuleFunction.__moduleBase, __gwtModuleFunction.__softPermutationId,__gwtModuleFunction.__computePropValue);
 $sendStats('moduleStartup', 'end');
 $gwt && $gwt.permProps && __gwtModuleFunction.__moduleStartupDone($gwt.permProps);
 //# sourceURL=cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient-0.js

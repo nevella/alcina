@@ -176,12 +176,12 @@ class gwt_hm_Value {
 		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
 		this.intValue = val;
 	}
-	setJavaObjectLength(jsObjectLength) {
+	setJavaObjectListLength(jsObjectLength) {
 		//the length parameter is unused (setting the js array length would require different handling)
 		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST;
 		this.arrayValue = [];
 	}
-	setJavaIntLength(intObjectLength) {
+	setJavaIntListLength(intObjectLength) {
 		//the length parameter is unused (setting the js array length would require different handling)
 		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST;
 		this.arrayValue = [];

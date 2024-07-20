@@ -321,9 +321,6 @@ public class HtmlParser {
 		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
-		if (replaceContents != null) {
-			replaceContents.clearSynced();
-		}
 		int length = html.length();
 		// gwt compiler hack - force string class init outside loop
 		boolean hasSyntheticContainer = !emitHtmlHeadBodyTags

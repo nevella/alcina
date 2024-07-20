@@ -999,6 +999,10 @@ public class Document extends Node
 		return false;
 	}
 
+	public DocumentImplAccess implAccess() {
+		return new DocumentImplAccess();
+	}
+
 	@Override
 	public void importNode(Node node, boolean deep) {
 		local.importNode(node, deep);
@@ -1109,6 +1113,16 @@ public class Document extends Node
 		Document contextDocument();
 
 		void registerCreatedDocument(Document document);
+	}
+
+	public class DocumentImplAccess {
+		public DocumentRefid refIdRemote() {
+			return (DocumentRefid) remote();
+		}
+
+		public Node getNode(Refid refId) {
+			return localDom.domIds.getNode(refId);
+		}
 	}
 
 	@Registration.Singleton(DomDocument.PerDocumentSupplier.class)

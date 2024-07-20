@@ -62,10 +62,12 @@ import com.google.gwt.util.tools.Utility;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.DateTzAdjustment;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.SEUtilities.NestedNameJvm;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm;
 import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.jscodeserver.JsCodeServerHttp;
 import cc.alcina.framework.jscodeserver.XhrTcpBridge;
@@ -334,8 +336,6 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 						try {
 							Registry.register().singleton(Timer.Provider.class,
 									new TimerJvm.Provider());
-							Registry.register().singleton(XhrTcpBridge.class,
-									new XhrTcpBridge());
 							Registry.register().singleton(
 									DateTzAdjustment.ContextAdjustment.class,
 									new DateTzAdjustment.ContextAdjustment());

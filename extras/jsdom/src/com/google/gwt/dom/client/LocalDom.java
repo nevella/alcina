@@ -1,7 +1,6 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -140,10 +139,6 @@ public class LocalDom implements ContextFrame {
 				return k;
 			}
 		});
-	}
-
-	public static void ensureRemote(Node node) {
-		get().ensureRemote0(node);
 	}
 
 	static void ensureRemoteDocument() {
@@ -369,7 +364,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public static String validateHtml(String html) {
-		return get().validateHtml0(html);
+		throw new UnsupportedOperationException();
 	}
 
 	public static void verifyDomEquivalence(boolean fromUserGesture) {
@@ -398,10 +393,6 @@ public class LocalDom implements ContextFrame {
 		get().verifyMutatingState0();
 	}
 
-	static void wasSynced(Element elem) {
-		get().wasSynced0(elem);
-	}
-
 	RefidRepresentations refIdRepresentations = new RefidRepresentations();
 
 	boolean applyToRemote = true;
@@ -417,8 +408,6 @@ public class LocalDom implements ContextFrame {
 	Map<NativeEvent, List<String>> eventMods = new LinkedHashMap<>();
 
 	List<Node> pendingSync = new ArrayList<>();
-
-	Set<Node> pendingSyncSet = AlcinaCollections.newUniqueSet();
 
 	ScheduledCommand flushCommand = null;
 
@@ -454,7 +443,7 @@ public class LocalDom implements ContextFrame {
 		}
 		// FIXME - remoteNode
 		if (remoteNode != null) {
-			newChild.putRemote(remoteNode, false);
+			newChild.putRemote(remoteNode);
 		}
 		parentNode.insertAfter(newChild, previousSibling);
 		if (remoteNode != null) {
@@ -488,66 +477,13 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	/*
-	 * This method links node and all ancestors to the corresponding remote
-	 * nodes, by finding the unklinked nodes and walking the stack, linking to
-	 * the nth remote node (where n is the index of the stack elt)
-	 * 
-	 * FIXME - refid - only permit a call to this in jso devmode, all other dom
-	 * linking (local <-> remote) should occur as the ships come in - i.e.
-	 * markupjso will
-	 */
-	private void ensureRemote0(Node node) {
-		if (isRefid()) {
-			// FIXME - refid - factor a bunch of this out into
-			// LDjso/LDrefId classes
-			ensureRemote0Refid(node);
-			return;
-		}
-		// temp - flush during large mutation application has unwanted side
-		// effects, don't verify tree linkage if node is already linked
-		if (node.hasRemote()) {
-			// this may have side-effects - but most of this is going away
-			return;
-		}
-		flush0(true);
-		List<Node> ancestors = new ArrayList<>();
-		Node cursor = node;
-		Node withRemote = null;
-		while (cursor != null) {
-			if (cursor.hasRemote()) {
-				withRemote = cursor;
-				break;
-			} else {
-				ancestors.add(cursor);
-				cursor = cursor.getParentElement();
-			}
-		}
-		Collections.reverse(ancestors);
-		if (withRemote == null) {
-			// attaching child with-remote to without-remote (say, a popup)
-			Node root = ancestors.get(0);
-			ensureRemoteNodeMaybePendingSync(root);
-			ensureRemote0(node);
-			return;
-		}
-		for (Node needsRemote : ancestors) {
-			int idx = needsRemote.indexInParentChildren();
-			NodeJso remote = withRemote.jsoRemote().getChildNodes0()
-					.getItem0(idx);
-			linkRemote(remote, needsRemote);
-			needsRemote.putRemote(remote, true);
-			withRemote = needsRemote;
-		}
-	}
-
-	private void ensureRemote0Refid(Node node) {
+	void linkSubtreeToRefidRemotes(Node node) {
 		Node cursor = node;
 		while (cursor != null) {
 			if (cursor.hasRemote()) {
 				break;
 			} else {
-				cursor.putRemote(NodeRefid.create(node), cursor.wasSynced());
+				cursor.putRemote(NodeRefid.create(node));
 			}
 			cursor = cursor.getParentNode();
 		}
@@ -572,7 +508,6 @@ public class LocalDom implements ContextFrame {
 				remote = ((DomDispatchJso) DOMImpl.impl.remote())
 						.createElement(element.getTagName());
 			}
-			element.pendingSync();
 			pendingSync.add(node);
 			break;
 		case Node.TEXT_NODE:
@@ -588,7 +523,7 @@ public class LocalDom implements ContextFrame {
 		if (remote.isJso()) {
 			linkRemote((NodeJso) remote, node);
 		}
-		node.putRemote(remote, false);
+		node.putRemote(remote);
 		return remote;
 	}
 
@@ -617,7 +552,6 @@ public class LocalDom implements ContextFrame {
 		flushCommand = null;
 		try {
 			syncing = true;
-			pendingSyncSet.clear();
 			// clear nodes enqueued for sync, then removed
 			pendingSync.removeIf(n -> n.getParentNode() == null);
 			new ArrayList<>(pendingSync).stream()
@@ -687,20 +621,21 @@ public class LocalDom implements ContextFrame {
 				loggingConfiguration.asMutationsConfiguration());
 	}
 
+	// FIXME - refid2 - this process should be the inverse of MarkupJso - and
+	// not require a linear number of devmode calls
 	void walkPutRemote(ElementJso elemJso, Element elem) {
-		elem.putRemote(elemJso, true);
+		elem.putRemote(elemJso);
 		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
 				(Node) elem,
 				e -> e.streamChildren().collect(Collectors.toList()));
 		traversal.forEach(node -> {
-			if (node.implAccess().isJsoRemote()) {
+			if (node.hasRemote()) {
 				return;
 			}
 			int idx = traversal.getIndexInParent();
-			NodeJso parentRemote = node.getParentNode().implAccess()
-					.jsoRemote();
+			NodeJso parentRemote = node.getParentNode().jsoRemote();
 			NodeJso remote = parentRemote.getChildNodes0().getItem0(idx);
-			node.putRemote(remote, true);
+			node.putRemote(remote);
 		});
 	}
 
@@ -713,9 +648,9 @@ public class LocalDom implements ContextFrame {
 	 * @return
 	 */
 	Element parse(ElementJso elemJso, boolean emitHtmlStructuralTags) {
+		// FIXME - refid2 - use MarkupJso
 		Element parsed = new HtmlParser().parse(elemJso.getOuterHtml(), null,
 				emitHtmlStructuralTags);
-		wasSynced0(parsed);
 		return parsed;
 	}
 
@@ -770,7 +705,6 @@ public class LocalDom implements ContextFrame {
 		MarkupToken markupToken = new MarkupToken(element, markup, subtreeIds);
 		new MarkupJso().markup(markupToken);
 		element.resolvePendingSync();
-		wasSynced0(element);
 	}
 
 	void localToRemote(Element element, ElementRemote remote,
@@ -817,6 +751,7 @@ public class LocalDom implements ContextFrame {
 				return;
 			} else {
 				remoteMutations.emitInnerMarkupMutation(element);
+				linkSubtreeToRefidRemotes(element);
 			}
 		}
 		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
@@ -829,7 +764,6 @@ public class LocalDom implements ContextFrame {
 			DOM.sinkBitlessEvent(element, eventTypeName);
 		});
 		element.resolvePendingSync();
-		wasSynced0(element);
 	}
 
 	private <T extends Node> T nodeFor0(NodeJso remote) {
@@ -933,6 +867,7 @@ public class LocalDom implements ContextFrame {
 			return cursor.getParentNodeJso();
 		}
 
+		// FIXME - refid2 - mutations - goes away
 		public void putRemoteChildren(Element elem,
 				List<NodeJso> remoteChildrenS0) {
 			NodeList<Node> childNodes = elem.getChildNodes();
@@ -940,7 +875,7 @@ public class LocalDom implements ContextFrame {
 				Node child = childNodes.getItem(idx);
 				NodeJso remote = remoteChildrenS0.get(idx);
 				// not sure about synced here...
-				child.putRemote(remote, child.wasSynced());
+				child.putRemote(remote);
 				linkRemote(remote, child);
 			}
 		}
@@ -967,6 +902,10 @@ public class LocalDom implements ContextFrame {
 
 		public void applyPreRemovalRefId(MutationNode mutationNode) {
 			domIds.applyPreRemovalRefId(mutationNode.node, mutationNode.refId);
+		}
+
+		public void putRemote(Node node, NodeRefid nodeRefid) {
+			node.putRemote(nodeRefid);
 		}
 	}
 
@@ -1018,8 +957,7 @@ public class LocalDom implements ContextFrame {
 						return;
 					}
 					if (eventData.eventValue() != null) {
-						target.implAccess().refIdRemote().value = eventData
-								.eventValue();
+						target.refIdRemote().value = eventData.eventValue();
 					}
 					// FIXME - romcom - attach probably not being called.
 					// This can probably be removed
@@ -1098,11 +1036,15 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	public static boolean isPendingSync(Element element) {
-		return get().isPendingSync0(element);
+	public static boolean isPendingSync(Node node) {
+		return get().isPendingSync0(node);
 	}
 
-	boolean isPendingSync0(Element element) {
-		return pendingSyncSet.contains(element);
+	boolean isPendingSync0(Node node) {
+		/*
+		 * Given normal dom structure patterns, this check will be infrequent
+		 * and pendingSync will be small, so no need to optimise
+		 */
+		return pendingSync.contains(node);
 	}
 }

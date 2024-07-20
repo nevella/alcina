@@ -43,7 +43,7 @@ public class Style implements ClientDomStyle {
 
 	StyleLocal local;
 
-	private ClientDomStyle remote = StyleNull.INSTANCE;
+	private ClientDomStyle remote = null;
 
 	protected Style(Element element) {
 		this.element = element;
@@ -355,10 +355,6 @@ public class Style implements ClientDomStyle {
 		local().cloneStyleFrom(style.local(), this);
 	}
 
-	void detachFromRemote() {
-		remote = StyleNull.INSTANCE;
-	}
-
 	@Override
 	public String getBackgroundColor() {
 		return local().getBackgroundColor();
@@ -615,7 +611,7 @@ public class Style implements ClientDomStyle {
 	}
 
 	boolean linkedToRemote() {
-		return remote != StyleNull.INSTANCE;
+		return remote != null;
 	}
 
 	protected StyleLocal local() {
@@ -623,9 +619,8 @@ public class Style implements ClientDomStyle {
 	}
 
 	protected ClientDomStyle remote() {
-		element.validateRemoteStatePreMutation();
 		if (!linkedToRemote() && element.hasRemote()) {
-			remote = element.ensureRemote().getStyleRemote();
+			remote = element.remote().getStyleRemote();
 		}
 		return remote;
 	}
@@ -637,7 +632,7 @@ public class Style implements ClientDomStyle {
 	}
 
 	void resetRemote() {
-		remote = StyleNull.INSTANCE;
+		remote = null;
 	}
 
 	@Override

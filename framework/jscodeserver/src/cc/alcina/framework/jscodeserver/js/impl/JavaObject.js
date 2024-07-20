@@ -83,24 +83,23 @@ gwt_hm_JavaObject.wrapJavaObject = function (valueObj, javaObject, scriptableIns
 			valueObj.addJsObjectId(scriptableInstance.getLocalObjectRef(obj));
 		}
 	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
-		var arr = javaObject.__gwt_java_js_int_list;
-		valueObj.setJavaObjectLength(arr.length);
-		for (var idx = 0; idx < arr.length; idx++) {
-			var iValue = arr[idx];
+		var objArray = javaObject.__gwt_java_js_int_list;
+		valueObj.setJavaObjectLength(objArray.length);
+		for (var idx = 0; idx < objArray.length; idx++) {
+			var iValue = objArray[idx];
 			valueObj.addJsInt(iValue);
 		}
 	}
 }
 gwt_hm_JavaObject.unwrapJavaObject = function (valueObj, javaObject, scriptableInstance) {
-	ret.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
 	if (javaObject.hasOwnProperty("__gwt_java_js_object_list")) {
 		javaObject.__gwt_java_js_object_list = [];
 		var intArray = valueObj.getArray();
-		for (var idx = 0; idx < ret.length; idx++) {
-			var refId = arr[idx];
+		for (var idx = 0; idx < intArray.length; idx++) {
+			var refId = intArray[idx];
 			javaObject.__gwt_java_js_object_list.push(scriptableInstance.getLocalObject(refId));
 		}
 	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
-		javaObject.__gwt_java_js_object_list = valueObj.getArray();
+		javaObject.__gwt_java_js_int_list = valueObj.getArray();
 	}
 }

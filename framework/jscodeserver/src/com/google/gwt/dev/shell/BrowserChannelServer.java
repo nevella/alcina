@@ -203,9 +203,10 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 				break;
 			}
 			case JS_INT_LIST: {
-				JavaScriptIntList list = (JavaScriptIntList) dispatchObject;
 				int[] arrayValues = val.getJavaObject().getArrayValues();
-				list.javaArray = arrayValues;
+				Object javaObject = ((DispatchObject) dispatchObject)
+						.getTarget();
+				ccl.writeToJavaScriptIntList(arrayValues, javaObject);
 				break;
 			}
 			}

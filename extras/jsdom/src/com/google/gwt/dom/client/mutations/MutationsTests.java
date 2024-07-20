@@ -241,7 +241,7 @@ public class MutationsTests {
 							.getRendered();
 					rendered.appendToRoot();
 					LocalDom.flush();
-					this.remote = rendered.asElement().implAccess().jsoRemote();
+					this.remote = rendered.asElement().jsoRemote();
 					LocalDom.invokeExternal(this::mutate);
 					new Timer() {
 						@Override

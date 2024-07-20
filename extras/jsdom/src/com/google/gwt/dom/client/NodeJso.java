@@ -430,12 +430,7 @@ public abstract class NodeJso extends JavaScriptObject
 		if (node.hasRemote()) {
 			return node.remote();
 		} else {
-			if (node.wasSynced()) {
-				LocalDom.ensureRemote(node);
-				return node.remote();
-			} else {
-				return LocalDom.ensureRemoteNodeMaybePendingSync(node);
-			}
+			return LocalDom.ensureRemoteNodeMaybePendingSync(node);
 		}
 	}
 

@@ -31,6 +31,7 @@ import org.w3c.dom.TypeInfo;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
+import com.google.gwt.dom.client.Document.DocumentImplAccess;
 import com.google.gwt.dom.client.DocumentRefid.InvokeProxy;
 import com.google.gwt.dom.client.DocumentRefid.InvokeProxy.Flag;
 import com.google.gwt.dom.client.DomIds.IdList;
@@ -722,7 +723,9 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public ElementJso jsoRemote() {
-		LocalDom.flush();
+		if (remote == null) {
+			LocalDom.flush();
+		}
 		return (ElementJso) remote();
 	}
 
@@ -1076,14 +1079,20 @@ public class Element extends Node implements ClientDomElement,
 		} else {
 			local().getChildren().clear();
 		}
+		// FIXME - refid2 - convert to pending, then just set local. so
+		// toPendingIfRemote
 		if (linkedAndNotPending()) {
 			remote().setInnerSafeHtml(html);
 			String remoteHtml = jsoRemote().getInnerHTML0();
 			local().setInnerHTML(remoteHtml);
-			LocalDom.wasSynced(this);
 		} else {
 			local().setInnerSafeHtml(html);
 		}
+	}
+
+	@Override
+	public boolean isElement() {
+		return true;
 	}
 
 	@Override
@@ -1091,10 +1100,10 @@ public class Element extends Node implements ClientDomElement,
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
+		// FIXME - refid2 - convert to pending, then just set local
 		if (linkedAndNotPending()) {
 			remote().setInnerText(text);
 			local().setInnerText(text);
-			LocalDom.wasSynced(this);
 		} else {
 			local().setInnerText(text);
 		}
@@ -1233,6 +1242,10 @@ public class Element extends Node implements ClientDomElement,
 		return fb.toString();
 	}
 
+	public ElementImplAccess implAccess() {
+		return new ElementImplAccess();
+	}
+
 	/**
 	 * Most of these methods assume the remote() is a NodeJso
 	 *
@@ -1290,6 +1303,23 @@ public class Element extends Node implements ClientDomElement,
 		public ClientDomElement remote() {
 			return Element.this.remote();
 		}
+
+		public boolean hasRemote() {
+			return Element.this.hasRemote();
+		}
+
+		public boolean isJsoRemote() {
+			return remote() != null && remote().isJso();
+		}
+
+		public ElementJso ensureJsoRemote() {
+			return Element.this.ensureJsoRemote();
+		}
+	}
+
+	ElementJso ensureJsoRemote() {
+		LocalDom.flush();
+		return (ElementJso) remote();
 	}
 
 	public void setSelectionRange(int pos, int length) {
@@ -1352,5 +1382,10 @@ public class Element extends Node implements ClientDomElement,
 
 	public String getOuterHtml(boolean pretty) {
 		return local().getOuterHtml(pretty);
+	}
+
+	@Override
+	public ClientDomStyle getStyleRemote() {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -1557,7 +1557,13 @@ public final class CompilingClassLoader extends ClassLoader
 
 		Class<?> clazzJavaScriptObject;
 
-		Field clazzJavaScriptObjectListListField;
+		Field clazzJavaScriptObjectListJavaArrayField;
+
+		Field clazzJavaScriptIntListJavaArrayField;
+
+		Class<?> clazzJavaScriptImplObject;
+
+		Field clazzJavaScriptImplObjectHostedModeReferenceField;
 
 		JavascriptLists() {
 			try {
@@ -1567,9 +1573,18 @@ public final class CompilingClassLoader extends ClassLoader
 						JavaScriptIntList.class.getName(), true);
 				clazzJavaScriptObject = loadClass(
 						JavaScriptObject.class.getName(), true);
-				clazzJavaScriptObjectListListField = clazzJavaScriptObjectList
+				clazzJavaScriptImplObject = loadClass(
+						JavaScriptObject.class.getName() + "$", true);
+				clazzJavaScriptObjectListJavaArrayField = clazzJavaScriptObjectList
 						.getDeclaredField("javaArray");
-				clazzJavaScriptObjectListListField.setAccessible(true);
+				clazzJavaScriptObjectListJavaArrayField.setAccessible(true);
+				clazzJavaScriptIntListJavaArrayField = clazzJavaScriptIntList
+						.getDeclaredField("javaArray");
+				clazzJavaScriptIntListJavaArrayField.setAccessible(true);
+				clazzJavaScriptImplObjectHostedModeReferenceField = clazzJavaScriptImplObject
+						.getDeclaredField("hostedModeReference");
+				clazzJavaScriptImplObjectHostedModeReferenceField
+						.setAccessible(true);
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
@@ -1585,8 +1600,7 @@ public final class CompilingClassLoader extends ClassLoader
 			}
 		}
 
-		public void writeToJavaScriptObjectList(int[] arrayValues,
-				Object javaObject) {
+		void writeToJavaScriptObjectList(int[] arrayValues, Object javaObject) {
 			CompilingClassLoader ccl = CompilingClassLoader.this;
 			try {
 				Object[] javaArray = (Object[]) Array
@@ -1600,8 +1614,44 @@ public final class CompilingClassLoader extends ClassLoader
 							.createJavaScriptObject(jsValueOOPHM, ccl);
 					javaArray[idx] = jso;
 				}
-				clazzJavaScriptObjectListListField.set(javaObject, javaArray);
+				clazzJavaScriptObjectListJavaArrayField.set(javaObject,
+						javaArray);
 			} catch (Throwable e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		void writeToJavaScriptIntList(int[] arrayValues, Object javaObject) {
+			CompilingClassLoader ccl = CompilingClassLoader.this;
+			try {
+				clazzJavaScriptIntListJavaArrayField.set(javaObject,
+						arrayValues);
+			} catch (Throwable e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		int[] getArrayValues0(Object wrapped) {
+			try {
+				if (wrapped.getClass() == clazzJavaScriptIntList) {
+					return (int[]) clazzJavaScriptIntListJavaArrayField
+							.get(wrapped);
+				} else if (wrapped.getClass() == clazzJavaScriptObjectList) {
+					Object[] javaArray = (Object[]) clazzJavaScriptObjectListJavaArrayField
+							.get(wrapped);
+					int[] result = new int[javaArray.length];
+					for (int idx = 0; idx < javaArray.length; idx++) {
+						Object element = javaArray[idx];
+						JsValueOOPHM hostedModeReference = (JsValueOOPHM) clazzJavaScriptImplObjectHostedModeReferenceField
+								.get(element);
+						result[idx] = hostedModeReference
+								.getJavaScriptObjectPointer();
+					}
+					return result;
+				} else {
+					return null;
+				}
+			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
 		}
@@ -1629,8 +1679,25 @@ public final class CompilingClassLoader extends ClassLoader
 		}
 	}
 
+	// devmode server -> browser
+	public static int[] getArrayValues(Object wrapped) {
+		ClassLoader classLoader = wrapped.getClass().getClassLoader();
+		if (classLoader instanceof CompilingClassLoader) {
+			return ((CompilingClassLoader) classLoader).ensureLists()
+					.getArrayValues0(wrapped);
+		} else {
+			return null;
+		}
+	}
+
+	// browser -> devmode server
 	public void writeToJavaScriptObjectList(int[] arrayValues,
 			Object javaObject) {
 		ensureLists().writeToJavaScriptObjectList(arrayValues, javaObject);
+	}
+
+	// browser -> devmode server
+	public void writeToJavaScriptIntList(int[] arrayValues, Object javaObject) {
+		ensureLists().writeToJavaScriptIntList(arrayValues, javaObject);
 	}
 }

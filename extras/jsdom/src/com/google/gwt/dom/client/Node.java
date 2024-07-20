@@ -415,7 +415,6 @@ public abstract class Node
 
 	@Override
 	public void removeFromParent() {
-		validateRemoteStatePreMutation();
 		sync(() -> remote().removeFromParent());
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				this, null, false));
@@ -495,10 +494,16 @@ public abstract class Node
 	}
 
 	protected void validateRemoteStatePreTreeMutation(Node incomingChild) {
-		if (synced) {
-			LocalDom.ensureRemote(this);
-			LocalDom.ensureRemoteNodeMaybePendingSync(incomingChild);
+		if (hasRemote()) {
+			// if this is pending sync, the children should remain local-only
+			if (!isPendingSync()) {
+				LocalDom.ensureRemoteNodeMaybePendingSync(incomingChild);
+			}
 		}
+	}
+
+	public boolean isElement() {
+		return false;
 	}
 
 	protected boolean isPendingSync() {
@@ -586,14 +591,14 @@ public abstract class Node
 			// post onDetach so that calling code can remove from remote dom
 			ClientDomNode remote = remote();
 			onDetach();
-			putRemote(remote, synced);
+			putRemote(remote);
 		}
 	}
 
 	@Override
 	public void setRefId(int id) {
 		this.refId = id;
-		remote().setRefId(id);
+		sync(() -> remote().setRefId(id));
 	}
 
 	@Override

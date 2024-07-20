@@ -50,7 +50,7 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 
 	public static void ensureRefidRemote(Node node) {
 		if (!node.hasRemote()) {
-			node.putRemote(create(node), false);
+			node.putRemote(create(node));
 		}
 		node.streamChildren().forEach(NodeRefid::ensureRefidRemote);
 	}
@@ -82,12 +82,7 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 		if (node.hasRemote()) {
 			return node.remote();
 		} else {
-			if (node.wasSynced()) {
-				LocalDom.ensureRemote(node);
-				return node.remote();
-			} else {
-				return LocalDom.ensureRemoteNodeMaybePendingSync(node);
-			}
+			return LocalDom.ensureRemoteNodeMaybePendingSync(node);
 		}
 	}
 
@@ -102,7 +97,7 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 	}
 
 	void emitMutation(MutationRecord mutation) {
-		getOwnerDocument().implAccess().refIdRemote().emitMutation(mutation);
+		getOwnerDocument().refIdRemote().emitMutation(mutation);
 	}
 
 	@Override
@@ -236,10 +231,6 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 
 	@Override
 	public Node replaceChild(Node newChild, Node oldChild) {
-		throw new UnsupportedOperationException();
-	}
-
-	void setParentNode(NodeLocalNull local) {
 		throw new UnsupportedOperationException();
 	}
 

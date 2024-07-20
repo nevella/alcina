@@ -123,21 +123,17 @@ public class RelativeInputModel {
 			}
 		}
 		if (modifiedAnchorLocation != null) {
-			selection
-					.collapse(
-							modifiedAnchorLocation.containingNode.gwtNode()
-									.implAccess().jsoRemote(),
-							modifiedAnchorLocation.indexInNode());
+			selection.collapse(
+					modifiedAnchorLocation.containingNode.gwtNode().jsoRemote(),
+					modifiedAnchorLocation.indexInNode());
 			Location extendTo = modifiedFocusLocation != null
 					? modifiedFocusLocation
 					: focusLocation;
-			selection.extend(
-					extendTo.containingNode.gwtNode().implAccess().jsoRemote(),
+			selection.extend(extendTo.containingNode.gwtNode().jsoRemote(),
 					extendTo.indexInNode());
 		} else if (modifiedFocusLocation != null) {
 			Location extendTo = modifiedFocusLocation;
-			selection.extend(
-					extendTo.containingNode.gwtNode().implAccess().jsoRemote(),
+			selection.extend(extendTo.containingNode.gwtNode().jsoRemote(),
 					extendTo.indexInNode());
 		}
 	}

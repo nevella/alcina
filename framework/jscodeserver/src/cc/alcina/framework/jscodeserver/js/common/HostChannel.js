@@ -247,7 +247,7 @@ class gwt_hm_HostChannel {
 				var val = this.readInt();
 				value.setJavaObjectId(val);
 				var len = this.readInt();
-				value.setJavaObjectLength(len);
+				value.setJavaObjectListLength(len);
 				for (var idx = 0; idx < len; idx++) {
 					value.addJsObjectId(this.readInt());
 				}
@@ -257,7 +257,7 @@ class gwt_hm_HostChannel {
 				var val = this.readInt();
 				value.setJavaObjectId(val);
 				var len = this.readInt();
-				value.setJavaObjectLength(len);
+				value.setJavaIntListLength(len);
 				for (var idx = 0; idx < len; idx++) {
 					value.addJsInt(this.readInt());
 				}

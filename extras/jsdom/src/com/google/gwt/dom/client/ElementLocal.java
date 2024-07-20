@@ -943,4 +943,9 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'getBoundingClientRect'");
 	}
+
+	@Override
+	public ClientDomStyle getStyleRemote() {
+		throw new UnsupportedOperationException();
+	}
 }

@@ -84,13 +84,9 @@ class ScrollImpl {
 	 * @return true if the direction is RTL, false if LTR
 	 */
 	public boolean isRtl(Element scrollable) {
-		return isRtl0(scrollable.implAccess().ensureJsoRemote());
+		// deprecated
+		return false;
 	}
-
-	private native boolean isRtl0(ElementJso scrollable) /*-{
-															var computedStyle = $doc.defaultView.getComputedStyle(scrollable, null);
-															return computedStyle.getPropertyValue('direction') == 'rtl';
-															}-*/;
 
 	/**
 	 * IE does not fire a scroll event when the scrollable element or the

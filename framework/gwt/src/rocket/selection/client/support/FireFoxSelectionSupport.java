@@ -67,7 +67,7 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 				} else {
 					debugInfo = 6;
 					TextJso textJso = getFirstTextDepthFirstWithParent(
-							((Element) node).implAccess().jsoRemote(), 1);
+							((Element) node).jsoRemote(), 1);
 					Text text = LocalDom.nodeFor(textJso);
 					end.setTextNode(text);
 					end.setOffset(0);
@@ -116,7 +116,7 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 				} else {
 					debugInfo = 7;
 					TextJso textJso = getFirstTextDepthFirstWithParent(
-							((Element) node).implAccess().jsoRemote(), 1);
+							((Element) node).jsoRemote(), 1);
 					debugInfo = 8;
 					Text text = LocalDom.nodeFor(textJso);
 					debugInfo = 9;

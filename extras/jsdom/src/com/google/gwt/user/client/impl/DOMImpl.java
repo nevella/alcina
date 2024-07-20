@@ -33,8 +33,7 @@ public abstract class DOMImpl {
 	 */
 	public static EventListener getEventListener(Element elem) {
 		if (elem.implAccess().hasRemote()) {
-			EventListener eventListener = getEventListener0(
-					elem.implAccess().jsoRemote());
+			EventListener eventListener = getEventListener0(elem.jsoRemote());
 			if (eventListener != null) {
 				return eventListener;
 			}
@@ -185,7 +184,7 @@ public abstract class DOMImpl {
 
 	public int getEventsSunk(Element elem) {
 		if (elem.implAccess().isJsoRemote()) {
-			ElementJso remote = elem.implAccess().jsoRemote();
+			ElementJso remote = elem.jsoRemote();
 			return getEventsSunk0(remote);
 		} else {
 			return elem.localEventBitsSunk();
