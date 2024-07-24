@@ -42,26 +42,11 @@ public class HtmlParser {
 		if (string.contains("\r\n")) {
 			string = string.replace("\r\n", "\n");
 		}
-		boolean singleNode = string.length() == 76700;
-		if (string.length() > 70000 & string.length() < 80000) {
-			Ax.err("strlen:%s - %s", string.length(), element.getTagName());
-		}
 		int idx = 0;
 		int length = string.length();
 		int maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
-		if (length <= maxCharsPerTextNode || singleNode) {
-			Text text = document.createTextNode(string);
-			element.appendChild(text);
-		} else {
-			while (idx < length) {
-				int segmentLength = length - idx;
-				segmentLength = Math.min(segmentLength, maxCharsPerTextNode);
-				String segment = string.substring(idx, idx + segmentLength);
-				Text text = document.createTextNode(segment);
-				element.appendChild(text);
-				idx += segmentLength;
-			}
-		}
+		Text text = document.createTextNode(string);
+		element.appendChild(text);
 		if (debugCursor) {
 			Ax.out("  tx: %s", CommonUtils.trimToWsChars(
 					TextUtils.normalizeWhitespaceAndTrim(string), 50, true));

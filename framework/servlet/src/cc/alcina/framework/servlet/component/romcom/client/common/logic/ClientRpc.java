@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
@@ -239,8 +238,8 @@ public class ClientRpc {
 			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
 			Topic<Request> calledSignal) {
 		request.protocolMessage.messageId = clientServerMessageCounter++;
-		Ax.out("dispatching request #%s - %s", request.requestId,
-				NestedName.get(request.protocolMessage));
+		// Ax.out("dispatching request #%s - %s", request.requestId,
+		// NestedName.get(request.protocolMessage));
 		String payload = ReflectiveSerializer.serializeForRpc(request);
 		String path = Window.Location.getPath();
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
@@ -276,11 +275,12 @@ public class ClientRpc {
 					Message message = response.protocolMessage;
 					Class<? extends Message> requestMessageClass = request.protocolMessage
 							.getClass();
-					Ax.out("[server->client response] #%s :: [client message :: %s] ==> %s",
-							response.requestId,
-							NestedName.get(requestMessageClass),
-							message == null ? "[null response]"
-									: NestedName.get(message));
+					// Ax.out("[server->client response] #%s :: [client message
+					// :: %s] ==> %s",
+					// response.requestId,
+					// NestedName.get(requestMessageClass),
+					// message == null ? "[null response]"
+					// : NestedName.get(message));
 					if (message != null) {
 						ProtocolMessageHandlerClient handler = Registry.impl(
 								ProtocolMessageHandlerClient.class,

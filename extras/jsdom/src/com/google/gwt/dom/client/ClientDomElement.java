@@ -313,4 +313,6 @@ public interface ClientDomElement extends ClientDomNode {
 	DomRect getBoundingClientRect();
 
 	ClientDomStyle getStyleRemote();
+
+	void setSelectionRange(int pos, int length);
 }

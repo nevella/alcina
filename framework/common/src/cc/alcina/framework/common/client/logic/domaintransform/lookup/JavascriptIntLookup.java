@@ -1,7 +1,9 @@
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
+import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -123,5 +125,15 @@ public final class JavascriptIntLookup<V> extends JavaScriptObject
 						"removing non-existent iterator value");
 			}
 		}
+	}
+
+	@Override
+	public List<V> values() {
+		List<V> list = new ArrayList<>();
+		Iterator valuesIterator = valuesIterator();
+		while (valuesIterator.hasNext()) {
+			list.add((V) valuesIterator.next());
+		}
+		return list;
 	}
 }

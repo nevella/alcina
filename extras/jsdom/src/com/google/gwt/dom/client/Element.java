@@ -31,7 +31,6 @@ import org.w3c.dom.TypeInfo;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
-import com.google.gwt.dom.client.Document.DocumentImplAccess;
 import com.google.gwt.dom.client.DocumentRefid.InvokeProxy;
 import com.google.gwt.dom.client.DocumentRefid.InvokeProxy.Flag;
 import com.google.gwt.dom.client.DomIds.IdList;
@@ -158,8 +157,6 @@ public class Element extends Node implements ClientDomElement,
 	 * For compatibility with widget events
 	 */
 	public Object uiObject;
-
-	private boolean pendingSync;
 
 	private HandlerManager handlerManager;
 
@@ -729,7 +726,7 @@ public class Element extends Node implements ClientDomElement,
 		return (ElementJso) remote();
 	}
 
-	private boolean linkedAndNotPending() {
+	boolean linkedAndNotPending() {
 		return hasRemote() && !isPendingSync();
 	}
 
@@ -808,7 +805,11 @@ public class Element extends Node implements ClientDomElement,
 		 * fails - and note that no events/side-effects are produced, this code
 		 * is just concerned with listener attach/detach)
 		 */
-		DOM.setEventListener(this, null);
+		/*
+		 * And - since the detach was just an artifact to handle GC issues on
+		 * IE, we don't need it (nice, since it's a perf hit in devmode)
+		 */
+		// DOM.setEventListener(this, null);
 		super.onDetach();
 	}
 
@@ -835,6 +836,9 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	protected void putRemote(ClientDomNode remote) {
+		if (this.remote == remote) {
+			return;
+		}
 		Preconditions.checkState(this.remote == null || remote == null);
 		this.remote = (ClientDomElement) remote;
 		if (remote != null) {
@@ -920,7 +924,6 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	public void resolvePendingSync() {
-		pendingSync = false;
 		if (isRefidRemote()) {
 			/*
 			 * all descendants are refId remotes
@@ -1040,30 +1043,18 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerHTML(String html) {
-		List<Node> oldChildren = getChildNodes().stream()
-				.collect(Collectors.toList());
+		setInnerHTML(html, null);
+	}
+
+	void setInnerHTML(String html, DomIds.IdList idList) {
 		removeAllChildren();
-		if (linkedAndNotPending()) {
-			/*
-			 * FIXME - refid - possibly use markupjso (or at least attempt it
-			 * first) - in fact, we can't do this (or we'd need to reverse sync
-			 * mutations) since the browser dom wd be ~= the server dom. So for
-			 * the moment just use markupJso - and swallow exceptions
-			 * 
-			 * (Originally this wrote to the jso, and applied the jso's (better
-			 * parsed) innerHtml )
-			 */
-			// remote().setInnerHTML(html);
-			// // tbodies? foots? proudfeet?
-			// String remoteHtml = jsoRemote().getInnerHTML0();
-			// local().setInnerHTML(remoteHtml);
-			// // this will create local refids, so apply then back
-			// LocalDom.wasSynced(this);
-			local().setInnerHTML(html);
-			LocalDom.localToRemoteInner(this, html);
-		} else {
-			local().setInnerHTML(html);
-		}
+		/*
+		 * this is the most conjoined part of localdom really - the idList (if
+		 * present) can come from a remote env - so the whole process (set html,
+		 * optionally using remote ids) is passed to LocalDom to avoid mixing
+		 * control flows
+		 */
+		LocalDom.setInnerHtml(this, html, idList);
 	}
 
 	@Override
@@ -1315,6 +1306,10 @@ public class Element extends Node implements ClientDomElement,
 		public ElementJso ensureJsoRemote() {
 			return Element.this.ensureJsoRemote();
 		}
+
+		public void setInnerHTML(String html, IdList idList) {
+			Element.this.setInnerHTML(html, idList);
+		}
 	}
 
 	ElementJso ensureJsoRemote() {
@@ -1322,8 +1317,13 @@ public class Element extends Node implements ClientDomElement,
 		return (ElementJso) remote();
 	}
 
+	ClientDomElement ensureRemote() {
+		LocalDom.flush();
+		return remote();
+	}
+
 	public void setSelectionRange(int pos, int length) {
-		jsoRemote().setSelectionRange(pos, length);
+		ensureRemote().setSelectionRange(pos, length);
 	}
 
 	/*
@@ -1374,10 +1374,6 @@ public class Element extends Node implements ClientDomElement,
 
 	public DomIds.IdList getSubtreeIds() {
 		return getOwnerDocument().localDom.domIds.getSubtreeIds(this);
-	}
-
-	public void applySubtreeRefIds(IdList refIds) {
-		getOwnerDocument().localDom.domIds.applySubtreeIds(this, refIds);
 	}
 
 	public String getOuterHtml(boolean pretty) {

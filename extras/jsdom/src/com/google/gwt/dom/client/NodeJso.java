@@ -454,7 +454,11 @@ public abstract class NodeJso extends JavaScriptObject
 	}-*/;
 
 	@Override
-	public final native int getRefId() /*-{
+	public final int getRefId() {
+		return getRefId0();
+	}
+
+	protected final native int getRefId0() /*-{
 	return this.hasOwnProperty('__refid') ? this.__refid : 0;
 	}-*/;
 }

@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Al;
-import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
@@ -335,7 +334,8 @@ public class LocalDom implements ContextFrame {
 	public static void register(Document doc) {
 		if (GWT.isClient()) {
 			get().initalizeRemoteSync(doc);
-			doc.getDocumentElement().setAttached(true);
+			//
+			doc.getDocumentElement().setAttached(true, true);
 		}
 	}
 
@@ -599,14 +599,14 @@ public class LocalDom implements ContextFrame {
 				.publish(new LocalDomException(exception, message));
 	}
 
-	private void initalizeDetachedSync0() {
+	void initalizeDetachedSync0() {
 		remoteMutations = new RemoteMutations(new MutationsAccess(),
 				new RemoteMutations.LoggingConfiguration());
 		localMutations = new LocalMutations(new MutationsAccess());
 		loggingConfiguration = new LoggingConfiguration();
 	}
 
-	private void initalizeRemoteSync(Document doc) {
+	void initalizeRemoteSync(Document doc) {
 		docRemote = doc.jsoRemote();
 		loggingConfiguration = new LoggingConfiguration();
 		linkRemote(docRemote, doc);
@@ -615,7 +615,7 @@ public class LocalDom implements ContextFrame {
 		Element documentElement = parse(documentElementJso, true);
 		walkPutRemote(documentElementJso, documentElement);
 		// create
-		documentElement.setAttached(true);
+		documentElement.setAttached(true, true);
 		nodeFor0(documentElementJso);
 		remoteMutations = new RemoteMutations(new MutationsAccess(),
 				loggingConfiguration.asMutationsConfiguration());
@@ -695,11 +695,7 @@ public class LocalDom implements ContextFrame {
 		remote.setRefId(node.getRefId());
 	}
 
-	static void localToRemoteInner(Element element, String markup) {
-		get().localToRemoteInner0(element, markup);
-	}
-
-	void localToRemoteInner0(Element element, String markup) {
+	void localToRemoteInner(Element element, String markup) {
 		IdList subtreeIds = domIds.getSubtreeIds(element);
 		pendingSync.remove(element);
 		MarkupToken markupToken = new MarkupToken(element, markup, subtreeIds);
@@ -1046,5 +1042,39 @@ public class LocalDom implements ContextFrame {
 		 * and pendingSync will be small, so no need to optimise
 		 */
 		return pendingSync.contains(node);
+	}
+
+	static void setInnerHtml(Element element, String html, IdList idList) {
+		get().setInnerHtml0(element, html, idList);
+	}
+
+	void setInnerHtml0(Element elem, String html, IdList idList) {
+		domIds.readFromIdList(elem, idList);
+		elem.local().setInnerHTML(html);
+		domIds.verifyIdList(idList);
+		if (elem.linkedAndNotPending()) {
+			/*
+			 * FIXME - refid - possibly use markupjso (or at least attempt it
+			 * first) - in fact, we can't do this (or we'd need to reverse sync
+			 * mutations) since the browser dom wd be ~= the server dom. So for
+			 * the moment just use markupJso - and swallow exceptions
+			 * 
+			 * (Originally this wrote to the jso, and applied the jso's (better
+			 * parsed) innerHtml )
+			 */
+			// remote().setInnerHTML(html);
+			// // tbodies? foots? proudfeet?
+			// String remoteHtml = jsoRemote().getInnerHTML0();
+			// local().setInnerHTML(remoteHtml);
+			// // this will create local refids, so apply then back
+			// LocalDom.wasSynced(this);
+			/*
+			 * the above is just (more or less) a reminder that markup
+			 * verification needs to happen. In romcom, we can't afford the time
+			 * cost to roundtrip to the browser - so throw (alas) - non-romcom,
+			 * we *can* - and should
+			 */
+			localToRemoteInner(elem, html);
+		}
 	}
 }

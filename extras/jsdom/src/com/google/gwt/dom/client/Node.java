@@ -17,6 +17,7 @@ package com.google.gwt.dom.client;
 
 import java.util.AbstractList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.w3c.dom.DOMException;
@@ -30,6 +31,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
@@ -476,13 +478,24 @@ public abstract class Node
 		throw new UnsupportedOperationException();
 	}
 
+	public List<Node> getChildren() {
+		return local().getChildren().stream().map(NodeLocal::node)
+				.collect(Collectors.toList());
+	}
+
+	public Stream<Node> traverse() {
+		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(this,
+				Node::getChildren);
+		return traversal.stream();
+	}
+
 	public Stream<Node> streamChildren() {
 		return getChildNodes().stream();
 	}
 
 	protected void onAttach() {
 		getOwnerDocument().localDom.onAttach(this);
-		streamChildren().forEach(n -> n.setAttached(true));
+		streamChildren().forEach(n -> n.setAttached(true, false));
 	}
 
 	protected void onDetach() {
@@ -490,7 +503,7 @@ public abstract class Node
 		// note this will be undone for the top-of-the-detach-tree (see void
 		// setAttached(boolean attached) )
 		resetRemote();
-		streamChildren().forEach(n -> n.setAttached(false));
+		streamChildren().forEach(n -> n.setAttached(false, true));
 	}
 
 	protected void validateRemoteStatePreTreeMutation(Node incomingChild) {
@@ -579,7 +592,14 @@ public abstract class Node
 	protected void validateInsert(Node newChild) {
 	}
 
-	void setAttached(boolean attached) {
+	/**
+	 * 
+	 * @param attached
+	 * @param attachRoot
+	 *            is this the root of the attach/detach op? (if so, remote will
+	 *            be restored )
+	 */
+	void setAttached(boolean attached, boolean attachRoot) {
 		if (attached == this.attached) {
 			return;
 		}
@@ -591,14 +611,20 @@ public abstract class Node
 			// post onDetach so that calling code can remove from remote dom
 			ClientDomNode remote = remote();
 			onDetach();
-			putRemote(remote);
+			if (attachRoot) {
+				putRemote(remote);
+			}
 		}
 	}
 
 	@Override
 	public void setRefId(int id) {
 		this.refId = id;
-		sync(() -> remote().setRefId(id));
+		// perf - remote dom ids need not be zeroed, the source of truth is the
+		// id's presence in DomIds
+		if (id != 0) {
+			sync(() -> remote().setRefId(id));
+		}
 	}
 
 	@Override

@@ -50,6 +50,9 @@ public class DomIds {
 	}
 
 	int nextCounterValue() {
+		if (externalIds != null) {
+			return externalIds.next();
+		}
 		int next = 0;
 		if (nextAttachId != 0) {
 			next = nextAttachId;
@@ -129,34 +132,41 @@ public class DomIds {
 		return byId.get(refId.id);
 	}
 
-	public void applySubtreeIds(Element elem, IdList refIds) {
-		// if this subtree is being applied to the root, update this (root)
-		// refId as well - otherwise this node's id must already be correct
-		boolean root = elem == elem.getOwnerDocument().documentElement;
-		List<Integer> ids = refIds.ids;
-		int idx = 0;
-		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
-				elem,
-				n -> n.getChildNodes().stream().collect(Collectors.toList()));
-		Iterator<Node> itr = traversal.iterator();
-		while (itr.hasNext()) {
-			Node node = itr.next();
-			int id = ids.get(idx);
-			if (!root && idx == 0) {
-				Preconditions.checkState(id != 0 && id == node.getRefId());
-			} else {
-				node.setRefId(id);
-				byId.put(id, node);
-			}
-			idx++;
-		}
-	}
-
 	void applyPreRemovalRefId(Node node, Refid refId) {
 		refId.id = getRemovedId(node);
 	}
 
 	public boolean wasRemoved(Refid refid) {
 		return removed.values().contains(refid.id);
+	}
+
+	// debug method
+	public List<Node> byTag(String tag) {
+		List<Node> list = byId.values().stream()
+				.filter(n -> n.getNodeName().equals(tag))
+				.collect(Collectors.toList());
+		return list;
+	}
+
+	Iterator<Integer> externalIds;
+
+	/*
+	 * For replaying remote markup/idlist mutations - first verify the first id
+	 * matches elem
+	 */
+	void readFromIdList(Element elem, IdList idList) {
+		if (idList != null) {
+			Preconditions.checkState(this.externalIds == null);
+			this.externalIds = idList.ids.iterator();
+			Preconditions
+					.checkState(elem.getRefId() == this.externalIds.next());
+		}
+	}
+
+	void verifyIdList(IdList idList) {
+		if (idList != null) {
+			Preconditions.checkState(!externalIds.hasNext());
+			externalIds = null;
+		}
 	}
 }

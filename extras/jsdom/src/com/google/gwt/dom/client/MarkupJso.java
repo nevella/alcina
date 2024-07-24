@@ -1,5 +1,8 @@
 package com.google.gwt.dom.client;
 
+import java.util.Iterator;
+
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.impl.JavaScriptIntList;
 import com.google.gwt.core.client.impl.JavaScriptObjectList;
 import com.google.gwt.dom.client.DomIds.IdList;
@@ -63,6 +66,12 @@ class MarkupJso {
 		JavaScriptObjectList createdJsos = new JavaScriptObjectList();
 
 		JavaScriptIntList localRefIds = new JavaScriptIntList();
+
+		public void populateRemotes() {
+			Iterator<JavaScriptObject> itr = createdJsos.iterator();
+			container.traverse()
+					.forEach(n -> n.putRemote((NodeJso) itr.next()));
+		}
 	}
 
 	void markup(MarkupToken token) {
@@ -80,8 +89,12 @@ class MarkupJso {
 	void markup0(MarkupToken token) {
 		token.remote.setInnerHTML(token.localMarkup);
 		long start = System.currentTimeMillis();
-		token.ok = traverseAndMark(token.remote, token.createdJsos,
-				token.localRefIds);
+		JavaScriptObjectList createdJsos = traverseAndMark(token.remote,
+				token.createdJsos, token.localRefIds);
+		token.ok = createdJsos != null;
+		if (token.ok) {
+			token.populateRemotes();
+		}
 		long end = System.currentTimeMillis();
 		// FIXME - logging
 		// LocalDom.consoleLog(Ax.format("traverse-and-mark :: %s nodes - %sms",
@@ -91,7 +104,7 @@ class MarkupJso {
 		}
 	}
 
-	final native boolean traverseAndMark(ElementJso container,
+	final native JavaScriptObjectList traverseAndMark(ElementJso container,
 			JavaScriptObjectList createdJsos, JavaScriptIntList refIdList) /*-{
 		//traverse the node tree depth first, maintaining an array of cursors to track node position
 		var resultJsos = createdJsos.@com.google.gwt.core.client.impl.JavaScriptObjectList::ensureJsArray()();
@@ -146,8 +159,9 @@ class MarkupJso {
 			coalesceList[0].nodeValue = content;
 		}
 		if(idsIdx != ids.length){
-		debugger;
+			debugger;
 		}
-		return idsIdx == ids.length;
+			// magic - return the createdJsos object to avoid round-tripping (devmode)
+		return idsIdx == ids.length? createdJsos: null;
 	}-*/;
 }

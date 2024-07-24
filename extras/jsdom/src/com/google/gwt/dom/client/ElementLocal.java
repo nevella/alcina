@@ -50,6 +50,9 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	ElementLocal(DocumentLocal documentLocal, String tagName) {
 		ownerDocument = documentLocal;
 		this.tagName = tagName;
+		if (tagName.equals("detail")) {
+			int debug = 3;
+		}
 		if (!GWT.isScript() && GWT.isClient()) {
 			// . is legal - but gets very confusing with css, so don't permit
 			Preconditions.checkArgument(PERMITTED_TAGS.exec(tagName) != null);
@@ -288,13 +291,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 				.orElse(null);
 	}
 
-	// @Override
-	// public final Element getFirstChildElement() {
-	// return resolveChildren().stream()
-	// .filter(node_jvm -> node_jvm.getNodeType() == Node.ELEMENT_NODE)
-	// .findFirst().map(node_jvm -> (Element) node_jvm.node())
-	// .orElse(null);
-	// }
 	@Override
 	public String getId() {
 		return getAttribute("id");
@@ -587,7 +583,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 				appendChild(ownerDocument
 						.createTextNode(HtmlParser.decodeEntities(html)));
 			} else {
-				getChildren().clear();
+				// children will have been cleared, so outerHtml will just be
+				// <my-tag my-attrs></my-tag>
 				String outerHtml = getOuterHtml();
 				StringBuilder builder = new StringBuilder();
 				int idx = outerHtml.indexOf("</");
@@ -698,17 +695,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		}
 		if (matchResult.getGroupCount() == 4) {
 			setInnerHTML(matchResult.getGroup(3));
-		}
-	}
-
-	@Override
-	void setParentNode(NodeLocal local) {
-		super.setParentNode(local);
-		if (local instanceof ElementLocal) {
-			ElementLocal elementLocal = (ElementLocal) local;
-			element.setAttached(elementLocal.element.attached);
-		} else {
-			element.setAttached(false);
 		}
 	}
 
@@ -947,5 +933,11 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	@Override
 	public ClientDomStyle getStyleRemote() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setSelectionRange(int pos, int length) {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'setSelectionRange'");
 	}
 }

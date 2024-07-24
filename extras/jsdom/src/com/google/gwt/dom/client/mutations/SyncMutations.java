@@ -84,10 +84,6 @@ class SyncMutations {
 					}
 				});
 			});
-		} catch (Exception e) {
-			Ax.simpleExceptionOut(e);
-			// FIXME - refid - this is just tmp until the refid exchange is
-			// complete
 		} finally {
 			mutationsAccess.setApplyToRemote(true);
 		}
@@ -174,7 +170,11 @@ class SyncMutations {
 
 	boolean isApplicable(MutationRecord record) {
 		if (record.target.getNodeName().equalsIgnoreCase("title")) {
-			// FIXME - merge with other 'can't track' checks
+			/*
+			 * FIXME - merge with other 'can't track' checks. In this case
+			 * (<title>), the value is set by the Window property rather than
+			 * the <title> text contents
+			 */
 			return false;
 		} else {
 			return true;

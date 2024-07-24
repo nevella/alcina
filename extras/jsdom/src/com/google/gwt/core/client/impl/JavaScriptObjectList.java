@@ -1,9 +1,9 @@
 package com.google.gwt.core.client.impl;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.JsArrayMixed;
 
 /**
@@ -25,14 +25,14 @@ public final class JavaScriptObjectList {
 	public JavaScriptObject[] javaArray = new JavaScriptObject[0];
 
 	public JsArrayMixed jsArray;
-
 	/*
 	 * js-side, ensures the existence of the jsarray (and initialises it with
 	 * javaArray values if they don't exist). This code involves an array copy
 	 * in GWT_SCRIPT mode - but there's no protocol round-tripping involved, so
 	 * the cost is minimal
 	 */
-	public final native JsArrayInteger ensureJsArray()/*-{
+
+	public final native JsArrayMixed ensureJsArray()/*-{
 	//devmode
 		if(this.hasOwnProperty("__gwt_java_js_object_list")){
 			return this.__gwt_java_js_object_list;
@@ -46,11 +46,45 @@ public final class JavaScriptObjectList {
 		this.@com.google.gwt.core.client.impl.JavaScriptObjectList::jsArray=arr;
 		this.@com.google.gwt.core.client.impl.JavaScriptObjectList::copyToArray()();
 		return arr;
-
-		
 	}-*/;
 
 	void copyToArray() {
 		Arrays.stream(javaArray).forEach(jsArray::push);
+	}
+
+	public Iterator<JavaScriptObject> iterator() {
+		if (jsArray != null) {
+			return new JsArrayIterator();
+		} else {
+			return new JavaArrayIterator();
+		}
+	}
+
+	class JavaArrayIterator implements Iterator<JavaScriptObject> {
+		int idx = 0;
+
+		@Override
+		public boolean hasNext() {
+			return idx < javaArray.length;
+		}
+
+		@Override
+		public JavaScriptObject next() {
+			return javaArray[idx++];
+		}
+	}
+
+	class JsArrayIterator implements Iterator<JavaScriptObject> {
+		int idx = 0;
+
+		@Override
+		public boolean hasNext() {
+			return idx < jsArray.length();
+		}
+
+		@Override
+		public JavaScriptObject next() {
+			return jsArray.getObject(idx++);
+		}
 	}
 }

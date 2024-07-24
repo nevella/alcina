@@ -282,7 +282,7 @@ public class Document extends Node
 		documentElement = new HtmlParser().parse(markup, null, true);
 		if (attachToParent) {
 			documentElement.local().parentNode = this.local();
-			documentElement.setAttached(true);
+			documentElement.setAttached(true, true);
 		}
 		return documentElement;
 	}

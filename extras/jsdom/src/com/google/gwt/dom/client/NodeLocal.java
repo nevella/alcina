@@ -260,13 +260,17 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public abstract void setNodeValue(String nodeValue);
 
-	void setParentNode(NodeLocal local) {
-		if (parentNode != local && parentNode != null && local != null) {
+	void setParentNode(NodeLocal newParentNode) {
+		if (parentNode != newParentNode && parentNode != null
+				&& newParentNode != null) {
 			// otherwise we go all loopy (do this instead of
 			// parentNode.removeChild(this)
 			parentNode.getChildren().remove(this);
 		}
-		parentNode = local;
+		parentNode = newParentNode;
+		boolean newAttached = newParentNode != null
+				&& newParentNode.node().attached;
+		node().setAttached(newAttached, true);
 	}
 
 	public void walk(Consumer<NodeLocal> consumer) {

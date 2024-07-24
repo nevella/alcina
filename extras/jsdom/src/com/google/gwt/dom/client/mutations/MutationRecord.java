@@ -337,8 +337,7 @@ public final class MutationRecord {
 			// not used for syncmutations, only for remote transport (so
 			// bypass most of the mutations infrastructure)
 			Element elem = (Element) target.node();
-			elem.setInnerHTML(newValue);
-			elem.applySubtreeRefIds(refIds);
+			elem.implAccess().setInnerHTML(newValue, refIds);
 			break;
 		default:
 			throw new UnsupportedOperationException();

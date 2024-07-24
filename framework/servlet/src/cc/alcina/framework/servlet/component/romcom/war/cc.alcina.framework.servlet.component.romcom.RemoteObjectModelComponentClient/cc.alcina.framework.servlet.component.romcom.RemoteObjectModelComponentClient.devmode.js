@@ -652,14 +652,14 @@ gwt_hm_JavaObject.wrapJavaObject = function (valueObj, javaObject, scriptableIns
 	valueObj.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
 	if (javaObject.hasOwnProperty("__gwt_java_js_object_list")) {
 		var arr = javaObject.__gwt_java_js_object_list;
-		valueObj.setJavaObjectLength(arr.length);
+		valueObj.setJavaObjectListLength(arr.length);
 		for (var idx = 0; idx < arr.length; idx++) {
 			var obj = arr[idx];
 			valueObj.addJsObjectId(scriptableInstance.getLocalObjectRef(obj));
 		}
 	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
 		var objArray = javaObject.__gwt_java_js_int_list;
-		valueObj.setJavaObjectLength(objArray.length);
+		valueObj.setJavaIntListLength(objArray.length);
 		for (var idx = 0; idx < objArray.length; idx++) {
 			var iValue = objArray[idx];
 			valueObj.addJsInt(iValue);
