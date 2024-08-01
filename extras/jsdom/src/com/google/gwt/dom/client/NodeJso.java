@@ -31,6 +31,30 @@ public abstract class NodeJso extends JavaScriptObject
 		return LocalDom.nodeFor(o);
 	}
 
+	static Node toNode(NodeJso nodeJso) {
+		Node result = toNode0(nodeJso);
+		result.putRemote(nodeJso);
+		return result;
+	}
+
+	static Node toNode0(NodeJso nodeJso) {
+		switch (nodeJso.getNodeType()) {
+		case Node.CDATA_SECTION_NODE:
+			return CDATASectionJso.toNode0((CDATASectionJso) nodeJso);
+		case Node.COMMENT_NODE:
+			return CommentJso.toNode0((CommentJso) nodeJso);
+		case Node.ELEMENT_NODE:
+			return LocalDom.toNode((ElementJso) nodeJso);
+		case Node.PROCESSING_INSTRUCTION_NODE:
+			return ProcessingInstructionJso
+					.toNode0((ProcessingInstructionJso) nodeJso);
+		case Node.TEXT_NODE:
+			return TextJso.toNode0((TextJso) nodeJso);
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	protected NodeJso() {
 	}
 
@@ -461,4 +485,8 @@ public abstract class NodeJso extends JavaScriptObject
 	protected final native int getRefId0() /*-{
 	return this.hasOwnProperty('__refid') ? this.__refid : 0;
 	}-*/;
+
+	public final native NodeJso getNextSiblingJso() /*-{
+		return this.nextSibling;
+		}-*/;
 }

@@ -903,6 +903,32 @@ public class LocalDom implements ContextFrame {
 		public void putRemote(Node node, NodeRefid nodeRefid) {
 			node.putRemote(nodeRefid);
 		}
+
+		public void setDetached(Node node) {
+			node.traverse().forEach(n -> n.setAttached(false, false));
+		}
+
+		public Node getNode(int refId) {
+			return domIds.getNode(new Refid(refId));
+		}
+
+		public void insertAttachedBefore(Node newChild, Node refChild) {
+			newChild.jsoRemote().getParentElement()
+					.insertAttachedBefore(newChild, refChild);
+			if (newChild.isElement()) {
+				Element newElem = (Element) newChild;
+				IdList idList = newElem.getSubtreeIds();
+				MarkupToken markupToken = new MarkupToken(newElem, null,
+						idList);
+				new MarkupJso().markup(markupToken);
+			} else {
+				newChild.jsoRemote().setRefId(newChild.refId);
+			}
+		}
+
+		public Node remoteToLocal(NodeJso nodeJso) {
+			return NodeJso.toNode(nodeJso);
+		}
 	}
 
 	/*
@@ -1076,5 +1102,9 @@ public class LocalDom implements ContextFrame {
 			 */
 			localToRemoteInner(elem, html);
 		}
+	}
+
+	static Node toNode(ElementJso elemJso) {
+		return get().parse(elemJso, false);
 	}
 }

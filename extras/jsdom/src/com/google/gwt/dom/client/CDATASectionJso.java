@@ -43,4 +43,8 @@ public class CDATASectionJso extends NodeJso implements ClientDomCDATASection {
 	public final Text splitText(int offset) {
 		throw new UnsupportedOperationException();
 	}
+
+	static Node toNode0(CDATASectionJso jso) {
+		return jso.getOwnerDocument().createCDATASection(jso.getData());
+	}
 }

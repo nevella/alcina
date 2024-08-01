@@ -87,7 +87,9 @@ class MarkupJso {
 	}
 
 	void markup0(MarkupToken token) {
-		token.remote.setInnerHTML(token.localMarkup);
+		if (token.localMarkup != null) {
+			token.remote.setInnerHTML(token.localMarkup);
+		}
 		long start = System.currentTimeMillis();
 		JavaScriptObjectList createdJsos = traverseAndMark(token.remote,
 				token.createdJsos, token.localRefIds);

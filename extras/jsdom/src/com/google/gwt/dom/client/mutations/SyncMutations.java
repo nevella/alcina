@@ -1,7 +1,6 @@
 package com.google.gwt.dom.client.mutations;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +47,12 @@ class SyncMutations {
 		this.mutationsAccess = mutationsAccess;
 	}
 
+	/*
+	 * Update the localdom (NodeLocal tree) - either on-server due to changes in
+	 * the browser (jso::local) dom, or on-client due to changes in the server
+	 * (local::refid) dom
+	 * 
+	 */
 	void applyDetachedMutationsToLocalDom(List<MutationRecord> recordList,
 			boolean applyToRemote) {
 		try {
@@ -225,17 +230,20 @@ class SyncMutations {
 		List<MutationRecord> recordList = recordJsoList.stream()
 				.map(jso -> new MutationRecord(this, jso))
 				.filter(this::isApplicable).collect(Collectors.toList());
-		// create inverse tree
-		List<MutationRecord> reversed = new ArrayList<>(recordList);
-		Collections.reverse(reversed);
-		reversed.stream().forEach(record -> {
-			record.apply(ApplyTo.mutations_reversed);
-		});
-		// sync local/topmost remote (of completed inverse tree).
-		syncTopmostMutatedIfContainedInInitialLocal();
-		applyRemoteMutationsToLocalDom(recordList);
-		// sync added subtrees
-		createdLocals.forEach(LocalDom::syncToRemote);
+		/*
+		 * V1
+		 * 
+		 * // create inverse tree List<MutationRecord> reversed = new
+		 * ArrayList<>(recordList); Collections.reverse(reversed);
+		 * reversed.stream().forEach(record -> {
+		 * record.apply(ApplyTo.mutations_reversed); }); // sync local/topmost
+		 * remote (of completed inverse tree).
+		 * syncTopmostMutatedIfContainedInInitialLocal();
+		 * applyRemoteMutationsToLocalDom(recordList); // sync added subtrees
+		 * createdLocals.forEach(LocalDom::syncToRemote);
+		 */
+		new SyncMutations2(mutationsAccess)
+				.applyRemoteMutationsToLocalDom(recordList);
 		return recordList;
 	}
 

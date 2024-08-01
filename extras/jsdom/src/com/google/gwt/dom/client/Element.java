@@ -1384,4 +1384,14 @@ public class Element extends Node implements ClientDomElement,
 	public ClientDomStyle getStyleRemote() {
 		throw new UnsupportedOperationException();
 	}
+
+	/*
+	 * newChild is already attached (mirroring remote/jso dom), this syncs the
+	 * local structure
+	 */
+	void insertAttachedBefore(Node newChild, Node refChild) {
+		local().insertBefore(newChild, refChild);
+		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
+				newChild, newChild.getPreviousSibling(), true));
+	}
 }

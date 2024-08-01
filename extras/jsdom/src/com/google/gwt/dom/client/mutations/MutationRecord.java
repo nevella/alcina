@@ -15,6 +15,7 @@ import com.google.gwt.dom.client.NodeJso;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
@@ -439,5 +440,18 @@ public final class MutationRecord {
 	@Reflected
 	public enum Type {
 		attributes, characterData, childList, innerMarkup
+	}
+
+	@Property.Not
+	public boolean isNonTree() {
+		switch (type) {
+		case attributes:
+		case characterData:
+			return true;
+		case childList:
+			return false;
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 }

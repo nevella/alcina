@@ -24,4 +24,9 @@ public class ProcessingInstructionJso extends NodeJso
 	public final void setData(String data) {
 		throw new UnsupportedOperationException();
 	}
+
+	static Node toNode0(ProcessingInstructionJso jso) {
+		return jso.getOwnerDocument()
+				.createProcessingInstruction(jso.getTarget(), jso.getData());
+	}
 }

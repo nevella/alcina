@@ -94,4 +94,8 @@ public class TextJso extends NodeJso implements ClientDomText {
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     return this.splitText(offset);
 	}-*/;
+
+	static Node toNode0(TextJso jso) {
+		return jso.getOwnerDocument().createTextNode(jso.getData());
+	}
 }

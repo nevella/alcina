@@ -80,4 +80,8 @@ public class CommentJso extends NodeJso implements ClientDomComment {
 	public final Text splitText(int offset) {
 		throw new UnsupportedOperationException();
 	}
+
+	static Node toNode0(CommentJso jso) {
+		return jso.getOwnerDocument().createComment(jso.getData());
+	}
 }
