@@ -91,7 +91,7 @@ public class AuthenticationManager {
 		context.tokenStore.setCookieValue(COOKIE_NAME_SESSIONID, sessionId);
 		logger.info("Created session :: cookie: {} user: {} type: {}",
 				sessionId, user, authenticationType);
-		context.localAuthenticator.postCreateAuthenticationSession(session);
+		context.authenticator.postCreateAuthenticationSession(session);
 		if (createClientInstance) {
 			createClientInstance(context);
 		}
@@ -104,8 +104,7 @@ public class AuthenticationManager {
 				context.session, userAgent,
 				context.tokenStore.getRemoteAddress(),
 				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
-		context.localAuthenticator
-				.postCreateClientInstance(context.clientInstance);
+		context.authenticator.postCreateClientInstance(context.clientInstance);
 	}
 
 	public ClientInstance createNonHttpClientInstance(String format,
@@ -244,7 +243,7 @@ public class AuthenticationManager {
 	}
 
 	public String getExternalAuthorizationUrl(Permission requiredPermission) {
-		return ensureContext().localAuthenticator
+		return ensureContext().authenticator
 				.getExternalAuthorizationUrl(requiredPermission);
 	}
 
@@ -328,14 +327,14 @@ public class AuthenticationManager {
 	public void invalidateSession(AuthenticationSession session,
 			String reason) {
 		session.markInvalid(reason);
-		ensureContext().localAuthenticator.invalidateSession(session);
+		ensureContext().authenticator.invalidateSession(session);
 	}
 
 	private boolean isExpired(AuthenticationSession session) {
 		if (!Configuration.is("sessionExpirationEnabled")) {
 			return false;
 		}
-		ensureContext().localAuthenticator.checkExternalExpiration(session);
+		ensureContext().authenticator.checkExternalExpiration(session);
 		boolean result = session.provideIsExpired();
 		if (result && session.getEndTime() == null) {
 			logger.warn(
@@ -396,11 +395,10 @@ public class AuthenticationManager {
 
 		AuthenticationTokenStore tokenStore;
 
-		private Authenticator<?> localAuthenticator = Registry
-				.impl(Authenticator.class);
+		Authenticator<?> authenticator = Registry.impl(Authenticator.class);
 
 		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
-			return (Authenticator<U>) localAuthenticator;
+			return (Authenticator<U>) authenticator;
 		}
 	}
 
