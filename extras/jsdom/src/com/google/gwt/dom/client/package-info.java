@@ -8,9 +8,9 @@
  * <p>
  * With the rewrite, a {@link com.google.gwt.dom.client.Node} (now also
  * implementing {@link org.w3c.dom.Node}) is essentially a router for two DOM
- * representations - <i>local</i> (local to the .js or hostedmode java vvm) and
- * <i>remote</i> - which varies depending on the context but, in the case of a
- * GWT client is the browser DOM.
+ * representations - <i>local</i> (local to the .js or hostedmode/server java
+ * vvm) and <i>remote</i> - which varies depending on the context but, in the
+ * case of a GWT client is the browser DOM.
  *
  * <p>
  * When the remote DOM representation is the browser DOM, the remote fields are
@@ -19,52 +19,75 @@
  * <h2>Invariants</h2>
  * <p>
  * LocalDom uses two parallel trees - 'local' (jvm/js) and 'remote' (browser
- * dom, or remote computer local/remote pair).
+ * dom, or server-side local/remote.attachId(proxy) pair).
  *
  * <p>
  * "Node" (unqualified) refers to the logical objects used (Element, Node, Text,
  * Document) etc which have references to both the local and remote trees, ditto
  * "tree" (refers to the logical tree reffing the local and remote). When nodes
- * are initially built, the remote node is set as a dummy (ElementNull) etc so
- * that writes have no effect on browser dom (and are thus fast). Traversal and
- * attribute checking are performed on the local node.
+ * are initially built, the remote node is null so that writes have no effect on
+ * browser dom (and are thus fast). Traversal and attribute checking are
+ * performed on the local node.
  * </p>
  *
  * <p>
- * For most logical purposes, the system requires that the trees be in sync. The
- * mechanisms used are:
+ * Before exiting a top-level call affecting the dom, and at times during
+ * processing, the system requires that the trees be in sync. The mechanisms
+ * used are:
  * <ul>
- * <li>The initial local tree is built from the html of the loading page (note -
- * traversing browser dom once and serializing as json is fast - even for large
- * trees. FIXME - localdom - switch to traversal-only, since we sometimes have
- * to fall back on it anyway)
+ * <li>The initial local tree is built from the actual html of the loading page
+ * (note - this process requires a constant number of calls to the browser dom,
+ * so is non-prohibitive in devmode. This is true of all interactions with the
+ * browser dom, due to extensions of the GWT devmode protocol).
  * <li>If a new local element is attached to an existing remote element, a
  * corresponding 'pending resolution' element is created and the local html tree
  * flushed at the end of the Scheduler event loop
  * <ul>
- * <li>The implementation tracks the 'syncId' of each localnode, when a subtree
- * is synced each node is assigned that sync value. Nodes can only be synced
- * once (via tree sync), all subsequent operations must be immediate writes -
- * the sync operations verify this constraint.
+ * <li>The implementation tracks the 'attachId' of each local node. This ID is
+ * set recursively when a node is descent-reachable from the document element
+ * ('attached') ('connected' is the browser DOM term) and removed when the
+ * element is detached. The ID is also set/removed on NodeJso objects during
+ * sync - a welcome side effect is that tracking the effect of mutations on the
+ * whole DOM becomes easy, sidestepping the issue of "mutations while detached".
  * </ul>
- * <li>If a node with a real remote node is attached to a local-only node, that
- * local-only node (and its local-only parents) must be immediately flushed.
- * This is checked for prior to all writes on main-tree nodes
  * </ul>
  * </p>
+ * <h2>Linked DOM types</h2>
+ * <ul>
+ * <li><b>Server-only</b> ('one-way') For server-side html rendering, TODO check
+ * - is this backed by a w3c doc? How does that work
+ * <li><b>Browser</b> ('two-way') The DocumentLocal tree is synced with a
+ * DocumentJso tree
+ * <li><b>Romcom</b> ('four-way') Two local/remote pairs - server (owned by the
+ * app instance's Environment), with a DocumentLocal/DocumentAttachId pair;
+ * synced to browser (DocumentLocal/DocumentJso)
+ * </ul>
  * <h2>Dealing with invalid incoming HTML</h2>
+ * <li>For the two-way linkage, it's easy - always prefix any setInnerHtml
+ * (local) call via setInnerHtml (remote)/getInnerHtml (remote), which will
+ * ensure the markup is valid (e.g. <code>&lt;table&gt;&lt;tr&gt;</code> markup
+ * would be replaced by <code>&lt;table&gt;&lt;tbody&gt;&lt;tr&gt;</code>).
+ * <li>For four-way - it's a TODO WIP - but basically the client-side mutation
+ * should signal that the server-side structure is invalid, with the correct
+ * markup - and the server-side DOM should emit some sort of synthetic NodeEvent
  * <p>
- * If there's a difference in node childcount/type between local and remote
- * correspondents, assume that the we're in html supplied via setHTML that was
- * invalid, and reparse. Use
+ * TODO - basically, in If there's a difference in node childcount/type between
+ * local and remote correspondents, assume that the we're in html supplied via
+ * setHTML that was invalid, and reparse. Use
  * com.google.gwt.dom.client.ElementJso.buildOuterHtml() if in IE (see its 'text
  * document'-centric html approach documented elsewhere). Can also be
  * preemptively validated via Element.setInnerHTMLWithValidation
  * </p>
- * <p>
- * TODO - remote the DomXxStatic - they may be removable with changes to the
- * devmode jso/wrapper generator (using default interface methods rather than a
- * shared static class)
+ * <h2>Implementation notes</h2>
+ * <ul>
+ * <li>Why DomXxStatic? Because the devmode jso generator doesn't allow
+ * non-final methods on interfaces TODO - remote the DomXxStatic - they may be
+ * removable with changes to the devmode jso/wrapper generator (using default
+ * interface methods rather than a shared static class)
+ * <li>TODO - check doc/frame constructor complexity
+ * <li>TODO - document the 'why' of the 'validate' methods in Node.java
+ * 
+ * </ul>
  * <h2>The story of an event listener registration</h2>
  * <p>
  * Say there's a dirndl model with a
