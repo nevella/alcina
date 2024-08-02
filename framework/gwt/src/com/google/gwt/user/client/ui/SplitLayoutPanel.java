@@ -25,6 +25,8 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * A panel that adds user-positioned splitters between each of its child
  * widgets.
@@ -91,8 +93,11 @@ public class SplitLayoutPanel extends DockLayoutPanel {
 	@Override
 	public void setHeight(String height) {
 		super.setHeight(height);
-		getElement().getStyle().setProperty("height", "calc(100vh - 100px)");
+		getElement().getStyle().setProperty("height",
+				Ax.format("calc(100vh - %s)", headerHeight));
 	}
+
+	public static String headerHeight = "100px";
 
 	abstract class Splitter extends Widget {
 		protected final Widget target;
