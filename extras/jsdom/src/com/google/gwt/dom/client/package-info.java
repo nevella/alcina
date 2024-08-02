@@ -154,6 +154,15 @@
  *
  * <p>
  * See also {@link Refid}
+ * 
+ * <h2>Topics - TODO</h2>
+ * <ul>
+ * <li>Event listener/registration/firing (possibly covered above)
+ * <li>Debug/tracing tools
+ * <li>Local mutations
+ * <li>Attached + connected
+ * <li>Document context + frame
+ * </ul>
  *
  */
 package com.google.gwt.dom.client;
