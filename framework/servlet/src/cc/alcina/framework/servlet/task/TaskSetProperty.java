@@ -1,9 +1,11 @@
 package cc.alcina.framework.servlet.task;
 
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskSetProperty extends PerformerTask {
+public class TaskSetProperty extends PerformerTask
+		implements Task.RemotePerformable {
 	private String key;
 
 	private String value;
