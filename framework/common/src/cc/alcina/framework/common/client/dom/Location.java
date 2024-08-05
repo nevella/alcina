@@ -232,6 +232,10 @@ public class Location implements Comparable<Location> {
 		return containingNode.isText();
 	}
 
+	public DomNode getContainingNode() {
+		return containingNode;
+	}
+
 	public Location relativeLocation(RelativeDirection direction) {
 		return relativeLocation(direction, TextTraversal.UNDEFINED);
 	}
@@ -437,6 +441,10 @@ public class Location implements Comparable<Location> {
 
 		public boolean contains(Range o) {
 			return start.compareTo(o.start) <= 0 && end.compareTo(o.end) >= 0;
+		}
+
+		public boolean contains(Location l) {
+			return start.compareTo(l) <= 0 && end.compareTo(l) >= 0;
 		}
 
 		public void detach() {
