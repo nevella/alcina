@@ -58,7 +58,7 @@ public interface Feature extends Registration.AllSubtypes {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented
-	@Target({ ElementType.METHOD, ElementType.TYPE })
+	@Target({ ElementType.METHOD, ElementType.TYPE, ElementType.PACKAGE })
 	@Repeatable(Refs.class)
 	@interface Ref {
 		Class<? extends Ref.Type>[] types() default {};

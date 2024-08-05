@@ -41,6 +41,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentHandler;
+import cc.alcina.framework.servlet.component.test.server.AlcinaDevTestHandler;
 import cc.alcina.framework.servlet.logging.FlightEventJettyHandler;
 
 @Registration.Singleton(DevConsoleRemote.class)
@@ -146,22 +147,19 @@ public class DevConsoleRemote {
 		devConsole.performCommand(commandString);
 	}
 
-	/*
-	 * FIXME - romcom - add + implement eviction policy
-	 */
 	void registerRemoteComponent(RemoteComponent component) {
 		{
 			ContextHandler protocolHandler = new ContextHandler(handlers,
 					component.getPath());
 			protocolHandler.setAllowNullPathInfo(true);
-			protocolHandler.setHandler(new ServerHandler(component));
+			protocolHandler.setHandler(new RomcomServerHandler(component));
 		}
 	}
 
-	public static class ServerHandler extends AbstractHandler {
+	public static class RomcomServerHandler extends AbstractHandler {
 		RemoteComponentHandler handler;
 
-		public ServerHandler(RemoteComponent component) {
+		public RomcomServerHandler(RemoteComponent component) {
 			handler = new RemoteComponentHandler(component, component.getPath(),
 					true);
 		}
@@ -176,6 +174,22 @@ public class DevConsoleRemote {
 
 		public void setLoadIndicatorHtml(String loadIndicatorHtml) {
 			handler.setLoadIndicatorHtml(loadIndicatorHtml);
+		}
+	}
+
+	public static class TestServerHandler extends AbstractHandler {
+		AlcinaDevTestHandler handler;
+
+		public TestServerHandler() {
+			handler = new AlcinaDevTestHandler();
+		}
+
+		@Override
+		public void handle(String target, Request baseRequest,
+				HttpServletRequest request, HttpServletResponse response)
+				throws IOException, ServletException {
+			handler.handle(request, response);
+			baseRequest.setHandled(true);
 		}
 	}
 
@@ -240,6 +254,12 @@ public class DevConsoleRemote {
 			jsCodeServerHandler.addServlet(
 					new ServletHolder(new JsCodeServerServlet()), "/*");
 			jsCodeServerHandler.setAllowNullPathInfo(true);
+		}
+		{
+			ContextHandler protocolHandler = new ContextHandler(handlers,
+					"/alcina.gwt.test");
+			protocolHandler.setAllowNullPathInfo(true);
+			protocolHandler.setHandler(new TestServerHandler());
 		}
 		registerRemoteComponents(handlers);
 		addSubclassHandlers(handlers);

@@ -8,7 +8,6 @@ import com.google.gwt.core.client.Scheduler;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.RemoteComponentInit;
-import cc.alcina.framework.servlet.component.romcom.client.test.TestSyncMutations2;
 
 /**
  * Thin gwt app which manipulates dom, posts events via send/receive on the the
@@ -40,8 +39,6 @@ public class RemoteObjectModelComponentClient implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
 		Client.Init.init();
-		// Scheduler.get().scheduleDeferred(() -> init0());
-		Scheduler.get().scheduleDeferred(
-				() -> new TestSyncMutations2().onModuleLoad());
+		Scheduler.get().scheduleDeferred(() -> init0());
 	}
 }
