@@ -284,7 +284,8 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			Node node = event.getContext().node;
 			// skip the transform node, bind the transform child to the
 			// valueModel
-			if (node.parent.annotationLocation == valueLocation) {
+			if (node.parent != null
+					&& node.parent.annotationLocation == valueLocation) {
 				/*
 				 * The input model (has Field and Bindable refs)
 				 */
