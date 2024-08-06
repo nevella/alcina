@@ -53,6 +53,10 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		return new Link().withModelEvent(modelEvent).withTextFromModelEvent();
 	}
 
+	public static Link button(Class<? extends ModelEvent> modelEvent) {
+		return of(modelEvent).withTag("button");
+	}
+
 	private static final transient String INITIAL_HREF = "#";
 
 	public static final transient String PRIMARY_ACTION = "primary-action";
