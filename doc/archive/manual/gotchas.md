@@ -45,3 +45,5 @@ FIXME console - use registry (probably) to model caches + deletion
 
 on the actual dom, events are bound at com.google.gwt.user.client.DOM.sinkEvents(Element elem, int eventBits)
 and fired at com.google.gwt.user.client.DOM.dispatchEventImpl(Event event, Element elem, EventListener listener)
+
+# debugging devmode exceptions

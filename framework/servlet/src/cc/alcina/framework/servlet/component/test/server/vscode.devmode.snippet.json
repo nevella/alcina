@@ -1,0 +1,30 @@
+{
+  "type": "java",
+  "name": "Test (alcina) GWT dev mode",
+  "request": "launch",
+  "projectName": "alcina",
+  "mainClass": "com.google.gwt.dev.DevMode",
+  "vmArgs": "-Dgwt.usearchives=false -Xmx2500m -XX:ReservedCodeCacheSize=500m  -Dcom.google.gwt.dev.DevMode.headless=true -Dfile.encoding=UTF-8 --add-opens java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED -Djava.net.preferIPv4Stack=true  --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.logging/java.util.logging=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED",
+  "args": "-logLevel INFO -sourceLevel 11 -remoteUI 51342:2383895968324901 -noserver -codeServerPort 9997 -war /var/local/gwt/alcina/war -bindAddress 0.0.0.0 -gen /var/local/gwt/gen cc.alcina.framework.servlet.component.test.AlcinaGwtTestClient",
+  "classPaths": [
+    "/g/alcina/extras/rpc/client/build",
+    "/g/alcina/framework/emul/dev",
+    "/g/alcina/extras/jsdom/src",
+    "/g/alcina/extras/jsdom/src-element",
+    "/g/alcina/extras/jsdom/src-regex",
+    "/g/alcina/extras/rpc/client/src",
+    "/g/alcina/framework/clientreflectorjvm/src",
+    "/g/alcina/framework/common/src",
+    "/g/alcina/framework/entity/src",
+    "/g/alcina/framework/impl/jboss-hibernate/src",
+    "/g/alcina/framework/emul/src",
+    "/g/alcina/framework/gwt/src",
+    "/g/alcina/framework/servlet/src",
+    "$Auto",
+    "/g/alcina/extras/collections/src"
+  ],
+  "presentation": {
+    "group": "x.devmode",
+    "order": 4
+  }
+}

@@ -6,8 +6,6 @@ import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
-import cc.alcina.framework.servlet.component.test.client.test.TestJsoLists;
-import cc.alcina.framework.servlet.component.test.client.test.TestSyncMutations2;
 
 /**
  * A scaffolding for the Alcina gwt tests
@@ -24,8 +22,9 @@ public class AlcinaGwtTestClient implements EntryPoint {
 		if (GWT.isScript()) {
 			throw new IllegalStateException("Devmode only");
 		}
-		new TestJsoLists().onModuleLoad();
-		new TestSyncMutations2().onModuleLoad();
+		new TestJsoLists().run();
+		new TestSyncMutations2().run();
+		new TestSyncMutations2a().run();
 		ClientUtils.consoleInfo("[AlcinaGwtTestClient] Tests passed");
 	}
 }

@@ -11,7 +11,7 @@
 	<public path="public" />
 	<super-source path="jre" />
 	<public path="client/widgets/res" />
-	<set-configuration-property name="ClientReflectionGenerator.ReachabilityData.folder" value="/tmp/remote-component-client" />
+	<set-configuration-property name="ClientReflectionGenerator.ReachabilityData.folder" value="/tmp/alcina-gwt-test-client" />
 	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls" value="_pix/.*|images/.*" />
 	<set-configuration-property name="ClientReflectionGenerator.FilterPeer.className" value="cc.alcina.framework.servlet.component.test.rebind.AlcinaGwtTestReflectionFilterPeer" />
 	<set-configuration-property name="ClientReflectionGenerator.LinkerPeer.className" value="cc.alcina.framework.servlet.component.test.rebind.AlcinaGwtTestReflectionLinkerPeer" />
