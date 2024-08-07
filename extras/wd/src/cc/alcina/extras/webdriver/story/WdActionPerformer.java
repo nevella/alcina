@@ -11,6 +11,8 @@ import com.google.common.base.Preconditions;
 import cc.alcina.extras.webdriver.query.ElementQuery;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
@@ -314,7 +316,11 @@ public class WdActionPerformer implements ActionTypePerformer<Story.Action.Ui> {
 				Preconditions.checkNotNull(elem);
 				JavascriptExecutor executor = (JavascriptExecutor) wdPerformer.wdContext.token
 						.getWebDriver();
-				executor.executeScript("arguments[0].scrollIntoView()", elem);
+				int fromTop = 150;
+				String script = Io.read().resource("res/scrollIntoView.js")
+						.asString();
+				script = Ax.format(script, fromTop).replace("//", "");
+				executor.executeScript(script, elem);
 			}
 		}
 	}

@@ -148,4 +148,8 @@ public abstract class Action<T> implements Permissible {
 			return t.asArea();
 		}
 	}
+
+	@Directed.Transform(ActionTransform.class)
+	public static abstract class Nested extends Action<Void> {
+	}
 }
