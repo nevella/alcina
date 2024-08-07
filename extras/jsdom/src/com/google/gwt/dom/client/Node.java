@@ -117,9 +117,9 @@ public abstract class Node
 	boolean attached;
 
 	/*
-	 * Attached nodes will have a non-zero refId, which is used for tree sync
+	 * Attached nodes will have a non-zero attachId, which is used for tree sync
 	 */
-	int refId;
+	int attachId;
 
 	protected Node() {
 	}
@@ -343,7 +343,7 @@ public abstract class Node
 	}
 
 	@Override
-	public boolean isRefid() {
+	public boolean isAttachId() {
 		return false;
 	}
 
@@ -618,21 +618,21 @@ public abstract class Node
 	}
 
 	@Override
-	public void setRefId(int id) {
-		this.refId = id;
+	public void setAttachId(int id) {
+		this.attachId = id;
 		// perf - remote dom ids need not be zeroed, the source of truth is the
 		// id's presence in DomIds
 		if (id != 0) {
-			sync(() -> remote().setRefId(id));
+			sync(() -> remote().setAttachId(id));
 		}
 	}
 
 	@Override
-	public int getRefId() {
-		return this.refId;
+	public int getAttachId() {
+		return this.attachId;
 	}
 
-	public String toNameRefId() {
-		return Ax.format("%s::%s", getNodeName(), getRefId());
+	public String toNameAttachId() {
+		return Ax.format("%s::%s", getNodeName(), getAttachId());
 	}
 }

@@ -581,7 +581,7 @@ public class Window {
 		scrollTo0(left, top, smooth);
 	}
 
-	// TODO - romcom - implement [DocumentRefid - null Node --> window]
+	// TODO - romcom - implement [DocumentAttachId - null Node --> window]
 	private static native void scrollTo0(int left, int top, boolean smooth) /*-{
     var args = {
       'left' : left,

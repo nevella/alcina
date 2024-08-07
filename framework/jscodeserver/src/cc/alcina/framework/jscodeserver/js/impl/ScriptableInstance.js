@@ -106,8 +106,8 @@ class gwt_hm_ScriptableInstance {
 	getLocalObjectRef(obj) {
 		return this.localObjects.ensureObjectRef(obj);
 	}
-	getLocalObject(refId) {
-		return this.localObjects.getById(refId);
+	getLocalObject(attachId) {
+		return this.localObjects.getById(attachId);
 	}
 	resolveLocal(val) {
 		switch (val.type) {

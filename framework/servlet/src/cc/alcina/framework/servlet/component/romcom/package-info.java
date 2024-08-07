@@ -5,7 +5,7 @@
  * events
  *
  * <p>
- * Much of the interaction is supported by the NodeRefid subtypes in the
+ * Much of the interaction is supported by the NodeAttachId subtypes in the
  * {@link com.google.gwt.dom.client} package; the 'server hosting client' code
  * is mostly in {@link VmEnvironment}
  *

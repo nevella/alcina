@@ -162,7 +162,7 @@ public class RemoteMutations {
 		MutationRecord removeMutation = MutationRecord
 				.generateRemoveMutation(parent, oldChild);
 		mutationsAccess
-				.applyPreRemovalRefId(removeMutation.removedNodes.get(0));
+				.applyPreRemovalAttachId(removeMutation.removedNodes.get(0));
 		return removeMutation;
 	}
 
@@ -277,6 +277,6 @@ public class RemoteMutations {
 	public void emitInnerMarkupMutation(Element elem) {
 		MutationRecord mutation = MutationRecord
 				.generateMarkupMutationRecord(elem);
-		Document.get().implAccess().refIdRemote().emitMutation(mutation);
+		Document.get().implAccess().attachIdRemote().emitMutation(mutation);
 	}
 }

@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 
 @Bean(PropertySource.FIELDS)
 public final class DomEventData {
-	public Refid firstReceiver;
+	public AttachId firstReceiver;
 
 	public String value;
 

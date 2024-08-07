@@ -56,7 +56,7 @@ class MarkupJso {
 		MarkupToken(Element container, String localMarkup, IdList idList) {
 			this.container = container;
 			this.localMarkup = localMarkup;
-			localRefIds.javaArray = idList.toIntArray();
+			localAttachIds.javaArray = idList.toIntArray();
 		}
 
 		String localMarkup;
@@ -65,7 +65,7 @@ class MarkupJso {
 
 		JavaScriptObjectList createdJsos = new JavaScriptObjectList();
 
-		JavaScriptIntList localRefIds = new JavaScriptIntList();
+		JavaScriptIntList localAttachIds = new JavaScriptIntList();
 
 		public void populateRemotes() {
 			Iterator<JavaScriptObject> itr = createdJsos.iterator();
@@ -92,7 +92,7 @@ class MarkupJso {
 		}
 		long start = System.currentTimeMillis();
 		JavaScriptObjectList createdJsos = traverseAndMark(token.remote,
-				token.createdJsos, token.localRefIds);
+				token.createdJsos, token.localAttachIds);
 		token.ok = createdJsos != null;
 		if (token.ok) {
 			token.populateRemotes();
@@ -100,17 +100,17 @@ class MarkupJso {
 		long end = System.currentTimeMillis();
 		// FIXME - logging
 		// LocalDom.consoleLog(Ax.format("traverse-and-mark :: %s nodes - %sms",
-		// refIds.size(), end - start), false);
+		// attachIds.size(), end - start), false);
 		if (!token.ok) {
 			LocalDom.consoleLog("MarkupJso :: !!success", true);
 		}
 	}
 
 	final native JavaScriptObjectList traverseAndMark(ElementJso container,
-			JavaScriptObjectList createdJsos, JavaScriptIntList refIdList) /*-{
+			JavaScriptObjectList createdJsos, JavaScriptIntList attachIdList) /*-{
 		//traverse the node tree depth first, maintaining an array of cursors to track node position
 		var resultJsos = createdJsos.@com.google.gwt.core.client.impl.JavaScriptObjectList::ensureJsArray()();
-		var ids = refIdList.@com.google.gwt.core.client.impl.JavaScriptIntList::ensureJsArray()();
+		var ids = attachIdList.@com.google.gwt.core.client.impl.JavaScriptIntList::ensureJsArray()();
 		var idsIdx = 0;
 		var itr = document.createNodeIterator(container);
 		var coalesceLists = [];

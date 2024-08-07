@@ -17,19 +17,19 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
  * 
  */
 @Bean(PropertySource.FIELDS)
-public final class Refid {
-	public static Refid forNode(Node node) {
-		Refid result = new Refid();
-		result.id = node.getRefId();
+public final class AttachId {
+	public static AttachId forNode(Node node) {
+		AttachId result = new AttachId();
+		result.id = node.getAttachId();
 		return result;
 	}
 
 	public int id;
 
-	public Refid() {
+	public AttachId() {
 	}
 
-	Refid(int id) {
+	AttachId(int id) {
 		this.id = id;
 	}
 

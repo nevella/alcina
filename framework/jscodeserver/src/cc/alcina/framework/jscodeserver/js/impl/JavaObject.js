@@ -96,8 +96,8 @@ gwt_hm_JavaObject.unwrapJavaObject = function (valueObj, javaObject, scriptableI
 		javaObject.__gwt_java_js_object_list = [];
 		var intArray = valueObj.getArray();
 		for (var idx = 0; idx < intArray.length; idx++) {
-			var refId = intArray[idx];
-			javaObject.__gwt_java_js_object_list.push(scriptableInstance.getLocalObject(refId));
+			var attachId = intArray[idx];
+			javaObject.__gwt_java_js_object_list.push(scriptableInstance.getLocalObject(attachId));
 		}
 	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
 		javaObject.__gwt_java_js_int_list = valueObj.getArray();

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.DocumentRefid.InvokeProxy;
+import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -19,8 +19,8 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  * That support could be generalised.
  */
-public class ElementRefid extends NodeRefid implements ElementRemote {
-	ElementRefid(Node node) {
+public class ElementAttachId extends NodeAttachId implements ElementRemote {
+	ElementAttachId(Node node) {
 		super(node);
 	}
 
@@ -51,12 +51,12 @@ public class ElementRefid extends NodeRefid implements ElementRemote {
 	}
 
 	public void emitSinkBitlessEvent(String eventTypeName) {
-		getOwnerDocument().refIdRemote().emitSinkBitlessEvent(elementFor(),
+		getOwnerDocument().attachIdRemote().emitSinkBitlessEvent(elementFor(),
 				eventTypeName);
 	}
 
 	public void emitSinkEvents(int eventBits) {
-		getOwnerDocument().refIdRemote().emitSinkEvents(elementFor(),
+		getOwnerDocument().attachIdRemote().emitSinkEvents(elementFor(),
 				eventBits);
 	}
 
@@ -350,7 +350,7 @@ public class ElementRefid extends NodeRefid implements ElementRemote {
 	public void setAttribute(String name, String value) {
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.attributes;
-		record.target = MutationNode.refId(elementFor());
+		record.target = MutationNode.attachId(elementFor());
 		record.attributeName = name;
 		record.newValue = value;
 		emitMutation(record);
@@ -483,14 +483,15 @@ public class ElementRefid extends NodeRefid implements ElementRemote {
 
 	<T> T invokeSync(String methodName, List<Class> argumentTypes,
 			List<?> arguments) {
-		return getOwnerDocument().refIdRemote().invokeProxy.invokeSync(
-				ElementRefid.this, methodName, argumentTypes, arguments, null);
+		return getOwnerDocument().attachIdRemote().invokeProxy.invokeSync(
+				ElementAttachId.this, methodName, argumentTypes, arguments,
+				null);
 	}
 
 	<T> T invokeStyle(String methodName, List<Class> argumentTypes,
 			List<?> arguments) {
-		return getOwnerDocument().refIdRemote().invokeProxy.invokeSync(
-				ElementRefid.this, methodName, argumentTypes, arguments,
+		return getOwnerDocument().attachIdRemote().invokeProxy.invokeSync(
+				ElementAttachId.this, methodName, argumentTypes, arguments,
 				List.of(InvokeProxy.Flag.invoke_on_element_style));
 	}
 
@@ -520,6 +521,6 @@ public class ElementRefid extends NodeRefid implements ElementRemote {
 
 	@Override
 	public ClientDomStyle getStyleRemote() {
-		return new StyleRefid(this);
+		return new StyleAttachId(this);
 	}
 }

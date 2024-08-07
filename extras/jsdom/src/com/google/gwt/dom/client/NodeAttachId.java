@@ -34,30 +34,30 @@ import cc.alcina.framework.common.client.util.Ax;
  * 
  *
  */
-public abstract class NodeRefid implements ClientDomNode, NodeRemote {
-	public static NodeRefid create(Node node) {
+public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
+	public static NodeAttachId create(Node node) {
 		switch (node.getNodeType()) {
 		case Node.ELEMENT_NODE:
-			return new ElementRefid(node);
+			return new ElementAttachId(node);
 		case Node.TEXT_NODE:
-			return new TextRefid(node);
+			return new TextAttachId(node);
 		case Node.COMMENT_NODE:
-			return new CommentRefid(node);
+			return new CommentAttachId(node);
 		default:
 			throw new UnsupportedOperationException();
 		}
 	}
 
-	public static void ensureRefidRemote(Node node) {
+	public static void ensureAttachIdRemote(Node node) {
 		if (!node.hasRemote()) {
 			node.putRemote(create(node));
 		}
-		node.streamChildren().forEach(NodeRefid::ensureRefidRemote);
+		node.streamChildren().forEach(NodeAttachId::ensureAttachIdRemote);
 	}
 
 	protected Node node;
 
-	NodeRefid(Node node) {
+	NodeAttachId(Node node) {
 		this.node = node;
 	}
 
@@ -66,8 +66,8 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 		if (LocalDom.isPending(this)) {
 			return null;
 		}
-		NodeRefid toAppend = resolvedOrPending(newChild);
-		LocalDom.refIdRepresentations().nodeAsMutations(newChild, false)
+		NodeAttachId toAppend = resolvedOrPending(newChild);
+		LocalDom.attachIdRepresentations().nodeAsMutations(newChild, false)
 				.forEach(this::emitMutation);
 		return newChild;
 	}
@@ -75,7 +75,7 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 	/**
 	 * Link remote to [remote or local]
 	 */
-	private NodeRefid resolvedOrPending(Node node) {
+	private NodeAttachId resolvedOrPending(Node node) {
 		if (node == null) {
 			return null;
 		}
@@ -97,7 +97,7 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 	}
 
 	void emitMutation(MutationRecord mutation) {
-		getOwnerDocument().refIdRemote().emitMutation(mutation);
+		getOwnerDocument().attachIdRemote().emitMutation(mutation);
 	}
 
 	@Override
@@ -179,8 +179,8 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 		if (LocalDom.isPending(this)) {
 			return null;
 		}
-		NodeRefid toInsert = resolvedOrPending(newChild);
-		LocalDom.refIdRepresentations().nodeAsMutations(newChild, false)
+		NodeAttachId toInsert = resolvedOrPending(newChild);
+		LocalDom.attachIdRepresentations().nodeAsMutations(newChild, false)
 				.forEach(this::emitMutation);
 		return newChild;
 	}
@@ -196,7 +196,7 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 	}
 
 	@Override
-	public boolean isRefid() {
+	public boolean isAttachId() {
 		return true;
 	}
 
@@ -217,9 +217,9 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		ensureRefidRemote(oldChild);
+		ensureAttachIdRemote(oldChild);
 		// emit the the remove mutation
-		List.of(LocalDom.refIdRepresentations().asRemoveMutation(node(),
+		List.of(LocalDom.attachIdRepresentations().asRemoveMutation(node(),
 				oldChild)).forEach(this::emitMutation);
 		return oldChild;
 	}
@@ -240,11 +240,11 @@ public abstract class NodeRefid implements ClientDomNode, NodeRemote {
 	}
 
 	@Override
-	public void setRefId(int id) {
+	public void setAttachId(int id) {
 	}
 
 	@Override
-	public int getRefId() {
-		return node().getRefId();
+	public int getAttachId() {
+		return node().getAttachId();
 	}
 }

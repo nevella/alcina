@@ -16,9 +16,9 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.NodeList;
-import com.google.gwt.dom.client.NodeRefid;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
@@ -78,14 +78,14 @@ class SyncMutations {
 				if (record.type == MutationRecord.Type.innerMarkup) {
 					Element elem = (Element) record.target.node();
 					if (!Al.isBrowser()) {
-						NodeRefid.ensureRefidRemote(elem);
+						NodeAttachId.ensureAttachIdRemote(elem);
 					}
 				}
 				record.addedNodes.forEach(added -> {
 					record.connectMutationNodeRef(added);
 					if (!Al.isBrowser()) {
 						mutationsAccess.putRemote(added.node,
-								NodeRefid.create(added.node));
+								NodeAttachId.create(added.node));
 					}
 				});
 			});

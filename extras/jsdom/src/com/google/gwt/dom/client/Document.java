@@ -104,7 +104,7 @@ public class Document extends Node
 			remote = DocumentJso.get();
 			break;
 		case REF_ID:
-			remote = new DocumentRefid(this);
+			remote = new DocumentAttachId(this);
 			break;
 		}
 		localDom = new LocalDom();
@@ -1040,8 +1040,8 @@ public class Document extends Node
 		throw new UnsupportedOperationException();
 	}
 
-	public DocumentRefid refIdRemote() {
-		return (DocumentRefid) remote;
+	public DocumentAttachId attachIdRemote() {
+		return (DocumentAttachId) remote;
 	}
 
 	@Override
@@ -1116,12 +1116,12 @@ public class Document extends Node
 	}
 
 	public class DocumentImplAccess {
-		public DocumentRefid refIdRemote() {
-			return (DocumentRefid) remote();
+		public DocumentAttachId attachIdRemote() {
+			return (DocumentAttachId) remote();
 		}
 
-		public Node getNode(Refid refId) {
-			return localDom.domIds.getNode(refId);
+		public Node getNode(AttachId attachId) {
+			return localDom.domIds.getNode(attachId);
 		}
 	}
 

@@ -6,6 +6,7 @@ import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.RootPanel;
 
 import cc.alcina.framework.common.client.consort.Consort;
@@ -41,7 +42,20 @@ class TestSyncMutations2a {
 				true);
 		Registry.register().singleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
-		new Tests().start();
+		Tests consort = new Tests();
+		consort.addOneTimeFinishedCallback(new AsyncCallback() {
+			@Override
+			public void onFailure(Throwable e) {
+				e.printStackTrace();
+				ClientUtils.consoleInfo("   [TestSyncMutations2] Failed");
+			}
+
+			@Override
+			public void onSuccess(Object arg0) {
+				ClientUtils.consoleInfo("   [TestSyncMutations2] Passed");
+			}
+		});
+		consort.start();
 	}
 
 	@Directed(

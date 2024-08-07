@@ -327,8 +327,8 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	public static RefidRepresentations refIdRepresentations() {
-		return get().refIdRepresentations;
+	public static AttachIdRepresentations attachIdRepresentations() {
+		return get().attachIdRepresentations;
 	}
 
 	public static void register(Document doc) {
@@ -393,7 +393,7 @@ public class LocalDom implements ContextFrame {
 		get().verifyMutatingState0();
 	}
 
-	RefidRepresentations refIdRepresentations = new RefidRepresentations();
+	AttachIdRepresentations attachIdRepresentations = new AttachIdRepresentations();
 
 	boolean applyToRemote = true;
 
@@ -477,13 +477,13 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	void linkSubtreeToRefidRemotes(Node node) {
+	void linkSubtreeToAttachIdRemotes(Node node) {
 		Node cursor = node;
 		while (cursor != null) {
 			if (cursor.hasRemote()) {
 				break;
 			} else {
-				cursor.putRemote(NodeRefid.create(node));
+				cursor.putRemote(NodeAttachId.create(node));
 			}
 			cursor = cursor.getParentNode();
 		}
@@ -502,8 +502,8 @@ public class LocalDom implements ContextFrame {
 		switch (nodeType) {
 		case Node.ELEMENT_NODE:
 			Element element = (Element) node;
-			if (isRefid()) {
-				remote = NodeRefid.create(node);
+			if (isAttachId()) {
+				remote = NodeAttachId.create(node);
 			} else {
 				remote = ((DomDispatchJso) DOMImpl.impl.remote())
 						.createElement(element.getTagName());
@@ -675,7 +675,7 @@ public class LocalDom implements ContextFrame {
 		return applyToRemote;
 	}
 
-	boolean isRefid() {
+	boolean isAttachId() {
 		return Document.get().remoteType == RemoteType.REF_ID;
 	}
 
@@ -692,7 +692,7 @@ public class LocalDom implements ContextFrame {
 
 	// FIXME - refid - maybe remove? simplify call sites?
 	private void linkRemote(NodeJso remote, Node node) {
-		remote.setRefId(node.getRefId());
+		remote.setAttachId(node.getAttachId());
 	}
 
 	void localToRemoteInner(Element element, String markup) {
@@ -742,12 +742,12 @@ public class LocalDom implements ContextFrame {
 				});
 			}
 		} else {
-			// ElementRefId
+			// ElementAttachId
 			if (!element.isAttached()) {
 				return;
 			} else {
 				remoteMutations.emitInnerMarkupMutation(element);
-				linkSubtreeToRefidRemotes(element);
+				linkSubtreeToAttachIdRemotes(element);
 			}
 		}
 		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
@@ -766,10 +766,10 @@ public class LocalDom implements ContextFrame {
 		if (remote.getNodeType() == Node.DOCUMENT_NODE) {
 			return (T) Document.get();
 		} else {
-			int refId = remote.getRefId();
-			Node node = domIds.getNode(new Refid(refId));
+			int attachId = remote.getAttachId();
+			Node node = domIds.getNode(new AttachId(attachId));
 			if (node == null) {
-				if (domIds.wasRemoved(new Refid(refId))) {
+				if (domIds.wasRemoved(new AttachId(attachId))) {
 					// removed from localdom, but remotedom removal still
 					// pending
 					return null;
@@ -896,20 +896,21 @@ public class LocalDom implements ContextFrame {
 			return n.jsoRemote();
 		}
 
-		public void applyPreRemovalRefId(MutationNode mutationNode) {
-			domIds.applyPreRemovalRefId(mutationNode.node, mutationNode.refId);
+		public void applyPreRemovalAttachId(MutationNode mutationNode) {
+			domIds.applyPreRemovalAttachId(mutationNode.node,
+					mutationNode.attachId);
 		}
 
-		public void putRemote(Node node, NodeRefid nodeRefid) {
-			node.putRemote(nodeRefid);
+		public void putRemote(Node node, NodeAttachId nodeAttachId) {
+			node.putRemote(nodeAttachId);
 		}
 
 		public void setDetached(Node node) {
 			node.traverse().forEach(n -> n.setAttached(false, false));
 		}
 
-		public Node getNode(int refId) {
-			return domIds.getNode(new Refid(refId));
+		public Node getNode(int attachId) {
+			return domIds.getNode(new AttachId(attachId));
 		}
 
 		public void insertAttachedBefore(Node newChild, Node refChild) {
@@ -922,7 +923,7 @@ public class LocalDom implements ContextFrame {
 						idList);
 				new MarkupJso().markup(markupToken);
 			} else {
-				newChild.jsoRemote().setRefId(newChild.refId);
+				newChild.jsoRemote().setAttachId(newChild.attachId);
 			}
 		}
 
@@ -932,10 +933,10 @@ public class LocalDom implements ContextFrame {
 	}
 
 	/*
-	 * Bridging class between the server-side remote (NodeRefid) dom and the
+	 * Bridging class between the server-side remote (NodeAttachId) dom and the
 	 * client-side LocalDom
 	 */
-	public class RefidRepresentations {
+	public class AttachIdRepresentations {
 		public void applyEvent(DomEventData eventData) {
 			try {
 				EventTarget eventTarget = eventData.event.getEventTarget();
@@ -979,7 +980,7 @@ public class LocalDom implements ContextFrame {
 						return;
 					}
 					if (eventData.eventValue() != null) {
-						target.refIdRemote().value = eventData.eventValue();
+						target.attachIdRemote().value = eventData.eventValue();
 					}
 					// FIXME - romcom - attach probably not being called.
 					// This can probably be removed
@@ -1045,11 +1046,11 @@ public class LocalDom implements ContextFrame {
 	}
 
 	boolean wasRemoved0(ElementJso elemJso) {
-		int refId = elemJso.getRefId();
-		Node node = domIds.getNode(new Refid(refId));
+		int attachId = elemJso.getAttachId();
+		Node node = domIds.getNode(new AttachId(attachId));
 		if (node == null) {
-			Preconditions.checkState(refId != 0);
-			// domIds.removed will *almost certainly* contain the refId, but
+			Preconditions.checkState(attachId != 0);
+			// domIds.removed will *almost certainly* contain the attachId, but
 			// because we're async and removed is flushed, it's possible that it
 			// wouldn't. so don't check
 			return true;

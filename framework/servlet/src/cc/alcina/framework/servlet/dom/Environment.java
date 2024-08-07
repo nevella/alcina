@@ -12,15 +12,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
-import com.google.gwt.dom.client.DocumentRefid;
-import com.google.gwt.dom.client.DocumentRefid.InvokeProxy;
+import com.google.gwt.dom.client.DocumentAttachId;
+import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.NodeRefid;
-import com.google.gwt.dom.client.Refid;
+import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -92,7 +92,7 @@ public class Environment {
 	 * FIXME - tricky - what to do with timeouts here - does this interact with
 	 * keep-alives, environmentmanager
 	 */
-	class InvokeProxyImpl implements DocumentRefid.InvokeProxy {
+	class InvokeProxyImpl implements DocumentAttachId.InvokeProxy {
 		int invokeCounter = 0;
 
 		class ResponseHandler {
@@ -126,18 +126,18 @@ public class Environment {
 		Map<Integer, ResponseHandler> responseHandlers = new LinkedHashMap<>();
 
 		@Override
-		public void invoke(NodeRefid node, String methodName,
+		public void invoke(NodeAttachId node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				List<InvokeProxy.Flag> flags, AsyncCallback<?> callback) {
 			invoke0(node, methodName, argumentTypes, arguments, flags,
 					callback);
 		}
 
-		ResponseHandler invoke0(NodeRefid node, String methodName,
+		ResponseHandler invoke0(NodeAttachId node, String methodName,
 				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 				AsyncCallback<?> callback) {
 			// check this is valid
-			if (node != null && Refid.forNode(node.node()).id == 0) {
+			if (node != null && AttachId.forNode(node.node()).id == 0) {
 				throw new IllegalStateException(Ax.format(
 						"node %s is detached, cannot be remote-invoked",
 						node.node().getNodeName()));
@@ -146,7 +146,7 @@ public class Environment {
 			emitMutations();
 			ResponseHandler handler = new ResponseHandler(callback);
 			Message.Invoke invoke = new Message.Invoke();
-			invoke.path = node == null ? null : Refid.forNode(node.node());
+			invoke.path = node == null ? null : AttachId.forNode(node.node());
 			invoke.id = ++invokeCounter;
 			invoke.methodName = methodName;
 			invoke.argumentTypes = argumentTypes == null ? List.of()
@@ -168,7 +168,7 @@ public class Environment {
 		 * Unsurprisingly similar to the GWT devmode message send/await
 		 */
 		@Override
-		public <T> T invokeSync(NodeRefid node, String methodName,
+		public <T> T invokeSync(NodeAttachId node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				List<InvokeProxy.Flag> flags) {
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
@@ -222,7 +222,7 @@ public class Environment {
 		}
 	}
 
-	class MutationProxyImpl implements DocumentRefid.MutationProxy {
+	class MutationProxyImpl implements DocumentAttachId.MutationProxy {
 		@Override
 		public void onLocationMutation(LocationMutation locationMutation) {
 			runWithMutations(
@@ -235,12 +235,12 @@ public class Environment {
 		}
 
 		@Override
-		public void onSinkBitlessEvent(Refid from, String eventTypeName) {
+		public void onSinkBitlessEvent(AttachId from, String eventTypeName) {
 			addEventMutation(new EventSystemMutation(from, eventTypeName));
 		}
 
 		@Override
-		public void onSinkEvents(Refid from, int eventBits) {
+		public void onSinkEvents(AttachId from, int eventBits) {
 			addEventMutation(new EventSystemMutation(from, eventBits));
 		}
 
@@ -358,7 +358,7 @@ public class Environment {
 
 	public void applyEvent(DomEventData eventData) {
 		runInClientFrame(
-				() -> LocalDom.refIdRepresentations().applyEvent(eventData));
+				() -> LocalDom.attachIdRepresentations().applyEvent(eventData));
 	}
 
 	public void applyLocationMutation(LocationMutation locationMutation,
@@ -387,7 +387,7 @@ public class Environment {
 	// TODO - threading - this should only occur on the ClientExecutionQueue, so
 	// probably dispatch should go via that
 	public void applyMutations(List<MutationRecord> mutations) {
-		runInClientFrame(() -> LocalDom.refIdRepresentations()
+		runInClientFrame(() -> LocalDom.attachIdRepresentations()
 				.applyMutations(mutations, false));
 	}
 
@@ -423,8 +423,9 @@ public class Environment {
 			scheduler.commandExecutor = new CommandExecutorImpl();
 			document = Document.contextProvider.createFrame(RemoteType.REF_ID);
 			document.createDocumentElement("<html/>", true);
-			document.implAccess().refIdRemote().mutationProxy = mutationProxy;
-			document.implAccess().refIdRemote().invokeProxy = invokeProxy;
+			document.implAccess()
+					.attachIdRemote().mutationProxy = mutationProxy;
+			document.implAccess().attachIdRemote().invokeProxy = invokeProxy;
 			LocalDom.initalizeDetachedSync();
 			enter(ui::init);
 		} finally {
@@ -520,7 +521,7 @@ public class Environment {
 	synchronized void emitMutations() {
 		if (mutations != null) {
 			runInClientFrame(() -> {
-				Document.get().refIdRemote().flushSinkEventsQueue();
+				Document.get().attachIdRemote().flushSinkEventsQueue();
 				queue.send(mutations);
 				mutations = null;
 			});

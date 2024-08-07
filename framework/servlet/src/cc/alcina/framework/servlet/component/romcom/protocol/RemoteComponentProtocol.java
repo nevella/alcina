@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.Refid;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
@@ -132,7 +132,7 @@ public class RemoteComponentProtocol {
 		}
 
 		public static class Invoke extends Message {
-			public Refid path;
+			public AttachId path;
 
 			public String methodName;
 
@@ -253,7 +253,7 @@ public class RemoteComponentProtocol {
 			public static Startup forClient() {
 				Startup result = new Startup();
 				result.maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
-				result.domMutations = LocalDom.refIdRepresentations()
+				result.domMutations = LocalDom.attachIdRepresentations()
 						.domAsMutations();
 				result.locationMutation = LocationMutation.ofWindow(true);
 				try {

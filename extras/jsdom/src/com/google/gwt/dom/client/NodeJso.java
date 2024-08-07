@@ -64,7 +64,7 @@ public abstract class NodeJso extends JavaScriptObject
 			return null;
 		}
 		NodeJso toAppend = resolvedOrPending(newChild);
-		toAppend.setRefId(newChild.refId);
+		toAppend.setAttachId(newChild.attachId);
 		return (T) nodeFor(appendChild0(toAppend));
 	}
 
@@ -303,7 +303,7 @@ public abstract class NodeJso extends JavaScriptObject
 		}
 		NodeJso newChildDom = resolvedOrPending(newChild);
 		NodeJso refChildDom = resolvedOrPending(refChild);
-		newChildDom.setRefId(newChild.refId);
+		newChildDom.setAttachId(newChild.attachId);
 		return nodeFor(insertBefore0(newChildDom, refChildDom));
 	}
 
@@ -339,7 +339,7 @@ public abstract class NodeJso extends JavaScriptObject
 	}
 
 	@Override
-	public final boolean isRefid() {
+	public final boolean isAttachId() {
 		return false;
 	}
 
@@ -469,7 +469,7 @@ public abstract class NodeJso extends JavaScriptObject
 	}-*/;
 
 	@Override
-	public final native void setRefId(int id) /*-{
+	public final native void setAttachId(int id) /*-{
 	if(id==0){
 		delete this.__refid;
 	}else{
@@ -478,11 +478,11 @@ public abstract class NodeJso extends JavaScriptObject
 	}-*/;
 
 	@Override
-	public final int getRefId() {
-		return getRefId0();
+	public final int getAttachId() {
+		return getAttachId0();
 	}
 
-	protected final native int getRefId0() /*-{
+	protected final native int getAttachId0() /*-{
 	return this.hasOwnProperty('__refid') ? this.__refid : 0;
 	}-*/;
 

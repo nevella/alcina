@@ -2,10 +2,10 @@ package com.google.gwt.dom.client;
 
 /**
  * Naming note - this interface is the root of the <strike>three</strike> four
- * DOM-like hierarchies (Node, NodeLocal, NodeJso, NodeRefId) which collectively
- * implement the local/remote (aka virtural) DOM model. Named ClientDomNode to
- * avoid collision with the more-used (particularly by external code)
- * cc.alcina.framework.common.client.dom.DomNode)
+ * DOM-like hierarchies (Node, NodeLocal, NodeJso, NodeAttachId) which
+ * collectively implement the local/remote (aka virtural) DOM model. Named
+ * ClientDomNode to avoid collision with the more-used (particularly by external
+ * code) cc.alcina.framework.common.client.dom.DomNode)
  *
  * 
  *
@@ -100,9 +100,9 @@ public interface ClientDomNode {
 
 	/**
 	 * 
-	 * @return true if the node is a NodeRefid subtype
+	 * @return true if the node is a NodeAttachId subtype
 	 */
-	boolean isRefid();
+	boolean isAttachId();
 
 	boolean isOrHasChild(Node child);
 
@@ -121,7 +121,7 @@ public interface ClientDomNode {
 
 	void setNodeValue(String nodeValue);
 
-	void setRefId(int id);
+	void setAttachId(int id);
 
-	int getRefId();
+	int getAttachId();
 }

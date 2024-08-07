@@ -47,7 +47,7 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		} else {
 			EventTarget result = new EventTarget();
 			if (target.isElement()) {
-				result.refId = Refid.forNode(target.asElement());
+				result.attachId = AttachId.forNode(target.asElement());
 				result.type = Type.element;
 			} else {
 				result.type = Type.valueOf(target.getNativeTargetType());
@@ -69,9 +69,9 @@ public class EventTarget implements JavascriptObjectEquivalent {
 
 	transient JavaScriptObject nativeTarget;
 
-	transient Node refIdTarget;
+	transient Node attachIdTarget;
 
-	Refid refId;
+	AttachId attachId;
 
 	Type type;
 
@@ -97,7 +97,7 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		if (ElementJso.is(nativeTarget)) {
 			ElementJso remote = ElementJso.asRemote(nativeTarget);
 			boolean connected = remote.isConnected();
-			if (remote.getRefId() == 0) {
+			if (remote.getAttachId() == 0) {
 				// return null;
 				if (!connected) {
 					// removed from local/browser dom - say a click, removed on
@@ -109,19 +109,19 @@ public class EventTarget implements JavascriptObjectEquivalent {
 			}
 			return (T) LocalDom.nodeFor(nativeTarget);
 		}
-		ensureRefidTarget();
-		if (refIdTarget instanceof ClientDomElement) {
-			return (T) refIdTarget;
+		ensureAttachIdTarget();
+		if (attachIdTarget instanceof ClientDomElement) {
+			return (T) attachIdTarget;
 		}
 		// Note that is() only confirme Element.class for the moment
 		throw new IllegalStateException(
 				"Should oonly be called after is() confirms the type");
 	}
 
-	void ensureRefidTarget() {
-		if (refIdTarget == null && refId != null
+	void ensureAttachIdTarget() {
+		if (attachIdTarget == null && attachId != null
 				&& Document.get().remoteType == RemoteType.REF_ID) {
-			refIdTarget = refId.node();
+			attachIdTarget = attachId.node();
 		}
 	}
 
@@ -133,8 +133,9 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		if (clazz == Element.class && ElementJso.is(nativeTarget)) {
 			return true;
 		}
-		ensureRefidTarget();
-		if (clazz == Element.class && refIdTarget instanceof ClientDomElement) {
+		ensureAttachIdTarget();
+		if (clazz == Element.class
+				&& attachIdTarget instanceof ClientDomElement) {
 			return true;
 		}
 		return false;

@@ -15,7 +15,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
-public class DocumentRefid extends NodeRefid implements ClientDomDocument {
+public class DocumentAttachId extends NodeAttachId
+		implements ClientDomDocument {
 	Document document;
 
 	public MutationProxy mutationProxy;
@@ -26,7 +27,7 @@ public class DocumentRefid extends NodeRefid implements ClientDomDocument {
 	// time
 	List<Runnable> sinkEventsQueue = new ArrayList<>();
 
-	public DocumentRefid(Document document) {
+	public DocumentAttachId(Document document) {
 		super(document);
 		this.document = document;
 	}
@@ -579,7 +580,7 @@ public class DocumentRefid extends NodeRefid implements ClientDomDocument {
 	public void emitSinkBitlessEvent(Element elem, String eventTypeName) {
 		addSunkEvent(() -> {
 			if (elem.isAttached()) {
-				mutationProxy.onSinkBitlessEvent(Refid.forNode(elem),
+				mutationProxy.onSinkBitlessEvent(AttachId.forNode(elem),
 						eventTypeName);
 			}
 		});
@@ -588,7 +589,7 @@ public class DocumentRefid extends NodeRefid implements ClientDomDocument {
 	public void emitSinkEvents(Element elem, int eventBits) {
 		addSunkEvent(() -> {
 			if (elem.isAttached()) {
-				mutationProxy.onSinkEvents(Refid.forNode(elem), eventBits);
+				mutationProxy.onSinkEvents(AttachId.forNode(elem), eventBits);
 			}
 		});
 	}
@@ -766,15 +767,15 @@ public class DocumentRefid extends NodeRefid implements ClientDomDocument {
 			invoke_on_element_style
 		}
 
-		void invoke(NodeRefid node, String methodName,
+		void invoke(NodeAttachId node, String methodName,
 				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 				AsyncCallback<?> callback);
 
-		<T> T invokeSync(NodeRefid node, String methodName,
+		<T> T invokeSync(NodeAttachId node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				List<InvokeProxy.Flag> flags);
 
-		default <T> T invokeSync(NodeRefid node, String methodName) {
+		default <T> T invokeSync(NodeAttachId node, String methodName) {
 			return invokeSync(node, methodName, null, null, null);
 		}
 	}
@@ -784,8 +785,8 @@ public class DocumentRefid extends NodeRefid implements ClientDomDocument {
 
 		void onMutation(MutationRecord mutationRecord);
 
-		void onSinkBitlessEvent(Refid from, String eventTypeName);
+		void onSinkBitlessEvent(AttachId from, String eventTypeName);
 
-		void onSinkEvents(Refid from, int eventBits);
+		void onSinkEvents(AttachId from, int eventBits);
 	}
 }

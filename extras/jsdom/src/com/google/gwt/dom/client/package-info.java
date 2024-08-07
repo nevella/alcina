@@ -138,7 +138,7 @@
  * <li>This means that (in general) only one element requires remote writes -
  * the initial attach and the setInnerHtml performed by the flush task, which
  * writes the subtree html to the remote node
- * <li>(TODO) - refId vs jso
+ * <li>(TODO) - attachId vs jso
  * <li>(TODO) - model more formally (as an algorithm sketch)
  * </ul>
  * <h4>Widget -&gt; Element migration</h4>
@@ -153,7 +153,7 @@
  * until Widget is removed from the codebase
  *
  * <p>
- * See also {@link Refid}
+ * See also {@link AttachId}
  * 
  * <h2>Topics - TODO</h2>
  * <ul>

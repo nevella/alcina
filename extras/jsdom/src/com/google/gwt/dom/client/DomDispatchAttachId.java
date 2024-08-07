@@ -1,6 +1,6 @@
 package com.google.gwt.dom.client;
 
-public class DomDispatchRefid implements DomDispatchContract {
+public class DomDispatchAttachId implements DomDispatchContract {
 	@Override
 	public void buttonClick(ButtonElement button) {
 		// TODO Auto-generated method stub

@@ -771,7 +771,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	@Override
 	public String toString() {
 		FormatBuilder format = new FormatBuilder();
-		format.format("@%s %s ", node().getRefId(), getTagName());
+		format.format("@%s %s ", node().getAttachId(), getTagName());
 		if (Ax.notBlank(getClassName())) {
 			format.format(".%s", getClassName());
 		}

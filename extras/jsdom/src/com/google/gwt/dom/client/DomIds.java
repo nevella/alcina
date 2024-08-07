@@ -44,8 +44,8 @@ public class DomIds {
 
 	void onAttach(Node node) {
 		int id = nextCounterValue();
-		Preconditions.checkState(node.refId == 0);
-		node.setRefId(id);
+		Preconditions.checkState(node.attachId == 0);
+		node.setAttachId(id);
 		byId.put(id, node);
 	}
 
@@ -78,11 +78,11 @@ public class DomIds {
 	}
 
 	void onDetach(Node node) {
-		int refId = node.refId;
-		Preconditions.checkState(refId != 0);
-		byId.remove(refId);
-		removed.put(node, refId);
-		node.setRefId(0);
+		int attachId = node.attachId;
+		Preconditions.checkState(attachId != 0);
+		byId.remove(attachId);
+		removed.put(node, attachId);
+		node.setAttachId(0);
 	}
 
 	/*
@@ -101,7 +101,7 @@ public class DomIds {
 					&& n.getNodeValue().isEmpty()) {
 				n.setNodeValue(" ");
 			}
-			list.ids.add(n.refId);
+			list.ids.add(n.attachId);
 		});
 		return list;
 	}
@@ -128,15 +128,15 @@ public class DomIds {
 		this.nextAttachId = nextAttachId;
 	}
 
-	public Node getNode(Refid refId) {
-		return byId.get(refId.id);
+	public Node getNode(AttachId attachId) {
+		return byId.get(attachId.id);
 	}
 
-	void applyPreRemovalRefId(Node node, Refid refId) {
-		refId.id = getRemovedId(node);
+	void applyPreRemovalAttachId(Node node, AttachId attachId) {
+		attachId.id = getRemovedId(node);
 	}
 
-	public boolean wasRemoved(Refid refid) {
+	public boolean wasRemoved(AttachId refid) {
 		return removed.values().contains(refid.id);
 	}
 
@@ -159,7 +159,7 @@ public class DomIds {
 			Preconditions.checkState(this.externalIds == null);
 			this.externalIds = idList.ids.iterator();
 			Preconditions
-					.checkState(elem.getRefId() == this.externalIds.next());
+					.checkState(elem.getAttachId() == this.externalIds.next());
 		}
 	}
 

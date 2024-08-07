@@ -177,7 +177,7 @@ public abstract class NodeLocal implements ClientDomNode {
 	}
 
 	@Override
-	public boolean isRefid() {
+	public boolean isAttachId() {
 		return false;
 	}
 
@@ -281,11 +281,11 @@ public abstract class NodeLocal implements ClientDomNode {
 	}
 
 	@Override
-	public void setRefId(int id) {
+	public void setAttachId(int id) {
 	}
 
 	@Override
-	public int getRefId() {
-		return node().getRefId();
+	public int getAttachId() {
+		return node().getAttachId();
 	}
 }

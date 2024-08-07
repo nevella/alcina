@@ -118,16 +118,16 @@ class SyncMutations2 {
 
 			void sync() {
 				while (childCursorJso != null) {
-					int refId = childCursorJso.getRefId();
+					int attachId = childCursorJso.getAttachId();
 					Node childCursor = null;
 					Node nextCursor = getNextCursor();
-					if (refId == 0) {
+					if (attachId == 0) {
 						childCursor = mutationsAccess
 								.remoteToLocal(childCursorJso);
 						mutationsAccess.insertAttachedBefore(childCursor,
 								nextCursor);
 					} else {
-						childCursor = mutationsAccess.getNode(refId);
+						childCursor = mutationsAccess.getNode(attachId);
 						Preconditions.checkState(nextCursor == childCursor);
 					}
 					appendCursor = childCursor;
@@ -164,13 +164,16 @@ class SyncMutations2 {
 
 		void scanForAdditions() {
 			mutations.stream().filter(m -> m.addedNodes.size() > 0)
+					.filter(m -> m.target.remoteHasAttachId())
 					.forEach(m -> damaged.add((Element) m.target.node()));
 		}
 
 		void scanForRemovals() {
 			mutations.stream().flatMap(m -> m.removedNodes.stream())
+					.filter(MutationNode::remoteHasAttachId)
 					.forEach(n -> detach.add(n.node()));
 			mutations.stream().filter(m -> m.removedNodes.size() > 0)
+					.filter(m -> m.target.remoteHasAttachId())
 					.forEach(m -> damaged.add((Element) m.target.node()));
 		}
 	}

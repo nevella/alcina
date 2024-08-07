@@ -1,8 +1,8 @@
 this.innerHTML = html || '';
 
 //traverse the node tree depth first, maintaining an array of cursors to track node position
-var refIdArrayJson = '';
-var ids = JSON.parse(refIdArrayJson);
+var attachIdArrayJson = '';
+var ids = JSON.parse(attachIdArrayJson);
 var idsIdx = 0;
 var itr = document.createNodeIterator(container);
 for (; ;) {

@@ -1,7 +1,7 @@
 package com.google.gwt.dom.client;
 
-public class CommentRefid extends NodeRefid implements ClientDomComment {
-	CommentRefid(Node node) {
+public class CommentAttachId extends NodeAttachId implements ClientDomComment {
+	CommentAttachId(Node node) {
 		super(node);
 	}
 

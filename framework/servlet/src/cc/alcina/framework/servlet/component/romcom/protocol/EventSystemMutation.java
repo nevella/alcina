@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.component.romcom.protocol;
 
-import com.google.gwt.dom.client.Refid;
+import com.google.gwt.dom.client.AttachId;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 
 @Bean(PropertySource.FIELDS)
 public final class EventSystemMutation {
-	public Refid path;
+	public AttachId path;
 
 	public int eventBits = -1;
 
@@ -17,12 +17,12 @@ public final class EventSystemMutation {
 	public EventSystemMutation() {
 	}
 
-	public EventSystemMutation(Refid path, int eventBits) {
+	public EventSystemMutation(AttachId path, int eventBits) {
 		this.path = path;
 		this.eventBits = eventBits;
 	}
 
-	public EventSystemMutation(Refid path, String eventTypeName) {
+	public EventSystemMutation(AttachId path, String eventTypeName) {
 		this.path = path;
 		this.eventTypeName = eventTypeName;
 	}

@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.ClientDomElement;
 import com.google.gwt.dom.client.ClientDomNode;
 import com.google.gwt.dom.client.Element;
@@ -18,7 +19,6 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
-import com.google.gwt.dom.client.Refid;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -52,21 +52,21 @@ public final class MutationNode {
 		return result;
 	}
 
-	public static MutationNode refId(Node node) {
+	public static MutationNode attachId(Node node) {
 		if (node == null) {
 			return null;
 		}
 		MutationNode result = new MutationNode();
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
-		result.refId = Refid.forNode(node);
+		result.attachId = AttachId.forNode(node);
 		result.node = node;
 		return result;
 	}
 
 	public transient org.w3c.dom.Node w3cNode;
 
-	public Refid refId = new Refid();
+	public AttachId attachId = new AttachId();
 
 	public short nodeType;
 
@@ -103,6 +103,10 @@ public final class MutationNode {
 	public MutationNode() {
 	}
 
+	boolean remoteHasAttachId() {
+		return remoteNode.getAttachId() != 0;
+	}
+
 	public MutationNode(ClientDomNode clientDomNode, SyncMutations sync,
 			LocalDom.MutationsAccess access, boolean withChildren,
 			MutationNode parent) {
@@ -124,7 +128,8 @@ public final class MutationNode {
 			// FIXME - refid - remove?
 			// ordinal = parent.childNodes.size();
 			// // -1 is a dummy idS
-			// refId = parent.refId.append(ordinal, clientDomNode.getRefId());
+			// attachId = parent.attachId.append(ordinal,
+			// clientDomNode.getAttachId());
 		}
 		if (nodeType == Node.ELEMENT_NODE) {
 			ClientDomElement elem = (ClientDomElement) clientDomNode;
@@ -350,7 +355,7 @@ public final class MutationNode {
 		FormatBuilder format = new FormatBuilder().separator(" ");
 		format.appendPadRight(12, nodeName);
 		if (sync == null || id == -1) {
-			format.appendIfNotBlankKv("path", refId);
+			format.appendIfNotBlankKv("path", attachId);
 		} else {
 			format.appendIfNotBlankKv("id", id);
 		}
@@ -542,7 +547,7 @@ public final class MutationNode {
 				format.appendKeyValues("left", left, "right", right,
 						"equivalent", false, "inequivalenceReason",
 						firstInequivalent.inequivalenceReason,
-						"inequivalencePath", firstInequivalent.left.refId,
+						"inequivalencePath", firstInequivalent.left.attachId,
 						"parent", firstInequivalent.parent.left);
 			}
 			return format.toString();
