@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.story.doc;
+package cc.alcina.framework.entity.story.doc;
 
 import cc.alcina.framework.gwt.client.story.TellerContext;
 

@@ -1,9 +1,10 @@
-package cc.alcina.framework.gwt.client.story.doc;
+package cc.alcina.framework.entity.story.doc;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
 import cc.alcina.framework.gwt.client.story.TellerContext;
+import cc.alcina.framework.gwt.client.story.doc.Feature_StoryDoc;
 
 /**
  * <p>
