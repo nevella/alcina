@@ -34,6 +34,9 @@ import com.google.gwt.util.tools.Utility;
 
 /**
  * A base class for communication between Dev-mode client and server.
+ * 
+ * NR - modified to support bulk dev mode transport - and in jsdom because
+ * CompilingClassLoader references on it
  */
 public abstract class BrowserChannel {
 	/**

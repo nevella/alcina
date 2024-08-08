@@ -634,6 +634,12 @@ public class LocalDom implements ContextFrame {
 			}
 			int idx = traversal.getIndexInParent();
 			NodeJso parentRemote = node.getParentNode().jsoRemote();
+			// edge case - parentRemote will be null inside a <noscript> tag -
+			// so that must be mirrored in the local dom
+			if (parentRemote == null) {
+				throw new IllegalStateException(
+						"Local nodes must track browser tree rules");
+			}
 			NodeJso remote = parentRemote.getChildNodes0().getItem0(idx);
 			node.putRemote(remote);
 		});

@@ -86,7 +86,8 @@ public class HtmlParser {
 	 *
 	 * Emit processing instruction, cdata nodes as comments
 	 *
-	 * Also splits #text nodes based on observed
+	 * Also splits #text nodes based on observed text node (from setHtml) size
+	 * (?)
 	 *
 	 * FIXME - LDM2 - live test in the browser
 	 */
@@ -175,6 +176,7 @@ public class HtmlParser {
 		switch (tag) {
 		case "script":
 		case "style":
+		case "noscript":
 			Preconditions.checkState(!closeTag);
 			String close = Ax.format("</%s>", tag);
 			String close2 = Ax.format("</%s>", tag.toUpperCase());

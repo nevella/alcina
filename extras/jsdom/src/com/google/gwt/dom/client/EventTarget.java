@@ -92,6 +92,15 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		return Element.as(this);
 	}
 
+	public boolean isUnconnectedElement() {
+		if (ElementJso.is(nativeTarget)) {
+			ElementJso remote = ElementJso.asRemote(nativeTarget);
+			return !remote.isConnected();
+		} else {
+			return false;
+		}
+	}
+
 	@Override
 	public <T extends JavascriptObjectEquivalent> T cast() {
 		if (ElementJso.is(nativeTarget)) {
