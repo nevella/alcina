@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.story;
 
+import cc.alcina.framework.entity.story.doc.StoryDoc;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
-import cc.alcina.framework.gwt.client.story.doc.StoryDoc;
 
 public interface TellerContext {
 	void init(StoryTeller storyTeller);
