@@ -2,6 +2,7 @@ package cc.alcina.extras.webdriver;
 
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.meta.Feature_Ui_support;
+import cc.alcina.framework.gwt.client.story.doc.Feature_StoryDoc;
 
 /**
  *
@@ -10,7 +11,7 @@ import cc.alcina.framework.common.client.meta.Feature_Ui_support;
  *
  * Also fixme/wd
  * 
- * [Note - implementation of this Feature is the {@link Feature_Story} class]
+ * [Note - implementation of this Feature is the {@link Feature_StoryDoc} class]
  */
 @Feature.Status.Ref(Feature.Status.Open.class)
 @Feature.Parent(Feature_Ui_support.class)

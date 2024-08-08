@@ -45,10 +45,10 @@ class _Header extends Waypoint {
 			 * menu elements should be described by the components they affect,
 			 * not the menu)
 			 */
-		//@formatter:off
-		static interface MenuShowing extends State {}
-		static interface MenuNotShowing extends State {}
-		//@formatter:on
+			//@formatter:off
+			static interface MenuShowing extends State {}
+			static interface MenuNotShowing extends State {}
+			//@formatter:on
 		}
 
 		@Decl.Conditional.ExitOkOnFalse(EnsureShowing.TestNotShowing.class)
