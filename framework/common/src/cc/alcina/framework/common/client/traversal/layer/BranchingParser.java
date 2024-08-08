@@ -83,6 +83,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * 
  */
 public class BranchingParser {
+	int branchSizeLimit = Integer.MAX_VALUE;
+
 	public static transient boolean debugLoggingEnabled;
 
 	State state;
@@ -111,6 +113,7 @@ public class BranchingParser {
 		this.layerParser = layerParser;
 		parserState = layerParser.parserState;
 		peer = (LayerParserPeer) layerParser.parserPeer;
+		branchSizeLimit = peer.getBranchSizeLimit();
 		logger = LoggerFactory.getLogger(getClass());
 		conditionalLogger = new ConditionalLogger(logger,
 				this::isDebugLoggingEnabled);
@@ -878,13 +881,19 @@ public class BranchingParser {
 			sentenceGroups.stream()
 					.map(g -> new Branch(g, parserState.location))
 					.forEach(edgeBranches::add);
-			while (edgeBranches.size() > 0) {
+			while (edgeBranches.size() > 0
+					&& edgeBranches.size() < branchSizeLimit) {
 				Branch branch = edgeBranches.remove(0);
 				conditionalLogger.debug("Entering branch {} at {}",
 						() -> new Object[] { branch, branch.location });
 				evaluatingBranch = branch;
 				branch.enter();
 				evaluatingBranch = null;
+			}
+			if (edgeBranches.size() == branchSizeLimit) {
+				// FIXME - traversal - emit warning observable
+				Ax.err("Exiting eval branches - max branches exceeded - %s",
+						branchSizeLimit);
 			}
 			bestMatch = matchedSentenceBranches.stream()
 					.sorted(new BranchOrdering()).findFirst().orElse(null);
