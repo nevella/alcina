@@ -361,7 +361,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 		return toInt32(getSubPixelClientWidth());
 	}
 
-	public final native StyleRemote getComputedStyle() /*-{
+	public final native StyleJso getComputedStyle() /*-{
     return $wnd.getComputedStyle(this);
 	}-*/;
 
@@ -624,11 +624,11 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	/**
 	 * Gets this element's {@link Style} object.
 	 */
-	final native StyleRemote getStyle0() /*-{
+	final native StyleJso getStyle0() /*-{
     return this.style;
 	}-*/;
 
-	public final StyleRemote getStyleRemote() {
+	public final StyleJso getStyleRemote() {
 		return getStyle0();
 	}
 

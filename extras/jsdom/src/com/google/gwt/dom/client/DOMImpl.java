@@ -293,7 +293,7 @@ abstract class DOMImpl {
 	 * Returns a numeric style property (such as zIndex) that may need to be
 	 * coerced to a string.
 	 */
-	protected String getNumericStyleProperty(StyleRemote style, String name) {
+	protected String getNumericStyleProperty(StyleJso style, String name) {
 		return getStyleProperty(style, name);
 	}
 
@@ -324,7 +324,7 @@ abstract class DOMImpl {
 		return ensureDocumentScrollingElement(doc).getScrollTop();
 	}
 
-	protected native String getStyleProperty(StyleRemote style, String name) /*-{
+	protected native String getStyleProperty(StyleJso style, String name) /*-{
     return style[name];
 	}-*/;
 

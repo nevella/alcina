@@ -743,7 +743,7 @@ public class LocalDom implements ContextFrame {
 					}
 				});
 				local.getStyle().getProperties().entrySet().forEach(e -> {
-					StyleRemote remoteStyle = jsoRemote.getStyle0();
+					StyleJso remoteStyle = jsoRemote.getStyle0();
 					remoteStyle.setProperty(e.getKey(), e.getValue());
 				});
 			}

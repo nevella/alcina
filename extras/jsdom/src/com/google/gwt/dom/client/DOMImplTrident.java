@@ -299,8 +299,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	 * numeric types.
 	 */
 	@Override
-	protected native String getNumericStyleProperty(StyleRemote style,
-			String name) /*-{
+	protected native String getNumericStyleProperty(StyleJso style, String name) /*-{
     return typeof (style[name]) == "number" ? "" + style[name] : style[name];
 	}-*/;
 

@@ -839,7 +839,12 @@ public class Element extends Node implements ClientDomElement,
 		if (this.remote == remote) {
 			return;
 		}
-		Preconditions.checkState(this.remote == null || remote == null);
+		if (this.remote == null || remote == null) {
+			// correct
+		} else {
+			throw new IllegalStateException(
+					"Changing remote - which should be invariant");
+		}
 		this.remote = (ClientDomElement) remote;
 		if (remote != null) {
 			if (local() != null) {

@@ -618,6 +618,12 @@ public class Style implements ClientDomStyle {
 		return local;
 	}
 
+	/**
+	 * The StyleJso remote is only instantiated lazily (it's mostly unused)
+	 * 
+	 * @return the remote if it exists (essentially if the element has a
+	 *         remote), or null
+	 */
 	protected ClientDomStyle remote() {
 		if (!linkedToRemote() && element.hasRemote()) {
 			remote = element.remote().getStyleRemote();
@@ -988,7 +994,7 @@ public class Style implements ClientDomStyle {
 	}
 
 	protected void sync(Runnable runnable) {
-		if (remote == null) {
+		if (remote() == null) {
 			return;
 		}
 		// FIXME - refid2 - setsyncing??
