@@ -40,9 +40,9 @@ import cc.alcina.framework.gwt.client.util.LineCallback;
   - [dep] ensure the app suggestor is cleared
   - enter "flour" in the suggestor
   - observe the change in the displayed selections
- - the notes:
+ - the notes (i.e. the 'tour' that should be output as a doc or as inline/in-app help):
   - annotate a (non-flour) selection [point 'enter text ['flour'].1'] [doc level debug]['this selection will be filtered out']
-  - display ui hint showing where to click (the suggestor)[point 'enter text ['flour'].2'][doc level info]
+  - display a ui hint showing where to click (the suggestor)[point 'enter text ['flour'].2'][doc level info]
   - mark a flour selection, explaining the change [point 'selections filtered'.1][doc level info]
  - the commentary:
   - this belongs at the ui/header component/suggestor path
@@ -51,8 +51,8 @@ import cc.alcina.framework.gwt.client.util.LineCallback;
    - [ancestor] document what the suggestor does
   - filter selections for investigation by typing a string. it will match text contents of input nodes
      and can be customised to match any aspect of a node (such as index in the document text run)
-  - the readme:
-    - always use a ui action (rather than say going to a url) if possible - helps the story, even if the 
+  - the Story readme:
+    - always use a ui action (rather than say going to a url) if possible - that helps the story, even if the 
 	  test could be done with a url
 	- naming - top-level names should be prefixed, inner should not (so Feature_X is prefixed, 
 	  Feature_X.Feature_XY is discouraged, Feature_X.Y better. See Alcina code-conventions.md)
@@ -61,6 +61,7 @@ import cc.alcina.framework.gwt.client.util.LineCallback;
  * </code>
  * </pre>
  */
+@Feature.Ref(Feature_Story.class)
 public interface Story {
 	/**
 	 *

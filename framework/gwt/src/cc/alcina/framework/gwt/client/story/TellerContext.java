@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.story;
 
+import cc.alcina.framework.entity.story.doc.StoryDoc;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 
 public interface TellerContext {
@@ -21,10 +22,21 @@ public interface TellerContext {
 	<P extends Part> P getPart(Class<? extends Part> clazz);
 
 	/**
+	 * <p>
 	 * A context part - often used to configure a StoryTeller process class
 	 * (provided by the peer).
+	 * 
+	 * <p>
+	 * The existence of parts is broadcast on story start via
+	 * <code>Registry.optional(PartConfigurable.class,(part ckass)).ifPresent...configure...</code>
+	 * - which allows relatively decoupled story observation (see
+	 * {@link StoryDoc})
 	 */
 	public interface Part {
+	}
+
+	public interface PartConfigurable<P extends Part> {
+		void configure(StoryTeller teller, P part);
 	}
 
 	boolean isThrowOnFailure();

@@ -46,4 +46,8 @@ public class LayerParserPeer {
 	public boolean lookaheadMatcherIsNormalizeSpaces() {
 		return true;
 	}
+
+	public int getBranchSizeLimit() {
+		return Integer.MAX_VALUE;
+	}
 }
