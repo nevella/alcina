@@ -637,10 +637,12 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public String provideName() {
 		try {
-			return getTask().getName();
+			return Ax.blankTo(getTask().getName(),
+					Ax.format("blank task name - %s", toStringId()));
 		} catch (Exception e) {
 			Ax.simpleExceptionOut(e);
-			return getTaskClassName();
+			return Ax.blankTo(getTaskClassName(),
+					Ax.format("blank task className - %s", toStringId()));
 		}
 	}
 
