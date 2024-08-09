@@ -125,7 +125,7 @@ public final class MutationNode {
 		this.nodeValue = clientDomNode.getNodeValue();
 		this.parent = parent;
 		if (parent != null) {
-			// FIXME - refid - remove?
+			// FIXME - attachId - remove?
 			// ordinal = parent.childNodes.size();
 			// // -1 is a dummy idS
 			// attachId = parent.attachId.append(ordinal,
@@ -314,8 +314,9 @@ public final class MutationNode {
 			// local/remote synced structure, make sure all the subtree
 			// local/remote links are removed
 			//
-			// FIMXE - refid - now we just need to remove local refids since
-			// refids are
+			// FIMXE - attachId - now we just need to remove local attachIds
+			// since
+			// attachIds are
 			// rewritten on attach
 			break;
 		}

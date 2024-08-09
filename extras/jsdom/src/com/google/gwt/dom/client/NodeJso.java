@@ -471,9 +471,9 @@ public abstract class NodeJso extends JavaScriptObject
 	@Override
 	public final native void setAttachId(int id) /*-{
 	if(id==0){
-		delete this.__refid;
+		delete this.__attachId;
 	}else{
-		this.__refid = id;
+		this.__attachId = id;
 	}
 	}-*/;
 
@@ -483,7 +483,7 @@ public abstract class NodeJso extends JavaScriptObject
 	}
 
 	protected final native int getAttachId0() /*-{
-	return this.hasOwnProperty('__refid') ? this.__refid : 0;
+	return this.hasOwnProperty('__attachId') ? this.__attachId : 0;
 	}-*/;
 
 	public final native NodeJso getNextSiblingJso() /*-{

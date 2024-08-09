@@ -935,7 +935,7 @@ public class Element extends Node implements ClientDomElement,
 			 */
 			try {
 				LooseContext.push();
-				LooseContext.set(DOM.CONTEXT_SINK_REF_ID_PENDING, this);
+				LooseContext.set(DOM.CONTEXT_SINK_ATTACH_ID_PENDING, this);
 				NodeAttachId.ensureAttachIdRemote(this);
 			} finally {
 				LooseContext.pop();
@@ -1075,7 +1075,7 @@ public class Element extends Node implements ClientDomElement,
 		} else {
 			local().getChildren().clear();
 		}
-		// FIXME - refid2 - convert to pending, then just set local. so
+		// FIXME - attachId - convert to pending, then just set local. so
 		// toPendingIfRemote
 		if (linkedAndNotPending()) {
 			remote().setInnerSafeHtml(html);
@@ -1096,7 +1096,7 @@ public class Element extends Node implements ClientDomElement,
 		List<Node> oldChildren = getChildNodes().stream()
 				.collect(Collectors.toList());
 		removeAllChildren();
-		// FIXME - refid2 - convert to pending, then just set local
+		// FIXME - attachId - convert to pending, then just set local
 		if (linkedAndNotPending()) {
 			remote().setInnerText(text);
 			local().setInnerText(text);

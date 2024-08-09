@@ -50,7 +50,7 @@ class SyncMutations {
 	/*
 	 * Update the localdom (NodeLocal tree) - either on-server due to changes in
 	 * the browser (jso::local) dom, or on-client due to changes in the server
-	 * (local::refid) dom
+	 * (local::attachId) dom
 	 * 
 	 */
 	void applyDetachedMutationsToLocalDom(List<MutationRecord> recordList,
@@ -117,7 +117,7 @@ class SyncMutations {
 						Node removedNode = mutationsAccess
 								.nodeForNoResolve(removed.remoteNode());
 						if (removedNode != null) {
-							// FIXME - refid - remove the whole shebang
+							// FIXME - attachId - remove the whole shebang
 							// mutationsAccess.removeFromRemoteLookup(removedNode);
 						}
 					});

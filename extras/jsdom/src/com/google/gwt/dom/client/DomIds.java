@@ -17,8 +17,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
- * Used for tree syncing. The node id will be stored in the __refid property of
- * the jso dom node on attach (and removed on detach)
+ * Used for tree syncing. The node id will be stored in the __attachId property
+ * of the jso dom node on attach (and removed on detach)
  * 
  * <p>
  * Client-created ids are odd, server-created ids are even, except that the
@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * 
  * <h3>Implementations</h3>
  * <ul>
- * <li>Node refid is generated on node attach, normally from the local dom's
+ * <li>Node attachId is generated on node attach, normally from the local dom's
  * counter (even for server, odd for browser)
  * <li>When propagating from one dom to the other, {@link #setNextAttachId} is
  * called before local node creation
@@ -88,8 +88,8 @@ public class DomIds {
 	/*
 	 * This class models the ids of all nodes in a subtree, in depth-first
 	 * order, for assigning post-set-innerhtml. This sets the text content of
-	 * empty nodes to " " - FIXME - refid - later - remove the space (but keep
-	 * the remote node)
+	 * empty nodes to " " - FIXME - attachId - later - remove the space (but
+	 * keep the remote node)
 	 */
 	public IdList getSubtreeIds(Node node) {
 		IdList list = new IdList();
@@ -136,8 +136,8 @@ public class DomIds {
 		attachId.id = getRemovedId(node);
 	}
 
-	public boolean wasRemoved(AttachId refid) {
-		return removed.values().contains(refid.id);
+	public boolean wasRemoved(AttachId attachId) {
+		return removed.values().contains(attachId.id);
 	}
 
 	// debug method

@@ -503,7 +503,7 @@ public abstract class Node
 		// note this will be undone for the top-of-the-detach-tree (see void
 		// setAttached(boolean attached) )
 		resetRemote();
-		streamChildren().forEach(n -> n.setAttached(false, true));
+		streamChildren().forEach(n -> n.setAttached(false, false));
 	}
 
 	protected void validateRemoteStatePreTreeMutation(Node incomingChild) {

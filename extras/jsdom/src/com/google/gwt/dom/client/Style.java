@@ -997,7 +997,7 @@ public class Style implements ClientDomStyle {
 		if (remote() == null) {
 			return;
 		}
-		// FIXME - refid2 - setsyncing??
+		// FIXME - attachId - setsyncing??
 		try {
 			LocalDom.setSyncing(true);
 			runnable.run();

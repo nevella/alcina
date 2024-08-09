@@ -354,7 +354,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public static void syncToRemote(Element element) {
-		// FIXME - refid
+		// FIXME - attachId
 		throw new UnsupportedOperationException();
 	}
 
@@ -364,7 +364,8 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public static String validateHtml(String html) {
-		throw new UnsupportedOperationException();
+		// FIXME - attachId - roundtrip (to brower) if GWT.isClient
+		return html;
 	}
 
 	public static void verifyDomEquivalence(boolean fromUserGesture) {
@@ -539,7 +540,7 @@ public class LocalDom implements ContextFrame {
 		flush0(false);
 	}
 
-	// FIXME - refid2 - is this needed? verifyMutatingState0?
+	// FIXME - attachId - is this needed? verifyMutatingState0?
 	boolean syncing;
 
 	void flush0(boolean force) {
@@ -621,7 +622,7 @@ public class LocalDom implements ContextFrame {
 				loggingConfiguration.asMutationsConfiguration());
 	}
 
-	// FIXME - refid2 - this process should be the inverse of MarkupJso - and
+	// FIXME - attachId - this process should be the inverse of MarkupJso - and
 	// not require a linear number of devmode calls
 	void walkPutRemote(ElementJso elemJso, Element elem) {
 		elem.putRemote(elemJso);
@@ -654,7 +655,7 @@ public class LocalDom implements ContextFrame {
 	 * @return
 	 */
 	Element parse(ElementJso elemJso, boolean emitHtmlStructuralTags) {
-		// FIXME - refid2 - use MarkupJso
+		// FIXME - attachId - use MarkupJso
 		Element parsed = new HtmlParser().parse(elemJso.getOuterHtml(), null,
 				emitHtmlStructuralTags);
 		return parsed;
@@ -696,7 +697,7 @@ public class LocalDom implements ContextFrame {
 				|| list.contains("eventCancelBubble"));
 	}
 
-	// FIXME - refid - maybe remove? simplify call sites?
+	// FIXME - attachId - maybe remove? simplify call sites?
 	private void linkRemote(NodeJso remote, Node node) {
 		remote.setAttachId(node.getAttachId());
 	}
@@ -861,7 +862,7 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public Node nodeForNoResolve(NodeJso remote) {
-			// FIXME - refid
+			// FIXME - attachId
 			throw new UnsupportedOperationException();
 		}
 
@@ -869,7 +870,7 @@ public class LocalDom implements ContextFrame {
 			return cursor.getParentNodeJso();
 		}
 
-		// FIXME - refid2 - mutations - goes away
+		// FIXME - attachId - mutations - goes away
 		public void putRemoteChildren(Element elem,
 				List<NodeJso> remoteChildrenS0) {
 			NodeList<Node> childNodes = elem.getChildNodes();
@@ -1082,33 +1083,18 @@ public class LocalDom implements ContextFrame {
 	}
 
 	void setInnerHtml0(Element elem, String html, IdList idList) {
+		/*
+		 * this element can be returned to the 'pending' state (all
+		 * manipulations are local-only until flush), since the remote is empty
+		 * 
+		 * FIXME - attachId - are the domIds calls needed?
+		 */
+		if (elem.linkedAndNotPending()) {
+			pendingSync.add(elem);
+		}
 		domIds.readFromIdList(elem, idList);
 		elem.local().setInnerHTML(html);
 		domIds.verifyIdList(idList);
-		if (elem.linkedAndNotPending()) {
-			/*
-			 * FIXME - refid - possibly use markupjso (or at least attempt it
-			 * first) - in fact, we can't do this (or we'd need to reverse sync
-			 * mutations) since the browser dom wd be ~= the server dom. So for
-			 * the moment just use markupJso - and swallow exceptions
-			 * 
-			 * (Originally this wrote to the jso, and applied the jso's (better
-			 * parsed) innerHtml )
-			 */
-			// remote().setInnerHTML(html);
-			// // tbodies? foots? proudfeet?
-			// String remoteHtml = jsoRemote().getInnerHTML0();
-			// local().setInnerHTML(remoteHtml);
-			// // this will create local refids, so apply then back
-			// LocalDom.wasSynced(this);
-			/*
-			 * the above is just (more or less) a reminder that markup
-			 * verification needs to happen. In romcom, we can't afford the time
-			 * cost to roundtrip to the browser - so throw (alas) - non-romcom,
-			 * we *can* - and should
-			 */
-			localToRemoteInner(elem, html);
-		}
 	}
 
 	static Node toNode(ElementJso elemJso) {

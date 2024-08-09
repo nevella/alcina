@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * <p>
  * This class is responsible for writing markup chunks to the jso (browser) dom,
  * and ensuring the resultant remote dom *exactly* matches the local dom. It
- * also marks each remote dom node with the correct refid.
+ * also marks each remote dom node with the correct attachId.
  * <p>
  * Unlike previous approaches, this means a little more (one-time) up-front cost
  * when rendering, but no more traversal-on-event, and a much simpler mutations
@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * <ul>
  * <li>Takes a container remote node, a markup string and a list of ref-ids
  * <li>Sets the inner html of the remote node, and begins to iterate (in js)
- * with the refids (passed as a json string to avoid perf issues in devmode)
+ * with the attachIds (passed as a json string to avoid perf issues in devmode)
  * <li>As it iterates, any adjacent text nodes generated from the markup
  * (webkit/blink oddity) will be combined
  * <li>As it iterates, it applies the elements of the ref-id list/array to the
@@ -88,14 +88,21 @@ class MarkupJso {
 
 	void markup0(MarkupToken token) {
 		if (token.localMarkup != null) {
+			if (token.localMarkup
+					.contains("representations about opportunity")) {
+				int debug = 3;
+			}
 			token.remote.setInnerHTML(token.localMarkup);
 		}
 		long start = System.currentTimeMillis();
-		JavaScriptObjectList createdJsos = traverseAndMark(token.remote,
-				token.createdJsos, token.localAttachIds);
-		token.ok = createdJsos != null;
-		if (token.ok) {
+		try {
+			JavaScriptObjectList createdJsos = traverseAndMark(token.remote,
+					token.createdJsos, token.localAttachIds);
+			token.ok = true;
 			token.populateRemotes();
+		} catch (RuntimeException e) {
+			// probably some odd dom - compare to roundtripped
+			throw e;
 		}
 		long end = System.currentTimeMillis();
 		// FIXME - logging
@@ -109,8 +116,8 @@ class MarkupJso {
 	final native JavaScriptObjectList traverseAndMark(ElementJso container,
 			JavaScriptObjectList createdJsos, JavaScriptIntList attachIdList) /*-{
 		//traverse the node tree depth first, maintaining an array of cursors to track node position
-		var resultJsos = createdJsos.@com.google.gwt.core.client.impl.JavaScriptObjectList::ensureJsArray()();
-		var ids = attachIdList.@com.google.gwt.core.client.impl.JavaScriptIntList::ensureJsArray()();
+		var resultJsos = createdJsos.@com.google.gwt.core.client.impl.JavaScriptObjectList:: ensureJsArray()();
+		var ids = attachIdList.@com.google.gwt.core.client.impl.JavaScriptIntList:: ensureJsArray()();
 		var idsIdx = 0;
 		var itr = document.createNodeIterator(container);
 		var coalesceLists = [];
@@ -121,16 +128,16 @@ class MarkupJso {
 				break;
 			}
 			if (idsIdx == ids.length) {
-				return false;
+				throw "incorrect-idlist-length";
 			}
-			node.__refid = ids[idsIdx++];
+			node.__attachId = ids[idsIdx++];
 			if (node.nodeType == Node.TEXT_NODE) {
 				var coalesceList = null;
 				var cursor = node;
 				for (; ;) {
 					var next = cursor.nextSibling;
-					if (next != null && next.nodeType == Node.TEXT_NODE ) {
-						if(coalesceList == null){
+					if (next != null && next.nodeType == Node.TEXT_NODE) {
+						if (coalesceList == null) {
 							coalesceList = [];
 							coalesceLists.push(coalesceList);
 							coalesceList.push(node);
@@ -148,22 +155,22 @@ class MarkupJso {
 		// It may be better to use the create-style::-- create-text-node::flush -- text-node.setNodeValue:: flush
 		// note that large text node creation is normally injection of a style or script node, and those do not use 
 		// this codepath
-		for (var idx=0; idx<coalesceLists.length; idx++) {
+		for (var idx = 0; idx < coalesceLists.length; idx++) {
 			var coalesceList = coalesceLists[idx];
-			var content='';
-			for (var idx1=0; idx1<coalesceList.length; idx1++) {
+			var content = '';
+			for (var idx1 = 0; idx1 < coalesceList.length; idx1++) {
 				var node = coalesceList[idx1];
 				content += node.nodeValue;
-				if(idx1>0){
+				if (idx1 > 0) {
 					node.remove();
 				}
 			}
 			coalesceList[0].nodeValue = content;
 		}
-		if(idsIdx != ids.length){
-			debugger;
+		if (idsIdx != ids.length) {
+			throw "incorrect-idlist-length";
 		}
-			// magic - return the createdJsos object to avoid round-tripping (devmode)
-		return idsIdx == ids.length? createdJsos: null;
+		// magic - return the createdJsos object to avoid round-tripping (devmode)
+		return idsIdx == ids.length ? createdJsos : null;
 	}-*/;
 }

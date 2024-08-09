@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  * <p>
  * This is the third iteration of the sync algorithm, the second (a
  * reverse-history) approach was more complex and more brittle, but was required
- * in the absence of refid.
+ * in the absence of attachId.
  * 
  * <p>
  * As an aside, the most naive (trivial) sync approach (iterate the entire
@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  * damaged
  * <li>Scan the children of all 'damaged' elements. For each child:
  * <ul>
- * <li>Ensure the remote child's refid (this <strike>is</strike> could be
+ * <li>Ensure the remote child's attachId (this <strike>is</strike> could be
  * optimised in a single .js call in devmode)
  * <li>If the child has a non-discarded local correspondent, preserve it.
  * <li>If not, regenerate the child node (and subtree)

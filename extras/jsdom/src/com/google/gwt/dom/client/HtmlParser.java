@@ -154,7 +154,7 @@ public class HtmlParser {
 	private void emitElement() {
 		boolean closeTag = false;
 		if (tag == null) {
-			tag = builder.toString();
+			tag = builder.toString().toLowerCase();
 			if (tag.startsWith("/")) {
 				tag = tag.substring(1);
 				closeTag = true;
@@ -221,10 +221,10 @@ public class HtmlParser {
 		int idx = string.indexOf(" ");
 		String tag, body;
 		if (idx == -1) {
-			tag = string;
+			tag = string.toLowerCase();
 			body = "";
 		} else {
-			tag = string.substring(0, idx);
+			tag = string.substring(0, idx).toLowerCase();
 			body = string.substring(idx + 1);
 		}
 		ProcessingInstruction processingInstruction = Document.get()
@@ -372,7 +372,7 @@ public class HtmlParser {
 					tokenState = TokenState.EXPECTING_PROCESSING_INSTRUCTION;
 				} else {
 					if (isWhiteSpace) {
-						tag = tagLookahead;
+						tag = tagLookahead.toLowerCase();
 						resetBuilder();
 						tokenState = TokenState.EXPECTING_ATTRIBUTES;
 					} else {
