@@ -376,7 +376,14 @@ public class JobScheduler {
 				case CREATED: {
 					JobAllocator allocator = new JobAllocator(queue,
 							allocatorService);
-					allocators.put(queue.job, allocator);
+					synchronized (allocators) {
+						if (allocators.containsKey(queue.job)) {
+							throw new IllegalStateException(Ax.format(
+									"Duplicate allocator creation - %s",
+									queue.job));
+						}
+						allocators.put(queue.job, allocator);
+					}
 					allocator.enqueueEvent(event.queueEvent);
 					synchronized (allocators) {
 						allocators.notifyAll();
