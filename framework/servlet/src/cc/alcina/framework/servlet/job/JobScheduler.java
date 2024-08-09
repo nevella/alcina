@@ -377,6 +377,13 @@ public class JobScheduler {
 					JobAllocator allocator = new JobAllocator(queue,
 							allocatorService);
 					synchronized (allocators) {
+						/*
+						 * FIXME - jobs - I don't think this check is necessary,
+						 * rather the check in JobAllocator#ensureStarted is
+						 * what's required to prevent duplicate allocators. But
+						 * leaving until proven correct (by an absence of
+						 * duplicates)
+						 */
 						if (allocators.containsKey(queue.job)) {
 							throw new IllegalStateException(Ax.format(
 									"Duplicate allocator creation - %s",
