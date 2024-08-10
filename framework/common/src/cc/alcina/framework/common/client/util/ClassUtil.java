@@ -78,6 +78,8 @@ public class ClassUtil {
 				return true;
 			case "java.util.ImmutableCollections$AbstractImmutableSet":
 				return true;
+			case "java.util.Arrays$ArrayList":
+				return true;
 			}
 			cursor = cursor.getSuperclass();
 		}

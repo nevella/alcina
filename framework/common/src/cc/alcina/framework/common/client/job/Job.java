@@ -441,6 +441,14 @@ public abstract class Job extends VersionableEntity<Job>
 		return provideToRelated(JobRelationType.PARENT_CHILD);
 	}
 
+	public Stream<Job> provideChildrenAndChildSubsequents() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		return Stream.concat(provideChildren(), provideChildren()
+				.flatMap(Job::provideDescendantsAndSubsequents));
+	}
+
 	public String provideConsistencyPriority() {
 		return Optional.ofNullable(getConsistencyPriority())
 				.orElse(Job.CONSISTENCY_PRIORITY_DEFAULT);

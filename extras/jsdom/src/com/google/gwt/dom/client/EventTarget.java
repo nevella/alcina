@@ -108,7 +108,7 @@ public class EventTarget implements JavascriptObjectEquivalent {
 			boolean connected = remote.isConnected();
 			if (remote.getAttachId() == 0) {
 				// return null;
-				if (!connected) {
+				if (!connected || LocalDom.wasRemoved(remote)) {
 					// removed from local/browser dom - say a click, removed on
 					// mousedown
 					return null;

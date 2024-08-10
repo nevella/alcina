@@ -99,8 +99,12 @@ public class Configuration {
 	public static boolean useStackTraceCallingClass;
 
 	public static String get(Class clazz, String key) {
+		return get(clazz, key, true);
+	}
+
+	public static String get(Class clazz, String key, boolean required) {
 		String value = properties.get(new Key(clazz, key));
-		if (value == null) {
+		if (value == null && required) {
 			Ax.sysLogHigh("Warning - no configuration for class/key %s.%s",
 					NestedName.get(clazz), key);
 		}

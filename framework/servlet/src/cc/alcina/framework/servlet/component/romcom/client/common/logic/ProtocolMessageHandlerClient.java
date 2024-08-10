@@ -164,10 +164,16 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				if (eventType.equals("keydown") && event.getKeyCode() == 13) {
 					event.preventDefault();
 				}
-				if (eventType.equals("click")) {
-					if (!(elem.hasAttribute("href") && elem.hasTagName("a"))) {
-						event.preventDefault();
-					}
+				// in a form, prevent -all- default actions unless it's a link
+				if (!(elem.hasAttribute("href") && elem.hasTagName("a"))) {
+					event.preventDefault();
+				}
+			}
+			// prevent default action on <a> with no href
+			if (eventType.equals("click")) {
+				if (Ax.isBlank(elem.getAttribute("href"))
+						&& elem.hasTagName("a")) {
+					event.preventDefault();
 				}
 			}
 			/*

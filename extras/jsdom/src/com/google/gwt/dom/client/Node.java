@@ -507,6 +507,9 @@ public abstract class Node
 	}
 
 	protected void validateRemoteStatePreTreeMutation(Node incomingChild) {
+		if (incomingChild == null) {
+			return;
+		}
 		if (hasRemote()) {
 			// if this is pending sync, the children should remain local-only
 			if (!isPendingSync()) {

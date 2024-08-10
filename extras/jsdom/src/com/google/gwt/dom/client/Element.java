@@ -1098,7 +1098,9 @@ public class Element extends Node implements ClientDomElement,
 		removeAllChildren();
 		// FIXME - attachId - convert to pending, then just set local
 		if (linkedAndNotPending()) {
-			remote().setInnerText(text);
+			if (attached) {
+				remote().setInnerText(text);
+			}
 			local().setInnerText(text);
 		} else {
 			local().setInnerText(text);

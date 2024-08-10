@@ -36,6 +36,7 @@ public class FileInput extends Widget
 	}
 
 	public Html5File[] getFiles() {
+		getElement().implAccess().ensureJsoRemote();
 		JsArray<Html5File> files = impl.getFiles(inputElement);
 		Html5File[] result = new Html5File[files.length()];
 		for (int i = 0; i < files.length(); ++i) {

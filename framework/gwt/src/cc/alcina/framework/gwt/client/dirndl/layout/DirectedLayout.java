@@ -1448,9 +1448,6 @@ public class DirectedLayout implements AlcinaProcess {
 							domElement.removeAttribute(propertyName);
 						}
 					} else {
-						if (propertyName.equals("value")) {
-							int debug = 3;
-						}
 						if (element != null) {
 							element.setPropertyString(propertyName,
 									stringValue);
