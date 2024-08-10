@@ -513,8 +513,13 @@ public class JobDomain {
 		}
 
 		void fireInitialCreationEvents() {
-			publish(EventType.CREATED);
-			checkFireToProcessing(job);
+			/*
+			 * This forces the state of jobs created before the (servlet layer)
+			 * JobScheduler is started - BUT I think the domain projection does
+			 * this anyway, so duplicate events are fired
+			 */
+			// publish(EventType.CREATED);
+			// checkFireToProcessing(job);
 		}
 
 		public void flushBufferedEvents() {
@@ -848,7 +853,8 @@ public class JobDomain {
 			if (queue != null) {
 				return queue;
 			} else {
-				// rather than compute-if-absent - put before event
+				// rather than compute-if-absent - put before publishing the
+				// create event
 				synchronized (queues) {
 					if (queues.containsKey(job)) {
 						return queues.get(job);
