@@ -366,11 +366,21 @@ public class JobRegistry {
 				});
 			}
 		}
+		long start = System.currentTimeMillis();
 		ContextAwaiter awaiter = ensureAwaiter(job);
 		TransactionEnvironment.get().commit();
 		awaiter.await(maxTime);
 		JobContext jobContext = activeJobs.get(job);
 		contextAwaiters.remove(job);
+		if (maxTime != 0 && System.currentTimeMillis() - start > maxTime) {
+			TransactionEnvironment.withDomain(() -> {
+				job.cancel();
+				Transaction.commit();
+			});
+			TransactionEnvironment.withDomain(() -> {
+				JobContext.checkCancelled();
+			});
+		}
 		jobContext.awaitSequenceCompletion();
 		DomainStore.waitUntilCurrentRequestsProcessed();
 		return TransactionEnvironment
@@ -605,6 +615,13 @@ public class JobRegistry {
 	 * Awaits completion of the task and any sequential (cascaded) tasks
 	 */
 	public Job perform(Task task) {
+		return perform(task, 0L);
+	}
+
+	/*
+	 * Awaits completion of the task and any sequential (cascaded) tasks
+	 */
+	public Job perform(Task task, long timeoutMillis) {
 		try {
 			/*
 			 * Check that the current job (if any) allows this concurrent task
@@ -625,7 +642,7 @@ public class JobRegistry {
 				launchedFromControlServlet = job;
 				LooseContext.remove(CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET);
 			}
-			return await(job);
+			return await(job, timeoutMillis);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw WrappedRuntimeException.wrap(e);
