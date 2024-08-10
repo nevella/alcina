@@ -1954,4 +1954,8 @@ public class DomNode {
 
 		List<Node> getNodesByXpath(String query, Node node);
 	}
+
+	public String getId() {
+		return attr("id");
+	}
 }
