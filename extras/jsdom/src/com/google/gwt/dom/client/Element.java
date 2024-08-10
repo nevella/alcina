@@ -463,7 +463,10 @@ public class Element extends Node implements ClientDomElement,
 	@Deprecated
 	@Override
 	public NodeList<Element> getElementsByTagName(String name) {
-		return jsoRemote().getElementsByTagName(name);
+		List<ElementLocal> list = traverse().filter(Node::isElement)
+				.map(Node::local).map(ElementLocal.class::cast)
+				.collect(Collectors.toList());
+		return new NodeList(new NodeListLocal(list));
 	}
 
 	@Override

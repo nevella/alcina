@@ -380,6 +380,9 @@ public class WidgetUtils {
 	}
 
 	private static int getBestOffsetWidth(Element e, boolean parentPass) {
+		if (!e.isAttached()) {
+			return 0;
+		}
 		int h = e.getPropertyInt("offsetWidth");
 		if (h != 0 || e.getParentElement() == null) {
 			return h;
@@ -765,6 +768,10 @@ public class WidgetUtils {
 	}
 
 	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
+	var attached = elem.@com.google.gwt.dom.client.Element::isAttached()();;
+	if(!attached){
+		return false;
+	}
     var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
     var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
     return (remote.style.display != 'none' && remote.offsetParent != null);

@@ -343,7 +343,7 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 */
 	private boolean eventTargetsPopup(NativeEvent event) {
 		EventTarget target = event.getEventTarget();
-		if (Element.is(target)) {
+		if (Element.is(target) && !target.isUnconnectedElement()) {
 			return getElement().isOrHasChild(Element.as(target));
 		}
 		return false;

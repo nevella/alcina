@@ -211,7 +211,7 @@ public class OptionElement extends Element {
 	 */
 	public void setText(String text) {
 		local().setInnerText(text);
-		remote().setPropertyString("text", text);
+		sync(() -> remote().setPropertyString("text", text));
 	}
 
 	/**
