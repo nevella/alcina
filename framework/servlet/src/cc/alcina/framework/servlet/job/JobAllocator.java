@@ -148,8 +148,14 @@ class JobAllocator {
 	}
 
 	void ensureStarted() {
-		if (allocationTask == null) {
-			allocationTask = new AllocationTask();
+		AllocationTask createdTask = null;
+		synchronized (this) {
+			if (allocationTask == null) {
+				allocationTask = new AllocationTask();
+				createdTask = allocationTask;
+			}
+		}
+		if (createdTask != null) {
 			allocatorService.execute(allocationTask);
 		}
 	}
