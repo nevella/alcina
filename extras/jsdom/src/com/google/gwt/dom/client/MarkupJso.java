@@ -67,7 +67,7 @@ class MarkupJso {
 
 		JavaScriptIntList localAttachIds = new JavaScriptIntList();
 
-		public void populateRemotes() {
+		void populateRemotes() {
 			Iterator<JavaScriptObject> itr = createdJsos.iterator();
 			container.traverse()
 					.forEach(n -> n.putRemote((NodeJso) itr.next()));
@@ -88,10 +88,6 @@ class MarkupJso {
 
 	void markup0(MarkupToken token) {
 		if (token.localMarkup != null) {
-			if (token.localMarkup
-					.contains("representations about opportunity")) {
-				int debug = 3;
-			}
 			token.remote.setInnerHTML(token.localMarkup);
 		}
 		long start = System.currentTimeMillis();
@@ -101,7 +97,13 @@ class MarkupJso {
 			token.ok = true;
 			token.populateRemotes();
 		} catch (RuntimeException e) {
-			// probably some odd dom - compare to roundtripped
+			token.remoteMarkup = token.remote.getInnerHTML0();
+			/* probably some odd dom - compare to roundtripped
+			@formatter:off
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), token.localMarkup.getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), token.remoteMarkup.getBytes());
+			 @formatter:on
+			 */
 			throw e;
 		}
 		long end = System.currentTimeMillis();

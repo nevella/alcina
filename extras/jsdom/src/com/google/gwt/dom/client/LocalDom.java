@@ -502,14 +502,14 @@ public class LocalDom implements ContextFrame {
 		int nodeType = node.getNodeType();
 		switch (nodeType) {
 		case Node.ELEMENT_NODE:
-			Element element = (Element) node;
+			Element elem = (Element) node;
 			if (isAttachId()) {
 				remote = NodeAttachId.create(node);
 			} else {
 				remote = ((DomDispatchJso) DOMImpl.impl.remote())
-						.createElement(element.getTagName());
+						.createElement(elem.getTagName());
 			}
-			pendingSync.add(node);
+			ensurePending(elem);
 			break;
 		case Node.TEXT_NODE:
 			remote = Document.get().jsoRemote()
@@ -554,9 +554,9 @@ public class LocalDom implements ContextFrame {
 		try {
 			syncing = true;
 			// clear nodes enqueued for sync, then removed
-			pendingSync.removeIf(n -> n.getParentNode() == null);
-			new ArrayList<>(pendingSync).stream()
-					.forEach(this::ensurePendingSynced);
+			pendingSync.removeIf(n -> !n.isAttached());
+			List<Node> toSync = new ArrayList<>(pendingSync);
+			toSync.stream().forEach(this::ensurePendingSynced);
 		} catch (RuntimeException re) {
 			topicReportException.publish(re);
 			throw re;
@@ -1090,11 +1090,17 @@ public class LocalDom implements ContextFrame {
 		 * FIXME - attachId - are the domIds calls needed?
 		 */
 		if (elem.linkedAndNotPending()) {
-			pendingSync.add(elem);
+			ensurePending(elem);
 		}
 		domIds.readFromIdList(elem, idList);
 		elem.local().setInnerHTML(html);
 		domIds.verifyIdList(idList);
+	}
+
+	void ensurePending(Element elem) {
+		if (!pendingSync.contains(elem)) {
+			pendingSync.add(elem);
+		}
 	}
 
 	static Node toNode(ElementJso elemJso) {

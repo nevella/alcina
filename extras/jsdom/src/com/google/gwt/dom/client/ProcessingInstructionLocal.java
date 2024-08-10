@@ -19,7 +19,12 @@ public class ProcessingInstructionLocal extends NodeLocal
 
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscapedNoQuotes(data);
+		// <?PITarget PIContent?>
+		builder.appendUnsafeHtml("<?");
+		builder.appendUnsafeHtml(target);
+		builder.appendUnsafeHtml(" ");
+		builder.appendUnsafeHtml(data);
+		builder.appendUnsafeHtml("?>");
 	}
 
 	@Override

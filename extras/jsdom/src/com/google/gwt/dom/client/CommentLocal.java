@@ -14,7 +14,9 @@ public class CommentLocal extends NodeLocal implements ClientDomComment {
 
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscapedNoQuotes(text);
+		builder.appendUnsafeHtml("<!--");
+		builder.appendUnsafeHtml(text);
+		builder.appendUnsafeHtml("-->");
 	}
 
 	@Override

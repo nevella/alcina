@@ -129,7 +129,8 @@ class SyncMutations {
 	}
 
 	private final native JsArray<MutationRecordJso>
-			filterForRepeatedModification(JsArray<MutationRecordJso> records)/*-{
+			filterForRepeatedModificationAndConnection(
+					JsArray<MutationRecordJso> records)/*-{
     //note records will be a []
     var nodeRecord = new Map();
     var result = [];
@@ -164,6 +165,9 @@ class SyncMutations {
         name = record.attributeName;
       }
       var target = record.target;
+	  if(!target.isConnected){
+	 	continue; 
+	  }
       var changes = nodeRecord.get(target).get(name);
       var last = changes[changes.length - 1];
       if (record == last) {
@@ -220,9 +224,14 @@ class SyncMutations {
 		MutationHistory.Event.publish(Type.MUTATIONS, recordList);
 	}
 
+	/*
+	 * This could be dev-mode optimised in a similar way to MarkupJso - but
+	 * that's much more used in devmode (external js mutations are mostly caused
+	 * by extensions after all) - so that's a low priority task
+	 */
 	private List<MutationRecord> sync0(JsArray<MutationRecordJso> records) {
 		int unfilteredLength = records.length();
-		records = filterForRepeatedModification(records);
+		records = filterForRepeatedModificationAndConnection(records);
 		LocalDom.getRemoteMutations().log(Ax.format("Syncing records :: %s/%s",
 				records.length(), unfilteredLength), false);
 		List<MutationRecordJso> recordJsoList = ClientUtils

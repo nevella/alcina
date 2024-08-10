@@ -89,6 +89,9 @@ public class PropertyReflection extends ReflectionElement
 	public PropertyReflection(ClassReflection classReflection, String name,
 			ReflectionVisibility reflectionVisibility,
 			ProvidesTypeBounds providesTypeBounds) {
+		if (name.equals("memberUsers")) {
+			int debug = 3;
+		}
 		this.classReflection = classReflection;
 		this.name = name;
 		this.reflectionVisibility = reflectionVisibility;
@@ -136,6 +139,7 @@ public class PropertyReflection extends ReflectionElement
 			if (method.isContravariantTo(setter)) {
 				return;
 			}
+			PropertyAccessor oldSetter = setter;
 			setter = method;
 			updatePropertyType(method.getPropertyType());
 		}
@@ -208,6 +212,27 @@ public class PropertyReflection extends ReflectionElement
 
 	private void updatePropertyType(JType type) {
 		JType erased = ClassReflection.erase(type);
+		if (type instanceof JClassType) {
+			List<? extends JClassType> updatedBounds = providesTypeBounds
+					.provideTypeBounds((JClassType) type);
+			if (jtypeBounds != null && jtypeBounds.size() > 0
+					&& updatedBounds.size() > 0) {
+				if (jtypeBounds.size() == 1 && updatedBounds.size() == 1) {
+					JClassType genCurrent = jtypeBounds.get(0);
+					JClassType genUpdate = updatedBounds.get(0);
+					if (genCurrent != genUpdate) {
+						int specicifity = computeSpecicifity(genCurrent,
+								genUpdate);
+						if (specicifity >= 0) {
+							// TODO - there's definitely a prettier way to do
+							// this
+							// (mismatch between getter and setter??)
+							return;
+						}
+					}
+				}
+			}
+		}
 		if (this.propertyType != null
 				&& this.propertyType instanceof JClassType) {
 			JClassType existingClassType = (JClassType) this.propertyType;

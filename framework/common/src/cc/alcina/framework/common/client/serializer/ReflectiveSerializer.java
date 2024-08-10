@@ -85,8 +85,8 @@ import elemental.json.impl.JsonUtil;
  * <ul>
  * <li>Create a per-property serializer, to optimise bean
  * deserialization/serialization (done)
- * <li>Look at cost of long serialization/deser (and box/unbox) in gwt -
- * possibly optimise
+ * <li>Look at cost of primitive long serialization/deser (and box/unbox) in gwt
+ * - possibly optimise
  * <li>Optionally (for rpc - where not concerned about in-process refactoring -
  * or for people who want clean json), add the following elision options:
  * <ul>
@@ -110,6 +110,10 @@ import elemental.json.impl.JsonUtil;
  * <li>If adding a value serializer, the value class should probably be in
  * {@link ClassReflector#stdAndPrimitivesMap}
  * <li>Don't serialize non-projected entities - use an {@link EntityLocator}
+ * <li>Debug - if say the deserializer is complaining about x, it's possibly a
+ * configuration mismatch between serializer and deserializer. So check those
+ * first, then use [TODO: code sample] to track serialization at the actual
+ * node, both sides
  * </ul>
  *
  * <p>

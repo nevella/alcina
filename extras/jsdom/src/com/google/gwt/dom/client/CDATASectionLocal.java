@@ -15,7 +15,9 @@ public class CDATASectionLocal extends NodeLocal
 
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendEscapedNoQuotes(text);
+		builder.appendUnsafeHtml("<![CDATA[");
+		builder.appendUnsafeHtml(text);
+		builder.appendUnsafeHtml("]]>");
 	}
 
 	@Override

@@ -32,6 +32,7 @@ Then compare xxx.short (a little more involved)
 # debug a large string (by writing to fs)
 
 java.nio.file.Files.write(java.nio.file.Path.of("/tmp/tmp.txt"), result.getBytes());
+java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), token.localMarkup.getBytes());
 
 # where's that md5 get generated
 
