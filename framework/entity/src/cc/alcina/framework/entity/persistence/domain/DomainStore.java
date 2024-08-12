@@ -1915,6 +1915,10 @@ public class DomainStore implements IDomainStore {
 						 * redo
 						 */
 						property.set(entity, event.getNewValue());
+					} catch (Throwable t) {
+						LoggerFactory.getLogger(DomainStore.class)
+								.warn("DEVEX::0::IndexingTransformListener", t);
+						throw t;
 					} finally {
 						tm.setIgnorePropertyChanges(false);
 					}
