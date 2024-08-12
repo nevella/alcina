@@ -184,8 +184,15 @@ public class JobRegistry {
 
 	public static final int MAX_CAUSE_LENGTH = 240;
 
-	static void awaitLatch(CountDownLatch latch) throws InterruptedException {
-		long timeout = Configuration.getLong("jobAllocatorSequenceTimeout");
+	enum LatchType {
+		POST_CHILD_COMPLETION, SEQUENCE_COMPLETION
+	}
+
+	static void awaitLatch(CountDownLatch latch, LatchType latchType)
+			throws InterruptedException {
+		long timeout = latchType == LatchType.POST_CHILD_COMPLETION
+				? TimeConstants.ONE_MINUTE_MS
+				: Configuration.getLong("jobAllocatorSequenceTimeout");
 		if (!latch.await(timeout, TimeUnit.SECONDS)) {
 			throw new IllegalStateException("Latch timed out - %s seconds");
 		}

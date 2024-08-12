@@ -34,6 +34,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Alloca
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
+import cc.alcina.framework.servlet.job.JobRegistry.LatchType;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
@@ -137,7 +138,8 @@ class JobAllocator {
 	public void awaitSequenceCompletion() {
 		ensureStarted();
 		try {
-			JobRegistry.awaitLatch(sequenceCompletionLatch);
+			JobRegistry.awaitLatch(sequenceCompletionLatch,
+					LatchType.SEQUENCE_COMPLETION);
 		} catch (Exception e) {
 			logger.warn("DEVEX-0 -- job sequence timeout/interruption", e);
 		}
