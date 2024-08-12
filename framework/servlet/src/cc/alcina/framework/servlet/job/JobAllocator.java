@@ -555,8 +555,11 @@ class JobAllocator {
 					- lastAllocated;
 			if (timeSinceAllocation > TimeConstants.ONE_HOUR_MS
 					&& jobContext != null
-					&& jobContext.getJob()
-							.getPerformer() == ClientInstance.self()
+					&& (jobContext.getJob().getPerformer() == null
+							// FIXME - jobs - performer should never be null at
+							// this point
+							|| jobContext.getJob()
+									.getPerformer() == ClientInstance.self())
 					&& jobContext.getPerformer() != null
 					&& jobContext.getPerformer().canAbort(job.getTask(),
 							timeSinceAllocation)

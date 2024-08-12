@@ -236,6 +236,17 @@ public class JobDomain {
 		queues.values().forEach(AllocationQueue::fireInitialCreationEvents);
 	}
 
+	long lastWarnNullStartTime = 0;
+
+	synchronized void warnNullStartTime(Job job) {
+		if (!TimeConstants.within(lastWarnNullStartTime,
+				TimeConstants.ONE_MINUTE_MS * 5)) {
+			lastWarnNullStartTime = System.currentTimeMillis();
+			logger.warn("Active job with null start time - {} {}", job.getId(),
+					job.getTaskClassName());
+		}
+	}
+
 	public Stream<? extends Job> getActiveJobs() {
 		// subjobs are reachable from two allocationqueues, hence 'distinct'
 		cleanupQueues();
@@ -244,8 +255,7 @@ public class JobDomain {
 				// FIXME - mvcc.4 - propagation/vacuum issue?
 				.peek(j -> {
 					if (j.getStartTime() == null) {
-						logger.warn("Active job with null start time - {} {}",
-								j.getId(), j.getTaskClassName());
+						warnNullStartTime(j);
 					}
 				}).filter(j -> j.getStartTime() != null)
 				.sorted(Comparator.comparing(Job::getStartTime).reversed());
