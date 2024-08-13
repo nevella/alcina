@@ -229,8 +229,13 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 				|| !job.getState().isCompletedNormally()) {
 			DomNode lastNode = builder.previousElement();
 			lastNode.addClassName("imperfect-state");
-			if (job.getResultType().isFail()) {
-				lastNode.addClassName("error-state");
+			try {
+				if (job.getResultType().isFail()) {
+					lastNode.addClassName("error-state");
+				}
+			} catch (Exception e) {
+				// DEVEX
+				logger.warn("processing job: " + job.getId(), e);
 			}
 			lastNode.setAttr("title",
 					Ax.format("%s - %s - %s", lastNode.textContent(),
