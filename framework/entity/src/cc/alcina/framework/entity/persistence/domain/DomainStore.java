@@ -105,6 +105,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.Ref;
@@ -164,6 +165,9 @@ public class DomainStore implements IDomainStore {
 
 	public static final String CONTEXT_IN_POST_PROCESS = DomainStore.class
 			.getName() + ".CONTEXT_IN_POST_PROCESS";
+
+	public static final String CONTEXT_IN_POST_PROCESS_EVENT = DomainStore.class
+			.getName() + ".CONTEXT_IN_POST_PROCESS_EVENT";
 
 	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
@@ -443,7 +447,7 @@ public class DomainStore implements IDomainStore {
 							clazz.getSimpleName(), id, localId));
 				}
 				// The created local is the 'domain identity', so need to
-				// preserve it but revert
+				// preserve it (i.e. keep the identity) but revert
 				// its field values before transforming
 				Transactions.revertToDefaultFieldValues(local);
 				local.setLocalId(localId);
@@ -746,10 +750,12 @@ public class DomainStore implements IDomainStore {
 		long postProcessStart = 0;
 		DomainStoreHealth health = getHealth();
 		DomainTransformEvent currentTransform = null;
+		TransformCollation collation = null;
 		try {
 			LooseContext.pushWithTrue(
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
 			LooseContext.setTrue(CONTEXT_IN_POST_PROCESS);
+			LooseContext.set(CONTEXT_IN_POST_PROCESS_EVENT, persistenceEvent);
 			LooseContext.set(LiSet.CONTEXT_NON_DOMAIN_NOTIFIER,
 					new NonDomainNotifier() {
 						@Override
@@ -780,7 +786,7 @@ public class DomainStore implements IDomainStore {
 					.getDomainTransformLayerWrapper().persistentEvents;
 			List<DomainTransformEventPersistent> filtered = removeNonApplicableTransforms(
 					events);
-			TransformCollation collation = new TransformCollation(filtered);
+			collation = new TransformCollation(filtered);
 			// this is also checked in TransformCommit
 			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
@@ -898,7 +904,7 @@ public class DomainStore implements IDomainStore {
 					UmbrellaException umby = new UmbrellaException(causes);
 					causes.iterator().next().printStackTrace();
 					DomainStoreUpdateException updateException = new DomainStoreUpdateException(
-							umby);
+							umby, collation);
 					topicUpdateException.publish(updateException);
 					if (updateException.ignoreForDomainStoreExceptionCount) {
 						logger.warn("Domain store update warning [non-fatal]",
@@ -1835,9 +1841,22 @@ public class DomainStore implements IDomainStore {
 
 		public boolean ignoreForDomainStoreExceptionCount;
 
-		public DomainStoreUpdateException(UmbrellaException umby) {
+		public TransformCollation collation;
+
+		public DomainStoreUpdateException(UmbrellaException umby,
+				TransformCollation collation) {
 			super(umby);
 			this.umby = umby;
+			this.collation = collation;
+		}
+
+		public void logEntities() {
+			FormatBuilder builder = new FormatBuilder();
+			builder.line("Exception request: entities");
+			if (collation != null) {
+				builder.append(collation.toIdsString());
+			}
+			Ax.err(builder.toString());
 		}
 	}
 

@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -98,10 +99,22 @@ public class ObjectUtil {
 				withShallowCopiedCollections, null);
 	}
 
+	public static class CopyObservable implements ProcessObservable {
+		public Object fromInstance;
+
+		public Object toInstance;
+
+		public CopyObservable(Object fromInstance, Object toInstance) {
+			this.fromInstance = fromInstance;
+			this.toInstance = toInstance;
+		}
+	}
+
 	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients,
 			boolean withShallowCopiedCollections,
 			Set<String> ignoreFieldNames) {
 		try {
+			new CopyObservable(t, toInstance).publish();
 			List<Field> fields = ObjectUtil.getFieldsForCopyOrLog(t,
 					withTransients, ignoreFieldNames);
 			for (Field field : fields) {
