@@ -27,9 +27,14 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 							+ "max-width:%sem; text-overflow:ellipsis;padding-right:1em;}"
 							+ ".numeric{text-align:right}", maxColWidth)
 					.append();
+			doc.xpath("//head").node().builder().tag("style")
+					.text("body > div {width: calc(100vw - 20px);} \n"
+							+ "table td:first-child{position: sticky; left: 0; background: white; padding-left: 5px}\n")
+					.append();
 		}
 		DomNode node = doc.xpath("//body").node();
-		DomNodeHtmlTableBuilder tableBuilder = node.html().tableBuilder();
+		DomNode container = node.builder().tag("div").append();
+		DomNodeHtmlTableBuilder tableBuilder = container.html().tableBuilder();
 		DomNodeHtmlTableRowBuilder headerBuilder = tableBuilder.row();
 		headerBuilder.className("header");
 		headers.forEach(headerBuilder::cell);
