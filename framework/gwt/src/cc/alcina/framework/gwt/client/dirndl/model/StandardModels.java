@@ -50,6 +50,10 @@ public class StandardModels {
 		@Binding(type = Type.PROPERTY)
 		public String title;
 
+		public TextTitle(String text) {
+			this(text, text);
+		}
+
 		public TextTitle(String text, String title) {
 			this.text = text;
 			this.title = title;
