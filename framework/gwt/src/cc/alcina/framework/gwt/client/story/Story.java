@@ -11,6 +11,7 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
@@ -19,6 +20,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
+import cc.alcina.framework.gwt.client.story.Story.Attribute.Entry;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
@@ -195,25 +197,120 @@ public interface Story {
 		 */
 		public interface Action {
 			/*
-			 * Invert the action result
-			 */
-			@Retention(RetentionPolicy.RUNTIME)
-			@Documented
-			@Target({ ElementType.TYPE })
-			public @interface Invert {
-			}
-
-			/*
 			 * A marker - annotations registered at this key by this will be
 			 * used to populate declarative Points
 			 */
 			public interface DeclarativeAction {
+				public static boolean isAnnotate(Class<?> clazz) {
+					return Reflections.isAssignableFrom(
+							Decl.Action.Annotate.class, clazz);
+				}
+
+				public static boolean isNotAnnotate(Class<?> clazz) {
+					return !isAnnotate(clazz);
+				}
 			}
 
 			@Registration.NonGenericSubtypes(Converter.class)
 			public interface Converter<A extends Annotation>
 					extends Registration.AllSubtypes {
 				Story.Action convert(A ann);
+			}
+
+			/**
+			 * Actions which annotate the UI - a separate logical unit to the
+			 * Story.Action tree. Since these should not have side-effects,
+			 * multiple annotate actions can be defined at a point (and executed
+			 * in sequence) - generally as part of the story documentation
+			 */
+			public interface Annotate {
+				/**
+				 * Highlight the first matched UI node
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface Highlight {
+					public static class ConverterImpl
+							implements Converter<Highlight> {
+						@Override
+						public Story.Action convert(Highlight ann) {
+							return new Story.Action.Annotate.Highlight();
+						}
+					}
+				}
+
+				/**
+				 * Add a caption relative to the first matched UI node
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface Caption {
+					String value();
+
+					public static class ConverterImpl
+							implements Converter<Caption> {
+						@Override
+						public Story.Action.Annotate convert(Caption ann) {
+							return new Story.Action.Annotate.Caption();
+						}
+					}
+				}
+
+				/**
+				 * Highlight the first matched UI node
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface Screenshot {
+					public static class ConverterImpl
+							implements Converter<Screenshot> {
+						@Override
+						public Story.Action.Annotate convert(Screenshot ann) {
+							return new Story.Action.Annotate.Screenshot();
+						}
+					}
+				}
+
+				/**
+				 * Highlight the first matched UI node
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface Clear {
+					public static class ConverterImpl
+							implements Converter<Clear> {
+						@Override
+						public Story.Action.Annotate convert(Clear ann) {
+							return new Story.Action.Annotate.Clear();
+						}
+					}
+				}
+
+				/**
+				 * Perform these three (basically default sequence) actions
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface HighlightScreenshotClear {
+					public static class ConverterImpl
+							implements Converter<HighlightScreenshotClear> {
+						@Override
+						public Story.Action.Annotate
+								convert(HighlightScreenshotClear ann) {
+							return new Story.Action.Annotate.HighlightScreenshotClear();
+						}
+					}
+				}
 			}
 
 			/**
@@ -608,18 +705,6 @@ public interface Story {
 			String value();
 		}
 
-		/** Documentation hints */
-		public interface Doc {
-			/**
-			 * Highlight the first matched UI node
-			 */
-			@Retention(RetentionPolicy.RUNTIME)
-			@Documented
-			@Target({ ElementType.TYPE })
-			public @interface HighlightUiNode {
-			}
-		}
-
 		/**
 		 * Conditional execution attributes
 		 */
@@ -688,13 +773,27 @@ public interface Story {
 
 		String getName();
 
+		/**
+		 * 
+		 * @return the Action (which will not be a subtype of Annotate)
+		 */
 		Story.Action getAction();
+
+		/**
+		 * 
+		 * @return the Annotate actions
+		 */
+		List<Story.Action.Annotate> getAnnotateActions();
 
 		Class<? extends Feature> getFeature();
 
 		Location getLocation();
 
 		Conditional getConditional();
+
+		String getLabel();
+
+		String getDescription();
 
 		/*
 		 * An aspect added to point/performers
@@ -710,6 +809,41 @@ public interface Story {
 		 */
 		public interface Code extends Story.Action {
 			void perform(Action.Context context) throws Exception;
+		}
+
+		/*
+		 * A directive to annotate the UI
+		 */
+		public interface Annotate extends Story.Action {
+			/**
+			 * Highlight the located element
+			 */
+			public static class Highlight implements Annotate {
+			}
+
+			/**
+			 * Display a caption relative to the located element
+			 */
+			public static class Caption implements Annotate {
+			}
+
+			/**
+			 * Take a screenshot
+			 */
+			public static class Screenshot implements Annotate {
+			}
+
+			/**
+			 * Clear all UI generated from {@link Annotate} subtypes
+			 */
+			public static class Clear implements Annotate {
+			}
+
+			/**
+			 * Perform the three contained actions
+			 */
+			public static class HighlightScreenshotClear implements Annotate {
+			}
 		}
 
 		/** A UI Location */
@@ -933,6 +1067,16 @@ public interface Story {
 
 			<V> Attribute.Entry<V, Attribute<V>>
 					getAttribute(Class<? extends Attribute<V>> clazz);
+
+			default <V> Attribute.Entry<V, Attribute<V>> ensureAttribute(
+					Class<? extends Attribute<V>> clazz,
+					Supplier<V> defaultValueSupplier) {
+				Entry<V, Attribute<V>> attribute = getAttribute(clazz);
+				if (attribute.value == null) {
+					attribute.value = defaultValueSupplier.get();
+				}
+				return attribute;
+			}
 
 			<V> void setAttribute(Class<? extends Attribute<V>> clazz, V value);
 

@@ -30,6 +30,8 @@ public class DirndlRenderer {
 
 	private ContextResolver contextResolver;
 
+	private boolean wrapStyleInCdata = false;
+
 	public DirndlRenderer addStyleFile(Class<?> styleRelativeClass,
 			String styleRelativeFilename) {
 		stylePaths
@@ -77,7 +79,7 @@ public class DirndlRenderer {
 			String style = Io.read().relativeTo(p.styleRelativeClass)
 					.resource(p.styleRelativeFilename).asString();
 			if (Ax.notBlank(style)) {
-				doc.html().appendStyleNode(style);
+				doc.html().appendStyleNode(style, wrapStyleInCdata);
 			}
 		});
 		return doc;
@@ -97,6 +99,11 @@ public class DirndlRenderer {
 		return this;
 	}
 
+	public DirndlRenderer withWrapStyleInCdata(boolean wrapStyleInCdata) {
+		this.wrapStyleInCdata = wrapStyleInCdata;
+		return this;
+	}
+
 	public DirndlRenderer withResolver(ContextResolver contextResolver) {
 		this.contextResolver = contextResolver;
 		return this;
@@ -112,5 +119,14 @@ public class DirndlRenderer {
 			this.styleRelativeClass = styleRelativeClass;
 			this.styleRelativeFilename = styleRelativeFilename;
 		}
+	}
+
+	public String asMarkup() {
+		String markup = asDocument().prettyToString();
+		if (wrapStyleInCdata) {
+			markup = markup.replace("<![CDATA[", "");
+			markup = markup.replace("]]", "");
+		}
+		return markup;
 	}
 }

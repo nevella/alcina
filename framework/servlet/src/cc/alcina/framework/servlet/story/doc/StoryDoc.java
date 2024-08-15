@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.story.doc;
+package cc.alcina.framework.servlet.story.doc;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;

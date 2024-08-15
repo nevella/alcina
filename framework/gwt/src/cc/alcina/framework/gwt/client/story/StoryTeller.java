@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.story.Story.Action;
+import cc.alcina.framework.gwt.client.story.Story.Action.Annotate;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResource;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
@@ -42,6 +43,10 @@ public class StoryTeller {
 			implements ProcessObservers.ContextObservers.Observable {
 		public Visit getVisit() {
 			return state.current();
+		}
+
+		public State getState() {
+			return state;
 		}
 	}
 
@@ -74,6 +79,24 @@ public class StoryTeller {
 
 		public Result result;
 
+		public String getDisplayName() {
+			return Ax.blankTo(point.getLabel(), point.getName());
+		}
+
+		public String getLabel() {
+			return point.getLabel();
+		}
+
+		public String getDescription() {
+			return point.getDescription();
+		}
+
+		/**
+		 * A free-form collection for say routing screenshots to the
+		 * documentation generator
+		 */
+		public List<?> processOutputs = new ArrayList<>();
+
 		Visit(Node parentNode, Point point) {
 			this.node = parentNode.add(this);
 			this.point = point;
@@ -97,7 +120,7 @@ public class StoryTeller {
 				return false;
 				//
 			} else {
-				new StoryActionPerformer().perform(this);
+				new StoryPerformer().perform(this);
 				return true;
 			}
 		}
@@ -199,6 +222,10 @@ public class StoryTeller {
 
 		public Action getAction() {
 			return point.getAction();
+		}
+
+		public List<Annotate> getAnnotateActions() {
+			return point.getAnnotateActions();
 		}
 
 		public Action.Location getLocation() {
@@ -360,7 +387,7 @@ public class StoryTeller {
 			if (result.isFiltered()) {
 				//
 			} else {
-				new StoryActionPerformer().beforeChildren(this);
+				new StoryPerformer().beforeChildren(this);
 			}
 		}
 
@@ -564,7 +591,7 @@ public class StoryTeller {
 			return (L) locations.get(axis);
 		}
 
-		<V> Attribute.Entry<V, Attribute<V>>
+		public <V> Attribute.Entry<V, Attribute<V>>
 				getAttribute(Class<? extends Attribute<V>> clazz) {
 			V value = (V) attributes.get(clazz);
 			Attribute.Entry<V, Attribute<V>> entry = new Attribute.Entry<>(

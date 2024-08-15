@@ -12,4 +12,12 @@ public class LeafTransforms {
 			return DateStyle.DATE_DOT.format(t);
 		}
 	}
+
+	public static class TimestampHuman
+			extends AbstractModelTransform<Date, String> {
+		@Override
+		public String apply(Date t) {
+			return DateStyle.TIMESTAMP_HUMAN.format(t);
+		}
+	}
 }

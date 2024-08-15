@@ -1006,7 +1006,16 @@ public class DomNode {
 		}
 
 		public void appendStyleNode(String css) {
-			head().builder().tag("style").text(css).append();
+			appendStyleNode(css, false);
+		}
+
+		public void appendStyleNode(String css, boolean wrapStyleInCdata) {
+			DomNode node = head().builder().tag("style").append();
+			if (wrapStyleInCdata) {
+				node.builder().cdata().text(css).append();
+			} else {
+				node.setText(css);
+			}
 		}
 
 		public DomNode body() {

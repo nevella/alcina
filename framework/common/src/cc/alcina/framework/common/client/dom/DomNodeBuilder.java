@@ -22,6 +22,8 @@ public class DomNodeBuilder {
 
 	private boolean processingInstruction;
 
+	private boolean cdata;
+
 	private StringMap attrs = new StringMap();
 
 	protected boolean built;
@@ -78,6 +80,11 @@ public class DomNodeBuilder {
 				throw new RuntimeException("no text");
 			}
 			node = doc().domDoc().createProcessingInstruction(tag, text);
+		} else if (cdata) {
+			if (text == null) {
+				throw new RuntimeException("no text");
+			}
+			node = doc().domDoc().createCDATASection(text);
 		} else if (tag != null) {
 			node = doc().domDoc().createElement(tag);
 			if (text != null) {
@@ -203,5 +210,10 @@ public class DomNodeBuilder {
 		node.children.adoptFrom(relativeTo);
 		relativeTo.children.append(node);
 		return node;
+	}
+
+	public DomNodeBuilder cdata() {
+		this.cdata = true;
+		return this;
 	}
 }
