@@ -121,7 +121,8 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 			}
 			String text = action.getText();
 			query.sendKeys(text);
-			if (query.getElement().getAttribute("type").equals("file")) {
+			if (Objects.equals(query.getElement().getAttribute("type"),
+					"file")) {
 				// handle chrome weirdness
 				query.emitChangeEvent();
 			}

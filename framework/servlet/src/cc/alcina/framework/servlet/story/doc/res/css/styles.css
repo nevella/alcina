@@ -69,10 +69,13 @@ sequence > visit-area {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-bottom: 3rem;
+  margin-bottom: 5rem;
 }
 sequence > visit-area > path {
   font-weight: bold;
+}
+sequence > visit-area > description {
+  margin-bottom: 1rem;
 }
 sequence > visit-area > img {
   max-width: 100%;
