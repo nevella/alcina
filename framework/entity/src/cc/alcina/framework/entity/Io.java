@@ -413,6 +413,25 @@ public class Io {
 				return ReadOp.this;
 			}
 		}
+
+		/**
+		 * 
+		 * @return the input as a data url of type application/octet-stream
+		 */
+		public String asDataUrl() {
+			return asDataUrl("application/octet-stream");
+		}
+
+		public String asDataUrl(String mimeType) {
+			try {
+				byte[] bytes = asBytes();
+				String encoded = Base64.getEncoder().encodeToString(bytes);
+				String url = Ax.format("data:%s;base64,%s", mimeType, encoded);
+				return url;
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
 	}
 
 	public static class Streams {

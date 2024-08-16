@@ -1361,6 +1361,18 @@ public class DomNode {
 			return null;
 		}
 
+		public DomNode previousSiblingElement() {
+			Node cursor = node.getPreviousSibling();
+			while (cursor != null) {
+				DomNode xnCursor = document.nodeFor(cursor);
+				if (xnCursor.isElement()) {
+					return xnCursor;
+				}
+				cursor = cursor.getPreviousSibling();
+			}
+			return null;
+		}
+
 		public DomNode previousSibling() {
 			return document.nodeFor(node.getPreviousSibling());
 		}
