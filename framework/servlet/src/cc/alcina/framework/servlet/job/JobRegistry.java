@@ -193,7 +193,8 @@ public class JobRegistry {
 		long timeout = latchType == LatchType.POST_CHILD_COMPLETION ? 60
 				: Configuration.getLong("jobAllocatorSequenceTimeout");
 		if (!latch.await(timeout, TimeUnit.SECONDS)) {
-			throw new IllegalStateException("Latch timed out - %s seconds");
+			throw new IllegalStateException(
+					Ax.format("Latch timed out - %s seconds", timeout));
 		}
 	}
 

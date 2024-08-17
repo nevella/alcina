@@ -611,12 +611,16 @@ class ClassTransformer {
 					// TransformManager.Serializer.get() --
 					// ignore since we don't care about statics (much)
 				} else {
-					Ax.simpleExceptionOut(e);
-					Ax.sysLogHigh("%s:%s\nNot solved: %s", containingClassName,
-							(methodDeclaration == null ? null
-									: methodDeclaration.getName().toString()),
-							expr);
-					int debug = 3;
+					if (Configuration.is(ClassTransformer.class,
+							"logSolverExceptions")) {
+						Ax.simpleExceptionOut(e);
+						Ax.sysLogHigh("%s:%s\nNot solved: %s",
+								containingClassName,
+								(methodDeclaration == null ? null
+										: methodDeclaration.getName()
+												.toString()),
+								expr);
+					}
 				}
 			}
 
