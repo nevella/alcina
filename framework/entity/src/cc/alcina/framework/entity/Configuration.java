@@ -865,9 +865,13 @@ public class Configuration {
 								bundles.getValue(key)))
 						.collect(Collectors.toList());
 				if (results.size() > 1) {
-					throw new IllegalStateException(Ax.format(
-							"Incorrect configuration - multiple matches for '%s' - \n%s",
-							key, results));
+					/*
+					 * FIXME - devex - log this
+					 */
+					// throw new IllegalStateException(Ax.format(
+					// "Incorrect configuration - multiple matches for '%s' -
+					// \n%s",
+					// key, results));
 				}
 				return Stream.of(Ax.first(results));
 			}
