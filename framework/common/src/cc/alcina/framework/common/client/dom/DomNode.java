@@ -1006,7 +1006,16 @@ public class DomNode {
 		}
 
 		public void appendStyleNode(String css) {
-			head().builder().tag("style").text(css).append();
+			appendStyleNode(css, false);
+		}
+
+		public void appendStyleNode(String css, boolean wrapStyleInCdata) {
+			DomNode node = head().builder().tag("style").append();
+			if (wrapStyleInCdata) {
+				node.builder().cdata().text(css).append();
+			} else {
+				node.setText(css);
+			}
 		}
 
 		public DomNode body() {
@@ -1348,6 +1357,18 @@ public class DomNode {
 					return xnCursor;
 				}
 				cursor = cursor.getNextSibling();
+			}
+			return null;
+		}
+
+		public DomNode previousSiblingElement() {
+			Node cursor = node.getPreviousSibling();
+			while (cursor != null) {
+				DomNode xnCursor = document.nodeFor(cursor);
+				if (xnCursor.isElement()) {
+					return xnCursor;
+				}
+				cursor = cursor.getPreviousSibling();
 			}
 			return null;
 		}
@@ -1953,5 +1974,9 @@ public class DomNode {
 		Node getNodeByXpath(String query, Node node);
 
 		List<Node> getNodesByXpath(String query, Node node);
+	}
+
+	public String getId() {
+		return attr("id");
 	}
 }

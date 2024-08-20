@@ -30,4 +30,11 @@ public class FileUtils {
 		return new File(
 				String.format("%s/%s", folder.getPath(), childFileName));
 	}
+
+	public static String fileUrlToDataUrl(String url) {
+		if (!url.startsWith("file:/")) {
+			return url;
+		}
+		return Io.read().url(url).asDataUrl();
+	}
 }

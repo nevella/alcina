@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
@@ -22,6 +23,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -246,6 +248,17 @@ public class TransformCollation {
 		perClass.keySet().forEach(k -> statistics
 				.add(((Class) k).getSimpleName(), perClass.items(k).size()));
 		return statistics.toLinkedHashMap(true).entrySet().toString();
+	}
+
+	public String toIdsString() {
+		ensureLookups();
+		FormatBuilder builder = new FormatBuilder();
+		perClass.keySet().forEach(k -> {
+			Collection<? extends Entity> items = (Collection) perClass.items(k);
+			builder.line("%s : %s", ((Class) k).getSimpleName(),
+					EntityHelper.toIdString(items));
+		});
+		return builder.toString();
 	}
 
 	public class EntityCollation implements HasId {

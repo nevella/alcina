@@ -1,0 +1,82 @@
+body {
+  background: #eee;
+}
+
+td, th {
+  vertical-align: top;
+  text-align: left;
+}
+
+sequence {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: "Open Sans", "Arial";
+  background: white;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+sequence a, sequence a.link, sequence a.visited {
+  text-decoration: none;
+  color: black;
+}
+sequence a:hover, sequence a.link:hover, sequence a.visited:hover {
+  color: #387ed3;
+}
+sequence > heading {
+  display: block;
+  font-weight: bold;
+  color: #0f4589;
+  margin: 1rem 0;
+}
+sequence > header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+sequence > header img {
+  width: 200px;
+}
+sequence > header heading {
+  font-size: 18px;
+  font-weight: bold;
+}
+sequence > header spacer {
+  display: block;
+  width: 200px;
+}
+sequence > table {
+  box-sizing: border-box;
+  margin-bottom: 2rem;
+  margin-top: 1rem;
+  border-collapse: separate;
+  border-spacing: 1rem 0.5rem;
+}
+sequence > table th {
+  text-align: left;
+  width: 12rem;
+}
+sequence > table td > value {
+  white-space: pre-wrap;
+}
+sequence > table td > value:not(:last-child):after {
+  content: ", ";
+}
+sequence > visit-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 5rem;
+}
+sequence > visit-area > path {
+  font-weight: bold;
+}
+sequence > visit-area > description {
+  margin-bottom: 1rem;
+}
+sequence > visit-area > img {
+  max-width: 100%;
+}

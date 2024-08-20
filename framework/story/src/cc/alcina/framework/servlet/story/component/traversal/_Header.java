@@ -17,7 +17,7 @@ class _Header extends Waypoint {
 
 	static final String XPATH_DOTBURGER_MENU_DISPLAY_MODE_HALF_WIDTH = "//overlay[@class='dotburger dropdown overlay menu']//menu/heading[.='Property display mode']/following-sibling::choices/choice[.='HALF_WIDTH']";
 
-	@Decl.Doc.HighlightUiNode
+	@Decl.Action.Annotate.Highlight
 	@Decl.Label("Application menu")
 	@Decl.Description("The application menu provides access to application"
 			+ " settings such as window display and selection ancestry modes")
@@ -95,10 +95,12 @@ class _Header extends Waypoint {
 		static class Reset extends Waypoint {
 		}
 
-		@Decl.Doc.HighlightUiNode
 		@Decl.Location.Xpath(XPATH_DOTBURGER_ICON)
 		@Decl.Label("Displaying the menu")
 		@Decl.Description("Click to open the application menu")
+		@Decl.Action.Annotate.Highlight
+		@Decl.Action.Annotate.Screenshot
+		@Decl.Action.Annotate.Clear
 		static class DocOpen extends Waypoint {
 		}
 

@@ -51,6 +51,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
 import cc.alcina.framework.servlet.job.JobRegistry.JobStateChangeObservable;
+import cc.alcina.framework.servlet.job.JobRegistry.LatchType;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
@@ -446,11 +447,15 @@ public class JobContext {
 	void awaitSequenceCompletion() {
 		TransactionEnvironment.get().ensureEnded();
 		try {
-			JobRegistry.awaitLatch(endedLatch);
+			// this should be LatchType.POST_CHILD_COMPLETION - but leaving at
+			// SEQUENCE_COMPLETION pending debugging
+			JobRegistry.awaitLatch(endedLatch, LatchType.SEQUENCE_COMPLETION);
+			if (!hadEnd0Exception) {
+				allocator.awaitSequenceCompletion();
+			}
 		} catch (Exception e) {
 			logger.warn("DEVEX-0 -- job sequence timeout/interruption", e);
 		}
-		allocator.awaitSequenceCompletion();
 		TransactionEnvironment.get().begin();
 	}
 
@@ -459,6 +464,8 @@ public class JobContext {
 	}
 
 	Timeout lastCheckCancelled = new Timeout(200).withTimeoutOnNextCheck();
+
+	private boolean hadEnd0Exception;
 
 	void checkCancelled0(boolean ignoreSelf) {
 		if (lastCheckCancelled.checkAndReset()) {
@@ -537,40 +544,51 @@ public class JobContext {
 	}
 
 	private void end0() {
-		Transaction.ensureBegun();
-		if (noHttpContext) {
-			if (JobRegistry.get().environment.isTrackMetrics()) {
-				InternalMetrics.get().endTracker(performer);
+		try {
+			Transaction.ensureBegun();
+			if (noHttpContext) {
+				if (JobRegistry.get().environment.isTrackMetrics()) {
+					InternalMetrics.get().endTracker(performer);
+				}
 			}
+			updateStatusDebouncer.cancel();
+			if (job.provideIsNotComplete()) {
+				// occurs just before end, since this method is possibly called
+				// on a
+				// different thread to the logbuffer context
+				// log = Registry.impl(PerThreadLogging.class).endBuffer();
+				int maxChars = LooseContext
+						.<Integer> optional(CONTEXT_LOG_MAX_CHARS)
+						.orElse(5000000);
+				log = CommonUtils.trimToWsChars(log, maxChars, true);
+				job.setLog(log);
+				if (job.provideRelatedSequential().stream()
+						.filter(j -> j != job)
+						.anyMatch(Job::provideIsNotComplete)) {
+					job.setState(JobState.COMPLETED);
+					allocator.ensureStarted();
+				} else {
+					job.setState(JobState.SEQUENCE_COMPLETE);
+				}
+				if (typedResult != null) {
+					job.setLargeResult(typedResult);
+				}
+				job.setEndTime(new Date());
+				if (job.getResultType() == null) {
+					job.setResultType(JobResultType.OK);
+				}
+				logger.info("Job complete - {} - {} - {} ms", job,
+						job.getEndTime(), job.getEndTime().getTime()
+								- job.getStartTime().getTime());
+			}
+			persistMetadata();
+		} catch (Throwable t) {
+			logger.warn("DEVEX-0 -- job end0 issue - " + job.getId(), t);
+			hadEnd0Exception = true;
+			throw t;
+		} finally {
+			endedLatch.countDown();
 		}
-		updateStatusDebouncer.cancel();
-		if (job.provideIsNotComplete()) {
-			// occurs just before end, since this method is possibly called on a
-			// different thread to the logbuffer context
-			// log = Registry.impl(PerThreadLogging.class).endBuffer();
-			int maxChars = LooseContext
-					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(5000000);
-			log = CommonUtils.trimToWsChars(log, maxChars, true);
-			job.setLog(log);
-			if (job.provideRelatedSequential().stream().filter(j -> j != job)
-					.anyMatch(Job::provideIsNotComplete)) {
-				job.setState(JobState.COMPLETED);
-				allocator.ensureStarted();
-			} else {
-				job.setState(JobState.SEQUENCE_COMPLETE);
-			}
-			if (typedResult != null) {
-				job.setLargeResult(typedResult);
-			}
-			job.setEndTime(new Date());
-			if (job.getResultType() == null) {
-				job.setResultType(JobResultType.OK);
-			}
-			logger.info("Job complete - {} - {} - {} ms", job, job.getEndTime(),
-					job.getEndTime().getTime() - job.getStartTime().getTime());
-		}
-		persistMetadata();
-		endedLatch.countDown();
 	}
 
 	public void endLogBuffer() {

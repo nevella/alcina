@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
@@ -36,6 +37,9 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Transactions {
+	public static final String CONTEXT_REVERTING_TO_DEFAULTS = Transactions.class
+			.getName() + ".CONTEXT_REVERTING_TO_DEFAULTS";
+
 	private static Transactions instance;
 
 	private static ConcurrentHashMap<Class, Constructor> copyConstructors = new ConcurrentHashMap<>();
@@ -272,7 +276,13 @@ public class Transactions {
 				.newInstance(entity.entityClass());
 		// because copying fields without resolution, entity will be the
 		// domainVersion
-		copyObjectFields(defaults, entity);
+		try {
+			LooseContext.push();
+			LooseContext.setTrue(CONTEXT_REVERTING_TO_DEFAULTS);
+			copyObjectFields(defaults, entity);
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	public static void shutdown() {

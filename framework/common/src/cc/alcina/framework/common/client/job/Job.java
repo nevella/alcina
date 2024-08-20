@@ -985,6 +985,12 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public void setTaskClassName(String taskClassName) {
+		if (this.taskClassName != null && taskClassName == null &&
+		// this is nulled for indexing
+				!TransformManager.get().isIgnorePropertyChanges()) {
+			throw new IllegalStateException(
+					"job-domain-exception :: Clearing invariant - " + id);
+		}
 		String old_taskClassName = this.taskClassName;
 		this.taskClassName = taskClassName;
 		propertyChangeSupport().firePropertyChange("taskClassName",
@@ -993,6 +999,12 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public void setTaskSerialized(String taskSerialized) {
+		if (this.taskSerialized != null && taskSerialized == null &&
+		// this is nulled for indexing
+				!TransformManager.get().isIgnorePropertyChanges()) {
+			throw new IllegalStateException(
+					"job-domain-exception :: Clearing invariant - " + id);
+		}
 		String old_taskSerialized = this.taskSerialized;
 		this.taskSerialized = taskSerialized;
 		propertyChangeSupport().firePropertyChange("taskSerialized",

@@ -184,10 +184,17 @@ public class JobRegistry {
 
 	public static final int MAX_CAUSE_LENGTH = 240;
 
-	static void awaitLatch(CountDownLatch latch) throws InterruptedException {
-		long timeout = Configuration.getLong("jobAllocatorSequenceTimeout");
+	enum LatchType {
+		POST_CHILD_COMPLETION, SEQUENCE_COMPLETION
+	}
+
+	static void awaitLatch(CountDownLatch latch, LatchType latchType)
+			throws InterruptedException {
+		long timeout = latchType == LatchType.POST_CHILD_COMPLETION ? 60
+				: Configuration.getLong("jobAllocatorSequenceTimeout");
 		if (!latch.await(timeout, TimeUnit.SECONDS)) {
-			throw new IllegalStateException("Latch timed out - %s seconds");
+			throw new IllegalStateException(
+					Ax.format("Latch timed out - %s seconds", timeout));
 		}
 	}
 
@@ -366,11 +373,21 @@ public class JobRegistry {
 				});
 			}
 		}
+		long start = System.currentTimeMillis();
 		ContextAwaiter awaiter = ensureAwaiter(job);
 		TransactionEnvironment.get().commit();
 		awaiter.await(maxTime);
 		JobContext jobContext = activeJobs.get(job);
 		contextAwaiters.remove(job);
+		if (maxTime != 0 && System.currentTimeMillis() - start > maxTime) {
+			TransactionEnvironment.withDomain(() -> {
+				job.cancel();
+				Transaction.commit();
+			});
+			TransactionEnvironment.withDomain(() -> {
+				JobContext.checkCancelled();
+			});
+		}
 		jobContext.awaitSequenceCompletion();
 		DomainStore.waitUntilCurrentRequestsProcessed();
 		return TransactionEnvironment
@@ -605,6 +622,13 @@ public class JobRegistry {
 	 * Awaits completion of the task and any sequential (cascaded) tasks
 	 */
 	public Job perform(Task task) {
+		return perform(task, 0L);
+	}
+
+	/*
+	 * Awaits completion of the task and any sequential (cascaded) tasks
+	 */
+	public Job perform(Task task, long timeoutMillis) {
 		try {
 			/*
 			 * Check that the current job (if any) allows this concurrent task
@@ -625,7 +649,7 @@ public class JobRegistry {
 				launchedFromControlServlet = job;
 				LooseContext.remove(CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET);
 			}
-			return await(job);
+			return await(job, timeoutMillis);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw WrappedRuntimeException.wrap(e);

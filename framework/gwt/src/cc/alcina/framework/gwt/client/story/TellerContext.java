@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.story;
 
-import cc.alcina.framework.entity.story.doc.StoryDoc;
 import cc.alcina.framework.gwt.client.story.Story.State.Provider;
 
 public interface TellerContext {
@@ -30,7 +29,7 @@ public interface TellerContext {
 	 * The existence of parts is broadcast on story start via
 	 * <code>Registry.optional(PartConfigurable.class,(part ckass)).ifPresent...configure...</code>
 	 * - which allows relatively decoupled story observation (see
-	 * {@link StoryDoc})
+	 * {@link cc.alcina.framework.servlet.story.doc.StoryDoc})
 	 */
 	public interface Part {
 	}

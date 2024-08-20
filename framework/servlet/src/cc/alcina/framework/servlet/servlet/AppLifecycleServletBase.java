@@ -59,7 +59,6 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.gwt.reflection.impl.JvmReflections;
-import cc.alcina.framework.entity.impl.PerDocumentSupplierCoreDocument;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -730,10 +729,18 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	public static class TimezoneDataProviderServlet
 			implements TimezoneData.Provider {
+		TimeZone tz = TimeZone.getDefault();
+
+		public TimezoneDataProviderServlet() {
+		}
+
+		public TimezoneDataProviderServlet(TimeZone tz) {
+			this.tz = tz;
+		}
+
 		@Override
 		public TimezoneData getTimezoneData() {
 			TimezoneData localData = new TimezoneData();
-			TimeZone tz = TimeZone.getDefault();
 			Calendar cal = GregorianCalendar.getInstance(tz);
 			// minus normalises to how .js defines it
 			int offsetInMillis = -tz.getOffset(cal.getTimeInMillis());
