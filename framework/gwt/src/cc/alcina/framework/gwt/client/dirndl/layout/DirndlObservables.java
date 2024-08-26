@@ -5,7 +5,11 @@ import com.google.gwt.event.shared.GwtEvent;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
-public class DirndlProcess {
+/**
+ * A container class for ({@link ProcessObservable} subtype) observables emitted
+ * by the layout process
+ */
+public class DirndlObservables {
 	public static class DomBindingBind extends Observable {
 		DomBindingBind(NodeEventBinding binding) {
 			super(binding);

@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.SEUtilities;
@@ -127,5 +128,11 @@ public class MvccObjectVersionsEntity<T extends Entity>
 		} catch (Exception e) {
 			return "exception..";
 		}
+	}
+
+	@Override
+	void publishRemoval() {
+		ProcessObservers.publish(MvccObservables.VersionsRemovalEvent.class,
+				() -> new MvccObservables.VersionsRemovalEvent(this));
 	}
 }

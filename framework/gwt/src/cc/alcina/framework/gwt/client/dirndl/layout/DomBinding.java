@@ -21,14 +21,16 @@ public abstract class DomBinding<E extends NodeEvent>
 	public void bind(Element element, Object model, boolean bind) {
 		if (!bind) {
 			Preconditions.checkState(handlerRegistration != null);
-			ProcessObservers.publish(DirndlProcess.DomBindingUnbind.class,
-					() -> new DirndlProcess.DomBindingUnbind(nodeEventBinding));
+			ProcessObservers.publish(DirndlObservables.DomBindingUnbind.class,
+					() -> new DirndlObservables.DomBindingUnbind(
+							nodeEventBinding));
 			handlerRegistration.removeHandler();
 			handlerRegistration = null;
 		} else {
 			Preconditions.checkState(handlerRegistration == null);
-			ProcessObservers.publish(DirndlProcess.DomBindingBind.class,
-					() -> new DirndlProcess.DomBindingBind(nodeEventBinding));
+			ProcessObservers.publish(DirndlObservables.DomBindingBind.class,
+					() -> new DirndlObservables.DomBindingBind(
+							nodeEventBinding));
 			handlerRegistration = bind0(element, model);
 			Preconditions.checkState(handlerRegistration != null);
 		}
@@ -48,8 +50,8 @@ public abstract class DomBinding<E extends NodeEvent>
 	protected abstract HandlerRegistration bind1(Element element);
 
 	protected void fireEvent(GwtEvent gwtEvent) {
-		ProcessObservers.publish(DirndlProcess.DomBindingFire.class,
-				() -> new DirndlProcess.DomBindingFire(nodeEventBinding,
+		ProcessObservers.publish(DirndlObservables.DomBindingFire.class,
+				() -> new DirndlObservables.DomBindingFire(nodeEventBinding,
 						gwtEvent));
 		nodeEventBinding.onEvent(gwtEvent);
 	}

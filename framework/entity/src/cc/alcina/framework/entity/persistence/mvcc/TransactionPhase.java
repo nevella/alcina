@@ -1,6 +1,10 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 enum TransactionPhase {
+	/*
+	 * user code runs in this phase (or possibly READ_ONLY/NON_COMMITAL), all
+	 * other phases model the MVCC commit lifecycle
+	 */
 	TO_DB_PREPARING, TO_DB_PERSISTING, TO_DB_PERSISTED, TO_DB_ABORTED,
 	TO_DOMAIN_PREPARING, TO_DOMAIN_COMMITTING, TO_DOMAIN_COMMITTED,
 	TO_DOMAIN_ABORTED, VACUUM_BEGIN, VACUUM_ENDED, READ_ONLY,

@@ -24,3 +24,36 @@ public long getTimeInVacuum() {
 			: System.currentTimeMillis() - vacuumStarted;
 }
 ```
+
+ <h2>DEVEX styles</h2>
+  <table>
+  <tr>
+  <td>Ordinal</td>
+  <td>Meaning</td>
+  </tr>
+  <tr>
+  <td>0</td>
+  <td>Noted, no logging code</td>
+  </tr>
+  <tr>
+  <td>1</td>
+  <td>Noted, logging code</td>
+  </tr>
+  
+  <tr>
+  <td>2</td>
+  <td>Noted, testing fix</td>
+  </tr>
+  <tr>
+  <td>3</td>
+  <td>(Hopefully) verified fix - should not be thrown</td>
+  </tr>
+  <tr>
+  <td>5</td>
+  <td>Unknown how it got here - just catch and log for now</td>
+  </tr>
+  <tr>
+  <td>6</td>
+  <td>Cannot reproduce</td>
+  </tr>
+  </table>

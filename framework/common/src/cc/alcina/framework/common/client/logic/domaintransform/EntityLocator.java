@@ -330,4 +330,8 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	public boolean wasRemoved() {
 		return find() == null;
 	}
+
+	public boolean hasLocalId() {
+		return localId != 0;
+	}
 }

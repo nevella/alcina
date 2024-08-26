@@ -44,3 +44,7 @@ This aids encapsulation
   often the UI class would be navigated to by name)
 
 - Package-level (non-public) classes follow the same rules as inner classes - avoid full prefixing
+
+## See also
+
+- [Devex styles](misc/notes.md)
