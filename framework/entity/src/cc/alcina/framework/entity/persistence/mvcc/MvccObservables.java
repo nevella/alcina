@@ -19,6 +19,38 @@ public class MvccObservables {
 
 		public Date date = new Date();
 
+		MvccObjectVersionsEntity<?> versions;
+
+		boolean writeable;
+
+		ObjectVersion version;
+
+		Observable(MvccObjectVersionsEntity<?> versions, boolean writeable) {
+			this.versions = versions;
+			this.writeable = writeable;
+			recordEvent();
+		}
+
+		Observable(MvccObjectVersionsEntity<?> versions,
+				ObjectVersion version) {
+			this.versions = versions;
+			this.version = version;
+			this.writeable = version.writeable;
+			recordEvent();
+		}
+
+		void recordEvent() {
+			Entity entity = versions.domainIdentity;
+			EntityLocator locator = entity.toLocator();
+			Entity versioned = version != null ? (Entity) version.object
+					: versions.resolve(writeable);
+			Map<String, String> primitiveFieldValues = Transactions
+					.primitiveFieldValues(versioned);
+			event = new MvccEvent((MvccObject) versions.domainIdentity, locator,
+					null, Transaction.current(), null, primitiveFieldValues,
+					null, writeable, System.identityHashCode(versioned));
+		}
+
 		@Override
 		public String toString() {
 			FormatBuilder format = new FormatBuilder();
@@ -31,52 +63,54 @@ public class MvccObservables {
 	}
 
 	public static class VersionsCreationEvent extends Observable {
-		MvccObjectVersionsEntity<?> versions;
-
-		VersionsCreationEvent(MvccObjectVersionsEntity<?> versions) {
-			this.versions = versions;
-			recordEvent(versions);
+		VersionsCreationEvent(MvccObjectVersionsEntity<?> versions,
+				boolean writeable) {
+			super(versions, writeable);
 		}
+	}
 
-		void recordEvent(MvccObjectVersionsEntity<?> versions) {
-			Entity entity = versions.domainIdentity;
-			EntityLocator locator = entity.toLocator();
-			Entity versioned = versions.resolve(false);
-			Map<String, String> primitiveFieldValues = Transactions
-					.primitiveFieldValues(versioned);
-			event = new MvccEvent((MvccObject) versions.domainIdentity, locator,
-					null, Transaction.current().getId(), null,
-					primitiveFieldValues, MvccEvent.Type.VERSIONS_CREATION,
-					versions.initialWriteableTransaction != null);
+	public static class VersionCreationEvent extends Observable {
+		VersionCreationEvent(MvccObjectVersionsEntity<?> versions,
+				ObjectVersion version) {
+			super(versions, version);
+			if (Transaction.current()
+					.getPhase() == TransactionPhase.VACUUM_BEGIN) {
+				int debug = 3;
+			}
 		}
 	}
 
 	public static class VersionsRemovalEvent extends Observable {
-		MvccObjectVersionsEntity<?> versions;
-
-		VersionsRemovalEvent(MvccObjectVersionsEntity<?> versions) {
-			this.versions = versions;
-			recordEvent(versions);
-		}
-
-		void recordEvent(MvccObjectVersionsEntity<?> versions) {
-			Entity entity = versions.domainIdentity;
-			EntityLocator locator = entity.toLocator();
-			Entity versioned = versions.domainIdentity;
-			Map<String, String> primitiveFieldValues = Transactions
-					.primitiveFieldValues(versioned);
-			event = new MvccEvent((MvccObject) versions.domainIdentity, locator,
-					null, Transaction.current().getId(), null,
-					primitiveFieldValues, MvccEvent.Type.VERSIONS_REMOVAL,
-					false);
+		VersionsRemovalEvent(MvccObjectVersionsEntity<?> versions,
+				boolean writeable) {
+			super(versions, writeable);
 		}
 	}
 
-	public static class MutationEvent extends Observable {
-		MvccObjectVersionsEntity<?> versions;
-
-		MutationEvent(MvccObjectVersionsEntity<?> versions) {
-			this.versions = versions;
+	public static class VersionRemovalEvent extends Observable {
+		VersionRemovalEvent(MvccObjectVersionsEntity<?> versions,
+				ObjectVersion version) {
+			super(versions, version);
 		}
 	}
+
+	public static class VersionCommittedEvent extends Observable {
+		VersionCommittedEvent(MvccObjectVersionsEntity<?> versions,
+				boolean writeable) {
+			super(versions, writeable);
+		}
+	}
+
+	public static class VersionDbPersistedEvent extends Observable {
+		VersionDbPersistedEvent(MvccObjectVersionsEntity<?> versions,
+				boolean writeable) {
+			super(versions, writeable);
+		}
+	}
+	// public static class MutationEvent extends Observable {
+	// MvccObjectVersionsEntity<?> versions;
+	// MutationEvent(MvccObjectVersionsEntity<?> versions) {
+	// this.versions = versions;
+	// }
+	// }
 }

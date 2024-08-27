@@ -714,6 +714,7 @@ public class Transaction implements Comparable<Transaction> {
 				.checkState(getPhase() == TransactionPhase.TO_DB_PERSISTING);
 		this.databaseCommitTimestamp = timestamp;
 		setPhase(TransactionPhase.TO_DB_PERSISTED);
+		Transactions.get().onDomainTransactionDbPersisted(this);
 	}
 
 	public void toDbPersisting() {

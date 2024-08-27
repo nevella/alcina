@@ -101,6 +101,24 @@ public class MvccObjectVersionsEntity<T extends Entity>
 			ThreadlocalTransformManager.cast()
 					.registerDomainObject(version.object, true);
 		}
+		ProcessObservers.publish(MvccObservables.VersionCreationEvent.class,
+				() -> new MvccObservables.VersionCreationEvent(this, version));
+	}
+
+	@Override
+	void onVersionRemoval(ObjectVersion<T> version) {
+		ProcessObservers.publish(MvccObservables.VersionRemovalEvent.class,
+				() -> new MvccObservables.VersionRemovalEvent(this, version));
+	}
+
+	void onDomainTransactionCommited() {
+		ProcessObservers.publish(MvccObservables.VersionCommittedEvent.class,
+				() -> new MvccObservables.VersionCommittedEvent(this, true));
+	}
+
+	void onDomainTransactionDbPersisted() {
+		ProcessObservers.publish(MvccObservables.VersionDbPersistedEvent.class,
+				() -> new MvccObservables.VersionDbPersistedEvent(this, true));
 	}
 
 	@Override
@@ -133,6 +151,6 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	@Override
 	void publishRemoval() {
 		ProcessObservers.publish(MvccObservables.VersionsRemovalEvent.class,
-				() -> new MvccObservables.VersionsRemovalEvent(this));
+				() -> new MvccObservables.VersionsRemovalEvent(this, false));
 	}
 }

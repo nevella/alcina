@@ -24,6 +24,8 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionCommittedEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionCreationEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsCreationEvent;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 
@@ -85,23 +87,42 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
  * cc.alcina.framework.servlet.process.observer.mvcc).
  * <p>
  * These events and their sequence also provide a guide to the lifecycle of an
- * mvcc entity - summarised here for a notional 'croissant' object (with
- * notional tx ids):
+ * mvcc entity - summarised here for a notional JobImpl object (with notional tx
+ * ids):
  * <table>
  * <tr>
- * <th>Tx</th>
+ * <th>Tx/Phase</th>
  * <th>Event/Observable</th>
  * <th>Code</th> *
  * <th>Notes</th>
  * </tr>
  * <tr>
- * <td>TO_DB_PREPARING [1]</td>
- * <td>{@link VersionsCreationEvent}</td>
- * <td><code>Croissant c = Croissant.create(); c.setFlavour("almond");</code></td>
- * *
- * <td>A Croissant_ entity is created with a local id, and its _mvccVersions__
+ * <td>txid:1 - TO_DB_PREPARING</td>
+ * <td>{@link VersionsCreationEvent}, {@link VersionCreationEvent}</td>
+ * <td><code>Job job = new TaskListJobs().schedule(); ... </code></td> *
+ * <td>A JobImpl entity is created with a local id, and its _mvccVersions__
  * field is initialised with a writeable version. All calls in this tx
- * (including setFlavour) route to this version</td>
+ * (including the e.g. setTaskSerialized in schedule()) route to this
+ * version</td>
+ * </tr>
+ * <tr>
+ * <td>txid:1 - TO_DB_PERSISTING...TO_DB_PERSISTED</td>
+ * <td>{@link VersionPersistedEvent}</td>
+ * <td><code>The transaction is committed to the db -
+ * TO_DB_PERSISTING, TO_DB_PERSISTED </code></td> *
+ * <td>The VersionPersistedEvent contains the final field values (and the object
+ * version will be the domainIdentity. Its fields will be reset to defaults
+ * during the TO_DOMAIN_COMMITTED tx</td>
+ * </tr>
+ * <tr>
+ * <td>txid:2 - TO_DOMAIN_PREPARING...TO_DOMAIN_COMMITTED</td>
+ * <td>{@link VersionCreationEvent}, {@link VersionCommittedEvent}</td>
+ * <td><code>The transaction is committed to the the committed graph - 
+  TO_DOMAIN_PREPARING, TO_DOMAIN_COMMITTING, TO_DOMAIN_COMMITTED </code></td> *
+ * <td>A new {@link ObjectVersion} is created during the TO_DOMAIN_COMMITTING
+ * phase. It is then modified by application of the transforms, and the
+ * domainIdentity fields are reset (since it will no longer be visible to any
+ * tx)</td>
  * </tr>
  * </table>
  *

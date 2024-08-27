@@ -1,6 +1,9 @@
 package cc.alcina.framework.servlet.process.observer.job;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsCreationEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsRemovalEvent;
 import cc.alcina.framework.servlet.process.observer.mvcc.ObservableEntityFilter;
@@ -18,11 +21,12 @@ public class JobMvccObserver implements ObservableEntityFilter {
 	@Override
 	public boolean isEndObservation(VersionsRemovalEvent removalEvent) {
 		if (Job.class.isAssignableFrom(removalEvent.event.locator.clazz)) {
-			Job job = removalEvent.event.locator.find();
-			// return job.provideIsSequenceComplete();
-			// TODO - queue for ending (rather than end), since the job may
-			// still be in flight
-			return false;
+			String state = removalEvent.event.primitiveFieldValues.get("state");
+			if (Objects.equals(state, JobState.SEQUENCE_COMPLETE.toString())) {
+				return true;
+			} else {
+				return false;
+			}
 		}
 		return false;
 	}

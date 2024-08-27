@@ -502,12 +502,27 @@ public class Transactions {
 		vacuum.addVacuumable(transaction, vacuumable);
 	}
 
-	public void onDomainTransactionCommited(Transaction transaction) {
+	void onDomainTransactionDbPersisted(Transaction transaction) {
+		getMvccObjectVersionsMvccObject(transaction).forEach(
+				MvccObjectVersionsMvccObject::onDomainTransactionDbPersisted);
+	}
+
+	Stream<MvccObjectVersionsMvccObject>
+			getMvccObjectVersionsMvccObject(Transaction transaction) {
+		return vacuum.getVacuumables(transaction).stream()
+				.filter(v -> v instanceof MvccObjectVersionsMvccObject)
+				.map(v -> (MvccObjectVersionsMvccObject) v);
+	}
+
+	void onDomainTransactionCommited(Transaction transaction) {
 		synchronized (transactionMetadataLock) {
+			getMvccObjectVersionsMvccObject(transaction).forEach(
+					MvccObjectVersionsMvccObject::onDomainTransactionCommited);
 			committedTransactions.add(transaction);
 			/*
-			 * these occur sequentially, so transaction will always have the
-			 * highest visible id (for a tx of this type)
+			 * these (to domain preparing/committing/committed sequences) occur
+			 * sequentially, so transaction will always have the highest visible
+			 * id (for a tx of this type)
 			 */
 			highestVisibleCommittedTransactionId = transaction.getId();
 			committedTransactionIds.add(transaction.getId());

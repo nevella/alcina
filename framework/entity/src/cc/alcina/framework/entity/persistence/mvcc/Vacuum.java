@@ -252,4 +252,8 @@ class Vacuum {
 			return Optional.ofNullable(tx);
 		}
 	}
+
+	List<Vacuumable> getVacuumables(Transaction transaction) {
+		return vacuumables.getOrDefault(transaction, List.of());
+	}
 }

@@ -95,7 +95,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static final Object MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR = new Object();
 
 	// called in a synchronized block (synchronized on domainIdentity) -- or --
-	// unreachable domainIdentity unreachable from other txs
+	// domainIdentity is unreachable(unreachable from other txs)
 	static <E extends Entity> MvccObjectVersions<E> createEntityVersions(
 			E domainIdentity, Transaction transaction,
 			boolean initialObjectIsWriteable) {
@@ -103,7 +103,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		MvccObjectVersionsEntity<E> versions = new MvccObjectVersionsEntity<E>(
 				domainIdentity, transaction, initialObjectIsWriteable);
 		ProcessObservers.publish(MvccObservables.VersionsCreationEvent.class,
-				() -> new MvccObservables.VersionsCreationEvent(versions));
+				() -> new MvccObservables.VersionsCreationEvent(versions,
+						initialObjectIsWriteable));
 		return versions;
 	}
 
@@ -299,15 +300,21 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected void removeWithSize(Transaction tx, boolean vacuum) {
 		ObjectVersion<T> version = versions().get(tx);
 		if (version != null) {
+			onVersionRemoval(version);
 			if (tx.isToDomainCommitted() && vacuum) {
 				setVisibleAllTransactions(version.object);
 			}
 			versions().remove(tx);
 			cachedResolution = null;
 			size.decrementAndGet();
-			checkIntercept(Type.VERSION_REMOVAL, tx.getId(), null,
-					version.writeable);
+			// FIXME - mvcc - cleanup (remove, this is just left here as a
+			// reminder )
+			// checkIntercept(Type.VERSION_REMOVAL, tx.getId(), null,
+			// version.writeable);
 		}
+	}
+
+	void onVersionRemoval(ObjectVersion<T> version) {
 	}
 
 	T resolve(boolean writeableVersion) {
@@ -326,7 +333,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	// sorted maps are nice but also painful (boiling down to "the comparable
-	// must be invariant") - this takes care of
+	// must be invariant") - this takes care of that
 	synchronized void resolveInvariantToDomainIdentity() {
 		Transaction transaction = Transaction.current();
 		ObjectVersion<T> version = new ObjectVersion<>();
@@ -662,17 +669,20 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				boolean writeable) {
 			EntityLocator locator = null;
 			Map<String, String> primitiveFieldValues = null;
+			int versionIdentityHashCode = -1;
 			if (mvccObjectVersions instanceof MvccObjectVersionsEntity) {
 				Entity entity = (Entity) mvccObjectVersions.domainIdentity;
 				locator = entity.toLocator();
 				Entity versioned = (Entity) mvccObjectVersions.resolve(false);
+				versionIdentityHashCode = System.identityHashCode(versioned);
 				primitiveFieldValues = Transactions
 						.primitiveFieldValues(versioned);
 			}
 			MvccEvent event = new MvccEvent(
 					(MvccObject) mvccObjectVersions.domainIdentity, locator,
-					fromTransaction, Transaction.current().getId(),
-					toTransaction, primitiveFieldValues, type, writeable);
+					fromTransaction, Transaction.current(), toTransaction,
+					primitiveFieldValues, type, writeable,
+					versionIdentityHashCode);
 			onEvent(event);
 		}
 	}
@@ -786,6 +796,12 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 
 		void publishRemoval() {
+		}
+
+		void onDomainTransactionCommited() {
+		}
+
+		void onDomainTransactionDbPersisted() {
 		}
 	}
 }

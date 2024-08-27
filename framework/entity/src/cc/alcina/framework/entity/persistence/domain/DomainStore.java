@@ -454,7 +454,7 @@ public class DomainStore implements IDomainStore {
 				local.setId(id);
 				// the current version (which will be committed)
 				Transactions.copyIdFieldsToCurrentVersion(local);
-				// only local-id objects created by this webapp client instance
+				// only local-id objects created by this webapp clientInstance
 				// will ever be put into the store cache in this phase - thus
 				// preserving the "local ids don't collide because they're on
 				// different transactions" logic of the cache

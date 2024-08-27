@@ -37,7 +37,8 @@ public class FormatBuilder {
 	String prefix;
 
 	/**
-	 * Indent level to prepend on to every line
+	 * Indent level to prepend on to every line. If a multiline string is
+	 * appended, each line will be indented
 	 */
 	int indent;
 
@@ -49,11 +50,16 @@ public class FormatBuilder {
 	/**
 	 * The start of the current line in the builder. This tracks all newlines
 	 * (either inserted explictly via methods like line() or by the contents of
-	 * template/args )
+	 * template/args)
 	 */
 	int startOfLineIdx = 0;
 
-	private boolean trackNewlines;
+	boolean trackNewlines;
+
+	/**
+	 * the kv separator will be a colon-space, not a colon
+	 */
+	boolean kvSpace;
 
 	/**
 	 * Append an object as a string to the end of the buffer
@@ -191,7 +197,8 @@ public class FormatBuilder {
 		String toString = value == null ? null : value.toString();
 		if (Ax.notBlank(toString)) {
 			append(key);
-			appendToBuilder(":");
+			String separator = kvSpace ? ": " : ":";
+			appendToBuilder(separator);
 			appendToBuilder(toString);
 		}
 		return this;
@@ -299,8 +306,12 @@ public class FormatBuilder {
 	private void ensureIndent() {
 		if (!indented && indent != 0) {
 			indented = true;
-			appendToBuilder(CommonUtils.padStringLeft("", indent, ' '));
+			appendToBuilder(makeIndentString());
 		}
+	}
+
+	private String makeIndentString() {
+		return CommonUtils.padStringLeft("", indent, ' ');
 	}
 
 	/**
@@ -454,10 +465,16 @@ public class FormatBuilder {
 	}
 
 	private void appendToBuilder(String string) {
-		if (string != null && trackNewlines) {
-			int lastIdx = string.lastIndexOf('\n');
-			if (lastIdx != -1) {
-				startOfLineIdx = sb.length() + lastIdx + 1;
+		if (string != null) {
+			if (indent != 0 && string.indexOf("\n") != -1) {
+				string = string.replaceAll("\n([^\n])",
+						Ax.format("\n%s$1", makeIndentString()));
+			}
+			if (trackNewlines) {
+				int lastIdx = string.lastIndexOf('\n');
+				if (lastIdx != -1) {
+					startOfLineIdx = sb.length() + lastIdx + 1;
+				}
 			}
 		}
 		sb.append(string);
@@ -494,6 +511,9 @@ public class FormatBuilder {
 		}
 	}
 
+	/**
+	 * This class breaks an arbitrary string at [maxWidth] characters
+	 */
 	public static class HardBreak {
 		public List<String> lines = new ArrayList<>();
 
@@ -533,6 +553,11 @@ public class FormatBuilder {
 
 	public FormatBuilder withTrackNewlines(boolean trackNewlines) {
 		this.trackNewlines = trackNewlines;
+		return this;
+	}
+
+	public FormatBuilder withKvSpace(boolean kvSpace) {
+		this.kvSpace = kvSpace;
 		return this;
 	}
 
