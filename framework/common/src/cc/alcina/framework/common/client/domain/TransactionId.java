@@ -2,8 +2,15 @@ package cc.alcina.framework.common.client.domain;
 
 import java.util.Objects;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+
+@Bean(PropertySource.FIELDS)
 public class TransactionId implements Comparable<TransactionId> {
 	public long id;
+
+	TransactionId() {
+	}
 
 	public TransactionId(long id) {
 		this.id = id;

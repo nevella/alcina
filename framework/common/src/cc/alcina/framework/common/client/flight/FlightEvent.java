@@ -1,23 +1,28 @@
 package cc.alcina.framework.common.client.flight;
 
+import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializationExceptionData;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.HandlesDeserializationException;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.common.client.util.IdCounter;
 
 @Bean(PropertySource.FIELDS)
-public class FlightEvent implements ProcessObservable, Comparable<FlightEvent>,
-		HandlesDeserializationException, HasStringRepresentation {
+public class FlightEvent
+		implements ProcessObservable, HandlesDeserializationException,
+		HasStringRepresentation, IdOrdered<FlightEvent> {
 	static IdCounter counter = new IdCounter();
 
 	public FlightEventWrappable event;
 
-	public long eventId;
+	public long id;
+
+	public long getId() {
+		return id;
+	}
 
 	public long time;
 
@@ -28,18 +33,13 @@ public class FlightEvent implements ProcessObservable, Comparable<FlightEvent>,
 
 	public FlightEvent(FlightEventWrappable event) {
 		this.event = event;
-		this.eventId = counter.nextId();
+		this.id = counter.nextId();
 		this.time = System.currentTimeMillis();
 	}
 
 	@Override
-	public int compareTo(FlightEvent o) {
-		return CommonUtils.compareLongs(eventId, o.eventId);
-	}
-
-	@Override
 	public String toString() {
-		return Ax.format("%s :: %s", eventId, event);
+		return Ax.format("%s :: %s", id, event);
 	}
 
 	@Override

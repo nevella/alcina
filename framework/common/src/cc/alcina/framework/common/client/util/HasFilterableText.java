@@ -1,7 +1,9 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.gwt.regexp.shared.MatchResult;
@@ -44,8 +46,10 @@ public interface HasFilterableText {
 
 		@Override
 		public Stream<String> toFilterableStrings() {
-			return Reflections.at(o).properties().stream()
-					.map(p -> String.valueOf(p.get(o)));
+			List<String> list = Reflections.at(o).properties().stream()
+					.map(p -> String.valueOf(p.get(o)))
+					.collect(Collectors.toList());
+			return list.stream();
 		}
 	}
 
@@ -63,6 +67,8 @@ public interface HasFilterableText {
 		boolean regex;
 
 		String lastString;
+
+		String normalisedString;
 
 		public Query(String query) {
 			this.query = Ax.blankToEmpty(query);
@@ -99,20 +105,22 @@ public interface HasFilterableText {
 			if (s != lastString) {
 				fromIndex = 0;
 				regExp = null;
+				lastString = s;
+				normalisedString = caseInsensitive ? s.toLowerCase() : s;
 			}
-			lastString = s;
 			if (regex && regExp == null) {
-				regExp = RegExp.compile(query);
+				String flags = caseInsensitive ? "i" : "";
+				regExp = RegExp.compile(query, flags);
 			}
 			if (regex) {
-				MatchResult matchResult = regExp.exec(s);
+				MatchResult matchResult = regExp.exec(normalisedString);
 				if (matchResult != null) {
 					return IntPair.of(matchResult.getIndex(),
 							matchResult.getIndex()
 									+ matchResult.getGroup(0).length());
 				}
 			} else {
-				int idx = s.indexOf(resolvedQuery, fromIndex);
+				int idx = normalisedString.indexOf(resolvedQuery, fromIndex);
 				if (idx != -1) {
 					IntPair result = IntPair.of(idx,
 							idx + resolvedQuery.length());

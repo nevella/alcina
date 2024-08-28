@@ -10,13 +10,11 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.domain.TransactionId;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.persistence.mvcc.MvccEvent.Type;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
@@ -56,8 +54,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected static int notifyResolveNullCount = 100;
 
 	protected static int notifyInvalidReadStateCount = 100;
-
-	private static EventInterceptor eventInterceptor;
 
 	private static final Object2ObjectAVLTreeMap<Transaction, ObjectVersion> EMPTY = new Object2ObjectAVLTreeMap<Transaction, ObjectVersion>() {
 		@Override
@@ -115,10 +111,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		MvccObject mvccObject = (MvccObject) domainIdentity;
 		return new MvccObjectVersionsTrieEntry(domainIdentity, transaction,
 				initialObjectIsWriteable);
-	}
-
-	public static void setEventInterceptor(EventInterceptor eventInterceptor) {
-		MvccObjectVersions.eventInterceptor = eventInterceptor;
 	}
 
 	// concurrency not required
@@ -185,20 +177,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		putVersion(version);
 		attach();
 		onVersionCreation(version);
-		checkIntercept(Type.VERSIONS_CREATION, null, null, version.writeable);
 	}
 
 	//
 	protected void attach() {
-	}
-
-	protected void checkIntercept(MvccEvent.Type type,
-			TransactionId fromTransaction, TransactionId toTransaction,
-			boolean writeable) {
-		if (eventInterceptor != null
-				&& eventInterceptor.isRecordEvent(this, domainIdentity, type)) {
-			eventInterceptor.recordEvent(this, type, null, null, writeable);
-		}
 	}
 
 	protected T copyObject(T mostRecentObject) {
@@ -441,10 +423,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			putVersion(version);
 			// }
 			onVersionCreation(version);
-			checkIntercept(Type.VERSION_CREATION,
-					mostRecentTransaction == null ? null
-							: mostRecentTransaction.getId(),
-					null, true);
 			return version.object;
 		} else {
 			/*
@@ -658,35 +636,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
-	public static abstract class EventInterceptor {
-		public abstract boolean isRecordEvent(MvccObjectVersions versions,
-				Object domainIdentity, Type type);
-
-		public abstract void onEvent(MvccEvent event);
-
-		void recordEvent(MvccObjectVersions mvccObjectVersions, Type type,
-				TransactionId fromTransaction, TransactionId toTransaction,
-				boolean writeable) {
-			EntityLocator locator = null;
-			Map<String, String> primitiveFieldValues = null;
-			int versionIdentityHashCode = -1;
-			if (mvccObjectVersions instanceof MvccObjectVersionsEntity) {
-				Entity entity = (Entity) mvccObjectVersions.domainIdentity;
-				locator = entity.toLocator();
-				Entity versioned = (Entity) mvccObjectVersions.resolve(false);
-				versionIdentityHashCode = System.identityHashCode(versioned);
-				primitiveFieldValues = Transactions
-						.primitiveFieldValues(versioned);
-			}
-			MvccEvent event = new MvccEvent(
-					(MvccObject) mvccObjectVersions.domainIdentity, locator,
-					fromTransaction, Transaction.current(), toTransaction,
-					primitiveFieldValues, type, writeable,
-					versionIdentityHashCode);
-			onEvent(event);
-		}
-	}
-
 	// T extends MvccObject, but makes the generics harder so not restricted
 	// here
 	static abstract class MvccObjectVersionsMvccObject<T>
@@ -774,8 +723,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 							}
 							// removal from the mvccobject will occur in a
 							// different (the global) monitor context
-							checkIntercept(Type.VERSIONS_REMOVAL, null, null,
-									false);
 							attached = false;
 						}
 					}

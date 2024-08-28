@@ -70,7 +70,7 @@ public class HighlightModel {
 			if (s == null) {
 				continue;
 			}
-			Query<?> query = Query.of(queryText);
+			Query<?> query = Query.of(queryText).withCaseInsensitive(true);
 			for (;;) {
 				IntPair matchingRange = query.next(s);
 				if (matchingRange == null) {

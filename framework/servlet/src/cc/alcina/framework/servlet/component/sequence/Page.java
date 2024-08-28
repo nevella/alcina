@@ -36,10 +36,17 @@ import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousHig
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.PropertyDisplayMode;
 import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
 
+/*
+ * TODO - look at an approach to prevent double-fires of say reloadSequence -
+ * the thing is that two things can trigger that, _both_ will be true on startup
+ * 
+ * 
+ */
 @TypedProperties
 @Directed(
 	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
-class Page extends Model.All implements SequenceEvents.FilterElements.Handler,
+class Page extends Model.Fields
+		implements SequenceEvents.FilterElements.Handler,
 		SequenceEvents.HighlightElements.Handler,
 		SequenceEvents.NextHighlight.Handler,
 		SequenceEvents.PreviousHighlight.Handler,
@@ -47,27 +54,47 @@ class Page extends Model.All implements SequenceEvents.FilterElements.Handler,
 		SequenceBrowserCommand.ClearFilter.Handler,
 		SequenceBrowserCommand.PropertyDisplayCycle.Handler,
 		SequenceBrowserCommand.FocusSearch.Handler {
+	class IndexPredicate implements Predicate {
+		int index = 0;
+
+		IntPair selectedRange;
+
+		IndexPredicate(IntPair selectedRange) {
+			this.selectedRange = selectedRange;
+		}
+
+		public boolean test(Object o) {
+			if (selectedRange == null) {
+				return true;
+			}
+			return selectedRange.contains(index++);
+		}
+	}
+
 	static PackageProperties._Page properties = PackageProperties.page;
 
+	@Directed
 	Header header;
 
+	@Directed
 	SequenceArea sequenceArea;
 
+	@Directed
 	DetailArea detailArea;
 
-	@Directed.Exclude
 	Sequence<?> sequence;
 
-	@Property.Not
 	List<?> filteredSequenceElements;
 
-	@Property.Not
 	Ui ui;
 
-	@Property.Not
 	HighlightModel highlightModel;
 
-	private StyleElement styleElement;
+	StyleElement styleElement;
+
+	SequencePlace lastFilterTestPlace = null;
+
+	SequencePlace lastHighlightTestPlace = null;
 
 	Page() {
 		this.ui = Ui.get();
@@ -77,10 +104,15 @@ class Page extends Model.All implements SequenceEvents.FilterElements.Handler,
 				.signal(this::reloadSequence);
 		bindings().from(ui).on(Ui.properties.place)
 				// todo - add ignoreable change filter
+				.filter(this::filterUnchangedSequencePlaceChange)
 				.signal(this::reloadSequence);
 		bindings().from(this).on(properties.sequence)
 				.signal(this::computeHighlightModel);
-		bindings().from(this).on(properties.sequence).value(this)
+		bindings().from(ui).on(Ui.properties.place)
+				// todo - add ignoreable change filter
+				.filter(this::filterUnchangedHighlightPlaceChange)
+				.signal(this::computeHighlightModel);
+		bindings().from(this).on(properties.sequence).value(this).debug()
 				.map(SequenceArea::new).to(this).on(properties.sequenceArea)
 				.oneWay();
 		bindings().from(this).on(properties.sequence).value(this)
@@ -91,26 +123,6 @@ class Page extends Model.All implements SequenceEvents.FilterElements.Handler,
 				.oneWay();
 		bindings().from(SequenceBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
-	}
-
-	void computeHighlightModel() {
-		highlightModel = new HighlightModel(filteredSequenceElements,
-				(Function) sequence.getDetailTransform(), ui.place.highlight,
-				ui.place.highlightIdx);
-		highlightModel.computeMatches();
-		if (highlightModel.hasMatches()
-				&& highlightModel.highlightIndex == -1) {
-			highlightModel.goTo(0);
-			goToHighlightModelIndex();
-		}
-	}
-
-	void reloadSequence() {
-		String sequenceKey = Ax.blankToEmpty(ui.settings.sequenceKey);
-		Sequence.Loader loader = Sequence.Loader.getLoader(sequenceKey);
-		Sequence<?> sequence = loader.load(sequenceKey);
-		filteredSequenceElements = filteredSequenceElements(sequence);
-		properties.sequence.set(this, sequence);
 	}
 
 	@Override
@@ -141,6 +153,86 @@ class Page extends Model.All implements SequenceEvents.FilterElements.Handler,
 	public void onLoadSequence(LoadSequence event) {
 		SequenceSettings.properties.sequenceKey.set(ui.settings,
 				event.getModel());
+	}
+
+	@Override
+	public void onHighlightElements(HighlightElements event) {
+		ui.place.copy().withHighlight(event.getModel()).go();
+	}
+
+	@Override
+	public void onPreviousHighlight(PreviousHighlight event) {
+		highlightModel.move(-1);
+		goToHighlightModelIndex();
+	}
+
+	@Override
+	public void onNextHighlight(NextHighlight event) {
+		highlightModel.move(1);
+		goToHighlightModelIndex();
+	}
+
+	@Property.Not
+	public List<IntPair> getSelectedElementHighlights() {
+		return highlightModel.elementMatches
+				.getAndEnsure(getSelectedSequenceElement()).stream()
+				.map(m -> m.range).collect(Collectors.toList());
+	}
+
+	@Property.Not
+	public int getSelectedElementHighlightIndex() {
+		Match match = highlightModel.getMatch(ui.place.highlightIdx);
+		return match == null ? -1 : match.getIndexInSelectedElementMatches();
+	}
+
+	@Property.Not
+	public Object getSelectedSequenceElement() {
+		int selectedElementIdx = ui.place.selectedElementIdx;
+		if (selectedElementIdx == -1
+				|| selectedElementIdx > filteredSequenceElements.size() - 1) {
+			return null;
+		} else {
+			return filteredSequenceElements.get(selectedElementIdx);
+		}
+	}
+
+	/*
+	 * The sequence will be changed if the filter is changed (essentially)
+	 */
+	boolean filterUnchangedSequencePlaceChange(SequencePlace place) {
+		boolean result = place.hasFilterChange(lastFilterTestPlace);
+		lastFilterTestPlace = place;
+		return result;
+	}
+
+	/*
+	 * The sequence will be changed if the filter is changed (essentially)
+	 */
+	boolean filterUnchangedHighlightPlaceChange(SequencePlace place) {
+		boolean result = place.hasHighlightChange(lastHighlightTestPlace);
+		lastHighlightTestPlace = place;
+		return result;
+	}
+
+	void computeHighlightModel() {
+		highlightModel = new HighlightModel(filteredSequenceElements,
+				(Function) sequence.getDetailTransform(), ui.place.highlight,
+				ui.place.highlightIdx);
+		highlightModel.computeMatches();
+		if (highlightModel.hasMatches()
+				&& highlightModel.highlightIndex == -1) {
+			highlightModel.goTo(0);
+			goToHighlightModelIndex();
+		}
+	}
+
+	//
+	void reloadSequence() {
+		String sequenceKey = Ax.blankToEmpty(ui.settings.sequenceKey);
+		Sequence.Loader loader = Sequence.Loader.getLoader(sequenceKey);
+		Sequence<?> sequence = loader.load(sequenceKey);
+		filteredSequenceElements = filteredSequenceElements(sequence);
+		properties.sequence.set(this, sequence);
 	}
 
 	void updateStyles(SequenceSettings settings) {
@@ -201,34 +293,6 @@ class Page extends Model.All implements SequenceEvents.FilterElements.Handler,
 		return filteredElements;
 	}
 
-	class IndexPredicate implements Predicate {
-		int index = 0;
-
-		IntPair selectedRange;
-
-		IndexPredicate(IntPair selectedRange) {
-			this.selectedRange = selectedRange;
-		}
-
-		public boolean test(Object o) {
-			if (selectedRange == null) {
-				return true;
-			}
-			return selectedRange.contains(index++);
-		}
-	}
-
-	@Override
-	public void onHighlightElements(HighlightElements event) {
-		ui.place.copy().withHighlight(event.getModel()).go();
-	}
-
-	@Override
-	public void onPreviousHighlight(PreviousHighlight event) {
-		highlightModel.move(-1);
-		goToHighlightModelIndex();
-	}
-
 	void goToHighlightModelIndex() {
 		if (!highlightModel.hasMatches()) {
 			return;
@@ -239,34 +303,5 @@ class Page extends Model.All implements SequenceEvents.FilterElements.Handler,
 				.withHighlightIndicies(highlightModel.highlightIndex, sequence
 						.getElements().indexOf(highlightedSequenceElement))
 				.go();
-	}
-
-	@Override
-	public void onNextHighlight(NextHighlight event) {
-		highlightModel.move(1);
-		goToHighlightModelIndex();
-	}
-
-	@Property.Not
-	public List<IntPair> getSelectedElementHighlights() {
-		return highlightModel.elementMatches
-				.getAndEnsure(getSelectedSequenceElement()).stream()
-				.map(m -> m.range).collect(Collectors.toList());
-	}
-
-	@Property.Not
-	public int getSelectedElementHighlightIndex() {
-		Match match = highlightModel.getMatch(ui.place.highlightIdx);
-		return match == null ? -1 : match.getIndexInSelectedElementMatches();
-	}
-
-	@Property.Not
-	public Object getSelectedSequenceElement() {
-		int selectedElementIdx = ui.place.selectedElementIdx;
-		if (selectedElementIdx == -1) {
-			return null;
-		} else {
-			return sequence.getElements().get(selectedElementIdx);
-		}
 	}
 }

@@ -68,7 +68,7 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 	}
 
 	void addHighlightSuggestion(String query, List<AppSuggestion> suggestions) {
-		Pattern pattern = Pattern.compile("hi(?:\\S*) (\\S+)");
+		Pattern pattern = Pattern.compile("hi (\\S.*)");
 		Matcher matcher = pattern.matcher(query);
 		if (matcher.matches()) {
 			AppSuggestionEntry suggestion = new AppSuggestionEntry();

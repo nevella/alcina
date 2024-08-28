@@ -187,8 +187,12 @@ public class BaseSourcesPropertyChangeEvents
 	public void set(String propertyName, Object newValue) {
 		Property property = Reflections.at(getClass()).property(propertyName);
 		Object oldValue = property.get(this);
-		set(propertyName, oldValue, newValue,
-				() -> property.set(this, newValue));
+		property.set(this, newValue);
+		//
+		// this route causes double-property changes (fixme - 20240828 - remove
+		// commented once tested)
+		// set(propertyName, oldValue, newValue,
+		// () -> property.set(this, newValue));
 	}
 
 	protected <V> void set(String propertyName, V oldValue, V newValue,

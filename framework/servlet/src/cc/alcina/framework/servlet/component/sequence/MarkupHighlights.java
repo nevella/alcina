@@ -78,6 +78,9 @@ public class MarkupHighlights extends Model.All {
 		if (!highlitMarkup.provideIsBound()) {
 			return;// multiple renders
 		}
+		if (ranges.size() <= rangeIdx) {
+			return;
+		}
 		String matchTerm = ranges.get(rangeIdx).toString();
 		Element matchElement = highlitMarkup.provideElement().asDomNode()
 				.stream().filter(n -> n.attrIs(HIGHLIGHT_RANGE, matchTerm))

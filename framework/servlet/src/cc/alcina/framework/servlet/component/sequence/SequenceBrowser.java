@@ -1,31 +1,15 @@
 package cc.alcina.framework.servlet.component.sequence;
 
-import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.gwt.place.shared.Place;
-import com.google.gwt.place.shared.PlaceController;
-import com.google.gwt.place.shared.PlaceHistoryHandler;
-
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
-import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
-import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
-import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
-import cc.alcina.framework.servlet.component.sequence.place.SequenceBrowserPlace;
 import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
 import cc.alcina.framework.servlet.dom.AbstractUi;
-import cc.alcina.framework.servlet.dom.ClientRemoteImpl;
 import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.dom.RemoteUi;
 import cc.alcina.framework.servlet.dom.SettingsSupport;
@@ -33,6 +17,14 @@ import cc.alcina.framework.servlet.dom.SettingsSupport;
 /**
  * <p>
  * A remote component that browses a sequence of some kind
+ * <p>
+ * Filtering of sequence elements is handled by testing the _transformed_
+ * element - see {@link Page#filteredSequenceElements()}. It's a
+ * case-insensitive regex filter, using HasFilterableText.Query (which in most
+ * cases just tests the property values of the transformed sequence element).
+ * <p>
+ * Highlightable text is provided by {@link HasStringRepresentation} - so having
+ * the transformed elements implement that is generally a plus
  * 
  */
 @Feature.Ref(Feature_SequenceBrowser.class)

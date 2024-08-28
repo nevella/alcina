@@ -755,9 +755,9 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	}
 
 	@Override
-	public final void scrollIntoView() {
-		ClientDomElementStatic.scrollIntoView(this);
-	}
+	public final native void scrollIntoView() /*-{
+		this.scrollIntoView();
+	}-*/;
 
 	/**
 	 * Adds a new attribute. If an attribute with that name is already present

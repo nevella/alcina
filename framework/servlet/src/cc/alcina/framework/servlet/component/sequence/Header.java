@@ -33,7 +33,8 @@ class Header extends Model.All {
 			bindings().from(page.ui).on(Ui.properties.place)
 					.map(place -> Ax.isBlank(place.highlight) ? ""
 							: Ax.format("Highlight: '%s' [%s/%s]",
-									place.highlight, place.highlightIdx,
+									place.highlight,
+									Math.max(0, place.highlightIdx),
 									page.highlightModel.matches.size()))
 					.to(this).on(properties.highlight).oneWay();
 		}

@@ -71,6 +71,12 @@ public class ModelBinding<T> {
 
 	Topic<?> fromTopic;
 
+	/*
+	 * Use this to add conditional breakpoints to test things like unwanted
+	 * multiple dispatch
+	 */
+	boolean debug;
+
 	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
 	}
@@ -170,6 +176,11 @@ public class ModelBinding<T> {
 
 	public ModelBinding<T> nonNull() {
 		return filter(Objects::nonNull);
+	}
+
+	public ModelBinding<T> debug() {
+		this.debug = true;
+		return this;
 	}
 
 	/**

@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.sequence.place;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
@@ -84,5 +86,14 @@ public class SequencePlace extends BasePlace
 		this.selectedElementIdx = selectedElementIdx;
 		this.highlightIdx = highlightIndex;
 		return this;
+	}
+
+	public boolean hasFilterChange(SequencePlace lastPlace) {
+		return lastPlace == null || !Objects.equals(filter, lastPlace.filter);
+	}
+
+	public boolean hasHighlightChange(SequencePlace lastPlace) {
+		return lastPlace == null
+				|| !Objects.equals(highlight, lastPlace.highlight);
 	}
 }

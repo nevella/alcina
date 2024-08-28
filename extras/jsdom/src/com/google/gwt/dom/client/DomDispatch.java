@@ -389,7 +389,7 @@ public class DomDispatch implements DomDispatchContract {
 
 	public void scrollIntoView(Element elem) {
 		resolveAllPending();
-		jsoImpl().scrollIntoView(elem.jsoRemote());
+		elem.jsoRemote().scrollIntoView();
 	}
 
 	@Override

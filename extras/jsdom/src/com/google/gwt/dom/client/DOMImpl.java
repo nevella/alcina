@@ -391,7 +391,10 @@ abstract class DOMImpl {
 		return LocalDom.nodeFor(node_dom);
 	}
 
-	protected native void scrollIntoView(ElementJso elem) /*-{
+	/*
+	 * uused
+	 */
+	protected native void scrollIntoViewOld(ElementJso elem) /*-{
     //safer to rely on emulated behaviour
     //        if (elem.scrollIntoView) {
     //            elem.scrollIntoView();

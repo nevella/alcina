@@ -1,17 +1,23 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.Date;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.domain.TransactionId;
+import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
-public class MvccEvent {
-	public MvccObject domainIdentity;
+@Bean(PropertySource.FIELDS)
+public class MvccEvent implements IdOrdered<MvccEvent> {
+	static transient IdCounter idCounter = new IdCounter();
 
-	public MvccEvent.Type type;
+	public transient MvccObject domainIdentity;
 
 	public boolean writeable;
 
@@ -31,13 +37,24 @@ public class MvccEvent {
 
 	public int versionIdentityHashCode;
 
+	public Date date;
+
+	public long id;
+
+	public String type;
+
+	/*
+	 * populated by history code
+	 */
+	public int versionId;
+
 	public MvccEvent() {
 	}
 
 	MvccEvent(MvccObject domainIdentity, EntityLocator locator,
 			TransactionId fromTransaction, Transaction currentTransaction,
 			TransactionId toTransaction,
-			Map<String, String> primitiveFieldValues, MvccEvent.Type type,
+			Map<String, String> primitiveFieldValues, String type,
 			boolean writeable, int versionIdentityHashCode) {
 		this.domainIdentity = domainIdentity;
 		this.locator = locator;
@@ -46,10 +63,16 @@ public class MvccEvent {
 		this.currentTransactionPhase = currentTransaction.phase;
 		this.toTransaction = toTransaction;
 		this.primitiveFieldValues = primitiveFieldValues;
-		this.type = type;
 		this.writeable = writeable;
 		this.versionIdentityHashCode = versionIdentityHashCode;
 		this.threadName = Thread.currentThread().getName();
+		this.type = type;
+		this.date = new Date();
+		this.id = idCounter.nextId();
+	}
+
+	public long getId() {
+		return id;
 	}
 
 	@Override
@@ -65,8 +88,8 @@ public class MvccEvent {
 		format.appendIfNotBlankKv("currentTransactionPhase",
 				currentTransactionPhase);
 		format.appendIfNotBlankKv("type", type);
-		format.appendIfNotBlankKv("versionIdentityHashCode",
-				versionIdentityHashCode);
+		format.appendIfNotBlankKv("versionId", versionId);
+		format.appendIfNotBlankKv("domainIdentity", versionId == 0);
 		format.appendIfNotBlankKv("writeable", writeable);
 		format.appendIfNotBlankKv("fromTransaction", fromTransaction);
 		format.appendIfNotBlankKv("toTransaction", toTransaction);
@@ -84,10 +107,5 @@ public class MvccEvent {
 			format.line("[kv] %s: %s", k, value);
 		});
 		return format.toString();
-	}
-
-	public enum Type {
-		VERSIONS_CREATION, VERSION_CREATION, VERSION_REMOVAL, VERSIONS_REMOVAL,
-		END
 	}
 }

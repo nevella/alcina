@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
-import java.util.Date;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -17,7 +16,9 @@ public class MvccObservables {
 	public static abstract class Observable implements ProcessObservable {
 		public MvccEvent event;
 
-		public Date date = new Date();
+		public MvccEvent getEvent() {
+			return event;
+		}
 
 		MvccObjectVersionsEntity<?> versions;
 
@@ -48,7 +49,8 @@ public class MvccObservables {
 					.primitiveFieldValues(versioned);
 			event = new MvccEvent((MvccObject) versions.domainIdentity, locator,
 					null, Transaction.current(), null, primitiveFieldValues,
-					null, writeable, System.identityHashCode(versioned));
+					getClass().getSimpleName(), writeable,
+					System.identityHashCode(versioned));
 		}
 
 		@Override
@@ -56,7 +58,8 @@ public class MvccObservables {
 			FormatBuilder format = new FormatBuilder();
 			format.line("type: %s", getClass().getSimpleName());
 			format.indent(1);
-			format.line("time: %s", DateStyle.TIMESTAMP_HUMAN.format(date));
+			format.line("time: %s",
+					DateStyle.TIMESTAMP_HUMAN.format(event.date));
 			format.line(event.toMultilineString());
 			return format.toString();
 		}

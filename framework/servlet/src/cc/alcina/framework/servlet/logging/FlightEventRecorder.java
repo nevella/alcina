@@ -46,7 +46,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 			}
 			ensureEventsFolder();
 			writeTo = FileUtils.child(eventsFolder,
-					String.valueOf(message.eventId));
+					String.valueOf(message.id) + ".json");
 			Io.write().asReflectiveSerialized(true).object(message)
 					.toFile(writeTo);
 		} catch (Exception e) {
