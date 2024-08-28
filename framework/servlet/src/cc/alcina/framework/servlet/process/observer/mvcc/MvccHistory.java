@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.persistence.mvcc.MvccEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable;
 import cc.alcina.framework.servlet.component.sequence.Sequence;
 import cc.alcina.framework.servlet.component.sequence.adapter.MvccEventSequence;
 
@@ -21,13 +21,13 @@ import cc.alcina.framework.servlet.component.sequence.adapter.MvccEventSequence;
 public class MvccHistory {
 	public MvccObject domainIdentity;
 
-	public List<MvccObservables.Observable> observables = new CopyOnWriteArrayList<>();
+	public List<MvccObservable> observables = new CopyOnWriteArrayList<>();
 
 	public MvccHistory(MvccObject domainIdentity) {
 		this.domainIdentity = domainIdentity;
 	}
 
-	void add(MvccObservables.Observable observable) {
+	void add(MvccObservable observable) {
 		observables.add(observable);
 	}
 
@@ -56,8 +56,7 @@ public class MvccHistory {
 			File folder = new File(MvccEventSequence.LOCAL_PATH);
 			populateVersionIds();
 			List<MvccEvent> events = observables.stream()
-					.map(MvccObservables.Observable::getEvent)
-					.collect(Collectors.toList());
+					.map(MvccObservable::getEvent).collect(Collectors.toList());
 			Sequence.Loader.writeElements(folder, events);
 		}
 	}

@@ -1,7 +1,7 @@
 package com.google.gwt.client.dom;
 
-import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.meta.Feature_Ui_support;
+import cc.alcina.framework.common.client.meta.Feature;
 
 /**
  * <p>

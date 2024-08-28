@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.component.featuretree;
 
-import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.meta.Feature_Ui_support;
+import cc.alcina.framework.common.client.meta.Feature;
 
 /**
  * <h4>Show feature implementation as a tree, with detail</h4>

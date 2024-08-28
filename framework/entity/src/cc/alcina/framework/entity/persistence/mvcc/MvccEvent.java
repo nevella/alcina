@@ -37,6 +37,8 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 
 	public int versionIdentityHashCode;
 
+	public int fromVersionIdentityHashCode;
+
 	public Date date;
 
 	public long id;
@@ -88,7 +90,13 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 		format.appendIfNotBlankKv("currentTransactionPhase",
 				currentTransactionPhase);
 		format.appendIfNotBlankKv("type", type);
+		if (fromVersionIdentityHashCode != 0) {
+			format.appendIfNotBlankKv("fromVersionIdentityHashCode",
+					fromVersionIdentityHashCode);
+		}
 		format.appendIfNotBlankKv("versionId", versionId);
+		format.appendIfNotBlankKv("versionIdentityHashCode",
+				versionIdentityHashCode);
 		format.appendIfNotBlankKv("domainIdentity", versionId == 0);
 		format.appendIfNotBlankKv("writeable", writeable);
 		format.appendIfNotBlankKv("fromTransaction", fromTransaction);

@@ -369,6 +369,9 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		public void scrollSelectedIntoView() {
 			Scheduler.get().scheduleDeferred(() -> {
+				if (meta.size() <= selectedRowIndex || selectedRowIndex != -1) {
+					return;
+				}
 				TableRow row = meta.get(selectedRowIndex).row;
 				if (row.provideIsBound()) {
 					row.provideElement().scrollIntoView();

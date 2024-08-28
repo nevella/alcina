@@ -98,8 +98,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		MvccObject mvccObject = (MvccObject) domainIdentity;
 		MvccObjectVersionsEntity<E> versions = new MvccObjectVersionsEntity<E>(
 				domainIdentity, transaction, initialObjectIsWriteable);
-		ProcessObservers.publish(MvccObservables.VersionsCreationEvent.class,
-				() -> new MvccObservables.VersionsCreationEvent(versions,
+		ProcessObservers.publish(MvccObservable.VersionsCreationEvent.class,
+				() -> new MvccObservable.VersionsCreationEvent(versions,
 						initialObjectIsWriteable));
 		return versions;
 	}
@@ -113,7 +113,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				initialObjectIsWriteable);
 	}
 
-	// concurrency not required
+	// concurrency not required in the current implementation (where access is
+	// synchronized). Stored in reverse order - i.e. the first entry is the most
+	// recent tx/version tuple
 	private Object2ObjectAVLTreeMap<Transaction, ObjectVersion<T>> versions;
 
 	protected T visibleAllTransactions;
@@ -195,7 +197,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
-	protected abstract void copyObject(T fromObject, T baseObject);
+	protected abstract void copyObject(T fromObject, T domainIdenttyObject);
 
 	protected synchronized void debugNotResolved() {
 		FormatBuilder fb = new FormatBuilder();
@@ -509,7 +511,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 		}
 		/*
-		 * loop NonDomainTransactio removal differently, depending on relative
+		 * loop NonDomainTransaction removal differently, depending on relative
 		 * size of the two sets
 		 */
 		if (size.get() > vacuumableTransactions.completedNonDomainTransactions
@@ -523,7 +525,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					.forEach(this::removeWithSize);
 		}
 		/*
-		 * try do remove domain transactions
+		 * try to remove domain transactions
 		 */
 		if (vacuumableTransactions.oldestVacuumableDomainTransaction != null
 				&& versions.size() > 0) {

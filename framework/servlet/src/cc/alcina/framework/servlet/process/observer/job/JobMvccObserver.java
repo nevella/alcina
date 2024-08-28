@@ -4,8 +4,8 @@ import java.util.Objects;
 
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsCreationEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsRemovalEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsCreationEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsRemovalEvent;
 import cc.alcina.framework.servlet.process.observer.mvcc.ObservableEntityFilter;
 
 /**

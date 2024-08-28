@@ -12,13 +12,15 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionCommittedEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionCreationEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionDbPersistedEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionRemovalEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsCreationEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsRemovalEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.RevertDomainIdentityEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionCommittedEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionCopiedToDomainIdentityEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionCreationEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionDbPersistedEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionRemovalEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsCreationEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsRemovalEvent;
 
 /**
  * <p>
@@ -84,7 +86,7 @@ public class MvccObserver {
 	}
 
 	class VersionsCreation
-			implements ProcessObserver<MvccObservables.VersionsCreationEvent> {
+			implements ProcessObserver<MvccObservable.VersionsCreationEvent> {
 		@Override
 		public void topicPublished(VersionsCreationEvent event) {
 			if (filters.stream().anyMatch(f -> f.isBeginObservation(event))) {
@@ -98,7 +100,7 @@ public class MvccObserver {
 	}
 
 	class VersionsRemoval
-			implements ProcessObserver<MvccObservables.VersionsRemovalEvent> {
+			implements ProcessObserver<MvccObservable.VersionsRemovalEvent> {
 		@Override
 		public void topicPublished(VersionsRemovalEvent event) {
 			if (filters.stream().anyMatch(f -> f.isEndObservation(event))) {
@@ -110,7 +112,7 @@ public class MvccObserver {
 	}
 
 	class VersionRemoval
-			implements ProcessObserver<MvccObservables.VersionRemovalEvent> {
+			implements ProcessObserver<MvccObservable.VersionRemovalEvent> {
 		@Override
 		public void topicPublished(VersionRemovalEvent event) {
 			conditionallyRecord(event);
@@ -118,7 +120,7 @@ public class MvccObserver {
 	}
 
 	class VersionCreation
-			implements ProcessObserver<MvccObservables.VersionCreationEvent> {
+			implements ProcessObserver<MvccObservable.VersionCreationEvent> {
 		@Override
 		public void topicPublished(VersionCreationEvent event) {
 			conditionallyRecord(event);
@@ -126,17 +128,33 @@ public class MvccObserver {
 	}
 
 	class VersionCommitted
-			implements ProcessObserver<MvccObservables.VersionCommittedEvent> {
+			implements ProcessObserver<MvccObservable.VersionCommittedEvent> {
 		@Override
 		public void topicPublished(VersionCommittedEvent event) {
 			conditionallyRecord(event);
 		}
 	}
 
-	class VersionDbPersisted implements
-			ProcessObserver<MvccObservables.VersionDbPersistedEvent> {
+	class VersionDbPersisted
+			implements ProcessObserver<MvccObservable.VersionDbPersistedEvent> {
 		@Override
 		public void topicPublished(VersionDbPersistedEvent event) {
+			conditionallyRecord(event);
+		}
+	}
+
+	class VersionCopiedToDomainIdentity implements
+			ProcessObserver<MvccObservable.VersionCopiedToDomainIdentityEvent> {
+		@Override
+		public void topicPublished(VersionCopiedToDomainIdentityEvent event) {
+			conditionallyRecord(event);
+		}
+	}
+
+	class RevertDomainIdentity implements
+			ProcessObserver<MvccObservable.RevertDomainIdentityEvent> {
+		@Override
+		public void topicPublished(RevertDomainIdentityEvent event) {
 			conditionallyRecord(event);
 		}
 	}
@@ -148,14 +166,16 @@ public class MvccObserver {
 		new VersionRemoval().bind();
 		new VersionCommitted().bind();
 		new VersionDbPersisted().bind();
+		new VersionCopiedToDomainIdentity().bind();
+		new RevertDomainIdentity().bind();
 	}
 
-	boolean isObserving(MvccObservables.Observable event) {
+	boolean isObserving(MvccObservable event) {
 		long localId = event.event.locator.localId;
 		return localId != 0 && histories.containsKey(localId);
 	}
 
-	void conditionallyRecord(MvccObservables.Observable event) {
+	void conditionallyRecord(MvccObservable event) {
 		MvccHistory history = histories.get(event.event.locator.localId);
 		if (history != null) {
 			history.add(event);
@@ -168,6 +188,8 @@ public class MvccObserver {
 			EvictionRecord record = evictionRecords.get(0);
 			if (record.evict()) {
 				evictionRecords.remove(0);
+			} else {
+				break;
 			}
 		}
 	}

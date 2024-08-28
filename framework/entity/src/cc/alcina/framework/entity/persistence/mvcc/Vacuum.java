@@ -198,6 +198,10 @@ class Vacuum {
 		 */
 		ObjectOpenHashSet<Transaction> completedNonDomainTransactions = new ObjectOpenHashSet<>();
 
+		/*
+		 * Newest-id tx is first (and to-domain is sequential, so this will be
+		 * chronologically the newest too)
+		 */
 		ObjectAVLTreeSet<Transaction> completedDomainTransactions = new ObjectAVLTreeSet<>(
 				Collections.reverseOrder());
 

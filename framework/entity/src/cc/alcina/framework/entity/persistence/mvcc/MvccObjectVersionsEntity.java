@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionCopiedToDomainIdentityEvent;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
 public class MvccObjectVersionsEntity<T extends Entity>
@@ -40,8 +41,11 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected void copyObject(T fromObject, T baseObject) {
-		Transactions.copyObjectFields(fromObject, baseObject);
+	protected void copyObject(T fromObject, T domainIdenttyObject) {
+		Transactions.copyObjectFields(fromObject, domainIdenttyObject);
+		ProcessObservers.publish(VersionCopiedToDomainIdentityEvent.class,
+				() -> new VersionCopiedToDomainIdentityEvent(this, fromObject,
+						domainIdenttyObject));
 	}
 
 	@Override
@@ -101,24 +105,24 @@ public class MvccObjectVersionsEntity<T extends Entity>
 			ThreadlocalTransformManager.cast()
 					.registerDomainObject(version.object, true);
 		}
-		ProcessObservers.publish(MvccObservables.VersionCreationEvent.class,
-				() -> new MvccObservables.VersionCreationEvent(this, version));
+		ProcessObservers.publish(MvccObservable.VersionCreationEvent.class,
+				() -> new MvccObservable.VersionCreationEvent(this, version));
 	}
 
 	@Override
 	void onVersionRemoval(ObjectVersion<T> version) {
-		ProcessObservers.publish(MvccObservables.VersionRemovalEvent.class,
-				() -> new MvccObservables.VersionRemovalEvent(this, version));
+		ProcessObservers.publish(MvccObservable.VersionRemovalEvent.class,
+				() -> new MvccObservable.VersionRemovalEvent(this, version));
 	}
 
 	void onDomainTransactionCommited() {
-		ProcessObservers.publish(MvccObservables.VersionCommittedEvent.class,
-				() -> new MvccObservables.VersionCommittedEvent(this, true));
+		ProcessObservers.publish(MvccObservable.VersionCommittedEvent.class,
+				() -> new MvccObservable.VersionCommittedEvent(this, true));
 	}
 
 	void onDomainTransactionDbPersisted() {
-		ProcessObservers.publish(MvccObservables.VersionDbPersistedEvent.class,
-				() -> new MvccObservables.VersionDbPersistedEvent(this, true));
+		ProcessObservers.publish(MvccObservable.VersionDbPersistedEvent.class,
+				() -> new MvccObservable.VersionDbPersistedEvent(this, true));
 	}
 
 	@Override
@@ -150,7 +154,7 @@ public class MvccObjectVersionsEntity<T extends Entity>
 
 	@Override
 	void publishRemoval() {
-		ProcessObservers.publish(MvccObservables.VersionsRemovalEvent.class,
-				() -> new MvccObservables.VersionsRemovalEvent(this, false));
+		ProcessObservers.publish(MvccObservable.VersionsRemovalEvent.class,
+				() -> new MvccObservable.VersionsRemovalEvent(this, false));
 	}
 }

@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -31,6 +32,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.RevertDomainIdentityEvent;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -276,10 +278,20 @@ public class Transactions {
 				.newInstance(entity.entityClass());
 		// because copying fields without resolution, entity will be the
 		// domainVersion
+		/*
+		 * TODO - 20240828 this context is for job/mvcc debugging - remove once
+		 * complete.
+		 */
 		try {
 			LooseContext.push();
 			LooseContext.setTrue(CONTEXT_REVERTING_TO_DEFAULTS);
 			copyObjectFields(defaults, entity);
+			MvccObjectVersions versions = ((MvccObject) entity)
+					.__getMvccVersions__();
+			ProcessObservers.publish(RevertDomainIdentityEvent.class,
+					() -> new RevertDomainIdentityEvent(
+							(MvccObjectVersionsEntity<?>) versions, defaults,
+							entity));
 		} finally {
 			LooseContext.pop();
 		}

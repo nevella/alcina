@@ -24,9 +24,9 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionCommittedEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionCreationEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsCreationEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionCommittedEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionCreationEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsCreationEvent;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 
 /**

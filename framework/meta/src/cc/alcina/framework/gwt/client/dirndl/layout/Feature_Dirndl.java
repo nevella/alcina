@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.meta.Feature_Ui_support;
+import cc.alcina.framework.common.client.meta.Feature;
 
 /**
  * Top-level dirndl (ui support) features

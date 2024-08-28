@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.process.observer.mvcc;
 
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsCreationEvent;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObservables.VersionsRemovalEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsCreationEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsRemovalEvent;
 
 public interface ObservableEntityFilter {
 	boolean isBeginObservation(VersionsCreationEvent creationEvent);
