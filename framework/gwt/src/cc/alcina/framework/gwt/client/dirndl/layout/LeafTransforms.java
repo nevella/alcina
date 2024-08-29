@@ -30,8 +30,7 @@ public class LeafTransforms {
 		}
 	}
 
-	public static class TimestampHuman
-			extends AbstractModelTransform<Date, String> {
+	public static class TimestampHuman implements ModelTransform<Date, String> {
 		@Override
 		public String apply(Date t) {
 			return DateStyle.TIMESTAMP_HUMAN.format(t);
