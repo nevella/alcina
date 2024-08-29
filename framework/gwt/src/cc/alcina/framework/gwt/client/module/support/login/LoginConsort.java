@@ -31,6 +31,8 @@ public abstract class LoginConsort extends Consort<State> {
 
 	protected Consumer<Model> modelRenderer;
 
+	public boolean uses2faAuth;
+
 	public LoginConsort() {
 	}
 
@@ -81,6 +83,11 @@ public abstract class LoginConsort extends Consort<State> {
 			return;
 		}
 		addState(State.Got_password);
+		if (!uses2faAuth) {
+			wasPlayed(playing.get(0),
+					Collections.singleton(State.Got_2fa_code));
+			return;
+		}
 		if (response.getStates()
 				.contains(LoginResponseState.Two_factor_code_required)) {
 			wasPlayed(playing.get(0));
@@ -101,7 +108,9 @@ public abstract class LoginConsort extends Consort<State> {
 		this.modelRenderer = modelRenderer;
 		addPlayer(new Player_Got_username());
 		addPlayer(new Player_Got_password());
-		addPlayer(new Player_Got_2fa());
+		if (uses2faAuth) {
+			addPlayer(new Player_Got_2fa());
+		}
 		addEndpointPlayer();
 	}
 

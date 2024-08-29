@@ -1,11 +1,13 @@
 package cc.alcina.framework.gwt.client.story;
 
 import java.lang.System.Logger.Level;
+import java.util.List;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.story.Story.Action.Annotate;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location.Axis;
@@ -15,7 +17,7 @@ import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result;
 import cc.alcina.framework.gwt.client.util.LineCallback;
 
-public class StoryActionPerformer {
+public class StoryPerformer {
 	public interface PerformerAttribute<T> extends Story.Attribute<T> {
 		public static interface Timeout extends PerformerAttribute<Integer> {
 		}
@@ -98,6 +100,14 @@ public class StoryActionPerformer {
 			// already failed
 			return;
 		}
+		// actions that change the UI
+		performAction(visit);
+		// actions that decorate the UI, but should not affect the performance
+		// of the story
+		performAnnotate(visit);
+	}
+
+	void performAction(Visit visit) {
 		Story.Action action = visit.getAction();
 		if (action == null) {
 			return;
@@ -117,6 +127,33 @@ public class StoryActionPerformer {
 			t.printStackTrace();
 			visit.result.ok = false;
 			visit.result.throwable = t;
+		}
+	}
+
+	void performAnnotate(Visit visit) {
+		List<Annotate> annotates = visit.getAnnotateActions();
+		if (annotates.isEmpty()) {
+			return;
+		}
+		// required for the conditional logic (which uses parent attributes)
+		Preconditions.checkState(visit.getParent() != null,
+				"Root visit/points cannot have annotates");
+		for (Annotate annotate : annotates) {
+			context = new ContextImpl();
+			context.visit = visit;
+			Class<? extends Story.Action> actionClass = annotate
+					.getActionClass();
+			ActionTypePerformer performer = Registry
+					.impl(ActionTypePerformer.class, actionClass);
+			try {
+				performer.perform(context, annotate);
+			} catch (Throwable t) {
+				System.out.println();
+				t.printStackTrace();
+				visit.result.ok = false;
+				visit.result.throwable = t;
+				break;
+			}
 		}
 	}
 

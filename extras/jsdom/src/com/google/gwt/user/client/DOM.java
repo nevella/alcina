@@ -482,6 +482,9 @@ public class DOM {
 		}
 		EventTarget eventTarget = event.getEventTarget();
 		String lcType = event.getType().toLowerCase();
+		if (lcType.equals("click")) {
+			int debugh = 3;
+		}
 		int eventTypeInt = Event.getTypeInt(lcType);
 		DispatchInfo dispatchInfo = null;
 		Optional<DispatchInfo> first = windowResources.recentDispatches.stream()

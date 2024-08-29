@@ -107,7 +107,8 @@ public class GeneralProperties extends Bindable
 	@Display(
 		helpText = "CSS which will be applied in this session, but not saved on the server",
 		name = "designer.transientCss",
-		focus = true)
+		focus = true,
+		styleName = "transientCss")
 	@PropertyPermissions(
 		read = @Permission(access = AccessLevel.EVERYONE),
 		write = @Permission(access = AccessLevel.EVERYONE))

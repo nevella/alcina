@@ -1,0 +1,206 @@
+/*
+2024 styles
+*/
+/*
+mainmenu2
+*/
+div.alcina-MainMenu2 {
+  display: grid;
+  grid-template-columns: min-content 1fr min-content;
+}
+div.alcina-MainMenu2 > div {
+  display: flex;
+}
+div.alcina-MainMenu2 > div.left {
+  justify-content: flex-start;
+}
+div.alcina-MainMenu2 > div.center {
+  justify-content: center;
+}
+div.alcina-MainMenu2 > div.right {
+  justify-content: flex-end;
+}
+div.alcina-MainMenu2 {
+  background: hsl(197.32deg 53.01% 40.12%) bottom left repeat-x;
+  height: 28px;
+  border-top: 1px solid #b9deec;
+  border-bottom: 4px solid #104860;
+}
+div.mainTabPanel .gwt-TabBar .gwt-TabBarItem {
+  margin-left: 0px;
+  background-color: transparent;
+  font-weight: normal;
+  padding: 0px;
+}
+div.alcina-MainMenu2 a,
+div.alcina-MainMenu2 a:link,
+div.alcina-MainMenu2 a:visited,
+div.alcina-MainMenu2 a:active,
+div.alcina-MainMenu2 div.gwt-Label {
+  padding: 7px 15px 7px 15px;
+  color: #ffffff;
+  display: block;
+  text-decoration: none;
+  line-height: 1em;
+  /* background-image: url(data:image/gif;base64,R0lGODlhAgACAIAAALne7EB+myH5BAAAAAAALAAAAAACAAIAAAICDFwAOw==);
+ */
+  background-repeat: repeat-y;
+  font-size: 1.15em;
+  white-space: nowrap;
+}
+div.alcina-MainMenu2 .gwt-TabBarItem-selected {
+  background-color: #104860;
+}
+div.mainTabPanel .gwt-TabPanelBottom {
+  border: none;
+}
+a.button-grey,
+a.button-grey:active,
+a.button-grey:visited,
+a.button-grey.disabled:hover {
+  min-width: 25px;
+  text-align: center;
+  box-sizing: border-box;
+}
+div.gwt-TabBarFirst {
+  display: none;
+}
+div.gwt-TabBarRest {
+  display: none;
+}
+div.alcina-skipHolder {
+  position: absolute;
+  top: 1em;
+  left: 1em;
+  z-index: 9999;
+  border: solid 1px #cecece;
+  padding: 1em;
+  background-color: white;
+}
+
+.alcina-skipToMainContent {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1em;
+  background-color: white;
+  margin: 1em;
+  border: solid 1px #aaa;
+  opacity: 0;
+}
+.alcina-skipToMainContent:focus {
+  left: 0;
+  opacity: 1;
+}
+span.alcina-BuildVersion {
+  display: inline-block;
+  background-color: hsl(149 48% 34% / 1);
+  color: white;
+}
+
+a.b-save {
+  background: #e9e9e9 url(/_pix/icon-save.gif) 0 0 no-repeat;
+}
+a.b-print {
+  background: #e9e9e9 url(/_pix/icon-print.gif) 0 0 no-repeat;
+}
+
+a.b-next-page {
+  background: #e9e9e9 url(/_pix/icon-next.gif) 0 0 no-repeat !important;
+}
+a.b-previous-page {
+  background: #e9e9e9 url(/_pix/icon-prev.gif) 0 0 no-repeat !important;
+}
+a.b-previous-page {
+  background: #e9e9e9 url(/_pix/icon-prev.gif) 0 0 no-repeat !important;
+}
+a.b-save,
+a.b-print,
+a.b-previous-page {
+  padding-left: 25px !important;
+  background-position: 5px 4px !important;
+}
+a.b-next-page {
+  padding-right: 25px !important;
+  background-position: top 5px right 4px !important;
+}
+a.b-save span,
+a.b-print span,
+a.b-previous-page span {
+  background: #e9e9e9 !important;
+  padding-left: 0 !important;
+}
+a.b-next-page span {
+  background: #e9e9e9 !important;
+  padding-right: 0 !important;
+}
+div.alcina-BreadcrumbBar {
+  background: #efefef;
+}
+div.alcina-BreadcrumbBar p.breadcrumb {
+  color: #666;
+}
+div.alcina-BreadcrumbBar div.right {
+  background: none;
+}
+div.alcina-BreadcrumbBar div.right span {
+  background: #efefef;
+}
+
+a.b-color-small {
+  background: #e9e9e9 url(/_pix/icon-color-small.gif) 0 0 no-repeat !important;
+}
+a.b-delete-small {
+  background: #e9e9e9 url(/_pix/icon-delete-small.gif) 0 0 no-repeat !important;
+}
+a.b-share-small {
+  background: #e9e9e9 url(/_pix/icon-share-small.gif) 0 0 no-repeat !important;
+}
+a.b-color-small span,
+a.b-share-small span,
+a.b-delete-small span {
+  background: #e9e9e9 !important;
+  padding-left: 0 !important;
+}
+a.b-color-small,
+a.b-share-small,
+a.b-delete-small {
+  padding-left: 18px !important;
+  background-position: 3px 3px !important;
+}
+table.gwittir-BoundTable tr.header {
+  background-image: none;
+}
+table.gwittir-BoundTable th,
+table.gwittir-BoundTable td,
+table.gwittir-BoundTable tr.header td {
+  padding: 3px 8px 3px 4px;
+  height: 16px;
+  background-image: none;
+}
+table.gwittir-BoundTable tr.odd {
+  background-color: #f3f7fb;
+}
+
+.alcina-BreadcrumbBar a:link,
+.alcina-BreadcrumbBar a:visited,
+.alcina-BreadcrumbBar a:active {
+  color: #666;
+  text-decoration: none;
+}
+div.alcina-ObjectTree input[type="text"] {
+  background-image: none !important;
+}
+div.alcina-BreadcrumbBar p span {
+  display: inline-block;
+  background-color: #efefef;
+}
+div.alcina-BreadcrumbBar p.breadcrumb-next {
+  background-image: none !important;
+  float: none;
+}
+input.alcina-Filter {
+  background-image: none;
+  height: 20px;
+  padding: 4px;
+}

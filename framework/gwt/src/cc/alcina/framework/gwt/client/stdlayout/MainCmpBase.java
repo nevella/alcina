@@ -25,6 +25,8 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.IsWidget;
+import com.google.gwt.user.client.ui.TabPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.gwt.client.widget.BaseTab;
 
@@ -35,7 +37,7 @@ import cc.alcina.framework.gwt.client.widget.BaseTab;
 public abstract class MainCmpBase extends Composite
 		implements BeforeSelectionHandler<Integer>, SelectionHandler<Integer>,
 		ValueChangeHandler<String> {
-	protected MainTabPanel tabPanel;
+	protected IMainTabPanel tabPanel;
 
 	protected ArrayList<IsWidget> buttons;
 
@@ -45,6 +47,10 @@ public abstract class MainCmpBase extends Composite
 
 	private HandlerRegistration historyHandlerRegistration;
 
+	TabPanel tabPanelWidget() {
+		return (TabPanel) tabPanel;
+	}
+
 	public MainCmpBase() {
 		initButtons();
 		this.tabPanel = createTabPanel();
@@ -53,16 +59,16 @@ public abstract class MainCmpBase extends Composite
 		tabPanel.addBeforeSelectionHandler(this);
 		tabPanel.addSelectionHandler(this);
 		this.resetTabs();
-		initWidget(tabPanel);
+		initWidget((Widget) tabPanel);
 	}
 
 	protected abstract void afterTabSelect(int tabIndex);
 
-	protected MainTabPanel createTabPanel() {
+	protected IMainTabPanel createTabPanel() {
 		return new MainTabPanel(buttons);
 	}
 
-	public MainTabPanel getTabPanel() {
+	public IMainTabPanel getTabPanel() {
 		return this.tabPanel;
 	}
 

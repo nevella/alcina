@@ -22,6 +22,7 @@ import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.debug.client.DebugInfo;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
+import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -327,6 +328,8 @@ public abstract class UIObject implements HasVisibility {
 		updatePrimaryAndDependentStyleNames(elem, style);
 	}
 
+	private static String propNameOriginalDisplayValue = "__original_display_value";
+
 	/**
 	 * Shows or hides the given element. Also updates the "aria-hidden"
 	 * attribute by setting it to true when it is hidden and removing it when it
@@ -341,7 +344,30 @@ public abstract class UIObject implements HasVisibility {
 	 * </p>
 	 */
 	public static void setVisible(Element elem, boolean visible) {
-		elem.getStyle().setProperty("display", visible ? "" : "none");
+		if (!visible) {
+			String originalDisplayValue = elem.getStyle()
+					.getProperty("display");
+			if (Ax.isBlank(originalDisplayValue)
+					|| originalDisplayValue.equals("none")) {
+				// no info, so when setting to 'visible' just remove display
+				// property
+			} else {
+				elem.setPropertyString(propNameOriginalDisplayValue,
+						originalDisplayValue);
+			}
+		}
+		String to = visible
+				? elem.getPropertyString(propNameOriginalDisplayValue)
+				: "none";
+		if (visible) {
+			if (Ax.isBlank(to)) {
+				elem.getStyle().removeProperty("display");
+			} else {
+				elem.getStyle().setProperty("display", to);
+			}
+		} else {
+			elem.getStyle().setDisplay(Display.NONE);
+		}
 		if (visible) {
 			elem.removeAttribute("aria-hidden");
 		} else {

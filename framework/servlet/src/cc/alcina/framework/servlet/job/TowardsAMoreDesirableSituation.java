@@ -86,8 +86,13 @@ public class TowardsAMoreDesirableSituation {
 		Job job = next.get();
 		if (job.getPerformer() != null) {
 			logger.info(
-					"TowardsAMoreDesirableSituation - fatal - non-null performer - {}",
+					"TowardsAMoreDesirableSituation - fatal - non-null performer - {} - cancelling",
 					job);
+			// FIXME - jobs - this shouldn't be possible (at least when
+			// JobDomain queues become fully transactional)
+			job.cancel();
+			Transaction.commit();
+			return;
 		}
 		job.setPerformer(ClientInstance.self());
 		job.setState(JobState.PENDING);

@@ -358,6 +358,7 @@ public class BeanFields {
 			if (!fieldVisible) {
 				return null;
 			}
+			// not currently supported
 			boolean focus = display.focus();
 			boolean fieldEditable = query.editable
 					&& (PermissionsManager.get()

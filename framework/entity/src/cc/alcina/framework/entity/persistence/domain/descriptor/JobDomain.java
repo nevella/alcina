@@ -236,6 +236,17 @@ public class JobDomain {
 		queues.values().forEach(AllocationQueue::fireInitialCreationEvents);
 	}
 
+	long lastWarnNullStartTime = 0;
+
+	synchronized void warnNullStartTime(Job job) {
+		if (!TimeConstants.within(lastWarnNullStartTime,
+				TimeConstants.ONE_MINUTE_MS * 5)) {
+			lastWarnNullStartTime = System.currentTimeMillis();
+			logger.warn("Active job with null start time - {} {}", job.getId(),
+					job.getTaskClassName());
+		}
+	}
+
 	public Stream<? extends Job> getActiveJobs() {
 		// subjobs are reachable from two allocationqueues, hence 'distinct'
 		cleanupQueues();
@@ -244,8 +255,7 @@ public class JobDomain {
 				// FIXME - mvcc.4 - propagation/vacuum issue?
 				.peek(j -> {
 					if (j.getStartTime() == null) {
-						logger.warn("Active job with null start time - {} {}",
-								j.getId(), j.getTaskClassName());
+						warnNullStartTime(j);
 					}
 				}).filter(j -> j.getStartTime() != null)
 				.sorted(Comparator.comparing(Job::getStartTime).reversed());
@@ -513,8 +523,13 @@ public class JobDomain {
 		}
 
 		void fireInitialCreationEvents() {
-			publish(EventType.CREATED);
-			checkFireToProcessing(job);
+			/*
+			 * This forces the state of jobs created before the (servlet layer)
+			 * JobScheduler is started - BUT I think the domain projection does
+			 * this anyway, so duplicate events are fired
+			 */
+			// publish(EventType.CREATED);
+			// checkFireToProcessing(job);
 		}
 
 		public void flushBufferedEvents() {
@@ -848,7 +863,8 @@ public class JobDomain {
 			if (queue != null) {
 				return queue;
 			} else {
-				// rather than compute-if-absent - put before event
+				// rather than compute-if-absent - put before publishing the
+				// create event
 				synchronized (queues) {
 					if (queues.containsKey(job)) {
 						return queues.get(job);

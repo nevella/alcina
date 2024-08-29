@@ -21,10 +21,21 @@ public interface TellerContext {
 	<P extends Part> P getPart(Class<? extends Part> clazz);
 
 	/**
+	 * <p>
 	 * A context part - often used to configure a StoryTeller process class
 	 * (provided by the peer).
+	 * 
+	 * <p>
+	 * The existence of parts is broadcast on story start via
+	 * <code>Registry.optional(PartConfigurable.class,(part ckass)).ifPresent...configure...</code>
+	 * - which allows relatively decoupled story observation (see
+	 * {@link cc.alcina.framework.servlet.story.doc.StoryDoc})
 	 */
 	public interface Part {
+	}
+
+	public interface PartConfigurable<P extends Part> {
+		void configure(StoryTeller teller, P part);
 	}
 
 	boolean isThrowOnFailure();

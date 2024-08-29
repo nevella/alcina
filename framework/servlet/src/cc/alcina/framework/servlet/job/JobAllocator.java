@@ -34,6 +34,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Alloca
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
+import cc.alcina.framework.servlet.job.JobRegistry.LatchType;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
@@ -137,7 +138,8 @@ class JobAllocator {
 	public void awaitSequenceCompletion() {
 		ensureStarted();
 		try {
-			JobRegistry.awaitLatch(sequenceCompletionLatch);
+			JobRegistry.awaitLatch(sequenceCompletionLatch,
+					LatchType.SEQUENCE_COMPLETION);
 		} catch (Exception e) {
 			logger.warn("DEVEX-0 -- job sequence timeout/interruption", e);
 		}
@@ -148,8 +150,14 @@ class JobAllocator {
 	}
 
 	void ensureStarted() {
-		if (allocationTask == null) {
-			allocationTask = new AllocationTask();
+		AllocationTask createdTask = null;
+		synchronized (this) {
+			if (allocationTask == null) {
+				allocationTask = new AllocationTask();
+				createdTask = allocationTask;
+			}
+		}
+		if (createdTask != null) {
 			allocatorService.execute(allocationTask);
 		}
 	}
@@ -549,8 +557,11 @@ class JobAllocator {
 					- lastAllocated;
 			if (timeSinceAllocation > TimeConstants.ONE_HOUR_MS
 					&& jobContext != null
-					&& jobContext.getJob()
-							.getPerformer() == ClientInstance.self()
+					&& (jobContext.getJob().getPerformer() == null
+							// FIXME - jobs - performer should never be null at
+							// this point
+							|| jobContext.getJob()
+									.getPerformer() == ClientInstance.self())
 					&& jobContext.getPerformer() != null
 					&& jobContext.getPerformer().canAbort(job.getTask(),
 							timeSinceAllocation)

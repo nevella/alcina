@@ -356,6 +356,10 @@ public class WDUtils {
 	}
 
 	private static int maybeOverrideTimeout(double timeout) {
+		if (timeout < 1.0) {
+			// fractional, just a check
+			return 1;
+		}
 		if (LooseContext.has(CONTEXT_OVERRIDE_TIMEOUT)
 				&& !LooseContext.has(CONTEXT_IGNORE_OVERRIDE_TIMEOUT)) {
 			Integer override = LooseContext

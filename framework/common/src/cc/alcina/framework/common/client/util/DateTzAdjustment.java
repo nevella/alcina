@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * internal representation.
  * 
  * For use where the client (browser) is in a different TZ to the server, but
- * you want to represent dates in the server tx
+ * you want to represent dates in the server tz
  */
 public class DateTzAdjustment implements BidiConverter<Date, Date> {
 	enum DateAdjustmentModifier {

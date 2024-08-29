@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.HasWithNull;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
@@ -120,6 +121,9 @@ public class ObjectTreeRenderer {
 				return;
 			}
 		}
+		if (renderable instanceof TreeRenderable.NotRendered) {
+			return;
+		}
 		TreeRenderer node = TreeRenderingInfoProvider.get()
 				.getForRenderable(renderable, parent, renderContext);
 		node.setParentRenderer(parent);
@@ -160,12 +164,12 @@ public class ObjectTreeRenderer {
 			String displayName = renderable.getDisplayName();
 			if (CommonUtils.isNotNullOrEmpty(displayName)
 					&& !node.isNoTitle()) {
-				Label label = TextProvider.get()
-						.getInlineLabel(TextProvider.get().getUiObjectText(
-								node.getClass(),
-								TextProvider.DISPLAY_NAME + "-" + displayName,
-								CommonUtils.upperCaseFirstLetterOnly(
-										displayName) + ": "));
+				String text = TextProvider.get().getUiObjectText(
+						node.getClass(),
+						TextProvider.DISPLAY_NAME + "-" + displayName,
+						CommonUtils.upperCaseFirstLetterOnly(displayName)
+								+ ": ");
+				Label label = TextProvider.get().getInlineLabel(text);
 				label.setStyleName("level-"
 						+ ((soleChild) ? Math.max(1, depth - 1) : depth));
 				cp.add(label);
@@ -205,6 +209,7 @@ public class ObjectTreeRenderer {
 				customiserWidget.addStyleName(customiserStyleName);
 				cp.add(customiserWidget);
 			}
+			addAria(renderable, cp);
 			return;
 		}
 		if (node.renderInstruction() == RenderInstruction.AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD
@@ -215,6 +220,7 @@ public class ObjectTreeRenderer {
 			node.setBoundWidget(bw);
 			cp.add(bw);
 			widgetsAdded = true;
+			addAria(renderable, cp);
 		}
 		if (children != null && children.size() != 0) {
 			ComplexPanel childPanel = cp;
@@ -241,6 +247,14 @@ public class ObjectTreeRenderer {
 			}
 		}
 		return;
+	}
+
+	void addAria(TreeRenderable renderable, ComplexPanel cp) {
+		String name = Ax.blankTo(renderable.getDisplayName(),
+				Ax.friendly(renderable.getClass().getSimpleName()));
+		cp.getElement().asDomNode().stream().filter(
+				e -> e.tagIsOneOf("input", "textarea", "select", "checkbox"))
+				.forEach(ctrl -> ctrl.setAttr("aria-label", name));
 	}
 
 	public static class FlowPanelWithBinding extends FlowPanel

@@ -38,6 +38,8 @@ public class Waypoint implements Story.Point {
 
 	protected Story.Action action;
 
+	protected List<Story.Action.Annotate> annotateActions;
+
 	protected Story.Action.Location location;
 
 	protected Class<? extends Feature> feature;
@@ -48,7 +50,29 @@ public class Waypoint implements Story.Point {
 
 	protected ConditionalImpl conditional;
 
+	protected String label;
+
+	protected String description;
+
 	public Waypoint() {
+	}
+
+	public String getLabel() {
+		ensurePopulated();
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+	public String getDescription() {
+		ensurePopulated();
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public ConditionalImpl getConditional() {
@@ -75,6 +99,12 @@ public class Waypoint implements Story.Point {
 	public Story.Action getAction() {
 		ensurePopulated();
 		return action;
+	}
+
+	@Override
+	public List<Story.Action.Annotate> getAnnotateActions() {
+		ensurePopulated();
+		return annotateActions;
 	}
 
 	public void setRequires(List<Class<? extends Story.State>> requires) {
@@ -138,15 +168,29 @@ public class Waypoint implements Story.Point {
 			}
 		}
 		if (feature == null) {
-			Story.Decl.Feature featureAnn = reflector
+			Story.Decl.Feature ann = reflector
 					.annotation(Story.Decl.Feature.class);
-			if (featureAnn != null) {
-				feature = featureAnn.value();
+			if (ann != null) {
+				feature = ann.value();
+			}
+		}
+		if (label == null) {
+			Story.Decl.Label ann = reflector.annotation(Story.Decl.Label.class);
+			if (ann != null) {
+				label = ann.value();
+			}
+		}
+		if (description == null) {
+			Story.Decl.Description ann = reflector
+					.annotation(Story.Decl.Description.class);
+			if (ann != null) {
+				description = ann.value();
 			}
 		}
 		if (action == null) {
 			Annotation actionAnnotation = Registry
 					.query(DeclarativeAction.class).untypedRegistrations()
+					.filter(DeclarativeAction::isNotAnnotate)
 					.map(clazz -> reflector
 							.annotation((Class<? extends Annotation>) clazz))
 					.filter(Objects::nonNull).findFirst().orElse(null);
@@ -155,6 +199,24 @@ public class Waypoint implements Story.Point {
 						Story.Decl.Action.Converter.class,
 						actionAnnotation.annotationType());
 				action = converter.convert(actionAnnotation);
+			}
+		}
+		if (annotateActions == null) {
+			List<Annotation> annotateActionAnnotations = Registry
+					.query(DeclarativeAction.class).untypedRegistrations()
+					.filter(DeclarativeAction::isAnnotate)
+					.map(clazz -> reflector
+							.annotation((Class<? extends Annotation>) clazz))
+					.filter(Objects::nonNull).collect(Collectors.toList());
+			annotateActions = annotateActionAnnotations.stream().map(ann -> {
+				Story.Decl.Action.Converter converter = Registry.impl(
+						Story.Decl.Action.Converter.class,
+						ann.annotationType());
+				return (Story.Action.Annotate) converter.convert(ann);
+			}).collect(Collectors.toList());
+			if (action != null && annotateActions.size() > 0) {
+				throw new IllegalStateException(
+						"To enforce separation of concerns,  an actiom and a non-empty annotateActions list on the same point is illegal");
 			}
 		}
 		if (location == null) {

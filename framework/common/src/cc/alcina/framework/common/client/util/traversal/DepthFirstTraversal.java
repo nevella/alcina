@@ -85,6 +85,10 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 		return current.value;
 	}
 
+	public T parent() {
+		return current.parent == null ? null : current.parent.value;
+	}
+
 	@Override
 	public Iterator<T> iterator() {
 		Preconditions.checkState(!iteratorConsumed,

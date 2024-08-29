@@ -103,6 +103,12 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	Model logicalParent;
 
+	/*
+	 * For event bubbling - if the logicalParent is detached, try the secondary
+	 * (if it exists)
+	 */
+	Model secondaryLogicalEventReroute;
+
 	private List<Class<? extends Model>> logicalAncestors;
 
 	private ModelEvents.Submit.Handler submitHandler;
@@ -124,6 +130,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		allowCloseWithoutSubmit = builder.allowCloseWithoutSubmit;
 		removeOnMouseDownOutside = builder.removeOnMouseDownOutside;
 		logicalParent = builder.logicalParent;
+		secondaryLogicalEventReroute = builder.secondaryLogicalEventReroute;
 		logicalAncestors = builder.logicalAncestors;
 		submitHandler = builder.submitHandler;
 		closedHandler = builder.closedHandler;
@@ -409,6 +416,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 	}
 
 	public static class Builder {
+		Model secondaryLogicalEventReroute;
+
 		List<Class<? extends Model>> logicalAncestors = List.of();
 
 		Model contents;
@@ -486,6 +495,16 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		 */
 		public Builder withLogicalParent(Model logicalParent) {
 			this.logicalParent = logicalParent;
+			return this;
+		}
+
+		/*
+		 * Will be used as a secondary event bubbler (if the logical parent is
+		 * attached)
+		 */
+		public Builder withSecondaryLogicalEventReroute(
+				Model secondaryLogicalEventReroute) {
+			this.secondaryLogicalEventReroute = secondaryLogicalEventReroute;
 			return this;
 		}
 

@@ -172,7 +172,7 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 	}
 
 	public void text(String text) {
-		if (text.isEmpty()) {
+		if (Ax.isBlank(text)) {
 			return;
 		}
 		debug("text - %s",

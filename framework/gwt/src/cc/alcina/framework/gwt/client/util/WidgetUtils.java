@@ -359,7 +359,8 @@ public class WidgetUtils {
 
 	private static int getBestOffsetHeight(Element e, boolean parentPass,
 			boolean allowParentPass) {
-		int h = e.getPropertyInt("offsetHeight");
+		e.implAccess().ensureRemote();
+		int h = e.getOffsetHeight();
 		if (h != 0 || e.getParentElement() == null) {
 			return h;
 		}
@@ -690,7 +691,7 @@ public class WidgetUtils {
 		return false;
 	}
 
-	static boolean isEditable(Element element) {
+	public static boolean isEditable(Element element) {
 		return element.hasTagName("input") || element.hasTagName("textarea")
 				|| Objects.equals(getComputedStyle(element, "contentEditable"),
 						"true");

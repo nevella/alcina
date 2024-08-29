@@ -21,4 +21,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  */
 public interface TreeRenderable extends SourcesPropertyChangeEvents {
 	public String getDisplayName();
+
+	// instruction to renderer
+	public interface NotRendered {
+	}
 }

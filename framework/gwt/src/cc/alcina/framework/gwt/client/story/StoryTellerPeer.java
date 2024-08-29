@@ -51,8 +51,16 @@ public class StoryTellerPeer implements TellerContext {
 	@Override
 	public void init(StoryTeller storyTeller) {
 		this.storyTeller = storyTeller;
+		initParts();
 		initServices();
 		initObservers();
+	}
+
+	void initParts() {
+		parts.entrySet().forEach(e -> {
+			Registry.optional(PartConfigurable.class, e.getKey())
+					.ifPresent(pc -> pc.configure(storyTeller, e.getValue()));
+		});
 	}
 
 	@Override
@@ -63,6 +71,10 @@ public class StoryTellerPeer implements TellerContext {
 	@Override
 	public <P extends Part> P getPart(Class<? extends Part> clazz) {
 		return (P) parts.computeIfAbsent(clazz, Reflections::newInstance);
+	}
+
+	protected void addPart(Part part) {
+		addPart(part.getClass(), part);
 	}
 
 	protected void addPart(Class<? extends Part> clazz, Part part) {
