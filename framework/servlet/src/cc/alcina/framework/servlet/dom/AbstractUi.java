@@ -9,6 +9,7 @@ import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.Client;
@@ -16,10 +17,9 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
-import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 
 @TypedProperties
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		implements RemoteUi {
 	public static PackageProperties._AbstractUi properties = PackageProperties.abstractUi;

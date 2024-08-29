@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.google.gwt.dom.client.EventTarget;
-
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -19,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 
@@ -103,6 +102,9 @@ class SerializationSupport {
 	TransienceContext[] types;
 
 	private SerializationSupport() {
+		if (Al.isBrowser()) {
+			types = new TransienceContext[] { TransienceContext.CLIENT };
+		}
 	}
 
 	List<Property> getProperties(Class type) {
@@ -123,6 +125,10 @@ class SerializationSupport {
 							return false;
 						}
 						String name = property.getName();
+						if (name.equals("nonRelational")
+								&& forClass.getName().contains("Morpheme")) {
+							int debug = 3;
+						}
 						AlcinaTransient alcinaTransient = Annotations.resolve(
 								valueClass, name, AlcinaTransient.class);
 						if (alcinaTransient != null) {

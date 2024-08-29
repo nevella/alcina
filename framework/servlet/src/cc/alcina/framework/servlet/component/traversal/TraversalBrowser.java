@@ -3,7 +3,6 @@ package cc.alcina.framework.servlet.component.traversal;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
@@ -49,7 +48,6 @@ public class TraversalBrowser {
 	}
 
 	@TypedProperties
-	@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 	public static class Ui extends AbstractUi<TraversalPlace> {
 		public static Ui get() {
 			return (Ui) Environment.get().ui;
