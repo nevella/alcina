@@ -102,9 +102,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 			}
 			((StyleLocal) element.getStyle().local()).properties.entrySet()
 					.forEach(e -> {
-						if (Ax.isBlank(e.getValue())) {
-							int debug = 3;
-						}
 						builder.appendEscaped(
 								LocalDom.declarativeCssName(e.getKey()));
 						builder.appendHtmlConstantNoCheck(":");
