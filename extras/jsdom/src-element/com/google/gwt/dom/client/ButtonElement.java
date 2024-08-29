@@ -25,7 +25,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  *      W3C HTML Specification</a>
  */
 @TagName(ButtonElement.TAG)
-public class ButtonElement extends Element {
+public class ButtonElement extends Element implements HrefElement {
 	public static final String TAG = "button";
 
 	/**

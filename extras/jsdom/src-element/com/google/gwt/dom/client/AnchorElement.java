@@ -27,7 +27,7 @@ import com.google.gwt.safehtml.shared.annotations.IsSafeUri;
  *      W3C HTML Specification</a>
  */
 @TagName(AnchorElement.TAG)
-public class AnchorElement extends Element {
+public class AnchorElement extends Element implements HrefElement {
 	public static final String TAG = "a";
 
 	/**

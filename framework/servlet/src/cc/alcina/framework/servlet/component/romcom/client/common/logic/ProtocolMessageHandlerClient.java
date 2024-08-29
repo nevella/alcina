@@ -7,6 +7,7 @@ import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.HrefElement;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.user.client.DOM;
@@ -158,22 +159,42 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 			Element elem = Element.as(event.getEventTarget());
 			/*
 			 * Cancel a few events if they're in a form (assume form auto-submit
-			 * just not wanted)
+			 * just not wanted). This is because - since event handling is async
+			 * - we can't wait for the remote handler to call preventDefault
+			 * 
+			 * 
 			 */
-			if (elem.asDomNode().ancestors().has("form")) {
-				if (eventType.equals("keydown") && event.getKeyCode() == 13) {
-					event.preventDefault();
-				}
-				// in a form, prevent -all- default actions unless it's a link
-				if (!(elem.hasAttribute("href") && elem.hasTagName("a"))) {
-					event.preventDefault();
-				}
+			boolean focusEvent = false;
+			switch (eventType) {
+			case BrowserEvents.FOCUS:
+			case BrowserEvents.BLUR:
+			case BrowserEvents.FOCUSIN:
+			case BrowserEvents.FOCUSOUT:
+				focusEvent = true;
+				break;
 			}
-			// prevent default action on <a> with no href
-			if (eventType.equals("click")) {
-				if (Ax.isBlank(elem.getAttribute("href"))
-						&& elem.hasTagName("a")) {
-					event.preventDefault();
+			if (!focusEvent) {
+				if (elem.asDomNode().ancestors().has("form")) {
+					boolean explicitPrevent = false;
+					if (eventType.equals("keydown") && event.getKeyCode() == 13
+							&& !elem.hasTagName("textarea")) {
+						explicitPrevent = true;
+					}
+					if (elem instanceof HrefElement
+							&& !((HrefElement) elem).hasLinkHref()) {
+						explicitPrevent = true;
+					}
+					if (explicitPrevent) {
+						event.preventDefault();
+					}
+				}
+				// prevent default action on <a> with no href
+				// TODO - space on <a> with no href?
+				if (eventType.equals("click") || eventType.equals("keydown")) {
+					if (Ax.isBlank(elem.getAttribute("href"))
+							&& elem.hasTagName("a")) {
+						event.preventDefault();
+					}
 				}
 			}
 			/*

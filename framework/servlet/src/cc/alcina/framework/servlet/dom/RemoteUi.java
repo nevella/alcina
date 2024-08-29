@@ -1,7 +1,6 @@
 package cc.alcina.framework.servlet.dom;
 
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.place.shared.Place;
@@ -9,15 +8,12 @@ import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
-import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 /**

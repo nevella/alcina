@@ -57,7 +57,7 @@
     <booleanAttribute key="org.eclipse.jdt.launching.DEFAULT_CLASSPATH" value="false"/>
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="com.google.gwt.dev.DevMode"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="opsol_client"/>
-    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-logLevel INFO -sourceLevel 11 -remoteUI 51342:2383895968324901 -noserver -codeServerPort 9997 -war /var/local/gwt/alcina/war -bindAddress 0.0.0.0 -gen /var/local/gwt/gen cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient com.ert.wearables.mx.MxClient"/>
+    <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="-logLevel INFO -sourceLevel 11 -remoteUI 51342:2383895968324901 -noserver -codeServerPort 9997 -war /var/local/gwt/alcina/war -bindAddress 0.0.0.0 -gen /var/local/gwt/gen cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="com.apdm.mobilitylab.client"/>
     <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dgwt.usearchives=false -Xmx2500m -XX:ReservedCodeCacheSize=500m -Dcom.google.gwt.dev.DevMode.headless=true -Dfile.encoding=UTF-8 --add-opens java.base/sun.net.www.protocol.jar=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED -Djava.net.preferIPv4Stack=true --add-opens java.base/java.util.concurrent=ALL-UNNAMED --add-opens java.logging/java.util.logging=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED"/>
 </launchConfiguration>
