@@ -19,7 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 
 @TypedProperties
-@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		implements RemoteUi {
 	public static PackageProperties._AbstractUi properties = PackageProperties.abstractUi;
