@@ -770,6 +770,9 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private <T extends Node> T nodeFor0(NodeJso remote) {
+		if (remote == null) {
+			return null;
+		}
 		if (remote.getNodeType() == Node.DOCUMENT_NODE) {
 			return (T) Document.get();
 		} else {

@@ -402,6 +402,9 @@ public class DomDocument extends DomNode implements Cloneable {
 					openNodes.set(depth, node);
 				}
 				if (node.isText()) {
+					if (node.textContent() == null) {
+						int debug = 3;
+					}
 					content.append(node.textContent());
 					int nodeLength = node.textContent().length();
 					for (int idx = 0; idx <= depth; idx++) {

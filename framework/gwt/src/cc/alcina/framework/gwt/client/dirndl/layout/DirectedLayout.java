@@ -545,9 +545,6 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void bind(boolean modelToRendered) {
-			if (modelToRendered) {
-				bindEvents();
-			}
 			bindModel(modelToRendered);
 			bindParentProperty();
 			/*
@@ -946,6 +943,10 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void postRender() {
+			bindEvents();
+		}
+
+		void postDomAttach() {
 			bind(true);
 		}
 
@@ -1761,6 +1762,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void afterRender() {
+			// must occur after insertion (onBind expects dom attach)
 			node.postRender();
 			if (node.hasRendered()) {
 				Optional<Rendered> firstAncestorRendered = firstAncestorRendered();
@@ -1811,6 +1813,7 @@ public class DirectedLayout implements AlcinaProcess {
 					}
 				}
 			}
+			node.postDomAttach();
 			if (directeds.size() > 1) {
 				enqueueInput(resolver, model, location,
 						directeds.subList(1, directeds.size()), node);

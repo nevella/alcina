@@ -247,6 +247,7 @@ public final class MutationRecord {
 			attributeName = jso.getAttributeName();
 			attributeNamespace = jso.getAttributeNamespace();
 			oldValue = jso.getOldValue();
+			oldValue = jso.getOldValue();
 			type = Type.valueOf(jso.getType());
 		} else {
 			// optimised, reduce # ws calls
@@ -272,6 +273,7 @@ public final class MutationRecord {
 			attributeName = stringOrNull(jsonObj, "attributeName");
 			// attributeNamespace = stringOrNull(jsonObj, "attributeNamespace");
 			oldValue = stringOrNull(jsonObj, "oldValue");
+			newValue = stringOrNull(jsonObj, "newValue");
 			type = Type.valueOf(jsonObj.getString("type"));
 		}
 	}
