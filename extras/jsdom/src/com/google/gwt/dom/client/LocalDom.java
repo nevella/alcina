@@ -731,23 +731,23 @@ public class LocalDom implements ContextFrame {
 				MarkupToken markupToken = new MarkupToken(element, localMarkup,
 						subtreeIds);
 				new MarkupJso().markup(markupToken);
-				// doesn't include style
-				local.getAttributeMap().entrySet().forEach(e -> {
-					String value = e.getValue();
-					switch (e.getKey()) {
-					case "text":
-						jsoRemote.setPropertyString(e.getKey(), value);
-						break;
-					default:
-						jsoRemote.setAttribute(e.getKey(), value);
-						break;
-					}
-				});
-				local.getStyle().getProperties().entrySet().forEach(e -> {
-					StyleJso remoteStyle = jsoRemote.getStyle0();
-					remoteStyle.setProperty(e.getKey(), e.getValue());
-				});
 			}
+			// doesn't include style
+			local.getAttributeMap().entrySet().forEach(e -> {
+				String value = e.getValue();
+				switch (e.getKey()) {
+				case "text":
+					jsoRemote.setPropertyString(e.getKey(), value);
+					break;
+				default:
+					jsoRemote.setAttribute(e.getKey(), value);
+					break;
+				}
+			});
+			local.getStyle().getProperties().entrySet().forEach(e -> {
+				StyleJso remoteStyle = jsoRemote.getStyle0();
+				remoteStyle.setProperty(e.getKey(), e.getValue());
+			});
 		} else {
 			// ElementAttachId
 			if (!element.isAttached()) {

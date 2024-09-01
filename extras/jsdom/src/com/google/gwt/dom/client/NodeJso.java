@@ -301,10 +301,9 @@ public abstract class NodeJso extends JavaScriptObject
 		if (LocalDom.isPending(this)) {
 			return null;
 		}
-		NodeJso newChildDom = resolvedOrPending(newChild);
-		NodeJso refChildDom = resolvedOrPending(refChild);
-		newChildDom.setAttachId(newChild.attachId);
-		return nodeFor(insertBefore0(newChildDom, refChildDom));
+		NodeJso newChildJso = resolvedOrPending(newChild);
+		NodeJso refChildJso = resolvedOrPending(refChild);
+		return nodeFor(insertBefore0(newChildJso, refChildJso));
 	}
 
 	/**

@@ -196,6 +196,10 @@ public class UIRendererWd extends UIRenderer {
 	protected void startTour(TourManager tourManager) {
 		popups.clear();
 		this.tourManager = tourManager;
+		injectResources();
+	}
+
+	void injectResources() {
 		String js = Io.read().resource("res/UIRendererWd.js").asString();
 		String css = Io.read().resource("res/UIRendererWd.css").asString();
 		if (managerWd().hidePopups) {
@@ -216,6 +220,11 @@ public class UIRendererWd extends UIRenderer {
 	}
 
 	<T> T wdJsInvoke(boolean escape, String template, Object... args) {
+		return wdJsInvoke0(0, escape, template, args);
+	}
+
+	<T> T wdJsInvoke0(int counter, boolean escape, String template,
+			Object... args) {
 		Object[] escapedArgs = new Object[args.length];
 		for (int i = 0; i < args.length; i++) {
 			escapedArgs[i] = StringEscapeUtils
@@ -226,6 +235,11 @@ public class UIRendererWd extends UIRenderer {
 		try {
 			return (T) exec.executeScript(command);
 		} catch (Exception e) {
+			if (counter == 0
+					&& e.toString().contains("__UIRendererWd is not defined")) {
+				injectResources();
+				return wdJsInvoke0(1, escape, template, args);
+			}
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
