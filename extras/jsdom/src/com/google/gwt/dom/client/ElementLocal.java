@@ -50,9 +50,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	ElementLocal(DocumentLocal documentLocal, String tagName) {
 		ownerDocument = documentLocal;
 		this.tagName = tagName;
-		if (tagName.equals("detail")) {
-			int debug = 3;
-		}
 		if (!GWT.isScript() && GWT.isClient()) {
 			// . is legal - but gets very confusing with css, so don't permit
 			Preconditions.checkArgument(PERMITTED_TAGS.exec(tagName) != null);

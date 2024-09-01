@@ -49,6 +49,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import elemental.js.json.JsJsonFactory;
@@ -335,7 +336,11 @@ public class ReflectiveSerializer {
 		} while (state.pending.size() > 0);
 	}
 
-	protected PropertySerialization getPropertySerialization(Class<?> clazz,
+	/*
+	 * Note that typeSerialization,properties _overrides_ on-property
+	 * PropertySerialization (since the former is used as a subclass customiser)
+	 */
+	static PropertySerialization getPropertySerialization(Class<?> clazz,
 			String propertyName) {
 		TypeSerialization typeSerialization = Annotations.resolve(clazz,
 				TypeSerialization.class);
@@ -548,6 +553,19 @@ public class ReflectiveSerializer {
 			String segment = Ax.format("[%s,%s]", name(),
 					value == null ? null : value.getClass().getSimpleName());
 			return parent == null ? segment : parent.toString() + "." + segment;
+		}
+
+		public String toDebugString() {
+			FormatBuilder format = new FormatBuilder();
+			format.line("path: %s", toString());
+			format.line("type node: %s", typeNode);
+			format.line("property node:");
+			format.indent(1);
+			format.line(propertyNode);
+			format.indent(0);
+			format.line("parent json:\n%s",
+					parent == null ? null : parent.serialNode.toJson(true));
+			return format.toString();
 		}
 
 		void writeValue() {
@@ -869,8 +887,8 @@ public class ReflectiveSerializer {
 					exactTypeNode = state.typeNode(LinkedHashSet.class);
 				}
 			}
-			propertySerialization = property
-					.annotation(PropertySerialization.class);
+			propertySerialization = getPropertySerialization(
+					property.getOwningType(), property.getName());
 			if (propertySerialization != null
 					&& propertySerialization.types().length == 1) {
 				exactChildTypeNode = state
@@ -905,7 +923,11 @@ public class ReflectiveSerializer {
 
 		@Override
 		public String toString() {
-			return property.toString();
+			FormatBuilder format = new FormatBuilder();
+			format.line(property);
+			format.appendIfNotBlankKv("exactTypeNode", exactTypeNode);
+			format.appendIfNotBlankKv("exactChildTypeNode", exactChildTypeNode);
+			return format.toString();
 		}
 
 		public TypeNode typeNode(Class<? extends Object> type) {
@@ -995,7 +1017,7 @@ public class ReflectiveSerializer {
 
 	public static class SerializationException extends RuntimeException {
 		public SerializationException(GraphNode node, RuntimeException e) {
-			super(node.toString(), e);
+			super(node.toDebugString(), e);
 		}
 	}
 

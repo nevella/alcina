@@ -218,7 +218,7 @@ class SyncMutations {
 			throw e;
 		} finally {
 			mutationsAccess.setApplyToRemote(true);
-			LocalDom.log(Level.INFO, "mutations - sync - %s ms",
+			LocalDom.log(Level.FINE, "mutations - sync - %s ms",
 					System.currentTimeMillis() - start);
 		}
 		MutationHistory.Event.publish(Type.MUTATIONS, recordList);

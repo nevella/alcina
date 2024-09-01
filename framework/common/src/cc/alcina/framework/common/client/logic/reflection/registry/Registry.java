@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
@@ -573,10 +572,6 @@ public class Registry {
 						boolean subkey) {
 					this.entry = entry;
 					this.subkey = subkey;
-					if (entry.getKey()
-							.clazz() == DomainCriterionHandler.class) {
-						int debug = 3;
-					}
 				}
 
 				@Override

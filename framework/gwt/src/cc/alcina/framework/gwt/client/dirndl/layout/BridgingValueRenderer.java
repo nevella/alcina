@@ -147,9 +147,6 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		if (inverseConverter != null) {
 			binding.getLeft().converter = inverseConverter;
 		}
-		if (editorContext.isDetached()) {
-			int debug = 3;
-		}
 		binding.setDetached(editorContext.isDetached());
 		valueModel.onChildBindingCreated(binding);
 		return binding;

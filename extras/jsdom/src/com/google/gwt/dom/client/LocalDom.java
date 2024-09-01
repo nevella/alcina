@@ -820,7 +820,7 @@ public class LocalDom implements ContextFrame {
 
 		public boolean mutationLogEvents = !!GWT.isScript();
 
-		public boolean logEvents = !GWT.isScript();
+		public boolean logEvents = false;// !GWT.isScript();
 
 		public boolean logHistoryOnEception = true;
 
@@ -931,6 +931,7 @@ public class LocalDom implements ContextFrame {
 				IdList idList = newElem.getSubtreeIds();
 				MarkupToken markupToken = new MarkupToken(newElem, null,
 						idList);
+				// this applies the local dom attachids to the jso nodes
 				new MarkupJso().markup(markupToken);
 			} else {
 				newChild.jsoRemote().setAttachId(newChild.attachId);

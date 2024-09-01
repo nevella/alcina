@@ -89,9 +89,6 @@ public class PropertyReflection extends ReflectionElement
 	public PropertyReflection(ClassReflection classReflection, String name,
 			ReflectionVisibility reflectionVisibility,
 			ProvidesTypeBounds providesTypeBounds) {
-		if (name.equals("memberUsers")) {
-			int debug = 3;
-		}
 		this.classReflection = classReflection;
 		this.name = name;
 		this.reflectionVisibility = reflectionVisibility;

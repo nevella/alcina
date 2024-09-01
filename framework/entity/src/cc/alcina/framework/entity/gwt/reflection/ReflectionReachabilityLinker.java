@@ -272,7 +272,6 @@ public class ReflectionReachabilityLinker extends Linker {
 					fragmentNames.put(Integer.parseInt(m.group(1)),
 							simpleClassName);
 				}
-				int debug = 3;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

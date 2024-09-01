@@ -105,9 +105,6 @@ class JsonUtilFastWriter {
 		 * Safely escape an arbitrary string as a JSON string literal.
 		 */
 		void quote(String value) {
-			if (value.contains("ViewEvent$Data")) {
-				int debug = 3;
-			}
 			builder.append('\"');
 			int length = value.length();
 			for (int i = 0; i < length; i++) {

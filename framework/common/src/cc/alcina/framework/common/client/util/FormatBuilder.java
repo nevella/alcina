@@ -536,9 +536,6 @@ public class FormatBuilder {
 					}
 				}
 				String line = string.substring(idx, breakAt);
-				if (line.length() > maxWidth) {
-					int debug = 3;
-				}
 				lines.add(line);
 				idx = breakAt;
 				if (idx < string.length() && string.charAt(idx) == '\n') {

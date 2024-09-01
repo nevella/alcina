@@ -82,7 +82,6 @@ import com.google.gwt.view.client.SingleSelectionModel;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasDisplayName.HasDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -886,9 +885,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	public void setRenderer(Function renderer) {
-		if (renderer.getClass() == HasDisplayNameRenderer.class) {
-			int debug = 3;
-		}
 		this.renderer = renderer;
 	}
 

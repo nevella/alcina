@@ -94,9 +94,6 @@ public class Field {
 			Class<?> declaringType, AnnotationLocation.Resolver resolver,
 			boolean editable) {
 		this.property = property;
-		if (property.getOwningType().getName().endsWith("_")) {
-			int debug = 3;
-		}
 		this.label = label;
 		this.cellProvider = cellProvider;
 		this.validator = validator;

@@ -34,7 +34,6 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JRawType;
@@ -665,14 +664,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		boolean sourcesPropertyChangeEvents() {
-			if (reflectedType.getQualifiedSourceName().endsWith("Thaithala")) {
-				JMethod jMethod = Arrays
-						.stream(reflectedType.getInheritableMethods())
-						.filter(m -> m.getName()
-								.equals("propertyChangeListeners"))
-						.findFirst().get();
-				int debug = 3;
-			}
 			return Arrays.stream(reflectedType.getInheritableMethods())
 					.filter(m -> m.getName().equals("firePropertyChange"))
 					.filter(m -> m.getReturnType() == voidJType)

@@ -436,10 +436,6 @@ public final class CompilingClassLoader extends ClassLoader
 			return ClassLoader.getSystemClassLoader().loadClass(className);
 		}
 		loadLock.lock();
-		if (className.equals(
-				"com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader")) {
-			int debug = 3;
-		}
 		try {
 			if (scriptOnlyClasses.contains(className)) {
 				/*

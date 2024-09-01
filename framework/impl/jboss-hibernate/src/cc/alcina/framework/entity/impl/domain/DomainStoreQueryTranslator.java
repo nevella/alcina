@@ -710,9 +710,6 @@ public class DomainStoreQueryTranslator {
 				if (projection instanceof AliasedProjection) {
 					projection = fieldHelper.getValue(projection, "projection");
 				}
-				if (projection.toString().equals("distinct count(cc.id)")) {
-					int debug = 3;
-				}
 				this.rootProjection = projection;
 				if (projection instanceof CountProjection) {
 					count = true;

@@ -93,6 +93,16 @@ public static class TypeModel3 {
  * <p>
  * Status: properties of parameterized types are working. See FIXME - reflection
  * - revisit for further work
+ * <p>
+ * FIXME - reflection - revisit - StatusCriterion extends
+ * EnumMultipleCriterion&lt;View.Status&gt; - there's still an issue with jdk
+ * reflection here, the resolved type of getValue() is Set&lt;Enum&gt; rather
+ * than Set&lt;View.Status&gt; - a fix would require a big rework of the jdk
+ * reflectio code (every method (JMethod) would also need its declaring type as
+ * a field, and
+ * cc.alcina.framework.entity.gwt.reflection.impl.typemodel.TypeOracle.getType(Type
+ * jdkType, int ordinal) would need to resolve based on containing type as well
+ * as the method return/parameter type)
  *
  */
 package cc.alcina.framework.entity.gwt.reflection.impl.typemodel;

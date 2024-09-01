@@ -84,10 +84,6 @@ public abstract class MvccObservable implements ProcessObservable {
 		VersionCreationEvent(MvccObjectVersionsEntity<?> versions,
 				ObjectVersion version) {
 			super(versions, version);
-			if (Transaction.current()
-					.getPhase() == TransactionPhase.VACUUM_BEGIN) {
-				int debug = 3;
-			}
 		}
 	}
 

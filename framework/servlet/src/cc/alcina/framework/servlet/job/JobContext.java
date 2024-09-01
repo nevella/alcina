@@ -338,9 +338,6 @@ public class JobContext {
 		}
 
 		void debounceMessage(String message) {
-			if (message.contains("SubHeadingLayer")) {
-				int debug = 3;
-			}
 			debouncer.eventOccurred(() -> {
 				get().enqueue(() -> {
 					Job job = getJob();
