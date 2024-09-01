@@ -47,6 +47,9 @@ public class EntityCleaner {
 	}
 
 	public String htmlToUnicodeEntities(String html, boolean strict) {
+		if (html == null) {
+			return null;
+		}
 		StringBuilder buf = new StringBuilder((int) (html.length() * 1.1));
 		int length = html.length();
 		int lineNumber = 1;
