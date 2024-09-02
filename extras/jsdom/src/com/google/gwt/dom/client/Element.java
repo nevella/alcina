@@ -250,8 +250,8 @@ public class Element extends Node implements ClientDomElement,
 
 	<T> T callWithRemoteOrDefault(boolean flush, Supplier<T> supplier,
 			T defaultValue) {
-		if (!hasRemote() && flush) {
-			jsoRemote();
+		if (!hasRemote() || isPendingSync()) {
+			LocalDom.flush();
 		}
 		if (hasRemote()) {
 			return supplier.get();
@@ -381,6 +381,7 @@ public class Element extends Node implements ClientDomElement,
 		return local().getAttributes();
 	}
 
+	@Override
 	public DomRect getBoundingClientRect() {
 		return callWithRemoteOrDefault(true,
 				() -> remote().getBoundingClientRect(), null);
@@ -1332,6 +1333,7 @@ public class Element extends Node implements ClientDomElement,
 		return remote();
 	}
 
+	@Override
 	public void setSelectionRange(int pos, int length) {
 		ensureRemote().setSelectionRange(pos, length);
 	}

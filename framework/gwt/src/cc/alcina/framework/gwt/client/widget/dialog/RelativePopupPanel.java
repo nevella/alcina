@@ -114,6 +114,7 @@ public class RelativePopupPanel extends SimplePanel
 	 * Window resize handler used to keep the glass the proper size.
 	 */
 	private ResizeHandler glassResizer = new ResizeHandler() {
+		@Override
 		public void onResize(ResizeEvent event) {
 			Style style = glass.getStyle();
 			int winWidth = Window.getClientWidth();
@@ -250,6 +251,7 @@ public class RelativePopupPanel extends SimplePanel
 		autoHidePartners.add(partner);
 	}
 
+	@Override
 	public HandlerRegistration
 			addCloseHandler(CloseHandler<RelativePopupPanel> handler) {
 		return addHandler(handler, CloseEvent.getType());
@@ -330,7 +332,7 @@ public class RelativePopupPanel extends SimplePanel
 	 */
 	private boolean eventTargetsPopup(NativeEvent event) {
 		EventTarget target = event.getEventTarget();
-		if (Element.is(target)) {
+		if (!target.wasRemoved() && Element.is(target)) {
 			Element eTarget = Element.as(target);
 			return getElement().isOrHasChild(eTarget);
 		}
@@ -456,6 +458,7 @@ public class RelativePopupPanel extends SimplePanel
 		CloseEvent.fire(this, this, autoClosed);
 	}
 
+	@Override
 	public boolean isAnimationEnabled() {
 		return isAnimationEnabled;
 	}
@@ -900,6 +903,7 @@ public class RelativePopupPanel extends SimplePanel
 		resizeAnimation = animation;
 	}
 
+	@Override
 	public void setAnimationEnabled(boolean enable) {
 		isAnimationEnabled = enable;
 	}
@@ -1100,6 +1104,7 @@ public class RelativePopupPanel extends SimplePanel
 		if (showing) {
 			nativePreviewHandlerRegistration = Event
 					.addNativePreviewHandler(new NativePreviewHandler() {
+						@Override
 						public void
 								onPreviewNativeEvent(NativePreviewEvent event) {
 							previewNativeEvent(event);
@@ -1107,6 +1112,7 @@ public class RelativePopupPanel extends SimplePanel
 					});
 			historyHandlerRegistration = History
 					.addValueChangeHandler(new ValueChangeHandler<String>() {
+						@Override
 						public void
 								onValueChange(ValueChangeEvent<String> event) {
 							if (autoHideOnHistoryEvents) {
@@ -1215,6 +1221,7 @@ public class RelativePopupPanel extends SimplePanel
 	public final void showRelativeTo(final UIObject target) {
 		// Set the position of the popup right before it is shown.
 		setPopupPositionAndShow(new PositionCallback() {
+			@Override
 			public void setPosition(int offsetWidth, int offsetHeight) {
 				position(target, offsetWidth, offsetHeight);
 			}
@@ -1445,6 +1452,7 @@ public class RelativePopupPanel extends SimplePanel
 				// Wait for the popup panel to be attached before running the
 				// animation
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+					@Override
 					public void execute() {
 						run(ANIMATION_DURATION);
 					}

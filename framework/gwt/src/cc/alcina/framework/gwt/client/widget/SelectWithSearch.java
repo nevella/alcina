@@ -279,6 +279,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	protected void afterUpdateItems(boolean empty) {
+		holder.setStyleName("has-items", !empty);
 	}
 
 	protected void checkShowPopup() {
@@ -754,6 +755,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	protected void onPopdownShowing(RelativePopupPanel popup, boolean show) {
 		PopupShownEvent.fire(this, show);
+		holder.setStyleName("showing-popup", show);
 	}
 
 	public String provideFilterBoxText() {
