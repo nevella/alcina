@@ -324,7 +324,18 @@ public abstract class DOMImplStandard extends DOMImpl {
 											foreach(captureEvents, function(e, fn) { captureEvents[e] = $entry(fn); });
 											
 											// Add capture event listeners
-											foreach(captureEvents, function(e, fn) { $wnd.addEventListener(e, fn, true); });
+											foreach(captureEvents, function(e, fn) {
+											 	var passive = false;
+												switch(e){
+													case "touchstart":
+													case "touchend":
+													case "touchmove":
+													case "wheel":
+														passive=true;
+														break;
+												}
+												var options = {capture: true, passive: passive};
+												$wnd.addEventListener(e, fn, options); });
 											}-*/;
 
 	@Override

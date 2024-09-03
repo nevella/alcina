@@ -226,6 +226,22 @@ public class DomDispatch implements DomDispatchContract {
 
 	@Override
 	public void eventPreventDefault(NativeEvent evt) {
+		// romcom cannot preventDefaults (that must happen in romcom
+		// compiled js)
+		//
+		// rather than warn, rely on test code to capture issues here
+		if (!Al.isBrowser()) {
+			return;
+		}
+		//
+		// sync to the switch in
+		// com.google.gwt.user.client.impl.DOMImplStandard.initEventSystem()
+		switch (evt.getType()) {
+		case "touchstart":
+		case "touchend":
+		case "wheel":
+			return;
+		}
 		LocalDom.eventMod(evt, "eventPreventDefault");
 		local().eventPreventDefault(evt);
 		remote().eventPreventDefault(evt);

@@ -499,6 +499,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 		return invokeSync(methodName, null, null);
 	}
 
+	@Override
 	public DomRect getBoundingClientRect() {
 		return invokeSync("getBoundingClientRect");
 	}
