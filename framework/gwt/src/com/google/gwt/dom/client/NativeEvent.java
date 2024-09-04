@@ -32,9 +32,18 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 
 /**
+ * <p>
  * A wrapper around the native dom event. It either dispatches to the jso (via
  * DOMImpl.impl) or uses the cached values. Because of the caching mechanism,
  * serialization is relatively simple
+ * 
+ * <p>
+ * Note that event handling under the attachid constraints may be more complex
+ * than not (although ultimately attach issues may bite you even in simpler dom
+ * modes) - for instance, removal of an element itself may cause a focus event,
+ * which can fire _during_ local/remote sync (a case where local + remote will
+ * necessarily be out of sync) - so it's valid to check both local + remote
+ * 'attach' where that is possible (see e.g. PopupPanel.eventTargetsPopup)
  */
 @Bean(PropertySource.FIELDS)
 public class NativeEvent implements JavascriptObjectEquivalent {

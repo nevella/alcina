@@ -813,10 +813,13 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		if (event.isCanceled()) {
 			return;
 		}
+		EventTarget eTarget = nativeEvent.getEventTarget();
+		if (Element.is(eTarget) && eTarget.isUnconnectedElement()) {
+			return;
+		}
 		// If the event targets the popup or the partner, consume it
 		boolean eventTargetsPopupOrPartner = eventTargetsPopup(nativeEvent)
 				|| eventTargetsPartner(nativeEvent);
-		EventTarget eTarget = nativeEvent.getEventTarget();
 		boolean eventTargetsScrollBar = Element.is(eTarget)
 				&& Element.as(eTarget).getTagName().equalsIgnoreCase("html");
 		if (cachedIsMobile == null) {

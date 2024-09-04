@@ -131,7 +131,9 @@ public class UrlBuilder {
 		if (url.path != null) {
 			this.path = url.path;
 		}
-		if (url.queryString != null) {
+		if (url.queryParameters != null) {
+			this.qsParams = new StringMap(url.queryParameters);
+		} else if (url.queryString != null) {
 			this.queryString = url.queryString;
 		}
 		if (url.hash != null) {

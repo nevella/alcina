@@ -151,6 +151,9 @@ public abstract class DOMImplStandard extends DOMImpl {
 			return;
 		}
 		Element element = evt.getCurrentEventTarget().cast();
+		if (element == null) {
+			return;
+		}
 		// FIXME - dom - a gwt hack (not mine) - can probably remove (and with
 		// it clippedimageimpl - just use css...?
 		element.setPropertyString("__gwtLastUnhandledEvent", evt.getType());

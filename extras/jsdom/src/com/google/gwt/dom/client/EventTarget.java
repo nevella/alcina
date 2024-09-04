@@ -94,8 +94,17 @@ public class EventTarget implements JavascriptObjectEquivalent {
 
 	public boolean isUnconnectedElement() {
 		if (ElementJso.is(nativeTarget)) {
+			LocalDom.flush();
 			ElementJso remote = ElementJso.asRemote(nativeTarget);
-			return !remote.isConnected();
+			if (!remote.isConnected()) {
+				return false;
+			}
+			/*
+			 * See the discussion in the NativeEvent javadoc for why this check
+			 * occurs
+			 */
+			Node node = remote.node();
+			return node == null || !node.isAttached();
 		} else {
 			return false;
 		}
@@ -106,7 +115,8 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		if (ElementJso.is(nativeTarget)) {
 			ElementJso remote = ElementJso.asRemote(nativeTarget);
 			boolean connected = remote.isConnected();
-			if (remote.getAttachId() == 0) {
+			int attachId = remote.getAttachId();
+			if (attachId == 0) {
 				// return null;
 				if (!connected || LocalDom.wasRemoved(remote)) {
 					// removed from local/browser dom - say a click, removed on

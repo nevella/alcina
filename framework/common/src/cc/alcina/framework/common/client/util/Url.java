@@ -1,5 +1,8 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Collections;
+import java.util.Map;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
@@ -44,7 +47,7 @@ public class Url {
 			queryParameters = StringMap
 					.fromPropertyString(transformedQueryString);
 		}
-		this.queryParameters = queryParameters;
+		this.queryParameters = Collections.unmodifiableMap(queryParameters);
 	}
 
 	public final String protocol;
@@ -61,7 +64,7 @@ public class Url {
 
 	public final String strUrl;
 
-	public final StringMap queryParameters;
+	public final Map<String, String> queryParameters;
 
 	@Override
 	public String toString() {
