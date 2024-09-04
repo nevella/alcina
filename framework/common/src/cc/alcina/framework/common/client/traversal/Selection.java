@@ -214,7 +214,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 						selection.getPathSegment(), layer));
 	}
 
-	default Selection parentSelection() {
+	default Selection<?> parentSelection() {
 		Node parent = processNode().getParent();
 		if (parent == null) {
 			return null;

@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -88,6 +89,18 @@ public abstract class FragmentNode extends Model.Fields
 	}
 
 	public void copyFromExternal(FragmentNode external) {
+	}
+
+	public <T extends FragmentNode> T soleChildOfType(Class<T> clazz) {
+		List<T> list = (List<T>) children().filter(clazz::isInstance)
+				.collect(Collectors.toList());
+		if (list.isEmpty()) {
+			return null;
+		} else if (list.size() == 1) {
+			return list.get(0);
+		} else {
+			throw new IllegalStateException("Multiple matches");
+		}
 	}
 
 	/*
