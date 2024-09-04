@@ -147,16 +147,14 @@ public abstract class DOMImplStandard extends DOMImpl {
 
 	private static void dispatchUnhandledEvent(NativeEventJso jso) {
 		Event evt = new Event(jso);
-		if (evt.getCurrentEventTarget().isUnconnectedElement()) {
-			return;
-		}
-		Element element = evt.getCurrentEventTarget().cast();
-		if (element == null) {
+		EventTarget eventTarget = evt.getCurrentEventTarget();
+		if (!eventTarget.isAttachedElement()) {
 			return;
 		}
 		// FIXME - dom - a gwt hack (not mine) - can probably remove (and with
 		// it clippedimageimpl - just use css...?
-		element.setPropertyString("__gwtLastUnhandledEvent", evt.getType());
+		eventTarget.asElement().setPropertyString("__gwtLastUnhandledEvent",
+				evt.getType());
 		dispatchEvent(jso);
 	}
 

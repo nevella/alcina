@@ -71,6 +71,67 @@ public class EventTarget implements JavascriptObjectEquivalent {
 
 	transient Node attachIdTarget;
 
+	transient ElementJsoTarget elementJsoTarget;
+
+	class ElementJsoTarget {
+		ElementJso elementJso;
+
+		Element element;
+
+		boolean attached() {
+			return element != null && element.isAttached();
+		}
+
+		ElementJsoTarget() {
+			if (ElementJso.is(nativeTarget)) {
+				exists = true;
+				ElementJso remote = ElementJso.asRemote(nativeTarget);
+				int attachId = remote.getAttachId();
+				if (attachId == 0) {
+					// double-check;
+					// return null;
+					if (!remote.isConnected() || LocalDom.wasRemoved(remote)) {
+						// removed from local/browser dom - say a click, removed
+						// on
+						// mousedown
+					} else {
+						throw new IllegalStateException();
+					}
+				}
+				element = LocalDom.nodeFor(nativeTarget);
+			} else {
+				//
+			}
+		}
+
+		boolean exists;
+	}
+
+	/**
+	 * Localdom disallows event handling once the target element was detached
+	 * from the dom. Due to edge cases such as (jso) dom node removal causing
+	 * focus events, and jso node removal only zderoing the attachid of the
+	 * removed subtree root node, the primary check is the attached state of the
+	 * local node
+	 * 
+	 * @return true if the event target is a detached eleement
+	 */
+	public boolean isDetachedElement() {
+		ensureElementJsoTarget();
+		return elementJsoTarget.exists && !elementJsoTarget.attached();
+	}
+
+	public boolean isAttachedElement() {
+		ensureElementJsoTarget();
+		return elementJsoTarget.exists && elementJsoTarget.attached();
+	}
+
+	void ensureElementJsoTarget() {
+		if (elementJsoTarget == null) {
+			elementJsoTarget = new ElementJsoTarget();
+		}
+	}
+
 	AttachId attachId;
 
 	Type type;
@@ -92,41 +153,12 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		return Element.as(this);
 	}
 
-	public boolean isUnconnectedElement() {
-		if (ElementJso.is(nativeTarget)) {
-			LocalDom.flush();
-			ElementJso remote = ElementJso.asRemote(nativeTarget);
-			if (!remote.isConnected()) {
-				return false;
-			}
-			/*
-			 * See the discussion in the NativeEvent javadoc for why this check
-			 * occurs
-			 */
-			Node node = remote.node();
-			return node == null || !node.isAttached();
-		} else {
-			return false;
-		}
-	}
-
 	@Override
 	public <T extends JavascriptObjectEquivalent> T cast() {
-		if (ElementJso.is(nativeTarget)) {
-			ElementJso remote = ElementJso.asRemote(nativeTarget);
-			boolean connected = remote.isConnected();
-			int attachId = remote.getAttachId();
-			if (attachId == 0) {
-				// return null;
-				if (!connected || LocalDom.wasRemoved(remote)) {
-					// removed from local/browser dom - say a click, removed on
-					// mousedown
-					return null;
-				} else {
-					throw new IllegalStateException();
-				}
-			}
-			return (T) LocalDom.nodeFor(nativeTarget);
+		ensureElementJsoTarget();
+		if (elementJsoTarget.exists) {
+			return elementJsoTarget.attached() ? (T) elementJsoTarget.element
+					: null;
 		}
 		ensureAttachIdTarget();
 		if (attachIdTarget instanceof ClientDomElement) {
@@ -167,16 +199,5 @@ public class EventTarget implements JavascriptObjectEquivalent {
 	@Override
 	public String toString() {
 		return super.toString() + ":" + nativeTarget;
-	}
-
-	/*
-	 * If the (element) eventtarget was removed from the dom - say between
-	 * mousedown + mouseup (remotedom)
-	 */
-	public boolean wasRemoved() {
-		if (ElementJso.is(nativeTarget)) {
-			return LocalDom.wasRemoved((ElementJso) nativeTarget);
-		}
-		return false;
 	}
 }

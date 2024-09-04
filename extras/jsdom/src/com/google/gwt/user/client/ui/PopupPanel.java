@@ -324,9 +324,9 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 			return false;
 		}
 		EventTarget target = event.getEventTarget();
-		if (Element.is(target)) {
+		if (target.isAttachedElement()) {
 			for (Element elem : autoHidePartners) {
-				if (elem.isOrHasChild(Element.as(target))) {
+				if (elem.isOrHasChild(target.asElement())) {
 					return true;
 				}
 			}
@@ -343,8 +343,8 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 	 */
 	private boolean eventTargetsPopup(NativeEvent event) {
 		EventTarget target = event.getEventTarget();
-		if (Element.is(target) && !target.isUnconnectedElement()) {
-			return getElement().isOrHasChild(Element.as(target));
+		if (target.isAttachedElement()) {
+			return getElement().isOrHasChild(target.asElement());
 		}
 		return false;
 	}
@@ -813,15 +813,15 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		if (event.isCanceled()) {
 			return;
 		}
-		EventTarget eTarget = nativeEvent.getEventTarget();
-		if (Element.is(eTarget) && eTarget.isUnconnectedElement()) {
+		EventTarget eventTarget = nativeEvent.getEventTarget();
+		if (!eventTarget.isAttachedElement()) {
 			return;
 		}
+		Element elem = eventTarget.asElement();
 		// If the event targets the popup or the partner, consume it
 		boolean eventTargetsPopupOrPartner = eventTargetsPopup(nativeEvent)
 				|| eventTargetsPartner(nativeEvent);
-		boolean eventTargetsScrollBar = Element.is(eTarget)
-				&& Element.as(eTarget).getTagName().equalsIgnoreCase("html");
+		boolean eventTargetsScrollBar = elem.hasTagName("html");
 		if (cachedIsMobile == null) {
 			cachedIsMobile = BrowserMod.isMobile();
 		}
@@ -895,14 +895,10 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 			break;
 		}
 		case Event.ONFOCUS: {
-			EventTarget eventTarget = nativeEvent.getEventTarget();
-			if (Element.is(eventTarget)) {
-				Element target = eventTarget.cast();
-				if (modal && !eventTargetsPopupOrPartner && (target != null)) {
-					blur(target);
-					event.cancel();
-					return;
-				}
+			if (modal && !eventTargetsPopupOrPartner && (elem != null)) {
+				blur(elem);
+				event.cancel();
+				return;
 			}
 			break;
 		}

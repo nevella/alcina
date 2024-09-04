@@ -17,8 +17,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.dom.client.AttachIds.IdList;
 import com.google.gwt.dom.client.Document.RemoteType;
-import com.google.gwt.dom.client.DomIds.IdList;
 import com.google.gwt.dom.client.MarkupJso.MarkupToken;
 import com.google.gwt.dom.client.mutations.LocalMutations;
 import com.google.gwt.dom.client.mutations.MutationNode;
@@ -414,14 +414,14 @@ public class LocalDom implements ContextFrame {
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
-	DomIds domIds;
+	AttachIds domIds;
 
 	LocalDom() {
 		topicPublishException = Topic.create();
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
 		topicReportException.add(this::handleReportedException);
-		domIds = new DomIds();
+		domIds = new AttachIds();
 	}
 
 	Node createAndInsertAfter(Node parentNode, Node previousSibling,
@@ -777,17 +777,18 @@ public class LocalDom implements ContextFrame {
 			return (T) Document.get();
 		} else {
 			int attachId = remote.getAttachId();
-			Node node = domIds.getNode(new AttachId(attachId));
-			if (node == null) {
-				if (domIds.wasRemoved(new AttachId(attachId))) {
-					// removed from localdom, but remotedom removal still
-					// pending
-					return null;
-				}
+			if (attachId == 0) {
 				throw new IllegalStateException(
 						"Remote should always be registered");
 			} else {
-				return (T) node;
+				Node node = domIds.getNode(new AttachId(attachId));
+				if (node == null) {
+					// removed from localdom, but remotedom removal still
+					// pending
+					return null;
+				} else {
+					return (T) node;
+				}
 			}
 		}
 	}

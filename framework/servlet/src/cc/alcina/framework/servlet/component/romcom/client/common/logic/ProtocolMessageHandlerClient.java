@@ -127,7 +127,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				return;
 			}
 		}
-		if (event.targetWasRemoved()) {
+		if (event.getCurrentEventTarget().isDetachedElement()) {
 			return;
 		}
 		if (currentEventMessage == null) {

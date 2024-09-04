@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.AttachIds;
 import com.google.gwt.dom.client.ClientDomElement;
-import com.google.gwt.dom.client.DomIds;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
@@ -221,7 +221,7 @@ public final class MutationRecord {
 	 * For dom trees, this carries the tree node ids (which are not carried by
 	 * the markup)
 	 */
-	public DomIds.IdList attachIds;
+	public AttachIds.IdList attachIds;
 
 	public transient List<Class<? extends Flag>> flags;
 

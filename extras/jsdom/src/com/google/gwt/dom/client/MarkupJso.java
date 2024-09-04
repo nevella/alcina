@@ -5,7 +5,7 @@ import java.util.Iterator;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.impl.JavaScriptIntList;
 import com.google.gwt.core.client.impl.JavaScriptObjectList;
-import com.google.gwt.dom.client.DomIds.IdList;
+import com.google.gwt.dom.client.AttachIds.IdList;
 
 import cc.alcina.framework.common.client.util.Ax;
 

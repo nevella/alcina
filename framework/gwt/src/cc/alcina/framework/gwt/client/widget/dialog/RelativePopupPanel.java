@@ -332,9 +332,8 @@ public class RelativePopupPanel extends SimplePanel
 	 */
 	private boolean eventTargetsPopup(NativeEvent event) {
 		EventTarget target = event.getEventTarget();
-		if (!target.wasRemoved() && Element.is(target)) {
-			Element eTarget = Element.as(target);
-			return getElement().isOrHasChild(eTarget);
+		if (target.isAttachedElement()) {
+			return getElement().isOrHasChild(target.asElement());
 		}
 		return false;
 	}

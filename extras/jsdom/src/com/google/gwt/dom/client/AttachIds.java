@@ -33,11 +33,15 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * called before local node creation
  * </ul>
  */
-public class DomIds {
+public class AttachIds {
 	int counter = 1;
 
 	IntLookup<Node> byId = IntLookup.Support.create();
 
+	/*
+	 * Retained only until localdom.flush(), these are required to populate
+	 * remove mutations
+	 */
 	Map<Node, Integer> removed = AlcinaCollections.newUnqiueMap();
 
 	int nextAttachId;
@@ -74,7 +78,7 @@ public class DomIds {
 	}
 
 	void releaseRemoved() {
-		// removed.clear();
+		removed.clear();
 	}
 
 	void onDetach(Node node) {
@@ -134,10 +138,6 @@ public class DomIds {
 
 	void applyPreRemovalAttachId(Node node, AttachId attachId) {
 		attachId.id = getRemovedId(node);
-	}
-
-	public boolean wasRemoved(AttachId attachId) {
-		return removed.values().contains(attachId.id);
 	}
 
 	// debug method

@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 /**
  * <p>
  * Models the identity of a DOM node (attached to root) with an integer id
- * value. See {@link DomIds} for how these ids are populated.
+ * value. See {@link AttachIds} for how these ids are populated.
  * 
  * <p>
  * It also contains accessor methods to access the referenced DOM node. It's the
