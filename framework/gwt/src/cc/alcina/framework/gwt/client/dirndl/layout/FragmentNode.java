@@ -92,7 +92,7 @@ public abstract class FragmentNode extends Model.Fields
 	}
 
 	public <T extends FragmentNode> T soleChildOfType(Class<T> clazz) {
-		List<T> list = (List<T>) children().filter(clazz::isInstance)
+		List<T> list = (List<T>) children().filter(t -> t.getClass() == clazz)
 				.collect(Collectors.toList());
 		if (list.isEmpty()) {
 			return null;
