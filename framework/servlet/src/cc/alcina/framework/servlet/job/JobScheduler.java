@@ -52,6 +52,10 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Subque
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.MethodContext;
+import cc.alcina.framework.servlet.process.observer.job.JobMvccObserver;
+import cc.alcina.framework.servlet.process.observer.job.JobObserver;
+import cc.alcina.framework.servlet.process.observer.job.ObservableJobFilter;
+import cc.alcina.framework.servlet.process.observer.mvcc.MvccObserver;
 
 /**
  * <h2>TODO</h2>
@@ -110,6 +114,10 @@ public class JobScheduler {
 		JobDomain.get().futureConsistencyEvents
 				.add(futureConsistencyEventListener);
 		JobDomain.get().futureJob.add(futureJobListener);
+		if (Configuration.is("observeJobEvents")) {
+			JobObserver.observe(new ObservableJobFilter.All());
+			MvccObserver.observe(new JobMvccObserver());
+		}
 		JobDomain.get().fireInitialAllocatorQueueCreationEvents();
 		thread = new ScheduleJobsThread();
 		thread.start();

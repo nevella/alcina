@@ -8,14 +8,11 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.Deseria
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.HandlesDeserializationException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
-import cc.alcina.framework.common.client.util.IdCounter;
 
 @Bean(PropertySource.FIELDS)
 public class FlightEvent
 		implements ProcessObservable, HandlesDeserializationException,
 		HasStringRepresentation, IdOrdered<FlightEvent> {
-	static IdCounter counter = new IdCounter();
-
 	public FlightEventWrappable event;
 
 	public long id;
@@ -33,7 +30,7 @@ public class FlightEvent
 
 	public FlightEvent(FlightEventWrappable event) {
 		this.event = event;
-		this.id = counter.nextId();
+		this.id = ProcessObservable.Id.nextId();
 		this.time = System.currentTimeMillis();
 	}
 

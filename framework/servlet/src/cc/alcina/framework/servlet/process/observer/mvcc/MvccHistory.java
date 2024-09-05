@@ -13,12 +13,13 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservable;
 import cc.alcina.framework.servlet.component.sequence.Sequence;
-import cc.alcina.framework.servlet.component.sequence.adapter.MvccEventSequence;
 
 /**
  * A detailed history of changes to the observed mvcc object
  */
 public class MvccHistory {
+	public static final String LOCAL_PATH = "/tmp/sequence/mvcc-event";
+
 	public MvccObject domainIdentity;
 
 	public List<MvccObservable> observables = new CopyOnWriteArrayList<>();
@@ -53,11 +54,16 @@ public class MvccHistory {
 
 	public class HistorySequence {
 		public void exportLocal() {
-			File folder = new File(MvccEventSequence.LOCAL_PATH);
+			List<MvccEvent> events = getEvents();
+			File folder = new File(LOCAL_PATH);
+			Sequence.Loader.writeElements(folder, events);
+		}
+
+		public List<MvccEvent> getEvents() {
 			populateVersionIds();
 			List<MvccEvent> events = observables.stream()
 					.map(MvccObservable::getEvent).collect(Collectors.toList());
-			Sequence.Loader.writeElements(folder, events);
+			return events;
 		}
 	}
 

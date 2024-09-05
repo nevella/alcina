@@ -697,10 +697,7 @@ public class JobDomain {
 			if (event.type.isPublishToGlobalQueue()) {
 				queueEvents.publish(event);
 			}
-		}
-
-		public void refreshProjection() {
-			// TODO Auto-generated method stub
+			new JobObservable.AllocationEvent(event).publish();
 		}
 
 		public void remove(Job job) {

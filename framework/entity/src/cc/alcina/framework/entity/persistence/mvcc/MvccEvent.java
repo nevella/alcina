@@ -8,15 +8,13 @@ import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 @Bean(PropertySource.FIELDS)
 public class MvccEvent implements IdOrdered<MvccEvent> {
-	static transient IdCounter idCounter = new IdCounter();
-
 	public transient MvccObject domainIdentity;
 
 	public boolean writeable;
@@ -70,7 +68,7 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 		this.threadName = Thread.currentThread().getName();
 		this.type = type;
 		this.date = new Date();
-		this.id = idCounter.nextId();
+		this.id = ProcessObservable.Id.nextId();
 	}
 
 	public long getId() {

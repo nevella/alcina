@@ -62,7 +62,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -83,6 +82,7 @@ import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
@@ -102,16 +102,18 @@ import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
  * clustered and non-clustered jobs.
  * </p>
  * <p>
- * A 'job' persistent object models execution of a Task. Jobs are executed on
- * JobQueues, which are uniquely defined by queue name - one-off queues for
- * arbitrary jobs, and "schedule" queues for jobs which are constrained by a
- * JobScheduler.Schedule. Note the difference between Job and Task - a Task and
- * a Schedule cause the execution of a Job.
+ * A 'job' persistent object models execution of a Task. Note the difference
+ * between Job and Task - a Job (conceptual) is the process of performing a
+ * Task, the {@link Job} entity tracks the persistent state of that performance.
  * </p>
  * <p>
  * Important properties related to the execution a job are 'creator' and
  * 'performer' - the clientInstance of the server that created/is allocated the
  * job respectively.
+ * </p>
+ * <p>
+ * <b>The below is incorrect in some respects (due to refactoring) - the fix
+ * will be part of the Job documentation rewrite </b>
  * </p>
  * <p>
  * JobScheduler.Schedule could well be named 'JobExecutionConstraints", but it's
@@ -209,17 +211,6 @@ public class JobRegistry {
 						"Domain transform permissions exception", e);
 				throw e;
 			}
-		}
-	}
-
-	/*
-	 * This info is also observable via JobDomain, but simpler here
-	 */
-	public static class JobStateChangeObservable implements ProcessObservable {
-		public Job job;
-
-		public JobStateChangeObservable(Job job) {
-			this.job = job;
 		}
 	}
 
@@ -814,7 +805,7 @@ public class JobRegistry {
 					if (trackInternalMetrics()) {
 						InternalMetrics.get().endTracker(job);
 					}
-					new JobStateChangeObservable(job).publish();
+					new JobObservable.Ended(job).publish();
 				} catch (Throwable e) {
 					logger.warn("DEVEX::0 - JobRegistry.performJob0.finally",
 							e);
@@ -1057,7 +1048,7 @@ public class JobRegistry {
 			default:
 				throw new UnsupportedOperationException();
 			}
-			new JobStateChangeObservable(job).publish();
+			new JobObservable.Created(job).publish();
 			return job;
 		}
 

@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -76,6 +77,7 @@ import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
+import cc.alcina.framework.entity.transform.AtomicSequentialIdGenerator;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
@@ -380,6 +382,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				Registration.Implementation.INSTANCE,
 				Registration.Priority._DEFAULT);
 		Mvcc.initialiseTransactionEnvironment();
+		ProcessObservable.Id.setGenerator(new AtomicSequentialIdGenerator());
 		initLoggers();
 	}
 

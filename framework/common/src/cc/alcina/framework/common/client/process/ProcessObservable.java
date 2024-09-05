@@ -1,8 +1,21 @@
 package cc.alcina.framework.common.client.process;
 
+import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.util.Ax;
 
 public interface ProcessObservable {
+	public static class Id {
+		static SequentialIdGenerator generator = new SequentialIdGenerator();
+
+		public static void setGenerator(SequentialIdGenerator generator) {
+			Id.generator = generator;
+		}
+
+		public static long nextId() {
+			return generator.incrementAndGet();
+		}
+	}
+
 	default boolean contains(String s) {
 		return toString().contains(s);
 	}

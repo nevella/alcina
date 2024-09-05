@@ -6,12 +6,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.flight.FlightEvent;
+import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable.AllocationEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccEvent;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafTransforms;
@@ -19,12 +23,13 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 import cc.alcina.framework.servlet.component.sequence.Sequence;
+import cc.alcina.framework.servlet.component.sequence.adapter.MvccEventSequence.MvccEventRow;
 
 /**
- * A transformation class to render a sequence of MvccEvent instances in the
- * sequence viewer
+ * A transformation class to render a sequence of [JobObservable, MvccEvent]
+ * instances in the sequence viewer
  */
-public class MvccEventSequence extends Sequence.Abstract<MvccEvent> {
+public class JobEventSequence extends Sequence.Abstract<IdOrdered> {
 	/*
 	 * Children must have a no-args constructor that populates the fields
 	 */
@@ -59,43 +64,99 @@ public class MvccEventSequence extends Sequence.Abstract<MvccEvent> {
 	}
 
 	@Override
-	public ModelTransform<MvccEvent, Model> getRowTransform() {
-		return MvccEventRow::new;
+	public ModelTransform<IdOrdered, Model> getRowTransform() {
+		return JobOrMvccObservableRow::new;
 	}
 
 	@Override
-	public ModelTransform<MvccEvent, Model> getDetailTransform() {
-		return MvccEventRow::new;
+	public ModelTransform<IdOrdered, Model> getDetailTransform() {
+		return JobOrMvccObservableRow::new;
 	}
 
-	static class MvccEventRow extends Model.All
+	/**
+	 * the union of the observable properties of JobObservableRow::MvccEventRow
+	 */
+	static class JobOrMvccObservableRow extends Model.All
 			implements HasStringRepresentation {
-		@Directed.Exclude
-		@Display.Exclude
-		MvccEvent event;
-
 		@Directed(className = "numeric")
 		int index;
 
 		@Directed(className = "numeric")
 		int versionId;
 
+		String name;
+
 		@ValueTransformer(LeafTransforms.Dates.TimestampNoDay.class)
 		Date time;
 
 		String type;
 
+		JobDomain.EventType allocationEventType;
+
 		@Directed.Exclude
 		@Display.Exclude
 		String stringRepresentation;
 
-		MvccEventRow(MvccEvent event) {
-			this.event = event;
-			index = (int) event.id;
-			time = event.date;
-			type = event.type;
-			versionId = event.versionId;
-			stringRepresentation = event.toMultilineString();
+		JobOrMvccObservableRow(IdOrdered event) {
+			if (event instanceof JobObservable) {
+				fromJobObservable((JobObservable) event);
+			} else {
+				fromMvccEvent((MvccEvent) event);
+			}
+		}
+
+		void fromMvccEvent(MvccEvent event) {
+			MvccEventRow row = new MvccEventRow(event);
+			index = row.index;
+			versionId = row.versionId;
+			time = row.time;
+			type = row.type;
+			stringRepresentation = row.stringRepresentation;
+		}
+
+		void fromJobObservable(JobObservable event) {
+			JobObservableRow row = new JobObservableRow(event);
+			index = row.index;
+			name = row.name;
+			time = row.time;
+			allocationEventType = row.allocationEventType;
+			stringRepresentation = row.stringRepresentation;
+		}
+
+		@Override
+		public String provideStringRepresentation() {
+			return stringRepresentation;
+		}
+	}
+
+	static class JobObservableRow extends Model.All
+			implements HasStringRepresentation {
+		@Directed.Exclude
+		@Display.Exclude
+		JobObservable event;
+
+		@Directed(className = "numeric")
+		int index;
+
+		String name;
+
+		@ValueTransformer(LeafTransforms.Dates.TimestampNoDay.class)
+		Date time;
+
+		JobDomain.EventType allocationEventType;
+
+		@Directed.Exclude
+		@Display.Exclude
+		String stringRepresentation;
+
+		JobObservableRow(JobObservable observable) {
+			this.event = observable;
+			index = (int) observable.id;
+			time = observable.date;
+			if (observable instanceof AllocationEvent) {
+				allocationEventType = ((AllocationEvent) observable).eventType;
+			}
+			stringRepresentation = observable.toString();
 		}
 
 		@Override

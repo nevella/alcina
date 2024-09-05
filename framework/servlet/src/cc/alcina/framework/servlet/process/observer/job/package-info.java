@@ -4,16 +4,17 @@
  * <pre>
  * <code>
  - what does it do?
-    - (see MvccObserver javadoc)
+    - (see JobObserver javadoc)
 - how is it tested?
     - call getHistory with a locator which matches the filter
 - how is it tested practically?
-    - attach "JobMvccObserver" - start a job - set a breakpoint - call getHistory().dump()
+    - attach "JobObserver" - start a job - set a breakpoint - call getHistory().dump()
 
-//(attach JobMvccObserver) ::
+(attach JobObserver) ::
+JobObserver.observe(new ObservableJobFilter.All());
 MvccObserver.observe(new JobMvccObserver());
 
-System.out.println(cc.alcina.framework.servlet.process.observer.mvcc.MvccObserver.getHistory(
+System.out.println(cc.alcina.framework.servlet.process.observer.job.JobObserver.getHistory(
 cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()));
 
 - what does it interact with?
@@ -23,7 +24,7 @@ cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()));
  * </code>
  * </pre>
  */
-@Feature.Ref(Feature_MvccHistory.class)
-package cc.alcina.framework.servlet.process.observer.mvcc;
+@Feature.Ref(Feature_JobHistory.class)
+package cc.alcina.framework.servlet.process.observer.job;
 
 import cc.alcina.framework.common.client.meta.Feature;

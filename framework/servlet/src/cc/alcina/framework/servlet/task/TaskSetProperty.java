@@ -10,6 +10,14 @@ public class TaskSetProperty extends PerformerTask
 
 	private String value;
 
+	public TaskSetProperty() {
+	}
+
+	public TaskSetProperty(String key, String value) {
+		this.key = key;
+		this.value = value;
+	}
+
 	public String getKey() {
 		return this.key;
 	}

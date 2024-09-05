@@ -9,7 +9,9 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsRemova
 import cc.alcina.framework.servlet.process.observer.mvcc.ObservableEntityFilter;
 
 /**
- * Observes mvcc changes to active job entities
+ * <p>
+ * Observes mvcc changes to active job entities. See the package doc for usage
+ * </p>
  */
 public class JobMvccObserver implements ObservableEntityFilter {
 	@Override
