@@ -775,7 +775,9 @@ public class DomainStore implements IDomainStore {
 			Transaction.current().toDomainCommitting(
 					testSensitiveTimestamp(transactionCommitTime), this,
 					applyTxToGraphCounter.getAndIncrement(),
-					persistenceEvent.getMaxPersistedRequestId());
+					persistenceEvent.getMaxPersistedRequestId(),
+					persistenceEvents.getQueue().getDbTransactionId(
+							persistenceEvent.getMaxPersistedRequestId()));
 			// opportunistically load any lazy loads in this tx phase, to ensure
 			// they become a non-vacuumable part of the graph
 			Transactions.getEnqueuedLazyLoads().forEach(Domain::find);

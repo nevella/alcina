@@ -137,8 +137,20 @@ public class Transactions {
 		throw new UnsupportedOperationException();
 	}
 
-	public static boolean isCommitted(TransactionId committingTxId) {
-		return get().isCommitted0(committingTxId);
+	public static boolean isCommitted(TransactionId txId) {
+		return get().isCommitted0(txId);
+	}
+
+	/**
+	 * 
+	 * @param txId
+	 *            the transaction id
+	 * @return true if the transaction was of type to-domain and was committed,
+	 *         or a to-domain tx caused by this tx was committed
+	 * 
+	 */
+	public static boolean isCommittedOrRelatedCommitted(TransactionId txId) {
+		return get().isCommitted0(txId);
 	}
 
 	public static synchronized boolean isInitialised() {
@@ -334,6 +346,13 @@ public class Transactions {
 
 	private Set<TransactionId> committedTransactionIds = new ObjectOpenHashSet<>();
 
+	/*
+	 * If a to-domain transaction was caused by a (local) to-db transaction, the
+	 * to-db transaction id will be added here once the to-domain transaction is
+	 * committed
+	 */
+	private Set<TransactionId> committedDbTransactionIds = new ObjectOpenHashSet<>();
+
 	private Transactions() {
 		Configuration.properties.topicInvalidated
 				.add(this::configurationInvalidated);
@@ -504,9 +523,16 @@ public class Transactions {
 		}
 	}
 
-	private boolean isCommitted0(TransactionId committingTxId) {
+	boolean isCommitted0(TransactionId committingTxId) {
 		synchronized (transactionMetadataLock) {
 			return committedTransactionIds.contains(committingTxId);
+		}
+	}
+
+	boolean isCommittedOrRelatedCommitted0(TransactionId committingTxId) {
+		synchronized (transactionMetadataLock) {
+			return committedTransactionIds.contains(committingTxId)
+					|| committedDbTransactionIds.contains(committingTxId);
 		}
 	}
 
@@ -537,7 +563,8 @@ public class Transactions {
 			 * id (for a tx of this type)
 			 */
 			highestVisibleCommittedTransactionId = transaction.getId();
-			committedTransactionIds.add(transaction.getId());
+			committedTransactionIds.add(transaction.id);
+			committedDbTransactionIds.add(transaction.dbTransactionId);
 		}
 	}
 

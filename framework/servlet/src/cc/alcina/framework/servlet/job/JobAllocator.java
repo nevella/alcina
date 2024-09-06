@@ -9,7 +9,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -301,32 +300,6 @@ class JobAllocator {
 					 * sequence completion - which means it does nothing
 					 */
 					int debug = 3;
-					/*
-					 * FIXME - mvcc.jobs.1a - up the timeout n catch these
-					 * suckers
-					 */
-					long incompleteCount = queue
-							.getIncompleteAllocatedJobCountForCurrentPhaseThisVm();
-					ExecutionConstraints constraints = ExecutionConstraints
-							.forQueue(queue);
-					ExecutorService executorService = constraints
-							.getExecutorServiceProvider().getService(queue);
-					if (executorService instanceof ThreadPoolExecutor
-							&& !constraints.isClusteredChildAllocation()
-							&& queue.job.getCreator() == ClientInstance.self()
-							&& queue.currentPhase == SubqueuePhase.Child) {
-						ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
-						if (tpex.getActiveCount() == 0 && incompleteCount > 0) {
-							// commented out, prevents grandchild jobs
-							//
-							// logger.warn(
-							// "Removing {} incomplete jobs as
-							// allocated/processing",
-							// incompleteCount);
-							// // queue.clearIncompleteAllocatedJobs();
-							// queue.cancelIncompleteAllocatedJobs();
-						}
-					}
 					// missed event?
 					queue.publish(EventType.WAKEUP);
 				} else {

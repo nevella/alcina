@@ -14,8 +14,17 @@
 JobObserver.observe(new ObservableJobFilter.All());
 MvccObserver.observe(new JobMvccObserver());
 
+-- or - configuration --
+
+JobScheduler.observeJobEvents=true
+
+-- log the history --
 System.out.println(cc.alcina.framework.servlet.process.observer.job.JobObserver.getHistory(
 cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()));
+
+-- write the history to the local fs --
+cc.alcina.framework.servlet.process.observer.job.JobObserver.getHistory(
+cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()).sequence().exportLocal();
 
 - what does it interact with?
     - DomainStore/mvcc and the Job system

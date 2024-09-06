@@ -376,7 +376,7 @@ public class Transaction implements Comparable<Transaction> {
 
 	SortedSet<Transaction> committedTransactions;
 
-	private TransactionId id;
+	TransactionId id;
 
 	private Map<DomainStore, StoreTransaction> storeTransactions = new LightMap();
 
@@ -402,6 +402,8 @@ public class Transaction implements Comparable<Transaction> {
 	 * reasons - during warmup, set this to true while populating
 	 */
 	private boolean populatingPureTransactional;
+
+	TransactionId dbTransactionId;
 
 	private Transaction(TransactionPhase initialPhase,
 			Transaction copyVisibleTransactionsFrom) {
@@ -754,14 +756,17 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public void toDomainCommitting(Timestamp timestamp, DomainStore store,
-			long sequenceId, long transformRequestId) {
+			long sequenceId, long transformRequestId,
+			TransactionId dbTransactionId) {
 		this.transformRequestId = transformRequestId;
+		this.dbTransactionId = dbTransactionId;
 		Preconditions
 				.checkState(getPhase() == TransactionPhase.TO_DOMAIN_PREPARING
 						&& ThreadlocalTransformManager.get().getTransforms()
 								.isEmpty());
 		this.databaseCommitTimestamp = timestamp;
-		storeTransactions.get(store).committingSequenceId = sequenceId;
+		StoreTransaction storeTransaction = storeTransactions.get(store);
+		storeTransaction.committingSequenceId = sequenceId;
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
 

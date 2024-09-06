@@ -879,7 +879,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		DomainTransformCommitPosition highestVisibleCommitPosition = transformSequencer.highestVisiblePosition;
 		warmupTransaction.toDomainCommitting(
 				highestVisibleCommitPosition.getCommitTimestamp(), store,
-				store.applyTxToGraphCounter.getAndIncrement(), 0L);
+				store.applyTxToGraphCounter.getAndIncrement(), 0L, null);
 		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
 				highestVisibleCommitPosition.getCommitTimestamp());
 		new StatCategory_DomainStore.Warmup.Loader.Mark().emit();
