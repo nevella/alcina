@@ -212,7 +212,8 @@ public class FormatBuilder {
 	}
 
 	public FormatBuilder appendKeyValues(Object... objects) {
-		Preconditions.checkState(objects.length % 2 == 0);
+		Preconditions.checkState(objects.length % 2 == 0,
+				"appendKeyValues: uneven number of args");
 		for (int idx = 0; idx < objects.length; idx += 2) {
 			String key = (String) objects[idx];
 			Object value = objects[idx + 1];
