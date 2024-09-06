@@ -21,6 +21,7 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionDbPersi
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionRemovalEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsCreationEvent;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionsRemovalEvent;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VisibleAllTransactionsUpdatedEvent;
 
 /**
  * <p>
@@ -159,6 +160,14 @@ public class MvccObserver {
 		}
 	}
 
+	class VisibleAllTransactionsUpdated implements
+			ProcessObserver<MvccObservable.VisibleAllTransactionsUpdatedEvent> {
+		@Override
+		public void topicPublished(VisibleAllTransactionsUpdatedEvent event) {
+			conditionallyRecord(event);
+		}
+	}
+
 	void registerObservers() {
 		new VersionsCreation().bind();
 		new VersionsRemoval().bind();
@@ -168,6 +177,7 @@ public class MvccObserver {
 		new VersionDbPersisted().bind();
 		new VersionCopiedToDomainIdentity().bind();
 		new RevertDomainIdentity().bind();
+		new VisibleAllTransactionsUpdated().bind();
 	}
 
 	boolean isObserving(MvccObservable event) {

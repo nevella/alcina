@@ -35,7 +35,7 @@ public abstract class MvccObservable implements ProcessObservable {
 			ObjectVersion version) {
 		this.versions = versions;
 		this.version = version;
-		this.writeable = version.writeable;
+		this.writeable = version != null && version.writeable;
 		recordEvent();
 	}
 
@@ -112,6 +112,14 @@ public abstract class MvccObservable implements ProcessObservable {
 		VersionRemovalEvent(MvccObjectVersionsEntity<?> versions,
 				ObjectVersion version) {
 			super(versions, version);
+		}
+	}
+
+	public static class VisibleAllTransactionsUpdatedEvent
+			extends MvccObservable {
+		VisibleAllTransactionsUpdatedEvent(
+				MvccObjectVersionsEntity<?> versions) {
+			super(versions, null);
 		}
 	}
 

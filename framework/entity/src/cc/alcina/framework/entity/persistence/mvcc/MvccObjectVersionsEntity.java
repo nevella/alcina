@@ -117,6 +117,14 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
+	void onVisibleAllTransactionsUpdated() {
+		ProcessObservers.publish(
+				MvccObservable.VisibleAllTransactionsUpdatedEvent.class,
+				() -> new MvccObservable.VisibleAllTransactionsUpdatedEvent(
+						this));
+	}
+
+	@Override
 	void onDomainTransactionCommited() {
 		ProcessObservers.publish(MvccObservable.VersionCommittedEvent.class,
 				() -> new MvccObservable.VersionCommittedEvent(this, true));

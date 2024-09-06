@@ -301,6 +301,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	void onVersionRemoval(ObjectVersion<T> version) {
 	}
 
+	void onVisibleAllTransactionsUpdated() {
+	}
+
 	T resolve(boolean writeableVersion) {
 		Transaction transaction = Transaction.current();
 		T resolved = resolveWithoutSync(transaction, writeableVersion);
@@ -441,6 +444,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected void setVisibleAllTransactions(T value) {
 		visibleAllTransactions = value;
+		onVisibleAllTransactionsUpdated();
 	}
 
 	@Override
