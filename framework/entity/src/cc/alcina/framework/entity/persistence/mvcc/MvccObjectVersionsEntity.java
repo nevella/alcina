@@ -99,14 +99,15 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected void onVersionCreation(ObjectVersion<T> version) {
-		super.onVersionCreation(version);
+	protected void onVersionCreation(ObjectVersion<T> version, T copiedFrom) {
+		super.onVersionCreation(version, copiedFrom);
 		if (version.writeable) {
 			ThreadlocalTransformManager.cast()
 					.registerDomainObject(version.object, true);
 		}
 		ProcessObservers.publish(MvccObservable.VersionCreationEvent.class,
-				() -> new MvccObservable.VersionCreationEvent(this, version));
+				() -> new MvccObservable.VersionCreationEvent(this, version,
+						copiedFrom));
 	}
 
 	@Override
@@ -115,11 +116,13 @@ public class MvccObjectVersionsEntity<T extends Entity>
 				() -> new MvccObservable.VersionRemovalEvent(this, version));
 	}
 
+	@Override
 	void onDomainTransactionCommited() {
 		ProcessObservers.publish(MvccObservable.VersionCommittedEvent.class,
 				() -> new MvccObservable.VersionCommittedEvent(this, true));
 	}
 
+	@Override
 	void onDomainTransactionDbPersisted() {
 		ProcessObservers.publish(MvccObservable.VersionDbPersistedEvent.class,
 				() -> new MvccObservable.VersionDbPersistedEvent(this, true));
@@ -156,5 +159,10 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	void publishRemoval() {
 		ProcessObservers.publish(MvccObservable.VersionsRemovalEvent.class,
 				() -> new MvccObservable.VersionsRemovalEvent(this, false));
+	}
+
+	int findVersion(Object from) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

@@ -33,11 +33,11 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 
 	public String threadName;
 
-	public int versionIdentityHashCode;
+	public int versionObjectIdentityHashCode;
 
 	public int visibleAllTransactionsIdentityHashCode;
 
-	public int fromVersionIdentityHashCode;
+	public int fromObjectIdentityHashCode;
 
 	public Date date;
 
@@ -57,7 +57,7 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 			TransactionId fromTransaction, Transaction currentTransaction,
 			TransactionId toTransaction,
 			Map<String, String> primitiveFieldValues, String type,
-			boolean writeable, int versionIdentityHashCode,
+			boolean writeable, int versionObjectIdentityHashCode,
 			int visibleAllTransactionsIdentityHashCode) {
 		this.domainIdentity = domainIdentity;
 		this.visibleAllTransactionsIdentityHashCode = visibleAllTransactionsIdentityHashCode;
@@ -68,7 +68,7 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 		this.toTransaction = toTransaction;
 		this.primitiveFieldValues = primitiveFieldValues;
 		this.writeable = writeable;
-		this.versionIdentityHashCode = versionIdentityHashCode;
+		this.versionObjectIdentityHashCode = versionObjectIdentityHashCode;
 		this.threadName = Thread.currentThread().getName();
 		this.type = type;
 		this.date = new Date();
@@ -93,17 +93,17 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 		format.appendIfNotBlankKv("currentTransactionPhase",
 				currentTransactionPhase);
 		format.appendIfNotBlankKv("type", type);
-		if (fromVersionIdentityHashCode != 0) {
-			format.appendIfNotBlankKv("fromVersionIdentityHashCode",
-					fromVersionIdentityHashCode);
+		if (fromObjectIdentityHashCode != 0) {
+			format.appendIfNotBlankKv("fromObjectIdentityHashCode",
+					fromObjectIdentityHashCode);
 		}
 		if (visibleAllTransactionsIdentityHashCode != 0) {
 			format.appendIfNotBlankKv("visibleAllTransactionsIdentityHashCode",
 					visibleAllTransactionsIdentityHashCode);
 		}
 		format.appendIfNotBlankKv("versionId", versionId);
-		format.appendIfNotBlankKv("versionIdentityHashCode",
-				versionIdentityHashCode);
+		format.appendIfNotBlankKv("versionObjectIdentityHashCode",
+				versionObjectIdentityHashCode);
 		format.appendIfNotBlankKv("domainIdentity", versionId == 0);
 		format.appendIfNotBlankKv("writeable", writeable);
 		format.appendIfNotBlankKv("fromTransaction", fromTransaction);

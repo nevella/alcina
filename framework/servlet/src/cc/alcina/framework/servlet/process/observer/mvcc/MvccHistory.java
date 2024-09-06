@@ -46,7 +46,7 @@ public class MvccHistory {
 		observables.forEach(o -> {
 			MvccEvent event = o.event;
 			Integer versionId = identityHashCodeEncounterIndex.computeIfAbsent(
-					event.versionIdentityHashCode,
+					event.versionObjectIdentityHashCode,
 					hash -> identityHashCodeEncounterIndex.size());
 			event.versionId = versionId;
 		});

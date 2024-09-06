@@ -178,7 +178,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		// onVersionCreation
 		putVersion(version);
 		attach();
-		onVersionCreation(version);
+		onVersionCreation(version, t);
 	}
 
 	//
@@ -256,7 +256,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
-	protected void onVersionCreation(ObjectVersion<T> version) {
+	protected void onVersionCreation(ObjectVersion<T> version, T copiedFrom) {
 	}
 
 	/*
@@ -424,7 +424,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			// call back into resolve());
 			putVersion(version);
 			// }
-			onVersionCreation(version);
+			onVersionCreation(version, mostRecentObject);
 			return version.object;
 		} else {
 			/*
@@ -705,7 +705,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					/*
 					 * tmp - disable as test of job sys issues
 					 */
-					if (attached) {
+					if (attached && false) {
 						// check initial transaction was vacuumed
 						if (initialWriteableTransaction == null) {
 							// if there's a version visible to all

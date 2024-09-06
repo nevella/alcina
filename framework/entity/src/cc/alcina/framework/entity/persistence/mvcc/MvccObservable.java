@@ -46,7 +46,7 @@ public abstract class MvccObservable implements ProcessObservable {
 		this.to = (Entity) to;
 		this.writeable = false;
 		recordEvent();
-		event.fromVersionIdentityHashCode = System.identityHashCode(from);
+		event.fromObjectIdentityHashCode = System.identityHashCode(from);
 	}
 
 	void recordEvent() {
@@ -93,8 +93,11 @@ public abstract class MvccObservable implements ProcessObservable {
 
 	public static class VersionCreationEvent extends MvccObservable {
 		VersionCreationEvent(MvccObjectVersionsEntity<?> versions,
-				ObjectVersion version) {
+				ObjectVersion version, Object from) {
 			super(versions, version);
+			event.fromObjectIdentityHashCode = from != null
+					? System.identityHashCode(from)
+					: 0;
 		}
 	}
 
