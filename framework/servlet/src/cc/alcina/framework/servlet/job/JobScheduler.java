@@ -117,6 +117,7 @@ public class JobScheduler {
 		if (Configuration.is("observeJobEvents")) {
 			JobObserver.observe(new ObservableJobFilter.All());
 			MvccObserver.observe(new JobMvccObserver());
+			Ax.sysLogHigh("Observing job events [perf,dev]");
 		}
 		JobDomain.get().fireInitialAllocatorQueueCreationEvents();
 		thread = new ScheduleJobsThread();
