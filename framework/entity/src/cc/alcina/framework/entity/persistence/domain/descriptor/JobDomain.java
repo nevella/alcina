@@ -61,6 +61,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.BaseProjectionSupportMvcc.TreeMapCreatorImpl;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
@@ -417,6 +418,8 @@ public class JobDomain {
 
 		private boolean firedToProcessing;
 
+		// synchronization: all access is synchronized on the AllocationQueue
+		// instance
 		List<Event> bufferedEvents = new ArrayList<>();
 
 		private AllocationQueue parentQueue;
@@ -493,28 +496,6 @@ public class JobDomain {
 			}
 		}
 
-		public void clearIncompleteAllocatedJobs() {
-			/*
-			 * Deliberately throws an exception (because the sets have no
-			 * itr.remove) - this is a response to an upstream problem
-			 *
-			 * FIXME - mvcc.jobs.2 - review no calls; remove
-			 *
-			 */
-			Stream.of(JobState.ALLOCATED, JobState.PROCESSING)
-					.forEach(state -> {
-						Set<? extends Job> jobs = subQueueJobs(currentPhase,
-								state);
-						Iterator<? extends Job> itr = jobs.iterator();
-						while (itr.hasNext()) {
-							Job next = itr.next();
-							logger.info("Removing from subQueue {}/{} - {}",
-									currentPhase, state, next);
-							itr.remove();
-						}
-					});
-		}
-
 		public AllocationQueue ensureParentQueue() {
 			if (parentQueue == null) {
 				parentQueue = queues.get(job.provideParent().get());
@@ -532,9 +513,15 @@ public class JobDomain {
 			// checkFireToProcessing(job);
 		}
 
-		public void flushBufferedEvents() {
-			bufferedEvents.forEach(this::publish0);
-			bufferedEvents.clear();
+		synchronized void flushBufferedEvents() {
+			Iterator<Event> itr = bufferedEvents.iterator();
+			while (itr.hasNext()) {
+				Event event = itr.next();
+				if (event.isCommitted()) {
+					publish0(event);
+					itr.remove();
+				}
+			}
 		}
 
 		public Stream<Job> getActiveJobs() {
@@ -680,9 +667,13 @@ public class JobDomain {
 			throw new UnsupportedOperationException();
 		}
 
-		// / ahhhhhh....we need to buffer events if in "todomaincommitting",
-		// / otherwise we may hit the allocators before the commit is finished
-		public void publish(EventType type) {
+		/*
+		 * ahhhhhh....we need to buffer events if in "todomaincommitting",
+		 * otherwise we may hit the allocators before the commit is finished
+		 * 
+		 * synchronization:
+		 */
+		public synchronized void publish(EventType type) {
 			Event event = new Event(type);
 			if (TransactionEnvironment.get().isToDomainCommitting()) {
 				bufferedEvents.add(event);
@@ -692,7 +683,7 @@ public class JobDomain {
 			}
 		}
 
-		void publish0(Event event) {
+		private void publish0(Event event) {
 			events.publish(event);
 			if (event.type.isPublishToGlobalQueue()) {
 				queueEvents.publish(event);
@@ -749,6 +740,11 @@ public class JobDomain {
 				this.queue = AllocationQueue.this;
 				this.transactionId = TransactionEnvironment.get()
 						.getCurrentTxId();
+			}
+
+			boolean isCommitted() {
+				return Transactions
+						.isCommittedOrRelatedCommitted(transactionId);
 			}
 
 			@Override

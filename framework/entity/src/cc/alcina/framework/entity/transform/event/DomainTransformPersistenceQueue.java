@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.TransactionId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -223,6 +224,8 @@ public class DomainTransformPersistenceQueue {
 
 	public void onPersistedRequestPreFlushed(
 			DomainTransformRequestPersistent request) {
+		state.recordDbRequestToDbTransactionAssociation(request.getId(),
+				Transaction.current().getId());
 		sequencer.onPersistedRequestPreCommitted(request.getId());
 	}
 
@@ -708,6 +711,14 @@ public class DomainTransformPersistenceQueue {
 					.put(p.getCommitTimestamp(), p));
 		}
 
+		private Map<Long, TransactionId> dbTransactionIdByPersistentRequestId = new Object2ObjectOpenHashMap<>();
+
+		synchronized void recordDbRequestToDbTransactionAssociation(
+				long requestId, TransactionId dbTransactionId) {
+			dbTransactionIdByPersistentRequestId.put(requestId,
+					dbTransactionId);
+		}
+
 		synchronized Long getLastRequestIdAtTimestamp(Timestamp timestamp) {
 			DomainTransformCommitPosition position = commitPositionsByTimestamp
 					.get(timestamp);
@@ -787,5 +798,19 @@ public class DomainTransformPersistenceQueue {
 			}
 			return appLifetimeCommitEventsRegistered.add(requestId);
 		}
+
+		synchronized TransactionId getDbTransactionId(long persistedRequestId) {
+			return dbTransactionIdByPersistentRequestId.get(persistedRequestId);
+		}
+	}
+
+	/**
+	 * 
+	 * @param persistedRequestId
+	 * @return the txid of the TO_DB_COMMITTED tx if the tx was local, otherwise
+	 *         null
+	 */
+	public TransactionId getDbTransactionId(long persistedRequestId) {
+		return state.getDbTransactionId(persistedRequestId);
 	}
 }
