@@ -547,9 +547,12 @@ public class Transactions {
 
 	Stream<MvccObjectVersionsMvccObject>
 			getMvccObjectVersionsMvccObject(Transaction transaction) {
+		// snapshot the result (to prevent concurrent modification, which is
+		// possible since the current tx may not be the reffed tx)
 		return vacuum.getVacuumables(transaction).stream()
 				.filter(v -> v instanceof MvccObjectVersionsMvccObject)
-				.map(v -> (MvccObjectVersionsMvccObject) v);
+				.map(v -> (MvccObjectVersionsMvccObject) v)
+				.collect(Collectors.toList()).stream();
 	}
 
 	void onDomainTransactionCommited(Transaction transaction) {

@@ -591,7 +591,7 @@ public class JobRegistry {
 			}
 		});
 		scheduler = new JobScheduler(this);
-		JobDomain.get().stateMessageEvents.add(messages -> {
+		JobDomain.get().topicStateMessageEvents.add(messages -> {
 			for (JobStateMessage message : messages) {
 				if (message == null) {
 					// FIXME - mvcc.5 - should not be
@@ -1405,7 +1405,7 @@ public class JobRegistry {
 						stateMessage.setJob(job);
 					});
 			try {
-				JobDomain.get().stateMessageEvents.add(listener);
+				JobDomain.get().topicStateMessageEvents.add(listener);
 				latch = new CountDownLatch(queriedJobs.size());
 				Transaction.commit();
 				latch.await(1, TimeUnit.SECONDS);
@@ -1416,7 +1416,7 @@ public class JobRegistry {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} finally {
-				JobDomain.get().stateMessageEvents.remove(listener);
+				JobDomain.get().topicStateMessageEvents.remove(listener);
 			}
 		}
 	}

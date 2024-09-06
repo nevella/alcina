@@ -93,6 +93,7 @@ import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
 import cc.alcina.framework.servlet.dom.Environment;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.job.JobScheduler;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
@@ -608,6 +609,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void postInitEntityLayer() {
 		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
+			JobScheduler.onBeforeAppStartup();
 			BackendTransformQueue.get().start();
 			serializationSignatureListener = new SerializationSignatureListener();
 			DomainStore.stores().writableStore().getPersistenceEvents()

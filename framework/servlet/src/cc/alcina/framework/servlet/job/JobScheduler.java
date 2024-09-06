@@ -107,19 +107,25 @@ public class JobScheduler {
 
 	private JobEnvironment environment;
 
-	JobScheduler(JobRegistry jobRegistry) {
-		this.jobRegistry = jobRegistry;
-		this.environment = jobRegistry.getEnvironment();
-		JobDomain.get().queueEvents.add(queueEventListener);
-		JobDomain.get().futureConsistencyEvents
-				.add(futureConsistencyEventListener);
-		JobDomain.get().futureJob.add(futureJobListener);
+	/*
+	 * Called early to ensure listeners are in place before job generation
+	 */
+	public static void onBeforeAppStartup() {
 		if (Configuration.is("observeJobEvents")) {
 			JobObserver.observe(new ObservableJobFilter.All());
 			MvccObserver.observe(new JobMvccObserver());
 			Ax.sysLogHigh("Observing job events [perf,dev]");
 		}
-		JobDomain.get().fireInitialAllocatorQueueCreationEvents();
+	}
+
+	JobScheduler(JobRegistry jobRegistry) {
+		this.jobRegistry = jobRegistry;
+		this.environment = jobRegistry.getEnvironment();
+		JobDomain.get().topicQueueEvents.add(queueEventListener);
+		JobDomain.get().topicFutureConsistencyEvents
+				.add(futureConsistencyEventListener);
+		JobDomain.get().topicFutureJob.add(futureJobListener);
+		JobDomain.get().onAllocatorEventListenersAttached();
 		thread = new ScheduleJobsThread();
 		thread.start();
 		if (environment.isPersistent()) {

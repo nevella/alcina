@@ -702,6 +702,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				if (getSize() == 0) {
 					// check not already detached (? should that double-vacuum
 					// be possible ?)
+					/*
+					 * tmp - disable as test of job sys issues
+					 */
 					if (attached) {
 						// check initial transaction was vacuumed
 						if (initialWriteableTransaction == null) {
@@ -732,6 +735,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 			// !!not!! synchronized on this (avoid deadlock with creation)
 			if (!attached) {
+				Ax.sysLogHigh("removing versions %s",
+						domainIdentity.getClass());
 				// double-check final detach - an assigning thread may have
 				// injected a new MvccObjectVersions, albeit unlikely
 				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {

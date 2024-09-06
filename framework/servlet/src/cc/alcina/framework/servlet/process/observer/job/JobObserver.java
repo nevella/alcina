@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
 
 /**
@@ -28,19 +29,15 @@ public class JobObserver {
 		return Registry.impl(JobObserver.class);
 	}
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	public static JobHistory getHistory(EntityLocator locator) {
+		return get().getHistory0(locator);
+	}
 
 	public static void observe(ObservableJobFilter filter) {
 		get().observe0(filter);
 	}
 
-	public static JobHistory getHistory(EntityLocator locator) {
-		return get().getHistory0(locator);
-	}
-
-	JobHistory getHistory0(EntityLocator locator) {
-		return histories.get(locator.localId);
-	}
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	/*
 	 * Since EntityLocator comparison is complex around promoted objects, use
@@ -52,31 +49,59 @@ public class JobObserver {
 
 	List<EvictionRecord> evictionRecords = new CopyOnWriteArrayList<>();
 
-	class EvictionRecord {
-		EvictionRecord(long localId) {
-			this.localId = localId;
-			this.evictAt = System.currentTimeMillis()
-					+ TimeConstants.ONE_MINUTE_MS;
-		}
+	JobObserver() {
+		JobDomain.get().topicLogObservations
+				.add(job -> getHistory0(job.toLocator()).sequence()
+						.withIncludeMvccObservables(true).exportLocal());
+	}
 
-		long localId;
-
-		long evictAt;
-
-		boolean evict() {
-			if (evictAt <= System.currentTimeMillis()) {
-				histories.remove(localId);
-				return true;
+	void checkEviction() {
+		while (evictionRecords.size() > 0) {
+			EvictionRecord record = evictionRecords.get(0);
+			if (record.evict()) {
+				evictionRecords.remove(0);
 			} else {
-				return false;
+				break;
 			}
 		}
+	}
+
+	void conditionallyRecord(JobObservable event) {
+		JobHistory history = histories.get(event.job.getLocalId());
+		if (history != null) {
+			history.add(event);
+		}
+		checkEviction();
+	}
+
+	JobHistory getHistory0(EntityLocator locator) {
+		return histories.get(locator.localId);
+	}
+
+	boolean isObserving(JobObservable event) {
+		long localId = event.job.getLocalId();
+		return localId != 0 && histories.containsKey(localId);
 	}
 
 	void observe0(ObservableJobFilter filter) {
 		filters.add(filter);
 		if (filters.size() == 1) {
 			registerObservers();
+		}
+	}
+
+	void registerObservers() {
+		new CreatedObserver().bind();
+		new EndedObserver().bind();
+		new ToProcessingObserver().bind();
+		new AllocationEventObserver().bind();
+	}
+
+	class AllocationEventObserver
+			implements ProcessObserver<JobObservable.AllocationEvent> {
+		@Override
+		public void topicPublished(JobObservable.AllocationEvent event) {
+			conditionallyRecord(event);
 		}
 	}
 
@@ -100,50 +125,32 @@ public class JobObserver {
 		}
 	}
 
+	class EvictionRecord {
+		long localId;
+
+		long evictAt;
+
+		EvictionRecord(long localId) {
+			this.localId = localId;
+			this.evictAt = System.currentTimeMillis()
+					+ TimeConstants.ONE_MINUTE_MS;
+		}
+
+		boolean evict() {
+			if (evictAt <= System.currentTimeMillis()) {
+				histories.remove(localId);
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+
 	class ToProcessingObserver
 			implements ProcessObserver<JobObservable.ToProcessing> {
 		@Override
 		public void topicPublished(JobObservable.ToProcessing event) {
 			conditionallyRecord(event);
-		}
-	}
-
-	class AllocationEventObserver
-			implements ProcessObserver<JobObservable.AllocationEvent> {
-		@Override
-		public void topicPublished(JobObservable.AllocationEvent event) {
-			conditionallyRecord(event);
-		}
-	}
-
-	void registerObservers() {
-		new CreatedObserver().bind();
-		new EndedObserver().bind();
-		new ToProcessingObserver().bind();
-		new AllocationEventObserver().bind();
-	}
-
-	boolean isObserving(JobObservable event) {
-		long localId = event.job.getLocalId();
-		return localId != 0 && histories.containsKey(localId);
-	}
-
-	void conditionallyRecord(JobObservable event) {
-		JobHistory history = histories.get(event.job.getLocalId());
-		if (history != null) {
-			history.add(event);
-		}
-		checkEviction();
-	}
-
-	void checkEviction() {
-		while (evictionRecords.size() > 0) {
-			EvictionRecord record = evictionRecords.get(0);
-			if (record.evict()) {
-				evictionRecords.remove(0);
-			} else {
-				break;
-			}
 		}
 	}
 }

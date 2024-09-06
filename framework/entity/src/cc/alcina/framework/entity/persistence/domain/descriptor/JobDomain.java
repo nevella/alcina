@@ -83,6 +83,10 @@ public class JobDomain {
 		return Registry.impl(JobDomain.class);
 	}
 
+	public static boolean isComplete(Job cursor) {
+		return get().completed.containsKey(cursor.getId());
+	}
+
 	private Class<? extends Job> jobImplClass;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
@@ -167,13 +171,19 @@ public class JobDomain {
 	 */
 	private Map<Long, Boolean> completed = new ConcurrentHashMap<>();
 
-	public Topic<AllocationQueue.Event> queueEvents = Topic.create();
+	public Topic<AllocationQueue.Event> topicQueueEvents = Topic.create();
 
-	public Topic<Void> futureConsistencyEvents = Topic.create();
+	public Topic<Void> topicFutureConsistencyEvents = Topic.create();
 
-	public Topic<Job> futureJob = Topic.create();
+	public Topic<Job> topicFutureJob = Topic.create();
 
-	public Topic<List<JobStateMessage>> stateMessageEvents = Topic.create();
+	public Topic<List<JobStateMessage>> topicStateMessageEvents = Topic.create();
+
+	/*
+	 * A channel to the servlet-layer observer (to aid debugging of issues that
+	 * occur in this class)
+	 */
+	public Topic<Job> topicLogObservations = Topic.create();
 
 	private Class<? extends JobRelation> jobRelationImplClass;
 
@@ -215,6 +225,10 @@ public class JobDomain {
 	private Set<AllocationQueue> queuesWithBufferedEvents = Collections
 			.synchronizedSet(new LinkedHashSet<>());
 
+	long lastWarnNullStartTime = 0;
+
+	boolean allocatorEventListenersAttached;
+
 	private void cleanupQueues() {
 		queues.entrySet().removeIf(e -> e.getValue().job.domain().wasRemoved()
 				|| e.getValue().job.resolveState() == JobState.ABORTED
@@ -231,21 +245,6 @@ public class JobDomain {
 		jobStateMessageImplClass = PersistentImpl
 				.getImplementation(JobStateMessage.class);
 		descriptor.addClassDescriptor(jobStateMessageImplClass);
-	}
-
-	public void fireInitialAllocatorQueueCreationEvents() {
-		queues.values().forEach(AllocationQueue::fireInitialCreationEvents);
-	}
-
-	long lastWarnNullStartTime = 0;
-
-	synchronized void warnNullStartTime(Job job) {
-		if (!TimeConstants.within(lastWarnNullStartTime,
-				TimeConstants.ONE_MINUTE_MS * 5)) {
-			lastWarnNullStartTime = System.currentTimeMillis();
-			logger.warn("Active job with null start time - {} {}", job.getId(),
-					job.getTaskClassName());
-		}
 	}
 
 	public Stream<? extends Job> getActiveJobs() {
@@ -367,6 +366,18 @@ public class JobDomain {
 				.filter(q -> !q.job.domain().wasRemoved());
 	}
 
+	public void onAllocatorEventListenersAttached() {
+		/*
+		 * Block queues mutation (which ensures all values exist during
+		 * iteration)
+		 */
+		synchronized (queues) {
+			TransactionEnvironment.get().endAndBeginNew();
+			allocatorEventListenersAttached = true;
+			queues.values().forEach(AllocationQueue::fireInitialCreationEvents);
+		}
+	}
+
 	public void onAppShutdown() {
 		stateMessageEventHandler.finished = true;
 		stateMessageEventQueue.add(new ArrayList<>());
@@ -393,6 +404,15 @@ public class JobDomain {
 
 	public void removeAllocationQueue(Job job) {
 		AllocationQueue queue = queues.remove(job);
+	}
+
+	synchronized void warnNullStartTime(Job job) {
+		if (!TimeConstants.within(lastWarnNullStartTime,
+				TimeConstants.ONE_MINUTE_MS * 5)) {
+			lastWarnNullStartTime = System.currentTimeMillis();
+			logger.warn("Active job with null start time - {} {}", job.getId(),
+					job.getTaskClassName());
+		}
 	}
 
 	/*
@@ -477,7 +497,7 @@ public class JobDomain {
 			}
 		}
 
-		private void checkFireToProcessing(Job job) {
+		synchronized void checkFireToProcessing(Job job) {
 			if (job == this.job && !firedToProcessing) {
 				try {
 					switch (job.resolveState()) {
@@ -504,20 +524,15 @@ public class JobDomain {
 		}
 
 		void fireInitialCreationEvents() {
-			/*
-			 * This forces the state of jobs created before the (servlet layer)
-			 * JobScheduler is started - BUT I think the domain projection does
-			 * this anyway, so duplicate events are fired
-			 */
-			// publish(EventType.CREATED);
-			// checkFireToProcessing(job);
+			flushBufferedEvents();
+			checkFireToProcessing(job);
 		}
 
 		synchronized void flushBufferedEvents() {
 			Iterator<Event> itr = bufferedEvents.iterator();
 			while (itr.hasNext()) {
 				Event event = itr.next();
-				if (event.isCommitted()) {
+				if (event.isCommitted() && allocatorEventListenersAttached) {
 					publish0(event);
 					itr.remove();
 				}
@@ -675,7 +690,8 @@ public class JobDomain {
 		 */
 		public synchronized void publish(EventType type) {
 			Event event = new Event(type);
-			if (TransactionEnvironment.get().isToDomainCommitting()) {
+			if (TransactionEnvironment.get().isToDomainCommitting()
+					|| !allocatorEventListenersAttached) {
 				bufferedEvents.add(event);
 				queuesWithBufferedEvents.add(this);
 			} else {
@@ -686,7 +702,7 @@ public class JobDomain {
 		private void publish0(Event event) {
 			events.publish(event);
 			if (event.type.isPublishToGlobalQueue()) {
-				queueEvents.publish(event);
+				topicQueueEvents.publish(event);
 			}
 			new JobObservable.AllocationEvent(event).publish();
 		}
@@ -1154,7 +1170,7 @@ public class JobDomain {
 			@Override
 			public void insert(Job t) {
 				if (t.getRunAt() != null && t.getState() == JobState.FUTURE) {
-					futureJob.publish(t);
+					topicFutureJob.publish(t);
 				}
 				if (!t.provideIsComplete()) {
 					return;
@@ -1263,7 +1279,7 @@ public class JobDomain {
 					return;
 				}
 				super.insert(t);
-				futureConsistencyEvents.publish(null);
+				topicFutureConsistencyEvents.publish(null);
 			}
 
 			@Override
@@ -1415,7 +1431,7 @@ public class JobDomain {
 							.take();
 					if (!messages.isEmpty()) {
 						Transaction.ensureBegun();
-						stateMessageEvents.publish(messages);
+						topicStateMessageEvents.publish(messages);
 						Transaction.commit();
 					}
 				} catch (Throwable t) {
@@ -1429,9 +1445,5 @@ public class JobDomain {
 
 	public static enum SubqueuePhase {
 		Self, Child, Sequence, Complete
-	}
-
-	public static boolean isComplete(Job cursor) {
-		return get().completed.containsKey(cursor.getId());
 	}
 }

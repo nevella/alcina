@@ -52,15 +52,26 @@ public abstract class MvccObservable implements ProcessObservable {
 	void recordEvent() {
 		Entity entity = versions.domainIdentity;
 		EntityLocator locator = entity.toLocator();
-		Entity versioned = to != null ? to
-				: version != null ? (Entity) version.object
-						: versions.resolve(writeable);
+		Entity versioned = null;
+		if (!versions.attached) {
+			versioned = entity;
+		} else if (to != null) {
+			versioned = to;
+		} else if (version != null) {
+			versioned = (Entity) version.object;
+		} else {
+			versioned = versions.resolve(writeable);
+		}
 		Map<String, String> primitiveFieldValues = Transactions
 				.primitiveFieldValues(versioned);
+		int visibleAllTransactionsIdentityHashCode = versions.visibleAllTransactions != null
+				? System.identityHashCode(versions.visibleAllTransactions)
+				: 0;
 		event = new MvccEvent((MvccObject) versions.domainIdentity, locator,
 				null, Transaction.current(), null, primitiveFieldValues,
 				getClass().getSimpleName(), writeable,
-				System.identityHashCode(versioned));
+				System.identityHashCode(versioned),
+				visibleAllTransactionsIdentityHashCode);
 	}
 
 	@Override

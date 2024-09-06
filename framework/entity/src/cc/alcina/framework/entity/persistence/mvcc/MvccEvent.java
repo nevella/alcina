@@ -35,6 +35,8 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 
 	public int versionIdentityHashCode;
 
+	public int visibleAllTransactionsIdentityHashCode;
+
 	public int fromVersionIdentityHashCode;
 
 	public Date date;
@@ -55,8 +57,10 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 			TransactionId fromTransaction, Transaction currentTransaction,
 			TransactionId toTransaction,
 			Map<String, String> primitiveFieldValues, String type,
-			boolean writeable, int versionIdentityHashCode) {
+			boolean writeable, int versionIdentityHashCode,
+			int visibleAllTransactionsIdentityHashCode) {
 		this.domainIdentity = domainIdentity;
+		this.visibleAllTransactionsIdentityHashCode = visibleAllTransactionsIdentityHashCode;
 		this.locator = locator;
 		this.fromTransaction = fromTransaction;
 		this.currentTransactionId = currentTransaction.getId();
@@ -71,6 +75,7 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 		this.id = ProcessObservable.Id.nextId();
 	}
 
+	@Override
 	public long getId() {
 		return id;
 	}
@@ -91,6 +96,10 @@ public class MvccEvent implements IdOrdered<MvccEvent> {
 		if (fromVersionIdentityHashCode != 0) {
 			format.appendIfNotBlankKv("fromVersionIdentityHashCode",
 					fromVersionIdentityHashCode);
+		}
+		if (visibleAllTransactionsIdentityHashCode != 0) {
+			format.appendIfNotBlankKv("visibleAllTransactionsIdentityHashCode",
+					visibleAllTransactionsIdentityHashCode);
 		}
 		format.appendIfNotBlankKv("versionId", versionId);
 		format.appendIfNotBlankKv("versionIdentityHashCode",
