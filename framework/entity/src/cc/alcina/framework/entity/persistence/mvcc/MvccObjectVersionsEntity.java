@@ -13,13 +13,14 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObject
 import cc.alcina.framework.entity.persistence.mvcc.MvccObservable.VersionCopiedToDomainIdentityEvent;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
-public class MvccObjectVersionsEntity<T extends Entity>
+class MvccObjectVersionsEntity<T extends Entity>
 		extends MvccObjectVersionsMvccObject<T> {
 	private static transient int addToVacuumWarnCounter = 0;
 
 	private int hash;
 
-	public MvccObjectVersionsEntity(T t, Transaction initialTransaction,
+	// See note in super - this constructor should only call super()
+	MvccObjectVersionsEntity(T t, Transaction initialTransaction,
 			boolean initialObjectIsWriteable) {
 		super(t, initialTransaction, initialObjectIsWriteable);
 	}

@@ -145,6 +145,7 @@ public class DomainTransformPersistenceEvents
 				// REVISIT - check this is fired;
 				case COMMIT_ERROR:
 					int debug = 3;
+					// deliberate fallthrough
 				case COMMIT_OK:
 					/*
 					 * will be fired from the queue

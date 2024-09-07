@@ -88,6 +88,16 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	};
 
+	/*
+	 * This monitor synchronizes operations on the __mvccVersions fields of
+	 * *all* domainidentity MvccObjects
+	 * 
+	 * When checking 'does this versioned object have a new MvccObjects
+	 * backing', check the domainIdentity
+	 * 
+	 * MvccObjects creation (and checking) is avoided where possible via
+	 * resolution caching, so this monitor is accessed relatively rarely
+	 */
 	static final Object MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR = new Object();
 
 	// called in a synchronized block (synchronized on domainIdentity) -- or --
@@ -651,6 +661,15 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		 */
 		boolean attached;
 
+		/*
+		 * Must be called synchronized on versions
+		 */
+		boolean isAttached() {
+			return attached && domainIdentity != null;
+		}
+
+		// See note in super - this constructor should (and does) only call
+		// super()
 		MvccObjectVersionsMvccObject(T t, Transaction initialTransaction,
 				boolean initialObjectIsWriteable) {
 			super(t, initialTransaction, initialObjectIsWriteable, null);
@@ -684,7 +703,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 			super.putVersion(version);
 			boolean initialObjectIsWriteable = this.initialWriteableTransaction != null;
-			if (!initialObjectIsWriteable) {
+			if (!initialObjectIsWriteable && visibleAllTransactions == null) {
 				// creating a versions object from a committed domainIdentity
 				// object.
 				//
@@ -709,7 +728,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					/*
 					 * tmp - disable as test of job sys issues
 					 */
-					if (attached && false) {
+					if (attached) {
 						// check initial transaction was vacuumed
 						if (initialWriteableTransaction == null) {
 							// if there's a version visible to all
@@ -726,8 +745,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 								if (visibleAllTransactions != domainIdentity) {
 									copyObject(visibleAllTransactions,
 											domainIdentity);
-									((MvccObject) visibleAllTransactions)
-											.__setMvccVersions__(null);
 								}
 							}
 							// removal from the mvccobject will occur in a
@@ -739,8 +756,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 			// !!not!! synchronized on this (avoid deadlock with creation)
 			if (!attached) {
-				Ax.sysLogHigh("removing versions %s",
-						domainIdentity.getClass());
 				// double-check final detach - an assigning thread may have
 				// injected a new MvccObjectVersions, albeit unlikely
 				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {

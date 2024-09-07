@@ -266,8 +266,34 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	static class CachedPerThreadTransaction {
+		Thread thread;
+
+		CachedPerThreadTransaction(Thread thread, Transaction transaction) {
+			this.thread = thread;
+			this.transaction = transaction;
+		}
+
+		Transaction transaction;
+	}
+
+	static CachedPerThreadTransaction cachedPerThreadTransaction;
+
+	/*
+	 * This call is cached (to avoid even the low cost of a concurrenthashmap
+	 * lookup if possible), since the most common usage pattern is by a single
+	 * thread
+	 */
 	private static Transaction getPerThreadTransaction() {
-		return perThreadTransaction.get(Thread.currentThread());
+		Thread currentThread = Thread.currentThread();
+		CachedPerThreadTransaction cached = cachedPerThreadTransaction;
+		if (cached != null && cached.thread == currentThread) {
+			return cached.transaction;
+		}
+		Transaction transaction = perThreadTransaction.get(currentThread);
+		cachedPerThreadTransaction = new CachedPerThreadTransaction(
+				currentThread, transaction);
+		return transaction;
 	}
 
 	public static boolean isInActiveTransaction() {
@@ -298,11 +324,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	private static Transaction provideCurrentThreadTransaction() {
-		Transaction transaction = perThreadTransaction
-				.get(Thread.currentThread());
-		if (transaction == null) {
-			transaction = getPerThreadTransaction();
-		}
+		Transaction transaction = getPerThreadTransaction();
 		if (transaction == null) {
 			Supplier<Transaction> supplier = threadLocalSupplier.get();
 			if (supplier != null) {
@@ -314,6 +336,7 @@ public class Transaction implements Comparable<Transaction> {
 
 	static void reapUnreferencedTransactions() {
 		perThreadTransaction.keySet().removeIf(t -> !t.isAlive());
+		cachedPerThreadTransaction = null;
 	}
 
 	public static void removePerThreadContext() {
@@ -321,6 +344,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	private static void removeThreadLocalTransaction() {
+		cachedPerThreadTransaction = null;
 		perThreadTransaction.remove(Thread.currentThread());
 	}
 
@@ -333,6 +357,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	private static void setThreadLocalTransaction(Transaction transaction) {
+		cachedPerThreadTransaction = null;
 		perThreadTransaction.put(Thread.currentThread(), transaction);
 	}
 

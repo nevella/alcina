@@ -170,93 +170,100 @@ public class Transactions {
 	 * classes (to obtain the domainIdentity version of the object)
 	 */
 	public static <T extends Entity> T resolve(T t, ResolvedVersionState state,
-			boolean domainIdentity) {
-		if (t instanceof MvccObject) {
-			MvccObject mvccObject = (MvccObject) t;
-			MvccObjectVersions<T> versions = mvccObject.__getMvccVersions__();
-			if (versions == null && state == ResolvedVersionState.READ) {
+			boolean resolveDomainIdentity) {
+		if (!(t instanceof MvccObject)) {
+			return t;
+		}
+		MvccObject mvccObject = (MvccObject) t;
+		MvccObjectVersionsEntity versions = (MvccObjectVersionsEntity) mvccObject
+				.__getMvccVersions__();
+		MvccObject domainIdentity = versions == null ? (MvccObject) t
+				: (MvccObject) versions.domainIdentity;
+		if (versions == null) {
+			if (state == ResolvedVersionState.READ) {
 				// no transactional versions, return base
 				return t;
+			}
+		} else {
+			// if returning 'domainIdentity', no need to synchronize (the
+			// MvccObjects is
+			// being used as an identity marker, its fields are still only
+			// internally accessible
+			// - and the
+			// identity itself is immutable). This is true even if during
+			// the vacuum copy-to-domain-identity phase
+			if (resolveDomainIdentity) {
+				return (T) domainIdentity;
+			}
+			Transaction transaction = Transaction.current();
+			// TODO - possibly optimise (app level 'in warmup')
+			// although - doesn't warmup write fields, not via setters? In
+			// which case this isn't called in warmup?
+			// FIXME - mvcc.5 - yep, setters (so resolve) shouldn't be
+			// called _at_all during warmup. Precondition me
+			if (transaction.isBaseTransaction()
+					|| transaction == versions.initialWriteableTransaction) {
+				return t;
 			} else {
-				// if returning 'domainIdentity', no need to synchronize (the
-				// MvccObjects is
-				// being used as an identity marker, its fields are still only
-				// internally accessible
-				// - and the
-				// identity itself is immutable). This is true even if during
-				// the vacuum copy-to-domain-identity phase
-				if (domainIdentity) {
-					return versions.domainIdentity;
+				//
+				// there's an interplay of locks here that dovetails with
+				// MvccObjectVersionsMvccObject.vacuum0
+				//
+				// our order: get - if non-null, lock MvccObjectVersions
+				// instance, validate, resolve.
+				//
+				// if invalid or null, global lock, ensure (vacuum will not
+				// hold both)
+				//
+				// mutation/concurrent access to instances of
+				// MvccObjectVersions handled in-class
+				//
+				boolean writeableVersion = state == ResolvedVersionState.WRITE;
+				T resolved = (T) versions.resolveWithoutSync(transaction,
+						writeableVersion);
+				if (resolved != null) {
+					return resolved;
 				}
-				Transaction transaction = Transaction.current();
-				// TODO - possibly optimise (app level 'in warmup')
-				// although - doesn't warmup write fields, not via setters? In
-				// which case this isn't called in warmup?
-				// FIXME - mvcc.5 - yep, setters (so resolve) shouldn't be
-				// called _at_all during warmup. Precondition me
-				if (transaction.isBaseTransaction() || (versions != null
-						&& transaction == versions.initialWriteableTransaction)) {
-					return t;
-				} else {
-					//
-					// there's an interplay of locks here that dovetails with
-					// MvccObjectVersionsMvccObject.vacuum0
-					//
-					// our order: get - if non-null, lock MvccObjectVersions
-					// instance, validate, resolve.
-					//
-					// if invalid or null, global lock, ensure (vacuum will not
-					// hold both)
-					//
-					// mutation/concurrent access to instances of
-					// MvccObjectVersions handled in-class
-					//
-					boolean writeableVersion = state == ResolvedVersionState.WRITE;
-					if (versions != null) {
-						T resolved = versions.resolveWithoutSync(transaction,
-								writeableVersion);
-						if (resolved != null) {
-							return resolved;
-						}
-						synchronized (versions) {
-							if (((MvccObjectVersionsMvccObject) versions).attached) {
-								// valid
-								return versions.resolve(writeableVersion);
-							}
-						}
-					}
-					// fallthrough, invalid or null
-					synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
-						// double-check, guard synchronous creation
-						versions = mvccObject.__getMvccVersions__();
-						if (versions == null
-								|| !((MvccObjectVersionsMvccObject) versions).attached) {
-							versions = MvccObjectVersions.createEntityVersions(
-									t, transaction, false);
-						}
-						/*
-						 * see docs for READ_INVALID
-						 */
-						if (state == ResolvedVersionState.READ_INVALID) {
-							versions.verifyWritable(transaction);
-						}
-						return versions.resolve(writeableVersion);
+				synchronized (versions) {
+					if (versions.isAttached()) {
+						// valid
+						return (T) versions.resolve(writeableVersion);
 					}
 				}
 			}
-		} else {
-			return t;
+		}
+		// fallthrough, invalid or null
+		synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
+			// double-check, guard synchronous creation
+			versions = (MvccObjectVersionsEntity) domainIdentity
+					.__getMvccVersions__();
+			Transaction transaction = Transaction.current();
+			boolean writeableVersion = state == ResolvedVersionState.WRITE;
+			if (versions == null || !versions.isAttached()) {
+				versions = (MvccObjectVersionsEntity) MvccObjectVersions
+						.createEntityVersions((T) domainIdentity, transaction,
+								false);
+			}
+			/*
+			 * see docs for READ_INVALID
+			 */
+			if (state == ResolvedVersionState.READ_INVALID) {
+				versions.verifyWritable(transaction);
+			}
+			return (T) versions.resolve(writeableVersion);
 		}
 	}
 
 	public static <K, V> TransactionalTrieEntry<K, V>
 			resolve(TransactionalTrieEntry<K, V> t, boolean write) {
 		MvccObject mvccObject = (MvccObject) t;
-		MvccObjectVersions<TransactionalTrieEntry> versions = mvccObject
+		MvccObjectVersionsTrieEntry versions = (MvccObjectVersionsTrieEntry) mvccObject
 				.__getMvccVersions__();
-		if (versions == null && !write) {
-			// no transactional versions, return base
-			return t;
+		if (versions == null) {
+			if (!write) {
+				// no transactional versions, return base
+				return t;
+			}
 		} else {
 			Transaction transaction = Transaction.current();
 			if (transaction.isBaseTransaction()) {
@@ -264,24 +271,29 @@ public class Transactions {
 			} else {
 				// see logic for resolve()
 				boolean writeableVersion = write;
-				versions = mvccObject.__getMvccVersions__();
 				if (versions != null) {
 					synchronized (versions) {
-						if (versions.domainIdentity != null) {
-							// valid
-							return versions.resolve(write);
+						if (versions.isAttached()) {
+							if (versions.domainIdentity != null) {
+								// valid
+								return versions.resolve(write);
+							}
 						}
 					}
 				}
-				// fallthrough, invalid or null
-				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
-					if (versions == null || versions.domainIdentity == null) {
-						versions = MvccObjectVersions.createTrieEntryVersions(t,
-								transaction, false);
-					}
-					return versions.resolve(write);
-				}
 			}
+		}
+		// fallthrough, invalid or null
+		synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
+			// reget (double-check)
+			Transaction transaction = Transaction.current();
+			versions = (MvccObjectVersionsTrieEntry) mvccObject
+					.__getMvccVersions__();
+			if (versions == null || !versions.isAttached()) {
+				versions = (MvccObjectVersionsTrieEntry) MvccObjectVersions
+						.createTrieEntryVersions(t, transaction, false);
+			}
+			return versions.resolve(write);
 		}
 	}
 
