@@ -1065,16 +1065,11 @@ public class LocalDom implements ContextFrame {
 
 	boolean wasRemoved0(ElementJso elemJso) {
 		int attachId = elemJso.getAttachId();
-		Node node = domIds.getNode(new AttachId(attachId));
-		if (node == null) {
-			Preconditions.checkState(attachId != 0);
-			// domIds.removed will *almost certainly* contain the attachId, but
-			// because we're async and removed is flushed, it's possible that it
-			// wouldn't. so don't check
+		if (attachId == 0) {
 			return true;
-		} else {
-			return false;
 		}
+		Node node = domIds.getNode(new AttachId(attachId));
+		return node == null;
 	}
 
 	public static boolean isPendingSync(Node node) {
