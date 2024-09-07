@@ -224,8 +224,15 @@ public class DomainTransformPersistenceQueue {
 
 	public void onPersistedRequestPreFlushed(
 			DomainTransformRequestPersistent request) {
-		state.recordDbRequestToDbTransactionAssociation(request.getId(),
-				Transaction.current().getId());
+		/*
+		 * This condition will be true if the thread is the current
+		 * committing-to-db thread, not otherwise (such as for a clustered
+		 * observer)
+		 */
+		if (Transaction.isInActiveTransaction()) {
+			state.recordDbRequestToDbTransactionAssociation(request.getId(),
+					Transaction.current().getId());
+		}
 		sequencer.onPersistedRequestPreCommitted(request.getId());
 	}
 

@@ -52,8 +52,8 @@ public class BetterMouseEntrySupport
 	public void onPreviewNativeEvent(NativePreviewEvent event) {
 		Event nativeEvent = Event.as(event.getNativeEvent());
 		EventTarget target = nativeEvent.getEventTarget();
-		if (Element.is(target)) {
-			if (!widget.getElement().isOrHasChild(Element.as(target))) {
+		if (target.isAttachedElement()) {
+			if (!widget.getElement().isOrHasChild(target.asElement())) {
 				removePreviewHandler();
 			}
 		}

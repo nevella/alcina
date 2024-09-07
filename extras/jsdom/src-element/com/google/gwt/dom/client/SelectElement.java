@@ -90,7 +90,11 @@ public class SelectElement extends Element {
 	 *            The element to insert before, or null for the tail of the list
 	 */
 	public final void add(OptionElement option, OptionElement before) {
-		DOMImpl.impl.selectAdd(this, option, before);
+		// FIXME - attachid - this changes behaviour (previously it was
+		// remote-before-local, due to 'indicies' - so the change may cause a
+		// bug)
+		insertBefore(option, before);
+		// DOMImpl.impl.selectAdd(this, option, before);
 	}
 
 	/**

@@ -703,7 +703,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	protected void maybeClosePopdown(ClickEvent event) {
 		if (event != null) {
 			try {
-				if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
+				if (WidgetUtils.isNewTabModifier(event.getNativeEvent())
+						|| event.isShiftKeyDown()) {
 					event.preventDefault();
 					ignoreNextBlur = System.currentTimeMillis();
 					// otherwise popup will be closed by blur

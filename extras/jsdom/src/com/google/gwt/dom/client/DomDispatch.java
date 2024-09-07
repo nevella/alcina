@@ -419,6 +419,12 @@ public class DomDispatch implements DomDispatchContract {
 		// }
 		// }
 		// remote before local - otherwise the indicies will be out
+		/*
+		 * FIXME - attachid - remove if upstream replacement ok
+		 */
+		if ("not-called".length() > 0) {
+			throw new UnsupportedOperationException();
+		}
 		remote().selectAdd(select, option, before);
 		local().selectAdd(select, option, before);
 	}

@@ -45,6 +45,7 @@ public class DomDispatchJso implements DomDispatchContract {
 	@Override
 	public void selectAdd(SelectElement select, OptionElement option,
 			OptionElement before) {
+		select.insertBefore(option, before);
 		if (select.hasRemote()) {
 			domImpl.selectAdd(select.jsoRemote(), option.jsoRemote(),
 					before == null ? null : before.jsoRemote());

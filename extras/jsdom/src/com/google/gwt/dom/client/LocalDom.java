@@ -470,7 +470,6 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public void ensurePendingSynced(Node node) {
-		Preconditions.checkState(node.hasRemote());
 		Element element = (Element) node;
 		if (element.isPendingSync()) {
 			ClientDomElement local = node.local();
@@ -554,7 +553,14 @@ public class LocalDom implements ContextFrame {
 		try {
 			syncing = true;
 			// clear nodes enqueued for sync, then removed
-			pendingSync.removeIf(n -> !n.isAttached());
+			pendingSync.removeIf(n ->
+			/*
+			 * this first check will be incorrect (for pending) if the node was
+			 * pending, then removed, then attached to some other pending
+			 * structure. hasRemote() is correct
+			 */
+			// !n.isAttached()
+			!n.hasRemote());
 			List<Node> toSync = new ArrayList<>(pendingSync);
 			toSync.stream().forEach(this::ensurePendingSynced);
 		} catch (RuntimeException re) {

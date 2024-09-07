@@ -272,8 +272,10 @@ public class DomainStoreQueryTranslator {
 				} else {
 					propertyPath = sub.associationPath + "."
 							+ propertyPath.substring(idx + 1);
-					propertyPath = computePathToRoot(context.parent,
-							propertyPath);
+					if (context != null) {
+						propertyPath = computePathToRoot(context.parent,
+								propertyPath);
+					}
 				}
 			}
 			idx = propertyPath.indexOf(".");

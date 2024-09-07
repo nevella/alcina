@@ -715,6 +715,9 @@ public class Transaction implements Comparable<Transaction> {
 		logger.debug("Transition tx: {}", this);
 	}
 
+	/*
+	 * Allow modification during a readonly transaction ()
+	 */
 	public void setPopulatingPureTransactional(
 			boolean populatingPureTransactional) {
 		this.populatingPureTransactional = populatingPureTransactional;
