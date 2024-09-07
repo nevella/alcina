@@ -88,9 +88,11 @@ class SequenceArea extends Model.Fields
 				rowsModel.meta.get(visibleRowIndex).setFlag("matches", true);
 			}
 		});
-		if (page.ui.place.selectedElementIdx != -1) {
+		int selectedElementIdx = page.ui.place.selectedElementIdx;
+		if (selectedElementIdx != -1
+				&& selectedElementIdx < page.sequence.getElements().size()) {
 			Object selectedElement = page.sequence.getElements()
-					.get(page.ui.place.selectedElementIdx);
+					.get(selectedElementIdx);
 			int visibleRowIndex = filteredElements.indexOf(selectedElement);
 			rowsModel.select(visibleRowIndex);
 			rowsModel.scrollSelectedIntoView();
