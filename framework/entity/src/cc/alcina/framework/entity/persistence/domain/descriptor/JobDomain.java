@@ -177,7 +177,8 @@ public class JobDomain {
 
 	public Topic<Job> topicFutureJob = Topic.create();
 
-	public Topic<List<JobStateMessage>> topicStateMessageEvents = Topic.create();
+	public Topic<List<JobStateMessage>> topicStateMessageEvents = Topic
+			.create();
 
 	/*
 	 * A channel to the servlet-layer observer (to aid debugging of issues that
@@ -438,7 +439,7 @@ public class JobDomain {
 
 		private boolean firedToProcessing;
 
-		// synchronization: all access is synchronized on the AllocationQueue
+		// synchronization: all access is synchronized on the bufferedEvents
 		// instance
 		List<Event> bufferedEvents = new ArrayList<>();
 
@@ -497,7 +498,7 @@ public class JobDomain {
 			}
 		}
 
-		synchronized void checkFireToProcessing(Job job) {
+		void checkFireToProcessing(Job job) {
 			if (job == this.job && !firedToProcessing) {
 				try {
 					switch (job.resolveState()) {
@@ -528,13 +529,16 @@ public class JobDomain {
 			checkFireToProcessing(job);
 		}
 
-		synchronized void flushBufferedEvents() {
-			Iterator<Event> itr = bufferedEvents.iterator();
-			while (itr.hasNext()) {
-				Event event = itr.next();
-				if (event.isCommitted() && allocatorEventListenersAttached) {
-					publish0(event);
-					itr.remove();
+		void flushBufferedEvents() {
+			synchronized (bufferedEvents) {
+				Iterator<Event> itr = bufferedEvents.iterator();
+				while (itr.hasNext()) {
+					Event event = itr.next();
+					if (event.isCommitted()
+							&& allocatorEventListenersAttached) {
+						publish0(event);
+						itr.remove();
+					}
 				}
 			}
 		}
@@ -686,14 +690,15 @@ public class JobDomain {
 		 * ahhhhhh....we need to buffer events if in "todomaincommitting",
 		 * otherwise we may hit the allocators before the commit is finished
 		 * 
-		 * synchronization:
 		 */
-		public synchronized void publish(EventType type) {
+		public void publish(EventType type) {
 			Event event = new Event(type);
 			if (TransactionEnvironment.get().isToDomainCommitting()
 					|| !allocatorEventListenersAttached) {
-				bufferedEvents.add(event);
-				queuesWithBufferedEvents.add(this);
+				synchronized (bufferedEvents) {
+					bufferedEvents.add(event);
+					queuesWithBufferedEvents.add(this);
+				}
 			} else {
 				publish0(event);
 			}
