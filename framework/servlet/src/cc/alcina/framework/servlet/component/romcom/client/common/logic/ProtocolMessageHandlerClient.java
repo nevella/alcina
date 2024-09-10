@@ -127,7 +127,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				return;
 			}
 		}
-		if (event.getCurrentEventTarget().isDetachedElement()) {
+		if (event.getEventTarget().isDetachedElement()) {
 			return;
 		}
 		if (currentEventMessage == null) {
@@ -223,7 +223,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 					.applyMutations(message.domMutations, true);
 			message.eventMutations.forEach(m -> {
 				try {
-					Element elem = (Element) m.path.node();
+					Element elem = (Element) m.nodeId.node();
 					if (m.eventBits == -1) {
 						DOM.sinkBitlessEvent(elem, m.eventTypeName);
 					} else {

@@ -16,15 +16,15 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
  * as is
  */
 public interface TransactionEnvironment {
-	public static TransactionEnvironment get() {
+	static TransactionEnvironment get() {
 		return Registry.impl(TransactionEnvironment.class);
 	}
 
-	public static void withDomain(Runnable runnable) {
+	static void withDomain(Runnable runnable) {
 		get().withDomainAccess0(runnable);
 	}
 
-	public static void withDomainTxThrowing(ThrowingRunnable runnable) {
+	static void withDomainTxThrowing(ThrowingRunnable runnable) {
 		TransactionEnvironment env = get();
 		env.withDomainAccess0(() -> {
 			boolean startedTx = false;
@@ -44,11 +44,11 @@ public interface TransactionEnvironment {
 		});
 	}
 
-	public static <T> T withDomain(Supplier<T> supplier) {
+	static <T> T withDomain(Supplier<T> supplier) {
 		return get().withDomainAccess0(supplier);
 	}
 
-	public static <T> T withDomainCommitting(Supplier<T> supplier) {
+	static <T> T withDomainCommitting(Supplier<T> supplier) {
 		return withDomain(() -> {
 			T result = supplier.get();
 			get().commit();
@@ -56,35 +56,37 @@ public interface TransactionEnvironment {
 		});
 	}
 
-	public void begin();
+	void begin();
 
-	public void commit();
+	void commit();
 
-	public void commitWithBackoff();
+	void commitWithBackoff();
 
-	public void end();
+	void end();
 
-	public void endAndBeginNew();
+	void endAndBeginNew();
 
-	public void ensureBegun();
+	void ensureBegun();
 
-	public void ensureEnded();
+	void ensureEnded();
 
-	public TransactionId getCurrentTxId();
+	TransactionId getCurrentTxId();
 
-	public boolean isInActiveTransaction();
+	boolean isInActiveTransaction();
 
-	public boolean isInNonSingleThreadedProjectionState();
+	boolean isInNonSingleThreadedProjectionState();
 
-	public boolean isInTransaction();
+	boolean isInTransaction();
 
-	public boolean isMultiple();
+	boolean isMultiple();
 
-	public boolean isToDomainCommitting();
+	boolean isToDomainCommitting();
 
-	public void waitUntilCurrentRequestsProcessed();
+	void waitUntilCurrentRequestsProcessed();
 
-	public void withDomainAccess0(Runnable runnable);
+	void withDomainAccess0(Runnable runnable);
 
-	public <T> T withDomainAccess0(Supplier<T> supplier);;
+	<T> T withDomainAccess0(Supplier<T> supplier);
+
+	boolean isCommittedOrRelatedCommitted(TransactionId transactionId);
 }

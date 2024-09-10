@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 
 @Bean(PropertySource.FIELDS)
 public final class EventSystemMutation {
-	public AttachId path;
+	public AttachId nodeId;
 
 	public int eventBits = -1;
 
@@ -17,19 +17,19 @@ public final class EventSystemMutation {
 	public EventSystemMutation() {
 	}
 
-	public EventSystemMutation(AttachId path, int eventBits) {
-		this.path = path;
+	public EventSystemMutation(AttachId nodeId, int eventBits) {
+		this.nodeId = nodeId;
 		this.eventBits = eventBits;
 	}
 
-	public EventSystemMutation(AttachId path, String eventTypeName) {
-		this.path = path;
+	public EventSystemMutation(AttachId nodeId, String eventTypeName) {
+		this.nodeId = nodeId;
 		this.eventTypeName = eventTypeName;
 	}
 
 	@Override
 	public String toString() {
 		return FormatBuilder.keyValues("bits", eventBits, "type", eventTypeName,
-				"path", path);
+				"nodeId", nodeId);
 	}
 }

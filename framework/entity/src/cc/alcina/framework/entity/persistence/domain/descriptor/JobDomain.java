@@ -61,7 +61,6 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.BaseProjectionSupportMvcc.TreeMapCreatorImpl;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
@@ -764,7 +763,7 @@ public class JobDomain {
 			}
 
 			boolean isCommitted() {
-				return Transactions
+				return TransactionEnvironment.get()
 						.isCommittedOrRelatedCommitted(transactionId);
 			}
 

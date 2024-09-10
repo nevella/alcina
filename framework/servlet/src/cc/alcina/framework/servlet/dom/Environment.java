@@ -255,7 +255,7 @@ public class Environment {
 
 		void addEventMutation(EventSystemMutation eventSystemMutation) {
 			runWithMutations(() -> {
-				Element elem = (Element) eventSystemMutation.path.node();
+				Element elem = (Element) eventSystemMutation.nodeId.node();
 				mutations.eventMutations.add(eventSystemMutation);
 			});
 		}

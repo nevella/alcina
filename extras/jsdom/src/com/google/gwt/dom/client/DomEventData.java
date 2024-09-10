@@ -6,6 +6,16 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
+/*
+ * Notes on value/inputValue propagation. To prevent round-trips - when say an
+ * input element A has the focus, is edited, then another element B is clicked,
+ * the click event C on B will fire before the blur + onChange on A.
+ * 
+ * However, the code handling C will require the current value of A. To ensure
+ * this, we preferentially copy A.inputValue (jso) to A.value (local). Note that
+ * this requires an Input.Handler be registered on A, not just a Change.Handler
+ * (so will require for Dirndl forms args.nodeEditors()==true)
+ */
 @Bean(PropertySource.FIELDS)
 public final class DomEventData {
 	public AttachId firstReceiver;

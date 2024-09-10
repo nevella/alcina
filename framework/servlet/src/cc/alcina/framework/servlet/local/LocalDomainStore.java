@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
@@ -115,7 +116,14 @@ public class LocalDomainStore {
 	}
 
 	public void commit() {
-		LocalDomainQueue.run(() -> commitToStorageTransformListener.flush());
+		try {
+			LooseContext.pushWithTrue(
+					TransactionEnvironmentNonTx.CONTEXT_COMMITTING);
+			LocalDomainQueue
+					.run(() -> commitToStorageTransformListener.flush());
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	public CommitToStorageTransformListener

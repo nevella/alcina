@@ -6,10 +6,14 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.domain.TransactionId;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 public class TransactionEnvironmentNonTx implements TransactionEnvironment {
+	public static final String CONTEXT_COMMITTING = TransactionEnvironmentNonTx.class
+			.getName() + ".CONTEXT_COMMITTING";
+
 	public static void runAndCommit(ThrowingRunnable runnable) {
 		LocalDomainQueue.run(() -> {
 			runnable.run();
@@ -109,5 +113,10 @@ public class TransactionEnvironmentNonTx implements TransactionEnvironment {
 			ref.set(supplier.get());
 		});
 		return ref.get();
+	}
+
+	@Override
+	public boolean isCommittedOrRelatedCommitted(TransactionId transactionId) {
+		return LooseContext.is(CONTEXT_COMMITTING);
 	}
 }
