@@ -60,9 +60,10 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 		Matcher matcher = pattern.matcher(query);
 		if (matcher.matches()) {
 			AppSuggestionEntry suggestion = new AppSuggestionEntry();
-			suggestion.match = Ax.format("Load sequence: '%s'", query);
-			suggestion.modelEvent = SequenceEvents.LoadSequence.class;
 			suggestion.eventData = matcher.group(1);
+			suggestion.match = Ax.format("Load sequence: '%s'",
+					suggestion.eventData);
+			suggestion.modelEvent = SequenceEvents.LoadSequence.class;
 			suggestions.add(suggestion);
 		}
 	}
@@ -72,9 +73,10 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 		Matcher matcher = pattern.matcher(query);
 		if (matcher.matches()) {
 			AppSuggestionEntry suggestion = new AppSuggestionEntry();
-			suggestion.match = Ax.format("Highlight: '%s'", query);
-			suggestion.modelEvent = SequenceEvents.HighlightElements.class;
 			suggestion.eventData = matcher.group(1);
+			suggestion.match = Ax.format("Highlight: '%s'",
+					suggestion.eventData);
+			suggestion.modelEvent = SequenceEvents.HighlightElements.class;
 			suggestions.add(suggestion);
 		}
 	}

@@ -737,7 +737,7 @@ public class JobContext {
 		setStatusMessage("%s (%s/%s)", message, itemsCompleted, itemCount);
 	}
 
-	public void updateProcessState(ProcessState processState) {
+	void updateProcessState(ProcessState processState) {
 		if (allocator.thread != null) {
 			processState.setAllocatorThreadName(allocator.thread.getName());
 		}

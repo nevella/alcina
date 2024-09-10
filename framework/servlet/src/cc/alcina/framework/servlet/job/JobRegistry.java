@@ -575,7 +575,11 @@ public class JobRegistry {
 
 	public List<Job> getThreadData(Job job) {
 		ThreadDataWaiter threadDataWaiter = new ThreadDataWaiter(job);
-		threadDataWaiter.await();
+		if (DomainStore.hasStores()) {
+			threadDataWaiter.await();
+		} else {
+			threadDataWaiter.populate();
+		}
 		return threadDataWaiter.queriedJobs;
 	}
 
@@ -875,11 +879,11 @@ public class JobRegistry {
 		scheduler.stopService();
 	}
 
-	protected boolean trackInternalMetrics() {
+	boolean trackInternalMetrics() {
 		return Configuration.is("trackInternalMetrics");
 	}
 
-	private void updateThreadData(JobStateMessage message) {
+	void updateThreadData(JobStateMessage message) {
 		logger.info("Checking thread data for job {}", message.getJob());
 		JobContext context = activeJobs.get(message.getJob());
 		if (context != null) {
@@ -1378,11 +1382,13 @@ public class JobRegistry {
 	class ThreadDataWaiter {
 		List<Job> queriedJobs = new ArrayList<>();
 
-		private Job job;
+		List<JobStateMessage> queriedMessages = new ArrayList<>();
 
-		private CountDownLatch latch;
+		Job job;
 
-		private TopicListener<List<JobStateMessage>> listener = messages -> {
+		CountDownLatch latch;
+
+		TopicListener<List<JobStateMessage>> listener = messages -> {
 			for (JobStateMessage message : messages) {
 				if (message.getProcessState() != null
 						&& queriedJobs.contains(message.getJob())) {
@@ -1391,19 +1397,17 @@ public class JobRegistry {
 			}
 		};
 
-		public ThreadDataWaiter(Job job) {
+		ThreadDataWaiter(Job job) {
 			this.job = job;
 		}
 
-		public void await() {
-			Stream.concat(Stream.of(job), job.provideDescendants())
-					.filter(j -> j.getState() == JobState.PROCESSING)
-					.forEach(job -> {
-						queriedJobs.add(job);
-						JobStateMessage stateMessage = PersistentImpl
-								.create(JobStateMessage.class);
-						stateMessage.setJob(job);
-					});
+		void populate() {
+			createQueries();
+			queriedMessages.forEach(JobRegistry.this::updateThreadData);
+		}
+
+		void await() {
+			createQueries();
 			try {
 				JobDomain.get().topicStateMessageEvents.add(listener);
 				latch = new CountDownLatch(queriedJobs.size());
@@ -1418,6 +1422,18 @@ public class JobRegistry {
 			} finally {
 				JobDomain.get().topicStateMessageEvents.remove(listener);
 			}
+		}
+
+		void createQueries() {
+			Stream.concat(Stream.of(job), job.provideDescendants())
+					.filter(j -> j.getState() == JobState.PROCESSING)
+					.forEach(job -> {
+						queriedJobs.add(job);
+						JobStateMessage stateMessage = PersistentImpl
+								.create(JobStateMessage.class);
+						stateMessage.setJob(job);
+						queriedMessages.add(stateMessage);
+					});
 		}
 	}
 

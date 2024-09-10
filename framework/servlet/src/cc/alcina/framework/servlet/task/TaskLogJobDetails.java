@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DateStyle;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.servlet.job.JobContext;
@@ -260,10 +259,8 @@ public class TaskLogJobDetails extends PerformerTask {
 						.withJobId(id(job)).withDetails(true));
 				div.html().addLink("Large result/details", href, "");
 			}
-			if (DomainStore.hasStores()) {
-				List<Job> threadData = JobRegistry.get().getThreadData(job);
-				processData(threadData, body);
-			}
+			List<Job> threadData = JobRegistry.get().getThreadData(job);
+			processData(threadData, body);
 			renderRelated(job, body);
 			fields(job, body);
 			JobContext.get().getJob().setLargeResult(doc.fullToString());
