@@ -29,6 +29,12 @@ public class DirndlObservables {
 		}
 	}
 
+	public static class RenderElement extends Observable {
+		RenderElement(DirectedLayout.Node layoutNode) {
+			super(layoutNode);
+		}
+	}
+
 	public static class Observable implements ProcessObservable {
 		final DirectedLayout.Node node;
 

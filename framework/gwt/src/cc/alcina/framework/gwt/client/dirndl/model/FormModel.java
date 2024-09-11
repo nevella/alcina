@@ -88,6 +88,86 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
+/**
+ * <p>
+ * A FormModel is the intermediate structure used to present, validate and
+ * commit a form-based view of a Java Bean.
+ * <p>
+ * (v2 documentation - for Dirndl editors, not (legacy) GWT widget editors)
+ * <ul>
+ * <li>How is it created?
+ * <p>
+ * A property in the rendered Dirndl model tree will be annotated with a
+ * directive to transform the property model to a FormModel or FormModel
+ * container- e.g.
+ * 
+ * <pre>
+ * <code>
+class PropertiesArea extends Model.Fields {
+...
+@Directed.Transform(BeanForm.Viewer.class)
+static class SelectionArea
+</code>
+ * </pre>
+ * 
+ * <p>
+ * The transform sequence is:
+ * <ul>
+ * <li><code>SelectionArea</code> instance to
+ * <li><code>BeanForm</code> subtype, then
+ * <li><code>beanForm.bindable</code> via <code>BeanForm.FormTransform</code>
+ * via <code>FormModelProvider.get()
+	.impl(BeanForm.FormTransform.Impl.class)</code> (the app-specific Bean to
+ * Form transforer) to <code>FormModel</code>
+ * </ul>
+ * <li>What does it do?
+ * <p>
+ * See the sequence tree below (TODO) - the short form is:
+ * <ul>
+ * <li>Set up FormModel.state
+ * <li>Generate FormElement instances instances corresponding to the Bean
+ * properties. These contain a Field, which is responsible for rendering
+ * <li>Generate BridgingValueRenderers for the fields
+ * <li>(Dirndl) Generate (render) the DOM elements corresponding to the
+ * transformed Field values
+ * <li>Populate the FormElement bindable (which will be used for validation)
+ * 
+ * </ul>
+ * <li>How is it tested?
+ * <p>
+ * There isn't an Alcina test yet - but one of the general-purpose romcom
+ * components (say SequenceBrowser) will have one as part of its Settings editor
+ * <li>How is it tested practically?
+ * <p>
+ * N/A so far
+ * <li>What does it interact with?
+ * <p>
+ * <ul>
+ * <li>Remote validation
+ * <li>Validation feedback
+ * <li>Submit events
+ * </ul>
+ * <li>What are the non-intuitives?
+ * </ul>
+ */
+/*
+ * Notes:
+ * @formatter:off
+ 
+* trad: validation can be invoked directly
+* modern: invoke as part of set (since that code path can handle async validation)
+
+* form validation works on a binding instance (which binds domain model props to ui model props)
+* note - validation sequence - it *is* necessary to commit text boxes before validation, since DOM events mean onChange may not have fired by the time validation is required
+* for romcom, input/textarea value caching means this is not a per hit (if not using legacy widgets - i.e. there's an onInput listener)
+* during validation, StringInput commit must be called
+
+* form field (bridging) validator setup
+    * FormElement.formBinding is set on element creation
+    * FormElement.binding is set on BridgingValueRenderer.setupBinding
+
+ * @formatter:on
+ */
 // FIXME - dirndl 1x1dz - actions - check validation, form submit
 @Directed
 public class FormModel extends Model

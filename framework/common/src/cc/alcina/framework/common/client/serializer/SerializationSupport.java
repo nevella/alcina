@@ -124,11 +124,13 @@ class SerializationSupport {
 						if (property.isWriteOnly()) {
 							return false;
 						}
-						String name = property.getName();
-						if (name.equals("nonRelational")
-								&& forClass.getName().contains("Morpheme")) {
-							int debug = 3;
+						if (ReflectiveSerializer.applicationPropertyFilter != null) {
+							if (!ReflectiveSerializer.applicationPropertyFilter
+									.test(property)) {
+								return false;
+							}
 						}
+						String name = property.getName();
 						AlcinaTransient alcinaTransient = Annotations.resolve(
 								valueClass, name, AlcinaTransient.class);
 						if (alcinaTransient != null) {

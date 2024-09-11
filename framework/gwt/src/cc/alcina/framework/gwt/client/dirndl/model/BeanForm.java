@@ -112,7 +112,7 @@ public class BeanForm extends Model {
 	 */
 	@Reflected
 	public static class FormTransform extends
-			AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable> {
+			AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, FormModel> {
 		private Impl delegate;
 
 		public FormTransform() {
@@ -121,25 +121,25 @@ public class BeanForm extends Model {
 		}
 
 		@Override
-		public Bindable apply(BaseSourcesPropertyChangeEvents t) {
+		public FormModel apply(BaseSourcesPropertyChangeEvents t) {
 			return delegate.apply(t);
 		}
 
 		@Override
-		public AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable>
+		public AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, FormModel>
 				withContextNode(Node node) {
 			return delegate.withContextNode(node);
 		}
 
 		public abstract static class Impl extends
-				AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, Bindable> {
+				AbstractContextSensitiveModelTransform<BaseSourcesPropertyChangeEvents, FormModel> {
 		}
 
 		@Reflected
 		public static class BasicFormTransform
 				extends BeanForm.FormTransform.Impl {
 			@Override
-			public Bindable apply(BaseSourcesPropertyChangeEvents model) {
+			public FormModel apply(BaseSourcesPropertyChangeEvents model) {
 				AbstractContextSensitiveModelTransform transformer = new FormModel.BindableFormModelTransformer();
 				if (model instanceof DirectedEntityActivity) {
 					transformer = new FormModel.EntityTransformer();

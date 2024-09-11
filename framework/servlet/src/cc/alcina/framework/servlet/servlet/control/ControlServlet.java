@@ -309,8 +309,9 @@ public class ControlServlet extends AlcinaServlet {
 	}
 
 	public enum TaskExecutionType {
-		WAIT_RETURN_LOG, WAIT_RETURN_ID, WAIT_RETURN_LARGE_OBJECT_SERIALIZED,
-		SCHEDULE_RETURN_ID;
+		WAIT_RETURN_LOG, WAIT_RETURN_ID,
+		// requires recordLargeInMemoryResult
+		WAIT_RETURN_LARGE_OBJECT_SERIALIZED, SCHEDULE_RETURN_ID;
 
 		public static TaskExecutionType defaultForWait(boolean wait) {
 			return wait ? WAIT_RETURN_LOG : SCHEDULE_RETURN_ID;
