@@ -315,7 +315,7 @@ public class ElementQuery {
 		}
 	}
 
-	void withElement(Consumer<WebElement> consumer) {
+	public void withElement(Consumer<WebElement> consumer) {
 		Consumer<List<WebElement>> intermediate = list -> consumer
 				.accept(list.get(0));
 		withElements(intermediate);

@@ -233,15 +233,15 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 		public void perform(WdActionPerformer wdPerformer,
 				Story.Action.Ui.ScrollIntoView action) throws Exception {
 			ElementQuery query = WdActionPerformer.createQuery(wdPerformer);
-			WebElement elem = query.getElement();
-			Preconditions.checkNotNull(elem);
-			JavascriptExecutor executor = (JavascriptExecutor) wdPerformer.wdContext.token
-					.getWebDriver();
-			int fromTop = 150;
-			String script = Io.read().resource("res/scrollIntoView.js")
-					.asString();
-			script = Ax.format(script, fromTop).replace("//", "");
-			executor.executeScript(script, elem);
+			query.withElement(elem -> {
+				JavascriptExecutor executor = (JavascriptExecutor) wdPerformer.wdContext.token
+						.getWebDriver();
+				int fromTop = 150;
+				String script = Io.read().resource("res/scrollIntoView.js")
+						.asString();
+				script = Ax.format(script, fromTop).replace("//", "");
+				executor.executeScript(script, elem);
+			});
 		}
 	}
 }

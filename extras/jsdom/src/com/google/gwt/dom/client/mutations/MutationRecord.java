@@ -247,7 +247,7 @@ public final class MutationRecord {
 			attributeName = jso.getAttributeName();
 			attributeNamespace = jso.getAttributeNamespace();
 			oldValue = jso.getOldValue();
-			oldValue = jso.getOldValue();
+			newValue = jso.getNewValue();
 			type = Type.valueOf(jso.getType());
 		} else {
 			// optimised, reduce # ws calls

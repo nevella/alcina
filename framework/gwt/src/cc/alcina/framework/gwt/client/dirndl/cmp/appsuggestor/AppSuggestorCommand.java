@@ -1,12 +1,14 @@
 package cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.*;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.function.Predicate;
+
+import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
@@ -57,7 +59,7 @@ public @interface AppSuggestorCommand {
 		public static class IsDeveloper implements Filter {
 			@Override
 			public boolean test(Class<? extends AppSuggestorEvent> t) {
-				return PermissionsManager.isDeveloper();
+				return PermissionsManager.isDeveloper() || !GWT.isScript();
 			}
 		}
 

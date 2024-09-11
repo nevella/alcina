@@ -124,7 +124,6 @@ class SyncMutations2 {
 					if (attachId == 0) {
 						childCursor = mutationsAccess
 								.remoteToLocal(childCursorJso);
-						int attachId2 = childCursorJso.getAttachId();
 						mutationsAccess.insertAttachedBefore(childCursor,
 								nextCursor);
 					} else {

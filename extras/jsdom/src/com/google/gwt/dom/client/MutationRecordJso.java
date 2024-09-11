@@ -23,7 +23,7 @@ public class MutationRecordJso extends JavaScriptObject {
     var obj = {
       addedNodes : this.addedNodes.length,
       attributeName : this.attributeName,
-      attributeNamespace : this.aattributeNamespace,
+      attributeNamespace : this.attributeNamespace,
       type : this.type,
       nextSibling : this.nextSibling == null ? 0 : 1,
       oldValue : this.oldValue,
@@ -40,7 +40,7 @@ public class MutationRecordJso extends JavaScriptObject {
 
 	static final native String getNewValue(MutationRecordJso record)/*-{
 		var newValue = null;
-		switch(this.type){
+		switch(record.type){
 		case "attributes":
 			newValue = record.target.getAttribute(record.attributeName);
 			break;
