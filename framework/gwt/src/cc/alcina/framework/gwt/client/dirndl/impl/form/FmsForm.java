@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
-import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
@@ -102,7 +101,7 @@ public class FmsForm {
 		priority = Priority.REMOVE)
 	public static class FmsFormTransform extends BeanForm.FormTransform.Impl {
 		@Override
-		public Bindable apply(BaseSourcesPropertyChangeEvents model) {
+		public FormModel apply(BaseSourcesPropertyChangeEvents model) {
 			try {
 				RenderContext.get().push();
 				/*

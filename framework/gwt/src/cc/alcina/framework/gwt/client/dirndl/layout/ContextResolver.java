@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -224,6 +225,8 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		if (layoutNode.rendered != null) {
 			return;
 		}
+		ProcessObservers.publish(DirndlObservables.RenderElement.class,
+				() -> new DirndlObservables.RenderElement(layoutNode));
 		// CLEAN - only problematic if ML is HTML-ish
 		if (tagName.toLowerCase().matches("body|title|head|html|style|script")
 				&& !(layoutNode.model instanceof RestrictedHtmlTag)) {

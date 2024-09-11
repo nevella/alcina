@@ -22,6 +22,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -155,6 +156,11 @@ public class ReflectiveSerializer {
 		SerializationSupport.deserializationInstance.types = new TransienceContext[] {
 				TransienceContext.CLIENT };
 	}
+
+	/**
+	 * For use by clients which seriously prune the reachable reflective types
+	 */
+	public static Predicate<Property> applicationPropertyFilter;
 
 	public static <T> T deserialize(String value, DeserializerOptions options) {
 		try {
@@ -1214,10 +1220,15 @@ public class ReflectiveSerializer {
 			List<Property> list = state.serializationSupport
 					.getProperties(type);
 			for (Property property : list) {
-				PropertyNode propertyNode = new PropertyNode(state, property);
-				propertyMap.put(property, propertyNode);
-				propertyNameMap.put(property.getName(), propertyNode);
-				properties.add(propertyNode);
+				try {
+					PropertyNode propertyNode = new PropertyNode(state,
+							property);
+					propertyMap.put(property, propertyNode);
+					propertyNameMap.put(property.getName(), propertyNode);
+					properties.add(propertyNode);
+				} catch (Exception e) {
+					Ax.out("Exclude: %s", property.toLocationString());
+				}
 			}
 		}
 
