@@ -287,6 +287,11 @@ public class BridgingValueRenderer extends DirectedRenderer {
 				if (directAnnotation != null) {
 					contextAnnotation = directAnnotation;
 				}
+				A parentAnnotation = parent.contextAnnotation(
+						valueLocation.property, clazz, resolutionContext);
+				if (parentAnnotation != null) {
+					contextAnnotation = parentAnnotation;
+				}
 			}
 			return contextAnnotation;
 		}

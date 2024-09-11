@@ -275,6 +275,9 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	@Override
 	protected <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
+		ProcessObservers.publish(DirndlObservables.ResolveAnnotations0.class,
+				() -> new DirndlObservables.ResolveAnnotations0(annotationClass,
+						location));
 		// first try custom resolution (which allows parents to apply), then use
 		// the resolver
 		List<A> custom = resolveAnnotations1(annotationClass, location);

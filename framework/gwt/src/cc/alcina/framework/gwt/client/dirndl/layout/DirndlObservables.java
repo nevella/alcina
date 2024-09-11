@@ -1,9 +1,13 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.lang.annotation.Annotation;
+
 import com.google.gwt.event.shared.GwtEvent;
 
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedName;
 
 /**
  * A container class for ({@link ProcessObservable} subtype) observables emitted
@@ -35,6 +39,24 @@ public class DirndlObservables {
 		}
 	}
 
+	public static class ResolveAnnotations0 implements ProcessObservable {
+		public Class<? extends Annotation> annotationClass;
+
+		public AnnotationLocation location;
+
+		ResolveAnnotations0(Class<? extends Annotation> annotationClass,
+				AnnotationLocation location) {
+			this.annotationClass = annotationClass;
+			this.location = location;
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("annotationClass",
+					NestedName.get(annotationClass), "location", location);
+		}
+	}
+
 	public static class Observable implements ProcessObservable {
 		final DirectedLayout.Node node;
 
@@ -60,10 +82,9 @@ public class DirndlObservables {
 
 		@Override
 		public String toString() {
-			FormatBuilder format = new FormatBuilder();
-			format.appendKeyValues("property", node.getProperty(), "node", node,
-					"eventBinding", eventBinding, "gwtEvent", gwtEvent);
-			return format.toString();
+			return FormatBuilder.keyValues("property", node.getProperty(),
+					"node", node, "eventBinding", eventBinding, "gwtEvent",
+					gwtEvent);
 		}
 	}
 }
