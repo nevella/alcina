@@ -233,11 +233,19 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	@Override
 	public String getPropertyString(String name) {
 		if (Objects.equals(name, "value")) {
-			// after the first get (if any), the property will be updated by
-			// events rather than server->client call
+			// the cached value field is updated by onInput events, so if value
+			// is null the value will be the original (local dom tree) value
 			if (value == null) {
-				value = invokeSync("getPropertyString", List.of(String.class),
-						List.of(name));
+				switch (getNodeName()) {
+				case "input":
+					value = getAttribute("value");
+					break;
+				case "textarea":
+					value = elementFor().getInnerText();
+					break;
+				default:
+					throw new UnsupportedOperationException();
+				}
 			}
 			return value;
 		} else {

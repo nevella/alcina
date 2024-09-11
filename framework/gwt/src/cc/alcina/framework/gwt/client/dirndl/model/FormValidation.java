@@ -133,8 +133,9 @@ public class FormValidation {
 		topicValidationResult
 				.publish(new ValidationResult(ValidationState.VALIDATING));
 		try {
-			if ((Al.isBrowser() && !WidgetUtils.docHasFocus())
-					|| Al.localRomCom) {
+			if ((Al.isBrowser() && !WidgetUtils.docHasFocus()) ||
+			// don't test if romcom, just commit
+					true) {
 				GwittirUtils
 						.commitAllTextBoxes(formModel.getState().formBinding);
 			}

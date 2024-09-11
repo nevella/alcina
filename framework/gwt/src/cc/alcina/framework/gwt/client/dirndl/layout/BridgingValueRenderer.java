@@ -198,6 +198,7 @@ public class BridgingValueRenderer extends DirectedRenderer {
 			return field.getSharedAnnotationResolver().resolvedCache();
 		}
 
+		@Override
 		public synchronized <A extends Annotation> List<A> resolveAnnotations(
 				Class<A> annotationClass, AnnotationLocation location) {
 			AnnotationLocation sharedLocation = location

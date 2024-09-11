@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
@@ -72,14 +71,14 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  *
  */
 @Directed(
-	bindings = { @Binding(type = Type.PROPERTY, from = "value"),
-			@Binding(type = Type.PROPERTY, from = "placeholder"),
-			@Binding(type = Type.PROPERTY, from = "type"),
-			@Binding(type = Type.PROPERTY, from = "spellcheck"),
-			@Binding(type = Type.PROPERTY, from = "autocomplete"),
-			@Binding(type = Type.PROPERTY, from = "rows"),
-			@Binding(type = Type.PROPERTY, from = "disabled"),
-			@Binding(type = Type.PROPERTY, from = "title") },
+	bindings = { @Binding(type = Binding.Type.PROPERTY, from = "value"),
+			@Binding(type = Binding.Type.PROPERTY, from = "placeholder"),
+			@Binding(type = Binding.Type.PROPERTY, from = "type"),
+			@Binding(type = Binding.Type.PROPERTY, from = "spellcheck"),
+			@Binding(type = Binding.Type.PROPERTY, from = "autocomplete"),
+			@Binding(type = Binding.Type.PROPERTY, from = "rows"),
+			@Binding(type = Binding.Type.PROPERTY, from = "disabled"),
+			@Binding(type = Binding.Type.PROPERTY, from = "title") },
 	emits = { ModelEvents.Change.class, ModelEvents.Input.class,
 			ModelEvents.Commit.class })
 @TypeSerialization(reflectiveSerializable = false)
@@ -225,6 +224,8 @@ public class StringInput extends Model.Value<String>
 				.ifPresent(placeholder -> setPlaceholder(placeholder.value()));
 		event.node.optional(Autocomplete.class).ifPresent(
 				autocomplete -> setAutocomplete(autocomplete.value()));
+		event.node.optional(Type.class)
+				.ifPresent(type -> setType(type.value()));
 		event.node.optional(FocusOnBind.class)
 				.ifPresent(ann -> setFocusOnBind(true));
 		event.node.optional(TextArea.class)
@@ -293,13 +294,17 @@ public class StringInput extends Model.Value<String>
 		switch (domEvent.getNativeKeyCode()) {
 		case KeyCodes.KEY_ENTER:
 			if (commitOnEnter) {
-				value = getCurrentValue();
+				commitCurrentValue();
 				event.reemitAs(this, Commit.class);
 				domEvent.preventDefault();
 			}
 			// simulate a 'commit' event
 			break;
 		}
+	}
+
+	public void commitCurrentValue() {
+		value = getCurrentValue();
 	}
 
 	@Override
@@ -466,6 +471,14 @@ public class StringInput extends Model.Value<String>
 	@Documented
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	public @interface Autocomplete {
+		String value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface Type {
 		String value();
 	}
 

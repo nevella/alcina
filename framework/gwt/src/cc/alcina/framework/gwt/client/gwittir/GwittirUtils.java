@@ -24,6 +24,7 @@ import java.util.Map;
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -37,6 +38,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
@@ -149,6 +152,10 @@ public class GwittirUtils {
 		refreshTextBoxes(binding, null, true, true, false);
 	}
 
+	/*
+	 * FIXME - dirndl - the 'should be refreshed' should be an interface on the
+	 * editors, not this type checking
+	 */
 	public static void refreshFields(Binding binding, String onlyPropertyName,
 			boolean muteTransformManager, boolean onlyEmpties,
 			boolean onlyCommit, FormFieldTypeForRefresh[] types) {
@@ -159,9 +166,13 @@ public class GwittirUtils {
 				TransformManager.get().setIgnorePropertyChanges(true);
 			}
 			for (Binding b : allBindings) {
-				if (b.getLeft() == null || b.getLeft().object == null
-						|| b.getRight() == null
-						|| !(b.getLeft().object instanceof AbstractBoundWidget)) {
+				if (b.getLeft() == null) {
+					continue;
+				}
+				SourcesPropertyChangeEvents leftObject = b.getLeft().object;
+				if (leftObject == null || b.getRight() == null
+						|| !(leftObject instanceof AbstractBoundWidget
+								|| leftObject instanceof Model.Value)) {
 					continue;
 				}
 				if (onlyPropertyName != null && !onlyPropertyName
@@ -170,34 +181,35 @@ public class GwittirUtils {
 				}
 				boolean satisfiesType = false;
 				boolean isText = CommonUtils
-						.simpleClassName(b.getLeft().object.getClass())
+						.simpleClassName(leftObject.getClass())
 						.equals("TextBox")
-						|| b.getLeft().object instanceof PasswordTextBox;
+						|| leftObject instanceof PasswordTextBox
+						|| leftObject instanceof StringInput;
 				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.TEXT)
 						&& isText;
 				boolean isTextArea = CommonUtils
-						.simpleClassName(b.getLeft().object.getClass())
+						.simpleClassName(leftObject.getClass())
 						.equals("TextArea");
 				satisfiesType |= lTypes.contains(
 						FormFieldTypeForRefresh.TEXT_AREA) && isTextArea;
-				boolean isSetBasedListBox = (b
-						.getLeft().object instanceof SetBasedListBox);
+				boolean isSetBasedListBox = (leftObject instanceof SetBasedListBox);
 				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.SELECT)
 						&& isSetBasedListBox;
-				boolean isCheckbox = b.getLeft().object instanceof Checkbox;
+				boolean isCheckbox = leftObject instanceof Checkbox;
 				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.CHECK)
 						&& isCheckbox;
-				boolean isRadio = (b.getLeft().object instanceof RadioButton
-						|| b.getLeft().object instanceof RadioButtonList);
+				boolean isRadio = (leftObject instanceof RadioButton
+						|| leftObject instanceof RadioButtonList);
 				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.RADIO)
 						&& isRadio;
-				AbstractBoundWidget tb = (AbstractBoundWidget) b
-						.getLeft().object;
-				if (!tb.isVisible()) {
-					continue;
+				if (leftObject instanceof AbstractBoundWidget) {
+					AbstractBoundWidget tb = (AbstractBoundWidget) leftObject;
+					if (!tb.isVisible()) {
+						continue;
+					}
 				}
-				if (tb instanceof HasBinding) {
-					Binding subBinding = ((HasBinding) tb).getBinding();
+				if (leftObject instanceof HasBinding) {
+					Binding subBinding = ((HasBinding) leftObject).getBinding();
 					if (subBinding != null) {
 						refreshFields(subBinding, onlyPropertyName,
 								muteTransformManager, onlyEmpties, onlyCommit,
@@ -207,22 +219,47 @@ public class GwittirUtils {
 				if (satisfiesType) {
 					Object value = b.getRight().property
 							.get(b.getRight().object);
-					Object tbValue = tb.getValue();
-					if (onlyEmpties && tbValue != null) {
+					Object inputValue = null;
+					if (leftObject instanceof AbstractBoundWidget) {
+						inputValue = ((AbstractBoundWidget) leftObject)
+								.getValue();
+					} else if (leftObject instanceof Model.Value) {
+						inputValue = ((Model.Value) leftObject).getValue();
+					} else {
+						throw new UnsupportedOperationException();
+					}
+					if (onlyEmpties && inputValue != null) {
 						continue;
 					}
 					if (onlyCommit) {
+						if (leftObject instanceof StringInput) {
+							/*
+							 * StringInput.value doesn't exactly track
+							 * <element>.value
+							 */
+							((StringInput) leftObject).commitCurrentValue();
+						}
 						b.setRight();
 					} else {
 						Object other = isSetBasedListBox
-								? ((SetBasedListBox) tb).provideOtherValue()
-								: " ".equals(tbValue) ? "" : " ";
+								? ((SetBasedListBox) leftObject)
+										.provideOtherValue()
+								: " ".equals(inputValue) ? "" : " ";
 						other = isCheckbox
-								? !(CommonUtils.bv((Boolean) tb.getValue()))
+								? !(CommonUtils.bv((Boolean) inputValue))
 								: other;
-						tb.setValue(other);
-						b.getRight().property.set(b.getRight().object, value);
-						tb.setValue(tbValue);
+						if (leftObject instanceof AbstractBoundWidget) {
+							AbstractBoundWidget abw = (AbstractBoundWidget) leftObject;
+							abw.setValue(other);
+							b.getRight().property.set(b.getRight().object,
+									value);
+							abw.setValue(inputValue);
+						} else if (leftObject instanceof Model.Value) {
+							b.getRight().property.set(b.getRight().object,
+									value);
+						} else {
+							throw new UnsupportedOperationException();
+						}
 					}
 				}
 			}

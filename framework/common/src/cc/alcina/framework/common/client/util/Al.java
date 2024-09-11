@@ -50,6 +50,4 @@ public class Al {
 			return true;
 		}
 	}
-
-	public static boolean localRomCom;
 }
