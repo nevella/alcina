@@ -11,6 +11,8 @@ import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
+import com.google.gwt.dom.client.SimpleTreeWalkerImpl;
+
 /**
  * <p>
  * Ideally the treewalker would be positioned before 'current' - since it isn't,
@@ -35,8 +37,14 @@ public class DomTokenStream implements Iterator<DomNode> {
 
 	public DomTokenStream(DomNode node) {
 		this.doc = node.document;
-		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
-				node.w3cNode(), NodeFilter.SHOW_ALL, null, true);
+		if (doc.domDoc() instanceof DocumentTraversal) {
+			DocumentTraversal documentTraversal = (DocumentTraversal) doc
+					.domDoc();
+			this.tw = documentTraversal.createTreeWalker(node.w3cNode(),
+					NodeFilter.SHOW_ALL, null, true);
+		} else {
+			this.tw = new SimpleTreeWalkerImpl(node.w3cNode());
+		}
 	}
 
 	public void afterModification() {
