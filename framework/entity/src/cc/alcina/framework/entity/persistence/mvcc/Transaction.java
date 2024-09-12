@@ -147,14 +147,21 @@ public class Transaction implements Comparable<Transaction> {
 
 	public static int commit() {
 		Transaction transaction = provideCurrentThreadTransaction();
-		if (transaction == null) {
-			Preconditions.checkState(!TransformManager.get().hasTransforms());
-			return 0;
-		} else {
-			Preconditions.checkState(transaction.isWriteable()
-					|| TransformManager.get().getTransforms().isEmpty());
-			int transformCount = TransformCommit.commitTransformsAsRoot();
-			return transformCount;
+		try {
+			if (transaction == null) {
+				Preconditions
+						.checkState(!TransformManager.get().hasTransforms());
+				return 0;
+			} else {
+				Preconditions.checkState(transaction.isWriteable()
+						|| TransformManager.get().getTransforms().isEmpty());
+				int transformCount = TransformCommit.commitTransformsAsRoot();
+				return transformCount;
+			}
+		} catch (IllegalStateException e) {
+			logger.info("Uncommitted transforms:");
+			logger.info(TransformManager.get().getTransforms().toString());
+			throw e;
 		}
 	}
 
