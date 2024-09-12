@@ -309,7 +309,10 @@ public final class MutationNode {
 			// (since we've listeed the parent's kids during the inverse tree
 			// build)
 			Node delta = remove.node();
-			target.removeChild(delta);
+			// FIXME - null check should not be needed -
+			if (delta != null) {
+				target.removeChild(delta);
+			}
 			// because the non-local code could then reinsert parts of the
 			// local/remote synced structure, make sure all the subtree
 			// local/remote links are removed

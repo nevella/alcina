@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FileUtils;
+import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -126,20 +127,31 @@ public interface Sequence<T> {
 		@Override
 		public Sequence<?> load(String location) {
 			sequence.name = name;
-			try {
-				sequence.elements = (List) SEUtilities
-						.listFilesRecursive(path, null).stream()
-						.filter(f -> f.isFile())
-						.map(f -> Io.read().file(f).asString())
-						.map(serializationRefactoringHandler::apply)
-						.map(s -> ReflectiveSerializer.deserialize(s,
-								new DeserializerOptions()
-										.withContinueOnException(true)))
-						.sorted().collect(Collectors.toList());
-			} catch (Exception e) {
-				e.printStackTrace();
-				sequence.name += " (load exception)";
+			if (!new File(path).exists()) {
+				// FIXME - romcom - this causes a mutation record apply issue -
+				// see
+				// com.google.gwt.dom.client.mutations.MutationNode.remove(MutationNode
+				// remove, ApplyTo applyTo) -
+				// https://github.com/nevella/alcina/issues/34
+				StatusModule.get().showMessageTransitional(Ax.format(
+						"Load sequence - path '%s' does not exist", path));
 				sequence.elements = new ArrayList<>();
+			} else {
+				try {
+					sequence.elements = (List) SEUtilities
+							.listFilesRecursive(path, null).stream()
+							.filter(f -> f.isFile())
+							.map(f -> Io.read().file(f).asString())
+							.map(serializationRefactoringHandler::apply)
+							.map(s -> ReflectiveSerializer.deserialize(s,
+									new DeserializerOptions()
+											.withContinueOnException(true)))
+							.sorted().collect(Collectors.toList());
+				} catch (Exception e) {
+					e.printStackTrace();
+					sequence.name += " (load exception)";
+					sequence.elements = new ArrayList<>();
+				}
 			}
 			return sequence;
 		}

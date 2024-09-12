@@ -236,12 +236,13 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 			// the cached value field is updated by onInput events, so if value
 			// is null the value will be the original (local dom tree) value
 			if (value == null) {
-				switch (getNodeName()) {
+				Element elem = elementFor();
+				switch (elem.getNodeName()) {
 				case "input":
-					value = getAttribute("value");
+					value = elem.getAttribute("value");
 					break;
 				case "textarea":
-					value = elementFor().getInnerText();
+					value = elem.getInnerText();
 					break;
 				default:
 					throw new UnsupportedOperationException();

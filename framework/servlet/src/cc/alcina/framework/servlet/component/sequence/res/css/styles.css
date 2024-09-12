@@ -536,8 +536,14 @@ body > page > header > left {
   justify-content: flex-start;
   grid-area: left;
 }
-body > page > header > left > name {
+body > page > header > left > a.name {
   white-space: nowrap;
+  color: white;
+  text-decoration: none;
+}
+body > page > header > left > a.name:hover {
+  color: white;
+  text-decoration: underline;
 }
 body > page > header > mid {
   grid-area: mid;

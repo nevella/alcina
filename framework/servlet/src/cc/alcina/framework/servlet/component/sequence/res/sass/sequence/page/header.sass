@@ -51,8 +51,14 @@ $item-gap: 2.5rem
     justify-content: flex-start
     grid-area: left
 
-    > name
+    > a.name
       white-space: nowrap
+      color: $color
+      text-decoration: none
+
+      &:hover
+        color: $color
+        text-decoration: underline
 
   > mid
     grid-area: mid

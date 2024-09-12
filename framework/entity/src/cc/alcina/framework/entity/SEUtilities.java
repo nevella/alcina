@@ -1284,7 +1284,8 @@ public class SEUtilities {
 			FileFilter filter, boolean removeFolders) {
 		Stack<File> folders = new Stack<File>();
 		List<File> results = new ArrayList<File>();
-		folders.add(new File(initialPath));
+		File root = new File(initialPath);
+		folders.add(root);
 		while (!folders.isEmpty()) {
 			File folder = folders.pop();
 			File[] files = filter == null ? folder.listFiles()

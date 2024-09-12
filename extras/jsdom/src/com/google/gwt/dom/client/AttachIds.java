@@ -74,7 +74,12 @@ public class AttachIds {
 	}
 
 	int getRemovedId(Node node) {
-		return removed.getOrDefault(node, -1);
+		Integer idWrapper = removed.get(node);
+		if (idWrapper == null) {
+			return -1;
+		} else {
+			return idWrapper.intValue();
+		}
 	}
 
 	void releaseRemoved() {

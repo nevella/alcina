@@ -1,8 +1,13 @@
 package cc.alcina.framework.servlet.component.sequence;
 
+import com.google.gwt.user.client.Window;
+
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 
@@ -14,7 +19,16 @@ class Header extends Model.All {
 	static class Left extends Model.All {
 		static PackageProperties._Header_Left properties = PackageProperties.header_left;
 
+		@Directed.Transform(NameTransform.class)
 		String name;
+
+		static class NameTransform implements ModelTransform<String, Link> {
+			@Override
+			public Link apply(String t) {
+				return new Link().withHref(Window.Location.getPath())
+						.withText(t).withClassName("name");
+			}
+		}
 
 		String filter;
 
