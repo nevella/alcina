@@ -298,6 +298,7 @@ public class TableModel extends Model implements NodeEditorContext {
 
 			int index;
 
+			@Override
 			public void onRowClicked(RowClicked event) {
 				int currentIndex = getSelectedRowIndex();
 				int toIndex = event.getModel().rowMeta.index;
@@ -369,7 +370,7 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		public void scrollSelectedIntoView() {
 			Scheduler.get().scheduleDeferred(() -> {
-				if (meta.size() <= selectedRowIndex || selectedRowIndex != -1) {
+				if (meta.size() <= selectedRowIndex || selectedRowIndex == -1) {
 					return;
 				}
 				TableRow row = meta.get(selectedRowIndex).row;

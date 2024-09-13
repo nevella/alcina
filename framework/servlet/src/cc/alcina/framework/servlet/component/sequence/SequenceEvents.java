@@ -81,4 +81,19 @@ public class SequenceEvents {
 		public interface Emitter extends ModelEvent.Emitter {
 		}
 	}
+
+	public static class SelectedIndexChanged extends
+			ModelEvent.DescendantEvent<Object, SelectedIndexChanged.Handler, SelectedIndexChanged.Emitter> {
+		@Override
+		public void dispatch(SelectedIndexChanged.Handler handler) {
+			handler.onSelectedIndexChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectedIndexChanged(SelectedIndexChanged event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
 }

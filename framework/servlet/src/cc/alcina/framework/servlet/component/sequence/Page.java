@@ -56,7 +56,8 @@ class Page extends Model.Fields
 		SequenceBrowserCommand.ClearFilter.Handler,
 		SequenceBrowserCommand.PropertyDisplayCycle.Handler,
 		SequenceBrowserCommand.FocusSearch.Handler,
-		SequenceEvents.HighlightModelChanged.Emitter {
+		SequenceEvents.HighlightModelChanged.Emitter,
+		SequenceEvents.SelectedIndexChanged.Emitter {
 	class IndexPredicate implements Predicate {
 		int index = 0;
 
@@ -66,6 +67,7 @@ class Page extends Model.Fields
 			this.selectedRange = selectedRange;
 		}
 
+		@Override
 		public boolean test(Object o) {
 			if (selectedRange == null) {
 				return true;
@@ -124,11 +126,15 @@ class Page extends Model.Fields
 				.map(DetailArea::new).to(this).on(properties.detailArea)
 				.oneWay();
 		bindings().from(ui).on(Ui.properties.place)
-				.filter(this::filterSelectedIndexChange).value(this)
-				.map(DetailArea::new).to(this).on(properties.detailArea)
-				.oneWay();
+				.filter(this::filterSelectedIndexChange)
+				.signal(this::onSelectedIndexChange);
 		bindings().from(SequenceBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
+	}
+
+	void onSelectedIndexChange() {
+		properties.detailArea.set(this, new DetailArea(this));
+		emitEvent(SequenceEvents.SelectedIndexChanged.class);
 	}
 
 	@Override

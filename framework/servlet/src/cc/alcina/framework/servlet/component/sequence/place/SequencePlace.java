@@ -98,7 +98,10 @@ public class SequencePlace extends BasePlace
 	}
 
 	public boolean hasSelectedIndexChange(SequencePlace lastPlace) {
-		return (lastPlace == null && selectedElementIdx != -1)
-				|| selectedElementIdx != lastPlace.selectedElementIdx;
+		if (lastPlace == null) {
+			return selectedElementIdx != -1;
+		} else {
+			return selectedElementIdx != lastPlace.selectedElementIdx;
+		}
 	}
 }

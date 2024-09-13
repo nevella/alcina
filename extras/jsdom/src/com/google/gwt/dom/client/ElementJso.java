@@ -321,6 +321,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 		return result;
 	}
 
+	@Override
 	public final native DomRect getBoundingClientRect()/*-{
 		var rect = this.getBoundingClientRect();
 		return @com.google.gwt.dom.client.DomRect::new(Lcom/google/gwt/dom/client/DomRectJso;)(rect);
@@ -628,6 +629,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
     return this.style;
 	}-*/;
 
+	@Override
 	public final StyleJso getStyleRemote() {
 		return getStyle0();
 	}
@@ -756,7 +758,49 @@ public class ElementJso extends NodeJso implements ElementRemote {
 
 	@Override
 	public final native void scrollIntoView() /*-{
-		this.scrollIntoView();
+	  @com.google.gwt.dom.client.ElementJso::scrollElemIntoView(Lcom/google/gwt/dom/client/ElementJso;)(this);
+		//this.scrollIntoView();
+	}-*/;
+
+	static native void scrollElemIntoView(ElementJso elem) /*-{
+    //safer to rely on emulated behaviour
+    //        if (elem.scrollIntoView) {
+    //            elem.scrollIntoView();
+    //            return;
+    //        }
+    var left = elem.offsetLeft, top = elem.offsetTop;
+    var width = elem.offsetWidth, height = elem.offsetHeight;
+
+    if (elem.parentNode != elem.offsetParent) {
+      left -= elem.parentNode.offsetLeft;
+      top -= elem.parentNode.offsetTop;
+    }
+
+    var cur = elem.parentNode;
+    while (cur && (cur.nodeType == 1)) {
+      if (left < cur.scrollLeft) {
+        cur.scrollLeft = left;
+      }
+      if (left + width > cur.scrollLeft + cur.clientWidth) {
+        cur.scrollLeft = (left + width) - cur.clientWidth;
+      }
+      if (top < cur.scrollTop) {
+        cur.scrollTop = top;
+      }
+      if (top + height > cur.scrollTop + cur.clientHeight) {
+        cur.scrollTop = (top + height) - cur.clientHeight;
+      }
+
+      var offsetLeft = cur.offsetLeft, offsetTop = cur.offsetTop;
+      if (cur.parentNode != cur.offsetParent) {
+        offsetLeft -= cur.parentNode.offsetLeft;
+        offsetTop -= cur.parentNode.offsetTop;
+      }
+
+      left += offsetLeft - cur.scrollLeft;
+      top += offsetTop - cur.scrollTop;
+      cur = cur.parentNode;
+    }
 	}-*/;
 
 	/**
