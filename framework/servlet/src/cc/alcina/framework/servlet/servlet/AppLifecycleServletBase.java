@@ -354,6 +354,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initDataFolder();
 
+	public void postInitRegistry() {
+	}
+
 	protected void initDevConsoleAndWebApp() {
 		Configuration.properties.topicInvalidated.add(v -> {
 			/*
@@ -514,6 +517,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		clearJarCache();
 		initRegistry();
 		initEntityLayerRegistry();
+		postInitRegistry();
 		initCommonImplServices();
 		initCustomServices();
 		MetricLogging.get().end(key);
