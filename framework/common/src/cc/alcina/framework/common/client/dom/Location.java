@@ -533,8 +533,8 @@ public class Location implements Comparable<Location> {
 
 		@Override
 		public String toString() {
-			return FormatBuilder.keyValues("start", start, "end", end, "text",
-					Ax.trimForLogging(text()));
+			return FormatBuilder.keyValues("text", toIntPair(), "start", start,
+					"end", end, "text", Ax.trimForLogging(text()));
 		}
 
 		public Range truncateAbsolute(int startIndex, int endIndex) {
@@ -542,6 +542,14 @@ public class Location implements Comparable<Location> {
 					.createRelativeLocation(endIndex - end.index, true);
 			Location modifiedStart = start
 					.createRelativeLocation(startIndex - start.index, false);
+			return new Range(modifiedStart, modifiedEnd);
+		}
+
+		public Range truncateRelative(int startIndex, int endIndex) {
+			Location modifiedEnd = end.createRelativeLocation(
+					start.index + endIndex - end.index, true);
+			Location modifiedStart = start.createRelativeLocation(startIndex,
+					false);
 			return new Range(modifiedStart, modifiedEnd);
 		}
 

@@ -44,6 +44,7 @@ import com.google.gwt.regexp.shared.RegExp;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeReadonlyLookup.DomNodeReadonlyLookupQuery;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -131,13 +132,27 @@ public class DomNode {
 		this.children = new DomNodeChildren();
 	}
 
-	public DomNode addAttr(String name, String value, String separator) {
+	/**
+	 * Add or remove <code>value</code> to the attribute specified by
+	 * <code>name</code>, with the parts of the attribute string separated by
+	 * <code>separator</code>
+	 */
+	public DomNode putAttrPart(String name, String value, String separator,
+			boolean add) {
 		String currentValue = attr(name);
-		if (currentValue.length() > 0) {
-			currentValue += separator;
+		Set<String> parts = Arrays.stream(currentValue.split(separator))
+				.collect(AlcinaCollectors.toLinkedHashSet());
+		if (add) {
+			parts.add(value);
+		} else {
+			parts.remove(value);
 		}
-		currentValue += value;
-		setAttr(name, value);
+		if (parts.isEmpty()) {
+			removeAttribute(name);
+		} else {
+			setAttr(name,
+					parts.stream().collect(Collectors.joining(separator)));
+		}
 		return this;
 	}
 
@@ -962,12 +977,15 @@ public class DomNode {
 			addStyle("font-weight: bold");
 		}
 
-		public void addClass(String className) {
-			addAttr("class", className, " ");
+		/**
+		 * Add or remove <code>className</code> to/from the class attribute
+		 */
+		public void putClass(String className, boolean add) {
+			putAttrPart("class", className, " ", add);
 		}
 
 		public void addStyle(String style) {
-			addAttr("style", style, "; ");
+			putAttrPart("style", style, "; ", true);
 		}
 
 		public void displayNone() {

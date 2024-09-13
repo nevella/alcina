@@ -66,4 +66,19 @@ public class SequenceEvents {
 			void onLoadSequence(LoadSequence event);
 		}
 	}
+
+	public static class HighlightModelChanged extends
+			ModelEvent.DescendantEvent<Object, HighlightModelChanged.Handler, HighlightModelChanged.Emitter> {
+		@Override
+		public void dispatch(HighlightModelChanged.Handler handler) {
+			handler.onHighlightModelChanged(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onHighlightModelChanged(HighlightModelChanged event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+	}
 }

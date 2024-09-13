@@ -96,4 +96,9 @@ public class SequencePlace extends BasePlace
 		return lastPlace == null
 				|| !Objects.equals(highlight, lastPlace.highlight);
 	}
+
+	public boolean hasSelectedIndexChange(SequencePlace lastPlace) {
+		return (lastPlace == null && selectedElementIdx != -1)
+				|| selectedElementIdx != lastPlace.selectedElementIdx;
+	}
 }

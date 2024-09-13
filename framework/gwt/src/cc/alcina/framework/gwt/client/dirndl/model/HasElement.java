@@ -6,4 +6,6 @@ public interface HasElement {
 	Element provideElement();
 
 	boolean provideIsBound();
+
+	boolean provideIsUnbound();
 }

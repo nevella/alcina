@@ -142,7 +142,9 @@ public class AttachIds {
 	}
 
 	void applyPreRemovalAttachId(Node node, AttachId attachId) {
-		attachId.id = getRemovedId(node);
+		if (attachId.isDetached()) {
+			attachId.id = getRemovedId(node);
+		}
 	}
 
 	// debug method

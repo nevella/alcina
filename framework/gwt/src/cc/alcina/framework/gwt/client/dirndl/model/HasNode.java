@@ -27,5 +27,10 @@ public interface HasNode extends HasElement {
 		return provideNode() != null;
 	}
 
+	@Override
+	default boolean provideIsUnbound() {
+		return provideNode() == null;
+	}
+
 	DirectedLayout.Node provideNode();
 }

@@ -226,7 +226,7 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 
 	@Override
 	public void removeFromParent() {
-		throw new UnsupportedOperationException();
+		node().getParentNode().remote().removeChild(node());
 	}
 
 	@Override

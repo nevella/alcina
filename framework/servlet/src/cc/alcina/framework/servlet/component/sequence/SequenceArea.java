@@ -18,13 +18,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.RowsModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
+import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightModelChanged;
 
 @Directed(tag = "sequence")
 // this is just to force the SequenceArea to be accessible from RowTransformer
 // (via the resolver)
 @DirectedContextResolver(FmsCellsContextResolver.class)
 class SequenceArea extends Model.Fields
-		implements TableEvents.RowsModelAttached.Handler {
+		implements TableEvents.RowsModelAttached.Handler,
+		SequenceEvents.HighlightModelChanged.Handler {
 	@Directed
 	Heading header;
 
@@ -82,12 +84,7 @@ class SequenceArea extends Model.Fields
 		this.rowsModel = event.getModel();
 		this.rowsModel.topicSelectedRowsChanged
 				.add(this::onSelectedRowsChanged);
-		page.highlightModel.elementMatches.keySet().forEach(sequenceElement -> {
-			int visibleRowIndex = filteredElements.indexOf(sequenceElement);
-			if (visibleRowIndex != -1) {
-				rowsModel.meta.get(visibleRowIndex).setFlag("matches", true);
-			}
-		});
+		updateRowMatches();
 		int selectedElementIdx = page.ui.place.selectedElementIdx;
 		if (selectedElementIdx != -1
 				&& selectedElementIdx < page.sequence.getElements().size()) {
@@ -96,6 +93,15 @@ class SequenceArea extends Model.Fields
 			int visibleRowIndex = filteredElements.indexOf(selectedElement);
 			rowsModel.select(visibleRowIndex);
 			rowsModel.scrollSelectedIntoView();
+		}
+	}
+
+	private void updateRowMatches() {
+		for (int idx = 0; idx < filteredElements.size(); idx++) {
+			Object filteredElement = filteredElements.get(idx);
+			rowsModel.meta.get(idx).setFlag("matches",
+					page.highlightModel.elementMatches.keySet()
+							.contains(filteredElement));
 		}
 	}
 
@@ -109,5 +115,10 @@ class SequenceArea extends Model.Fields
 						.withSelectedRange(selected).go();
 			}
 		}
+	}
+
+	@Override
+	public void onHighlightModelChanged(HighlightModelChanged event) {
+		updateRowMatches();
 	}
 }

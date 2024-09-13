@@ -134,12 +134,21 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 		sync(() -> remote().setData(data));
 	}
 
+	/**
+	 * Because empty text nodes are discouraged (for local/remote sync), this
+	 * varies from the w3c node spec by throwing an exception if the created
+	 * text node is empty
+	 */
 	@Override
 	public Text splitText(int offset) {
 		String contents = getTextContent();
 		setTextContent(contents.substring(0, offset));
-		Text createdNode = getOwnerDocument()
-				.createTextNode(contents.substring(offset));
+		String newNodeContents = contents.substring(offset);
+		if (newNodeContents.isEmpty()) {
+			throw new IllegalStateException();
+		}
+		Text createdNode = getOwnerDocument().createTextNode(newNodeContents);
+		getParentElement().insertAfter(createdNode, this);
 		return createdNode;
 	}
 

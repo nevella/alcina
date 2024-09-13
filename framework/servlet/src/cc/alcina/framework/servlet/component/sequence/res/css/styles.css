@@ -667,6 +667,9 @@ body > page > detail > string-representation {
 body > page > detail > string-representation .__markup_highlight {
   background-color: yellow;
 }
+body > page > detail > string-representation .__selected_markup_highlight {
+  background-color: orange;
+}
 
 app-suggestor {
   display: block;

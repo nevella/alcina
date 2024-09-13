@@ -62,6 +62,9 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * For sync, note that {@link Element} has a {@link Style} child which has the
  * same pattern of client-visible model type with a local and remote
  * implementation field
+ * <p>
+ * Note that append/insert order is quite involved - essentially
+ * remove-non-local, insert-local,insert-non-local
  */
 @Reflected
 public abstract class Node
@@ -138,6 +141,11 @@ public abstract class Node
 	public <T extends Node> T appendChild(T newChild) {
 		validateInsert(newChild);
 		validateRemoteStatePreTreeMutation(newChild);
+		if (newChild.getParentNode() != null) {
+			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
+					newChild.getParentNode(), newChild, null, false));
+			newChild.sync(() -> newChild.remote().removeFromParent());
+		}
 		T node = local().appendChild(newChild);
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				node, node.getPreviousSibling(), true));
@@ -306,6 +314,12 @@ public abstract class Node
 			validateInsert(newChild);
 			validateRemoteStatePreTreeMutation(newChild);
 			validateRemoteStatePreTreeMutation(refChild);
+			if (newChild.getParentNode() != null) {
+				notify(() -> LocalDom.getLocalMutations()
+						.notifyChildListMutation(newChild.getParentNode(),
+								newChild, null, false));
+				newChild.sync(() -> newChild.remote().removeFromParent());
+			}
 			Node result = local().insertBefore(newChild, refChild);
 			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
 					this, newChild, newChild.getPreviousSibling(), true));

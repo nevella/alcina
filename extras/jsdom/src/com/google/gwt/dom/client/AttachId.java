@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.reflection.Property;
 
 /**
  * <p>
@@ -40,5 +41,10 @@ public final class AttachId {
 	@Override
 	public String toString() {
 		return String.valueOf(id);
+	}
+
+	@Property.Not
+	public boolean isDetached() {
+		return id <= 0;
 	}
 }

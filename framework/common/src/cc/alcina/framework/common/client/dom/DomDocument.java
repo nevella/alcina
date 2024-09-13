@@ -352,6 +352,7 @@ public class DomDocument extends DomNode implements Cloneable {
 		@Override
 		public Location createRelativeLocation(Location location, int offset,
 				boolean after) {
+			ensureLookups();
 			int index = location.index + offset;
 			/*
 			 * Special case, preserve existing node if possible)
@@ -499,6 +500,7 @@ public class DomDocument extends DomNode implements Cloneable {
 		 */
 		@Override
 		public List<DomNode> getContainingNodes(int index, boolean after) {
+			ensureLookups();
 			List<DomNode> result = new ArrayList<>();
 			Location start = byNode.get(getDocumentElementNode());
 			while (!start.isTextNode()) {

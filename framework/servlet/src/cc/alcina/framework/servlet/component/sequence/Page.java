@@ -40,7 +40,9 @@ import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
  * TODO - look at an approach to prevent double-fires of say reloadSequence -
  * the thing is that two things can trigger that, _both_ will be true on startup
  * 
- * 
+ * <p>The bindings are quite complex - to try and minimise the redraws - but
+ * even so, there is the issue above. Possibly the above, add filters to (say)
+ * reloadSequence keyed off some sort of 'context original event'
  */
 @TypedProperties
 @Directed(
@@ -53,7 +55,8 @@ class Page extends Model.Fields
 		SequenceEvents.LoadSequence.Handler,
 		SequenceBrowserCommand.ClearFilter.Handler,
 		SequenceBrowserCommand.PropertyDisplayCycle.Handler,
-		SequenceBrowserCommand.FocusSearch.Handler {
+		SequenceBrowserCommand.FocusSearch.Handler,
+		SequenceEvents.HighlightModelChanged.Emitter {
 	class IndexPredicate implements Predicate {
 		int index = 0;
 
@@ -96,6 +99,8 @@ class Page extends Model.Fields
 
 	SequencePlace lastHighlightTestPlace = null;
 
+	SequencePlace lastSelectedIndexChangePlace = null;
+
 	Page() {
 		this.ui = Ui.get();
 		header = new Header(this);
@@ -118,7 +123,8 @@ class Page extends Model.Fields
 		bindings().from(this).on(properties.sequence).value(this)
 				.map(DetailArea::new).to(this).on(properties.detailArea)
 				.oneWay();
-		bindings().from(ui).on(Ui.properties.place).value(this)
+		bindings().from(ui).on(Ui.properties.place)
+				.filter(this::filterSelectedIndexChange).value(this)
 				.map(DetailArea::new).to(this).on(properties.detailArea)
 				.oneWay();
 		bindings().from(SequenceBrowser.Ui.get().settings)
@@ -206,11 +212,21 @@ class Page extends Model.Fields
 	}
 
 	/*
-	 * The sequence will be changed if the filter is changed (essentially)
+	 * Test for unchanged highlight model
 	 */
 	boolean filterUnchangedHighlightPlaceChange(SequencePlace place) {
 		boolean result = place.hasHighlightChange(lastHighlightTestPlace);
 		lastHighlightTestPlace = place;
+		return result;
+	}
+
+	/*
+	 * Test for unchanged selected index
+	 */
+	boolean filterSelectedIndexChange(SequencePlace place) {
+		boolean result = place
+				.hasSelectedIndexChange(lastSelectedIndexChangePlace);
+		lastSelectedIndexChangePlace = place;
 		return result;
 	}
 
@@ -224,6 +240,7 @@ class Page extends Model.Fields
 			highlightModel.goTo(0);
 			goToHighlightModelIndex();
 		}
+		emitEvent(SequenceEvents.HighlightModelChanged.class);
 	}
 
 	//

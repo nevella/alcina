@@ -511,8 +511,12 @@ public class LocalDom implements ContextFrame {
 			ensurePending(elem);
 			break;
 		case Node.TEXT_NODE:
-			remote = Document.get().jsoRemote()
-					.createTextNode0(((Text) node).getData());
+			if (isAttachId()) {
+				remote = NodeAttachId.create(node);
+			} else {
+				remote = Document.get().jsoRemote()
+						.createTextNode0(((Text) node).getData());
+			}
 			break;
 		// case Node.DOCUMENT_NODE:
 		// nodeDom = doc.domImpl();
