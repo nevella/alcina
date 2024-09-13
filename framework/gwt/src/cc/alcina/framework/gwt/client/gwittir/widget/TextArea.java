@@ -429,6 +429,9 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		if (ensureAllLinesVisible) {
 			Scheduler.get().scheduleDeferred(() -> {
 				Element element = this.base.getElement();
+				if (!element.isAttached()) {
+					return;
+				}
 				element.getStyle().setProperty("height", "auto");
 				String paddingTop = WidgetUtils.getComputedStyle(element,
 						"paddingTop");

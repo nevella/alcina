@@ -56,7 +56,7 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 			// should not be required - but added due to production NPEs
 			return;
 		}
-		if (!Element.is(eventTarget)) {
+		if (!Element.is(eventTarget) || eventTarget.isDetachedElement()) {
 			return;
 		}
 		Element target = eventTarget.cast();
