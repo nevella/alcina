@@ -141,11 +141,9 @@ public abstract class Node
 	public <T extends Node> T appendChild(T newChild) {
 		validateInsert(newChild);
 		validateRemoteStatePreTreeMutation(newChild);
-		if (newChild.getParentNode() != null) {
-			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
-					newChild.getParentNode(), newChild, null, false));
-			newChild.sync(() -> newChild.remote().removeFromParent());
-		}
+		// explicit remove-before-insert is the neatest way to cause sync events
+		// to fire
+		newChild.removeFromParent();
 		T node = local().appendChild(newChild);
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				node, node.getPreviousSibling(), true));
@@ -314,12 +312,7 @@ public abstract class Node
 			validateInsert(newChild);
 			validateRemoteStatePreTreeMutation(newChild);
 			validateRemoteStatePreTreeMutation(refChild);
-			if (newChild.getParentNode() != null) {
-				notify(() -> LocalDom.getLocalMutations()
-						.notifyChildListMutation(newChild.getParentNode(),
-								newChild, null, false));
-				newChild.sync(() -> newChild.remote().removeFromParent());
-			}
+			newChild.removeFromParent();
 			Node result = local().insertBefore(newChild, refChild);
 			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
 					this, newChild, newChild.getPreviousSibling(), true));
@@ -429,8 +422,14 @@ public abstract class Node
 		return removeChild((Node) arg0);
 	}
 
+	/**
+	 * parent can be null, in which case this is a noop
+	 */
 	@Override
 	public void removeFromParent() {
+		if (getParentNode() == null) {
+			return;
+		}
 		sync(() -> remote().removeFromParent());
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				this, null, false));
