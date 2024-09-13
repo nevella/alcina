@@ -92,9 +92,8 @@ class SequenceArea extends Model.Fields
 	private void updateRowDecoratorsAndScroll() {
 		for (int idx = 0; idx < filteredElements.size(); idx++) {
 			Object filteredElement = filteredElements.get(idx);
-			rowsModel.meta.get(idx).setFlag("matches",
-					page.highlightModel.elementMatches.keySet()
-							.contains(filteredElement));
+			boolean hasMatch = page.highlightModel.hasMatch(filteredElement);
+			rowsModel.meta.get(idx).setFlag("matches", hasMatch);
 		}
 		int selectedElementIdx = page.ui.place.selectedElementIdx;
 		if (selectedElementIdx != -1
