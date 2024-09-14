@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui;
 import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 
 /*
  * inputs can be any of several types, so non-typed
@@ -76,7 +77,8 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 			stream = applyFilter(stream, filter);
 		}
 		AtomicInteger valueCounter = new AtomicInteger();
-		stream.limit(25).forEach(elem -> {
+		int limit = TraversalSettings.get().tableRows;
+		stream.limit(limit).forEach(elem -> {
 			if (elem instanceof Entity) {
 				Entity childEntity = (Entity) elem;
 				select(new EntitySelection(selection, childEntity));

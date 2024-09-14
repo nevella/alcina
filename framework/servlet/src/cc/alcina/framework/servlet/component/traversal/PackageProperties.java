@@ -15,6 +15,7 @@ import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.dom.Environment;
 import java.lang.Boolean;
 import java.lang.Class;
+import java.lang.Integer;
 import java.lang.String;
 
 public class PackageProperties {
@@ -63,6 +64,7 @@ public class PackageProperties {
       public TypedProperty<TraversalSettings, TraversalSettings.InputOutputDisplayMode> inputOutputDisplayMode = new TypedProperty<>(TraversalSettings.class, "inputOutputDisplayMode");
       public TypedProperty<TraversalSettings, TraversalSettings.PropertyDisplayMode> propertyDisplayMode = new TypedProperty<>(TraversalSettings.class, "propertyDisplayMode");
       public TypedProperty<TraversalSettings, Boolean> showContainerLayers = new TypedProperty<>(TraversalSettings.class, "showContainerLayers");
+      public TypedProperty<TraversalSettings, Integer> tableRows = new TypedProperty<>(TraversalSettings.class, "tableRows");
     }
     
 //@formatter:on

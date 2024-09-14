@@ -1,10 +1,17 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -131,6 +138,21 @@ public class TraversalBrowser {
 
 		public TraversalAnswerSupplier(int forLayer) {
 			this.fromLayer = forLayer;
+		}
+
+		public static void proposeSetRowSuggestion(String query,
+				List<AppSuggestion> suggestions) {
+			Pattern pattern = Pattern.compile("set rows (\\d+)");
+			Matcher matcher = pattern.matcher(query);
+			if (matcher.matches()) {
+				AppSuggestionEntry suggestion = new AppSuggestionEntry();
+				suggestion.eventData = matcher.group(1);
+				int tableRows = TraversalSettings.get().tableRows;
+				suggestion.match = Ax.format("Set rows: '%s' (current=%s)",
+						suggestion.eventData, tableRows);
+				suggestion.modelEvent = TraversalEvents.SetSettingTableRows.class;
+				suggestions.add(suggestion);
+			}
 		}
 	}
 
