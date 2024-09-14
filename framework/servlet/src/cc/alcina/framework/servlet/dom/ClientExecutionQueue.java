@@ -17,7 +17,15 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * This queue/thread dispatches messages to the client, waiting for its
  * AwaitRemote request
  * 
- * It also
+ * @formatter:off
+ * - apart from Startup, only AwaitRemote requests from the client receive messages from the server
+ * - asyncEventQueue is "messages from the client to process when available"
+ * - syncEventQueue is "single message -  from the server to the client' 
+ *  Queries - is it reentrant? can it have multiiple messages?
+ *  "
+ *  - TODO - add a transport layer which handles message retry (Android sleep/resume)
+ * 
+ * @formatter:on
  */
 class ClientExecutionQueue implements Runnable {
 	BlockingQueue<Message> syncEventQueue = new LinkedBlockingQueue<>();
@@ -69,7 +77,8 @@ class ClientExecutionQueue implements Runnable {
 	}
 
 	/*
-	 * The main client event loop - analagous to the js event loop
+	 * The main client event loop *body* - analagous to the js event loop (note
+	 * there are two modes, so there's not a loop per se)
 	 * 
 	 * While waiting for a sync response from the clients, this loop will be
 	 * called re-entrantly with acceptClientEvents==false
@@ -78,6 +87,10 @@ class ClientExecutionQueue implements Runnable {
 	 * to the loop, and are handled in targetted try/catch blocks) - that said,
 	 * if the exception occurs during dom mutation (server or client), it might
 	 * be better to refresh. WIP
+	 * 
+	 * TODO - rather than two modes (? two threads?), the logic might be cleaner
+	 * if 'acceptClientEvents' is replaced by a check on syncEventQueue
+	 * non-empty
 	 */
 	void loop(boolean acceptClientEvents) {
 		boolean delta = false;
@@ -189,13 +202,6 @@ class ClientExecutionQueue implements Runnable {
 	}
 
 	FromClientMessageAcceptor fromClientMessageAcceptor;
-
-	void acceptServerMessage(Message message) {
-		synchronized (this) {
-			syncEventQueue.add(message);
-			notify();
-		}
-	}
 
 	void handleFromClientMessageAcceptor(MessageHandlerServer messageHandler) {
 		if (messageHandler instanceof FromClientMessageAcceptor) {
