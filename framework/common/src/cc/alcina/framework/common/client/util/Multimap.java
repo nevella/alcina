@@ -131,6 +131,11 @@ public class Multimap<K, V extends List>
 		return this.map.containsKey(key);
 	}
 
+	public boolean containsNonEmpty(Object key) {
+		V v = get(key);
+		return v != null && v.size() > 0;
+	}
+
 	@Override
 	public boolean containsValue(Object value) {
 		return this.map.containsValue(value);

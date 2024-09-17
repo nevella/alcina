@@ -19,6 +19,8 @@ public class TraversalSettings extends Bindable.Fields {
 
 	public InputOutputDisplayMode inputOutputDisplayMode = InputOutputDisplayMode.INPUT_OUTPUT;
 
+	public int tableRows = 50;
+
 	public enum PropertyDisplayMode {
 		QUARTER_WIDTH, HALF_WIDTH, NONE
 	}
@@ -41,5 +43,9 @@ public class TraversalSettings extends Bindable.Fields {
 						% InputOutputDisplayMode.values().length];
 		properties.inputOutputDisplayMode.set(this, next);
 		return next;
+	}
+
+	public void putTableRows(String tableRowsStr) {
+		properties.tableRows.set(this, Integer.parseInt(tableRowsStr));
 	}
 }

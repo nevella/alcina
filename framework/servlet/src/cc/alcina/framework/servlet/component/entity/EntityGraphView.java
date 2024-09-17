@@ -29,10 +29,10 @@ import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelecti
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
-import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
-import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
+import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
+import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.dom.RemoteUi;
@@ -135,6 +135,7 @@ public class EntityGraphView {
 		@Override
 		public void setPlace(TraversalPlace place) {
 			if (!Objects.equals(place, this.place)) {
+				super.setPlace(place);
 				traverse();
 				// if the filter matches exactly one entity, append it to the
 				// place + re-set
@@ -158,7 +159,6 @@ public class EntityGraphView {
 					}
 				}
 			}
-			super.setPlace(place);
 		}
 
 		@Override

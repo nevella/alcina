@@ -756,6 +756,10 @@ public class ElementJso extends NodeJso implements ElementRemote {
 		removeFromParent0();
 	}
 
+	/*
+	 * DOM scrollinto view doesn't respect 'already visible' - so go with a
+	 * modified version of the gwt impl (mmoved from DomImpl to here)
+	 */
 	@Override
 	public final native void scrollIntoView() /*-{
 	  @com.google.gwt.dom.client.ElementJso::scrollElemIntoView(Lcom/google/gwt/dom/client/ElementJso;)(this);
@@ -778,17 +782,19 @@ public class ElementJso extends NodeJso implements ElementRemote {
 
     var cur = elem.parentNode;
     while (cur && (cur.nodeType == 1)) {
-      if (left < cur.scrollLeft) {
-        cur.scrollLeft = left;
-      }
+      // modified from the gwt version, prefer keeping [left,top] unchanged (and visible) - so compute left after left+width, etc
       if (left + width > cur.scrollLeft + cur.clientWidth) {
         cur.scrollLeft = (left + width) - cur.clientWidth;
       }
-      if (top < cur.scrollTop) {
-        cur.scrollTop = top;
+	  if (left < cur.scrollLeft) {
+        cur.scrollLeft = left;
       }
+      
       if (top + height > cur.scrollTop + cur.clientHeight) {
         cur.scrollTop = (top + height) - cur.clientHeight;
+      }
+	  if (top < cur.scrollTop) {
+        cur.scrollTop = top;
       }
 
       var offsetLeft = cur.offsetLeft, offsetTop = cur.offsetTop;

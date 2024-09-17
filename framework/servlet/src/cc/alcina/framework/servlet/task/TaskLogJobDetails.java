@@ -110,7 +110,7 @@ public class TaskLogJobDetails extends PerformerTask {
 						fieldText = CommonUtils.toLimitedCollectionString(
 								(Collection<?>) fieldValue, 50);
 					} else {
-						fieldText = fieldValue.toString();
+						fieldText = Ax.trim(fieldValue.toString(), 100000);
 					}
 					row.cell(p.getName()).cell(fieldText)
 							.style("whitespace:pre-wrap");

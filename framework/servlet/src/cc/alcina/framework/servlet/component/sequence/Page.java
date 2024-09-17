@@ -174,13 +174,13 @@ class Page extends Model.Fields
 
 	@Override
 	public void onPreviousHighlight(PreviousHighlight event) {
-		highlightModel.move(-1);
+		highlightModel.moveIndex(getSelectedSequenceElement(), -1);
 		goToHighlightModelIndex();
 	}
 
 	@Override
 	public void onNextHighlight(NextHighlight event) {
-		highlightModel.move(1);
+		highlightModel.moveIndex(getSelectedSequenceElement(), +1);
 		goToHighlightModelIndex();
 	}
 

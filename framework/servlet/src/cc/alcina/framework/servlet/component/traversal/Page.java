@@ -12,12 +12,10 @@ import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.Event;
 
-import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -27,22 +25,22 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFilter;
-import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
-import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
-import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
-import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
-import cc.alcina.framework.servlet.component.traversal.TraversalSettings.InputOutputDisplayMode;
-import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.InputOutputCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelContainment;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelDescendant;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelView;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFilter;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.InputOutputDisplayMode;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
-import cc.alcina.framework.servlet.dom.AbstractUi;
 
 @Directed(
 	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
@@ -57,7 +55,8 @@ class Page extends Model.All
 		TraversalBrowserCommand.SelectionFilterModelView.Handler,
 		TraversalBrowserCommand.PropertyDisplayCycle.Handler,
 		TraversalBrowserCommand.InputOutputCycle.Handler,
-		TraversalCommand.FocusSearch.Handler {
+		TraversalCommand.FocusSearch.Handler,
+		TraversalEvents.SetSettingTableRows.Handler {
 	static PackageProperties._Page properties = PackageProperties.page;
 
 	Header header;
@@ -310,5 +309,11 @@ class Page extends Model.All
 		InputOutputDisplayMode next = settings.nextInputOutputDisplayMode();
 		StatusModule.get().showMessageTransitional(
 				Ax.format("Input/Output display mode -> %s", next));
+	}
+
+	@Override
+	public void onSetSettingTableRows(SetSettingTableRows event) {
+		String model = event.getModel();
+		TraversalBrowser.Ui.get().settings.putTableRows(model);
 	}
 }

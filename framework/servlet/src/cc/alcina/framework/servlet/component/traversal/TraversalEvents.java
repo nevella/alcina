@@ -46,4 +46,16 @@ public class TraversalEvents {
 			void onSelectionTypeSelected(SelectionTypeSelected event);
 		}
 	}
+
+	public static class SetSettingTableRows
+			extends ModelEvent<String, SetSettingTableRows.Handler> {
+		@Override
+		public void dispatch(SetSettingTableRows.Handler handler) {
+			handler.onSetSettingTableRows(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSetSettingTableRows(SetSettingTableRows event);
+		}
+	}
 }

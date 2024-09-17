@@ -8,6 +8,7 @@ import com.google.gwt.dom.client.Document;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -22,6 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * <li>Initializer can take plain text (it'll be wrapped in a pre)
  * </ul>
  */
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class MarkupHighlights extends Model.Fields {
 	private static final String MARKUP_HIGHLIGHT = "__markup_highlight";
 
