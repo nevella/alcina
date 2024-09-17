@@ -41,6 +41,7 @@ import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.event.shared.HasHandlers;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
@@ -1068,26 +1069,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerSafeHtml(SafeHtml html) {
-		setInnerSafeHtml(html, true);
-	}
-
-	protected void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
-		List<Node> oldChildren = getChildNodes().stream()
-				.collect(Collectors.toList());
-		if (withPreRemove) {
-			removeAllChildren();
-		} else {
-			local().getChildren().clear();
-		}
-		// FIXME - attachId - convert to pending, then just set local. so
-		// toPendingIfRemote
-		if (linkedAndNotPending()) {
-			remote().setInnerSafeHtml(html);
-			String remoteHtml = jsoRemote().getInnerHTML0();
-			local().setInnerHTML(remoteHtml);
-		} else {
-			local().setInnerSafeHtml(html);
-		}
+		setInnerHTML(html.asString());
 	}
 
 	@Override
@@ -1097,18 +1079,7 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerText(String text) {
-		List<Node> oldChildren = getChildNodes().stream()
-				.collect(Collectors.toList());
-		removeAllChildren();
-		// FIXME - attachId - convert to pending, then just set local
-		if (linkedAndNotPending()) {
-			if (attached) {
-				remote().setInnerText(text);
-			}
-			local().setInnerText(text);
-		} else {
-			local().setInnerText(text);
-		}
+		setInnerHTML(SafeHtmlUtils.htmlEscape(text));
 	}
 
 	@Override

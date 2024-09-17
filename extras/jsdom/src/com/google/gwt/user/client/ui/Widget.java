@@ -313,7 +313,8 @@ public class Widget extends UIObject
 			// Only fire the mouse out event if it's leaving this
 			// widget.
 			EventTarget relatedEventTarget = event.getRelatedEventTarget();
-			if (relatedEventTarget != null && Element.is(relatedEventTarget)) {
+			if (relatedEventTarget != null
+					&& relatedEventTarget.isAttachedElement()) {
 				Element related = relatedEventTarget.cast();
 				if (related != null && getElement().isOrHasChild(related)) {
 					return;

@@ -30,7 +30,6 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
 import com.google.gwt.view.client.CellPreviewEvent;
 import com.google.gwt.view.client.HasData;
@@ -825,7 +824,6 @@ class HasDataPresenter<T>
 		try {
 			if (redrawRequired) {
 				// Redraw the entire content.
-				SafeHtmlBuilder sb = new SafeHtmlBuilder();
 				view.replaceAllChildren(newState.rowData, selectionModel,
 						newState.keyboardStealFocus);
 				view.resetFocus();
@@ -835,7 +833,6 @@ class HasDataPresenter<T>
 				{
 					int absStart = range0.getStart();
 					int relStart = absStart - pageStart;
-					SafeHtmlBuilder sb = new SafeHtmlBuilder();
 					List<T> replaceValues = newState.rowData.subList(relStart,
 							relStart + range0.getLength());
 					view.replaceChildren(replaceValues, relStart,
@@ -845,7 +842,6 @@ class HasDataPresenter<T>
 				if (range1 != null) {
 					int absStart = range1.getStart();
 					int relStart = absStart - pageStart;
-					SafeHtmlBuilder sb = new SafeHtmlBuilder();
 					// NR - patch for oldkeyboardselection causing an error
 					if (relStart + range1.getLength() <= newState.rowData
 							.size()) {

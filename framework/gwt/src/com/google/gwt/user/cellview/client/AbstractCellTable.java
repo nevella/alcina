@@ -2411,7 +2411,7 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 		 */
 		protected void replaceAllRowsImpl(AbstractCellTable<?> table,
 				TableSectionElement section, SafeHtml html) {
-			section.setInnerSafeHtml(html, false);
+			section.setInnerSafeHtml(html);
 		}
 
 		/**

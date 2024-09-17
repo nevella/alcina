@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.safehtml.shared.SafeHtml;
 
 /**
  * The THEAD, TFOOT, and TBODY elements.
@@ -199,11 +198,6 @@ public class TableSectionElement extends Element {
 	 */
 	public void setChOff(String chOff) {
 		this.setPropertyString("chOff", chOff);
-	}
-
-	@Override
-	public void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
-		super.setInnerSafeHtml(html, withPreRemove);
 	}
 
 	/**
