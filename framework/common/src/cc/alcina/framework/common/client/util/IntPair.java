@@ -57,6 +57,11 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return intersection(ranges, range) != null;
 	}
 
+	public static boolean containedInRanges(List<IntPair> ranges, int index) {
+		return ranges.stream()
+				.anyMatch(r -> r.containsExEnd(IntPair.point(index)));
+	}
+
 	public static boolean isContinuous(List<IntPair> pairs) {
 		IntPair union = unionOf(pairs);
 		return provideUncovered(pairs, union).isEmpty();
