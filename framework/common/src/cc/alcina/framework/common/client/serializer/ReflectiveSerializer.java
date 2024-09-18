@@ -57,6 +57,7 @@ import elemental.js.json.JsJsonFactory;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonObject;
+import elemental.json.JsonString;
 import elemental.json.JsonType;
 import elemental.json.JsonValue;
 import elemental.json.impl.JsonUtil;
@@ -530,7 +531,7 @@ public class ReflectiveSerializer {
 				 * modelling Beans
 				 */
 				if (typeNode != null && typeNode.hasProperties()) {
-					if (serialNode.isNotPropertyNode()) {
+					if (serialNode.isTypeInfoNode()) {
 						// clear, and force a load of type info
 						typeNode = null;
 					}
@@ -861,12 +862,14 @@ public class ReflectiveSerializer {
 		}
 
 		@Override
-		public boolean isNotPropertyNode() {
+		public boolean isTypeInfoNode() {
 			switch (jsonValue.getType()) {
-			case OBJECT:
-				return false;
+			case ARRAY:
+				JsonArray arr = (JsonArray) jsonValue;
+				return arr.length() == 2 && arr.get(0) instanceof JsonString
+						&& arr.get(1) instanceof JsonObject;
 			default:
-				return true;
+				return false;
 			}
 		}
 	}
@@ -1137,7 +1140,7 @@ public class ReflectiveSerializer {
 	interface SerialNode {
 		boolean canWriteTypeName();
 
-		boolean isNotPropertyNode();
+		boolean isTypeInfoNode();
 
 		SerialNode createArrayContainer();
 
