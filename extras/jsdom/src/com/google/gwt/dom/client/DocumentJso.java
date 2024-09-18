@@ -1006,4 +1006,9 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	public final native void setTitle(String title) /*-{
     this.title = title;
 	}-*/;
+
+	final String validateHtml(String html) {
+		ElementJso elementJso = createElementNode0("div");
+		return elementJso.sanitizeHTML(html);
+	}
 }

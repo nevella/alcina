@@ -874,6 +874,11 @@ public class ElementJso extends NodeJso implements ElementRemote {
     this.innerHTML = html || '';
 	}-*/;
 
+	final native String sanitizeHTML(String html) /*-{
+    this.innerHTML = html || '';
+	return this.innerHTML;
+	}-*/;
+
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
 		ClientDomElementStatic.setInnerSafeHtml(this, html);

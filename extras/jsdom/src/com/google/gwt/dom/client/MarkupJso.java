@@ -100,8 +100,8 @@ class MarkupJso {
 			token.remoteMarkup = token.remote.getInnerHTML0();
 			/* probably some odd dom - compare to roundtripped
 			@formatter:off
-			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), token.localMarkup.getBytes());
-			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), token.remoteMarkup.getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), token.localMarkup.replace("&nbsp;","\u00A0").getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), token.remoteMarkup.replace("&nbsp;","\u00A0").getBytes());
 			 @formatter:on
 			 */
 			throw e;

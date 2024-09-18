@@ -364,8 +364,11 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public static String validateHtml(String html) {
-		// FIXME - attachId - roundtrip (to brower) if GWT.isClient
-		return html;
+		if (GWT.isClient()) {
+			return Document.get().jsoRemote().validateHtml(html);
+		} else {
+			return html;
+		}
 	}
 
 	public static void verifyDomEquivalence(boolean fromUserGesture) {
