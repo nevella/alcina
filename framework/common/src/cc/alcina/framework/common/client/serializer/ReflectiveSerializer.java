@@ -523,6 +523,18 @@ public class ReflectiveSerializer {
 						return;
 					}
 				}
+				/*
+				 * For legacy compatibility (where typeinfo was recorded but not
+				 * expected), peek. Note that this does not handle serialNodes
+				 * modelling Collections with unexpected classinfo, just those
+				 * modelling Beans
+				 */
+				if (typeNode != null && typeNode.hasProperties()) {
+					if (serialNode.isNotPropertyNode()) {
+						// clear, and force a load of type info
+						typeNode = null;
+					}
+				}
 				if (typeNode == null) {
 					Class type = serialNode.readType(this);
 					typeNode = state.typeNode(type);
@@ -847,6 +859,16 @@ public class ReflectiveSerializer {
 			Preconditions.checkState(jsonValue instanceof JsonArray);
 			((JsonArray) jsonValue).set(0, serializationClass(type).getName());
 		}
+
+		@Override
+		public boolean isNotPropertyNode() {
+			switch (jsonValue.getType()) {
+			case OBJECT:
+				return false;
+			default:
+				return true;
+			}
+		}
 	}
 
 	/*
@@ -1115,6 +1137,8 @@ public class ReflectiveSerializer {
 	interface SerialNode {
 		boolean canWriteTypeName();
 
+		boolean isNotPropertyNode();
+
 		SerialNode createArrayContainer();
 
 		SerialNode createPropertyContainer();
@@ -1205,7 +1229,7 @@ public class ReflectiveSerializer {
 		Map<String, PropertyNode> propertyNameMap = AlcinaCollections
 				.newHashMap();
 
-		private ClassReflector classReflector;
+		ClassReflector classReflector;
 
 		TypeSerializer serializer;
 
@@ -1232,7 +1256,11 @@ public class ReflectiveSerializer {
 			}
 		}
 
-		public Object newInstance() {
+		boolean hasProperties() {
+			return properties.size() > 0;
+		}
+
+		Object newInstance() {
 			return classReflector.newInstance();
 		}
 
@@ -1240,11 +1268,11 @@ public class ReflectiveSerializer {
 			return propertyMap.get(property);
 		}
 
-		public PropertyNode propertyNode(String name) {
+		PropertyNode propertyNode(String name) {
 			return propertyNameMap.get(name);
 		}
 
-		public Object templateInstance() {
+		Object templateInstance() {
 			return classReflector.templateInstance();
 		}
 	}
