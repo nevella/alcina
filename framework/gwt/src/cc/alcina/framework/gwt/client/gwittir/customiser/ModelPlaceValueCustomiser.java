@@ -21,6 +21,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
@@ -61,6 +62,9 @@ public class ModelPlaceValueCustomiser
 			}
 			String name = null;
 			BasePlace place = null;
+			if (!Registry.optional(RegistryHistoryMapper.class).isPresent()) {
+				return DisplayNameRenderer.INSTANCE.render(entity);
+			}
 			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
 					.get().getPlaceByModelClass(entity.entityClass());
 			if (instancePlace == null) {
