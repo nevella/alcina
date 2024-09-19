@@ -185,7 +185,12 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 				: i1 > ip.i1 ? 1 : i2 < ip.i2 ? -1 : i2 > ip.i2 ? 1 : 0;
 	}
 
-	// inclusive!
+	/**
+	 * Incluseive!!
+	 * 
+	 * @param i
+	 * @return
+	 */
 	public boolean contains(int i) {
 		return i >= i1 && i <= i2;
 	}

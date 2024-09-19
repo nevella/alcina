@@ -878,7 +878,11 @@ public class JobDomain {
 			} else {
 				// rather than compute-if-absent - put before publishing the
 				// create event
+				if (queues.containsKey(job)) {
+					return queues.get(job);
+				}
 				synchronized (queues) {
+					// double-checked - this prevents an edge case deadlock
 					if (queues.containsKey(job)) {
 						return queues.get(job);
 					}
