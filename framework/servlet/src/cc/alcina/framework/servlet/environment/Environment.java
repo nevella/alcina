@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.dom;
+package cc.alcina.framework.servlet.environment;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,7 +47,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -71,8 +71,16 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * 
  * TOPICS Message loop and exception handling - see ClientExecutionQueue.loop
  */
-public class Environment {
-	public static class TimerProvider implements Timer.Provider {
+class Environment {
+	static Environment get() {
+		return LooseContext.get(Environment.CONTEXT_ENVIRONMENT);
+	}
+
+	static boolean has() {
+		return LooseContext.has(Environment.CONTEXT_ENVIRONMENT);
+	}
+
+	static class TimerProvider implements Timer.Provider {
 		TimerJvm.Provider exEnvironmentDelegate = new TimerJvm.Provider();
 
 		public TimerProvider() {
@@ -80,21 +88,22 @@ public class Environment {
 
 		@Override
 		public Timer getTimer(Runnable runnable) {
-			if (has()) {
-				return get().scheduler.createTimer(runnable);
+			if (Environment.has()) {
+				return Environment.get().scheduler.createTimer(runnable);
 			} else {
 				return exEnvironmentDelegate.getTimer(runnable);
 			}
 		}
 	}
 
+	static final transient String CONTEXT_ENVIRONMENT = Environment.class
+			.getName() + ".CONTEXT_ENVIRONMENT";
+
 	/*
 	 * FIXME - tricky - what to do with timeouts here - does this interact with
 	 * keep-alives, environmentmanager
 	 */
 	class InvokeProxyImpl implements DocumentAttachId.InvokeProxy {
-		int invokeCounter = 0;
-
 		class ResponseHandler {
 			InvokeResponse response;
 
@@ -123,6 +132,8 @@ public class Environment {
 			}
 		}
 
+		int invokeCounter = 0;
+
 		Map<Integer, ResponseHandler> responseHandlers = new LinkedHashMap<>();
 
 		@Override
@@ -131,32 +142,6 @@ public class Environment {
 				List<InvokeProxy.Flag> flags, AsyncCallback<?> callback) {
 			invoke0(node, methodName, argumentTypes, arguments, flags,
 					callback);
-		}
-
-		ResponseHandler invoke0(NodeAttachId node, String methodName,
-				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
-				AsyncCallback<?> callback) {
-			// check this is valid
-			if (node != null && AttachId.forNode(node.node()).id == 0) {
-				throw new IllegalStateException(Ax.format(
-						"node %s is detached, cannot be remote-invoked",
-						node.node().getNodeName()));
-			}
-			// always emit mutations before proxy invoke
-			emitMutations();
-			ResponseHandler handler = new ResponseHandler(callback);
-			Message.Invoke invoke = new Message.Invoke();
-			invoke.path = node == null ? null : AttachId.forNode(node.node());
-			invoke.id = ++invokeCounter;
-			invoke.methodName = methodName;
-			invoke.argumentTypes = argumentTypes == null ? List.of()
-					: argumentTypes;
-			invoke.arguments = arguments == null ? List.of() : arguments;
-			invoke.flags = flags == null ? List.of() : flags;
-			invoke.sync = callback == null;
-			responseHandlers.put(invoke.id, handler);
-			queue.send(invoke);
-			return handler;
 		}
 
 		public void onInvokeResponse(InvokeResponse response) {
@@ -209,6 +194,32 @@ public class Environment {
 				}
 			}
 		}
+
+		ResponseHandler invoke0(NodeAttachId node, String methodName,
+				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
+				AsyncCallback<?> callback) {
+			// check this is valid
+			if (node != null && AttachId.forNode(node.node()).id == 0) {
+				throw new IllegalStateException(Ax.format(
+						"node %s is detached, cannot be remote-invoked",
+						node.node().getNodeName()));
+			}
+			// always emit mutations before proxy invoke
+			emitMutations();
+			ResponseHandler handler = new ResponseHandler(callback);
+			Message.Invoke invoke = new Message.Invoke();
+			invoke.path = node == null ? null : AttachId.forNode(node.node());
+			invoke.id = ++invokeCounter;
+			invoke.methodName = methodName;
+			invoke.argumentTypes = argumentTypes == null ? List.of()
+					: argumentTypes;
+			invoke.arguments = arguments == null ? List.of() : arguments;
+			invoke.flags = flags == null ? List.of() : flags;
+			invoke.sync = callback == null;
+			responseHandlers.put(invoke.id, handler);
+			queue.send(invoke);
+			return handler;
+		}
 	}
 
 	static class InvokeException extends RuntimeException {
@@ -256,7 +267,7 @@ public class Environment {
 		void addEventMutation(EventSystemMutation eventSystemMutation) {
 			runWithMutations(() -> {
 				Element elem = (Element) eventSystemMutation.nodeId.node();
-				mutations.eventMutations.add(eventSystemMutation);
+				mutations.eventSystemMutations.add(eventSystemMutation);
 			});
 		}
 	}
@@ -269,15 +280,15 @@ public class Environment {
 		}
 	}
 
-	private static final transient String CONTEXT_ENVIRONMENT = Environment.class
-			.getName() + ".CONTEXT_ENVIRONMENT";
-
-	public static Environment get() {
-		return LooseContext.get(CONTEXT_ENVIRONMENT);
-	}
-
-	static boolean has() {
-		return LooseContext.has(CONTEXT_ENVIRONMENT);
+	class CommandExecutorImpl implements SchedulerFrame.CommandExecutor {
+		@Override
+		public void execute(SchedulerFrame.Task task) {
+			queue.submit(() -> {
+				runInClientFrame(() -> {
+					task.executeCommand();
+				});
+			});
+		}
 	}
 
 	/*
@@ -285,9 +296,9 @@ public class Environment {
 	 * This allows the client to switch environments after say a dev rebuild
 	 * (equal id/auth, unequal uid will force a refresh)
 	 */
-	public final String uid;
+	final String uid;
 
-	public final RemoteUi ui;
+	final RemoteUi ui;
 
 	ClientExecutionQueue queue;
 
@@ -342,11 +353,6 @@ public class Environment {
 	long lastPacketsReceived;
 
 	long nonInteractionTimeout;
-
-	public void clientStarted() {
-		clientStarted = true;
-		scheduler.setClientStarted(true);
-	}
 
 	Environment(RemoteUi ui, Session session) {
 		this.ui = ui;
@@ -433,17 +439,6 @@ public class Environment {
 		}
 	}
 
-	class CommandExecutorImpl implements SchedulerFrame.CommandExecutor {
-		@Override
-		public void execute(SchedulerFrame.Task task) {
-			queue.submit(() -> {
-				runInClientFrame(() -> {
-					task.executeCommand();
-				});
-			});
-		}
-	}
-
 	public boolean isInitialised() {
 		return client != null;
 	}
@@ -456,10 +451,6 @@ public class Environment {
 		} else {
 			runInClientFrame(runnable);
 		}
-	}
-
-	public void renderInitialUi() {
-		runInClientFrame(() -> ui.render());
 	}
 
 	@Override
@@ -489,6 +480,57 @@ public class Environment {
 			// throw new InvalidClientUidException();
 			// }
 		}
+	}
+
+	public void handleFromClientMessage(MessageToken token) throws Exception {
+		validateSession(token.request.session,
+				((MessageHandlerServer) token.messageHandler)
+						.isValidateClientInstanceUid());
+		lastPacketsReceived = System.currentTimeMillis();
+		queue.handleFromClientMessage(token);
+	}
+
+	public void flush() {
+		emitMutations();
+	}
+
+	public void initialiseSettings(String settings) {
+		ui.initialiseSettings(settings);
+	}
+
+	void addLifecycleHandlers() {
+		runInClientFrame(() -> ui.addLifecycleHandlers());
+	}
+
+	public int nextServerClientMessageId() {
+		return serverClientMessageCounter.getAndIncrement();
+	}
+
+	public String getSessionPath() {
+		Url url = Url.parse(session.url);
+		return url.queryParameters.get("path");
+	}
+
+	public void setNonInteractionTimeout(long nonInteractionTimeout) {
+		this.nonInteractionTimeout = nonInteractionTimeout;
+	}
+
+	public void startClient() {
+		/*
+		 * will enqueue a mutations event in the to-client queue
+		 */
+		renderInitialUi();
+		addLifecycleHandlers();
+		clientStarted();
+	}
+
+	void clientStarted() {
+		clientStarted = true;
+		scheduler.setClientStarted(true);
+	}
+
+	void renderInitialUi() {
+		runInClientFrame(() -> ui.render());
 	}
 
 	/*
@@ -579,35 +621,6 @@ public class Environment {
 		queue.start();
 	}
 
-	public void handleFromClientMessage(MessageHandlingToken token)
-			throws Exception {
-		validateSession(token.request.session,
-				token.messageHandler.isValidateClientInstanceUid());
-		lastPacketsReceived = System.currentTimeMillis();
-		queue.handleFromClientMessage(token);
-	}
-
-	public void flush() {
-		emitMutations();
-	}
-
-	public void initialiseSettings(String settings) {
-		ui.initialiseSettings(settings);
-	}
-
-	public void addLifecycleHandlers() {
-		runInClientFrame(() -> ui.addLifecycleHandlers());
-	}
-
-	public int nextServerClientMessageId() {
-		return serverClientMessageCounter.getAndIncrement();
-	}
-
-	public String getSessionPath() {
-		Url url = Url.parse(session.url);
-		return url.queryParameters.get("path");
-	}
-
 	void end(String reason) {
 		logger.info("Stopping env [{}] :: {}", reason, session.id);
 		if (clientStarted) {
@@ -615,9 +628,5 @@ public class Environment {
 		}
 		queue.stop();
 		EnvironmentManager.get().deregister(this);
-	}
-
-	public void setNonInteractionTimeout(long nonInteractionTimeout) {
-		this.nonInteractionTimeout = nonInteractionTimeout;
 	}
 }

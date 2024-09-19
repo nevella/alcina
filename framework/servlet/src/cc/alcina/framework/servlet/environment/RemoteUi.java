@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.dom;
+package cc.alcina.framework.servlet.environment;
 
 import java.util.function.Consumer;
 
@@ -15,6 +15,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.servlet.component.featuretree.FeatureTree.Ui;
 
 /**
  * <p>
@@ -112,12 +113,21 @@ public interface RemoteUi {
 
 	void end();
 
-	/*
-	 * In most cases Environment.get() will also give access to the environment
-	 * - but in cases where (say) an off-thread event is being processed, this
-	 * access to the environment must be used
-	 */
-	Environment getEnvironment();
+	static RemoteUi get() {
+		return Environment.get().ui;
+	}
+
+	default void flush() {
+		Environment.get().flush();
+	}
+
+	default String getUid() {
+		return Environment.get().uid;
+	}
+
+	default String getSessionPath() {
+		return Environment.get().getSessionPath();
+	}
 
 	void setEnvironment(Environment environment);
 }

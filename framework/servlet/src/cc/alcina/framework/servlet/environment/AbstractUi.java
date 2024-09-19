@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.dom;
+package cc.alcina.framework.servlet.environment;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -26,7 +26,18 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 
 	DirectedLayout layout;
 
+	/*
+	 * In most cases Environment.get() will also give access to the environment
+	 * - but in cases where (say) an off-thread event is being processed, this
+	 * access to the environment must be used
+	 * 
+	 */
 	Environment environment;
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
 
 	public P place;
 
@@ -59,16 +70,6 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 
 	public void setPlace(P place) {
 		set("place", this.place, place, () -> this.place = place);
-	}
-
-	@Override
-	public Environment getEnvironment() {
-		return environment;
-	}
-
-	@Override
-	public void setEnvironment(Environment environment) {
-		this.environment = environment;
 	}
 
 	@Override

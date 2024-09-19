@@ -9,10 +9,9 @@ import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
-import cc.alcina.framework.servlet.dom.AbstractUi;
-import cc.alcina.framework.servlet.dom.Environment;
-import cc.alcina.framework.servlet.dom.RemoteUi;
-import cc.alcina.framework.servlet.dom.SettingsSupport;
+import cc.alcina.framework.servlet.environment.AbstractUi;
+import cc.alcina.framework.servlet.environment.RemoteUi;
+import cc.alcina.framework.servlet.environment.SettingsSupport;
 
 /**
  * <p>
@@ -47,7 +46,7 @@ public class SequenceBrowser {
 		static PackageProperties._SequenceBrowser_Ui properties = PackageProperties.sequenceBrowser_ui;
 
 		public static Ui get() {
-			return (Ui) Environment.get().ui;
+			return (Ui) RemoteUi.get();
 		}
 
 		Page page;

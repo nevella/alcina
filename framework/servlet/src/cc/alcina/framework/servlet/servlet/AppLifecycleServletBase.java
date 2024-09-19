@@ -90,7 +90,7 @@ import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
-import cc.alcina.framework.servlet.dom.Environment;
+import cc.alcina.framework.servlet.environment.EnvironmentApi;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.job.JobScheduler;
@@ -343,7 +343,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		LooseContext.register(ttmInstance);
 		JvmReflections.initJvmServices();
 		Registry.register().singleton(Timer.Provider.class,
-				new Environment.TimerProvider());
+				new EnvironmentApi.TimerProvider());
 	}
 
 	protected abstract void initContainerBridge();

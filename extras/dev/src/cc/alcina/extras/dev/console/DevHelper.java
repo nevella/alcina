@@ -88,7 +88,7 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerTopics;
-import cc.alcina.framework.servlet.dom.Environment;
+import cc.alcina.framework.servlet.environment.EnvironmentApi;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import elemental.json.impl.JsonUtil;
 
@@ -418,7 +418,7 @@ public abstract class DevHelper {
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.devWarning.add(devWarningListener);
 		Registry.register().singleton(Timer.Provider.class,
-				new Environment.TimerProvider());
+				new EnvironmentApi.TimerProvider());
 		PermissionsManager.register(new ThreadedPermissionsManager());
 		JsonUtil.FAST_STRINGIFY = true;
 		try {

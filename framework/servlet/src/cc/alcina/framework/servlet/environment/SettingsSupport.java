@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.dom;
+package cc.alcina.framework.servlet.environment;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.reflection.Reflections;

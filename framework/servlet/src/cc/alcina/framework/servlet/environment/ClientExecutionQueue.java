@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.dom;
+package cc.alcina.framework.servlet.environment;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
-import cc.alcina.framework.servlet.component.romcom.server.MessageHandlers.FromClientMessageAcceptor;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlerServer;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken.Handler;
+import cc.alcina.framework.servlet.environment.MessageHandlerServer.FromClientMessageAcceptor;
 
 /*
  * This queue/thread dispatches messages to the client, waiting for its
@@ -40,11 +40,11 @@ class ClientExecutionQueue implements Runnable {
 			this.runnable = runnable;
 		}
 
-		AsyncEvent(MessageHandlingToken fromClientMessage) {
+		AsyncEvent(MessageToken fromClientMessage) {
 			this.fromClientMessage = fromClientMessage;
 		}
 
-		MessageHandlingToken fromClientMessage;
+		MessageToken fromClientMessage;
 
 		Runnable runnable;
 	}
@@ -155,7 +155,7 @@ class ClientExecutionQueue implements Runnable {
 		}
 	}
 
-	void handleFromClientMessage(MessageHandlingToken token) {
+	void handleFromClientMessage(MessageToken token) {
 		if (token.request.protocolMessage.sync) {
 			handleFromClientMessageSync(token);
 		} else {
@@ -182,13 +182,14 @@ class ClientExecutionQueue implements Runnable {
 	 * when multiple client events are emitted, at least one of which causes a
 	 * server->client sync call
 	 */
-	void handleFromClientMessageSync(MessageHandlingToken token) {
+	void handleFromClientMessageSync(MessageToken token) {
 		try {
 			if (token.request.protocolMessage.sync) {
 				environment.runInFrameWithoutSync = true;
 			}
-			token.messageHandler.handle(token.request, token.response,
-					environment, token.request.protocolMessage);
+			Handler<Environment, Message> messageHandler = (Handler<Environment, Message>) token.messageHandler;
+			messageHandler.handle(token, environment,
+					token.request.protocolMessage);
 			handleFromClientMessageAcceptor(token.messageHandler);
 		} catch (Exception e) {
 			token.response.putException(e);
@@ -203,7 +204,7 @@ class ClientExecutionQueue implements Runnable {
 
 	FromClientMessageAcceptor fromClientMessageAcceptor;
 
-	void handleFromClientMessageAcceptor(MessageHandlerServer messageHandler) {
+	void handleFromClientMessageAcceptor(Handler<?, ?> messageHandler) {
 		if (messageHandler instanceof FromClientMessageAcceptor) {
 			synchronized (this) {
 				// flush the existing acceptor, if any

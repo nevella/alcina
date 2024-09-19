@@ -18,8 +18,8 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.servlet.dom.EnvironmentManager;
-import cc.alcina.framework.servlet.dom.EnvironmentManager.EnvironmentSource;
+import cc.alcina.framework.servlet.environment.EnvironmentManager;
+import cc.alcina.framework.servlet.environment.EnvironmentManager.EnvironmentSource;
 
 /**
  * This class abstracts support for observable backend events which are the root

@@ -1,15 +1,14 @@
-package cc.alcina.framework.servlet.dom;
+package cc.alcina.framework.servlet.environment;
+
+import com.google.gwt.place.shared.Place;
 
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
-import cc.alcina.framework.servlet.dom.Environment;
-import com.google.gwt.place.shared.Place;
-import java.lang.Class;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _AbstractUi abstractUi = new _AbstractUi();
     

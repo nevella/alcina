@@ -9,7 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.servlet.ServletLayerTopics;
-import cc.alcina.framework.servlet.dom.Environment;
+import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @Feature.Ref(Feature_TraversalBrowser_AppSuggestorImplementation.Shortcuts.class)
 @AppSuggestorCommand(
@@ -43,7 +43,7 @@ public abstract class TraversalCommand<T, H extends NodeEvent.Handler>
 				 */
 				StatusModule.get().showMessageTransitional(
 						"Reloading dev console + traversal view");
-				Environment.get().flush();
+				RemoteUi.get().flush();
 				ServletLayerTopics.topicRestartConsole.signal();
 			}
 		}

@@ -4,23 +4,11 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.traversal.Header;
-import cc.alcina.framework.servlet.component.traversal.Page;
-import cc.alcina.framework.servlet.component.traversal.PropertiesArea;
-import cc.alcina.framework.servlet.component.traversal.RenderedSelections;
-import cc.alcina.framework.servlet.component.traversal.SelectionLayers;
-import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
-import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
-import cc.alcina.framework.servlet.dom.Environment;
-import java.lang.Boolean;
-import java.lang.Class;
-import java.lang.Integer;
-import java.lang.String;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Page page = new _Page();
@@ -49,7 +37,6 @@ public class PackageProperties {
     public static class _TraversalBrowser_Ui implements TypedProperty.Container {
       public TypedProperty<TraversalBrowser.Ui, Class> appCommandContext = new TypedProperty<>(TraversalBrowser.Ui.class, "appCommandContext");
       public TypedProperty<TraversalBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(TraversalBrowser.Ui.class, "commandContextProvider");
-      public TypedProperty<TraversalBrowser.Ui, Environment> environment = new TypedProperty<>(TraversalBrowser.Ui.class, "environment");
       public TypedProperty<TraversalBrowser.Ui, RemoteComponentObservables.ObservableHistory> history = new TypedProperty<>(TraversalBrowser.Ui.class, "history");
       public TypedProperty<TraversalBrowser.Ui, String> mainCaption = new TypedProperty<>(TraversalBrowser.Ui.class, "mainCaption");
       public TypedProperty<TraversalBrowser.Ui, Page> page = new TypedProperty<>(TraversalBrowser.Ui.class, "page");

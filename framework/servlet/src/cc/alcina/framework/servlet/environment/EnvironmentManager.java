@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.dom;
+package cc.alcina.framework.servlet.environment;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,7 +19,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Timeout;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
@@ -32,9 +34,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.dom.Feature_EnvironmentManager;
 
 /**
  * <p>
@@ -224,5 +231,46 @@ public class EnvironmentManager {
 			entries = environmentSources.values().stream().map(Entry::new)
 					.collect(Collectors.toList());
 		}
+	}
+
+	public void handleMessage(MessageToken token) throws Exception {
+		RemoteComponentRequest request = token.request;
+		Environment env = getEnvironment(request.session);
+		if (env == null) {
+			throw buildInvalidClientException(
+					request.session.componentClassName);
+		}
+		MessageHandlerServer messageHandler = Registry.impl(
+				MessageHandlerServer.class, request.protocolMessage.getClass());
+		token.messageHandler = messageHandler;
+		/*
+		 * tmp = this will all be queue calls
+		 */
+		// http thread
+		messageHandler.onBeforeMessageHandled(request.protocolMessage);
+		// unless the message is a sync response, on the env thread
+		env.handleFromClientMessage(token);
+		// http thread
+		messageHandler.onAfterMessageHandled(request.protocolMessage);
+	}
+
+	InvalidClientException
+			buildInvalidClientException(String componentClassName) {
+		Class<? extends RemoteUi> uiType = Reflections
+				.forName(componentClassName);
+		boolean singleInstance = RemoteUi.SingleInstance.class
+				.isAssignableFrom(uiType);
+		boolean existingInstance = singleInstance
+				&& EnvironmentManager.get().hasEnvironment(uiType);
+		String message = null;
+		InvalidClientException.Action action = Action.REFRESH;
+		if (existingInstance) {
+			action = Action.EXPIRED;
+			message = "This component client (tab) has ben superseded "
+					+ "by a newer access to this component. \n\nPlease use the newer client, "
+					+ "or refresh to switch rendering to this client";
+		}
+		return new InvalidClientException(message, action,
+				NestedName.get(uiType));
 	}
 }

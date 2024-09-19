@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.dom.style;
+package cc.alcina.framework.servlet.environment.style;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
