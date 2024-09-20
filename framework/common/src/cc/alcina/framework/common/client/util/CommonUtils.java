@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gwt.core.client.GWT;
 
-import au.com.barnet.jade.cs.persistent.misc.LegislationVersionType;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
