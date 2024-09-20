@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gwt.core.client.GWT;
 
+import au.com.barnet.jade.cs.persistent.misc.LegislationVersionType;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -2267,6 +2268,14 @@ public class CommonUtils {
 			return new String(baos.toByteArray(), "UTF-8");
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
+	public static int nullSafeOrdinal(Enum enunValue) {
+		if (enunValue == null) {
+			return -1;
+		} else {
+			return enunValue.ordinal();
 		}
 	}
 }
