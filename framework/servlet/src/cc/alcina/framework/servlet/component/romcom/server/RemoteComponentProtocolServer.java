@@ -41,5 +41,9 @@ public class RemoteComponentProtocolServer {
 			this.response = response;
 			this.latch = new CountDownLatch(1);
 		}
+
+		public void messageConsumed() {
+			latch.countDown();
+		}
 	}
 }

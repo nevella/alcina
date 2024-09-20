@@ -2,16 +2,17 @@ package cc.alcina.framework.servlet.environment;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken.Handler;
-import cc.alcina.framework.servlet.environment.MessageHandlerServer.FromClientMessageAcceptor;
+import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMessageAcceptor;
 
 /*
  * This queue/thread dispatches messages to the client, waiting for its
@@ -25,22 +26,28 @@ import cc.alcina.framework.servlet.environment.MessageHandlerServer.FromClientMe
  *  "
  *  - TODO - add a transport layer which handles message retry (Android sleep/resume)
  * 
+ * 
  * @formatter:on
+ * 
+ * - Terminology - 'execution thread' - analagous to the single thread of js dispatch in a 
+ * browser, the only thread with access to the (local) DOM. The thread is stored in #executionThread
  */
 class ClientExecutionQueue implements Runnable {
-	BlockingQueue<Message> syncEventQueue = new LinkedBlockingQueue<>();
+	BlockingQueue<Message> toClientQueue = new LinkedBlockingQueue<>();
 
-	BlockingQueue<AsyncEvent> asyncEventQueue = new LinkedBlockingQueue<>();
+	// server-generated runnables or from-client messages to process in order,
+	// while not awaiting a synchronous client response
+	BlockingQueue<AsyncDispatchable> asyncDispatchQueue = new LinkedBlockingQueue<>();
 
 	/*
 	 * either of these should be dispatched asynchronously, in order
 	 */
-	class AsyncEvent {
-		AsyncEvent(Runnable runnable) {
+	class AsyncDispatchable {
+		AsyncDispatchable(Runnable runnable) {
 			this.runnable = runnable;
 		}
 
-		AsyncEvent(MessageToken fromClientMessage) {
+		AsyncDispatchable(MessageToken fromClientMessage) {
 			this.fromClientMessage = fromClientMessage;
 		}
 
@@ -53,22 +60,56 @@ class ClientExecutionQueue implements Runnable {
 
 	Environment environment;
 
+	MessageTransport messageTransport;
+
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
+		this.messageTransport = new MessageTransport();
+	}
+
+	/*
+	 * Note the difference in ordering depending on threading - non-queued
+	 * execution is required for nested execution order on the execution thread
+	 */
+	void invoke(Runnable runnable) {
+		if (inOnExecutionThread()) {
+			runnable.run();
+		} else {
+			addDispatchable(new AsyncDispatchable(runnable));
+		}
+	}
+
+	boolean inOnExecutionThread() {
+		return Thread.currentThread() == executionThread;
 	}
 
 	void start() {
-		String threadName = Ax.format("remcom-env-%s", environment.session.id);
-		Thread thread = new Thread(this, threadName);
-		thread.setDaemon(true);
-		thread.start();
+		String threadName = Ax.format("romcom-exec-%s",
+				environment.access().getSession().id);
+		executionThread = new Thread(this, threadName);
+		executionThread.setDaemon(true);
+		executionThread.start();
 	}
 
 	@Override
 	public void run() {
-		while (!finished) {
-			loop(true);
+		try {
+			LooseContext.push();
+			environment.fromClientExecutionThreadAccess().beforeEnterContext();
+			// this will initialise the outer context (with Document, Window
+			// etc). each cycle of loop will execute in a child context
+			environment.fromClientExecutionThreadAccess().enterContext();
+			while (!finished) {
+				pumpMessage();
+			}
+		} finally {
+			environment.fromClientExecutionThreadAccess().exitContext();
+			LooseContext.pop();
 		}
+	}
+
+	boolean isRunning() {
+		return executionThread != null;
 	}
 
 	void onLoopException(Exception e) {
@@ -77,8 +118,8 @@ class ClientExecutionQueue implements Runnable {
 	}
 
 	/*
-	 * The main client event loop *body* - analagous to the js event loop (note
-	 * there are two modes, so there's not a loop per se)
+	 * TODO - old docs - The main client event loop *body* - analagous to the js
+	 * event loop (note there are two modes, so there's not a loop per se)
 	 * 
 	 * While waiting for a sync response from the clients, this loop will be
 	 * called re-entrantly with acceptClientEvents==false
@@ -92,82 +133,75 @@ class ClientExecutionQueue implements Runnable {
 	 * if 'acceptClientEvents' is replaced by a check on syncEventQueue
 	 * non-empty
 	 */
-	void loop(boolean acceptClientEvents) {
+	// WIP - replacement for loop
+	void pumpMessage() {
 		boolean delta = false;
-		synchronized (this) {
-			if (fromClientMessageAcceptor != null) {
-				Message message = syncEventQueue.poll();
-				if (message != null) {
-					try {
-						fromClientMessageAcceptor.accept(message);
-					} catch (Exception e) {
-						onLoopException(e);
-					}
-					fromClientMessageAcceptor = null;
-					logger.debug("fromClientMessageAcceptor :: consumed");
-					delta = true;
-				}
-			}
-			if (acceptClientEvents) {
-				AsyncEvent asyncEvent = asyncEventQueue.poll();
-				if (asyncEvent != null) {
-					if (asyncEvent.fromClientMessage != null) {
-						handleFromClientMessageSync(
-								asyncEvent.fromClientMessage);
+		try {
+			LooseContext.push();
+			AsyncDispatchable dispatchable = asyncDispatchQueue.poll();
+			if (dispatchable != null) {
+				environment.fromClientExecutionThreadAccess().enter(() -> {
+					if (dispatchable.fromClientMessage != null) {
+						handleFromClientMessageOnThread(
+								dispatchable.fromClientMessage);
 					} else {
 						try {
-							asyncEvent.runnable.run();
+							dispatchable.runnable.run();
 						} catch (Exception e) {
 							onLoopException(e);
 						}
 					}
-					delta = true;
-				}
+				});
+				delta = true;
 			}
-			if (!delta) {
-				try {
-					waiting.set(true);
-					// FIXME - an infinite wait is problematic here - but when
-					// should the lock be released?
-					wait(1000);
-				} catch (InterruptedException e) {
-					Ax.simpleExceptionOut(e);
-				} finally {
-					waiting.set(false);
+		} finally {
+			LooseContext.pop();
+		}
+		if (!delta) {
+			try {
+				// make sure we're waiting on an empty queue
+				synchronized (asyncDispatchQueue) {
+					if (asyncDispatchQueue.isEmpty()) {
+						asyncDispatchQueue.wait(1000);
+					}
 				}
+			} catch (InterruptedException e) {
+				Ax.simpleExceptionOut(e);
 			}
 		}
 	}
-
-	AtomicBoolean waiting = new AtomicBoolean();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	/*
 	 * Does not await receipt
 	 */
-	void send(Message message) {
-		syncEventQueue.add(message);
-		if (waiting.get()) {
-			synchronized (this) {
-				notify();
-			}
-		}
+	void sendToClient(Message message) {
+		toClientQueue.add(message);
+		messageTransport.conditionallySendToClient();
 	}
 
+	/*
+	 * Called from a servlet receiver thread (so not the cl-ex thread).
+	 */
 	void handleFromClientMessage(MessageToken token) {
-		if (token.request.protocolMessage.sync) {
-			handleFromClientMessageSync(token);
+		Message protocolMessage = token.request.protocolMessage;
+		if (protocolMessage.sync) {
+			handleFromClientMessageOnThread(token);
 		} else {
-			synchronized (this) {
-				asyncEventQueue.add(new AsyncEvent(token));
-				notify();
-			}
+			addDispatchable(new AsyncDispatchable(token));
 			try {
 				token.latch.await();
 			} catch (InterruptedException e) {
 				Ax.simpleExceptionOut(e);
 			}
+		}
+	}
+
+	void addDispatchable(AsyncDispatchable dispatchable) {
+		synchronized (asyncDispatchQueue) {
+			asyncDispatchQueue.add(dispatchable);
+			asyncDispatchQueue.notify();
 		}
 	}
 
@@ -178,66 +212,60 @@ class ClientExecutionQueue implements Runnable {
 	 * waiting for the token to be processed, it will be unblocked by the
 	 * token.latch.countDown() call
 	 * 
-	 * The 'environment.runInFrameWithoutSync' is necessary to prevent deadlocks
-	 * when multiple client events are emitted, at least one of which causes a
-	 * server->client sync call
 	 */
-	void handleFromClientMessageSync(MessageToken token) {
+	void handleFromClientMessageOnThread(MessageToken token) {
 		try {
-			if (token.request.protocolMessage.sync) {
-				environment.runInFrameWithoutSync = true;
-			}
-			Handler<Environment, Message> messageHandler = (Handler<Environment, Message>) token.messageHandler;
-			messageHandler.handle(token, environment,
+			Handler<Environment.Access, Message> messageHandler = (Handler<Environment.Access, Message>) token.messageHandler;
+			messageHandler.handle(token, environment.access(),
 					token.request.protocolMessage);
-			handleFromClientMessageAcceptor(token.messageHandler);
 		} catch (Exception e) {
 			token.response.putException(e);
 			logger.warn(
 					"Exception in server queue (in response to invokesync)");
 			onLoopException(e);
-		} finally {
-			environment.runInFrameWithoutSync = false;
 		}
-		token.latch.countDown();
+		token.messageConsumed();
 	}
 
-	FromClientMessageAcceptor fromClientMessageAcceptor;
-
-	void handleFromClientMessageAcceptor(Handler<?, ?> messageHandler) {
-		if (messageHandler instanceof FromClientMessageAcceptor) {
-			synchronized (this) {
-				// flush the existing acceptor, if any
-				if (this.fromClientMessageAcceptor != null) {
-					this.fromClientMessageAcceptor.accept(null);
-				}
-				this.fromClientMessageAcceptor = (FromClientMessageAcceptor) messageHandler;
-				logger.debug("fromClientMessageAcceptor :: registered");
-				notify();
-			}
-		}
-	}
-
-	public void onInvokedSync() {
-		while (syncEventQueue.size() > 0) {
-			loop(false);
-		}
-	}
-
-	void submit(Runnable runnable) {
-		synchronized (this) {
-			asyncEventQueue.add(new AsyncEvent(runnable));
-			notify();
-		}
-	}
+	private Thread executionThread;
 
 	void stop() {
 		finished = true;
-		if (this.fromClientMessageAcceptor != null) {
-			this.fromClientMessageAcceptor.accept(null);
-		}
+		messageTransport.flushAcceptor();
+		// FIXME - transport - flush all handlers
 		synchronized (this) {
 			notifyAll();
+		}
+	}
+
+	void registerToClientMessageAcceptor(ToClientMessageAcceptor acceptor) {
+		messageTransport.registerAcceptor(acceptor);
+	}
+
+	class MessageTransport {
+		ToClientMessageAcceptor acceptor;
+
+		synchronized void registerAcceptor(ToClientMessageAcceptor acceptor) {
+			flushAcceptor();
+			this.acceptor = acceptor;
+			conditionallySendToClient();
+		}
+
+		synchronized void conditionallySendToClient() {
+			if (acceptor != null) {
+				Message message = toClientQueue.poll();
+				if (message != null) {
+					this.acceptor.accept(message);
+					this.acceptor = null;
+				}
+			}
+		}
+
+		synchronized void flushAcceptor() {
+			if (this.acceptor != null) {
+				this.acceptor.accept(null);
+				this.acceptor = null;
+			}
 		}
 	}
 }

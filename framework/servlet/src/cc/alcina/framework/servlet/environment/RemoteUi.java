@@ -22,6 +22,10 @@ import cc.alcina.framework.servlet.component.featuretree.FeatureTree.Ui;
  * This is the top-level ROMCOM application class - analagous to a browser
  * Client class, but a level up (to provide hooks for css injection, init,
  * app-specific settings etc)
+ * <p>
+ * Access - todo - all dom methods must go via env.access().dispatchOnUiThread()
+ * <p>
+ * FIXME - romcom - move some non-ui to component
  */
 public interface RemoteUi {
 	Client createClient();
@@ -79,7 +83,7 @@ public interface RemoteUi {
 		public RemoteResolver() {
 			super();
 			Environment env = Environment.get();
-			Consumer<Runnable> uiDispatch = env::dispatch;
+			Consumer<Runnable> uiDispatch = env.access()::invoke;
 			dispatch = Ref.of(uiDispatch);
 		}
 	}
@@ -102,32 +106,37 @@ public interface RemoteUi {
 	}
 
 	default void addLifecycleHandlers() {
-		Window.addPageHideHandler(evt -> Environment.get().end("pagehide"));
-	}
-
-	default void onBeforeEnterFrame() {
-	}
-
-	default void onExitFrame() {
+		Window.addPageHideHandler(
+				evt -> Environment.get().access().end("pagehide"));
 	}
 
 	void end();
 
 	static RemoteUi get() {
-		return Environment.get().ui;
+		return Environment.get().access().getUi();
 	}
 
 	default void flush() {
-		Environment.get().flush();
+		Environment.get().access().flush();
 	}
 
 	default String getUid() {
-		return Environment.get().uid;
+		return Environment.get().access().getUid();
 	}
 
 	default String getSessionPath() {
-		return Environment.get().getSessionPath();
+		return Environment.get().access().getSessionPath();
 	}
 
 	void setEnvironment(Environment environment);
+
+	default void onEnterIteration() {
+	}
+
+	default void onExitIteration() {
+	}
+
+	// Use this to block initial rendering until server-side state is ready
+	default void onBeforeEnterContext() {
+	}
 }

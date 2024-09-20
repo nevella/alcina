@@ -29,10 +29,10 @@ class EnvironmentReaper {
 	}
 
 	void conditionallyReap(Environment env) {
-		boolean isLocalhost = env.session.provideIsLocalHost();
-		boolean packetsReceived = env.clientStarted;
-		long lastPacketReceived = env.lastPacketsReceived.get();
-		long startTime = env.session.startTime;
+		boolean isLocalhost = env.access().getSession().provideIsLocalHost();
+		long lastPacketReceived = env.access().getLastPacketsReceived().get();
+		boolean packetsReceived = lastPacketReceived > 0;
+		long startTime = env.access().getSession().startTime;
 		boolean reap = false;
 		if (isLocalhost && !packetsReceived) {
 			if (!TimeConstants.within(startTime,
@@ -46,12 +46,14 @@ class EnvironmentReaper {
 				reap = true;
 			}
 		}
-		if (env.nonInteractionTimeout != 0 && !TimeConstants
-				.within(lastPacketReceived, env.nonInteractionTimeout)) {
+		long nonInteractionTimeout = env.access().getNonInteractionTimeout()
+				.get();
+		if (nonInteractionTimeout != 0 && !TimeConstants
+				.within(lastPacketReceived, nonInteractionTimeout)) {
 			reap = true;
 		}
 		if (reap) {
-			env.end("reap/inactive");
+			env.access().end("reap/inactive");
 		}
 	}
 

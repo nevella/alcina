@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
+import cc.alcina.framework.common.client.util.Timer.Provider;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
@@ -48,8 +49,11 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.PersistSettings;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.environment.MessageHandlerServer.AwaitRemoteHandler;
+import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMessageAcceptor;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -78,8 +82,8 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * v2
  * 
  * Thread-safety - all external (non-Environment) access should go via the
- * Access object, which ensures thread-safety, mostly by dispatching on the
- * queue
+ * Access object, which ensures thread-safety, mostly by dispatching on the ui
+ * thread
  */
 class Environment {
 	static Environment get() {
@@ -154,11 +158,6 @@ class Environment {
 					callback);
 		}
 
-		void onInvokeResponse(InvokeResponse response) {
-			ResponseHandler handler = responseHandlers.remove(response.id);
-			handler.handle(response);
-		}
-
 		/*
 		 * Unsurprisingly similar to the GWT devmode message send/await
 		 */
@@ -166,17 +165,15 @@ class Environment {
 		public <T> T invokeSync(NodeAttachId node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				List<InvokeProxy.Flag> flags) {
+			/*
+			 * Special sauce - the invoke0 will create a handler, the handler's
+			 * latch will block until the response message returns from the
+			 * client .
+			 * 
+			 * Synchronous! 2006 is back!
+			 */
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
 					arguments, flags, null);
-			if (!clientStarted) {
-				return null;
-			}
-			/*
-			 * Special sauce - the queue will return the client's http call with
-			 * an 'invoke' message, and await the invokeResponse. Synchronous!
-			 * 2006 is back!
-			 */
-			queue.onInvokedSync();
 			boolean timedOut = false;
 			long start = System.currentTimeMillis();
 			do {
@@ -227,8 +224,13 @@ class Environment {
 			invoke.flags = flags == null ? List.of() : flags;
 			invoke.sync = callback == null;
 			responseHandlers.put(invoke.id, handler);
-			queue.send(invoke);
+			queue.sendToClient(invoke);
 			return handler;
+		}
+
+		void onInvokeResponse(InvokeResponse response) {
+			ResponseHandler handler = responseHandlers.remove(response.id);
+			handler.handle(response);
 		}
 	}
 
@@ -293,11 +295,7 @@ class Environment {
 	class CommandExecutorImpl implements SchedulerFrame.CommandExecutor {
 		@Override
 		public void execute(SchedulerFrame.Task task) {
-			queue.submit(() -> {
-				runInClientFrame(() -> {
-					task.executeCommand();
-				});
-			});
+			queue.invoke(task::executeCommand);
 		}
 	}
 
@@ -306,161 +304,144 @@ class Environment {
 	 * This allows the client to switch environments after say a dev rebuild
 	 * (equal id/auth, unequal uid will force a refresh)
 	 */
-	final String uid;
+	private final String uid;
 
-	final RemoteUi ui;
+	private final RemoteUi ui;
 
-	ClientExecutionQueue queue;
+	private ClientExecutionQueue queue;
 
 	/*
 	 * The uid of the most recent client to send a startup packet. All others
 	 * will receive a 'reload' message on rpc calls
 	 */
-	String connectedClientUid;
+	private String connectedClientUid;
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	Document document;
+	private Document document;
 
-	MutationProxyImpl mutationProxy = new MutationProxyImpl();
+	private MutationProxyImpl mutationProxy = new MutationProxyImpl();
 
-	InvokeProxyImpl invokeProxy = new InvokeProxyImpl();
+	private InvokeProxyImpl invokeProxy = new InvokeProxyImpl();
 
-	Message.Mutations mutations = null;
+	private Message.Mutations mutations = null;
 
 	// FIXME - romcom - use an event pump rather than a timer
-	EventCollator<Object> eventCollator;
+	private EventCollator<Object> eventCollator;
 
-	Client client;
+	private Client client;
 
-	History history;
+	private History history;
 
-	Window.Location location;
+	private Window.Location location;
 
-	Window.Navigator navigator;
+	private Window.Navigator navigator;
 
-	Window.Resources windowResources;
+	private Window.Resources windowResources;
 
-	EventFrame eventFrame;
+	private EventFrame eventFrame;
 
-	final Session session;
+	private final Session session;
 
-	SchedulerFrame scheduler;
+	private SchedulerFrame scheduler;
 
-	boolean clientStarted;
+	private EnvironmentRegistry environmentRegistry;
 
-	EnvironmentRegistry environmentRegistry;
+	private AtomicLong lastPacketsReceived = new AtomicLong();
 
-	/*
-	 * Instruction from the queue that serial execution is controlled by
-	 * invokeSync (so execute the next invokeInClientFrame without synchronizing
-	 * on 'this')
-	 */
-	boolean runInFrameWithoutSync;
+	private AtomicLong nonInteractionTimeout = new AtomicLong();
 
-	AtomicInteger serverClientMessageCounter = new AtomicInteger();
+	private Access access;
 
-	AtomicLong lastPacketsReceived = new AtomicLong();
-
-	long nonInteractionTimeout;
+	private ClientExecutionThreadAccess clientExecutionThreadAccess;
 
 	Environment(RemoteUi ui, Session session) {
 		this.ui = ui;
 		this.session = session;
 		this.uid = SEUtilities.generatePrettyUuid();
 		this.eventCollator = new EventCollator<Object>(5, this::emitMutations);
-		startQueue();
+		this.access = new Access();
+		this.clientExecutionThreadAccess = new ClientExecutionThreadAccess();
+		queue = new ClientExecutionQueue(this);
 	}
 
-	void applyEvent(DomEventData eventData) {
-		runInClientFrame(
-				() -> LocalDom.attachIdRepresentations().applyEvent(eventData));
-	}
-
-	void applyLocationMutation(LocationMutation locationMutation,
-			boolean startup) {
-		runInClientFrame(() -> {
-			if (startup) {
-				Window.Location.init(locationMutation.protocol,
-						locationMutation.host, locationMutation.port,
-						locationMutation.path, locationMutation.queryString);
-				Window.Navigator.init(locationMutation.navigator.appCodeName,
-						locationMutation.navigator.appName,
-						locationMutation.navigator.appVersion,
-						locationMutation.navigator.platform,
-						locationMutation.navigator.userAgent,
-						locationMutation.navigator.cookieEnabled);
-			}
-			String token = locationMutation.hash.startsWith("#")
-					? locationMutation.hash.substring(1)
-					: locationMutation.hash;
-			Ax.logEvent("Navigate %s:: -> %s", startup ? "(startup) " : "",
-					token);
-			History.newItem(token, !startup);
-		});
-	}
-
-	// TODO - threading - this should only occur on the ClientExecutionQueue, so
-	// probably dispatch should go via that
-	void applyMutations(List<MutationRecord> mutations) {
-		runInClientFrame(() -> LocalDom.attachIdRepresentations()
-				.applyMutations(mutations, false));
-	}
-
-	/**
-	 * Executes the runnable within the environment's context. Called from
-	 * outside the queuing system (so simply add to the execution queue)
-	 * 
-	 * Note that probably the queue should wrap the runnable (rather than here)
+	/*
+	 * Access *from* the execution thread (so DOM etc access permitted)
 	 */
-	void dispatch(Runnable runnable) {
-		queue.submit(() -> runInClientFrame(runnable));
-	}
+	class ClientExecutionThreadAccess {
+		void beforeEnterContext() {
+			ui.onBeforeEnterContext();
+		}
 
-	void initialiseClient(RemoteComponentProtocol.Session session) {
-		Preconditions.checkState(Objects.equals(session.id, this.session.id));
-		try {
-			LooseContext.push();
-			LooseContext.set(CONTEXT_ENVIRONMENT, this);
-			environmentRegistry = new EnvironmentRegistry();
-			EnvironmentRegistry.enter(environmentRegistry);
-			// the order - location, history, client, document - is necessary
-			location = Window.Location.contextProvider.createFrame(null);
-			navigator = Window.Navigator.contextProvider.createFrame(null);
-			history = History.contextProvider.createFrame(null);
-			windowResources = Window.Resources.contextProvider
-					.createFrame(null);
-			eventFrame = EventFrame.contextProvider.createFrame(null);
-			History.addValueChangeHandler(this::onHistoryChange);
-			client = Client.contextProvider.createFrame(ui);
-			client.getPlaceController();
-			client.setupPlaceMapping();
-			scheduler = SchedulerFrame.contextProvider.createFrame(null);
-			scheduler.commandExecutor = new CommandExecutorImpl();
-			document = Document.contextProvider.createFrame(RemoteType.REF_ID);
-			document.createDocumentElement("<html/>", true);
-			document.implAccess()
-					.attachIdRemote().mutationProxy = mutationProxy;
-			document.implAccess().attachIdRemote().invokeProxy = invokeProxy;
-			LocalDom.initalizeDetachedSync();
-			enter(ui::init);
-		} finally {
-			LooseContext.pop();
+		void enterContext() {
+			Environment.this.enterContext();
+		}
+
+		void enterIteration() {
+			Environment.this.enterIteration();
+		}
+
+		void exitIteration() {
+			Environment.this.exitIteration();
+		}
+
+		void exitContext() {
+			Environment.this.exitContext();
+		}
+
+		void enter(Runnable runnable) {
+			Environment.this.enter(runnable);
 		}
 	}
 
-	boolean isInitialised() {
-		return client != null;
+	ClientExecutionThreadAccess fromClientExecutionThreadAccess() {
+		return clientExecutionThreadAccess;
 	}
 
-	void onInvokeResponse(InvokeResponse response) {
-		Runnable runnable = () -> invokeProxy.onInvokeResponse(response);
-		if (response.sync) {
-			// effectively reentering locked section on another thread
-			runnable.run();
-		} else {
-			runInClientFrame(runnable);
-		}
+	void exitIteration() {
+		ui.onExitIteration();
+	}
+
+	void enterIteration() {
+		ui.onEnterIteration();
+	}
+
+	private void enterContext() {
+		LooseContext.set(CONTEXT_ENVIRONMENT, this);
+		environmentRegistry = new EnvironmentRegistry();
+		EnvironmentRegistry.enter(environmentRegistry);
+		// the order - location, history, client, document - is necessary
+		location = Window.Location.contextProvider.createFrame(null);
+		navigator = Window.Navigator.contextProvider.createFrame(null);
+		history = History.contextProvider.createFrame(null);
+		windowResources = Window.Resources.contextProvider.createFrame(null);
+		eventFrame = EventFrame.contextProvider.createFrame(null);
+		History.addValueChangeHandler(this::onHistoryChange);
+		client = Client.contextProvider.createFrame(ui);
+		client.getPlaceController();
+		client.setupPlaceMapping();
+		scheduler = SchedulerFrame.contextProvider.createFrame(null);
+		scheduler.commandExecutor = new CommandExecutorImpl();
+		document = Document.contextProvider.createFrame(RemoteType.REF_ID);
+		document.createDocumentElement("<html/>", true);
+		document.implAccess().attachIdRemote().mutationProxy = mutationProxy;
+		document.implAccess().attachIdRemote().invokeProxy = invokeProxy;
+		LocalDom.initalizeDetachedSync();
+		GWTBridgeHeadless.inClient.set(true);
+		EnvironmentRegistry.enter(environmentRegistry);
+		Client.contextProvider.registerFrame(client);
+		History.contextProvider.registerFrame(history);
+		Window.Location.contextProvider.registerFrame(location);
+		Window.Navigator.contextProvider.registerFrame(navigator);
+		Window.Resources.contextProvider.registerFrame(windowResources);
+		SchedulerFrame.contextProvider.registerFrame(scheduler);
+		EventFrame.contextProvider.registerFrame(eventFrame);
+		Document.contextProvider.registerFrame(document);
+		GWTBridgeHeadless.inClient.set(true);
+	}
+
+	private void exitContext() {
+		GWTBridgeHeadless.inClient.set(false);
 	}
 
 	@Override
@@ -468,7 +449,7 @@ class Environment {
 		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
 	}
 
-	void validateSession(RemoteComponentProtocol.Session session,
+	private void validateSession(RemoteComponentProtocol.Session session,
 			boolean validateClientInstanceUid) throws Exception {
 		if (!Objects.equals(session.auth, session.auth)) {
 			throw new RemoteComponentProtocol.InvalidAuthenticationException();
@@ -492,54 +473,25 @@ class Environment {
 		}
 	}
 
-	void flush() {
-		emitMutations();
-	}
-
-	void initialiseSettings(String settings) {
+	private void initialiseSettings(String settings) {
 		ui.initialiseSettings(settings);
 	}
 
-	void addLifecycleHandlers() {
-		runInClientFrame(() -> ui.addLifecycleHandlers());
-	}
-
-	int nextServerClientMessageId() {
-		return serverClientMessageCounter.getAndIncrement();
-	}
-
-	String getSessionPath() {
-		Url url = Url.parse(session.url);
-		return url.queryParameters.get("path");
-	}
-
-	void setNonInteractionTimeout(long nonInteractionTimeout) {
-		this.nonInteractionTimeout = nonInteractionTimeout;
-	}
-
-	void startClient() {
+	private void startClient() {
 		/*
-		 * will enqueue a mutations event in the to-client queue
+		 * will cause mutations event (the initial render) to be queued in the
+		 * queue.toClientQueue
 		 */
-		renderInitialUi();
-		addLifecycleHandlers();
-		clientStarted();
-	}
-
-	void clientStarted() {
-		clientStarted = true;
-		scheduler.setClientStarted(true);
-	}
-
-	void renderInitialUi() {
-		runInClientFrame(() -> ui.render());
+		ui.init();
+		ui.render();
+		ui.addLifecycleHandlers();
 	}
 
 	/*
 	 * Corresponds to com.google.gwt.core.client.impl.Impl.entry0(Object
 	 * jsFunction, Object thisObj, Object args)
 	 */
-	void enter(Runnable runnable) {
+	private void enter(Runnable runnable) {
 		try {
 			try {
 				scheduler.pump(true);
@@ -552,7 +504,7 @@ class Environment {
 				 * noop-runnable (which will flush the scheduler) at the
 				 * earliest event
 				 */
-				scheduler.scheduleNextEntry(() -> dispatch(new Noop()));
+				scheduler.scheduleNextEntry(() -> access().invoke(new Noop()));
 			}
 		} catch (RuntimeException e) {
 			e.printStackTrace();
@@ -562,74 +514,28 @@ class Environment {
 	}
 
 	// see class doc re sync
-	synchronized void emitMutations() {
+	private void emitMutations() {
 		if (mutations != null) {
-			runInClientFrame(() -> {
-				Document.get().attachIdRemote().flushSinkEventsQueue();
-				queue.send(mutations);
-				mutations = null;
-			});
+			Document.get().attachIdRemote().flushSinkEventsQueue();
+			queue.sendToClient(mutations);
+			mutations = null;
 		}
 	}
 
-	void onHistoryChange(ValueChangeEvent<String> event) {
+	private void onHistoryChange(ValueChangeEvent<String> event) {
 		mutationProxy.onLocationMutation(
 				Message.Mutations.ofLocation().locationMutation);
 	}
 
-	void runInClientFrame(Runnable runnable) {
-		if (runInFrameWithoutSync) {
-			runInClientFrameUnsynced(runnable);
-		} else {
-			synchronized (this) {
-				runInClientFrameUnsynced(runnable);
-			}
-		}
+	Access access() {
+		return access;
 	}
 
-	void runInClientFrameUnsynced(Runnable runnable) {
-		if (has()) {
-			runnable.run();
-		} else {
-			try {
-				LooseContext.push();
-				LooseContext.set(CONTEXT_ENVIRONMENT, this);
-				EnvironmentRegistry.enter(environmentRegistry);
-				Client.contextProvider.registerFrame(client);
-				History.contextProvider.registerFrame(history);
-				Window.Location.contextProvider.registerFrame(location);
-				Window.Navigator.contextProvider.registerFrame(navigator);
-				Window.Resources.contextProvider.registerFrame(windowResources);
-				SchedulerFrame.contextProvider.registerFrame(scheduler);
-				EventFrame.contextProvider.registerFrame(eventFrame);
-				Document.contextProvider.registerFrame(document);
-				GWTBridgeHeadless.inClient.set(true);
-				ui.onBeforeEnterFrame();
-				enter(runnable::run);
-			} catch (Throwable t) {
-				Ax.err("Exception in frame");
-				Ax.simpleExceptionOut(t);
-				throw t;
-			} finally {
-				ui.onExitFrame();
-				GWTBridgeHeadless.inClient.set(false);
-				LooseContext.pop();
-			}
-		}
-	}
-
-	void startQueue() {
-		queue = new ClientExecutionQueue(this);
-		queue.start();
-	}
-
-	void end(String reason) {
-		logger.info("Stopping env [{}] :: {}", reason, session.id);
-		if (clientStarted) {
-			dispatch(() -> ui.end());
-		}
-		queue.stop();
-		EnvironmentManager.get().deregister(this);
+	private void startup(MessageToken token, Startup message) {
+		access().applyMutations(message.domMutations);
+		access().applyLocationMutation(message.locationMutation, true);
+		initialiseSettings(message.settings);
+		startClient();
 	}
 
 	/*
@@ -637,12 +543,15 @@ class Environment {
 	 * Environment is
 	 */
 	class Access {
+		Access() {
+		}
+
 		String getConnectedClientUid() {
 			return connectedClientUid;
 		}
 
 		void setNonInteractionTimeout(long nonInteractionTimeout) {
-			Environment.this.setNonInteractionTimeout(nonInteractionTimeout);
+			Environment.this.nonInteractionTimeout.set(nonInteractionTimeout);
 		}
 
 		Session getSession() {
@@ -658,11 +567,115 @@ class Environment {
 		}
 
 		void dispatchToClient(Message message) {
-			queue.send(message);
+			queue.sendToClient(message);
 		}
-	}
 
-	Access access() {
-		return new Access();
+		void applyEvent(DomEventData eventData) {
+			queue.invoke(() -> LocalDom.attachIdRepresentations()
+					.applyEvent(eventData));
+		}
+
+		void applyLocationMutation(LocationMutation locationMutation,
+				boolean startup) {
+			queue.invoke(() -> {
+				if (startup) {
+					Window.Location.init(locationMutation.protocol,
+							locationMutation.host, locationMutation.port,
+							locationMutation.path,
+							locationMutation.queryString);
+					Window.Navigator.init(
+							locationMutation.navigator.appCodeName,
+							locationMutation.navigator.appName,
+							locationMutation.navigator.appVersion,
+							locationMutation.navigator.platform,
+							locationMutation.navigator.userAgent,
+							locationMutation.navigator.cookieEnabled);
+				}
+				String token = locationMutation.hash.startsWith("#")
+						? locationMutation.hash.substring(1)
+						: locationMutation.hash;
+				Ax.logEvent("Navigate %s:: -> %s", startup ? "(startup) " : "",
+						token);
+				History.newItem(token, !startup);
+			});
+		}
+
+		void end(String reason) {
+			logger.info("Stopping env [{}] :: {}", reason, session.id);
+			if (queue.finished) {
+				access().invoke(() -> ui.end());
+			}
+			queue.stop();
+			EnvironmentManager.get().deregister(Environment.this);
+		}
+
+		void applyMutations(List<MutationRecord> mutations) {
+			queue.invoke(() -> LocalDom.attachIdRepresentations()
+					.applyMutations(mutations, false));
+		}
+
+		void onInvokeResponse(InvokeResponse response) {
+			Runnable runnable = () -> invokeProxy.onInvokeResponse(response);
+			if (response.sync) {
+				/*
+				 * This will cause the response value to be applied to the
+				 * handler, and the handler's latch unlocked (so the client
+				 * execution thread will continue)
+				 */
+				runnable.run();
+			} else {
+				queue.invoke(runnable);
+			}
+		}
+
+		void startup(MessageToken token, Startup message) {
+			Preconditions.checkState(
+					Objects.equals(session.id, Environment.this.session.id));
+			Runnable startupRunnable = () -> Environment.this.startup(token,
+					message);
+			queue.start();
+			queue.invoke(startupRunnable);
+		}
+
+		/**
+		 * Executes the runnable within the environment's context. Called from
+		 * outside the queuing system (so simply add to the execution queue)
+		 * 
+		 * Note that probably the queue should wrap the runnable (rather than
+		 * here)
+		 */
+		void invoke(Runnable runnable) {
+			queue.invoke(runnable::run);
+		}
+
+		RemoteUi getUi() {
+			return ui;
+		}
+
+		String getUid() {
+			return uid;
+		}
+
+		void flush() {
+			emitMutations();
+		}
+
+		String getSessionPath() {
+			Url url = Url.parse(session.url);
+			return url.queryParameters.get("path");
+		}
+
+		AtomicLong getLastPacketsReceived() {
+			return lastPacketsReceived;
+		}
+
+		AtomicLong getNonInteractionTimeout() {
+			return nonInteractionTimeout;
+		}
+
+		public void registerToClientMessageAcceptor(
+				ToClientMessageAcceptor acceptor) {
+			queue.registerToClientMessageAcceptor(acceptor);
+		}
 	}
 }

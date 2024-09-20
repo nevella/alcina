@@ -147,7 +147,7 @@ public class EnvironmentManager {
 
 	public boolean hasEnvironment(Class<? extends RemoteUi> uiType) {
 		return environments.values().stream()
-				.anyMatch(env -> env.ui.getClass() == uiType);
+				.anyMatch(env -> env.access().getUi().getClass() == uiType);
 	}
 
 	public boolean isSingletonEnvironmentInitialised() {

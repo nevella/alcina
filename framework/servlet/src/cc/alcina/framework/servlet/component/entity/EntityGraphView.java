@@ -86,18 +86,22 @@ public class EntityGraphView {
 		EntityPeer peer;
 
 		@Override
-		public void onBeforeEnterFrame() {
+		public void onBeforeEnterContext() {
 			try {
 				loadedLatch.await();
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
+		}
+
+		@Override
+		public void onEnterIteration() {
 			PermissionsManager.get().pushSystemUser();
 			Transaction.ensureBegun();
 		}
 
 		@Override
-		public void onExitFrame() {
+		public void onExitIteration() {
 			Transaction.end();
 			PermissionsManager.get().popSystemUser();
 		}

@@ -12,8 +12,8 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
 
 @Registration.NonGenericSubtypes(MessageHandlerServer.class)
 public abstract class MessageHandlerServer<PM extends Message>
-		implements MessageToken.Handler<Environment, PM> {
-	public abstract void handle(MessageToken token, Environment env,
+		implements MessageToken.Handler<Environment.Access, PM> {
+	public abstract void handle(MessageToken token, Environment.Access env,
 			PM message);
 
 	public boolean isValidateClientInstanceUid() {
@@ -28,23 +28,26 @@ public abstract class MessageHandlerServer<PM extends Message>
 
 	public static class AwaitRemoteHandler
 			extends MessageHandlerServer<Message.AwaitRemote>
-			implements FromClientMessageAcceptor {
+			implements ToClientMessageAcceptor {
 		CountDownLatch latch;
 
 		MessageToken token;
 
 		@Override
 		public void onBeforeMessageHandled(Message.AwaitRemote message) {
-			// required for reentrant handling of messages
+			// handle this message on the receiving servlet thread
 			message.sync = true;
 		}
 
+		/*
+		 * handled in the servlet thread, not the client execution thread
+		 */
 		@Override
-		public void handle(MessageToken token, Environment env,
+		public void handle(MessageToken token, Environment.Access env,
 				AwaitRemote message) {
 			latch = new CountDownLatch(1);
 			this.token = token;
-			// NOOP (will be called-back once there's a message)
+			env.registerToClientMessageAcceptor(this);
 		}
 
 		@Override
@@ -63,14 +66,18 @@ public abstract class MessageHandlerServer<PM extends Message>
 		}
 	}
 
-	public interface FromClientMessageAcceptor {
+	/*
+	 * Accepts messages to the client (and causes them to be passed to the
+	 * client)
+	 */
+	interface ToClientMessageAcceptor {
 		void accept(Message message);
 	}
 
 	public static class DomEventMessageHandler
 			extends MessageHandlerServer<Message.DomEventMessage> {
 		@Override
-		public void handle(MessageToken token, Environment env,
+		public void handle(MessageToken token, Environment.Access env,
 				Message.DomEventMessage message) {
 			message.events.forEach(env::applyEvent);
 		}
@@ -79,7 +86,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 	public static class InvokeResponseHandler
 			extends MessageHandlerServer<Message.InvokeResponse> {
 		@Override
-		public void handle(MessageToken token, Environment env,
+		public void handle(MessageToken token, Environment.Access env,
 				Message.InvokeResponse message) {
 			env.onInvokeResponse(message);
 		}
@@ -88,7 +95,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 	public static class MutationsHandler
 			extends MessageHandlerServer<Message.Mutations> {
 		@Override
-		public void handle(MessageToken token, Environment env,
+		public void handle(MessageToken token, Environment.Access env,
 				Message.Mutations message) {
 			/*
 			 * Currently romcom doesn't handle non-localdom browser .js mutation
@@ -103,13 +110,15 @@ public abstract class MessageHandlerServer<PM extends Message>
 	public static class StartupHandler
 			extends MessageHandlerServer<Message.Startup> {
 		@Override
-		public void handle(MessageToken token, Environment env,
+		public void onBeforeMessageHandled(Message.Startup message) {
+			// handle this message on the receiving servlet thread
+			message.sync = true;
+		}
+
+		@Override
+		public void handle(MessageToken token, Environment.Access env,
 				Message.Startup message) {
-			env.initialiseClient(token.request.session);
-			env.applyMutations(message.domMutations);
-			env.applyLocationMutation(message.locationMutation, true);
-			env.initialiseSettings(message.settings);
-			env.startClient();
+			env.startup(token, message);
 			token.response.protocolMessage = new Message.BeginAwaitLoop();
 		}
 
