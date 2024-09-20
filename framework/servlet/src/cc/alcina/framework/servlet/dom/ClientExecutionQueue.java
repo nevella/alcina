@@ -14,10 +14,9 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
 
 /*
- * This queue/thread dispatches messages to the client, waiting for its
- * AwaitRemote request
+* @formatter:off
+ * This queue/thread dispatches messages to the client, waiting for its  AwaitRemote request
  * 
- * @formatter:off
  * - apart from Startup, only AwaitRemote requests from the client receive messages from the server
  * - asyncEventQueue is "messages from the client to process when available"
  * - syncEventQueue is "single message -  from the server to the client' 
@@ -26,6 +25,15 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  *  - TODO - add a transport layer which handles message retry (Android sleep/resume)
  * 
  * @formatter:on
+ * 
+ */
+/*
+ * Note :: explain -why- a DOM needs single-threaded access (it's a case of
+ * access restriction to a mutable tree, nothing special about a DOM really)
+ * 
+ * Note :: (transport) document why everything in Environment is private,
+ * exception-that-proves for Beans manfiesto private rule is that it's a highly
+ * accessed package class with complex access rules
  */
 class ClientExecutionQueue implements Runnable {
 	BlockingQueue<Message> syncEventQueue = new LinkedBlockingQueue<>();
