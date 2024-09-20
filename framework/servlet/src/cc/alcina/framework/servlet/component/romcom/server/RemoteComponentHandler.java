@@ -28,7 +28,6 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
-import cc.alcina.framework.servlet.environment.EnvironmentApi;
 import cc.alcina.framework.servlet.environment.EnvironmentManager;
 import cc.alcina.framework.servlet.environment.EnvironmentManager.EnvironmentList;
 import cc.alcina.framework.servlet.publication.DirndlRenderer;
@@ -258,7 +257,6 @@ public class RemoteComponentHandler {
 					.fromStream(servletRequest.getInputStream()).asString();
 			long start = System.currentTimeMillis();
 			if (requestJson.length() > 0) {
-				EnvironmentApi env = null;
 				RemoteComponentRequest request = ReflectiveSerializer
 						.deserializeRpc(requestJson);
 				RemoteComponentResponse response = new RemoteComponentResponse();

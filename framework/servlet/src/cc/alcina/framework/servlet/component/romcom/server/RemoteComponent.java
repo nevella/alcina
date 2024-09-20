@@ -7,10 +7,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
-import cc.alcina.framework.servlet.environment.EnvironmentApi;
 import cc.alcina.framework.servlet.environment.EnvironmentManager;
-import cc.alcina.framework.servlet.environment.RemoteUi;
 import cc.alcina.framework.servlet.environment.EnvironmentManager.Credentials;
+import cc.alcina.framework.servlet.environment.RemoteUi;
 
 public interface RemoteComponent {
 	default RemoteComponentProtocol.Session
@@ -27,14 +26,13 @@ public interface RemoteComponent {
 			session.url += "?" + request.getQueryString();
 		}
 		session.componentClassName = ui.getClass().getName();
-		EnvironmentApi environment = EnvironmentManager.get().register(ui,
-				session);
-		environment.setNonInteractionTimeout(
-				getNonInteractionTimeout(environment));
+		EnvironmentManager.get().register(ui, session,
+				getNonInteractionTimeout(session));
 		return session;
 	}
 
-	default long getNonInteractionTimeout(EnvironmentApi environment) {
+	default long
+			getNonInteractionTimeout(RemoteComponentProtocol.Session session) {
 		return 5 * TimeConstants.ONE_MINUTE_MS;
 	}
 

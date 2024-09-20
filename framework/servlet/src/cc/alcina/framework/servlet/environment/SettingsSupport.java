@@ -29,6 +29,6 @@ public class SettingsSupport {
 		String json = ReflectiveSerializer.serialize(settings);
 		PersistSettings persistSettings = new RemoteComponentProtocol.Message.PersistSettings();
 		persistSettings.value = json;
-		Environment.get().queue.send(persistSettings);
+		Environment.get().access().dispatchToClient(persistSettings);
 	}
 }

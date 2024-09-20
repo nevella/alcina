@@ -51,7 +51,6 @@ import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.TimezoneData;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Configuration.Properties;
@@ -90,7 +89,7 @@ import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
-import cc.alcina.framework.servlet.environment.EnvironmentApi;
+import cc.alcina.framework.servlet.environment.EnvironmentManager;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.job.JobScheduler;
@@ -342,8 +341,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				.ttmInstance();
 		LooseContext.register(ttmInstance);
 		JvmReflections.initJvmServices();
-		Registry.register().singleton(Timer.Provider.class,
-				new EnvironmentApi.TimerProvider());
+		// initialise the EnvironmentManager (server-side browser environments)
+		EnvironmentManager.get();
 	}
 
 	protected abstract void initContainerBridge();

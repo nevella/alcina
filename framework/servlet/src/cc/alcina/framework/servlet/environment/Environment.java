@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.PersistSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
 
@@ -70,6 +72,14 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * frame)
  * 
  * TOPICS Message loop and exception handling - see ClientExecutionQueue.loop
+ * 
+ * ------* ------* ------* ------* ------* ------
+ * 
+ * v2
+ * 
+ * Thread-safety - all external (non-Environment) access should go via the
+ * Access object, which ensures thread-safety, mostly by dispatching on the
+ * queue
  */
 class Environment {
 	static Environment get() {
@@ -83,7 +93,7 @@ class Environment {
 	static class TimerProvider implements Timer.Provider {
 		TimerJvm.Provider exEnvironmentDelegate = new TimerJvm.Provider();
 
-		public TimerProvider() {
+		TimerProvider() {
 		}
 
 		@Override
@@ -118,7 +128,7 @@ class Environment {
 				}
 			}
 
-			public void handle(InvokeResponse response) {
+			void handle(InvokeResponse response) {
 				this.response = response;
 				if (callback != null) {
 					if (response.exception == null) {
@@ -144,7 +154,7 @@ class Environment {
 					callback);
 		}
 
-		public void onInvokeResponse(InvokeResponse response) {
+		void onInvokeResponse(InvokeResponse response) {
 			ResponseHandler handler = responseHandlers.remove(response.id);
 			handler.handle(response);
 		}
@@ -350,7 +360,7 @@ class Environment {
 
 	AtomicInteger serverClientMessageCounter = new AtomicInteger();
 
-	long lastPacketsReceived;
+	AtomicLong lastPacketsReceived = new AtomicLong();
 
 	long nonInteractionTimeout;
 
@@ -362,12 +372,12 @@ class Environment {
 		startQueue();
 	}
 
-	public void applyEvent(DomEventData eventData) {
+	void applyEvent(DomEventData eventData) {
 		runInClientFrame(
 				() -> LocalDom.attachIdRepresentations().applyEvent(eventData));
 	}
 
-	public void applyLocationMutation(LocationMutation locationMutation,
+	void applyLocationMutation(LocationMutation locationMutation,
 			boolean startup) {
 		runInClientFrame(() -> {
 			if (startup) {
@@ -392,7 +402,7 @@ class Environment {
 
 	// TODO - threading - this should only occur on the ClientExecutionQueue, so
 	// probably dispatch should go via that
-	public void applyMutations(List<MutationRecord> mutations) {
+	void applyMutations(List<MutationRecord> mutations) {
 		runInClientFrame(() -> LocalDom.attachIdRepresentations()
 				.applyMutations(mutations, false));
 	}
@@ -403,11 +413,11 @@ class Environment {
 	 * 
 	 * Note that probably the queue should wrap the runnable (rather than here)
 	 */
-	public void dispatch(Runnable runnable) {
+	void dispatch(Runnable runnable) {
 		queue.submit(() -> runInClientFrame(runnable));
 	}
 
-	public void initialiseClient(RemoteComponentProtocol.Session session) {
+	void initialiseClient(RemoteComponentProtocol.Session session) {
 		Preconditions.checkState(Objects.equals(session.id, this.session.id));
 		try {
 			LooseContext.push();
@@ -439,11 +449,11 @@ class Environment {
 		}
 	}
 
-	public boolean isInitialised() {
+	boolean isInitialised() {
 		return client != null;
 	}
 
-	public void onInvokeResponse(InvokeResponse response) {
+	void onInvokeResponse(InvokeResponse response) {
 		Runnable runnable = () -> invokeProxy.onInvokeResponse(response);
 		if (response.sync) {
 			// effectively reentering locked section on another thread
@@ -458,7 +468,7 @@ class Environment {
 		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
 	}
 
-	public void validateSession(RemoteComponentProtocol.Session session,
+	void validateSession(RemoteComponentProtocol.Session session,
 			boolean validateClientInstanceUid) throws Exception {
 		if (!Objects.equals(session.auth, session.auth)) {
 			throw new RemoteComponentProtocol.InvalidAuthenticationException();
@@ -482,19 +492,11 @@ class Environment {
 		}
 	}
 
-	public void handleFromClientMessage(MessageToken token) throws Exception {
-		validateSession(token.request.session,
-				((MessageHandlerServer) token.messageHandler)
-						.isValidateClientInstanceUid());
-		lastPacketsReceived = System.currentTimeMillis();
-		queue.handleFromClientMessage(token);
-	}
-
-	public void flush() {
+	void flush() {
 		emitMutations();
 	}
 
-	public void initialiseSettings(String settings) {
+	void initialiseSettings(String settings) {
 		ui.initialiseSettings(settings);
 	}
 
@@ -502,20 +504,20 @@ class Environment {
 		runInClientFrame(() -> ui.addLifecycleHandlers());
 	}
 
-	public int nextServerClientMessageId() {
+	int nextServerClientMessageId() {
 		return serverClientMessageCounter.getAndIncrement();
 	}
 
-	public String getSessionPath() {
+	String getSessionPath() {
 		Url url = Url.parse(session.url);
 		return url.queryParameters.get("path");
 	}
 
-	public void setNonInteractionTimeout(long nonInteractionTimeout) {
+	void setNonInteractionTimeout(long nonInteractionTimeout) {
 		this.nonInteractionTimeout = nonInteractionTimeout;
 	}
 
-	public void startClient() {
+	void startClient() {
 		/*
 		 * will enqueue a mutations event in the to-client queue
 		 */
@@ -628,5 +630,39 @@ class Environment {
 		}
 		queue.stop();
 		EnvironmentManager.get().deregister(this);
+	}
+
+	/*
+	 * Provides thread-safe access to the Environment. Don't directly access the
+	 * Environment is
+	 */
+	class Access {
+		String getConnectedClientUid() {
+			return connectedClientUid;
+		}
+
+		void setNonInteractionTimeout(long nonInteractionTimeout) {
+			Environment.this.setNonInteractionTimeout(nonInteractionTimeout);
+		}
+
+		Session getSession() {
+			return session;
+		}
+
+		void handleFromClientMessage(MessageToken token) throws Exception {
+			validateSession(token.request.session,
+					((MessageHandlerServer) token.messageHandler)
+							.isValidateClientInstanceUid());
+			lastPacketsReceived.set(System.currentTimeMillis());
+			queue.handleFromClientMessage(token);
+		}
+
+		void dispatchToClient(Message message) {
+			queue.send(message);
+		}
+	}
+
+	Access access() {
+		return new Access();
 	}
 }

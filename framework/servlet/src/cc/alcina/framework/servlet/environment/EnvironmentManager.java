@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Timeout;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -122,6 +123,7 @@ public class EnvironmentManager {
 		if (flightRecordingEnabled) {
 			startFlightRecording();
 		}
+		registerEnvironmentSensitiveTimerProvider();
 		new EnvironmentReaper().start();
 	}
 
@@ -153,10 +155,12 @@ public class EnvironmentManager {
 		return environments.size() == 1;
 	}
 
-	public Environment register(RemoteUi ui, Session session) {
+	public Environment register(RemoteUi ui, Session session,
+			long nonInteractionTimeout) {
 		Environment environment = new Environment(ui, session);
 		environments.put(session.id, environment);
 		ui.setEnvironment(environment);
+		environment.access().setNonInteractionTimeout(nonInteractionTimeout);
 		return environment;
 	}
 
@@ -188,7 +192,7 @@ public class EnvironmentManager {
 	}
 
 	public void deregister(Environment environment) {
-		environments.remove(environment.session.id);
+		environments.remove(environment.access().getSession().id);
 	}
 
 	public void await(RemoteComponent component, String path)
@@ -249,7 +253,7 @@ public class EnvironmentManager {
 		// http thread
 		messageHandler.onBeforeMessageHandled(request.protocolMessage);
 		// unless the message is a sync response, on the env thread
-		env.handleFromClientMessage(token);
+		env.access().handleFromClientMessage(token);
 		// http thread
 		messageHandler.onAfterMessageHandled(request.protocolMessage);
 	}
@@ -272,5 +276,10 @@ public class EnvironmentManager {
 		}
 		return new InvalidClientException(message, action,
 				NestedName.get(uiType));
+	}
+
+	void registerEnvironmentSensitiveTimerProvider() {
+		Registry.register().singleton(Timer.Provider.class,
+				new Environment.TimerProvider());
 	}
 }

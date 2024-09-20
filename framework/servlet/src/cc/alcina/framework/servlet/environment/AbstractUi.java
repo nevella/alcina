@@ -75,7 +75,7 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 	@Override
 	public String toString() {
 		return Ax.format("%s::%s", NestedName.get(this),
-				Environment.get().connectedClientUid);
+				Environment.get().access().getConnectedClientUid());
 	}
 
 	@Override
