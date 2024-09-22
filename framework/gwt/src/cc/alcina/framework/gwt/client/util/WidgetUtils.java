@@ -27,6 +27,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
@@ -628,7 +629,7 @@ public class WidgetUtils {
 		return widget;// root panel
 	}
 
-	public native static int getRelativeTopTo(Element elem, Element end) /*-{
+	public native static int getRelativeTopTo(ElementJso elem, ElementJso end) /*-{
     var top = 0;
     while (elem != end) {
       top += elem.offsetTop;
@@ -637,7 +638,7 @@ public class WidgetUtils {
     return top;
 	}-*/;
 
-	public static native int getScrollLeft(Element elem) /*-{
+	public static native int getScrollLeft(ElementJso elem) /*-{
     var left = 0;
     var curr = elem;
     // This intentionally excludes body which has a null offsetParent.
@@ -649,7 +650,7 @@ public class WidgetUtils {
     return left;
 	}-*/;
 
-	public static native int getScrollTop(Element elem) /*-{
+	public static native int getScrollTop(ElementJso elem) /*-{
     var top = 0;
     var curr = elem;
     // This intentionally excludes body which has a null offsetParent.

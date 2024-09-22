@@ -134,6 +134,10 @@ public class BoundSelectorMinimal extends BoundSelector {
 			maybeFocusResultsHandler = new ClickHandler() {
 				@Override
 				public void onClick(ClickEvent event) {
+					if (event.getNativeEvent().getEventTarget()
+							.isDetachedElement()) {
+						return;
+					}
 					Element elt = Element
 							.as(event.getNativeEvent().getEventTarget());
 					Element stop = cfp.getElement();
