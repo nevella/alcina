@@ -35,7 +35,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
-import cc.alcina.framework.servlet.dom.RemoteUi;
+import cc.alcina.framework.servlet.environment.RemoteUi;
 import cc.alcina.framework.servlet.job.JobContext;
 
 public class EntityGraphView {
@@ -86,18 +86,22 @@ public class EntityGraphView {
 		EntityPeer peer;
 
 		@Override
-		public void onBeforeEnterFrame() {
+		public void onBeforeEnterContext() {
 			try {
 				loadedLatch.await();
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
+		}
+
+		@Override
+		public void onEnterIteration() {
 			PermissionsManager.get().pushSystemUser();
 			Transaction.ensureBegun();
 		}
 
 		@Override
-		public void onExitFrame() {
+		public void onExitIteration() {
 			Transaction.end();
 			PermissionsManager.get().popSystemUser();
 		}

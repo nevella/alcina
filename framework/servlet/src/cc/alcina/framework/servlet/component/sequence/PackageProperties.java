@@ -1,26 +1,17 @@
 package cc.alcina.framework.servlet.component.sequence;
 
+import java.util.List;
+
+import com.google.gwt.dom.client.StyleElement;
+
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
-import cc.alcina.framework.servlet.component.sequence.DetailArea;
-import cc.alcina.framework.servlet.component.sequence.Header;
-import cc.alcina.framework.servlet.component.sequence.HighlightModel;
-import cc.alcina.framework.servlet.component.sequence.Page;
-import cc.alcina.framework.servlet.component.sequence.Sequence;
-import cc.alcina.framework.servlet.component.sequence.SequenceArea;
-import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings;
 import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
-import cc.alcina.framework.servlet.dom.Environment;
-import com.google.gwt.dom.client.StyleElement;
-import java.lang.Class;
-import java.lang.String;
-import java.util.List;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Header header = new _Header();
@@ -63,7 +54,6 @@ public class PackageProperties {
     static class _SequenceBrowser_Ui implements TypedProperty.Container {
       TypedProperty<SequenceBrowser.Ui, Class> appCommandContext = new TypedProperty<>(SequenceBrowser.Ui.class, "appCommandContext");
       TypedProperty<SequenceBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(SequenceBrowser.Ui.class, "commandContextProvider");
-      TypedProperty<SequenceBrowser.Ui, Environment> environment = new TypedProperty<>(SequenceBrowser.Ui.class, "environment");
       TypedProperty<SequenceBrowser.Ui, String> mainCaption = new TypedProperty<>(SequenceBrowser.Ui.class, "mainCaption");
       TypedProperty<SequenceBrowser.Ui, Page> page = new TypedProperty<>(SequenceBrowser.Ui.class, "page");
       TypedProperty<SequenceBrowser.Ui, SequencePlace> place = new TypedProperty<>(SequenceBrowser.Ui.class, "place");

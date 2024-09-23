@@ -93,7 +93,7 @@ public class SimpleStringParser {
 	 * 
 	 * Keep this synchronized with the version in Base64Utils.
 	 */
-	private static String toBase64(long value) {
+	public static String toBase64(long value) {
 		// Convert to ints early to avoid need for long ops
 		int low = (int) (value & 0xffffffff);
 		int high = (int) (value >> 32);

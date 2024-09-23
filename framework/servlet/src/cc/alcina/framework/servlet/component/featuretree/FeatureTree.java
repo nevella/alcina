@@ -6,9 +6,8 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
-import cc.alcina.framework.servlet.dom.AbstractUi;
-import cc.alcina.framework.servlet.dom.Environment;
-import cc.alcina.framework.servlet.dom.RemoteUi;
+import cc.alcina.framework.servlet.environment.AbstractUi;
+import cc.alcina.framework.servlet.environment.RemoteUi;
 
 /**
  * A remote component that models the jvm-visible feature tree
@@ -33,7 +32,7 @@ public class FeatureTree {
 
 	public static class Ui extends AbstractUi<FeaturePlace> {
 		public static Ui get() {
-			return (Ui) Environment.get().ui;
+			return (Ui) RemoteUi.get();
 		}
 
 		@Override

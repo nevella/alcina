@@ -162,25 +162,13 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 		void execute(SchedulerFrame.Task task);
 	}
 
-	private boolean clientStarted;
-
-	public void setClientStarted(boolean clientStarted) {
-		this.clientStarted = clientStarted;
-		postClientStarted.tasks.forEach(_finally.tasks::add);
-		postClientStarted = null;
-	}
-
 	public static Supplier<Scheduler> asSupplier() {
 		return () -> contextProvider.contextFrame();
 	}
 
 	@Override
 	public void scheduleDeferred(ScheduledCommand cmd) {
-		if (clientStarted) {
-			deferred.add(cmd);
-		} else {
-			postClientStarted.add(cmd);
-		}
+		deferred.add(cmd);
 	}
 
 	@Override
@@ -200,11 +188,7 @@ public class SchedulerFrame extends Scheduler implements ContextFrame {
 
 	@Override
 	public void scheduleFinally(ScheduledCommand cmd) {
-		if (clientStarted) {
-			_finally.add(cmd);
-		} else {
-			postClientStarted.add(cmd);
-		}
+		_finally.add(cmd);
 	}
 
 	@Override

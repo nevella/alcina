@@ -46,7 +46,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
-import cc.alcina.framework.servlet.dom.AbstractUi;
+import cc.alcina.framework.servlet.environment.AbstractUi;
 
 class LayerSelections extends Model.All {
 	@Binding(type = Type.PROPERTY)

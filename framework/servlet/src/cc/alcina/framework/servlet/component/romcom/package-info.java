@@ -25,8 +25,8 @@
  * Normally, a new {@link VmEnvironment} is generated for each init() from the
  * client - the exception is a 'sole environment' endpoint, such as an
  * android-app-hosted web ui, where there is only one DOM layout hosted per
- * client (but see package {@link cc.alcina.framework.servlet.dom} - romcom
- * handshake - this is probably changing)
+ * client (but see package {@link cc.alcina.framework.servlet.environment} -
+ * romcom handshake - this is probably changing)
  *
  * <h4>Future
  * <p>

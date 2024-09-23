@@ -11,7 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
-import cc.alcina.framework.servlet.dom.Environment;
+import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @Directed(tag = "layers")
 class SelectionLayers extends Model.Fields {
@@ -28,7 +28,7 @@ class SelectionLayers extends Model.Fields {
 	TraversalPlace renderedPlace;
 
 	SelectionLayers(Page page) {
-		Ax.out("History delta - id %s - %s", Environment.get().uid,
+		Ax.out("History delta - id %s - %s", RemoteUi.get().getUid(),
 				Ax.ntrim(Ui.place(), 30));
 		this.page = page;
 		this.renderedPlace = page.ui.place;

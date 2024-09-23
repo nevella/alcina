@@ -221,7 +221,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				Message.Mutations message) {
 			LocalDom.attachIdRepresentations()
 					.applyMutations(message.domMutations, true);
-			message.eventMutations.forEach(m -> {
+			message.eventSystemMutations.forEach(m -> {
 				try {
 					Element elem = (Element) m.nodeId.node();
 					if (m.eventBits == -1) {

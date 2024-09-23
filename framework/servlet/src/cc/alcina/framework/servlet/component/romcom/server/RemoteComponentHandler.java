@@ -16,29 +16,30 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.ProtocolException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlerServer;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageHandlingToken;
-import cc.alcina.framework.servlet.dom.Environment;
-import cc.alcina.framework.servlet.dom.EnvironmentManager;
-import cc.alcina.framework.servlet.dom.EnvironmentManager.EnvironmentList;
-import cc.alcina.framework.servlet.dom.RemoteUi;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.environment.EnvironmentManager;
+import cc.alcina.framework.servlet.environment.EnvironmentManager.EnvironmentList;
 import cc.alcina.framework.servlet.publication.DirndlRenderer;
 
-/*
+/**
+ * <p>
  * Provides common implementation for jetty/servlet remotecomponent handling
+ * <p>
+ * Threading - note that handle can be called *concurrently* from multiple
+ * threads on the same environment - during synchronous server-side evaluation,
+ * the return from the client will come on a different servlet thread
  */
 public class RemoteComponentHandler {
 	RemoteComponent component;
@@ -49,6 +50,8 @@ public class RemoteComponentHandler {
 
 	boolean addOriginHeaders;
 
+	MessageTransportLayer messageTransportLayer = new MessageTransportLayer();
+
 	public RemoteComponentHandler(RemoteComponent component, String featurePath,
 			boolean addOriginHeaders) {
 		this.component = component;
@@ -58,26 +61,6 @@ public class RemoteComponentHandler {
 		if (url == null) {
 			throw new RuntimeException("Unable to find resource directory");
 		}
-	}
-
-	private InvalidClientException
-			buildInvalidClientException(String componentClassName) {
-		Class<? extends RemoteUi> uiType = Reflections
-				.forName(componentClassName);
-		boolean singleInstance = RemoteUi.SingleInstance.class
-				.isAssignableFrom(uiType);
-		boolean existingInstance = singleInstance
-				&& EnvironmentManager.get().hasEnvironment(uiType);
-		String message = null;
-		InvalidClientException.Action action = Action.REFRESH;
-		if (existingInstance) {
-			action = Action.EXPIRED;
-			message = "This component client (tab) has ben superseded "
-					+ "by a newer access to this component. \n\nPlease use the newer client, "
-					+ "or refresh to switch rendering to this client";
-		}
-		return new InvalidClientException(message, action,
-				NestedName.get(uiType));
 	}
 
 	URL getResourceUrl(String warRelativePart) {
@@ -281,12 +264,8 @@ public class RemoteComponentHandler {
 					.fromStream(servletRequest.getInputStream()).asString();
 			long start = System.currentTimeMillis();
 			if (requestJson.length() > 0) {
-				Environment env = null;
 				RemoteComponentRequest request = ReflectiveSerializer
 						.deserializeRpc(requestJson);
-				MessageHandlerServer messageHandler = Registry.impl(
-						MessageHandlerServer.class,
-						request.protocolMessage.getClass());
 				RemoteComponentResponse response = new RemoteComponentResponse();
 				response.requestId = request.requestId;
 				response.session = request.session;
@@ -295,22 +274,9 @@ public class RemoteComponentHandler {
 						NestedName.get(request.protocolMessage),
 						request.protocolMessage.toDebugString());
 				try {
-					env = EnvironmentManager.get()
-							.getEnvironment(request.session);
-					if (env == null) {
-						throw buildInvalidClientException(
-								request.session.componentClassName);
-					}
-					MessageHandlingToken token = new MessageHandlingToken(
-							requestJson, request, response, messageHandler);
-					// http thread
-					messageHandler
-							.onBeforeMessageHandled(request.protocolMessage);
-					// unless sync, on the env thread
-					env.handleFromClientMessage(token);
-					// http thread
-					messageHandler
-							.onAfterMessageHandled(request.protocolMessage);
+					MessageToken token = new MessageToken(requestJson, request,
+							response);
+					EnvironmentManager.get().handleMessage(token);
 				} catch (Exception e) {
 					if (e instanceof ProtocolException) {
 						boolean handled = false;
@@ -330,9 +296,9 @@ public class RemoteComponentHandler {
 					}
 					response.putException(e);
 				}
-				if (response.protocolMessage != null && env != null) {
-					response.protocolMessage.messageId = env
-							.nextServerClientMessageId();
+				if (response.protocolMessage != null) {
+					response.protocolMessage.messageId = messageTransportLayer
+							.nextId();
 				}
 				logger.debug("{} dispatched response #{} - {}", Ax.appMillis(),
 						response.requestId,

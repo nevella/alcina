@@ -18,10 +18,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
-import cc.alcina.framework.servlet.dom.AbstractUi;
-import cc.alcina.framework.servlet.dom.Environment;
-import cc.alcina.framework.servlet.dom.RemoteUi;
-import cc.alcina.framework.servlet.dom.SettingsSupport;
+import cc.alcina.framework.servlet.environment.AbstractUi;
+import cc.alcina.framework.servlet.environment.RemoteUi;
+import cc.alcina.framework.servlet.environment.SettingsSupport;
 
 /**
  * A remote component that models a SelectionTraversal's process tree
@@ -57,7 +56,7 @@ public class TraversalBrowser {
 	@TypedProperties
 	public static class Ui extends AbstractUi<TraversalPlace> {
 		public static Ui get() {
-			return (Ui) Environment.get().ui;
+			return (Ui) RemoteUi.get();
 		}
 
 		public static TraversalPlace place() {
@@ -104,7 +103,7 @@ public class TraversalBrowser {
 		}
 
 		public String getTraversalPath() {
-			String sessionPath = Environment.get().getSessionPath();
+			String sessionPath = RemoteUi.get().getSessionPath();
 			return sessionPath == null ? null
 					: sessionPath.replaceFirst("/.+?/", "");
 		}

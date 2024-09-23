@@ -210,14 +210,14 @@ public class RemoteComponentProtocol {
 			// (but there is)
 			public List<MutationRecord> domMutations = new ArrayList<>();
 
-			public List<EventSystemMutation> eventMutations = new ArrayList<>();
+			public List<EventSystemMutation> eventSystemMutations = new ArrayList<>();
 
 			public LocationMutation locationMutation;
 
 			@Override
 			public String toDebugString() {
 				return FormatBuilder.keyValues("dom", domMutations.size(),
-						"event", eventMutations.size(), "loc",
+						"event", eventSystemMutations.size(), "loc",
 						locationMutation);
 			}
 		}

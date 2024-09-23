@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.dom.style.StyleScoper;
+import cc.alcina.framework.servlet.environment.style.StyleScoper;
 
 /**
  * SelectionMarkup implementation for a single document
