@@ -40,6 +40,8 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	private boolean details;
 
+	private int limit = 50;
+
 	private DomNodeHtmlTableCellBuilder
 			date(DomNodeHtmlTableCellBuilder builder) {
 		DomNode lastNode = builder.previousElement();
@@ -50,17 +52,17 @@ public class TaskLogJobDetails extends PerformerTask {
 	protected void renderRelated(Job top, DomNode body) {
 		Stream<Job> relatedProcessing = top.provideDescendantsAndSubsequents()
 				.filter(j -> j.getState() == JobState.PROCESSING)
-				.sorted(EntityComparator.INSTANCE).limit(50);
+				.sorted(EntityComparator.INSTANCE).limit(limit);
 		Stream<Job> relatedNonProcessing = top
 				.provideDescendantsAndSubsequents()
 				.filter(j -> j.getState() != JobState.PROCESSING)
-				.sorted(EntityComparator.INSTANCE).limit(50);
+				.sorted(EntityComparator.INSTANCE).limit(limit);
 		Stream<Job> childAndSubsequentJobs = Stream.concat(relatedProcessing,
 				relatedNonProcessing);
 		renderRelatedSection(body, "Child/Subsequent jobs",
 				childAndSubsequentJobs);
 		renderRelatedSection(body, "Awaited jobs", top.provideAwaitedSubtree()
-				.sorted(EntityComparator.INSTANCE).limit(50));
+				.sorted(EntityComparator.INSTANCE).limit(limit));
 	}
 
 	long id(Job job) {
@@ -136,6 +138,7 @@ public class TaskLogJobDetails extends PerformerTask {
 			populateFromParameters(Map<String, String[]> parameterMap) {
 		StringMap map = StringMap.flatten(parameterMap);
 		jobId = Long.parseLong(map.get("id"));
+		limit = Integer.parseInt(map.getOrDefault("limit", "50"));
 		details = map.is("details");
 		return this;
 	}

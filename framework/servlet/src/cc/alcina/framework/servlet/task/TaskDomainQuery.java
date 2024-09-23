@@ -5,49 +5,99 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
 import cc.alcina.framework.common.client.domain.Domain.EntityTreeLogger;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
-public class TaskDomainQuery extends PerformerTask {
-	private List<String> resultPaths = List.of("*").stream()
+public class TaskDomainQuery extends PerformerTask.Fields
+		implements Task.RemotePerformable {
+	public List<String> resultPaths = List.of("*").stream()
 			.collect(Collectors.toList());
 
-	private EntityLocator from;
+	public EntityLocator from;
 
-	private int maxElementsPerCollection = 100;
+	public int maxElementsPerCollection = 100;
 
-	private transient FormatBuilder fb = new FormatBuilder();
+	transient FormatBuilder fb = new FormatBuilder();
 
-	private int maxChars = 20000;
+	public int maxChars = 20000;
 
-	private transient PathSegments pathSegments;
+	transient PathSegments pathSegments;
 
-	private boolean withEntityToString;
+	public boolean withEntityToString;
 
-	public EntityLocator getFrom() {
-		return this.from;
-	}
+	@Bean(PropertySource.FIELDS)
+	public static class ResultNode {
+		public String value;
 
-	public int getMaxChars() {
-		return this.maxChars;
-	}
+		transient Map<String, ResultNode> properties;
 
-	public int getMaxElementsPerCollection() {
-		return this.maxElementsPerCollection;
+		public List<ResultNode> elements = new ArrayList<>();
+
+		transient ResultNode parent;
+
+		public String stringRepresentation;
+
+		public String path;
+
+		int depth() {
+			ResultNode cursor = this;
+			int depth = 0;
+			while (cursor.parent != null) {
+				depth++;
+				cursor = cursor.parent;
+			}
+			return depth;
+		}
+
+		public ResultNode createChild() {
+			ResultNode child = new ResultNode();
+			child.parent = this;
+			elements.add(child);
+			return child;
+		}
+
+		public Stream<ResultNode> stream() {
+			return elements.stream();
+		}
+
+		public ResultNode firstChild() {
+			return Ax.first(elements);
+		}
+
+		public synchronized ResultNode get(String key) {
+			if (properties == null) {
+				properties = elements.stream()
+						.collect(AlcinaCollectors.toKeyMap(n -> n.path));
+			}
+			return properties.get(key);
+		}
+
+		public String value(String key) {
+			ResultNode node = get(key);
+			return node == null ? null : node.value;
+		}
 	}
 
 	private List<Entity> getPropertyEntities(Entity entity, Property p) {
@@ -67,21 +117,17 @@ public class TaskDomainQuery extends PerformerTask {
 		return result;
 	}
 
-	private String getPropertyValue(Entity entity, Property p) {
+	String getPropertyValue(Entity entity, Property p) {
 		return getStringRepresentation(p.get(entity));
 	}
 
-	public List<String> getResultPaths() {
-		return this.resultPaths;
-	}
-
-	private String getStringRepresentation(Object object) {
+	String getStringRepresentation(Object object) {
 		if (object == null) {
 			return "(null)";
 		}
 		if (object instanceof Entity) {
 			Entity entity = (Entity) object;
-			return isWithEntityToString()
+			return withEntityToString
 					? Ax.format("%s :: %s", entity.getId(), entity)
 					: String.valueOf(entity.getId());
 		}
@@ -113,11 +159,8 @@ public class TaskDomainQuery extends PerformerTask {
 		}
 	}
 
-	public boolean isWithEntityToString() {
-		return this.withEntityToString;
-	}
-
-	private void logPath(Entity entity, int depth) {
+	void logPath(Entity entity, ResultNode node) {
+		int depth = node.depth();
 		ClassReflector classReflector = Reflections.at(entity.entityClass());
 		List<Property> properties = pathSegments.properties(entity);
 		fb.indent(depth * 4);
@@ -132,10 +175,17 @@ public class TaskDomainQuery extends PerformerTask {
 					String propertyValue = getPropertyValue(entity, p);
 					fb.line("%s : %s", CommonUtils.padStringRight(name,
 							propertyNameMaxLength, ' '), propertyValue);
+					ResultNode propertyNode = node.createChild();
+					propertyNode.path = name;
+					propertyNode.value = propertyValue;
 					if (pathSegments.tryDescend(name)) {
 						// exact path match, can descend
 						List<Entity> entities = getPropertyEntities(entity, p);
-						entities.forEach(e -> logPath(e, depth + 1));
+						entities.forEach(e -> {
+							ResultNode elementNode = propertyNode.createChild();
+							elementNode.value = e.toStringId();
+							logPath(e, elementNode);
+						});
 						pathSegments.ascend(name);
 					}
 				});
@@ -151,37 +201,20 @@ public class TaskDomainQuery extends PerformerTask {
 		fb.line("Entity: %s", from);
 		fb.line("Paths: %s", resultPaths);
 		fb.line("=============================================");
-		logPath(entity, 0);
+		ResultNode root = new ResultNode();
+		logPath(entity, root);
 		logger.info(fb.toString());
-	}
-
-	public void setFrom(EntityLocator from) {
-		this.from = from;
-	}
-
-	public void setMaxChars(int maxChars) {
-		this.maxChars = maxChars;
-	}
-
-	public void setMaxElementsPerCollection(int maxElementsPerCollection) {
-		this.maxElementsPerCollection = maxElementsPerCollection;
-	}
-
-	public void setResultPaths(List<String> resultPaths) {
-		this.resultPaths = resultPaths;
-	}
-
-	public void setWithEntityToString(boolean withEntityToString) {
-		this.withEntityToString = withEntityToString;
+		JobContext.get().recordLargeInMemoryResult(
+				ReflectiveSerializer.serialize(root));
 	}
 
 	public TaskDomainQuery withFrom(Class clazz, long id) {
-		setFrom(new EntityLocator(clazz, id, 0L));
+		from = new EntityLocator(clazz, id, 0L);
 		return this;
 	}
 
 	public TaskDomainQuery withFrom(Entity entity) {
-		setFrom(entity.toLocator());
+		from = entity.toLocator();
 		return this;
 	}
 
