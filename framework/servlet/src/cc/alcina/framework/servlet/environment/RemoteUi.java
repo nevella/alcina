@@ -9,13 +9,13 @@ import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
-import cc.alcina.framework.servlet.component.featuretree.FeatureTree.Ui;
 
 /**
  * <p>
@@ -128,6 +128,7 @@ public interface RemoteUi {
 		return Environment.get().access().getSessionPath();
 	}
 
+	@Property.Not
 	void setEnvironment(Environment environment);
 
 	default void onEnterIteration() {
