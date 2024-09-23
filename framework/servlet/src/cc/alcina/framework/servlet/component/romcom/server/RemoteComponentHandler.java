@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -96,7 +97,7 @@ public class RemoteComponentHandler {
 					&& Ax.notBlank(request.getParameter("action"))) {
 				serveQuery(request, response);
 			} else {
-				serveFile(request, response);
+				serveFile(request, response, null);
 			}
 			break;
 		case "POST":
@@ -171,7 +172,9 @@ public class RemoteComponentHandler {
 		}
 	}
 
-	void serveFile(HttpServletRequest request, HttpServletResponse response)
+	public void serveFile(HttpServletRequest request,
+			HttpServletResponse response,
+			BiFunction<HttpServletRequest, String, String> rcHtmlCustomiser)
 			throws IOException {
 		String path = request.getPathInfo();
 		boolean injectSession = false;
@@ -249,6 +252,10 @@ public class RemoteComponentHandler {
 						websocketTransportClientPrefix);
 				bootstrapHtml = bootstrapHtml.replace("%%LOAD_INDICATOR_HTML%%",
 						loadIndicatorHtml);
+				if (rcHtmlCustomiser != null) {
+					bootstrapHtml = rcHtmlCustomiser.apply(request,
+							bootstrapHtml);
+				}
 				Io.write().string(bootstrapHtml)
 						.toStream(response.getOutputStream());
 			} else {

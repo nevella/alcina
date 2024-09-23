@@ -53,8 +53,8 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
  * </code>
  *
  * <p>
- * Classes which contribute keys to the client configuration will implement
- * ClientProperties.Has, and generally reference (or be) a client class visible
+ * Classes which contribute keys to the client configuration sjould implement
+ * ClientProperties.Key, and generally reference (or be) a client class visible
  * to both client and server code, which is the flagLocation class for the
  * shared configuration.
  * </p>
