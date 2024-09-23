@@ -42,6 +42,14 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	private int limit = 50;
 
+	public int getLimit() {
+		return limit;
+	}
+
+	public void setLimit(int limit) {
+		this.limit = limit;
+	}
+
 	private DomNodeHtmlTableCellBuilder
 			date(DomNodeHtmlTableCellBuilder builder) {
 		DomNode lastNode = builder.previousElement();
