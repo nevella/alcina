@@ -52,10 +52,14 @@ public class TimeConstants {
 	}
 
 	public static boolean within(long time, long delta) {
-		return (System.currentTimeMillis() - time) < delta;
+		return age(time) < delta;
 	}
 
 	public static boolean withinDays(Date date, int days) {
 		return date == null ? false : within(date.getTime(), days * ONE_DAY_MS);
+	}
+
+	public static long age(long time) {
+		return System.currentTimeMillis() - time;
 	}
 }

@@ -22,8 +22,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -96,10 +98,22 @@ public class ClientRpc {
 			}
 		} else {
 			submitQueue.submit(message);
+			if (acceptorQueue.inFlightMessageSendTime != 0 && !TimeConstants
+					.within(acceptorQueue.inFlightMessageSendTime,
+							10 * TimeConstants.ONE_SECOND_MS)) {
+				long age = TimeConstants
+						.age(acceptorQueue.inFlightMessageSendTime);
+				RemoteObjectModelComponentClient.consoleError(Ax.format(
+						"Timed out & restarted await : gap %s ms", age));
+				acceptorQueue.cancelInFlight();
+				acceptorQueue.submit(new AwaitRemote());
+			}
 		}
 	}
 
 	static class BrowserDispatchQueue implements TopicListener<Request> {
+		long inFlightMessageSendTime;
+
 		List<RemoteComponentRequest> requestQueue = new ArrayList<>();
 
 		void submit(Message message) {
@@ -120,6 +134,11 @@ public class ClientRpc {
 				requestQueue.add(request);
 				maybeDispatch();
 			}
+		}
+
+		public void cancelInFlight() {
+			inFlightComponentRequest = null;
+			inFlightMessageSendTime = 0;
 		}
 
 		boolean isEmpty() {
@@ -149,6 +168,7 @@ public class ClientRpc {
 				@Override
 				public void run() {
 					inFlightComponentRequest = requestQueue.remove(0);
+					inFlightMessageSendTime = System.currentTimeMillis();
 					queueingComponentRequest = null;
 					Topic<Request> calledSignal = Topic.create();
 					calledSignal.add(BrowserDispatchQueue.this);
@@ -165,6 +185,7 @@ public class ClientRpc {
 			if (httpRequest == inFlightHttpRequest) {
 				maybeEnqueueAwaitRemote();
 				inFlightComponentRequest = null;
+				inFlightMessageSendTime = 0;
 				maybeDispatch();
 			}
 		}

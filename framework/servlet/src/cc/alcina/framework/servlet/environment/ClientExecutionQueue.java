@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken.Handler;
@@ -184,6 +185,7 @@ class ClientExecutionQueue implements Runnable {
 	 * Does not await receipt
 	 */
 	void sendToClient(Message message) {
+		message.messageId = transportLayer.nextId();
 		toClientQueue.add(message);
 		messageTransport.conditionallySendToClient();
 	}
@@ -248,6 +250,8 @@ class ClientExecutionQueue implements Runnable {
 	void registerToClientMessageAcceptor(ToClientMessageAcceptor acceptor) {
 		messageTransport.registerAcceptor(acceptor);
 	}
+
+	MessageTransportLayer transportLayer = new MessageTransportLayerServer();
 
 	class MessageTransport {
 		ToClientMessageAcceptor acceptor;

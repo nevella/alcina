@@ -21,7 +21,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
@@ -49,8 +48,6 @@ public class RemoteComponentHandler {
 	String featurePath;
 
 	boolean addOriginHeaders;
-
-	MessageTransportLayer messageTransportLayer = new MessageTransportLayer();
 
 	public RemoteComponentHandler(RemoteComponent component, String featurePath,
 			boolean addOriginHeaders) {
@@ -295,10 +292,6 @@ public class RemoteComponentHandler {
 						e.printStackTrace();
 					}
 					response.putException(e);
-				}
-				if (response.protocolMessage != null) {
-					response.protocolMessage.messageId = messageTransportLayer
-							.nextId();
 				}
 				logger.debug("{} dispatched response #{} - {}", Ax.appMillis(),
 						response.requestId,
