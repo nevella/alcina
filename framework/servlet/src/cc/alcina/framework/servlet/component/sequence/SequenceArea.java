@@ -97,9 +97,8 @@ class SequenceArea extends Model.Fields
 		}
 		int selectedElementIdx = page.ui.place.selectedElementIdx;
 		if (selectedElementIdx != -1
-				&& selectedElementIdx < page.sequence.getElements().size()) {
-			Object selectedElement = page.sequence.getElements()
-					.get(selectedElementIdx);
+				&& selectedElementIdx < filteredElements.size()) {
+			Object selectedElement = filteredElements.get(selectedElementIdx);
 			int visibleRowIndex = filteredElements.indexOf(selectedElement);
 			rowsModel.select(visibleRowIndex);
 			rowsModel.scrollSelectedIntoView();

@@ -322,9 +322,8 @@ class Page extends Model.Fields
 		}
 		Object highlightedSequenceElement = highlightModel
 				.getHighlightedElement();
-		ui.place.copy()
-				.withHighlightIndicies(highlightModel.highlightIndex, sequence
-						.getElements().indexOf(highlightedSequenceElement))
+		ui.place.copy().withHighlightIndicies(highlightModel.highlightIndex,
+				filteredSequenceElements.indexOf(highlightedSequenceElement))
 				.go();
 	}
 }
