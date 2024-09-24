@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.task;
 
 import java.io.File;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -29,8 +30,8 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -61,7 +62,8 @@ import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatur
  * startup (since there are potential serialization issues)
  * 
  * Omit checks for a type with either via the Configuration package filter
- * string or by adding ReflectiveSerializer.Checks(ignore=true) to the type
+ * string or by adding ReflectiveSerializer.Checks(ignore=true) to the type (or
+ * an ancestor package)
  */
 public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 	public transient ReflectiveSerializableSignatures signatures = new ReflectiveSerializableSignatures();
@@ -74,22 +76,16 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 
 	private transient Set<Class<?>> serializables;
 
-	private transient List<String> ignorePackages;
-
 	private void addPropertyIssue(Property property) {
 		incorrectProperty.add(property);
 	}
 
-	private void
-			checkAllTransientFieldsWithPropertiesAreTransient(Class<?> clazz) {
+	void checkAllTransientFieldsWithPropertiesAreTransient(Class<?> clazz) {
 		if (clazz.isEnum()) {
 			return;
 		}
-		if (clazz.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
-			if (clazz.getAnnotation(ReflectiveSerializer.Checks.class)
-					.ignore()) {
-				return;
-			}
+		if (omitDueToChecksAnnotation(clazz)) {
+			return;
 		}
 		ClassReflector reflector = Reflections.at(clazz);
 		if (reflector.isAbstract()) {
@@ -111,6 +107,27 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 		}
 	}
 
+	boolean omitDueToChecksAnnotation(Class<?> clazz) {
+		if (clazz.getName().startsWith("java")) {
+			return false;
+		}
+		AnnotatedElement element = clazz;
+		while (element != null) {
+			if (element
+					.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
+				return element.getAnnotation(ReflectiveSerializer.Checks.class)
+						.ignore();
+			}
+			if (element instanceof Class) {
+				element = ((Class) element).getPackage();
+			} else {
+				Package pkg = (Package) element;
+				element = ClassUtil.getParentPackage(pkg, clazz);
+			}
+		}
+		return false;
+	}
+
 	private void checkSerializationIssues(Class<?> clazz) {
 		try {
 			checkSerializationIssues0(clazz);
@@ -122,11 +139,8 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 	}
 
 	private void checkSerializationIssues0(Class<?> clazz) {
-		if (clazz.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
-			if (clazz.getAnnotation(ReflectiveSerializer.Checks.class)
-					.ignore()) {
-				return;
-			}
+		if (omitDueToChecksAnnotation(clazz)) {
+			return;
 		}
 		if (clazz.isAnnotationPresent(TypeSerialization.class)) {
 			if (!clazz.getAnnotation(TypeSerialization.class)
@@ -146,15 +160,15 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 						result = ReflectiveSerializer.hasSerializer(
 								PersistentImpl.getImplementationOrSelf(type));
 					}
+					if (omitDueToChecksAnnotation(type)) {
+						result = true;
+					}
 					if (type.isAnnotationPresent(
 							ReflectiveSerializer.Checks.class)) {
 						result |= type
 								.getAnnotation(
 										ReflectiveSerializer.Checks.class)
-								.hasReflectedSubtypes()
-								|| type.getAnnotation(
-										ReflectiveSerializer.Checks.class)
-										.ignore();
+								.hasReflectedSubtypes();
 					}
 					if (property.has(ReflectiveSerializer.Checks.class)) {
 						result |= property
@@ -202,8 +216,6 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 		try {
 			Registry.optional(AppPersistenceBase.InitRegistrySupport.class)
 					.ifPresent(r -> r.muteClassloaderLogging(true));
-			ignorePackages = Arrays
-					.asList(Configuration.get("ignorePackages").split(";"));
 			ClassMetadataCache<ClassMetadata> classes = new ServletClasspathScanner(
 					"*", true, true, null, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
@@ -213,7 +225,6 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 			scanner.scan(classes, file.getPath());
 			serializables = scanner.getOutgoingCache().classData.values()
 					.stream().filter(m -> m.isReflective)
-					.filter(this::permitPackage)
 					.map(m -> Reflections.forName(m.className))
 					.collect(AlcinaCollectors.toLinkedHashSet());
 		} finally {
@@ -268,11 +279,6 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 		logger.info(
 				"ReflectiveSerializableSignatures serializedDefaults signature: ({}) : {} ",
 				signatures.classNameDefaultSerializedForms.size(), sha1);
-	}
-
-	boolean permitPackage(ClassMetadata metadata) {
-		return !ignorePackages.stream()
-				.anyMatch(p -> metadata.className.startsWith(p));
 	}
 
 	@Override

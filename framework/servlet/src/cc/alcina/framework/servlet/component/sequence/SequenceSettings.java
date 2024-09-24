@@ -2,8 +2,10 @@ package cc.alcina.framework.servlet.component.sequence;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 
 @TypedProperties
+@ReflectiveSerializer.Checks(ignore = false)
 public class SequenceSettings extends Bindable.Fields {
 	public static SequenceSettings get() {
 		return SequenceBrowser.Ui.get().settings;

@@ -2,8 +2,10 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 
 @TypedProperties
+@ReflectiveSerializer.Checks(ignore = false)
 public class TraversalSettings extends Bindable.Fields {
 	public static TraversalSettings get() {
 		return TraversalBrowser.Ui.get().settings;

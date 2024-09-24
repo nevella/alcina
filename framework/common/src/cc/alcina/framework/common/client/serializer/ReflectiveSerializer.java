@@ -395,7 +395,8 @@ public class ReflectiveSerializer {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
+	@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD,
+			ElementType.PACKAGE })
 	public @interface Checks {
 		boolean hasReflectedSubtypes() default false;
 
