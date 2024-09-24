@@ -416,6 +416,7 @@ public abstract class DevHelper {
 		XmlUtils.noTransformerCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.devWarning.add(devWarningListener);
+		EnvironmentManager.registerEnvironmentSensitiveTimerProvider();
 		EnvironmentManager.get();
 		PermissionsManager.register(new ThreadedPermissionsManager());
 		JsonUtil.FAST_STRINGIFY = true;
