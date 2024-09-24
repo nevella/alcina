@@ -163,7 +163,7 @@ public class EnvironmentManager {
 		return environment;
 	}
 
-	public Environment singletonEnvironment() {
+	Environment singletonEnvironment() {
 		Preconditions.checkState(environments.size() == 1);
 		return environments.values().iterator().next();
 	}
@@ -280,5 +280,9 @@ public class EnvironmentManager {
 	public static void registerEnvironmentSensitiveTimerProvider() {
 		Registry.register().singleton(Timer.Provider.class,
 				new Environment.TimerProvider());
+	}
+
+	public void invokeInSingletonEnvironment(Runnable runnable) {
+		singletonEnvironment().access().invoke(runnable);
 	}
 }

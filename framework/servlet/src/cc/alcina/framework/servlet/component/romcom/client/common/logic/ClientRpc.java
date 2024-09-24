@@ -106,6 +106,8 @@ public class ClientRpc {
 				RemoteObjectModelComponentClient.consoleError(Ax.format(
 						"Timed out & restarted await : gap %s ms", age));
 				acceptorQueue.cancelInFlight();
+			}
+			if (acceptorQueue.isEmpty()) {
 				acceptorQueue.submit(new AwaitRemote());
 			}
 		}

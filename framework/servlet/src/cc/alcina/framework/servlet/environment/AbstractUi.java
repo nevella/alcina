@@ -8,6 +8,7 @@ import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -32,9 +33,11 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 	 * access to the environment must be used
 	 * 
 	 */
+	@Property.Not
 	Environment environment;
 
 	@Override
+	@Property.Not
 	public void setEnvironment(Environment environment) {
 		this.environment = environment;
 	}
