@@ -341,8 +341,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				.ttmInstance();
 		LooseContext.register(ttmInstance);
 		JvmReflections.initJvmServices();
-		// initialise the EnvironmentManager (server-side browser environments)
-		EnvironmentManager.get();
+		EnvironmentManager.registerEnvironmentSensitiveTimerProvider();
 	}
 
 	protected abstract void initContainerBridge();

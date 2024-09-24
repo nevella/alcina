@@ -123,7 +123,6 @@ public class EnvironmentManager {
 		if (flightRecordingEnabled) {
 			startFlightRecording();
 		}
-		registerEnvironmentSensitiveTimerProvider();
 		new EnvironmentReaper().start();
 	}
 
@@ -278,7 +277,7 @@ public class EnvironmentManager {
 				NestedName.get(uiType));
 	}
 
-	void registerEnvironmentSensitiveTimerProvider() {
+	public static void registerEnvironmentSensitiveTimerProvider() {
 		Registry.register().singleton(Timer.Provider.class,
 				new Environment.TimerProvider());
 	}

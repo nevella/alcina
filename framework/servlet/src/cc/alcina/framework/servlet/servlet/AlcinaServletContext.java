@@ -22,12 +22,17 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.gwt.client.logic.ClientProperties;
 import cc.alcina.framework.gwt.client.logic.ClientProperties.NonClientCookies;
+import cc.alcina.framework.servlet.CookieUtils;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class AlcinaServletContext {
 	private static final String CONTEXT_SERVLET_CONTEXT = AlcinaServletContext.class
 			.getName() + ".CONTEXT_SERVLET_CONTEXT";
+
+	/** For use when accessing a cookie value outside an AlcinaServletContext */
+	public static final String CONTEXT_SERVLET_REQUEST = AlcinaServletContext.class
+			.getName() + ".CONTEXT_SERVLET_REQUEST";
 
 	public static void endContext() {
 		AlcinaServletContext threadContext = servletContext();
@@ -138,11 +143,30 @@ public class AlcinaServletContext {
 		return this;
 	}
 
+	public static void putContextRequest(HttpServletRequest request) {
+		LooseContext.set(CONTEXT_SERVLET_REQUEST, request);
+	}
+
 	public static class NonClientCookiesImpl implements NonClientCookies {
+		String getCookieValue(String cookieName) {
+			if (httpContext() != null) {
+				return httpContext()
+						.getCookieValue(ClientProperties.class.getName());
+			} else {
+				HttpServletRequest request = LooseContext
+						.get(CONTEXT_SERVLET_REQUEST);
+				if (request != null) {
+					return CookieUtils.getCookieValueByName(request,
+							cookieName);
+				} else {
+					return null;
+				}
+			}
+		}
+
 		@Override
 		public Map<String, String> getCookieMap() {
-			String cookie = httpContext()
-					.getCookieValue(ClientProperties.class.getName());
+			String cookie = getCookieValue(ClientProperties.class.getName());
 			if (Ax.notBlank(cookie)) {
 				cookie = UrlComponentEncoder.get().decode(cookie);
 				return StringMap.fromPropertyString(cookie);
