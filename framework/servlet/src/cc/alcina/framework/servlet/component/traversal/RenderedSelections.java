@@ -98,6 +98,9 @@ class RenderedSelections extends Model.Fields {
 	}
 
 	void conditionallyPopulateMarkup(SelectionTraversal traversal) {
+		if (provideIsUnbound()) {
+			return;
+		}
 		SelectionMarkup markup = page.getSelectionMarkup();
 		String styleScope = Ax.format(
 				"selections.%s > selection-markup-area > div",

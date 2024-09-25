@@ -2099,13 +2099,19 @@ public class SEUtilities {
 		}, "se-delayed-invoker").start();
 	}
 
-	public static Package getParentPackage(Package pkg, Class<?> classInPkg) {
-		String name = pkg.getName();
-		if (name.contains(".")) {
-			String parentName = name.replaceFirst("(.+)(\\..+)", "$1");
-			return classInPkg.getClassLoader().getDefinedPackage(parentName);
-		} else {
-			return null;
+	public static Package getNearestAncestorPackage(Package pkg,
+			Class<?> classInPkg) {
+		String cursor = pkg.getName();
+		while (cursor.contains(".")) {
+			String parentName = cursor.replaceFirst("(.+)(\\..+)", "$1");
+			Package definedPackage = classInPkg.getClassLoader()
+					.getDefinedPackage(parentName);
+			if (definedPackage != null) {
+				return definedPackage;
+			} else {
+				cursor = parentName;
+			}
 		}
+		return null;
 	}
 }

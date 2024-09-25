@@ -122,7 +122,7 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 				element = ((Class) element).getPackage();
 			} else {
 				Package pkg = (Package) element;
-				element = SEUtilities.getParentPackage(pkg, clazz);
+				element = SEUtilities.getNearestAncestorPackage(pkg, clazz);
 			}
 		}
 		return false;
