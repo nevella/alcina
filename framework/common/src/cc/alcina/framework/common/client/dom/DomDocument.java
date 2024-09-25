@@ -280,7 +280,9 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	// FIXME - remove with universal mutable location support
 	public void invalidateLocations() {
-		locations.invalidateLookups();
+		if (locations != null) {
+			locations.invalidateLookups();
+		}
 	}
 
 	/*

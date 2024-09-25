@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
@@ -363,5 +364,15 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	 * to avoid class structure cycles
 	 */
 	public interface ViewAsync {
+	}
+
+	/*
+	 * Marker, the selection is a logical output of a deep (e.g. document)
+	 * transformation traversal
+	 */
+	public interface Output {
+	}
+
+	public interface WithRange<T> extends Selection<T>, Location.Range.Has {
 	}
 }

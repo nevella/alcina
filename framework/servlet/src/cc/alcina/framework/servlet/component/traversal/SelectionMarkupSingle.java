@@ -12,16 +12,12 @@ import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -122,45 +118,6 @@ public class SelectionMarkupSingle extends SelectionMarkup {
 			}
 		}
 
-		class MeasureSelectionSequence {
-			MeasureSelection input;
-
-			MeasureSelection output;
-
-			MeasureSelection highestAncestor;
-
-			MeasureSelectionSequence() {
-				MeasureSelection cursor = measureSelection;
-				if (isOutput(cursor)) {
-					output = cursor;
-					while (isOutput(cursor)) {
-						cursor = (MeasureSelection) cursor.parentSelection();
-					}
-					input = cursor;
-				} else {
-					input = cursor;
-					Multimap<Selection, List<MeasureSelection>> byParent = traversal
-							.getSelections(MeasureSelection.class, true)
-							.stream().collect(AlcinaCollectors
-									.toKeyMultimap(Selection::parentSelection));
-					while (cursor != null && !isOutput(cursor)) {
-						cursor = Ax.first(byParent.getAndEnsure(cursor));
-					}
-					output = cursor;
-				}
-			}
-
-			private boolean isOutput(MeasureSelection selection) {
-				Layer layer = traversal.getLayer(selection);
-				return layer.layerContext(Layer.Output.class) != null;
-			}
-
-			Measure ioSelection() {
-				MeasureSelection selection = query.input ? input : output;
-				return selection != null ? selection.get() : null;
-			}
-		}
-
 		ModelBuilder(Query query) {
 			this.query = query;
 			computeMeasure();
@@ -178,7 +135,8 @@ public class SelectionMarkupSingle extends SelectionMarkup {
 		void computeMeasure() {
 			if (query.selection instanceof MeasureSelection) {
 				measureSelection = (MeasureSelection) query.selection;
-				selectionMeasure = new MeasureSelectionSequence().ioSelection();
+				selectionMeasure = new RangeSelectionSequence(traversal, query)
+						.ioSelection();
 			} else {
 				return;
 			}

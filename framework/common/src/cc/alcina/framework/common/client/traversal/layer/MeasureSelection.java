@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.DetachedRootSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -14,7 +15,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.NestedName;
 
 public class MeasureSelection extends AbstractSelection<Measure>
-		implements Comparable<MeasureSelection> {
+		implements Comparable<MeasureSelection>, Selection.WithRange<Measure> {
 	/*
 	 * Utility to allow usage of measurecontainment etc from non-selection
 	 * measures
@@ -187,5 +188,10 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		public String computeText(MeasureSelection selection) {
 			return selection.get().ntc();
 		}
+	}
+
+	@Override
+	public Range provideRange() {
+		return get();
 	}
 }

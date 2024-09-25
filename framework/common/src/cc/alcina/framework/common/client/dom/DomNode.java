@@ -177,7 +177,8 @@ public class DomNode {
 	}
 
 	public Location.Range asRange() {
-		return document.locations().asRange(this);
+		return isAttachedToDocument() ? document.locations().asRange(this)
+				: null;
 	}
 
 	public String attr(String name) {
@@ -539,10 +540,15 @@ public class DomNode {
 		return DomEnvironment.get().streamNCleanForBrowserHtmlFragment(node);
 	}
 
-	public void strip() {
+	/**
+	 * 
+	 * @return the first child node if any, or null
+	 */
+	public DomNode strip() {
 		List<DomNode> nodes = children.nodes();
 		nodes.forEach(relative()::insertBeforeThis);
 		removeFromParent();
+		return Ax.first(nodes);
 	}
 
 	public DomNodeStyle style() {

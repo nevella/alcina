@@ -25,7 +25,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
-import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentClient;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -103,8 +102,6 @@ public class ClientRpc {
 							10 * TimeConstants.ONE_SECOND_MS)) {
 				long age = TimeConstants
 						.age(acceptorQueue.inFlightMessageSendTime);
-				RemoteObjectModelComponentClient.consoleError(Ax.format(
-						"Timed out & restarted await : gap %s ms", age));
 				acceptorQueue.cancelInFlight();
 			}
 			if (acceptorQueue.isEmpty()) {

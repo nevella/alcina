@@ -12,8 +12,10 @@ import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.Event;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -192,6 +194,21 @@ class Page extends Model.All
 
 	void clearPlaceSelections() {
 		place().clearSelections();
+	}
+
+	private SelectionMarkup selectionMarkup;
+
+	@Property.Not
+	SelectionMarkup getSelectionMarkup() {
+		SelectionTraversal traversal = history.getObservable();
+		if (selectionMarkup == null && traversal != null) {
+			SelectionMarkup.Has markupProvider = traversal
+					.context(SelectionMarkup.Has.class);
+			if (markupProvider != null) {
+				selectionMarkup = markupProvider.getSelectionMarkup();
+			}
+		}
+		return selectionMarkup;
 	}
 
 	boolean filterRedundantPlaceChange(TraversalPlace place) {

@@ -38,7 +38,7 @@ class RenderedSelections extends Model.Fields {
 	Heading heading;
 
 	@Directed
-	SelectionMarkupArea selectionMarkup;
+	SelectionMarkupArea selectionMarkupArea;
 
 	@Directed
 	SelectionTableArea selectionTable;
@@ -63,9 +63,11 @@ class RenderedSelections extends Model.Fields {
 		bindings().from(this).on("selection").signal(this::onSelectionChange);
 	}
 
-	public void setSelectionMarkup(SelectionMarkupArea selectionMarkup) {
-		set("selectionMarkup", this.selectionMarkup, selectionMarkup,
-				() -> this.selectionMarkup = selectionMarkup);
+	public void
+			setSelectionMarkupArea(SelectionMarkupArea selectionMarkupArea) {
+		set("selectionMarkupArea", this.selectionMarkupArea,
+				selectionMarkupArea,
+				() -> this.selectionMarkupArea = selectionMarkupArea);
 	}
 
 	public void setSelection(Selection selection) {
@@ -74,8 +76,9 @@ class RenderedSelections extends Model.Fields {
 	}
 
 	void onSelectionChange() {
-		setSelectionMarkup(null);
 		if (selection == null) {
+			setSelectionTable(null);
+			setSelectionMarkupArea(null);
 			return;
 		}
 		// workaround for vs.code (or eclipse) compilation issue - the local
@@ -95,19 +98,19 @@ class RenderedSelections extends Model.Fields {
 	}
 
 	void conditionallyPopulateMarkup(SelectionTraversal traversal) {
-		SelectionMarkup.Has markupProvider = traversal
-				.context(SelectionMarkup.Has.class);
-		if (markupProvider == null) {
-			return;
-		}
-		SelectionMarkup markup = markupProvider.getSelectionMarkup();
+		SelectionMarkup markup = page.getSelectionMarkup();
 		String styleScope = Ax.format(
 				"selections.%s > selection-markup-area > div",
 				input ? "input" : "output");
 		Query query = markup.query(selection, styleScope, input);
 		Model model = query.getModel();
-		SelectionMarkupArea markupArea = new SelectionMarkupArea(model);
-		setSelectionMarkup(markupArea);
+		if (this.selectionMarkupArea != null
+				&& this.selectionMarkupArea.model == model) {
+			return;
+		}
+		SelectionMarkupArea selectionMarkupArea = new SelectionMarkupArea(
+				model);
+		setSelectionMarkupArea(selectionMarkupArea);
 		if (style == null) {
 			Model style = new Style(query.getCss());
 			setStyle(style);

@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -34,7 +33,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
-import cc.alcina.framework.common.client.util.Timer.Provider;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
@@ -48,11 +46,9 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.PersistSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
-import cc.alcina.framework.servlet.environment.MessageHandlerServer.AwaitRemoteHandler;
 import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMessageAcceptor;
 
 /*
@@ -175,6 +171,7 @@ class Environment {
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
 					arguments, flags, null);
 			boolean timedOut = false;
+			boolean hadTimeOut = false;
 			long start = System.currentTimeMillis();
 			do {
 				try {
@@ -183,13 +180,17 @@ class Environment {
 					Ax.simpleExceptionOut(e);
 				}
 				if (timedOut) {
-					Ax.out("invokesync - timedout");
+					hadTimeOut = true;
+					Ax.out("invokesync - [retry]");
 				}
 			} while (timedOut && !queue.finished && TimeConstants.within(start,
 					30 * TimeConstants.ONE_SECOND_MS));
 			if (timedOut) {
 				throw new InvokeException("Timed out");
 			} else {
+				if (hadTimeOut) {
+					Ax.out("invokesync - [retry.success]");
+				}
 				if (handler.response.exception == null) {
 					return (T) handler.response.response;
 				} else {

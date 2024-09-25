@@ -30,9 +30,9 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.EncryptionUtils;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -122,7 +122,7 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 				element = ((Class) element).getPackage();
 			} else {
 				Package pkg = (Package) element;
-				element = ClassUtil.getParentPackage(pkg, clazz);
+				element = SEUtilities.getParentPackage(pkg, clazz);
 			}
 		}
 		return false;

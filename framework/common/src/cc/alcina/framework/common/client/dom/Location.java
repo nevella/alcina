@@ -439,6 +439,12 @@ public class Location implements Comparable<Location> {
 			return start.containingNode;
 		}
 
+		/**
+		 * This method is end-inclusive (this.contains(this) == true)
+		 * 
+		 * @param o
+		 * @return
+		 */
 		public boolean contains(Range o) {
 			return start.compareTo(o.start) <= 0 && end.compareTo(o.end) >= 0;
 		}
@@ -598,6 +604,10 @@ public class Location implements Comparable<Location> {
 						TextTraversal.EXIT_NODE);
 				return next;
 			}
+		}
+
+		public interface Has {
+			Range provideRange();
 		}
 	}
 

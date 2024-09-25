@@ -2098,4 +2098,14 @@ public class SEUtilities {
 			}
 		}, "se-delayed-invoker").start();
 	}
+
+	public static Package getParentPackage(Package pkg, Class<?> classInPkg) {
+		String name = pkg.getName();
+		if (name.contains(".")) {
+			String parentName = name.replaceFirst("(.+)(\\..+)", "$1");
+			return classInPkg.getClassLoader().getDefinedPackage(parentName);
+		} else {
+			return null;
+		}
+	}
 }

@@ -1107,7 +1107,18 @@ public class LocalDom implements ContextFrame {
 		}
 		domIds.readFromIdList(elem, idList);
 		elem.local().setInnerHTML(html);
-		domIds.verifyIdList(idList);
+		try {
+			domIds.verifyIdList(idList);
+		} catch (RuntimeException e) {
+			/* probably some odd dom - compare to roundtripped
+			@formatter:off
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), html.replace("&nbsp;","\u00A0").getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), elem.local()
+			 el.replace("&nbsp;","\u00A0").getBytes());
+			 @formatter:on
+			 */
+			throw e;
+		}
 	}
 
 	void ensurePending(Element elem) {
