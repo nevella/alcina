@@ -257,7 +257,13 @@ public class JobRegistry {
 	}
 
 	public static boolean isInitialised() {
-		return instance != null;
+		if (instance != null) {
+			synchronized (instance) {
+				return instance.jobExecutors != null;
+			}
+		} else {
+			return false;
+		}
 	}
 
 	public static void logLargeResult(Job job) {
@@ -583,7 +589,7 @@ public class JobRegistry {
 		return threadDataWaiter.queriedJobs;
 	}
 
-	public void init() {
+	public synchronized void init() {
 		// max 200, since we want the first job status message to be max 200ms
 		// from job start (and it's debounced)
 		TransformCommit.get()
