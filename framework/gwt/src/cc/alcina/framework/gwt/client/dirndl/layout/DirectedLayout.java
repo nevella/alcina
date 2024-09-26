@@ -1402,6 +1402,7 @@ public class DirectedLayout implements AlcinaProcess {
 								node.appendChild(node.getOwnerDocument()
 										.createTextNode(stringValue));
 							} else {
+								// COMMENT, TEXT, PROCESSING_INSTRUCTION
 								node.setNodeValue(stringValue);
 							}
 						} else {

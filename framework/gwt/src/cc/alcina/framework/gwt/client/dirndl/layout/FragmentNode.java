@@ -248,6 +248,10 @@ public abstract class FragmentNode extends Model.Fields
 			return this;
 		}
 
+		public boolean contains(FragmentNode node) {
+			return stream().anyMatch(n -> n == node);
+		}
+
 		public boolean has(Class<? extends FragmentNode> test) {
 			return stream().anyMatch(
 					n -> Reflections.isAssignableFrom(test, n.getClass()));
