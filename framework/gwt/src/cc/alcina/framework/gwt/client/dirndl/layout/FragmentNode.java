@@ -296,6 +296,10 @@ public abstract class FragmentNode extends Model.Fields
 	public static class FragmentRoot implements FragmentNodeOps {
 		Model rootModel;
 
+		public Model getRootModel() {
+			return rootModel;
+		}
+
 		FragmentModel fragmentModel;
 
 		public FragmentRoot(FragmentModel fragmentModel, Model rootModel) {

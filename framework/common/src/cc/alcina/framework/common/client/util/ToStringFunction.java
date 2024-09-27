@@ -72,4 +72,12 @@ public interface ToStringFunction<T> extends Function<T, String> {
 			return t == null ? null : t.toString();
 		}
 	}
+
+	@Reflected
+	public static class Existence implements ToStringFunction<Boolean> {
+		@Override
+		public String apply(Boolean t) {
+			return t == null || !t ? null : Boolean.TRUE.toString();
+		}
+	}
 }

@@ -1313,6 +1313,9 @@ public class DirectedLayout implements AlcinaProcess {
 					break;
 				case PROPERTY:
 				case CLASS_PROPERTY: {
+					if (!rendered.hasAttributes()) {
+						break;
+					}
 					String propertyName = binding.type() == Type.CLASS_PROPERTY
 							? "class"
 							: binding.to().isEmpty() ? Ax.cssify(binding.from())
@@ -1436,6 +1439,11 @@ public class DirectedLayout implements AlcinaProcess {
 					break;
 				case PROPERTY:
 				case CLASS_PROPERTY: {
+					if (!rendered.hasAttributes()) {
+						// generic containers which may be rendered as
+						// non-element nodes
+						break;
+					}
 					String propertyName = binding.type() == Type.CLASS_PROPERTY
 							? "class"
 							: binding.to().isEmpty() ? Ax.cssify(binding.from())
@@ -1694,6 +1702,8 @@ public class DirectedLayout implements AlcinaProcess {
 	 */
 	public interface Rendered {
 		void append(Rendered rendered);
+
+		boolean hasAttributes();
 
 		void appendToRoot();
 

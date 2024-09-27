@@ -105,4 +105,9 @@ class RenderedW3cNode implements Rendered {
 			setElement(element);
 		}
 	}
+
+	@Override
+	public boolean hasAttributes() {
+		return node instanceof org.w3c.dom.Element;
+	}
 }
