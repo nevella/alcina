@@ -5,9 +5,11 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup.Query;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -81,6 +83,19 @@ class RenderedSelections extends Model.Fields {
 			setSelectionMarkupArea(null);
 			return;
 		}
+		conditionallyPopulate();
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			Client.eventBus().queued().deferred()
+					.lambda(this::conditionallyPopulate).dispatch();
+		}
+	}
+
+	private void conditionallyPopulate() {
 		// workaround for vs.code (or eclipse) compilation issue - the local
 		// traversal variable is a required intermediate
 		SelectionTraversal traversal = page.history.getObservable();

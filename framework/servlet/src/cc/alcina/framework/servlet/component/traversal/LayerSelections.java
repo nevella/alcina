@@ -31,6 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.Answe
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.SuggestionSelected;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
@@ -46,7 +47,6 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
-import cc.alcina.framework.servlet.environment.AbstractUi;
 
 class LayerSelections extends Model.All {
 	@Binding(type = Type.PROPERTY)
@@ -362,6 +362,14 @@ class LayerSelections extends Model.All {
 							.dispatch();
 				} else {
 					render();
+				}
+			}
+
+			@Override
+			public void onBind(Bind event) {
+				super.onBind(event);
+				if (event.isBound() && selected) {
+					provideElement().scrollIntoView();
 				}
 			}
 

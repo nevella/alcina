@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
@@ -12,6 +13,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
@@ -143,7 +145,11 @@ public class MarkupHighlights extends Model.Fields {
 		}
 
 		void scrollTo() {
-			wrapped.get(0).gwtElement().scrollIntoView();
+			Element gwtElement = wrapped.get(0).gwtElement();
+			// FIXME - this is to workaround out-of-order client processing -
+			// revisit with romcom.trans
+			Timer.Provider.get().getTimer(() -> gwtElement.scrollIntoView())
+					.schedule(100);
 		}
 
 		void setSelected(boolean selected) {
