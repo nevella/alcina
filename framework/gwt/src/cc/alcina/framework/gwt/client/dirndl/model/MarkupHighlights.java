@@ -145,6 +145,9 @@ public class MarkupHighlights extends Model.Fields {
 		}
 
 		void scrollTo() {
+			if (wrapped.isEmpty()) {
+				return;
+			}
 			Element gwtElement = wrapped.get(0).gwtElement();
 			// FIXME - this is to workaround out-of-order client processing -
 			// revisit with romcom.trans
