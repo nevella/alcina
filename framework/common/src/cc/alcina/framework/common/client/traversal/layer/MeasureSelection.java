@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.DetachedRootSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -15,7 +16,8 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.NestedName;
 
 public class MeasureSelection extends AbstractSelection<Measure>
-		implements Comparable<MeasureSelection>, Selection.WithRange<Measure> {
+		implements Comparable<MeasureSelection>, Selection.WithRange<Measure>,
+		HasReleaseableResources {
 	/*
 	 * Utility to allow usage of measurecontainment etc from non-selection
 	 * measures
@@ -42,6 +44,12 @@ public class MeasureSelection extends AbstractSelection<Measure>
 
 	public MeasureSelection(Selection parent, Measure measure) {
 		this(parent, measure, null);
+	}
+
+	@Override
+	public void releaseResources() {
+		super.releaseResources();
+		get().detach();
 	}
 
 	public MeasureSelection(Selection parent, Measure measure,

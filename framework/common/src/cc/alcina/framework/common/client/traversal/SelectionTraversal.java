@@ -190,6 +190,12 @@ public class SelectionTraversal
 
 	public boolean serialExecution = false;
 
+	/*
+	 * Set true to release resources once the layer (and potentially children)
+	 * are complete
+	 */
+	public boolean releaseResources = false;
+
 	public SelectionTraversal() {
 		this(null);
 	}
@@ -325,7 +331,6 @@ public class SelectionTraversal
 			}
 		} finally {
 			exitSelectionContext(selection);
-			selection.processNode().setSelfComplete(true);
 			releaseCompletedSelections(selection);
 			state.onSelectionProcessed(selection);
 			selectionProcessed.publish(selection);
@@ -359,6 +364,9 @@ public class SelectionTraversal
 	 */
 	private void releaseCompletedSelections(Selection selection) {
 		selection.processNode().setSelfComplete(true);
+		if (!releaseResources) {
+			return;
+		}
 		Selection cursor = selection;
 		while (cursor != null) {
 			if (cursor.processNode().evaluateReleaseResources()) {
@@ -371,7 +379,12 @@ public class SelectionTraversal
 	}
 
 	public void select(Selection selection) {
-		state.selections.add(selection);
+		if (!state.selections.add(selection)) {
+			/*
+			 * this will never be processed, so mark as released
+			 */
+			selection.processNode().setReleasedResources(true);
+		}
 	}
 
 	public void setExecutor(Executor executor) {
@@ -452,6 +465,7 @@ public class SelectionTraversal
 			state.onAfterTraversal();
 			ProcessObservers.publish(LayerExit.class, () -> new LayerExit());
 		}
+		state.releaseLastLayerResources();
 		topicTraversalComplete.publish(this);
 		ProcessObservers.publish(TraversalComplete.class,
 				() -> new TraversalComplete());
@@ -782,6 +796,13 @@ public class SelectionTraversal
 
 		public <T> T context(Class<T> clazz) {
 			return SelectionTraversal.this.context(clazz);
+		}
+
+		void releaseLastLayerResources() {
+			Layer last = visitedLayers.keySet().stream().reduce(Ax.last())
+					.orElse(null);
+			selections.byLayer.get(last).keySet().forEach(
+					SelectionTraversal.this::releaseCompletedSelections);
 		}
 
 		public <S extends Selection> List<S>

@@ -31,7 +31,10 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * Models the stages, elements and status of an operation which can be modelled
  * as a tree structure. Particularly useful for progress logging
  *
- * 
+ * <p>
+ * Resource release - for processes such as SelectionTraversal - generally
+ * release heavy-weight resources (e.g. DomDocuments) once all child selections
+ * [in the next layer] have been processed. Nodes marked as
  *
  */
 public class TreeProcess {
@@ -209,9 +212,12 @@ public class TreeProcess {
 			return (T) this;
 		}
 
-		default boolean referencesParentResources() {
-			return false;
+		default boolean hasReleaseableResources() {
+			return this instanceof HasReleaseableResources;
 		}
+	}
+
+	public interface HasReleaseableResources {
 	}
 	/*
 	 * Provides an initial process node for a process
@@ -270,11 +276,18 @@ public class TreeProcess {
 			if (isReleasedResources()) {
 				return false;
 			}
-			if (getChildren().stream()
-					.allMatch(n -> n.isReleasedResources()
-							|| (n.getValue() instanceof HasProcessNode
-									&& !((HasProcessNode) n.getValue())
-											.referencesParentResources()))) {
+			boolean release = false;
+			if (getValue() instanceof HasProcessNode) {
+				// if there are no releaseable resources, release (don't ask
+				// children - don't allow multilayer transference of resources)
+				release = !((HasProcessNode) getValue())
+						.hasReleaseableResources();
+			}
+			if (!release) {
+				release = getChildren().stream()
+						.allMatch(n -> n.isReleasedResources());
+			}
+			if (release) {
 				setReleasedResources(true);
 				return true;
 			} else {
@@ -399,6 +412,12 @@ public class TreeProcess {
 			int idx = indexInParent();
 			return idx == 0 ? null : getParent().getChildren().get(idx - 1);
 		}
+
+		default void detachSubtreeValues() {
+			stream().forEach(Node::detachValue);
+		}
+
+		void detachValue();
 	}
 
 	/**
@@ -457,6 +476,13 @@ public class TreeProcess {
 		public NodeImpl(Node parent, Object value) {
 			this(null, parent, value);
 		}
+
+		public void detachValue() {
+			if (parent != null) {
+				((NodeImpl) parent).childrenByValue.remove(this.value);
+			}
+			this.value = null;
+		};
 
 		public NodeImpl(TreeProcess tree, Node parent, Object value) {
 			this.tree = tree;
