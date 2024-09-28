@@ -192,10 +192,10 @@ public class JobRegistry {
 
 	static void awaitLatch(Job job, CountDownLatch latch, LatchType latchType)
 			throws InterruptedException {
+		Class<? extends Task> taskClass = MethodContext.instance()
+				.withWrappingTransaction().call(() -> job.provideTaskClass());
 		long timeout = latchType == LatchType.POST_CHILD_COMPLETION ? 60
-				: Registry
-						.impl(TaskSequenceTimeoutProvider.class,
-								job.provideTaskClass())
+				: Registry.impl(TaskSequenceTimeoutProvider.class, taskClass)
 						.getJobAllocatorSequenceTimeoutSeconds();
 		if (!latch.await(timeout, TimeUnit.SECONDS)) {
 			throw new IllegalStateException(
