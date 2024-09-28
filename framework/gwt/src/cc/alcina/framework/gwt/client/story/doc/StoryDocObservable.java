@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.story.doc;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -39,6 +40,10 @@ public abstract class StoryDocObservable
 	public long index;
 
 	static transient IdCounter counter = new IdCounter();
+
+	public String path() {
+		return ancestorDisplayNames.stream().collect(Collectors.joining(" > "));
+	}
 
 	protected StoryDocObservable() {
 	}

@@ -13,7 +13,6 @@ sequence {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: "Open Sans", "Arial";
   background: white;
   min-height: 100vh;
   align-items: flex-start;
@@ -31,20 +30,20 @@ sequence > heading {
   color: #0f4589;
   margin: 1rem 0;
 }
-sequence > header {
+sequence > doc-header {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
 }
-sequence > header img {
+sequence > doc-header img {
   width: 200px;
 }
-sequence > header heading {
+sequence > doc-header heading {
   font-size: 18px;
   font-weight: bold;
 }
-sequence > header spacer {
+sequence > doc-header spacer {
   display: block;
   width: 200px;
 }

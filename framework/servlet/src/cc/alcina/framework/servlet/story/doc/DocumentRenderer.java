@@ -29,9 +29,12 @@ public class DocumentRenderer implements StoryDocRenderer {
 		this.part = part;
 		this.observables = observables;
 		Sequence sequence = new Sequence();
-		String markup = new DirndlRenderer().withRenderable(sequence)
-				.addStyleFile(DocumentRenderer.class, "res/css/styles.css")
-				.withWrapStyleInCdata(true).asMarkup();
+		DirndlRenderer renderer = new DirndlRenderer().withRenderable(sequence)
+				.addStyleFile(DocumentRenderer.class, "res/css/styles.css");
+		if (part.rendererConfiguration.customCss != null) {
+			renderer.addStyleResource(part.rendererConfiguration.customCss);
+		}
+		String markup = renderer.withWrapStyleInCdata(true).asMarkup();
 		File out = FileUtils.child(outputFolder, "document.html");
 		Io.write().string(markup).toFile(out);
 		Ax.out("Wrote report markup to %s", out);
@@ -61,10 +64,17 @@ public class DocumentRenderer implements StoryDocRenderer {
 
 		class Header extends Model.All {
 			Header() {
-				heading = part.rendererConfiguration.storyTitle;
+				heading2 = part.rendererConfiguration.storyTitle;
+				if (heading2 == null) {
+					if (observables.isEmpty()) {
+						heading2 = "[No observables]";
+					} else {
+						heading2 = observables.get(0).path();
+					}
+				}
 			}
 
-			String heading;
+			String heading2;
 		}
 
 		Header header;
@@ -92,8 +102,7 @@ public class DocumentRenderer implements StoryDocRenderer {
 
 			VisitArea(StoryDocObservable observable) {
 				this.observable = observable;
-				path = observable.ancestorDisplayNames.stream()
-						.collect(Collectors.joining(" > "));
+				path = observable.path();
 				description = observable.description;
 				if (observable.screenshot != null) {
 					String base64 = Base64.getEncoder()

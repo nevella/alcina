@@ -22,5 +22,9 @@ public class StoryDocPart implements TellerContext.Part {
 		public Date date = new Date();
 
 		public Class<? extends Point> pointFilter;
+
+		public Class<? extends Point> storyTitlePoint;
+
+		public String customCss;
 	}
 }

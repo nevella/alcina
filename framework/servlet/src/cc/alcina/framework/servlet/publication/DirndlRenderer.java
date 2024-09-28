@@ -24,7 +24,7 @@ public class DirndlRenderer {
 		return new DirndlRenderer();
 	}
 
-	private List<StylePath> stylePaths = new ArrayList<>();
+	private List<StyleResource> styleResources = new ArrayList<>();
 
 	private Model renderable;
 
@@ -34,8 +34,8 @@ public class DirndlRenderer {
 
 	public DirndlRenderer addStyleFile(Class<?> styleRelativeClass,
 			String styleRelativeFilename) {
-		stylePaths
-				.add(new StylePath(styleRelativeClass, styleRelativeFilename));
+		styleResources.add(
+				new StyleResource(styleRelativeClass, styleRelativeFilename));
 		return this;
 	}
 
@@ -51,7 +51,7 @@ public class DirndlRenderer {
 	 * Render, just return the rendered element
 	 */
 	public DomNode asNode() {
-		Preconditions.checkState(stylePaths.isEmpty());
+		Preconditions.checkState(styleResources.isEmpty());
 		DomDocument document = asDocument();
 		return document.html().body().children.firstElement().children
 				.firstElement();
@@ -75,9 +75,8 @@ public class DirndlRenderer {
 		DomDocument doc = DomDocument.basicHtmlDoc();
 		DomNode div = doc.html().body().builder().tag("div").append();
 		div.setInnerXml(outerHtml);
-		stylePaths.forEach(p -> {
-			String style = Io.read().relativeTo(p.styleRelativeClass)
-					.resource(p.styleRelativeFilename).asString();
+		styleResources.forEach(res -> {
+			String style = res.getCss();
 			if (Ax.notBlank(style)) {
 				doc.html().appendStyleNode(style, wrapStyleInCdata);
 			}
@@ -109,15 +108,34 @@ public class DirndlRenderer {
 		return this;
 	}
 
-	static class StylePath {
+	static class StyleResource {
 		Class<?> styleRelativeClass;
 
 		String styleRelativeFilename;
 
-		public StylePath(Class<?> styleRelativeClass,
+		String css;
+
+		public StyleResource(Class<?> styleRelativeClass,
 				String styleRelativeFilename) {
 			this.styleRelativeClass = styleRelativeClass;
 			this.styleRelativeFilename = styleRelativeFilename;
+		}
+
+		public String getCss() {
+			if (styleRelativeFilename != null) {
+				return Io.read().relativeTo(styleRelativeClass)
+						.resource(styleRelativeFilename).asString();
+			} else {
+				return css;
+			}
+		}
+
+		StyleResource(String css) {
+			this.css = css;
+		}
+
+		public static StyleResource cssResource(String css) {
+			return new StyleResource(css);
 		}
 	}
 
@@ -128,5 +146,10 @@ public class DirndlRenderer {
 			markup = markup.replace("]]", "");
 		}
 		return markup;
+	}
+
+	public DirndlRenderer addStyleResource(String customCss) {
+		styleResources.add(StyleResource.cssResource(customCss));
+		return this;
 	}
 }
