@@ -190,13 +190,23 @@ public class JobRegistry {
 		POST_CHILD_COMPLETION, SEQUENCE_COMPLETION
 	}
 
-	static void awaitLatch(CountDownLatch latch, LatchType latchType)
+	static void awaitLatch(Job job, CountDownLatch latch, LatchType latchType)
 			throws InterruptedException {
 		long timeout = latchType == LatchType.POST_CHILD_COMPLETION ? 60
-				: Configuration.getLong("jobAllocatorSequenceTimeout");
+				: Registry
+						.impl(TaskSequenceTimeoutProvider.class,
+								job.provideTaskClass())
+						.getJobAllocatorSequenceTimeoutSeconds();
 		if (!latch.await(timeout, TimeUnit.SECONDS)) {
 			throw new IllegalStateException(
 					Ax.format("Latch timed out - %s seconds", timeout));
+		}
+	}
+
+	@Registration({ TaskSequenceTimeoutProvider.class, Object.class })
+	public static class TaskSequenceTimeoutProvider {
+		public long getJobAllocatorSequenceTimeoutSeconds() {
+			return Configuration.getLong("jobAllocatorSequenceTimeout");
 		}
 	}
 

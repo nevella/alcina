@@ -146,7 +146,7 @@ class JobAllocator {
 	public void awaitSequenceCompletion() {
 		ensureStarted();
 		try {
-			JobRegistry.awaitLatch(sequenceCompletionLatch,
+			JobRegistry.awaitLatch(queue.job, sequenceCompletionLatch,
 					LatchType.SEQUENCE_COMPLETION);
 		} catch (Exception e) {
 			logger.warn("DEVEX-0 -- job sequence timeout/interruption", e);

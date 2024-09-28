@@ -446,7 +446,8 @@ public class JobContext {
 		try {
 			// this should be LatchType.POST_CHILD_COMPLETION - but leaving at
 			// SEQUENCE_COMPLETION pending debugging
-			JobRegistry.awaitLatch(endedLatch, LatchType.SEQUENCE_COMPLETION);
+			JobRegistry.awaitLatch(job, endedLatch,
+					LatchType.SEQUENCE_COMPLETION);
 			if (!hadEnd0Exception) {
 				allocator.awaitSequenceCompletion();
 			}
