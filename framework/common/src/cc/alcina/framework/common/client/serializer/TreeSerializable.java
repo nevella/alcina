@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.serializer;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -119,5 +120,13 @@ public interface TreeSerializable extends Serializable {
 
 	// marker for deserialization
 	public interface NonMultiple {
+	}
+
+	static boolean areEqual(TreeSerializable ts0, TreeSerializable ts1) {
+		if (ts0 == null || ts1 == null) {
+			return ts0 == ts1;
+		}
+		return Objects.equals(FlatTreeSerializer.serialize(ts0),
+				FlatTreeSerializer.serialize(ts1));
 	}
 }

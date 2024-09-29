@@ -4,11 +4,22 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
+import cc.alcina.framework.servlet.component.traversal.Header;
+import cc.alcina.framework.servlet.component.traversal.Page;
+import cc.alcina.framework.servlet.component.traversal.PropertiesArea;
+import cc.alcina.framework.servlet.component.traversal.RenderedSelections;
+import cc.alcina.framework.servlet.component.traversal.SelectionLayers;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
+import java.lang.Boolean;
+import java.lang.Class;
+import java.lang.Integer;
+import java.lang.String;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Page page = new _Page();

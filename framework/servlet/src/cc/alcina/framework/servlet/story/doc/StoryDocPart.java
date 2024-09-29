@@ -26,5 +26,9 @@ public class StoryDocPart implements TellerContext.Part {
 		public Class<? extends Point> storyTitlePoint;
 
 		public String customCss;
+
+		public String postRenderExec;
+
+		public boolean scrollToStoryAtEnd;
 	}
 }

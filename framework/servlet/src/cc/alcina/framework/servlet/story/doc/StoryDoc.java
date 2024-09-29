@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.story.doc;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
 import cc.alcina.framework.gwt.client.story.TellerContext;
 import cc.alcina.framework.gwt.client.story.doc.Feature_StoryDoc;
@@ -32,6 +33,7 @@ public class StoryDoc implements TellerContext.PartConfigurable<StoryDocPart> {
 	@Override
 	public void configure(StoryTeller teller, StoryDocPart part) {
 		this.teller = teller;
+		this.teller.setAttribute(Story.Action.Annotate.Enabled.class, true);
 		this.part = part;
 		this.observableRecorder = new ObservableRecorder(this);
 		observableRecorder.observe();

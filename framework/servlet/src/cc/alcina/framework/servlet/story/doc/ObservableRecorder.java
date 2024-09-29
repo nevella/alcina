@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -71,10 +72,18 @@ class ObservableRecorder {
 			Ax.out("stored message :: %s", observable.visit.pathDisplayName());
 		}
 
-		public void updateCurrentObservable(byte[] screenshotBytes) {
+		public void updateCurrentObservable(String visitDisplayName,
+				byte[] screenshotBytes) {
 			DocumentPoint observable = Io.read().file(currentObservableFile)
 					.asReflectiveSerializedObject();
 			observable.screenshot = screenshotBytes;
+			// check there's no screenshot without a label/desc (which would
+			// cause a mismatched screenshot)
+			if (!Objects.equals(visitDisplayName, observable.displayName)) {
+				throw new IllegalStateException(Ax.format(
+						"Mismatched screenshot/observable :: %s -> %s",
+						visitDisplayName, observable.displayName));
+			}
 			String json = ReflectiveSerializer.serialize(observable);
 			Io.write().string(json).toFile(currentObservableFile);
 		}
@@ -114,7 +123,9 @@ class ObservableRecorder {
 			byte[] screenshotBytes = message.getState()
 					.getAttribute(ScreenshotData.class).get();
 			if (screenshotBytes != null) {
-				storage.updateCurrentObservable(screenshotBytes);
+				message.getState().removeAttribute(ScreenshotData.class);
+				storage.updateCurrentObservable(
+						message.getVisit().displayName(), screenshotBytes);
 			}
 		}
 	}

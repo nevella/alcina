@@ -9,8 +9,11 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 
 import cc.alcina.extras.webdriver.query.ElementQuery;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.story.Story;
+import cc.alcina.framework.gwt.client.story.Story.Action;
+import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.doc.ScreenshotData;
 
 public class AnnotatePerformer
@@ -21,6 +24,16 @@ public class AnnotatePerformer
 			return context.ensureAttribute(AnnotatedElementsAttr.class,
 					() -> new AnnotatedElements()).get();
 		}
+	}
+
+	@Override
+	public void perform(Context context, Story.Action.Annotate action)
+			throws Exception {
+		if (!context.getAttribute(Story.Action.Annotate.Enabled.class)
+				.orElse(false)) {
+			return;
+		}
+		super.perform(context, action);
 	}
 
 	static class AnnotatedElements {
@@ -77,6 +90,7 @@ public class AnnotatePerformer
 				Story.Action.Annotate.Screenshot action) throws Exception {
 			byte[] pngBytes = ((TakesScreenshot) wdPerformer.wdContext.token
 					.getWebDriver()).getScreenshotAs(OutputType.BYTES);
+			Ax.out("setssbytes :: %s", pngBytes.length);
 			wdPerformer.context.setAttribute(ScreenshotData.class, pngBytes);
 		}
 	}

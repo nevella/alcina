@@ -838,6 +838,7 @@ public abstract class Choices<T> extends Model implements
 		@Override
 		public void setValue(List<T> value) {
 			set("value", this.value, value, () -> this.value = value);
+			select.setSelectedValues(value);
 		}
 
 		@Override

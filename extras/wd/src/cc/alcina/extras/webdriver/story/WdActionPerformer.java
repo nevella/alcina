@@ -35,7 +35,7 @@ public abstract class WdActionPerformer<A extends Story.Action>
 	WdContext wdContext;
 
 	@Override
-	public void perform(Context context, Story.Action action) throws Exception {
+	public void perform(Context context, A action) throws Exception {
 		this.context = context;
 		this.action = action;
 		ensureWd();

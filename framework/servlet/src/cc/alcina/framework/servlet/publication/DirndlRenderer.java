@@ -26,13 +26,15 @@ public class DirndlRenderer {
 
 	private List<StyleResource> styleResources = new ArrayList<>();
 
+	private List<ScriptResource> scriptResources = new ArrayList<>();
+
 	private Model renderable;
 
 	private ContextResolver contextResolver;
 
 	private boolean wrapStyleInCdata = false;
 
-	public DirndlRenderer addStyleFile(Class<?> styleRelativeClass,
+	public DirndlRenderer addStyleResource(Class<?> styleRelativeClass,
 			String styleRelativeFilename) {
 		styleResources.add(
 				new StyleResource(styleRelativeClass, styleRelativeFilename));
@@ -80,6 +82,9 @@ public class DirndlRenderer {
 			if (Ax.notBlank(style)) {
 				doc.html().appendStyleNode(style, wrapStyleInCdata);
 			}
+		});
+		scriptResources.forEach(res -> {
+			doc.html().appendScriptNode(res.js, false);
 		});
 		return doc;
 	}
@@ -139,6 +144,14 @@ public class DirndlRenderer {
 		}
 	}
 
+	static class ScriptResource {
+		String js;
+
+		public ScriptResource(String js) {
+			this.js = js;
+		}
+	}
+
 	public String asMarkup() {
 		String markup = asDocument().prettyToString();
 		if (wrapStyleInCdata) {
@@ -150,6 +163,11 @@ public class DirndlRenderer {
 
 	public DirndlRenderer addStyleResource(String customCss) {
 		styleResources.add(StyleResource.cssResource(customCss));
+		return this;
+	}
+
+	public DirndlRenderer addScriptResource(String js) {
+		scriptResources.add(new ScriptResource(js));
 		return this;
 	}
 }

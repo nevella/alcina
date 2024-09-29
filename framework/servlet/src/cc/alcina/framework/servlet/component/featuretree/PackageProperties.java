@@ -3,10 +3,12 @@ package cc.alcina.framework.servlet.component.featuretree;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
+import java.lang.Class;
+import java.lang.String;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _FeatureTree_Ui featureTree_ui = new _FeatureTree_Ui();
     

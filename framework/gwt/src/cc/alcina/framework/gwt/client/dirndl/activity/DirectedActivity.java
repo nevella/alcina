@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.google.gwt.activity.shared.Activity;
 import com.google.gwt.activity.shared.ActivityManager;
+import com.google.gwt.activity.shared.PlaceUpdateable;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
@@ -35,6 +36,8 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  *
  *
  * @param <P>
+ * 
+ * @see PlaceUpdateable
  */
 @Registration(DirectedActivity.class)
 @TypedProperties

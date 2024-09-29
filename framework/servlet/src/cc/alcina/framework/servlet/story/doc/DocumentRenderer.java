@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.FileUtils;
+import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Img;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafTransforms;
@@ -30,18 +31,32 @@ public class DocumentRenderer implements StoryDocRenderer {
 		this.observables = observables;
 		Sequence sequence = new Sequence();
 		DirndlRenderer renderer = new DirndlRenderer().withRenderable(sequence)
-				.addStyleFile(DocumentRenderer.class, "res/css/styles.css");
+				.addStyleResource(DocumentRenderer.class, "res/css/styles.css");
 		if (part.rendererConfiguration.customCss != null) {
 			renderer.addStyleResource(part.rendererConfiguration.customCss);
 		}
+		renderer.addScriptResource(
+				Io.read().resource("res/js/doc-renderer.js").asString());
 		String markup = renderer.withWrapStyleInCdata(true).asMarkup();
 		File out = FileUtils.child(outputFolder, "document.html");
 		Io.write().string(markup).toFile(out);
 		Ax.out("Wrote report markup to %s", out);
 		File debugOut = FileUtils.child(new File("/tmp/story"),
 				"document.html");
+		// js in the page will scroll to the end (for debug iterations)
+		File debugOutEnd = FileUtils.child(new File("/tmp/story"),
+				"document_scrollToEnd.html");
 		Io.write().string(markup).toFile(debugOut);
+		Io.write().string(markup).toFile(debugOutEnd);
 		Ax.out("Wrote report markup to %s", debugOut);
+		String postRenderExec = part.rendererConfiguration.postRenderExec;
+		if (part.rendererConfiguration.scrollToStoryAtEnd
+				&& postRenderExec == null) {
+			postRenderExec = "open /tmp/story/document_scrollToEnd.html";
+		}
+		if (postRenderExec != null) {
+			Shell.exec(postRenderExec);
+		}
 	}
 
 	@Directed

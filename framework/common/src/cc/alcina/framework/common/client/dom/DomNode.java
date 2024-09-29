@@ -1042,6 +1042,15 @@ public class DomNode {
 			}
 		}
 
+		public void appendScriptNode(String js, boolean wrapInCdata) {
+			DomNode node = head().builder().tag("script").append();
+			if (wrapInCdata) {
+				node.builder().cdata().text(js).append();
+			} else {
+				node.setText(js);
+			}
+		}
+
 		public DomNode body() {
 			return xpath("//body").optionalNode()
 					.orElse(xpath("//BODY").node());

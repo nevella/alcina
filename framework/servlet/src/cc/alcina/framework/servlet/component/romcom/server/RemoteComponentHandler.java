@@ -134,7 +134,7 @@ public class RemoteComponentHandler {
 			EnvironmentList list = EnvironmentManager.get()
 					.getEnvironmentList();
 			String html = DirndlRenderer.instance().withRenderable(list)
-					.addStyleFile(getClass(), "EnvironmentList.css")
+					.addStyleResource(getClass(), "EnvironmentList.css")
 					.asDocument().html().toHtml();
 			response.setContentType("text/html");
 			Io.write().string(html).toStream(response.getOutputStream());

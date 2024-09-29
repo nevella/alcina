@@ -218,10 +218,14 @@ public interface Story {
 			}
 
 			/**
+			 * <p>
 			 * Actions which annotate the UI - a separate logical unit to the
 			 * Story.Action tree. Since these should not have side-effects,
 			 * multiple annotate actions can be defined at a point (and executed
 			 * in sequence) - generally as part of the story documentation
+			 * <p>
+			 * By default, they're not enabled - see
+			 * {@link Story.Action.Annotate}
 			 */
 			public interface Annotate {
 				/**
@@ -295,7 +299,25 @@ public interface Story {
 				}
 
 				/**
+				 * <p>
 				 * Perform these three (basically default sequence) actions
+				 * 
+				 * <p>
+				 * <b>Note</b> Only add this to a leaf point - if you need to
+				 * document a branch point feature, add a 'screenshot leaf' as
+				 * the first child - e.g.
+				 * 
+				 * <pre>
+				 * <code>
+				 * //no screenshot
+				 * &#x40;Decl.Child(Doc_Fature_X.class)
+				 * class Point_Feature_X
+				 * &#x40;Decl.Label("Feature_X label")
+				 * &#x40;Decl.Description("Feature_X desc")
+				 * &#x40;Decl.Action.Annotate.HighlightScreenshotClear
+				 *   class Doc_Fature_X
+				 * </code>
+				 * </pre>
 				 */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -812,9 +834,14 @@ public interface Story {
 		}
 
 		/*
-		 * A directive to annotate the UI
+		 * <p>A directive to annotate the UI <p> By default, they're not enabled
+		 * - an observer must set the {@link Enabled} attribute to true to
+		 * enable
 		 */
 		public interface Annotate extends Story.Action {
+			public interface Enabled extends Story.Attribute<Boolean> {
+			}
+
 			/**
 			 * Highlight the located element
 			 */
