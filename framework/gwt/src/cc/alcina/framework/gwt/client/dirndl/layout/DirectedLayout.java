@@ -958,6 +958,15 @@ public class DirectedLayout implements AlcinaProcess {
 			return idx == 0 ? null : parent.children.get(idx - 1);
 		}
 
+		public Node nextSibling() {
+			if (parent == null) {
+				return null;
+			}
+			int idx = parent.children.indexOf(this);
+			return idx == parent.children.size() - 1 ? null
+					: parent.children.get(idx + 1);
+		}
+
 		public Node provideMostSpecificNodeForModel() {
 			Node cursor = this;
 			while (true) {

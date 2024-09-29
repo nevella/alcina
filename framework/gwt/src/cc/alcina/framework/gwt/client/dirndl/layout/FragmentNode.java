@@ -445,6 +445,13 @@ public abstract class FragmentNode extends Model.Fields
 					: (FragmentNode) directedPreviousSibling.model;
 		}
 
+		public FragmentNode nextSibling() {
+			DirectedLayout.Node directedPreviousSibling = provideNode()
+					.nextSibling();
+			return directedPreviousSibling == null ? null
+					: (FragmentNode) directedPreviousSibling.model;
+		}
+
 		public void removeFromParent() {
 			withMutating(() -> provideParentNode()
 					.removeChildNode(FragmentNode.this));
