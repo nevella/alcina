@@ -801,7 +801,7 @@ public class SelectionTraversal
 		void releaseLastLayerResources() {
 			Layer last = visitedLayers.keySet().stream().reduce(Ax.last())
 					.orElse(null);
-			selections.byLayer.get(last).keySet().forEach(
+			selections.byLayer.getOrDefault(last, Map.of()).keySet().forEach(
 					SelectionTraversal.this::releaseCompletedSelections);
 		}
 
