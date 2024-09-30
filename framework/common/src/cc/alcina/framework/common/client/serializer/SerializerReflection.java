@@ -174,7 +174,13 @@ class SerializerReflection {
 	 * synchronization is handled by typeNodes being concurrent
 	 */
 	synchronized TypeNode getTypeNode(Class clazz) {
-		return typeNodes.computeIfAbsent(clazz, c -> new TypeNode(c));
+		TypeNode typeNode = typeNodes.get(clazz);
+		if (typeNode == null) {
+			typeNode = new TypeNode(clazz);
+			typeNodes.put(clazz, typeNode);
+			typeNode.init();
+		}
+		return typeNode;
 	}
 
 	/*
@@ -199,8 +205,14 @@ class SerializerReflection {
 
 		TypeSerializer serializer;
 
+		/*
+		 * split constructor and init to handle recursive lookup
+		 */
 		TypeNode(Class type) {
 			this.type = type;
+		}
+
+		void init() {
 			classReflector = Reflections.at(type);
 			serializerLocation = ReflectiveSerializer.resolveSerializer(type);
 			serializer = serializerLocation.typeSerializer;

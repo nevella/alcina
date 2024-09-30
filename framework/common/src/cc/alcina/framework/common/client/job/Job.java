@@ -752,11 +752,21 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	private Optional<? extends JobRelation> provideToAntecedentRelation() {
-		if (getToRelations().isEmpty()) {
+		Set<? extends JobRelation> toRelations = getToRelations();
+		if (toRelations.isEmpty()) {
 			return Optional.empty();
 		}
-		return getToRelations().stream()
-				.filter(rel -> rel.getType().isSequential()).findFirst();
+		// return toRelations.stream()
+		// .filter(rel -> rel.getType().isSequential()).findFirst();
+		/*
+		 * Non-stream optimisation.
+		 */
+		for (JobRelation rel : toRelations) {
+			if (rel.getType().isSequential()) {
+				return Optional.of(rel);
+			}
+		}
+		return Optional.empty();
 	}
 
 	public Job provideTopLevelAncestor() {

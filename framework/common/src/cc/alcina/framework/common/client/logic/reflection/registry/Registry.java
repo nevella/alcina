@@ -350,6 +350,7 @@ public class Registry {
 					if (ascendedFinalKey) {
 						return false;
 					} else {
+						keys = new ArrayList<>(keys);
 						keys.set(keys.size() - 1, registryKeys.get(superclass));
 					}
 				}
@@ -663,8 +664,20 @@ public class Registry {
 		}
 
 		public List<RegistryKey> asRegistrationKeys() {
-			return classes.stream().map(registryKeys::get)
-					.collect(Collectors.toList());
+			// optimisation
+			if (classes.size() == 1) {
+				return List.of(registryKeys.get(classes.get(0)));
+			} else if (classes.size() == 2) {
+				return List.of(registryKeys.get(classes.get(0)),
+						registryKeys.get(classes.get(1)));
+			} else if (classes.size() == 3) {
+				return List.of(registryKeys.get(classes.get(0)),
+						registryKeys.get(classes.get(1)),
+						registryKeys.get(classes.get(2)));
+			} else {
+				return classes.stream().map(registryKeys::get)
+						.collect(Collectors.toList());
+			}
 		}
 
 		V checkNonSingleton(Class<? extends V> clazz) {
