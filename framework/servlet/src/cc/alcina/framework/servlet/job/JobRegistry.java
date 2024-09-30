@@ -211,9 +211,8 @@ public class JobRegistry {
 			});
 			String jobDescription = callInTx(() -> Ax.format("%s - %s",
 					job.toString(), job.toStringFull()));
-			throw new IllegalStateException(
-					Ax.format("Latch timed out - %s seconds - %s", timeout,
-							jobDescription));
+			throw new IllegalStateException(Ax.format(
+					"Latch timed out - %s ms - %s", timeout, jobDescription));
 		}
 	}
 

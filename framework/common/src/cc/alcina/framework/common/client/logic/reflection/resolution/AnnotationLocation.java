@@ -162,9 +162,18 @@ public class AnnotationLocation {
 				annotationClass -> getAnnotation(annotationClass) != null);
 	}
 
+	int hash = 0;
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(property, classLocation, resolver, resolutionState);
+		if (hash == 0) {
+			hash = Objects.hash(property, classLocation, resolver,
+					resolutionState);
+			if (hash == 0) {
+				hash = -1;
+			}
+		}
+		return hash;
 	}
 
 	public boolean isDefiningType(Class<?> clazz) {
@@ -309,18 +318,26 @@ public class AnnotationLocation {
 	}
 
 	/**
+	 * <p>
 	 * Resolves annotations (really, returns declarative information packaged in
 	 * annotation instances) at a class/property location
 	 *
-	 *
+	 * <p>
+	 * Concurrent via access, since resolveAnnotations() is synchronized
 	 *
 	 */
 	public static abstract class Resolver {
+		private static AnnotationLocation.Resolver resolver;
+
 		public static AnnotationLocation.Resolver get() {
-			/*
-			 * Must be bootstrapped by imperative code
-			 */
-			return Registry.impl(AnnotationLocation.Resolver.class);
+			// no need to sync/double-check, since the block body is idempotent
+			if (resolver == null) {
+				/*
+				 * Must be bootstrapped by imperative code
+				 */
+				resolver = Registry.impl(AnnotationLocation.Resolver.class);
+			}
+			return resolver;
 		}
 
 		private MultikeyMap<List<? extends Annotation>> resolvedCache = new UnsortedMultikeyMap<>(
