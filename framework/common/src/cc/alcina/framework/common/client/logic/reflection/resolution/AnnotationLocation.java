@@ -174,51 +174,21 @@ public class AnnotationLocation {
 
 	int hash = 0;
 
-	static long hashNanos;
-
-	static long hashNanosMiss;
-
-	static long hashCtr;
-
-	static long hashMiss;
-
-	static long hashNanosMsg;
-
 	@Override
 	public int hashCode() {
 		long n1 = System.nanoTime();
 		boolean miss = false;
-		try {
+		if (hash == 0) {
+			miss = true;
+			hash ^= property == null ? 0 : property.hashCode();
+			hash ^= classLocation == null ? 0 : classLocation.hashCode();
+			hash ^= resolver == null ? 0 : resolver.hashCode();
+			hash ^= resolutionState == null ? 0 : resolutionState.hashCode();
 			if (hash == 0) {
-				miss = true;
-				hash ^= property == null ? 0 : property.hashCode();
-				hash ^= classLocation == null ? 0 : classLocation.hashCode();
-				hash ^= resolver == null ? 0 : resolver.hashCode();
-				hash ^= resolutionState == null ? 0
-						: resolutionState.hashCode();
-				if (hash == 0) {
-					hash = -1;
-				}
-			}
-			return hash;
-		} finally {
-			long n2 = System.nanoTime();
-			long diff = n2 - n1;
-			hashNanos += diff;
-			if (miss) {
-				hashNanosMiss += diff;
-				hashMiss++;
-			}
-			hashCtr++;
-			if (hashNanos > 10000000L) {
-				long hashNanosMsg = hashNanos / 10000000L;
-				if (hashNanosMsg != AnnotationLocation.hashNanosMsg) {
-					AnnotationLocation.hashNanosMsg = hashNanosMsg;
-					Ax.out("hashNanos: %s [%s] [%s] [%s]", hashNanos, hashCtr,
-							hashMiss, hashNanosMiss);
-				}
+				hash = -1;
 			}
 		}
+		return hash;
 	}
 
 	public boolean isDefiningType(Class<?> clazz) {

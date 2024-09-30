@@ -21,7 +21,6 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadOracle;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
@@ -506,29 +505,19 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public Job provideFirstInSequence() {
-		if (Domain.isMvccObject(domainIdentity())) {
-			if (firstInSequence == null) {
-				Optional<Job> previous = providePrevious();
-				if (previous.isPresent()) {
-					firstInSequence = providePrevious().get()
-							.provideFirstInSequence();
-				} else {
-					firstInSequence = domainIdentity();
-				}
+		if (firstInSequence == null) {
+			/*
+			 * This relies on previous being invariant
+			 */
+			Optional<Job> previous = providePrevious();
+			if (previous.isPresent()) {
+				firstInSequence = providePrevious().get()
+						.provideFirstInSequence();
+			} else {
+				firstInSequence = domainIdentity();
 			}
-			return firstInSequence;
-		} else {
-			Job cursor = domainIdentity();
-			while (true) {
-				Optional<Job> previous = cursor.providePrevious();
-				if (previous.isPresent()) {
-					cursor = previous.get();
-				} else {
-					break;
-				}
-			}
-			return cursor;
 		}
+		return firstInSequence;
 	}
 
 	public boolean provideHasCompletePredecesorOrNone() {
