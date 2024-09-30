@@ -205,7 +205,8 @@ public class FlatTreeSerializer {
 				clazz = Reflections.forName(state.keyValues.get(CLASS));
 			}
 			state.keyValues.remove(CLASS);
-			state.serializationSupport = SerializationSupport.deserializationInstance;
+			state.serializerReflection = SerializerReflection.get(Set.of(),
+					false);
 			T instance = Reflections.newInstance(clazz);
 			String mappedKeysValue = instance.treeSerializationCustomiser()
 					.mapKeys(value, false);
@@ -524,7 +525,7 @@ public class FlatTreeSerializer {
 								property = segmentMap.get("");
 							}
 						} else {
-							property = state.serializationSupport
+							property = state.serializerReflection
 									.getProperties(cursor.value.getClass())
 									.stream()
 									.filter(p -> p.getName()
@@ -541,7 +542,7 @@ public class FlatTreeSerializer {
 							}
 							break;
 						}
-						PropertySerialization propertySerialization = SerializationSupport
+						PropertySerialization propertySerialization = SerializerReflection
 								.getPropertySerialization(property);
 						Object childValue = property.get(cursor.value);
 						Node lookahead = new Node(cursor, childValue, null);
@@ -673,7 +674,7 @@ public class FlatTreeSerializer {
 		RootClassPropertyKey key = new RootClassPropertyKey(rootClass,
 				cursor.path.property);
 		return deSerializationPropertyAliasClass.computeIfAbsent(key, k -> {
-			PropertySerialization propertySerialization = SerializationSupport
+			PropertySerialization propertySerialization = SerializerReflection
 					.getPropertySerialization(k.property);
 			Class[] availableTypes = propertySerialization == null
 					? new Class[0]
@@ -695,7 +696,7 @@ public class FlatTreeSerializer {
 
 	private Map<String, Property> getAliasPropertyMap(Node cursor) {
 		Function<? super Property, ? extends String> keyMapper = property -> {
-			PropertySerialization propertySerialization = SerializationSupport
+			PropertySerialization propertySerialization = SerializerReflection
 					.getPropertySerialization(property);
 			if (propertySerialization != null) {
 				if (propertySerialization.defaultProperty()) {
@@ -710,7 +711,7 @@ public class FlatTreeSerializer {
 		Map<String, Property> map = new LinkedHashMap<>();
 		return deSerializationClassAliasProperty
 				.computeIfAbsent(cursor.value.getClass(), clazz -> {
-					state.serializationSupport
+					state.serializerReflection
 							.getProperties(cursor.value.getClass())
 							.forEach(p -> addWithUniquenessCheck(map,
 									keyMapper.apply(p), p, cursor));
@@ -800,7 +801,7 @@ public class FlatTreeSerializer {
 					state.pending.add(childNode);
 				});
 			} else if (value instanceof TreeSerializable) {
-				state.serializationSupport.getProperties(value.getClass())
+				state.serializerReflection.getProperties(value.getClass())
 						.forEach(property -> {
 							Object childValue = getValue(cursor, property,
 									value);
@@ -817,7 +818,7 @@ public class FlatTreeSerializer {
 									defaultValue);
 							childNode.path.property = property;
 							childNode.path.setPropertySerialization(
-									SerializationSupport
+									SerializerReflection
 											.getPropertySerialization(
 													property));
 							if (childNode.path.ignoreForSerialization()) {
@@ -856,8 +857,8 @@ public class FlatTreeSerializer {
 			state.serializerOptions = options;
 			Node node = new Node(null, object,
 					Reflections.at(object).templateInstance());
-			state.serializationSupport = SerializationSupport
-					.serializationInstance();
+			state.serializerReflection = SerializerReflection
+					.serializationInstance(false);
 			state.pending.add(node);
 			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
 			serializer.serialize();
@@ -923,7 +924,7 @@ public class FlatTreeSerializer {
 
 	private Object synthesisePopulatedPropertyValue(Node node,
 			Property property) {
-		PropertySerialization propertySerialization = SerializationSupport
+		PropertySerialization propertySerialization = SerializerReflection
 				.getPropertySerialization(property);
 		if (propertySerialization != null
 				&& propertySerialization.notTestable()) {
@@ -1904,7 +1905,7 @@ public class FlatTreeSerializer {
 	}
 
 	static class State {
-		SerializationSupport serializationSupport;
+		SerializerReflection serializerReflection;
 
 		public Class<? extends Object> rootClass;
 

@@ -8,7 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
@@ -33,7 +32,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -44,8 +42,9 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
+import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeNode;
+import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeNode.PropertyNode;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
@@ -153,11 +152,6 @@ public class ReflectiveSerializer {
 		return deserialize(value, options);
 	}
 
-	public static void registerClientDeserialization() {
-		SerializationSupport.deserializationInstance.types = new TransienceContext[] {
-				TransienceContext.CLIENT };
-	}
-
 	/**
 	 * For use by clients which seriously prune the reachable reflective types
 	 */
@@ -170,9 +164,8 @@ public class ReflectiveSerializer {
 				return null;
 			}
 			JsonSerialNode.ensureValueSerializers();
-			State state = new State(
-					SerializationSupport.deserializationInstance,
-					Resolver.get());
+			State state = new State(SerializerReflection.get(Set.of(),
+					options.defaultCollectionTypes), Resolver.get());
 			state.deserializerOptions = options;
 			// create json doc
 			GraphNode node = new GraphNode(null, null);
@@ -280,8 +273,8 @@ public class ReflectiveSerializer {
 			return null;
 		}
 		JsonSerialNode.ensureValueSerializers();
-		State state = new State(SerializationSupport.serializationInstance(),
-				Resolver.get());
+		State state = new State(SerializerReflection.serializationInstance(
+				options.defaultCollectionTypes), Resolver.get());
 		state.serializerOptions = options;
 		GraphNode node = new GraphNode(null, null);
 		node.state = state;
@@ -875,102 +868,6 @@ public class ReflectiveSerializer {
 		}
 	}
 
-	/*
-	 * Encapsulates serialization info for a property in the current
-	 * serialization context.
-	 */
-	static class PropertyNode {
-		TypeNode exactChildTypeNode;
-
-		TypeNode exactTypeNode;
-
-		/*
-		 * These typenode fields are resolution optimisations
-		 */
-		TypeNode lastTypeNode;
-
-		TypeNode lastChildTypeNode;
-
-		Property property;
-
-		PropertySerialization propertySerialization;
-
-		private State state;
-
-		public PropertyNode(State state, Property property) {
-			this.state = state;
-			this.property = property;
-			Class type = property.getType();
-			Class exactType = SerializationSupport
-					.solePossibleImplementation(type);
-			if (exactType != null) {
-				exactTypeNode = state.typeNode(exactType);
-			}
-			if (state.deserializerOptions != null
-					&& state.deserializerOptions.defaultCollectionTypes) {
-				// must be synced with the the hardcoded handling in the
-				// SerializerOptions.elideTypeInfo()
-				// method
-				if (type == List.class) {
-					exactTypeNode = state.typeNode(ArrayList.class);
-				} else if (type == Map.class) {
-					exactTypeNode = state.typeNode(LinkedHashMap.class);
-				} else if (type == Set.class) {
-					exactTypeNode = state.typeNode(LinkedHashSet.class);
-				}
-			}
-			propertySerialization = getPropertySerialization(
-					property.getOwningType(), property.getName());
-			if (propertySerialization != null
-					&& propertySerialization.types().length == 1) {
-				exactChildTypeNode = state
-						.typeNode(propertySerialization.types()[0]);
-			} else {
-				if (Reflections.isAssignableFrom(Collection.class,
-						property.getType())) {
-					TypeBounds typeBounds = property.getTypeBounds();
-					if (typeBounds.bounds.size() == 1) {
-						Class<?> elementType = typeBounds.bounds.get(0);
-						Class soleImplementationType = SerializationSupport
-								.solePossibleImplementation(elementType);
-						if (soleImplementationType != null) {
-							exactChildTypeNode = state
-									.typeNode(soleImplementationType);
-						}
-					}
-				}
-			}
-		}
-
-		public TypeNode childTypeNode(Class<? extends Object> type) {
-			if (lastChildTypeNode == null || type != lastChildTypeNode.type) {
-				lastChildTypeNode = state.typeNode(type);
-			}
-			return lastChildTypeNode;
-		}
-
-		String name() {
-			return property.getName();
-		}
-
-		@Override
-		public String toString() {
-			FormatBuilder format = new FormatBuilder();
-			format.line(property);
-			format.appendIfNotBlankKv("exactTypeNode", exactTypeNode);
-			format.appendIfNotBlankKv("exactChildTypeNode", exactChildTypeNode);
-			return format.toString();
-		}
-
-		public TypeNode typeNode(Class<? extends Object> type) {
-			if (lastTypeNode == null || type != lastTypeNode.type) {
-				lastTypeNode = state.typeNode(type);
-				lastTypeNode.serializerLocation.verifyType(property.getType());
-			}
-			return lastTypeNode;
-		}
-	}
-
 	public interface ReflectiveSerializable {
 	}
 
@@ -1187,13 +1084,11 @@ public class ReflectiveSerializer {
 
 		Deque<GraphNode> pending = new LinkedList<>();
 
-		SerializationSupport serializationSupport;
+		SerializerReflection serializationSupport;
 
 		AnnotationLocation.Resolver resolver;
 
-		Map<Class, TypeNode> typeNodes = AlcinaCollections.newHashMap();
-
-		State(SerializationSupport serializationSupport, Resolver resolver) {
+		State(SerializerReflection serializationSupport, Resolver resolver) {
 			this.serializationSupport = serializationSupport;
 			this.resolver = resolver;
 			voidTypeNode = typeNode(Void.class);
@@ -1205,79 +1100,8 @@ public class ReflectiveSerializer {
 
 		TypeNode typeNode(Class type) {
 			type = ClassUtil.isEnumSubclass(type) ? type.getSuperclass() : type;
-			TypeNode typeNode = typeNodes.get(type);
-			if (typeNode == null) {
-				typeNode = new TypeNode(type);
-				typeNodes.put(type, typeNode);
-				typeNode.init(this);
-			}
+			TypeNode typeNode = serializationSupport.getTypeNode(type);
 			return typeNode;
-		}
-	}
-
-	/*
-	 * Encapsulates serialization info for a type in the current serialization
-	 * context. Every GraphNode has a type node - if the graphnode corresponds
-	 * to Java null, the type node type will be Void
-	 */
-	static class TypeNode {
-		Class<? extends Object> type;
-
-		TypeSerializerForType serializerLocation;
-
-		List<PropertyNode> properties = new ArrayList<>();
-
-		Map<Property, PropertyNode> propertyMap = AlcinaCollections
-				.newHashMap();
-
-		Map<String, PropertyNode> propertyNameMap = AlcinaCollections
-				.newHashMap();
-
-		ClassReflector classReflector;
-
-		TypeSerializer serializer;
-
-		TypeNode(Class type) {
-			this.type = type;
-		}
-
-		void init(State state) {
-			classReflector = Reflections.at(type);
-			serializerLocation = resolveSerializer(type);
-			serializer = serializerLocation.typeSerializer;
-			List<Property> list = state.serializationSupport
-					.getProperties(type);
-			for (Property property : list) {
-				try {
-					PropertyNode propertyNode = new PropertyNode(state,
-							property);
-					propertyMap.put(property, propertyNode);
-					propertyNameMap.put(property.getName(), propertyNode);
-					properties.add(propertyNode);
-				} catch (Exception e) {
-					Ax.out("Exclude: %s", property.toLocationString());
-				}
-			}
-		}
-
-		boolean hasProperties() {
-			return properties.size() > 0;
-		}
-
-		Object newInstance() {
-			return classReflector.newInstance();
-		}
-
-		PropertyNode propertyNode(Property property) {
-			return propertyMap.get(property);
-		}
-
-		PropertyNode propertyNode(String name) {
-			return propertyNameMap.get(name);
-		}
-
-		Object templateInstance() {
-			return classReflector.templateInstance();
 		}
 	}
 
