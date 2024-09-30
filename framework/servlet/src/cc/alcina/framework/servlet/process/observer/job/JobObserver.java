@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
 
@@ -67,11 +68,15 @@ public class JobObserver {
 	}
 
 	void conditionallyRecord(JobObservable event) {
-		JobHistory history = histories.get(event.job.getLocalId());
+		JobHistory history = getHistoryForEvent(event);
 		if (history != null) {
 			history.add(event);
 		}
 		checkEviction();
+	}
+
+	JobHistory getHistoryForEvent(JobObservable event) {
+		return histories.get(event.job.getLocalId());
 	}
 
 	JobHistory getHistory0(EntityLocator locator) {
@@ -95,6 +100,21 @@ public class JobObserver {
 		new EndedObserver().bind();
 		new ToProcessingObserver().bind();
 		new AllocationEventObserver().bind();
+		new TimedOutEventObserver().bind();
+	}
+
+	class TimedOutEventObserver
+			implements ProcessObserver<JobObservable.TimedOut> {
+		@Override
+		public void topicPublished(JobObservable.TimedOut event) {
+			if (Configuration.is("record")) {
+				JobHistory history = getHistoryForEvent(event);
+				if (history != null) {
+					history.sequence().withIncludeMvccObservables(true)
+							.exportLocal();
+				}
+			}
+		}
 	}
 
 	class AllocationEventObserver

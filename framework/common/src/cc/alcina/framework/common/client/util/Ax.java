@@ -255,10 +255,20 @@ public class Ax {
 		System.out.println(CommonUtils.highlightForLog(template, args));
 	}
 
+	/**
+	 * 
+	 * @param date
+	 * @return the formatted date - e.g. "30/09/2024 - 06:39:28:268"
+	 */
 	public static String timestamp(Date date) {
 		return DateStyle.DATE_TIME_MS.format(date);
 	}
 
+	/**
+	 * 
+	 * @param date
+	 * @return the formatted date - e.g. "20240930_063957_844"
+	 */
 	public static String timestampYmd(Date date) {
 		return DateStyle.TIMESTAMP.format(date);
 	}

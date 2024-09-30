@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -190,22 +191,35 @@ public class JobRegistry {
 		POST_CHILD_COMPLETION, SEQUENCE_COMPLETION
 	}
 
+	static <V> V callInTx(Callable<V> callable) {
+		return MethodContext.instance().withWrappingTransaction()
+				.call(callable);
+	}
+
 	static void awaitLatch(Job job, CountDownLatch latch, LatchType latchType)
 			throws InterruptedException {
-		Class<? extends Task> taskClass = MethodContext.instance()
-				.withWrappingTransaction().call(() -> job.provideTaskClass());
-		long timeout = latchType == LatchType.POST_CHILD_COMPLETION ? 60
+		Class<? extends Task> taskClass = callInTx(
+				() -> job.provideTaskClass());
+		long timeout = latchType == LatchType.POST_CHILD_COMPLETION
+				? 1 * TimeConstants.ONE_MINUTE_MS
 				: Registry.impl(TaskSequenceTimeoutProvider.class, taskClass)
-						.getJobAllocatorSequenceTimeoutSeconds();
-		if (!latch.await(timeout, TimeUnit.SECONDS)) {
+						.getJobAllocatorSequenceTimeout();
+		if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+			callInTx(() -> {
+				new JobObservable.TimedOut(job).publish();
+				return null;
+			});
+			String jobDescription = callInTx(() -> Ax.format("%s - %s",
+					job.toString(), job.toStringFull()));
 			throw new IllegalStateException(
-					Ax.format("Latch timed out - %s seconds", timeout));
+					Ax.format("Latch timed out - %s seconds - %s", timeout,
+							jobDescription));
 		}
 	}
 
 	@Registration({ TaskSequenceTimeoutProvider.class, Object.class })
 	public static class TaskSequenceTimeoutProvider {
-		public long getJobAllocatorSequenceTimeoutSeconds() {
+		public long getJobAllocatorSequenceTimeout() {
 			return Configuration.getLong("jobAllocatorSequenceTimeout");
 		}
 	}
@@ -388,6 +402,8 @@ public class JobRegistry {
 		contextAwaiters.remove(job);
 		if (maxTime != 0 && System.currentTimeMillis() - start > maxTime) {
 			TransactionEnvironment.withDomain(() -> {
+				Ax.sysLogHigh("Job timed out - %s", job);
+				new JobObservable.TimedOut(job).publish();
 				job.cancel();
 				Transaction.commit();
 			});

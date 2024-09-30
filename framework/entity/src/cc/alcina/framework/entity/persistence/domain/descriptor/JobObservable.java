@@ -74,6 +74,15 @@ public abstract class JobObservable
 		}
 	}
 
+	public static class TimedOut extends JobObservable {
+		TimedOut() {
+		}
+
+		public TimedOut(Job job) {
+			super(job);
+		}
+	}
+
 	public static class ToProcessing extends JobObservable {
 		ToProcessing() {
 		}

@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.process.observer.job;
 
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
@@ -9,8 +10,11 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.IdOrdered;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
+import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.servlet.component.sequence.Sequence;
 import cc.alcina.framework.servlet.process.observer.mvcc.MvccObserver;
 
@@ -61,6 +65,16 @@ public class JobHistory {
 					.collect(Collectors.toList());
 			File folder = new File(LOCAL_PATH);
 			Sequence.Loader.writeElements(folder, events);
+			String persistentExportPath = Configuration
+					.get("persistentExportPath");
+			if (Ax.notBlank(persistentExportPath)) {
+				File persistentFolder = new File(persistentExportPath);
+				persistentFolder.mkdirs();
+				File jobFolder = FileUtils.child(persistentFolder,
+						Ax.timestampYmd(new Date()));
+				Sequence.Loader.writeElements(jobFolder, events);
+				Ax.out("wrote job event sequence to %s", jobFolder);
+			}
 		}
 	}
 
