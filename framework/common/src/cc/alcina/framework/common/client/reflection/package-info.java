@@ -81,13 +81,20 @@ static class HelloBeans1x5 {
  * <h4>From private to package</h4>
  * <h4>Notes</h4>
  * <ul>
- * <li>Private signifies 'only classes in this nest can access the member', but
+ * <li>
+ * <p>
+ * Private signifies 'only classes in this nest can access the member', but
  * given top-level classes can contain a nested class structure of arbitrary
  * depth, the chance of incorrect member access of a private member (by say a
  * nested class) is still significant. For this reason, Alcina-style code style
  * is package-by-default, with the requirement that members with non-obvious
  * access semantics should be javadoc-documented if they're intended to support
  * access from outside the exact owning class (not the nest).
+ * <p>
+ * Exceptions to package-by-default are:
+ * <ul>
+ * <li>if the field has an ensure accessor
+ * </ul>
  * <li>The other benefit of private is that static analysis tools (e.g. the mvcc
  * ClassTransformer) can make guarantees about access (since in java a class
  * cannot be extended). Package access allows no such guarantees. For this

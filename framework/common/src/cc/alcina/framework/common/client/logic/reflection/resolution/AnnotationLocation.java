@@ -30,6 +30,8 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * property/actualtype/ResolutionState.parent tuple, it currently manages
  * 'consumed earlier in the chain' annotations and could be used as a caching
  * mechanism
+ * 
+ * Thread-saftey: not threadsafe
  *
  *
  */
@@ -57,7 +59,14 @@ public class AnnotationLocation {
 
 	protected Resolver resolver;
 
-	public ResolutionState resolutionState = new ResolutionState();
+	private ResolutionState resolutionState;
+
+	public ResolutionState ensureResolutionState() {
+		if (resolutionState == null) {
+			resolutionState = new ResolutionState();
+		}
+		return resolutionState;
+	}
 
 	protected AnnotationLocation() {
 	}
@@ -80,7 +89,7 @@ public class AnnotationLocation {
 	public AnnotationLocation copyWithClassLocation(Class<?> clazz) {
 		AnnotationLocation location = new AnnotationLocation(clazz, property,
 				resolver);
-		location.resolutionState.setTransformationParent(this);
+		location.ensureResolutionState().setTransformationParent(this);
 		return location;
 	}
 
@@ -110,7 +119,8 @@ public class AnnotationLocation {
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 		A resolvedAnnotation = resolver.resolveAnnotation(annotationClass,
 				this);
-		if (resolvedAnnotation == null || resolutionState.consumed == null) {
+		if (resolvedAnnotation == null || resolutionState == null
+				|| resolutionState.consumed == null) {
 			return resolvedAnnotation;
 		}
 		if (!resolutionState.consumed.contains(resolvedAnnotation)) {
@@ -164,16 +174,51 @@ public class AnnotationLocation {
 
 	int hash = 0;
 
+	static long hashNanos;
+
+	static long hashNanosMiss;
+
+	static long hashCtr;
+
+	static long hashMiss;
+
+	static long hashNanosMsg;
+
 	@Override
 	public int hashCode() {
-		if (hash == 0) {
-			hash = Objects.hash(property, classLocation, resolver,
-					resolutionState);
+		long n1 = System.nanoTime();
+		boolean miss = false;
+		try {
 			if (hash == 0) {
-				hash = -1;
+				miss = true;
+				hash ^= property == null ? 0 : property.hashCode();
+				hash ^= classLocation == null ? 0 : classLocation.hashCode();
+				hash ^= resolver == null ? 0 : resolver.hashCode();
+				hash ^= resolutionState == null ? 0
+						: resolutionState.hashCode();
+				if (hash == 0) {
+					hash = -1;
+				}
+			}
+			return hash;
+		} finally {
+			long n2 = System.nanoTime();
+			long diff = n2 - n1;
+			hashNanos += diff;
+			if (miss) {
+				hashNanosMiss += diff;
+				hashMiss++;
+			}
+			hashCtr++;
+			if (hashNanos > 10000000L) {
+				long hashNanosMsg = hashNanos / 10000000L;
+				if (hashNanosMsg != AnnotationLocation.hashNanosMsg) {
+					AnnotationLocation.hashNanosMsg = hashNanosMsg;
+					Ax.out("hashNanos: %s [%s] [%s] [%s]", hashNanos, hashCtr,
+							hashMiss, hashNanosMiss);
+				}
 			}
 		}
-		return hash;
 	}
 
 	public boolean isDefiningType(Class<?> clazz) {
@@ -305,6 +350,7 @@ public class AnnotationLocation {
 			// FIXME - dirndl 1x1g - optimise. probably copy-on-write, and share
 			// the location across say all transformation children
 			transformationParent = annotationLocation;
+			transformationParent.ensureResolutionState();
 			if (annotationLocation.resolutionState.resolvedPropertyAnnotations != null) {
 				resolvedPropertyAnnotations = new ArrayList<>();
 				resolvedPropertyAnnotations.addAll(
@@ -399,5 +445,13 @@ public class AnnotationLocation {
 		AnnotationLocation location = new AnnotationLocation(classLocation,
 				property, replaceResolver);
 		return location;
+	}
+
+	public void setResolutionState(ResolutionState resolutionState) {
+		this.resolutionState = resolutionState;
+	}
+
+	public ResolutionState getResolutionState() {
+		return resolutionState;
 	}
 }

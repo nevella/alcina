@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.ResolutionState;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
@@ -43,13 +44,19 @@ public class DefaultAnnotationResolver extends Resolver {
 		MergeStrategy mergeStrategy = Reflections
 				.newInstance(resolution.mergeStrategy());
 		List<Inheritance> inheritance = Arrays.asList(resolution.inheritance());
-		List<A> propertyAnnotations = location.resolutionState.resolvedPropertyAnnotations != null
-				? (List<A>) location.resolutionState.resolvedPropertyAnnotations
-						.stream()
-						.filter(a -> a.annotationType() == annotationClass)
-						.collect(Collectors.toList())
-				: mergeStrategy.resolveProperty(annotationClass,
-						location.property, inheritance, originatingResolver);
+		List<A> propertyAnnotations = null;
+		ResolutionState resolutionState = location.getResolutionState();
+		if (resolutionState != null
+				&& resolutionState.resolvedPropertyAnnotations != null) {
+			propertyAnnotations = (List<A>) location
+					.ensureResolutionState().resolvedPropertyAnnotations
+							.stream()
+							.filter(a -> a.annotationType() == annotationClass)
+							.collect(Collectors.toList());
+		} else {
+			propertyAnnotations = mergeStrategy.resolveProperty(annotationClass,
+					location.property, inheritance, originatingResolver);
+		}
 		Class resolvedLocationClass = classResolver != null
 				? resolvedLocationClass = classResolver.apply(location)
 				: location.classLocation;
