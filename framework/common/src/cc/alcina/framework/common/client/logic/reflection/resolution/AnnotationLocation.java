@@ -59,6 +59,14 @@ public class AnnotationLocation {
 
 	public ResolutionState resolutionState = new ResolutionState();
 
+	public ResolutionState getResolutionState() {
+		return resolutionState;
+	}
+
+	public void setResolutionState(ResolutionState resolutionState) {
+		this.resolutionState = resolutionState;
+	}
+
 	protected AnnotationLocation() {
 	}
 
