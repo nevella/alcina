@@ -19,6 +19,8 @@ public class GridData extends Model.All {
 	public static class Row extends Model.All {
 		public String caption = "";
 
+		public String className;
+
 		public List<String> data = new ArrayList<>();
 
 		List<String> toStringList() {
@@ -57,10 +59,14 @@ public class GridData extends Model.All {
 
 			@Directed(tag = "row")
 			class RowData extends Model.All {
+				@Binding(type = Type.CLASS_PROPERTY)
+				String className;
+
 				@Directed
 				List<TagText> cells;
 
 				RowData(Row row) {
+					className = row.className;
 					cells = row.toStringList().stream()
 							.map(s -> new TagText("cell", s, s))
 							.collect(Collectors.toList());

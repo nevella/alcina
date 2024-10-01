@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -185,17 +183,13 @@ class SerializerReflection {
 				 * double-checking not essential
 				 */
 				typeNode = new TypeNode(clazz);
-				synchronized (typeNode) {
-					typeNodes.put(clazz, typeNode);
-					typeNode.init();
-				}
+				typeNodes.put(clazz, typeNode);
+				typeNode.init();
 			}
 		} else {
 			if (!typeNode.initialised) {
-				boolean initialised = false;
-				synchronized (typeNode) {
-					// the lock will be released on initialisation
-					Preconditions.checkState(typeNode.initialised);
+				synchronized (typeNodes) {
+					// reentrant only for the initialising thread
 				}
 			}
 		}
