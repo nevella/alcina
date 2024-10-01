@@ -205,8 +205,7 @@ public class FlatTreeSerializer {
 				clazz = Reflections.forName(state.keyValues.get(CLASS));
 			}
 			state.keyValues.remove(CLASS);
-			state.serializerReflection = SerializerReflection.get(Set.of(),
-					false);
+			state.serializerReflection = SerializerReflection.get(false);
 			T instance = Reflections.newInstance(clazz);
 			String mappedKeysValue = instance.treeSerializationCustomiser()
 					.mapKeys(value, false);

@@ -28,10 +28,10 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -45,6 +45,8 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
 import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeNode;
 import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeNode.PropertyNode;
+import cc.alcina.framework.common.client.serializer.SerializerReflection.TypeSerializerForType;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
@@ -164,8 +166,14 @@ public class ReflectiveSerializer {
 				return null;
 			}
 			JsonSerialNode.ensureValueSerializers();
-			State state = new State(SerializerReflection.get(Set.of(),
-					options.defaultCollectionTypes), Resolver.get());
+			TransienceContext[] transienceContexts = new TransienceContext[0];
+			if (Al.isBrowser()) {
+				transienceContexts = new TransienceContext[] {
+						TransienceContext.CLIENT };
+			}
+			SerializerReflection serializationSupport = SerializerReflection
+					.get(transienceContexts, options.defaultCollectionTypes);
+			State state = new State(serializationSupport, Resolver.get());
 			state.deserializerOptions = options;
 			// create json doc
 			GraphNode node = new GraphNode(null, null);
@@ -532,7 +540,7 @@ public class ReflectiveSerializer {
 				}
 				if (typeNode == null) {
 					Class type = serialNode.readType(this);
-					typeNode = state.typeNode(type);
+					typeNode = state.serializationSupport.getTypeNode(type);
 				}
 				TypeSerializer serializer = typeNode.serializer;
 				value = serializer.readValue(this);
@@ -549,15 +557,20 @@ public class ReflectiveSerializer {
 				typeNode = state.voidTypeNode;
 				return;
 			}
+			if (toString().equals(
+					"[null,JadexInitModel].[initialTranches,ArrayList].[null,JadeModelJournals].[groupNames,Multimap].[null,ArrayList]")) {
+				int debug = 3;
+			}
 			Class<? extends Object> type = value.getClass();
 			if (propertyNode == null) {
 				if (parent != null && parent.propertyNode != null) {
-					typeNode = parent.propertyNode.childTypeNode(type);
+					typeNode = parent.propertyNode.typeNodeAndVerify(type,
+							true);
 				} else {
-					typeNode = state.typeNode(type);
+					typeNode = state.serializationSupport.getTypeNode(type);
 				}
 			} else {
-				typeNode = propertyNode.typeNode(type);
+				typeNode = propertyNode.typeNodeAndVerify(type, false);
 			}
 		}
 
@@ -935,8 +948,8 @@ public class ReflectiveSerializer {
 		@Override
 		public void writeValueOrContainer(GraphNode node,
 				SerialNode serialNode) {
-			node.typeNode = node.state
-					.typeNode(serializeAs(node.value.getClass()));
+			node.typeNode = node.state.serializationSupport
+					.getTypeNode(serializeAs(node.value.getClass()));
 			ReflectiveSerializer.SerialNode container = serialNode
 					.createPropertyContainer();
 			serialNode.write(node, container);
@@ -1091,17 +1104,12 @@ public class ReflectiveSerializer {
 		State(SerializerReflection serializationSupport, Resolver resolver) {
 			this.serializationSupport = serializationSupport;
 			this.resolver = resolver;
-			voidTypeNode = typeNode(Void.class);
+			voidTypeNode = serializationSupport.getTypeNode(Void.class);
 		}
 
 		PropertyNode propertyNode(Property property) {
-			return typeNode(property.getOwningType()).propertyNode(property);
-		}
-
-		TypeNode typeNode(Class type) {
-			type = ClassUtil.isEnumSubclass(type) ? type.getSuperclass() : type;
-			TypeNode typeNode = serializationSupport.getTypeNode(type);
-			return typeNode;
+			return serializationSupport.getTypeNode(property.getOwningType())
+					.propertyNode(property);
 		}
 	}
 
@@ -1140,32 +1148,6 @@ public class ReflectiveSerializer {
 
 		public abstract void writeValueOrContainer(GraphNode node,
 				SerialNode serialNode);
-	}
-
-	static class TypeSerializerForType {
-		Class actualType;
-
-		TypeSerializer typeSerializer;
-
-		public TypeSerializerForType(Class actualType,
-				TypeSerializer typeSerializer) {
-			this.actualType = actualType;
-			this.typeSerializer = typeSerializer;
-		}
-
-		public void verifyType(Class declaredType) {
-			if (declaredType != null
-					&& !typeSerializer.handlesDeclaredTypeSubclasses()) {
-				if (actualType != Enum.class && actualType != Entity.class
-				// i.e. declaredtype is a supertype of serializertype
-						&& !Reflections.isAssignableFrom(declaredType,
-								actualType)) {
-					throw new IllegalStateException(Ax.format(
-							"Declared type %s cannot be serialized by resolved serializer for type %s",
-							declaredType, actualType));
-				}
-			}
-		}
 	}
 
 	@Reflected

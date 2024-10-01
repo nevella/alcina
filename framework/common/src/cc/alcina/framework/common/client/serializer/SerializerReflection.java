@@ -25,14 +25,11 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypeBounds;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.TypeSerializer;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.TypeSerializerForType;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
-import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
-import cc.alcina.framework.common.client.util.CollectionCreators.LinkedMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
@@ -48,16 +45,19 @@ class SerializerReflection {
 	private static Map<Class, Class> solePossibleImplementation = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	static SerializerReflection get(Set<TransienceContext> transienceContexts,
+	static SerializerReflection get(boolean defaultCollectionTypes) {
+		return get(new TransienceContext[0], defaultCollectionTypes);
+	}
+
+	static SerializerReflection get(TransienceContext[] transienceContexts,
 			boolean defaultCollectionTypes) {
-		if (Al.isBrowser()) {
-			transienceContexts = Stream
-					.concat(transienceContexts.stream(),
-							Stream.of(TransienceContext.CLIENT))
-					.collect(Collectors.toSet());
-		}
+		TransienceContext[] contextTransienceContexts = AlcinaTransient.Support
+				.getTransienceContexts();
+		Stream<TransienceContext> stream = Arrays
+				.stream(contextTransienceContexts);
+		stream = Stream.concat(stream, Arrays.stream(transienceContexts));
 		SerializationModifiers key = new SerializationModifiers(
-				transienceContexts, defaultCollectionTypes);
+				stream.collect(Collectors.toSet()), defaultCollectionTypes);
 		return reflectionByModifiers.computeIfAbsent(key,
 				SerializerReflection::new);
 	}
@@ -125,10 +125,7 @@ class SerializerReflection {
 
 	static SerializerReflection
 			serializationInstance(boolean defaultCollectionTypes) {
-		return get(
-				Arrays.stream(AlcinaTransient.Support.getTransienceContexts())
-						.collect(Collectors.toSet()),
-				defaultCollectionTypes);
+		return get(defaultCollectionTypes);
 	}
 
 	public static Class solePossibleImplementation(Class type) {
@@ -168,20 +165,25 @@ class SerializerReflection {
 			.impl(ConcurrentMapCreator.class).create();
 
 	private Map<Class, TypeNode> typeNodes = Registry
-			.impl(LinkedMapCreator.class).create();
+			.impl(ConcurrentMapCreator.class).create();
 
 	/*
 	 * synchronization is handled by typeNodes being concurrent
 	 */
-	synchronized TypeNode getTypeNode(Class clazz) {
+	TypeNode getTypeNode(Class clazz) {
 		if (ClassUtil.isEnumSubclass(clazz)) {
 			clazz = clazz.getSuperclass();
 		}
 		TypeNode typeNode = typeNodes.get(clazz);
 		if (typeNode == null) {
-			typeNode = new TypeNode(clazz);
-			typeNodes.put(clazz, typeNode);
-			typeNode.init();
+			synchronized (typeNodes) {
+				/*
+				 * double-checking not essential
+				 */
+				typeNode = new TypeNode(clazz);
+				typeNodes.put(clazz, typeNode);
+				typeNode.init();
+			}
 		}
 		return typeNode;
 	}
@@ -194,7 +196,7 @@ class SerializerReflection {
 	class TypeNode {
 		Class<? extends Object> type;
 
-		TypeSerializerForType serializerLocation;
+		SerializerReflection.TypeSerializerForType serializerLocation;
 
 		List<PropertyNode> properties = new ArrayList<>();
 
@@ -261,13 +263,6 @@ class SerializerReflection {
 
 			TypeNode exactTypeNode;
 
-			/*
-			 * These typenode fields are resolution optimisations
-			 */
-			TypeNode lastTypeNode;
-
-			TypeNode lastChildTypeNode;
-
 			Property property;
 
 			PropertySerialization propertySerialization;
@@ -278,7 +273,7 @@ class SerializerReflection {
 				Class exactType = SerializerReflection
 						.solePossibleImplementation(type);
 				if (exactType != null) {
-					exactTypeNode = typeNode(exactType);
+					exactTypeNode = getTypeNode(exactType);
 				}
 				if (defaultCollectionTypes) {
 					// must be synced with the the hardcoded handling in the
@@ -308,20 +303,12 @@ class SerializerReflection {
 							Class soleImplementationType = SerializerReflection
 									.solePossibleImplementation(elementType);
 							if (soleImplementationType != null) {
-								exactChildTypeNode = typeNode(
+								exactChildTypeNode = getTypeNode(
 										soleImplementationType);
 							}
 						}
 					}
 				}
-			}
-
-			public TypeNode childTypeNode(Class<? extends Object> type) {
-				if (lastChildTypeNode == null
-						|| type != lastChildTypeNode.type) {
-					lastChildTypeNode = typeNode(type);
-				}
-				return lastChildTypeNode;
 			}
 
 			String name() {
@@ -338,13 +325,15 @@ class SerializerReflection {
 				return format.toString();
 			}
 
-			public TypeNode typeNode(Class<? extends Object> type) {
-				if (lastTypeNode == null || type != lastTypeNode.type) {
-					lastTypeNode = getTypeNode(type);
-					lastTypeNode.serializerLocation
-							.verifyType(property.getType());
+			public TypeNode typeNodeAndVerify(Class<? extends Object> type,
+					boolean child) {
+				TypeNode typeNode = getTypeNode(type);
+				if (child) {
+					//
+				} else {
+					typeNode.serializerLocation.verifyType(property.getType());
 				}
-				return lastTypeNode;
+				return typeNode;
 			}
 		}
 	}
@@ -445,6 +434,41 @@ class SerializerReflection {
 					:
 					// prserve order (original order will be field)
 					0;
+		}
+	}
+
+	static class TypeSerializerForType {
+		Class actualType;
+
+		ReflectiveSerializer.TypeSerializer typeSerializer;
+
+		public TypeSerializerForType(Class actualType,
+				ReflectiveSerializer.TypeSerializer typeSerializer) {
+			this.actualType = actualType;
+			this.typeSerializer = typeSerializer;
+		}
+
+		private Map<Class, Boolean> verifiedDeclaredTypes = Registry
+				.impl(ConcurrentMapCreator.class).create();
+
+		public void verifyType(Class declaredType) {
+			if (declaredType != null
+					&& !typeSerializer.handlesDeclaredTypeSubclasses()) {
+				if (actualType != Enum.class && actualType != Entity.class) {
+					if (verifiedDeclaredTypes.containsKey(declaredType)) {
+						return;
+					}
+					// i.e. declaredtype is a supertype of serializertype
+					if (Reflections.isAssignableFrom(declaredType,
+							actualType)) {
+						verifiedDeclaredTypes.put(declaredType, true);
+					} else {
+						throw new IllegalStateException(Ax.format(
+								"Declared type %s cannot be serialized by resolved serializer for type %s",
+								declaredType, actualType));
+					}
+				}
+			}
 		}
 	}
 }

@@ -382,10 +382,14 @@ public class JobRegistry {
 		return await(job, 0);
 	}
 
+	/*
+	 * TODO - threading - this is on a different thread to the job performer etc
+	 * - so whether or not JobContext jobContext = activeJobs.get(job); is
+	 * populated is slightly uncertain. Fix by creating barriers
+	 */
 	public Job await(Job job, long maxTime) throws InterruptedException {
-		JobContext jobContext = JobContext.get();
-		if (jobContext != null) {
-			Job contextJob = jobContext.getJob();
+		if (JobContext.has()) {
+			Job contextJob = JobContext.get().getJob();
 			if (contextJob.provideDescendants().noneMatch(j -> j == job)) {
 				TransactionEnvironment.withDomain(() -> {
 					TransactionEnvironment.get().ensureBegun();
@@ -397,10 +401,8 @@ public class JobRegistry {
 		long start = System.currentTimeMillis();
 		ContextAwaiter awaiter = ensureAwaiter(job);
 		TransactionEnvironment.get().commit();
-		if (jobContext == null) {
-			jobContext = activeJobs.get(job);
-		}
 		awaiter.await(maxTime);
+		JobContext jobContext = activeJobs.get(job);
 		contextAwaiters.remove(job);
 		if (maxTime != 0 && System.currentTimeMillis() - start > maxTime) {
 			TransactionEnvironment.withDomain(() -> {

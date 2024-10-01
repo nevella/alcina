@@ -424,12 +424,4 @@ public class AnnotationLocation {
 				property, replaceResolver);
 		return location;
 	}
-
-	public void setResolutionState(ResolutionState resolutionState) {
-		this.resolutionState = resolutionState;
-	}
-
-	public ResolutionState getResolutionState() {
-		return resolutionState;
-	}
 }
