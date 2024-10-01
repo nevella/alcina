@@ -2,6 +2,9 @@ package cc.alcina.framework.servlet.logging;
 
 import java.io.File;
 import java.util.Date;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.flight.FlightEventWrappable;
@@ -29,16 +32,54 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 		return Registry.impl(FlightEventRecorder.class);
 	}
 
+	RecorderThread recorderThread;
+
+	boolean finished;
+
+	class RecorderThread extends Thread {
+		BlockingQueue<FlightEvent> events = new LinkedBlockingDeque<>();
+
+		RecorderThread() {
+			super("flightevent-recorder");
+		}
+
+		@Override
+		public void run() {
+			while (!finished) {
+				try {
+					FlightEvent event = events.poll(1, TimeUnit.SECONDS);
+					if (event != null) {
+						writeMessage(event);
+					}
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	@Override
 	public void onApplicationStartup() {
+		boolean finished = false;
 		if (!Configuration.is("enabled")) {
 			return;
 		}
 		ProcessObservers.observe(this, true);
+		this.recorderThread = new RecorderThread();
+		this.recorderThread.start();
+	}
+
+	@Override
+	public void onApplicationShutdown() {
+		finished = true;
 	}
 
 	@Override
 	public synchronized void topicPublished(FlightEvent message) {
+		recorderThread.events.add(message);
+	}
+
+	void writeMessage(FlightEvent message) {
 		File writeTo = null;
 		try {
 			if (sessionId == null) {

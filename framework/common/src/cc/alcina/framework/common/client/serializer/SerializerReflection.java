@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.serializer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -11,7 +10,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -53,11 +53,15 @@ class SerializerReflection {
 			boolean defaultCollectionTypes) {
 		TransienceContext[] contextTransienceContexts = AlcinaTransient.Support
 				.getTransienceContexts();
-		Stream<TransienceContext> stream = Arrays
-				.stream(contextTransienceContexts);
-		stream = Stream.concat(stream, Arrays.stream(transienceContexts));
-		SerializationModifiers key = new SerializationModifiers(
-				stream.collect(Collectors.toSet()), defaultCollectionTypes);
+		Set<TransienceContext> set = new LinkedHashSet<>();
+		for (TransienceContext transienceContext : contextTransienceContexts) {
+			set.add(transienceContext);
+		}
+		for (TransienceContext transienceContext : transienceContexts) {
+			set.add(transienceContext);
+		}
+		SerializationModifiers key = new SerializationModifiers(set,
+				defaultCollectionTypes);
 		return reflectionByModifiers.computeIfAbsent(key,
 				SerializerReflection::new);
 	}
@@ -168,7 +172,7 @@ class SerializerReflection {
 			.impl(ConcurrentMapCreator.class).create();
 
 	/*
-	 * synchronization is handled by typeNodes being concurrent
+	 * this must be synchronized,
 	 */
 	TypeNode getTypeNode(Class clazz) {
 		if (ClassUtil.isEnumSubclass(clazz)) {
@@ -181,8 +185,18 @@ class SerializerReflection {
 				 * double-checking not essential
 				 */
 				typeNode = new TypeNode(clazz);
-				typeNodes.put(clazz, typeNode);
-				typeNode.init();
+				synchronized (typeNode) {
+					typeNodes.put(clazz, typeNode);
+					typeNode.init();
+				}
+			}
+		} else {
+			if (!typeNode.initialised) {
+				boolean initialised = false;
+				synchronized (typeNode) {
+					// the lock will be released on initialisation
+					Preconditions.checkState(typeNode.initialised);
+				}
 			}
 		}
 		return typeNode;
@@ -194,6 +208,8 @@ class SerializerReflection {
 	 * to Java null, the type node type will be Void
 	 */
 	class TypeNode {
+		volatile boolean initialised;
+
 		Class<? extends Object> type;
 
 		SerializerReflection.TypeSerializerForType serializerLocation;
@@ -232,6 +248,7 @@ class SerializerReflection {
 					Ax.out("Exclude: %s", property.toLocationString());
 				}
 			}
+			initialised = true;
 		}
 
 		boolean hasProperties() {

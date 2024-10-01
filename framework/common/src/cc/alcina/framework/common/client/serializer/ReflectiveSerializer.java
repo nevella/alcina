@@ -557,10 +557,6 @@ public class ReflectiveSerializer {
 				typeNode = state.voidTypeNode;
 				return;
 			}
-			if (toString().equals(
-					"[null,JadexInitModel].[initialTranches,ArrayList].[null,JadeModelJournals].[groupNames,Multimap].[null,ArrayList]")) {
-				int debug = 3;
-			}
 			Class<? extends Object> type = value.getClass();
 			if (propertyNode == null) {
 				if (parent != null && parent.propertyNode != null) {
