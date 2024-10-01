@@ -174,6 +174,9 @@ class SerializerReflection {
 	 * synchronization is handled by typeNodes being concurrent
 	 */
 	synchronized TypeNode getTypeNode(Class clazz) {
+		if (ClassUtil.isEnumSubclass(clazz)) {
+			clazz = clazz.getSuperclass();
+		}
 		TypeNode typeNode = typeNodes.get(clazz);
 		if (typeNode == null) {
 			typeNode = new TypeNode(clazz);
