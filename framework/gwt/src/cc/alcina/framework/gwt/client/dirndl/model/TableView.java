@@ -91,6 +91,9 @@ public class TableView extends
 					if (value == null) {
 						return null;
 					}
+					if (value instanceof Comparable) {
+						return (Comparable) value;
+					}
 					return value.toString();
 				}
 			};

@@ -254,6 +254,13 @@ public final class MutationNode {
 		}
 		case local: {
 			Node target = node();
+			/*
+			 * Check - this may be ok (are we sending attr mutations at the end?
+			 * in which case ok. if in order, not ok)
+			 */
+			if (target == null) {
+				return null;
+			}
 			String currentValue = ((Element) target)
 					.getAttribute(attributeName);
 			((Element) target).setAttribute(attributeName, characterData);
@@ -335,6 +342,13 @@ public final class MutationNode {
 		}
 		case local: {
 			Node target = node();
+			/*
+			 * Check - this may be ok (are we sending attr mutations at the end?
+			 * in which case ok. if in order, not ok)
+			 */
+			if (target == null) {
+				return null;
+			}
 			String currentValue = ((Element) target)
 					.getAttribute(attributeName);
 			((Element) target).removeAttribute(attributeName);

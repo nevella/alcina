@@ -131,9 +131,16 @@ public interface RemoteUi {
 	@Property.Not
 	void setEnvironment(Environment environment);
 
+	/**
+	 * Executed before each event cycle in the pump (analagous to a js event
+	 * pump cycle). Use this to say set up a Transaction context
+	 */
 	default void onEnterIteration() {
 	}
 
+	/**
+	 * Executed at the end of each event cycle in the pump
+	 */
 	default void onExitIteration() {
 	}
 

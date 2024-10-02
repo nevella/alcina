@@ -7,6 +7,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public enum BooleanEnum {
 	FALSE, TRUE;
 
+	public static boolean is(BooleanEnum b) {
+		return toBooleanPrimitive(b);
+	}
+
 	public static BooleanEnum fromBoolean(Boolean b) {
 		return b == null ? null : b ? TRUE : FALSE;
 	}

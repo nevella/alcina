@@ -23,6 +23,8 @@ import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
+import cc.alcina.framework.common.client.job.JobRelation;
+import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.lock.JobResource;
@@ -35,6 +37,7 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timeout;
@@ -793,5 +796,33 @@ public class JobContext {
 		public Node getSelectedProcessNode() {
 			return JobContext.getSelectedProcessNode();
 		}
+	}
+
+	public static String getJobTreeContextAsString() {
+		FormatBuilder format = new FormatBuilder();
+		String prelude = Ax.format("Job tree - thread %s",
+				Thread.currentThread().getName());
+		format.line(prelude);
+		if (!JobContext.has()) {
+			format.append("[no job context]");
+		} else {
+			List<String> jobStrings = new ArrayList<>();
+			Job jobCursor = JobContext.get().getJob();
+			while (jobCursor != null) {
+				jobStrings.add(0, jobCursor.toString());
+				Set<? extends JobRelation> toRelations = jobCursor
+						.getToRelations();
+				Optional<? extends JobRelation> awaiter = toRelations.stream()
+						.filter(t -> t.getType() == JobRelationType.AWAITED)
+						.findFirst();
+				if (awaiter.isPresent()) {
+					jobCursor = awaiter.get().getFrom();
+					continue;
+				}
+				jobCursor = jobCursor.provideParent().orElse(null);
+			}
+			jobStrings.forEach(js -> format.line("job - %s", js));
+		}
+		return format.toString();
 	}
 }

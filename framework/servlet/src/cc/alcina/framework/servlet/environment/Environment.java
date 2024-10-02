@@ -494,6 +494,7 @@ class Environment {
 	 */
 	private void enter(Runnable runnable) {
 		try {
+			ui.onEnterIteration();
 			try {
 				scheduler.pump(true);
 				runnable.run();
@@ -511,6 +512,8 @@ class Environment {
 			e.printStackTrace();
 			// TODO - allow exception catch (uncaught exception handler) here
 			throw e;
+		} finally {
+			ui.onExitIteration();
 		}
 	}
 
