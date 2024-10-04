@@ -217,6 +217,8 @@ public abstract class DevConsole implements ClipboardOwner {
 	int consoleOutputFileMark;
 
 	public DevConsole(String[] args) {
+		System.setProperty("java.util.logging.config.file",
+				"/g/alcina/extras/dev/src/cc/alcina/extras/dev/console/logging.properties");
 		if (args.length == 0) {
 			String propertyArgs = System.getProperty("DevConsole.args");
 			if (Ax.notBlank(propertyArgs)) {
@@ -248,8 +250,6 @@ public abstract class DevConsole implements ClipboardOwner {
 		} catch (Exception e) {
 			Ax.simpleExceptionOut(e);
 		}
-		System.setProperty("java.util.logging.config.file",
-				"/g/alcina/extras/dev/src/cc/alcina/extras/dev/console/logging.properties");
 		logger = LoggerFactory.getLogger(getClass());
 		shells.push(DevConsoleCommand.class);
 		launchConfiguration = new LaunchConfiguration(args);
@@ -1133,5 +1133,9 @@ public abstract class DevConsole implements ClipboardOwner {
 				throw WrappedRuntimeException.wrap(e);
 			}
 		}
+	}
+
+	public static int timeSinceStartup() {
+		return (int) (System.currentTimeMillis() - startupTime);
 	}
 }
