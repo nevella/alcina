@@ -459,6 +459,7 @@ public class JobDomain {
 					JobState.ALLOCATED);
 			stat.total = stat.active + stat.pending + stat.completed;
 			stat.name = job.toDisplayName();
+			stat.taskClass = job.provideTaskClass();
 			stat.jobId = String.valueOf(job.getId());
 			stat.startTime = job.getStartTime() != null ? job.getStartTime()
 					: job.getCreationDate();
@@ -774,6 +775,8 @@ public class JobDomain {
 		}
 
 		public class QueueStat {
+			public Class<? extends Task> taskClass;
+
 			public int active;
 
 			public int pending;

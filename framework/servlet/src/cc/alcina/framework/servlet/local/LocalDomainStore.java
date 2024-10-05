@@ -216,6 +216,8 @@ public class LocalDomainStore {
 
 	class CommitToStorageTransformListenerNoRemote
 			extends CommitToStorageTransformListener {
+		boolean committing;
+
 		/*
 		 * A simplified version of the superclass methods (which just pushes the
 		 * grouped transforms as a 'persistent' request)
@@ -225,31 +227,40 @@ public class LocalDomainStore {
 		 */
 		@Override
 		protected synchronized void commit0() {
-			DomainTransformRequestPersistent request = Reflections.newInstance(
-					persistenceImplementations.getPersistentRequestClass());
-			int requestId = localRequestId++;
-			request.setRequestId(requestId);
-			request.setClientInstance(
-					PermissionsManager.get().getClientInstance());
-			transformQueue.forEach(event -> {
-				DomainTransformEventPersistent persistentEvent = Reflections
+			try {
+				committing = true;
+				DomainTransformRequestPersistent request = Reflections
 						.newInstance(persistenceImplementations
-								.getPersistentEventClass());
-				persistentEvent.wrap(event);
-				request.getEvents().add(persistentEvent);
-			});
-			transformQueue.clear();
-			persistenceEvents.publish(request);
-			// nuffink doink...yet
-			// super.commit0();
-			/*
-			 * create a faux DTRP publish on access queue
-			 */
+								.getPersistentRequestClass());
+				int requestId = localRequestId++;
+				request.setRequestId(requestId);
+				request.setClientInstance(
+						PermissionsManager.get().getClientInstance());
+				transformQueue.forEach(event -> {
+					DomainTransformEventPersistent persistentEvent = Reflections
+							.newInstance(persistenceImplementations
+									.getPersistentEventClass());
+					persistentEvent.wrap(event);
+					request.getEvents().add(persistentEvent);
+				});
+				transformQueue.clear();
+				persistenceEvents.publish(request);
+				// nuffink doink...yet
+				// super.commit0();
+				/*
+				 * create a faux DTRP publish on access queue
+				 */
+			} finally {
+				committing = false;
+			}
 		}
 
 		@Override
 		public void domainTransform(DomainTransformEvent event) {
-			LocalDomainQueue.checkOnDomainThread();
+			LocalDomainQueue.checkInDomainContext();
+			if (committing) {
+				int debug = 3;
+			}
 			super.domainTransform(event);
 		}
 
@@ -296,7 +307,7 @@ public class LocalDomainStore {
 
 		@Override
 		public <V extends Entity> V find(V v) {
-			LocalDomainQueue.checkOnDomainThread();
+			LocalDomainQueue.checkInDomainContext();
 			return domain.getCache().get(v.toLocator());
 		}
 
@@ -317,7 +328,7 @@ public class LocalDomainStore {
 
 		@Override
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
-			LocalDomainQueue.checkOnDomainThread();
+			LocalDomainQueue.checkInDomainContext();
 			return domain.getCache().stream(clazz);
 		}
 
@@ -333,7 +344,7 @@ public class LocalDomainStore {
 
 			@Override
 			public Stream<V> stream() {
-				LocalDomainQueue.checkOnDomainThread();
+				LocalDomainQueue.checkInDomainContext();
 				return query0(entityClass, this);
 			}
 		}

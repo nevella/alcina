@@ -1,10 +1,9 @@
 package cc.alcina.framework.servlet.local;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,25 +12,36 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 @Registration.Singleton
 public class LocalDomainQueue {
-	public static void checkNotOnDomainThread() {
-		if (Thread.currentThread() == get().thread) {
+	public static final String CONTEXT_IN_DOMAIN = LocalDomainQueue.class
+			.getName() + ".CONTEXT_IN_DOMAIN";
+
+	private static boolean paused;
+
+	public static void checkNotInDomainContext() {
+		if (inDomainContext()) {
+			paused = true;
 			throw new IllegalStateException(
-					Ax.format("Calling blocking code on domain thread: %s",
+					Ax.format("Calling blocking code in domain context: %s",
 							Thread.currentThread()));
 		}
 	}
 
-	public static void checkOnDomainThread() {
-		if (Thread.currentThread() != get().thread) {
+	public static void checkInDomainContext() {
+		if (!inDomainContext()) {
 			throw new IllegalStateException(Ax.format(
-					"Calling domain modification code on non-domain thread: %s",
+					"Calling domain modification code in non-domain context: %s",
 					Thread.currentThread()));
 		}
+	}
+
+	static boolean inDomainContext() {
+		return LooseContext.is(CONTEXT_IN_DOMAIN);
 	}
 
 	public static LocalDomainQueue get() {
@@ -43,83 +53,129 @@ public class LocalDomainQueue {
 		get().execute0(runnable);
 	}
 
-	private BlockingQueue<RunnableEntry> queue = new LinkedBlockingQueue<>();
-
-	private Thread thread;
-
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	QueueExecutor queueExecutor;
+
 	public LocalDomainQueue() {
-		QueueExecutorPoller executorPoller = new QueueExecutorPoller();
-		thread = new Thread(executorPoller, "local-domain-access");
-		thread.setDaemon(true);
-		thread.start();
+		this.queueExecutor = new QueueExecutor();
 	}
 
 	private void execute0(ThrowingRunnable runnable) {
-		if (Thread.currentThread() == thread) {
-			try {
-				// reentrant call
-				runnable.run();
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
-			}
-		} else {
-			RunnableEntry entry = new RunnableEntry(runnable);
-			queue.add(entry);
-			entry.await();
-		}
+		queueExecutor.queue(runnable);
 	}
 
-	class QueueExecutorPoller implements Runnable {
-		boolean finished;
+	/**
+	 * TODO - make optionally non-reentrant; and non-blocking; and
+	 * context-clearing
+	 * 
+	 * @author nick@alcina.cc
+	 *
+	 */
+	class QueueExecutor {
+		private BlockingQueue<RunnableEntry> queue = new LinkedBlockingQueue<>();
 
-		@Override
-		public void run() {
-			while (!finished) {
-				RunnableEntry entry = null;
+		void queue(ThrowingRunnable runnable) {
+			if (paused) {
+				synchronized (LocalDomainQueue.class) {
+					try {
+						LocalDomainQueue.class.wait();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+			if (inDomainContext()) {
 				try {
-					LooseContext.push();
-					entry = queue.take();
-					entry.context.forEach((k, v) -> LooseContext.set(k, v));
-					entry.runnable.run();
+					// reentrant call
+					runnable.run();
+				} catch (Exception e) {
+					throw WrappedRuntimeException.wrap(e);
+				}
+			} else {
+				RunnableEntry entry = new RunnableEntry(runnable);
+				synchronized (this) {
+					queue.add(entry);
+					int size = queue.size();
+				}
+				pump(entry);
+			}
+		}
+
+		void pump(RunnableEntry entry) {
+			for (;;) {
+				RunnableEntry head = queue.peek();
+				if (head == entry) {
+					entry.unblock();
+					entry.execute();
+					queue.poll();
+					RunnableEntry next = queue.peek();
+					/*
+					 * There's a race (thread A peeks here, thread B peeks
+					 * earlier) - but they'll just aee and unblock the *same*
+					 * object
+					 */
+					if (next != null) {
+						next.unblock();
+					}
+					return;
+				} else {
+					entry.await();
+				}
+			}
+		}
+
+		IdCounter counter = new IdCounter();
+
+		// FIXME - localdomain - should *probably* be a completable future
+		class RunnableEntry {
+			ThrowingRunnable runnable;
+
+			CountDownLatch latch = new CountDownLatch(1);
+
+			Throwable throwable;
+
+			long id;
+
+			RunnableEntry(ThrowingRunnable runnable) {
+				// currently unused (LDQ is reentrant)
+				id = counter.nextId();
+				this.runnable = runnable;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("t: %s - id: %s",
+						Thread.currentThread().getName(), id);
+			}
+
+			void unblock() {
+				latch.countDown();
+			}
+
+			void execute() {
+				try {
+					LooseContext.pushWithTrue(CONTEXT_IN_DOMAIN);
+					runnable.run();
 				} catch (Throwable t) {
 					logger.warn("Local domain access issue", t);
-					entry.throwable = t;
+					this.throwable = t;
 				} finally {
-					if (entry != null) {
-						entry.latch.countDown();
-						entry = null;
-					}
 					LooseContext.pop();
 				}
 			}
-		}
-	}
 
-	// FIXME - localdomain - should *probably* be a completable future
-	class RunnableEntry {
-		ThrowingRunnable runnable;
-
-		CountDownLatch latch = new CountDownLatch(1);
-
-		Throwable throwable;
-
-		Map<String, Object> context = new LinkedHashMap<>();
-
-		RunnableEntry(ThrowingRunnable runnable) {
-			context.putAll(LooseContext.getContext().getProperties());
-			this.runnable = runnable;
-		}
-
-		void await() {
-			try {
-				latch.await();
-				if (throwable != null) {
-					throw throwable;
+			void await() {
+				for (;;) {
+					try {
+						if (latch.await(1, TimeUnit.SECONDS)) {
+							break;
+						}
+					} catch (Throwable e) {
+						throw WrappedRuntimeException.wrap(e);
+					}
 				}
-			} catch (Throwable e) {
-				throw WrappedRuntimeException.wrap(e);
 			}
 		}
 	}

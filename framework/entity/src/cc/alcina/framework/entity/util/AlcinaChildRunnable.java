@@ -215,7 +215,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 	}
 
 	public AlcinaChildRunnable withContextSnapshot() {
-		copyContext.putAll(LooseContext.getContext().getProperties());
+		copyContext
+				.putAll(LooseContext.getContext().snapshot().getProperties());
 		return this;
 	}
 

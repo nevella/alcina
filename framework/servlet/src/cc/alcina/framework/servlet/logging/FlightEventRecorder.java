@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
@@ -88,8 +89,8 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev
 			ensureEventsFolder();
 			writeTo = FileUtils.child(eventsFolder,
 					String.valueOf(message.id) + ".json");
-			Io.write().asReflectiveSerialized(true).object(message)
-					.toFile(writeTo);
+			String serialized = ReflectiveSerializer.serialize(message);
+			Io.write().string(serialized).toFile(writeTo);
 		} catch (Exception e) {
 			e.printStackTrace();
 			if (writeTo != null) {

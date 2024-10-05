@@ -362,10 +362,10 @@ public class JobScheduler {
 			jobRegistry.withJobMetadataLock(
 					getClass().getName() + "::futuresToPending", () -> {
 						// localdomain support
-						Transaction.ensureBegun();
+						TransactionEnvironment.get().ensureBegun();
 						futuresToPending(event);
 						refreshFutures(event);
-						Transaction.commit();
+						TransactionEnvironment.get().commit();
 					});
 		}
 		if (event.type == ScheduleEventType.SHUTDOWN) {
