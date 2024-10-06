@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken.Handler;
@@ -251,7 +251,7 @@ class ClientExecutionQueue implements Runnable {
 		messageTransport.registerAcceptor(acceptor);
 	}
 
-	MessageTransportLayer transportLayer = new MessageTransportLayerServer();
+	MessageTransportLayer2 transportLayer = new MessageTransportLayerServer();
 
 	class MessageTransport {
 		ToClientMessageAcceptor acceptor;

@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import com.google.common.base.Preconditions;
+
 public class SequentialIdGenerator {
 	private long id;
 
@@ -18,6 +20,12 @@ public class SequentialIdGenerator {
 
 	public long get() {
 		return id;
+	}
+
+	public synchronized int incrementAndGetInt() {
+		long value = incrementAndGet();
+		Preconditions.checkState(value < Integer.MAX_VALUE);
+		return (int) value;
 	}
 
 	public synchronized long incrementAndGet() {
