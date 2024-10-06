@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.environment;
 import java.util.List;
 
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
 class MessageTransportLayerServer extends MessageTransportLayer2 {
 	class SendChannelImpl extends SendChannel {
@@ -56,5 +57,22 @@ class MessageTransportLayerServer extends MessageTransportLayer2 {
 	@Override
 	protected ReceiveChannel receiveChannel() {
 		return receiveChannel;
+	}
+
+	/*
+ * @formatter:off
+ * 
+ * distribute etc incoming messages
+ * 
+ * await empty to-process queue (unless a from-server synchronous message needs sending)
+ * 
+ * send outgoing messages
+ * 
+ * * @formatter:on
+ */
+	void onReceivedToken(RequestToken token) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'onReceivedToken'");
 	}
 }

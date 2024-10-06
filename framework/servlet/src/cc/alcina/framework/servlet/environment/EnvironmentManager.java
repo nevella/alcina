@@ -42,6 +42,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequ
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.dom.Feature_EnvironmentManager;
 
 /**
@@ -284,5 +285,14 @@ public class EnvironmentManager {
 
 	public void invokeInSingletonEnvironment(Runnable runnable) {
 		singletonEnvironment().access().invoke(runnable);
+	}
+
+	public void handleRequest(RequestToken token) throws Exception {
+		Environment env = getEnvironment(token.request.session);
+		if (env == null) {
+			throw buildInvalidClientException(
+					token.request.session.componentClassName);
+		}
+		env.access().handleRequest(token);
 	}
 }

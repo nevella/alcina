@@ -137,7 +137,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 				if (currentEventMessage == null) {
 					return;
 				}
-				ClientRpc.send(currentEventMessage, true);
+				ClientRpc.send(currentEventMessage);
 				currentEventMessage = null;
 			});
 		}
@@ -209,7 +209,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 		}
 		if (event.getType().equals(BrowserEvents.PAGEHIDE)) {
 			// immediate dispatch
-			ClientRpc.send(currentEventMessage, true);
+			ClientRpc.send(currentEventMessage);
 			currentEventMessage = null;
 		}
 	}

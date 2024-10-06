@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken.Handler;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMessageAcceptor;
 /*
  * This queue/thread dispatches messages to the client, waiting for its
@@ -191,19 +191,31 @@ class ClientExecutionQueue implements Runnable {
 	}
 
 	/*
-	 * Called from a servlet receiver thread (so not the cl-ex thread).
+	 * TODO -
 	 */
 	void handleFromClientMessage(MessageToken token) {
-		Message protocolMessage = token.request.protocolMessage;
-		if (protocolMessage.sync) {
-			handleFromClientMessageOnThread(token);
-		} else {
-			addDispatchable(new AsyncDispatchable(token));
-			try {
-				token.latch.await();
-			} catch (InterruptedException e) {
-				Ax.simpleExceptionOut(e);
-			}
+		// Message protocolMessage = token.request.protocolMessage;
+		// if (protocolMessage.sync) {
+		// handleFromClientMessageOnThread(token);
+		// } else {
+		// addDispatchable(new AsyncDispatchable(token));
+		// try {
+		// token.latch.await();
+		// } catch (InterruptedException e) {
+		// Ax.simpleExceptionOut(e);
+		// }
+		// }
+	}
+
+	/*
+	 * Called from a servlet receiver thread (so not the cl-ex thread).
+	 */
+	void handleFromClientRequest(RequestToken token) {
+		transportLayer.onReceivedToken(token);
+		try {
+			token.latch.await();
+		} catch (InterruptedException e) {
+			Ax.simpleExceptionOut(e);
 		}
 	}
 
@@ -220,6 +232,9 @@ class ClientExecutionQueue implements Runnable {
 	 * environment's event queue/thread. If an http thread is blocking while
 	 * waiting for the token to be processed, it will be unblocked by the
 	 * token.latch.countDown() call
+	 * 
+	 * TODO - romcom - remove?
+	 * 
 	 * 
 	 */
 	void handleFromClientMessageOnThread(MessageToken token) {
@@ -251,7 +266,7 @@ class ClientExecutionQueue implements Runnable {
 		messageTransport.registerAcceptor(acceptor);
 	}
 
-	MessageTransportLayer2 transportLayer = new MessageTransportLayerServer();
+	MessageTransportLayerServer transportLayer = new MessageTransportLayerServer();
 
 	class MessageTransport {
 		ToClientMessageAcceptor acceptor;

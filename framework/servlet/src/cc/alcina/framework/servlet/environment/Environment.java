@@ -49,6 +49,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMessageAcceptor;
 
 /*
@@ -680,6 +681,12 @@ class Environment {
 		public void registerToClientMessageAcceptor(
 				ToClientMessageAcceptor acceptor) {
 			queue.registerToClientMessageAcceptor(acceptor);
+		}
+
+		public void handleRequest(RequestToken token) {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'handleRequest'");
 		}
 	}
 }

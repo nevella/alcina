@@ -242,6 +242,17 @@ public class RemoteComponentProtocol {
 					return null;
 				}
 			}
+
+			public static ProcessingException wrap(Exception e) {
+				Message.ProcessingException processingException = new Message.ProcessingException();
+				processingException.exceptionClassName = e.getClass().getName();
+				processingException.exceptionMessage = CommonUtils
+						.toSimpleExceptionMessage(e);
+				if (e instanceof ProtocolException) {
+					processingException.protocolException = (ProtocolException) e;
+				}
+				return processingException;
+			}
 		}
 
 		/*
