@@ -4,8 +4,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -25,6 +29,8 @@ public class MethodContext {
 	private Map<String, Object> context = new LinkedHashMap<>();
 
 	private String metricKey;
+
+	private Class metricKeyClass;
 
 	private boolean wrappingTransaction;
 
@@ -93,7 +99,9 @@ public class MethodContext {
 					ThreadedPermissionsManager.cast().popUser();
 				}
 				if (metricKey != null) {
-					MetricLogging.get().end(metricKey);
+					Logger logger = metricKeyClass == null ? null
+							: LoggerFactory.getLogger(metricKeyClass);
+					MetricLogging.get().end(metricKey, logger);
 				}
 				if (threadName != null) {
 					currentThread.setName(entryThreadName);
@@ -147,6 +155,18 @@ public class MethodContext {
 
 	public MethodContext withMetricKey(String metricKey) {
 		this.metricKey = metricKey;
+		return this;
+	}
+
+	/**
+	 * 
+	 * @param metricKeyClass
+	 *            will be used as the Logger source class
+	 * @return
+	 */
+	public MethodContext withMetricKeyClass(Class metricKeyClass) {
+		withMetricKey(NestedName.get(metricKeyClass));
+		this.metricKeyClass = metricKeyClass;
 		return this;
 	}
 
