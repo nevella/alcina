@@ -440,15 +440,17 @@ public class TreeProcess {
 	}
 
 	public static class NodeException extends Exception {
-		private Node selected;
+		public String nodeTreePath;
 
-		public NodeException(Node selected, Exception exception) {
+		public String nodeContents;
+
+		public String nodeDisplayNamePath;
+
+		public NodeException(Node node, Exception exception) {
 			super(exception);
-			this.selected = selected;
-		}
-
-		public Node getSelected() {
-			return this.selected;
+			this.nodeTreePath = node.treePath();
+			this.nodeDisplayNamePath = node.displayNamePath();
+			this.nodeContents = node.toString();
 		}
 	}
 
