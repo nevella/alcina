@@ -694,7 +694,7 @@ class JobAllocator {
 		if (queue.job.provideChildren().count() > 0
 				&& queue.job.provideChildrenAndChildSubsequents()
 						.allMatch(Job::provideIsComplete)) {
-			Ax.err("children are complete, but waiting on lock - %s",
+			logger.info("children are complete, but waiting on lock - {}",
 					queue.job);
 			// Ax.err("DEVEX-0 -- Marking as children complete - latch issue -
 			// %s",
