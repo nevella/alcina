@@ -40,6 +40,16 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	private boolean details;
 
+	private boolean truncateFields = true;
+
+	public boolean isTruncateFields() {
+		return truncateFields;
+	}
+
+	public void setTruncateFields(boolean truncateFields) {
+		this.truncateFields = truncateFields;
+	}
+
 	private int limit = 50;
 
 	public int getLimit() {
@@ -120,7 +130,9 @@ public class TaskLogJobDetails extends PerformerTask {
 						fieldText = CommonUtils.toLimitedCollectionString(
 								(Collection<?>) fieldValue, 50);
 					} else {
-						fieldText = Ax.trim(fieldValue.toString(), 100000);
+						String string = fieldValue.toString();
+						fieldText = truncateFields ? Ax.trim(string, 100000)
+								: string;
 					}
 					row.cell(p.getName()).cell(fieldText)
 							.style("whitespace:pre-wrap");
@@ -147,6 +159,8 @@ public class TaskLogJobDetails extends PerformerTask {
 		StringMap map = StringMap.flatten(parameterMap);
 		jobId = Long.parseLong(map.get("id"));
 		limit = Integer.parseInt(map.getOrDefault("limit", "50"));
+		truncateFields = Boolean
+				.parseBoolean(map.getOrDefault("truncateFields", "true"));
 		details = map.is("details");
 		return this;
 	}
