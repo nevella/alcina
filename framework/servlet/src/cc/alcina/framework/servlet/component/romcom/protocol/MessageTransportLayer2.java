@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -43,6 +44,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * received, receipt has been acknowledged and the packet can be released
  */
 public abstract class MessageTransportLayer2 {
+	@Reflected
 	public enum SendChannelId {
 		CLIENT_TO_SERVER, SERVER_TO_CLIENT
 	}
@@ -142,6 +144,8 @@ public abstract class MessageTransportLayer2 {
 
 		public Date published;
 
+		public Date sendExceptionDate;
+
 		void queuedForDispatch() {
 			sent = new Date();
 		}
@@ -202,11 +206,18 @@ public abstract class MessageTransportLayer2 {
 			return transportHistory.sent == null
 					|| (transportHistory.resendRequested != null
 							&& transportHistory.sent
-									.before(transportHistory.resendRequested));
+									.before(transportHistory.resendRequested))
+					|| (transportHistory.sendExceptionDate != null
+							&& transportHistory.sent.before(
+									transportHistory.sendExceptionDate));
 		}
 
 		boolean wasAcknowledged(EnvelopeId highestReceivedEnvelopeId) {
 			return transportHistory.wasAcknowledged(highestReceivedEnvelopeId);
+		}
+
+		public void onSendException(Throwable exception) {
+			transportHistory.sendExceptionDate = new Date();
 		}
 	}
 
@@ -252,7 +263,7 @@ public abstract class MessageTransportLayer2 {
 		/*
 		 * If no inflight or retry, send
 		 */
-		protected void conditionallySend() {
+		public void conditionallySend() {
 			synchronized (unacknowledgedMessages) {
 				/*
 				 * This path doesn't send if there's *only* receipt metadata to
@@ -282,6 +293,12 @@ public abstract class MessageTransportLayer2 {
 					});
 				}
 			}
+		}
+
+		public void onReceiveSuccess() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'onReceiveSuccess'");
 		}
 	}
 

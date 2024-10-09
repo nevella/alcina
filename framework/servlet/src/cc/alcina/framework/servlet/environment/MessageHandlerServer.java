@@ -61,8 +61,8 @@ public abstract class MessageHandlerServer<PM extends Message>
 
 		@Override
 		public void accept(Message message) {
-			token.response.protocolMessage = message;
-			latch.countDown();
+			// token.response.protocolMessage = message;
+			// latch.countDown();
 		}
 	}
 
@@ -118,8 +118,12 @@ public abstract class MessageHandlerServer<PM extends Message>
 		@Override
 		public void handle(MessageToken token, Environment.Access env,
 				Message.Startup message) {
+			/*
+			 * the startup message handler will send a BeginAwaitLoop message to
+			 * the server at the end of processing
+			 */
 			env.startup(token, message);
-			token.response.protocolMessage = new Message.BeginAwaitLoop();
+			// token.response.protocolMessage = new Message.BeginAwaitLoop();
 		}
 
 		// rather than throwing if different to current (like other packets), a

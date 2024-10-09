@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -32,8 +31,6 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
  */
 @Registration.Singleton
 public class ClientRpc {
-	RemoteComponentProtocol.Session session;
-
 	int awaitDelay = 0;
 
 	public static void runAsync(Class clazz, Runnable runnable) {
@@ -170,7 +167,7 @@ public class ClientRpc {
 		}
 	}
 
-	class ExceptionHandler
+	static class ExceptionHandler
 			implements BiConsumer<RemoteComponentRequest, Throwable> {
 		@Override
 		public void accept(RemoteComponentRequest t, Throwable u) {
@@ -181,7 +178,7 @@ public class ClientRpc {
 				case 0:
 				case 404:
 					setState(State.err_recoverable);
-					awaitDelay++;
+					get().awaitDelay++;
 					break;
 				default:
 					setState(State.err_finished);

@@ -563,11 +563,20 @@ class Environment {
 			return session;
 		}
 
+		/*
+		 * Fixme ROMCOM -
+		 * 
+		 * envelope handles session validation
+		 * 
+		 * transport handles last packet received
+		 * 
+		 * 
+		 */
 		void handleFromClientMessage(MessageToken token) throws Exception {
-			validateSession(token.request.session,
-					((MessageHandlerServer) token.messageHandler)
-							.isValidateClientInstanceUid());
-			lastPacketsReceived.set(System.currentTimeMillis());
+			// validateSession(token.request.session,
+			// ((MessageHandlerServer) token.messageHandler)
+			// .isValidateClientInstanceUid());
+			// lastPacketsReceived.set(System.currentTimeMillis());
 			queue.handleFromClientMessage(token);
 		}
 

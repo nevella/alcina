@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken.Handler;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
@@ -240,10 +241,9 @@ class ClientExecutionQueue implements Runnable {
 	void handleFromClientMessageOnThread(MessageToken token) {
 		try {
 			Handler<Environment.Access, Message> messageHandler = (Handler<Environment.Access, Message>) token.messageHandler;
-			messageHandler.handle(token, environment.access(),
-					token.request.protocolMessage);
+			messageHandler.handle(token, environment.access(), token.message);
 		} catch (Exception e) {
-			token.response.putException(e);
+			transportLayer.sendMessage(ProcessingException.wrap(e));
 			logger.warn(
 					"Exception in server queue (in response to invokesync)");
 			onLoopException(e);
