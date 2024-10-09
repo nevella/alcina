@@ -56,11 +56,8 @@ public class MessageTransportLayerClient extends MessageTransportLayer2 {
 		sendChannel().conditionallySend();
 	}
 
-	void onReceiveSuccess() {
-		sendChannel().onReceiveSuccess();
-	}
-
 	void onComponentResponse(RemoteComponentResponse response) {
+		receiveChannel().onEnvelopeReceived(response.messageEnvelope);
 	}
 
 	class EnvelopeDispatcherImpl extends EnvelopeDispatcher {

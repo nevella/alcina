@@ -2,6 +2,8 @@ package cc.alcina.framework.servlet.environment;
 
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -18,15 +20,26 @@ class MessageTransportLayerServer extends MessageTransportLayer2 {
 	class AggregateDispatcherImpl extends EnvelopeDispatcher {
 		@Override
 		protected boolean isDispatchAvailable() {
-			return false;
+			return dispatchableToken != null;
 		}
 
 		@Override
 		protected void
 				dispatch(List<UnacknowledgedMessage> unacknowledgedMessages) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'dispatch'");
+			MessageEnvelope envelope = createEnvelope(unacknowledgedMessages);
+			dispatchableToken.response.messageEnvelope = envelope;
+			dispatchableToken.response.session = dispatchableToken.request.session;
+			dispatchableToken.latch.countDown();
+		}
+
+		RequestToken dispatchableToken;
+
+		/*
+		 * never have more than one awaiting, dispatchable token
+		 */
+		void registerAvailableTokenForResponse(RequestToken token) {
+			Preconditions.checkState(dispatchableToken == null);
+			dispatchableToken = token;
 		}
 	}
 
@@ -77,19 +90,28 @@ class MessageTransportLayerServer extends MessageTransportLayer2 {
 	}
 
 	/*
- * @formatter:off
- * 
- * distribute etc incoming messages
- * 
- * await empty to-process queue (unless a from-server synchronous message needs sending)
- * 
- * send outgoing messages
- * 
- * * @formatter:on
- */
-	void onReceivedToken(RequestToken token) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'onReceivedToken'");
+	 * 
+	 * Threading - this is not on the execution thread, so synchronized (it's
+	 * just a quick routing of incoming data)
+	 * 
+	 */
+	synchronized void onReceivedToken(RequestToken token) {
+		/*
+		 * distribute etc incoming messages
+		 */
+		receiveChannel().onEnvelopeReceived(token.request.messageEnvelope);
+		/*
+		 * if there's already a token, this will cause it to be sent [FIXME -
+		 * signal 'finish buffering to-client messages']
+		 */
+		if (aggregateDispatcher.isDispatchAvailable()) {
+			sendChannel.unconditionallySend();
+		}
+		/*
+		 * register the associated HttpServletResponse for use as a protocol
+		 * response
+		 */
+		aggregateDispatcher.registerAvailableTokenForResponse(token);
+		sendChannel.conditionallySend();
 	}
 }

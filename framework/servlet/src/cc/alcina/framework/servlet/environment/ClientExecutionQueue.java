@@ -74,6 +74,8 @@ class ClientExecutionQueue implements Runnable {
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
 		this.messageTransport = new MessageTransport();
+		transportLayer = new MessageTransportLayerServer();
+		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 	}
 
 	/*
@@ -98,6 +100,16 @@ class ClientExecutionQueue implements Runnable {
 		executionThread = new Thread(this, threadName);
 		executionThread.setDaemon(true);
 		executionThread.start();
+	}
+
+	void onMessageReceived(Message message) {
+		MessageHandlerServer handler = MessageHandlerServer.forMessage(message);
+		MessageToken token = new MessageToken(message);
+		if (handler.isSync()) {
+			handler.handle(token, environment.access(), message);
+		} else {
+			asyncDispatchQueue.add(new AsyncDispatchable(token));
+		}
 	}
 
 	@Override
@@ -266,7 +278,7 @@ class ClientExecutionQueue implements Runnable {
 		messageTransport.registerAcceptor(acceptor);
 	}
 
-	MessageTransportLayerServer transportLayer = new MessageTransportLayerServer();
+	MessageTransportLayerServer transportLayer;
 
 	class MessageTransport {
 		ToClientMessageAcceptor acceptor;

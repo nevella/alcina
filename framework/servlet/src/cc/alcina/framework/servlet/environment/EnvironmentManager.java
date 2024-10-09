@@ -292,7 +292,7 @@ public class EnvironmentManager {
 		singletonEnvironment().access().invoke(runnable);
 	}
 
-	public void handleRequest(RequestToken token) throws Exception {
+	public void acceptRequest(RequestToken token) throws Exception {
 		Environment env = getEnvironment(token.request.session);
 		if (env == null) {
 			throw buildInvalidClientException(

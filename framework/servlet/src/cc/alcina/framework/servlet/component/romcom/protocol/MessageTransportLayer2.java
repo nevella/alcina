@@ -3,7 +3,9 @@ package cc.alcina.framework.servlet.component.romcom.protocol;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -16,6 +18,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.TransportEvent.Type;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 
 /**
@@ -83,6 +86,21 @@ public abstract class MessageTransportLayer2 {
 		}
 
 		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof MessageId) {
+				MessageId o = (MessageId) obj;
+				return sendChannelId == o.sendChannelId && number == o.number;
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return sendChannelId.hashCode() ^ number;
+		}
+
+		@Override
 		public int compareTo(MessageId o) {
 			Preconditions.checkState(sendChannelId == o.sendChannelId);
 			return number - o.number;
@@ -116,6 +134,21 @@ public abstract class MessageTransportLayer2 {
 		public int compareTo(EnvelopeId o) {
 			Preconditions.checkState(sendChannelId == o.sendChannelId);
 			return number - o.number;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof EnvelopeId) {
+				EnvelopeId o = (EnvelopeId) obj;
+				return sendChannelId == o.sendChannelId && number == o.number;
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return sendChannelId.hashCode() ^ number;
 		}
 
 		@Override
@@ -202,6 +235,10 @@ public abstract class MessageTransportLayer2 {
 					.compareTo(o.transportHistory.messageId);
 		}
 
+		public void onSendException(Throwable exception) {
+			transportHistory.sendExceptionDate = new Date();
+		}
+
 		boolean shouldSend() {
 			return transportHistory.sent == null
 					|| (transportHistory.resendRequested != null
@@ -215,10 +252,39 @@ public abstract class MessageTransportLayer2 {
 		boolean wasAcknowledged(EnvelopeId highestReceivedEnvelopeId) {
 			return transportHistory.wasAcknowledged(highestReceivedEnvelopeId);
 		}
+	}
 
-		public void onSendException(Throwable exception) {
-			transportHistory.sendExceptionDate = new Date();
+	public static class TransportEvent {
+		public enum Type {
+			success, transport_failure;
 		}
+
+		Date date;
+
+		public Type type;
+
+		public TransportEvent(Type type) {
+			this.date = new Date();
+			this.type = type;
+		}
+	}
+
+	class TransportEvents {
+		List<TransportEvent> events = new ArrayList<>();
+
+		synchronized void onTransportSuccess() {
+			events.add(new TransportEvent(Type.success));
+		}
+
+		synchronized void onTransportFailure() {
+			events.add(new TransportEvent(Type.transport_failure));
+		}
+	}
+
+	TransportEvents transportEvents = new TransportEvents();
+
+	public void onReceiveSuccess() {
+		transportEvents.onTransportSuccess();
 	}
 
 	public abstract class EnvelopeDispatcher {
@@ -254,12 +320,6 @@ public abstract class MessageTransportLayer2 {
 	}
 
 	public abstract class SendChannel extends Channel {
-		protected void send(Message message) {
-			message.messageId = nextId();
-			bufferMessage(new UnacknowledgedMessage(message, sendChannelId()));
-			conditionallySend();
-		}
-
 		/*
 		 * If no inflight or retry, send
 		 */
@@ -272,10 +332,22 @@ public abstract class MessageTransportLayer2 {
 				if (unacknowledgedMessages.stream()
 						.anyMatch(UnacknowledgedMessage::shouldSend)) {
 					if (envelopeDispatcher().isDispatchAvailable()) {
-						envelopeDispatcher().dispatch(unacknowledgedMessages);
+						unconditionallySend();
 					}
 				}
 			}
+		}
+
+		public void unconditionallySend() {
+			synchronized (unacknowledgedMessages) {
+				envelopeDispatcher().dispatch(unacknowledgedMessages);
+			}
+		}
+
+		protected void send(Message message) {
+			message.messageId = nextId();
+			bufferMessage(new UnacknowledgedMessage(message, sendChannelId()));
+			conditionallySend();
 		}
 
 		void bufferMessage(UnacknowledgedMessage message) {
@@ -294,18 +366,14 @@ public abstract class MessageTransportLayer2 {
 				}
 			}
 		}
-
-		public void onReceiveSuccess() {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'onReceiveSuccess'");
-		}
 	}
 
 	public abstract class ReceiveChannel extends Channel {
 		int highestPublishedMessageId = 0;
 
 		EnvelopeId highestReceivedEnvelopeId;
+
+		protected Set<MessageId> receivedMessageIds = new LinkedHashSet<>();
 
 		/*
 		 * Send - update histories
@@ -338,8 +406,13 @@ public abstract class MessageTransportLayer2 {
 		}
 
 		void addMessagesToUnacknowledged(MessageEnvelope envelope) {
+			// this is the only place receivedMessageIds is used, so sync works
+			// for both
 			synchronized (unacknowledgedMessages) {
 				envelope.packets.forEach(packet -> {
+					if (!receivedMessageIds.add(packet.messageId)) {
+						return;
+					}
 					UnacknowledgedMessage unacknowledgedMessage = new UnacknowledgedMessage(
 							packet.message, packet.messageId.sendChannelId);
 					unacknowledgedMessage.transportHistory.received = new Date();

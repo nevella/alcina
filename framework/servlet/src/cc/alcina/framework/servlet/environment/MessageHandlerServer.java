@@ -5,6 +5,7 @@ import java.util.concurrent.CountDownLatch;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
@@ -115,6 +116,10 @@ public abstract class MessageHandlerServer<PM extends Message>
 			message.sync = true;
 		}
 
+		public boolean isSync() {
+			return true;
+		}
+
 		@Override
 		public void handle(MessageToken token, Environment.Access env,
 				Message.Startup message) {
@@ -132,5 +137,16 @@ public abstract class MessageHandlerServer<PM extends Message>
 		public boolean isValidateClientInstanceUid() {
 			return false;
 		}
+	}
+
+	public static MessageHandlerServer<?> forMessage(Message message) {
+		return Registry.impl(MessageHandlerServer.class, message.getClass());
+	}
+
+	/*
+	 * handle synchronously (not in the CEQT)
+	 */
+	public boolean isSync() {
+		return false;
 	}
 }

@@ -693,9 +693,7 @@ class Environment {
 		}
 
 		public void handleRequest(RequestToken token) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'handleRequest'");
+			queue.transportLayer.onReceivedToken(token);
 		}
 	}
 }

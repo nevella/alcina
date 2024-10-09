@@ -5,7 +5,6 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -19,6 +18,8 @@ public class RemoteComponentProtocolServer {
 	/**
 	 * Models the state required for Message processing. Some of this will be
 	 * upped to RequestToken when message/request are not 1-1
+	 * 
+	 * FIXME - possibly remove most of this
 	 */
 	public static class MessageToken {
 		public Handler<?, ?> messageHandler;
@@ -36,8 +37,9 @@ public class RemoteComponentProtocolServer {
 		}
 
 		public MessageToken(Message message) {
-			this.messageHandler = Registry.impl(Handler.class,
-					message.getClass());
+			this.messageHandler = null;
+			// Registry.impl(Handler.class,
+			// message.getClass());
 			this.message = message;
 			this.latch = new CountDownLatch(1);
 		}

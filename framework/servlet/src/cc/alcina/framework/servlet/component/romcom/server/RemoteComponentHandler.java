@@ -20,8 +20,11 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.EnvelopeId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.MessageEnvelope;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.MessageId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.MessagePacket;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
@@ -274,7 +277,8 @@ public class RemoteComponentHandler {
 				try {
 					RequestToken token = new RequestToken(requestJson, request,
 							response);
-					EnvironmentManager.get().handleRequest(token);
+					EnvironmentManager.get().acceptRequest(token);
+					token.latch.await();
 				} catch (Exception e) {
 					if (e instanceof ProtocolException) {
 						boolean handled = false;
@@ -293,12 +297,19 @@ public class RemoteComponentHandler {
 						e.printStackTrace();
 					}
 					/*
-					 * this won't have an envelopeid
+					 * this envelope will have 'queue jump' (-1)
+					 * envelope/message ids - client execution will be halted
+					 * after processing the message with either a refresh or
+					 * finish
 					 */
 					response.messageEnvelope = new MessageEnvelope();
+					SendChannelId sendChannelId = SendChannelId.SERVER_TO_CLIENT;
+					response.messageEnvelope.envelopeId = new EnvelopeId(
+							sendChannelId, -1);
 					ProcessingException message = ProcessingException.wrap(e);
+					MessageId messageId = new MessageId(sendChannelId, -1);
 					response.messageEnvelope.packets
-							.add(new MessagePacket(null, message));
+							.add(new MessagePacket(messageId, message));
 				}
 				logger.debug("{} dispatched response {} - {}", Ax.appMillis(),
 						response.messageEnvelope.envelopeId,
