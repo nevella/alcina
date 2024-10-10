@@ -11,27 +11,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken.Handler;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
-import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMessageAcceptor;
-/*
- * This queue/thread dispatches messages to the client, waiting for its
- * AwaitRemote request
- * 
- * @formatter:off
- * - apart from Startup, only AwaitRemote requests from the client receive messages from the server
- * - asyncEventQueue is "messages from the client to process when available"
- * - syncEventQueue is "single message -  from the server to the client' 
- *  Queries - is it reentrant? can it have multiiple messages?
- *  "
- *  - TODO - add a transport layer which handles message retry (Android sleep/resume)
- * 
- * 
- * @formatter:on
- * 
- * - Terminology - 'execution thread' - analagous to the single thread of js dispatch in a 
- * browser, the only thread with access to the (local) DOM. The thread is stored in #executionThread
- */
 
 /*
  * Note :: explain -why- a DOM needs single-threaded access (it's a case of
@@ -42,8 +22,6 @@ import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMess
  * accessed package class with complex access rules
  */
 class ClientExecutionQueue implements Runnable {
-	BlockingQueue<Message> toClientQueue = new LinkedBlockingQueue<>();
-
 	// server-generated runnables or from-client messages to process in order,
 	// while not awaiting a synchronous client response
 	BlockingQueue<AsyncDispatchable> asyncDispatchQueue = new LinkedBlockingQueue<>();
@@ -63,17 +41,23 @@ class ClientExecutionQueue implements Runnable {
 		MessageToken fromClientMessage;
 
 		Runnable runnable;
+
+		@Override
+		public String toString() {
+			if (fromClientMessage != null) {
+				return fromClientMessage.message.toString();
+			} else {
+				return runnable.toString();
+			}
+		}
 	}
 
 	boolean finished = false;
 
 	Environment environment;
 
-	MessageTransport messageTransport;
-
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
-		this.messageTransport = new MessageTransport();
 		transportLayer = new MessageTransportLayerServer();
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 	}
@@ -105,10 +89,10 @@ class ClientExecutionQueue implements Runnable {
 	void onMessageReceived(Message message) {
 		MessageHandlerServer handler = MessageHandlerServer.forMessage(message);
 		MessageToken token = new MessageToken(message);
-		if (handler.isSync()) {
+		if (handler.isSynchronous()) {
 			handler.handle(token, environment.access(), message);
 		} else {
-			asyncDispatchQueue.add(new AsyncDispatchable(token));
+			addDispatchable(new AsyncDispatchable(token));
 		}
 	}
 
@@ -198,9 +182,7 @@ class ClientExecutionQueue implements Runnable {
 	 * Does not await receipt
 	 */
 	void sendToClient(Message message) {
-		message.messageId = transportLayer.nextId();
-		toClientQueue.add(message);
-		messageTransport.conditionallySendToClient();
+		transportLayer.sendMessage(message);
 	}
 
 	/*
@@ -252,7 +234,8 @@ class ClientExecutionQueue implements Runnable {
 	 */
 	void handleFromClientMessageOnThread(MessageToken token) {
 		try {
-			Handler<Environment.Access, Message> messageHandler = (Handler<Environment.Access, Message>) token.messageHandler;
+			MessageHandlerServer messageHandler = MessageHandlerServer
+					.forMessage(token.message);
 			messageHandler.handle(token, environment.access(), token.message);
 		} catch (Exception e) {
 			transportLayer.sendMessage(ProcessingException.wrap(e));
@@ -267,43 +250,12 @@ class ClientExecutionQueue implements Runnable {
 
 	void stop() {
 		finished = true;
-		messageTransport.flushAcceptor();
+		transportLayer.onFinish();
 		// FIXME - transport - flush all handlers
 		synchronized (this) {
 			notifyAll();
 		}
 	}
 
-	void registerToClientMessageAcceptor(ToClientMessageAcceptor acceptor) {
-		messageTransport.registerAcceptor(acceptor);
-	}
-
 	MessageTransportLayerServer transportLayer;
-
-	class MessageTransport {
-		ToClientMessageAcceptor acceptor;
-
-		synchronized void registerAcceptor(ToClientMessageAcceptor acceptor) {
-			flushAcceptor();
-			this.acceptor = acceptor;
-			conditionallySendToClient();
-		}
-
-		synchronized void conditionallySendToClient() {
-			if (acceptor != null) {
-				Message message = toClientQueue.poll();
-				if (message != null) {
-					this.acceptor.accept(message);
-					this.acceptor = null;
-				}
-			}
-		}
-
-		synchronized void flushAcceptor() {
-			if (this.acceptor != null) {
-				this.acceptor.accept(null);
-				this.acceptor = null;
-			}
-		}
-	}
 }

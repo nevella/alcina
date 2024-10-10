@@ -1,20 +1,37 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.Date;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
-class MessageTransportLayerServer extends MessageTransportLayer2 {
+class MessageTransportLayerServer extends MessageTransportLayer {
 	class SendChannelImpl extends SendChannel {
+		@Override
+		public void conditionallySend() {
+			super.conditionallySend();
+		}
 	}
 
+	long start = System.currentTimeMillis();
+
 	class ReceiveChannelImpl extends ReceiveChannel {
+		public Date lastEnvelopeReceived = new Date(0);
+
+		@Override
+		public void onEnvelopeReceived(MessageEnvelope envelope) {
+			lastEnvelopeReceived = new Date();
+			super.onEnvelopeReceived(envelope);
+		}
 	}
 
 	class AggregateDispatcherImpl extends EnvelopeDispatcher {
@@ -30,6 +47,7 @@ class MessageTransportLayerServer extends MessageTransportLayer2 {
 			dispatchableToken.response.messageEnvelope = envelope;
 			dispatchableToken.response.session = dispatchableToken.request.session;
 			dispatchableToken.latch.countDown();
+			dispatchableToken = null;
 		}
 
 		RequestToken dispatchableToken;
@@ -41,6 +59,10 @@ class MessageTransportLayerServer extends MessageTransportLayer2 {
 			Preconditions.checkState(dispatchableToken == null);
 			dispatchableToken = token;
 		}
+	}
+
+	long lifetimeMs() {
+		return System.currentTimeMillis() - start;
 	}
 
 	/*
@@ -89,6 +111,8 @@ class MessageTransportLayerServer extends MessageTransportLayer2 {
 		return receiveChannel;
 	}
 
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	/*
 	 * 
 	 * Threading - this is not on the execution thread, so synchronized (it's
@@ -104,14 +128,26 @@ class MessageTransportLayerServer extends MessageTransportLayer2 {
 		 * if there's already a token, this will cause it to be sent [FIXME -
 		 * signal 'finish buffering to-client messages']
 		 */
-		if (aggregateDispatcher.isDispatchAvailable()) {
-			sendChannel.unconditionallySend();
-		}
+		flushOutgoingMessages();
 		/*
 		 * register the associated HttpServletResponse for use as a protocol
 		 * response
 		 */
 		aggregateDispatcher.registerAvailableTokenForResponse(token);
 		sendChannel.conditionallySend();
+	}
+
+	void flushOutgoingMessages() {
+		if (aggregateDispatcher.isDispatchAvailable()) {
+			sendChannel.unconditionallySend();
+		}
+	}
+
+	public void onFinish() {
+		flushOutgoingMessages();
+	}
+
+	Date getLastEnvelopeReceived() {
+		return receiveChannel.lastEnvelopeReceived;
 	}
 }

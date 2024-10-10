@@ -4,7 +4,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
   sendStats('bootstrap', 'begin');
   function isHostedMode(){
     var query = $wnd_0.location.search;
-    return query.indexOf('gwt.codesvr.cc.alcina.extras.dev.console.remote.RemoteConsoleClient=') != -1 || query.indexOf('gwt.codesvr=') != -1;
+    return query.indexOf('gwt.codesvr.cc.alcina.extras.dev.console.remote.RemoteConsoleClient=') != -1 || (query.indexOf('gwt.codesvr=') != -1 || query.indexOf('gwt.l') != -1);
   }
 
   function sendStats(evtGroupString, typeString){
@@ -64,6 +64,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     }
     var scriptFrame = $doc_0.createElement('iframe');
     scriptFrame.id = 'cc.alcina.extras.dev.console.remote.RemoteConsoleClient';
+    scriptFrame.title = 'Javascript container. No human-readable content';
     scriptFrame.style.cssText = 'position:absolute; width:0; height:0; border:none; left: -1000px;' + ' top: -1000px;';
     scriptFrame.tabIndex = -1;
     $doc_0.body.appendChild(scriptFrame);
@@ -334,7 +335,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     }
     var strongName;
     try {
-      strongName = '73A9992F70FE9B54829E8A1B613BBDCC';
+      strongName = '8CA33B74AD8EE9A4542DDAAEBC33B8DC';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);

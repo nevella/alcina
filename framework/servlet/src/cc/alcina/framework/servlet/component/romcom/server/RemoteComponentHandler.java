@@ -20,11 +20,11 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.EnvelopeId;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.MessageEnvelope;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.MessageId;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.MessagePacket;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2.SendChannelId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessagePacket;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
@@ -211,8 +211,9 @@ public class RemoteComponentHandler {
 						.list(request.getHeaderNames()).stream()
 						.map(n -> Ax.format("%s=%s", n, request.getHeader(n)))
 						.collect(Collectors.toList());
-				logger.info("Creating environment - http headers: {}", headers);
 				session = component.createEnvironment(request);
+				logger.info("Created environment - {} - http headers: {}",
+						session, headers);
 			} catch (Exception e) {
 				sessionCreationException = e;
 				logger.warn("Exception creating session", e);

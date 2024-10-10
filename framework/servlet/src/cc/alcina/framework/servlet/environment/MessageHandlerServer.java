@@ -1,15 +1,13 @@
 package cc.alcina.framework.servlet.environment;
 
-import java.util.concurrent.CountDownLatch;
-
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.environment.Environment.Access;
 
 @Registration.NonGenericSubtypes(MessageHandlerServer.class)
 public abstract class MessageHandlerServer<PM extends Message>
@@ -21,58 +19,20 @@ public abstract class MessageHandlerServer<PM extends Message>
 		return true;
 	}
 
-	public void onAfterMessageHandled(PM message) {
-	}
-
-	public void onBeforeMessageHandled(PM message) {
-	}
-
 	public static class AwaitRemoteHandler
-			extends MessageHandlerServer<Message.AwaitRemote>
-			implements ToClientMessageAcceptor {
-		CountDownLatch latch;
-
-		MessageToken token;
-
+			extends MessageHandlerServer<Message.AwaitRemote> {
 		@Override
-		public void onBeforeMessageHandled(Message.AwaitRemote message) {
-			// handle this message on the receiving servlet thread
-			message.sync = true;
+		public boolean isSynchronous() {
+			return true;
 		}
 
-		/*
-		 * handled in the servlet thread, not the client execution thread
-		 */
 		@Override
-		public void handle(MessageToken token, Environment.Access env,
+		public void handle(MessageToken token, Access env,
 				AwaitRemote message) {
-			latch = new CountDownLatch(1);
-			this.token = token;
-			env.registerToClientMessageAcceptor(this);
+			/*
+			 * Noop
+			 */
 		}
-
-		@Override
-		public void onAfterMessageHandled(Message.AwaitRemote message) {
-			try {
-				latch.await();
-			} catch (InterruptedException e) {
-				Ax.simpleExceptionOut(e);// and exit, client will retry
-			}
-		}
-
-		@Override
-		public void accept(Message message) {
-			// token.response.protocolMessage = message;
-			// latch.countDown();
-		}
-	}
-
-	/*
-	 * Accepts messages to the client (and causes them to be passed to the
-	 * client)
-	 */
-	interface ToClientMessageAcceptor {
-		void accept(Message message);
 	}
 
 	public static class DomEventMessageHandler
@@ -90,6 +50,11 @@ public abstract class MessageHandlerServer<PM extends Message>
 		public void handle(MessageToken token, Environment.Access env,
 				Message.InvokeResponse message) {
 			env.onInvokeResponse(message);
+		}
+
+		@Override
+		public boolean isSynchronous() {
+			return true;
 		}
 	}
 
@@ -110,13 +75,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 
 	public static class StartupHandler
 			extends MessageHandlerServer<Message.Startup> {
-		@Override
-		public void onBeforeMessageHandled(Message.Startup message) {
-			// handle this message on the receiving servlet thread
-			message.sync = true;
-		}
-
-		public boolean isSync() {
+		public boolean isSynchronous() {
 			return true;
 		}
 
@@ -144,9 +103,10 @@ public abstract class MessageHandlerServer<PM extends Message>
 	}
 
 	/*
-	 * handle synchronously (not in the CEQT)
+	 * handle synchronously (from the POV of the incoming Http/WS request)(not
+	 * in the CEQT)
 	 */
-	public boolean isSync() {
+	public boolean isSynchronous() {
 		return false;
 	}
 }

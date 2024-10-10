@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,6 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
-import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMessageAcceptor;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -83,14 +83,6 @@ import cc.alcina.framework.servlet.environment.MessageHandlerServer.ToClientMess
  * thread
  */
 class Environment {
-	static Environment get() {
-		return LooseContext.get(Environment.CONTEXT_ENVIRONMENT);
-	}
-
-	static boolean has() {
-		return LooseContext.has(Environment.CONTEXT_ENVIRONMENT);
-	}
-
 	static class TimerProvider implements Timer.Provider {
 		TimerJvm.Provider exEnvironmentDelegate = new TimerJvm.Provider();
 
@@ -106,9 +98,6 @@ class Environment {
 			}
 		}
 	}
-
-	static final transient String CONTEXT_ENVIRONMENT = Environment.class
-			.getName() + ".CONTEXT_ENVIRONMENT";
 
 	/*
 	 * FIXME - tricky - what to do with timeouts here - does this interact with
@@ -302,6 +291,198 @@ class Environment {
 	}
 
 	/*
+	 * Access *from* the execution thread (so DOM etc access permitted)
+	 */
+	class ClientExecutionThreadAccess {
+		void beforeEnterContext() {
+			ui.onBeforeEnterContext();
+		}
+
+		void enterContext() {
+			Environment.this.enterContext();
+		}
+
+		void enterIteration() {
+			Environment.this.enterIteration();
+		}
+
+		void exitIteration() {
+			Environment.this.exitIteration();
+		}
+
+		void exitContext() {
+			Environment.this.exitContext();
+		}
+
+		void enter(Runnable runnable) {
+			Environment.this.enter(runnable);
+		}
+	}
+
+	/*
+	 * Provides thread-safe access to the Environment. Don't directly access the
+	 * Environment is
+	 */
+	class Access {
+		Access() {
+		}
+
+		public void handleRequest(RequestToken token) {
+			queue.transportLayer.onReceivedToken(token);
+		}
+
+		String getConnectedClientUid() {
+			return connectedClientUid;
+		}
+
+		void setNonInteractionTimeout(long nonInteractionTimeout) {
+			Environment.this.nonInteractionTimeout.set(nonInteractionTimeout);
+		}
+
+		Session getSession() {
+			return session;
+		}
+
+		/*
+		 * Fixme ROMCOM -
+		 * 
+		 * envelope handles session validation
+		 * 
+		 * transport handles last packet received
+		 * 
+		 * 
+		 */
+		void handleFromClientMessage(MessageToken token) throws Exception {
+			// validateSession(token.request.session,
+			// ((MessageHandlerServer) token.messageHandler)
+			// .isValidateClientInstanceUid());
+			// lastPacketsReceived.set(System.currentTimeMillis());
+			queue.handleFromClientMessage(token);
+		}
+
+		void dispatchToClient(Message message) {
+			queue.sendToClient(message);
+		}
+
+		void applyEvent(DomEventData eventData) {
+			queue.invoke(() -> LocalDom.attachIdRepresentations()
+					.applyEvent(eventData));
+		}
+
+		void applyLocationMutation(LocationMutation locationMutation,
+				boolean startup) {
+			queue.invoke(() -> {
+				if (startup) {
+					Window.Location.init(locationMutation.protocol,
+							locationMutation.host, locationMutation.port,
+							locationMutation.path,
+							locationMutation.queryString);
+					Window.Navigator.init(
+							locationMutation.navigator.appCodeName,
+							locationMutation.navigator.appName,
+							locationMutation.navigator.appVersion,
+							locationMutation.navigator.platform,
+							locationMutation.navigator.userAgent,
+							locationMutation.navigator.cookieEnabled);
+				}
+				String token = locationMutation.hash.startsWith("#")
+						? locationMutation.hash.substring(1)
+						: locationMutation.hash;
+				Ax.logEvent("Navigate %s:: -> %s", startup ? "(startup) " : "",
+						token);
+				History.newItem(token, !startup);
+			});
+		}
+
+		void end(String reason) {
+			logger.info("Stopping env [{}] :: {}", reason, session.id);
+			EnvironmentManager.get().deregister(Environment.this);
+			if (queue.finished) {
+				access().invoke(() -> ui.end());
+			}
+			queue.stop();
+		}
+
+		void applyMutations(List<MutationRecord> mutations) {
+			queue.invoke(() -> LocalDom.attachIdRepresentations()
+					.applyMutations(mutations, false));
+		}
+
+		/*
+		 * Called from off the CEQT
+		 */
+		void onInvokeResponse(InvokeResponse response) {
+			Runnable runnable = () -> invokeProxy.onInvokeResponse(response);
+			if (response.sync) {
+				/*
+				 * This will cause the response value to be applied to the
+				 * handler, and the handler's latch unlocked (so the client
+				 * execution thread will continue)
+				 */
+				runnable.run();
+			} else {
+				queue.invoke(runnable);
+			}
+		}
+
+		void startup(MessageToken token, Startup message) {
+			Preconditions.checkState(
+					Objects.equals(session.id, Environment.this.session.id));
+			Runnable startupRunnable = () -> Environment.this.startup(token,
+					message);
+			queue.start();
+			queue.invoke(startupRunnable);
+		}
+
+		/**
+		 * Executes the runnable within the environment's context. Called from
+		 * outside the queuing system (so simply add to the execution queue)
+		 * 
+		 * Note that probably the queue should wrap the runnable (rather than
+		 * here)
+		 */
+		void invoke(Runnable runnable) {
+			queue.invoke(runnable::run);
+		}
+
+		RemoteUi getUi() {
+			return ui;
+		}
+
+		String getUid() {
+			return uid;
+		}
+
+		void flush() {
+			emitMutations();
+		}
+
+		String getSessionPath() {
+			Url url = Url.parse(session.url);
+			return url.queryParameters.get("path");
+		}
+
+		Date getLastPacketsReceived() {
+			return queue.transportLayer.getLastEnvelopeReceived();
+		}
+
+		AtomicLong getNonInteractionTimeout() {
+			return nonInteractionTimeout;
+		}
+	}
+
+	static final transient String CONTEXT_ENVIRONMENT = Environment.class
+			.getName() + ".CONTEXT_ENVIRONMENT";
+
+	static Environment get() {
+		return LooseContext.get(Environment.CONTEXT_ENVIRONMENT);
+	}
+
+	static boolean has() {
+		return LooseContext.has(Environment.CONTEXT_ENVIRONMENT);
+	}
+
+	/*
 	 * Sent by the client to mark which environment it's communicating with.
 	 * This allows the client to switch environments after say a dev rebuild
 	 * (equal id/auth, unequal uid will force a refresh)
@@ -367,33 +548,9 @@ class Environment {
 		queue = new ClientExecutionQueue(this);
 	}
 
-	/*
-	 * Access *from* the execution thread (so DOM etc access permitted)
-	 */
-	class ClientExecutionThreadAccess {
-		void beforeEnterContext() {
-			ui.onBeforeEnterContext();
-		}
-
-		void enterContext() {
-			Environment.this.enterContext();
-		}
-
-		void enterIteration() {
-			Environment.this.enterIteration();
-		}
-
-		void exitIteration() {
-			Environment.this.exitIteration();
-		}
-
-		void exitContext() {
-			Environment.this.exitContext();
-		}
-
-		void enter(Runnable runnable) {
-			Environment.this.enter(runnable);
-		}
+	@Override
+	public String toString() {
+		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
 	}
 
 	ClientExecutionThreadAccess fromClientExecutionThreadAccess() {
@@ -406,6 +563,10 @@ class Environment {
 
 	void enterIteration() {
 		ui.onEnterIteration();
+	}
+
+	Access access() {
+		return access;
 	}
 
 	private void enterContext() {
@@ -444,11 +605,6 @@ class Environment {
 
 	private void exitContext() {
 		GWTBridgeHeadless.inClient.set(false);
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
 	}
 
 	private void validateSession(RemoteComponentProtocol.Session session,
@@ -532,168 +688,10 @@ class Environment {
 				Message.Mutations.ofLocation().locationMutation);
 	}
 
-	Access access() {
-		return access;
-	}
-
 	private void startup(MessageToken token, Startup message) {
 		access().applyMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
 		initialiseSettings(message.settings);
 		startClient();
-	}
-
-	/*
-	 * Provides thread-safe access to the Environment. Don't directly access the
-	 * Environment is
-	 */
-	class Access {
-		Access() {
-		}
-
-		String getConnectedClientUid() {
-			return connectedClientUid;
-		}
-
-		void setNonInteractionTimeout(long nonInteractionTimeout) {
-			Environment.this.nonInteractionTimeout.set(nonInteractionTimeout);
-		}
-
-		Session getSession() {
-			return session;
-		}
-
-		/*
-		 * Fixme ROMCOM -
-		 * 
-		 * envelope handles session validation
-		 * 
-		 * transport handles last packet received
-		 * 
-		 * 
-		 */
-		void handleFromClientMessage(MessageToken token) throws Exception {
-			// validateSession(token.request.session,
-			// ((MessageHandlerServer) token.messageHandler)
-			// .isValidateClientInstanceUid());
-			// lastPacketsReceived.set(System.currentTimeMillis());
-			queue.handleFromClientMessage(token);
-		}
-
-		void dispatchToClient(Message message) {
-			queue.sendToClient(message);
-		}
-
-		void applyEvent(DomEventData eventData) {
-			queue.invoke(() -> LocalDom.attachIdRepresentations()
-					.applyEvent(eventData));
-		}
-
-		void applyLocationMutation(LocationMutation locationMutation,
-				boolean startup) {
-			queue.invoke(() -> {
-				if (startup) {
-					Window.Location.init(locationMutation.protocol,
-							locationMutation.host, locationMutation.port,
-							locationMutation.path,
-							locationMutation.queryString);
-					Window.Navigator.init(
-							locationMutation.navigator.appCodeName,
-							locationMutation.navigator.appName,
-							locationMutation.navigator.appVersion,
-							locationMutation.navigator.platform,
-							locationMutation.navigator.userAgent,
-							locationMutation.navigator.cookieEnabled);
-				}
-				String token = locationMutation.hash.startsWith("#")
-						? locationMutation.hash.substring(1)
-						: locationMutation.hash;
-				Ax.logEvent("Navigate %s:: -> %s", startup ? "(startup) " : "",
-						token);
-				History.newItem(token, !startup);
-			});
-		}
-
-		void end(String reason) {
-			logger.info("Stopping env [{}] :: {}", reason, session.id);
-			if (queue.finished) {
-				access().invoke(() -> ui.end());
-			}
-			queue.stop();
-			EnvironmentManager.get().deregister(Environment.this);
-		}
-
-		void applyMutations(List<MutationRecord> mutations) {
-			queue.invoke(() -> LocalDom.attachIdRepresentations()
-					.applyMutations(mutations, false));
-		}
-
-		void onInvokeResponse(InvokeResponse response) {
-			Runnable runnable = () -> invokeProxy.onInvokeResponse(response);
-			if (response.sync) {
-				/*
-				 * This will cause the response value to be applied to the
-				 * handler, and the handler's latch unlocked (so the client
-				 * execution thread will continue)
-				 */
-				runnable.run();
-			} else {
-				queue.invoke(runnable);
-			}
-		}
-
-		void startup(MessageToken token, Startup message) {
-			Preconditions.checkState(
-					Objects.equals(session.id, Environment.this.session.id));
-			Runnable startupRunnable = () -> Environment.this.startup(token,
-					message);
-			queue.start();
-			queue.invoke(startupRunnable);
-		}
-
-		/**
-		 * Executes the runnable within the environment's context. Called from
-		 * outside the queuing system (so simply add to the execution queue)
-		 * 
-		 * Note that probably the queue should wrap the runnable (rather than
-		 * here)
-		 */
-		void invoke(Runnable runnable) {
-			queue.invoke(runnable::run);
-		}
-
-		RemoteUi getUi() {
-			return ui;
-		}
-
-		String getUid() {
-			return uid;
-		}
-
-		void flush() {
-			emitMutations();
-		}
-
-		String getSessionPath() {
-			Url url = Url.parse(session.url);
-			return url.queryParameters.get("path");
-		}
-
-		AtomicLong getLastPacketsReceived() {
-			return lastPacketsReceived;
-		}
-
-		AtomicLong getNonInteractionTimeout() {
-			return nonInteractionTimeout;
-		}
-
-		public void registerToClientMessageAcceptor(
-				ToClientMessageAcceptor acceptor) {
-			queue.registerToClientMessageAcceptor(acceptor);
-		}
-
-		public void handleRequest(RequestToken token) {
-			queue.transportLayer.onReceivedToken(token);
-		}
 	}
 }

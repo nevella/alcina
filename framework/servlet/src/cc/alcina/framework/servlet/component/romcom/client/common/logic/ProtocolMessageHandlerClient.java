@@ -25,19 +25,21 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
 /*
  * FIXME - beans1x5 - package protected
  */
 @Registration.NonGenericSubtypes(ProtocolMessageHandlerClient.class)
 public abstract class ProtocolMessageHandlerClient<PM extends Message> {
-	public abstract void handle(RemoteComponentResponse response, PM message);
+	public abstract void handle(HandlerContext handlerContext, PM message);
+
+	public interface HandlerContext {
+	}
 
 	public static class BeginAwaitLoopHandler
 			extends ProtocolMessageHandlerClient<Message.BeginAwaitLoop> {
 		@Override
-		public void handle(RemoteComponentResponse response,
+		public void handle(HandlerContext handlerContext,
 				Message.BeginAwaitLoop message) {
 			ClientRpc.beginAwaitLoop();
 		}
@@ -46,7 +48,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 	public static class InvokeHandler
 			extends ProtocolMessageHandlerClient<Message.Invoke> {
 		@Override
-		public void handle(RemoteComponentResponse response,
+		public void handle(HandlerContext handlerContext,
 				Message.Invoke message) {
 			AttachId path = message.path;
 			Element elem = path == null ? null : (Element) path.node();
@@ -217,7 +219,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 	public static class MutationsHandler
 			extends ProtocolMessageHandlerClient<Message.Mutations> {
 		@Override
-		public void handle(RemoteComponentResponse response,
+		public void handle(HandlerContext handlerContext,
 				Message.Mutations message) {
 			LocalDom.attachIdRepresentations()
 					.applyMutations(message.domMutations, true);
@@ -263,7 +265,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 	public static class ProcessingExceptionHandler
 			extends ProtocolMessageHandlerClient<Message.ProcessingException> {
 		@Override
-		public void handle(RemoteComponentResponse response,
+		public void handle(HandlerContext handlerContext,
 				Message.ProcessingException message) {
 			RemoteObjectModelComponentState.get().finished = true;
 			Exception protocolException = message.protocolException;
@@ -286,7 +288,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 	public static class PersistSettingsHandler
 			extends ProtocolMessageHandlerClient<Message.PersistSettings> {
 		@Override
-		public void handle(RemoteComponentResponse response,
+		public void handle(HandlerContext handlerContext,
 				Message.PersistSettings message) {
 			RemoteComponentSettings.setSettings(message.value);
 		}

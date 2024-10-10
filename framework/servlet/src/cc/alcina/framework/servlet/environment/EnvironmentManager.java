@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
@@ -295,6 +297,8 @@ public class EnvironmentManager {
 	public void acceptRequest(RequestToken token) throws Exception {
 		Environment env = getEnvironment(token.request.session);
 		if (env == null) {
+			LoggerFactory.getLogger(getClass()).info(
+					"Invalid client session :: {}", token.request.session);
 			throw buildInvalidClientException(
 					token.request.session.componentClassName);
 		}

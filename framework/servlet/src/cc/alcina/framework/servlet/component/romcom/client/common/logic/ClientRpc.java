@@ -18,8 +18,11 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
+import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -30,7 +33,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
  * TODO - romcom - handle network issue retry (client and server)
  */
 @Registration.Singleton
-public class ClientRpc {
+public class ClientRpc implements HandlerContext {
 	int awaitDelay = 0;
 
 	public static void runAsync(Class clazz, Runnable runnable) {
@@ -69,9 +72,38 @@ public class ClientRpc {
 		get().transportLayer.sendMessage(message);
 	}
 
-	MessageTransportLayerClient transportLayer = new MessageTransportLayerClient();
+	MessageTransportLayerClient transportLayer;
 
-	ExceptionHandler exceptionHandler = new ExceptionHandler();
+	ExceptionHandler exceptionHandler;
+
+	ClientRpc() {
+		transportLayer = new MessageTransportLayerClient();
+		exceptionHandler = new ExceptionHandler();
+		transportLayer.topicMessageReceived.add(this::onMessageReceived);
+	}
+
+	void onMessageReceived(Message message) {
+		ProtocolMessageHandlerClient handler = Registry
+				.impl(ProtocolMessageHandlerClient.class, message.getClass());
+		try {
+			handler.handle(this, message);
+		} catch (Throwable e) {
+			// FIXME - ask the context to log
+			Ax.out("Exception handling message %s\n"
+					+ "================\nSerialized form:\n%s", message, "??");
+			e.printStackTrace();
+			/*
+			 * FIXME - devex - 0 - once syncmutations.3 is stable, this should
+			 * not occur (ha!)
+			 *
+			 * Serious, the romcom client is a bounded piece of code that just
+			 * propagates server changes to the client dom, so all exceptions
+			 * *should* be server-only (unless client dom is mashed by an
+			 * extension)
+			 */
+			Window.alert(CommonUtils.toSimpleExceptionMessage(e));
+		}
+	}
 
 	/*
 	 * probably move all this to the transport...

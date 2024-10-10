@@ -2,7 +2,9 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
@@ -13,15 +15,24 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer2;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
-public class MessageTransportLayerClient extends MessageTransportLayer2 {
+public class MessageTransportLayerClient extends MessageTransportLayer {
 	RemoteComponentProtocol.Session session;
 
 	class SendChannelImpl extends SendChannel {
+		/*
+		 * If there are no inflight envelopes, enqueue an await message
+		 */
+		void conditionallyEnqueueAwaitMessage() {
+			if (envelopeDispatcher.getInflightCount() == 0) {
+				send(new AwaitRemote());
+			}
+		}
 	}
 
 	class ReceiveChannelImpl extends ReceiveChannel {
@@ -53,6 +64,7 @@ public class MessageTransportLayerClient extends MessageTransportLayer2 {
 	}
 
 	void onRequestReturned() {
+		sendChannel.conditionallyEnqueueAwaitMessage();
 		sendChannel().conditionallySend();
 	}
 
@@ -69,6 +81,25 @@ public class MessageTransportLayerClient extends MessageTransportLayer2 {
 		@Override
 		protected boolean isDispatchAvailable() {
 			return messageCallback == null;
+		}
+
+		int getInflightCount() {
+			return inflightEnvelope.size();
+		}
+
+		Map<EnvelopeId, EnvelopeTransportHistory> inflightEnvelope = new LinkedHashMap<>();
+
+		class EnvelopeTransportHistory {
+			EnvelopeTransportHistory(MessageEnvelope envelope) {
+				id = envelope.envelopeId;
+				sent = new Date();
+			}
+
+			Date sent;
+
+			Date expectedReceipt;
+
+			EnvelopeId id;
 		}
 
 		@Override
@@ -95,20 +126,22 @@ public class MessageTransportLayerClient extends MessageTransportLayer2 {
 			RequestCallback callback = new RequestCallback() {
 				@Override
 				public void onError(Request httpRequest, Throwable exception) {
+					onReturned();
 					remoteExceptions
 							.add(new RemoteExceptionEvent(exception, sendTime));
 					unacknowledgedMessages
 							.forEach(uak -> uak.onSendException(exception));
-					signalCalled(httpRequest);
 				}
 
-				void signalCalled(Request httpRequest) {
+				void onReturned() {
+					inflightEnvelope.remove(envelope.envelopeId);
 					onRequestReturned();
 				}
 
 				@Override
 				public void onResponseReceived(Request httpRequest,
 						Response httpResponse) {
+					onReturned();
 					if (httpResponse.getStatusCode() == 0
 							|| httpResponse.getStatusCode() >= 400) {
 						onError(httpRequest,
@@ -120,54 +153,11 @@ public class MessageTransportLayerClient extends MessageTransportLayer2 {
 					RemoteComponentResponse response = ReflectiveSerializer
 							.deserializeRpc(text);
 					onComponentResponse(response);
-					// if (response != null) {
-					// // reset delay (successful response)
-					// awaitDelay = 0;
-					// Message message = response.protocolMessage;
-					// Class<? extends Message> requestMessageClass =
-					// request.protocolMessage
-					// .getClass();
-					// // Ax.out("[server->client response] #%s :: [client
-					// message
-					// // :: %s] ==> %s",
-					// // response.requestId,
-					// // NestedName.get(requestMessageClass),
-					// // message == null ? "[null response]"
-					// // : NestedName.get(message));
-					// if (message != null) {
-					// ProtocolMessageHandlerClient handler = Registry.impl(
-					// ProtocolMessageHandlerClient.class,
-					// message.getClass());
-					// try {
-					// handler.handle(response, message);
-					// } catch (Throwable e) {
-					// Ax.out("Exception handling message %s\n"
-					// + "================\nSerialized form:\n%s",
-					// message, text);
-					// e.printStackTrace();
-					// /*
-					// * FIXME - devex - 0 - once syncmutations.3 is
-					// * stable, this should not occur (ha!)
-					// *
-					// * Serious, the romcom client is a bounded piece of
-					// * code that just propagates server changes to the
-					// * client dom, so all exceptions *should* be
-					// * server-only (unless client dom is mashed by an
-					// * extension)
-					// */
-					// Window.alert(
-					// CommonUtils.toSimpleExceptionMessage(e));
-					// }
-					// } else {
-					// // Ax.out("Received no-message response for %s",
-					// // NestedName.get(messageClass));
-					// }
-					// signalCalled(httpRequest);
-					// } else {
-					// }
 				}
 			};
 			try {
+				inflightEnvelope.put(envelope.envelopeId,
+						new EnvelopeTransportHistory(envelope));
 				builder.sendRequest(payload, callback);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
