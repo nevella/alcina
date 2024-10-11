@@ -11,7 +11,7 @@ import cc.alcina.framework.servlet.environment.Environment.Access;
 
 @Registration.NonGenericSubtypes(MessageHandlerServer.class)
 public abstract class MessageHandlerServer<PM extends Message>
-		implements MessageToken.Handler<Environment.Access, PM> {
+		implements Message.Handler<PM> {
 	public abstract void handle(MessageToken token, Environment.Access env,
 			PM message);
 

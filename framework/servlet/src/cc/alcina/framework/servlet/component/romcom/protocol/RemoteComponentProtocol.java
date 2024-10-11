@@ -74,6 +74,12 @@ public class RemoteComponentProtocol {
 		public static class BeginAwaitLoop extends Message {
 		}
 
+		public interface Handler<M extends Message> {
+			default boolean isHandleOutOfBand() {
+				return false;
+			}
+		}
+
 		/*
 		 * Not an album by Beck.
 		 */

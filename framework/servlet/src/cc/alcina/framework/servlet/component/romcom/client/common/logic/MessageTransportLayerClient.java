@@ -14,9 +14,11 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -36,6 +38,10 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 	}
 
 	class ReceiveChannelImpl extends ReceiveChannel {
+		protected Message.Handler handler(Message message) {
+			return Registry.impl(ProtocolMessageHandlerClient.class,
+					message.getClass());
+		}
 	}
 
 	ReceiptCallback messageCallback;
@@ -173,6 +179,7 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		}
 	}
 
+	// FIXME - this isn't used
 	class ReceiptCallback implements AsyncCallback<MessageEnvelope> {
 		Throwable caught;
 

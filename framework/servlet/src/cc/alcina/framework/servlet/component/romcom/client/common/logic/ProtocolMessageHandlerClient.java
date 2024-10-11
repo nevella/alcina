@@ -30,7 +30,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * FIXME - beans1x5 - package protected
  */
 @Registration.NonGenericSubtypes(ProtocolMessageHandlerClient.class)
-public abstract class ProtocolMessageHandlerClient<PM extends Message> {
+public abstract class ProtocolMessageHandlerClient<PM extends Message>
+		implements Message.Handler<PM> {
 	public abstract void handle(HandlerContext handlerContext, PM message);
 
 	public interface HandlerContext {
@@ -264,6 +265,11 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message> {
 
 	public static class ProcessingExceptionHandler
 			extends ProtocolMessageHandlerClient<Message.ProcessingException> {
+		@Override
+		public boolean isHandleOutOfBand() {
+			return true;
+		}
+
 		@Override
 		public void handle(HandlerContext handlerContext,
 				Message.ProcessingException message) {

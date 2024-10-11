@@ -413,8 +413,11 @@ public abstract class MessageTransportLayer {
 		void publishSequentialMessages() {
 			synchronized (unacknowledgedMessages) {
 				for (UnacknowledgedMessage unacknowledgedMessage : unacknowledgedMessages) {
-					if (unacknowledgedMessage.message.messageId == highestPublishedMessageId
-							+ 1) {
+					boolean publish = unacknowledgedMessage.message.messageId == highestPublishedMessageId
+							+ 1;
+					publish |= handler(unacknowledgedMessage.message)
+							.isHandleOutOfBand();
+					if (publish) {
 						topicMessageReceived
 								.publish(unacknowledgedMessage.message);
 						highestPublishedMessageId++;
@@ -423,6 +426,8 @@ public abstract class MessageTransportLayer {
 				}
 			}
 		}
+
+		protected abstract Message.Handler handler(Message message);
 
 		void addMessagesToUnacknowledged(MessageEnvelope envelope) {
 			// this is the only place receivedMessageIds is used, so sync works

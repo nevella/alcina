@@ -32,6 +32,11 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			lastEnvelopeReceived = new Date();
 			super.onEnvelopeReceived(envelope);
 		}
+
+		protected Message.Handler handler(Message message) {
+			return Registry.impl(MessageHandlerServer.class,
+					message.getClass());
+		}
 	}
 
 	class AggregateDispatcherImpl extends EnvelopeDispatcher {
