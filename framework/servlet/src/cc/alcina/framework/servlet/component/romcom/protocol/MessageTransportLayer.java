@@ -160,7 +160,23 @@ public abstract class MessageTransportLayer {
 	public static class TransportHistory {
 		public MessageId messageId;
 
-		public EnvelopeId firstReceiptPacketId;
+		/*
+		 * When a message is first sent, this is set (to the envelope id ID0 of
+		 * the containing envelope, which will be the lowest envelope id for
+		 * which this message was sent). Once the other end responds with
+		 * "I have seen an envelope with id ID1", where ID1>=ID0, the sending
+		 * logic guarantees that the receipient has received the message wrapped
+		 * by this TransportHistory
+		 * 
+		 * The reason for this layered approach is that the recipient doesn't
+		 * need to send complex acknowledgments of receipt - only the envelope
+		 * ID (although the sender does need to possibly double-send )
+		 * 
+		 * A TODO is to not immediately re-send large messages - note this means
+		 * not resending *anything*, since the contract is
+		 * "resend everything unacknowledged"
+		 */
+		public EnvelopeId firstSentEnvelopeId;
 
 		public Date sent;
 
@@ -183,7 +199,7 @@ public abstract class MessageTransportLayer {
 		}
 
 		boolean wasAcknowledged(EnvelopeId highestReceivedEnvelopeId) {
-			return firstReceiptPacketId != null && firstReceiptPacketId
+			return firstSentEnvelopeId != null && firstSentEnvelopeId
 					.compareTo(highestReceivedEnvelopeId) <= 0;
 		}
 	}
@@ -303,6 +319,9 @@ public abstract class MessageTransportLayer {
 			envelope.highestReceivedEnvelopeId = receiveChannel().highestReceivedEnvelopeId;
 			unacknowledgedMessages.stream()
 					.filter(UnacknowledgedMessage::shouldSend).forEach(uack -> {
+						if (uack.transportHistory.firstSentEnvelopeId == null) {
+							uack.transportHistory.firstSentEnvelopeId = envelope.envelopeId;
+						}
 						uack.transportHistory.sent = new Date();
 						envelope.packets.add(new MessagePacket(
 								uack.transportHistory.messageId, uack.message));
