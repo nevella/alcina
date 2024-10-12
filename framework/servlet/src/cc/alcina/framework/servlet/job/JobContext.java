@@ -342,18 +342,20 @@ public class JobContext {
 
 		void debounceMessage(String message) {
 			debouncer.eventOccurred(() -> {
-				get().enqueue(() -> {
-					Job job = getJob();
-					job.setStatusMessage(message);
-					if (itemCount > 0 && itemsCompleted > 0) {
-						setCompletion(((double) itemsCompleted)
-								/ ((double) itemCount));
-					}
-				});
+				JobRegistry.get().environment.updateJobStatus(JobContext.this,
+						() -> updateJobStatusDebounced(message));
 				MethodContext.instance().withThreadName(thread.getName())
 						.run(() -> LoggerFactory.getLogger(JobContext.class)
 								.info("status message: {}", message));
 			});
+		}
+	}
+
+	void updateJobStatusDebounced(String message) {
+		Job job = getJob();
+		job.setStatusMessage(message);
+		if (itemCount > 0 && itemsCompleted > 0) {
+			setCompletion(((double) itemsCompleted) / ((double) itemCount));
 		}
 	}
 
@@ -369,15 +371,13 @@ public class JobContext {
 		} else {
 			try {
 				JobContext.adopt(this, true);
-				Transaction.ensureBegun();
-				collator.getLastObject().run();
-				TransformCommit
-						.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
+				// FIXME - this duplicates some of the other debounce routing
+				JobRegistry.get().environment.updateJobStatus(this,
+						collator.getLastObject());
 			} catch (Exception e) {
 				e.printStackTrace();
 			} finally {
 				JobContext.adopt(this, false);
-				Transaction.end();
 			}
 		}
 	}
@@ -641,8 +641,9 @@ public class JobContext {
 		getJob().setCompletion(completion);
 	}
 
-	private void enqueue(Runnable runnable) {
-		TransformCommit.get().enqueueBackendTransform(runnable);
+	void enqueue(Runnable runnable) {
+		TransformCommit.get().enqueueBackendTransform(runnable,
+				JobRegistry.TRANSFORM_QUEUE_NAME);
 	}
 
 	public void onJobException(Exception e) {

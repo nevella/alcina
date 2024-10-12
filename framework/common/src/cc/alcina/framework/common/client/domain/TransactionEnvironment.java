@@ -56,6 +56,13 @@ public interface TransactionEnvironment {
 		});
 	}
 
+	static void withDomainCommitting(Runnable runnable) {
+		withDomain(() -> {
+			runnable.run();
+			get().commit();
+		});
+	}
+
 	void begin();
 
 	void commit();
