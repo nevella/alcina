@@ -83,6 +83,7 @@ class ClientExecutionQueue implements Runnable {
 				environment.access().getSession().id);
 		executionThread = new Thread(this, threadName);
 		executionThread.setDaemon(true);
+		executionThread.setPriority(Thread.MAX_PRIORITY);
 		executionThread.start();
 	}
 
