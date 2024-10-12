@@ -132,6 +132,10 @@ public class TowardsAMoreDesirableSituation {
 		events.add(new Event(Type.SHUTDOWN));
 	}
 
+	static String getFutureConsistencyLockPath() {
+		return TowardsAMoreDesirableSituation.class.getSimpleName();
+	}
+
 	void tend() {
 		if (!Configuration.is("enabled")) {
 			return;
@@ -143,8 +147,8 @@ public class TowardsAMoreDesirableSituation {
 		while (canAllocate()) {
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
-				JobRegistry.get()
-						.withJobMetadataLock(getClass().getSimpleName(), () -> {
+				JobRegistry.get().withJobMetadataLock(
+						getFutureConsistencyLockPath(), () -> {
 							Transaction.endAndBeginNew();
 							// allocate in bulk while holding lock
 							while (canAllocate()) {
