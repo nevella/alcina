@@ -406,7 +406,6 @@ public abstract class MessageTransportLayer {
 			updateHistoriesOnReceipt(envelope);
 			sendChannel().updateHistoriesOnReceipt(envelope);
 			addMessagesToUnacknowledged(envelope);
-			Ax.out(envelope.toMessageSummaryString());
 			publishSequentialMessages();
 		}
 

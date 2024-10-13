@@ -16,6 +16,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -32,12 +33,15 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		 */
 		void conditionallyEnqueueAwaitMessage() {
 			if (envelopeDispatcher.getInflightCount() == 0) {
-				send(new AwaitRemote());
+				if (!RemoteObjectModelComponentState.get().finished) {
+					send(new AwaitRemote());
+				}
 			}
 		}
 	}
 
 	class ReceiveChannelImpl extends ReceiveChannel {
+		@Override
 		protected Message.Handler handler(Message message) {
 			return Registry.impl(ProtocolMessageHandlerClient.class,
 					message.getClass());
