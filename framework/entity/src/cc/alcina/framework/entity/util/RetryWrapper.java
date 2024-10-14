@@ -23,13 +23,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @param <T>
  */
 public class RetryWrapper<T> {
-	public int maxCount = Integer.MAX_VALUE;
+	public int maxRetryCount = Integer.MAX_VALUE;
 
 	public int maxBackoffPower = 4;
 
 	public int logEveryNFails = 10;
 
-	public int initialDelayMs = 60;
+	public long initialDelayMs = 60;
 
 	Callable<T> callable;
 
@@ -64,7 +64,7 @@ public class RetryWrapper<T> {
 			}
 			logException(lastException);
 			retryCount++;
-			if (retryCount >= maxCount) {
+			if (retryCount >= maxRetryCount) {
 				break;
 			}
 			int delayExponent = Math.min(retryCount, maxBackoffPower);
