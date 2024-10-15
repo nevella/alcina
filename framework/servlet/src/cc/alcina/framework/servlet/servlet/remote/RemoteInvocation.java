@@ -123,12 +123,13 @@ public class RemoteInvocation {
 				params.clientInstanceAuth = clientInstance.getAuth();
 			}
 			params.context = new LinkedHashMap<>();
-			LooseContext.getContext().getProperties().forEach((k, v) -> {
-				if (v == null || GraphProjection
-						.isPrimitiveOrDataClass(v.getClass())) {
-					params.context.put(k, v);
-				}
-			});
+			LooseContext.getContext().snapshot().getProperties()
+					.forEach((k, v) -> {
+						if (v == null || GraphProjection
+								.isPrimitiveOrDataClass(v.getClass())) {
+							params.context.put(k, v);
+						}
+					});
 			List<NameValuePair> qparams = new ArrayList<NameValuePair>();
 			qparams.add(new BasicNameValuePair(
 					RemoteInvocationServlet.REMOTE_INVOCATION_PARAMETERS,

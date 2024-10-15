@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -79,6 +80,8 @@ public class RemoteConsoleInit {
 				new TimerGwt.Provider());
 		Registry.register().singleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
+		RegistryHistoryMapper mapper = new RegistryHistoryMapper();
+		Registry.register().singleton(RegistryHistoryMapper.class, mapper);
 		Registry.register().add(AlcinaBeanSerializerC.class.getName(),
 				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
 				Registration.Implementation.INSTANCE,

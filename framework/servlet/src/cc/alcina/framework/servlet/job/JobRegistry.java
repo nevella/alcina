@@ -1251,7 +1251,8 @@ public class JobRegistry {
 			//
 			// instead, all tasks for which runAsRoot returns false must
 			// implement iuser
-			copyContext.putAll(LooseContext.getContext().getProperties());
+			copyContext.putAll(
+					LooseContext.getContext().snapshot().getProperties());
 		}
 
 		public void await(long maxTime) {
@@ -1375,7 +1376,8 @@ public class JobRegistry {
 			Thread currentThread = Thread.currentThread();
 			launchingThreadId = currentThread.getId();
 			launchingThreadName = currentThread.getName();
-			copyContext.putAll(LooseContext.getContext().getProperties());
+			copyContext.putAll(
+					LooseContext.getContext().snapshot().getProperties());
 			contextClassLoader = currentThread.getContextClassLoader();
 		}
 
@@ -1478,14 +1480,18 @@ public class JobRegistry {
 		return scheduler.debugOrphanage(jobId);
 	}
 
-	public boolean waitForZeroPendingOrInActiveJobs(long maxTime) {
+	public boolean waitForZeroPendingOrInActiveJobs(long maxTime,
+			Set<Class<? extends Task>> ignoreTaskClasses) {
 		long start = System.currentTimeMillis();
 		while (TimeConstants.within(start, maxTime)) {
 			long incompleteOrPending = TransactionEnvironment.withDomain(() -> {
 				try {
 					TransactionEnvironment.get().ensureBegun();
 					List<QueueStat> queueStats = JobRegistry.get()
-							.getActiveQueueStats().collect(Collectors.toList());
+							.getActiveQueueStats()
+							.filter(qs -> !ignoreTaskClasses
+									.contains(qs.taskClass))
+							.collect(Collectors.toList());
 					Long active = queueStats.stream()
 							.collect(Collectors.summingLong(qs -> qs.active));
 					Long pending = queueStats.stream()
@@ -1497,6 +1503,11 @@ public class JobRegistry {
 			});
 			if (incompleteOrPending == 0) {
 				return true;
+			}
+			try {
+				Thread.sleep(5);
+			} catch (InterruptedException e) {
+				throw new WrappedRuntimeException(e);
 			}
 		}
 		return false;

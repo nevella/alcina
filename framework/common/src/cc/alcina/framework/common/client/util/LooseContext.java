@@ -1,6 +1,8 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -311,5 +313,23 @@ public abstract class LooseContext {
 	 */
 	public static void restore(LooseContextInstance contextSnapshot) {
 		contextSnapshot.cloneFieldsTo(getContext());
+	}
+
+	static Set<String> snapshotExclusions = null;
+
+	/**
+	 * <p>
+	 * Define a key as execution-state specific (such as a lock), rather than
+	 * execution-context specific. Fuzzy, I know
+	 * <p>
+	 * Sync :: manual copy-on-write
+	 */
+	public static synchronized void excludeFromSnapshot(String key) {
+		Set<String> newExclusions = new LinkedHashSet<>();
+		if (snapshotExclusions != null) {
+			newExclusions.addAll(snapshotExclusions);
+		}
+		newExclusions.add(key);
+		snapshotExclusions = newExclusions;
 	}
 }

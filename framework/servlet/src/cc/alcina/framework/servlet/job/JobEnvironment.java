@@ -36,4 +36,6 @@ public interface JobEnvironment {
 	void setAllocatorThreadName(String name);
 
 	void waitUntilCurrentRequestsProcessed();
+
+	void updateJobStatus(JobContext jobContext, Runnable runnable);
 }

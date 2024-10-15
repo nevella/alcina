@@ -376,7 +376,8 @@ public abstract class Job extends VersionableEntity<Job>
 	@DomainProperty(serialize = true)
 	public Task getTask() {
 		task = TransformManager.resolveMaybeDeserialize(task,
-				this.taskSerialized, null, Reflections.forName(taskClassName));
+				this.taskSerialized, null,
+				Reflections.forName(getTaskClassName()));
 		return this.task;
 	}
 

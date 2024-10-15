@@ -9,5 +9,6 @@ public class DevConsoleLoggingHandler extends ConsoleHandler {
 			throws SecurityException {
 		// hijack the superclass (which sets systems.err)
 		super.setOutputStream(System.out);
+		setFormatter(new DevConsoleLoggingFormatter());
 	}
 }

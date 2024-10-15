@@ -26,7 +26,7 @@ var $sessionId = $wnd.__gwtStatsSessionId ? $wnd.__gwtStatsSessionId : null;
  * Variables used by the Plugin
  *****************************************************************************/
 var $entry;
-var $hostedHtmlVersion="2.1";
+var $hostedHtmlVersion = "2.1";
 
 var $errFn;
 var $moduleName;
@@ -42,37 +42,37 @@ var __gwt_javaInvokes = [];
 // Wrapper to call JS methods, which we need both to be able to supply a
 // different this for method lookup and to get the exception back
 function __gwt_jsInvoke(thisObj, methodName) {
- try {
-   var args = Array.prototype.slice.call(arguments, 2);
-   return [0, window[methodName].apply(thisObj, args)];
- } catch (e) {
-   return [1, e];
- }
+	try {
+		var args = Array.prototype.slice.call(arguments, 2);
+		return [0, window[methodName].apply(thisObj, args)];
+	} catch (e) {
+		return [1, e];
+	}
 }
 
 function __gwt_makeJavaInvoke(argCount) {
-  return __gwt_javaInvokes[argCount] || __gwt_doMakeJavaInvoke(argCount);
+	return __gwt_javaInvokes[argCount] || __gwt_doMakeJavaInvoke(argCount);
 }
 
 function __gwt_doMakeJavaInvoke(argCount) {
-  // IE6 won't eval() anonymous functions except as r-values
-  var argList = "";
-  for (var i = 0; i < argCount; i++) {
-    argList += ",p" + i;
-  }
-  var argListNoComma = argList.substring(1);
+	// IE6 won't eval() anonymous functions except as r-values
+	var argList = "";
+	for (var i = 0; i < argCount; i++) {
+		argList += ",p" + i;
+	}
+	var argListNoComma = argList.substring(1);
 
-  return eval(
-    "__gwt_javaInvokes[" + argCount + "] =\n" +
-    "  function(thisObj, dispId" + argList + ") {\n" +
-    "    var result = __static(dispId, thisObj" + argList + ");\n" +
-    "    if (result[0]) {\n" +
-    "      throw result[1];\n" +
-    "    } else {\n" +
-    "      return result[1];\n" +
-    "    }\n" +
-    "  }\n"
-  ); 
+	return eval(
+		"__gwt_javaInvokes[" + argCount + "] =\n" +
+		"  function(thisObj, dispId" + argList + ") {\n" +
+		"    var result = __static(dispId, thisObj" + argList + ");\n" +
+		"    if (result[0]) {\n" +
+		"      throw result[1];\n" +
+		"    } else {\n" +
+		"      return result[1];\n" +
+		"    }\n" +
+		"  }\n"
+	);
 }
 
 
@@ -85,35 +85,35 @@ function __gwt_doMakeJavaInvoke(argCount) {
 var __gwt_tearOffs = [];
 var __gwt_tearOffGenerators = [];
 function __gwt_makeTearOff(proxy, dispId, argCount) {
-  return __gwt_tearOffs[dispId] || __gwt_doMakeTearOff(dispId, argCount);
+	return __gwt_tearOffs[dispId] || __gwt_doMakeTearOff(dispId, argCount);
 }
 
 function __gwt_doMakeTearOff(dispId, argCount) {
-  return __gwt_tearOffs[dispId] = 
-      (__gwt_tearOffGenerators[argCount] || __gwt_doMakeTearOffGenerator(argCount))(dispId);
+	return __gwt_tearOffs[dispId] =
+		(__gwt_tearOffGenerators[argCount] || __gwt_doMakeTearOffGenerator(argCount))(dispId);
 }
 
 function __gwt_doMakeTearOffGenerator(argCount) {
-  // IE6 won't eval() anonymous functions except as r-values
-  var argList = "";
-  for (var i = 0; i < argCount; i++) {
-    argList += ",p" + i;
-  }
-  var argListNoComma = argList.substring(1);
+	// IE6 won't eval() anonymous functions except as r-values
+	var argList = "";
+	for (var i = 0; i < argCount; i++) {
+		argList += ",p" + i;
+	}
+	var argListNoComma = argList.substring(1);
 
-  return eval(
-    "__gwt_tearOffGenerators[" + argCount + "] =\n" +
-    "  function(dispId) {\n" +
-    "    return function(" + argListNoComma + ") {\n" +
-    "      var result = __static(dispId, this" + argList + ");\n" +
-    "      if (result[0]) {\n" +
-    "        throw result[1];\n" +
-    "      } else {\n" +
-    "        return result[1];\n" +
-    "      }\n" +
-    "    }\n" +
-    "  }\n"
-  ); 
+	return eval(
+		"__gwt_tearOffGenerators[" + argCount + "] =\n" +
+		"  function(dispId) {\n" +
+		"    return function(" + argListNoComma + ") {\n" +
+		"      var result = __static(dispId, this" + argList + ");\n" +
+		"      if (result[0]) {\n" +
+		"        throw result[1];\n" +
+		"      } else {\n" +
+		"        return result[1];\n" +
+		"      }\n" +
+		"    }\n" +
+		"  }\n"
+	);
 }
 
 
@@ -121,17 +121,17 @@ function __gwt_doMakeTearOffGenerator(argCount) {
  *Code to give visual feedback when something goes wrong in Dev Mode
  *****************************************************************************/
 function __gwt_disconnected() {
-  // Prevent double-invocation.
-  window.__gwt_disconnected = new Function();
-  // Do it in a timeout so we can be sure we have a clean stack.
-  window.setTimeout(__gwt_disconnected_impl, 1);
+	// Prevent double-invocation.
+	window.__gwt_disconnected = new Function();
+	// Do it in a timeout so we can be sure we have a clean stack.
+	window.setTimeout(__gwt_disconnected_impl, 1);
 }
 
 function __gwt_disconnected_impl() {
-  __gwt_displayGlassMessage('GWT Code Server Disconnected',
-      'Most likely, you closed GWT Development Mode. Or, you might have lost '
-      + 'network connectivity. To fix this, try restarting GWT Development Mode and '
-      + 'refresh this page.');
+	__gwt_displayGlassMessage('GWT Code Server Disconnected',
+		'Most likely, you closed GWT Development Mode. Or, you might have lost '
+		+ 'network connectivity. To fix this, try restarting GWT Development Mode and '
+		+ 'refresh this page.');
 }
 
 // Keep track of z-index to allow layering of multiple glass messages
@@ -139,46 +139,46 @@ var __gwt_glassMessageZIndex = 2147483647;
 
 // Note this method is also used by ModuleSpace.java
 function __gwt_displayGlassMessage(summary, details) {
-  var topWin = window.top;
-  var topDoc = topWin.document;
-  var outer = topDoc.createElement("div");
-  // Do not insert whitespace or outer.firstChild will get a text node.
-  outer.innerHTML = 
-    '<div style="position:absolute;z-index:' + __gwt_glassMessageZIndex-- +
-    ';left:50px;top:50px;width:600px;color:#FFF;font-family:verdana;text-align:left;">' +
-    '<div style="font-size:30px;font-weight:bold;">' + summary + '</div>' +
-    '<div style="font-size:15px;">' + details + '</div>' +
-    '</div>' +
-    '<div style="position:absolute;z-index:' + __gwt_glassMessageZIndex-- +
-    ';left:0px;top:0px;right:0px;bottom:0px;filter:alpha(opacity=60);opacity:0.6;background-color:#000;"></div>'
-  ;
-  topDoc.body.appendChild(outer);
-  var glass = outer.firstChild;
-  var glassStyle = glass.style;
+	var topWin = window.top;
+	var topDoc = topWin.document;
+	var outer = topDoc.createElement("div");
+	// Do not insert whitespace or outer.firstChild will get a text node.
+	outer.innerHTML =
+		'<div style="position:absolute;z-index:' + __gwt_glassMessageZIndex-- +
+		';left:50px;top:50px;width:600px;color:#FFF;font-family:verdana;text-align:left;">' +
+		'<div style="font-size:30px;font-weight:bold;">' + summary + '</div>' +
+		'<div style="font-size:15px;">' + details + '</div>' +
+		'</div>' +
+		'<div style="position:absolute;z-index:' + __gwt_glassMessageZIndex-- +
+		';left:0px;top:0px;right:0px;bottom:0px;filter:alpha(opacity=60);opacity:0.6;background-color:#000;"></div>'
+		;
+	topDoc.body.appendChild(outer);
+	var glass = outer.firstChild;
+	var glassStyle = glass.style;
 
-  // Scroll to the top and remove scrollbars.
-  topWin.scrollTo(0, 0);
-  if (topDoc.compatMode == "BackCompat") {
-    topDoc.body.style["overflow"] = "hidden";
-  } else {
-    topDoc.documentElement.style["overflow"] = "hidden";
-  }
+	// Scroll to the top and remove scrollbars.
+	topWin.scrollTo(0, 0);
+	if (topDoc.compatMode == "BackCompat") {
+		topDoc.body.style["overflow"] = "hidden";
+	} else {
+		topDoc.documentElement.style["overflow"] = "hidden";
+	}
 
-  // Steal focus.
-  glass.focus();
+	// Steal focus.
+	glass.focus();
 
-  if ((navigator.userAgent.indexOf("MSIE") >= 0) && (topDoc.compatMode == "BackCompat")) {
-    // IE quirks mode doesn't support right/bottom, but does support this.
-    glassStyle.width = "125%";
-    glassStyle.height = "100%";
-  } else if (navigator.userAgent.indexOf("MSIE 6") >= 0) {
-    // IE6 doesn't have a real standards mode, so we have to use hacks.
-    glassStyle.width = "125%"; // Get past scroll bar area.
-    // Nasty CSS; onresize would be better but the outer window won't let us add a listener IE.
-    glassStyle.setExpression("height", "document.documentElement.clientHeight");
-  }
+	if ((navigator.userAgent.indexOf("MSIE") >= 0) && (topDoc.compatMode == "BackCompat")) {
+		// IE quirks mode doesn't support right/bottom, but does support this.
+		glassStyle.width = "125%";
+		glassStyle.height = "100%";
+	} else if (navigator.userAgent.indexOf("MSIE 6") >= 0) {
+		// IE6 doesn't have a real standards mode, so we have to use hacks.
+		glassStyle.width = "125%"; // Get past scroll bar area.
+		// Nasty CSS; onresize would be better but the outer window won't let us add a listener IE.
+		glassStyle.setExpression("height", "document.documentElement.clientHeight");
+	}
 
-  $doc.title = summary + " [" + $doc.title + "]";
+	$doc.title = summary + " [" + $doc.title + "]";
 }
 
 
@@ -186,12 +186,12 @@ function __gwt_displayGlassMessage(summary, details) {
  * Other functions called by the Plugin
  *****************************************************************************/
 function __gwt_makeResult(isException, result) {
-  return [isException, result];
+	return [isException, result];
 }
 
 //should be prefixed with "__gwt_"
 function fireOnModuleLoadStart(className) {
-  $sendStats("moduleStartup", "onModuleLoadStart");
+	$sendStats("moduleStartup", "onModuleLoadStart");
 }
 
 
@@ -199,202 +199,208 @@ function fireOnModuleLoadStart(className) {
  * Helper functions for the Development Mode startup code. Listed alphabetically
  *****************************************************************************/
 function doBrowserSpecificFixes() {
-  var ua = navigator.userAgent.toLowerCase();
-  if (ua.indexOf("gecko") != -1) {
-    // install eval wrapper on FF to avoid EvalError problem
-    var __eval = window.eval;
-    window.eval = function(s) {
-      return __eval(s);
-    }
-  }
-  if (ua.indexOf("chrome") != -1) {
-    // work around __gwt_ObjectId appearing in JS objects
-    var hop = window.Object.prototype.hasOwnProperty;
-    window.Object.prototype.hasOwnProperty = function(prop) {
-      return prop != "__gwt_ObjectId" && hop.call(this, prop);
-    };
-    var hop2 = window.Object.prototype.propertyIsEnumerable;
-    window.Object.prototype.propertyIsEnumerable = function(prop) {
-      return prop != "__gwt_ObjectId" && hop2.call(this, prop);
-    };
-    // do the same in the main window if it is different from our window
-    if ($wnd != window) {
-      var hop3 = $wnd.Object.prototype.hasOwnProperty;
-      $wnd.Object.prototype.hasOwnProperty = function(prop) {
-        return prop != "__gwt_ObjectId" && hop3.call(this, prop);
-      };
-      var hop4 = $wnd.Object.prototype.propertyIsEnumerable;
-      $wnd.Object.prototype.propertyIsEnumerable = function(prop) {
-        return prop != "__gwt_ObjectId" && hop4.call(this, prop);
-      };
-    }
-  }
+	var ua = navigator.userAgent.toLowerCase();
+	if (ua.indexOf("gecko") != -1) {
+		// install eval wrapper on FF to avoid EvalError problem
+		var __eval = window.eval;
+		window.eval = function (s) {
+			return __eval(s);
+		}
+	}
+	if (ua.indexOf("chrome") != -1) {
+		// work around __gwt_ObjectId appearing in JS objects
+		var hop = window.Object.prototype.hasOwnProperty;
+		window.Object.prototype.hasOwnProperty = function (prop) {
+			return prop != "__gwt_ObjectId" && hop.call(this, prop);
+		};
+		var hop2 = window.Object.prototype.propertyIsEnumerable;
+		window.Object.prototype.propertyIsEnumerable = function (prop) {
+			return prop != "__gwt_ObjectId" && hop2.call(this, prop);
+		};
+		// do the same in the main window if it is different from our window
+		if ($wnd != window) {
+			var hop3 = $wnd.Object.prototype.hasOwnProperty;
+			$wnd.Object.prototype.hasOwnProperty = function (prop) {
+				return prop != "__gwt_ObjectId" && hop3.call(this, prop);
+			};
+			var hop4 = $wnd.Object.prototype.propertyIsEnumerable;
+			$wnd.Object.prototype.propertyIsEnumerable = function (prop) {
+				return prop != "__gwt_ObjectId" && hop4.call(this, prop);
+			};
+		}
+	}
 }
 
 function embedPlugin() {
-  var embed = document.createElement('embed');
-  embed.id = 'pluginEmbed';
-  embed.type = 'application/x-gwt-hosted-mode';
-  embed.width = '10';
-  embed.height = '20';
+	var embed = document.createElement('embed');
+	embed.id = 'pluginEmbed';
+	embed.type = 'application/x-gwt-hosted-mode';
+	embed.width = '10';
+	embed.height = '20';
 
-  var obj = document.createElement('object');
-  obj.id = 'pluginObject';
-  obj.classid = 'clsid:1D6156B6-002B-49E7-B5CA-C138FB843B4E';
+	var obj = document.createElement('object');
+	obj.id = 'pluginObject';
+	obj.classid = 'clsid:1D6156B6-002B-49E7-B5CA-C138FB843B4E';
 
-  document.body.appendChild(embed);
-  document.body.appendChild(obj);
+	document.body.appendChild(embed);
+	document.body.appendChild(obj);
 }
 
 function findPluginObject() {
-  try {
-    return document.getElementById('pluginObject');
-  } catch (e) {
-    return null;
-  }
+	try {
+		return document.getElementById('pluginObject');
+	} catch (e) {
+		return null;
+	}
 }
 
 function findPluginEmbed() {
-  try {
-    return document.getElementById('pluginEmbed')
-  } catch (e) {
-    return null;
-  }
+	try {
+		return document.getElementById('pluginEmbed')
+	} catch (e) {
+		return null;
+	}
 }
 
 function findPluginXPCOM() {
-  try {
-    return __gwt_HostedModePlugin;
-  } catch (e) {
-    return null;
-  }
+	try {
+		return __gwt_HostedModePlugin;
+	} catch (e) {
+		return null;
+	}
 }
 function loadPluginJsCodeServer() {
-  try {
-    var script = $doc.createElement('script');
-    script.src = "/jscodeserver/GwtJsPlugin.js";
-    document.getElementsByTagName('head')[0].appendChild(script);
-  } catch (e) {
-  }
+	try {
+		var script = $doc.createElement('script');
+		script.src = "/jscodeserver/GwtJsPlugin.js";
+		document.getElementsByTagName('head')[0].appendChild(script);
+	} catch (e) {
+	}
 }
 function findPluginJsCodeServer() {
-  try {
-    return __gwt_jsCodeServerPlugin;
-  } catch (e) {
-    return null;
-  }
+	try {
+		return __gwt_jsCodeServerPlugin;
+	} catch (e) {
+		return null;
+	}
 }
 
 function getCodeServer() {
-  var server = "localhost:9997";
-  var query = $wnd.location.search;
-  var idx = query.indexOf("gwt.codesvr=");
-  if (idx >= 0) {
-    idx += 12;  // "gwt.codesvr=".length == 12
-  } else {
-    idx = query.indexOf("gwt.codesvr.cc.alcina.extras.dev.console.remote.RemoteConsoleClient=");
-    idx += (13 + "cc.alcina.extras.dev.console.remote.RemoteConsoleClient".length);  // 
-  }
-  if (idx >= 0) {
-    var amp = query.indexOf("&", idx);
-    if (amp >= 0) {
-      server = query.substring(idx, amp);
-    } else {
-      server = query.substring(idx);
-    }
-    // According to RFC 3986, some of this component's characters (e.g., ':')
-    // are reserved and *may* be escaped.
-    return decodeURIComponent(server);
-  }
+	var server = "127.0.0.1:9997";
+	var query = $wnd.location.search;
+	{
+		var idx = query.indexOf("gwt.l");
+		if (idx >= 0) {
+			return server;
+		}
+	}
+	var idx = query.indexOf("gwt.codesvr=");
+	if (idx >= 0) {
+		idx += 12;  // "gwt.codesvr=".length == 12
+	} else {
+		idx = query.indexOf("gwt.codesvr.cc.alcina.extras.dev.console.remote.RemoteConsoleClient=");
+		idx += (13 + "cc.alcina.extras.dev.console.remote.RemoteConsoleClient".length);  // 
+	}
+	if (idx >= 0) {
+		var amp = query.indexOf("&", idx);
+		if (amp >= 0) {
+			server = query.substring(idx, amp);
+		} else {
+			server = query.substring(idx);
+		}
+		// According to RFC 3986, some of this component's characters (e.g., ':')
+		// are reserved and *may* be escaped.
+		return decodeURIComponent(server);
+	}
 }
 
 function generateSessionId() {
-  var ASCII_EXCLAMATION = 33;
-  var ASCII_TILDE = 126;
-  var chars = [];
-  for (var i = 0; i < 16; ++i) {
-    chars.push(Math.floor(ASCII_EXCLAMATION
-    + Math.random() * (ASCII_TILDE - ASCII_EXCLAMATION + 1)));
-  }
-  return String.fromCharCode.apply(null, chars);
+	var ASCII_EXCLAMATION = 33;
+	var ASCII_TILDE = 126;
+	var chars = [];
+	for (var i = 0; i < 16; ++i) {
+		chars.push(Math.floor(ASCII_EXCLAMATION
+			+ Math.random() * (ASCII_TILDE - ASCII_EXCLAMATION + 1)));
+	}
+	return String.fromCharCode.apply(null, chars);
 }
 
 function loadIframe(url) {
-  var topDoc = window.top.document;
+	var topDoc = window.top.document;
 
-  // create an iframe
-  var iframeDiv = topDoc.createElement("div");
-  iframeDiv.innerHTML = "<iframe scrolling=no frameborder=0 src='" + url + "'>";
-  var iframe = iframeDiv.firstChild;
+	// create an iframe
+	var iframeDiv = topDoc.createElement("div");
+	iframeDiv.innerHTML = "<iframe scrolling=no frameborder=0 src='" + url + "'>";
+	var iframe = iframeDiv.firstChild;
 
-  // mess with the iframe style a little
-  var iframeStyle = iframe.style;
-  iframeStyle.position = "absolute";
-  iframeStyle.borderWidth = "0";
-  iframeStyle.left = "0";
-  iframeStyle.top = "0";
-  iframeStyle.width = "100%";
-  iframeStyle.backgroundColor = "#ffffff";
-  iframeStyle.zIndex = "1";
-  iframeStyle.height = "100%";
+	// mess with the iframe style a little
+	var iframeStyle = iframe.style;
+	iframeStyle.position = "absolute";
+	iframeStyle.borderWidth = "0";
+	iframeStyle.left = "0";
+	iframeStyle.top = "0";
+	iframeStyle.width = "100%";
+	iframeStyle.backgroundColor = "#ffffff";
+	iframeStyle.zIndex = "1";
+	iframeStyle.height = "100%";
 
-  // update the top window's document's body's style
-  var hostBodyStyle = window.top.document.body.style; 
-  hostBodyStyle.margin = "0";
-  hostBodyStyle.height = iframeStyle.height;
-  hostBodyStyle.overflow = "hidden";
+	// update the top window's document's body's style
+	var hostBodyStyle = window.top.document.body.style;
+	hostBodyStyle.margin = "0";
+	hostBodyStyle.height = iframeStyle.height;
+	hostBodyStyle.overflow = "hidden";
 
-  // insert the iframe
-  topDoc.body.insertBefore(iframe, topDoc.body.firstChild);
+	// insert the iframe
+	topDoc.body.insertBefore(iframe, topDoc.body.firstChild);
 }
 
 function pluginConnectionError(codeServer) {
-  __gwt_displayGlassMessage(
-      "Plugin failed to connect to Development Mode server at " + simpleEscape(codeServer),
-      "Follow the troubleshooting instructions at "
-      + "<a href='http://code.google.com/p/google-web-toolkit/wiki/TroubleshootingOOPHM'>"
-      + "http://code.google.com/p/google-web-toolkit/wiki/TroubleshootingOOPHM</a>");
-  if ($errFn) {
-    $errFn($moduleName);
-  }
+	__gwt_displayGlassMessage(
+		"Plugin failed to connect to Development Mode server at " + simpleEscape(codeServer),
+		"Follow the troubleshooting instructions at "
+		+ "<a href='http://code.google.com/p/google-web-toolkit/wiki/TroubleshootingOOPHM'>"
+		+ "http://code.google.com/p/google-web-toolkit/wiki/TroubleshootingOOPHM</a>");
+	if ($errFn) {
+		$errFn($moduleName);
+	}
 }
 
 function simpleEscape(originalString) {
-  return originalString.replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/\'/g, "&#39;")
-    .replace(/\"/g,"&quot;");
+	return originalString.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/\'/g, "&#39;")
+		.replace(/\"/g, "&quot;");
 }
 
 function tryConnectingToPlugin(sessionId, url) {
-  // Note that the order is important
-  //var pluginFinders = [findPluginXPCOM, findPluginObject, findPluginEmbed, findPluginJsCodeServer];
-  var pluginFinders = [ findPluginJsCodeServer];
-  var codeServer = getCodeServer();
-  var plugin = null;
-  for (var i = 0; i < pluginFinders.length; ++i) {
-    try {
-      var maybePlugin = pluginFinders[i]();
-      if (maybePlugin != null && maybePlugin.init(window)) {
-        plugin = maybePlugin;
-        break;
-      }
-    } catch (e) {
-    }
-  }
+	// Note that the order is important
+	//var pluginFinders = [findPluginXPCOM, findPluginObject, findPluginEmbed, findPluginJsCodeServer];
+	var pluginFinders = [findPluginJsCodeServer];
+	var codeServer = getCodeServer();
+	var plugin = null;
+	for (var i = 0; i < pluginFinders.length; ++i) {
+		try {
+			var maybePlugin = pluginFinders[i]();
+			if (maybePlugin != null && maybePlugin.init(window)) {
+				plugin = maybePlugin;
+				break;
+			}
+		} catch (e) {
+		}
+	}
 
-  if (plugin == null) {
-    // Plugin initialization failed. Show the missing-plugin page.
-    return null;
-  }
-  if (!plugin.connect(url, sessionId, codeServer, $moduleName,
-                      $hostedHtmlVersion)) {
-    // Connection failed. Show the error alert and troubleshooting page.
-    pluginConnectionError(codeServer);
-  }
+	if (plugin == null) {
+		// Plugin initialization failed. Show the missing-plugin page.
+		return null;
+	}
+	if (!plugin.connect(url, sessionId, codeServer, $moduleName,
+		$hostedHtmlVersion)) {
+		// Connection failed. Show the error alert and troubleshooting page.
+		pluginConnectionError(codeServer);
+	}
 
-  return plugin;
+	return plugin;
 }
 
 
@@ -402,60 +408,60 @@ function tryConnectingToPlugin(sessionId, url) {
  * Development Mode startup code
  *****************************************************************************/
 function gwtOnLoad(errFn, moduleName, moduleBase, softPermutationId, computePropValue) {
-  if(typeof __gwt_jsCodeServerPlugin == "undefined"){
-    loadPluginJsCodeServer();
-    window.setTimeout( function(){
-      gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue);
-    },50);
-  }else{
-    gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue);
-  }
+	if (typeof __gwt_jsCodeServerPlugin == "undefined") {
+		loadPluginJsCodeServer();
+		window.setTimeout(function () {
+			gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue);
+		}, 50);
+	} else {
+		gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue);
+	}
 }
 function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue) {
-  $errFn = errFn;
-  $moduleName = moduleName;
-  $moduleBase = moduleBase;
-  __gwt_getProperty = computePropValue;
-  
-  doBrowserSpecificFixes();
+	$errFn = errFn;
+	$moduleName = moduleName;
+	$moduleBase = moduleBase;
+	__gwt_getProperty = computePropValue;
 
-/*
-  if (!findPluginXPCOM()) {
-    embedPlugin();
-  }
-*/
+	doBrowserSpecificFixes();
 
-  var topWin = window.top;
-  try{
-      var test = !topWin.__gwt_SessionID;
-      if(test){
-        //force non-elision
-        var test = window.name;
-      }
-  }catch(e){
-      //top may not be accessible from this window/frame
-      topWin = window.parent
-  }
+	/*
+	  if (!findPluginXPCOM()) {
+		embedPlugin();
+	  }
+	*/
 
-  if (!topWin.__gwt_SessionID) {
-    topWin.__gwt_SessionID = generateSessionId();
-  }
-  var plugin = tryConnectingToPlugin(topWin.__gwt_SessionID, topWin.location.href);
-  if (plugin == null) {
-    loadIframe("http://www.gwtproject.org/missing-plugin/");
-  } else {
-    // take over the onunload function, wrapping any existing call if it exists
-    var oldUnload = window.onunload;
-    window.onunload = function() {
-      // run wrapped unload first in case it is running gwt code
-      !!oldUnload && oldUnload();
-      try {
-        // wrap in try/catch since plugins are not required to supply this
-        plugin.disconnect();
-      } catch (e) {
-      }
-    };
-  }
+	var topWin = window.top;
+	try {
+		var test = !topWin.__gwt_SessionID;
+		if (test) {
+			//force non-elision
+			var test = window.name;
+		}
+	} catch (e) {
+		//top may not be accessible from this window/frame
+		topWin = window.parent
+	}
+
+	if (!topWin.__gwt_SessionID) {
+		topWin.__gwt_SessionID = generateSessionId();
+	}
+	var plugin = tryConnectingToPlugin(topWin.__gwt_SessionID, topWin.location.href);
+	if (plugin == null) {
+		loadIframe("http://www.gwtproject.org/missing-plugin/");
+	} else {
+		// take over the onunload function, wrapping any existing call if it exists
+		var oldUnload = window.onunload;
+		window.onunload = function () {
+			// run wrapped unload first in case it is running gwt code
+			!!oldUnload && oldUnload();
+			try {
+				// wrap in try/catch since plugins are not required to supply this
+				plugin.disconnect();
+			} catch (e) {
+			}
+		};
+	}
 }
 
 class GwtJsPlugin {
@@ -563,66 +569,114 @@ gwt_hm_BrowserChannel.VALUE_TYPE_STRING = 9
 gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT = 10
 gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT = 11
 gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED = 12
+gwt_hm_BrowserChannel.VALUE_TYPE_UNUSED = 13
+gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST = 14
+gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST = 15
 
 //just statics - we need a function with extras
-class gwt_hm_JavaObject {}
-gwt_hm_JavaObject.isInstance = function(javaObject) {
-    return (javaObject) && javaObject.hasOwnProperty("__gwt_java_object_id");
+class gwt_hm_JavaObject { }
+gwt_hm_JavaObject.isInstance = function (javaObject) {
+	return (javaObject) && javaObject.hasOwnProperty("__gwt_java_object_id");
 }
-gwt_hm_JavaObject.getJavaObjectId = function(javaObject) {
-    return javaObject.__gwt_java_object_id;
+gwt_hm_JavaObject.getJavaObjectId = function (javaObject) {
+	return javaObject.__gwt_java_object_id;
 }
-gwt_hm_JavaObject.dispatch = function(javaObject, sourceArguments) {
-    var args = [];
-    for (var idx = 2; idx < sourceArguments.length; idx++) {
-        args.push(sourceArguments[idx]);
-    }
-    var dispId = sourceArguments[0];
-    var objectId = gwt_hm_JavaObject.getJavaObjectId(javaObject);
-    var thisObj = sourceArguments[1];
-    if (gwt_hm_JavaObject.isInstance(thisObj)) {
-        objectId = gwt_hm_JavaObject.getJavaObjectId(thisObj);
-    }
-    return javaObject.__gwt_plugin.javaObjectInvoke(objectId, dispId, args, args.length);
+gwt_hm_JavaObject.dispatch = function (javaObject, sourceArguments) {
+	var args = [];
+	for (var idx = 2; idx < sourceArguments.length; idx++) {
+		args.push(sourceArguments[idx]);
+	}
+	var dispId = sourceArguments[0];
+	var objectId = gwt_hm_JavaObject.getJavaObjectId(javaObject);
+	var thisObj = sourceArguments[1];
+	if (gwt_hm_JavaObject.isInstance(thisObj)) {
+		objectId = gwt_hm_JavaObject.getJavaObjectId(thisObj);
+	}
+	return javaObject.__gwt_plugin.javaObjectInvoke(objectId, dispId, args, args.length);
 }
 gwt_hm_JavaObject.propertyDispatcher = {
-    set: function(javaObject, prop, value) {
-        var objectId = javaObject.__gwt_java_object_id;
-        var dispId = prop;
-        return javaObject.__gwt_plugin.javaObjectSet(objectId, dispId, value);
-    },
-    get: function(javaObject, prop) {
-        var objectId = javaObject.__gwt_java_object_id;
-        var dispId = prop;
-        if (isNaN(parseInt(dispId))) {
-            // string-valued -- e.g. hasOwnProperty
-            return javaObject[prop];
-        }
-        return javaObject.__gwt_plugin.javaObjectGet(objectId, dispId);
-    },
-    has: function(javaObject, prop) {
-        throw "nope";
-        return javaObject.hasOwnProperty(prop);
-    }
+	set: function (javaObject, prop, value) {
+		var objectId = javaObject.__gwt_java_object_id;
+		var dispId = prop;
+		if (isNaN(parseInt(dispId))) {
+			// string-valued -- e.g. __gwt_java_js_object_list
+			javaObject[prop] = value;
+			return;
+		}
+		return javaObject.__gwt_plugin.javaObjectSet(objectId, dispId, value);
+	},
+	get: function (javaObject, prop) {
+		var objectId = javaObject.__gwt_java_object_id;
+		var dispId = prop;
+		if (isNaN(parseInt(dispId))) {
+			// string-valued -- e.g. hasOwnProperty
+			return javaObject[prop];
+		}
+		return javaObject.__gwt_plugin.javaObjectGet(objectId, dispId);
+	},
+	has: function (javaObject, prop) {
+		throw "nope";
+		return javaObject.hasOwnProperty(prop);
+	}
 };
-gwt_hm_JavaObject.create = function(plugin, id) {
-    var dispatcher = function() {
-        // we use a function rather than an object because the original NPAPI impl
-        // expects a "default" call target:
-        //
-        // e.g. __static(55) and not __static.callRemote(55)
-        //
-        // we then use power-of-js to add properties to the function (and then
-        // proxy...lordy)
-        //
-        // works though. could rewrite without function/proxy by rewriting
-        // generated js in hostedmode -
-        // but no need, that would be for pre-proxy js engines
-        return gwt_hm_JavaObject.dispatch(arguments.callee, arguments);
-    }
-    dispatcher.__gwt_java_object_id = id;
-    dispatcher.__gwt_plugin = plugin;
-    return new Proxy(dispatcher, gwt_hm_JavaObject.propertyDispatcher);
+gwt_hm_JavaObject.create = function (plugin, id, type) {
+	var dispatcher = function () {
+		// we use a function rather than an object because the original NPAPI impl
+		// expects a "default" call target:
+		//
+		// e.g. __static(55) and not __static.callRemote(55)
+		//
+		// we then use power-of-js to add properties to the function (and then
+		// proxy...lordy)
+		//
+		// works though. could rewrite without function/proxy by rewriting
+		// generated js in hostedmode -
+		// but no need, that would be for pre-proxy js engines
+		return gwt_hm_JavaObject.dispatch(arguments.callee, arguments);
+	}
+	dispatcher.__gwt_java_object_id = id;
+	dispatcher.__gwt_plugin = plugin;
+	switch (type) {
+		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
+			//note that the value of the property can be replaced - its presence is what determines the JAVA_OBJECT subtype
+			dispatcher.__gwt_java_js_object_list = [];
+			break;
+		case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
+			//note that the value of the property can be replaced - its presence is what determines the JAVA_OBJECT subtype
+			dispatcher.__gwt_java_js_int_list = [];
+			break;
+	}
+	return new Proxy(dispatcher, gwt_hm_JavaObject.propertyDispatcher);
+}
+gwt_hm_JavaObject.wrapJavaObject = function (valueObj, javaObject, scriptableInstance) {
+	valueObj.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(javaObject));
+	if (javaObject.hasOwnProperty("__gwt_java_js_object_list")) {
+		var arr = javaObject.__gwt_java_js_object_list;
+		valueObj.setJavaObjectListLength(arr.length);
+		for (var idx = 0; idx < arr.length; idx++) {
+			var obj = arr[idx];
+			valueObj.addJsObjectId(scriptableInstance.getLocalObjectRef(obj));
+		}
+	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
+		var objArray = javaObject.__gwt_java_js_int_list;
+		valueObj.setJavaIntListLength(objArray.length);
+		for (var idx = 0; idx < objArray.length; idx++) {
+			var iValue = objArray[idx];
+			valueObj.addJsInt(iValue);
+		}
+	}
+}
+gwt_hm_JavaObject.unwrapJavaObject = function (valueObj, javaObject, scriptableInstance) {
+	if (javaObject.hasOwnProperty("__gwt_java_js_object_list")) {
+		javaObject.__gwt_java_js_object_list = [];
+		var intArray = valueObj.getArray();
+		for (var idx = 0; idx < intArray.length; idx++) {
+			var attachId = intArray[idx];
+			javaObject.__gwt_java_js_object_list.push(scriptableInstance.getLocalObject(attachId));
+		}
+	} else if (javaObject.hasOwnProperty("__gwt_java_js_int_list")) {
+		javaObject.__gwt_java_js_int_list = valueObj.getArray();
+	}
 }
 
 class gwt_hm_ScriptableInstance {
@@ -721,7 +775,7 @@ class gwt_hm_ScriptableInstance {
 			val.setString(value);
 		} else if (typeof value == "object" || typeof value == "function") {
 			if (unwrapJava && gwt_hm_JavaObject.isInstance(value)) {
-				val.setJavaObjectId(gwt_hm_JavaObject.getJavaObjectId(value));
+				gwt_hm_JavaObject.wrapJavaObject(val, value, this);
 			} else {
 				val.setJsObjectId(scriptInstance.getLocalObjectRef(value));
 			}
@@ -732,6 +786,9 @@ class gwt_hm_ScriptableInstance {
 	}
 	getLocalObjectRef(obj) {
 		return this.localObjects.ensureObjectRef(obj);
+	}
+	getLocalObject(attachId) {
+		return this.localObjects.getById(attachId);
 	}
 	resolveLocal(val) {
 		switch (val.type) {
@@ -756,11 +813,16 @@ class gwt_hm_ScriptableInstance {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
 				return val.getString();
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
 				var id = val.getJavaObjectId();
 				if (!this.javaObjects.has(id)) {
-					this.javaObjects.set(id, gwt_hm_JavaObject.create(this, id));
+					var javaObject = gwt_hm_JavaObject.create(this, id, val.type);
+					this.javaObjects.set(id, javaObject);
 				}
-				return this.javaObjects.get(id);
+				var javaObject = this.javaObjects.get(id);
+				gwt_hm_JavaObject.unwrapJavaObject(val, javaObject, this);
+				return javaObject;
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
 				return this.localObjects.getById(val.getJsObjectId());
 			case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
@@ -781,7 +843,7 @@ class gwt_hm_ScriptableInstance {
 		var retArr = [];
 		if (ret == null) {
 			//connection closed
-			return 	retArr;
+			return retArr;
 		}
 		retArr.push(ret.isException);
 		retArr.push(this.resolveLocal(ret.retValue));
@@ -1005,7 +1067,7 @@ class gwt_hm_HostChannel {
 				return false;
 		}
 		var self = this;
-		window.addEventListener("unload", function(event) {
+		window.addEventListener("unload", function (event) {
 			self.disconnectFromHost();
 		});
 		return true;
@@ -1190,8 +1252,28 @@ class gwt_hm_HostChannel {
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT: {
 				var val = this.readInt();
 				value.setJsObjectId(val);
-			}
 				return value;
+			}
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST: {
+				var val = this.readInt();
+				value.setJavaObjectId(val);
+				var len = this.readInt();
+				value.setJavaObjectListLength(len);
+				for (var idx = 0; idx < len; idx++) {
+					value.addJsObjectId(this.readInt());
+				}
+				return value;
+			}
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST: {
+				var val = this.readInt();
+				value.setJavaObjectId(val);
+				var len = this.readInt();
+				value.setJavaIntListLength(len);
+				for (var idx = 0; idx < len; idx++) {
+					value.addJsInt(this.readInt());
+				}
+				return value;
+			}
 			default:
 				throw "Unhandled value type sent from server: " + type;
 		}
@@ -1226,6 +1308,16 @@ class gwt_hm_HostChannel {
 				return this.sendInt(value.getJsObjectId());
 			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
 				return this.sendInt(value.getJavaObjectId());
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
+				this.sendInt(value.getJavaObjectId());
+				var arr = value.getArray();
+				this.sendInt(arr.length);
+				for (var idx = 0; idx < arr.length; idx++) {
+					var intValue = arr[idx];
+					this.sendInt(intValue);
+				}
+				return;
 			default:
 				throw "Unhandled value type sent to server: " + type;
 		}
@@ -1629,225 +1721,260 @@ gwt_hm_LoadJsniMessage.receive = function(channel) {
 }
 
 class gwt_hm_Value {
-    type;
-    boolValue;
-    byteValue;
-    charValue;
-    doubleValue;
-    floatValue;
-    intValue;
-    longValue;
-    shortValue;
-    stringValue;
-    constructor() {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
-    }
-    getBoolean() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN);
-        return this.boolValue;
-    }
-    getByte() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_BYTE);
-        return this.byteValue;
-    }
-    getChar() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_CHAR);
-        return this.charValue;
-    }
-    getDouble() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE);
-        return this.doubleValue;
-    }
-    getFloat() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT);
-        return this.floatValue;
-    }
-    getInt() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_INT);
-        return this.intValue;
-    }
-    getJavaObjectId() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT);
-        return this.intValue;
-    }
-    getJsObjectId() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT);
-        return this.intValue;
-    }
-    getLong() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_LONG);
-        return this.longValue;
-    }
-    getShort() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_SHORT);
-        return this.shortValue;
-    }
-    getString() {
-        this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_STRING);
-        return this.stringValue;
-    }
-    getType() {
-        return type;
-    }
-    isBoolean() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN;
-    }
-    isByte() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_BYTE;
-    }
-    isChar() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_CHAR;
-    }
-    isDouble() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
-    }
-    isFloat() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT;
-    }
-    isInt() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_INT;
-    }
-    isJavaObject() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT;
-    }
-    isJsObject() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
-    }
-    isLong() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_LONG;
-    }
-    isNull() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_NULL;
-    }
-    isNumber() {
-        switch (this.type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                return true;
-            default:
-                return false;
-        }
-    }
-    isPrimitive() {
-        switch (this.type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                return true;
-            default:
-                return false;
-        }
-    }
-    isShort() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_SHORT;
-    }
-    isString() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_STRING;
-    }
-    isUndefined() {
-        return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
-    }
-    setBoolean(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN;
-        this.boolValue = val;
-    }
-    setByte(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_BYTE;
-        this.byteValue = val;
-    }
-    setChar(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_CHAR;
-        this.charValue = val;
-    }
-    setDouble(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
-        this.doubleValue = val;
-    }
-    setDouble(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
-        this.doubleValue = val;
-    }
-    setFloat(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT;
-        this.floatValue = val;
-    }
-    setInt(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_INT;
-        this.intValue = val;
-    }
-    setJavaObjectId(objectId) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT;
-        this.intValue = objectId;
-    }
-    setJsObjectId(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
-        this.intValue = val;
-    }
-    setLong(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_LONG;
-        this.longValue = val;
-    }
-    setNull() {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_NULL;
-    }
-    setShort(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_SHORT;
-        this.shortValue = val;
-    }
-    setString(val) {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_STRING;
-        this.stringValue = val;
-    }
-    setUndefined() {
-        this.type = gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
-    }
-    assertType(reqType) {
-        if (this.type != reqType) {
-            throw "Value::assertType - expecting type " + reqType;
-        }
-    }
-    toString() {
-        switch (this.type) {
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
-                return `boolean: ${this.getBoolean()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-                return `byte: ${this.getByte()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-                return `char: ${this.getChar()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-                return `double: ${this.getDouble()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
-                return `float: ${this.getFloat()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-                return `int: ${this.getInt()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-                return `long: ${this.getLong()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                return `short: ${this.getShort()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
-                return "null";
-            case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
-                return `string: ${this.getString()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
-                return `javaobj: ${this.getJavaObjectId()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
-                return `jsobj: ${this.getJsObjectId()}`;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
-                return "undefined";
-            default:
-                return "Unknown type";
-        }
-    }
+	type;
+	boolValue;
+	byteValue;
+	charValue;
+	doubleValue;
+	floatValue;
+	intValue;
+	longValue;
+	shortValue;
+	stringValue;
+	arrayValue;
+	constructor() {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
+	}
+	getBoolean() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN);
+		return this.boolValue;
+	}
+	getByte() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_BYTE);
+		return this.byteValue;
+	}
+	getChar() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_CHAR);
+		return this.charValue;
+	}
+	getDouble() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE);
+		return this.doubleValue;
+	}
+	getFloat() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT);
+		return this.floatValue;
+	}
+	getInt() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_INT);
+		return this.intValue;
+	}
+	getJavaObjectId() {
+		if (this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST) {
+			//allowed
+		} else {
+			this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT);
+		}
+		return this.intValue;
+	}
+	getJsObjectId() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT);
+		return this.intValue;
+	}
+	getLong() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_LONG);
+		return this.longValue;
+	}
+	getShort() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_SHORT);
+		return this.shortValue;
+	}
+	getString() {
+		this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_STRING);
+		return this.stringValue;
+	}
+	getArray() {
+		if (this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST || this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST) {
+			//allowed
+		} else {
+			this.assertType(gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST);
+		}
+		return this.arrayValue;
+	}
+	getType() {
+		return type;
+	}
+	isBoolean() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN;
+	}
+	isByte() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_BYTE;
+	}
+	isChar() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_CHAR;
+	}
+	isDouble() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
+	}
+	isFloat() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT;
+	}
+	isInt() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_INT;
+	}
+	isJavaObject() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT;
+	}
+	isJsObject() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
+	}
+	isLong() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_LONG;
+	}
+	isNull() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_NULL;
+	}
+	isNumber() {
+		switch (this.type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+				return true;
+			default:
+				return false;
+		}
+	}
+	isPrimitive() {
+		switch (this.type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+				return true;
+			default:
+				return false;
+		}
+	}
+	isShort() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_SHORT;
+	}
+	isString() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_STRING;
+	}
+	isUndefined() {
+		return this.type == gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
+	}
+	setBoolean(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN;
+		this.boolValue = val;
+	}
+	setByte(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_BYTE;
+		this.byteValue = val;
+	}
+	setChar(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_CHAR;
+		this.charValue = val;
+	}
+	setDouble(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
+		this.doubleValue = val;
+	}
+	setDouble(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE;
+		this.doubleValue = val;
+	}
+	setFloat(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT;
+		this.floatValue = val;
+	}
+	setInt(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_INT;
+		this.intValue = val;
+	}
+	setJavaObjectId(objectId) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT;
+		this.intValue = objectId;
+	}
+	setJsObjectId(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT;
+		this.intValue = val;
+	}
+	setJavaObjectListLength(jsObjectLength) {
+		//the length parameter is unused (setting the js array length would require different handling)
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST;
+		this.arrayValue = [];
+	}
+	setJavaIntListLength(intObjectLength) {
+		//the length parameter is unused (setting the js array length would require different handling)
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST;
+		this.arrayValue = [];
+	}
+	addJsObjectId(val) {
+		this.arrayValue.push(val);
+	}
+	addJsInt(val) {
+		this.arrayValue.push(val);
+	}
+	setLong(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_LONG;
+		this.longValue = val;
+	}
+	setNull() {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_NULL;
+	}
+	setShort(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_SHORT;
+		this.shortValue = val;
+	}
+	setString(val) {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_STRING;
+		this.stringValue = val;
+	}
+	setUndefined() {
+		this.type = gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED;
+	}
+	assertType(reqType) {
+		if (this.type != reqType) {
+			throw "Value::assertType - expecting type " + reqType;
+		}
+	}
+	toString() {
+		switch (this.type) {
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
+				return `boolean: ${this.getBoolean()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+				return `byte: ${this.getByte()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+				return `char: ${this.getChar()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+				return `double: ${this.getDouble()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+				return `float: ${this.getFloat()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+				return `int: ${this.getInt()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+				return `long: ${this.getLong()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+				return `short: ${this.getShort()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
+				return "null";
+			case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
+				return `string: ${this.getString()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+				return `javaobj: ${this.getJavaObjectId()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
+				return `jsobj: ${this.getJsObjectId()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
+				return "undefined";
+			case gwt_hm_BrowserChannel.VALUE_TYPE_UNUSED:
+				return "unused";
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT_LIST:
+				return `jsobj[]: ${this.getJsObjectId()}`;
+			case gwt_hm_BrowserChannel.VALUE_TYPE_JS_INT_LIST:
+				return `int[]: ${this.getJsObjectId()}`;
+			default:
+				return "Unknown type";
+		}
+	}
 }
 
 class gwt_hm_CheckVersionsMessage extends gwt_hm_Message {
@@ -2131,7 +2258,10 @@ class WebSocketTransportClient extends WebSocketTransport {
          * load socket worker, wait for connect event
          */
         this.setBuffers(new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE), new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE));
-        this.socketWorker = new Worker(`/${this.moduleName}/WebSocketTransport.js`);
+        var clientPrefix = $wnd._alc_websocket_transport_client_prefix;
+        var pathPrefix = typeof clientPrefix == 'undefined' ? '' : clientPrefix;
+        this.socketWorker = new Worker(`/${pathPrefix}${this.moduleName}/WebSocketTransport.js`);
+
         this.socketWorker.postMessage({
             message: "start",
             codeServerWs: this.codeServerWs,

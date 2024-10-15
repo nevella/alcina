@@ -96,4 +96,15 @@
  * 
  * 
  */
+/*
+ * Session handling logic
+ * 
+ * There are basically three types of apps - single UI only (say an android app
+ * with a webview UI), multiple UI (the sequence browser is one such - server
+ * logic is confined to the UI thread itself), and replaceable single UI (where
+ * only one UI instance can exist, but a browser refresh returns a new,
+ * connected UI rather than failing).
+ * 
+ * TODO - how is this modelled, how is it handled and what are some examples?
+ */
 package cc.alcina.framework.servlet.environment;

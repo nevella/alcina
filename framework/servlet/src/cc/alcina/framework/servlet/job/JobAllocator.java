@@ -125,14 +125,22 @@ class JobAllocator {
 			}
 			TransactionEnvironment.get().ensureEnded();
 			ensureStarted();
+			boolean wasCheckedComplete = false;
 			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
 				TransactionEnvironment.get().endAndBeginNew();
 				if (enqueuedStatusMessage != null) {
 					TransactionEnvironment.withDomain(this::applyStatusMessage);
 				}
-				TransactionEnvironment
+				Boolean checkedComplete = TransactionEnvironment
 						.withDomain(this::doubleCheckChildCompletion);
+				wasCheckedComplete |= checkedComplete;
 				TransactionEnvironment.get().end();
+			}
+			/*
+			 * interesting - possibly due to queueing on LDT?
+			 */
+			if (wasCheckedComplete) {
+				int debug = 4;
 			}
 			TransactionEnvironment.get().endAndBeginNew();
 			new StatusMessage().publish();
@@ -190,6 +198,7 @@ class JobAllocator {
 			// to handle the job-deleted case
 			e.printStackTrace();
 		}
+		// this is essentially job-nuking
 		childCompletionLatch.countDown();
 		sequenceCompletionLatch.countDown();
 	}
@@ -317,6 +326,7 @@ class JobAllocator {
 							eventQueue.poll();
 						}
 					}
+					commit();
 				}
 			} catch (Exception e) {
 				logger.warn("Exception in allocator");
@@ -411,10 +421,20 @@ class JobAllocator {
 					 */
 					if (queue.job.provideNextInSequence().isPresent()) {
 						logger.debug(
-								"Releasing child completion latch -  job {}",
+								"Releasing child completion latch - job {}",
 								job.toDisplayName());
 						childCompletionLatch.countDown();
 					}
+					/*
+					 * correction - only if *children* are present...?
+					 * 
+					 */
+					// if (queue.job.provideChildren().count() > 0) {
+					// logger.debug(
+					// "Releasing child completion latch - job {}",
+					// job.toDisplayName());
+					// childCompletionLatch.countDown();
+					// }
 				}
 				SubqueuePhase priorPhase = queue.currentPhase;
 				queue.incrementPhase();
@@ -572,6 +592,7 @@ class JobAllocator {
 				toCancel.forEach(Job::cancel);
 				commit();
 			}
+			commit();
 			TransactionEnvironment.get().ensureEnded();
 		}
 
@@ -669,15 +690,21 @@ class JobAllocator {
 		}
 	}
 
-	void doubleCheckChildCompletion() {
+	boolean doubleCheckChildCompletion() {
 		if (queue.job.provideChildren().count() > 0
 				&& queue.job.provideChildrenAndChildSubsequents()
 						.allMatch(Job::provideIsComplete)) {
-			Ax.err("DEVEX-0 -- Marking as children complete - latch issue - %s",
+			logger.info("children are complete, but waiting on lock - {}",
 					queue.job);
-			Ax.out(queue.job.provideChildrenAndChildSubsequents()
-					.collect(Collectors.toList()));
-			childCompletionLatch.countDown();
+			// Ax.err("DEVEX-0 -- Marking as children complete - latch issue -
+			// %s",
+			// queue.job);
+			// Ax.out(queue.job.provideChildrenAndChildSubsequents()
+			// .collect(Collectors.toList()));
+			return true;
+			// childCompletionLatch.countDown();
+		} else {
+			return false;
 		}
 	}
 }

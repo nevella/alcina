@@ -30,7 +30,8 @@ class EnvironmentReaper {
 
 	void conditionallyReap(Environment env) {
 		boolean isLocalhost = env.access().getSession().provideIsLocalHost();
-		long lastPacketReceived = env.access().getLastPacketsReceived().get();
+		long lastPacketReceived = env.access().getLastPacketsReceived()
+				.getTime();
 		boolean packetsReceived = lastPacketReceived > 0;
 		long startTime = env.access().getSession().startTime;
 		boolean reap = false;

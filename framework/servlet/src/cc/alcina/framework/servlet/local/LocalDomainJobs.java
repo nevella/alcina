@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.local;
 
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.job.JobEnvironmentNonTx;
 import cc.alcina.framework.servlet.job.JobRegistry;
 
@@ -12,6 +13,7 @@ import cc.alcina.framework.servlet.job.JobRegistry;
 public class LocalDomainJobs {
 	public void init(LocalDomainStore localDomainStore) {
 		JobEnvironmentNonTx jobEnvironment = new JobEnvironmentNonTx();
+		LooseContext.excludeFromSnapshot(LocalDomainQueue.CONTEXT_IN_DOMAIN);
 		JobRegistry.get().setEnvironment(jobEnvironment);
 		JobRegistry.get().init();
 	}

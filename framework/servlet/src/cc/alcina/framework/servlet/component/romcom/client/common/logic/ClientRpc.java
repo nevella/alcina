@@ -1,7 +1,5 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -14,21 +12,18 @@ import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
@@ -37,19 +32,9 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
  * 
  * TODO - romcom - handle network issue retry (client and server)
  */
-public class ClientRpc {
-	static RemoteComponentProtocol.Session session;
-
-	private transient static int clientMessageId;
-
-	static int awaitDelay = 0;
-
-	static RemoteComponentRequest createRequest() {
-		RemoteComponentRequest request = new RemoteComponentRequest();
-		request.session = session;
-		request.requestId = ++clientMessageId;
-		return request;
-	}
+@Registration.Singleton
+public class ClientRpc implements HandlerContext {
+	int awaitDelay = 0;
 
 	public static void runAsync(Class clazz, Runnable runnable) {
 		GWT.runAsync(clazz, new RunAsyncCallback() {
@@ -79,187 +64,59 @@ public class ClientRpc {
 		};
 	}
 
+	public static ClientRpc get() {
+		return Registry.impl(ClientRpc.class);
+	}
+
 	static void send(Message message) {
-		send(message, false);
+		get().transportLayer.sendMessage(message);
 	}
 
-	/**
-	 * @param block
-	 *            - currently not implemented, but should (could) be for
-	 *            client->server event dispatch - FIXME - remcon - for local
-	 *            clients, blocking makes sense - for truly remote (inet),
-	 *            probably not
+	MessageTransportLayerClient transportLayer;
+
+	ExceptionHandler exceptionHandler;
+
+	ClientRpc() {
+		transportLayer = new MessageTransportLayerClient();
+		exceptionHandler = new ExceptionHandler();
+		transportLayer.topicMessageReceived.add(this::onMessageReceived);
+	}
+
+	void onMessageReceived(Message message) {
+		ProtocolMessageHandlerClient handler = Registry
+				.impl(ProtocolMessageHandlerClient.class, message.getClass());
+		try {
+			handler.handle(this, message);
+		} catch (Throwable e) {
+			// FIXME - ask the context to log
+			Ax.out("Exception handling message %s\n"
+					+ "================\nSerialized form:\n%s", message, "??");
+			e.printStackTrace();
+			/*
+			 * FIXME - devex - 0 - once syncmutations.3 is stable, this should
+			 * not occur (ha!)
+			 *
+			 * Serious, the romcom client is a bounded piece of code that just
+			 * propagates server changes to the client dom, so all exceptions
+			 * *should* be server-only (unless client dom is mashed by an
+			 * extension)
+			 */
+			Window.alert(CommonUtils.toSimpleExceptionMessage(e));
+		}
+	}
+
+	/*
+	 * probably move all this to the transport...
 	 */
-	static void send(Message message, boolean block) {
-		if (message instanceof AwaitRemote) {
-			if (acceptorQueue.isEmpty()) {
-				acceptorQueue.submit(message);
-			}
-		} else {
-			submitQueue.submit(message);
-			if (acceptorQueue.inFlightMessageSendTime != 0 && !TimeConstants
-					.within(acceptorQueue.inFlightMessageSendTime,
-							10 * TimeConstants.ONE_SECOND_MS)) {
-				long age = TimeConstants
-						.age(acceptorQueue.inFlightMessageSendTime);
-				acceptorQueue.cancelInFlight();
-			}
-			if (acceptorQueue.isEmpty()) {
-				acceptorQueue.submit(new AwaitRemote());
-			}
-		}
-	}
-
-	static class BrowserDispatchQueue implements TopicListener<Request> {
-		long inFlightMessageSendTime;
-
-		List<RemoteComponentRequest> requestQueue = new ArrayList<>();
-
-		void submit(Message message) {
-			if (!message.sync) {
-				// first, try to merge (particularly important for multiple
-				// mousemove dispatch)
-				RemoteComponentRequest last = Ax.last(requestQueue);
-				if (last != null && last.protocolMessage.canMerge(message)) {
-					last.protocolMessage.merge(message);
-					return;
-				}
-			}
-			RemoteComponentRequest request = createRequest();
-			request.protocolMessage = message;
-			if (message.sync) {
-				submitRequest(request, null, null);
-			} else {
-				requestQueue.add(request);
-				maybeDispatch();
-			}
-		}
-
-		public void cancelInFlight() {
-			inFlightComponentRequest = null;
-			inFlightMessageSendTime = 0;
-		}
-
-		boolean isEmpty() {
-			return requestQueue.isEmpty();
-		}
-
-		RemoteComponentRequest inFlightComponentRequest = null;
-
-		RemoteComponentRequest queueingComponentRequest = null;
-
-		Request inFlightHttpRequest;
-
-		// this defers dispatch by (heuristic) 10ms to collect related events
-		// (e.g. mousedown/up/click)
-		void maybeDispatch() {
-			if (inFlightComponentRequest != null) {
-				return;
-			}
-			if (requestQueue.isEmpty()) {
-				return;
-			}
-			if (queueingComponentRequest != null) {
-				return;
-			}
-			queueingComponentRequest = requestQueue.get(0);
-			new Timer() {
-				@Override
-				public void run() {
-					inFlightComponentRequest = requestQueue.remove(0);
-					inFlightMessageSendTime = System.currentTimeMillis();
-					queueingComponentRequest = null;
-					Topic<Request> calledSignal = Topic.create();
-					calledSignal.add(BrowserDispatchQueue.this);
-					inFlightHttpRequest = submitRequest(
-							inFlightComponentRequest, null, calledSignal);
-				}
-				// TODO - if there's a mousedown, possibly delay a little longer
-				// (depending on latency) to get the corresonding up/click
-			}.schedule(10);
-		}
-
-		@Override
-		public void topicPublished(Request httpRequest) {
-			if (httpRequest == inFlightHttpRequest) {
-				maybeEnqueueAwaitRemote();
-				inFlightComponentRequest = null;
-				inFlightMessageSendTime = 0;
-				maybeDispatch();
-			}
-		}
-
-		void maybeEnqueueAwaitRemote() {
-			if (inFlightComponentRequest != null
-					&& !(inFlightComponentRequest.protocolMessage instanceof AwaitRemote)) {
-				return;
-			}
-			enqueueWhenVisible();
-		}
-
-		void retry() {
-			if (Document.get().getVisibilityState().equals("visible")) {
-			} else {
-				new Timer() {
-					@Override
-					public void run() {
-						retry();
-					}
-				}.schedule(100);
-			}
-		}
-
-		void enqueueWhenVisible() {
-			if (timerQueued) {
-				return;
-			}
-			if (Document.get().getVisibilityState().equals("visible")) {
-				if (awaitDelay == 0) {
-					submit(new AwaitRemote());
-				} else {
-					/*
-					 * if the server is reloading or there's a network issue,
-					 * don't try too often
-					 */
-					new Timer() {
-						@Override
-						public void run() {
-							submit(new AwaitRemote());
-							timerQueued = false;
-						}
-					}.schedule(awaitDelay);
-					timerQueued = true;
-					awaitDelay = Math.min(1000, awaitDelay + 100);
-				}
-			} else {
-				new Timer() {
-					@Override
-					public void run() {
-						enqueueWhenVisible();
-						timerQueued = false;
-					}
-				}.schedule(100);
-				timerQueued = true;
-			}
-		}
-
-		boolean timerQueued = false;
-	}
-
-	static BrowserDispatchQueue submitQueue = new BrowserDispatchQueue();
-
-	static BrowserDispatchQueue acceptorQueue = new BrowserDispatchQueue();
-
-	static int clientServerMessageCounter = 0;
-
-	static ExceptionHandler exceptionHandler = new ExceptionHandler();
-
 	static Request submitRequest(RemoteComponentRequest request,
 			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
 			Topic<Request> calledSignal) {
-		request.protocolMessage.messageId = clientServerMessageCounter++;
-		// Ax.out("dispatching request #%s - %s", request.requestId,
-		// NestedName.get(request.protocolMessage));
+		return get().submitRequest0(request, errorHandler, calledSignal);
+	}
+
+	Request submitRequest0(RemoteComponentRequest request,
+			BiConsumer<RemoteComponentRequest, Throwable> errorHandler,
+			Topic<Request> calledSignal) {
 		String payload = ReflectiveSerializer.serializeForRpc(request);
 		String path = Window.Location.getPath();
 		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, path);
@@ -289,49 +146,50 @@ public class ClientRpc {
 				String text = httpResponse.getText();
 				RemoteComponentResponse response = text.isEmpty() ? null
 						: ReflectiveSerializer.deserializeRpc(text);
-				if (response != null) {
-					// reset delay (successful response)
-					awaitDelay = 0;
-					Message message = response.protocolMessage;
-					Class<? extends Message> requestMessageClass = request.protocolMessage
-							.getClass();
-					// Ax.out("[server->client response] #%s :: [client message
-					// :: %s] ==> %s",
-					// response.requestId,
-					// NestedName.get(requestMessageClass),
-					// message == null ? "[null response]"
-					// : NestedName.get(message));
-					if (message != null) {
-						ProtocolMessageHandlerClient handler = Registry.impl(
-								ProtocolMessageHandlerClient.class,
-								message.getClass());
-						try {
-							handler.handle(response, message);
-						} catch (Throwable e) {
-							Ax.out("Exception handling message %s\n"
-									+ "================\nSerialized form:\n%s",
-									message, text);
-							e.printStackTrace();
-							/*
-							 * FIXME - devex - 0 - once syncmutations.3 is
-							 * stable, this should not occur (ha!)
-							 * 
-							 * Serious, the romcom client is a bounded piece of
-							 * code that just propagates server changes to the
-							 * client dom, so all exceptions *should* be
-							 * server-only (unless client dom is mashed by an
-							 * extension)
-							 */
-							Window.alert(
-									CommonUtils.toSimpleExceptionMessage(e));
-						}
-					} else {
-						// Ax.out("Received no-message response for %s",
-						// NestedName.get(messageClass));
-					}
-					signalCalled(httpRequest);
-				} else {
-				}
+				// if (response != null) {
+				// // reset delay (successful response)
+				// awaitDelay = 0;
+				// Message message = response.protocolMessage;
+				// Class<? extends Message> requestMessageClass =
+				// request.protocolMessage
+				// .getClass();
+				// // Ax.out("[server->client response] #%s :: [client message
+				// // :: %s] ==> %s",
+				// // response.requestId,
+				// // NestedName.get(requestMessageClass),
+				// // message == null ? "[null response]"
+				// // : NestedName.get(message));
+				// if (message != null) {
+				// ProtocolMessageHandlerClient handler = Registry.impl(
+				// ProtocolMessageHandlerClient.class,
+				// message.getClass());
+				// try {
+				// handler.handle(response, message);
+				// } catch (Throwable e) {
+				// Ax.out("Exception handling message %s\n"
+				// + "================\nSerialized form:\n%s",
+				// message, text);
+				// e.printStackTrace();
+				// /*
+				// * FIXME - devex - 0 - once syncmutations.3 is
+				// * stable, this should not occur (ha!)
+				// *
+				// * Serious, the romcom client is a bounded piece of
+				// * code that just propagates server changes to the
+				// * client dom, so all exceptions *should* be
+				// * server-only (unless client dom is mashed by an
+				// * extension)
+				// */
+				// Window.alert(
+				// CommonUtils.toSimpleExceptionMessage(e));
+				// }
+				// } else {
+				// // Ax.out("Received no-message response for %s",
+				// // NestedName.get(messageClass));
+				// }
+				// signalCalled(httpRequest);
+				// } else {
+				// }
 			}
 		};
 		try {
@@ -352,7 +210,7 @@ public class ClientRpc {
 				case 0:
 				case 404:
 					setState(State.err_recoverable);
-					awaitDelay++;
+					get().awaitDelay++;
 					break;
 				default:
 					setState(State.err_finished);

@@ -1,16 +1,16 @@
 CACHE MANIFEST
-# Version: BB280B90FDD1D8BCD9DA4A76FC311988
+# Version: 338A763AC379C86AD7BB548E66734A9F
 CACHE:
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/73A9992F70FE9B54829E8A1B613BBDCC.cache.js
+/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/827EADC51A0435CD3FB479ACBBE123FF.cache.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/Alcina-dep.css
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/WebSocketTransport.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/cc.alcina.extras.dev.console.remote.RemoteConsoleClient.devmode.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/cc.alcina.extras.dev.console.remote.RemoteConsoleClient.nocache.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/clear.cache.gif
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/compilation-mappings.txt
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/73A9992F70FE9B54829E8A1B613BBDCC/1.cache.js
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/73A9992F70FE9B54829E8A1B613BBDCC/2.cache.js
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/73A9992F70FE9B54829E8A1B613BBDCC/3.cache.js
+/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/827EADC51A0435CD3FB479ACBBE123FF/1.cache.js
+/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/827EADC51A0435CD3FB479ACBBE123FF/2.cache.js
+/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/827EADC51A0435CD3FB479ACBBE123FF/3.cache.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/empty.css
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/readme.txt
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/cc.alcina.extras.dev.console.remote.RemoteConsoleClient.nocache.js?compiled

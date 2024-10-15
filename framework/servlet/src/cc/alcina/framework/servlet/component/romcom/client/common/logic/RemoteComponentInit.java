@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer;
 
 /*
@@ -19,16 +20,17 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
 public class RemoteComponentInit implements NativePreviewHandler {
 	public void init() {
 		Event.addNativePreviewHandler(this);
+		initWindowListeners();
 		History.addValueChangeHandler(hash -> {
 			if (!RemoteObjectModelComponentState.get().firingLocationMutation) {
 				ClientRpc.send(Message.Mutations.ofLocation());
 			}
 		});
-		ClientRpc.session = ReflectiveSerializer
+		ClientRpc.get().transportLayer.session = ReflectiveSerializer
 				.deserializeRpc(ClientUtils.wndString(
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
-		ClientRpc.send(Message.Startup.forClient());
-		initWindowListeners();
+		Startup startupMessage = Message.Startup.forClient();
+		ClientRpc.send(startupMessage);
 	}
 
 	// FIXME - dirndl - this can just be sent via normal event creation (ehich

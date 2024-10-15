@@ -79,4 +79,9 @@ public class JobEnvironmentNonTx implements JobEnvironment {
 
 	class JobDomainLocal {
 	}
+
+	@Override
+	public void updateJobStatus(JobContext jobContext, Runnable runnable) {
+		TransactionEnvironment.withDomainCommitting(runnable);
+	}
 }

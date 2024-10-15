@@ -40,6 +40,11 @@ public class RemoteComponentProtocol {
 
 	@Bean(PropertySource.FIELDS)
 	public static class InvalidClientException extends ProtocolException {
+		@Reflected
+		public enum Action {
+			REFRESH, EXPIRED
+		}
+
 		public Action action;
 
 		public transient String uiType;
@@ -53,27 +58,10 @@ public class RemoteComponentProtocol {
 			this.action = action;
 			this.uiType = uiType;
 		}
-
-		@Reflected
-		public enum Action {
-			REFRESH, EXPIRED
-		}
 	}
 
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Message {
-		/*
-		 * The request/response (server->client) is marked as synchronous, the
-		 * server thread will not continue until the (possibly out-of-order)
-		 * response is processed
-		 */
-		public boolean sync;
-
-		/*
-		 * Client -> server; incremental.
-		 */
-		public int messageId;
-
 		/*
 		 * Sent by the client to allow the server to send it messages
 		 */
@@ -84,6 +72,12 @@ public class RemoteComponentProtocol {
 		 * Sent by the server to instruct the client to begin the await loop
 		 */
 		public static class BeginAwaitLoop extends Message {
+		}
+
+		public interface Handler<M extends Message> {
+			default boolean isHandleOutOfBand() {
+				return false;
+			}
 		}
 
 		/*
@@ -121,17 +115,12 @@ public class RemoteComponentProtocol {
 			}
 		}
 
-		/*
-		 * A dirndl UI example
-		 */
-		@Bean(PropertySource.FIELDS)
-		@Directed
-		static class HelloBeans1x5 {
-			@Directed
-			String world = "World!";
-		}
-
 		public static class Invoke extends Message {
+			@Reflected
+			public enum JsResponseType {
+				_void, string, node_jso
+			}
+
 			public AttachId path;
 
 			public String methodName;
@@ -147,11 +136,6 @@ public class RemoteComponentProtocol {
 			public String javascript;
 
 			public JsResponseType jsResponseType;
-
-			@Reflected
-			public enum JsResponseType {
-				_void, string, node_jso
-			}
 		}
 
 		public static class PersistSettings extends Message {
@@ -228,6 +212,17 @@ public class RemoteComponentProtocol {
 		 */
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class ProcessingException extends Message {
+			public static ProcessingException wrap(Exception e) {
+				Message.ProcessingException processingException = new Message.ProcessingException();
+				processingException.exceptionClassName = e.getClass().getName();
+				processingException.exceptionMessage = CommonUtils
+						.toSimpleExceptionMessage(e);
+				if (e instanceof ProtocolException) {
+					processingException.protocolException = (ProtocolException) e;
+				}
+				return processingException;
+			}
+
 			public ProtocolException protocolException;
 
 			public String exceptionClassName;
@@ -248,8 +243,6 @@ public class RemoteComponentProtocol {
 		 * Sent by the client on startup, to initialise the server dom
 		 */
 		public static class Startup extends Message {
-			public String settingsException;
-
 			public static Startup forClient() {
 				Startup result = new Startup();
 				result.maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
@@ -265,6 +258,8 @@ public class RemoteComponentProtocol {
 				return result;
 			}
 
+			public String settingsException;
+
 			public LocationMutation locationMutation;
 
 			public List<MutationRecord> domMutations = new ArrayList<>();
@@ -274,8 +269,35 @@ public class RemoteComponentProtocol {
 			public String settings;
 		}
 
+		/*
+		 * A dirndl UI example
+		 */
+		@Bean(PropertySource.FIELDS)
+		@Directed
+		static class HelloBeans1x5 {
+			@Directed
+			String world = "World!";
+		}
+
+		/*
+		 * The request/response (server->client) is marked as synchronous, the
+		 * server thread will not continue until the (possibly out-of-order)
+		 * response is processed
+		 */
+		public boolean sync;
+
+		/*
+		 * Client -> server; incremental.
+		 */
+		public int messageId;
+
 		public String toDebugString() {
 			return "";
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s", messageId, NestedName.get(this));
 		}
 
 		public boolean canMerge(Message message) {
@@ -328,6 +350,11 @@ public class RemoteComponentProtocol {
 
 		public boolean provideIsLocalHost() {
 			return Objects.equals(remoteAddress, "127.0.0.1");
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("session :: id - %s", id);
 		}
 	}
 }

@@ -413,11 +413,11 @@ public class TreeProcess {
 			return idx == 0 ? null : getParent().getChildren().get(idx - 1);
 		}
 
-		default void detachSubtreeValues() {
-			stream().forEach(Node::detachValue);
-		}
-
-		void detachValue();
+		/*
+		 * detach the subtree *and* the value - essentially to remove any memory
+		 * pressure from a SelectionTraversal at this node
+		 */
+		void detachSubtree();
 	}
 
 	/**
@@ -440,15 +440,17 @@ public class TreeProcess {
 	}
 
 	public static class NodeException extends Exception {
-		private Node selected;
+		public String nodeTreePath;
 
-		public NodeException(Node selected, Exception exception) {
+		public String nodeContents;
+
+		public String nodeDisplayNamePath;
+
+		public NodeException(Node node, Exception exception) {
 			super(exception);
-			this.selected = selected;
-		}
-
-		public Node getSelected() {
-			return this.selected;
+			this.nodeTreePath = node.treePath();
+			this.nodeDisplayNamePath = node.displayNamePath();
+			this.nodeContents = node.toString();
 		}
 	}
 
@@ -477,12 +479,18 @@ public class TreeProcess {
 			this(null, parent, value);
 		}
 
-		public void detachValue() {
+		public void detachSubtree() {
+			detachValue();
+			childrenByValue.clear();
+			children.clear();
+		}
+
+		void detachValue() {
 			if (parent != null) {
 				((NodeImpl) parent).childrenByValue.remove(this.value);
 			}
 			this.value = null;
-		};
+		}
 
 		public NodeImpl(TreeProcess tree, Node parent, Object value) {
 			this.tree = tree;

@@ -709,6 +709,10 @@ public class DirectedLayout implements AlcinaProcess {
 			return depth;
 		}
 
+		public DomNode domNode() {
+			return rendered.asDomNode();
+		}
+
 		public void dispatch(Class<? extends ModelEvent> modelEventClass,
 				Object data) {
 			Context context = NodeEvent.Context.fromNode(this);

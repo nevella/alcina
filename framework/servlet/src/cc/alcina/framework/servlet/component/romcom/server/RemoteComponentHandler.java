@@ -19,15 +19,20 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageId;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessagePacket;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannelId;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.ProtocolException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.environment.EnvironmentManager;
 import cc.alcina.framework.servlet.environment.EnvironmentManager.EnvironmentList;
 import cc.alcina.framework.servlet.publication.DirndlRenderer;
@@ -206,8 +211,9 @@ public class RemoteComponentHandler {
 						.list(request.getHeaderNames()).stream()
 						.map(n -> Ax.format("%s=%s", n, request.getHeader(n)))
 						.collect(Collectors.toList());
-				logger.info("Creating environment - http headers: {}", headers);
 				session = component.createEnvironment(request);
+				logger.info("Created environment - {} - http headers: {}",
+						session, headers);
 			} catch (Exception e) {
 				sessionCreationException = e;
 				logger.warn("Exception creating session", e);
@@ -264,16 +270,16 @@ public class RemoteComponentHandler {
 				RemoteComponentRequest request = ReflectiveSerializer
 						.deserializeRpc(requestJson);
 				RemoteComponentResponse response = new RemoteComponentResponse();
-				response.requestId = request.requestId;
 				response.session = request.session;
-				logger.debug("{} received request #{} - {} {}", Ax.appMillis(),
-						request.requestId,
-						NestedName.get(request.protocolMessage),
-						request.protocolMessage.toDebugString());
+				logger.debug("{} received request {} - {} {}", Ax.appMillis(),
+						request.messageEnvelope.envelopeId,
+						request.messageEnvelope.toMessageSummaryString(),
+						request.messageEnvelope.toMessageDebugString());
 				try {
-					MessageToken token = new MessageToken(requestJson, request,
+					RequestToken token = new RequestToken(requestJson, request,
 							response);
-					EnvironmentManager.get().handleMessage(token);
+					EnvironmentManager.get().acceptRequest(token);
+					token.latch.await();
 				} catch (Exception e) {
 					if (e instanceof ProtocolException) {
 						boolean handled = false;
@@ -291,11 +297,24 @@ public class RemoteComponentHandler {
 					} else {
 						e.printStackTrace();
 					}
-					response.putException(e);
+					/*
+					 * this envelope will have 'queue jump' (-1)
+					 * envelope/message ids - client execution will be halted
+					 * after processing the message with either a refresh or
+					 * finish
+					 */
+					response.messageEnvelope = new MessageEnvelope();
+					SendChannelId sendChannelId = SendChannelId.SERVER_TO_CLIENT;
+					response.messageEnvelope.envelopeId = new EnvelopeId(
+							sendChannelId, -1);
+					ProcessingException message = ProcessingException.wrap(e);
+					MessageId messageId = new MessageId(sendChannelId, -1);
+					response.messageEnvelope.packets
+							.add(new MessagePacket(messageId, message));
 				}
-				logger.debug("{} dispatched response #{} - {}", Ax.appMillis(),
-						response.requestId,
-						NestedName.get(response.protocolMessage));
+				logger.debug("{} dispatched response {} - {}", Ax.appMillis(),
+						response.messageEnvelope.envelopeId,
+						response.messageEnvelope.toMessageSummaryString());
 				new RemoteComponentEvent(request, response, start,
 						System.currentTimeMillis()).publish();
 				servletResponse.getWriter()

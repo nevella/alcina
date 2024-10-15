@@ -86,4 +86,9 @@ class JobEnvironmentTx implements JobEnvironment {
 	public void waitUntilCurrentRequestsProcessed() {
 		DomainStore.waitUntilCurrentRequestsProcessed();
 	}
+
+	@Override
+	public void updateJobStatus(JobContext jobContext, Runnable runnable) {
+		runInTransaction(() -> jobContext.enqueue(runnable));
+	}
 }

@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
@@ -38,10 +40,10 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.dom.Feature_EnvironmentManager;
 
 /**
@@ -237,24 +239,30 @@ public class EnvironmentManager {
 	}
 
 	public void handleMessage(MessageToken token) throws Exception {
-		RemoteComponentRequest request = token.request;
-		Environment env = getEnvironment(request.session);
-		if (env == null) {
-			throw buildInvalidClientException(
-					request.session.componentClassName);
-		}
-		MessageHandlerServer messageHandler = Registry.impl(
-				MessageHandlerServer.class, request.protocolMessage.getClass());
-		token.messageHandler = messageHandler;
 		/*
-		 * tmp = this will all be queue calls
+		 * ROMCOM - messages are offered to the CEQ in order (off CEQ thread) -
+		 * it can either process em (sync) or add to queue (async)
+		 * 
+		 * message return to client is 'send message' - with some debouncing
 		 */
-		// http thread
-		messageHandler.onBeforeMessageHandled(request.protocolMessage);
-		// unless the message is a sync response, on the env thread
-		env.access().handleFromClientMessage(token);
-		// http thread
-		messageHandler.onAfterMessageHandled(request.protocolMessage);
+		// RemoteComponentRequest request = token.request;
+		// Environment env = getEnvironment(request.session);
+		// if (env == null) {
+		// throw buildInvalidClientException(
+		// request.session.componentClassName);
+		// }
+		// MessageHandlerServer messageHandler = Registry.impl(
+		// MessageHandlerServer.class, request.protocolMessage.getClass());
+		// token.messageHandler = messageHandler;
+		// /*
+		// * tmp = this will all be queue calls
+		// */
+		// // http thread
+		// messageHandler.onBeforeMessageHandled(request.protocolMessage);
+		// // unless the message is a sync response, on the env thread
+		// env.access().handleFromClientMessage(token);
+		// // http thread
+		// messageHandler.onAfterMessageHandled(request.protocolMessage);
 	}
 
 	InvalidClientException
@@ -284,5 +292,16 @@ public class EnvironmentManager {
 
 	public void invokeInSingletonEnvironment(Runnable runnable) {
 		singletonEnvironment().access().invoke(runnable);
+	}
+
+	public void acceptRequest(RequestToken token) throws Exception {
+		Environment env = getEnvironment(token.request.session);
+		if (env == null) {
+			LoggerFactory.getLogger(getClass()).info(
+					"Invalid client session :: {}", token.request.session);
+			throw buildInvalidClientException(
+					token.request.session.componentClassName);
+		}
+		env.access().handleRequest(token);
 	}
 }

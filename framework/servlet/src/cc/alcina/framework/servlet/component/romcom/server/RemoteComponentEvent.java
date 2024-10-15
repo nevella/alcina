@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
@@ -56,22 +55,22 @@ public class RemoteComponentEvent
 	@Override
 	public String provideDetail() {
 		return Ax.format("%s --> %s",
-				NestedName.getSimple(request.protocolMessage),
-				NestedName.getSimple(response.protocolMessage));
+				request.messageEnvelope.toMessageSummaryString(),
+				response.messageEnvelope.toMessageSummaryString());
 	}
 
 	@Override
 	public byte[] provideInputBytes() {
-		return request == null || request.protocolMessage == null ? new byte[0]
-				: FlightEventWrappable.serialize(request.protocolMessage)
+		return request == null || request.messageEnvelope == null ? new byte[0]
+				: FlightEventWrappable.serialize(request.messageEnvelope)
 						.getBytes(StandardCharsets.UTF_8);
 	}
 
 	@Override
 	public byte[] provideOutputBytes() {
-		return response == null || response.protocolMessage == null
+		return response == null || response.messageEnvelope == null
 				? new byte[0]
-				: FlightEventWrappable.serialize(response.protocolMessage)
+				: FlightEventWrappable.serialize(response.messageEnvelope)
 						.getBytes(StandardCharsets.UTF_8);
 	}
 }

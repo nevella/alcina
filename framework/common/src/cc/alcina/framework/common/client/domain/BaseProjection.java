@@ -90,6 +90,10 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		return (V) lookup.get(objects);
 	}
 
+	/**
+	 * 
+	 * @return basically project().length - 1
+	 */
 	protected abstract int getDepth();
 
 	public MultikeyMap<T> getLookup() {

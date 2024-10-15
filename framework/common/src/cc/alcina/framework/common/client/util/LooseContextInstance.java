@@ -62,7 +62,11 @@ public class LooseContextInstance {
 	}
 
 	protected void cloneFieldsTo(LooseContextInstance other) {
-		other.properties = new HashMap<String, Object>(properties);
+		other.properties = new HashMap<>(properties);
+		Set<String> snapshotExclusions = LooseContext.snapshotExclusions;
+		if (snapshotExclusions != null) {
+			other.properties.keySet().removeIf(snapshotExclusions::contains);
+		}
 		other.stack = new Stack<>();
 		stack.forEach(frame -> other.stack.add(frame.clone()));
 		other.frame = frame.clone();
@@ -212,6 +216,7 @@ public class LooseContextInstance {
 
 		int depth;
 
+		@Override
 		protected Frame clone() {
 			Frame frame = new Frame();
 			frame.properties = CollectionCreators.Bootstrap.getHashMapCreator()
