@@ -29,6 +29,7 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
+		AlcinaServletContext.checkRefusing(httpRequest, httpResponse);
 		String resourceName = resourceInfo.getResourceClass().getSimpleName();
 		String methodName = resourceInfo.getResourceMethod().getName();
 		// Format the thread using the calling method's class and name
