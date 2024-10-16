@@ -356,5 +356,20 @@ public class RemoteComponentProtocol {
 		public String toString() {
 			return Ax.format("session :: id - %s", id);
 		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Session) {
+				Session o = (Session) obj;
+				return Objects.equals(id, o.id);
+			} else {
+				return super.equals(obj);
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return id.hashCode();
+		}
 	}
 }

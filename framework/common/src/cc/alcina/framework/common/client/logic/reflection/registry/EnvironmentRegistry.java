@@ -71,6 +71,9 @@ public class EnvironmentRegistry extends Registry {
 	static Map<Class, Boolean> classEnvironmentSingleton = CollectionCreators.Bootstrap
 			.createConcurrentClassMap();
 
+	static Map<Class, Boolean> classEnvironmentRegistration = CollectionCreators.Bootstrap
+			.createConcurrentClassMap();
+
 	public static void enter(EnvironmentRegistry registry) {
 		LooseContext.set(CONTEXT_REGISTRY, registry);
 	}
@@ -167,7 +170,7 @@ public class EnvironmentRegistry extends Registry {
 
 	static boolean hasEnvironmentRegistration(Class<?> type) {
 		try {
-			boolean hasEnvironmentRegistration = classEnvironmentSingleton
+			boolean hasEnvironmentRegistration = classEnvironmentRegistration
 					.computeIfAbsent(type, clazz -> Reflections.at(clazz)
 							.has(Registration.EnvironmentRegistration.class));
 			return hasEnvironmentRegistration;
