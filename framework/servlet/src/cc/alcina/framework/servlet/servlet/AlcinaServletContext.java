@@ -85,7 +85,11 @@ public class AlcinaServletContext {
 				try {
 					// sleep to prevent thundering request herds
 					Thread.sleep(500);
-				} catch (InterruptedException e) {
+					response.getWriter().write("Capacity exceeded");
+					response.setContentType("text/plain");
+					response.setStatus(503);
+					response.flushBuffer();
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				return true;
