@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -69,6 +70,33 @@ public class AlcinaServletContext {
 	private boolean rootPermissions;
 
 	private HttpContext httpContext;
+
+	/**
+	 * Refuse all requests, in the case of a malfunctioning (e.g. deadlocked)
+	 * server
+	 */
+	public static boolean refuseAllRequests;
+
+	public static boolean checkRefusing(HttpServletRequest request,
+			HttpServletResponse response) {
+		if (refuseAllRequests) {
+			if (!Configuration.is(AlcinaServletContext.class,
+					"ignoreRefusing")) {
+				try {
+					// sleep to prevent thundering request herds
+					Thread.sleep(500);
+					response.getWriter().write("Capacity exceeded");
+					response.setContentType("text/plain");
+					response.setStatus(503);
+					response.flushBuffer();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				return true;
+			}
+		}
+		return false;
+	}
 
 	public AlcinaServletContext() {
 	}

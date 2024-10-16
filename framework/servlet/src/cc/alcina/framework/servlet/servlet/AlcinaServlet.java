@@ -106,6 +106,9 @@ public abstract class AlcinaServlet extends HttpServlet
 
 	protected void wrapRequest(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException {
+		if (AlcinaServletContext.checkRefusing(request, response)) {
+			return;
+		}
 		AlcinaServletContext alcinaContext = null;
 		try {
 			String threadName = Ax.format("task-%s:%s",
