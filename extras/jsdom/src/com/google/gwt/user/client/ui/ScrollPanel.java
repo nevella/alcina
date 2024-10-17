@@ -385,4 +385,8 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	public void setWidth(String width) {
 		super.setWidth(width);
 	}
+
+	public boolean isScrolledToBottom() {
+		return getVerticalScrollPosition() == getMaximumVerticalScrollPosition();
+	}
 }
