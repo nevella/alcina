@@ -37,6 +37,10 @@ public class AlcinaGwtTestReflectionFilterPeer
 				.equals("com.google.gwt.dom.client.Element")) {
 			return true;
 		}
+		if (type.getQualifiedSourceName()
+				.equals("com.google.gwt.dom.client.Document")) {
+			return true;
+		}
 		// and style
 		if (type.getQualifiedSourceName()
 				.matches("com.google.gwt.dom.client.Style([$.].+)?")) {

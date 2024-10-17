@@ -181,7 +181,7 @@ public class EnvironmentRegistry extends Registry {
 
 	@Override
 	protected Register register0() {
-		return new EnvironmentRegister(super.register0());
+		return register;
 	}
 
 	class EnvironmentRegister extends Register {

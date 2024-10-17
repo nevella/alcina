@@ -32,9 +32,13 @@ public class RemoteComponentReflectionFilterPeer
 
 	@Override
 	public boolean isVisibleType(JType type) {
-		// allow invoke on element bean methods
+		// allow invoke on element + document bean methods
 		if (type.getQualifiedSourceName()
 				.equals("com.google.gwt.dom.client.Element")) {
+			return true;
+		}
+		if (type.getQualifiedSourceName()
+				.equals("com.google.gwt.dom.client.Document")) {
 			return true;
 		}
 		// and style

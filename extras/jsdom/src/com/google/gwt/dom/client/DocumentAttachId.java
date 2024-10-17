@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.w3c.dom.CDATASection;
@@ -693,7 +694,8 @@ public class DocumentAttachId extends NodeAttachId
 
 	@Override
 	public int getScrollTop() {
-		throw new UnsupportedOperationException();
+		// FIXME - romcom - optimise
+		return invokeSync("getScrollTop");
 	}
 
 	@Override
@@ -703,7 +705,8 @@ public class DocumentAttachId extends NodeAttachId
 
 	@Override
 	public String getTitle() {
-		throw new UnsupportedOperationException();
+		// FIXME - romcom - optimise
+		return invokeSync("getTitle");
 	}
 
 	@Override
@@ -761,6 +764,11 @@ public class DocumentAttachId extends NodeAttachId
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public Document getOwnerDocument() {
+		return document;
+	}
+
 	public interface InvokeProxy {
 		@Reflected
 		public enum Flag {
@@ -778,6 +786,9 @@ public class DocumentAttachId extends NodeAttachId
 		default <T> T invokeSync(NodeAttachId node, String methodName) {
 			return invokeSync(node, methodName, null, null, null);
 		}
+
+		<T> T invokeScript(Class clazz, String methodName,
+				List<Class> argumentTypes, List<?> arguments);
 	}
 
 	public interface MutationProxy {
@@ -788,5 +799,12 @@ public class DocumentAttachId extends NodeAttachId
 		void onSinkBitlessEvent(AttachId from, String eventTypeName);
 
 		void onSinkEvents(AttachId from, int eventBits);
+	}
+
+	@Override
+	public <T> T invoke(Supplier<T> supplier, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
+		return invokeProxy.invokeScript(clazz, methodName, argumentTypes,
+				arguments);
 	}
 }

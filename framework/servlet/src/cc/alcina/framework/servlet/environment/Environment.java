@@ -39,6 +39,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.util.TimerJvm;
+import cc.alcina.framework.entity.util.source.SourceNodes;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.util.EventCollator;
@@ -160,6 +161,11 @@ class Environment {
 			 */
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
 					arguments, flags, null);
+			return awaitResponse(node, methodName, handler);
+		}
+
+		<T> T awaitResponse(NodeAttachId node, String methodName,
+				ResponseHandler handler) {
 			boolean timedOut = false;
 			boolean hadTimeOut = false;
 			long start = System.currentTimeMillis();
@@ -191,6 +197,13 @@ class Environment {
 							handler.response.exception);
 				}
 			}
+		}
+
+		@Override
+		public <T> T invokeScript(Class clazz, String methodName,
+				List<Class> argumentTypes, List<?> arguments) {
+			String methodBody = SourceNodes.getMethodBody(clazz, methodName);
+			return null;
 		}
 
 		ResponseHandler invoke0(NodeAttachId node, String methodName,

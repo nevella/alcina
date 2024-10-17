@@ -22,8 +22,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * 
  * <p>
  * Client-created ids are odd, server-created ids are even, except that the
- * [html] id is 1 for both (the server creates an html node on startup as the
- * sync root)
+ * #document id is 1 and the [html] id is 2 for both (the server creates an html
+ * node on startup as the sync root)
  * 
  * <h3>Implementations</h3>
  * <ul>
@@ -63,12 +63,21 @@ public class AttachIds {
 			nextAttachId = 0;
 		} else {
 			next = counter;
-			if (counter == 1 && !Al.isBrowser()) {
-				// server-side, html is created, now partition the server/client
-				// created id sets
-				counter--;
+			if (counter == 1) {
+				counter++;
+			} else if (counter == 2) {
+				/*
+				 * #document and rootElement [html] are created , now partition
+				 * the server/client created id sets
+				 */
+				if (Al.isBrowser()) {
+					counter += 2;
+				} else {
+					counter++;
+				}
+			} else {
+				counter += 2;
 			}
-			counter += 2;
 		}
 		return next;
 	}

@@ -357,9 +357,9 @@ public class Window {
 	 *
 	 * @return the window's title.
 	 */
-	public static native String getTitle() /*-{
-    return $doc.title;
-	}-*/;
+	public static String getTitle() {
+		return Document.get().getTitle();
+	}
 
 	private static void maybeInitializeCloseHandlers() {
 		if (GWT.isClient() && !closeHandlersInitialized) {

@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -488,24 +487,6 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	@Override
 	public void sinkEvents(int eventBits) {
 		throw new UnsupportedOperationException();
-	}
-
-	<T> T invokeSync(String methodName, List<Class> argumentTypes,
-			List<?> arguments) {
-		return getOwnerDocument().attachIdRemote().invokeProxy.invokeSync(
-				ElementAttachId.this, methodName, argumentTypes, arguments,
-				null);
-	}
-
-	<T> T invokeStyle(String methodName, List<Class> argumentTypes,
-			List<?> arguments) {
-		return getOwnerDocument().attachIdRemote().invokeProxy.invokeSync(
-				ElementAttachId.this, methodName, argumentTypes, arguments,
-				List.of(InvokeProxy.Flag.invoke_on_element_style));
-	}
-
-	<T> T invokeSync(String methodName) {
-		return invokeSync(methodName, null, null);
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 
+import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -188,6 +189,23 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 	@Override
 	public Node insertFirst(Node child) {
 		throw new UnsupportedOperationException();
+	}
+
+	<T> T invokeSync(String methodName, List<Class> argumentTypes,
+			List<?> arguments) {
+		return getOwnerDocument().attachIdRemote().invokeProxy.invokeSync(
+				NodeAttachId.this, methodName, argumentTypes, arguments, null);
+	}
+
+	<T> T invokeStyle(String methodName, List<Class> argumentTypes,
+			List<?> arguments) {
+		return getOwnerDocument().attachIdRemote().invokeProxy.invokeSync(
+				NodeAttachId.this, methodName, argumentTypes, arguments,
+				List.of(InvokeProxy.Flag.invoke_on_element_style));
+	}
+
+	<T> T invokeSync(String methodName) {
+		return invokeSync(methodName, null, null);
 	}
 
 	@Override
