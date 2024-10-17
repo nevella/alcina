@@ -94,7 +94,7 @@ public class SourceNodes {
 		BlockComment blockComment = (BlockComment) methodDeclaration
 				.getChildNodes().stream().filter(n -> n instanceof BlockComment)
 				.findFirst().get();
-		String boundaryPattern = "(?s)/\\*-\\{(.+)\\}-\\*/";
+		String boundaryPattern = "(?s)/\\*-\\{(.+)\\}-\\*/\\s*";
 		String jni = blockComment.toString();
 		Matcher matcher = Pattern.compile(boundaryPattern).matcher(jni);
 		matcher.matches();

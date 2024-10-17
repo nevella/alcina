@@ -39,7 +39,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.util.TimerJvm;
-import cc.alcina.framework.entity.util.source.SourceNodes;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.util.EventCollator;
@@ -202,7 +201,8 @@ class Environment {
 		@Override
 		public <T> T invokeScript(Class clazz, String methodName,
 				List<Class> argumentTypes, List<?> arguments) {
-			String methodBody = SourceNodes.getMethodBody(clazz, methodName);
+			// String methodBody = SourceNodes.getMethodBody(clazz, methodName);
+			// FIXME - romcom
 			return null;
 		}
 

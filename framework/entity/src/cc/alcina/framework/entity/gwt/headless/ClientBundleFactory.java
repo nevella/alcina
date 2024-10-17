@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.resources.client.ClientBundle.Source;
 import com.google.gwt.resources.client.ResourcePrototype;
+import com.google.gwt.resources.client.TextResource;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
@@ -46,6 +47,8 @@ public class ClientBundleFactory implements RegistryFactory<ClientBundle> {
 				Class<?> returnType = method.getReturnType();
 				if (returnType == SimpleCssResource.class) {
 					return new SimpleCssResourceImpl(readOp.asString());
+				} else if (returnType == TextResource.class) {
+					return new TextResourceImpl(readOp.asString());
 				} else {
 					throw new UnsupportedOperationException();
 				}
@@ -62,6 +65,24 @@ public class ClientBundleFactory implements RegistryFactory<ClientBundle> {
 		String text;
 
 		public SimpleCssResourceImpl(String text) {
+			this.text = text;
+		}
+
+		@Override
+		public String getName() {
+			return null;
+		}
+
+		@Override
+		public String getText() {
+			return text;
+		}
+	}
+
+	class TextResourceImpl implements TextResource {
+		String text;
+
+		public TextResourceImpl(String text) {
 			this.text = text;
 		}
 
