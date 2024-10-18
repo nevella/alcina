@@ -510,12 +510,14 @@ public class SEUtilities {
 		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
 			sb.append(entry.getKey());
 			sb.append("\n");
-			StackTraceElement[] value = entry.getValue();
-			for (StackTraceElement stackTraceElement : value) {
+			StackTraceElement[] traces = entry.getValue();
+			// max 400 lines
+			int skip = Math.max(0, traces.length - 400);
+			Arrays.stream(traces).forEach(element -> {
 				sb.append("\t");
-				sb.append(stackTraceElement);
+				sb.append(element);
 				sb.append("\n");
-			}
+			});
 		}
 		return sb.toString();
 	}
