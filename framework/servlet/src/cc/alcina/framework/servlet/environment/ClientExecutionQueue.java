@@ -238,6 +238,7 @@ class ClientExecutionQueue implements Runnable {
 			MessageHandlerServer messageHandler = MessageHandlerServer
 					.forMessage(token.message);
 			messageHandler.handle(token, environment.access(), token.message);
+			environment.access().flush();
 		} catch (Exception e) {
 			transportLayer.sendMessage(ProcessingException.wrap(e));
 			logger.warn(
