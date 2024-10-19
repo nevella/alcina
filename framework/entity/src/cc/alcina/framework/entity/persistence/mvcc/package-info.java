@@ -9,9 +9,6 @@
  * from the postgresql project's mvcc system, but there are few other
  * similarities (since this is an MVCC object, not relational database system).
  * 
- * <p>
- * Principal classes: [Domain, Transactions, Transaction, TLTM, Entity,
- * ObjectVersions, ObjectVersion]
  * 
  * <p>
  * The domain/mvcc subsystem provides high-performance transactional views of
@@ -26,8 +23,13 @@
  * essentially as stores of values - specifically code analysis disallows usage
  * of the version instance's identity - the keyword this cannot be used in
  * transactional entity code, instead the {@link Entity#domainIdentity} method
- * is used to access the object identity of the entity. Routing and maintenance
- * of versions is controlled by a per-entity {@link MvccObjectVersions} object.
+ * is used to access the object identity of the entity. This ensures that there
+ * is only one 'identity' instance of an entity visible to application code, and
+ * that object versions cannot leak across transaction bounrdaries.
+ * 
+ * <p>
+ * Routing and maintenance of versions is controlled by a per-entity
+ * {@link MvccObjectVersions} object.
  * 
  * 
  * <h4>Example of transactional entity access and modification</h4>
@@ -102,7 +104,7 @@
  * 
  * 
  * <p>
- * Exampe of rewritten code
+ * Exampe of rewritten code (TODO)
  * 
  * 
  * <h4>Diagrams:</h4>
@@ -127,5 +129,3 @@
  * similarities (since this is an MVCC object, not relational database system).
  */
 package cc.alcina.framework.entity.persistence.mvcc;
-
-import cc.alcina.framework.common.client.logic.domain.Entity;
