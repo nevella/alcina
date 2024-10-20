@@ -1,12 +1,14 @@
 package cc.alcina.framework.servlet.process.observer.job;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.IdOrdered;
@@ -15,6 +17,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
 import cc.alcina.framework.entity.util.FileUtils;
+import cc.alcina.framework.entity.util.ZipUtil;
 import cc.alcina.framework.servlet.component.sequence.Sequence;
 import cc.alcina.framework.servlet.process.observer.mvcc.MvccObserver;
 
@@ -46,7 +49,7 @@ public class JobHistory {
 	}
 
 	public class JobSequence {
-		public boolean includeMvccObservables;
+		public boolean includeMvccObservables = true;
 
 		public JobSequence
 				withIncludeMvccObservables(boolean includeMvccObservables) {
@@ -54,7 +57,7 @@ public class JobHistory {
 			return this;
 		}
 
-		public void exportLocal() {
+		public File exportLocal() {
 			Stream<? extends IdOrdered> stream = observables.stream();
 			if (includeMvccObservables) {
 				stream = Stream.concat(stream,
@@ -65,16 +68,29 @@ public class JobHistory {
 					.collect(Collectors.toList());
 			File folder = new File(LOCAL_PATH);
 			Sequence.Loader.writeElements(folder, events);
-			String persistentExportPath = Configuration
-					.get("persistentExportPath");
-			if (Ax.notBlank(persistentExportPath)) {
-				File persistentFolder = new File(persistentExportPath);
-				persistentFolder.mkdirs();
-				File jobFolder = FileUtils.child(persistentFolder,
-						Ax.timestampYmd(new Date()));
-				Sequence.Loader.writeElements(jobFolder, events);
-				Ax.out("wrote job event sequence to %s", jobFolder);
-			}
+			File datestampedFolder = createLocalDatestampedEventFolder();
+			Sequence.Loader.writeElements(datestampedFolder, events);
+			Ax.out("wrote job event sequence to %s", datestampedFolder);
+			return datestampedFolder;
+		}
+	}
+
+	static File createLocalDatestampedEventFolder() {
+		String persistentExportPath = Configuration.get("persistentExportPath");
+		File persistentFolder = new File(persistentExportPath);
+		persistentFolder.mkdirs();
+		File datestampedFolder = FileUtils.child(persistentFolder,
+				Ax.timestampYmd(new Date()));
+		return datestampedFolder;
+	}
+
+	public static File unzipExportedEvents(InputStream inputStream) {
+		File datestampedFolder = createLocalDatestampedEventFolder();
+		try {
+			new ZipUtil().unzip(datestampedFolder, inputStream);
+			return datestampedFolder;
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
 		}
 	}
 
