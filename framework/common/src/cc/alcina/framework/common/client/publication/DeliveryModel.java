@@ -110,6 +110,10 @@ public interface DeliveryModel extends TreeSerializable {
 		provideAttachments().remove(attachment);
 	}
 
+	public Long getRequestorClientInstanceId();
+
+	public void setRequestorClientInstanceId(Long requestorClientInstanceId);
+
 	public static class MailAttachment {
 		public String uid;
 

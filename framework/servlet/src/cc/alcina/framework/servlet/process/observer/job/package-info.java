@@ -26,6 +26,14 @@ cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()));
 cc.alcina.framework.servlet.process.observer.job.JobObserver.getHistory(
 cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()).sequence().exportLocal();
 
+-- copy the logs to the default viewer folder for the sequence viewer --
+mkdir -p /tmp/sequence/job/job-event-latest
+rm -rf /tmp/sequence/job/job-event-latest/* 
+cp -R /opt/jboss/.alcina/tmp/job/sequence/20241019_221219_378 /tmp/sequence/job/job-event-latest
+[launch alcina devconsole]
+open http://127.0.0.1:31009/seq
+load job
+
 - what does it interact with?
     - DomainStore/mvcc and the Job system
 - what are the non-intuitives?

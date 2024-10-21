@@ -156,9 +156,12 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		return this;
 	}
 
+	String priorThreadName = null;
+
 	@Override
 	public void run() {
 		if (threadName != null) {
+			priorThreadName = Thread.currentThread().getName();
 			Thread.currentThread().setName(threadName);
 		}
 		inTransaction = Transaction.isInTransaction();
@@ -198,6 +201,9 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			}
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();
+			if (threadName != null) {
+				Thread.currentThread().setName(priorThreadName);
+			}
 		}
 	}
 

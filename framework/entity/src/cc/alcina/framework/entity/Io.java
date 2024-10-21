@@ -412,6 +412,11 @@ public class Io {
 				this.url = url;
 				return ReadOp.this;
 			}
+
+			public ReadOp base64String(String base64String) {
+				bytes = Base64.getDecoder().decode(base64String);
+				return ReadOp.this;
+			}
 		}
 
 		/**
@@ -424,13 +429,16 @@ public class Io {
 
 		public String asDataUrl(String mimeType) {
 			try {
-				byte[] bytes = asBytes();
-				String encoded = Base64.getEncoder().encodeToString(bytes);
-				String url = Ax.format("data:%s;base64,%s", mimeType, encoded);
+				String url = Ax.format("data:%s;base64,%s", mimeType,
+						asBase64String());
 				return url;
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
+		}
+
+		public String asBase64String() {
+			return Base64.getEncoder().encodeToString(asBytes());
 		}
 	}
 

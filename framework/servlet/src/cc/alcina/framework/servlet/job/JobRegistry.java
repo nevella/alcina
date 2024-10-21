@@ -1325,6 +1325,8 @@ public class JobRegistry {
 
 		void record() {
 			get().inMemoryResults.put(job, this);
+			logger.info("Recorded large result - {} chars - for {}",
+					result.length(), job);
 		}
 	}
 
