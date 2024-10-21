@@ -6,6 +6,7 @@ import java.util.Date;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -24,10 +25,12 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -198,6 +201,15 @@ public class Publisher {
 			IUser user = PermissionsManager.get().getUser();
 			if (user == null) {
 				user = UserlandProvider.get().getSystemUser();
+			}
+			ClientInstance clientInstance = ClientInstance.self();
+			if (clientInstance == null) {
+				clientInstance = EntityLayerObjects.get()
+						.getServerAsClientInstance();
+			}
+			if (Configuration.is("trackPublicationClientInstanceId")) {
+				deliveryModel
+						.setRequestorClientInstanceId(clientInstance.getId());
 			}
 			publicationUserId = persister.getNextPublicationIdForUser(user);
 			persist(contentDefinition, deliveryModel, publicationUserId,

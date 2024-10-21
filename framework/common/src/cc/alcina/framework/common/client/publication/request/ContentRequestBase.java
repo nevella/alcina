@@ -47,6 +47,78 @@ import cc.alcina.framework.common.client.util.StringMap;
  */
 public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		Bindable implements DeliveryModel, TreeSerializable, Definition {
+	public static class TestContentDefinition implements ContentDefinition {
+		@Override
+		public String getPublicationType() {
+			return "test";
+		}
+	}
+
+	@TypeSerialization(flatSerializable = false)
+	public static class TestContentRequest
+			extends ContentRequestBase<TestContentDefinition> {
+		@Override
+		public TestContentDefinition getContentDefinition() {
+			return this.contentDefinition;
+		}
+
+		@Override
+		public void
+				setContentDefinition(TestContentDefinition contentDefinition) {
+			this.contentDefinition = contentDefinition;
+		}
+	}
+
+	private static class Customiser
+			extends TreeSerializable.Customiser<ContentRequestBase> {
+		public Customiser(ContentRequestBase serializable) {
+			super(serializable);
+		}
+
+		@Override
+		public void onAfterTreeDeserialize() {
+			StringMap.fromPropertyString(serializable.propertiesSerialized)
+					.forEach((k, v) -> serializable.properties.put(k, v));
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onAfterTreeDeserialize();
+			}
+		}
+
+		@Override
+		public void onAfterTreeSerialize() {
+			serializable.properties = new LinkedHashMap<>();
+			StringMap.fromPropertyString(serializable.propertiesSerialized)
+					.forEach((k, v) -> serializable.properties.put(k, v));
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onAfterTreeSerialize();
+			}
+		}
+
+		@Override
+		public void onBeforeTreeDeserialize() {
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onBeforeTreeDeserialize();
+			}
+		}
+
+		@Override
+		public void onBeforeTreeSerialize() {
+			if (serializable.properties == null) {
+				serializable.properties = new LinkedHashMap<>();
+			}
+			serializable.propertiesSerialized = new StringMap(
+					serializable.properties).toPropertyString();
+			serializable.properties = new LinkedHashMap<>();
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onBeforeTreeSerialize();
+			}
+		}
+	}
+
 	static final long serialVersionUID = -1L;
 
 	private String outputFormat = FormatConversionTarget.HTML.serializedForm();
@@ -120,6 +192,16 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	private List<MultipleDeliveryEntry> multipleDeliveryEntries = new ArrayList<>();
 
 	private RepositoryConnection repositoryConnection = new RepositoryConnection();
+
+	private Long requestorClientInstanceId;
+
+	public Long getRequestorClientInstanceId() {
+		return requestorClientInstanceId;
+	}
+
+	public void setRequestorClientInstanceId(Long requestorClientInstanceId) {
+		this.requestorClientInstanceId = requestorClientInstanceId;
+	}
 
 	public void ensureSuggestedFilename(String filename) {
 		if (Ax.isBlank(getSuggestedFileName())) {
@@ -587,77 +669,5 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	@Override
 	public TreeSerializable.Customiser treeSerializationCustomiser() {
 		return new Customiser(this);
-	}
-
-	private static class Customiser
-			extends TreeSerializable.Customiser<ContentRequestBase> {
-		public Customiser(ContentRequestBase serializable) {
-			super(serializable);
-		}
-
-		@Override
-		public void onAfterTreeDeserialize() {
-			StringMap.fromPropertyString(serializable.propertiesSerialized)
-					.forEach((k, v) -> serializable.properties.put(k, v));
-			if (serializable.contentDefinition != null) {
-				serializable.contentDefinition.treeSerializationCustomiser()
-						.onAfterTreeDeserialize();
-			}
-		}
-
-		@Override
-		public void onAfterTreeSerialize() {
-			serializable.properties = new LinkedHashMap<>();
-			StringMap.fromPropertyString(serializable.propertiesSerialized)
-					.forEach((k, v) -> serializable.properties.put(k, v));
-			if (serializable.contentDefinition != null) {
-				serializable.contentDefinition.treeSerializationCustomiser()
-						.onAfterTreeSerialize();
-			}
-		}
-
-		@Override
-		public void onBeforeTreeDeserialize() {
-			if (serializable.contentDefinition != null) {
-				serializable.contentDefinition.treeSerializationCustomiser()
-						.onBeforeTreeDeserialize();
-			}
-		}
-
-		@Override
-		public void onBeforeTreeSerialize() {
-			if (serializable.properties == null) {
-				serializable.properties = new LinkedHashMap<>();
-			}
-			serializable.propertiesSerialized = new StringMap(
-					serializable.properties).toPropertyString();
-			serializable.properties = new LinkedHashMap<>();
-			if (serializable.contentDefinition != null) {
-				serializable.contentDefinition.treeSerializationCustomiser()
-						.onBeforeTreeSerialize();
-			}
-		}
-	}
-
-	public static class TestContentDefinition implements ContentDefinition {
-		@Override
-		public String getPublicationType() {
-			return "test";
-		}
-	}
-
-	@TypeSerialization(flatSerializable = false)
-	public static class TestContentRequest
-			extends ContentRequestBase<TestContentDefinition> {
-		@Override
-		public TestContentDefinition getContentDefinition() {
-			return this.contentDefinition;
-		}
-
-		@Override
-		public void
-				setContentDefinition(TestContentDefinition contentDefinition) {
-			this.contentDefinition = contentDefinition;
-		}
 	}
 }
