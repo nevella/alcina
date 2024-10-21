@@ -2238,6 +2238,10 @@ public class CommonUtils {
 			return firstOnly.isEmpty() && secondOnly.isEmpty();
 		}
 
+		public boolean hasIntersection() {
+			return intersection.size() > 0;
+		}
+
 		public String toSizes() {
 			return format("First: %s\tBoth: %s\tSecond: %s", firstOnly.size(),
 					intersection.size(), secondOnly.size());

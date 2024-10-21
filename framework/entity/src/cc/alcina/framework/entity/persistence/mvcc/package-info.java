@@ -18,18 +18,19 @@
  * a single null check - i.e. extremely low.
  * 
  * <p>
- * When an entity has been changed, each changed version of the entity is
- * modelled by a new instance of the entity class. Those instances act
- * essentially as stores of values - specifically code analysis disallows usage
- * of the version instance's identity - the keyword this cannot be used in
- * transactional entity code, instead the {@link Entity#domainIdentity} method
- * is used to access the object identity of the entity. This ensures that there
- * is only one 'identity' instance of an entity visible to application code, and
- * that object versions cannot leak across transaction bounrdaries.
+ * When an entity - or more generally an MvccObject - has been changed, each
+ * changed version of the entity is modelled by a new instance of the entity
+ * class. Those instances act essentially as stores of values - specifically
+ * code analysis disallows usage of the version instance's identity - the
+ * keyword this cannot be used in transactional entity code, instead the
+ * {@link Entity#domainIdentity} method is used to access the object identity of
+ * the entity. This ensures that there is only one 'identity' instance of an
+ * entity visible to application code, and that object versions cannot leak
+ * across transaction bounrdaries.
  * 
  * <p>
  * Routing and maintenance of versions is controlled by a per-entity
- * {@link MvccObjectVersions} object.
+ * {@link MvccObjectVersions} object and the per-app {@link Vacuum} process
  * 
  * 
  * <h4>Example of transactional entity access and modification</h4>
@@ -106,6 +107,9 @@
  * <p>
  * Exampe of rewritten code (TODO)
  * 
+ * TODO details - begin work on non-bytecode source rewriter (probably using the
+ * GWT sourcewriter) - this doc is the first client
+ * 
  * 
  * <h4>Diagrams:</h4>
  * <ul>
@@ -120,12 +124,18 @@
  * <li>Trie
  * <li>MvccObjectVersions
  * <li>[Domain, Transactions, Transaction, TLTM, Entity, ObjectVersions,
- * ObjectVersion] </ul
+ * ObjectVersion]
+ * </ul>
  * <p>
  * Catechism: *
  * <p>
- * General implementation notes: Some of the transactional id terminology is
- * borrowed from the postgresql project's mvcc system, but there are few other
- * similarities (since this is an MVCC object, not relational database system).
+ * <h3>Gotchas and implementation notes</h3>
+ * <ul>
+ * <li>Operations on mvccobjectversions are always routed through the domain
+ * identity? not …quite_, but on the way.
+ * <li>_Operations_ (mutations) on mvccobjectversions need to check attached -
+ * but not field (cached tx) access, since the cache values, if existent, will
+ * be immutably true for that tx. ditto (of course) domainidentity
+ * </ul>
  */
 package cc.alcina.framework.entity.persistence.mvcc;

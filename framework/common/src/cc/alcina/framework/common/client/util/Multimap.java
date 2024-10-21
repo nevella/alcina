@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -335,5 +336,10 @@ public class Multimap<K, V extends List>
 	@Override
 	public Collection<V> values() {
 		return this.map.values();
+	}
+
+	public Stream<K> keysWithMultipleValues() {
+		return this.map.entrySet().stream().filter(e -> e.getValue().size() > 1)
+				.map(Map.Entry::getKey);
 	}
 }

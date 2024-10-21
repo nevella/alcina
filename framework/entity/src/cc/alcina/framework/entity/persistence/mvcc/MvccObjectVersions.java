@@ -45,8 +45,22 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  *
  * Debugging note - attach breakpoints to debugMe() and call it - otherwise the
  * caller will be de-optimised and you'll never hit sync issues
+ * 
  *
+ * 
  * @param <T>
+ */
+/*
+ * @formatter:off
+ * Vacuum notes (for incorporation into doc):
+ * * vacuum
+    * entity
+        * readonly - just discard once tx is finished
+        * write - non committing - just discard once tx is finished
+        * write - committed - 
+            * discard once no tx references the tx of this version (if not latest)
+            * if only one version, and creation tx is unreffed (doc), discard via the double-lock-shuffle
+ * @formatter:on
  */
 public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
