@@ -43,6 +43,8 @@ public class TaskDomainQuery extends PerformerTask.Fields
 
 	public int maxChars = 20000;
 
+	public int maxFieldChars = 200;
+
 	transient PathSegments pathSegments;
 
 	public boolean withEntityToString;
@@ -151,9 +153,8 @@ public class TaskDomainQuery extends PerformerTask.Fields
 			}
 		}
 		if (object instanceof String) {
-			maxChars = 200;
 			return Ax.format("\"%s\"", StringEscapeUtils.escapeJava(CommonUtils
-					.trimToWsChars(object.toString(), maxChars, true)));
+					.trimToWsChars(object.toString(), maxFieldChars, true)));
 		} else {
 			return object.toString();
 		}
