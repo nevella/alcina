@@ -417,7 +417,8 @@ public abstract class TransformManager
 	 * NonRelational was serialized - which may not be desirable
 	 */
 	public static void updateSerialized(Entity entity) {
-		Reflections.at(entity).properties().forEach(property -> {
+		Class<? extends Entity> entityClass = entity.entityClass();
+		Reflections.at(entityClass).properties().forEach(property -> {
 			if (property.has(DomainProperty.class)
 					&& property.annotation(DomainProperty.class).serialize()) {
 				// same logic as #handleCascadedPropertyChange
