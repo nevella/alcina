@@ -91,6 +91,7 @@ public class JobObserver {
 	void observe0(ObservableJobFilter filter) {
 		filters.add(filter);
 		if (filters.size() == 1) {
+			logger.info("registering ObservableJobFilter");
 			registerObservers();
 		}
 	}
@@ -107,6 +108,7 @@ public class JobObserver {
 			implements ProcessObserver<JobObservable.TimedOut> {
 		@Override
 		public void topicPublished(JobObservable.TimedOut event) {
+			logger.info("TimedOutEventObserver - observed {}", event);
 			if (Configuration.is("record")) {
 				JobHistory history = getHistoryForEvent(event);
 				if (history != null) {
@@ -130,6 +132,8 @@ public class JobObserver {
 		public void topicPublished(JobObservable.Created event) {
 			if (filters.stream().anyMatch(f -> f.isBeginObservation(event))) {
 				if (!isObserving(event)) {
+					logger.info("Begin observing - job localid {}",
+							event.job.getLocalId());
 					histories.put(event.job.getLocalId(),
 							new JobHistory(event.job));
 				}
@@ -158,6 +162,7 @@ public class JobObserver {
 
 		boolean evict() {
 			if (evictAt <= System.currentTimeMillis()) {
+				logger.info("Evict history - job localid {}", localId);
 				histories.remove(localId);
 				return true;
 			} else {
