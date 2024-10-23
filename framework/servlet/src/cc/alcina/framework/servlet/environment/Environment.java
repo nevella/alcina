@@ -46,6 +46,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
@@ -140,7 +141,7 @@ class Environment {
 		public void invoke(NodeAttachId node, String methodName,
 				List<Class> argumentTypes, List<?> arguments,
 				List<InvokeProxy.Flag> flags, AsyncCallback<?> callback) {
-			invoke0(node, methodName, argumentTypes, arguments, flags,
+			invoke0(node, methodName, argumentTypes, arguments, flags, null,
 					callback);
 		}
 
@@ -159,7 +160,7 @@ class Environment {
 			 * Synchronous! 2006 is back!
 			 */
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
-					arguments, flags, null);
+					arguments, flags, null, null);
 			return awaitResponse(node, methodName, handler);
 		}
 
@@ -201,14 +202,17 @@ class Environment {
 		@Override
 		public <T> T invokeScript(Class clazz, String methodName,
 				List<Class> argumentTypes, List<?> arguments) {
-			// String methodBody = SourceNodes.getMethodBody(clazz, methodName);
-			// FIXME - romcom
+			String methodBody = new JsInvokeBuilder().build(clazz, methodName,
+					argumentTypes, arguments);
+			ResponseHandler handler = invoke0(null, null, null, null, List.of(),
+					methodBody, null);
+			// currently non-sync
 			return null;
 		}
 
 		ResponseHandler invoke0(NodeAttachId node, String methodName,
 				List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
-				AsyncCallback<?> callback) {
+				String javascript, AsyncCallback<?> callback) {
 			// check this is valid
 			if (node != null && AttachId.forNode(node.node()).id == 0) {
 				throw new IllegalStateException(Ax.format(
@@ -227,6 +231,10 @@ class Environment {
 			invoke.arguments = arguments == null ? List.of() : arguments;
 			invoke.flags = flags == null ? List.of() : flags;
 			invoke.sync = callback == null;
+			if (javascript != null) {
+				invoke.javascript = javascript;
+				invoke.jsResponseType = JsResponseType._void;
+			}
 			responseHandlers.put(invoke.id, handler);
 			queue.sendToClient(invoke);
 			return handler;

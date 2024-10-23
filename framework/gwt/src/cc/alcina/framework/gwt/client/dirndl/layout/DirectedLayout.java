@@ -1598,6 +1598,13 @@ public class DirectedLayout implements AlcinaProcess {
 				bindings.forEach(PropertyBinding::unbind);
 			}
 		}
+
+		/*
+		 * Use for debugging model/node bindings across layouts
+		 */
+		public String provideLayoutId() {
+			return String.valueOf(DirectedLayout.this.hashCode());
+		}
 	}
 
 	static class ReceivesEmitsEvents {

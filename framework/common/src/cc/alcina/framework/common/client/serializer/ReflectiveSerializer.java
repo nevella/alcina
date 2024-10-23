@@ -826,7 +826,7 @@ public class ReflectiveSerializer {
 				throw Ax.runtimeException("No value serializer for type %s",
 						value.getClass());
 			} else {
-				return valueSerializer.toJson(value);
+				return valueSerializer.toJsonValue(value);
 			}
 		}
 
@@ -1185,7 +1185,7 @@ public class ReflectiveSerializer {
 
 		public abstract List<Class> serializesTypes();
 
-		protected abstract JsonValue toJson(T object);
+		protected abstract JsonValue toJsonValue(T object);
 	}
 
 	public static String serializeForRpc(Object object) {
@@ -1210,6 +1210,22 @@ public class ReflectiveSerializer {
 			this.throwable = ex;
 			this.deserializationClassName = deserializationClassName;
 			this.json = json;
+		}
+	}
+
+	public static String toJavascriptLiteral(Object value) {
+		if (value == null) {
+			return Json.createNull().toJson();
+		}
+		Class<? extends Object> serializerType = value.getClass();
+		JsonSerialNode.ensureValueSerializers();
+		ValueSerializer valueSerializer = JsonSerialNode
+				.getValueSerializer(serializerType);
+		if (valueSerializer == null) {
+			throw Ax.runtimeException("No value serializer for type %s",
+					value.getClass());
+		} else {
+			return valueSerializer.toJsonValue(value).toJson();
 		}
 	}
 }

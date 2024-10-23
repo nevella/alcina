@@ -1,11 +1,14 @@
 package cc.alcina.framework.entity.util.source;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -14,10 +17,12 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.comments.BlockComment;
 import com.github.javaparser.ast.comments.JavadocComment;
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.SEUtilities;
 
 @Registration.Singleton
 public class SourceNodes {
@@ -84,20 +89,68 @@ public class SourceNodes {
 		}
 	}
 
-	public static String getMethodBody(Class<?> clazz, String methodName) {
-		return get().getMethodBody0(clazz, methodName);
+	public static SourceMethod getMethod(Class<?> clazz, String methodName,
+			List<Class> argumentTypes) {
+		return get().getMethod0(clazz, methodName, argumentTypes);
 	}
 
-	String getMethodBody0(Class<?> clazz, String methodName) {
-		MethodDeclaration methodDeclaration = getDeclaration(clazz).get()
-				.getMethodsByName(methodName).get(0);
-		BlockComment blockComment = (BlockComment) methodDeclaration
-				.getChildNodes().stream().filter(n -> n instanceof BlockComment)
-				.findFirst().get();
-		String boundaryPattern = "(?s)/\\*-\\{(.+)\\}-\\*/\\s*";
-		String jni = blockComment.toString();
-		Matcher matcher = Pattern.compile(boundaryPattern).matcher(jni);
-		matcher.matches();
-		return matcher.group(1);
+	SourceMethod getMethod0(Class<?> clazz, String methodName,
+			List<Class> argumentTypes) {
+		return new SourceMethod(clazz, methodName, argumentTypes);
+	}
+
+	public class SourceMethod {
+		MethodDeclaration methodDeclaration;
+
+		public List<String> argumentNames;
+
+		List<Class> argumentTypes;
+
+		SourceMethod(Class<?> clazz, String methodName,
+				List<Class> argumentTypes) {
+			if (argumentTypes.isEmpty()) {
+				// can either indicate 'no-args' or 'sole method with that name'
+				List<MethodDeclaration> namedMethods = getDeclaration(clazz)
+						.get().getMethodsByName(methodName);
+				if (namedMethods.size() == 1) {
+					methodDeclaration = namedMethods.get(0);
+					Method method = SEUtilities.allClassMethods(clazz).stream()
+							.filter(m -> m.getName().equals(methodName))
+							.findFirst().get();
+					argumentTypes = List.of(method.getParameterTypes());
+				}
+			}
+			this.argumentTypes = argumentTypes;
+			String[] argumentTypeNames = this.argumentTypes.stream()
+					.map(Class::getSimpleName).toArray(len -> new String[len]);
+			List<String> argumentTypeNameList = Arrays
+					.asList(argumentTypeNames);
+			if (methodDeclaration == null) {
+				methodDeclaration = getDeclaration(clazz).get()
+						.getMethodsBySignature(methodName, argumentTypeNames)
+						.get(0);
+			}
+			argumentNames = methodDeclaration.getParameters().stream()
+					.map(p -> p.getName().toString())
+					.collect(Collectors.toList());
+		}
+
+		public String getBody() {
+			BlockComment blockComment = (BlockComment) methodDeclaration
+					.getChildNodes().stream()
+					.filter(n -> n instanceof BlockComment).findFirst().get();
+			String boundaryPattern = "(?s)/\\*-\\{(.+)\\}-\\*/\\s*";
+			String jni = blockComment.toString();
+			Matcher matcher = Pattern.compile(boundaryPattern).matcher(jni);
+			matcher.matches();
+			String js = matcher.group(1);
+			// very quick+dirty+incorrect check there are no JSNI/Java refs
+			Preconditions.checkArgument(!js.contains("@"));
+			return js;
+		}
+
+		public List<Class> getArgumentTypes() {
+			return argumentTypes;
+		}
 	}
 }

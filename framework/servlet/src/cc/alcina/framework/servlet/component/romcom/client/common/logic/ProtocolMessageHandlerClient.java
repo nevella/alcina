@@ -101,8 +101,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 				String responseType, Node node, String script) /*-{
 			var arg = node;
 			var ret = eval(script);
-			switch(responseTypeName){
-				case "void":
+			switch(responseType){
+				case "_void":
 				break;
 				case "node_jso":
 				scriptResult.@cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.InvokeHandler.Result::node = ret;

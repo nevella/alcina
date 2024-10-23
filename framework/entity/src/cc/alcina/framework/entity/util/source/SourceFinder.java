@@ -53,7 +53,9 @@ public interface SourceFinder {
 	}
 
 	default String findSource0(Class clazz) {
-		return Io.read().file(findSourceFile0(clazz)).asString();
+		File sourceFile = findSourceFile0(clazz);
+		return sourceFile == null ? null
+				: Io.read().file(sourceFile).asString();
 	}
 
 	File findSourceFile0(Class clazz);
@@ -95,15 +97,22 @@ public interface SourceFinder {
 				if (file3.exists()) {
 					return file3;
 				}
+				sourceFileLocation = new URI(sourceFileLocation.toString()
+						.replace("/alcina/framework/common/src/",
+								"/alcina/framework/gwt/src/")).toURL();
+				File file4 = new File(toPath(sourceFileLocation));
+				if (file4.exists()) {
+					return file4;
+				}
 				Optional<SourceFinderFsHelper> helper = Registry
 						.optional(SourceFinderFsHelper.class);
 				if (helper.isPresent()) {
 					sourceFileLocation = new URI(sourceFileLocation.toString()
 							.replace("/alcina/framework/entity/src/",
 									"/alcina/framework/common/src/")).toURL();
-					File file4 = new File(toPath(sourceFileLocation));
-					if (file4.exists()) {
-						return file4;
+					File file5 = new File(toPath(sourceFileLocation));
+					if (file5.exists()) {
+						return file5;
 					}
 				}
 				return null;

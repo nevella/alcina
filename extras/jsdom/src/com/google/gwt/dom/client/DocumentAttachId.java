@@ -787,6 +787,7 @@ public class DocumentAttachId extends NodeAttachId
 			return invokeSync(node, methodName, null, null, null);
 		}
 
+		/** this will be executed async, with no callback */
 		<T> T invokeScript(Class clazz, String methodName,
 				List<Class> argumentTypes, List<?> arguments);
 	}
