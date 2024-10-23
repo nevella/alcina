@@ -183,6 +183,7 @@ public interface Feature extends Registration.AllSubtypes {
 
 	public interface Type{
 		public interface Backend_model extends Type{}
+		public interface Backend_framework extends Type{}
 		public interface Backend_report extends Type{}
 		@Retention(RetentionPolicy.RUNTIME)
 		@Inherited
@@ -198,7 +199,7 @@ public interface Feature extends Registration.AllSubtypes {
 		public interface Ui_constraint extends Type{}
 
 		/*
-		 * Ui_feature is tourable - others not
+		 * Ui_feature is tourable/storyable - others are not
 		 */
 		public interface Ui_feature extends Type{}
 
@@ -207,5 +208,9 @@ public interface Feature extends Registration.AllSubtypes {
 		 */
 		public interface Ui_implementation extends Type{}
 		public interface Ui_support extends Type{}
+		/*
+		 * An abstract framework feature (client/server)
+		 */
+		public interface Framework extends Type{}
 	}
 }
