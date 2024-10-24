@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -91,7 +92,7 @@ public class MethodContext {
 			return callable.call();
 		} catch (Throwable e) {
 			e.printStackTrace();
-			throw new RuntimeException(e);
+			throw WrappedRuntimeException.wrap(e);
 		} finally {
 			try {
 				currentThread.setContextClassLoader(entryClassLoader);

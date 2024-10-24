@@ -121,6 +121,15 @@ Test sketch
  	- end job
  	- observe job thread 'waiting' message
 
+
+	FIXME (a different issue - queued/non-blocking entity creation support)
+
+* what's the goal? basically to coalesce the transforms from independent, low priority runnables into one tx
+* the BackendTransformQueue mechanism - currently it's "transform transfer" - but that's fragile and complicated
+* instead - put the runnables in another tx (on the backing thread)
+* for some tasks (AtRestEncryption), we'll need a fully isolated context - but probably want that *anyway*
+* for the moment, anything non-blocking and complex (creation, deletion), do it on a committing (non-backend thread)
+
  * @formatter:on
  */
 @Registration.Singleton

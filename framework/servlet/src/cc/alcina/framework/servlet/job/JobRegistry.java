@@ -69,7 +69,6 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
-import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
@@ -434,41 +433,51 @@ public class JobRegistry {
 		return contextAwaiters.computeIfAbsent(job, ContextAwaiter::new);
 	}
 
-	/*
+	public Optional<? extends Job> getExistingPending(Task task) {
+		String serialized = TransformManager.serialize(task, true);
+		Optional<? extends Job> pending = JobDomain.get()
+				.getJobsForTask(task.getClass())
+				.filter(j -> j.getState() == JobState.PENDING)
+				.filter(j -> Objects.equals(serialized, j.getTaskSerialized()))
+				.findFirst();
+		return pending;
+	}
+
+	/**
+	 * <p>
 	 * Ensure there is exactly one pending job (which takes care of changes
 	 * affecting the model which will be missed by an in-flight)
+	 * 
+	 * <p>
+	 * Note that this *does not lock* - so to force cluster uniqueness (which is
+	 * probably unnecessary/overdoing it if the task is idempotent, mind), wrap
+	 * in
+	 * 
+	 * <p>
+	 * withJobMetadataLock(task.getClass().getName(),...ensureScheduled
+	 * 
+	 * @return null if there's an existing job, otherwise
 	 */
 	public Job ensureScheduled(Task task, boolean scheduleAfterInFlight) {
-		Ref<Job> jobRef = new Ref<>();
-		String serialized = TransformManager.serialize(task, true);
-		withJobMetadataLock(task.getClass().getName(), () -> {
-			Optional<? extends Job> pending = JobDomain.get()
+		Optional<? extends Job> pending = getExistingPending(task);
+		if (pending.isPresent()) {
+			return pending.get();
+		}
+		Job job = task.schedule();
+		if (scheduleAfterInFlight) {
+			String serialized = TransformManager.serialize(task, true);
+			Optional<? extends Job> inFlight = JobDomain.get()
 					.getJobsForTask(task.getClass())
-					.filter(j -> j.getState() == JobState.PENDING)
+					.filter(j -> j.getState() == JobState.ALLOCATED
+							|| j.getState() == JobState.PROCESSING)
 					.filter(j -> Objects.equals(serialized,
 							j.getTaskSerialized()))
 					.findFirst();
-			if (pending.isPresent()) {
-				jobRef.set(pending.get());
-				return;
+			if (inFlight.isPresent()) {
+				inFlight.get().createRelation(job, JobRelationType.SEQUENCE);
 			}
-			Job job = task.schedule();
-			if (scheduleAfterInFlight) {
-				Optional<? extends Job> inFlight = JobDomain.get()
-						.getJobsForTask(task.getClass())
-						.filter(j -> j.getState() == JobState.ALLOCATED
-								|| j.getState() == JobState.PROCESSING)
-						.filter(j -> Objects.equals(serialized,
-								j.getTaskSerialized()))
-						.findFirst();
-				if (inFlight.isPresent()) {
-					inFlight.get().createRelation(job,
-							JobRelationType.SEQUENCE);
-				}
-			}
-			jobRef.set(job);
-		});
-		return jobRef.get();
+		}
+		return job;
 	}
 
 	<JR extends JobResource> Optional<JR> getAcquiredResource(Job forJob,

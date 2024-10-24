@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.Reflect
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
@@ -158,12 +159,12 @@ public class DownloadServlet extends HttpServlet {
 		try {
 			Io.Streams.copy(new BufferedInputStream(new FileInputStream(f)),
 					response.getOutputStream());
-			TimerService.get().schedule(() -> {
+			Timer.Provider.get().getTimer(() -> {
 				DownloadItem toRemove = items.remove(id);
 				if (toRemove.deleteOnDownload) {
 					f.delete();
 				}
-			}, TimeConstants.ONE_MINUTE_MS);
+			}).schedule(TimeConstants.ONE_MINUTE_MS);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
