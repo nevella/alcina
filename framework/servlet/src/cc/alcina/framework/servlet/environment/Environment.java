@@ -284,6 +284,14 @@ class Environment {
 			if (mutations == null) {
 				mutations = new Message.Mutations();
 			}
+			// if there's leakage of singletons, the mutationRecord may be
+			// firing in the wrong environment's context
+			if (Environment.get() != Environment.this) {
+				throw new IllegalStateException(Ax.format(
+						"Emitting a mutation in an invalid environment context. "
+								+ "This is possibly caused by singleton leakage (a missing @Registration.EnvironmentSingleton) - mutation env: %s - context env: %s ",
+						Environment.get(), Environment.this));
+			}
 			runnable.run();
 			eventCollator.eventOccurred();
 		}

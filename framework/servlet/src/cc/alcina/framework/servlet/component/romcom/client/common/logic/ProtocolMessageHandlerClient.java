@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.BrowserEvents;
@@ -62,6 +63,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 			Object result = null;
 			try {
 				if (message.methodName != null) {
+					Preconditions.checkNotNull(node, Ax
+							.format("invoke - target node %s not found", path));
 					result = Reflections.at(node).invoke(node,
 							message.methodName, message.argumentTypes,
 							message.arguments, message.flags);
