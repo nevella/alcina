@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.util;
 
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
@@ -35,8 +36,10 @@ public class TimerJvm implements Timer {
 		public Provider() {
 		}
 
+		private AtomicInteger timerId = new AtomicInteger();
+
 		private java.util.Timer timer = new java.util.Timer(
-				"alcina-timerjvm-provider", true);
+				"alcina-timerjvm-provider-" + timerId.getAndIncrement(), true);
 
 		@Override
 		public Timer getTimer(Runnable runnable) {

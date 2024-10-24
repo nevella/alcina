@@ -2,9 +2,12 @@ package cc.alcina.framework.gwt.client.util;
 
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Timer;
 
 /*
@@ -49,6 +52,10 @@ public class EventCollator<T> {
 			try {
 				synchronized (finishedMonitor) {
 					if (!finished) {
+						if (logger != null) {
+							logger.info("{} collator :: firing event",
+									Ax.appMillis());
+						}
 						action.accept(EventCollator.this);
 					}
 				}
@@ -84,6 +91,8 @@ public class EventCollator<T> {
 
 	private Object finishedMonitor = new Object();
 
+	public Logger logger;
+
 	public EventCollator(long waitToPerformAction,
 			Consumer<EventCollator<T>> action) {
 		this(waitToPerformAction, action, Registry.impl(Timer.Provider.class));
@@ -97,8 +106,13 @@ public class EventCollator<T> {
 	}
 
 	public EventCollator(long waitToPerformAction, Runnable runnable) {
-		this(waitToPerformAction, collator -> runnable.run(),
+		this(waitToPerformAction, runnable,
 				Registry.impl(Timer.Provider.class));
+	}
+
+	public EventCollator(long waitToPerformAction, Runnable runnable,
+			Timer.Provider timerProvider) {
+		this(waitToPerformAction, collator -> runnable.run(), timerProvider);
 	}
 
 	public void cancel() {
@@ -121,10 +135,20 @@ public class EventCollator<T> {
 			lastEventOccurred = System.currentTimeMillis();
 			if (firstEventOccurred == 0) {
 				firstEventOccurred = lastEventOccurred;
+				if (logger != null) {
+					logger.info("{} collator :: first event occurred",
+							Ax.appMillis());
+				}
 			}
 			if (timer == null && timerProvider != null) {
 				timer = timerProvider.getTimer(checkCallback);
-				timer.scheduleRepeating(waitToPerformAction / 2);
+				long periodMillis = waitToPerformAction / 2;
+				timer.scheduleRepeating(periodMillis);
+				if (logger != null) {
+					logger.info("{} collator :: timer scheduled - {}",
+							Ax.appMillis(),
+							Ax.appMillis() + waitToPerformAction);
+				}
 			}
 		}
 	}
