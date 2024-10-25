@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
@@ -40,7 +40,7 @@ import cc.alcina.framework.gwt.client.story.StoryTeller.Visit.Result.Log;
  */
 public class StoryTeller {
 	public abstract class StoryTellerObservable
-			implements ProcessObservers.ContextObservers.Observable {
+			implements ContextObservers.Observable {
 		public Visit getVisit() {
 			return state.current();
 		}
