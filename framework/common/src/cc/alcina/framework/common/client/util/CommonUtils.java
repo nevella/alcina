@@ -2026,7 +2026,7 @@ public class CommonUtils {
 		if (isNullOrEmpty(s)) {
 			return s;
 		}
-		if (s.matches(".*[\\-\u2013\u2014\u2011\u2012].*")) {
+		if (s.matches(".+[\\-\u2013\u2014\u2011\u2012].+")) {
 			// handle hyphenated-names
 			return Arrays.stream(s.split("[\\-\u2013\u2014\u2011\u2012]"))
 					.map(CommonUtils::upperCaseFirstLetterOnly)
