@@ -78,6 +78,12 @@
  * 
  * 
  * </pre>
+ * 
+ * <h3>Message transport observation</h3>
+ * <p>
+ * To observe rmcp message lifecycle - to, say, get metrics on when Mutation
+ * messages are dispatched (server), received (client) and processed (client),
+ * observe the
  */
 /*
  * RefIdDom DOM(s) are a server-side linked dom structure (NodeLooal, NodeRefId)

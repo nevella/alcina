@@ -3,8 +3,10 @@ package cc.alcina.framework.servlet.component.romcom.protocol;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,6 +46,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * The way acknowledgment/receipt works is that a transporthistory has the first
  * envelopeId where receipt was sent - if a envelopeId higher than that is
  * received, receipt has been acknowledged and the packet can be released
+ * 
+ * NOTE - packet resend is currently *NOT* implemented
  */
 public abstract class MessageTransportLayer {
 	@Reflected
@@ -202,6 +206,9 @@ public abstract class MessageTransportLayer {
 			return firstSentEnvelopeId != null && firstSentEnvelopeId
 					.compareTo(highestReceivedEnvelopeId) <= 0;
 		}
+
+		void updateFromOtherEndpoint(TransportHistory history) {
+		}
 	}
 
 	@Bean(PropertySource.FIELDS)
@@ -267,6 +274,22 @@ public abstract class MessageTransportLayer {
 		boolean wasAcknowledged(EnvelopeId highestReceivedEnvelopeId) {
 			return transportHistory.wasAcknowledged(highestReceivedEnvelopeId);
 		}
+
+		void updateTransportHistoryFromRemote(TransportHistory remoteHistory) {
+			if (remoteHistory.published != null
+					&& transportHistory.published == null) {
+				transportHistory.published = remoteHistory.published;
+				new MessageTransportLayerObservables.PublishedObservable(this)
+						.publish();
+			}
+		}
+
+		public void onSending() {
+			boolean resending = transportHistory.sent != null;
+			transportHistory.sent = new Date();
+			new MessageTransportLayerObservables.SentObservable(this, resending)
+					.publish();
+		}
 	}
 
 	public static class TransportEvent {
@@ -305,36 +328,73 @@ public abstract class MessageTransportLayer {
 	public abstract class EnvelopeDispatcher {
 		protected abstract boolean isDispatchAvailable();
 
-		protected abstract void
-				dispatch(List<UnacknowledgedMessage> unacknowledgedMessages);
+		protected abstract void dispatch(
+				List<UnacknowledgedMessage> sendMessages,
+				List<UnacknowledgedMessage> receivedMessages);
 
 		/*
 		 * the caller is synchronized on the unacknowledgedMessages list
 		 */
 		protected MessageEnvelope createEnvelope(
-				List<UnacknowledgedMessage> unacknowledgedMessages) {
+				List<UnacknowledgedMessage> sendMessages,
+				List<UnacknowledgedMessage> receivedMessages) {
 			MessageEnvelope envelope = new MessageEnvelope();
 			envelope.envelopeId = new EnvelopeId(sendChannelId(),
 					envelopeIdGenerator.incrementAndGetInt());
 			envelope.highestReceivedEnvelopeId = receiveChannel().highestReceivedEnvelopeId;
-			unacknowledgedMessages.stream()
-					.filter(UnacknowledgedMessage::shouldSend).forEach(uack -> {
+			sendMessages.stream().filter(UnacknowledgedMessage::shouldSend)
+					.forEach(uack -> {
 						if (uack.transportHistory.firstSentEnvelopeId == null) {
 							uack.transportHistory.firstSentEnvelopeId = envelope.envelopeId;
 						}
-						uack.transportHistory.sent = new Date();
+						uack.onSending();
 						envelope.packets.add(new MessagePacket(
 								uack.transportHistory.messageId, uack.message));
 					});
-			unacknowledgedMessages.forEach(uack -> {
-				envelope.transportHistories.add(uack.transportHistory);
-			});
+			/*
+			 * send the transport histories of sent + received messages (for
+			 * sender metrics)
+			 */
+			sendMessages.forEach(uack -> envelope.transportHistories
+					.add(uack.transportHistory));
+			receivedMessages.forEach(uack -> envelope.transportHistories
+					.add(uack.transportHistory));
 			return envelope;
 		}
 	}
 
 	public abstract class Channel {
 		protected List<UnacknowledgedMessage> unacknowledgedMessages = new ArrayList<>();
+
+		protected Map<MessageId, UnacknowledgedMessage> messageIdUnacknowledgedMessage = new LinkedHashMap<>();
+
+		protected List<UnacknowledgedMessage> snapshotUnacknowledgedMessages() {
+			synchronized (unacknowledgedMessages) {
+				return new ArrayList<>(unacknowledgedMessages);
+			}
+		}
+
+		void bufferMessage(UnacknowledgedMessage message) {
+			synchronized (unacknowledgedMessages) {
+				unacknowledgedMessages.add(message);
+				messageIdUnacknowledgedMessage
+						.put(message.transportHistory.messageId, message);
+			}
+		}
+
+		void removeMessage(UnacknowledgedMessage message) {
+			synchronized (unacknowledgedMessages) {
+				unacknowledgedMessages.remove(message);
+				messageIdUnacknowledgedMessage
+						.remove(message.transportHistory.messageId);
+			}
+		}
+
+		UnacknowledgedMessage getUnacknowledgedMessage(MessageId messageId) {
+			synchronized (unacknowledgedMessages) {
+				return messageIdUnacknowledgedMessage.get(messageId);
+			}
+		}
 	}
 
 	public abstract class SendChannel extends Channel {
@@ -358,7 +418,8 @@ public abstract class MessageTransportLayer {
 
 		public void unconditionallySend() {
 			synchronized (unacknowledgedMessages) {
-				envelopeDispatcher().dispatch(unacknowledgedMessages);
+				envelopeDispatcher().dispatch(unacknowledgedMessages,
+						receiveChannel().snapshotUnacknowledgedMessages());
 			}
 		}
 
@@ -368,14 +429,21 @@ public abstract class MessageTransportLayer {
 			conditionallySend();
 		}
 
-		void bufferMessage(UnacknowledgedMessage message) {
-			synchronized (unacknowledgedMessages) {
-				unacknowledgedMessages.add(message);
-			}
-		}
-
 		void updateHistoriesOnReceipt(MessageEnvelope envelope) {
 			synchronized (unacknowledgedMessages) {
+				envelope.transportHistories.stream().filter(
+						remoteHistory -> remoteHistory.messageId.sendChannelId == sendChannelId())
+						.forEach(remoteHistory -> {
+							UnacknowledgedMessage unacknowledgedMessage = getUnacknowledgedMessage(
+									remoteHistory.messageId);
+							if (unacknowledgedMessage != null) {
+								unacknowledgedMessage
+										.updateTransportHistoryFromRemote(
+												remoteHistory);
+							} else {
+								int debug = 3;
+							}
+						});
 				EnvelopeId highestReceivedEnvelopeId = envelope.highestReceivedEnvelopeId;
 				if (highestReceivedEnvelopeId != null) {
 					unacknowledgedMessages.removeIf(u -> {
@@ -429,7 +497,8 @@ public abstract class MessageTransportLayer {
 		protected abstract Message.Handler handler(Message message);
 
 		void addMessagesToUnacknowledged(MessageEnvelope envelope) {
-			// this is the only place receivedMessageIds is used, so sync works
+			// this is the only place receivedMessageIds is used, so sync
+			// works
 			// for both
 			synchronized (unacknowledgedMessages) {
 				envelope.packets.forEach(packet -> {
@@ -459,9 +528,12 @@ public abstract class MessageTransportLayer {
 				 * sender, remove
 				 */
 				if (highestReceivedEnvelopeId != null) {
-					unacknowledgedMessages.removeIf(u -> {
-						return u.wasAcknowledged(highestReceivedEnvelopeId);
-					});
+					List<UnacknowledgedMessage> toRemove = unacknowledgedMessages
+							.stream()
+							.filter(u -> u
+									.wasAcknowledged(highestReceivedEnvelopeId))
+							.collect(Collectors.toList());
+					toRemove.forEach(this::removeMessage);
 				}
 			}
 		}

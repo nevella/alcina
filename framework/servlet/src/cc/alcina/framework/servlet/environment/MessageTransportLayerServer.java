@@ -46,9 +46,10 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 
 		@Override
-		protected void
-				dispatch(List<UnacknowledgedMessage> unacknowledgedMessages) {
-			MessageEnvelope envelope = createEnvelope(unacknowledgedMessages);
+		protected void dispatch(List<UnacknowledgedMessage> sendMessages,
+				List<UnacknowledgedMessage> receivedMessages) {
+			MessageEnvelope envelope = createEnvelope(sendMessages,
+					receivedMessages);
 			dispatchableToken.response.messageEnvelope = envelope;
 			dispatchableToken.response.session = dispatchableToken.request.session;
 			dispatchableToken.latch.countDown();

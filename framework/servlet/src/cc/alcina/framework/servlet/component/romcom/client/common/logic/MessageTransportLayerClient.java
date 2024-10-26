@@ -113,15 +113,16 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		}
 
 		@Override
-		protected void
-				dispatch(List<UnacknowledgedMessage> unacknowledgedMessagesIn) {
+		protected void dispatch(List<UnacknowledgedMessage> sendMessagesIn,
+				List<UnacknowledgedMessage> receivedMessages) {
 			/*
 			 * make a copy of the parameter for post-rpc processing, avoid
 			 * synchronization issues
 			 */
-			List<UnacknowledgedMessage> unacknowledgedMessages = new ArrayList<>(
-					unacknowledgedMessagesIn);
-			MessageEnvelope envelope = createEnvelope(unacknowledgedMessages);
+			List<UnacknowledgedMessage> sendMessages = new ArrayList<>(
+					sendMessagesIn);
+			MessageEnvelope envelope = createEnvelope(sendMessages,
+					receivedMessages);
 			RemoteComponentRequest request = new RemoteComponentRequest();
 			request.messageEnvelope = envelope;
 			request.session = session;
@@ -139,8 +140,7 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 					onReturned();
 					remoteExceptions
 							.add(new RemoteExceptionEvent(exception, sendTime));
-					unacknowledgedMessages
-							.forEach(uak -> uak.onSendException(exception));
+					sendMessages.forEach(uak -> uak.onSendException(exception));
 				}
 
 				void onReturned() {
