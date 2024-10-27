@@ -202,7 +202,7 @@ public class ClientProperties {
 						generalProperties.getClientProperties());
 			}
 		} else {
-			cookieMap = Registry.impl(NonClientCookies.class).getCookieMap();
+			//
 		}
 	}
 
@@ -228,8 +228,16 @@ public class ClientProperties {
 	 */
 	private String resolve(String key) {
 		// Check cookie property store first
-		if (cookieMap.containsKey(key)) {
-			return cookieMap.get(key);
+		if (GWT.isClient()) {
+			if (cookieMap.containsKey(key)) {
+				return cookieMap.get(key);
+			}
+		} else {
+			Map<String, String> nonClientCookieMap = Registry
+					.impl(NonClientCookies.class).getCookieMap();
+			if (nonClientCookieMap.containsKey(key)) {
+				return nonClientCookieMap.get(key);
+			}
 		}
 		// Check properties on GeneralProprties first
 		if (userPropertiesMap.containsKey(key)) {

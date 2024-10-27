@@ -43,11 +43,19 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 @TypedProperties
 public class DirectedActivity<P extends BasePlace> extends Model
 		implements Activity, HasPlace<P> {
-	public static final Topic<DirectedActivity> topicActivityStarted = Topic
-			.create();
+	@Registration.Singleton
+	@Registration.EnvironmentSingleton
+	public static class Topics {
+		public static Topics get() {
+			return Registry.impl(Topics.class);
+		}
 
-	public static final Topic<DirectedActivity> topicActivityStopped = Topic
-			.create();
+		public final Topic<DirectedActivity> topicActivityStarted = Topic
+				.create();
+
+		public final Topic<DirectedActivity> topicActivityStopped = Topic
+				.create();
+	}
 
 	public static Activity forPlace(Place place) {
 		if (!(place instanceof BasePlace)) {
@@ -123,7 +131,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 
 	@Override
 	public void onStop() {
-		topicActivityStopped.publish(this);
+		Topics.get().topicActivityStopped.publish(this);
 	}
 
 	@Override
@@ -134,7 +142,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
 		// ask the framework to render this activity
-		topicActivityStarted.publish(this);
+		Topics.get().topicActivityStarted.publish(this);
 	}
 
 	public <DA extends DirectedActivity> DA withPlace(P place) {

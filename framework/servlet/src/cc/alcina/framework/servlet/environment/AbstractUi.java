@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 
 @TypedProperties
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
@@ -93,6 +94,10 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 	}
 
 	protected abstract DirectedLayout render0();
+
+	protected RemoteComponentProtocol.Session getSession() {
+		return environment.access().getSession();
+	}
 
 	@Override
 	public void end() {

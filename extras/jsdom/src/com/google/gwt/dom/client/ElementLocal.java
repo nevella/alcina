@@ -937,4 +937,16 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'setSelectionRange'");
 	}
+
+	/*
+	 * During initialisation, construct the parent->child binding (without
+	 * remote side-effects or attach)
+	 * 
+	 * This could possibly be prettier, but the constuction of the initial dom
+	 * (from documentElement, not #document) tree is purely element-based
+	 */
+	void putParent(DocumentLocal local) {
+		parentNode = local;
+		parentNode.getChildren().add(this);
+	}
 }

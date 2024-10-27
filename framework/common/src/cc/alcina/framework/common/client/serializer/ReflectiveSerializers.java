@@ -536,7 +536,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(BasePlace object) {
+		public JsonValue toJsonValue(BasePlace object) {
 			return Json.create(object.toTokenStringWithoutAppPrefix());
 		}
 	}
@@ -554,7 +554,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Boolean object) {
+		public JsonValue toJsonValue(Boolean object) {
 			return Json.create(object);
 		}
 	}
@@ -572,7 +572,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Byte object) {
+		public JsonValue toJsonValue(Byte object) {
 			return Json.create(object);
 		}
 	}
@@ -590,7 +590,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(byte[] object) {
+		public JsonValue toJsonValue(byte[] object) {
 			return Json.create(Base64.encodeBytes(object));
 		}
 	}
@@ -609,7 +609,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Class object) {
+		public JsonValue toJsonValue(Class object) {
 			return Json.create(
 					ReflectiveSerializer.serializationClass(object).getName());
 		}
@@ -631,7 +631,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Date object) {
+		public JsonValue toJsonValue(Date object) {
 			return Json.create(String.valueOf(object.getTime()));
 		}
 	}
@@ -649,7 +649,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Double object) {
+		public JsonValue toJsonValue(Double object) {
 			return Json.create(object);
 		}
 	}
@@ -668,7 +668,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Enum object) {
+		public JsonValue toJsonValue(Enum object) {
 			return Json.create(object.toString());
 		}
 	}
@@ -687,7 +687,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(ExtensibleEnum object) {
+		public JsonValue toJsonValue(ExtensibleEnum object) {
 			return Json.create(object.toString());
 		}
 	}
@@ -705,7 +705,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Float object) {
+		public JsonValue toJsonValue(Float object) {
 			return Json.create(object);
 		}
 	}
@@ -723,7 +723,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Integer object) {
+		public JsonValue toJsonValue(Integer object) {
 			return Json.create(object);
 		}
 	}
@@ -741,7 +741,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Long object) {
+		public JsonValue toJsonValue(Long object) {
 			return Json.create(object.toString());
 		}
 	}
@@ -759,7 +759,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Short object) {
+		public JsonValue toJsonValue(Short object) {
 			return Json.create(object);
 		}
 	}
@@ -778,7 +778,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(String object) {
+		public JsonValue toJsonValue(String object) {
 			return Json.create(object);
 		}
 	}
@@ -799,7 +799,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(Timestamp object) {
+		public JsonValue toJsonValue(Timestamp object) {
 			return Json.create(
 					Ax.format("%s.%s", object.getTime(), object.getNanos()));
 		}
@@ -818,7 +818,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		public JsonValue toJson(UUID object) {
+		public JsonValue toJsonValue(UUID object) {
 			return Json.create(object.toString());
 		}
 	}

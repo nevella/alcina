@@ -444,6 +444,10 @@ public class DirectedLayout implements AlcinaProcess {
 		public void remove() {
 			DirectedLayout.this.remove();
 		}
+
+		public DirectedLayout getLayout() {
+			return DirectedLayout.this;
+		}
 	}
 
 	/**
@@ -1593,6 +1597,13 @@ public class DirectedLayout implements AlcinaProcess {
 			void unbind() {
 				bindings.forEach(PropertyBinding::unbind);
 			}
+		}
+
+		/*
+		 * Use for debugging model/node bindings across layouts
+		 */
+		public String provideLayoutId() {
+			return String.valueOf(DirectedLayout.this.hashCode());
 		}
 	}
 

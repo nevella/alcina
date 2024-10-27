@@ -1,5 +1,8 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import org.w3c.dom.DOMException;
 
 public class DocumentLocal extends NodeLocal implements ClientDomDocument {
@@ -743,6 +746,12 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 
 	@Override
 	public void setTitle(String title) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <T> T invoke(Supplier<T> supplier, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
 		throw new UnsupportedOperationException();
 	}
 }

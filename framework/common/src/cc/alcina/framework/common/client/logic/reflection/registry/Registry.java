@@ -1014,4 +1014,8 @@ public class Registry {
 			byClass.remove(singletonImplementationType);
 		}
 	}
+
+	public static boolean has(Class<?> clazz) {
+		return optional(clazz).isPresent();
+	}
 }

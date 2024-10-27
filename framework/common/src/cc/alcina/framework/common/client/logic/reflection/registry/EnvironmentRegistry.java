@@ -1,11 +1,17 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
+import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -28,6 +34,8 @@ public class EnvironmentRegistry extends Registry {
 			+ ".CONTEXT_REGISTRY";
 
 	static RegistryProvider delegateProvider;
+
+	EnvironmentRegister register;
 
 	Registry delegate() {
 		return delegateProvider.getRegistry();
@@ -63,6 +71,9 @@ public class EnvironmentRegistry extends Registry {
 	static Map<Class, Boolean> classEnvironmentSingleton = CollectionCreators.Bootstrap
 			.createConcurrentClassMap();
 
+	static Map<Class, Boolean> classEnvironmentRegistration = CollectionCreators.Bootstrap
+			.createConcurrentClassMap();
+
 	public static void enter(EnvironmentRegistry registry) {
 		LooseContext.set(CONTEXT_REGISTRY, registry);
 	}
@@ -73,6 +84,7 @@ public class EnvironmentRegistry extends Registry {
 		registrations = delegate().registrations;
 		implementations = delegate().implementations;
 		registryKeys = delegate().registryKeys;
+		register = new EnvironmentRegister(super.register0());
 	}
 
 	class EnvironmentQuery<V> extends Registry.Query<V> {
@@ -103,8 +115,12 @@ public class EnvironmentRegistry extends Registry {
 		@Override
 		public V impl() {
 			boolean hasEnvironmentSingleton = hasEnvironmentSingleton(type);
+			boolean hasEnvironmentRegistration = hasEnvironmentRegistration(
+					type);
 			if (hasEnvironmentSingleton) {
 				return (V) singletons.ensure(type);
+			} else if (hasEnvironmentRegistration) {
+				return (V) register.get(type);
 			} else {
 				return delegateQuery().impl();
 			}
@@ -149,6 +165,73 @@ public class EnvironmentRegistry extends Registry {
 			return hasEnvironmentSingleton;
 		} catch (Exception e) {
 			return false;
+		}
+	}
+
+	static boolean hasEnvironmentRegistration(Class<?> type) {
+		try {
+			boolean hasEnvironmentRegistration = classEnvironmentRegistration
+					.computeIfAbsent(type, clazz -> Reflections.at(clazz)
+							.has(Registration.EnvironmentRegistration.class));
+			return hasEnvironmentRegistration;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	@Override
+	protected Register register0() {
+		return register;
+	}
+
+	class EnvironmentRegister extends Register {
+		Register delegate;
+
+		EnvironmentRegister(Register delegate) {
+			this.delegate = delegate;
+		}
+
+		Map<Class<?>, Object> environmentImplementations = AlcinaCollections
+				.newLinkedHashMap();
+
+		public <V> V get(Class<V> type) {
+			return (V) environmentImplementations.get(type);
+		}
+
+		@Override
+		public void add(Class registeringClass, List<Class> keys,
+				Implementation implementation, Priority priority) {
+			delegate.add(registeringClass, keys, implementation, priority);
+		}
+
+		@Override
+		public void add(Class registeringClass, Registration registration) {
+			delegate.add(registeringClass, registration);
+		}
+
+		@Override
+		public void add(RegistryKey registeringClassKey, List<RegistryKey> keys,
+				Implementation implementation, Priority priority) {
+			delegate.add(registeringClassKey, keys, implementation, priority);
+		}
+
+		@Override
+		public void add(String registeringClassClassName, List<String> keys,
+				Implementation implementation, Priority priority) {
+			delegate.add(registeringClassClassName, keys, implementation,
+					priority);
+		}
+
+		@Override
+		public void addDefault(Class registeringClass, Class... keys) {
+			delegate.addDefault(registeringClass, keys);
+		}
+
+		@Override
+		public void singleton(Class type, Object implementation) {
+			Preconditions
+					.checkState(!environmentImplementations.containsKey(type));
+			environmentImplementations.put(type, implementation);
 		}
 	}
 

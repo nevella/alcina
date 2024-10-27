@@ -953,6 +953,12 @@ public class PermissionsManager implements DomainTransformListener {
 			this.loginState = loginState;
 			this.asRoot = asRoot;
 		}
+
+		public static PermissionsState root() {
+			return new PermissionsState(
+					PermissionsManager.get().getSystemUser(),
+					LoginState.LOGGED_IN, true);
+		}
 	}
 
 	/**
@@ -1017,5 +1023,9 @@ public class PermissionsManager implements DomainTransformListener {
 		public void register(PermissionsExtensionForRule ext) {
 			perNameRules.put(ext.getRuleName(), ext);
 		}
+	}
+
+	public void pushState(PermissionsState state) {
+		pushUser(state.user, state.loginState, state.asRoot);
 	}
 }
