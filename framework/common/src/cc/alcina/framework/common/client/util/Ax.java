@@ -333,4 +333,8 @@ public class Ax {
 	public static Date date(int year, int month, int dayOfMonth) {
 		return DateUtil.oldDate(year, month, dayOfMonth);
 	}
+
+	public static long appMillis(Date date) {
+		return date.getTime() - appStartup;
+	}
 }
