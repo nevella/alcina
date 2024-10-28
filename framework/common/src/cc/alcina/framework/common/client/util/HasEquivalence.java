@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 
 /*
  * 'equivalence' is a relation between instances of a class similar to equals -
@@ -399,7 +398,7 @@ public interface HasEquivalence<T> {
 				Collection<T> existing, Collection<T> generated) {
 			// compare in order (generated,existing) so the intersection will be
 			// the generated objects (for which we remove transforms)
-			ThreeWaySetResult<T> split = threeWaySplit(generated, existing);
+			Intersection<T> split = threeWaySplit(generated, existing);
 			split.secondOnly.forEach(Entity::delete);
 			TransformManager.get()
 					.removeTransformsForObjects(split.intersection);
@@ -428,9 +427,9 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static <T extends HasEquivalence> ThreeWaySetResult<T>
+		public static <T extends HasEquivalence> Intersection<T>
 				threeWaySplit(Collection<T> c1, Collection<T> c2) {
-			ThreeWaySetResult<T> result = new ThreeWaySetResult<>();
+			Intersection<T> result = new Intersection<>();
 			Set intersection = new LinkedHashSet<>((List) intersection(c1, c2));
 			result.intersection = intersection;
 			result.firstOnly = new LinkedHashSet<>(
@@ -440,13 +439,13 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static <T, V extends HasEquivalenceAdapter<T, ?>>
-				ThreeWaySetResult<V> threeWaySplit(Collection<T> c1,
-						Collection<T> c2, Function<T, V> mapper,
+		public static <T, V extends HasEquivalenceAdapter<T, ?>> Intersection<V>
+				threeWaySplit(Collection<T> c1, Collection<T> c2,
+						Function<T, V> mapper,
 						BiFunction<T, Collection<T>, T> correspondenceMapper) {
 			List<V> l1 = c1.stream().map(mapper).collect(Collectors.toList());
 			List<V> l2 = c2.stream().map(mapper).collect(Collectors.toList());
-			ThreeWaySetResult<V> result = threeWaySplit(l1, l2);
+			Intersection<V> result = threeWaySplit(l1, l2);
 			result.firstOnly
 					.forEach(v -> v.left = correspondenceMapper.apply(v.o, c1));
 			result.intersection
@@ -506,7 +505,7 @@ public interface HasEquivalence<T> {
 	public static class PairwiseEquivalenceString<T extends HasEquivalenceString>
 			implements HasEquivalenceString<T> {
 		public static <T extends HasEquivalenceString>
-				ThreeWaySetResult<PairwiseEquivalenceString<T>>
+				Intersection<PairwiseEquivalenceString<T>>
 				split(Collection<T> left, Collection<T> right) {
 			Map<String, T> leftMap = left.stream().collect(AlcinaCollectors
 					.toKeyMap(HasEquivalenceString::equivalenceString));
@@ -516,9 +515,9 @@ public interface HasEquivalence<T> {
 					leftMap.size() == left.size()
 							&& rightMap.size() == right.size(),
 					"Non-unique keys");
-			ThreeWaySetResult<PairwiseEquivalenceString<T>> result = new ThreeWaySetResult<>();
-			ThreeWaySetResult<String> keySplit = CommonUtils
-					.threeWaySplit(leftMap.keySet(), rightMap.keySet());
+			Intersection<PairwiseEquivalenceString<T>> result = new Intersection<>();
+			Intersection<String> keySplit = Intersection.of(leftMap.keySet(),
+					rightMap.keySet());
 			result.firstOnly = keySplit.firstOnly.stream()
 					.map(k -> new PairwiseEquivalenceString<>(k, leftMap.get(k),
 							rightMap.get(k)))

@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.extras.webdriver.gallery.GalleryPersister.Image;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
+import cc.alcina.framework.common.client.util.Intersection;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
@@ -37,7 +37,7 @@ public class GalleryComparator {
 				.deserializeFromFile(baselineIndex, GallerySnapshot.class);
 		GallerySnapshot currentSnapshot = JacksonUtils
 				.deserializeFromFile(currentIndex, GallerySnapshot.class);
-		ThreeWaySetResult<Image> result = HasEquivalenceHelper
+		Intersection<Image> result = HasEquivalenceHelper
 				.threeWaySplit(baselineSnapshot.images, currentSnapshot.images);
 		logger.info("Comparing snapshots:\n\t{} ->\n\t{}", currentSnapshot,
 				baselineSnapshot);
