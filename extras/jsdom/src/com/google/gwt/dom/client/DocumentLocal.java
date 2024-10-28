@@ -754,4 +754,11 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 			List<Class> argumentTypes, List<?> arguments, boolean sync) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void invoke(Runnable runnable, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
+		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
+				argumentTypes, arguments, sync);
+	}
 }

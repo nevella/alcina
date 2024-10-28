@@ -1179,17 +1179,8 @@ public interface ClientDomDocument extends ClientDomNode {
 
 	void setTitle(String title);
 
-	default void invoke(Runnable runnable, Class clazz, String methodName,
-			List<Class> argumentTypes, List<?> arguments, boolean sync) {
-		if (argumentTypes == null) {
-			argumentTypes = List.of();
-		}
-		if (arguments == null) {
-			arguments = List.of();
-		}
-		invoke(RunnableSupplier.of(runnable), clazz, methodName, argumentTypes,
-				arguments, sync);
-	}
+	void invoke(Runnable runnable, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync);
 
 	<T> T invoke(Supplier<T> supplier, Class clazz, String methodName,
 			List<Class> argumentTypes, List<?> arguments, boolean sync);

@@ -808,4 +808,11 @@ public class DocumentAttachId extends NodeAttachId
 		return invokeProxy.invokeScript(clazz, methodName, argumentTypes,
 				arguments);
 	}
+
+	@Override
+	public void invoke(Runnable runnable, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
+		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
+				argumentTypes, arguments, sync);
+	}
 }

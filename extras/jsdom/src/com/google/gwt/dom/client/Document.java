@@ -1159,9 +1159,10 @@ public class Document extends Node
 		localDom.domIds.setNextAttachId(id);
 	}
 
-	public boolean isHtmlTags() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'isHtmlTags'");
+	@Override
+	public void invoke(Runnable runnable, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
+		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
+				argumentTypes, arguments, sync);
 	}
 }

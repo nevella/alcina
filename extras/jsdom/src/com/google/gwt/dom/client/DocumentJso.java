@@ -1023,4 +1023,11 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 		// call
 		return supplier.get();
 	}
+
+	@Override
+	public final void invoke(Runnable runnable, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
+		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
+				argumentTypes, arguments, sync);
+	}
 }
