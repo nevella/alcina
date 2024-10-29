@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.romcom.protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Ax;
@@ -20,11 +21,14 @@ public class MessageTransportLayerObservables {
 			this.resending = resending;
 		}
 
+		@Reflected
 		static class LogObserver implements ProcessObserver<SentObservable> {
 			@Override
 			public void topicPublished(SentObservable message) {
-				logger.info("{} {} - sent", Ax.appMillis(),
-						message.message.transportHistory.messageId);
+				if (message.message.message instanceof RemoteComponentProtocol.Message.Mutations) {
+					logger.info("{} {} - mutations sent", Ax.appMillis(),
+							message.message.transportHistory.messageId);
+				}
 			}
 		}
 	}
@@ -36,12 +40,18 @@ public class MessageTransportLayerObservables {
 			this.message = message;
 		}
 
+		@Reflected
 		static class LogObserver
 				implements ProcessObserver<PublishedObservable> {
 			@Override
 			public void topicPublished(PublishedObservable message) {
-				logger.info("{} {} - published", Ax.appMillis(),
-						message.message.transportHistory.messageId);
+				if (message.message.message instanceof RemoteComponentProtocol.Message.Mutations) {
+					logger.info("{} {} - mutations published - {}",
+							Ax.appMillis(),
+							message.message.transportHistory.messageId,
+							Ax.appMillis(
+									message.message.transportHistory.published));
+				}
 			}
 		}
 	}

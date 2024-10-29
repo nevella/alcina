@@ -125,7 +125,11 @@ public abstract class Job extends VersionableEntity<Job>
 	@GwtTransient
 	private String taskSignature;
 
+	// cached value for sequence computation
 	private transient Job firstInSequence;
+
+	// cached value for sequence computation
+	private transient Job previousForComputeFirst;
 
 	@GwtTransient
 	private String consistencyPriority;
@@ -506,17 +510,18 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public Job provideFirstInSequence() {
-		if (firstInSequence == null) {
-			/*
-			 * This relies on previous being invariant
-			 */
-			Optional<Job> previous = providePrevious();
-			if (previous.isPresent()) {
-				firstInSequence = providePrevious().get()
-						.provideFirstInSequence();
-			} else {
-				firstInSequence = domainIdentity();
-			}
+		Job previous = providePrevious().orElse(null);
+		if (previous == null) {
+			return domainIdentity();
+		}
+		/*
+		 * The previous of the previous job will be invariant, so only change
+		 * the cached value if previous changes (during Job creation)
+		 */
+		if (previous != this.previousForComputeFirst) {
+			this.previousForComputeFirst = previous;
+			this.firstInSequence = this.previousForComputeFirst
+					.provideFirstInSequence();
 		}
 		return firstInSequence;
 	}

@@ -718,4 +718,11 @@ public class CommitToStorageTransformListener
 					.flushWithOneoffCallback(Async.untypedCallback(runnable));
 		}
 	}
+
+	public void
+			addToPriorRequestsWithoutResponse(DomainTransformRequest request) {
+		synchronized (collectionsMonitor) {
+			this.priorRequestsWithoutResponse.add(request);
+		}
+	}
 }
