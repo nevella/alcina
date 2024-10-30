@@ -150,6 +150,9 @@ public class StringInput extends Model.Value<String>
 	}
 
 	public void focus() {
+		if (!provideIsBound()) {
+			return;
+		}
 		FocusImpl.getFocusImplForWidget().focus(provideElement());
 	}
 
