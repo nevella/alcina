@@ -157,6 +157,12 @@ public @interface Directed {
 	@Target({ ElementType.METHOD, ElementType.FIELD })
 	@ClientVisible
 	public static @interface Exclude {
+		public static class Impl implements Exclude {
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Exclude.class;
+			}
+		}
 	}
 
 	/**

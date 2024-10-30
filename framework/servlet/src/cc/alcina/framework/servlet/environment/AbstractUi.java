@@ -53,7 +53,7 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		@Override
 		public Set<Class<? extends CommandContext>> getContexts() {
 			Set<Class<? extends CommandContext>> commandContexts = new LinkedHashSet<>();
-			commandContexts.add(getAppCommandContext());
+			commandContexts.addAll(getAppCommandContexts());
 			return commandContexts;
 		}
 	}
@@ -66,7 +66,8 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		keyboardShortcuts.deltaHandler(keybindingsHandler, bound);
 	}
 
-	public abstract Class<? extends CommandContext> getAppCommandContext();
+	public abstract Set<Class<? extends CommandContext>>
+			getAppCommandContexts();
 
 	public CommandContext.Provider getCommandContextProvider() {
 		return new CommandContextProviderImpl();

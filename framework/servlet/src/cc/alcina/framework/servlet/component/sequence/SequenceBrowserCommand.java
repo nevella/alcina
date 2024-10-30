@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.sequence;
 
+import com.google.gwt.dom.client.NativeEvent.Modifier;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
@@ -95,6 +97,23 @@ public abstract class SequenceBrowserCommand<T, H extends NodeEvent.Handler>
 
 		public interface Handler extends NodeEvent.Handler {
 			void onClearFilter(ClearFilter event);
+		}
+	}
+
+	@AppSuggestorCommand(
+		parent = SequenceBrowserCommand.class,
+		name = "sequence column set: cycle",
+		description = "Sequence column set: cycle mode")
+	@KeyBinding(key = "c", modifiers = Modifier.SHIFT)
+	public static class ColumnSetCycle
+			extends ModelEvent<Object, ColumnSetCycle.Handler> {
+		@Override
+		public void dispatch(ColumnSetCycle.Handler handler) {
+			handler.onColumnSetCycle(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onColumnSetCycle(ColumnSetCycle event);
 		}
 	}
 }

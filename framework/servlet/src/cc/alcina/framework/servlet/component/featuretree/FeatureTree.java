@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.featuretree;
 
+import java.util.Set;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.Client;
@@ -58,9 +60,9 @@ public class FeatureTree {
 		}
 
 		@Override
-		public Class<? extends cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext>
-				getAppCommandContext() {
-			return CommandContext.class;
+		public Set<Class<? extends cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext>>
+				getAppCommandContexts() {
+			return Set.of(CommandContext.class);
 		}
 	}
 

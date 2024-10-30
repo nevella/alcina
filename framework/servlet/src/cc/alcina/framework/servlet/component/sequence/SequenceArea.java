@@ -1,8 +1,15 @@
 package cc.alcina.framework.servlet.component.sequence;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver;
@@ -20,7 +27,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel.RowsModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightModelChanged;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SelectedIndexChanged;
+import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 
+@TypedProperties
 @Directed(tag = "sequence")
 // this is just to force the SequenceArea to be accessible from RowTransformer
 // (via the resolver)
@@ -29,14 +38,58 @@ class SequenceArea extends Model.Fields
 		implements TableEvents.RowsModelAttached.Handler,
 		SequenceEvents.HighlightModelChanged.Handler,
 		SequenceEvents.SelectedIndexChanged.Handler {
+	static PackageProperties._SequenceArea properties = PackageProperties.sequenceArea;
+
 	@Directed
 	Heading header;
+
+	@Binding(type = Type.PROPERTY)
+	ColumnSet columnSet;
 
 	@Directed.Transform(TableView.class)
 	@TableModel.RowTransformer(RowTransformer.class)
 	@BeanViewModifiers(detached = true, nodeEditors = true)
-	@DirectedContextResolver(DisplayAllMixin.class)
+	@DirectedContextResolver(ColumnResolver.class)
 	List<?> filteredElements;
+
+	static class ColumnResolver extends DisplayAllMixin {
+		@Override
+		public <A extends Annotation> A contextAnnotation(
+				HasAnnotations reflector, Class<A> clazz,
+				ResolutionContext resolutionContext) {
+			if (clazz == Directed.Exclude.class) {
+				if (reflector instanceof Property) {
+					if (isExclude((Property) reflector)) {
+						return (A) new Directed.Exclude.Impl();
+					}
+				}
+			}
+			return super.contextAnnotation(reflector, clazz, resolutionContext);
+		}
+
+		boolean isExclude(Property property) {
+			if (SequenceSettings.get().columnSet == ColumnSet.DETAIL) {
+				switch (property.getName()) {
+				case "in":
+				case "out":
+				case "type":
+					return true;
+				}
+			}
+			return false;
+		}
+
+		@Override
+		protected <A extends Annotation> List<A> resolveAnnotations0(
+				Class<A> annotationClass, AnnotationLocation location) {
+			if (annotationClass == Directed.Exclude.class) {
+				if (isExclude(location.property)) {
+					return List.of((A) new Directed.Exclude.Impl());
+				}
+			}
+			return super.resolveAnnotations0(annotationClass, location);
+		}
+	}
 
 	Page page;
 
@@ -62,6 +115,9 @@ class SequenceArea extends Model.Fields
 		header = new Heading("Sequence elements");
 		this.page = page;
 		filteredElements = page.filteredSequenceElements;
+		bindings().from(SequenceSettings.get())
+				.on(SequenceSettings.properties.columnSet).to(this)
+				.on(properties.columnSet).oneWay();
 	}
 
 	public void onRowClicked(RowClicked event) {

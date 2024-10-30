@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,6 +14,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
+import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
@@ -72,9 +74,10 @@ public class TraversalBrowser {
 		public TraversalSettings settings;
 
 		@Override
-		public Class<? extends cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext>
-				getAppCommandContext() {
-			return CommandContext.class;
+		public Set<Class<? extends cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext>>
+				getAppCommandContexts() {
+			return Set.of(CommandContext.class,
+					FlightEventCommand.CommandContext.class);
 		}
 
 		@Override
@@ -94,6 +97,7 @@ public class TraversalBrowser {
 		@Override
 		public void init() {
 			FmsForm.registerImplementations();
+			StatusModule.get();
 		}
 
 		@Override

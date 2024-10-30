@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.ui.table.Field;
 
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -38,6 +39,11 @@ public class TableView extends
 					.forMultipleWidgetContainer(true).forBean(first)
 					.withAllowNullWidgetProviders(true)
 					.withResolver(node.getResolver()).listFields();
+			fields.removeIf(field -> {
+				return new AnnotationLocation(null, field.getProperty(),
+						node.getResolver())
+								.hasAnnotation((Directed.Exclude.class));
+			});
 			fields.stream().map(TableColumn::new)
 					.forEach(tableModel.header.getColumns()::add);
 			rowModels.stream().map(

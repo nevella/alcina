@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import com.google.gwt.dom.client.NativeEvent.Modifier;
+
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
