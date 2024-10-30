@@ -188,7 +188,7 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	PrintStream oldS2;
 
-	String outDumpFileName = null;
+	String outDumpFileName = "/tmp/log/dev-console.html";
 
 	private DevConsoleRemote remote;
 

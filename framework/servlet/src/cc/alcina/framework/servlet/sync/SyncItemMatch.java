@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 
 public class SyncItemMatch<T> {
 	public T left;
@@ -32,6 +33,13 @@ public class SyncItemMatch<T> {
 
 	public void log(SyncItemLogType type, String message) {
 		logs.add(new SyncItemLogRecord(type, message));
+	}
+
+	@Override
+	public String toString() {
+		return FormatBuilder.keyValues("left", left, "right", right,
+				"ambiguous", ambiguous, "logs", logs, "currentSyncStatus",
+				currentSyncStatus, "issueType", issueType);
 	}
 
 	public void logMatch(String message) {
@@ -72,6 +80,11 @@ public class SyncItemMatch<T> {
 			super();
 			this.type = type;
 			this.message = message;
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("type", type, "message", message);
 		}
 	}
 
