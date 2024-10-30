@@ -112,7 +112,11 @@ public class TextUtils {
 				if (ensureBuilder) {
 					if (out == null) {
 						out = new StringBuilder();
-						out.append(input, 0, idx);
+						int to = idx;
+						if (idx > 0 && input.charAt(idx - 1) == ' ') {
+							to--;
+						}
+						out.append(input, 0, to);
 						// force append first time (may be 1 or 2 ws chars)
 						out.append(' ');
 						inWhitespacePrior = true;
