@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.cmp.status;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.NotificationObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
@@ -55,6 +56,7 @@ public class StatusModule {
 		new NotificationObserver().bind();
 	}
 
+	@Reflected
 	class NotificationObserver
 			implements ProcessObserver<NotificationObservable> {
 		@Override
