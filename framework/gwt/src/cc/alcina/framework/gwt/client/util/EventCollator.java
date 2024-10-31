@@ -187,4 +187,8 @@ public class EventCollator<T> {
 		}
 		return this;
 	}
+
+	public boolean hasEvents() {
+		return timer != null;
+	}
 }
