@@ -16,10 +16,16 @@ public class SequenceSettings extends Bindable.Fields {
 
 	public PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
 
+	public ColumnSet columnSet = ColumnSet.STANDARD;
+
 	public String sequenceKey;
 
 	public enum PropertyDisplayMode {
-		QUARTER_WIDTH, HALF_WIDTH, NONE
+		QUARTER_WIDTH, HALF_WIDTH, FULL_WIDTH, NONE
+	}
+
+	public enum ColumnSet {
+		STANDARD, DETAIL
 	}
 
 	public PropertyDisplayMode nextPropertyDisplayMode() {
@@ -27,6 +33,13 @@ public class SequenceSettings extends Bindable.Fields {
 				.values()[(propertyDisplayMode.ordinal() + 1)
 						% PropertyDisplayMode.values().length];
 		properties.propertyDisplayMode.set(this, next);
+		return next;
+	}
+
+	public ColumnSet nextColumnSet() {
+		ColumnSet next = ColumnSet.values()[(columnSet.ordinal() + 1)
+				% ColumnSet.values().length];
+		properties.columnSet.set(this, next);
 		return next;
 	}
 }

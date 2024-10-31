@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersister.PersistElementResult;
@@ -85,7 +86,13 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 				return;
 			}
 			topicBeforeMerge.publish(merger);
-			merger.merge(leftCollection, rightCollection, deltaModel, logger);
+			try {
+				LooseContext.push();
+				merger.merge(leftCollection, rightCollection, deltaModel,
+						logger);
+			} finally {
+				LooseContext.pop();
+			}
 			topicMergeCompleted.publish(merger);
 			if (merger.wasIncomplete() || mergeIncomplete.size() > 0) {
 				logger.info(Ax.format("Merger incomplete:\n\t%s",

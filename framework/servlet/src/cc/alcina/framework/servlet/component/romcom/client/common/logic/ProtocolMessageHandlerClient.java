@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.Objects;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.BrowserEvents;
@@ -9,6 +10,7 @@ import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HrefElement;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -52,7 +54,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		public void handle(HandlerContext handlerContext,
 				Message.Invoke message) {
 			AttachId path = message.path;
-			Element elem = path == null ? null : (Element) path.node();
+			Node node = path == null ? null : path.node();
 			Message.InvokeResponse responseMessage = new Message.InvokeResponse();
 			responseMessage.id = message.id;
 			// if the server requested sync, return that in the response (since
@@ -61,13 +63,15 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 			Object result = null;
 			try {
 				if (message.methodName != null) {
-					result = Reflections.at(elem).invoke(elem,
+					Preconditions.checkNotNull(node, Ax
+							.format("invoke - target node %s not found", path));
+					result = Reflections.at(node).invoke(node,
 							message.methodName, message.argumentTypes,
 							message.arguments, message.flags);
 				} else {
 					Result scriptResult = new Result();
 					String script = message.javascript;
-					invokeJs(scriptResult, message.jsResponseType.name(), elem,
+					invokeJs(scriptResult, message.jsResponseType.name(), node,
 							script);
 					result = scriptResult.asObject();
 				}
@@ -97,11 +101,11 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		}
 
 		static final native void invokeJs(Result scriptResult,
-				String responseType, Element elem, String script) /*-{
-			var arg = elem;
+				String responseType, Node node, String script) /*-{
+			var arg = node;
 			var ret = eval(script);
-			switch(responseTypeName){
-				case "void":
+			switch(responseType){
+				case "_void":
 				break;
 				case "node_jso":
 				scriptResult.@cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.InvokeHandler.Result::node = ret;
@@ -109,6 +113,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 				case "string":
 				scriptResult.@cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.InvokeHandler.Result::string = ret;
 				break; 
+				default:
+				throw "unsupported responseType "+responseType;
 			}
 			}-*/;
 	}

@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 
 @TypedProperties
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
@@ -52,7 +53,7 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		@Override
 		public Set<Class<? extends CommandContext>> getContexts() {
 			Set<Class<? extends CommandContext>> commandContexts = new LinkedHashSet<>();
-			commandContexts.add(getAppCommandContext());
+			commandContexts.addAll(getAppCommandContexts());
 			return commandContexts;
 		}
 	}
@@ -65,7 +66,8 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		keyboardShortcuts.deltaHandler(keybindingsHandler, bound);
 	}
 
-	public abstract Class<? extends CommandContext> getAppCommandContext();
+	public abstract Set<Class<? extends CommandContext>>
+			getAppCommandContexts();
 
 	public CommandContext.Provider getCommandContextProvider() {
 		return new CommandContextProviderImpl();
@@ -93,6 +95,10 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 	}
 
 	protected abstract DirectedLayout render0();
+
+	protected RemoteComponentProtocol.Session getSession() {
+		return environment.access().getSession();
+	}
 
 	@Override
 	public void end() {

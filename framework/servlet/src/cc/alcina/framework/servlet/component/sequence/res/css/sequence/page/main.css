@@ -339,7 +339,7 @@ edit-value textarea {
   cursor: default;
   white-space: pre-wrap;
   max-height: 70vh;
-  overflow: scroll;
+  overflow: auto;
 }
 .dl-status > .element.removing {
   transition: transform 0.5s, opacity 0.5s;
@@ -643,6 +643,9 @@ body > page > sequence > table tr.matches > td {
 }
 body > page > sequence > table tr.selected > td {
   background-color: #84A4FC;
+}
+body > page > sequence[column-set=DETAIL] > table td > value.wide {
+  max-width: unset;
 }
 body > page > detail {
   display: grid;

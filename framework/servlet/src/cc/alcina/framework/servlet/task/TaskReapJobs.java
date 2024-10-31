@@ -27,12 +27,19 @@ import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
-public class TaskReapJobs extends PerformerTask {
+public class TaskReapJobs extends PerformerTask.Fields {
 	transient Job currentJob;
+
+	public boolean force;
+
+	public TaskReapJobs withForce(boolean force) {
+		this.force = force;
+		return this;
+	}
 
 	@Override
 	public void run() throws Exception {
-		if (!Configuration.is("enabled")) {
+		if (!Configuration.is("enabled") && !force) {
 			return;
 		}
 		LooseContext.setTrue(

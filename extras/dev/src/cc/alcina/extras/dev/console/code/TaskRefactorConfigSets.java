@@ -25,8 +25,7 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
+import cc.alcina.framework.common.client.util.Intersection;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Configuration.ConfigurationFile;
 import cc.alcina.framework.entity.Configuration.PropertyTree;
@@ -164,7 +163,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 		this.tree = new Configuration.PropertyTree();
 		classpathConfigurationFiles.forEach(tree::add);
 		appPropertyFileEntries.forEach(tree::add);
-		Set<String> trulyRemove = CommonUtils.threeWaySplit(removeKeys,
+		Set<String> trulyRemove = Intersection.of(removeKeys,
 				preserveKeys).firstOnly;
 		tree.removeKeys(trulyRemove);
 	}
@@ -185,8 +184,7 @@ public class TaskRefactorConfigSets extends PerformerTask {
 			//
 		} else {
 			List<String> keys = tree.allKeys();
-			ThreeWaySetResult<String> split = CommonUtils.threeWaySplit(keys,
-					seenKeys);
+			Intersection<String> split = Intersection.of(keys, seenKeys);
 			Io.write()
 					.string(split.firstOnly.stream()
 							.collect(Collectors.joining("\n")))

@@ -357,9 +357,9 @@ public class Window {
 	 *
 	 * @return the window's title.
 	 */
-	public static native String getTitle() /*-{
-    return $doc.title;
-	}-*/;
+	public static String getTitle() {
+		return Document.get().getTitle();
+	}
 
 	private static void maybeInitializeCloseHandlers() {
 		if (GWT.isClient() && !closeHandlersInitialized) {
@@ -578,7 +578,8 @@ public class Window {
 
 	public static void scrollTo(int left, int top, boolean smooth) {
 		topicScrollTo().publish(new IntPair(left, top));
-		scrollTo0(left, top, smooth);
+		Document.get().invoke(() -> scrollTo0(left, top, smooth), Window.class,
+				"scrollTo0", null, List.of(left, top, smooth), false);
 	}
 
 	// TODO - romcom - implement [DocumentAttachId - null Node --> window]

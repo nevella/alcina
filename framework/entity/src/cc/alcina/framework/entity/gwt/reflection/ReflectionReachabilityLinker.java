@@ -37,9 +37,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ReflectionModule;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.common.client.util.Intersection;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
@@ -532,8 +531,8 @@ public class ReflectionReachabilityLinker extends Linker {
 		}
 
 		private boolean logAndComputeDelta() {
-			ThreeWaySetResult<Type> split = CommonUtils
-					.threeWaySplit(previousPassReflectedTypes, reflectedTypes);
+			Intersection<Type> split = Intersection
+					.of(previousPassReflectedTypes, reflectedTypes);
 			typeList.types = reflectedTypes.stream().sorted()
 					.collect(Collectors.toList());
 			logger.log(TreeLogger.Type.INFO, Ax.format(

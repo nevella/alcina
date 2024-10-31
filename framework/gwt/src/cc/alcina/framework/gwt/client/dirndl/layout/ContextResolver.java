@@ -221,6 +221,14 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		services.put(service.registration(), Optional.of(service));
 	}
 
+	@Override
+	public <A extends Annotation> A contextAnnotation(HasAnnotations reflector,
+			Class<A> clazz, ResolutionContext resolutionContext) {
+		return parent == null
+				? super.contextAnnotation(reflector, clazz, resolutionContext)
+				: parent.contextAnnotation(reflector, clazz, resolutionContext);
+	}
+
 	public void renderElement(DirectedLayout.Node layoutNode, String tagName) {
 		if (layoutNode.rendered != null) {
 			return;

@@ -58,7 +58,8 @@ class Page extends Model.All
 		TraversalBrowserCommand.PropertyDisplayCycle.Handler,
 		TraversalBrowserCommand.InputOutputCycle.Handler,
 		TraversalCommand.FocusSearch.Handler,
-		TraversalEvents.SetSettingTableRows.Handler {
+		TraversalEvents.SetSettingTableRows.Handler,
+		FlightEventCommandHandlers {
 	static PackageProperties._Page properties = PackageProperties.page;
 
 	Header header;
@@ -147,6 +148,10 @@ class Page extends Model.All
 				break;
 			case HALF_WIDTH:
 				rows.add("layers layers props props");
+				break;
+			case FULL_WIDTH:
+				rows.add("props props props props");
+				builder.line("body > page > layers{display: none;}");
 				break;
 			case NONE:
 				rows.add("layers layers layers layers");
@@ -241,6 +246,7 @@ class Page extends Model.All
 		public Set<Class<? extends CommandContext>> getContexts() {
 			Set<Class<? extends CommandContext>> commandContexts = new LinkedHashSet<>();
 			commandContexts.add(appContext());
+			commandContexts.add(FlightEventCommand.CommandContext.class);
 			return commandContexts;
 		}
 	}

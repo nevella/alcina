@@ -1,9 +1,14 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.ProcessingInstruction;
+
+import cc.alcina.framework.common.client.util.RunnableSupplier;
 
 /**
  * all methods should actually call through to domdocument_static ... when i get
@@ -1173,4 +1178,10 @@ public interface ClientDomDocument extends ClientDomNode {
 	void setScrollTop(int top);
 
 	void setTitle(String title);
+
+	void invoke(Runnable runnable, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync);
+
+	<T> T invoke(Supplier<T> supplier, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync);
 }

@@ -504,4 +504,15 @@ public @interface Registration {
 	@Target({ ElementType.TYPE })
 	public @interface EnvironmentSingleton {
 	}
+
+	/*
+	 * Marks a registration key as being required for each Environment
+	 * (server-side client emulation instance)
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@ClientVisible
+	@Target({ ElementType.TYPE })
+	public @interface EnvironmentRegistration {
+	}
 }

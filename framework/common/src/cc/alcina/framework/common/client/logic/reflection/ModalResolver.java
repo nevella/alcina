@@ -85,13 +85,21 @@ public class ModalResolver extends ContextResolver implements FormModel.Has {
 		if (location == node.getAnnotationLocation()) {
 			return parent.resolveAnnotations(annotationClass, location);
 		}
+		/*
+		 * If the parent resolver is defined on the same model, use it for
+		 * default resolution (aka customisation of the bean views), otherwise
+		 * use supert
+		 */
+		boolean resolveDefaultWithParent = getRootModel() == parent
+				.getRootModel();
+		List<A> defaultResolution = resolveDefaultWithParent
+				? parent.resolveAnnotations(annotationClass, location)
+				: super.resolveAnnotations(annotationClass, location);
 		boolean customResolution = annotationClass == Display.class
 				|| annotationClass == Custom.class
 				|| annotationClass == Validator.class
 				|| annotationClass == Directed.class
 				|| annotationClass == Directed.Transform.class;
-		List<A> defaultResolution = super.resolveAnnotations(annotationClass,
-				location);
 		if (customResolution) {
 			RequireSpecified requireSpecified = Reflections
 					.at(location.classLocation)

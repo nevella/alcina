@@ -1,5 +1,8 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
@@ -1010,5 +1013,21 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	final String validateHtml(String html) {
 		ElementJso elementJso = createElementNode0("div");
 		return elementJso.sanitizeHTML(html);
+	}
+
+	@Override
+	public final <T> T invoke(Supplier<T> supplier, Class clazz,
+			String methodName, List<Class> argumentTypes, List<?> arguments,
+			boolean sync) {
+		// this supplier will always just be a lambda(-esque) wrapping a JSNI
+		// call
+		return supplier.get();
+	}
+
+	@Override
+	public final void invoke(Runnable runnable, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
+		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
+				argumentTypes, arguments, sync);
 	}
 }

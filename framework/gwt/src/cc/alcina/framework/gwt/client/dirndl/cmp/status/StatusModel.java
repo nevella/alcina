@@ -76,7 +76,7 @@ public class StatusModel extends Model
 
 	void addMessage(Message message) {
 		if (message.isNotBlank()) {
-			Ax.out(message);
+			Ax.out("[%s] %s", getClass().getSimpleName(), message);
 			StatusElement element = new StatusElement();
 			element.setText(message.string);
 			element.setModel(message.model);

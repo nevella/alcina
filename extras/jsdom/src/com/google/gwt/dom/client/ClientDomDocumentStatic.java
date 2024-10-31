@@ -1,5 +1,9 @@
 package com.google.gwt.dom.client;
 
+import java.util.List;
+
+import cc.alcina.framework.common.client.util.RunnableSupplier;
+
 public class ClientDomDocumentStatic {
 	/**
 	 * Creates an &lt;a&gt; element.
@@ -1521,5 +1525,18 @@ public class ClientDomDocumentStatic {
 
 	static void setTitle(ClientDomDocument domDocument, String title) {
 		throw new UnsupportedOperationException();
+	}
+
+	static void invoke(ClientDomDocument domDocument, Runnable runnable,
+			Class clazz, String methodName, List<Class> argumentTypes,
+			List<?> arguments, boolean sync) {
+		if (argumentTypes == null) {
+			argumentTypes = List.of();
+		}
+		if (arguments == null) {
+			arguments = List.of();
+		}
+		domDocument.invoke(RunnableSupplier.of(runnable), clazz, methodName,
+				argumentTypes, arguments, sync);
 	}
 }

@@ -24,7 +24,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -1805,39 +1804,6 @@ public class CommonUtils {
 		return b ? "t" : "f";
 	}
 
-	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
-			Collection<T> c2) {
-		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
-		Set intersection = intersection(c1, c2);
-		result.intersection = intersection;
-		result.firstOnly = new LinkedHashSet<T>(c1);
-		result.secondOnly = new LinkedHashSet<T>(c2);
-		result.firstOnly.removeAll(intersection);
-		result.secondOnly.removeAll(intersection);
-		return result;
-	}
-
-	public static <T> ThreeWaySetResult<T>
-			threeWaySplitIdentity(Collection<T> c1, Collection<T> c2) {
-		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
-		IdentityHashMap m1 = new IdentityHashMap();
-		IdentityHashMap m2 = new IdentityHashMap();
-		c1.forEach(o -> m1.put(o, true));
-		c2.forEach(o -> m2.put(o, true));
-		result.firstOnly = m1.keySet();
-		result.secondOnly = m2.keySet();
-		IdentityHashMap intersection = new IdentityHashMap();
-		result.intersection = intersection.keySet();
-		for (Object o : m1.keySet()) {
-			if (m2.keySet().contains(o)) {
-				intersection.put(o, true);
-			}
-		}
-		result.firstOnly.removeAll(result.intersection);
-		result.secondOnly.removeAll(result.intersection);
-		return result;
-	}
-
 	public static void throwIfCompletedWithException(List<Future> futures)
 			throws Exception {
 		for (Future future : futures) {
@@ -2215,48 +2181,6 @@ public class CommonUtils {
 
 		public static String sanitizeForUnixPaths(String fileName) {
 			return fileName.replaceAll("[:]", "").replaceAll("[ ]", "_");
-		}
-	}
-
-	public static class ThreeWaySetResult<T> {
-		public Set<T> firstOnly;
-
-		public Set<T> secondOnly;
-
-		public Set<T> intersection;
-
-		public Stream<T> delta() {
-			return Stream.concat(firstOnly.stream(), secondOnly.stream());
-		}
-
-		public boolean isEmpty() {
-			return firstOnly.isEmpty() && secondOnly.isEmpty()
-					&& intersection.isEmpty();
-		}
-
-		public boolean isIntersectionOnly() {
-			return firstOnly.isEmpty() && secondOnly.isEmpty();
-		}
-
-		public boolean hasIntersection() {
-			return intersection.size() > 0;
-		}
-
-		public String toSizes() {
-			return format("First: %s\tBoth: %s\tSecond: %s", firstOnly.size(),
-					intersection.size(), secondOnly.size());
-		}
-
-		public String toSizes(String firstType, String secondType) {
-			return format("%s: %s\tBoth: %s\t%s: %s", firstType,
-					firstOnly.size(), intersection.size(), secondType,
-					secondOnly.size());
-		}
-
-		@Override
-		public String toString() {
-			return format("First: %s\nBoth: %s\nSecond: %s", firstOnly,
-					intersection, secondOnly);
 		}
 	}
 

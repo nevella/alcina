@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.sync;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
 
 public class SyncLogger {
@@ -10,6 +11,26 @@ public class SyncLogger {
 
 	public void log(SyncItemMatch itemMatch, SyncPair pair) {
 		rows.add(new SyncLoggerRow(itemMatch, pair));
+		if (pair == null) {
+			if (itemMatch.currentSyncStatus == SyncItemLogStatus.CATEGORY_CUSTOM_IGNORED
+					|| itemMatch.currentSyncStatus == SyncItemLogStatus.CATEGORY_IGNORED) {
+				new IgnoredObservable(itemMatch).publish();
+			}
+		}
+	}
+
+	public static class IgnoredObservable
+			implements ContextObservers.Observable {
+		public SyncItemMatch itemMatch;
+
+		public IgnoredObservable(SyncItemMatch itemMatch) {
+			this.itemMatch = itemMatch;
+		}
+
+		@Override
+		public String toString() {
+			return itemMatch.toString();
+		}
 	}
 
 	public static class SyncLoggerRow {

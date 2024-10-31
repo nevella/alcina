@@ -65,7 +65,11 @@ import cc.alcina.framework.servlet.process.observer.mvcc.MvccObserver;
  * <li>UI
  * <ul>
  *
- *
+ * <h3>Testing</h3>
+ * <ul>
+ * <li>Job retention from DevConsole ::
+ * <code>new TaskReapJobs().withForce(true).perform();</code>
+ * </ul>
  */
 public class JobScheduler {
 	private JobRegistry jobRegistry;

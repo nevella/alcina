@@ -32,6 +32,10 @@ import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
 /**
  * The panel to which all other widgets must ultimately be added. RootPanels are
  * never created directly. Rather, they are accessed via {@link RootPanel#get()}
@@ -55,17 +59,26 @@ public class RootPanel extends AbsolutePanel {
 		}
 	};
 
-	private static Map<String, RootPanel> rootPanels = new HashMap<String, RootPanel>();
+	@Registration.Singleton
+	@Registration.EnvironmentSingleton
+	@Reflected
+	public static class EnvironmentPanels {
+		public static EnvironmentPanels get() {
+			return Registry.impl(EnvironmentPanels.class);
+		}
 
-	private static Set<Widget> widgetsToDetach = new HashSet<Widget>();
+		private Map<String, RootPanel> rootPanels = new HashMap<String, RootPanel>();
+
+		private Set<Widget> widgetsToDetach = new HashSet<Widget>();
+	}
 
 	// FIXME - dirndl - support for external attach/detach
 	public static void attachNow(Widget widget) {
-		assert !widgetsToDetach
+		assert !EnvironmentPanels.get().widgetsToDetach
 				.contains(widget) : "attachNow() called on a widget "
 						+ " currently in the detach list";
 		widget.onAttach();
-		widgetsToDetach.add(widget);
+		EnvironmentPanels.get().widgetsToDetach.add(widget);
 	}
 
 	/**
@@ -90,13 +103,13 @@ public class RootPanel extends AbsolutePanel {
 	 * @see #detachOnWindowClose(Widget)
 	 */
 	public static void detachNow(Widget widget) {
-		assert widgetsToDetach
+		assert EnvironmentPanels.get().widgetsToDetach
 				.contains(widget) : "detachNow() called on a widget "
 						+ "not currently in the detach list";
 		try {
 			widget.onDetach();
 		} finally {
-			widgetsToDetach.remove(widget);
+			EnvironmentPanels.get().widgetsToDetach.remove(widget);
 		}
 	}
 
@@ -124,13 +137,13 @@ public class RootPanel extends AbsolutePanel {
 	 * @see #detachNow(Widget)
 	 */
 	public static void detachOnWindowClose(Widget widget) {
-		assert !widgetsToDetach
+		assert !EnvironmentPanels.get().widgetsToDetach
 				.contains(widget) : "detachOnUnload() called twice "
 						+ "for the same widget";
 		assert !isElementChildOfWidget(
 				widget.getElement()) : "A widget that has "
 						+ "an existing parent widget may not be added to the detach list";
-		widgetsToDetach.add(widget);
+		EnvironmentPanels.get().widgetsToDetach.add(widget);
 	}
 
 	// Package-protected for use by unit tests. Do not call this method
@@ -140,10 +153,11 @@ public class RootPanel extends AbsolutePanel {
 		// cleaned up. This will cause all of their event listeners
 		// to be unhooked, which will avoid potential memory leaks.
 		try {
-			AttachDetachException.tryCommand(widgetsToDetach,
+			AttachDetachException.tryCommand(
+					EnvironmentPanels.get().widgetsToDetach,
 					maybeDetachCommand);
 		} finally {
-			widgetsToDetach.clear();
+			EnvironmentPanels.get().widgetsToDetach.clear();
 			// Clear the RootPanel cache, since we've "detached" all RootPanels
 			// at
 			// this point. This would be pointless, since it only happens on
@@ -151,7 +165,7 @@ public class RootPanel extends AbsolutePanel {
 			// but it is very helpful for unit tests, because it allows
 			// RootPanel.get() to work properly even after a synthesized
 			// "unload".
-			rootPanels.clear();
+			EnvironmentPanels.get().rootPanels.clear();
 		}
 	}
 
@@ -180,7 +194,7 @@ public class RootPanel extends AbsolutePanel {
 	 */
 	public static RootPanel get(String id) {
 		// See if this RootPanel is already created.
-		RootPanel rp = rootPanels.get(id);
+		RootPanel rp = EnvironmentPanels.get().rootPanels.get(id);
 		// Find the element that this RootPanel will wrap.
 		Element elem = null;
 		if (id != null) {
@@ -204,7 +218,7 @@ public class RootPanel extends AbsolutePanel {
 		// Note that the code in this if block only happens once -
 		// on the first RootPanel.get(String) or RootPanel.get()
 		// call.
-		if (rootPanels.size() == 0) {
+		if (EnvironmentPanels.get().rootPanels.size() == 0) {
 			if (GWT.isClient()) {
 				hookWindowClosing();
 				// If we're in a RTL locale, set the RTL directionality
@@ -223,7 +237,7 @@ public class RootPanel extends AbsolutePanel {
 			// Otherwise, wrap the existing element.
 			rp = new RootPanel(elem);
 		}
-		rootPanels.put(id, rp);
+		EnvironmentPanels.get().rootPanels.put(id, rp);
 		detachOnWindowClose(rp);
 		return rp;
 	}
@@ -286,7 +300,7 @@ public class RootPanel extends AbsolutePanel {
 	 * @return <code>true</code> if the widget is in the detach list
 	 */
 	public static boolean isInDetachList(Widget widget) {
-		return widgetsToDetach.contains(widget);
+		return EnvironmentPanels.get().widgetsToDetach.contains(widget);
 	}
 
 	private RootPanel(Element elem) {

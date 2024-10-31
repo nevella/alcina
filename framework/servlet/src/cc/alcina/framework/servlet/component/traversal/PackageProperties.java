@@ -13,9 +13,9 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import java.lang.Boolean;
-import java.lang.Class;
 import java.lang.Integer;
 import java.lang.String;
+import java.util.Set;
 
 public class PackageProperties {
     // auto-generated, do not modify
@@ -46,7 +46,7 @@ public class PackageProperties {
     }
     
     public static class _TraversalBrowser_Ui implements TypedProperty.Container {
-      public TypedProperty<TraversalBrowser.Ui, Class> appCommandContext = new TypedProperty<>(TraversalBrowser.Ui.class, "appCommandContext");
+      public TypedProperty<TraversalBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(TraversalBrowser.Ui.class, "appCommandContexts");
       public TypedProperty<TraversalBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(TraversalBrowser.Ui.class, "commandContextProvider");
       public TypedProperty<TraversalBrowser.Ui, RemoteComponentObservables.ObservableHistory> history = new TypedProperty<>(TraversalBrowser.Ui.class, "history");
       public TypedProperty<TraversalBrowser.Ui, String> mainCaption = new TypedProperty<>(TraversalBrowser.Ui.class, "mainCaption");

@@ -99,4 +99,11 @@ public interface HasDisplayName {
 			throw new UnsupportedOperationException();
 		}
 	}
+
+	public interface Friendly extends HasDisplayName {
+		@Override
+		default String displayName() {
+			return Ax.friendly(this);
+		}
+	}
 }

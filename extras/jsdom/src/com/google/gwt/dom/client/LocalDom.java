@@ -332,10 +332,11 @@ public class LocalDom implements ContextFrame {
 	}
 
 	public static void register(Document doc) {
-		if (GWT.isClient()) {
+		if (Al.isBrowser()) {
 			get().initalizeRemoteSync(doc);
 			//
-			doc.getDocumentElement().setAttached(true, true);
+		} else {
+			doc.setAttached(true, true);
 		}
 	}
 
@@ -627,9 +628,10 @@ public class LocalDom implements ContextFrame {
 		localMutations = new LocalMutations(new MutationsAccess());
 		ElementJso documentElementJso = docRemote.getDocumentElement0();
 		Element documentElement = parse(documentElementJso, true);
+		documentElement.local().putParent(doc.local());
 		walkPutRemote(documentElementJso, documentElement);
 		// create
-		documentElement.setAttached(true, true);
+		doc.setAttached(true, true);
 		nodeFor0(documentElementJso);
 		remoteMutations = new RemoteMutations(new MutationsAccess(),
 				loggingConfiguration.asMutationsConfiguration());

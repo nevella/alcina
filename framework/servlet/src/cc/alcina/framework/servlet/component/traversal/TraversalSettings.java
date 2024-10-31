@@ -24,7 +24,7 @@ public class TraversalSettings extends Bindable.Fields {
 	public int tableRows = 50;
 
 	public enum PropertyDisplayMode {
-		QUARTER_WIDTH, HALF_WIDTH, NONE
+		QUARTER_WIDTH, HALF_WIDTH, FULL_WIDTH, NONE
 	}
 
 	public enum InputOutputDisplayMode {

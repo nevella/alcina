@@ -7,8 +7,8 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObserv
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import java.lang.Boolean;
-import java.lang.Class;
 import java.lang.String;
+import java.util.Set;
 
 public class PackageProperties {
     // auto-generated, do not modify
@@ -17,7 +17,7 @@ public class PackageProperties {
     public static _EntityGraphView_Ui entityGraphView_ui = new _EntityGraphView_Ui();
     
     public static class _EntityGraphView_Ui implements TypedProperty.Container {
-      public TypedProperty<EntityGraphView.Ui, Class> appCommandContext = new TypedProperty<>(EntityGraphView.Ui.class, "appCommandContext");
+      public TypedProperty<EntityGraphView.Ui, Set> appCommandContexts = new TypedProperty<>(EntityGraphView.Ui.class, "appCommandContexts");
       public TypedProperty<EntityGraphView.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(EntityGraphView.Ui.class, "commandContextProvider");
       public TypedProperty<EntityGraphView.Ui, RemoteComponentObservables.ObservableHistory> history = new TypedProperty<>(EntityGraphView.Ui.class, "history");
       public TypedProperty<EntityGraphView.Ui, String> mainCaption = new TypedProperty<>(EntityGraphView.Ui.class, "mainCaption");

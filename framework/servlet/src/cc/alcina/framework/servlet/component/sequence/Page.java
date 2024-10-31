@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.sequence.HighlightModel.Match;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ClearFilter;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ColumnSetCycle;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
@@ -33,6 +34,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightEl
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequence;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NextHighlight;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousHighlight;
+import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.PropertyDisplayMode;
 import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
 
@@ -55,6 +57,7 @@ class Page extends Model.Fields
 		SequenceEvents.LoadSequence.Handler,
 		SequenceBrowserCommand.ClearFilter.Handler,
 		SequenceBrowserCommand.PropertyDisplayCycle.Handler,
+		SequenceBrowserCommand.ColumnSetCycle.Handler,
 		SequenceBrowserCommand.FocusSearch.Handler,
 		SequenceEvents.HighlightModelChanged.Emitter,
 		SequenceEvents.SelectedIndexChanged.Emitter {
@@ -275,6 +278,10 @@ class Page extends Model.Fields
 			case HALF_WIDTH:
 				rows.add("sequence sequence props props");
 				break;
+			case FULL_WIDTH:
+				rows.add("props props props props");
+				builder.line("body > page > sequence{display: none;}");
+				break;
 			case NONE:
 				rows.add("sequence sequence sequence sequence");
 				builder.line("body > page > properties{display: none;}");
@@ -325,5 +332,14 @@ class Page extends Model.Fields
 		ui.place.copy().withHighlightIndicies(highlightModel.highlightIndex,
 				filteredSequenceElements.indexOf(highlightedSequenceElement))
 				.go();
+	}
+
+	@Override
+	public void onColumnSetCycle(ColumnSetCycle event) {
+		SequenceSettings settings = SequenceBrowser.Ui.get().settings;
+		ColumnSet next = settings.nextColumnSet();
+		StatusModule.get()
+				.showMessageTransitional(Ax.format("Column set -> %s", next));
+		reloadSequence();
 	}
 }

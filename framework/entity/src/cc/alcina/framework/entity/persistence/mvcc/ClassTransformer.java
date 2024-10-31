@@ -83,6 +83,7 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorr
 import cc.alcina.framework.entity.util.AlcinaParallel;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.FsObjectCache;
+import cc.alcina.framework.entity.util.source.SourceFinder;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;

@@ -15,7 +15,9 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMConfiguration;
@@ -108,11 +110,6 @@ public class Document extends Node
 			break;
 		}
 		localDom = new LocalDom();
-	}
-
-	@Override
-	protected void onAttach() {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -896,7 +893,7 @@ public class Document extends Node
 
 	@Override
 	public Document getOwnerDocument() {
-		return null;
+		return this;
 	}
 
 	@Override
@@ -947,6 +944,13 @@ public class Document extends Node
 	@Override
 	public String getTextContent() throws DOMException {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <T> T invoke(Supplier<T> supplier, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
+		return remote().invoke(supplier, clazz, methodName, argumentTypes,
+				arguments, sync);
 	}
 
 	@Override
@@ -1155,9 +1159,10 @@ public class Document extends Node
 		localDom.domIds.setNextAttachId(id);
 	}
 
-	public boolean isHtmlTags() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'isHtmlTags'");
+	@Override
+	public void invoke(Runnable runnable, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
+		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
+				argumentTypes, arguments, sync);
 	}
 }
