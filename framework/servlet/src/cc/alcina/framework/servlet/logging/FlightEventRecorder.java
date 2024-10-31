@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.flight.FlightEventWrappable;
 import cc.alcina.framework.common.client.flight.FlightEventWrappable.FlightExceptionMessage;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -35,6 +36,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		return Registry.impl(FlightEventRecorder.class);
 	}
 
+	@Reflected
 	class FlightEventObserver implements ProcessObserver<FlightEvent> {
 		@Override
 		public synchronized void topicPublished(FlightEvent message) {
@@ -42,6 +44,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		}
 	}
 
+	@Reflected
 	class MarkRecordedEventsObserver
 			implements ProcessObserver<MarkRecordedEvents> {
 		@Override
@@ -50,6 +53,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		}
 	}
 
+	@Reflected
 	class PersistRecordedEventsObserver
 			implements ProcessObserver<PersistRecordedEvents> {
 		@Override
