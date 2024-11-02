@@ -219,6 +219,10 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 			return map;
 		}
 
+		public Stream<String> values() {
+			return map().values().stream();
+		}
+
 		public void set(Enum e, Object value) {
 			set(Ax.friendly(e), value);
 		}

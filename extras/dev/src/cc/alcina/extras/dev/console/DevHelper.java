@@ -675,7 +675,7 @@ public abstract class DevHelper {
 
 	public void initTopics() {
 		ServletLayerTopics.topicRestartConsole
-				.add(() -> DevConsole.getInstance().restart());
+				.add(() -> DevConsole.get().restart());
 	}
 
 	public String reloadConfigurationFile() {

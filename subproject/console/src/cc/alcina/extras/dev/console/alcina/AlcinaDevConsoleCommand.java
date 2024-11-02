@@ -103,7 +103,7 @@ public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 					.resource("codeserver-paths.local.txt").asList();
 			codeService.handlerTypes = List
 					.of(PackagePropertiesGenerator.class);
-			codeService.blockStartThread = DevConsole.getInstance()
+			codeService.blockStartThread = DevConsole.get()
 					.isExitAfterCommand();
 			codeService.start();
 			return "started";

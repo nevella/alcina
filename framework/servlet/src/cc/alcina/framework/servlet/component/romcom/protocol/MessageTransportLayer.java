@@ -23,8 +23,15 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 
 /**
+ * <p>
  * This (simple) class provides the infrastructure to handle lost requests, by
  * numbering and queueing message receipt/dispatch
+ * 
+ * <h3>Message acknowledgment (ACK)</h3>
+ * <p>
+ * Both sender and receiver retain references to messages until receipt has been
+ * acknowledged by the other end of the connection. The mechanics for how
+ * acknowledgment is signalled differ:
  */
 /*
  * A message transport (layer) has two channels - send + receive - each with an
