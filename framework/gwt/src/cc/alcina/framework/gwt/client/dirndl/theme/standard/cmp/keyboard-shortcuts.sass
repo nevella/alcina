@@ -1,0 +1,14 @@
+@use '../../theme/theme'  
+@use '../../theme/color'
+@use '../../dirndl/cmp/context-menu'
+
+@mixin contents
+  keyboard-shortcuts-area   
+    @include context-menu.dropdown
+    padding: 1rem
+    display: grid
+    grid-template-columns: 1fr 1fr 1fr
+
+    > shortcut
+      display: contents
+    

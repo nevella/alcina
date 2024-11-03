@@ -9,7 +9,7 @@
   */
 
 
-@mixin dropdown()
+@mixin dropdown
   background: white
   user-select: none
   padding: 1rem 0
@@ -17,13 +17,13 @@
   box-shadow: base.$box-shadow-bottom
 
 
-@mixin dropdown-list()
+@mixin dropdown-list
   @include dropdown
   border-radius: 4px
   display: flex
   flex-direction: column
 
-@mixin dropdown-list-item()
+@mixin dropdown-list-item
   padding: 0.4rem 1rem
   /* use padding, not line-height, so hover bkg is vertically centered*/
   line-height: 2
@@ -32,7 +32,7 @@
   &:hover, &[index-selected]
     background-color: color.$dark_alpha_10
 
-@mixin dropdown-choices()
+@mixin dropdown-choices
   @include dropdown-list
   
   > results 
@@ -41,7 +41,7 @@
   > choice, > results > choice
     @include dropdown-list-item
 
-@mixin context-menu()
+@mixin context-menu
   @include dropdown-list
 
   > action
@@ -63,7 +63,7 @@
   padding-left: 0.5rem !important
   padding-right: 0.5rem !important
 
-@mixin context-menu-icons-only()
+@mixin context-menu-icons-only
   padding: 0.4rem 0.7rem
   border-radius: 0
   flex-direction: row
@@ -84,7 +84,7 @@
     > label
       display: none
 
-@mixin context-menu-text-only()
+@mixin context-menu-text-only
   padding: 0.5rem 0
 
   > action

@@ -25,6 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
@@ -35,6 +36,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.S
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelView;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
@@ -58,8 +60,8 @@ class Page extends Model.All
 		TraversalBrowserCommand.PropertyDisplayCycle.Handler,
 		TraversalBrowserCommand.InputOutputCycle.Handler,
 		TraversalCommand.FocusSearch.Handler,
-		TraversalEvents.SetSettingTableRows.Handler,
-		FlightEventCommandHandlers {
+		TraversalEvents.SetSettingTableRows.Handler, FlightEventCommandHandlers,
+		TraversalCommand.ShowKeyboardShortcuts.Handler {
 	static PackageProperties._Page properties = PackageProperties.page;
 
 	Header header;
@@ -338,5 +340,11 @@ class Page extends Model.All
 	public void onSetSettingTableRows(SetSettingTableRows event) {
 		String model = event.getModel();
 		TraversalBrowser.Ui.get().settings.putTableRows(model);
+	}
+
+	@Override
+	public void onShowKeyboardShortcuts(ShowKeyboardShortcuts event) {
+		KeyboardShortcutsArea
+				.show(TraversalBrowser.Ui.get().getKeybindingsHandler());
 	}
 }

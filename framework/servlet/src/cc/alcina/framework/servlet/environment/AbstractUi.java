@@ -49,6 +49,10 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 
 	private KeybindingsHandler keybindingsHandler;
 
+	public KeybindingsHandler getKeybindingsHandler() {
+		return keybindingsHandler;
+	}
+
 	public class CommandContextProviderImpl implements CommandContext.Provider {
 		@Override
 		public Set<Class<? extends CommandContext>> getContexts() {

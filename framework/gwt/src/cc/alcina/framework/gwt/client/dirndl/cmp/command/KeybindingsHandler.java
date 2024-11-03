@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -46,6 +47,13 @@ public class KeybindingsHandler implements KeyboardShortcuts.Handler {
 	@FunctionalInterface
 	public interface EventDispatcher {
 		void dispatch(Class<? extends ModelEvent> eventType);
+	}
+
+	public Stream<MatchData> getContextMatches() {
+		Set<Class<? extends CommandContext>> contexts = commandContextProvider
+				.getContexts();
+		return boundEvents.stream().filter(eventType -> KeyBinding.Support
+				.matches(contexts, eventType, null));
 	}
 
 	public KeybindingsHandler(EventDispatcher eventDispatcher,
