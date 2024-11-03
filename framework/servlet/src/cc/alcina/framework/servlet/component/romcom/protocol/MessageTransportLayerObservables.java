@@ -40,6 +40,14 @@ public class MessageTransportLayerObservables {
 		}
 	}
 
+	public static class RetryObservable implements ProcessObservable {
+		public MessageToken message;
+
+		public RetryObservable(MessageToken message) {
+			this.message = message;
+		}
+	}
+
 	public static class PublishedObservable implements ProcessObservable {
 		public MessageToken message;
 

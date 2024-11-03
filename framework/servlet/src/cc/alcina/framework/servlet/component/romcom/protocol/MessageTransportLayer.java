@@ -19,9 +19,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGener
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.TransportEvent.Type;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -37,7 +39,6 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * acknowledged by the other end of the connection. The mechanics for how
  * acknowledgment is signalled differ:
  * 
- * <?xml version="1.0" encoding="UTF-8"?>
  * <table>
  * <tr>
  * <td>Sender</td>
@@ -100,8 +101,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * <td>Event: send to other end (this will be triggered if there are outstanding
  * messages *or* outstanding transporthistory.published metadata</td>
  * <td>Send transportHistory of received packets. For any with
- * publishedFirstSet==null, set publishedFirstSent to the outgoing envelope
- * id</td>
+ * firstReceiptAcknowledgedEnvelopeId==null, set
+ * firstReceiptAcknowledgedEnvelopeId</td>
  * </tr>
  * <tr>
  * <td>(receiver channel) Event: messageReceived</td>
@@ -111,12 +112,13 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * </tr>
  * <tr>
  * <td>Action: process acknowledgement of any transporthistories owned by this
- * sender with publicationDate set</td>
+ * sender with receivedDate set</td>
  * <td/>
  * <td/>
  * <td/>
  * </tr>
  * </table>
+ * 
  * 
  */
 /*
@@ -125,7 +127,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * 
  * A messageenvelope has messagepackets + messagedispatchhistories
  * 
- * A messagepacket has messageid - message
+ * A messagepacket has messageid + message
  * 
  * A transportHistory has messageid - timesent (if sender), timereceived (if
  * receiver)
@@ -134,20 +136,9 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * 
  * An envelopeDispatcher is responsible for dispatching envelopes
  * 
- * A connectionVerifier is responsible for verifying the state of the connection
+ * A receiptVerifier is responsible for verifying the receipt state of the
+ * packets, and resending
  * 
- * The way acknowledgment/receipt works is that a transporthistory has the first
- * envelopeId where receipt was sent - if a envelopeId higher than that is
- * received, receipt has been acknowledged and the packet can be released
- * 
- * NOTE - packet resend is currently *NOT* implemented
- */
-/*
- * TODO - fix
- * 
- * there's confusion between *message* and *metadata* transport here - 'ack'
- * (s->r) should just be 'received' metadata (go back to 'update from received
- * metadata'); ack (r->s) should be 'firstReceivedEnvId'
  */
 public abstract class MessageTransportLayer {
 	@Reflected
@@ -303,6 +294,9 @@ public abstract class MessageTransportLayer {
 		 */
 		public EnvelopeId firstReceiptAcknowledgedEnvelopeId;
 
+		/*
+		 * This will be cleared if a retry is required
+		 */
 		public Date sent;
 
 		/*
@@ -311,9 +305,9 @@ public abstract class MessageTransportLayer {
 		public Date received;
 
 		/*
-		 * in the time context of the sender
+		 * in the time context of the sender. Used by retry logic
 		 */
-		public Date resendRequested;
+		public List<Date> unacknowledgedSendDates = new ArrayList<>();
 
 		public Date published;
 
@@ -340,6 +334,24 @@ public abstract class MessageTransportLayer {
 					&& firstReceiptAcknowledgedEnvelopeId == null) {
 				firstReceiptAcknowledgedEnvelopeId = envelopeId;
 			}
+		}
+
+		public void markAsRetry() {
+			unacknowledgedSendDates.add(sent);
+			sent = null;
+		}
+
+		public boolean isPendingSend() {
+			return shouldSend();
+		}
+
+		public boolean shouldSend() {
+			return sent == null || (sendExceptionDate != null
+					&& sent.before(sendExceptionDate));
+		}
+
+		public boolean wasSent() {
+			return sent != null || unacknowledgedSendDates.size() > 0;
 		}
 	}
 
@@ -403,13 +415,7 @@ public abstract class MessageTransportLayer {
 		}
 
 		boolean shouldSend() {
-			return transportHistory.sent == null
-					|| (transportHistory.resendRequested != null
-							&& transportHistory.sent
-									.before(transportHistory.resendRequested))
-					|| (transportHistory.sendExceptionDate != null
-							&& transportHistory.sent.before(
-									transportHistory.sendExceptionDate));
+			return transportHistory.shouldSend();
 		}
 
 		boolean shouldSendMetadata() {
@@ -449,6 +455,15 @@ public abstract class MessageTransportLayer {
 					highestReceivedEnvelopeId)) {
 				acknowledged = true;
 			}
+		}
+
+		transient int size = -1;
+
+		public int getSize() {
+			if (size == -1) {
+				size = ReflectiveSerializer.serialize(message).length();
+			}
+			return size;
 		}
 	}
 
@@ -589,6 +604,7 @@ public abstract class MessageTransportLayer {
 						unconditionallySend();
 					}
 				}
+				receiptVerifier().verify();
 			}
 		}
 
@@ -603,6 +619,121 @@ public abstract class MessageTransportLayer {
 			message.messageId = nextId();
 			bufferMessage(new MessageToken(message, sendChannelId()));
 			conditionallySend();
+		}
+
+		protected ReceiptVerifier receiptVerifier;
+
+		protected ReceiptVerifier receiptVerifier() {
+			synchronized (this) {
+				if (receiptVerifier == null) {
+					receiptVerifier = new ReceiptVerifier();
+				}
+			}
+			return receiptVerifier;
+		}
+
+		/**
+		 * <p>
+		 * THe ReceiptVerifier verifies receipt, by checking receipt after a
+		 * certain elapsed time and if necessary signalling that unacknowledged
+		 * messages should be resent
+		 * <h4>Implementation logic</h4>
+		 * <ul>
+		 * <li>If there are no unacknowledged messages, exit
+		 * <li>Compute the retry time for oldest packet, from [oldest send time;
+		 * total in-flight size, retry count]
+		 * <li>If retry time is exceeded, mark packets as requiring resend.
+		 * Record send history; signal a conditional send; rerun the
+		 * verification process (to ensure a timer)
+		 * <li>Else, if there's an existing verification scheduled, exit
+		 * <li>Else schedule a verification check for the retry time
+		 * </ul>
+		 */
+		public class ReceiptVerifier {
+			Timer scheduledVerification = null;
+
+			protected void verify() {
+				synchronized (unacknowledgedMessages) {
+					if (unacknowledgedMessages.isEmpty()) {
+						return;
+					}
+					Date now = new Date();
+					boolean retryMarked = false;
+					int inFlightSize = unacknowledgedMessages.stream()
+							.filter(token -> token.transportHistory.wasSent())
+							.collect(Collectors
+									.summingInt(token -> token.getSize()));
+					Date earliestRetry = null;
+					for (MessageToken token : unacknowledgedMessages) {
+						/*
+						 * An existing send (possibly retry) already exists for
+						 * this token, ignore for retry computation
+						 */
+						if (token.transportHistory.isPendingSend()) {
+							continue;
+						}
+						Date retryDate = computeRetryDate(token, inFlightSize);
+						if (retryDate.compareTo(now) <= 0) {
+							token.transportHistory.markAsRetry();
+							logger.info("{} - retry scheduled",
+									token.message.messageId);
+							new MessageTransportLayerObservables.RetryObservable(
+									token).publish();
+							retryMarked = true;
+						} else {
+							if (earliestRetry == null
+									|| retryDate.before(earliestRetry)) {
+								earliestRetry = retryDate;
+							}
+						}
+					}
+					if (retryMarked) {
+						conditionallySend();
+					} else {
+						if (scheduledVerification == null) {
+							scheduledVerification = Timer.Provider.get()
+									.getTimer(this::onScheduledVerification);
+							scheduledVerification.schedule(
+									earliestRetry.getTime() - now.getTime());
+						}
+					}
+				}
+			}
+
+			void onScheduledVerification() {
+				scheduledVerification = null;
+				verify();
+			}
+
+			/*
+			 * Non-computed, and doesn't allow for compression - just a
+			 * heuristic
+			 */
+			protected int bandwidthBytesPerSecond() {
+				return 500000;
+			}
+
+			/*
+			 * min retry time : 1 second
+			 * 
+			 * max retry time (1st attempt): 5 seconds
+			 * 
+			 * backoff by retrytime multiplier (exponential)
+			 */
+			protected Date computeRetryDate(MessageToken messageToken,
+					int inFlightSize) {
+				long from = messageToken.transportHistory.sent.getTime();
+				double transmissionTimeMs = inFlightSize
+						/ bandwidthBytesPerSecond() * 1000.0;
+				transmissionTimeMs = Math.max(1000.0, transmissionTimeMs);
+				transmissionTimeMs = Math.min(5000.0, transmissionTimeMs);
+				transmissionTimeMs = Math.pow(2,
+						messageToken.transportHistory.unacknowledgedSendDates
+								.size())
+						* transmissionTimeMs;
+				transmissionTimeMs = Math.min(60000.0, transmissionTimeMs);
+				return new Date((long) transmissionTimeMs + from);
+			}
 		}
 
 		void updateHistoriesOnReceipt(MessageEnvelope envelope) {
