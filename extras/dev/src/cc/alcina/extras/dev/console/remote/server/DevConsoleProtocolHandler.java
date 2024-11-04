@@ -38,7 +38,7 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 	public void handle(String target, Request baseRequest,
 			HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		while (!DevConsole.getInstance().isInitialised()) {
+		while (!DevConsole.get().isInitialised()) {
 			try {
 				Thread.sleep(100);
 			} catch (Exception e) {

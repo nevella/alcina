@@ -7,16 +7,15 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.UnacknowledgedMessage;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 
 public class MessageTransportLayerObservables {
 	public static class SentObservable implements ProcessObservable {
-		public UnacknowledgedMessage message;
+		public MessageToken message;
 
 		public boolean resending;
 
-		public SentObservable(UnacknowledgedMessage message,
-				boolean resending) {
+		public SentObservable(MessageToken message, boolean resending) {
 			this.message = message;
 			this.resending = resending;
 		}
@@ -33,10 +32,26 @@ public class MessageTransportLayerObservables {
 		}
 	}
 
-	public static class PublishedObservable implements ProcessObservable {
-		public UnacknowledgedMessage message;
+	public static class ReceivedObservable implements ProcessObservable {
+		public MessageToken message;
 
-		public PublishedObservable(UnacknowledgedMessage message) {
+		public ReceivedObservable(MessageToken message) {
+			this.message = message;
+		}
+	}
+
+	public static class RetryObservable implements ProcessObservable {
+		public MessageToken message;
+
+		public RetryObservable(MessageToken message) {
+			this.message = message;
+		}
+	}
+
+	public static class PublishedObservable implements ProcessObservable {
+		public MessageToken message;
+
+		public PublishedObservable(MessageToken message) {
 			this.message = message;
 		}
 

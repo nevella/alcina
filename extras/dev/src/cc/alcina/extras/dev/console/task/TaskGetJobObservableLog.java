@@ -6,6 +6,7 @@ import java.io.InputStream;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.process.observer.job.JobHistory;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 import cc.alcina.framework.servlet.task.TaskLogJobObservable;
@@ -21,6 +22,8 @@ public abstract class TaskGetJobObservableLog extends PerformerTask.Fields {
 
 	public TaskLogJobObservable.LogType logType = LogType.job_observable;
 
+	public boolean copyToJobSequenceFolder = true;
+
 	@Override
 	public void run() throws Exception {
 		TaskLogJobObservable remoteTask = new TaskLogJobObservable();
@@ -35,6 +38,13 @@ public abstract class TaskGetJobObservableLog extends PerformerTask.Fields {
 			InputStream zipStream = Io.read().base64String(resultSerialized)
 					.asInputStream();
 			File unzippedTo = JobHistory.unzipExportedEvents(zipStream);
+			if (copyToJobSequenceFolder) {
+				File jobFolder = new File(JobHistory.LOCAL_PATH);
+				jobFolder.mkdirs();
+				SEUtilities.deleteDirectory(jobFolder, false);
+				unzippedTo.renameTo(jobFolder);
+				unzippedTo = jobFolder;
+			}
 			logger.info("job {} - events unzipped to:\n\t{}", jobId,
 					unzippedTo);
 			break;

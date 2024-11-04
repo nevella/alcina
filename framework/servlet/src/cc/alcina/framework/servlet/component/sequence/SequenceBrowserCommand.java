@@ -10,6 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.servlet.ServletLayerTopics;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommand;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @AppSuggestorCommand(
@@ -114,6 +115,23 @@ public abstract class SequenceBrowserCommand<T, H extends NodeEvent.Handler>
 
 		public interface Handler extends NodeEvent.Handler {
 			void onColumnSetCycle(ColumnSetCycle event);
+		}
+	}
+
+	@AppSuggestorCommand(
+		parent = SequenceBrowserCommand.class,
+		name = "keyboard shortcuts",
+		description = "Show the keyboard shortcuts")
+	@KeyBinding(key = "K")
+	public static class ShowKeyboardShortcuts extends
+			SequenceBrowserCommand<Object, ShowKeyboardShortcuts.Handler> {
+		@Override
+		public void dispatch(ShowKeyboardShortcuts.Handler handler) {
+			handler.onShowKeyboardShortcuts(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onShowKeyboardShortcuts(ShowKeyboardShortcuts event);
 		}
 	}
 }

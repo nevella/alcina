@@ -23,6 +23,11 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
  * <p>
  * It has considerable overlap with MvccObserver - if adding any more Observer
  * types, abstract the base.
+ * <p>
+ * Histories are evicted 1 minute after job completion (the eviction 'pump' is
+ * driven by job events, so the most recent job may be retained for longer). Set
+ * <code>JobObserver.TimedOutEventObserver.record</code> to persist timedout
+ * histories
  */
 @Registration.Singleton
 public class JobObserver {
@@ -76,7 +81,11 @@ public class JobObserver {
 	}
 
 	JobHistory getHistoryForEvent(JobObservable event) {
-		return histories.get(event.job.getLocalId());
+		return histories.get(getJobLocalId(event));
+	}
+
+	private long getJobLocalId(JobObservable event) {
+		return event.job.getLocalId();
 	}
 
 	JobHistory getHistory0(EntityLocator locator) {
@@ -84,7 +93,7 @@ public class JobObserver {
 	}
 
 	boolean isObserving(JobObservable event) {
-		long localId = event.job.getLocalId();
+		long localId = getJobLocalId(event);
 		return localId != 0 && histories.containsKey(localId);
 	}
 
@@ -146,6 +155,7 @@ public class JobObserver {
 		@Override
 		public void topicPublished(JobObservable.Ended event) {
 			conditionallyRecord(event);
+			evictionRecords.add(new EvictionRecord(getJobLocalId(event)));
 		}
 	}
 

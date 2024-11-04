@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.process.ContextObservers;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
 
 public class SyncLogger {
@@ -37,6 +38,12 @@ public class SyncLogger {
 		public SyncItemMatch itemMatch;
 
 		public SyncPair pair;
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("itemMatch", itemMatch, "pair",
+					pair);
+		}
 
 		public SyncLoggerRow() {
 		}

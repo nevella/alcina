@@ -383,8 +383,7 @@ public abstract class DevConsoleCommand {
 			}
 			boolean load = argv[0].equals("load");
 			String name = argv[1];
-			File profile = FileUtils.child(console.profileFolder,
-					name);
+			File profile = FileUtils.child(console.profileFolder, name);
 			File profileSer = FileUtils.child(profile, "ser");
 			File testFolder = console.getDevHelper().getTestFolder();
 			if (load) {
@@ -414,9 +413,8 @@ public abstract class DevConsoleCommand {
 				SEUtilities.copyFile(console.consolePropertiesFile,
 						FileUtils.child(profile,
 								console.consolePropertiesFile.getName()));
-				SEUtilities.copyFile(console.consoleHistoryFile,
-						FileUtils.child(profile,
-								console.consoleHistoryFile.getName()));
+				SEUtilities.copyFile(console.consoleHistoryFile, FileUtils
+						.child(profile, console.consoleHistoryFile.getName()));
 			}
 			return load ? String.format("Loaded config from profile '%s'", name)
 					: String.format("Saved config to profile '%s'", name);
@@ -536,7 +534,7 @@ public abstract class DevConsoleCommand {
 						}
 						if (runnable.requiresDomainStore()
 								&& DevHelper.getDefaultUser() == null) {
-							DevConsole.getInstance().emitIfFirst(
+							DevConsole.get().emitIfFirst(
 									new StatCategory_Console.InitCommands());
 							console.ensureDomainStore();
 							pushedUser = DevHelper.getDefaultUser();
@@ -747,7 +745,7 @@ public abstract class DevConsoleCommand {
 			String filter = argv.length > 0 ? argv[0] : null;
 			Predicate<DevConsoleCommand> consoleFilter = c -> true;
 			if ("cons".equals(filter)) {
-				consoleFilter = c -> DevConsole.getInstance()
+				consoleFilter = c -> DevConsole.get()
 						.isConsoleInstanceCommand(c);
 				filter = null;
 			}

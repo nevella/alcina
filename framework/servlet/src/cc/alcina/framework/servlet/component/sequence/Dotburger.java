@@ -8,9 +8,11 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Button;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Dropdown;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommand;
 
 /*
  * The main dropdown navigation/options menu
@@ -31,6 +33,11 @@ class Dotburger extends Model.Fields {
 		@Directed.Transform(Choices.Single.To.class)
 		@Choices.EnumValues(PropertyDisplayMode.class)
 		PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
+
+		Heading section4 = new Heading("Actions");
+
+		Link keyboardShortcuts = Link
+				.of(SequenceBrowserCommand.ShowKeyboardShortcuts.class);
 
 		Menu() {
 			bindings().from(SequenceSettings.get())

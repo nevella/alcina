@@ -30,11 +30,6 @@ public class CommentAttachId extends NodeAttachId implements ClientDomComment {
 	}
 
 	@Override
-	public String getNodeName() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public short getNodeType() {
 		throw new UnsupportedOperationException();
 	}

@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.romcom.protocol;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.DomEventData;
@@ -95,6 +96,11 @@ public class RemoteComponentProtocol {
 			public void merge(Message message) {
 				events.addAll(((DomEventMessage) message).events);
 			}
+
+			@Override
+			protected String provideMessageData() {
+				return Ax.first(events).event.getType();
+			}
 		}
 
 		/*
@@ -123,6 +129,8 @@ public class RemoteComponentProtocol {
 
 			public AttachId path;
 
+			public String targetName;
+
 			public String methodName;
 
 			public List<?> arguments;
@@ -136,6 +144,15 @@ public class RemoteComponentProtocol {
 			public String javascript;
 
 			public JsResponseType jsResponseType;
+
+			@Override
+			protected String provideMessageData() {
+				if (Ax.notBlank(javascript)) {
+					return "javascript:" + Ax.ntrim(javascript, 50);
+				} else {
+					return Ax.format("%s::%s", targetName, methodName);
+				}
+			}
 		}
 
 		public static class PersistSettings extends Message {
@@ -203,6 +220,20 @@ public class RemoteComponentProtocol {
 				return FormatBuilder.keyValues("dom", domMutations.size(),
 						"event", eventSystemMutations.size(), "loc",
 						locationMutation);
+			}
+
+			@Override
+			protected String provideMessageData() {
+				if (domMutations.size() > 0) {
+					return domMutations.stream().map(dm -> dm.target.nodeName)
+							.distinct().collect(Collectors.joining(", "));
+				} else if (eventSystemMutations.size() > 0) {
+					return eventSystemMutations.stream()
+							.map(esm -> esm.eventTypeName).distinct()
+							.collect(Collectors.joining(", "));
+				} else {
+					return "";
+				}
 			}
 		}
 
@@ -297,7 +328,19 @@ public class RemoteComponentProtocol {
 
 		@Override
 		public String toString() {
-			return Ax.format("%s :: %s", messageId, NestedName.get(this));
+			String messageData = provideMessageData();
+			if (Ax.notBlank(messageData)) {
+				messageData = Ax.format(" [%s]", messageData);
+			}
+			return Ax.format("%s :: %s%s", messageId,
+					getClass().getSimpleName(), messageData);
+		}
+
+		/*
+		 * for toString() - e.g. for a DomEvent, the event type
+		 */
+		protected String provideMessageData() {
+			return "";
 		}
 
 		public boolean canMerge(Message message) {

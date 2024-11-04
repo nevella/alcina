@@ -224,6 +224,7 @@ class Environment {
 			ResponseHandler handler = new ResponseHandler(callback);
 			Message.Invoke invoke = new Message.Invoke();
 			invoke.path = node == null ? null : AttachId.forNode(node.node());
+			invoke.targetName = node == null ? null : node.getNodeName();
 			invoke.id = ++invokeCounter;
 			invoke.methodName = methodName;
 			invoke.argumentTypes = argumentTypes == null ? List.of()

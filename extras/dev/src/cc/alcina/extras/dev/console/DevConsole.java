@@ -146,7 +146,7 @@ public abstract class DevConsole implements ClipboardOwner {
 
 	static DevConsole instance;
 
-	public static DevConsole getInstance() {
+	public static DevConsole get() {
 		return instance;
 	}
 
@@ -268,7 +268,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		BackendTransformQueue.get().start();
 		JobRegistry.get().init();
 		JobLogTimer.get().init();
-		AlcinaTopics.applicationRestart.add(v -> getInstance().restart());
+		AlcinaTopics.applicationRestart.add(v -> get().restart());
 		DomainStore.topicStoreLoadingComplete.signal();
 	}
 

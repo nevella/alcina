@@ -10,44 +10,71 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannel.ReceiptVerifier;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.TransportEvent.Type;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 
 /**
- * This (simple) class provides the infrastructure to handle lost requests, by
- * numbering and queueing message receipt/dispatch
- */
-/*
- * A message transport (layer) has two channels - send + receive - each with an
- * enum id
+ * <h3>The Message Transport Layer</h3>
+ * <p>
+ * This class provides the infrastructure to handle guaranteed, ordered
+ * bidirectional message dispatch between the romcom server (jdk app) and romcom
+ * client (the browser shim).
  * 
- * A messageenvelope has messagepackets + messagedispatchhistories
+ * <p>
+ * Messages are grouped into envelopes (the unit of send/receive). Both messages
+ * and envelopes are numbered (with {@link MessageId}, {@link EnvelopeId} to
+ * track receipt/dispatch.
  * 
- * A messagepacket has messageid - message
+ * <p>
+ * The total communication flow is between two {@link MessageTransportLayer}
+ * subtypes - <code>MessageTransportLayerServer</code> and
+ * <code>MessageTransportLayerClient</code>. The two subtypes have different
+ * {@link SendChannelId} values, which distinguish the two send/receive
+ * channels.
+ * <p>
+ * Each {@link MessageTransportLayer} has two {@link Channel}s -
+ * {@link SendChannel} + {@link ReceiveChannel}. They communicate by sending
+ * {@link MessageEnvelope} instances over an underlying communication layer
+ * (XmlHttp by default, but WebSocket would also work).
  * 
- * A transportHistory has messageid - timesent (if sender), timereceived (if
- * receiver)
+ * <h4>The protocol types - overview</h4>
+ * <p>
+ * A {@link MessageEnvelope} contains a list of {@link MessagePacket} elements
+ * (the payload) and a list of {@link TransportHistory} elements (tracking
+ * metadata).
  * 
- * A messageid has channelId + number (in channel)
+ * <p>
+ * A {@link MessagePacket} has a {@link MessageId} and a {@link Message}
  * 
- * An envelopeDispatcher is responsible for dispatching envelopes
+ * <p>
+ * A {@link TransportHistory} has a {@link MessageId} and various metadata
+ * tracking the send/receive history of the message
  * 
- * A connectionVerifier is responsible for verifying the state of the connection
+ * A {@link MessageId} has a {@link SendChannelId} and a sequential, per-channel
+ * <code>number</code>
  * 
- * The way acknowledgment/receipt works is that a transporthistory has the first
- * envelopeId where receipt was sent - if a envelopeId higher than that is
- * received, receipt has been acknowledged and the packet can be released
+ * @see SendChannel for detail on receipt verification - which handles
+ *      communication issues causing RPC timeout or exception
  * 
- * NOTE - packet resend is currently *NOT* implemented
+ * 
+ * 
+ * 
  */
 public abstract class MessageTransportLayer {
 	@Reflected
@@ -170,18 +197,42 @@ public abstract class MessageTransportLayer {
 		 * which this message was sent). Once the other end responds with
 		 * "I have seen an envelope with id ID1", where ID1>=ID0, the sending
 		 * logic guarantees that the receipient has received the message wrapped
-		 * by this TransportHistory
+		 * by this TransportHistory [sic] No- other way - env id is about r2s,
+		 * not s2r
 		 * 
 		 * The reason for this layered approach is that the recipient doesn't
 		 * need to send complex acknowledgments of receipt - only the envelope
-		 * ID (although the sender does need to possibly double-send )
+		 * ID (although the sender does need to possibly double-send ) (tru -
+		 * but only r2s)
 		 * 
 		 * A TODO is to not immediately re-send large messages - note this means
 		 * not resending *anything*, since the contract is
-		 * "resend everything unacknowledged"
+		 * "resend everything unacknowledged". (nope, just meta)
+		 * 
+		 * So...in brief (and this para should go into a more structured
+		 * location) -
+		 * 
+		 * send logic is
+		 * "don't send until all outstanding sends are done, or no large outstanding sends"
+		 * - say 300ms (small), 2s (large)
+		 * 
+		 * receipt logic is "always acknowledge transports"
+		 * 
+		 * resend logic is 'schedule a resend - cancel if no unacked'
+		 * 
+		 * Note - the sender *could* check published (to determine ACK) - but
+		 * since the receiver *has* to check envelopeid, for symmetry I
+		 * preferred to use the same mechanism for both endws of ACK
 		 */
-		public EnvelopeId firstSentEnvelopeId;
+		/*
+		 * This is the first envelope sent from the message receiver which
+		 * contains 'received' metadata
+		 */
+		public EnvelopeId firstReceiptAcknowledgedEnvelopeId;
 
+		/*
+		 * This will be cleared if a retry is required
+		 */
 		public Date sent;
 
 		/*
@@ -190,9 +241,9 @@ public abstract class MessageTransportLayer {
 		public Date received;
 
 		/*
-		 * in the time context of the sender
+		 * in the time context of the sender. Used by retry logic
 		 */
-		public Date resendRequested;
+		public List<Date> unacknowledgedSendDates = new ArrayList<>();
 
 		public Date published;
 
@@ -202,12 +253,41 @@ public abstract class MessageTransportLayer {
 			sent = new Date();
 		}
 
-		boolean wasAcknowledged(EnvelopeId highestReceivedEnvelopeId) {
-			return firstSentEnvelopeId != null && firstSentEnvelopeId
-					.compareTo(highestReceivedEnvelopeId) <= 0;
+		boolean wasAcknowledged(SendChannelId sendChannelId,
+				EnvelopeId highestReceivedEnvelopeId) {
+			boolean isSenderEndpoint = sendChannelId == messageId.sendChannelId;
+			if (isSenderEndpoint) {
+				return received != null;
+			} else {
+				return firstReceiptAcknowledgedEnvelopeId != null
+						&& firstReceiptAcknowledgedEnvelopeId
+								.compareTo(highestReceivedEnvelopeId) <= 0;
+			}
 		}
 
-		void updateFromOtherEndpoint(TransportHistory history) {
+		public void onBeforeSendReceivedMessageHistory(EnvelopeId envelopeId) {
+			if (received != null
+					&& firstReceiptAcknowledgedEnvelopeId == null) {
+				firstReceiptAcknowledgedEnvelopeId = envelopeId;
+			}
+		}
+
+		public void markAsRetry() {
+			unacknowledgedSendDates.add(sent);
+			sent = null;
+		}
+
+		public boolean isPendingSend() {
+			return shouldSend();
+		}
+
+		public boolean shouldSend() {
+			return sent == null || (sendExceptionDate != null
+					&& sent.before(sendExceptionDate));
+		}
+
+		public boolean wasSent() {
+			return sent != null || unacknowledgedSendDates.size() > 0;
 		}
 	}
 
@@ -235,14 +315,23 @@ public abstract class MessageTransportLayer {
 		}
 	}
 
-	public class UnacknowledgedMessage
-			implements Comparable<UnacknowledgedMessage> {
+	/**
+	 * This class tracks the lifecycle of a message, in particular it handles
+	 * the 'retain until acknowledged' described in the outer class javadoc,
+	 * which is required for resend
+	 */
+	public class MessageToken implements Comparable<MessageToken> {
 		public TransportHistory transportHistory = new TransportHistory();
 
 		public Message message;
 
-		public UnacknowledgedMessage(Message message,
-				SendChannelId sendChannelId) {
+		/*
+		 * this isn't a property of the transport history, since its computation
+		 * differs if the containing channel is sender or receiver
+		 */
+		boolean acknowledged;
+
+		public MessageToken(Message message, SendChannelId sendChannelId) {
 			if (message.messageId == 0) {
 				message.messageId = messageIdGenerator.incrementAndGetInt();
 			}
@@ -252,7 +341,7 @@ public abstract class MessageTransportLayer {
 		}
 
 		@Override
-		public int compareTo(UnacknowledgedMessage o) {
+		public int compareTo(MessageToken o) {
 			return this.transportHistory.messageId
 					.compareTo(o.transportHistory.messageId);
 		}
@@ -262,20 +351,25 @@ public abstract class MessageTransportLayer {
 		}
 
 		boolean shouldSend() {
-			return transportHistory.sent == null
-					|| (transportHistory.resendRequested != null
-							&& transportHistory.sent
-									.before(transportHistory.resendRequested))
-					|| (transportHistory.sendExceptionDate != null
-							&& transportHistory.sent.before(
-									transportHistory.sendExceptionDate));
+			return transportHistory.shouldSend();
 		}
 
-		boolean wasAcknowledged(EnvelopeId highestReceivedEnvelopeId) {
-			return transportHistory.wasAcknowledged(highestReceivedEnvelopeId);
+		boolean shouldSendMetadata() {
+			return transportHistory.received != null
+					&& transportHistory.firstReceiptAcknowledgedEnvelopeId == null;
+		}
+
+		boolean shouldSendMessageOrMetadata() {
+			return shouldSend() || shouldSendMetadata();
 		}
 
 		void updateTransportHistoryFromRemote(TransportHistory remoteHistory) {
+			if (remoteHistory.received != null
+					&& transportHistory.received == null) {
+				transportHistory.received = remoteHistory.received;
+				new MessageTransportLayerObservables.ReceivedObservable(this)
+						.publish();
+			}
 			if (remoteHistory.published != null
 					&& transportHistory.published == null) {
 				transportHistory.published = remoteHistory.published;
@@ -289,6 +383,23 @@ public abstract class MessageTransportLayer {
 			transportHistory.sent = new Date();
 			new MessageTransportLayerObservables.SentObservable(this, resending)
 					.publish();
+		}
+
+		public void onHighestReceivedEnvelopeId(
+				EnvelopeId highestReceivedEnvelopeId) {
+			if (transportHistory.wasAcknowledged(sendChannelId(),
+					highestReceivedEnvelopeId)) {
+				acknowledged = true;
+			}
+		}
+
+		transient int size = -1;
+
+		public int getSize() {
+			if (size == -1) {
+				size = ReflectiveSerializer.serialize(message).length();
+			}
+			return size;
 		}
 	}
 
@@ -326,26 +437,35 @@ public abstract class MessageTransportLayer {
 	}
 
 	public abstract class EnvelopeDispatcher {
+		/**
+		 * <p>
+		 * Marks a dispatcher subtype which tests dispatch exception handling
+		 * <p>
+		 * TODO - move to test tree
+		 */
+		public interface ForceExceptional {
+		}
+
 		protected abstract boolean isDispatchAvailable();
 
-		protected abstract void dispatch(
-				List<UnacknowledgedMessage> sendMessages,
-				List<UnacknowledgedMessage> receivedMessages);
+		protected abstract void dispatch(List<MessageToken> sendMessages,
+				List<MessageToken> receivedMessages);
 
 		/*
 		 * the caller is synchronized on the unacknowledgedMessages list
 		 */
 		protected MessageEnvelope createEnvelope(
-				List<UnacknowledgedMessage> sendMessages,
-				List<UnacknowledgedMessage> receivedMessages) {
+				List<MessageToken> sendMessages,
+				List<MessageToken> receivedMessages) {
 			MessageEnvelope envelope = new MessageEnvelope();
 			envelope.envelopeId = new EnvelopeId(sendChannelId(),
 					envelopeIdGenerator.incrementAndGetInt());
+			envelope.dateSent = new Date();
 			envelope.highestReceivedEnvelopeId = receiveChannel().highestReceivedEnvelopeId;
-			sendMessages.stream().filter(UnacknowledgedMessage::shouldSend)
+			sendMessages.stream().filter(MessageToken::shouldSend)
 					.forEach(uack -> {
-						if (uack.transportHistory.firstSentEnvelopeId == null) {
-							uack.transportHistory.firstSentEnvelopeId = envelope.envelopeId;
+						if (uack.transportHistory.firstReceiptAcknowledgedEnvelopeId == null) {
+							uack.transportHistory.firstReceiptAcknowledgedEnvelopeId = envelope.envelopeId;
 						}
 						uack.onSending();
 						envelope.packets.add(new MessagePacket(
@@ -357,24 +477,27 @@ public abstract class MessageTransportLayer {
 			 */
 			sendMessages.forEach(uack -> envelope.transportHistories
 					.add(uack.transportHistory));
-			receivedMessages.forEach(uack -> envelope.transportHistories
-					.add(uack.transportHistory));
+			receivedMessages.forEach(uack -> {
+				uack.transportHistory.onBeforeSendReceivedMessageHistory(
+						envelope.envelopeId);
+				envelope.transportHistories.add(uack.transportHistory);
+			});
 			return envelope;
 		}
 	}
 
 	public abstract class Channel {
-		protected List<UnacknowledgedMessage> unacknowledgedMessages = new ArrayList<>();
+		protected List<MessageToken> unacknowledgedMessages = new ArrayList<>();
 
-		protected Map<MessageId, UnacknowledgedMessage> messageIdUnacknowledgedMessage = new LinkedHashMap<>();
+		protected Map<MessageId, MessageToken> messageIdUnacknowledgedMessage = new LinkedHashMap<>();
 
-		protected List<UnacknowledgedMessage> snapshotUnacknowledgedMessages() {
+		protected List<MessageToken> snapshotUnacknowledgedMessages() {
 			synchronized (unacknowledgedMessages) {
 				return new ArrayList<>(unacknowledgedMessages);
 			}
 		}
 
-		void bufferMessage(UnacknowledgedMessage message) {
+		void bufferMessage(MessageToken message) {
 			synchronized (unacknowledgedMessages) {
 				unacknowledgedMessages.add(message);
 				messageIdUnacknowledgedMessage
@@ -382,37 +505,86 @@ public abstract class MessageTransportLayer {
 			}
 		}
 
-		void removeMessage(UnacknowledgedMessage message) {
+		void removeMessage(MessageToken message) {
 			synchronized (unacknowledgedMessages) {
 				unacknowledgedMessages.remove(message);
 				messageIdUnacknowledgedMessage
 						.remove(message.transportHistory.messageId);
+				logger.info("Message acknowledged + removed :: {}",
+						message.transportHistory.messageId);
 			}
 		}
 
-		UnacknowledgedMessage getUnacknowledgedMessage(MessageId messageId) {
+		MessageToken getUnacknowledgedMessage(MessageId messageId) {
 			synchronized (unacknowledgedMessages) {
 				return messageIdUnacknowledgedMessage.get(messageId);
 			}
 		}
+
+		void removeAcknowledgedMessages() {
+			synchronized (unacknowledgedMessages) {
+				List<MessageToken> toRemove = unacknowledgedMessages.stream()
+						.filter(uack -> uack.acknowledged)
+						.collect(Collectors.toList());
+				toRemove.forEach(this::removeMessage);
+			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("uack message count: %s",
+					unacknowledgedMessages.size());
+		}
 	}
 
+	/**
+	 * 
+	 * <p>
+	 * The SendChannel instance buffers and sends messages - grouped into
+	 * envelopes - and ensures their eventual receipt.
+	 * <p>
+	 * The {@link EnvelopeDispatcher} is responsible for dispatching envelopes
+	 * (invoking the RPC layer)
+	 * 
+	 * <h3>Message acknowledgment (ACK)</h3>
+	 * <p>
+	 * Messages are conditionally marked as requiring resend by the
+	 * {@link ReceiptVerifier}if they're not acknowledged within a certain time,
+	 * or transport fails due to an exception. The mechanics vary slightly for
+	 * [server-&gt;client; client-&gt;server].
+	 * 
+	 * <h3>Issue recovery</h3>
+	 * <p>
+	 * Issue recovery is perfomed by the ReceiptVerifier - recovery is tied to
+	 * acknowledgment - once a message is acknowledged, it's removed from the
+	 * list of those potentially requiring issue recovery/retry.
+	 * <h3>Testing: Issue recovery</h3>
+	 * <p>
+	 * Issue recovery is tested by forcing exceptional conditions at the RPC
+	 * layer, both timeouts and transport exceptions. This can be done by
+	 * instantiating an {@link EnvelopeDispatcher.ForceExceptional} subtype as
+	 * the envelope dispatcher
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 */
 	public abstract class SendChannel extends Channel {
 		/*
 		 * If no inflight or retry, send
 		 */
 		public void conditionallySend() {
 			synchronized (unacknowledgedMessages) {
-				/*
-				 * This path doesn't send if there's *only* receipt metadata to
-				 * acknowledge - that's handled in the verifier side-channel
-				 */
 				if (unacknowledgedMessages.stream()
-						.anyMatch(UnacknowledgedMessage::shouldSend)) {
+						.anyMatch(MessageToken::shouldSendMessageOrMetadata)) {
 					if (envelopeDispatcher().isDispatchAvailable()) {
 						unconditionallySend();
 					}
 				}
+				receiptVerifier.verify();
 			}
 		}
 
@@ -425,8 +597,208 @@ public abstract class MessageTransportLayer {
 
 		protected void send(Message message) {
 			message.messageId = nextId();
-			bufferMessage(new UnacknowledgedMessage(message, sendChannelId()));
+			bufferMessage(new MessageToken(message, sendChannelId()));
 			conditionallySend();
+		}
+
+		protected ReceiptVerifier receiptVerifier;
+
+		public SendChannel() {
+			initImplementations();
+		}
+
+		protected void initImplementations() {
+			receiptVerifier = new ReceiptVerifier();
+		}
+
+		/**
+		 * <p>
+		 * THe ReceiptVerifier verifies receipt, by checking receipt after a
+		 * certain elapsed time and if necessary signalling that unacknowledged
+		 * messages should be resent
+		 * <h4>Implementation logic</h4>
+		 * <ul>
+		 * <li>If there are no unacknowledged messages, exit
+		 * <li>Compute the retry time for oldest packet, from [oldest send time;
+		 * total in-flight size, retry count]
+		 * <li>If retry time is exceeded, mark packets as requiring resend.
+		 * Record send history; signal a conditional send; rerun the
+		 * verification process (to ensure a timer)
+		 * <li>Else, if there's an existing verification scheduled, exit
+		 * <li>Else schedule a verification check for the retry time
+		 * </ul>
+		 * 
+		 * <p>
+		 * Both sender and receiver retain references to messages until receipt
+		 * has been acknowledged by the other end of the connection. The
+		 * mechanics for how acknowledgment is signalled differ:
+		 * 
+		 * <table>
+		 * <tr>
+		 * <td>Sender</td>
+		 * <td>Sender (impl)</td>
+		 * <td>Receiver</td>
+		 * <td>Receiver (impl)</td>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>(previous send)</td>
+		 * <td>Sends envelope with id R:M0</td>
+		 * </tr>
+		 * <tr>
+		 * <td>State: New message token, unsent</td>
+		 * <td>MessageToken object created, added to unacknowledgedTokens</td>
+		 * <td/>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td>Event: message sent</td>
+		 * <td/>
+		 * <td>message sent in envelope with id S:N0"</td>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td>Note that this envelope also contains the id of the last received
+		 * envelope (R:M0)" ",",</td>
+		 * <td/>
+		 * <td/>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>Event: envelope received</td>
+		 * <td>TransportHistory.Received set</td>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>Event: envelope published</td>
+		 * <td>TransportHistory.Published set</td>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>State: message published</td>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>... (other messages)</td>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>Event: send to other end (this will be triggered if there are
+		 * outstanding messages *or* outstanding transporthistory.published
+		 * metadata</td>
+		 * <td>Send transportHistory of received packets. For any with
+		 * firstReceiptAcknowledgedEnvelopeId==null, set
+		 * firstReceiptAcknowledgedEnvelopeId</td>
+		 * </tr>
+		 * <tr>
+		 * <td>(receiver channel) Event: messageReceived</td>
+		 * <td/>
+		 * <td/>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td>Action: process acknowledgement of any transporthistories owned
+		 * by this sender with receivedDate set</td>
+		 * <td/>
+		 * <td/>
+		 * <td/>
+		 * </tr>
+		 * </table>
+		 */
+		public class ReceiptVerifier {
+			Timer scheduledVerification = null;
+
+			protected void verify() {
+				synchronized (unacknowledgedMessages) {
+					if (unacknowledgedMessages.isEmpty()) {
+						return;
+					}
+					Date now = new Date();
+					boolean retryMarked = false;
+					int inFlightSize = unacknowledgedMessages.stream()
+							.filter(token -> token.transportHistory.wasSent())
+							.collect(Collectors
+									.summingInt(token -> token.getSize()));
+					Date earliestRetry = null;
+					for (MessageToken token : unacknowledgedMessages) {
+						/*
+						 * An existing send (possibly retry) already exists for
+						 * this token, ignore for retry computation
+						 */
+						if (token.transportHistory.isPendingSend()) {
+							continue;
+						}
+						Date retryDate = computeRetryDate(token, inFlightSize);
+						if (retryDate.compareTo(now) <= 0) {
+							token.transportHistory.markAsRetry();
+							logger.info("{} - retry scheduled",
+									token.message.messageId);
+							new MessageTransportLayerObservables.RetryObservable(
+									token).publish();
+							retryMarked = true;
+						} else {
+							if (earliestRetry == null
+									|| retryDate.before(earliestRetry)) {
+								earliestRetry = retryDate;
+							}
+						}
+					}
+					if (retryMarked) {
+						conditionallySend();
+					} else {
+						if (scheduledVerification == null) {
+							scheduledVerification = Timer.Provider.get()
+									.getTimer(this::onScheduledVerification);
+							scheduledVerification.schedule(
+									earliestRetry.getTime() - now.getTime());
+						}
+					}
+				}
+			}
+
+			void onScheduledVerification() {
+				scheduledVerification = null;
+				verify();
+			}
+
+			/*
+			 * Non-computed, and doesn't allow for compression - just a
+			 * heuristic
+			 */
+			protected int bandwidthBytesPerSecond() {
+				return 500000;
+			}
+
+			/*
+			 * min retry time : 1 second
+			 * 
+			 * max retry time (1st attempt): 5 seconds
+			 * 
+			 * backoff by retrytime multiplier (exponential)
+			 */
+			protected Date computeRetryDate(MessageToken messageToken,
+					int inFlightSize) {
+				long from = messageToken.transportHistory.sent.getTime();
+				double transmissionTimeMs = inFlightSize
+						/ bandwidthBytesPerSecond() * 1000.0;
+				transmissionTimeMs = Math.max(1000.0, transmissionTimeMs);
+				transmissionTimeMs = Math.min(5000.0, transmissionTimeMs);
+				transmissionTimeMs = Math.pow(2,
+						messageToken.transportHistory.unacknowledgedSendDates
+								.size())
+						* transmissionTimeMs;
+				transmissionTimeMs = Math.min(60000.0, transmissionTimeMs);
+				return new Date((long) transmissionTimeMs + from);
+			}
 		}
 
 		void updateHistoriesOnReceipt(MessageEnvelope envelope) {
@@ -434,7 +806,7 @@ public abstract class MessageTransportLayer {
 				envelope.transportHistories.stream().filter(
 						remoteHistory -> remoteHistory.messageId.sendChannelId == sendChannelId())
 						.forEach(remoteHistory -> {
-							UnacknowledgedMessage unacknowledgedMessage = getUnacknowledgedMessage(
+							MessageToken unacknowledgedMessage = getUnacknowledgedMessage(
 									remoteHistory.messageId);
 							if (unacknowledgedMessage != null) {
 								unacknowledgedMessage
@@ -446,11 +818,16 @@ public abstract class MessageTransportLayer {
 						});
 				EnvelopeId highestReceivedEnvelopeId = envelope.highestReceivedEnvelopeId;
 				if (highestReceivedEnvelopeId != null) {
-					unacknowledgedMessages.removeIf(u -> {
-						return u.wasAcknowledged(highestReceivedEnvelopeId);
-					});
+					unacknowledgedMessages
+							.forEach(uack -> uack.onHighestReceivedEnvelopeId(
+									highestReceivedEnvelopeId));
+					removeAcknowledgedMessages();
 				}
 			}
+		}
+
+		void sendAcknowledgments() {
+			conditionallySend();
 		}
 	}
 
@@ -475,11 +852,12 @@ public abstract class MessageTransportLayer {
 			sendChannel().updateHistoriesOnReceipt(envelope);
 			addMessagesToUnacknowledged(envelope);
 			publishSequentialMessages();
+			sendChannel().sendAcknowledgments();
 		}
 
 		void publishSequentialMessages() {
 			synchronized (unacknowledgedMessages) {
-				for (UnacknowledgedMessage unacknowledgedMessage : unacknowledgedMessages) {
+				for (MessageToken unacknowledgedMessage : unacknowledgedMessages) {
 					boolean publish = unacknowledgedMessage.message.messageId == highestPublishedMessageId
 							+ 1;
 					publish |= handler(unacknowledgedMessage.message)
@@ -497,15 +875,16 @@ public abstract class MessageTransportLayer {
 		protected abstract Message.Handler handler(Message message);
 
 		void addMessagesToUnacknowledged(MessageEnvelope envelope) {
-			// this is the only place receivedMessageIds is used, so sync
-			// works
-			// for both
+			/*
+			 * this is the only place receivedMessageIds is used, so sync works
+			 * for both
+			 */
 			synchronized (unacknowledgedMessages) {
 				envelope.packets.forEach(packet -> {
 					if (!receivedMessageIds.add(packet.messageId)) {
 						return;
 					}
-					UnacknowledgedMessage unacknowledgedMessage = new UnacknowledgedMessage(
+					MessageToken unacknowledgedMessage = new MessageToken(
 							packet.message, packet.messageId.sendChannelId);
 					unacknowledgedMessage.transportHistory.received = new Date();
 					unacknowledgedMessage.transportHistory.sent = envelope.dateSent;
@@ -528,12 +907,10 @@ public abstract class MessageTransportLayer {
 				 * sender, remove
 				 */
 				if (highestReceivedEnvelopeId != null) {
-					List<UnacknowledgedMessage> toRemove = unacknowledgedMessages
-							.stream()
-							.filter(u -> u
-									.wasAcknowledged(highestReceivedEnvelopeId))
-							.collect(Collectors.toList());
-					toRemove.forEach(this::removeMessage);
+					unacknowledgedMessages
+							.forEach(uack -> uack.onHighestReceivedEnvelopeId(
+									highestReceivedEnvelopeId));
+					removeAcknowledgedMessages();
 				}
 			}
 		}
@@ -564,4 +941,14 @@ public abstract class MessageTransportLayer {
 	protected abstract ReceiveChannel receiveChannel();
 
 	protected abstract EnvelopeDispatcher envelopeDispatcher();
+
+	protected Logger logger = LoggerFactory
+			.getLogger(MessageTransportLayer.class);
+
+	@Override
+	public String toString() {
+		return FormatBuilder.keyValues("sendChannelId", sendChannelId(),
+				"sendChannel", sendChannel(), "receiveChannel",
+				receiveChannel());
+	}
 }

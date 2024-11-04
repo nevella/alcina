@@ -63,9 +63,9 @@ public @interface KeyBinding {
 
 	public static class MatchData {
 		// initially only one (no chords)
-		List<Entry> entries;
+		public List<Entry> entries;
 
-		Class<? extends ModelEvent> eventType;
+		public Class<? extends ModelEvent> eventType;
 
 		String checkInvalid() {
 			if (entries.get(0).contexts.isEmpty()) {
@@ -96,10 +96,10 @@ public @interface KeyBinding {
 			return Ax.format("%s => %s", entries, eventType.getSimpleName());
 		}
 
-		class Entry {
-			KeyBinding binding;
+		public class Entry {
+			public KeyBinding binding;
 
-			Set<NativeEvent.Modifier> modifiers;
+			public Set<NativeEvent.Modifier> modifiers;
 
 			Set<Class<? extends CommandContext>> contexts;
 
@@ -116,6 +116,9 @@ public @interface KeyBinding {
 					NativeEvent nativeEvent) {
 				if (contexts.stream()
 						.anyMatch(ctx -> this.contexts.contains(ctx))) {
+					if (nativeEvent == null) {
+						return true;
+					}
 					Set<Modifier> modifiers = nativeEvent.getModifiers();
 					if (binding.key().length() > 0) {
 						String key = nativeEvent.getKey();

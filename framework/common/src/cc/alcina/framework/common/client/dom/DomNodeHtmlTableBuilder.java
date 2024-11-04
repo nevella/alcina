@@ -65,7 +65,7 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 		tag("table");
 	}
 
-	private DomNode ensureBuilt() {
+	public DomNode domNode() {
 		if (built) {
 			return builtNode();
 		} else {
@@ -74,7 +74,7 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 	}
 
 	public DomNodeHtmlTableRowBuilder row() {
-		DomNode tableNode = ensureBuilt();
+		DomNode tableNode = domNode();
 		return new DomNodeHtmlTableRowBuilder(tableNode);
 	}
 

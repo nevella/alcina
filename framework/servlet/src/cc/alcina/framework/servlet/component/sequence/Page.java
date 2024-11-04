@@ -23,12 +23,14 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.servlet.component.sequence.HighlightModel.Match;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ColumnSetCycle;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.PropertyDisplayCycle;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequence;
@@ -60,7 +62,8 @@ class Page extends Model.Fields
 		SequenceBrowserCommand.ColumnSetCycle.Handler,
 		SequenceBrowserCommand.FocusSearch.Handler,
 		SequenceEvents.HighlightModelChanged.Emitter,
-		SequenceEvents.SelectedIndexChanged.Emitter {
+		SequenceEvents.SelectedIndexChanged.Emitter,
+		SequenceBrowserCommand.ShowKeyboardShortcuts.Handler {
 	class IndexPredicate implements Predicate {
 		int index = 0;
 
@@ -341,5 +344,11 @@ class Page extends Model.Fields
 		StatusModule.get()
 				.showMessageTransitional(Ax.format("Column set -> %s", next));
 		reloadSequence();
+	}
+
+	@Override
+	public void onShowKeyboardShortcuts(ShowKeyboardShortcuts event) {
+		KeyboardShortcutsArea
+				.show(SequenceBrowser.Ui.get().getKeybindingsHandler());
 	}
 }

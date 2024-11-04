@@ -113,14 +113,13 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		}
 
 		@Override
-		protected void dispatch(List<UnacknowledgedMessage> sendMessagesIn,
-				List<UnacknowledgedMessage> receivedMessages) {
+		protected void dispatch(List<MessageToken> sendMessagesIn,
+				List<MessageToken> receivedMessages) {
 			/*
 			 * make a copy of the parameter for post-rpc processing, avoid
 			 * synchronization issues
 			 */
-			List<UnacknowledgedMessage> sendMessages = new ArrayList<>(
-					sendMessagesIn);
+			List<MessageToken> sendMessages = new ArrayList<>(sendMessagesIn);
 			MessageEnvelope envelope = createEnvelope(sendMessages,
 					receivedMessages);
 			RemoteComponentRequest request = new RemoteComponentRequest();

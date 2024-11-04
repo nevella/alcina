@@ -947,3 +947,17 @@ overlay.app-suggestor > results > choice > suggestion > app-suggestion > content
 overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > options {
   display: block;
 }
+
+keyboard-shortcuts-area {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+keyboard-shortcuts-area > shortcut {
+  display: contents;
+}

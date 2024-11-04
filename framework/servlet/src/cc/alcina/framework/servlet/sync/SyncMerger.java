@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
@@ -29,6 +30,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
+import cc.alcina.framework.servlet.sync.SyncLogger.SyncLoggerRow;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
 /**
@@ -357,8 +359,15 @@ public class SyncMerger<T> {
 	}
 
 	public boolean wasIncomplete() {
-		return syncLogger.rows.stream().anyMatch(
-				slr -> slr.provideHadIssue(ignoreElementsWithAmbiguity()));
+		List<SyncLoggerRow> list = syncLogger.rows.stream().filter(
+				slr -> slr.provideHadIssue(ignoreElementsWithAmbiguity()))
+				.collect(Collectors.toList());
+		boolean incomplete = list.size() > 0;
+		if (incomplete) {
+			Ax.out("Incomplete rows");
+			Ax.out(list);
+		}
+		return incomplete;
 	}
 
 	protected abstract class CustomMergeFilter implements MergeFilter<T> {

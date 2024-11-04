@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Arrays;
 import java.util.Date;
 
 import com.google.gwt.core.client.GWT;
@@ -139,5 +140,24 @@ public class DateUtil {
 		} else {
 			return Registry.impl(MonthResolver.class).getMonth(d);
 		}
+	}
+
+	/**
+	 * 
+	 * return the month, including for a short string (jul, JUL)
+	 * 
+	 * @param monthString
+	 * @return the month (zero-based)
+	 */
+	public static int getMonth(String monthString) {
+		String cmp = monthString.toLowerCase();
+		for (int idx = 0; idx < CommonUtils.MONTH_NAMES.length; idx++) {
+			String monthName = CommonUtils.MONTH_NAMES[idx].toLowerCase();
+			if ((cmp.length() == 3 && monthName.startsWith(cmp))
+					|| monthName.equals(cmp)) {
+				return idx;
+			}
+		}
+		return -1;
 	}
 }
