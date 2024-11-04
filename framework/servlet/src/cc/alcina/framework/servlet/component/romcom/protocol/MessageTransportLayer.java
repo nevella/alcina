@@ -25,7 +25,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannel.ReceiptVerifier;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.TransportEvent.Type;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 
@@ -312,6 +311,11 @@ public abstract class MessageTransportLayer {
 			return packets.stream().map(MessagePacket::message)
 					.map(Message::toDebugString)
 					.collect(Collectors.joining(","));
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s", envelopeId, toMessageSummaryString());
 		}
 	}
 
@@ -667,50 +671,66 @@ public abstract class MessageTransportLayer {
 		public class ReceiptVerifier {
 			Timer scheduledVerification = null;
 
+			boolean verifying;
+
 			protected void verify() {
+				if (verifying) {
+					return;
+				}
 				synchronized (unacknowledgedMessages) {
-					if (unacknowledgedMessages.isEmpty()) {
-						return;
+					try {
+						verifying = true;
+						verify0();
+					} finally {
+						verifying = false;
 					}
-					Date now = new Date();
-					boolean retryMarked = false;
-					int inFlightSize = unacknowledgedMessages.stream()
-							.filter(token -> token.transportHistory.wasSent())
-							.collect(Collectors
-									.summingInt(token -> token.getSize()));
-					Date earliestRetry = null;
-					for (MessageToken token : unacknowledgedMessages) {
-						/*
-						 * An existing send (possibly retry) already exists for
-						 * this token, ignore for retry computation
-						 */
-						if (token.transportHistory.isPendingSend()) {
-							continue;
-						}
-						Date retryDate = computeRetryDate(token, inFlightSize);
-						if (retryDate.compareTo(now) <= 0) {
-							token.transportHistory.markAsRetry();
-							logger.info("{} - retry scheduled",
-									token.message.messageId);
-							new MessageTransportLayerObservables.RetryObservable(
-									token).publish();
-							retryMarked = true;
-						} else {
-							if (earliestRetry == null
-									|| retryDate.before(earliestRetry)) {
-								earliestRetry = retryDate;
-							}
-						}
+				}
+			}
+
+			protected void verify0() {
+				if (unacknowledgedMessages.isEmpty()) {
+					return;
+				}
+				Date now = new Date();
+				boolean retryMarked = false;
+				int inFlightSize = unacknowledgedMessages.stream()
+						.filter(token -> token.transportHistory.wasSent())
+						.collect(Collectors
+								.summingInt(token -> token.getSize()));
+				Date earliestRetry = null;
+				for (MessageToken token : unacknowledgedMessages) {
+					/*
+					 * An existing send (possibly retry) already exists for this
+					 * token, ignore for retry computation
+					 */
+					if (token.transportHistory.isPendingSend()) {
+						retryMarked = true;
+						continue;
 					}
-					if (retryMarked) {
-						conditionallySend();
+					Date retryDate = computeRetryDate(token, inFlightSize);
+					if (retryDate.compareTo(now) <= 0) {
+						token.transportHistory.markAsRetry();
+						logger.info("{} - retry scheduled",
+								token.message.messageId);
+						new MessageTransportLayerObservables.RetryObservable(
+								token).publish();
+						retryMarked = true;
 					} else {
-						if (scheduledVerification == null) {
-							scheduledVerification = Timer.Provider.get()
-									.getTimer(this::onScheduledVerification);
-							scheduledVerification.schedule(
-									earliestRetry.getTime() - now.getTime());
+						if (earliestRetry == null
+								|| retryDate.before(earliestRetry)) {
+							earliestRetry = retryDate;
 						}
+					}
+				}
+				if (retryMarked) {
+					conditionallySend();
+				} else {
+					Preconditions.checkState(earliestRetry != null);
+					if (scheduledVerification == null) {
+						scheduledVerification = Timer.Provider.get()
+								.getTimer(this::onScheduledVerification);
+						scheduledVerification.schedule(
+								earliestRetry.getTime() - now.getTime());
 					}
 				}
 			}

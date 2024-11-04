@@ -10,7 +10,6 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.servlet.component.romcom.client.common.logic.MessageTransportLayerClient;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -36,15 +35,16 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			super.onEnvelopeReceived(envelope);
 		}
 
+		@Override
 		protected Message.Handler handler(Message message) {
 			return Registry.impl(MessageHandlerServer.class,
 					message.getClass());
 		}
 	}
 
-	class AggregateDispatcher extends EnvelopeDispatcher {
-		AggregateDispatcher() {
-			super(MessageTransportLayerServer.this);
+	static class AggregateDispatcher extends EnvelopeDispatcher {
+		AggregateDispatcher(MessageTransportLayerServer transportLayer) {
+			super(transportLayer);
 		}
 
 		@Override
@@ -63,7 +63,11 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			dispatchableToken = null;
 		}
 
-		class ExceptionTest extends AggregateDispatcher {
+		static class ExceptionTest extends AggregateDispatcher {
+			ExceptionTest(MessageTransportLayerServer transportLayer) {
+				super(transportLayer);
+			}
+
 			@Override
 			protected void dispatch(List<MessageToken> sendMessages,
 					List<MessageToken> receivedMessages) {
@@ -71,6 +75,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 					MessageEnvelope envelope = createEnvelope(sendMessages,
 							receivedMessages);
 					Ax.err("Simulate transport issue - dropping %s", envelope);
+					dispatchableToken.latch.countDown();
+					dispatchableToken = null;
 					return;
 				} else {
 					super.dispatch(sendMessages, receivedMessages);
@@ -116,7 +122,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	MessageTransportLayerServer() {
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
-		aggregateDispatcher = new AggregateDispatcher();
+		aggregateDispatcher = new AggregateDispatcher(this);
 	}
 
 	@Override
