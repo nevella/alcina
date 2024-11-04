@@ -54,6 +54,8 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 
 	private int limit;
 
+	private boolean showDateMillis;
+
 	protected void addActive(DomDocument doc, String sectionFilterName,
 			Predicate<Job> sectionFilter) {
 		{
@@ -282,6 +284,9 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 		if (map.containsKey("limit")) {
 			limit = map.getInt("limit");
 		}
+		if (map.containsKey("showDateMillis")) {
+			showDateMillis = map.is("showDateMillis");
+		}
 		listConsistencyJobs = map.is("listConsistencyJobs");
 		jobResultType = map.enumValue("jobResultType", JobResultType.class);
 		scheduled = map.containsKey("scheduled") ? map.is("scheduled") : null;
@@ -383,7 +388,17 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 	}
 
 	String timestamp(Date date) {
-		return DateStyle.TIMESTAMP_HUMAN.format(date);
+		DateStyle style = showDateMillis ? DateStyle.TIMESTAMP
+				: DateStyle.TIMESTAMP_HUMAN;
+		return style.format(date);
+	}
+
+	public boolean isShowDateMillis() {
+		return showDateMillis;
+	}
+
+	public void setShowDateMillis(boolean showDateMillis) {
+		this.showDateMillis = showDateMillis;
 	}
 
 	class Filter implements Predicate<Job> {

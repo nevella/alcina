@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.util.HasEquivalence;
 
 public interface Task extends TreeSerializable, HasEquivalence {
 	default Job ensurePending() {
-		return Registry.impl(Performer.class).ensurePending(this);
+		return Registry.impl(Performer.class).ensurePending(this, true);
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public interface Task extends TreeSerializable, HasEquivalence {
 		 * in-flight job's sequence (ensuring it will run after the in-flight
 		 * job's completion)
 		 */
-		Job ensurePending(Task task);
+		Job ensurePending(Task task, boolean withLock);
 
 		Job perform(Task task);
 

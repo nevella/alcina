@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
@@ -79,6 +80,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
+import cc.alcina.framework.entity.persistence.domain.LockUtils;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
@@ -93,6 +95,7 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
+import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
 
 /**
@@ -449,16 +452,30 @@ public class JobRegistry {
 	 * affecting the model which will be missed by an in-flight)
 	 * 
 	 * <p>
-	 * Note that this *does not lock* - so to force cluster uniqueness (which is
-	 * probably unnecessary/overdoing it if the task is idempotent, mind), wrap
-	 * in
+	 * Note that to force cluster uniqueness (which is probably
+	 * unnecessary/overdoing it if the task is idempotent, mind), pass
+	 * withClusterUniqueness == true
 	 * 
 	 * <p>
 	 * withJobMetadataLock(task.getClass().getName(),...ensureScheduled
 	 * 
+	 * @param withLock
+	 * 
 	 * @return null if there's an existing job, otherwise
 	 */
-	public Job ensureScheduled(Task task, boolean scheduleAfterInFlight) {
+	Job ensureScheduled(Task task, boolean scheduleAfterInFlight,
+			boolean withClusterUniqueness) {
+		if (withClusterUniqueness) {
+			Ref<Job> ref = Ref.empty();
+			withJobMetadataLock(task.getClass().getName(), () -> ref
+					.set(ensureScheduled0(task, scheduleAfterInFlight)));
+			return ref.get();
+		} else {
+			return ensureScheduled0(task, scheduleAfterInFlight);
+		}
+	}
+
+	Job ensureScheduled0(Task task, boolean scheduleAfterInFlight) {
 		Optional<? extends Job> pending = getExistingPending(task);
 		if (pending.isPresent()) {
 			return pending.get();
@@ -958,7 +975,8 @@ public class JobRegistry {
 	}
 
 	public Object withJobMetadataLock(Job job, Runnable runnable) {
-		return withJobMetadataLock(job.toLocator().toRecoverableNumericString(),
+		return withJobMetadataLock(
+				ExecutionConstraints.getDefaultJobMetadataLockPath(job),
 				runnable);
 	}
 
@@ -1348,7 +1366,8 @@ public class JobRegistry {
 
 		@Override
 		public Object allocationLock(String path, boolean acquire) {
-			return new Object();
+			return LockUtils.obtainClassStringKeyLock(JobExecutorsSingle.class,
+					path);
 		}
 
 		@Override
@@ -1413,8 +1432,8 @@ public class JobRegistry {
 	@Registration.Singleton(Task.Performer.class)
 	public static class Performer implements Task.Performer {
 		@Override
-		public Job ensurePending(Task task) {
-			return get().ensureScheduled(task, true);
+		public Job ensurePending(Task task, boolean withLock) {
+			return get().ensureScheduled(task, true, withLock);
 		}
 
 		@Override

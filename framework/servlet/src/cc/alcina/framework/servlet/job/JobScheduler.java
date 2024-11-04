@@ -710,6 +710,19 @@ public class JobScheduler {
 				executorService.shutdown();
 			}
 		}
+
+		/**
+		 * Normally allocation will be locked just on the job (for say
+		 * allocating child jobs). In more resource-constrained environment
+		 * (e.g. Android), the lock may be coarser
+		 */
+		public String getAllocationLockPath(Job job) {
+			return getDefaultJobMetadataLockPath(job);
+		}
+
+		public static String getDefaultJobMetadataLockPath(Job job) {
+			return job.toLocator().toRecoverableNumericString();
+		}
 	}
 
 	public interface ExecutorServiceProvider {

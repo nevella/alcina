@@ -330,6 +330,12 @@ public class JobDomain {
 		return getVisibleQueues().flatMap(AllocationQueue::getIncompleteJobs);
 	}
 
+	public Stream<Job> getAllocatedOrProcessingJobs() {
+		cleanupQueues();
+		return getVisibleQueues()
+				.flatMap(AllocationQueue::getAllocatedOrProcessingJobs);
+	}
+
 	public Optional<AllocationQueue> getIncompleteQueueContaining(Job job) {
 		cleanupQueues();
 		return getVisibleQueues()
@@ -420,21 +426,24 @@ public class JobDomain {
 	 * Because the projection is not transactional, access is locked via a
 	 * readwrite lock - write lock taken before first modification is processed
 	 */
-	public class AllocationQueue {
+	public static class AllocationQueue {
 		public Job job;
 
 		public Topic<Event> events = Topic.create();
 
-		SubqueueProjection subqueues = new SubqueueProjection();
+		SubqueueProjection subqueues;
 
 		public SubqueuePhase currentPhase = SubqueuePhase.Self;
 
-		List<JobState> incompleteAllocatableStates = Arrays.asList(
+		static List<JobState> incompleteAllocatableStates = Arrays.asList(
 				JobState.PENDING, JobState.ALLOCATED, JobState.PROCESSING);
 
-		List<JobState> incompleteAllocatableStatesChild = Arrays.asList(
+		static List<JobState> incompleteAllocatableStatesChild = Arrays.asList(
 				JobState.PENDING, JobState.ALLOCATED, JobState.PROCESSING,
 				JobState.COMPLETED);
+
+		static List<JobState> incompleteAllocatedStates = Arrays
+				.asList(JobState.ALLOCATED, JobState.PROCESSING);
 
 		private boolean firedToProcessing;
 
@@ -446,8 +455,12 @@ public class JobDomain {
 
 		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-		public AllocationQueue(Job job) {
+		JobDomain domain;
+
+		public AllocationQueue(JobDomain domain, Job job) {
+			this.domain = domain;
 			this.job = job;
+			this.subqueues = new SubqueueProjection();
 		}
 
 		public QueueStat asQueueStat() {
@@ -482,7 +495,8 @@ public class JobDomain {
 						Iterator<? extends Job> itr = jobs.iterator();
 						while (itr.hasNext()) {
 							Job next = itr.next();
-							logger.info("Cancelling from subQueue {}/{} - {}",
+							domain.logger.info(
+									"Cancelling from subQueue {}/{} - {}",
 									currentPhase, state, next);
 							next.cancel();
 						}
@@ -492,7 +506,7 @@ public class JobDomain {
 
 		public void checkComplete() {
 			if (isComplete()) {
-				queues.remove(job);
+				domain.queues.remove(job);
 				publish(EventType.DELETED);
 				currentPhase = SubqueuePhase.Complete;
 			}
@@ -509,7 +523,7 @@ public class JobDomain {
 						break;
 					}
 				} catch (Exception e) {
-					logger.warn(
+					domain.logger.warn(
 							"DEVEX-0 - Fire to processing of (probably) non-visible job - {}",
 							job.getId());
 					e.printStackTrace();
@@ -519,7 +533,7 @@ public class JobDomain {
 
 		public AllocationQueue ensureParentQueue() {
 			if (parentQueue == null) {
-				parentQueue = queues.get(job.provideParent().get());
+				parentQueue = domain.queues.get(job.provideParent().get());
 			}
 			return parentQueue;
 		}
@@ -535,7 +549,7 @@ public class JobDomain {
 				while (itr.hasNext()) {
 					Event event = itr.next();
 					if (event.isCommitted()
-							&& allocatorEventListenersAttached) {
+							&& domain.allocatorEventListenersAttached) {
 						publish0(event);
 						itr.remove();
 					}
@@ -563,6 +577,10 @@ public class JobDomain {
 
 		public Stream<Job> getIncompleteJobs() {
 			return perStateJobs(incompleteAllocatableStatesChild);
+		}
+
+		public Stream<Job> getAllocatedOrProcessingJobs() {
+			return perStateJobs(incompleteAllocatedStates);
 		}
 
 		public long getTotalJobCount() {
@@ -694,10 +712,10 @@ public class JobDomain {
 		public void publish(EventType type) {
 			Event event = new Event(type);
 			if (TransactionEnvironment.get().isToDomainCommitting()
-					|| !allocatorEventListenersAttached) {
+					|| !domain.allocatorEventListenersAttached) {
 				synchronized (bufferedEvents) {
 					bufferedEvents.add(event);
-					queuesWithBufferedEvents.add(this);
+					domain.queuesWithBufferedEvents.add(this);
 				}
 			} else {
 				publish0(event);
@@ -707,7 +725,7 @@ public class JobDomain {
 		private void publish0(Event event) {
 			events.publish(event);
 			if (event.type.isPublishToGlobalQueue()) {
-				topicQueueEvents.publish(event);
+				domain.topicQueueEvents.publish(event);
 			}
 			new JobObservable.AllocationEvent(event).publish();
 		}
@@ -798,7 +816,7 @@ public class JobDomain {
 		 */
 		class SubqueueProjection extends BaseProjection<Job> {
 			public SubqueueProjection() {
-				super(SubqueuePhase.class, JobState.class, jobImplClass);
+				super(SubqueuePhase.class, JobState.class, domain.jobImplClass);
 			}
 
 			@Override
@@ -808,7 +826,7 @@ public class JobDomain {
 
 			@Override
 			public Class<? extends Job> getListenedClass() {
-				return jobImplClass;
+				return domain.jobImplClass;
 			}
 
 			@Override
@@ -889,7 +907,7 @@ public class JobDomain {
 					if (queues.containsKey(job)) {
 						return queues.get(job);
 					}
-					queue = new AllocationQueue(job);
+					queue = new AllocationQueue(JobDomain.this, job);
 					queues.put(job, queue);
 					queue.publish(EventType.CREATED);
 				}

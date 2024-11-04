@@ -446,15 +446,12 @@ class JobAllocator {
 				enqueueEvent(event);
 			} else {
 				TransactionEnvironment.get().endAndBeginNew();
-				AllocationQueue constraintQueue = queue;
-				if ((queue.currentPhase == SubqueuePhase.Sequence
+				boolean useParentConstraints = (queue.currentPhase == SubqueuePhase.Sequence
 						|| queue.currentPhase == SubqueuePhase.Child)
-						&& queue.job.provideParent().isPresent()) {
-					/*
-					 * use the parent constraints
-					 */
-					constraintQueue = queue.ensureParentQueue();
-				}
+						&& queue.job.provideParent().isPresent();
+				AllocationQueue constraintQueue = useParentConstraints
+						? queue.ensureParentQueue()
+						: queue;
 				ExecutionConstraints executionConstraints = ExecutionConstraints
 						.forQueue(constraintQueue);
 				long maxAllocatable = queue.currentPhase == SubqueuePhase.Sequence
@@ -477,13 +474,26 @@ class JobAllocator {
 								.getService(constraintQueue);
 						List<Job> allocating = new ArrayList<>();
 						Runnable allocateJobs = () -> {
+							if (job.provideTaskClass().getName()
+									.contains("TaskTraverseDeviceFilesystem")) {
+								int debug = 3;
+							}
+							/*
+							 * Double-checking (inside lock
+							 */
+							long maxAllocatableLocked = queue.currentPhase == SubqueuePhase.Sequence
+									? 1// essentially passing the allocation
+										// slot to the next-in-sequence
+									: executionConstraints
+											.calculateMaxAllocatable(
+													constraintQueue);
 							/*
 							 * Double-checking
 							 */
 							Set<Job> invalidAllocated = new LinkedHashSet<>();
 							queue.getUnallocatedJobs()
 									.filter(this::isAllocatable)
-									.limit(maxAllocatable)
+									.limit(maxAllocatableLocked)
 									.forEach(allocating::add);
 							allocating.forEach(j -> {
 								if (j.getState() != JobState.PENDING) {
@@ -539,19 +549,18 @@ class JobAllocator {
 									});
 						};
 						// FIXME - mvcc.jobs.1a - getting splurgey allocation?
-						Object lock = JobRegistry.get().withJobMetadataLock(job,
-								allocateJobs);
+						/*
+						 * FIMXE followup - the above can probably go once we
+						 * have a formal description of allocation behaviour
+						 */
+						String lockPath = executionConstraints
+								.getAllocationLockPath(job);
+						Object lock = JobRegistry.get()
+								.withJobMetadataLock(lockPath, allocateJobs);
 						if (lock == null) {
 							logger.warn("Ran allocation job without lock? {}",
 									job);
 						}
-						// if
-						// (executionConstraints.isClusteredChildAllocation()) {
-						// JobRegistry.get().withJobMetadataLock(job,
-						// allocateJobs);
-						// } else {
-						// allocateJobs.run();
-						// }
 					}
 				}
 			}
