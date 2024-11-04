@@ -121,6 +121,10 @@ public class LocalDomainStore {
 					TransactionEnvironmentNonTx.CONTEXT_COMMITTING);
 			LocalDomainQueue
 					.run(() -> commitToStorageTransformListener.flush());
+			/*
+			 * This is the sole accessing thread - so safe:
+			 */
+			TransformManager.get().clearTransforms();
 		} finally {
 			LooseContext.pop();
 		}
