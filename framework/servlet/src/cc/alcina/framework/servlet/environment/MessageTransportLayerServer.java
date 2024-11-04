@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
@@ -39,7 +40,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 	}
 
-	class AggregateDispatcherImpl extends EnvelopeDispatcher {
+	class AggregateDispatcher extends EnvelopeDispatcher {
 		@Override
 		protected boolean isDispatchAvailable() {
 			return dispatchableToken != null;
@@ -54,6 +55,21 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			dispatchableToken.response.session = dispatchableToken.request.session;
 			dispatchableToken.latch.countDown();
 			dispatchableToken = null;
+		}
+
+		class ExceptionTest extends AggregateDispatcher {
+			@Override
+			protected void dispatch(List<MessageToken> sendMessages,
+					List<MessageToken> receivedMessages) {
+				if (Math.random() < 0.1) {
+					MessageEnvelope envelope = createEnvelope(sendMessages,
+							receivedMessages);
+					Ax.err("Simulate transport issue - dropping %s", envelope);
+					return;
+				} else {
+					super.dispatch(sendMessages, receivedMessages);
+				}
+			}
 		}
 
 		RequestToken dispatchableToken;
@@ -89,12 +105,12 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 	ReceiveChannelImpl receiveChannel;
 
-	AggregateDispatcherImpl aggregateDispatcher;
+	AggregateDispatcher aggregateDispatcher;
 
 	MessageTransportLayerServer() {
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
-		aggregateDispatcher = new AggregateDispatcherImpl();
+		aggregateDispatcher = new AggregateDispatcher();
 	}
 
 	@Override

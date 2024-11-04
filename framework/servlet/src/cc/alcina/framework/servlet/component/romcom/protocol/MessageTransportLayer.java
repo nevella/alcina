@@ -25,119 +25,55 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.SendChannel.ReceiptVerifier;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.TransportEvent.Type;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 
 /**
+ * <h3>The Message Transport Layer</h3>
  * <p>
- * This (simple) class provides the infrastructure to handle lost requests, by
- * numbering and queueing message receipt/dispatch
+ * This class provides the infrastructure to handle guaranteed, ordered
+ * bidirectional message dispatch between the romcom server (jdk app) and romcom
+ * client (the browser shim).
  * 
- * <h3>Message acknowledgment (ACK)</h3>
  * <p>
- * Both sender and receiver retain references to messages until receipt has been
- * acknowledged by the other end of the connection. The mechanics for how
- * acknowledgment is signalled differ:
+ * Messages are grouped into envelopes (the unit of send/receive). Both messages
+ * and envelopes are numbered (with {@link MessageId}, {@link EnvelopeId} to
+ * track receipt/dispatch.
  * 
- * <table>
- * <tr>
- * <td>Sender</td>
- * <td>Sender (impl)</td>
- * <td>Receiver</td>
- * <td>Receiver (impl)</td>
- * </tr>
- * <tr>
- * <td/>
- * <td/>
- * <td>(previous send)</td>
- * <td>Sends envelope with id R:M0</td>
- * </tr>
- * <tr>
- * <td>State: New message token, unsent</td>
- * <td>MessageToken object created, added to unacknowledgedTokens</td>
- * <td/>
- * <td/>
- * </tr>
- * <tr>
- * <td>Event: message sent</td>
- * <td/>
- * <td>message sent in envelope with id S:N0"</td>
- * <td/>
- * </tr>
- * <tr>
- * <td>Note that this envelope also contains the id of the last received
- * envelope (R:M0)" ",",</td>
- * <td/>
- * <td/>
- * <td/>
- * </tr>
- * <tr>
- * <td/>
- * <td/>
- * <td>Event: envelope received</td>
- * <td>TransportHistory.Received set</td>
- * </tr>
- * <tr>
- * <td/>
- * <td/>
- * <td>Event: envelope published</td>
- * <td>TransportHistory.Published set</td>
- * </tr>
- * <tr>
- * <td/>
- * <td/>
- * <td>State: message published</td>
- * <td/>
- * </tr>
- * <tr>
- * <td/>
- * <td/>
- * <td>... (other messages)</td>
- * <td/>
- * </tr>
- * <tr>
- * <td/>
- * <td/>
- * <td>Event: send to other end (this will be triggered if there are outstanding
- * messages *or* outstanding transporthistory.published metadata</td>
- * <td>Send transportHistory of received packets. For any with
- * firstReceiptAcknowledgedEnvelopeId==null, set
- * firstReceiptAcknowledgedEnvelopeId</td>
- * </tr>
- * <tr>
- * <td>(receiver channel) Event: messageReceived</td>
- * <td/>
- * <td/>
- * <td/>
- * </tr>
- * <tr>
- * <td>Action: process acknowledgement of any transporthistories owned by this
- * sender with receivedDate set</td>
- * <td/>
- * <td/>
- * <td/>
- * </tr>
- * </table>
+ * <p>
+ * The total communication flow is between two {@link MessageTransportLayer}
+ * subtypes - <code>MessageTransportLayerServer</code> and
+ * <code>MessageTransportLayerClient</code>. The two subtypes have different
+ * {@link SendChannelId} values, which distinguish the two send/receive
+ * channels.
+ * <p>
+ * Each {@link MessageTransportLayer} has two {@link Channel}s -
+ * {@link SendChannel} + {@link ReceiveChannel}. They communicate by sending
+ * {@link MessageEnvelope} instances over an underlying communication layer
+ * (XmlHttp by default, but WebSocket would also work).
+ * 
+ * <h4>The protocol types - overview</h4>
+ * <p>
+ * A {@link MessageEnvelope} contains a list of {@link MessagePacket} elements
+ * (the payload) and a list of {@link TransportHistory} elements (tracking
+ * metadata).
+ * 
+ * <p>
+ * A {@link MessagePacket} has a {@link MessageId} and a {@link Message}
+ * 
+ * <p>
+ * A {@link TransportHistory} has a {@link MessageId} and various metadata
+ * tracking the send/receive history of the message
+ * 
+ * A {@link MessageId} has a {@link SendChannelId} and a sequential, per-channel
+ * <code>number</code>
+ * 
+ * @see SendChannel for detail on receipt verification - which handles
+ *      communication issues causing RPC timeout or exception
  * 
  * 
- */
-/*
- * A message transport (layer) has two channels - send + receive - each with an
- * enum id
  * 
- * A messageenvelope has messagepackets + messagedispatchhistories
- * 
- * A messagepacket has messageid + message
- * 
- * A transportHistory has messageid - timesent (if sender), timereceived (if
- * receiver)
- * 
- * A messageid has channelId + number (in channel)
- * 
- * An envelopeDispatcher is responsible for dispatching envelopes
- * 
- * A receiptVerifier is responsible for verifying the receipt state of the
- * packets, and resending
  * 
  */
 public abstract class MessageTransportLayer {
@@ -501,6 +437,15 @@ public abstract class MessageTransportLayer {
 	}
 
 	public abstract class EnvelopeDispatcher {
+		/**
+		 * <p>
+		 * Marks a dispatcher subtype which tests dispatch exception handling
+		 * <p>
+		 * TODO - move to test tree
+		 */
+		public interface ForceExceptional {
+		}
+
 		protected abstract boolean isDispatchAvailable();
 
 		protected abstract void dispatch(List<MessageToken> sendMessages,
@@ -592,6 +537,41 @@ public abstract class MessageTransportLayer {
 		}
 	}
 
+	/**
+	 * 
+	 * <p>
+	 * The SendChannel instance buffers and sends messages - grouped into
+	 * envelopes - and ensures their eventual receipt.
+	 * <p>
+	 * The {@link EnvelopeDispatcher} is responsible for dispatching envelopes
+	 * (invoking the RPC layer)
+	 * 
+	 * <h3>Message acknowledgment (ACK)</h3>
+	 * <p>
+	 * Messages are conditionally marked as requiring resend by the
+	 * {@link ReceiptVerifier}if they're not acknowledged within a certain time,
+	 * or transport fails due to an exception. The mechanics vary slightly for
+	 * [server-&gt;client; client-&gt;server].
+	 * 
+	 * <h3>Issue recovery</h3>
+	 * <p>
+	 * Issue recovery is perfomed by the ReceiptVerifier - recovery is tied to
+	 * acknowledgment - once a message is acknowledged, it's removed from the
+	 * list of those potentially requiring issue recovery/retry.
+	 * <h3>Testing: Issue recovery</h3>
+	 * <p>
+	 * Issue recovery is tested by forcing exceptional conditions at the RPC
+	 * layer, both timeouts and transport exceptions. This can be done by
+	 * instantiating an {@link EnvelopeDispatcher.ForceExceptional} subtype as
+	 * the envelope dispatcher
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
+	 */
 	public abstract class SendChannel extends Channel {
 		/*
 		 * If no inflight or retry, send
@@ -604,7 +584,7 @@ public abstract class MessageTransportLayer {
 						unconditionallySend();
 					}
 				}
-				receiptVerifier().verify();
+				receiptVerifier.verify();
 			}
 		}
 
@@ -623,13 +603,12 @@ public abstract class MessageTransportLayer {
 
 		protected ReceiptVerifier receiptVerifier;
 
-		protected ReceiptVerifier receiptVerifier() {
-			synchronized (this) {
-				if (receiptVerifier == null) {
-					receiptVerifier = new ReceiptVerifier();
-				}
-			}
-			return receiptVerifier;
+		public SendChannel() {
+			initImplementations();
+		}
+
+		protected void initImplementations() {
+			receiptVerifier = new ReceiptVerifier();
 		}
 
 		/**
@@ -648,6 +627,92 @@ public abstract class MessageTransportLayer {
 		 * <li>Else, if there's an existing verification scheduled, exit
 		 * <li>Else schedule a verification check for the retry time
 		 * </ul>
+		 * 
+		 * <p>
+		 * Both sender and receiver retain references to messages until receipt
+		 * has been acknowledged by the other end of the connection. The
+		 * mechanics for how acknowledgment is signalled differ:
+		 * 
+		 * <table>
+		 * <tr>
+		 * <td>Sender</td>
+		 * <td>Sender (impl)</td>
+		 * <td>Receiver</td>
+		 * <td>Receiver (impl)</td>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>(previous send)</td>
+		 * <td>Sends envelope with id R:M0</td>
+		 * </tr>
+		 * <tr>
+		 * <td>State: New message token, unsent</td>
+		 * <td>MessageToken object created, added to unacknowledgedTokens</td>
+		 * <td/>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td>Event: message sent</td>
+		 * <td/>
+		 * <td>message sent in envelope with id S:N0"</td>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td>Note that this envelope also contains the id of the last received
+		 * envelope (R:M0)" ",",</td>
+		 * <td/>
+		 * <td/>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>Event: envelope received</td>
+		 * <td>TransportHistory.Received set</td>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>Event: envelope published</td>
+		 * <td>TransportHistory.Published set</td>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>State: message published</td>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>... (other messages)</td>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td/>
+		 * <td/>
+		 * <td>Event: send to other end (this will be triggered if there are
+		 * outstanding messages *or* outstanding transporthistory.published
+		 * metadata</td>
+		 * <td>Send transportHistory of received packets. For any with
+		 * firstReceiptAcknowledgedEnvelopeId==null, set
+		 * firstReceiptAcknowledgedEnvelopeId</td>
+		 * </tr>
+		 * <tr>
+		 * <td>(receiver channel) Event: messageReceived</td>
+		 * <td/>
+		 * <td/>
+		 * <td/>
+		 * </tr>
+		 * <tr>
+		 * <td>Action: process acknowledgement of any transporthistories owned
+		 * by this sender with receivedDate set</td>
+		 * <td/>
+		 * <td/>
+		 * <td/>
+		 * </tr>
+		 * </table>
 		 */
 		public class ReceiptVerifier {
 			Timer scheduledVerification = null;
