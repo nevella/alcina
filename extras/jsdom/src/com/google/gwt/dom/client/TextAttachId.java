@@ -33,11 +33,6 @@ public class TextAttachId extends NodeAttachId implements ClientDomText {
 	}
 
 	@Override
-	public String getNodeName() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public short getNodeType() {
 		throw new UnsupportedOperationException();
 	}

@@ -155,11 +155,6 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	}
 
 	@Override
-	public String getNodeName() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public short getNodeType() {
 		throw new UnsupportedOperationException();
 	}

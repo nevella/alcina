@@ -6,8 +6,12 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.History;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Timer;
+import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
@@ -29,6 +33,8 @@ public class RemoteComponentInit implements NativePreviewHandler {
 		ClientRpc.get().transportLayer.session = ReflectiveSerializer
 				.deserializeRpc(ClientUtils.wndString(
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
+		Registry.register().singleton(Timer.Provider.class,
+				new TimerGwt.Provider());
 		Startup startupMessage = Message.Startup.forClient();
 		ClientRpc.send(startupMessage);
 	}

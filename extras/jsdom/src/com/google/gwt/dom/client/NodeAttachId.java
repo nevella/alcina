@@ -135,7 +135,9 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 	}
 
 	@Override
-	public abstract String getNodeName();
+	public String getNodeName() {
+		return node.getNodeName();
+	}
 
 	@Override
 	public abstract short getNodeType();

@@ -663,11 +663,6 @@ public class DocumentAttachId extends NodeAttachId
 	}
 
 	@Override
-	public String getNodeName() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public short getNodeType() {
 		throw new UnsupportedOperationException();
 	}
