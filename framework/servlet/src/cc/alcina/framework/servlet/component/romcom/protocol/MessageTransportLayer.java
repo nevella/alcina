@@ -436,56 +436,6 @@ public abstract class MessageTransportLayer {
 		transportEvents.onTransportSuccess();
 	}
 
-	public abstract class EnvelopeDispatcher {
-		/**
-		 * <p>
-		 * Marks a dispatcher subtype which tests dispatch exception handling
-		 * <p>
-		 * TODO - move to test tree
-		 */
-		public interface ForceExceptional {
-		}
-
-		protected abstract boolean isDispatchAvailable();
-
-		protected abstract void dispatch(List<MessageToken> sendMessages,
-				List<MessageToken> receivedMessages);
-
-		/*
-		 * the caller is synchronized on the unacknowledgedMessages list
-		 */
-		protected MessageEnvelope createEnvelope(
-				List<MessageToken> sendMessages,
-				List<MessageToken> receivedMessages) {
-			MessageEnvelope envelope = new MessageEnvelope();
-			envelope.envelopeId = new EnvelopeId(sendChannelId(),
-					envelopeIdGenerator.incrementAndGetInt());
-			envelope.dateSent = new Date();
-			envelope.highestReceivedEnvelopeId = receiveChannel().highestReceivedEnvelopeId;
-			sendMessages.stream().filter(MessageToken::shouldSend)
-					.forEach(uack -> {
-						if (uack.transportHistory.firstReceiptAcknowledgedEnvelopeId == null) {
-							uack.transportHistory.firstReceiptAcknowledgedEnvelopeId = envelope.envelopeId;
-						}
-						uack.onSending();
-						envelope.packets.add(new MessagePacket(
-								uack.transportHistory.messageId, uack.message));
-					});
-			/*
-			 * send the transport histories of sent + received messages (for
-			 * sender metrics)
-			 */
-			sendMessages.forEach(uack -> envelope.transportHistories
-					.add(uack.transportHistory));
-			receivedMessages.forEach(uack -> {
-				uack.transportHistory.onBeforeSendReceivedMessageHistory(
-						envelope.envelopeId);
-				envelope.transportHistories.add(uack.transportHistory);
-			});
-			return envelope;
-		}
-	}
-
 	public abstract class Channel {
 		protected List<MessageToken> unacknowledgedMessages = new ArrayList<>();
 

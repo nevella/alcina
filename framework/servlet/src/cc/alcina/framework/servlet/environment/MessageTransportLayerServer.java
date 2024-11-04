@@ -10,6 +10,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.servlet.component.romcom.client.common.logic.MessageTransportLayerClient;
+import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
@@ -41,6 +43,10 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	}
 
 	class AggregateDispatcher extends EnvelopeDispatcher {
+		AggregateDispatcher() {
+			super(MessageTransportLayerServer.this);
+		}
+
 		@Override
 		protected boolean isDispatchAvailable() {
 			return dispatchableToken != null;
