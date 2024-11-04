@@ -122,7 +122,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	MessageTransportLayerServer() {
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
-		aggregateDispatcher = new AggregateDispatcher.ExceptionTest(this);
+		aggregateDispatcher = new AggregateDispatcher(this);
 	}
 
 	@Override
