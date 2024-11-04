@@ -464,7 +464,7 @@ public abstract class MessageTransportLayer {
 				activeMessages.remove(message);
 				messageIdActiveMessage
 						.remove(message.transportHistory.messageId);
-				logger.info("Message acknowledged + removed :: {}",
+				logger.debug("Message acknowledged + removed :: {}",
 						message.transportHistory.messageId);
 			}
 		}
