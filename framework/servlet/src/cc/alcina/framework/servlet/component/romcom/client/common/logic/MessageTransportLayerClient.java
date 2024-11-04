@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
+import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -83,6 +84,10 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 	}
 
 	class EnvelopeDispatcherImpl extends EnvelopeDispatcher {
+		EnvelopeDispatcherImpl() {
+			super(MessageTransportLayerClient.this);
+		}
+
 		/*
 		 * if *inflight* - no. Note that the in-flight XMLHttp request can be
 		 * cancelled by the verifier (or removed on success/failure/xmlhttp
