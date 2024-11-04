@@ -441,53 +441,58 @@ public abstract class MessageTransportLayer {
 	}
 
 	public abstract class Channel {
-		protected List<MessageToken> unacknowledgedMessages = new ArrayList<>();
+		protected List<MessageToken> activeMessages = new ArrayList<>();
 
-		protected Map<MessageId, MessageToken> messageIdUnacknowledgedMessage = new LinkedHashMap<>();
+		protected Map<MessageId, MessageToken> messageIdActiveMessage = new LinkedHashMap<>();
 
-		protected List<MessageToken> snapshotUnacknowledgedMessages() {
-			synchronized (unacknowledgedMessages) {
-				return new ArrayList<>(unacknowledgedMessages);
+		protected List<MessageToken> snapshotActiveMessages() {
+			synchronized (activeMessages) {
+				return new ArrayList<>(activeMessages);
 			}
 		}
 
 		void bufferMessage(MessageToken message) {
-			synchronized (unacknowledgedMessages) {
-				unacknowledgedMessages.add(message);
-				messageIdUnacknowledgedMessage
-						.put(message.transportHistory.messageId, message);
+			synchronized (activeMessages) {
+				activeMessages.add(message);
+				messageIdActiveMessage.put(message.transportHistory.messageId,
+						message);
 			}
 		}
 
 		void removeMessage(MessageToken message) {
-			synchronized (unacknowledgedMessages) {
-				unacknowledgedMessages.remove(message);
-				messageIdUnacknowledgedMessage
+			synchronized (activeMessages) {
+				activeMessages.remove(message);
+				messageIdActiveMessage
 						.remove(message.transportHistory.messageId);
 				logger.info("Message acknowledged + removed :: {}",
 						message.transportHistory.messageId);
 			}
 		}
 
-		MessageToken getUnacknowledgedMessage(MessageId messageId) {
-			synchronized (unacknowledgedMessages) {
-				return messageIdUnacknowledgedMessage.get(messageId);
+		MessageToken getActiveMessage(MessageId messageId) {
+			synchronized (activeMessages) {
+				return messageIdActiveMessage.get(messageId);
 			}
 		}
 
-		void removeAcknowledgedMessages() {
-			synchronized (unacknowledgedMessages) {
-				List<MessageToken> toRemove = unacknowledgedMessages.stream()
-						.filter(uack -> uack.acknowledged)
+		void removeAcknowledgedPublishedMessages() {
+			synchronized (activeMessages) {
+				List<MessageToken> toRemove = activeMessages.stream().filter(
+						active -> active.acknowledged && (!publishesMessages()
+								|| active.transportHistory.published != null))
 						.collect(Collectors.toList());
 				toRemove.forEach(this::removeMessage);
 			}
 		}
 
+		/**
+		 * true for receivechannel, false for sendchannel
+		 */
+		protected abstract boolean publishesMessages();
+
 		@Override
 		public String toString() {
-			return Ax.format("uack message count: %s",
-					unacknowledgedMessages.size());
+			return Ax.format("active message count: %s", activeMessages.size());
 		}
 	}
 
@@ -531,8 +536,8 @@ public abstract class MessageTransportLayer {
 		 * If no inflight or retry, send
 		 */
 		public void conditionallySend() {
-			synchronized (unacknowledgedMessages) {
-				if (unacknowledgedMessages.stream()
+			synchronized (activeMessages) {
+				if (activeMessages.stream()
 						.anyMatch(MessageToken::shouldSendMessageOrMetadata)) {
 					if (envelopeDispatcher().isDispatchAvailable()) {
 						unconditionallySend();
@@ -543,9 +548,9 @@ public abstract class MessageTransportLayer {
 		}
 
 		public void unconditionallySend() {
-			synchronized (unacknowledgedMessages) {
-				envelopeDispatcher().dispatch(unacknowledgedMessages,
-						receiveChannel().snapshotUnacknowledgedMessages());
+			synchronized (activeMessages) {
+				envelopeDispatcher().dispatch(activeMessages,
+						receiveChannel().snapshotActiveMessages());
 			}
 		}
 
@@ -563,6 +568,11 @@ public abstract class MessageTransportLayer {
 
 		protected void initImplementations() {
 			receiptVerifier = new ReceiptVerifier();
+		}
+
+		@Override
+		protected boolean publishesMessages() {
+			return false;
 		}
 
 		/**
@@ -677,7 +687,7 @@ public abstract class MessageTransportLayer {
 				if (verifying) {
 					return;
 				}
-				synchronized (unacknowledgedMessages) {
+				synchronized (activeMessages) {
 					try {
 						verifying = true;
 						verify0();
@@ -688,17 +698,17 @@ public abstract class MessageTransportLayer {
 			}
 
 			protected void verify0() {
-				if (unacknowledgedMessages.isEmpty()) {
+				if (activeMessages.stream().allMatch(m -> m.acknowledged)) {
 					return;
 				}
 				Date now = new Date();
 				boolean retryMarked = false;
-				int inFlightSize = unacknowledgedMessages.stream()
+				int inFlightSize = activeMessages.stream()
 						.filter(token -> token.transportHistory.wasSent())
 						.collect(Collectors
 								.summingInt(token -> token.getSize()));
 				Date earliestRetry = null;
-				for (MessageToken token : unacknowledgedMessages) {
+				for (MessageToken token : activeMessages) {
 					/*
 					 * An existing send (possibly retry) already exists for this
 					 * token, ignore for retry computation
@@ -772,14 +782,14 @@ public abstract class MessageTransportLayer {
 		}
 
 		void updateHistoriesOnReceipt(MessageEnvelope envelope) {
-			synchronized (unacknowledgedMessages) {
+			synchronized (activeMessages) {
 				envelope.transportHistories.stream().filter(
 						remoteHistory -> remoteHistory.messageId.sendChannelId == sendChannelId())
 						.forEach(remoteHistory -> {
-							MessageToken unacknowledgedMessage = getUnacknowledgedMessage(
+							MessageToken activeMessageToken = getActiveMessage(
 									remoteHistory.messageId);
-							if (unacknowledgedMessage != null) {
-								unacknowledgedMessage
+							if (activeMessageToken != null) {
+								activeMessageToken
 										.updateTransportHistoryFromRemote(
 												remoteHistory);
 							} else {
@@ -788,10 +798,10 @@ public abstract class MessageTransportLayer {
 						});
 				EnvelopeId highestReceivedEnvelopeId = envelope.highestReceivedEnvelopeId;
 				if (highestReceivedEnvelopeId != null) {
-					unacknowledgedMessages
-							.forEach(uack -> uack.onHighestReceivedEnvelopeId(
+					activeMessages.forEach(activeMessage -> activeMessage
+							.onHighestReceivedEnvelopeId(
 									highestReceivedEnvelopeId));
-					removeAcknowledgedMessages();
+					removeAcknowledgedPublishedMessages();
 				}
 			}
 		}
@@ -820,67 +830,72 @@ public abstract class MessageTransportLayer {
 			}
 			updateHistoriesOnReceipt(envelope);
 			sendChannel().updateHistoriesOnReceipt(envelope);
-			addMessagesToUnacknowledged(envelope);
+			addMessagesToActive(envelope);
 			publishSequentialMessages();
 			sendChannel().sendAcknowledgments();
 		}
 
 		void publishSequentialMessages() {
-			synchronized (unacknowledgedMessages) {
-				for (MessageToken unacknowledgedMessage : unacknowledgedMessages) {
-					boolean publish = unacknowledgedMessage.message.messageId == highestPublishedMessageId
+			synchronized (activeMessages) {
+				for (MessageToken activeMessageToken : activeMessages) {
+					boolean publish = activeMessageToken.message.messageId == highestPublishedMessageId
 							+ 1;
-					publish |= handler(unacknowledgedMessage.message)
+					publish |= handler(activeMessageToken.message)
 							.isHandleOutOfBand();
 					if (publish) {
 						topicMessageReceived
-								.publish(unacknowledgedMessage.message);
+								.publish(activeMessageToken.message);
 						highestPublishedMessageId++;
-						unacknowledgedMessage.transportHistory.published = new Date();
+						activeMessageToken.transportHistory.published = new Date();
 					}
 				}
 			}
 		}
 
+		@Override
+		protected boolean publishesMessages() {
+			return true;
+		}
+
 		protected abstract Message.Handler handler(Message message);
 
-		void addMessagesToUnacknowledged(MessageEnvelope envelope) {
+		void addMessagesToActive(MessageEnvelope envelope) {
 			/*
 			 * this is the only place receivedMessageIds is used, so sync works
 			 * for both
 			 */
-			synchronized (unacknowledgedMessages) {
+			synchronized (activeMessages) {
 				envelope.packets.forEach(packet -> {
 					if (!receivedMessageIds.add(packet.messageId)) {
 						return;
 					}
-					MessageToken unacknowledgedMessage = new MessageToken(
+					MessageToken activeMessageToken = new MessageToken(
 							packet.message, packet.messageId.sendChannelId);
-					unacknowledgedMessage.transportHistory.received = new Date();
-					unacknowledgedMessage.transportHistory.sent = envelope.dateSent;
-					unacknowledgedMessages.add(unacknowledgedMessage);
+					activeMessageToken.transportHistory.received = new Date();
+					activeMessageToken.transportHistory.sent = envelope.dateSent;
+					activeMessages.add(activeMessageToken);
 				});
-				Collections.sort(unacknowledgedMessages);
+				Collections.sort(activeMessages);
 			}
 		}
 
 		void updateHistoriesOnReceipt(MessageEnvelope envelope) {
-			synchronized (unacknowledgedMessages) {
+			synchronized (activeMessages) {
 				/*
 				 * The highest envelopeId sent by *this* endpoint, received by
 				 * the other
 				 */
 				EnvelopeId highestReceivedEnvelopeId = envelope.highestReceivedEnvelopeId;
 				/*
-				 * Any unacknowledged messages (that this channel has received)
-				 * for which we know that receipt acknowledgment has reached the
+				 * Any complete messages (that this channel has received) for
+				 * which we know that receipt acknowledgment has reached the
 				 * sender, remove
 				 */
 				if (highestReceivedEnvelopeId != null) {
-					unacknowledgedMessages
-							.forEach(uack -> uack.onHighestReceivedEnvelopeId(
+					activeMessages.forEach(activeMessage -> activeMessage
+							.onHighestReceivedEnvelopeId(
 									highestReceivedEnvelopeId));
-					removeAcknowledgedMessages();
+					removeAcknowledgedPublishedMessages();
 				}
 			}
 		}

@@ -463,7 +463,7 @@ public class JobRegistry {
 	 * 
 	 * @return null if there's an existing job, otherwise
 	 */
-	Job ensureScheduled(Task task, boolean scheduleAfterInFlight,
+	public Job ensureScheduled(Task task, boolean scheduleAfterInFlight,
 			boolean withClusterUniqueness) {
 		if (withClusterUniqueness) {
 			Ref<Job> ref = Ref.empty();
