@@ -729,7 +729,7 @@ public class JobContext {
 
 	public void toAwaitingChildren() {
 		TransactionEnvironment.get().commit();
-		allocator.toAwaitingChildren();
+		allocator.toAwaitingChildren(this);
 	}
 
 	@Override

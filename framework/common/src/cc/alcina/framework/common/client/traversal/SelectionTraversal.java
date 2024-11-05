@@ -330,11 +330,17 @@ public class SelectionTraversal
 				layer.onAfterProcess(selection);
 			}
 		} finally {
-			exitSelectionContext(selection);
-			releaseCompletedSelections(selection);
-			state.onSelectionProcessed(selection);
-			selectionProcessed.publish(selection);
-			LooseContext.pop();
+			try {
+				exitSelectionContext(selection);
+				releaseCompletedSelections(selection);
+				state.onSelectionProcessed(selection);
+				selectionProcessed.publish(selection);
+			} catch (Throwable e) {
+				logger.warn("DEVEX-0 :: selection cleanup", e);
+				throw e;
+			} finally {
+				LooseContext.pop();
+			}
 		}
 	}
 

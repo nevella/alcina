@@ -97,6 +97,8 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
+import cc.alcina.framework.servlet.job.JobScheduler.NoResubmitPolicy;
+import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy;
 
 /**
  * <h2>Overview</h2>
@@ -163,7 +165,17 @@ import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
  * non-transactional) environments exist, supporting use on non-db-backed
  * systems (e.g. Android)
  *
- *
+ * <p>
+ * Job abort is controlled by the Task's {@link AbortPolicy}. The default
+ * timeout is 1 day.
+ * <p>
+ * Job retry/resubmit behaviour is also controlled by the Task's
+ * {@link AbortPolicy}. The default behaviour {@link NoResubmitPolicy} is to
+ * neither resubmit if a job was orphaned (performer jvm was terminated), nor if
+ * it was timed out.
+ * <p>
+ * A resubmitted job is linked to its failed antecedent by a
+ * {@link JobRelationType#RESUBMIT} relation.
  */
 @Registrations({
 		@Registration(
@@ -198,13 +210,17 @@ public class JobRegistry {
 				.call(callable);
 	}
 
+	/**
+	 * Timed-out jobs are *not* resubmitted here - this affects threads waiting
+	 * for the job, rather than the job itself
+	 */
 	static void awaitLatch(Job job, CountDownLatch latch, LatchType latchType)
 			throws InterruptedException {
 		Class<? extends Task> taskClass = callInTx(
 				() -> job.provideTaskClass());
 		long timeout = latchType == LatchType.POST_CHILD_COMPLETION
 				? 1 * TimeConstants.ONE_MINUTE_MS
-				: Registry.impl(TaskSequenceTimeoutProvider.class, taskClass)
+				: Registry.impl(SequenceTimeoutProvider.class, taskClass)
 						.getJobAllocatorSequenceTimeout();
 		if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
 			callInTx(() -> {
@@ -218,8 +234,8 @@ public class JobRegistry {
 		}
 	}
 
-	@Registration({ TaskSequenceTimeoutProvider.class, Object.class })
-	public static class TaskSequenceTimeoutProvider {
+	@Registration({ SequenceTimeoutProvider.class, Object.class })
+	public static class SequenceTimeoutProvider {
 		public long getJobAllocatorSequenceTimeout() {
 			return Configuration.getLong("jobAllocatorSequenceTimeout");
 		}

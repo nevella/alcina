@@ -97,4 +97,8 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 			}
 		}
 	}
+
+	public boolean is(JobRelationType type) {
+		return this.type == type;
+	}
 }
