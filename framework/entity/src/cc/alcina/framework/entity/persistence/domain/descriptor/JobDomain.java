@@ -118,6 +118,8 @@ public class JobDomain {
 				logger.trace("Issue with job transform details:\n{}",
 						event.getTransformPersistenceToken().getRequest());
 				break;
+			// PRE_COMMIT is correct here - the code is just logging job entity
+			// changes, immediately prior to db commit
 			case PRE_COMMIT:
 				Set<Long> ids = collation.query(jobImplClass).stream()
 						.map(qr -> qr.entityCollation.getId())

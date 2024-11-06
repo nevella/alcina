@@ -95,10 +95,10 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
+import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
 import cc.alcina.framework.servlet.job.JobScheduler.NoResubmitPolicy;
-import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy;
 
 /**
  * <h2>Overview</h2>
@@ -400,10 +400,32 @@ public class JobRegistry {
 		return await(job, 0);
 	}
 
+	public void awaitAfterStart(Job job) {
+		// naive, just spinlock
+		long start = System.currentTimeMillis();
+		long allocationTimeout = AbortPolicy.forJob(job)
+				.getAllocationTimeout(job);
+		while (System.currentTimeMillis() - start < allocationTimeout) {
+			Transaction.endAndBeginNew();
+			if (job.provideIsSequenceComplete()) {
+				return;
+			} else {
+				try {
+					Thread.sleep(1000);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	/*
 	 * TODO - threading - this is on a different thread to the job performer etc
 	 * - so whether or not JobContext jobContext = activeJobs.get(job); is
 	 * populated is slightly uncertain. Fix by creating barriers
+	 * 
+	 * This also requires that it be called before the job starts (not very
+	 * robust) - could be better ()
 	 */
 	public Job await(Job job, long maxTime) throws InterruptedException {
 		if (JobContext.has()) {
@@ -1332,7 +1354,10 @@ public class JobRegistry {
 								log.getAsInt(), job);
 					}
 				}
-				if (latch.getCount() > 0) {
+				/*
+				 * Second will be true if job was joined/awaited after starting
+				 */
+				if (latch.getCount() > 0 && !job.provideIsComplete()) {
 					JobRegistry.logger.warn(
 							"DEVEX - 0 - Timed out waiting for job {}", job);
 				}
