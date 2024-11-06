@@ -1,8 +1,12 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
@@ -304,6 +308,84 @@ public class TextUtils {
 				}
 			}
 			return builder.toString();
+		}
+	}
+
+	public static class StringIds {
+		/**
+		 * <p>
+		 * Create a list of unique strings that can be used as identifiers, of
+		 * length at least minLength
+		 * <p>
+		 * The implementation is: normalise each term, then sort by length
+		 * (which will preserve incoming sort if of equal length), then sort
+		 * alphabetically. The result can then be constructed by checking the
+		 * preceding id and ensuring uniqueness
+		 * 
+		 * @param inputs
+		 * @param i
+		 * @return
+		 */
+		public static Map<String, String>
+				createUniqueShortIds(List<String> inputs, int minLength) {
+			Preconditions.checkArgument(
+					CommonUtils.dedupe(inputs).size() == inputs.size());
+			Preconditions.checkArgument(
+					inputs.stream().allMatch(i -> i.length() >= minLength));
+			Map<String, String> idsToOrig = inputs.stream()
+					.collect(AlcinaCollectors.toKeyMap(StringIds::idNormalise));
+			Preconditions.checkArgument(inputs.size() == idsToOrig.size(),
+					"input contains duplicates modulo normalisation");
+			Map<String, String> result = new LinkedHashMap<>();
+			List<String> list = idsToOrig.keySet().stream()
+					.sorted(new GenComparator()).toList();
+			String last = "";
+			for (String id : list) {
+				String orig = idsToOrig.get(id);
+				for (int idx = minLength; idx <= id.length(); idx++) {
+					String test = id.substring(0, idx);
+					if (last.startsWith(test)) {
+						continue;
+					} else {
+						result.put(orig, test);
+						last = test;
+						break;
+					}
+				}
+				Preconditions.checkState(result.containsKey(orig));
+			}
+			return result;
+		}
+
+		/**
+		 * Return a form suitable for a string id (lowercase, spaces to
+		 * underscore, all non-alphanumeric-underscore characters removed)
+		 * 
+		 * @param string
+		 * @return the id string
+		 */
+		public static String idNormalise(String string) {
+			return string.toLowerCase().replace("the ", "").replace(" ", "_")
+					.replaceAll("[^a-z0-9_]", "");
+		}
+
+		static class GenComparator implements Comparator<String> {
+			@Override
+			public int compare(String o1, String o2) {
+				{
+					int cmp = o1.length() - o2.length();
+					if (cmp != 0) {
+						return cmp;
+					}
+				}
+				{
+					int cmp = o1.length() - o2.length();
+					if (cmp != 0) {
+						return cmp;
+					}
+				}
+				throw new IllegalArgumentException("Duplicate strings");
+			}
 		}
 	}
 }
