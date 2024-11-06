@@ -607,11 +607,6 @@ class JobAllocator {
 				toAbort.forEach(j -> {
 					AbortPolicy policy = AbortPolicy.forJob(j);
 					policy.onBeforeAbort(j, AbortReason.TIMED_OUT);
-					/*
-					 * this interim commit is to handle what appears to be a
-					 * hibernate issue - FIXME
-					 */
-					commit();
 					j.setState(JobState.ABORTED);
 					j.setEndTime(new Date());
 					j.setResultType(JobResultType.DID_NOT_COMPLETE);

@@ -27,9 +27,8 @@ import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStoreP
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
-import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
-import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -444,12 +443,19 @@ public abstract class Job extends VersionableEntity<Job>
 				.map(JobRelation::getTo).filter(Objects::nonNull);
 	}
 
-	public Stream<Job> provideChildren() {
-		return provideToRelated(JobRelationType.PARENT_CHILD);
+	private Stream<Job> provideFromRelated(JobRelationType type) {
+		if (getToRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		/*
+		 * requires the final filter for indexing during a deletion cycle
+		 */
+		return getToRelations().stream().filter(rel -> rel.getType() == type)
+				.map(JobRelation::getFrom).filter(Objects::nonNull);
 	}
 
-	public Stream<Job> provideAwaited() {
-		return provideToRelated(JobRelationType.AWAITED);
+	public Stream<Job> provideChildren() {
+		return provideToRelated(JobRelationType.PARENT_CHILD);
 	}
 
 	public Stream<Job> provideChildrenAndChildSubsequents() {
@@ -743,6 +749,10 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public Stream<Job> provideAwaiteds() {
 		return provideToRelated(JobRelationType.AWAITED);
+	}
+
+	public Optional<Job> provideAwaiting() {
+		return provideFromRelated(JobRelationType.AWAITED).findFirst();
 	}
 
 	public Class<? extends Task> provideTaskClass() {

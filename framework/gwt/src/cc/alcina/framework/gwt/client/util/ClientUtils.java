@@ -55,6 +55,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -643,4 +644,14 @@ public class ClientUtils {
 		
 			}
 			}-*/;
+
+	public static String toSimpleExceptionMessage(Throwable t) {
+		String result = CommonUtils.toSimpleExceptionMessage(t);
+		if (t instanceof StatusCodeException) {
+			if (((StatusCodeException) t).getStatusCode() == 0) {
+				result = "Network connectivity issue. Please check your internet connection";
+			}
+		}
+		return result;
+	}
 }

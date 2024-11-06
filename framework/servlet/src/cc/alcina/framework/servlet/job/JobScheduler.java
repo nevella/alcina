@@ -825,6 +825,11 @@ public class JobScheduler {
 		public void onBeforeAbort(Job job, AbortReason reason) {
 			if (shouldResubmit(job, reason)) {
 				resubmit(job);
+				/*
+				 * this interim commit is to handle what appears to be a
+				 * hibernate issue - FIXME
+				 */
+				Transaction.commit();
 			}
 		}
 
