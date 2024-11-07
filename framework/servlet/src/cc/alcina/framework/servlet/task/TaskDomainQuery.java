@@ -206,7 +206,7 @@ public class TaskDomainQuery extends PerformerTask.Fields
 				resultPaths = List.of("*");
 			}
 			pathSegments = new PathSegments();
-			fb.line("Entity: %s", from);
+			fb.line("Entity: %s", locator);
 			fb.line("Paths: %s", resultPaths);
 			fb.line("=============================================");
 			ResultNode root = new ResultNode();
