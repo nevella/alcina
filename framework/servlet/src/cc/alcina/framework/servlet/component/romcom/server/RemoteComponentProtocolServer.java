@@ -5,6 +5,8 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -63,6 +65,19 @@ public class RemoteComponentProtocolServer {
 			this.request = request;
 			this.response = response;
 			this.latch = new CountDownLatch(1);
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder format = new FormatBuilder();
+			format.line(NestedName.get(this));
+			format.line("request: %s",
+					request.messageEnvelope.toMessageSummaryString());
+			format.line("response: %s",
+					response == null || response.messageEnvelope == null ? null
+							: response.messageEnvelope
+									.toMessageSummaryString());
+			return format.toString();
 		}
 	}
 }
