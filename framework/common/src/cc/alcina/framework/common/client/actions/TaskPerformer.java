@@ -27,10 +27,6 @@ import cc.alcina.framework.common.client.lock.JobResource;
  * @author Nick Reddel
  */
 public interface TaskPerformer<T extends Task> {
-	default boolean canAbort(Task task, long timeSinceAllocation) {
-		return false;
-	}
-
 	default boolean checkCanPerformConcurrently(Task task) {
 		return true;
 	}

@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -180,6 +181,7 @@ public abstract class Job extends VersionableEntity<Job>
 			}
 			tracker.setSerializedResult(getResultSerialized());
 		}
+		tracker.setResubmitId(EntityHelper.getIdOrZero(provideResubmittedTo()));
 		return tracker;
 	}
 
@@ -439,6 +441,17 @@ public abstract class Job extends VersionableEntity<Job>
 		 */
 		return getFromRelations().stream().filter(rel -> rel.getType() == type)
 				.map(JobRelation::getTo).filter(Objects::nonNull);
+	}
+
+	private Stream<Job> provideFromRelated(JobRelationType type) {
+		if (getToRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		/*
+		 * requires the final filter for indexing during a deletion cycle
+		 */
+		return getToRelations().stream().filter(rel -> rel.getType() == type)
+				.map(JobRelation::getFrom).filter(Objects::nonNull);
 	}
 
 	public Stream<Job> provideChildren() {
@@ -736,6 +749,10 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public Stream<Job> provideAwaiteds() {
 		return provideToRelated(JobRelationType.AWAITED);
+	}
+
+	public Optional<Job> provideAwaiting() {
+		return provideFromRelated(JobRelationType.AWAITED).findFirst();
 	}
 
 	public Class<? extends Task> provideTaskClass() {
@@ -1260,5 +1277,17 @@ public abstract class Job extends VersionableEntity<Job>
 			}
 			return EntityComparator.INSTANCE.compare(o1, o2);
 		}
+	}
+
+	public Optional<Job> provideResubmittedFrom() {
+		return getToRelations().stream()
+				.filter(rel -> rel.is(JobRelationType.RESUBMIT)).findFirst()
+				.map(JobRelation::getFrom);
+	}
+
+	public Optional<Job> provideResubmittedTo() {
+		return getFromRelations().stream()
+				.filter(rel -> rel.is(JobRelationType.RESUBMIT)).findFirst()
+				.map(JobRelation::getTo);
 	}
 }

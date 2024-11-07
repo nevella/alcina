@@ -106,7 +106,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 		return DomainStore.hasStores()
 				? (List<Job>) DomainStore.queryPool().call(
 						() -> streamRef.get().collect(Collectors.toList()),
-						streamRef, true)
+						streamRef, parallel)
 				: (List<Job>) streamRef.get().collect(Collectors.toList());
 	}
 

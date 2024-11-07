@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -35,9 +36,10 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Subque
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LatchType;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
+import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy;
+import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy.AbortReason;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
-import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
 
 /*
  * Start the wrapped thread either on creation - if a 'self-starter' (top-level,
@@ -203,7 +205,8 @@ class JobAllocator {
 		sequenceCompletionLatch.countDown();
 	}
 
-	void toAwaitingChildren() {
+	void toAwaitingChildren(JobContext jobContext) {
+		this.jobContext = jobContext;
 		if (queue.currentPhase == SubqueuePhase.Self) {
 			queue.publish(EventType.TO_AWAITING_CHILDREN);
 		}
@@ -337,11 +340,19 @@ class JobAllocator {
 			}
 		}
 
-		public void processEvent(Event event) {
+		void processEvent(Event event) {
 			if (finished) {
 				return;
 			}
-			TransactionEnvironment.get().ensureBegun();
+			try {
+				TransactionEnvironment.get().ensureBegun();
+				processEvent0(event);
+			} finally {
+				TransactionEnvironment.get().ensureEnded();
+			}
+		}
+
+		void processEvent0(Event event) {
 			Job job = queue.job;
 			if (firstEvent) {
 				firstEvent = false;
@@ -459,6 +470,12 @@ class JobAllocator {
 							// slot to the next-in-sequence
 						: executionConstraints
 								.calculateMaxAllocatable(constraintQueue);
+				Optional<Job> resubmittedFrom = queue.job
+						.provideResubmittedFrom();
+				if (resubmittedFrom.isPresent()
+						&& !resubmittedFrom.get().provideIsComplete()) {
+					maxAllocatable = 0;
+				}
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
 				// 30...let drain to 10...again)
 				if (maxAllocatable > 0) {
@@ -474,12 +491,9 @@ class JobAllocator {
 								.getService(constraintQueue);
 						List<Job> allocating = new ArrayList<>();
 						Runnable allocateJobs = () -> {
-							if (job.provideTaskClass().getName()
-									.contains("TaskTraverseDeviceFilesystem")) {
-								int debug = 3;
-							}
 							/*
-							 * Double-checking (inside lock
+							 * Double-checking (inside lock). No need to check
+							 * for a prior incomplete resubmit job here
 							 */
 							long maxAllocatableLocked = queue.currentPhase == SubqueuePhase.Sequence
 									? 1// essentially passing the allocation
@@ -503,7 +517,7 @@ class JobAllocator {
 									List<Job> maTest = queue
 											.getUnallocatedJobs()
 											.filter(this::isAllocatable)
-											.limit(maxAllocatable)
+											.limit(maxAllocatableLocked)
 											.collect(Collectors.toList());
 									invalidAllocated.add(j);
 								} else {
@@ -566,16 +580,14 @@ class JobAllocator {
 			}
 			long timeSinceAllocation = System.currentTimeMillis()
 					- lastAllocated;
-			if (timeSinceAllocation > TimeConstants.ONE_HOUR_MS
-					&& jobContext != null
+			AbortPolicy abortPolicy = AbortPolicy.forJob(job);
+			long allocationTimeout = abortPolicy.getAllocationTimeout(job);
+			if (timeSinceAllocation > allocationTimeout && jobContext != null
 					&& (jobContext.getJob().getPerformer() == null
 							// FIXME - jobs - performer should never be null at
 							// this point
 							|| jobContext.getJob()
 									.getPerformer() == ClientInstance.self())
-					&& jobContext.getPerformer() != null
-					&& jobContext.getPerformer().canAbort(job.getTask(),
-							timeSinceAllocation)
 					&& Configuration.is(Transactions.class,
 							"cancelTimedoutTransactions")) {
 				List<Job> incompleteChildren = job.provideChildren()
@@ -583,26 +595,27 @@ class JobAllocator {
 								|| j.getState() == JobState.COMPLETED)
 						.collect(Collectors.toList());
 				logger.warn(
-						"DEVEX::0 - Cancelling/aborting timed-out job - no allocations for one hour :: {} - incomplete children :: {}",
-						job, incompleteChildren);
+						"DEVEX::0 - Cancelling/aborting timed-out job - no allocations for {} ms :: {} - incomplete children :: {}",
+						allocationTimeout, job, incompleteChildren);
 				Stream<Job> toAbort = incompleteChildren.isEmpty()
-						? Stream.of(job)
-						: incompleteChildren.stream();
+						|| abortPolicy.isAbortParentOnChildTimeout()
+								? Stream.of(job)
+								: incompleteChildren.stream();
 				Stream<Job> toCancel = incompleteChildren.isEmpty()
 						? Stream.empty()
 						: Stream.of(job);
 				toAbort.forEach(j -> {
-					ResubmitPolicy policy = ResubmitPolicy.forJob(j);
-					policy.visit(j);
+					AbortPolicy policy = AbortPolicy.forJob(j);
+					policy.onBeforeAbort(j, AbortReason.TIMED_OUT);
 					j.setState(JobState.ABORTED);
 					j.setEndTime(new Date());
 					j.setResultType(JobResultType.DID_NOT_COMPLETE);
+					commit();
 				});
 				toCancel.forEach(Job::cancel);
 				commit();
 			}
 			commit();
-			TransactionEnvironment.get().ensureEnded();
 		}
 
 		@Override

@@ -30,6 +30,32 @@ import cc.alcina.framework.gwt.client.dirndl.model.Status.StatusReason;
  * @author Nick Reddel
  */
 public class JobTracker extends Model implements TreeSerializable {
+	@Bean
+	public static class Request implements Serializable {
+		private List<Long> ids = new ArrayList<>();
+
+		public List<Long> getIds() {
+			return this.ids;
+		}
+
+		public void setIds(List<Long> ids) {
+			this.ids = ids;
+		}
+	}
+
+	@Bean
+	public static class Response implements Serializable {
+		private List<JobTracker> trackers = new ArrayList<>();
+
+		public List<JobTracker> getTrackers() {
+			return this.trackers;
+		}
+
+		public void setTrackers(List<JobTracker> trackers) {
+			this.trackers = trackers;
+		}
+	}
+
 	private boolean cancelled;
 
 	private boolean complete;
@@ -56,19 +82,29 @@ public class JobTracker extends Model implements TreeSerializable {
 
 	private String leafCount;
 
-	public String getLeafCount() {
-		return leafCount;
-	}
-
-	public void setLeafCount(String leafCount) {
-		this.leafCount = leafCount;
-	}
+	private long resubmitId;
 
 	public JobTracker() {
 	}
 
 	public JobTracker(String id) {
 		this.id = id;
+	}
+
+	public long getResubmitId() {
+		return resubmitId;
+	}
+
+	public void setResubmitId(long resubmitId) {
+		this.resubmitId = resubmitId;
+	}
+
+	public String getLeafCount() {
+		return leafCount;
+	}
+
+	public void setLeafCount(String leafCount) {
+		this.leafCount = leafCount;
 	}
 
 	public StatusReason asResultStatusReason() {
@@ -212,32 +248,6 @@ public class JobTracker extends Model implements TreeSerializable {
 	public String toString() {
 		return Ax.format("JobTracker: %s\n%s %s", getId(), getJobName(),
 				CommonUtils.nullToEmpty(getJobResult()));
-	}
-
-	@Bean
-	public static class Request implements Serializable {
-		private List<Long> ids = new ArrayList<>();
-
-		public List<Long> getIds() {
-			return this.ids;
-		}
-
-		public void setIds(List<Long> ids) {
-			this.ids = ids;
-		}
-	}
-
-	@Bean
-	public static class Response implements Serializable {
-		private List<JobTracker> trackers = new ArrayList<>();
-
-		public List<JobTracker> getTrackers() {
-			return this.trackers;
-		}
-
-		public void setTrackers(List<JobTracker> trackers) {
-			this.trackers = trackers;
-		}
 	}
 
 	public String toProgressMessageWithLeafCount() {

@@ -1,5 +1,6 @@
 package cc.alcina.extras.dev.console;
 
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
@@ -27,9 +28,17 @@ public class DevConsoleCommandsDeploy {
 		String targetContainerControlServletKey = Configuration
 				.get("targetContainerControlServletKey");
 		Ax.out("\n****************\n****************\n** Executing **\n****************\n****************\n\n");
-		String response = ControlServlet.invokeTask(task,
-				targetContainerControlServletPath,
-				targetContainerControlServletKey, executionType);
+		String response = null;
+		if (Configuration.is("executeLocal")) {
+			response = null;
+			Job job = task.perform();
+			response = Ax.blankTo(job.getLog(),
+					Ax.format("Job %s - complete", job));
+		} else {
+			response = ControlServlet.invokeTask(task,
+					targetContainerControlServletPath,
+					targetContainerControlServletKey, executionType);
+		}
 		return response;
 	}
 

@@ -52,6 +52,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Subque
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.MethodContext;
+import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy.AbortReason;
 import cc.alcina.framework.servlet.process.observer.job.JobMvccObserver;
 import cc.alcina.framework.servlet.process.observer.job.JobObserver;
 import cc.alcina.framework.servlet.process.observer.job.ObservableJobFilter;
@@ -178,8 +179,8 @@ public class JobScheduler {
 		TransactionEnvironment.withDomain(() -> {
 			Ax.sysLogHigh("Allocator timeout: %s", job);
 			Transaction.ensureBegun();
-			ResubmitPolicy policy = ResubmitPolicy.forJob(job);
-			policy.visit(job);
+			AbortPolicy policy = AbortPolicy.forJob(job);
+			policy.onBeforeAbort(job, AbortReason.TIMED_OUT);
 			job.setState(JobState.ABORTED);
 			job.setEndTime(new Date());
 			job.setResultType(JobResultType.DID_NOT_COMPLETE);
@@ -242,7 +243,7 @@ public class JobScheduler {
 									"Job scheduler - future-to-pending - ABORTED-STUCK - {} ",
 									earliestIncompleteScheduled);
 							doAbort(Stream.of(earliestIncompleteScheduled),
-									new Date());
+									new Date(), AbortPolicy.AbortReason.STUCK);
 							Transaction.commit();
 							earliestIncompleteScheduled = JobDomain.get()
 									.getEarliestIncompleteScheduled(key,
@@ -473,7 +474,8 @@ public class JobScheduler {
 						Stream<Job> doubleChecked = getToAbortOrReassign(
 								activeInstances, visibleInstanceRegex, cutoff)
 										.limit(200);
-						doAbort(doubleChecked, abortTime);
+						doAbort(doubleChecked, abortTime,
+								AbortReason.ORPHANED_PERFORMER_TERMINATED);
 						logger.warn("Aborting jobs - committing transforms");
 						int committed = Transaction.commit();
 						if (committed == 0) {
@@ -489,7 +491,7 @@ public class JobScheduler {
 		}
 	}
 
-	void doAbort(Stream<Job> jobs, Date abortTime) {
+	void doAbort(Stream<Job> jobs, Date abortTime, AbortReason reason) {
 		jobs.forEach(job -> {
 			if (job.provideIsComplete()) {
 				logger.warn("Not aborting job {} - already complete", job);
@@ -503,8 +505,8 @@ public class JobScheduler {
 				return;
 			}
 			/* resubmit, then abort */
-			ResubmitPolicy policy = ResubmitPolicy.forJob(job);
-			policy.visit(job);
+			AbortPolicy policy = AbortPolicy.forJob(job);
+			policy.onBeforeAbort(job, reason);
 			job.setState(JobState.ABORTED);
 			job.setEndTime(abortTime);
 			job.setResultType(JobResultType.DID_NOT_COMPLETE);
@@ -609,12 +611,12 @@ public class JobScheduler {
 	}
 
 	@Registration(
-		value = ResubmitPolicy.class,
+		value = AbortPolicy.class,
 		implementation = Registration.Implementation.FACTORY)
 	public static class DefaultRetryPolicyProvider
-			implements RegistryFactory<ResubmitPolicy> {
+			implements RegistryFactory<AbortPolicy> {
 		@Override
-		public ResubmitPolicy impl() {
+		public AbortPolicy impl() {
 			return new NoResubmitPolicy();
 		}
 	}
@@ -732,30 +734,36 @@ public class JobScheduler {
 		}
 	}
 
-	public static class NoResubmitPolicy extends ResubmitPolicy {
-		@Override
-		public boolean shouldResubmit(Job job) {
+	public static class NoResubmitPolicy extends AbortPolicy {
+		protected boolean shouldResubmit(Job job, AbortReason reason) {
 			return false;
-		}
+		};
 	}
 
-	public static class ResubmitNTimesPolicy extends ResubmitPolicy {
+	public static class ResubmitNTimesPolicy extends AbortPolicy {
 		private int nTimes;
 
+		private boolean requiresSystemUser;
+
 		public ResubmitNTimesPolicy(int nTimes) {
+			this(nTimes, true);
+		}
+
+		public ResubmitNTimesPolicy(int nTimes, boolean requiresSystemUser) {
 			this.nTimes = nTimes;
+			this.requiresSystemUser = requiresSystemUser;
 		}
 
 		@Override
-		public boolean shouldResubmit(Job orphanedJob) {
-			if (!Ax.isTest()) {
-				if (orphanedJob.getUser() != UserlandProvider.get()
+		public boolean shouldResubmit(Job toAbortJob, AbortReason reason) {
+			if (!Ax.isTest() && requiresSystemUser) {
+				if (toAbortJob.getUser() != UserlandProvider.get()
 						.getSystemUser()) {
 					return false;
 				}
 			}
 			int counter = 0;
-			Job cursor = orphanedJob;
+			Job cursor = toAbortJob;
 			while (true) {
 				counter++;
 				Optional<Job> precedingJob = cursor.getToRelations().stream()
@@ -772,12 +780,24 @@ public class JobScheduler {
 		}
 	}
 
-	public abstract static class ResubmitPolicy<T extends Task> {
-		public static ResubmitPolicy forJob(Job job) {
-			return Registry.impl(ResubmitPolicy.class, job.provideTaskClass());
+	/**
+	 * <p>
+	 * The task-class-specific resubmit policy controls several aspects of a
+	 * exception handling for a job:
+	 * <ul>
+	 * <li>If the performer vm was terminated - default behaviour is to resubmit
+	 * the job
+	 * <li>Determine whether the job should be aborted due to timeout
+	 * <li>Determine whether a timedout job should be resubmitted - default
+	 * behaviour is to resubmit
+	 * </ul>
+	 */
+	public abstract static class AbortPolicy<T extends Task> {
+		public static AbortPolicy forJob(Job job) {
+			return Registry.impl(AbortPolicy.class, job.provideTaskClass());
 		}
 
-		public static ResubmitPolicy retryNTimes(int nTimes) {
+		public static AbortPolicy retryNTimes(int nTimes) {
 			return new ResubmitNTimesPolicy(nTimes);
 		}
 
@@ -797,15 +817,36 @@ public class JobScheduler {
 			return resubmit;
 		}
 
-		protected boolean shouldResubmit(Job job) {
+		protected boolean shouldResubmit(Job job, AbortReason reason) {
 			return job.provideIsTopLevel() && job.getRunAt() != null
 					&& job.getState().isResubmittable();
 		}
 
-		public void visit(Job job) {
-			if (shouldResubmit(job)) {
+		public void onBeforeAbort(Job job, AbortReason reason) {
+			if (shouldResubmit(job, reason)) {
 				resubmit(job);
+				/*
+				 * this interim commit is to handle what appears to be a
+				 * hibernate issue - FIXME
+				 */
+				Transaction.commit();
 			}
+		}
+
+		public long getAllocationTimeout(Job job) {
+			return TimeConstants.ONE_DAY_MS;
+		}
+
+		public enum AbortReason {
+			ORPHANED_PERFORMER_TERMINATED, TIMED_OUT, STUCK
+		}
+
+		/**
+		 * @return true if the child is one of a sequence logically required by
+		 *         the parent (rather than one-of-many-of-the-same-type)
+		 */
+		public boolean isAbortParentOnChildTimeout() {
+			return false;
 		}
 	}
 

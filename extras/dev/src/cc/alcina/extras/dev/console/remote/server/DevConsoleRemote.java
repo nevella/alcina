@@ -43,6 +43,7 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentHandler;
 import cc.alcina.framework.servlet.component.test.server.AlcinaDevTestHandler;
 import cc.alcina.framework.servlet.logging.FlightEventJettyHandler;
+import cc.alcina.framework.servlet.servlet.JobJettyHandler;
 
 @Registration.Singleton(DevConsoleRemote.class)
 public class DevConsoleRemote {
@@ -227,6 +228,13 @@ public class DevConsoleRemote {
 					"/flight");
 			protocolHandler.setAllowNullPathInfo(true);
 			protocolHandler.setHandler(new FlightEventJettyHandler());
+		}
+		{
+			ContextHandler protocolHandler = new ContextHandler(handlers,
+					// "job.do" for consistency with the servlet path
+					"/job.do");
+			protocolHandler.setAllowNullPathInfo(true);
+			protocolHandler.setHandler(new JobJettyHandler());
 		}
 		{
 			ContextHandler protocolHandler = new ContextHandler(handlers,

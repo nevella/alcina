@@ -95,8 +95,10 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
+import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
+import cc.alcina.framework.servlet.job.JobScheduler.NoResubmitPolicy;
 
 /**
  * <h2>Overview</h2>
@@ -163,7 +165,17 @@ import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
  * non-transactional) environments exist, supporting use on non-db-backed
  * systems (e.g. Android)
  *
- *
+ * <p>
+ * Job abort is controlled by the Task's {@link AbortPolicy}. The default
+ * timeout is 1 day.
+ * <p>
+ * Job retry/resubmit behaviour is also controlled by the Task's
+ * {@link AbortPolicy}. The default behaviour {@link NoResubmitPolicy} is to
+ * neither resubmit if a job was orphaned (performer jvm was terminated), nor if
+ * it was timed out.
+ * <p>
+ * A resubmitted job is linked to its failed antecedent by a
+ * {@link JobRelationType#RESUBMIT} relation.
  */
 @Registrations({
 		@Registration(
@@ -198,13 +210,17 @@ public class JobRegistry {
 				.call(callable);
 	}
 
+	/**
+	 * Timed-out jobs are *not* resubmitted here - this affects threads waiting
+	 * for the job, rather than the job itself
+	 */
 	static void awaitLatch(Job job, CountDownLatch latch, LatchType latchType)
 			throws InterruptedException {
 		Class<? extends Task> taskClass = callInTx(
 				() -> job.provideTaskClass());
 		long timeout = latchType == LatchType.POST_CHILD_COMPLETION
 				? 1 * TimeConstants.ONE_MINUTE_MS
-				: Registry.impl(TaskSequenceTimeoutProvider.class, taskClass)
+				: Registry.impl(SequenceTimeoutProvider.class, taskClass)
 						.getJobAllocatorSequenceTimeout();
 		if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
 			callInTx(() -> {
@@ -218,8 +234,8 @@ public class JobRegistry {
 		}
 	}
 
-	@Registration({ TaskSequenceTimeoutProvider.class, Object.class })
-	public static class TaskSequenceTimeoutProvider {
+	@Registration({ SequenceTimeoutProvider.class, Object.class })
+	public static class SequenceTimeoutProvider {
 		public long getJobAllocatorSequenceTimeout() {
 			return Configuration.getLong("jobAllocatorSequenceTimeout");
 		}
@@ -384,10 +400,32 @@ public class JobRegistry {
 		return await(job, 0);
 	}
 
+	public void awaitAfterStart(Job job) {
+		// naive, just spinlock
+		long start = System.currentTimeMillis();
+		long allocationTimeout = AbortPolicy.forJob(job)
+				.getAllocationTimeout(job);
+		while (System.currentTimeMillis() - start < allocationTimeout) {
+			Transaction.endAndBeginNew();
+			if (job.provideIsSequenceComplete()) {
+				return;
+			} else {
+				try {
+					Thread.sleep(1000);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	/*
 	 * TODO - threading - this is on a different thread to the job performer etc
 	 * - so whether or not JobContext jobContext = activeJobs.get(job); is
 	 * populated is slightly uncertain. Fix by creating barriers
+	 * 
+	 * This also requires that it be called before the job starts (not very
+	 * robust) - could be better ()
 	 */
 	public Job await(Job job, long maxTime) throws InterruptedException {
 		if (JobContext.has()) {
@@ -885,7 +923,7 @@ public class JobRegistry {
 	public void processOrphans() {
 		// manual because auto-scheduling generally disabled for dev
 		// server/consoles
-		Preconditions.checkState(Ax.isTest());
+		Preconditions.checkState(EntityLayerUtils.isTestOrTestServer());
 		scheduler.processOrphans();
 	}
 
@@ -1316,7 +1354,10 @@ public class JobRegistry {
 								log.getAsInt(), job);
 					}
 				}
-				if (latch.getCount() > 0) {
+				/*
+				 * Second will be true if job was joined/awaited after starting
+				 */
+				if (latch.getCount() > 0 && !job.provideIsComplete()) {
 					JobRegistry.logger.warn(
 							"DEVEX - 0 - Timed out waiting for job {}", job);
 				}

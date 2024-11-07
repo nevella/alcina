@@ -216,6 +216,12 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 							"Invocation target exception = see server logs");
 				}
 				out = e;
+				if (transformMethod) {
+					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
+					Ax.sysLogHigh("Dev transforms");
+					Ax.out(token);
+					Ax.out("\n--------------------\n");
+				}
 			} finally {
 				if (transformMethod) {
 					PermissionsManager.get().popUser();

@@ -35,7 +35,7 @@ public class TaskDomainQuery extends PerformerTask.Fields
 	public List<String> resultPaths = List.of("*").stream()
 			.collect(Collectors.toList());
 
-	public EntityLocator from;
+	public List<EntityLocator> from = new ArrayList<>();
 
 	public int maxElementsPerCollection = 100;
 
@@ -48,6 +48,11 @@ public class TaskDomainQuery extends PerformerTask.Fields
 	transient PathSegments pathSegments;
 
 	public boolean withEntityToString;
+
+	@Bean(PropertySource.FIELDS)
+	public static class ResultNodes {
+		public List<ResultNode> nodes = new ArrayList<>();
+	}
 
 	@Bean(PropertySource.FIELDS)
 	public static class ResultNode {
@@ -194,28 +199,32 @@ public class TaskDomainQuery extends PerformerTask.Fields
 
 	@Override
 	public void run() {
-		Entity entity = from.find();
-		if (resultPaths == null || resultPaths.isEmpty()) {
-			resultPaths = List.of("*");
+		ResultNodes nodes = new ResultNodes();
+		for (EntityLocator locator : from) {
+			Entity entity = locator.find();
+			if (resultPaths == null || resultPaths.isEmpty()) {
+				resultPaths = List.of("*");
+			}
+			pathSegments = new PathSegments();
+			fb.line("Entity: %s", locator);
+			fb.line("Paths: %s", resultPaths);
+			fb.line("=============================================");
+			ResultNode root = new ResultNode();
+			logPath(entity, root);
+			logger.info(fb.toString());
+			nodes.nodes.add(root);
 		}
-		pathSegments = new PathSegments();
-		fb.line("Entity: %s", from);
-		fb.line("Paths: %s", resultPaths);
-		fb.line("=============================================");
-		ResultNode root = new ResultNode();
-		logPath(entity, root);
-		logger.info(fb.toString());
 		JobContext.get().recordLargeInMemoryResult(
-				ReflectiveSerializer.serialize(root));
+				ReflectiveSerializer.serialize(nodes));
 	}
 
 	public TaskDomainQuery withFrom(Class clazz, long id) {
-		from = new EntityLocator(clazz, id, 0L);
+		from.add(new EntityLocator(clazz, id, 0L));
 		return this;
 	}
 
 	public TaskDomainQuery withFrom(Entity entity) {
-		from = entity.toLocator();
+		from.add(entity.toLocator());
 		return this;
 	}
 
@@ -314,5 +323,10 @@ public class TaskDomainQuery extends PerformerTask.Fields
 			}
 			return descended;
 		}
+	}
+
+	public TaskDomainQuery withFrom(List<EntityLocator> entities) {
+		from.addAll(entities);
+		return this;
 	}
 }
