@@ -39,7 +39,7 @@ public class TaskDomainQuery extends PerformerTask.Fields
 
 	public int maxElementsPerCollection = 100;
 
-	transient FormatBuilder fb = new FormatBuilder();
+	transient FormatBuilder format = new FormatBuilder();
 
 	public int maxChars = 20000;
 
@@ -169,17 +169,17 @@ public class TaskDomainQuery extends PerformerTask.Fields
 		int depth = node.depth();
 		ClassReflector classReflector = Reflections.at(entity.entityClass());
 		List<Property> properties = pathSegments.properties(entity);
-		fb.indent(depth * 4);
-		fb.line("Entity: %s", entity.toStringId());
+		format.indent(depth * 4);
+		format.line("Entity: %s", entity.toStringId());
 		int propertyNameMaxLength = 20;
 		properties.stream().filter(Property::provideNotDefaultIgnoreable)
 				.filter(Property::isReadable)
 				.sorted(new Property.NameComparator()).forEach(p -> {
-					fb.indent(depth * 4 + 2);
+					format.indent(depth * 4 + 2);
 					String name = CommonUtils.trimToWsChars(p.getName(),
 							propertyNameMaxLength);
 					String propertyValue = getPropertyValue(entity, p);
-					fb.line("%s : %s", CommonUtils.padStringRight(name,
+					format.line("%s : %s", CommonUtils.padStringRight(name,
 							propertyNameMaxLength, ' '), propertyValue);
 					ResultNode propertyNode = node.createChild();
 					propertyNode.path = name;
@@ -206,13 +206,15 @@ public class TaskDomainQuery extends PerformerTask.Fields
 				resultPaths = List.of("*");
 			}
 			pathSegments = new PathSegments();
-			fb.line("Entity: %s", locator);
-			fb.line("Paths: %s", resultPaths);
-			fb.line("=============================================");
+			format.line("Entity: %s", locator);
+			format.line("Paths: %s", resultPaths);
+			format.line("=============================================");
 			ResultNode root = new ResultNode();
 			logPath(entity, root);
-			logger.info(fb.toString());
 			nodes.nodes.add(root);
+		}
+		if (from.size() < 10) {
+			logger.info(format.toString());
 		}
 		JobContext.get().recordLargeInMemoryResult(
 				ReflectiveSerializer.serialize(nodes));
