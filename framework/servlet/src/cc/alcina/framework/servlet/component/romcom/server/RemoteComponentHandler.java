@@ -271,8 +271,9 @@ public class RemoteComponentHandler {
 						.deserializeRpc(requestJson);
 				RemoteComponentResponse response = new RemoteComponentResponse();
 				response.session = request.session;
-				logger.debug("{} received request {} - {} {}", Ax.appMillis(),
-						request.messageEnvelope.envelopeId,
+				logger.debug("{} received request [#{}/#_] - {} {}",
+						Ax.appMillis(),
+						request.messageEnvelope.envelopeId.number,
 						request.messageEnvelope.toMessageSummaryString(),
 						request.messageEnvelope.toMessageDebugString());
 				try {
@@ -312,8 +313,10 @@ public class RemoteComponentHandler {
 					response.messageEnvelope.packets
 							.add(new MessagePacket(messageId, message));
 				}
-				logger.debug("{} dispatched response {} - {}", Ax.appMillis(),
-						response.messageEnvelope.envelopeId,
+				logger.debug("{} dispatched response [#{}/#{}] - {}",
+						Ax.appMillis(),
+						request.messageEnvelope.envelopeId.number,
+						response.messageEnvelope.envelopeId.number,
 						response.messageEnvelope.toMessageSummaryString());
 				new RemoteComponentEvent(request, response, start,
 						System.currentTimeMillis()).publish();

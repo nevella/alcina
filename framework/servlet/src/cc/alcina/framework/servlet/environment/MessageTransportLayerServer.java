@@ -1,30 +1,31 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
 class MessageTransportLayerServer extends MessageTransportLayer {
 	class SendChannelImpl extends SendChannel {
+		/**
+		 * See {@link MessageTransportLayerServer#onReceivedToken} - we want to
+		 * only have one higher-level operation accessing the envelopeDispatcher
+		 */
 		@Override
 		public void conditionallySend() {
-			super.conditionallySend();
+			synchronized (envelopeDispatcher()) {
+				super.conditionallySend();
+			}
 		}
 	}
-
-	long start = System.currentTimeMillis();
 
 	class ReceiveChannelImpl extends ReceiveChannel {
 		public Date lastEnvelopeReceived = new Date(0);
@@ -42,27 +43,10 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 	}
 
+	/**
+	 * Thread access - check
+	 */
 	static class AggregateDispatcher extends EnvelopeDispatcher {
-		AggregateDispatcher(MessageTransportLayerServer transportLayer) {
-			super(transportLayer);
-		}
-
-		@Override
-		protected boolean isDispatchAvailable() {
-			return dispatchableToken != null;
-		}
-
-		@Override
-		protected void dispatch(List<MessageToken> sendMessages,
-				List<MessageToken> receivedMessages) {
-			MessageEnvelope envelope = createEnvelope(sendMessages,
-					receivedMessages);
-			dispatchableToken.response.messageEnvelope = envelope;
-			dispatchableToken.response.session = dispatchableToken.request.session;
-			dispatchableToken.latch.countDown();
-			dispatchableToken = null;
-		}
-
 		static class ExceptionTest extends AggregateDispatcher {
 			ExceptionTest(MessageTransportLayerServer transportLayer) {
 				super(transportLayer);
@@ -75,8 +59,8 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 					MessageEnvelope envelope = createEnvelope(sendMessages,
 							receivedMessages);
 					Ax.err("Simulate transport issue - dropping %s", envelope);
+					RequestToken dispatchableToken = getPreferredDispatchableTokenAndRemoveFromAvailable();
 					dispatchableToken.latch.countDown();
-					dispatchableToken = null;
 					return;
 				} else {
 					super.dispatch(sendMessages, receivedMessages);
@@ -84,34 +68,84 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			}
 		}
 
-		RequestToken dispatchableToken;
+		List<DispatchableToken> dispatchableTokens = new ArrayList<>();
+
+		class DispatchableToken {
+			RequestToken token;
+
+			DispatchableToken(RequestToken token) {
+				this.token = token;
+			}
+
+			boolean isAwaiter() {
+				return token.request.messageEnvelope.packets.stream()
+						.anyMatch(pkt -> pkt.message instanceof AwaitRemote);
+			}
+		}
+
+		RequestToken getPreferredDispatchableTokenAndRemoveFromAvailable() {
+			// try non-awaiter
+			DispatchableToken dispatchable = dispatchableTokens.stream()
+					.filter(token -> !token.isAwaiter()).findFirst()
+					.orElse(null);
+			if (dispatchable == null) {
+				// fall through to non-awaiter
+				dispatchable = dispatchableTokens.stream()
+						.filter(token -> token.isAwaiter()).findFirst().get();
+			}
+			dispatchableTokens.remove(dispatchable);
+			return dispatchable.token;
+		}
 
 		/*
-		 * never have more than one awaiting, dispatchable token
+		 * Sync - all operations/calls should be synchronized on the
+		 * AggregateDispatcher instance
+		 */
+		AggregateDispatcher(MessageTransportLayerServer transportLayer) {
+			super(transportLayer);
+		}
+
+		@Override
+		protected boolean isDispatchAvailable() {
+			return dispatchableTokens.size() > 0;
+		}
+
+		@Override
+		protected void dispatch(List<MessageToken> sendMessages,
+				List<MessageToken> receivedMessages) {
+			MessageEnvelope envelope = createEnvelope(sendMessages,
+					receivedMessages);
+			RequestToken dispatchableToken = getPreferredDispatchableTokenAndRemoveFromAvailable();
+			dispatchableToken.response.messageEnvelope = envelope;
+			dispatchableToken.response.session = dispatchableToken.request.session;
+			dispatchableToken.latch.countDown();
+		}
+
+		/*
+		 * any superfluous requests (not needed for return dispatch) will be
 		 */
 		void registerAvailableTokenForResponse(RequestToken token) {
-			Preconditions.checkState(dispatchableToken == null);
-			dispatchableToken = token;
+			DispatchableToken dispatchable = new DispatchableToken(token);
+			dispatchableTokens.add(dispatchable);
+		}
+
+		/*
+		 * Allow at most one awaiter, one or zero non-awaiters
+		 */
+		boolean shouldFlush(boolean flushAllNonAwaiters) {
+			return dispatchableTokens.stream()
+					.filter(token -> !token.isAwaiter())
+					.count() > (flushAllNonAwaiters ? 0 : 1)
+					|| dispatchableTokens.stream()
+							.filter(token -> token.isAwaiter()).count() > 1;
+		}
+
+		boolean hasDispatchers() {
+			return dispatchableTokens.size() > 0;
 		}
 	}
 
-	long lifetimeMs() {
-		return System.currentTimeMillis() - start;
-	}
-
-	/*
-	 * If the envelope contains a startup packet, this will be false - so the
-	 * new clientInstanceUid (session) in this envelope will clobber other
-	 * sessions for the same logical Component, if any
-	 */
-	boolean isValidateClientInstanceUid(RemoteComponentRequest request) {
-		return request.messageEnvelope.packets.stream().anyMatch(
-				p -> handlerFor(p.message).isValidateClientInstanceUid());
-	}
-
-	MessageHandlerServer<?> handlerFor(Message message) {
-		return Registry.impl(MessageHandlerServer.class, message.getClass());
-	}
+	long start = System.currentTimeMillis();
 
 	SendChannelImpl sendChannel;
 
@@ -123,6 +157,14 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
 		aggregateDispatcher = new AggregateDispatcher(this);
+	}
+
+	void onFinish() {
+		synchronized (envelopeDispatcher()) {
+			while (aggregateDispatcher.hasDispatchers()) {
+				sendChannel.unconditionallySend();
+			}
+		}
 	}
 
 	@Override
@@ -145,43 +187,67 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		return receiveChannel;
 	}
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	long lifetimeMs() {
+		return System.currentTimeMillis() - start;
+	}
+
+	/*
+	 * If the envelope contains a startup packet, this will be false - so the
+	 * new clientInstanceUid (session) in this envelope will clobber other
+	 * sessions for the same logical Component, if any
+	 */
+	boolean isValidateClientInstanceUid(RemoteComponentRequest request) {
+		return request.messageEnvelope.packets.stream().anyMatch(
+				p -> handlerFor(p.message).isValidateClientInstanceUid());
+	}
+
+	MessageHandlerServer<?> handlerFor(Message message) {
+		return Registry.impl(MessageHandlerServer.class, message.getClass());
+	}
 
 	/*
 	 * 
 	 * Threading - this is not on the execution thread, so synchronized (it's
-	 * just a quick routing of incoming data)
+	 * just a quick routing of incoming data). This synchronizes on the envelope
+	 * dispatcher to ensure no races with
 	 * 
 	 */
-	synchronized void onReceivedToken(RequestToken token) {
-		/*
-		 * distribute etc incoming messages
-		 */
-		receiveChannel().onEnvelopeReceived(token.request.messageEnvelope);
-		/*
-		 * if there's already a token, this will cause it to be sent [FIXME -
-		 * signal 'finish buffering to-client messages']
-		 */
-		flushOutgoingMessages();
-		/*
-		 * register the associated HttpServletResponse for use as a protocol
-		 * response
-		 */
-		aggregateDispatcher.registerAvailableTokenForResponse(token);
-		sendChannel.conditionallySend();
+	void onReceivedToken(RequestToken token) {
+		synchronized (envelopeDispatcher()) {
+			/*
+			 * distribute etc incoming messages
+			 */
+			receiveChannel().onEnvelopeReceived(token.request.messageEnvelope);
+			/*
+			 * register the associated HttpServletResponse for use as a protocol
+			 * response
+			 */
+			aggregateDispatcher.registerAvailableTokenForResponse(token);
+			/*
+			 * ensure the dispatcher doesn't have too many in-flight requests
+			 * queued
+			 */
+			conditionallyFlushDispatcher(false);
+			sendChannel.conditionallySend();
+		}
 	}
 
-	void flushOutgoingMessages() {
-		if (aggregateDispatcher.isDispatchAvailable()) {
+	void conditionallyFlushDispatcher(boolean flushAllNonAwaiters) {
+		while (aggregateDispatcher.shouldFlush(flushAllNonAwaiters)) {
 			sendChannel.unconditionallySend();
 		}
 	}
 
-	public void onFinish() {
-		flushOutgoingMessages();
-	}
-
 	Date getLastEnvelopeReceived() {
 		return receiveChannel.lastEnvelopeReceived;
+	}
+
+	/*
+	 * For easier debugging, wait until this point to flush any non-awaiter
+	 * envelopes. That'll ensure that, in the normal case, the http roundtrip
+	 * contains the incoming message and any response messages
+	 */
+	void onEmptyClientDispatchQueue() {
+		conditionallyFlushDispatcher(true);
 	}
 }

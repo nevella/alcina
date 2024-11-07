@@ -141,7 +141,7 @@ class ClientExecutionQueue implements Runnable {
 	 */
 	// WIP - replacement for loop
 	void pumpMessage() {
-		boolean delta = false;
+		boolean dispatched = false;
 		try {
 			LooseContext.push();
 			AsyncDispatchable dispatchable = asyncDispatchQueue.poll();
@@ -158,16 +158,18 @@ class ClientExecutionQueue implements Runnable {
 						}
 					}
 				});
-				delta = true;
+				dispatched = true;
 			}
 		} finally {
 			LooseContext.pop();
 		}
-		if (!delta) {
+		if (!dispatched) {
 			try {
 				// make sure we're waiting on an empty queue
 				synchronized (asyncDispatchQueue) {
 					if (asyncDispatchQueue.isEmpty()) {
+						environment.access().flush();
+						transportLayer.onEmptyClientDispatchQueue();
 						asyncDispatchQueue.wait(1000);
 					}
 				}
@@ -238,7 +240,6 @@ class ClientExecutionQueue implements Runnable {
 			MessageHandlerServer messageHandler = MessageHandlerServer
 					.forMessage(token.message);
 			messageHandler.handle(token, environment.access(), token.message);
-			environment.access().flush();
 		} catch (Exception e) {
 			transportLayer.sendMessage(ProcessingException.wrap(e));
 			logger.warn(
