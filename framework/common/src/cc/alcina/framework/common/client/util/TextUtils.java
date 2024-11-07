@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -338,7 +339,7 @@ public class TextUtils {
 					"input contains duplicates modulo normalisation");
 			Map<String, String> result = new LinkedHashMap<>();
 			List<String> list = idsToOrig.keySet().stream()
-					.sorted(new GenComparator()).toList();
+					.sorted(new GenComparator()).collect(Collectors.toList());
 			String last = "";
 			for (String id : list) {
 				String orig = idsToOrig.get(id);

@@ -57,6 +57,7 @@ public abstract class PerformerTask implements SelfPerformer {
 		SelfPerformer.super.onAfterEnd();
 		Arrays.stream(getClass().getDeclaredFields())
 				.filter(f -> Modifier.isTransient(f.getModifiers()))
+				.filter(f -> !Modifier.isStatic(f.getModifiers()))
 				.filter(f -> f.getAnnotation(RetainTransient.class) == null)
 				.forEach(f -> {
 					try {
