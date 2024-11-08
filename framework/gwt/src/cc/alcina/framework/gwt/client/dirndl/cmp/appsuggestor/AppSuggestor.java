@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -170,7 +171,12 @@ public class AppSuggestor extends Model.Fields
 		}
 	}
 
-	@Directed(tag = "app-suggestor")
+	@Directed(
+		tag = "app-suggestor",
+		bindings = @Binding(
+			type = Type.PROPERTY,
+			to = NodeAttachId.ATTR_NAME_TRANSMIT_STATE,
+			literal = "true"))
 	public Suggestor suggestor;
 
 	Attributes attributes;

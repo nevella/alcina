@@ -22,7 +22,7 @@ public class DocumentAttachId extends NodeAttachId
 
 	public MutationProxy mutationProxy;
 
-	public InvokeProxy invokeProxy;
+	RemoteUiState invokeProxy;
 
 	// hack-ish - the element path is not necessarily determined at sink events
 	// time
@@ -31,6 +31,11 @@ public class DocumentAttachId extends NodeAttachId
 	public DocumentAttachId(Document document) {
 		super(document);
 		this.document = document;
+		this.invokeProxy = new RemoteUiState();
+	}
+
+	public void registerToRemoteInvokeProxy(InvokeProxy invokeProxy) {
+		this.invokeProxy.remoteDelegate = invokeProxy;
 	}
 
 	@Override
@@ -809,5 +814,19 @@ public class DocumentAttachId extends NodeAttachId
 			List<Class> argumentTypes, List<?> arguments, boolean sync) {
 		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
 				argumentTypes, arguments, sync);
+	}
+
+	@Override
+	public Element getActiveElement() {
+		return invokeSync("getActiveElement");
+	}
+
+	@Override
+	public List<Element> querySelectorAll(String selector) {
+		throw new UnsupportedOperationException();
+	}
+
+	public void onRemoteUiContextReceived(DomEventContext eventContext) {
+		invokeProxy.eventContext = eventContext;
 	}
 }

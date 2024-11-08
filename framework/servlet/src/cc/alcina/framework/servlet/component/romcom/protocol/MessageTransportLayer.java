@@ -555,8 +555,14 @@ public abstract class MessageTransportLayer {
 		}
 
 		protected void send(Message message) {
-			message.messageId = nextId();
-			bufferMessage(new MessageToken(message, sendChannelId()));
+			send(List.of(message));
+		}
+
+		protected void send(List<Message> messages) {
+			messages.forEach(message -> {
+				message.messageId = nextId();
+				bufferMessage(new MessageToken(message, sendChannelId()));
+			});
 			conditionallySend();
 		}
 

@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntCounter;
+import cc.alcina.framework.common.client.util.IntPair;
 
 // FIXME - dirndl - move all event code from Element to here?
 public class ElementLocal extends NodeLocal implements ClientDomElement {
@@ -948,5 +949,10 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	void putParent(DocumentLocal local) {
 		parentNode = local;
 		parentNode.getChildren().add(this);
+	}
+
+	@Override
+	public IntPair getScrollPosition() {
+		throw new UnsupportedOperationException();
 	}
 }

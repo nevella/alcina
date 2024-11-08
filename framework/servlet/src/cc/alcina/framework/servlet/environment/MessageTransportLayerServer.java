@@ -25,6 +25,18 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 				super.conditionallySend();
 			}
 		}
+
+		@Override
+		protected void send(Message message) {
+			batcher.add(message);
+		}
+
+		/*
+		 * re-implement to allow MessageBatcherServer to access this method
+		 */
+		protected void send(List<Message> messages) {
+			super.send(messages);
+		}
 	}
 
 	class ReceiveChannelImpl extends ReceiveChannel {
@@ -153,10 +165,13 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 	AggregateDispatcher aggregateDispatcher;
 
+	MessageBatcherServer batcher;
+
 	MessageTransportLayerServer() {
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
 		aggregateDispatcher = new AggregateDispatcher(this);
+		batcher = new MessageBatcherServer(this);
 	}
 
 	void onFinish() {
@@ -246,8 +261,11 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	 * For easier debugging, wait until this point to flush any non-awaiter
 	 * envelopes. That'll ensure that, in the normal case, the http roundtrip
 	 * contains the incoming message and any response messages
+	 * 
+	 * Calls to this method will be immediately preceded by
+	 * environment.access().flush();
 	 */
-	void onEmptyClientDispatchQueue() {
-		conditionallyFlushDispatcher(true);
+	void flush() {
+		batcher.flush();
 	}
 }

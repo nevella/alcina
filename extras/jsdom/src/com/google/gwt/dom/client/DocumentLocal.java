@@ -761,4 +761,14 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
 				argumentTypes, arguments, sync);
 	}
+
+	@Override
+	public Element getActiveElement() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<Element> querySelectorAll(String selector) {
+		throw new UnsupportedOperationException();
+	}
 }

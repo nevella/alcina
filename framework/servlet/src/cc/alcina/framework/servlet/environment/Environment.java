@@ -18,7 +18,6 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.DocumentAttachId;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
-import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodeAttachId;
@@ -45,6 +44,7 @@ import cc.alcina.framework.gwt.client.util.EventCollator;
 import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
@@ -161,6 +161,7 @@ class Environment {
 			 */
 			ResponseHandler handler = invoke0(node, methodName, argumentTypes,
 					arguments, flags, null, null);
+			queue.flush();
 			return awaitResponse(node, methodName, handler);
 		}
 
@@ -220,7 +221,7 @@ class Environment {
 						node.node().getNodeName()));
 			}
 			// always emit mutations before proxy invoke
-			emitMutations();
+			access().flush();
 			ResponseHandler handler = new ResponseHandler(callback);
 			Message.Invoke invoke = new Message.Invoke();
 			invoke.path = node == null ? null : AttachId.forNode(node.node());
@@ -373,30 +374,8 @@ class Environment {
 			return session;
 		}
 
-		/*
-		 * Fixme ROMCOM -
-		 * 
-		 * envelope handles session validation
-		 * 
-		 * transport handles last packet received
-		 * 
-		 * 
-		 */
-		void handleFromClientMessage(MessageToken token) throws Exception {
-			// validateSession(token.request.session,
-			// ((MessageHandlerServer) token.messageHandler)
-			// .isValidateClientInstanceUid());
-			// lastPacketsReceived.set(System.currentTimeMillis());
-			queue.handleFromClientMessage(token);
-		}
-
 		void dispatchToClient(Message message) {
 			queue.sendToClient(message);
-		}
-
-		void applyEvent(DomEventData eventData) {
-			queue.invoke(() -> LocalDom.attachIdRepresentations()
-					.applyEvent(eventData));
 		}
 
 		void applyLocationMutation(LocationMutation locationMutation,
@@ -483,8 +462,10 @@ class Environment {
 			return uid;
 		}
 
+		// currently only called by app reload - which makes sense, flush final
+		// messages ('reloading') before reload
 		void flush() {
-			emitMutations();
+			invoke(Environment.this::emitMutations);
 		}
 
 		String getSessionPath() {
@@ -498,6 +479,15 @@ class Environment {
 
 		AtomicLong getNonInteractionTimeout() {
 			return nonInteractionTimeout;
+		}
+
+		void onDomEventMessage(DomEventMessage message) {
+			queue.invoke(() -> {
+				document.attachIdRemote()
+						.onRemoteUiContextReceived(message.eventContext);
+				message.events.forEach(eventData -> LocalDom
+						.attachIdRepresentations().applyEvent(eventData));
+			});
 		}
 	}
 
@@ -572,10 +562,18 @@ class Environment {
 		this.ui = ui;
 		this.session = session;
 		this.uid = SEUtilities.generatePrettyUuid();
-		this.eventCollator = new EventCollator<Object>(5, this::emitMutations);
+		this.eventCollator = new EventCollator<Object>(5,
+				this::flushNonClientMutations);
 		this.access = new Access();
 		this.clientExecutionThreadAccess = new ClientExecutionThreadAccess();
 		queue = new ClientExecutionQueue(this);
+	}
+
+	void flushNonClientMutations() {
+		access().invoke(() -> {
+			emitMutations();
+			access().flush();
+		});
 	}
 
 	@Override
@@ -618,7 +616,8 @@ class Environment {
 		document = Document.contextProvider.createFrame(RemoteType.REF_ID);
 		document.createDocumentElement("<html/>", true);
 		document.implAccess().attachIdRemote().mutationProxy = mutationProxy;
-		document.implAccess().attachIdRemote().invokeProxy = invokeProxy;
+		document.implAccess().attachIdRemote()
+				.registerToRemoteInvokeProxy(invokeProxy);
 		LocalDom.initalizeDetachedSync();
 		GWTBridgeHeadless.inClient.set(true);
 		EnvironmentRegistry.enter(environmentRegistry);
@@ -704,8 +703,7 @@ class Environment {
 		}
 	}
 
-	// see class doc re sync
-	private void emitMutations() {
+	void emitMutations() {
 		if (mutations != null) {
 			Document.get().attachIdRemote().flushSinkEventsQueue();
 			queue.sendToClient(mutations);

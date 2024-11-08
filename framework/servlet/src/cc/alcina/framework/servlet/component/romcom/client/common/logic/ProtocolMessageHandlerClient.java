@@ -142,12 +142,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		if (currentEventMessage == null) {
 			currentEventMessage = new Message.DomEventMessage();
 			Scheduler.get().scheduleDeferred(() -> {
-				// may have been removed by a 'fire-now'
-				if (currentEventMessage == null) {
-					return;
-				}
-				ClientRpc.send(currentEventMessage);
-				currentEventMessage = null;
+				sendCurrentEventMessage();
 			});
 		}
 		DomEventData eventData = new DomEventData();
@@ -218,9 +213,19 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		}
 		if (event.getType().equals(BrowserEvents.PAGEHIDE)) {
 			// immediate dispatch
-			ClientRpc.send(currentEventMessage);
-			currentEventMessage = null;
+			sendCurrentEventMessage();
 		}
+	}
+
+	static void sendCurrentEventMessage() {
+		// may have been removed by a 'fire-now'
+		if (currentEventMessage == null) {
+			return;
+		}
+		currentEventMessage.eventContext = new DomEventContextGenerator()
+				.generate();
+		ClientRpc.send(currentEventMessage);
+		currentEventMessage = null;
 	}
 
 	public static class MutationsHandler

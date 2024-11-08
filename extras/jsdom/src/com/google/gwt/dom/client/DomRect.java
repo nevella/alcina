@@ -2,7 +2,11 @@ package com.google.gwt.dom.client;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 
-public class DomRect extends Bindable.Fields {
+/**
+ * Note - it's really rare that x!=left, y!=top - but they differ when
+ * width/height are negative
+ */
+public final class DomRect extends Bindable.Fields {
 	public double bottom;
 
 	public double height;
