@@ -647,6 +647,15 @@ public class JobRegistry {
 		return null;
 	}
 
+	public Job getJobHoldingResource(JobResource resource) {
+		return JobDomain.get().getActiveJobs().filter(
+				j -> j.domain().ensurePopulated().getProcessState() != null && j
+						.getProcessState().getResources().stream()
+						.anyMatch(rr -> rr.isAcquired()
+								&& rr.getPath().equals(resource.getPath())))
+				.findFirst().orElse(null);
+	}
+
 	public Object getResourceOwner() {
 		return JobContext.has()
 				? JobContext.get().getJob().provideFirstInSequence()
