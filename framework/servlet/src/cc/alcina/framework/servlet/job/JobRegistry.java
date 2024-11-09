@@ -454,8 +454,9 @@ public class JobRegistry {
 			TransactionEnvironment.withDomain(() -> {
 				JobContext.checkCancelled();
 			});
+		} else {
+			jobContext.awaitSequenceCompletion();
 		}
-		jobContext.awaitSequenceCompletion();
 		DomainStore.waitUntilCurrentRequestsProcessed();
 		return TransactionEnvironment
 				.withDomain(() -> job.domain().ensurePopulated());
