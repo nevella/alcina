@@ -43,7 +43,13 @@ public class OverlayPosition {
 			return;
 		}
 		Preconditions.checkState(fromRect != null);
-		toRect = toElement.getBoundingClientRect();
+		if (constraints.stream().noneMatch(Constraint::requiresActualToRect)) {
+			// will return a [0,0,0,0] domRect - which is fine if positioning
+			// non-center constraints
+			toRect = new DomRect();
+		} else {
+			toRect = toElement.getBoundingClientRect();
+		}
 		constraints.forEach(Constraint::apply);
 	}
 
@@ -69,6 +75,10 @@ public class OverlayPosition {
 				"constraints", constraints);
 	}
 
+	/*
+	 * Note - viewport-centered is rendered via css, not style/coordinate
+	 * modification.
+	 */
 	public OverlayPosition viewportCentered(boolean viewportCentered) {
 		this.viewportCentered = viewportCentered;
 		return this;
@@ -123,6 +133,18 @@ public class OverlayPosition {
 			}
 		}
 
+		boolean requiresActualToRect() {
+			switch (to) {
+			case CENTER:
+				return true;
+			case START:
+			case END:
+				return false;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
 		private double pos(DoublePair line, Position position) {
 			switch (position) {
 			case START:
@@ -149,9 +171,5 @@ public class OverlayPosition {
 
 	public enum Position {
 		START, CENTER, END
-	}
-
-	public void viewportBottom(boolean b) {
-		// TODO Auto-generated method stub
 	}
 }

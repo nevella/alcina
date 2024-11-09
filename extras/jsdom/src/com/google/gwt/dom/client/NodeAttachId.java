@@ -36,6 +36,9 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  */
 public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
+	/*
+	 * Can be added to a Dirndl model with interface TransmitState
+	 */
 	public static final String ATTR_NAME_TRANSMIT_STATE = "__attachId_ts";
 
 	public static final String ATTR_NAME_TRANSMIT_STATE_SELECTOR = "[__attachId_ts]";
@@ -215,6 +218,13 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 		return getOwnerDocument().attachIdRemote().invokeProxy.invokeSync(
 				NodeAttachId.this, methodName, argumentTypes, arguments,
 				List.of(InvokeProxy.Flag.invoke_on_element_style));
+	}
+
+	void invokeStyleAsync(String methodName, List<Class> argumentTypes,
+			List<?> arguments) {
+		getOwnerDocument().attachIdRemote().invokeProxy.invoke(
+				NodeAttachId.this, methodName, argumentTypes, arguments,
+				List.of(InvokeProxy.Flag.invoke_on_element_style), null);
 	}
 
 	<T> T invokeSync(String methodName) {

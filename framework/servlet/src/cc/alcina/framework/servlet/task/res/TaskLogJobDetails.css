@@ -20,3 +20,18 @@ td {
   font-weight: 100;
   -webkit-font-smoothing: none;
 }
+
+div.links {
+  margin-bottom: 1em;
+}
+div.links > div > a {
+  color: #446;
+  text-decoration: none;
+}
+div.links > div > a:visited {
+  color: #744;
+}
+
+div.links > div > a:hover {
+  text-decoration: underline;
+}

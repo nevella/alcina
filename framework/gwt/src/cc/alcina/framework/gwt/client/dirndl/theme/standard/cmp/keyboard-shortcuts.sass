@@ -1,14 +1,51 @@
 @use '../../theme/theme'  
 @use '../../theme/color'
 @use '../../dirndl/cmp/context-menu'
+@use '../../dirndl/cmp/heading'
+@use '../../dirndl/cmp/filter'
 
 @mixin contents
   keyboard-shortcuts-area   
     @include context-menu.dropdown
-    padding: 1rem
-    display: grid
-    grid-template-columns: 1fr 1fr 1fr
-
-    > shortcut
-      display: contents
+    padding: 1rem 2rem 2rem
+    font-size: 1.1rem
+    width: 750px
+    min-height: 50vh
     
+    > heading
+      @include heading.panel-3
+
+    > contents-filter
+      @include filter.contents-filter
+      font-size: 1.1rem
+      
+    > shortcuts
+      display: grid
+      grid-template-columns: 3rem 2rem 1fr
+      margin-top: 1rem
+      column-gap: 1rem
+      row-gap: 0.5rem
+      max-height: 50vh
+      overflow: auto
+
+      > shortcut
+        display: contents
+
+        > modifier-cell
+          text-align: right
+          isplay: inline-block
+          margin-top: -2px
+
+          > modifier
+            border: solid 1px #777
+            border-radius: 3px
+            padding: 2px
+            font-size: 0.8rem
+            color: #777
+
+            &:empty
+              border: none
+    
+body > .overlay-container.viewport-centered > overlay.keyboard-shortcuts-area
+  top: 3rem
+  transform: translate(-50%, 0%)

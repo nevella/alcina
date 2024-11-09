@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DateStyle;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -165,7 +166,7 @@ public class TaskLogJobDetails extends PerformerTask {
 		return this;
 	}
 
-	protected void processData(List<Job> threadData, DomNode body) {
+	protected void renderProcessData(List<Job> threadData, DomNode body) {
 		body.builder().tag("h2").text("Process state").append();
 		body.builder().tag("div")
 				.text("%s %s", threadData.size(),
@@ -267,25 +268,10 @@ public class TaskLogJobDetails extends PerformerTask {
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
 			DomNode body = doc.html().body();
-			body.builder().tag("h2").text("Allocator").append();
-			DomNodeBuilder queueDiv = body.builder().tag("div")
-					.className("allocation-queue");
-			AllocationQueue allocationQueue = JobDomain.get()
-					.getAllocationQueue(job);
-			if (allocationQueue == null) {
-				queueDiv.text("(No allocation queue)");
-			} else {
-				queueDiv.text(allocationQueue.toString());
-			}
-			queueDiv.append();
-			if (job.getLargeResult() != null) {
-				DomNode div = body.builder().tag("div").append();
-				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
-						.withJobId(id(job)).withDetails(true));
-				div.html().addLink("Large result/details", href, "");
-			}
+			renderQueue(job, body);
+			renderActions(job, body);
 			List<Job> threadData = JobRegistry.get().getThreadData(job);
-			processData(threadData, body);
+			renderProcessData(threadData, body);
 			renderRelated(job, body);
 			fields(job, body);
 			JobContext.get().getJob().setLargeResult(doc.fullToString());
@@ -293,6 +279,40 @@ public class TaskLogJobDetails extends PerformerTask {
 			// FIXME - localdomain.mvcc - remove
 			TransactionEnvironment.get().commit();
 		}
+	}
+
+	void renderActions(Job job, DomNode body) {
+		DomNode links = body.builder().tag("div").className("links").append();
+		if (job.getLargeResult() != null) {
+			DomNode div = links.builder().tag("div").append();
+			String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
+					.withJobId(id(job)).withDetails(true));
+			div.html().addLink("Large result/details", href, "");
+		}
+		if (job.provideIsComplete()) {
+			DomNode div = links.builder().tag("div").append();
+			String href = JobServlet.createTaskUrl(job.getTask());
+			div.html().addLink(Ax.format("Execute again (%s)",
+					NestedName.get(job.getTask())), href, "");
+		}
+		DomNode div = links.builder().tag("div").append();
+		String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
+				.withJobId(id(job)).withTruncateFields(false));
+		div.html().addLink("Show entire field values", href, "");
+	}
+
+	private void renderQueue(Job job, DomNode body) {
+		body.builder().tag("h2").text("Allocator").append();
+		DomNodeBuilder queueDiv = body.builder().tag("div")
+				.className("allocation-queue");
+		AllocationQueue allocationQueue = JobDomain.get()
+				.getAllocationQueue(job);
+		if (allocationQueue == null) {
+			queueDiv.text("(No allocation queue)");
+		} else {
+			queueDiv.text(allocationQueue.toString());
+		}
+		queueDiv.append();
 	}
 
 	public void setDetails(boolean details) {
@@ -309,6 +329,11 @@ public class TaskLogJobDetails extends PerformerTask {
 
 	private TaskLogJobDetails withDetails(boolean details) {
 		this.details = details;
+		return this;
+	}
+
+	private TaskLogJobDetails withTruncateFields(boolean truncateFields) {
+		this.truncateFields = truncateFields;
 		return this;
 	}
 

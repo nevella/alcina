@@ -618,7 +618,7 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setLeft(double value, Unit unit) {
-		element.invokeStyle("setLeft", List.of(double.class, Unit.class),
+		element.invokeStyleAsync("setLeft", List.of(double.class, Unit.class),
 				List.of(value, unit));
 	}
 
@@ -724,15 +724,15 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setProperty(String name, double value, Unit unit) {
-		element.invokeStyle("setProperty",
+		element.invokeStyleAsync("setProperty",
 				List.of(String.class, double.class, Unit.class),
 				List.of(name, value, unit));
 	}
 
 	@Override
 	public void setProperty(String name, String value) {
-		element.invokeStyle("setProperty", List.of(String.class, double.class),
-				List.of(name, value));
+		element.invokeStyleAsync("setProperty",
+				List.of(String.class, double.class), List.of(name, value));
 	}
 
 	@Override
@@ -787,7 +787,7 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void setTop(double value, Unit unit) {
-		element.invokeStyle("setTop", List.of(double.class, Unit.class),
+		element.invokeStyleAsync("setTop", List.of(double.class, Unit.class),
 				List.of(value, unit));
 	}
 

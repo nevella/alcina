@@ -37,7 +37,7 @@ class RemoteUiState implements InvokeProxy {
 				}
 			}
 		}
-		int debug = 3;
+		// not handled by cached ui state
 		return remoteDelegate.invokeSync(node, methodName, argumentTypes,
 				arguments, flags);
 	}

@@ -49,10 +49,10 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  *
  */
 @Directed(emits = ModelEvents.SelectionChanged.class)
-public class Suggestor extends Model
-		implements SuggestorEvents.EditorAsk.Handler,
-		ModelEvents.SelectionChanged.Handler, HasSelectedValue,
-		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler {
+public class Suggestor extends Model implements
+		SuggestorEvents.EditorAsk.Handler, ModelEvents.SelectionChanged.Handler,
+		HasSelectedValue, KeyboardNavigation.Navigation.Handler,
+		ModelEvents.Closed.Handler, Model.TransmitState {
 	// FIXME - dirndl 1x1e - add a default impl, which routes via a Debounce
 	// (which doesn't send if inflight, but has a timeout)
 	public interface Answer<A extends Ask> {

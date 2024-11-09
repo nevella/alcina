@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -33,7 +32,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOnBind;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion.ModelSuggestion;
-import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 
 @Directed(renderer = DirectedRenderer.Delegating.class)
 @TypeSerialization(reflectiveSerializable = false)
@@ -171,12 +169,7 @@ public class AppSuggestor extends Model.Fields
 		}
 	}
 
-	@Directed(
-		tag = "app-suggestor",
-		bindings = @Binding(
-			type = Type.PROPERTY,
-			to = NodeAttachId.ATTR_NAME_TRANSMIT_STATE,
-			literal = "true"))
+	@Directed(tag = "app-suggestor")
 	public Suggestor suggestor;
 
 	Attributes attributes;
@@ -249,7 +242,11 @@ public class AppSuggestor extends Model.Fields
 		attributes.withFocusOnBind(true);
 		attributes.withSelectAllOnFocus(true);
 		attributes.withSuggestOnBind(SuggestOnBind.NON_EMPTY_VALUE);
-		attributes.withSuggestionXAlign(Position.CENTER);
+		/*
+		 * app css should guarantee that the dropdown and the suggestor are
+		 * equal-sized, so START (default) is equivalent
+		 */
+		// attributes.withSuggestionXAlign(Position.CENTER);
 		attributes.withLogicalAncestors(List.of(AppSuggestor.class));
 		attributes.withAnswer(new AnswerImpl(this.attributes.answerSupplier));
 		attributes.withNonOverlaySuggestionResults(true);
