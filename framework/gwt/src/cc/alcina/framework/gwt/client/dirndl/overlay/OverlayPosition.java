@@ -136,9 +136,9 @@ public class OverlayPosition {
 		boolean requiresActualToRect() {
 			switch (to) {
 			case CENTER:
+			case END:
 				return true;
 			case START:
-			case END:
 				return false;
 			default:
 				throw new UnsupportedOperationException();
