@@ -27,6 +27,9 @@ public class FileUtils {
 	}
 
 	public static File child(File folder, String childFileName) {
+		if (childFileName.startsWith("/")) {
+			childFileName = childFileName.substring(1);
+		}
 		return new File(
 				String.format("%s/%s", folder.getPath(), childFileName));
 	}
