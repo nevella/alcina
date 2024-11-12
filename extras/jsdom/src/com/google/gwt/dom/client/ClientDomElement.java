@@ -5,6 +5,8 @@ import java.util.Map;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
+import cc.alcina.framework.common.client.util.IntPair;
+
 public interface ClientDomElement extends ClientDomNode {
 	/**
 	 * Returns the index of the first occurrence of name in a space-separated
@@ -315,4 +317,6 @@ public interface ClientDomElement extends ClientDomNode {
 	ClientDomStyle getStyleRemote();
 
 	void setSelectionRange(int pos, int length);
+
+	IntPair getScrollPosition();
 }

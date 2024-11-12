@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.JobServlet.Action;
 import cc.alcina.framework.servlet.task.ServletAwaitTask;
@@ -85,8 +86,12 @@ public class JobHandler implements HttpWriteUtils {
 					response.getWriter().write(String.valueOf(job.getId()));
 					response.flushBuffer();
 				} else {
-					String href = JobServlet.createTaskUrl(
-							new TaskLogJobDetails().withJobId(job.getId()));
+					String href = ServletLayerUtils
+							.robustGetRequestHostProtocolPort(request)
+							+ JobServlet
+									.createTaskUrl(new TaskLogJobDetails()
+											.withJobId(job.getId()))
+									.substring(1);
 					outputAsHtml = task instanceof TaskWithHtmlResult;
 					response.setContentType(
 							outputAsHtml ? "text/html" : "text/plain");

@@ -17,6 +17,7 @@ import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementJso extends NodeJso implements ElementRemote {
@@ -1142,5 +1143,10 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	final public void setSelectionRange(int pos, int length) {
 		((TextBoxImpl) GWT.create(TextBoxImpl.class))
 				.setSelectionRange((Element) node(), pos, length);
+	}
+
+	@Override
+	public final IntPair getScrollPosition() {
+		return new IntPair(getScrollLeft(), getScrollTop());
 	}
 }

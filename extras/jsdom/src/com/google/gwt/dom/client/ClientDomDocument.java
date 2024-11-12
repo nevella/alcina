@@ -8,8 +8,6 @@ import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.ProcessingInstruction;
 
-import cc.alcina.framework.common.client.util.RunnableSupplier;
-
 /**
  * all methods should actually call through to domdocument_static ... when i get
  * the time
@@ -1184,4 +1182,8 @@ public interface ClientDomDocument extends ClientDomNode {
 
 	<T> T invoke(Supplier<T> supplier, Class clazz, String methodName,
 			List<Class> argumentTypes, List<?> arguments, boolean sync);
+
+	Element getActiveElement();
+
+	List<Element> querySelectorAll(String selector);
 }

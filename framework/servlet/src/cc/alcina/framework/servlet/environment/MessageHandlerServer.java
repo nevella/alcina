@@ -40,7 +40,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 		@Override
 		public void handle(MessageToken token, Environment.Access env,
 				Message.DomEventMessage message) {
-			message.events.forEach(env::applyEvent);
+			env.onDomEventMessage(message);
 		}
 	}
 

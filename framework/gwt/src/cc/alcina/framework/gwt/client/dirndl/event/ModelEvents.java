@@ -2,9 +2,12 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  * <p>
@@ -296,6 +299,24 @@ public class ModelEvents {
 		}
 
 		void setVisible(boolean visible);
+
+		public static abstract class Abstract extends Model.All
+				implements FilterContentsFilterable {
+			private boolean visible = true;
+
+			@Binding(
+				to = "display",
+				transform = Binding.DisplayBlankNone.class,
+				type = Type.STYLE_ATTRIBUTE)
+			public boolean isVisible() {
+				return visible;
+			}
+
+			public void setVisible(boolean visible) {
+				set("visible", this.visible, visible,
+						() -> this.visible = visible);
+			}
+		}
 	}
 
 	public static class Find extends ModelEvent<Object, Find.Handler> {

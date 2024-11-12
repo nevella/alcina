@@ -73,7 +73,9 @@ public abstract class DocumentSelection extends MeasureSelection
 
 	@Override
 	public void releaseResources() {
-		super.releaseResources();
+		if (super.get() != null) {
+			super.releaseResources();
+		}
 		document = null;
 	}
 

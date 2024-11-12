@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.SelfPerformer;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -40,6 +41,11 @@ public abstract class PerformerTask implements SelfPerformer {
 	public abstract static class Fields extends PerformerTask {
 	}
 
+	@Bean(PropertySource.FIELDS)
+	public abstract static class Remote extends Fields
+			implements Task.RemotePerformable {
+	}
+
 	/**
 	 * 
 	 * Retain this particular transient field
@@ -58,6 +64,7 @@ public abstract class PerformerTask implements SelfPerformer {
 		Arrays.stream(getClass().getDeclaredFields())
 				.filter(f -> Modifier.isTransient(f.getModifiers()))
 				.filter(f -> !Modifier.isStatic(f.getModifiers()))
+				.filter(f -> !f.getType().isPrimitive())
 				.filter(f -> f.getAnnotation(RetainTransient.class) == null)
 				.forEach(f -> {
 					try {

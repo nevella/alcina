@@ -2,6 +2,7 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
@@ -1030,4 +1031,25 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
 				argumentTypes, arguments, sync);
 	}
+
+	@Override
+	public final Element getActiveElement() {
+		ElementJso activeElementJso = getActiveElement0();
+		return activeElementJso == null ? null : activeElementJso.elementFor();
+	}
+
+	final native ElementJso getActiveElement0()/*-{
+		return this.activeElement;
+		}-*/;
+
+	@Override
+	public final List<Element> querySelectorAll(String selector) {
+		return querySelectorAll0(selector).stream()
+				.collect(Collectors.toList());
+	}
+
+	native final NodeList<Element> querySelectorAll0(String selector) /*-{
+    var nodeList = this.querySelectorAll(selector);
+    return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/ClientDomNodeList;)(nodeList);
+	}-*/;
 }

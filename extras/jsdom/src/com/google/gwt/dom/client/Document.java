@@ -1165,4 +1165,13 @@ public class Document extends Node
 		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
 				argumentTypes, arguments, sync);
 	}
+
+	@Override
+	public Element getActiveElement() {
+		return remote.getActiveElement();
+	}
+
+	public List<Element> querySelectorAll(String selector) {
+		return remote.querySelectorAll(selector);
+	}
 }

@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.AttachId;
+import com.google.gwt.dom.client.DomEventContext;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.mutations.LocationMutation;
@@ -87,15 +88,7 @@ public class RemoteComponentProtocol {
 		public static class DomEventMessage extends Message {
 			public List<DomEventData> events = new ArrayList<>();
 
-			@Override
-			public boolean canMerge(Message message) {
-				return message instanceof DomEventMessage;
-			}
-
-			@Override
-			public void merge(Message message) {
-				events.addAll(((DomEventMessage) message).events);
-			}
+			public DomEventContext eventContext;
 
 			@Override
 			protected String provideMessageData() {

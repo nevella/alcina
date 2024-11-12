@@ -22,14 +22,14 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * accessed package class with complex access rules
  */
 class ClientExecutionQueue implements Runnable {
-	// server-generated runnables or from-client messages to process in order,
-	// while not awaiting a synchronous client response
-	BlockingQueue<AsyncDispatchable> asyncDispatchQueue = new LinkedBlockingQueue<>();
-
 	/*
 	 * either of these should be dispatched asynchronously, in order
 	 */
 	class AsyncDispatchable {
+		MessageToken fromClientMessage;
+
+		Runnable runnable;
+
 		AsyncDispatchable(Runnable runnable) {
 			this.runnable = runnable;
 		}
@@ -37,10 +37,6 @@ class ClientExecutionQueue implements Runnable {
 		AsyncDispatchable(MessageToken fromClientMessage) {
 			this.fromClientMessage = fromClientMessage;
 		}
-
-		MessageToken fromClientMessage;
-
-		Runnable runnable;
 
 		@Override
 		public String toString() {
@@ -52,9 +48,19 @@ class ClientExecutionQueue implements Runnable {
 		}
 	}
 
+	// server-generated runnables or from-client messages to process in order,
+	// while not awaiting a synchronous client response
+	BlockingQueue<AsyncDispatchable> asyncDispatchQueue = new LinkedBlockingQueue<>();
+
 	boolean finished = false;
 
 	Environment environment;
+
+	Logger logger = LoggerFactory.getLogger(getClass());
+
+	private Thread executionThread;
+
+	MessageTransportLayerServer transportLayer;
 
 	ClientExecutionQueue(Environment environment) {
 		this.environment = environment;
@@ -62,19 +68,36 @@ class ClientExecutionQueue implements Runnable {
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
 	}
 
+	@Override
+	public void run() {
+		try {
+			LooseContext.push();
+			environment.fromClientExecutionThreadAccess().beforeEnterContext();
+			// this will initialise the outer context (with Document, Window
+			// etc). each cycle of loop will execute in a child context
+			environment.fromClientExecutionThreadAccess().enterContext();
+			while (!finished) {
+				pumpMessage();
+			}
+		} finally {
+			environment.fromClientExecutionThreadAccess().exitContext();
+			LooseContext.pop();
+		}
+	}
+
 	/*
 	 * Note the difference in ordering depending on threading - non-queued
 	 * execution is required for nested execution order on the execution thread
 	 */
 	void invoke(Runnable runnable) {
-		if (inOnExecutionThread()) {
+		if (isOnExecutionThread()) {
 			runnable.run();
 		} else {
 			addDispatchable(new AsyncDispatchable(runnable));
 		}
 	}
 
-	boolean inOnExecutionThread() {
+	boolean isOnExecutionThread() {
 		return Thread.currentThread() == executionThread;
 	}
 
@@ -94,23 +117,6 @@ class ClientExecutionQueue implements Runnable {
 			handler.handle(token, environment.access(), message);
 		} else {
 			addDispatchable(new AsyncDispatchable(token));
-		}
-	}
-
-	@Override
-	public void run() {
-		try {
-			LooseContext.push();
-			environment.fromClientExecutionThreadAccess().beforeEnterContext();
-			// this will initialise the outer context (with Document, Window
-			// etc). each cycle of loop will execute in a child context
-			environment.fromClientExecutionThreadAccess().enterContext();
-			while (!finished) {
-				pumpMessage();
-			}
-		} finally {
-			environment.fromClientExecutionThreadAccess().exitContext();
-			LooseContext.pop();
 		}
 	}
 
@@ -169,7 +175,7 @@ class ClientExecutionQueue implements Runnable {
 				synchronized (asyncDispatchQueue) {
 					if (asyncDispatchQueue.isEmpty()) {
 						environment.access().flush();
-						transportLayer.onEmptyClientDispatchQueue();
+						transportLayer.flush();
 						asyncDispatchQueue.wait(1000);
 					}
 				}
@@ -179,8 +185,6 @@ class ClientExecutionQueue implements Runnable {
 		}
 	}
 
-	Logger logger = LoggerFactory.getLogger(getClass());
-
 	/*
 	 * Does not await receipt
 	 */
@@ -188,21 +192,8 @@ class ClientExecutionQueue implements Runnable {
 		transportLayer.sendMessage(message);
 	}
 
-	/*
-	 * TODO -
-	 */
-	void handleFromClientMessage(MessageToken token) {
-		// Message protocolMessage = token.request.protocolMessage;
-		// if (protocolMessage.sync) {
-		// handleFromClientMessageOnThread(token);
-		// } else {
-		// addDispatchable(new AsyncDispatchable(token));
-		// try {
-		// token.latch.await();
-		// } catch (InterruptedException e) {
-		// Ax.simpleExceptionOut(e);
-		// }
-		// }
+	void flush() {
+		transportLayer.flush();
 	}
 
 	/*
@@ -249,16 +240,11 @@ class ClientExecutionQueue implements Runnable {
 		token.messageConsumed();
 	}
 
-	private Thread executionThread;
-
 	void stop() {
 		finished = true;
 		transportLayer.onFinish();
-		// FIXME - transport - flush all handlers
 		synchronized (this) {
 			notifyAll();
 		}
 	}
-
-	MessageTransportLayerServer transportLayer;
 }

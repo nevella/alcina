@@ -50,6 +50,10 @@ public class JobServlet extends AlcinaServlet {
 				if (typed.isDetails()) {
 					queryParameters.put("details", Boolean.TRUE.toString());
 				}
+				if (!typed.isTruncateFields()) {
+					queryParameters.put("truncateFields",
+							Boolean.FALSE.toString());
+				}
 			}
 		} else if (task instanceof TaskCancelJob) {
 			queryParameters.put("action", "cancel");

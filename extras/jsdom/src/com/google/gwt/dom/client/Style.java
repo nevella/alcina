@@ -2031,6 +2031,9 @@ public class Style implements ClientDomStyle {
 							(double) arguments.get(1), (Unit) arguments.get(2));
 					return null;
 				}
+			case "removeProperty":
+				style.removeProperty((String) arguments.get(0));
+				return null;
 			default:
 				throw new UnsupportedOperationException();
 			}

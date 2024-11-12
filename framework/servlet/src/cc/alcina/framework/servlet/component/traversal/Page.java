@@ -232,7 +232,7 @@ class Page extends Model.All
 	}
 
 	void goPreserveScrollPosition(TraversalPlace place) {
-		Element scrollableLayers = layers.provideElement().getChildElement(1);
+		Element scrollableLayers = layers.layersContainer.provideElement();
 		int top = scrollableLayers.getScrollTop();
 		place.go();
 		layers.provideElement().getChildElement(1).setScrollTop(top);

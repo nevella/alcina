@@ -11,6 +11,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /*
  * Currently an outlier in this is support for the 'value' property - which
@@ -61,7 +62,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public void focus() {
-		invokeSync("focus");
+		invokeAsync("focus");
 	}
 
 	@Override
@@ -346,7 +347,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public final void scrollIntoView() {
-		invokeSync("scrollIntoView", List.of(), List.of());
+		invokeAsync("scrollIntoView", List.of(), List.of());
 	}
 
 	@Override
@@ -443,7 +444,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 			} else {
 				// local caching to prevent roundtrips (although those do work)
 				this.value = value;
-				invokeSync("setPropertyString",
+				invokeAsync("setPropertyString",
 						List.of(String.class, String.class),
 						// not list.of - does not allow nulls
 						Arrays.asList(name, value));
@@ -456,12 +457,12 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
-		invokeSync("setScrollLeft", List.of(int.class), List.of(scrollLeft));
+		invokeAsync("setScrollLeft", List.of(int.class), List.of(scrollLeft));
 	}
 
 	@Override
 	public void setScrollTop(int scrollTop) {
-		invokeSync("setScrollTop", List.of(int.class), List.of(scrollTop));
+		invokeAsync("setScrollTop", List.of(int.class), List.of(scrollTop));
 	}
 
 	@Override
@@ -501,12 +502,17 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public void setSelectionRange(int pos, int length) {
-		invokeSync("setSelectionRange", List.of(int.class, int.class),
+		invokeAsync("setSelectionRange", List.of(int.class, int.class),
 				List.of(pos, length));
 	}
 
 	@Override
 	public ClientDomStyle getStyleRemote() {
 		return new StyleAttachId(this);
+	}
+
+	@Override
+	public IntPair getScrollPosition() {
+		return invokeSync("getScrollPosition");
 	}
 }

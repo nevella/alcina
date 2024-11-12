@@ -53,6 +53,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
@@ -1376,5 +1377,9 @@ public class Element extends Node implements ClientDomElement,
 		local().insertBefore(newChild, refChild);
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
 				newChild, newChild.getPreviousSibling(), true));
+	}
+
+	public IntPair getScrollPosition() {
+		return remote().getScrollPosition();
 	}
 }

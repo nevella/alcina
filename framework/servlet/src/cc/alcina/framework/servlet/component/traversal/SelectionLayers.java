@@ -18,8 +18,21 @@ class SelectionLayers extends Model.Fields {
 	@Directed
 	Heading header = new Heading("Selection layers");
 
-	@Directed.Wrap("layers")
-	List<LayerSelections> layers;
+	/*
+	 * @Directed.Wrap is not used (rather, a container class) because it's a
+	 * scroll container, so code wants access to the rendered element
+	 */
+	@Directed(tag = "layers")
+	class LayersContainer extends Model.All implements TransmitState {
+		List<LayerSelections> layers;
+
+		public void setLayers(List<LayerSelections> layers) {
+			set("layers", this.layers, layers, () -> this.layers = layers);
+		}
+	}
+
+	@Directed
+	LayersContainer layersContainer = new LayersContainer();
 
 	Page page;
 
@@ -46,11 +59,7 @@ class SelectionLayers extends Model.Fields {
 		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers
 				&& layer.unfiliteredSelectionCount() == 0
 				&& !layer.nameArea.hasFilter);
-		setLayers(layers);
-	}
-
-	public void setLayers(List<LayerSelections> layers) {
-		set("layers", this.layers, layers, () -> this.layers = layers);
+		layersContainer.setLayers(layers);
 	}
 
 	boolean placeChangeCausesChange(TraversalPlace newPlace) {

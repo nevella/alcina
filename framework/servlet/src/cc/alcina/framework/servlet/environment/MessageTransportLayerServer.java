@@ -13,6 +13,15 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
+/**
+ * <p>
+ * The server end of the message transport layer
+ * 
+ * 
+ * 
+ * @see {@link MessageBatcher} - performance optimiser, which batches messages
+ *      such as interleaved invoke/js and mutation
+ */
 class MessageTransportLayerServer extends MessageTransportLayer {
 	class SendChannelImpl extends SendChannel {
 		/**
@@ -24,6 +33,18 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			synchronized (envelopeDispatcher()) {
 				super.conditionallySend();
 			}
+		}
+
+		@Override
+		protected void send(Message message) {
+			batcher.add(message);
+		}
+
+		/*
+		 * re-implement to allow MessageBatcherServer to access this method
+		 */
+		protected void send(List<Message> messages) {
+			super.send(messages);
 		}
 	}
 
@@ -153,10 +174,13 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 	AggregateDispatcher aggregateDispatcher;
 
+	MessageBatcherServer batcher;
+
 	MessageTransportLayerServer() {
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
 		aggregateDispatcher = new AggregateDispatcher(this);
+		batcher = new MessageBatcherServer();
 	}
 
 	void onFinish() {
@@ -246,8 +270,44 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	 * For easier debugging, wait until this point to flush any non-awaiter
 	 * envelopes. That'll ensure that, in the normal case, the http roundtrip
 	 * contains the incoming message and any response messages
+	 * 
+	 * Calls to this method will be immediately preceded by
+	 * environment.access().flush();
 	 */
-	void onEmptyClientDispatchQueue() {
-		conditionallyFlushDispatcher(true);
+	void flush() {
+		batcher.flush();
+	}
+
+	/**
+	 * <p>
+	 * THe batcher groups as many messages as possible before sending, to
+	 * improve performance.
+	 * <p>
+	 * Invariants are:
+	 * <ul>
+	 * <li>Outgoing messages must be sent once all incoming messages are
+	 * processed
+	 * <li>Callers of message.send guarantee that mutations are flushed (and the
+	 * mutation message added, if any) before any dom-related message (i.e.
+	 * invoke) are enqueued
+	 * <li>Outgoing messages must be sent if a synchronous client response is
+	 * required (i.e. invoke/sync was called)
+	 * <li>Effectively this means an interleaved sequence of [invoke, mutation]
+	 * messages are sent
+	 * </ul>
+	 */
+	class MessageBatcherServer {
+		synchronized void flush() {
+			List<Message> toSend = messages;
+			messages = new ArrayList<>();
+			sendChannel.send(toSend);
+			conditionallyFlushDispatcher(true);
+		}
+
+		List<Message> messages = new ArrayList<>();
+
+		synchronized void add(Message message) {
+			messages.add(message);
+		}
 	}
 }

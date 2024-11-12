@@ -36,6 +36,13 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  */
 public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
+	/*
+	 * Can be added to a Dirndl model with interface TransmitState
+	 */
+	public static final String ATTR_NAME_TRANSMIT_STATE = "__attachId_ts";
+
+	public static final String ATTR_NAME_TRANSMIT_STATE_SELECTOR = "[__attachId_ts]";
+
 	public static NodeAttachId create(Node node) {
 		switch (node.getNodeType()) {
 		case Node.ELEMENT_NODE:
@@ -199,6 +206,13 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 				NodeAttachId.this, methodName, argumentTypes, arguments, null);
 	}
 
+	void invokeAsync(String methodName, List<Class> argumentTypes,
+			List<?> arguments) {
+		getOwnerDocument().attachIdRemote().invokeProxy.invoke(
+				NodeAttachId.this, methodName, argumentTypes, arguments, null,
+				null);
+	}
+
 	<T> T invokeStyle(String methodName, List<Class> argumentTypes,
 			List<?> arguments) {
 		return getOwnerDocument().attachIdRemote().invokeProxy.invokeSync(
@@ -206,8 +220,19 @@ public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 				List.of(InvokeProxy.Flag.invoke_on_element_style));
 	}
 
+	void invokeStyleAsync(String methodName, List<Class> argumentTypes,
+			List<?> arguments) {
+		getOwnerDocument().attachIdRemote().invokeProxy.invoke(
+				NodeAttachId.this, methodName, argumentTypes, arguments,
+				List.of(InvokeProxy.Flag.invoke_on_element_style), null);
+	}
+
 	<T> T invokeSync(String methodName) {
 		return invokeSync(methodName, null, null);
+	}
+
+	void invokeAsync(String methodName) {
+		invokeAsync(methodName, null, null);
 	}
 
 	@Override

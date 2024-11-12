@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 @Bean
 @XmlAccessorType(XmlAccessType.FIELD)
 @Registrations({ @Registration(JaxbContextRegistration.class), })
-public class IntPair implements Comparable<IntPair>, Serializable,
+public final class IntPair implements Comparable<IntPair>, Serializable,
 		Iterable<Integer>, TreeSerializable {
 	public static List<IntPair> asRangeList(List<Integer> ints) {
 		int start = -1;

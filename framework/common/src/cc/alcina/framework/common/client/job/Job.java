@@ -318,6 +318,12 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.performerVersionNumber;
 	}
 
+	/**
+	 * The serialized property is lazy, so only call after
+	 * job.domain().ensurePopulated()
+	 * 
+	 * @return
+	 */
 	@Transient
 	@DomainProperty(serialize = true)
 	public ProcessState getProcessState() {
