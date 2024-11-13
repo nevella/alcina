@@ -197,13 +197,15 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	public ClassReflection.ProvidesTypeBounds providesTypeBounds = new ProvidesTypeBoundsJavacImpl();
 
-	public JType voidJType;
+	JType voidJType;
 
 	public Object[] firePropertyChangeMethodJTypes;
 
 	JClassType registrationAllSubtypesClient;
 
 	public Attributes attributes = new Attributes();
+
+	JClassType voidWrappedJType;
 
 	void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
 		if (!type.isPrimitive()) {
@@ -358,6 +360,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		reflectUnknownInInitialModule = !context.isProdMode()
 				|| Boolean.getBoolean("reachability.production");
 		voidJType = JPrimitiveType.VOID;
+		voidWrappedJType = getType(void.class);
 		registrationAllSubtypesClient = getType(
 				Registration.AllSubtypesClient.class);
 		firePropertyChangeMethodJTypes = new JType[] { getType(String.class),
@@ -666,7 +669,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		boolean sourcesPropertyChangeEvents() {
 			return Arrays.stream(reflectedType.getInheritableMethods())
 					.filter(m -> m.getName().equals("firePropertyChange"))
-					.filter(m -> m.getReturnType() == voidJType)
+					.filter(m -> m.getReturnType() == voidJType
+							|| m.getReturnType() == voidWrappedJType)
 					.anyMatch(m -> Arrays.equals(m.getParameterTypes(),
 							firePropertyChangeMethodJTypes));
 		}
