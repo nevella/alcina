@@ -11,8 +11,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
-import cc.alcina.framework.servlet.component.traversal.TraversalSettings.InputOutputDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
 /*
@@ -41,11 +41,11 @@ class Dotburger extends Model.Fields {
 		@Choices.EnumValues(PropertyDisplayMode.class)
 		PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
 
-		Heading section3 = new Heading("I/O display mode");
+		Heading section3 = new Heading("Secondary display mode");
 
 		@Directed.Transform(Choices.Single.To.class)
-		@Choices.EnumValues(InputOutputDisplayMode.class)
-		InputOutputDisplayMode ioDisplayMode = InputOutputDisplayMode.INPUT_OUTPUT;
+		@Choices.Values(TraversalBrowser.ValidSecondaryAreaDisplayModes.class)
+		SecondaryAreaDisplayMode secondaryAreaDisplayMode = SecondaryAreaDisplayMode.INPUT_OUTPUT;
 
 		Heading section4 = new Heading("Actions");
 
@@ -54,8 +54,8 @@ class Dotburger extends Model.Fields {
 
 		Menu() {
 			bindings().from(TraversalSettings.get())
-					.on(TraversalSettings.properties.inputOutputDisplayMode)
-					.to(this).on(properties.ioDisplayMode).bidi();
+					.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+					.to(this).on(properties.secondaryAreaDisplayMode).bidi();
 			bindings().from(TraversalSettings.get())
 					.on(TraversalSettings.properties.propertyDisplayMode)
 					.to(this).on(properties.propertyDisplayMode).bidi();

@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.Arrays;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -19,7 +21,7 @@ public class TraversalSettings extends Bindable.Fields {
 
 	public PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
 
-	public InputOutputDisplayMode inputOutputDisplayMode = InputOutputDisplayMode.INPUT_OUTPUT;
+	public SecondaryAreaDisplayMode secondaryAreaDisplayMode = SecondaryAreaDisplayMode.INPUT_OUTPUT;
 
 	public int tableRows = 50;
 
@@ -27,8 +29,8 @@ public class TraversalSettings extends Bindable.Fields {
 		QUARTER_WIDTH, HALF_WIDTH, FULL_WIDTH, NONE
 	}
 
-	public enum InputOutputDisplayMode {
-		INPUT_OUTPUT, INPUT, OUTPUT, NONE
+	public enum SecondaryAreaDisplayMode {
+		INPUT_OUTPUT, INPUT, OUTPUT, TABLE, NONE
 	}
 
 	public PropertyDisplayMode nextPropertyDisplayMode() {
@@ -39,11 +41,12 @@ public class TraversalSettings extends Bindable.Fields {
 		return next;
 	}
 
-	public InputOutputDisplayMode nextInputOutputDisplayMode() {
-		InputOutputDisplayMode next = InputOutputDisplayMode
-				.values()[(inputOutputDisplayMode.ordinal() + 1)
-						% InputOutputDisplayMode.values().length];
-		properties.inputOutputDisplayMode.set(this, next);
+	public SecondaryAreaDisplayMode nextSecondaryAreaDisplayMode() {
+		SecondaryAreaDisplayMode[] values = TraversalBrowser.Ui.get()
+				.getValidSecondaryAreadModes();
+		SecondaryAreaDisplayMode next = values[(Arrays.asList(values)
+				.indexOf(secondaryAreaDisplayMode) + 1) % values.length];
+		properties.secondaryAreaDisplayMode.set(this, next);
 		return next;
 	}
 

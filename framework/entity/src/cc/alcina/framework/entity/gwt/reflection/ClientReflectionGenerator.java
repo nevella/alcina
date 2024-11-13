@@ -360,7 +360,14 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		reflectUnknownInInitialModule = !context.isProdMode()
 				|| Boolean.getBoolean("reachability.production");
 		voidJType = JPrimitiveType.VOID;
-		voidWrappedJType = getType(void.class);
+		if (!context.getTypeOracle().getClass().getName()
+				.startsWith("com.google")) {
+			// only required for non-browser (and unavailable in gwt typemodel,
+			// since it maps there to JPrimitiveType.VOID
+			// FIXME - probably an issue with non-GWT typemodel, and non-gwt shd
+			// map to JPrimitiveType.VOID
+			voidWrappedJType = getType(void.class);
+		}
 		registrationAllSubtypesClient = getType(
 				Registration.AllSubtypesClient.class);
 		firePropertyChangeMethodJTypes = new JType[] { getType(String.class),

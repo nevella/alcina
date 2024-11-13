@@ -131,12 +131,14 @@ class LayerSelections extends Model.All {
 			hasFilter = filter.existing != null;
 		}
 
-		class Filter extends Model.All implements DomEvents.Click.Handler {
+		class Filter extends Model.All implements ModelEvents.Filter.Handler {
 			// TODO - dirndl - maybe a lightweight singleton Action? Although
 			// this works well enough
 			Link button;
 
-			@Directed(tag = "existing")
+			@Directed(
+				tag = "existing",
+				reemits = { DomEvents.Click.class, ModelEvents.Filter.class })
 			LeafModel.TextTitle existing;
 
 			private Overlay overlay;
@@ -150,19 +152,6 @@ class LayerSelections extends Model.All {
 				if (attr != null) {
 					this.existing = new TextTitle(attr.toString());
 				}
-			}
-
-			@Override
-			public void onClick(Click event) {
-				WidgetUtils.squelchCurrentEvent();
-				FilterSuggestor suggestor = new FilterSuggestor();
-				overlay = Overlay.builder()
-						.dropdown(Position.START,
-								provideElement().getBoundingClientRect(), this,
-								new FilterSuggestor())
-						.build();
-				setFilterEditorOpen(true);
-				overlay.open();
 			}
 
 			@Directed.Delegating
@@ -206,6 +195,19 @@ class LayerSelections extends Model.All {
 					suggestor.setValue(null);
 					event.reemitAs(this, SuggestionSelected.class);
 				}
+			}
+
+			@Override
+			public void onFilter(ModelEvents.Filter event) {
+				WidgetUtils.squelchCurrentEvent();
+				FilterSuggestor suggestor = new FilterSuggestor();
+				overlay = Overlay.builder()
+						.dropdown(Position.START,
+								provideElement().getBoundingClientRect(), this,
+								new FilterSuggestor())
+						.build();
+				setFilterEditorOpen(true);
+				overlay.open();
 			}
 		}
 

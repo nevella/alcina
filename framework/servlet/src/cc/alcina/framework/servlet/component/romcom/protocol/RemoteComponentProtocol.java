@@ -92,7 +92,8 @@ public class RemoteComponentProtocol {
 
 			@Override
 			protected String provideMessageData() {
-				return Ax.first(events).event.getType();
+				return events.stream().map(e -> e.event.getType()).distinct()
+						.collect(Collectors.joining(", "));
 			}
 		}
 

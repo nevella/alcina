@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
@@ -17,7 +18,10 @@ import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
 @Directed(tag = "selections")
+@TypedProperties
 class RenderedSelections extends Model.Fields {
+	static PackageProperties._RenderedSelections properties = PackageProperties.renderedSelections;
+
 	class SelectionMarkupArea extends Model.All {
 		SelectionMarkupArea(Model model) {
 			this.model = model;
@@ -44,24 +48,23 @@ class RenderedSelections extends Model.Fields {
 	@Directed
 	SelectionTableArea selectionTable;
 
-	public void setSelectionTable(SelectionTableArea selectionTable) {
-		set("selectionTable", this.selectionTable, selectionTable,
-				() -> this.selectionTable = selectionTable);
-	}
-
 	Selection<?> selection;
 
-	boolean input;
+	Variant variant;
 
-	RenderedSelections(Page page, boolean input) {
+	RenderedSelections(Page page, Variant variant) {
 		this.page = page;
-		this.input = input;
-		this.heading = new Heading(input ? "Input" : "Output");
+		this.variant = variant;
+		this.heading = new Heading(Ax.friendly(variant));
 		bindings().from(page.ui).on(Ui.properties.place)
 				.typed(TraversalPlace.class)
 				.map(p -> p.provideSelection(SelectionType.VIEW))
 				.accept(this::setSelection);
 		bindings().from(this).on("selection").signal(this::onSelectionChange);
+	}
+
+	enum Variant {
+		input, output, table
 	}
 
 	@Override
@@ -89,7 +92,7 @@ class RenderedSelections extends Model.Fields {
 
 	private void conditionallyPopulate() {
 		if (selection == null) {
-			setSelectionTable(null);
+			properties.selectionTable.set(this, null);
 			setSelectionMarkupArea(null);
 			return;
 		}
@@ -101,11 +104,12 @@ class RenderedSelections extends Model.Fields {
 	}
 
 	void conditionallyPopulateTable(SelectionTraversal traversal) {
-		if (input) {
+		if (variant != Variant.table) {
 			return;
 		}
 		if (selection instanceof SelectionTableArea.HasTableRepresentation) {
-			setSelectionTable(new SelectionTableArea(selection));
+			properties.selectionTable.set(this,
+					new SelectionTableArea(selection));
 		}
 	}
 
@@ -115,10 +119,10 @@ class RenderedSelections extends Model.Fields {
 			setSelectionMarkupArea(null);
 			return;
 		}
-		String styleScope = Ax.format(
-				"selections.%s > selection-markup-area > div",
-				input ? "input" : "output");
-		Query query = markup.query(selection, styleScope, input);
+		String styleScope = Ax
+				.format("selections.%s > selection-markup-area > div", variant);
+		Query query = markup.query(selection, styleScope,
+				variant == Variant.input);
 		Model model = query.getModel();
 		if (this.selectionMarkupArea != null
 				&& this.selectionMarkupArea.model == model) {

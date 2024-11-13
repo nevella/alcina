@@ -1,7 +1,5 @@
 package cc.alcina.framework.servlet.component.traversal;
 
-import com.google.gwt.dom.client.NativeEvent.Modifier;
-
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
@@ -87,18 +85,18 @@ public abstract class TraversalBrowserCommand<T, H extends NodeEvent.Handler>
 
 	@AppSuggestorCommand(
 		parent = TraversalBrowserCommand.class,
-		name = "input/output: cycle",
-		description = "Cycle through the input/output display modes")
-	@KeyBinding(key = "i")
-	public static class InputOutputCycle
-			extends TraversalBrowserCommand<Object, InputOutputCycle.Handler> {
+		name = "secondary mode: cycle",
+		description = "Cycle through the secondary area display modes")
+	@KeyBinding(key = "s")
+	public static class SecondaryAreaDisplayCycle extends
+			TraversalBrowserCommand<Object, SecondaryAreaDisplayCycle.Handler> {
 		@Override
-		public void dispatch(InputOutputCycle.Handler handler) {
-			handler.onInputOutputCycle(this);
+		public void dispatch(SecondaryAreaDisplayCycle.Handler handler) {
+			handler.onSecondaryAreaDisplayCycle(this);
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onInputOutputCycle(InputOutputCycle event);
+			void onSecondaryAreaDisplayCycle(SecondaryAreaDisplayCycle event);
 		}
 	}
 }

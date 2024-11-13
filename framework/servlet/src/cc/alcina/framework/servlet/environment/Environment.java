@@ -85,7 +85,7 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  */
 class Environment {
 	static class TimerProvider implements Timer.Provider {
-		TimerJvm.Provider exEnvironmentDelegate = new TimerJvm.Provider();
+		static TimerJvm.Provider exEnvironmentDelegate = new TimerJvm.Provider();
 
 		TimerProvider() {
 		}

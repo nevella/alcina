@@ -4,14 +4,14 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui.EntityPeer;
+import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.RootLayerNamer;
 
 public class RootLayer extends Layer<DomainGraphSelection> {
 	public RootLayer() {
 		addChild(new EntityTypesLayer());
-		int depth = EntityGraphView.peer().queryDepth();
+		int depth = EntityBrowser.peer().queryDepth();
 		for (int idx = 1; idx < depth; idx++) {
 			addChild(new QueryLayer());
 		}

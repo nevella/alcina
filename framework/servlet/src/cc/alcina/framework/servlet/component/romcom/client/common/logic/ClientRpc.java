@@ -146,50 +146,6 @@ public class ClientRpc implements HandlerContext {
 				String text = httpResponse.getText();
 				RemoteComponentResponse response = text.isEmpty() ? null
 						: ReflectiveSerializer.deserializeRpc(text);
-				// if (response != null) {
-				// // reset delay (successful response)
-				// awaitDelay = 0;
-				// Message message = response.protocolMessage;
-				// Class<? extends Message> requestMessageClass =
-				// request.protocolMessage
-				// .getClass();
-				// // Ax.out("[server->client response] #%s :: [client message
-				// // :: %s] ==> %s",
-				// // response.requestId,
-				// // NestedName.get(requestMessageClass),
-				// // message == null ? "[null response]"
-				// // : NestedName.get(message));
-				// if (message != null) {
-				// ProtocolMessageHandlerClient handler = Registry.impl(
-				// ProtocolMessageHandlerClient.class,
-				// message.getClass());
-				// try {
-				// handler.handle(response, message);
-				// } catch (Throwable e) {
-				// Ax.out("Exception handling message %s\n"
-				// + "================\nSerialized form:\n%s",
-				// message, text);
-				// e.printStackTrace();
-				// /*
-				// * FIXME - devex - 0 - once syncmutations.3 is
-				// * stable, this should not occur (ha!)
-				// *
-				// * Serious, the romcom client is a bounded piece of
-				// * code that just propagates server changes to the
-				// * client dom, so all exceptions *should* be
-				// * server-only (unless client dom is mashed by an
-				// * extension)
-				// */
-				// Window.alert(
-				// CommonUtils.toSimpleExceptionMessage(e));
-				// }
-				// } else {
-				// // Ax.out("Received no-message response for %s",
-				// // NestedName.get(messageClass));
-				// }
-				// signalCalled(httpRequest);
-				// } else {
-				// }
 			}
 		};
 		try {

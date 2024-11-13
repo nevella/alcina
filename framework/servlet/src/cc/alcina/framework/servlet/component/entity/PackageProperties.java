@@ -2,7 +2,8 @@ package cc.alcina.framework.servlet.component.entity;
 
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
-import cc.alcina.framework.servlet.component.entity.EntityGraphView;
+import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.servlet.component.entity.EntityBrowser;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
@@ -14,19 +15,20 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
-    public static _EntityGraphView_Ui entityGraphView_ui = new _EntityGraphView_Ui();
+    public static _EntityBrowser_Ui entityBrowser_ui = new _EntityBrowser_Ui();
     
-    public static class _EntityGraphView_Ui implements TypedProperty.Container {
-      public TypedProperty<EntityGraphView.Ui, Set> appCommandContexts = new TypedProperty<>(EntityGraphView.Ui.class, "appCommandContexts");
-      public TypedProperty<EntityGraphView.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(EntityGraphView.Ui.class, "commandContextProvider");
-      public TypedProperty<EntityGraphView.Ui, RemoteComponentObservables.ObservableHistory> history = new TypedProperty<>(EntityGraphView.Ui.class, "history");
-      public TypedProperty<EntityGraphView.Ui, String> mainCaption = new TypedProperty<>(EntityGraphView.Ui.class, "mainCaption");
-      public TypedProperty<EntityGraphView.Ui, EntityGraphView.Ui.EntityPeer> peer = new TypedProperty<>(EntityGraphView.Ui.class, "peer");
-      public TypedProperty<EntityGraphView.Ui, TraversalPlace> place = new TypedProperty<>(EntityGraphView.Ui.class, "place");
-      public TypedProperty<EntityGraphView.Ui, TraversalSettings> settings = new TypedProperty<>(EntityGraphView.Ui.class, "settings");
-      public TypedProperty<EntityGraphView.Ui, String> traversalId = new TypedProperty<>(EntityGraphView.Ui.class, "traversalId");
-      public TypedProperty<EntityGraphView.Ui, String> traversalPath = new TypedProperty<>(EntityGraphView.Ui.class, "traversalPath");
-      public TypedProperty<EntityGraphView.Ui, Boolean> useSelectionSegmentPath = new TypedProperty<>(EntityGraphView.Ui.class, "useSelectionSegmentPath");
+    public static class _EntityBrowser_Ui implements TypedProperty.Container {
+      public TypedProperty<EntityBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(EntityBrowser.Ui.class, "appCommandContexts");
+      public TypedProperty<EntityBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(EntityBrowser.Ui.class, "commandContextProvider");
+      public TypedProperty<EntityBrowser.Ui, RemoteComponentObservables.ObservableHistory> history = new TypedProperty<>(EntityBrowser.Ui.class, "history");
+      public TypedProperty<EntityBrowser.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(EntityBrowser.Ui.class, "keybindingsHandler");
+      public TypedProperty<EntityBrowser.Ui, String> mainCaption = new TypedProperty<>(EntityBrowser.Ui.class, "mainCaption");
+      public TypedProperty<EntityBrowser.Ui, EntityBrowser.Ui.EntityPeer> peer = new TypedProperty<>(EntityBrowser.Ui.class, "peer");
+      public TypedProperty<EntityBrowser.Ui, TraversalPlace> place = new TypedProperty<>(EntityBrowser.Ui.class, "place");
+      public TypedProperty<EntityBrowser.Ui, TraversalSettings> settings = new TypedProperty<>(EntityBrowser.Ui.class, "settings");
+      public TypedProperty<EntityBrowser.Ui, String> traversalId = new TypedProperty<>(EntityBrowser.Ui.class, "traversalId");
+      public TypedProperty<EntityBrowser.Ui, String> traversalPath = new TypedProperty<>(EntityBrowser.Ui.class, "traversalPath");
+      public TypedProperty<EntityBrowser.Ui, Boolean> useSelectionSegmentPath = new TypedProperty<>(EntityBrowser.Ui.class, "useSelectionSegmentPath");
     }
     
 //@formatter:on

@@ -1,14 +1,18 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
@@ -17,8 +21,10 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.environment.RemoteUi;
@@ -130,8 +136,46 @@ public class TraversalBrowser {
 			return layout;
 		}
 
+		/*
+		 * this uses page.history (rather than owning it) because page is easier
+		 * to bind to
+		 */
 		protected SelectionTraversal traversal0() {
 			return page.history == null ? null : page.history.getObservable();
+		}
+
+		@Property.Not
+		public SecondaryAreaDisplayMode[] getValidSecondaryAreadModes() {
+			if (getSelectionMarkup() != null) {
+				return SecondaryAreaDisplayMode.values();
+			} else {
+				return new SecondaryAreaDisplayMode[] {
+						SecondaryAreaDisplayMode.TABLE,
+						SecondaryAreaDisplayMode.NONE };
+			}
+		}
+
+		private SelectionMarkup selectionMarkup;
+
+		public SelectionMarkup getSelectionMarkup() {
+			SelectionTraversal traversal = traversal0();
+			if (selectionMarkup == null && traversal != null) {
+				SelectionMarkup.Has markupProvider = traversal
+						.context(SelectionMarkup.Has.class);
+				if (markupProvider != null) {
+					selectionMarkup = markupProvider.getSelectionMarkup();
+				}
+			}
+			return selectionMarkup;
+		}
+	}
+
+	@Reflected
+	static class ValidSecondaryAreaDisplayModes
+			implements Choices.Values.ValueSupplier {
+		@Override
+		public List<?> get() {
+			return Arrays.asList(Ui.get().getValidSecondaryAreadModes());
 		}
 	}
 

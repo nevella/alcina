@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
+import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -18,7 +19,7 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.servlet.component.entity.EntityGraphView.Ui;
+import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui;
 import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
@@ -29,7 +30,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 class QueryLayer extends Layer implements InputsFromPreviousSibling {
 	@Override
 	public void process(Selection selection) throws Exception {
-		if (!EntityGraphView.peer().isSelected(selection)) {
+		if (!EntityBrowser.peer().isSelected(selection)) {
 			return;
 		} else {
 			if (selection instanceof EntitySelection) {
@@ -144,6 +145,7 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 				}
 				return matchesOrContains(string, filter.normalisedValue());
 			} else {
+				// FIXME - very inefficient (possibly reuse domainquery)
 				Property property = Reflections.at(o).property(filter.key);
 				Object propertyValue = property.get(o);
 				if (propertyValue == null) {
@@ -153,9 +155,13 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 					return matchesOrContains(propertyValue.toString(),
 							filter.normalisedValue());
 				}
-				Object value = getTypedValue(property,
+				Object filterValue = getTypedValue(property,
 						filter.normalisedValue());
-				return Objects.equals(value, propertyValue);
+				PropertyFilter<Object> propertyFilter = new PropertyFilter<>(
+						property.getName(), filterValue, filter.op);
+				Object value = getTypedValue(property,
+						propertyValue.toString());
+				return propertyFilter.matchesValue(value);
 			}
 		}
 

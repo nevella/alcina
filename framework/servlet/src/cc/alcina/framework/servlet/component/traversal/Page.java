@@ -28,9 +28,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
+import cc.alcina.framework.servlet.component.traversal.RenderedSelections.Variant;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
-import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.InputOutputCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.PropertyDisplayCycle;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SecondaryAreaDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelContainment;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelDescendant;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelView;
@@ -41,8 +42,8 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSel
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
-import cc.alcina.framework.servlet.component.traversal.TraversalSettings.InputOutputDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
@@ -58,7 +59,7 @@ class Page extends Model.All
 		TraversalBrowserCommand.SelectionFilterModelDescendant.Handler,
 		TraversalBrowserCommand.SelectionFilterModelView.Handler,
 		TraversalBrowserCommand.PropertyDisplayCycle.Handler,
-		TraversalBrowserCommand.InputOutputCycle.Handler,
+		TraversalBrowserCommand.SecondaryAreaDisplayCycle.Handler,
 		TraversalCommand.FocusSearch.Handler,
 		TraversalEvents.SetSettingTableRows.Handler, FlightEventCommandHandlers,
 		TraversalCommand.ShowKeyboardShortcuts.Handler {
@@ -75,6 +76,9 @@ class Page extends Model.All
 
 	@Directed(className = "output")
 	RenderedSelections output;
+
+	@Directed(className = "table")
+	RenderedSelections table;
 
 	@Directed.Exclude
 	RemoteComponentObservables<SelectionTraversal>.ObservableHistory history;
@@ -118,11 +122,14 @@ class Page extends Model.All
 				.map(PropertiesArea::new).to(this).on(properties.propertiesArea)
 				.oneWay();
 		bindings().from(this).on(properties.history)
-				.map(o -> new RenderedSelections(this, true)).to(this)
+				.map(o -> new RenderedSelections(this, Variant.input)).to(this)
 				.on(properties.input).oneWay();
 		bindings().from(this).on(properties.history)
-				.map(o -> new RenderedSelections(this, false)).to(this)
+				.map(o -> new RenderedSelections(this, Variant.output)).to(this)
 				.on(properties.output).oneWay();
+		bindings().from(this).on(properties.history)
+				.map(o -> new RenderedSelections(this, Variant.table)).to(this)
+				.on(properties.table).oneWay();
 		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.filter(this::filterRedundantPlaceChange).value(this)
 				.map(SelectionLayers::new).to(this).on(properties.layers)
@@ -163,7 +170,7 @@ class Page extends Model.All
 				throw new UnsupportedOperationException();
 			}
 			builder.line("body > page {grid-template-rows: 50px 1fr 260px;}");
-			switch (settings.inputOutputDisplayMode) {
+			switch (settings.secondaryAreaDisplayMode) {
 			case INPUT_OUTPUT:
 				rows.add("input input output output");
 				break;
@@ -174,6 +181,11 @@ class Page extends Model.All
 			case OUTPUT:
 				rows.add("output output output output");
 				builder.line("body > page > selections.input{display: none;}");
+				break;
+			case TABLE:
+				rows.add("table table table table");
+				builder.line("body > page > selections.input{display: none;}");
+				builder.line("body > page > selections.output{display: none;}");
 				break;
 			case NONE:
 				builder.line("body > page > selections{display: none;}");
@@ -203,19 +215,9 @@ class Page extends Model.All
 		place().clearSelections();
 	}
 
-	private SelectionMarkup selectionMarkup;
-
 	@Property.Not
 	SelectionMarkup getSelectionMarkup() {
-		SelectionTraversal traversal = history.getObservable();
-		if (selectionMarkup == null && traversal != null) {
-			SelectionMarkup.Has markupProvider = traversal
-					.context(SelectionMarkup.Has.class);
-			if (markupProvider != null) {
-				selectionMarkup = markupProvider.getSelectionMarkup();
-			}
-		}
-		return selectionMarkup;
+		return ui.getSelectionMarkup();
 	}
 
 	boolean filterRedundantPlaceChange(TraversalPlace place) {
@@ -329,11 +331,11 @@ class Page extends Model.All
 	}
 
 	@Override
-	public void onInputOutputCycle(InputOutputCycle event) {
+	public void onSecondaryAreaDisplayCycle(SecondaryAreaDisplayCycle event) {
 		TraversalSettings settings = TraversalBrowser.Ui.get().settings;
-		InputOutputDisplayMode next = settings.nextInputOutputDisplayMode();
+		SecondaryAreaDisplayMode next = settings.nextSecondaryAreaDisplayMode();
 		StatusModule.get().showMessageTransitional(
-				Ax.format("Input/Output display mode -> %s", next));
+				Ax.format("Secondary display mode -> %s", next));
 	}
 
 	@Override

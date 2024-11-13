@@ -792,6 +792,7 @@ body > page > selections > selection-table-area {
   display: block;
   width: 100%;
   overflow-x: scroll;
+  grid-area: table;
 }
 body > page > selections > selection-table-area > table {
   border-spacing: 0;

@@ -17,4 +17,11 @@ import cc.alcina.framework.common.client.meta.Feature;
 @Feature.Status.Ref(Feature.Status.Open.class)
 @Feature.Parent(Feature_TraversalBrowser.class)
 public interface Feature_TraversalBrowser_SelectionTable extends Feature {
+	@Feature.Parent(Feature_TraversalBrowser.class)
+	public interface Column_sort extends Feature {
+	}
+
+	@Feature.Parent(Feature_TraversalBrowser.class)
+	public interface Column_filter extends Feature {
+	}
 }
