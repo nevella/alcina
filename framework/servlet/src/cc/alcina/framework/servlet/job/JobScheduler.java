@@ -52,7 +52,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Subque
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy.AbortReason;
+import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy.AbortReason;
 import cc.alcina.framework.servlet.process.observer.job.JobMvccObserver;
 import cc.alcina.framework.servlet.process.observer.job.JobObserver;
 import cc.alcina.framework.servlet.process.observer.job.ObservableJobFilter;
@@ -179,7 +179,7 @@ public class JobScheduler {
 		TransactionEnvironment.withDomain(() -> {
 			Ax.sysLogHigh("Allocator timeout: %s", job);
 			Transaction.ensureBegun();
-			AbortPolicy policy = AbortPolicy.forJob(job);
+			ExceptionPolicy policy = ExceptionPolicy.forJob(job);
 			policy.onBeforeAbort(job, AbortReason.TIMED_OUT);
 			job.setState(JobState.ABORTED);
 			job.setEndTime(new Date());
@@ -243,7 +243,8 @@ public class JobScheduler {
 									"Job scheduler - future-to-pending - ABORTED-STUCK - {} ",
 									earliestIncompleteScheduled);
 							doAbort(Stream.of(earliestIncompleteScheduled),
-									new Date(), AbortPolicy.AbortReason.STUCK);
+									new Date(),
+									ExceptionPolicy.AbortReason.STUCK);
 							Transaction.commit();
 							earliestIncompleteScheduled = JobDomain.get()
 									.getEarliestIncompleteScheduled(key,
@@ -505,7 +506,7 @@ public class JobScheduler {
 				return;
 			}
 			/* resubmit, then abort */
-			AbortPolicy policy = AbortPolicy.forJob(job);
+			ExceptionPolicy policy = ExceptionPolicy.forJob(job);
 			policy.onBeforeAbort(job, reason);
 			job.setState(JobState.ABORTED);
 			job.setEndTime(abortTime);
@@ -611,12 +612,12 @@ public class JobScheduler {
 	}
 
 	@Registration(
-		value = AbortPolicy.class,
+		value = ExceptionPolicy.class,
 		implementation = Registration.Implementation.FACTORY)
 	public static class DefaultRetryPolicyProvider
-			implements RegistryFactory<AbortPolicy> {
+			implements RegistryFactory<ExceptionPolicy> {
 		@Override
-		public AbortPolicy impl() {
+		public ExceptionPolicy impl() {
 			return new NoResubmitPolicy();
 		}
 	}
@@ -734,13 +735,13 @@ public class JobScheduler {
 		}
 	}
 
-	public static class NoResubmitPolicy extends AbortPolicy {
+	public static class NoResubmitPolicy extends ExceptionPolicy {
 		protected boolean shouldResubmit(Job job, AbortReason reason) {
 			return false;
 		};
 	}
 
-	public static class ResubmitNTimesPolicy extends AbortPolicy {
+	public static class ResubmitNTimesPolicy extends ExceptionPolicy {
 		private int nTimes;
 
 		private boolean requiresSystemUser;
@@ -792,12 +793,12 @@ public class JobScheduler {
 	 * behaviour is to resubmit
 	 * </ul>
 	 */
-	public abstract static class AbortPolicy<T extends Task> {
-		public static AbortPolicy forJob(Job job) {
-			return Registry.impl(AbortPolicy.class, job.provideTaskClass());
+	public abstract static class ExceptionPolicy<T extends Task> {
+		public static ExceptionPolicy forJob(Job job) {
+			return Registry.impl(ExceptionPolicy.class, job.provideTaskClass());
 		}
 
-		public static AbortPolicy retryNTimes(int nTimes) {
+		public static ExceptionPolicy retryNTimes(int nTimes) {
 			return new ResubmitNTimesPolicy(nTimes);
 		}
 

@@ -36,8 +36,8 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Subque
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LatchType;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
-import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy;
-import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy.AbortReason;
+import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy;
+import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy.AbortReason;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
 
@@ -580,8 +580,8 @@ class JobAllocator {
 			}
 			long timeSinceAllocation = System.currentTimeMillis()
 					- lastAllocated;
-			AbortPolicy abortPolicy = AbortPolicy.forJob(job);
-			long allocationTimeout = abortPolicy.getAllocationTimeout(job);
+			ExceptionPolicy exceptionPolicy = ExceptionPolicy.forJob(job);
+			long allocationTimeout = exceptionPolicy.getAllocationTimeout(job);
 			if (timeSinceAllocation > allocationTimeout && jobContext != null
 					&& (jobContext.getJob().getPerformer() == null
 							// FIXME - jobs - performer should never be null at
@@ -598,14 +598,14 @@ class JobAllocator {
 						"DEVEX::0 - Cancelling/aborting timed-out job - no allocations for {} ms :: {} - incomplete children :: {}",
 						allocationTimeout, job, incompleteChildren);
 				Stream<Job> toAbort = incompleteChildren.isEmpty()
-						|| abortPolicy.isAbortParentOnChildTimeout()
+						|| exceptionPolicy.isAbortParentOnChildTimeout()
 								? Stream.of(job)
 								: incompleteChildren.stream();
 				Stream<Job> toCancel = incompleteChildren.isEmpty()
 						? Stream.empty()
 						: Stream.of(job);
 				toAbort.forEach(j -> {
-					AbortPolicy policy = AbortPolicy.forJob(j);
+					ExceptionPolicy policy = ExceptionPolicy.forJob(j);
 					policy.onBeforeAbort(j, AbortReason.TIMED_OUT);
 					j.setState(JobState.ABORTED);
 					j.setEndTime(new Date());

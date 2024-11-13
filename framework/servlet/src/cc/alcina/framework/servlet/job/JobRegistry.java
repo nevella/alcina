@@ -95,7 +95,7 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
-import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy;
+import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
 import cc.alcina.framework.servlet.job.JobScheduler.NoResubmitPolicy;
@@ -166,11 +166,11 @@ import cc.alcina.framework.servlet.job.JobScheduler.NoResubmitPolicy;
  * systems (e.g. Android)
  *
  * <p>
- * Job abort is controlled by the Task's {@link AbortPolicy}. The default
+ * Job abort is controlled by the Task's {@link ExceptionPolicy}. The default
  * timeout is 1 day.
  * <p>
  * Job retry/resubmit behaviour is also controlled by the Task's
- * {@link AbortPolicy}. The default behaviour {@link NoResubmitPolicy} is to
+ * {@link ExceptionPolicy}. The default behaviour {@link NoResubmitPolicy} is to
  * neither resubmit if a job was orphaned (performer jvm was terminated), nor if
  * it was timed out.
  * <p>
@@ -403,7 +403,7 @@ public class JobRegistry {
 	public void awaitAfterStart(Job job) {
 		// naive, just spinlock
 		long start = System.currentTimeMillis();
-		long allocationTimeout = AbortPolicy.forJob(job)
+		long allocationTimeout = ExceptionPolicy.forJob(job)
 				.getAllocationTimeout(job);
 		while (System.currentTimeMillis() - start < allocationTimeout) {
 			Transaction.endAndBeginNew();

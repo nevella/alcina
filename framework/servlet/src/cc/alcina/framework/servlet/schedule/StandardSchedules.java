@@ -15,7 +15,7 @@ import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
-import cc.alcina.framework.servlet.job.JobScheduler.AbortPolicy;
+import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 
 public class StandardSchedules {
@@ -144,10 +144,10 @@ public class StandardSchedules {
 	}
 
 	public static class RecurrentResubmitFactory
-			implements RegistryFactory<AbortPolicy> {
+			implements RegistryFactory<ExceptionPolicy> {
 		@Override
-		public AbortPolicy impl() {
-			return AbortPolicy.retryNTimes(2);
+		public ExceptionPolicy impl() {
+			return ExceptionPolicy.retryNTimes(2);
 		}
 	}
 
