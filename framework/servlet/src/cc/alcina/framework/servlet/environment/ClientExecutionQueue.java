@@ -172,10 +172,20 @@ class ClientExecutionQueue implements Runnable {
 		if (!dispatched) {
 			try {
 				// make sure we're waiting on an empty queue
+				boolean isFlushing = false;
 				synchronized (asyncDispatchQueue) {
-					if (asyncDispatchQueue.isEmpty()) {
+					isFlushing = asyncDispatchQueue.isEmpty();
+					if (isFlushing) {
 						environment.access().flush();
-						transportLayer.flush();
+					}
+				}
+				if (isFlushing) {
+					/*
+					 * Not in a synchronized block because that can cause
+					 * deadlock (conflicting with queueing of incoming messages)
+					 */
+					transportLayer.flush();
+					synchronized (asyncDispatchQueue) {
 						asyncDispatchQueue.wait(1000);
 					}
 				}
