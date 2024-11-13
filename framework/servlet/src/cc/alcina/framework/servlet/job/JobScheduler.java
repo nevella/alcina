@@ -763,20 +763,7 @@ public class JobScheduler {
 					return false;
 				}
 			}
-			int counter = 0;
-			Job cursor = toAbortJob;
-			while (true) {
-				counter++;
-				Optional<Job> precedingJob = cursor.getToRelations().stream()
-						.filter(rel -> rel
-								.getType() == JobRelationType.RESUBMIT)
-						.findFirst().map(JobRelation::getFrom);
-				if (precedingJob.isPresent()) {
-					cursor = precedingJob.get();
-				} else {
-					break;
-				}
-			}
+			int counter = getResubmitCount(toAbortJob);
 			return counter <= nTimes;
 		}
 	}
@@ -810,6 +797,24 @@ public class JobScheduler {
 			return (T) job.getTask();
 		}
 
+		protected int getResubmitCount(Job job) {
+			int counter = 0;
+			Job cursor = job;
+			while (true) {
+				counter++;
+				Optional<Job> precedingJob = cursor.getToRelations().stream()
+						.filter(rel -> rel
+								.getType() == JobRelationType.RESUBMIT)
+						.findFirst().map(JobRelation::getFrom);
+				if (precedingJob.isPresent()) {
+					cursor = precedingJob.get();
+				} else {
+					break;
+				}
+			}
+			return counter;
+		}
+
 		protected Job resubmit(Job job) {
 			Job resubmit = JobRegistry.createBuilder().withTask(job.getTask())
 					.withRelated(job).withRelationType(JobRelationType.RESUBMIT)
@@ -823,8 +828,23 @@ public class JobScheduler {
 					&& job.getState().isResubmittable();
 		}
 
+		protected boolean shouldResubmitAfterException(Job job) {
+			return false;
+		}
+
 		public void onBeforeAbort(Job job, AbortReason reason) {
 			if (shouldResubmit(job, reason)) {
+				resubmit(job);
+				/*
+				 * this interim commit is to handle what appears to be a
+				 * hibernate issue - FIXME
+				 */
+				Transaction.commit();
+			}
+		}
+
+		public void onAfterJobException(Job job) {
+			if (shouldResubmitAfterException(job)) {
 				resubmit(job);
 				/*
 				 * this interim commit is to handle what appears to be a

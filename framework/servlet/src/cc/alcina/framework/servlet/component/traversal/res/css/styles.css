@@ -768,6 +768,9 @@ body > page > selections.input {
 body > page > selections.output {
   grid-area: output;
 }
+body > page > selections.table {
+  grid-area: table;
+}
 body > page > selections > selection-area {
   display: flex;
   flex-direction: column;
@@ -792,7 +795,6 @@ body > page > selections > selection-table-area {
   display: block;
   width: 100%;
   overflow-x: scroll;
-  grid-area: table;
 }
 body > page > selections > selection-table-area > table {
   border-spacing: 0;

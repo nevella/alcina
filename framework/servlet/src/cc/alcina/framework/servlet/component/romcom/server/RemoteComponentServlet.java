@@ -19,7 +19,7 @@ web.xml configuration example:
 		<servlet-class>cc.alcina.framework.servlet.component.romcom.server.RemoteComponentServlet</servlet-class>
 		<init-param>
 			<param-name>componentClassName</param-name>
-			<param-value>cc.alcina.framework.servlet.component.entity.EntityGraphView$Component</param-value>
+			<param-value>cc.alcina.framework.servlet.component.entity.EntityBrowser$Component</param-value>
 		</init-param>
 		<init-param>
 			<param-name>featurePath</param-name>

@@ -18,6 +18,9 @@
   &.output
     grid-area: output
 
+  &.table
+    grid-area: table
+
   > selection-area
     display: flex
     flex-direction: column
@@ -42,7 +45,6 @@
     display: block
     width: 100%
     overflow-x: scroll
-    grid-area: table
 
     > table
       @include table.data-table
