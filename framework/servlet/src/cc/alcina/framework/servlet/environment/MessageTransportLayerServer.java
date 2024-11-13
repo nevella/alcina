@@ -154,11 +154,14 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		 * Allow at most one awaiter, one or zero non-awaiters
 		 */
 		boolean shouldFlush(boolean flushAllNonAwaiters) {
-			return dispatchableTokens.stream()
-					.filter(token -> !token.isAwaiter())
-					.count() > (flushAllNonAwaiters ? 0 : 1)
-					|| dispatchableTokens.stream()
-							.filter(token -> token.isAwaiter()).count() > 1;
+			// envelope dispatcher (this) is the monitor for dispatch
+			synchronized (this) {
+				return dispatchableTokens.stream()
+						.filter(token -> !token.isAwaiter())
+						.count() > (flushAllNonAwaiters ? 0 : 1)
+						|| dispatchableTokens.stream()
+								.filter(token -> token.isAwaiter()).count() > 1;
+			}
 		}
 
 		boolean hasDispatchers() {

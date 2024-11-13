@@ -166,7 +166,7 @@ public class EntityHelper {
 	}
 
 	public static String toIdString(Collection<? extends Entity> entities) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		for (Entity entity : entities) {
 			if (sb.length() != 0) {
 				sb.append(",");

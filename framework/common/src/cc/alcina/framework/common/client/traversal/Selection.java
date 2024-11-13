@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasFilterableString;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
@@ -199,8 +200,9 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 	default void onDuplicatePathSelection(Layer layer, Selection selection) {
 		LoggerFactory.getLogger(Selection.class).warn(
-				"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}",
-				processNode().treePath(), selection.processNode().treePath());
+				"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}\nPath: {}",
+				processNode().treePath(), selection.processNode().treePath(),
+				selection.getPathSegment());
 		/*
 		 * This wants a client/server-friendly config system
 		 */
@@ -210,9 +212,19 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 					"Duplicate path selection - index paths:\nExisting: {}\nIncoming: {}",
 					selection.fullDebugPath(), selection.fullDebugPath());
 		}
-		throw new IllegalArgumentException(
+		throw new DuplicateSelectionException(
 				Ax.format("Duplicate selection path: %s :: %s",
 						selection.getPathSegment(), layer));
+	}
+
+	public static class DuplicateSelectionException
+			extends IllegalArgumentException {
+		public DuplicateSelectionException() {
+		}
+
+		public DuplicateSelectionException(String message) {
+			super(message);
+		}
 	}
 
 	default Selection<?> parentSelection() {
@@ -316,6 +328,15 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	default String toDebugString() {
 		return CommonUtils.joinWithNewlines(
 				ancestorSelections().collect(Collectors.toList()));
+	}
+
+	default String toTypeSegmentString() {
+		return Ax.format("%s :: %s", NestedName.get(this), getPathSegment());
+	}
+
+	default String toDebugStack() {
+		return ancestorSelections().map(Selection::toTypeSegmentString)
+				.collect(Collectors.joining("\n"));
 	}
 
 	View view();

@@ -22,7 +22,7 @@ public abstract class ParserLayer<S extends MeasureSelection> extends Layer<S> {
 				createParserPeer(selection));
 		layerParser.parse();
 		processParserResults(selection, layerParser.getParserResults());
-		if (detachMeasures) {
+		if (detachMeasures && state.getTraversal().releaseResources) {
 			layerParser.detachMeasures();
 		}
 	}

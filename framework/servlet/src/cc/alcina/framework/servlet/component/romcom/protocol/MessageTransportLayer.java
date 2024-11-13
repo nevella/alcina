@@ -65,8 +65,15 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * A {@link TransportHistory} has a {@link MessageId} and various metadata
  * tracking the send/receive history of the message
  * 
+ * <p>
  * A {@link MessageId} has a {@link SendChannelId} and a sequential, per-channel
  * <code>number</code>
+ * 
+ * <p>
+ * * Synchronization - for message operations, sync on the channel's message
+ * list; for envelope operations, sync on the dispatcher. Review, and possibly
+ * make channel ops sync on the channel instead (document non-internal api
+ * points)
  * 
  * @see SendChannel for detail on receipt verification - which handles
  *      communication issues causing RPC timeout or exception
