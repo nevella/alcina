@@ -909,6 +909,22 @@ public class JobRegistry {
 							ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
 					Transaction.ensureBegun();
 					performer.onBeforeEnd();
+					/*
+					 * Before resubmit check, may be required by the
+					 * exceptionPolicy check
+					 */
+					context.flushLog();
+					/*
+					 * resubmit (if necessary) before this job ends, so that job
+					 * observers don't exit
+					 */
+					if (job.provideIsException()) {
+						ExceptionPolicy exceptionPolicy = ExceptionPolicy
+								.forJob(job);
+						if (exceptionPolicy.shouldResubmitAfterException(job)) {
+							exceptionPolicy.resubmit(job);
+						}
+					}
 					context.end();
 					performer.onAfterEnd();
 					releaseResources(job, false);

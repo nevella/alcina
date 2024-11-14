@@ -544,6 +544,19 @@ public class JobContext {
 		}
 	}
 
+	void flushLog() {
+		if (job.provideIsNotComplete()) {
+			// occurs just before end, since this method is possibly called
+			// on a
+			// different thread to the logbuffer context
+			// log = Registry.impl(PerThreadLogging.class).endBuffer();
+			int maxChars = LooseContext
+					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(5000000);
+			log = CommonUtils.trimToWsChars(log, maxChars, true);
+			job.setLog(log);
+		}
+	}
+
 	private void end0() {
 		try {
 			Transaction.ensureBegun();
@@ -554,15 +567,6 @@ public class JobContext {
 			}
 			updateStatusDebouncer.cancel();
 			if (job.provideIsNotComplete()) {
-				// occurs just before end, since this method is possibly called
-				// on a
-				// different thread to the logbuffer context
-				// log = Registry.impl(PerThreadLogging.class).endBuffer();
-				int maxChars = LooseContext
-						.<Integer> optional(CONTEXT_LOG_MAX_CHARS)
-						.orElse(5000000);
-				log = CommonUtils.trimToWsChars(log, maxChars, true);
-				job.setLog(log);
 				if (job.provideRelatedSequential().stream()
 						.filter(j -> j != job)
 						.anyMatch(Job::provideIsNotComplete)) {
