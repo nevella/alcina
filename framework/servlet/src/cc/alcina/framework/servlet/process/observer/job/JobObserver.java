@@ -110,6 +110,8 @@ public class JobObserver {
 		new EndedObserver().bind();
 		new ToProcessingObserver().bind();
 		new AllocationEventObserver().bind();
+		new AllocatorCreatedObserver().bind();
+		new AllocationThreadStartedObserver().bind();
 		new TimedOutEventObserver().bind();
 	}
 
@@ -185,6 +187,23 @@ public class JobObserver {
 			implements ProcessObserver<JobObservable.ToProcessing> {
 		@Override
 		public void topicPublished(JobObservable.ToProcessing event) {
+			conditionallyRecord(event);
+		}
+	}
+
+	class AllocationThreadStartedObserver
+			implements ProcessObserver<JobObservable.AllocationThreadStarted> {
+		@Override
+		public void
+				topicPublished(JobObservable.AllocationThreadStarted event) {
+			conditionallyRecord(event);
+		}
+	}
+
+	class AllocatorCreatedObserver
+			implements ProcessObserver<JobObservable.AllocatorCreated> {
+		@Override
+		public void topicPublished(JobObservable.AllocatorCreated event) {
 			conditionallyRecord(event);
 		}
 	}

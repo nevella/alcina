@@ -33,6 +33,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Alloca
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LatchType;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
@@ -90,6 +91,7 @@ class JobAllocator {
 		 * Allocator threads are started for top-level jobs iff visible:
 		 */
 		Job job = queue.job;
+		new JobObservable.AllocatorCreated(job).publish();
 		boolean topLevelQueue = job.provideIsTopLevel()
 				&& job.provideIsFirstInSequence();
 		/*
@@ -621,6 +623,7 @@ class JobAllocator {
 		@Override
 		public void run() {
 			thread = Thread.currentThread();
+			new JobObservable.AllocationThreadStarted(queue.job).publish();
 			while (!finished) {
 				try {
 					Event event = eventQueue.poll(1, TimeUnit.SECONDS);

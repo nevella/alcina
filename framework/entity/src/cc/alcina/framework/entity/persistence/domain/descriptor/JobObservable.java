@@ -92,6 +92,24 @@ public abstract class JobObservable
 		}
 	}
 
+	public static class AllocationThreadStarted extends JobObservable {
+		AllocationThreadStarted() {
+		}
+
+		public AllocationThreadStarted(Job job) {
+			super(job);
+		}
+	}
+
+	public static class AllocatorCreated extends JobObservable {
+		AllocatorCreated() {
+		}
+
+		public AllocatorCreated(Job job) {
+			super(job);
+		}
+	}
+
 	public static class AllocationEvent extends JobObservable {
 		public transient Event event;
 
