@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEven
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
@@ -39,6 +40,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
  * Note - when bidi binding a data model to a UI element, the data model element
  * should be 'from' (since the initial bind sequence is from-&gt;to then
  * to-&gt;from)
+ * 
+ * <p>
+ * See
  * 
  * @param <T>
  */
@@ -77,6 +81,8 @@ public class ModelBinding<T> {
 	 */
 	boolean debug;
 
+	TargetBinding targetBinding;
+
 	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
 	}
@@ -113,6 +119,19 @@ public class ModelBinding<T> {
 		if (postMapPredicate != null
 				&& !((Predicate) postMapPredicate).test(o2)) {
 			return;
+		}
+		if (targetBinding != null) {
+			Class<?> toType = targetBinding.getTargetPropertyType();
+			if (Reflections.isAssignableFrom(IfNotExisting.class, toType)) {
+				IfNotExisting existing = (IfNotExisting) targetBinding
+						.getExistingValue();
+				if (existing != null) {
+					if (existing
+							.testExistingSatisfies(fromPropertyChangeSource)) {
+						return;
+					}
+				}
+			}
 		}
 		Preconditions.checkState(consumer != null,
 				"No consumer - possibly you forgot to call bind(), "
@@ -323,19 +342,37 @@ public class ModelBinding<T> {
 
 		Object on;
 
-		private Function map;
+		Function map;
 
 		ModelBinding<T2> binding;
 
+		Property property;
+
 		TargetBinding(ModelBinding<T2> binding, BSP to) {
 			this.binding = binding;
+			binding.targetBinding = this;
 			this.to = to;
+		}
+
+		Object getExistingValue() {
+			return ensureProperty().get(to);
+		}
+
+		private Property ensureProperty() {
+			if (property == null) {
+				property = Reflections.at(to).property(on);
+			}
+			return property;
+		}
+
+		Class<?> getTargetPropertyType() {
+			return ensureProperty().getType();
 		}
 
 		void acceptLeftToRight() {
 			binding.accept(newValue -> {
 				try {
-					Reflections.at(to).property(on).set(to, newValue);
+					ensureProperty().set(to, newValue);
 				} catch (Exception e) {
 					LoggerFactory.getLogger(getClass()).warn(
 							"Exception executing model binding on {} to {} :: {}",

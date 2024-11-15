@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
@@ -22,6 +24,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasFilterableString;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
@@ -341,6 +344,8 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 	View view();
 
+	RowView rowView();
+
 	public interface Has {
 		Selection provideSelection();
 	}
@@ -380,6 +385,12 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		}
 	}
 
+	@Registration.NonGenericSubtypes(View.class)
+	public interface RowView<S extends Selection>
+			extends Registration.AllSubtypes, IsBindable {
+		void putSelection(S selection);
+	}
+
 	/*
 	 * Marker, view should be lazy-loaded. It's not an inner interface of view
 	 * to avoid class structure cycles
@@ -395,5 +406,54 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	}
 
 	public interface WithRange<T> extends Selection<T>, Location.Range.Has {
+	}
+
+	/**
+	 * Support for UI representations of the selection
+	 */
+	public interface HasTableRepresentation {
+		List<? extends Bindable> getSelectionBindables();
+
+		/*
+		 * returns the current selection children as table-viewables if they are
+		 * all of the same (Bindable) type
+		 */
+		public interface Children extends HasTableRepresentation {
+			@Override
+			default List<? extends Bindable> getSelectionBindables() {
+				Selection selection = (Selection) this;
+				List list = selection.processNode().getChildren().stream()
+						.map(pn -> ((Selection) pn.getValue()).get())
+						.collect(Collectors.toList());
+				Ref<Class> sameTypeCheck = Ref.empty();
+				if (list.stream().allMatch(o -> {
+					if (!(o instanceof Bindable)) {
+						return false;
+					}
+					if (sameTypeCheck.isEmpty()) {
+						sameTypeCheck.set(o.getClass());
+					} else {
+						if (sameTypeCheck.get() != o.getClass()) {
+							return false;
+						}
+					}
+					return true;
+				})) {
+					return list;
+				} else {
+					return null;
+				}
+			}
+
+			@Override
+			default Selection selectionFor(Object value) {
+				Selection selection = (Selection) this;
+				return selection.processNode().getChildren().stream()
+						.map(pn -> ((Selection) pn.getValue()))
+						.filter(sel -> sel.get() == value).findFirst().get();
+			}
+		}
+
+		Selection selectionFor(Object object);
 	}
 }

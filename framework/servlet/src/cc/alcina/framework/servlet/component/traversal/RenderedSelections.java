@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
@@ -14,8 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
 @Directed(tag = "selections")
 @TypedProperties
@@ -107,7 +107,10 @@ class RenderedSelections extends Model.Fields {
 		if (variant != Variant.table) {
 			return;
 		}
-		if (selection instanceof SelectionTableArea.HasTableRepresentation) {
+		Layer layer = Ui.getSelectedLayer();
+		if (layer != null) {
+			properties.selectionTable.set(this, new SelectionTableArea(layer));
+		} else if (selection instanceof Selection.HasTableRepresentation) {
 			properties.selectionTable.set(this,
 					new SelectionTableArea(selection));
 		}

@@ -8,13 +8,13 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @Directed(tag = "layers")
-class SelectionLayers extends Model.Fields {
+class SelectionLayers extends Model.Fields implements IfNotExisting<HasPage> {
 	@Directed
 	Heading header = new Heading("Selection layers");
 
@@ -66,5 +66,10 @@ class SelectionLayers extends Model.Fields {
 		return !renderedPlace.equivalentFilterTo(newPlace)
 				|| !Objects.equals(renderedPlace.viewPath().segmentPath,
 						newPlace.viewPath().segmentPath);
+	}
+
+	@Override
+	public boolean testExistingSatisfies(HasPage input) {
+		return placeChangeCausesChange(input.providePage().place());
 	}
 }

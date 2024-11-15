@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.servlet.component.traversal.SelectionTableArea;
 
 class PropertySelection extends AbstractSelection<Property>
-		implements SelectionTableArea.HasTableRepresentation.Children {
+		implements Selection.HasTableRepresentation.Children {
 	private Object propertyValue;
 
 	public PropertySelection(Selection<?> parent, Property value) {

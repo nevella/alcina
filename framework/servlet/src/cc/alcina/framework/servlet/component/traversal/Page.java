@@ -39,13 +39,13 @@ import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFil
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.LayerSelectionChange;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
 
 @Directed(
 	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
@@ -62,7 +62,12 @@ class Page extends Model.All
 		TraversalBrowserCommand.SecondaryAreaDisplayCycle.Handler,
 		TraversalCommand.FocusSearch.Handler,
 		TraversalEvents.SetSettingTableRows.Handler, FlightEventCommandHandlers,
-		TraversalCommand.ShowKeyboardShortcuts.Handler {
+		TraversalCommand.ShowKeyboardShortcuts.Handler,
+		TraversalEvents.LayerSelectionChange.Handler, HasPage {
+	public Page providePage() {
+		return this;
+	}
+
 	static PackageProperties._Page properties = PackageProperties.page;
 
 	Header header;
@@ -122,18 +127,23 @@ class Page extends Model.All
 				.map(PropertiesArea::new).to(this).on(properties.propertiesArea)
 				.oneWay();
 		bindings().from(this).on(properties.history)
-				.map(o -> new RenderedSelections(this, Variant.input)).to(this)
-				.on(properties.input).oneWay();
+				.value(() -> new RenderedSelections(this, Variant.input))
+				.to(this).on(properties.input).oneWay();
 		bindings().from(this).on(properties.history)
-				.map(o -> new RenderedSelections(this, Variant.output)).to(this)
-				.on(properties.output).oneWay();
+				.value(() -> new RenderedSelections(this, Variant.output))
+				.to(this).on(properties.output).oneWay();
+		bindings().from(this).on(properties.history)
+				.value(() -> new RenderedSelections(this, Variant.table))
+				.to(this).on(properties.table).oneWay();
+		bindings().from(ui).on(Ui.properties.place).value(this)
+				.map(SelectionLayers::new).to(this).on(properties.layers)
+				.oneWay();
+		bindings().from(ui).on(Ui.properties.place)
+				.value(() -> new RenderedSelections(this, Variant.table))
+				.to(this).on(properties.table).oneWay();
 		bindings().from(this).on(properties.history)
 				.map(o -> new RenderedSelections(this, Variant.table)).to(this)
 				.on(properties.table).oneWay();
-		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
-				.filter(this::filterRedundantPlaceChange).value(this)
-				.map(SelectionLayers::new).to(this).on(properties.layers)
-				.oneWay();
 		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
@@ -265,8 +275,9 @@ class Page extends Model.All
 
 	@Override
 	public void onSelectionSelected(SelectionSelected event) {
-		goPreserveScrollPosition(
-				place().copy().withSelection(event.getModel()));
+		TraversalPlace to = place().copy().withSelection(event.getModel());
+		to.clearLayerSelection();
+		goPreserveScrollPosition(to);
 	}
 
 	@Override
@@ -348,5 +359,16 @@ class Page extends Model.All
 	public void onShowKeyboardShortcuts(ShowKeyboardShortcuts event) {
 		KeyboardShortcutsArea
 				.show(TraversalBrowser.Ui.get().getKeybindingsHandler());
+	}
+
+	@Override
+	public void onLayerSelectionChange(LayerSelectionChange event) {
+		TraversalPlace to = place().copy();
+		int currentSelected = to.provideSelectedLayerIndex();
+		to.clearLayerSelection();
+		if (currentSelected != event.getModel().index) {
+			to.selectLayer(event.getModel());
+		}
+		to.go();
 	}
 }

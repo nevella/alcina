@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
@@ -25,7 +26,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 import cc.alcina.framework.servlet.environment.SettingsSupport;
@@ -62,7 +62,8 @@ public class TraversalBrowser {
 	}
 
 	@TypedProperties
-	public static class Ui extends AbstractUi<TraversalPlace> {
+	public static class Ui extends AbstractUi<TraversalPlace>
+			implements HasPage {
 		public static Ui get() {
 			return (Ui) RemoteUi.get();
 		}
@@ -167,6 +168,20 @@ public class TraversalBrowser {
 				}
 			}
 			return selectionMarkup;
+		}
+
+		public static Layer getSelectedLayer() {
+			return get().getSelectedLayer0();
+		}
+
+		protected Layer getSelectedLayer0() {
+			int selectedLayerIndex = place().provideSelectedLayerIndex();
+			return traversal().getLayer(selectedLayerIndex);
+		}
+
+		@Override
+		public Page providePage() {
+			return page;
 		}
 	}
 

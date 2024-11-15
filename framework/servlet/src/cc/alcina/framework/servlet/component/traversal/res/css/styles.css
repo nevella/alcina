@@ -679,6 +679,9 @@ body > page > layers > layers > layer-selections > name-area[filter-editor-open]
 body > page > layers > layers > layer-selections > name-area:not([has-filter]):not(:hover) > filter {
   visibility: hidden;
 }
+body > page > layers > layers > layer-selections > name-area[selected] {
+  background: #e3fae3;
+}
 body > page > layers > layers > layer-selections > selections-area {
   display: contents;
 }

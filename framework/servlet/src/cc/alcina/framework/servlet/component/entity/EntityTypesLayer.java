@@ -23,7 +23,7 @@ class EntityTypesLayer extends Layer<DomainGraphSelection> {
 
 	public static class TypeSelection
 			extends AbstractSelection<Class<? extends Entity>>
-			implements SelectionTableArea.HasTableRepresentation.Children {
+			implements Selection.HasTableRepresentation.Children {
 		public TypeSelection(Selection parent, Class<? extends Entity> value) {
 			super(parent, value, NestedName.get(value).toLowerCase());
 		}

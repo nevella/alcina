@@ -6,10 +6,15 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasFilterableString;
+import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public abstract class AbstractSelection<T> implements Selection<T> {
 	T value;
@@ -133,6 +138,17 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 		return view;
 	}
 
+	Selection.RowView rowView;
+
+	@Override
+	public Selection.RowView rowView() {
+		if (rowView == null) {
+			rowView = Registry.impl(Selection.RowView.class, getClass());
+			rowView.putSelection(this);
+		}
+		return rowView;
+	}
+
 	protected static class View<S extends AbstractSelection>
 			implements Selection.View<S> {
 		String text;
@@ -146,6 +162,28 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 		protected String computeText(S selection) {
 			return HasFilterableString.filterableString(selection.get());
+		}
+	}
+
+	@Registration(value = { Selection.RowView.class, AbstractSelection.class })
+	public static class RowView<S extends AbstractSelection> extends Model.All
+			implements Selection.RowView<S> {
+		public String type;
+
+		public String text;
+
+		@Property.Not
+		protected S selection;
+
+		public RowView() {
+		}
+
+		@Override
+		public void putSelection(S selection) {
+			this.selection = selection;
+			Selection.View view = selection.view();
+			this.type = NestedName.get(selection);
+			this.text = view.getText(selection);
 		}
 	}
 }

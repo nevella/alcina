@@ -15,8 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
 @Directed(tag = "properties")
 class PropertiesArea extends Model.Fields {

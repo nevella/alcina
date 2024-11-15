@@ -4,7 +4,6 @@ import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
 
 public class StandardLayerAttributes {
 	@TypeSerialization("sort-selected-first")

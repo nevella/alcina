@@ -1006,4 +1006,10 @@ public class SelectionTraversal
 		return state.visitedLayers.keySet().stream()
 				.collect(Collectors.toList());
 	}
+
+	public Layer getLayer(int selectedLayerIndex) {
+		return getVisitedLayers().stream()
+				.filter(layer -> layer.index == selectedLayerIndex).findFirst()
+				.orElse(null);
+	}
 }

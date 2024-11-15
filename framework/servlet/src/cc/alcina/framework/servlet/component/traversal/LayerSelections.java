@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.traversal.Layer;
@@ -44,9 +45,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionPath;
-import cc.alcina.framework.servlet.component.traversal.place.TraversalPlace.SelectionType;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
 class LayerSelections extends Model.All {
 	@Binding(type = Type.PROPERTY)
@@ -97,8 +97,11 @@ class LayerSelections extends Model.All {
 		return selectionLayers.traversal.getSelections(layer).size();
 	}
 
+	// FIXME - once inner classes allow static (JDK16) use typedproperties,
+	// remvoe setters
 	@Directed(className = "bordered-area")
-	class NameArea extends Model.All implements ModelEvents.Closed.Handler {
+	class NameArea extends Model.All
+			implements ModelEvents.Closed.Handler, DomEvents.Click.Handler {
 		@Directed
 		LeafModel.TextTitle key;
 
@@ -119,6 +122,14 @@ class LayerSelections extends Model.All {
 		@Directed.Exclude
 		String outputs;
 
+		@Binding(type = Type.PROPERTY)
+		boolean selected;
+
+		public void setSelected(boolean selected) {
+			set("selected", this.selected, selected,
+					() -> this.selected = selected);
+		}
+
 		NameArea() {
 			FormatBuilder keyBuilder = new FormatBuilder();
 			keyBuilder.indent(layer.depth());
@@ -129,6 +140,19 @@ class LayerSelections extends Model.All {
 					Ax.format("%s : %s", keyString, outputs));
 			filter = new Filter();
 			hasFilter = filter.existing != null;
+			bindings().from(selectionLayers.page.ui).on(Ui.properties.place)
+					.map(this::computeSelected).to(this).on("selected")
+					.oneWay();
+		}
+
+		boolean computeSelected(Place place) {
+			TraversalPlace traversalPlace = (TraversalPlace) place;
+			return traversalPlace.isSelected(layer);
+		}
+
+		public void onClick(Click event) {
+			event.reemitAs(this, TraversalEvents.LayerSelectionChange.class,
+					layer);
 		}
 
 		class Filter extends Model.All implements ModelEvents.Filter.Handler {

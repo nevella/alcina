@@ -25,7 +25,7 @@ public class MessageTransportLayerObservables {
 			@Override
 			public void topicPublished(SentObservable message) {
 				if (message.message.message instanceof RemoteComponentProtocol.Message.Mutations) {
-					logger.info("{} {} - mutations sent", Ax.appMillis(),
+					logger.debug("{} {} - mutations sent", Ax.appMillis(),
 							message.message.transportHistory.messageId);
 				}
 			}
@@ -61,7 +61,7 @@ public class MessageTransportLayerObservables {
 			@Override
 			public void topicPublished(PublishedObservable message) {
 				if (message.message.message instanceof RemoteComponentProtocol.Message.Mutations) {
-					logger.info("{} {} - mutations published - {}",
+					logger.debug("{} {} - mutations published - {}",
 							Ax.appMillis(),
 							message.message.transportHistory.messageId,
 							Ax.appMillis(
