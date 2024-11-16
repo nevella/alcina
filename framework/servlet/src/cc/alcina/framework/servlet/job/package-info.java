@@ -16,6 +16,10 @@
  * (post-creation) should generally be 1 tx/job
  * <li>All job-metadata-locking operations happen on the allocator queue - not
  * on the jobcontext thread
+ * <li>CHILD vs AWAIT relationtype - this depends on what the structure of the
+ * parent is - if parent code is interleaved with dependent job performance,
+ * AWAIT, if parent just generates a bunch of tasks and then awaits their
+ * (sequential or otherwise) completion, CHILD
  * </ul>
  */
 package cc.alcina.framework.servlet.job;
