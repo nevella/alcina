@@ -104,4 +104,15 @@ public class SequencePlace extends BasePlace
 			return selectedElementIdx != lastPlace.selectedElementIdx;
 		}
 	}
+
+	public SequencePlace deltaSelectedRow(int delta, int size) {
+		selectedElementIdx = selectedElementIdx + delta;
+		if (selectedElementIdx < 0) {
+			selectedElementIdx = size - 1;
+		}
+		if (selectedElementIdx >= size) {
+			selectedElementIdx = size == 0 ? -1 : 0;
+		}
+		return this;
+	}
 }

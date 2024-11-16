@@ -30,28 +30,28 @@ public class SequenceEvents {
 	}
 
 	@KeyBinding(key = ".", context = SequenceBrowser.CommandContext.class)
-	public static class NextHighlight
-			extends ModelEvent<Object, NextHighlight.Handler> {
+	public static class NextSelectable
+			extends ModelEvent<Object, NextSelectable.Handler> {
 		@Override
-		public void dispatch(NextHighlight.Handler handler) {
-			handler.onNextHighlight(this);
+		public void dispatch(NextSelectable.Handler handler) {
+			handler.onNextSelectable(this);
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onNextHighlight(NextHighlight event);
+			void onNextSelectable(NextSelectable event);
 		}
 	}
 
 	@KeyBinding(key = ",", context = SequenceBrowser.CommandContext.class)
-	public static class PreviousHighlight
-			extends ModelEvent<Object, PreviousHighlight.Handler> {
+	public static class PreviousSelectable
+			extends ModelEvent<Object, PreviousSelectable.Handler> {
 		@Override
-		public void dispatch(PreviousHighlight.Handler handler) {
-			handler.onPreviousHighlight(this);
+		public void dispatch(PreviousSelectable.Handler handler) {
+			handler.onPreviousSelectable(this);
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onPreviousHighlight(PreviousHighlight event);
+			void onPreviousSelectable(PreviousSelectable event);
 		}
 	}
 
