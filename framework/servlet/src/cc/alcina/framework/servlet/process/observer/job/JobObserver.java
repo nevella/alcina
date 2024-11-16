@@ -142,7 +142,7 @@ public class JobObserver {
 		public void topicPublished(JobObservable.Created event) {
 			if (filters.stream().anyMatch(f -> f.isBeginObservation(event))) {
 				if (!isObserving(event)) {
-					logger.info("Begin observing - job localid {}",
+					logger.debug("Begin observing - job localid {}",
 							event.job.getLocalId());
 					histories.put(event.job.getLocalId(),
 							new JobHistory(event.job));
@@ -173,7 +173,7 @@ public class JobObserver {
 
 		boolean evict() {
 			if (evictAt <= System.currentTimeMillis()) {
-				logger.info("Evict history - job localid {}", localId);
+				logger.debug("Evict history - job localid {}", localId);
 				histories.remove(localId);
 				return true;
 			} else {
