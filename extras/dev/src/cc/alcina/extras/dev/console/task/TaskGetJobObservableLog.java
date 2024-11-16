@@ -24,6 +24,11 @@ public abstract class TaskGetJobObservableLog extends PerformerTask.Fields {
 
 	public boolean copyToJobSequenceFolder = true;
 
+	public TaskGetJobObservableLog withJobId(long jobId) {
+		this.jobId = jobId;
+		return this;
+	}
+
 	@Override
 	public void run() throws Exception {
 		TaskLogJobObservable remoteTask = new TaskLogJobObservable();

@@ -1296,4 +1296,8 @@ public abstract class Job extends VersionableEntity<Job>
 				.filter(rel -> rel.is(JobRelationType.RESUBMIT)).findFirst()
 				.map(JobRelation::getTo);
 	}
+
+	public boolean provideCanAppendPending() {
+		return state == JobState.ALLOCATED || state == JobState.PROCESSING;
+	}
 }

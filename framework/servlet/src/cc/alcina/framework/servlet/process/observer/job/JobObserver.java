@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
-import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
@@ -169,7 +168,7 @@ public class JobObserver {
 		EvictionRecord(long localId) {
 			this.localId = localId;
 			this.evictAt = System.currentTimeMillis()
-					+ TimeConstants.ONE_MINUTE_MS;
+					+ Configuration.getLong("evictCompleteJobsAfterMs");
 		}
 
 		boolean evict() {

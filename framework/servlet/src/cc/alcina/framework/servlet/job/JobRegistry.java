@@ -522,15 +522,25 @@ public class JobRegistry {
 		Job job = task.schedule();
 		if (scheduleAfterInFlight) {
 			String serialized = TransformManager.serialize(task, true);
-			Optional<? extends Job> inFlight = JobDomain.get()
+			Optional<? extends Job> o_inFlight = JobDomain.get()
 					.getJobsForTask(task.getClass())
-					.filter(j -> j.getState() == JobState.ALLOCATED
-							|| j.getState() == JobState.PROCESSING)
+					.filter(Job::provideCanAppendPending)
 					.filter(j -> Objects.equals(serialized,
 							j.getTaskSerialized()))
+					.filter(j -> j.getPerformer() == ClientInstance.self())
 					.findFirst();
-			if (inFlight.isPresent()) {
-				inFlight.get().createRelation(job, JobRelationType.SEQUENCE);
+			if (o_inFlight.isPresent()) {
+				Job inFlight = o_inFlight.get();
+				JobAllocator inFlightAllocator = scheduler.allocators
+						.get(inFlight);
+				if (inFlightAllocator != null && inFlightAllocator
+						.setAwaitJobExistenceBeforeContinueToExit(job)) {
+					/*
+					 * Complex - we need to block inflight changes until the tx
+					 * is complete
+					 */
+					inFlight.createRelation(job, JobRelationType.SEQUENCE);
+				}
 			}
 		}
 		return job;
@@ -1608,5 +1618,9 @@ public class JobRegistry {
 			}
 		}
 		return false;
+	}
+
+	boolean hasAllocator(Job job) {
+		return scheduler.allocators.containsKey(job);
 	}
 }

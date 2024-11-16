@@ -34,6 +34,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.Alloca
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobObservable;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LatchType;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
@@ -82,6 +83,13 @@ class JobAllocator {
 
 	Thread thread;
 
+	// locks actions which require lock over the whole processEvent0
+	private Object addSubsequentsMonitor = new Object();
+
+	private Job awaitJobExistenceBeforeContinueToExit;
+
+	private boolean beforeAddSubsequentsBarrier = true;
+
 	JobAllocator(AllocationQueue queue, ExecutorService allocatorService) {
 		this.queue = queue;
 		this.allocatorService = allocatorService;
@@ -120,10 +128,13 @@ class JobAllocator {
 
 	/*
 	 * Called only from the performer thread (so job.provideChildren is live)
+	 * 
+	 * Once entered, subsequent jobs cannot be added to this job
 	 */
 	void awaitChildCompletion(JobContext jobContext) {
 		this.jobContext = jobContext;
 		try {
+			checkAddSubsequentsBarrier();
 			if (queue.job.provideChildren().noneMatch(j -> true)) {
 				return;
 			}
@@ -152,6 +163,35 @@ class JobAllocator {
 			TransactionEnvironment.get().ensureBegun();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	void checkAddSubsequentsBarrier() throws InterruptedException {
+		synchronized (addSubsequentsMonitor) {
+			if (awaitJobExistenceBeforeContinueToExit != null) {
+				/*
+				 * spinlock with timeout%/
+				 */
+				long start = System.currentTimeMillis();
+				while (TimeConstants.within(start,
+						TimeConstants.ONE_MINUTE_MS)) {
+					logger.info("await spinlock - {} -  job {}",
+							queue.currentPhase,
+							awaitJobExistenceBeforeContinueToExit.toLocator());
+					Job domainVisible = awaitJobExistenceBeforeContinueToExit
+							.toLocator().find();
+					if (domainVisible != null
+							&& JobRegistry.get().hasAllocator(domainVisible)) {
+						awaitJobExistenceBeforeContinueToExit = null;
+						Transaction.endAndBeginNew();
+						break;
+					} else {
+						Thread.sleep(10);
+						Transaction.endAndBeginNew();
+					}
+				}
+			}
+			beforeAddSubsequentsBarrier = false;
 		}
 	}
 
@@ -349,12 +389,14 @@ class JobAllocator {
 			try {
 				TransactionEnvironment.get().ensureBegun();
 				processEvent0(event);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			} finally {
 				TransactionEnvironment.get().ensureEnded();
 			}
 		}
 
-		void processEvent0(Event event) {
+		void processEvent0(Event event) throws Exception {
 			Job job = queue.job;
 			if (firstEvent) {
 				firstEvent = false;
@@ -363,27 +405,39 @@ class JobAllocator {
 				logger.debug("Allocation thread started -  job {}",
 						job.toDisplayName());
 			}
+			if (awaitJobExistenceBeforeContinueToExit != null) {
+				/*
+				 * spinlock with timeout - the actual change occurs on the
+				 * performer thread
+				 */
+				long start = System.currentTimeMillis();
+				while (TimeConstants.within(start,
+						TimeConstants.ONE_MINUTE_MS)) {
+					if (awaitJobExistenceBeforeContinueToExit == null) {
+						Transaction.endAndBeginNew();
+						break;
+					} else {
+						Thread.sleep(10);
+					}
+				}
+			}
 			boolean deleted = false;
 			try {
 				LooseContext.pushWithTrue(
 						LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED);
 				if (job.domain().wasRemoved()) {
-					try {
-						// production issue -- revisit
-						Thread.sleep(1000);
-						DomainStore.waitUntilCurrentRequestsProcessed();
-						if (!job.domain().wasRemoved()) {
-							logger.debug(
-									"DEVEX-12 ::  event with incomplete domain tx -  job {}",
-									job.toDisplayName());
-						} else {
-							deleted = true;
-							// was deleted - FIXME - mvcc.jobs.2 - remove this -
-							// improve upstream
-							// (AllocationQueue insert/remove)
-						}
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
+					// production issue -- revisit
+					Thread.sleep(1000);
+					DomainStore.waitUntilCurrentRequestsProcessed();
+					if (!job.domain().wasRemoved()) {
+						logger.debug(
+								"DEVEX-12 ::  event with incomplete domain tx -  job {}",
+								job.toDisplayName());
+					} else {
+						deleted = true;
+						// was deleted - FIXME - mvcc.jobs.2 - remove this -
+						// improve upstream
+						// (AllocationQueue insert/remove)
 					}
 				}
 			} finally {
@@ -731,5 +785,19 @@ class JobAllocator {
 		} else {
 			return false;
 		}
+	}
+
+	/*
+	 * locking logic (fix for job/2) - queue.currentPhase is only changed within
+	 * the other section (processEvent0) locked by processEventMonitor
+	 */
+	boolean setAwaitJobExistenceBeforeContinueToExit(Job job) {
+		synchronized (addSubsequentsMonitor) {
+			if (beforeAddSubsequentsBarrier) {
+				awaitJobExistenceBeforeContinueToExit = job;
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -175,6 +175,17 @@ public class ControlServlet extends AlcinaServlet {
 		}
 	}
 
+	public static class RequiresEnablement extends ControlServlet {
+		@Override
+		protected void handleRequest(HttpServletRequest request,
+				HttpServletResponse response) throws Exception {
+			if (!Configuration.is("enabled")) {
+				throw new UnsupportedOperationException("Not enabled");
+			}
+			super.handleRequest(request, response);
+		}
+	}
+
 	@Override
 	protected void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
