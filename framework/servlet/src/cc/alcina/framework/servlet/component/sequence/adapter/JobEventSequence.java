@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
@@ -91,7 +92,7 @@ public class JobEventSequence extends Sequence.Abstract<IdOrdered> {
 
 		String type;
 
-		JobDomain.EventType allocationEventType;
+		String subType;
 
 		@Directed.Exclude
 		@Display.Exclude
@@ -110,7 +111,8 @@ public class JobEventSequence extends Sequence.Abstract<IdOrdered> {
 			index = row.index;
 			versionId = row.versionId;
 			time = row.time;
-			type = row.type;
+			type = event.getClass().getSimpleName();
+			subType = row.type;
 			stringRepresentation = row.stringRepresentation;
 		}
 
@@ -119,7 +121,13 @@ public class JobEventSequence extends Sequence.Abstract<IdOrdered> {
 			index = row.index;
 			name = row.name;
 			time = row.time;
-			allocationEventType = row.allocationEventType;
+			if (event instanceof JobObservable.AllocationEvent) {
+				type = event.getClass().getSimpleName();
+				subType = Ax.friendly(row.allocationEventType);
+			} else {
+				type = JobObservable.class.getSimpleName();
+				subType = event.getClass().getSimpleName();
+			}
 			stringRepresentation = row.stringRepresentation;
 		}
 

@@ -26,6 +26,10 @@ cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()));
 cc.alcina.framework.servlet.process.observer.job.JobObserver.getHistory(
 cc.alcina.framework.servlet.job.JobContext.get().getJob().toLocator()).sequence().exportLocal();
 
+-- or (obtain logs from jboss server) --
+see TaskLogJobObservable (run server-side to write logs to container FS)
+see TaskGetJobObservableLog (console - run to write server-side logs then download to local)
+
 -- copy the logs to the default viewer folder for the sequence viewer --
 mkdir -p /tmp/sequence/job/job-event-latest
 rm -rf /tmp/sequence/job/job-event-latest/* 

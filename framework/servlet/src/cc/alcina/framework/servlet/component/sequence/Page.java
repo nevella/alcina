@@ -34,8 +34,8 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.Sho
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequence;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NextHighlight;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousHighlight;
+import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NextSelectable;
+import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousSelectable;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.PropertyDisplayMode;
 import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
@@ -54,8 +54,8 @@ import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
 class Page extends Model.Fields
 		implements SequenceEvents.FilterElements.Handler,
 		SequenceEvents.HighlightElements.Handler,
-		SequenceEvents.NextHighlight.Handler,
-		SequenceEvents.PreviousHighlight.Handler,
+		SequenceEvents.NextSelectable.Handler,
+		SequenceEvents.PreviousSelectable.Handler,
 		SequenceEvents.LoadSequence.Handler,
 		SequenceBrowserCommand.ClearFilter.Handler,
 		SequenceBrowserCommand.PropertyDisplayCycle.Handler,
@@ -179,15 +179,25 @@ class Page extends Model.Fields
 	}
 
 	@Override
-	public void onPreviousHighlight(PreviousHighlight event) {
-		highlightModel.moveIndex(getSelectedSequenceElement(), -1);
-		goToHighlightModelIndex();
+	public void onPreviousSelectable(PreviousSelectable event) {
+		if (highlightModel.hasMatches()) {
+			highlightModel.moveIndex(getSelectedSequenceElement(), -1);
+			goToHighlightModelIndex();
+		} else {
+			Ui.place().copy()
+					.deltaSelectedRow(-1, filteredSequenceElements.size()).go();
+		}
 	}
 
 	@Override
-	public void onNextHighlight(NextHighlight event) {
-		highlightModel.moveIndex(getSelectedSequenceElement(), +1);
-		goToHighlightModelIndex();
+	public void onNextSelectable(NextSelectable event) {
+		if (highlightModel.hasMatches()) {
+			highlightModel.moveIndex(getSelectedSequenceElement(), +1);
+			goToHighlightModelIndex();
+		} else {
+			Ui.place().copy()
+					.deltaSelectedRow(1, filteredSequenceElements.size()).go();
+		}
 	}
 
 	@Property.Not
