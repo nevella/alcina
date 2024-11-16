@@ -731,7 +731,7 @@ public class JobContext {
 		}
 	}
 
-	public void toAwaitingChildren() {
+	void toAwaitingChildren() {
 		TransactionEnvironment.get().commit();
 		allocator.toAwaitingChildren(this);
 	}

@@ -77,6 +77,12 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 				other.toLocator().toIdPairString(), other.provideName());
 	}
 
+	/*
+	 * parent_child and awaited have identical resource + sequence
+	 * characteristics (resources are passed down, execution is
+	 * self-child/awaited-finished), but implementation details (thread and
+	 * queue allocation) are quite different
+	 */
 	@Reflected
 	public static enum JobRelationType {
 		PARENT_CHILD, SEQUENCE, RESUBMIT,

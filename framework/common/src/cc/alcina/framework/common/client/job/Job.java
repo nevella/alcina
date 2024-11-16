@@ -725,7 +725,8 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	/*
-	 * self, previous in stream, and, if present, repeat from parent
+	 * self, previous in stream, and, if present, repeat from parent -or-
+	 * awaiter
 	 */
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public Stream<Job> provideSelfAndAntecedents() {
@@ -740,9 +741,18 @@ public abstract class Job extends VersionableEntity<Job>
 				break;
 			}
 		}
-		Optional<Job> parent = cursor.provideParent();
-		return Stream.concat(selfAndPreviousSiblings.stream(), parent
+		Optional<Job> parentOrAwaiter = cursor.provideParentOrAwaiter();
+		return Stream.concat(selfAndPreviousSiblings.stream(), parentOrAwaiter
 				.map(Job::provideSelfAndAntecedents).orElse(Stream.empty()));
+	}
+
+	public Optional<Job> provideParentOrAwaiter() {
+		Optional<? extends JobRelation> rel = provideToRelation(
+				JobRelationType.PARENT_CHILD);
+		if (rel.isEmpty()) {
+			rel = provideToRelation(JobRelationType.AWAITED);
+		}
+		return rel.map(JobRelation::getFrom);
 	}
 
 	public String provideShortName() {
