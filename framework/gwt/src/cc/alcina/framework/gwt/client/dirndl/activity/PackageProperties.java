@@ -3,11 +3,13 @@ package cc.alcina.framework.gwt.client.dirndl.activity;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 import java.lang.Boolean;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class PackageProperties {
@@ -20,6 +22,7 @@ public class PackageProperties {
     public static _DirectedCategoriesActivity directedCategoriesActivity = new _DirectedCategoriesActivity();
     public static _DirectedCategoryActivity directedCategoryActivity = new _DirectedCategoryActivity();
     public static _DirectedEntityActivity directedEntityActivity = new _DirectedEntityActivity();
+    public static _RootArea rootArea = new _RootArea();
     
     public static class _DirectedActivity implements TypedProperty.Container {
       public TypedProperty<DirectedActivity, BasePlace> place = new TypedProperty<>(DirectedActivity.class, "place");
@@ -49,6 +52,11 @@ public class PackageProperties {
       public TypedProperty<DirectedEntityActivity, Entity> entity = new TypedProperty<>(DirectedEntityActivity.class, "entity");
       public TypedProperty<DirectedEntityActivity, Boolean> entityNotFound = new TypedProperty<>(DirectedEntityActivity.class, "entityNotFound");
       public TypedProperty<DirectedEntityActivity, EntityPlace> place = new TypedProperty<>(DirectedEntityActivity.class, "place");
+    }
+    
+    public static class _RootArea implements TypedProperty.Container {
+      public TypedProperty<RootArea, Map> fragmentOverlays = new TypedProperty<>(RootArea.class, "fragmentOverlays");
+      public TypedProperty<RootArea, DirectedActivity> mainActivity = new TypedProperty<>(RootArea.class, "mainActivity");
     }
     
 //@formatter:on

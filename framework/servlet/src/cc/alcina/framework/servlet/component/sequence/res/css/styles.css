@@ -565,6 +565,9 @@ body > page > header > right {
   justify-content: flex-end;
   grid-area: right;
 }
+body > page > header > right > * {
+  cursor: pointer;
+}
 body > page > header > right > dropdown {
   display: inline-block;
   width: 20px;
@@ -579,6 +582,7 @@ body > page > header > right > dropdown > button {
   background-position: center;
   border: none;
   background-color: transparent;
+  cursor: pointer;
 }
 body > page > header > right > dropdown > button:hover {
   filter: invert(0.5);

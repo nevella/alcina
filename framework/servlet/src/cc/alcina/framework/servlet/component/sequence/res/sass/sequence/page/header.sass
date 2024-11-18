@@ -69,6 +69,9 @@ $item-gap: 2.5rem
     justify-content: flex-end
     grid-area: right
 
+    > *
+      cursor: pointer
+
     > dropdown
       display: inline-block
       width: 20px
@@ -77,6 +80,7 @@ $item-gap: 2.5rem
       > button
         filter: invert(1)
         @include action.content
+        cursor: pointer
 
         &.dotburger
           @include ellipsis-vertical.content

@@ -6,10 +6,14 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.gwt.activity.shared.PlaceUpdateable;
 import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
@@ -17,10 +21,15 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasFilterableText;
 import cc.alcina.framework.common.client.util.HasFilterableText.Query;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
+import cc.alcina.framework.gwt.client.dirndl.cmp.told.ToldPlace;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
@@ -38,7 +47,6 @@ import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NextSelecta
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousSelectable;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.PropertyDisplayMode;
-import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
 
 /*
  * TODO - look at an approach to prevent double-fires of say reloadSequence -
@@ -63,7 +71,36 @@ class Page extends Model.Fields
 		SequenceBrowserCommand.FocusSearch.Handler,
 		SequenceEvents.HighlightModelChanged.Emitter,
 		SequenceEvents.SelectedIndexChanged.Emitter,
-		SequenceBrowserCommand.ShowKeyboardShortcuts.Handler {
+		SequenceBrowserCommand.ShowKeyboardShortcuts.Handler,
+		ModelEvents.ApplicationHelp.Handler {
+	/**
+	 * This activity hooks the Page up to the RootArea (the general routing
+	 * contract)
+	 */
+	@Directed.Delegating
+	@Bean(PropertySource.FIELDS)
+	@Registration({ DirectedActivity.class, SequencePlace.class })
+	static class ActivityRoute extends DirectedActivity
+			// register in spite of non-public access
+			implements Registration.AllSubtypes, PlaceUpdateable {
+		@Directed
+		Page page;
+
+		@Override
+		public void onBeforeRender(BeforeRender event) {
+			page = new Page();
+			super.onBeforeRender(event);
+		}
+
+		@Override
+		public boolean canUpdate(PlaceUpdateable otherActivity) {
+			/*
+			 * All place updates are handled by the Page
+			 */
+			return true;
+		}
+	}
+
 	class IndexPredicate implements Predicate {
 		int index = 0;
 
@@ -111,6 +148,7 @@ class Page extends Model.Fields
 
 	Page() {
 		this.ui = Ui.get();
+		this.ui.page = this;
 		header = new Header(this);
 		bindings().addBindHandler(ui::bindKeyboardShortcuts);
 		bindings().from(ui.settings).on(SequenceSettings.properties.sequenceKey)
@@ -360,5 +398,13 @@ class Page extends Model.Fields
 	public void onShowKeyboardShortcuts(ShowKeyboardShortcuts event) {
 		KeyboardShortcutsArea
 				.show(SequenceBrowser.Ui.get().getKeybindingsHandler());
+	}
+
+	@Override
+	public void onApplicationHelp(ApplicationHelp event) {
+		SequencePlace place = Ui.place().copy();
+		place.fragments().ensure(ToldPlace.class).withNodePath(ToldPlace.ROOT);
+		String tokenString = place.toTokenString();
+		place.go();
 	}
 }

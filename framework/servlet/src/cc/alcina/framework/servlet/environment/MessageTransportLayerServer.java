@@ -17,10 +17,15 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * <p>
  * The server end of the message transport layer
  * 
- * 
+ * <p>
+ * FIXME - synchronisation could be cleaner - there are two distinct areas
+ * (envelopes; unacknowledged messages) - is there some formal documentation
+ * around sync validation?
  * 
  * @see {@link MessageBatcher} - performance optimiser, which batches messages
  *      such as interleaved invoke/js and mutation
+ * 
+ * 
  */
 class MessageTransportLayerServer extends MessageTransportLayer {
 	class SendChannelImpl extends SendChannel {

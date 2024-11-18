@@ -1,9 +1,8 @@
 package cc.alcina.framework.gwt.client.place;
 
-import com.google.gwt.place.shared.Place;
 import com.google.gwt.regexp.shared.RegExp;
 
-public abstract class BasePlaceRegexTokenizer<P extends Place>
+public abstract class BasePlaceRegexTokenizer<P extends BasePlace>
 		extends BasePlaceTokenizer<P> {
 	@Override
 	public abstract P getPlace(String token);

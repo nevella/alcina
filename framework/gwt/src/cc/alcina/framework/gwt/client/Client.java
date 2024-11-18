@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.activity.shared.ActivityManager;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.PerDocumentSupplierGwtImpl;
@@ -48,109 +49,6 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @Reflected
 @Registration(Client.class)
 public abstract class Client implements ContextFrame {
-	public static ContextProvider<Object, Client> contextProvider;
-
-	/**
-	 * Utility method for a common pattern (ui bind :: do xxx on place change);
-	 */
-	public static void addPlaceChangeBinding(Model model, Runnable runnable) {
-		model.bindings().addRegistration(() -> Client.eventBus()
-				.addHandler(PlaceChangeEvent.TYPE, evt -> runnable.run()));
-	}
-
-	public static CommonRemoteServiceAsync commonRemoteService() {
-		return Registry.impl(CommonRemoteServiceAsync.class);
-	}
-
-	public static <P extends Place> P currentPlace() {
-		return (P) get().getPlaceController().getWhere();
-	}
-
-	public static VariableDispatchEventBus eventBus() {
-		return get().eventBus;
-	}
-
-	public static void flushAndRefresh() {
-		Runnable runnable = () -> {
-			refreshCurrentPlace();
-		};
-		CommitToStorageTransformListener.flushAndRun(runnable);
-	}
-
-	public static Client get() {
-		return contextProvider.contextFrame();
-	}
-
-	// prefer place.go (which calls through to this, but is more fluent)
-	public static void goTo(Place place) {
-		Runnable runnable = () -> get().placeController.goTo(place);
-		CommitToStorageTransformListener.flushAndRun(runnable);
-	}
-
-	public static boolean has() {
-		return contextProvider != null && contextProvider.hasFrame();
-	}
-
-	public static boolean isCurrentPlace(Place place) {
-		return Objects.equals(place, get().placeController.getWhere());
-	}
-
-	public static boolean isDeveloper() {
-		return EntityClientUtils.isTestServer()
-				|| PermissionsManager.isDeveloper();
-	}
-
-	public static void refreshCurrentPlace() {
-		BasePlace place = (BasePlace) currentPlace();
-		place.setRefreshed(true);
-		place = place.copy();
-		place.go();
-	}
-
-	public static void refreshOrGoTo(Place place) {
-		if (isCurrentPlace(place)) {
-			refreshCurrentPlace();
-		} else {
-			goTo(place);
-		}
-	}
-
-	public static SearchRemoteServiceAsync searchRemoteService() {
-		return Registry.impl(SearchRemoteServiceAsync.class);
-	}
-
-	protected final VariableDispatchEventBus eventBus = new VariableDispatchEventBus();
-
-	protected PlaceController placeController;
-
-	protected UiController uiController;
-
-	protected PlaceHistoryHandler historyHandler;
-
-	public Client() {
-		createPlaceController();
-	}
-
-	protected abstract void createPlaceController();
-
-	public PlaceController getPlaceController() {
-		return this.placeController;
-	}
-
-	public UiController getUiController() {
-		return this.uiController;
-	}
-
-	public void initAppHistory() {
-		historyHandler.handleCurrentHistory();
-	}
-
-	public void setupPlaceMapping() {
-		historyHandler = new PlaceHistoryHandler(
-				Registry.impl(RegistryHistoryMapper.class));
-		uiController = new UiController();
-	}
-
 	public static class Init {
 		public static long startTime;
 
@@ -252,9 +150,123 @@ public abstract class Client implements ContextFrame {
 	public static class SupportReachability {
 	}
 
+	public static ContextProvider<Object, Client> contextProvider;
+
+	/**
+	 * Utility method for a common pattern (ui bind :: do xxx on place change);
+	 */
+	public static void addPlaceChangeBinding(Model model, Runnable runnable) {
+		model.bindings().addRegistration(() -> Client.eventBus()
+				.addHandler(PlaceChangeEvent.TYPE, evt -> runnable.run()));
+	}
+
+	public static CommonRemoteServiceAsync commonRemoteService() {
+		return Registry.impl(CommonRemoteServiceAsync.class);
+	}
+
+	public static <P extends Place> P currentPlace() {
+		return (P) get().getPlaceController().getWhere();
+	}
+
+	public static VariableDispatchEventBus eventBus() {
+		return get().eventBus;
+	}
+
+	public static void flushAndRefresh() {
+		Runnable runnable = () -> {
+			refreshCurrentPlace();
+		};
+		CommitToStorageTransformListener.flushAndRun(runnable);
+	}
+
+	public static Client get() {
+		return contextProvider.contextFrame();
+	}
+
+	// prefer place.go (which calls through to this, but is more fluent)
+	public static void goTo(Place place) {
+		Runnable runnable = () -> get().placeController.goTo(place);
+		CommitToStorageTransformListener.flushAndRun(runnable);
+	}
+
+	public static boolean has() {
+		return contextProvider != null && contextProvider.hasFrame();
+	}
+
+	public static boolean isCurrentPlace(Place place) {
+		return Objects.equals(place, get().placeController.getWhere());
+	}
+
+	public static boolean isDeveloper() {
+		return EntityClientUtils.isTestServer()
+				|| PermissionsManager.isDeveloper();
+	}
+
+	public static void refreshCurrentPlace() {
+		BasePlace place = (BasePlace) currentPlace();
+		place.setRefreshed(true);
+		place = place.copy();
+		place.go();
+	}
+
+	public static void refreshOrGoTo(Place place) {
+		if (isCurrentPlace(place)) {
+			refreshCurrentPlace();
+		} else {
+			goTo(place);
+		}
+	}
+
+	public static SearchRemoteServiceAsync searchRemoteService() {
+		return Registry.impl(SearchRemoteServiceAsync.class);
+	}
+
+	protected final VariableDispatchEventBus eventBus = new VariableDispatchEventBus();
+
+	protected PlaceController placeController;
+
+	protected UiController uiController;
+
+	protected PlaceHistoryHandler historyHandler;
+
+	protected ActivityManager activityManager;
+
+	public Client() {
+		createPlaceController();
+	}
+
+	public ActivityManager getActivityManager() {
+		return activityManager;
+	}
+
+	public PlaceController getPlaceController() {
+		return this.placeController;
+	}
+
+	public UiController getUiController() {
+		return this.uiController;
+	}
+
+	public void initAppHistory() {
+		historyHandler.handleCurrentHistory();
+	}
+
+	public void setupPlaceMapping() {
+		historyHandler = new PlaceHistoryHandler(
+				Registry.impl(RegistryHistoryMapper.class));
+		uiController = new UiController();
+	}
+
 	public Place parsePlace(String strUrl) {
 		Url url = Url.parse(strUrl);
 		return RegistryHistoryMapper.get().getPlaceIfParseable(url.hash)
 				.orElse(null);
 	}
+
+	public void setupActivityManager() {
+		// FIXME - can be a noop, but all dirndl clients should configure +
+		// attach their activitymanager here
+	}
+
+	protected abstract void createPlaceController();
 }

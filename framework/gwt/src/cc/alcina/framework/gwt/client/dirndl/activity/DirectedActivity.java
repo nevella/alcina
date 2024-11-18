@@ -33,7 +33,11 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * do), and interception/re-render (via property change) by the container or the
  * activity subclass itself
  *
- *
+ * <p>
+ * Normally application routing works by having a 'main area', the type of which
+ * is a DirectedActivity. Changes to that activity can either be rendered
+ * directed (if the activity is itself the UI Model) or be transformed into the
+ * appropriate UI model via &#064;Directed.Transform
  *
  * @param <P>
  * 
@@ -50,14 +54,20 @@ public class DirectedActivity<P extends BasePlace> extends Model
 			return Registry.impl(Topics.class);
 		}
 
-		public final Topic<DirectedActivity> topicActivityStarted = Topic
-				.create();
+		public final Topic<DirectedActivity> topicActivityStarted = Topic.RetainMultiple
+				.create().withRetainPublished(true);
 
-		public final Topic<DirectedActivity> topicActivityStopped = Topic
-				.create();
+		public final Topic<DirectedActivity> topicActivityStopped = Topic.RetainMultiple
+				.create().withRetainPublished(true);
+
+		public final Topic<Class<? extends BasePlace>> topicChannelStopped = Topic
+				.create().withRetainPublished(true);
 	}
 
-	public static Activity forPlace(Place place) {
+	public Class<? extends Place> channel;
+
+	public static Activity forPlace(Place place,
+			Class<? extends Place> channel) {
 		if (!(place instanceof BasePlace)) {
 			return null;
 		}
@@ -106,6 +116,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 				}
 			}
 		}
+		directedActivity.channel = channel;
 		directedActivity.setPlace((BasePlace) place);
 		return directedActivity;
 	}

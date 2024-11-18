@@ -28,4 +28,29 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
 @Feature.Status.Ref(Feature.Status.In_Progress.class)
 @Feature.Parent(Feature_Dirndl.class)
 public interface Feature_HelpModule extends Feature {
+	/**
+	 * The help area - header (including search, tree, contents/results)
+	 */
+	@Feature.Parent(Feature_HelpModule.class)
+	public interface _Area extends Feature {
+	}
+
+	/**
+	 * [Title :: Search/omni field]; dotburger (expand/collapse tree;
+	 * fullscreen; wide; document view); close
+	 */
+	@Feature.Parent(_Area.class)
+	public interface _Header extends Feature {
+	}
+
+	@Feature.Parent(_Area.class)
+	public interface _Topics extends Feature {
+	}
+
+	/**
+	 * Either displays current node or search results/extracts
+	 */
+	@Feature.Parent(_Area.class)
+	public interface _Content extends Feature {
+	}
 }

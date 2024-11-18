@@ -71,6 +71,12 @@ import cc.alcina.framework.common.client.util.Ax;
  * <p>
  * For a useful pattern that implements a decoupled type/handler pattern, see
  * {@link NonGenericSubtypes}
+ * <p>
+ * Class/protection access - normally Registration annotations are -not-
+ * registered if the registering type is non-public, for the moment it should
+ * implement {@link Registration.AllSubtypes} if registration of non-public is
+ * desired (which makes sense, registration of a type without subtypes would be
+ * odd).
  *
  * @see Registry
  *

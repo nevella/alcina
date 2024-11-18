@@ -50,7 +50,7 @@ public interface Feature extends Registration.AllSubtypes {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Inherited
 	@Documented
-	@Target({ ElementType.TYPE })
+	@Target({ ElementType.TYPE, ElementType.PACKAGE })
 	@interface Parent {
 		Class<? extends Feature> value();
 	}

@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.environment;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.google.gwt.activity.shared.Activity;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
@@ -20,6 +21,11 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 
+/**
+ * <p>
+ * Activity routing - all AbstractUi apps use the {@link Place} and
+ * {@link Activity} system for modelling main UI state
+ */
 @TypedProperties
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class AbstractUi<P extends Place> extends Bindable.Fields
@@ -43,6 +49,9 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		this.environment = environment;
 	}
 
+	/**
+	 * The current place, transformed from the browser url.
+	 */
 	public P place;
 
 	private KeyboardShortcuts keyboardShortcuts;

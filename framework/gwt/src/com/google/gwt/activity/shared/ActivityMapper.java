@@ -32,4 +32,9 @@ public interface ActivityMapper {
 	 *            a Place object
 	 */
 	Activity getActivity(Place place);
+
+	default Activity getActivity(Place newPlace,
+			Class<? extends Place> channel) {
+		return getActivity(newPlace);
+	}
 }

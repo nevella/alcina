@@ -3,12 +3,15 @@ package cc.alcina.framework.gwt.client.place;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -22,7 +25,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
 @Reflected
 @Registration(BasePlaceTokenizer.class)
-public abstract class BasePlaceTokenizer<P extends Place>
+public abstract class BasePlaceTokenizer<P extends BasePlace>
 		implements PlaceTokenizer<P>, Registration.Ensure {
 	protected StringBuilder tokenBuilder;
 
@@ -107,13 +110,21 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	@Override
 	public P getPlace(String token) {
 		Preconditions.checkState(mutable);
+		String[] fragments = token.split("//");
+		token = fragments[0];
 		parts = token.split("/");
 		try {
-			return getPlace0(token);
+			P place0 = getPlace0(token);
+			for (int idx = 1; idx < fragments.length; idx++) {
+				BasePlace fragmentPlace = (BasePlace) RegistryHistoryMapper
+						.get().parseAndReturnPlace(fragments[idx]);
+				place0.fragments.add(fragmentPlace);
+			}
+			return place0;
 		} catch (Exception e) {
 			if (e.getClass() == RuntimeException.class || !GWT.isScript()) {
 				// key collisions etc
-				throw e;
+				throw WrappedRuntimeException.wrap(e);
 			} else {
 				e.printStackTrace();
 				return getPlace(getPrefix());
@@ -144,7 +155,16 @@ public abstract class BasePlaceTokenizer<P extends Place>
 			hash = getParameterPartPrefix() + hash;
 			addTokenPart(hash);
 		}
-		return tokenBuilder.toString();
+		String token = tokenBuilder.toString();
+		if (place.fragments.size() > 0) {
+			token = Stream
+					.concat(Stream.of(token), place.fragments.stream()
+							.map(fragment -> RegistryHistoryMapper.get()
+									.getTokenizerByClass(fragment)
+									.mutableInstance().getToken(fragment)))
+					.collect(Collectors.joining("//"));
+		}
+		return token;
 	}
 
 	protected abstract void getToken0(P place);

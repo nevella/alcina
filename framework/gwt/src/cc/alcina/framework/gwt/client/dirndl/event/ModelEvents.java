@@ -35,6 +35,18 @@ public class ModelEvents {
 		}
 	}
 
+	public static class ApplicationHelp
+			extends ModelEvent<Object, ApplicationHelp.Handler> {
+		@Override
+		public void dispatch(ApplicationHelp.Handler handler) {
+			handler.onApplicationHelp(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onApplicationHelp(ApplicationHelp event);
+		}
+	}
+
 	public static class Apply extends ModelEvent<Object, Apply.Handler> {
 		@Override
 		public void dispatch(Apply.Handler handler) {

@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.environment;
 
 import java.util.function.Consumer;
 
+import com.google.gwt.activity.shared.ActivityMapper;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
@@ -14,6 +15,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivityManager;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
@@ -26,8 +28,16 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * Access - todo - all dom methods must go via env.access().dispatchOnUiThread()
  * <p>
  * FIXME - romcom - move some non-ui to component
+ *
  */
 public interface RemoteUi {
+	/**
+	 * <p>
+	 * The created client will have its associated activity/place system classes
+	 * initialised after this call
+	 * 
+	 * @return the created client
+	 */
 	Client createClient();
 
 	void init();
@@ -62,6 +72,13 @@ public interface RemoteUi {
 			historyHandler = new PlaceHistoryHandler(mapper);
 			historyHandler.register(placeController, eventBus,
 					() -> Reflections.newInstance(defaultPlaceType));
+		}
+
+		@Override
+		public void setupActivityManager() {
+			ActivityMapper activityMapper = new DirectedActivityManager.DefaultMapper();
+			activityManager = new DirectedActivityManager(activityMapper,
+					Client.eventBus());
 		}
 
 		public TypedPlaceClient(Class<P> permittedPlaceSupertype,

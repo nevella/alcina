@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.sequence.place;
+package cc.alcina.framework.servlet.component.sequence;
 
 import java.util.Objects;
 

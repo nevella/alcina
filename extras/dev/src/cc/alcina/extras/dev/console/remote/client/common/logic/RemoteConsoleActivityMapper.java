@@ -7,6 +7,7 @@ import com.google.gwt.place.shared.Place;
 import cc.alcina.extras.dev.console.remote.client.module.console.ConsoleActivity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
 @Reflected
@@ -20,7 +21,7 @@ public class RemoteConsoleActivityMapper implements ActivityMapper {
 		return null;
 	}
 
-	public static class ConsolePlace extends Place {
+	public static class ConsolePlace extends BasePlace {
 	}
 
 	public static class ConsolePlaceTokenizer

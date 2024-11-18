@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.HtmlDefaultTags;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
@@ -207,8 +208,15 @@ public abstract class DirectedRenderer {
 	}
 
 	/**
+	 * <p>
 	 * Renders no widget for the annotated object, but renders the object
 	 * properties (so rendering is 'delegated' to the properties)
+	 * 
+	 * <p>
+	 * Note that if the top-level model is delegating, only one child will be
+	 * rendered (Dirndl requires a top-level single element, not multiple). This
+	 * restriction applies to chains of top-level delegating nodes. See
+	 * {@link RootArea} for a discussion.
 	 */
 	public static class Delegating extends DirectedRenderer
 			implements GeneratesPropertyInputs {

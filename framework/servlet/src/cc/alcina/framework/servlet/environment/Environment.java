@@ -611,6 +611,7 @@ class Environment {
 		client = Client.contextProvider.createFrame(ui);
 		client.getPlaceController();
 		client.setupPlaceMapping();
+		client.setupActivityManager();
 		scheduler = SchedulerFrame.contextProvider.createFrame(null);
 		scheduler.commandExecutor = new CommandExecutorImpl();
 		document = Document.contextProvider.createFrame(RemoteType.REF_ID);

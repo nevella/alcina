@@ -1,33 +1,27 @@
 package cc.alcina.framework.servlet.component.sequence;
 
+import java.util.List;
+import java.util.Set;
+
+import com.google.gwt.dom.client.StyleElement;
+
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
-import cc.alcina.framework.servlet.component.sequence.DetailArea;
-import cc.alcina.framework.servlet.component.sequence.Header;
-import cc.alcina.framework.servlet.component.sequence.HighlightModel;
-import cc.alcina.framework.servlet.component.sequence.Page;
-import cc.alcina.framework.servlet.component.sequence.Sequence;
-import cc.alcina.framework.servlet.component.sequence.SequenceArea;
-import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings;
-import cc.alcina.framework.servlet.component.sequence.place.SequencePlace;
-import com.google.gwt.dom.client.StyleElement;
-import java.lang.String;
-import java.util.List;
-import java.util.Set;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Header header = new _Header();
     static _Header_Left header_left = new _Header_Left();
     static _Page page = new _Page();
+    static _Page_PageActivity page_pageActivity = new _Page_PageActivity();
     static _SequenceArea sequenceArea = new _SequenceArea();
     static _SequenceBrowser_Ui sequenceBrowser_ui = new _SequenceBrowser_Ui();
     public static _SequenceSettings sequenceSettings = new _SequenceSettings();
@@ -63,6 +57,12 @@ public class PackageProperties {
       TypedProperty<Page, SequenceArea> sequenceArea = new TypedProperty<>(Page.class, "sequenceArea");
       TypedProperty<Page, StyleElement> styleElement = new TypedProperty<>(Page.class, "styleElement");
       TypedProperty<Page, SequenceBrowser.Ui> ui = new TypedProperty<>(Page.class, "ui");
+    }
+    
+    static class _Page_PageActivity implements TypedProperty.Container {
+      TypedProperty<Page.ActivityRoute, Class> channel = new TypedProperty<>(Page.ActivityRoute.class, "channel");
+      TypedProperty<Page.ActivityRoute, Page> page = new TypedProperty<>(Page.ActivityRoute.class, "page");
+      TypedProperty<Page.ActivityRoute, BasePlace> place = new TypedProperty<>(Page.ActivityRoute.class, "place");
     }
     
     static class _SequenceArea implements TypedProperty.Container {

@@ -21,7 +21,7 @@ public class Topic<T> {
 		return new Topic<>();
 	}
 
-	private Publisher publisher;
+	protected Publisher publisher;
 
 	private boolean wasPublished;
 
@@ -29,7 +29,40 @@ public class Topic<T> {
 
 	private T published;
 
-	private Topic() {
+	/**
+	 * This class (unlike topic) only supports one listener at a time -
+	 * otherwise retention of multiple events is overly complex (for which
+	 * listener?), and assumes single-threaded access
+	 */
+	public static class RetainMultiple<T> extends Topic<T> {
+		List<T> retained = new ArrayList<>();
+
+		public static <T> RetainMultiple<T> create() {
+			RetainMultiple<T> retainMultiple = new RetainMultiple<>();
+			retainMultiple.withRetainPublished(true);
+			return retainMultiple;
+		}
+
+		@Override
+		public void publish(T t) {
+			super.publish(t);
+			retained.add(t);
+		}
+
+		@Override
+		protected ListenerReference add(TopicListener<T> listener,
+				boolean fireIfWasPublished) {
+			Preconditions.checkState(!publisher.hasListeners());
+			return super.add(listener, fireIfWasPublished);
+		}
+
+		@Override
+		protected void fireOnAddWasPublished(TopicListener<T> listener) {
+			retained.forEach(listener::topicPublished);
+		}
+	}
+
+	protected Topic() {
 		publisher = new Publisher();
 	}
 
@@ -51,7 +84,7 @@ public class Topic<T> {
 		return add(listener, false);
 	}
 
-	private ListenerReference add(TopicListener<T> listener,
+	protected ListenerReference add(TopicListener<T> listener,
 			boolean fireIfWasPublished) {
 		delta(listener, true);
 		if (wasPublished && fireIfWasPublished) {
@@ -61,9 +94,13 @@ public class Topic<T> {
 			 * it. Useful for adding async one-off listeners when the event may
 			 * have already occurred
 			 */
-			listener.topicPublished(published);
+			fireOnAddWasPublished(listener);
 		}
 		return new Topic.Reference(this, listener);
+	}
+
+	protected void fireOnAddWasPublished(TopicListener<T> listener) {
+		listener.topicPublished(published);
 	}
 
 	public ListenerReference addWithPublishedCheck(Runnable runnable) {
@@ -89,7 +126,7 @@ public class Topic<T> {
 
 	public void fireIfPublished(Consumer<T> consumer) {
 		if (wasPublished) {
-			consumer.accept(published);
+			fireOnAddWasPublished(consumer::accept);
 		}
 	}
 
@@ -152,7 +189,8 @@ public class Topic<T> {
 
 	/*
 	 *
-	 * Thread-safe (lookup is copy-on-write, mutation is synchronized)
+	 * Thread-safe (lookup is copy-on-write, mutation is synchronized, all
+	 * readers of lookup get a single instance on method start)
 	 */
 	public static class Publisher {
 		/*
@@ -176,10 +214,13 @@ public class Topic<T> {
 
 		public void clearListeners() {
 			Preconditions.checkState(GWT.isClient());
-			lookup = null;
+			synchronized (this) {
+				lookup = null;
+			}
 		}
 
 		public boolean hasListeners() {
+			List<TopicListener> lookup = this.lookup;
 			return lookup != null && lookup.size() > 0;
 		}
 
@@ -192,6 +233,7 @@ public class Topic<T> {
 		}
 
 		public void publishTopic(Object message) {
+			List<TopicListener> lookup = this.lookup;
 			if (lookup == null) {
 				return;
 			}

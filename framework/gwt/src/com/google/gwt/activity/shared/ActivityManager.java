@@ -15,11 +15,16 @@
  */
 package com.google.gwt.activity.shared;
 
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.gwt.event.shared.ResettableEventBus;
 import com.google.gwt.event.shared.UmbrellaException;
+import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.place.shared.PlaceChangeRequestEvent;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
@@ -31,9 +36,15 @@ import cc.alcina.framework.gwt.client.dirndl.activity.HasPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
 /**
+ * <p>
  * Manages {@link Activity} objects that should be kicked off in response to
  * {@link PlaceChangeEvent} events. Each activity can start itself
  * asynchronously, and provides a widget to be shown when it's ready to run.
+ * 
+ * <p>
+ * Dirndl co-option - activities are still used, but there's no 'target widgets'
+ * - and there's extensions for place fragments. Basically, this should be a
+ * (much simpler) rewrite, in a different class - but until then, here we are.
  */
 public class ActivityManager
 		implements PlaceChangeEvent.Handler, PlaceChangeRequestEvent.Handler {
@@ -44,9 +55,9 @@ public class ActivityManager
 		}
 	};
 
-	private final ActivityMapper mapper;
+	protected final ActivityMapper mapper;
 
-	private final EventBus eventBus;
+	protected final EventBus eventBus;
 
 	/*
 	 * Note that we use the legacy class from com.google.gwt.event.shared,
@@ -61,6 +72,10 @@ public class ActivityManager
 	protected boolean startingNext = false;
 
 	private HandlerRegistration handlerRegistration;
+
+	protected Class<? extends Place> channel;
+
+	Map<Class<? extends BasePlace>, ActivityManager> channelManagers = new LinkedHashMap<>();
 
 	/**
 	 * Create an ActivityManager. Next call {@link #setDisplay}.
@@ -94,7 +109,7 @@ public class ActivityManager
 		return this.currentActivity;
 	}
 
-	private Activity getNextActivity(PlaceChangeEvent event) {
+	protected Activity getNextActivity(PlaceChangeEvent event) {
 		if (display == null) {
 			/*
 			 * Display may have been nulled during PlaceChangeEvent dispatch.
@@ -103,7 +118,7 @@ public class ActivityManager
 			 */
 			return null;
 		}
-		return mapper.getActivity(event.getNewPlace());
+		return mapper.getActivity(event.getNewPlace(), channel);
 	}
 
 	/**
@@ -117,7 +132,53 @@ public class ActivityManager
 	 * treatment.
 	 */
 	@Override
-	public void onPlaceChange(PlaceChangeEvent event) {
+	synchronized public void onPlaceChange(PlaceChangeEvent event) {
+		onPlaceChange0(event);
+		if (!(event.getNewPlace() instanceof BasePlace)) {
+			return;
+		}
+		BasePlace basePlace = (BasePlace) event.getNewPlace();
+		Set<Class<? extends BasePlace>> fragmentClasses = new LinkedHashSet<>();
+		basePlace.fragments.forEach(fragment -> {
+			Class<? extends BasePlace> fragmentClass = fragment.getClass();
+			fragmentClasses.add(fragmentClass);
+			ensureChannel(fragmentClass)
+					.onPlaceChange(new PlaceChangeEvent(fragment));
+		});
+		Iterator<Entry<Class<? extends BasePlace>, ActivityManager>> itr = channelManagers
+				.entrySet().iterator();
+		while (itr.hasNext()) {
+			Entry<Class<? extends BasePlace>, ActivityManager> entry = itr
+					.next();
+			Class<? extends BasePlace> fragmentClass = entry.getKey();
+			if (fragmentClasses.contains(fragmentClass)) {
+				return;
+			}
+			// remove
+			entry.getValue().updateHandlers(false);
+			onChannelStopped(fragmentClass);
+			itr.remove();
+		}
+	}
+
+	protected void onChannelStopped(Class<? extends BasePlace> channel) {
+	}
+
+	ActivityManager ensureChannel(Class<? extends BasePlace> channel) {
+		if (!channelManagers.containsKey(channel)) {
+			ActivityManager channelManager = createFragmentManager();
+			channelManager.channel = channel;
+			channelManagers.put(channel, channelManager);
+		}
+		return channelManagers.get(channel);
+	}
+
+	protected ActivityManager createFragmentManager() {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'createFragmentManager'");
+	}
+
+	void onPlaceChange0(PlaceChangeEvent event) {
 		Activity nextActivity = getNextActivity(event);
 		Throwable caughtOnStop = null;
 		Throwable caughtOnCancel = null;
@@ -277,7 +338,7 @@ public class ActivityManager
 		return caughtOnStop;
 	}
 
-	private void updateHandlers(boolean activate) {
+	protected void updateHandlers(boolean activate) {
 		if (activate) {
 			final HandlerRegistration placeReg = eventBus
 					.addHandler(PlaceChangeEvent.TYPE, this);

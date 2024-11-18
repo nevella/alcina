@@ -157,8 +157,9 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 				|| place == Place.NOWHERE) {
 			return "";
 		}
+		BasePlace basePlace = (BasePlace) place;
 		String token = getTokenizerByClass(place).mutableInstance()
-				.getToken(place);
+				.getToken(basePlace);
 		return getAppPrefix().isEmpty() ? token : getAppPrefix() + "/" + token;
 	}
 
@@ -169,7 +170,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return getTokenizerByClass(place).mutableInstance();
 	}
 
-	private BasePlaceTokenizer getTokenizerByClass(Place place) {
+	BasePlaceTokenizer<?> getTokenizerByClass(Place place) {
 		Class<? extends Place> clazz = place.getClass();
 		{
 			BasePlaceTokenizer tokenizer = tokenizersByPlace.get(clazz);
