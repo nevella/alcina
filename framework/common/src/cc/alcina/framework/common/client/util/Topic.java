@@ -52,7 +52,8 @@ public class Topic<T> {
 		@Override
 		protected ListenerReference add(TopicListener<T> listener,
 				boolean fireIfWasPublished) {
-			Preconditions.checkState(!publisher.hasListeners());
+			Preconditions.checkState(
+					!fireIfWasPublished || !publisher.hasListeners());
 			return super.add(listener, fireIfWasPublished);
 		}
 

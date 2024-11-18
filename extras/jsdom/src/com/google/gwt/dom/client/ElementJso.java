@@ -989,7 +989,8 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 */
 	final native void setPropertyString0(String name, String value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
-	this.setAttribute(name,value);
+	var attrName = name=='className'?'class':name;
+	this.setAttribute(attrName,value);
     this[name] = value;
 	}-*/;
 

@@ -21,6 +21,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 public enum Status implements ProvidesStatus {
 	OK, WARN, ERROR;
 
+	public static Status okError(boolean ok) {
+		return ok ? OK : ERROR;
+	}
+
 	public static Status
 			provideMultiple(List<? extends ProvidesStatus> children) {
 		return children.stream().map(ProvidesStatus::provideStatus)
