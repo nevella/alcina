@@ -21,4 +21,22 @@ public interface Feature_TraversalBrowser_SelectionCards extends Feature {
 	@Feature.Parent(Feature_TraversalBrowser.class)
 	public interface Layer_filter extends Feature {
 	}
+
+	/**
+	 * <p>
+	 * Perf - ensure that components aren't double-rendered due to
+	 * propertychange cascade
+	 * <ul>
+	 * <li>add logging for major components; fire when created
+	 * <li>log place; history change. verify that each change only causes one
+	 * component re-render
+	 * <li>For layers, work on collection changes not causing full re-render
+	 * <li>Check mutation bandwidth
+	 * 
+	 * </ul>
+	 */
+	@Feature.Parent(Feature_TraversalBrowser.class)
+	@Feature.Type.Ref(Feature.Type.Ui_implementation.class)
+	public interface Performance extends Feature {
+	}
 }

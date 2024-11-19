@@ -91,9 +91,9 @@ public class RootArea extends Model.Fields
 	 * Note that a method handle block returns a new lambda each time - so we
 	 * make a field ref, which can be correctly removed
 	 */
-	TopicListener<DirectedActivity> onActivityStartedRef = this::onActivityStarted;
+	transient TopicListener<DirectedActivity> onActivityStartedRef = this::onActivityStarted;
 
-	TopicListener<Class<? extends BasePlace>> onChannelStoppedRef = this::onChannelStopped;
+	transient TopicListener<Class<? extends BasePlace>> onChannelStoppedRef = this::onChannelStopped;
 
 	public RootArea() {
 	}
