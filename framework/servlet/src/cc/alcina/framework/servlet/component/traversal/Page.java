@@ -6,24 +6,31 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.gwt.activity.shared.PlaceUpdateable;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.Event;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
@@ -149,6 +156,40 @@ class Page extends Model.All
 				.on("filterText").oneWay();
 		bindings().from(TraversalBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
+	}
+
+	/**
+	 * This activity hooks the Page up to the RootArea (the general routing
+	 * contract)
+	 */
+	@Directed.Delegating
+	@Bean(PropertySource.FIELDS)
+	@Registration({ DirectedActivity.class, TraversalPlace.class })
+	static class ActivityRoute extends DirectedActivity
+			// register in spite of non-public access
+			implements Registration.AllSubtypes, PlaceUpdateable,
+			ModelEvent.DelegatesDispatch {
+		@Directed
+		Page page;
+
+		@Override
+		public void onBeforeRender(BeforeRender event) {
+			page = new Page();
+			super.onBeforeRender(event);
+		}
+
+		@Override
+		public boolean canUpdate(PlaceUpdateable otherActivity) {
+			/*
+			 * All place updates are handled by the Page
+			 */
+			return true;
+		}
+
+		@Override
+		public Model provideDispatchDelegate() {
+			return page;
+		}
 	}
 
 	void updateStyles(TraversalSettings settings) {

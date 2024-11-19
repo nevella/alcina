@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
-import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.environment.RemoteUi;

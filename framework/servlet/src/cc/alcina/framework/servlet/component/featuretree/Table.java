@@ -18,7 +18,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features.Entry;
-import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 
 class Table extends Model.Fields {
 	@Directed.Wrap("thead")

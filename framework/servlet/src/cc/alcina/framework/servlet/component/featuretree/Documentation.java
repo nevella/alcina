@@ -12,7 +12,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 
 class Documentation extends Model.Fields {
 	@Directed
@@ -39,16 +38,18 @@ class Documentation extends Model.Fields {
 		String content = null;
 		if (currentPlace instanceof FeaturePlace) {
 			FeaturePlace featurePlace = (FeaturePlace) currentPlace;
-			try {
-				Optional<JavadocComment> javadocComment = SourceNodes
-						.getTypeJavadoc(featurePlace.feature);
-				if (javadocComment.isPresent()) {
-					content = javadocComment.get().getContent();
-					content = content.replaceAll("\n\\s*\\*", "\n");
-					content = content.replaceFirst("@author.+", "");
+			if (featurePlace.feature != null) {
+				try {
+					Optional<JavadocComment> javadocComment = SourceNodes
+							.getTypeJavadoc(featurePlace.feature);
+					if (javadocComment.isPresent()) {
+						content = javadocComment.get().getContent();
+						content = content.replaceAll("\n\\s*\\*", "\n");
+						content = content.replaceFirst("@author.+", "");
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
 		}
 		setContent(content);

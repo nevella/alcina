@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.featuretree.place;
+package cc.alcina.framework.servlet.component.featuretree;
 
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;

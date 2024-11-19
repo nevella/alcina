@@ -11,7 +11,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features;
 import cc.alcina.framework.servlet.component.featuretree.FeatureTable.Features.Entry;
-import cc.alcina.framework.servlet.component.featuretree.place.FeaturePlace;
 
 class Properties extends Model.All {
 	Heading header = new Heading("Properties");
@@ -41,7 +40,9 @@ class Properties extends Model.All {
 		FeatureProperties properties = null;
 		if (currentPlace instanceof FeaturePlace) {
 			FeaturePlace featurePlace = (FeaturePlace) currentPlace;
-			properties = new FeatureProperties(featurePlace.feature);
+			if (featurePlace.feature != null) {
+				properties = new FeatureProperties(featurePlace.feature);
+			}
 		}
 		setProperties(properties);
 	}
