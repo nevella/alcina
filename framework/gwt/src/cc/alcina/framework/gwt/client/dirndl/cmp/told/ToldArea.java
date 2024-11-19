@@ -6,9 +6,12 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
+import cc.alcina.framework.gwt.client.dirndl.activity.RootArea.ChannelOverlayPosition;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Builder;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.ViewportRelative;
 
 class ToldArea extends Model.Fields {
 	@Directed
@@ -38,6 +41,16 @@ class ToldArea extends Model.Fields {
 			 * All place updates are handled by the ToldArea
 			 */
 			return true;
+		}
+	}
+
+	@Registration({ ChannelOverlayPosition.class, ToldPlace.class })
+	static class ChannelOverlayPositionImpl extends ChannelOverlayPosition
+			// register in spite of non-public access
+			implements Registration.AllSubtypes {
+		@Override
+		public void position(Builder builder) {
+			builder.positionViewportRelative(ViewportRelative.BOTTOM_RIGHT);
 		}
 	}
 }

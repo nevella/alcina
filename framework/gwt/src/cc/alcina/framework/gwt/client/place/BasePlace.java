@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.cmp.told.ToldPlace;
 
 /**
  * <p>
@@ -94,6 +95,10 @@ public abstract class BasePlace extends Place
 		public <BP extends BasePlace> Optional<BP> get(Class<BP> fragmentType) {
 			return fragments.stream().filter(p -> p.getClass() == fragmentType)
 					.map(p -> (BP) p).findFirst();
+		}
+
+		public boolean has(Class<ToldPlace> fragmentType) {
+			return get(fragmentType).isPresent();
 		}
 	}
 

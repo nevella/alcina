@@ -5,14 +5,17 @@ import java.util.Map;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Delegating;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -34,7 +37,8 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  */
 @Delegating
 @TypedProperties
-public class RootArea extends Model.Fields {
+public class RootArea extends Model.Fields
+		implements ModelEvent.DelegatesDispatch {
 	public static PackageProperties._RootArea properties = PackageProperties.rootArea;
 
 	@Directed
@@ -58,14 +62,28 @@ public class RootArea extends Model.Fields {
 		ChannelOverlay(Class<? extends BasePlace> channel,
 				DirectedActivity activity) {
 			this.channel = channel;
-			this.overlay = Overlay.builder().withContents(this)
-					.positionViewportCentered().build();
+			Overlay.Builder builder = Overlay.builder().withContents(this)
+					.withRemoveOnMouseDownOutside(false);
+			Registry.impl(ChannelOverlayPosition.class, channel)
+					.position(builder);
+			this.overlay = builder.build();
 			overlay.open();
 		}
 
 		public void setActivity(DirectedActivity activity) {
 			set("activity", this.activity, activity,
 					() -> this.activity = activity);
+		}
+	}
+
+	/**
+	 * Positions the overlay (builder) before creation; keyed to the channel
+	 * class
+	 */
+	@Registration(ChannelOverlayPosition.class)
+	public static class ChannelOverlayPosition {
+		public void position(Overlay.Builder builder) {
+			builder.positionViewportCentered();
 		}
 	}
 
@@ -120,5 +138,10 @@ public class RootArea extends Model.Fields {
 				.computeIfAbsent(activity.channel,
 						channel -> new ChannelOverlay(channel, activity))
 				.setActivity(activity);
+	}
+
+	@Override
+	public Model provideDispatchDelegate() {
+		return mainActivity;
 	}
 }

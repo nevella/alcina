@@ -132,7 +132,7 @@ public @interface Directed {
 	/**
 	 * Sugar for @Directed(renderer=DirectedRenderer.Delegating.class)
 	 *
-	 *
+	 * @see DirectedRenderer.Delegating
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)

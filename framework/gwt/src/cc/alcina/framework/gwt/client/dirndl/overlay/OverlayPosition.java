@@ -8,8 +8,11 @@ import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DoublePair;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.ToStringFunction;
 
 /**
  * Models a set of positioning constraints between a DomRect and an element (or
@@ -21,7 +24,23 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
  *
  */
 public class OverlayPosition {
-	boolean viewportCentered;
+	@Reflected
+	public enum ViewportRelative {
+		TOP_LEFT, TOP_CENTER, TOP_RIGHT, //
+		MIDDLE_LEFT, MIDDLE_CENTER, MIDDLE_RIGHT, //
+		BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT;
+
+		@Reflected
+		public static class Transform
+				implements ToStringFunction<ViewportRelative> {
+			@Override
+			public String apply(ViewportRelative t) {
+				return "viewport-" + Ax.cssify(t);
+			}
+		}
+	}
+
+	ViewportRelative viewportRelative;
 
 	DomRect fromRect;
 
@@ -37,9 +56,10 @@ public class OverlayPosition {
 	}
 
 	void apply() {
-		// allow exactly one of {viewportCentered,non-empty constraints}
-		Preconditions.checkState(viewportCentered ^ constraints.size() > 0);
-		if (viewportCentered) {
+		// allow exactly one of {viewportRelative,non-empty constraints}
+		Preconditions
+				.checkState(viewportRelative != null ^ constraints.size() > 0);
+		if (viewportRelative != null) {
 			return;
 		}
 		Preconditions.checkState(fromRect != null);
@@ -71,16 +91,20 @@ public class OverlayPosition {
 
 	@Override
 	public String toString() {
-		return FormatBuilder.keyValues("viewportCentered", viewportCentered,
+		return FormatBuilder.keyValues("viewportRelative", viewportRelative,
 				"constraints", constraints);
 	}
 
+	public OverlayPosition viewportCentered() {
+		return viewportRelative(ViewportRelative.MIDDLE_CENTER);
+	}
+
 	/*
-	 * Note - viewport-centered is rendered via css, not style/coordinate
-	 * modification.
+	 * Note - viewport-cenrelativetered is rendered via css, not
+	 * style/coordinate modification.
 	 */
-	public OverlayPosition viewportCentered(boolean viewportCentered) {
-		this.viewportCentered = viewportCentered;
+	public OverlayPosition viewportRelative(ViewportRelative viewportRelative) {
+		this.viewportRelative = viewportRelative;
 		return this;
 	}
 

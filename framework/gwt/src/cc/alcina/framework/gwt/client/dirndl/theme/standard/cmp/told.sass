@@ -1,0 +1,16 @@
+@use '../../theme/theme'
+@use '../../theme/color'
+@use 'context-menu'
+@use 'panel'
+
+@mixin content
+  height: 50vh
+  width: 25vw
+  @include panel.content
+  @include context-menu.dropdown
+  margin: 0.5rem
+  padding: 1.0rem
+  user-select: auto
+
+told-area
+  @include content

@@ -1,13 +1,23 @@
 @use '../../theme/theme'
 @use '../../theme/color'
 
-@mixin viewport-centered
-  &.viewport-centered
+@mixin viewport-relative
+  &.viewport-middle-center
     > *
       position: fixed
       top: 50%
       left: 50%
       transform: translate(-50%, -50%)
+
+  &.viewport-bottom-right
+    > *
+      position: fixed
+      right: 0
+      bottom: 0
+
+  /*
+    leaving the rest as an exercise
+    */
   
 
 body > .overlay-container
@@ -18,7 +28,7 @@ body > .overlay-container
   left: 0
   display: inline-block
 
-  @include viewport-centered
+  @include viewport-relative
 
   > overlay
     display: flex
@@ -48,7 +58,7 @@ body > overlay-container-modal
   &:last-of-type
     background-color: rgba(0,0,0,0.2)
 
-  @include viewport-centered
+  @include viewport-relative
 
   > overlay
 

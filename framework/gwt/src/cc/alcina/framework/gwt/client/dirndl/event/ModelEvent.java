@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  * <p>
@@ -208,5 +209,9 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	@Registration.NonGenericSubtypes(TopLevelHandler.class)
 	public static interface TopLevelHandler<M extends ModelEvent>
 			extends EventHandler, ModelEvent.Handler {
+	}
+
+	public interface DelegatesDispatch {
+		Model provideDispatchDelegate();
 	}
 }

@@ -10,6 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.ViewportRelative;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
 
 /**
@@ -23,14 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  *
  *
  */
-@Directed(
-	className = "overlay-container",
-	bindings = { @Binding(from = "viewportCentered", type = Type.CSS_CLASS),
-			@Binding(
-				from = "visible",
-				to = "visibility",
-				transform = Binding.VisibilityVisibleHidden.class,
-				type = Type.STYLE_ATTRIBUTE) })
+@Directed(className = "overlay-container")
 public class OverlayContainer extends Model implements HasTag,
 		Model.RerouteBubbledEvents, Overlay.PositionedDescendants.Emitter {
 	private final Overlay contents;
@@ -65,10 +59,17 @@ public class OverlayContainer extends Model implements HasTag,
 		return this.contents;
 	}
 
-	public boolean isViewportCentered() {
-		return containerOptions.position.viewportCentered;
+	@Binding(
+		type = Type.CSS_CLASS,
+		transform = OverlayPosition.ViewportRelative.Transform.class)
+	public ViewportRelative getViewportRelative() {
+		return containerOptions.position.viewportRelative;
 	}
 
+	@Binding(
+		to = "visibility",
+		transform = Binding.VisibilityVisibleHidden.class,
+		type = Type.STYLE_ATTRIBUTE)
 	public boolean isVisible() {
 		return this.visible;
 	}

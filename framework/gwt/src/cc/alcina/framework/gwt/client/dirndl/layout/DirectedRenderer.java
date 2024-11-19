@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.HtmlDefaultTags;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
@@ -217,6 +218,9 @@ public abstract class DirectedRenderer {
 	 * rendered (Dirndl requires a top-level single element, not multiple). This
 	 * restriction applies to chains of top-level delegating nodes. See
 	 * {@link RootArea} for a discussion.
+	 * <p>
+	 * Note that a model that delegates rendering may also want to delegate
+	 * event handling - see {@link ModelEvent.DelegatesDispatch}
 	 */
 	public static class Delegating extends DirectedRenderer
 			implements GeneratesPropertyInputs {

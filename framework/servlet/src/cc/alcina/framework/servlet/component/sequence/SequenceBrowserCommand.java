@@ -10,7 +10,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.servlet.ServletLayerTopics;
-import cc.alcina.framework.servlet.component.traversal.TraversalCommand;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @AppSuggestorCommand(
@@ -132,6 +131,23 @@ public abstract class SequenceBrowserCommand<T, H extends NodeEvent.Handler>
 
 		public interface Handler extends NodeEvent.Handler {
 			void onShowKeyboardShortcuts(ShowKeyboardShortcuts event);
+		}
+	}
+
+	@AppSuggestorCommand(
+		parent = SequenceBrowserCommand.class,
+		name = "help",
+		description = "Show the application help panel")
+	@KeyBinding(key = "?", modifiers = Modifier.SHIFT)
+	public static class ToggleHelp
+			extends ModelEvent<Object, ToggleHelp.Handler> {
+		@Override
+		public void dispatch(ToggleHelp.Handler handler) {
+			handler.onToggleHelp(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onToggleHelp(ToggleHelp event);
 		}
 	}
 }

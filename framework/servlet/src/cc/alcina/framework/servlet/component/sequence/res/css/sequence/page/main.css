@@ -367,12 +367,19 @@ body > .overlay-container {
   top: 0;
   left: 0;
   display: inline-block;
+  /* leaving the rest as an exercise
+  * */
 }
-body > .overlay-container.viewport-centered > * {
+body > .overlay-container.viewport-middle-center > * {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+body > .overlay-container.viewport-bottom-right > * {
+  position: fixed;
+  right: 0;
+  bottom: 0;
 }
 body > .overlay-container > overlay {
   display: flex;
@@ -398,21 +405,78 @@ body > overlay-container-modal {
   display: block;
   bottom: 0;
   right: 0;
+  /* leaving the rest as an exercise
+  * */
 }
 body > overlay-container-modal:last-of-type {
   background-color: rgba(0, 0, 0, 0.2);
 }
-body > overlay-container-modal.viewport-centered > * {
+body > overlay-container-modal.viewport-middle-center > * {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
+body > overlay-container-modal.viewport-bottom-right > * {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+}
 body > overlay-container-modal > overlay {
   background-color: white;
 }
 
-body > .overlay-container.viewport-centered > overlay.keyboard-shortcuts-area {
+told-area {
+  height: 50vh;
+  width: 25vw;
+  display: flex;
+  flex-direction: column;
+  margin: 1rem 0;
+  box-sizing: border-box;
+  overflow-y: scroll;
+  overflow-x: auto;
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  margin: 0.5rem;
+  padding: 1rem;
+  user-select: auto;
+}
+told-area > heading, told-area > heading-actions {
+  margin: 0 0 0.5rem;
+  display: flex;
+  width: 100%;
+  font-weight: bold;
+  justify-content: space-between;
+}
+told-area > heading-actions > actions {
+  font-weight: normal;
+  display: flex;
+  gap: 1em;
+}
+told-area > heading-actions > actions a {
+  cursor: pointer;
+}
+told-area > key-values {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 1rem;
+  row-gap: 0.1rem;
+}
+told-area > key-values > key-value {
+  display: contents;
+}
+told-area > key-values > key-value > key {
+  color: #777;
+}
+told-area > a {
+  display: block;
+  margin: 0 0 0.2rem;
+}
+
+body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts-area {
   top: 3rem;
   transform: translate(-50%, 0%);
 }

@@ -28,6 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.cmp.told.ToldPlace;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
@@ -40,6 +41,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.Col
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ToggleHelp;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequence;
@@ -72,7 +74,8 @@ class Page extends Model.Fields
 		SequenceEvents.HighlightModelChanged.Emitter,
 		SequenceEvents.SelectedIndexChanged.Emitter,
 		SequenceBrowserCommand.ShowKeyboardShortcuts.Handler,
-		ModelEvents.ApplicationHelp.Handler {
+		ModelEvents.ApplicationHelp.Handler,
+		SequenceBrowserCommand.ToggleHelp.Handler {
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)
@@ -82,7 +85,8 @@ class Page extends Model.Fields
 	@Registration({ DirectedActivity.class, SequencePlace.class })
 	static class ActivityRoute extends DirectedActivity
 			// register in spite of non-public access
-			implements Registration.AllSubtypes, PlaceUpdateable {
+			implements Registration.AllSubtypes, PlaceUpdateable,
+			ModelEvent.DelegatesDispatch {
 		@Directed
 		Page page;
 
@@ -98,6 +102,11 @@ class Page extends Model.Fields
 			 * All place updates are handled by the Page
 			 */
 			return true;
+		}
+
+		@Override
+		public Model provideDispatchDelegate() {
+			return page;
 		}
 	}
 
@@ -403,8 +412,18 @@ class Page extends Model.Fields
 	@Override
 	public void onApplicationHelp(ApplicationHelp event) {
 		SequencePlace place = Ui.place().copy();
-		place.fragments().ensure(ToldPlace.class).withNodePath(ToldPlace.ROOT);
+		if (place.fragments().has(ToldPlace.class)) {
+			place.fragments().remove(ToldPlace.class);
+		} else {
+			place.fragments().ensure(ToldPlace.class)
+					.withNodePath(ToldPlace.ROOT);
+		}
 		String tokenString = place.toTokenString();
 		place.go();
+	}
+
+	@Override
+	public void onToggleHelp(ToggleHelp event) {
+		event.reemitAs(this, ApplicationHelp.class);
 	}
 }

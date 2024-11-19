@@ -37,6 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.ViewportRelative;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -458,7 +459,13 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		}
 
 		public Builder positionViewportCentered() {
-			position.viewportCentered(true);
+			position.viewportCentered();
+			return this;
+		}
+
+		public Builder
+				positionViewportRelative(ViewportRelative viewportRelative) {
+			position.viewportRelative(viewportRelative);
 			return this;
 		}
 
