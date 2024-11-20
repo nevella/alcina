@@ -22,6 +22,9 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
  * (envelopes; unacknowledged messages) - is there some formal documentation
  * around sync validation?
  * 
+ * <p>
+ * FIXME - perf - some of the logging is heavyweight - use some conditional form
+ * 
  * @see {@link MessageBatcher} - performance optimiser, which batches messages
  *      such as interleaved invoke/js and mutation
  * 
@@ -109,11 +112,19 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			}
 		}
 
+		// FIXME - DOC - this is really the key for metadata exchange
 		RequestToken getPreferredDispatchableTokenAndRemoveFromAvailable() {
-			// try non-awaiter
-			DispatchableToken dispatchable = dispatchableTokens.stream()
-					.filter(token -> !token.isAwaiter()).findFirst()
+			DispatchableToken dispatchable = null;
+			// second awaiter, if > 1 awaiters
+			dispatchable = dispatchableTokens.stream()
+					.filter(token -> token.isAwaiter()).skip(1).findFirst()
 					.orElse(null);
+			// try non-awaiter
+			if (dispatchable == null) {
+				dispatchable = dispatchableTokens.stream()
+						.filter(token -> !token.isAwaiter()).findFirst()
+						.orElse(null);
+			}
 			if (dispatchable == null) {
 				// fall through to non-awaiter
 				dispatchable = dispatchableTokens.stream()
@@ -121,6 +132,13 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			}
 			dispatchableTokens.remove(dispatchable);
 			return dispatchable.token;
+		}
+
+		// FIXME - DOC - this is really the key for metadata exchange [#2]
+		@Override
+		protected boolean shouldSendReceiveChannelMetadata() {
+			return dispatchableTokens.stream()
+					.filter(token -> token.isAwaiter()).count() > 1;
 		}
 
 		/*
@@ -149,6 +167,9 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 		/*
 		 * any superfluous requests (not needed for return dispatch) will be
+		 * returned (not here, but during this execution cycle by shouldFlush).
+		 * In particular, a second AwaiteResponse will be returned immediately,
+		 * completing the client/server metadata exchange
 		 */
 		void registerAvailableTokenForResponse(RequestToken token) {
 			DispatchableToken dispatchable = new DispatchableToken(token);
@@ -156,7 +177,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 
 		/*
-		 * Allow at most one awaiter, one or zero non-awaiters
+		 * Allow at most one awaiter, one or zero non-awaiters.
 		 */
 		boolean shouldFlush(boolean flushAllNonAwaiters) {
 			// envelope dispatcher (this) is the monitor for dispatch

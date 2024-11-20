@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.activity.shared.PlaceUpdateable;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.StyleElement;
@@ -95,7 +98,7 @@ class Page extends Model.All
 	@Directed.Exclude
 	RemoteComponentObservables<SelectionTraversal>.ObservableHistory history;
 
-	@Directed.Exclude
+	@Property.Not
 	Ui ui;
 
 	private StyleElement styleElement;
@@ -107,7 +110,11 @@ class Page extends Model.All
 				provideNode().dispatch(eventType, null);
 			}, new CommandContextProviderImpl());
 
+	@Property.Not
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	Page() {
+		TraversalBrowser.Ui.logConstructor(this);
 		header = new Header(this);
 		this.ui = Ui.get();
 		// FIXME - dirndl - bindings - change addListener to a ModelBinding with
@@ -156,6 +163,13 @@ class Page extends Model.All
 				.on("filterText").oneWay();
 		bindings().from(TraversalBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
+		/*
+		 * logging
+		 */
+		bindings().from(this).on(properties.history).accept(
+				history -> logger.debug("history change :: {}", history));
+		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
+				.accept(place -> logger.debug("place change :: {}", place));
 	}
 
 	/**
@@ -224,14 +238,17 @@ class Page extends Model.All
 			switch (settings.secondaryAreaDisplayMode) {
 			case INPUT_OUTPUT:
 				rows.add("input input output output");
+				builder.line("body > page > selections.table{display: none;}");
 				break;
 			case INPUT:
 				rows.add("input input input input");
 				builder.line("body > page > selections.output{display: none;}");
+				builder.line("body > page > selections.table{display: none;}");
 				break;
 			case OUTPUT:
 				rows.add("output output output output");
 				builder.line("body > page > selections.input{display: none;}");
+				builder.line("body > page > selections.table{display: none;}");
 				break;
 			case TABLE:
 				rows.add("table table table table");

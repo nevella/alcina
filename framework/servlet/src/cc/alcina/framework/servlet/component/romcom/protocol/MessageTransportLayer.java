@@ -105,6 +105,10 @@ public abstract class MessageTransportLayer {
 		public Message message() {
 			return message;
 		}
+
+		public MessageId messageId() {
+			return messageId;
+		}
 	}
 
 	@Bean(PropertySource.FIELDS)
@@ -295,6 +299,20 @@ public abstract class MessageTransportLayer {
 		public boolean wasSent() {
 			return sent != null || unacknowledgedSendDates.size() > 0;
 		}
+
+		String toTransportDebugString() {
+			String latestState = "not sent";
+			if (sent != null) {
+				latestState = "sent";
+			}
+			if (received != null) {
+				latestState = "received";
+			}
+			if (published != null) {
+				latestState = "published";
+			}
+			return Ax.format("%s - %s", messageId, latestState);
+		}
 	}
 
 	@Bean(PropertySource.FIELDS)
@@ -323,6 +341,20 @@ public abstract class MessageTransportLayer {
 		@Override
 		public String toString() {
 			return Ax.format("%s :: %s", envelopeId, toMessageSummaryString());
+		}
+
+		public String toTransportDebugString() {
+			FormatBuilder format = new FormatBuilder().separator(" - ");
+			format.format("id: %s", envelopeId);
+			format.format("messageids: %s",
+					packets.stream().map(MessagePacket::messageId)
+							.map(Object::toString)
+							.collect(Collectors.joining(",")));
+			format.format("transport histories: %s",
+					transportHistories.stream()
+							.map(TransportHistory::toTransportDebugString)
+							.collect(Collectors.joining(",")));
+			return format.toString();
 		}
 	}
 
@@ -412,6 +444,11 @@ public abstract class MessageTransportLayer {
 			}
 			return size;
 		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s - %s", transportHistory.messageId, message);
+		}
 	}
 
 	public static class TransportEvent {
@@ -458,8 +495,20 @@ public abstract class MessageTransportLayer {
 			}
 		}
 
+		boolean shouldSendMessagesOrMetadata() {
+			synchronized (activeMessages) {
+				return activeMessages.stream()
+						.anyMatch(MessageToken::shouldSendMessageOrMetadata);
+			}
+		}
+
+		abstract String channelName();
+
 		void bufferMessage(MessageToken message) {
 			synchronized (activeMessages) {
+				logger.debug("Message added to active [{}] ::  {}",
+						channelName(),
+						message.transportHistory.toTransportDebugString());
 				activeMessages.add(message);
 				messageIdActiveMessage.put(message.transportHistory.messageId,
 						message);
@@ -539,15 +588,25 @@ public abstract class MessageTransportLayer {
 	 * 
 	 */
 	public abstract class SendChannel extends Channel {
+		@Override
+		String channelName() {
+			return "send";
+		}
+
 		/*
 		 * If no inflight or retry, send
 		 */
 		public void conditionallySend() {
 			synchronized (activeMessages) {
-				if (activeMessages.stream()
-						.anyMatch(MessageToken::shouldSendMessageOrMetadata)) {
-					if (envelopeDispatcher().isDispatchAvailable()) {
+				if (envelopeDispatcher().isDispatchAvailable()) {
+					if (shouldSendMessagesOrMetadata()) {
 						unconditionallySend();
+					} else {
+						if (receiveChannel().shouldSendMessagesOrMetadata()
+								&& envelopeDispatcher()
+										.shouldSendReceiveChannelMetadata()) {
+							unconditionallySend();
+						}
 					}
 				}
 				receiptVerifier.verify();
@@ -733,7 +792,7 @@ public abstract class MessageTransportLayer {
 					Date retryDate = computeRetryDate(token, inFlightSize);
 					if (retryDate.compareTo(now) <= 0) {
 						token.transportHistory.markAsRetry();
-						logger.info("{} - retry scheduled",
+						logger.info("#{} - retry scheduled",
 								token.message.messageId);
 						new MessageTransportLayerObservables.RetryObservable(
 								token).publish();
@@ -783,7 +842,7 @@ public abstract class MessageTransportLayer {
 				long from = messageToken.transportHistory.sent.getTime();
 				double transmissionTimeMs = inFlightSize
 						/ bandwidthBytesPerSecond() * 1000.0;
-				transmissionTimeMs = Math.max(1000.0, transmissionTimeMs);
+				transmissionTimeMs = Math.max(2000.0, transmissionTimeMs);
 				transmissionTimeMs = Math.min(5000.0, transmissionTimeMs);
 				transmissionTimeMs = Math.pow(2,
 						messageToken.transportHistory.unacknowledgedSendDates
@@ -831,12 +890,19 @@ public abstract class MessageTransportLayer {
 
 		protected Set<MessageId> receivedMessageIds = new LinkedHashSet<>();
 
+		@Override
+		String channelName() {
+			return "receive";
+		}
+
 		/*
 		 * Send - update histories
 		 * 
 		 * emit message receipt
 		 */
 		public void onEnvelopeReceived(MessageEnvelope envelope) {
+			logger.debug("Envelope received :: {} :: {}", Ax.appMillis(),
+					envelope.toTransportDebugString());
 			if (EnvelopeId.nullAwareCompare(highestReceivedEnvelopeId,
 					envelope.envelopeId) < 0) {
 				highestReceivedEnvelopeId = envelope.envelopeId;
@@ -886,7 +952,7 @@ public abstract class MessageTransportLayer {
 							packet.message, packet.messageId.sendChannelId);
 					activeMessageToken.transportHistory.received = new Date();
 					activeMessageToken.transportHistory.sent = envelope.dateSent;
-					activeMessages.add(activeMessageToken);
+					bufferMessage(activeMessageToken);
 				});
 				Collections.sort(activeMessages);
 			}

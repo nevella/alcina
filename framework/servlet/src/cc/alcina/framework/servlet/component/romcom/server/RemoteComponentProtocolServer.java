@@ -23,7 +23,7 @@ public class RemoteComponentProtocolServer {
 	 * 
 	 * FIXME - possibly remove most of this
 	 */
-	public static class MessageToken {
+	public static class MessageProcessingToken {
 		public Handler<?, ?> messageHandler;
 
 		public final CountDownLatch latch;
@@ -35,10 +35,11 @@ public class RemoteComponentProtocolServer {
 		}
 
 		public interface Handler<E, PM extends Message> {
-			void handle(MessageToken token, E environment, PM message);
+			void handle(MessageProcessingToken token, E environment,
+					PM message);
 		}
 
-		public MessageToken(Message message) {
+		public MessageProcessingToken(Message message) {
 			this.messageHandler = null;
 			// Registry.impl(Handler.class,
 			// message.getClass());

@@ -3,6 +3,9 @@ package cc.alcina.framework.servlet.component.romcom.protocol;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.EnvelopeId;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageEnvelope;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessagePacket;
@@ -59,6 +62,14 @@ public abstract class EnvelopeDispatcher {
 					.onBeforeSendReceivedMessageHistory(envelope.envelopeId);
 			envelope.transportHistories.add(uack.transportHistory);
 		});
+		getLogger().debug("envelope created :: {} :: {}", Ax.appMillis(),
+				envelope.toTransportDebugString());
 		return envelope;
 	}
+
+	protected Logger getLogger() {
+		return transportLayer.logger;
+	}
+
+	protected abstract boolean shouldSendReceiveChannelMetadata();
 }

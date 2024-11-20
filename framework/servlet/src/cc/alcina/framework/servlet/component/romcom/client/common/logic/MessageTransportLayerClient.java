@@ -11,11 +11,11 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
@@ -25,16 +25,28 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
+/**
+ * <p>
+ * FIXME - DOC
+ * 
+ * <p>
+ * Transport is complicated by acknowledgment. Round #3 - 20241120 - we need to
+ * send an extra awaitresponses (essentially) as the transport/metadata carrier
+ * - it will be released by the server, ensuring a complete client/server
+ * metadata cycle
+ */
 public class MessageTransportLayerClient extends MessageTransportLayer {
 	RemoteComponentProtocol.Session session;
 
 	class SendChannelImpl extends SendChannel {
 		/*
-		 * If there are no inflight envelopes, enqueue an await message
+		 * If there are no inflight envelopes -- OR there's a single
+		 * unacknowledged AwaitRemote in flight -- enqueue an await message
 		 */
 		void conditionallyEnqueueAwaitMessage() {
-			if (envelopeDispatcher.getInflightCount() == 0) {
-				if (!RemoteObjectModelComponentState.get().finished) {
+			if (!RemoteObjectModelComponentState.get().finished) {
+				if (envelopeDispatcher.getInflightCount() == 0) {
+					send(new AwaitRemote());
 					send(new AwaitRemote());
 				}
 			}
@@ -48,12 +60,6 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 					message.getClass());
 		}
 	}
-
-	ReceiptCallback messageCallback;
-
-	ReceiptCallback verifierCallback;
-
-	List<ReceiptCallback> failureHistory = new ArrayList<>();
 
 	/*
 	 * used in backoff logic
@@ -88,14 +94,19 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 			super(MessageTransportLayerClient.this);
 		}
 
+		@Override
+		protected boolean shouldSendReceiveChannelMetadata() {
+			return true;
+		}
+
 		/*
-		 * if *inflight* - no. Note that the in-flight XMLHttp request can be
-		 * cancelled by the verifier (or removed on success/failure/xmlhttp
-		 * timeout)
+		 * Because http/2 - there's no reason to not send messages as they come
+		 * in (except possibly server load, but trying to gate that from the
+		 * client is dubiousx)
 		 */
 		@Override
 		protected boolean isDispatchAvailable() {
-			return messageCallback == null;
+			return true;
 		}
 
 		int getInflightCount() {
@@ -166,6 +177,9 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 					String text = httpResponse.getText();
 					RemoteComponentResponse response = ReflectiveSerializer
 							.deserializeRpc(text);
+					getLogger().debug("envelope returned :: {} :: {}/{}",
+							Ax.appMillis(), envelope.envelopeId,
+							response.messageEnvelope.envelopeId);
 					onComponentResponse(response);
 				}
 			};
@@ -173,6 +187,7 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 				inflightEnvelope.put(envelope.envelopeId,
 						new EnvelopeTransportHistory(envelope));
 				builder.sendRequest(payload, callback);
+				getLogger().debug("envelope sent :: {}", envelope.envelopeId);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -184,41 +199,6 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 
 		StatusCodeException(Response httpResponse) {
 			this.httpResponse = httpResponse;
-		}
-	}
-
-	// FIXME - this isn't used
-	class ReceiptCallback implements AsyncCallback<MessageEnvelope> {
-		Throwable caught;
-
-		MessageEnvelope sent;
-
-		Date created = new Date();
-
-		ReceiptCallback(MessageEnvelope sent) {
-			this.sent = sent;
-		}
-
-		@Override
-		public void onFailure(Throwable caught) {
-			onReceived();
-			this.caught = caught;
-			failureHistory.add(this);
-			sendChannel();// conditionalsend
-		}
-
-		void onReceived() {
-			if (verifierCallback == this) {
-				verifierCallback = null;
-			}
-			if (messageCallback == this) {
-				messageCallback = null;
-			}
-		}
-
-		@Override
-		public void onSuccess(MessageEnvelope result) {
-			receiveChannel().onEnvelopeReceived(result);
 		}
 	}
 

@@ -41,6 +41,7 @@ class SelectionLayers extends Model.Fields implements IfNotExisting<HasPage> {
 	TraversalPlace renderedPlace;
 
 	SelectionLayers(Page page) {
+		TraversalBrowser.Ui.logConstructor(this);
 		Ax.out("History delta - id %s - %s", RemoteUi.get().getUid(),
 				Ax.ntrim(Ui.place(), 30));
 		this.page = page;

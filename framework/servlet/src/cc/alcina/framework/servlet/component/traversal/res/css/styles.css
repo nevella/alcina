@@ -50,12 +50,19 @@ body > .overlay-container {
   top: 0;
   left: 0;
   display: inline-block;
+  /* leaving the rest as an exercise
+  * */
 }
-body > .overlay-container.viewport-centered > * {
+body > .overlay-container.viewport-middle-center > * {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+body > .overlay-container.viewport-bottom-right > * {
+  position: fixed;
+  right: 0;
+  bottom: 0;
 }
 body > .overlay-container > overlay {
   display: flex;
@@ -81,15 +88,22 @@ body > overlay-container-modal {
   display: block;
   bottom: 0;
   right: 0;
+  /* leaving the rest as an exercise
+  * */
 }
 body > overlay-container-modal:last-of-type {
   background-color: rgba(0, 0, 0, 0.2);
 }
-body > overlay-container-modal.viewport-centered > * {
+body > overlay-container-modal.viewport-middle-center > * {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+body > overlay-container-modal.viewport-bottom-right > * {
+  position: fixed;
+  right: 0;
+  bottom: 0;
 }
 body > overlay-container-modal > overlay {
   background-color: white;
@@ -444,7 +458,7 @@ overlay-container overlay.filter-suggestor > suggestor input {
   width: 250px;
 }
 
-body > .overlay-container.viewport-centered > overlay.keyboard-shortcuts-area {
+body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts-area {
   top: 3rem;
   transform: translate(-50%, 0%);
 }

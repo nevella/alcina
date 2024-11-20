@@ -24,6 +24,7 @@ class RenderedSelections extends Model.Fields {
 
 	class SelectionMarkupArea extends Model.All {
 		SelectionMarkupArea(Model model) {
+			TraversalBrowser.Ui.logConstructor(this);
 			this.model = model;
 		}
 
@@ -53,6 +54,7 @@ class RenderedSelections extends Model.Fields {
 	Variant variant;
 
 	RenderedSelections(Page page, Variant variant) {
+		TraversalBrowser.Ui.logConstructor(this);
 		this.page = page;
 		this.variant = variant;
 		this.heading = new Heading(Ax.friendly(variant));

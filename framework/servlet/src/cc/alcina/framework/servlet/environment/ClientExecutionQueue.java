@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
 /*
@@ -26,7 +26,7 @@ class ClientExecutionQueue implements Runnable {
 	 * either of these should be dispatched asynchronously, in order
 	 */
 	class AsyncDispatchable {
-		MessageToken fromClientMessage;
+		MessageProcessingToken fromClientMessage;
 
 		Runnable runnable;
 
@@ -34,7 +34,7 @@ class ClientExecutionQueue implements Runnable {
 			this.runnable = runnable;
 		}
 
-		AsyncDispatchable(MessageToken fromClientMessage) {
+		AsyncDispatchable(MessageProcessingToken fromClientMessage) {
 			this.fromClientMessage = fromClientMessage;
 		}
 
@@ -112,7 +112,7 @@ class ClientExecutionQueue implements Runnable {
 
 	void onMessageReceived(Message message) {
 		MessageHandlerServer handler = MessageHandlerServer.forMessage(message);
-		MessageToken token = new MessageToken(message);
+		MessageProcessingToken token = new MessageProcessingToken(message);
 		if (handler.isSynchronous()) {
 			handler.handle(token, environment.access(), message);
 		} else {
@@ -236,7 +236,7 @@ class ClientExecutionQueue implements Runnable {
 	 * 
 	 * 
 	 */
-	void handleFromClientMessageOnThread(MessageToken token) {
+	void handleFromClientMessageOnThread(MessageProcessingToken token) {
 		try {
 			MessageHandlerServer messageHandler = MessageHandlerServer
 					.forMessage(token.message);

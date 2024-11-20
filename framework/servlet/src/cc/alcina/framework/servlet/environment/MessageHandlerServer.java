@@ -6,14 +6,14 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.environment.Environment.Access;
 
 @Registration.NonGenericSubtypes(MessageHandlerServer.class)
 public abstract class MessageHandlerServer<PM extends Message>
 		implements Message.Handler<PM> {
-	public abstract void handle(MessageToken token, Environment.Access env,
-			PM message);
+	public abstract void handle(MessageProcessingToken token,
+			Environment.Access env, PM message);
 
 	public boolean isValidateClientInstanceUid() {
 		return true;
@@ -27,7 +27,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 		}
 
 		@Override
-		public void handle(MessageToken token, Access env,
+		public void handle(MessageProcessingToken token, Access env,
 				AwaitRemote message) {
 			/*
 			 * Noop
@@ -38,7 +38,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 	public static class DomEventMessageHandler
 			extends MessageHandlerServer<Message.DomEventMessage> {
 		@Override
-		public void handle(MessageToken token, Environment.Access env,
+		public void handle(MessageProcessingToken token, Environment.Access env,
 				Message.DomEventMessage message) {
 			env.onDomEventMessage(message);
 		}
@@ -47,7 +47,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 	public static class InvokeResponseHandler
 			extends MessageHandlerServer<Message.InvokeResponse> {
 		@Override
-		public void handle(MessageToken token, Environment.Access env,
+		public void handle(MessageProcessingToken token, Environment.Access env,
 				Message.InvokeResponse message) {
 			env.onInvokeResponse(message);
 		}
@@ -61,7 +61,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 	public static class MutationsHandler
 			extends MessageHandlerServer<Message.Mutations> {
 		@Override
-		public void handle(MessageToken token, Environment.Access env,
+		public void handle(MessageProcessingToken token, Environment.Access env,
 				Message.Mutations message) {
 			/*
 			 * Currently romcom doesn't handle non-localdom browser .js mutation
@@ -80,7 +80,7 @@ public abstract class MessageHandlerServer<PM extends Message>
 		}
 
 		@Override
-		public void handle(MessageToken token, Environment.Access env,
+		public void handle(MessageProcessingToken token, Environment.Access env,
 				Message.Startup message) {
 			/*
 			 * the startup message handler will send a BeginAwaitLoop message to

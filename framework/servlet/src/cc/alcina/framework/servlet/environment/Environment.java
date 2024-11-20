@@ -50,7 +50,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 
 /*
@@ -434,7 +434,7 @@ class Environment {
 			}
 		}
 
-		void startup(MessageToken token, Startup message) {
+		void startup(MessageProcessingToken token, Startup message) {
 			Preconditions.checkState(
 					Objects.equals(session.id, Environment.this.session.id));
 			Runnable startupRunnable = () -> Environment.this.startup(token,
@@ -717,7 +717,7 @@ class Environment {
 				Message.Mutations.ofLocation().locationMutation);
 	}
 
-	private void startup(MessageToken token, Startup message) {
+	private void startup(MessageProcessingToken token, Startup message) {
 		access().applyMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
 		initialiseSettings(message.settings);

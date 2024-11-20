@@ -49,6 +49,12 @@ public class AlcinaLogUtils {
 		}
 	}
 
+	public static void setLogLevelClient(String path, Level newLevel) {
+		java.util.logging.Logger logger = java.util.logging.Logger
+				.getLogger(path);
+		logger.setLevel(newLevel);
+	}
+
 	@Registration.Singleton
 	public static class LogMuter {
 		public void muteAllLogging(boolean muteAll) {

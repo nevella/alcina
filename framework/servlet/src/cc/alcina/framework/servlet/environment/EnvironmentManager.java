@@ -42,7 +42,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentEvent;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageToken;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
 import cc.alcina.framework.servlet.dom.Feature_EnvironmentManager;
 
@@ -238,7 +238,7 @@ public class EnvironmentManager {
 		}
 	}
 
-	public void handleMessage(MessageToken token) throws Exception {
+	public void handleMessage(MessageProcessingToken token) throws Exception {
 		/*
 		 * ROMCOM - messages are offered to the CEQ in order (off CEQ thread) -
 		 * it can either process em (sync) or add to queue (async)

@@ -9,7 +9,6 @@ import com.google.gwt.user.client.History;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Timer;
-import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
@@ -37,6 +36,11 @@ public class RemoteComponentInit implements NativePreviewHandler {
 				new TimerGwt.Provider());
 		Startup startupMessage = Message.Startup.forClient();
 		ClientRpc.send(startupMessage);
+		/*
+		 * Activate devmode transport logging
+		 */
+		// AlcinaLogUtils.setLogLevelClient(
+		// "cc.alcina.framework.servlet.component.romcom", Level.ALL);
 	}
 
 	// FIXME - dirndl - this can just be sent via normal event creation (ehich

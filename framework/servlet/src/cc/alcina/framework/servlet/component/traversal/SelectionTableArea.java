@@ -39,6 +39,7 @@ public class SelectionTableArea extends Model.Fields
 	}
 
 	public SelectionTableArea(Layer layer) {
+		TraversalBrowser.Ui.logConstructor(this);
 		hasTable = new LayerToTable(layer);
 		selectionBindables = hasTable.getSelectionBindables();
 	}
