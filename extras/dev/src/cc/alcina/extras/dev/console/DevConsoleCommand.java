@@ -468,6 +468,51 @@ public abstract class DevConsoleCommand {
 		}
 	}
 
+	public static class CmdDomainQueryRemote extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "dqr" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Query the remote domain";
+		}
+
+		@Override
+		public String getUsage() {
+			return "dqr <class-simple-name> <id> <paths> - e.g. dq MyUser 1 email";
+		}
+
+		@Override
+		public boolean ignoreForCommandHistory() {
+			return false;
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			Preconditions.checkArgument(argv.length == 2 || argv.length == 3);
+			String className = argv[0];
+			String idStr = argv[1];
+			String paths = argv.length == 2 ? "*" : argv[2];
+			DevConsole.get().clear();
+			Optional<Class<? extends Entity>> clazz = Registry
+					.query(Entity.class).registrations()
+					.filter(c -> Objects.equals(c.getSimpleName(), className))
+					.findFirst();
+			if (clazz.isEmpty()) {
+				throw new IllegalArgumentException(
+						Ax.format("Entity class not found: %s", className));
+			}
+			Entity entity = Reflections.newInstance(clazz.get());
+			entity.setId(Long.parseLong(idStr));
+			TaskDomainQuery query = new TaskDomainQuery().withFrom(entity)
+					.withResultPaths(new String[] { paths });
+			query.performRemoteSync();
+			return "";
+		}
+	}
+
 	public static class CmdExecRunnable extends DevConsoleCommand {
 		static void listRunnables(List<Class> classes, String runnableNamePart)
 				throws Exception {
