@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.Topic;
@@ -105,6 +106,19 @@ public class ModelBinding<T> {
 	}
 
 	void acceptStreamElement0(Object obj) {
+		if (targetBinding != null) {
+			Class<?> toType = targetBinding.getTargetPropertyType();
+			if (Reflections.isAssignableFrom(IfNotExisting.class, toType)) {
+				IfNotExisting existing = (IfNotExisting) targetBinding
+						.getExistingValue();
+				if (existing != null) {
+					if (existing
+							.testExistingSatisfies(fromPropertyChangeSource)) {
+						return;
+					}
+				}
+			}
+		}
 		if (preSupplierPredicate != null
 				&& !((Predicate) preSupplierPredicate).test(obj)) {
 			return;
@@ -119,19 +133,6 @@ public class ModelBinding<T> {
 		if (postMapPredicate != null
 				&& !((Predicate) postMapPredicate).test(o2)) {
 			return;
-		}
-		if (targetBinding != null) {
-			Class<?> toType = targetBinding.getTargetPropertyType();
-			if (Reflections.isAssignableFrom(IfNotExisting.class, toType)) {
-				IfNotExisting existing = (IfNotExisting) targetBinding
-						.getExistingValue();
-				if (existing != null) {
-					if (existing
-							.testExistingSatisfies(fromPropertyChangeSource)) {
-						return;
-					}
-				}
-			}
 		}
 		Preconditions.checkState(consumer != null,
 				"No consumer - possibly you forgot to call bind(), "
@@ -268,9 +269,12 @@ public class ModelBinding<T> {
 	}
 
 	private Object resolvePropertyChangeValue() {
-		return on != null ? Reflections.at(fromPropertyChangeSource)
-				.property(on).get(fromPropertyChangeSource)
+		return on != null ? fromProperty().get(fromPropertyChangeSource)
 				: fromPropertyChangeSource;
+	}
+
+	private Property fromProperty() {
+		return Reflections.at(fromPropertyChangeSource).property(on);
 	}
 
 	/**
@@ -422,5 +426,22 @@ public class ModelBinding<T> {
 		public void oneWay() {
 			acceptLeftToRight();
 		}
+
+		@Override
+		public String toString() {
+			return ensureProperty().toLocationString();
+		}
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder format = new FormatBuilder();
+		format.format("%s.", NestedName.get(fromPropertyChangeSource));
+		format.format("%s", on == null ? "*" : fromProperty().getName());
+		// ...map, fn etc
+		if (targetBinding != null) {
+			format.format(" --> %s", targetBinding);
+		}
+		return format.toString();
 	}
 }

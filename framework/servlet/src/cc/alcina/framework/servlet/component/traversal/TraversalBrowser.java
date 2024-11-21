@@ -188,10 +188,14 @@ public class TraversalBrowser {
 			return page;
 		}
 
+		/*
+		 * Used to debug redundant model construction/rendering
+		 */
 		@Feature.Ref(Feature_TraversalBrowser.Performance.class)
-		public static void logConstructor(Model model) {
-			LoggerFactory.getLogger(TraversalBrowser.class)
-					.debug("Constructor :: {}", NestedName.get(model));
+		public static void logConstructor(Model model, Object... additional) {
+			LoggerFactory.getLogger(TraversalBrowser.class).debug(
+					"Constructor :: {} {}", NestedName.get(model),
+					additional.length == 0 ? "" : List.of(additional));
 		}
 	}
 

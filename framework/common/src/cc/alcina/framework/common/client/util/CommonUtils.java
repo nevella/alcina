@@ -1943,7 +1943,8 @@ public class CommonUtils {
 		if (s == null || s.length() <= maxChars) {
 			return s;
 		}
-		if (s.substring(maxChars / 2, maxChars).indexOf(" ") == -1) {
+		if (maxChars >= 10
+				&& s.substring(maxChars - 10, maxChars).indexOf(" ") == -1) {
 			return s.substring(0, maxChars) + ellipsis;
 		}
 		return s.substring(0, s.substring(0, maxChars).lastIndexOf(' '))

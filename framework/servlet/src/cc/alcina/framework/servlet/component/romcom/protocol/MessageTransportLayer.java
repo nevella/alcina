@@ -77,8 +77,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
  * 
  * <p>
  * FIXME - metadata sync causes a nasty loop in invalid client session unless
- * [TODO] - remove the guard to test/add some code to handle out-of-control
- * metadata exchanges
+ * [git/aaaaddaa4] - remove the guard to test/add some code to handle
+ * out-of-control metadata exchanges
  * 
  * @see SendChannel for detail on receipt verification - which handles
  *      communication issues causing RPC timeout or exception

@@ -129,6 +129,13 @@ class Page extends Model.All
 		// one-off (to get the initial value)
 		TraversalHistories.get().subscribe(traversalPath, this::setHistory)
 				.remove();
+		/*
+		 * logging
+		 */
+		bindings().from(this).on(properties.history).accept(
+				history -> logger.info("history change :: {}", history));
+		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
+				.accept(place -> logger.info("place change :: {}", place));
 		bindings().addListener(() -> TraversalHistories.get()
 				.subscribe(traversalPath, this::setHistory));
 		// place selections will be invalid if history changes
@@ -152,24 +159,11 @@ class Page extends Model.All
 		bindings().from(ui).on(Ui.properties.place).value(this)
 				.map(SelectionLayers::new).to(this).on(properties.layers)
 				.oneWay();
-		bindings().from(ui).on(Ui.properties.place)
-				.value(() -> new RenderedSelections(this, Variant.table))
-				.to(this).on(properties.table).oneWay();
-		bindings().from(this).on(properties.history)
-				.map(o -> new RenderedSelections(this, Variant.table)).to(this)
-				.on(properties.table).oneWay();
 		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
 		bindings().from(TraversalBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
-		/*
-		 * logging
-		 */
-		bindings().from(this).on(properties.history).accept(
-				history -> logger.debug("history change :: {}", history));
-		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
-				.accept(place -> logger.debug("place change :: {}", place));
 	}
 
 	/**
@@ -286,19 +280,6 @@ class Page extends Model.All
 	@Property.Not
 	SelectionMarkup getSelectionMarkup() {
 		return ui.getSelectionMarkup();
-	}
-
-	boolean filterRedundantPlaceChange(TraversalPlace place) {
-		if (layers != null) {
-			if (layers.traversal != Ui.traversal()) {
-				// layers will be changed anyway by traversal change, redundant
-				return false;
-			} else {
-				return layers.placeChangeCausesChange(place);
-			}
-		} else {
-			return true;
-		}
 	}
 
 	void goPreserveScrollPosition(TraversalPlace place) {

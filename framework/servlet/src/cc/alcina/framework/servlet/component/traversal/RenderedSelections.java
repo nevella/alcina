@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -24,7 +23,7 @@ class RenderedSelections extends Model.Fields {
 
 	class SelectionMarkupArea extends Model.All {
 		SelectionMarkupArea(Model model) {
-			TraversalBrowser.Ui.logConstructor(this);
+			TraversalBrowser.Ui.logConstructor(this, variant);
 			this.model = model;
 		}
 
@@ -54,7 +53,7 @@ class RenderedSelections extends Model.Fields {
 	Variant variant;
 
 	RenderedSelections(Page page, Variant variant) {
-		TraversalBrowser.Ui.logConstructor(this);
+		TraversalBrowser.Ui.logConstructor(this, variant);
 		this.page = page;
 		this.variant = variant;
 		this.heading = new Heading(Ax.friendly(variant));
@@ -67,13 +66,6 @@ class RenderedSelections extends Model.Fields {
 
 	enum Variant {
 		input, output, table
-	}
-
-	@Override
-	public void onBeforeRender(BeforeRender event) {
-		super.onBeforeRender(event);
-		// unusual ordering - we want selection
-		conditionallyPopulate();
 	}
 
 	public void
