@@ -40,11 +40,14 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 public class CollectionDeltaModel extends Model.Fields {
 	static PackageProperties._CollectionDeltaModel properties = PackageProperties.collectionDeltaModel;
 
+	/*
+	 * FIXME - jdk16 - move to static member of inner class
+	 */
+	static PackageProperties._CollectionDeltaModel_RelativeInsert RelativeInsert_properties = PackageProperties.collectionDeltaModel_relativeInsert;
+
 	@TypedProperties
 	@Directed.Delegating
 	class RelativeInsert extends Model.All {
-		static PackageProperties._CollectionDeltaModel_RelativeInsert properties = PackageProperties.collectionDeltaModel_relativeInsert;
-
 		RelativeInsert before;
 
 		List<RelativeInsert> contents;
