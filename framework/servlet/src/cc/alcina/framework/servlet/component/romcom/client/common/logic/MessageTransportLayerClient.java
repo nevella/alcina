@@ -38,17 +38,21 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResp
 public class MessageTransportLayerClient extends MessageTransportLayer {
 	RemoteComponentProtocol.Session session;
 
+	/*
+	 * a lookahead in response processing to skip metadata handshake if the
+	 * response indiciates this session is finished
+	 */
+	boolean willFinish;
+
 	class SendChannelImpl extends SendChannel {
 		/*
 		 * If there are no inflight envelopes -- OR there's a single
 		 * unacknowledged AwaitRemote in flight -- enqueue an await message
 		 */
 		void conditionallyEnqueueAwaitMessage() {
-			if (!RemoteObjectModelComponentState.get().finished) {
-				if (envelopeDispatcher.getInflightCount() == 0) {
-					send(new AwaitRemote());
-					send(new AwaitRemote());
-				}
+			if (envelopeDispatcher.getInflightCount() == 0) {
+				send(new AwaitRemote());
+				send(new AwaitRemote());
 			}
 		}
 	}
@@ -80,7 +84,11 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		}
 	}
 
-	void onRequestReturned() {
+	/*
+	 * must be called late (since client.finish must be checked before
+	 * enqueueing awaits)
+	 */
+	void onRequestReturnedPostFinishCheck() {
 		sendChannel.conditionallyEnqueueAwaitMessage();
 		sendChannel().conditionallySend();
 	}
@@ -106,7 +114,8 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		 */
 		@Override
 		protected boolean isDispatchAvailable() {
-			return true;
+			return !(RemoteObjectModelComponentState.get().finished
+					|| willFinish);
 		}
 
 		int getInflightCount() {
@@ -156,11 +165,11 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 					remoteExceptions
 							.add(new RemoteExceptionEvent(exception, sendTime));
 					sendMessages.forEach(uak -> uak.onSendException(exception));
+					onRequestReturnedPostFinishCheck();
 				}
 
 				void onReturned() {
 					inflightEnvelope.remove(envelope.envelopeId);
-					onRequestReturned();
 				}
 
 				@Override
@@ -180,6 +189,10 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 					getLogger().debug("envelope returned :: {} :: {}/{}",
 							Ax.appMillis(), envelope.envelopeId,
 							response.messageEnvelope.envelopeId);
+					willFinish |= response.messageEnvelope.packets.stream()
+							.map(MessagePacket::message).anyMatch(
+									ProtocolMessageHandlerClient::isClientFinished);
+					onRequestReturnedPostFinishCheck();
 					onComponentResponse(response);
 				}
 			};

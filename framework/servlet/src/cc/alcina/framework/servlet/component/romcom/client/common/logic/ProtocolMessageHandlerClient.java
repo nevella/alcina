@@ -34,6 +34,10 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 @Registration.NonGenericSubtypes(ProtocolMessageHandlerClient.class)
 public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		implements Message.Handler<PM> {
+	static boolean isClientFinished(Message message) {
+		return message instanceof Message.ProcessingException;
+	}
+
 	public abstract void handle(HandlerContext handlerContext, PM message);
 
 	public interface HandlerContext {

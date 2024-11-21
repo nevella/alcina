@@ -10,6 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
@@ -40,16 +41,15 @@ class SelectionLayers extends Model.Fields implements IfNotExisting<HasPage> {
 
 	TraversalPlace renderedPlace;
 
+	ObservableHistory renderedHistory;
+
 	SelectionLayers(Page page) {
 		TraversalBrowser.Ui.logConstructor(this);
 		Ax.out("History delta - id %s - %s", RemoteUi.get().getUid(),
 				Ax.ntrim(Ui.place(), 30));
 		this.page = page;
 		this.renderedPlace = page.ui.place;
-		render();
-	}
-
-	void render() {
+		this.renderedHistory = page.history;
 		if (page.history == null) {
 			return;
 		}
@@ -71,6 +71,9 @@ class SelectionLayers extends Model.Fields implements IfNotExisting<HasPage> {
 
 	@Override
 	public boolean testExistingSatisfies(HasPage input) {
+		if (input.providePage().history != renderedHistory) {
+			return false;
+		}
 		return placeChangeCausesChange(input.providePage().place());
 	}
 }
