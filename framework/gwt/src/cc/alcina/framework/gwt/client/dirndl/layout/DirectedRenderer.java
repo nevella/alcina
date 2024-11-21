@@ -128,12 +128,19 @@ public abstract class DirectedRenderer {
 	}
 
 	/**
+	 * <p>
 	 * The most-specific @Directed at the initiating AnnotationLocation will be
 	 * applied to each Collection element. This renderer renders no widget for
 	 * the collection itself, normally there will be one widget (or at least
 	 * dirndl node) per collection element
 	 *
-	 *
+	 * <p>
+	 * Note that this renderer re-renders all nodes on property change - even if
+	 * the new collection-typed property value is mostly identical to the
+	 * previous value (say an addition of one element to a list)
+	 * 
+	 * <p>
+	 * If it makes sense to render only the delta on change, use a
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, AbstractCollection.class })

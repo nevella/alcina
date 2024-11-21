@@ -2206,4 +2206,12 @@ public class CommonUtils {
 			return enunValue.ordinal();
 		}
 	}
+
+	public static Set<?> wrapInSet(Collection<?> collection) {
+		if (collection instanceof Set) {
+			return (Set<?>) collection;
+		} else {
+			return new HashSet<>(collection);
+		}
+	}
 }

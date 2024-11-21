@@ -4,11 +4,13 @@ import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 import java.lang.Boolean;
+import java.lang.Class;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -23,6 +25,7 @@ public class PackageProperties {
     public static _DirectedCategoryActivity directedCategoryActivity = new _DirectedCategoryActivity();
     public static _DirectedEntityActivity directedEntityActivity = new _DirectedEntityActivity();
     public static _RootArea rootArea = new _RootArea();
+    static _RootArea_ChannelOverlay rootArea_channelOverlay = new _RootArea_ChannelOverlay();
     
     public static class _DirectedActivity implements TypedProperty.Container {
       public TypedProperty<DirectedActivity, BasePlace> place = new TypedProperty<>(DirectedActivity.class, "place");
@@ -55,8 +58,14 @@ public class PackageProperties {
     }
     
     public static class _RootArea implements TypedProperty.Container {
-      public TypedProperty<RootArea, Map> fragmentOverlays = new TypedProperty<>(RootArea.class, "fragmentOverlays");
+      public TypedProperty<RootArea, Map> channelOverlays = new TypedProperty<>(RootArea.class, "channelOverlays");
       public TypedProperty<RootArea, DirectedActivity> mainActivity = new TypedProperty<>(RootArea.class, "mainActivity");
+    }
+    
+    static class _RootArea_ChannelOverlay implements TypedProperty.Container {
+      TypedProperty<RootArea.ChannelOverlay, DirectedActivity> activity = new TypedProperty<>(RootArea.ChannelOverlay.class, "activity");
+      TypedProperty<RootArea.ChannelOverlay, Class> channel = new TypedProperty<>(RootArea.ChannelOverlay.class, "channel");
+      TypedProperty<RootArea.ChannelOverlay, Overlay> overlay = new TypedProperty<>(RootArea.ChannelOverlay.class, "overlay");
     }
     
 //@formatter:on

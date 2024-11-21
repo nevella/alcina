@@ -9,6 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.Header;
 import cc.alcina.framework.servlet.component.traversal.Page;
@@ -16,10 +17,10 @@ import cc.alcina.framework.servlet.component.traversal.PropertiesArea;
 import cc.alcina.framework.servlet.component.traversal.RenderedSelections;
 import cc.alcina.framework.servlet.component.traversal.SelectionLayers;
 import cc.alcina.framework.servlet.component.traversal.SelectionTableArea;
-import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 import java.lang.Boolean;
+import java.lang.Class;
 import java.lang.Integer;
 import java.lang.String;
 import java.util.Set;
@@ -30,6 +31,7 @@ public class PackageProperties {
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Page page = new _Page();
+    static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
     static _RenderedSelections renderedSelections = new _RenderedSelections();
     public static _TraversalBrowser_Ui traversalBrowser_ui = new _TraversalBrowser_Ui();
     public static _TraversalSettings traversalSettings = new _TraversalSettings();
@@ -53,7 +55,12 @@ public class PackageProperties {
       TypedProperty<Page, RenderedSelections> output = new TypedProperty<>(Page.class, "output");
       TypedProperty<Page, PropertiesArea> propertiesArea = new TypedProperty<>(Page.class, "propertiesArea");
       TypedProperty<Page, RenderedSelections> table = new TypedProperty<>(Page.class, "table");
-      TypedProperty<Page, TraversalBrowser.Ui> ui = new TypedProperty<>(Page.class, "ui");
+    }
+    
+    static class _Page_ActivityRoute implements TypedProperty.Container {
+      TypedProperty<Page.ActivityRoute, Class> channel = new TypedProperty<>(Page.ActivityRoute.class, "channel");
+      TypedProperty<Page.ActivityRoute, Page> page = new TypedProperty<>(Page.ActivityRoute.class, "page");
+      TypedProperty<Page.ActivityRoute, BasePlace> place = new TypedProperty<>(Page.ActivityRoute.class, "place");
     }
     
     static class _RenderedSelections implements TypedProperty.Container {
