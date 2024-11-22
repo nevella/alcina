@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  */
 public class SubtaskExecutor {
-	List<Task> tasks = new ArrayList<>();
+	public List<Task> tasks = new ArrayList<>();
 
 	public void addTask(Task task) {
 		tasks.add(task);
