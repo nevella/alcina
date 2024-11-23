@@ -1,6 +1,7 @@
 /**
  * <p>
- * Scaffolding for running the Alcina GWT test suite
+ * Scaffolding for running the Alcina GWT test suite - which tests low-level
+ * (DOM mutations/GWT devmode protocol) code, as well as medium (chubbytree)
  * 
  * <p>
  * TODO
@@ -16,5 +17,8 @@
  * </code>
  * </pre>
  * </ul>
+ * 
+ * <p>
+ * For execution docs, see server/package-info.java
  */
 package cc.alcina.framework.servlet.component.test;

@@ -408,7 +408,7 @@ public class ModelBinding<T> {
 			return this;
 		}
 
-		public TargetBinding<BSP, T2> on(TypedProperty<BSP, T2> on) {
+		public TargetBinding<BSP, T2> on(TypedProperty<BSP, ? super T2> on) {
 			this.on = on;
 			return (TargetBinding<BSP, T2>) this;
 		}

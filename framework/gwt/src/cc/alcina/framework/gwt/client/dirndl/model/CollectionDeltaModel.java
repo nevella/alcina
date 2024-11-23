@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -12,9 +13,13 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 /**
+ * <p>
+ * AKA ChubbyTree (that's my inspirational name for the data structure used)
  * <p>
  * Wraps a reference to a collection property, and (via delegation/transform)
  * ensures that only the changed elements are rendered. In brief, it does this
@@ -37,7 +42,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 @TypedProperties
 @Directed.Delegating
 public class CollectionDeltaModel extends Model.Fields {
-	static PackageProperties._CollectionDeltaModel properties = PackageProperties.collectionDeltaModel;
+	public static PackageProperties._CollectionDeltaModel properties = PackageProperties.collectionDeltaModel;
 
 	/*
 	 * FIXME - jdk16 - move to static member of inner class
@@ -74,10 +79,16 @@ public class CollectionDeltaModel extends Model.Fields {
 		/* Note that only one of {element, contents} can be non-null */
 		Object element;
 
+		/*
+		 * Only updated during one update() cycle
+		 */
+		@Property.Not
 		List<RelativeInsert> contents;
 
-		@Property.Not
-		List<RelativeInsert> pendingContents;
+		/*
+		 * Copied at the end of update, the rendered chub
+		 */
+		List<RelativeInsert> flushedContents;
 
 		RelativeInsert after;
 
@@ -85,6 +96,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		 * a node is the parent of before, the {elements of contents/contnets}
 		 * and after
 		 */
+		@Property.Not
 		RelativeInsert parent;
 
 		RelativeInsert firstDescendantOrSelf() {
@@ -134,35 +146,50 @@ public class CollectionDeltaModel extends Model.Fields {
 			return this;
 		}
 
-		void insert(Object object, InsertDirection insertDirection) {
+		/**
+		 * 
+		 * @param object
+		 * @param insertDirection
+		 * @return the inserted RelativeInsert
+		 */
+		RelativeInsert insert(Object object, InsertDirection insertDirection) {
 			if (insertDirection == InsertDirection.after) {
 				if (canAppend()) {
-					append(object);
+					return append(object);
 				} else {
-					if (after == null) {
-						RelativeInsert child = new RelativeInsert(this);
-						child.append(object);
-						RelativeInsert_properties.after.set(this, child);
+					// because of the way bulk insert works, this is a simple
+					// parent check rather than a recursive scan
+					if (canAppendToParent()) {
+						return parent.insert(object, insertDirection);
 					} else {
-						RelativeInsert firstDescendantOrSelfOfAfter = after
-								.firstDescendantOrSelf();
-						/*
-						 * it's guaranteed that
-						 * firstDescendantOrSelfOfAfter.before is null, since
-						 * all leaves are null
-						 */
-						RelativeInsert child = new RelativeInsert(
-								firstDescendantOrSelfOfAfter);
-						child.append(object);
-						RelativeInsert_properties.before
-								.set(firstDescendantOrSelfOfAfter, child);
+						if (after == null) {
+							RelativeInsert child = new RelativeInsert(this);
+							RelativeInsert grand = child.append(object);
+							RelativeInsert_properties.after.set(this, child);
+							return grand;
+						} else {
+							RelativeInsert firstDescendantOrSelfOfAfter = after
+									.firstDescendantOrSelf();
+							/*
+							 * it's guaranteed that
+							 * firstDescendantOrSelfOfAfter.before is null,
+							 * since all leaves are null
+							 */
+							RelativeInsert child = new RelativeInsert(
+									firstDescendantOrSelfOfAfter);
+							RelativeInsert grand = child.append(object);
+							RelativeInsert_properties.before
+									.set(firstDescendantOrSelfOfAfter, child);
+							return grand;
+						}
 					}
 				}
 			} else {
 				if (before == null) {
 					RelativeInsert child = new RelativeInsert(this);
-					child.append(object);
+					RelativeInsert grand = child.append(object);
 					RelativeInsert_properties.before.set(this, child);
+					return grand;
 				} else {
 					RelativeInsert lastDescendantOrSelfOfBefore = after
 							.lastDescendantOrSelf();
@@ -172,25 +199,91 @@ public class CollectionDeltaModel extends Model.Fields {
 					 */
 					RelativeInsert child = new RelativeInsert(
 							lastDescendantOrSelfOfBefore);
-					child.append(object);
+					RelativeInsert grand = child.append(object);
 					RelativeInsert_properties.after
 							.set(lastDescendantOrSelfOfBefore, child);
+					return grand;
 				}
 			}
 		}
 
-		void append(Object current) {
-			RelativeInsert child = new RelativeInsert(this);
-			if (pendingContents == null) {
-				pendingContents = new ArrayList<>();
+		boolean canAppendToParent() {
+			return parent != null && parent != null && parent.isPending();
+		}
+
+		@Property.Not
+		boolean isPending() {
+			return contents != null && flushedContents == null;
+		}
+
+		void toStringSelf(FormatBuilder format) {
+			String pos = parent == null ? "root" : parent.pos(this);
+			String val = element == null ? "--" : NestedName.get(element);
+			format.format("%s%s :: %s", FormatBuilder.spaces(depth()), pos,
+					val);
+		}
+
+		@Override
+		public String toString() {
+			List<RelativeInsert> stack = new ArrayList<>();
+			RelativeInsert cursor = this;
+			do {
+				stack.add(cursor);
+				cursor = cursor.parent;
+			} while (cursor != null);
+			Collections.reverse(stack);
+			FormatBuilder format = new FormatBuilder().separator("\n");
+			stack.forEach(ins -> ins.toStringSelf(format));
+			return format.toString();
+		}
+
+		String pos(RelativeInsert child) {
+			if (child == before) {
+				return "before";
+			} else if (child == after) {
+				return "after";
+			} else {
+				return Ax.format("content:[%s]", contents.indexOf(child));
 			}
-			child.element = current;
-			pendingContents.add(child);
+		}
+
+		int depth() {
+			int depth = 0;
+			RelativeInsert cursor = this;
+			while (cursor.parent != null) {
+				depth++;
+				cursor = cursor.parent;
+			}
+			return depth;
+		}
+
+		/**
+		 * 
+		 * @param current
+		 *            the object to append
+		 * @return the appended RelativeInsert
+		 */
+		RelativeInsert append(Object current) {
+			if (parent != null && parent.canAppend()) {
+				return parent.append(current);
+			} else {
+				RelativeInsert child = new RelativeInsert(this);
+				if (contents == null) {
+					contents = new ArrayList<>();
+					update.pending.add(this);
+				}
+				child.element = current;
+				contents.add(child);
+				return child;
+			}
+		}
+
+		void flushPending() {
+			RelativeInsert_properties.flushedContents.set(this, contents);
 		}
 
 		boolean canAppend() {
-			return element == null && contents == null
-					&& pendingContents == null;
+			return element == null && flushedContents == null && after == null;
 		}
 
 		/**
@@ -283,18 +376,22 @@ public class CollectionDeltaModel extends Model.Fields {
 				}
 			}
 		}
+
+		public void dump() {
+			FormatBuilder format = new FormatBuilder().separator("\n");
+			RelativeInsert cursor = this;
+			while (cursor != null) {
+				cursor.toStringSelf(format);
+				cursor = cursor.next();
+			}
+			Ax.out(format.toString());
+		}
 	}
 
-	/*
-	 * As in other tree-like structures, this is an "off-grid" container - a
-	 * logical, not a render root
-	 */
+	@Directed
 	RelativeInsert root;
 
-	@Directed
-	List<RelativeInsert> initialElements;
-
-	public Collection<?> collection;
+	public Collection collection;
 
 	public CollectionDeltaModel() {
 		bindings().from(this).on(properties.collection)
@@ -329,7 +426,9 @@ public class CollectionDeltaModel extends Model.Fields {
 		InsertDirection insertDirection;
 
 		Update() {
-			Preconditions.checkArgument(!collection.contains(null));
+			// collection.contains(null) - JDK bug - NPE
+			Preconditions.checkArgument(
+					collection.stream().noneMatch(e -> e == null));
 			remainingToRender = new CountingMap<>();
 			remainingRendered = new CountingMap<>();
 			collection.forEach(remainingToRender::add);
@@ -377,8 +476,11 @@ public class CollectionDeltaModel extends Model.Fields {
 					// already rendered
 					cursor = renderAt.validatingNext();
 				} else {
-					renderAt.insert(current, insertDirection);
-					cursor = renderAt.validatingNext();
+					RelativeInsert created = renderAt.insert(current,
+							insertDirection);
+					cursor = created.next();
+					Ax.out(cursor);
+					int debug = 3;
 				}
 			}
 			/*
@@ -388,6 +490,9 @@ public class CollectionDeltaModel extends Model.Fields {
 			while (cursor != null) {
 				cursor = cursor.validatingNext();
 			}
+			pending.forEach(RelativeInsert::flushPending);
+			root.dump();
+			// int debug = 3;
 		}
 
 		/*
@@ -407,12 +512,11 @@ public class CollectionDeltaModel extends Model.Fields {
 
 	void updateElements() {
 		if (collection == null || collection.isEmpty()) {
-			properties.initialElements.set(this, null);
-			root = null;
+			properties.root.set(this, null);
 			return;
 		}
 		if (root == null) {
-			root = new RelativeInsert(null);
+			properties.root.set(this, new RelativeInsert(null));
 		}
 		update = new Update();
 		update.update();
