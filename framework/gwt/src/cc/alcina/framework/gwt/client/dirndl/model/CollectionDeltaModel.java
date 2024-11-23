@@ -38,6 +38,9 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
  * <p>
  * WIP - the structure/sequence looks about right, need to implement the
  * unsupporteds and add set of "pendings to flush"
+ * 
+ * <p>
+ * FIXME - pruneredundant - if setnull, remove parent?
  */
 @TypedProperties
 @Directed.Delegating
@@ -65,7 +68,8 @@ public class CollectionDeltaModel extends Model.Fields {
 	/**
 	 * See {@link #next()} for the structure that these instances create.
 	 * Essentially it's a tree - but optimised for the common case of 'insert a
-	 * consecutive list of elements'
+	 * consecutive list of elements'. Note that within this class 'element'
+	 * means collection element, not DOM element
 	 */
 	@TypedProperties
 	@Directed.Delegating
@@ -76,7 +80,9 @@ public class CollectionDeltaModel extends Model.Fields {
 
 		RelativeInsert before;
 
-		/* Note that only one of {element, contents} can be non-null */
+		/*
+		 * Note that only one of {element, contents} can be non-null.
+		 */
 		Object element;
 
 		/*
@@ -219,8 +225,8 @@ public class CollectionDeltaModel extends Model.Fields {
 		void toStringSelf(FormatBuilder format) {
 			String pos = parent == null ? "root" : parent.pos(this);
 			String val = element == null ? "--" : NestedName.get(element);
-			format.format("%s%s :: %s", FormatBuilder.spaces(depth()), pos,
-					val);
+			format.format("%s%s :: %s :: %s", FormatBuilder.spaces(depth()),
+					pos, val, Ax.trimForLogging(element));
 		}
 
 		@Override
@@ -386,6 +392,15 @@ public class CollectionDeltaModel extends Model.Fields {
 			}
 			Ax.out(format.toString());
 		}
+
+		boolean canSetCollectionElement() {
+			return parent != null && before == null && after == null
+					&& contents == null && flushedContents == null;
+		}
+
+		void setCollectionElement(Object current) {
+			RelativeInsert_properties.element.set(this, current);
+		}
 	}
 
 	@Directed
@@ -450,10 +465,8 @@ public class CollectionDeltaModel extends Model.Fields {
 				insertDirection = null;
 				renderAt = null;
 				/*
-				 * either cursor matches; cursor does not match; cursor is null
 				 * 
-				 * The latter two cases are the same (ensure cursor does not
-				 * directly contaain anything, move on)
+				 * FIXME - doc explain each branch below
 				 */
 				while (renderAt == null) {
 					if (cursor == null) {
@@ -467,6 +480,16 @@ public class CollectionDeltaModel extends Model.Fields {
 					} else if (willMatch(cursor)) {
 						insertDirection = InsertDirection.before;
 						renderAt = cursor;
+					} else if (cursor.canSetCollectionElement()) {
+						/*
+						 * The cursor is a leaf without before/after branches,
+						 * so is a valid position for the collection element
+						 */
+						cursor.setCollectionElement(current);
+						/*
+						 * cursor.matches(current) is now correct
+						 */
+						renderAt = cursor;
 					} else {
 						/* will clear out all remaining inserts */
 						cursor = cursor.validatingNext();
@@ -479,8 +502,6 @@ public class CollectionDeltaModel extends Model.Fields {
 					RelativeInsert created = renderAt.insert(current,
 							insertDirection);
 					cursor = created.next();
-					Ax.out(cursor);
-					int debug = 3;
 				}
 			}
 			/*
@@ -491,7 +512,9 @@ public class CollectionDeltaModel extends Model.Fields {
 				cursor = cursor.validatingNext();
 			}
 			pending.forEach(RelativeInsert::flushPending);
+			Ax.out("------------");
 			root.dump();
+			Ax.out("------------\n");
 			// int debug = 3;
 		}
 

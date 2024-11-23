@@ -29,8 +29,25 @@ public class TraversalSettings extends Bindable.Fields {
 		QUARTER_WIDTH, HALF_WIDTH, FULL_WIDTH, NONE
 	}
 
+	public enum SecondaryArea {
+		INPUT, OUTPUT, TABLE;
+	}
+
 	public enum SecondaryAreaDisplayMode {
-		INPUT_OUTPUT, INPUT, OUTPUT, TABLE, NONE
+		INPUT_OUTPUT, INPUT, OUTPUT, TABLE, NONE;
+
+		boolean isVisible(SecondaryArea area) {
+			switch (area) {
+			case INPUT:
+				return this == INPUT || this == INPUT_OUTPUT;
+			case OUTPUT:
+				return this == OUTPUT || this == INPUT_OUTPUT;
+			case TABLE:
+				return this == TABLE;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 
 	public PropertyDisplayMode nextPropertyDisplayMode() {

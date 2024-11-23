@@ -71,7 +71,7 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 	}
 
 	void addStream(Selection selection, Stream stream) {
-		Layer layer = Ui.traversal().getLayer(selection);
+		Layer layer = getTraversal().getLayer(selection);
 		Filter filter = Ui.place().attributesOrEmpty(layer.index + 1)
 				.get(Filter.class);
 		if (filter != null) {

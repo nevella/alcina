@@ -65,9 +65,21 @@ public class TraversalBrowser {
 		}
 	}
 
+	/**
+	 * <p>
+	 * Although UI logically contains page, traversal and history are both
+	 * 'primary' there - #traversal is mutated via a binding on page (since page
+	 * is a model, it's easier to manage bindings there)
+	 * 
+	 * <p>
+	 * FIXME - If there's a breaking history change (i.e. an incompatible
+	 * observable), refresh the page rather than add multiple bindings in Page
+	 */
 	@TypedProperties
 	public static class Ui extends AbstractUi<TraversalPlace>
 			implements HasPage {
+		static PackageProperties._TraversalBrowser_Ui properties = PackageProperties.traversalBrowser_ui;
+
 		public static Ui get() {
 			return (Ui) RemoteUi.get();
 		}
@@ -77,10 +89,12 @@ public class TraversalBrowser {
 		}
 
 		public static SelectionTraversal traversal() {
-			return get().traversal0();
+			return get().traversal;
 		}
 
 		Page page;
+
+		public SelectionTraversal traversal;
 
 		public TraversalSettings settings;
 
@@ -141,14 +155,6 @@ public class TraversalBrowser {
 			return layout;
 		}
 
-		/*
-		 * this uses page.history (rather than owning it) because page is easier
-		 * to bind to
-		 */
-		protected SelectionTraversal traversal0() {
-			return page.history == null ? null : page.history.getObservable();
-		}
-
 		@Property.Not
 		public SecondaryAreaDisplayMode[] getValidSecondaryAreadModes() {
 			if (getSelectionMarkup() != null) {
@@ -163,7 +169,6 @@ public class TraversalBrowser {
 		private SelectionMarkup selectionMarkup;
 
 		public SelectionMarkup getSelectionMarkup() {
-			SelectionTraversal traversal = traversal0();
 			if (selectionMarkup == null && traversal != null) {
 				SelectionMarkup.Has markupProvider = traversal
 						.context(SelectionMarkup.Has.class);

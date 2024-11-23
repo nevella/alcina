@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryArea;
 
 @Directed(tag = "selections")
 @TypedProperties
@@ -50,9 +51,9 @@ class RenderedSelections extends Model.Fields {
 
 	Selection<?> selection;
 
-	Variant variant;
+	SecondaryArea variant;
 
-	RenderedSelections(Page page, Variant variant) {
+	RenderedSelections(Page page, SecondaryArea variant) {
 		TraversalBrowser.Ui.logConstructor(this, variant);
 		this.page = page;
 		this.variant = variant;
@@ -62,10 +63,6 @@ class RenderedSelections extends Model.Fields {
 				.map(p -> p.provideSelection(SelectionType.VIEW))
 				.accept(this::setSelection);
 		bindings().from(this).on("selection").signal(this::onSelectionChange);
-	}
-
-	enum Variant {
-		input, output, table
 	}
 
 	public void
@@ -98,7 +95,7 @@ class RenderedSelections extends Model.Fields {
 	}
 
 	void conditionallyPopulateTable(SelectionTraversal traversal) {
-		if (variant != Variant.table) {
+		if (variant != SecondaryArea.TABLE) {
 			return;
 		}
 		Layer layer = Ui.getSelectedLayer();
@@ -111,6 +108,9 @@ class RenderedSelections extends Model.Fields {
 	}
 
 	void conditionallyPopulateMarkup(SelectionTraversal traversal) {
+		if (variant == SecondaryArea.TABLE) {
+			return;
+		}
 		SelectionMarkup markup = page.getSelectionMarkup();
 		if (markup == null) {
 			setSelectionMarkupArea(null);
@@ -119,7 +119,7 @@ class RenderedSelections extends Model.Fields {
 		String styleScope = Ax
 				.format("selections.%s > selection-markup-area > div", variant);
 		Query query = markup.query(selection, styleScope,
-				variant == Variant.input);
+				variant == SecondaryArea.INPUT);
 		Model model = query.getModel();
 		if (this.selectionMarkupArea != null
 				&& this.selectionMarkupArea.model == model) {

@@ -32,8 +32,8 @@ import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
-import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 import cc.alcina.framework.servlet.job.JobContext;
@@ -141,6 +141,9 @@ public class EntityBrowser {
 			if (!Objects.equals(place, this.place)) {
 				super.setPlace(place);
 				traverse();
+				if (traversal() == null) {
+					return;
+				}
 				// if the filter matches exactly one entity, append it to the
 				// place + re-set
 				Layer lastLayer = Ax.last(traversal().getVisitedLayers());

@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.traversal.RenderedSelections.Variant;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SecondaryAreaDisplayCycle;
@@ -55,6 +55,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.Selection
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryArea;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
 
 @Directed(
@@ -115,8 +116,9 @@ class Page extends Model.All
 
 	Page() {
 		TraversalBrowser.Ui.logConstructor(this);
-		header = new Header(this);
 		this.ui = Ui.get();
+		header = new Header(this);
+		layers = new SelectionLayers(this);
 		// FIXME - dirndl - bindings - change addListener to a ModelBinding with
 		// a prebind (setleft) phase....maybe? that might be a bit too
 		// tree-shaped, even for me
@@ -138,32 +140,41 @@ class Page extends Model.All
 				.accept(place -> logger.info("place change :: {}", place));
 		bindings().addListener(() -> TraversalHistories.get()
 				.subscribe(traversalPath, this::setHistory));
+		bindings().from(this).on(properties.history)
+				.map(ObservableHistory::getObservable)
+				.typed(SelectionTraversal.class).to(ui)
+				.on(Ui.properties.traversal).oneWay();
 		// place selections will be invalid if history changes
 		bindings().from(this).on(properties.history)
 				.signal(this::clearPlaceSelections);
 		bindings().from(this).on(properties.history).value(this)
-				.map(SelectionLayers::new).to(this).on(properties.layers)
-				.oneWay();
-		bindings().from(this).on(properties.history).value(this)
 				.map(PropertiesArea::new).to(this).on(properties.propertiesArea)
 				.oneWay();
-		bindings().from(this).on(properties.history)
-				.value(() -> new RenderedSelections(this, Variant.input))
+		bindings().from(TraversalSettings.get())
+				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+				.value(() -> renderedSelectionsIfVisible(SecondaryArea.INPUT))
 				.to(this).on(properties.input).oneWay();
-		bindings().from(this).on(properties.history)
-				.value(() -> new RenderedSelections(this, Variant.output))
+		bindings().from(TraversalSettings.get())
+				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+				.value(() -> renderedSelectionsIfVisible(SecondaryArea.OUTPUT))
 				.to(this).on(properties.output).oneWay();
-		bindings().from(this).on(properties.history)
-				.value(() -> new RenderedSelections(this, Variant.table))
+		bindings().from(TraversalSettings.get())
+				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+				.value(() -> renderedSelectionsIfVisible(SecondaryArea.TABLE))
 				.to(this).on(properties.table).oneWay();
-		bindings().from(ui).on(Ui.properties.place).value(this)
-				.map(SelectionLayers::new).to(this).on(properties.layers)
-				.oneWay();
 		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
 		bindings().from(TraversalBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
+	}
+
+	RenderedSelections renderedSelectionsIfVisible(SecondaryArea area) {
+		if (TraversalSettings.get().secondaryAreaDisplayMode.isVisible(area)) {
+			return new RenderedSelections(this, area);
+		} else {
+			return null;
+		}
 	}
 
 	/**

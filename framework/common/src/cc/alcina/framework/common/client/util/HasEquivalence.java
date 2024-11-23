@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /*
  * 'equivalence' is a relation between instances of a class similar to equals -
@@ -33,6 +34,20 @@ public interface HasEquivalence<T> {
 		}
 	}
 
+	public static <T, E extends HasEquivalenceAdapter> boolean areEquivalent(
+			Class<? extends HasEquivalenceAdapter<T, E>> adapterClass, T o1,
+			T o2) {
+		if (o1 == null) {
+			return o2 == null;
+		} else {
+			HasEquivalenceAdapter<T, E> a1 = Reflections
+					.newInstance(adapterClass).withReferent(o1);
+			HasEquivalenceAdapter<T, E> a2 = Reflections
+					.newInstance(adapterClass).withReferent(o2);
+			return a1.equivalentTo((E) a2);
+		}
+	}
+
 	public int equivalenceHash();
 
 	public boolean equivalentTo(T other);
@@ -44,6 +59,14 @@ public interface HasEquivalence<T> {
 		public T left;
 
 		public T right;
+
+		public <HEA extends HasEquivalenceAdapter<T, E>> HEA withReferent(T o) {
+			this.o = o;
+			return (HEA) this;
+		}
+
+		public HasEquivalenceAdapter() {
+		}
 
 		public HasEquivalenceAdapter(T referent) {
 			this.o = referent;

@@ -23,6 +23,12 @@ class TestChubbyTree {
 				List.of("bruce", "was", "here", "fully"));
 		TestContainer.properties.collection.set(cont,
 				List.of("bruce", "there", "was", "here", "fully"));
+		TestContainer.properties.collection.set(cont,
+				List.of("bruce", "there", "was", "here", "committed"));
+		TestContainer.properties.collection.set(cont,
+				List.of("bruce", "there", "was", "here", "luckily"));
+		TestContainer.properties.collection.set(cont,
+				List.of("bruce", "there", "was", "beer", "luckily"));
 	}
 
 	@Directed
