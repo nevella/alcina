@@ -1,0 +1,85 @@
+
+@mixin sub-heading
+  display: block
+  font-weight: bold
+  color: #0f4589
+  margin: 1rem 0
+
+@mixin top-level
+  body
+    background: #eee
+
+  td, th
+    vertical-align: top
+    text-align: left
+
+@mixin contents
+  sequence
+    display: flex
+    flex-direction: column
+    max-width: 1200px
+    margin: 0 auto
+    padding: 2rem
+    background: white
+    min-height: 100vh
+    align-items: flex-start
+
+    a, a.link, a.visited
+      text-decoration: none
+      color: black
+
+      &:hover
+        color: #387ed3  
+
+    > heading
+      @include sub-heading
+
+    > doc-header
+      display: flex
+      width: 100%
+      align-items: center
+      justify-content: space-between
+
+      img
+        width: 200px
+
+      heading
+        font-size: 18px
+        font-weight: bold
+      
+      spacer
+        display: block
+        width: 200px
+
+    > table
+      box-sizing: border-box
+      margin-bottom: 2rem
+      margin-top: 1rem
+      border-collapse: separate
+      border-spacing: 1rem 0.5rem
+
+      th
+        text-align: left
+        width: 12rem
+
+      td
+        > value
+          white-space: pre-wrap
+
+          &:not(:last-child):after
+            content:', '
+
+    > visit-area
+      display: flex
+      flex-direction: column
+      gap: 1rem
+      margin-bottom: 5rem
+
+      > path
+        font-weight: bold
+
+      > description
+        margin-bottom: 1rem
+
+      > img
+        max-width: 100%

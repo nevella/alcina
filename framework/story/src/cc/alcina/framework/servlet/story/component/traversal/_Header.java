@@ -98,9 +98,7 @@ class _Header extends Waypoint {
 		@Decl.Location.Xpath(XPATH_DOTBURGER_ICON)
 		@Decl.Label("Displaying the menu")
 		@Decl.Description("Click to open the application menu")
-		@Decl.Action.Annotate.Highlight
-		@Decl.Action.Annotate.Screenshot
-		@Decl.Action.Annotate.Clear
+		@Decl.Action.Annotate.HighlightScreenshotClear
 		static class DocOpen extends Waypoint {
 		}
 

@@ -31,9 +31,12 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
@@ -45,6 +48,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.S
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelContainment;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelDescendant;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelView;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.ToggleHelp;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowKeyboardShortcuts;
@@ -62,7 +66,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings.Seconda
 	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
 @TypedProperties
 class Page extends Model.All
-		implements TraversalEvents.SelectionSelected.Handler,
+		implements HasPage, TraversalEvents.SelectionSelected.Handler,
 		TraversalEvents.SelectionTypeSelected.Handler,
 		TraversalEvents.FilterSelections.Handler,
 		TraversalCommand.ClearFilter.Handler,
@@ -74,7 +78,9 @@ class Page extends Model.All
 		TraversalCommand.FocusSearch.Handler,
 		TraversalEvents.SetSettingTableRows.Handler, FlightEventCommandHandlers,
 		TraversalCommand.ShowKeyboardShortcuts.Handler,
-		TraversalEvents.LayerSelectionChange.Handler, HasPage {
+		TraversalEvents.LayerSelectionChange.Handler,
+		TraversalBrowserCommand.ToggleHelp.Handler,
+		ModelEvents.ApplicationHelp.Handler {
 	public Page providePage() {
 		return this;
 	}
@@ -117,6 +123,7 @@ class Page extends Model.All
 	Page() {
 		TraversalBrowser.Ui.logConstructor(this);
 		this.ui = Ui.get();
+		this.ui.page = this;
 		header = new Header(this);
 		layers = new SelectionLayers(this);
 		// FIXME - dirndl - bindings - change addListener to a ModelBinding with
@@ -420,5 +427,15 @@ class Page extends Model.All
 			to.selectLayer(event.getModel());
 		}
 		to.go();
+	}
+
+	@Override
+	public void onToggleHelp(ToggleHelp event) {
+		event.reemitAs(this, ApplicationHelp.class);
+	}
+
+	@Override
+	public void onApplicationHelp(ApplicationHelp event) {
+		HelpPlace.toggleRoot(Ui.place().copy()).go();
 	}
 }

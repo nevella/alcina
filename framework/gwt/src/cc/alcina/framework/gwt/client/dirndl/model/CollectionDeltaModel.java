@@ -512,10 +512,9 @@ public class CollectionDeltaModel extends Model.Fields {
 				cursor = cursor.validatingNext();
 			}
 			pending.forEach(RelativeInsert::flushPending);
-			Ax.out("------------");
-			root.dump();
-			Ax.out("------------\n");
-			// int debug = 3;
+			// Ax.out("------------");
+			// root.dump();
+			// Ax.out("------------\n");
 		}
 
 		/*

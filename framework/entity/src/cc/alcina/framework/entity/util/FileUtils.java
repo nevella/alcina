@@ -40,4 +40,8 @@ public class FileUtils {
 		}
 		return Io.read().url(url).asDataUrl();
 	}
+
+	public static File sibling(File file, String siblingFileName) {
+		return child(file.getParentFile(), siblingFileName);
+	}
 }

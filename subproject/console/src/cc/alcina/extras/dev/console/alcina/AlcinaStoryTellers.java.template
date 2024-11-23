@@ -1,0 +1,41 @@
+package cc.alcina.extras.dev.console.alcina;
+
+import cc.alcina.extras.webdriver.story.WdContextPart;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.gwt.client.story.StoryTeller;
+import cc.alcina.framework.gwt.client.story.StoryTellerPeer;
+import cc.alcina.framework.servlet.story.component.traversal.Story_TraversalBrowser;
+import cc.alcina.framework.servlet.story.doc.StoryDocPart;
+
+public class AlcinaStoryTellers {
+	@Registration({ StoryTellerPeer.class, Story_TraversalBrowser.class })
+	public static class Story_TraversalBrowser_PeerImpl extends StoryTellerPeer {
+		@Override
+		public void init(StoryTeller storyTeller) {
+			storyTeller.restrictToPoint = null;
+			{
+				WdContextPart wdContextPart = new WdContextPart();
+				wdContextPart.setShouldMaximiseTab(true);
+				wdContextPart.setDefaultTimeout(8);
+				addPart(wdContextPart);
+			}
+			{
+				StoryDocPart docPart = new StoryDocPart();
+				docPart.path = "/tmp/story";
+				docPart.rendererConfiguration = new StoryDocPart.RendererConfiguration();
+				// override title - normally unused
+				docPart.rendererConfiguration.storyTitle = null;
+				docPart.rendererConfiguration.storyTitlePoint = storyTeller.restrictToPoint;
+				docPart.rendererConfiguration.build = AlcinaStoryUtils
+						.getAlcinaCommit();
+				docPart.rendererConfiguration.pointFilter = storyTeller.restrictToPoint;
+				/*
+				 * During story dev, change to true
+				 */
+				docPart.rendererConfiguration.scrollToStoryAtEnd = false;
+				addPart(docPart);
+			}
+			super.init(storyTeller);
+		}
+	}
+}

@@ -167,10 +167,27 @@ public abstract class DevHelper {
 		}
 	}
 
+	protected String getConsoleSourcePath() {
+		return getClass().getProtectionDomain().getCodeSource().getLocation()
+				.toString()//
+				.replaceFirst("(file:)(.+)(/bin)", "$2/src/")
+				+ getClass().getPackageName().replace(".", "/");
+	}
+
+	protected String getConsoleSourceRelativePath(String relativePath) {
+		return Ax.format("%s/%s", getConsoleSourcePath(), relativePath);
+	}
+
 	protected void copyTemplates() {
 		copyTemplate(getNonVcsJavaTaskFilePath());
 		copyTemplate(getNonVcsJavaProcessObserverFilePath());
 		copyTemplate(getNonVcsJavaDevmodeProcessObserverFilePath());
+		getNonVcsAdditionalTemplateFiles().forEach(
+				path -> this.copyTemplate(getConsoleSourceRelativePath(path)));
+	}
+
+	protected List<String> getNonVcsAdditionalTemplateFiles() {
+		return List.of();
 	}
 
 	protected TransformManager createTransformManager() {

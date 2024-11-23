@@ -2012,4 +2012,11 @@ public class DomNode {
 	public String getId() {
 		return attr("id");
 	}
+
+	public String getInnerMarkup() {
+		StringBuilder builder = new StringBuilder();
+		children.elements()
+				.forEach(child -> builder.append(child.fullToString()));
+		return builder.toString();
+	}
 }

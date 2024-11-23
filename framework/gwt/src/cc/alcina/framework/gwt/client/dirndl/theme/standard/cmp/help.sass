@@ -2,8 +2,10 @@
 @use '../../theme/color'
 @use 'context-menu'
 @use 'panel'
+@use 'story'
 
-@mixin content
+
+@mixin help-area
   height: 50vh
   width: 25vw
   @include panel.content
@@ -12,5 +14,7 @@
   padding: 1.0rem
   user-select: auto
 
-told-area
-  @include content
+@mixin contents
+  help-area
+    @include help-area
+    @include story.contents

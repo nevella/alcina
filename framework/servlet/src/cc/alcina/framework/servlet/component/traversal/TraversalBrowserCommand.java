@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import com.google.gwt.dom.client.NativeEvent.Modifier;
+
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
@@ -97,6 +99,23 @@ public abstract class TraversalBrowserCommand<T, H extends NodeEvent.Handler>
 
 		public interface Handler extends NodeEvent.Handler {
 			void onSecondaryAreaDisplayCycle(SecondaryAreaDisplayCycle event);
+		}
+	}
+
+	@AppSuggestorCommand(
+		parent = TraversalBrowserCommand.class,
+		name = "help",
+		description = "Show the application help panel")
+	@KeyBinding(key = "?", modifiers = Modifier.SHIFT)
+	public static class ToggleHelp
+			extends ModelEvent<Object, ToggleHelp.Handler> {
+		@Override
+		public void dispatch(ToggleHelp.Handler handler) {
+			handler.onToggleHelp(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onToggleHelp(ToggleHelp event);
 		}
 	}
 }

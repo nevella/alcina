@@ -21,6 +21,7 @@ public class PackageProperties {
     static class _CollectionDeltaModel_RelativeInsert implements TypedProperty.Container {
       TypedProperty<CollectionDeltaModel.RelativeInsert, CollectionDeltaModel.RelativeInsert> after = new TypedProperty<>(CollectionDeltaModel.RelativeInsert.class, "after");
       TypedProperty<CollectionDeltaModel.RelativeInsert, CollectionDeltaModel.RelativeInsert> before = new TypedProperty<>(CollectionDeltaModel.RelativeInsert.class, "before");
+      TypedProperty<CollectionDeltaModel.RelativeInsert, Object> collectionElement = new TypedProperty<>(CollectionDeltaModel.RelativeInsert.class, "collectionElement");
       TypedProperty<CollectionDeltaModel.RelativeInsert, Object> element = new TypedProperty<>(CollectionDeltaModel.RelativeInsert.class, "element");
       TypedProperty<CollectionDeltaModel.RelativeInsert, List> flushedContents = new TypedProperty<>(CollectionDeltaModel.RelativeInsert.class, "flushedContents");
     }

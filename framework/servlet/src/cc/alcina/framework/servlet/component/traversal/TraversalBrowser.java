@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -18,10 +19,13 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestion;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
+import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpContentProvider;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -123,6 +127,8 @@ public class TraversalBrowser {
 		public void init() {
 			FmsForm.registerImplementations();
 			StatusModule.get();
+			Registry.register().singleton(HelpContentProvider.class,
+					new HelpContentProviderImpl());
 		}
 
 		@Override
@@ -149,9 +155,9 @@ public class TraversalBrowser {
 		protected DirectedLayout render0() {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
-			page = new Page();
 			DirectedLayout layout = new DirectedLayout();
-			layout.render(resolver(), page).getRendered().appendToRoot();
+			layout.render(resolver(), new RootArea()).getRendered()
+					.appendToRoot();
 			return layout;
 		}
 
@@ -210,6 +216,13 @@ public class TraversalBrowser {
 		@Override
 		public List<?> get() {
 			return Arrays.asList(Ui.get().getValidSecondaryAreadModes());
+		}
+	}
+
+	static class HelpContentProviderImpl implements HelpContentProvider {
+		public String getHelpMarkup() {
+			return Io.read().resource("story/document.html").asDomDocument()
+					.html().body().getInnerMarkup();
 		}
 	}
 

@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.logic.reflection;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -173,6 +174,8 @@ public @interface Registration {
 					.annotation(Registrations.class);
 			Registration.Singleton singleton = reflector
 					.annotation(Registration.Singleton.class);
+			Registration.Self self = reflector
+					.annotation(Registration.Self.class);
 			Registration.NonGenericSubtypes nonGenericSubtypes = reflector
 					.annotation(Registration.NonGenericSubtypes.class);
 			if (registration != null) {
@@ -184,6 +187,10 @@ public @interface Registration {
 			if (singleton != null) {
 				result.add(new SingletonWrapper(singleton,
 						reflector.getReflectedClass()));
+			}
+			if (self != null) {
+				result.add(
+						new SelfWrapper(self, reflector.getReflectedClass()));
 			}
 			if (nonGenericSubtypes != null) {
 				Optional<Registration> applicableNonGeneric = applicableNonGeneric(
@@ -367,6 +374,58 @@ public @interface Registration {
 			}
 		}
 
+		public static class SelfWrapper implements Registration {
+			private Self self;
+
+			private Class<?> declaringClass;
+
+			public SelfWrapper(Self self, Class<?> declaringClass) {
+				this.self = self;
+				this.declaringClass = declaringClass;
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Registration.class;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof SelfWrapper) {
+					return ((SelfWrapper) obj).self.equals(self);
+				} else {
+					return super.equals(obj);
+				}
+			}
+
+			@Override
+			public int hashCode() {
+				return self.hashCode();
+			}
+
+			@Override
+			public Implementation implementation() {
+				return Implementation.INSTANCE;
+			}
+
+			@Override
+			public Priority priority() {
+				return Priority._DEFAULT;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("@%s(value=%s,implementation=%s,priority=%s)",
+						Registration.class.getName(), Arrays.toString(value()),
+						implementation(), priority());
+			}
+
+			@Override
+			public Class[] value() {
+				return new Class[] { declaringClass };
+			}
+		}
+
 		public static class SingletonWrapper implements Registration {
 			private Singleton singleton;
 
@@ -490,6 +549,21 @@ public @interface Registration {
 		Priority priority() default Priority._DEFAULT;
 
 		Class[] value() default {};
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE })
+	// Is eapplied to subclasses
+	@Inherited
+	/**
+	 *
+	 * <p>
+	 * Sugar for @Registration(Foo.class)public class Foo{}
+	 * </p>
+	 *
+	 */
+	public @interface Self {
 	}
 
 	public static class Support {

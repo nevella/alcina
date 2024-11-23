@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.story;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -10,6 +11,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.story.Story.State;
 import cc.alcina.framework.gwt.client.story.StoryTeller.Visit;
 
+@Registration(StoryTellerPeer.class)
 public class StoryTellerPeer implements TellerContext {
 	class SimpleDependencyResolver implements DependencyResolver {
 		@Override

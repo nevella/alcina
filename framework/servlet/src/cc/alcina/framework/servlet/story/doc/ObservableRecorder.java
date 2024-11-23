@@ -8,12 +8,17 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.gwt.client.story.Story.Point;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
@@ -32,6 +37,8 @@ class ObservableRecorder {
 	Storage storage;
 
 	AtomicInteger observableCounter = new AtomicInteger();
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	ObservableRecorder(StoryDoc storyDoc) {
 		this.storyDoc = storyDoc;
@@ -69,7 +76,8 @@ class ObservableRecorder {
 		public void storeObservable(DocumentPoint observable) {
 			String json = ReflectiveSerializer.serialize(observable);
 			storeObservable(json);
-			Ax.out("stored message :: %s", observable.visit.pathDisplayName());
+			logger.debug("stored message :: {}",
+					observable.visit.pathDisplayName());
 		}
 
 		public void updateCurrentObservable(String visitDisplayName,
@@ -86,6 +94,19 @@ class ObservableRecorder {
 			}
 			String json = ReflectiveSerializer.serialize(observable);
 			Io.write().string(json).toFile(currentObservableFile);
+		}
+
+		public void conditionallyCopyToPersistent() {
+			if (storyDoc.part.replacePersistent) {
+				File to = new File(storyDoc.part.persistentPath);
+				SEUtilities.deleteDirectory(to, true);
+				try {
+					SEUtilities.copyFile(folder, to);
+					logger.info("copied observables to {}", to);
+				} catch (Exception e) {
+					throw WrappedRuntimeException.wrap(e);
+				}
+			}
 		}
 	}
 
@@ -134,7 +155,7 @@ class ObservableRecorder {
 			implements ProcessObserver<StoryTeller.AfterStory> {
 		@Override
 		public void topicPublished(StoryTeller.AfterStory message) {
-			Ax.out("stored observables to %s", storage.folder);
+			logger.info("stored observables to %s", storage.folder);
 			RendererConfiguration rendererConfiguration = storyDoc.part.rendererConfiguration;
 			if (rendererConfiguration != null) {
 				List<StoryDocObservable> observables = storage.getObservables();
@@ -144,6 +165,7 @@ class ObservableRecorder {
 				Reflections.newInstance(rendererConfiguration.renderer)
 						.render(storyDoc.part, storage.folder, observables);
 			}
+			storage.conditionallyCopyToPersistent();
 		}
 
 		boolean testPoint(String pointClassName) {

@@ -1,6 +1,7 @@
 package cc.alcina.extras.dev.console.alcina;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
 import cc.alcina.framework.gwt.client.story.StoryTellerPeer;
@@ -92,7 +93,8 @@ public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 		@Override
 		public String run(String[] argv) throws Exception {
 			Story_TraversalBrowser story = new Story_TraversalBrowser();
-			StoryTellerPeer peer = new StoryTellerPeer();
+			StoryTellerPeer peer = Registry.impl(StoryTellerPeer.class,
+					story.getClass());
 			StoryTeller teller = new StoryTeller(peer);
 			teller.tell(story);
 			return "told";

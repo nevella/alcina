@@ -263,6 +263,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 					.getAnnotation(Registrations.class);
 			Registration.Singleton singleton = clazz
 					.getAnnotation(Registration.Singleton.class);
+			Registration.Self self = clazz
+					.getAnnotation(Registration.Self.class);
 			Registration.NonGenericSubtypes nonGenericSubtypes = clazz
 					.getAnnotation(Registration.NonGenericSubtypes.class);
 			if (registration != null) {
@@ -274,6 +276,10 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			if (singleton != null) {
 				result.add(new Registration.MergeStrategy.SingletonWrapper(
 						singleton, typeModelToJdkType(clazz)));
+			}
+			if (self != null) {
+				result.add(new Registration.MergeStrategy.SelfWrapper(self,
+						typeModelToJdkType(clazz)));
 			}
 			if (nonGenericSubtypes != null) {
 				Optional<Registration> applicableNonGeneric = applicableNonGeneric(
