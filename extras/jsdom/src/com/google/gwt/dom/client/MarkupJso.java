@@ -98,6 +98,11 @@ class MarkupJso {
 			token.populateRemotes();
 		} catch (RuntimeException e) {
 			token.remoteMarkup = token.remote.getInnerHTML0();
+			Exception reportedException = new IllegalArgumentException(Ax
+					.format("invalid markup -- mismatched remote, local markup -- \nlocal:\n%s\n\nremote:\n%s",
+							Ax.ntrim(token.localMarkup, 500),
+							Ax.ntrim(token.remoteMarkup, 500)));
+			LocalDom.topicPublishException().publish(reportedException);
 			/* probably some odd dom - compare to roundtripped
 			@formatter:off
 			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), token.localMarkup.replace("&nbsp;","\u00A0").getBytes());

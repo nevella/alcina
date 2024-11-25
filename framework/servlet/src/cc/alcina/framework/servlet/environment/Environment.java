@@ -48,6 +48,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
@@ -489,6 +490,18 @@ class Environment {
 						.attachIdRepresentations().applyEvent(eventData));
 			});
 		}
+
+		void onClientProcessingException(ProcessingException message) {
+			Ax.sysLogHigh("Client processing exception: %s",
+					message.exceptionClassName);
+			if (ui.isNotifyException(message)) {
+				logger.warn("Exception body: \n{}", message.exceptionMessage);
+				queue.invoke(() -> {
+					Window.alert(Ax.blankTo(message.exceptionMessage,
+							message.exceptionClassName));
+				});
+			}
+		}
 	}
 
 	static final transient String CONTEXT_ENVIRONMENT = Environment.class
@@ -549,8 +562,6 @@ class Environment {
 	private SchedulerFrame scheduler;
 
 	private EnvironmentRegistry environmentRegistry;
-
-	private AtomicLong lastPacketsReceived = new AtomicLong();
 
 	private AtomicLong nonInteractionTimeout = new AtomicLong();
 

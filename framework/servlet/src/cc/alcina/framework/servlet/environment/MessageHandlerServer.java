@@ -73,8 +73,18 @@ public abstract class MessageHandlerServer<PM extends Message>
 		}
 	}
 
+	public static class ProcessingExceptionHandler
+			extends MessageHandlerServer<Message.ProcessingException> {
+		@Override
+		public void handle(MessageProcessingToken token, Environment.Access env,
+				Message.ProcessingException message) {
+			env.onClientProcessingException(message);
+		}
+	}
+
 	public static class StartupHandler
 			extends MessageHandlerServer<Message.Startup> {
+		@Override
 		public boolean isSynchronous() {
 			return true;
 		}

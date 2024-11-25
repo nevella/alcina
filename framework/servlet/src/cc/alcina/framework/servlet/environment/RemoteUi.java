@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivityManager;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 
 /**
  * <p>
@@ -164,4 +165,6 @@ public interface RemoteUi {
 	// Use this to block initial rendering until server-side state is ready
 	default void onBeforeEnterContext() {
 	}
+
+	boolean isNotifyException(ProcessingException message);
 }

@@ -3,6 +3,9 @@
     <stringAttribute key="bad_container_name" value="/opsol_server"/>
     <booleanAttribute key="com.gwtplugins.gdt.eclipse.core.RUN_SERVER" value="false"/>
     <stringAttribute key="com.gwtplugins.gdt.eclipse.suiteMainTypeProcessor.PREVIOUSLY_SET_MAIN_TYPE_NAME" value="com.google.gwt.dev.DevMode"/>
+    <listAttribute key="com.gwtplugins.gwt.eclipse.core.ENTRY_POINT_MODULES">
+        <listEntry value="com.ert.wearables.mx.MxClient"/>
+    </listAttribute>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
         <listEntry value="/com.apdm.mobilitylab.client"/>
     </listAttribute>

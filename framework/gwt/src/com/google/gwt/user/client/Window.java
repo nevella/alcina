@@ -262,7 +262,12 @@ public class Window {
 	 * @param msg
 	 *            the message to be displayed.
 	 */
-	public static native void alert(String msg) /*-{
+	public static void alert(String msg) {
+		Document.get().invoke(() -> alert0(msg), Window.class, "alert0", null,
+				List.of(msg), false);
+	}
+
+	private static native void alert0(String msg) /*-{
     $wnd.alert(msg);
 	}-*/;
 

@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.google.gwt.activity.shared.Activity;
@@ -20,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 
 /**
  * <p>
@@ -42,6 +45,40 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 	 */
 	@Property.Not
 	Environment environment;
+
+	public interface ClientExceptionNotificationPolicy {
+		boolean isNotifyException(ProcessingException message);
+
+		public static class No implements ClientExceptionNotificationPolicy {
+			@Override
+			public boolean isNotifyException(ProcessingException message) {
+				return false;
+			}
+		}
+
+		public static class Once implements ClientExceptionNotificationPolicy {
+			boolean notified;
+
+			@Override
+			public boolean isNotifyException(ProcessingException message) {
+				if (!notified) {
+					notified = true;
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+	}
+
+	protected ClientExceptionNotificationPolicy clientExceptionNotificationPolicy = new ClientExceptionNotificationPolicy.No();
+
+	@Override
+	public boolean isNotifyException(ProcessingException message) {
+		return clientExceptionNotificationPolicy.isNotifyException(message);
+	}
+
+	List<ProcessingException> notifiedExceptions = new ArrayList<>();
 
 	@Override
 	@Property.Not
