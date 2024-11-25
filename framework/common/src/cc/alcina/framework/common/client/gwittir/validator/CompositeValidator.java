@@ -20,8 +20,10 @@
 package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
@@ -33,8 +35,8 @@ import com.totsp.gwittir.client.validator.Validator;
  * 
  *         Modified - Nick Reddel, added getValidators() for framework support
  */
-public class CompositeValidator implements Validator {
-	private ArrayList<Validator> validators = new ArrayList();
+public class CompositeValidator implements Validator.Bidi {
+	private List<Validator> validators = new ArrayList<>();
 
 	/** Creates a new instance of CompositeValidator */
 	public CompositeValidator() {
@@ -59,8 +61,25 @@ public class CompositeValidator implements Validator {
 	public Object validate(Object value) throws ValidationException {
 		for (Iterator it = validators.iterator(); it.hasNext();) {
 			Validator validator = (Validator) it.next();
-			validator.validate(value);
+			value = validator.validate(value);
 		}
 		return value;
+	}
+
+	@Override
+	public Validator inverseValidator() {
+		CompositeValidator inverseValidator = new CompositeValidator();
+		List<Validator> reversedValidators = validators.stream()
+				.collect(Collectors.toList());
+		Collections.reverse(reversedValidators);
+		for (Validator validator : reversedValidators) {
+			if (validator instanceof Validator.Bidi) {
+				inverseValidator
+						.add(((Validator.Bidi) validator).inverseValidator());
+			} else {
+				return null;
+			}
+		}
+		return inverseValidator;
 	}
 }

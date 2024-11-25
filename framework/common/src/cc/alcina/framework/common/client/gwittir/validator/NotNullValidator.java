@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
  *         annotation for framework support
  */
 @Reflected
-public class NotNullValidator implements Validator {
+public class NotNullValidator implements Validator.Bidi {
 	public static final NotNullValidator INSTANCE = new NotNullValidator();
 
 	/** Creates a new instance of NotNullValidator */
@@ -46,5 +46,22 @@ public class NotNullValidator implements Validator {
 					NotNullValidator.class);
 		}
 		return value;
+	}
+
+	class Passthrough implements Validator.Bidi {
+		@Override
+		public Object validate(Object value) {
+			return value;
+		}
+
+		@Override
+		public Validator inverseValidator() {
+			return NotNullValidator.this;
+		}
+	}
+
+	@Override
+	public Validator inverseValidator() {
+		return new Passthrough();
 	}
 }

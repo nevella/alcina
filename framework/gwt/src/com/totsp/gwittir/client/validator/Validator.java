@@ -23,6 +23,15 @@ import cc.alcina.framework.common.client.reflection.Property;
 
 /**
  *
+ * 
+ * <p>
+ * NR - note, a validator is really a "converter plus" - particularly because
+ * validators can form chains
+ * <p>
+ * FIXME - alcina - In fact, it makes more sense for converter to subclass
+ * validator - it's an always-succeeding validator basically (and validator
+ * should be typed)
+ * 
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
