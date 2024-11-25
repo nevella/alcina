@@ -75,8 +75,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  */
 @Directed(
 	emits = { ModelEvents.Closed.class, ModelEvents.Submit.class,
-			ModelEvents.Opened.class },
-	bindings = @Binding(from = "cssClass", type = Type.CLASS_PROPERTY))
+			ModelEvents.Opened.class })
 public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
@@ -230,6 +229,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		return this.contents;
 	}
 
+	@Binding(type = Type.CLASS_PROPERTY)
 	public String getCssClass() {
 		return this.cssClass;
 	}
@@ -541,6 +541,12 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 				withRemoveOnMouseDownOutside(boolean removeOnMouseDownOutside) {
 			this.removeOnMouseDownOutside = removeOnMouseDownOutside;
 			return this;
+		}
+
+		public void withFixed(boolean fixed) {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'withFixed'");
 		}
 	}
 

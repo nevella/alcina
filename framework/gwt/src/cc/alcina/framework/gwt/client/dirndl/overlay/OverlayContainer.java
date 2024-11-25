@@ -1,16 +1,20 @@
 package cc.alcina.framework.gwt.client.dirndl.overlay;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.ViewportRelative;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
 
 /**
@@ -24,7 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  *
  *
  */
-@Directed(className = "overlay-container")
+@Directed
 public class OverlayContainer extends Model implements HasTag,
 		Model.RerouteBubbledEvents, Overlay.PositionedDescendants.Emitter {
 	private final Overlay contents;
@@ -34,9 +38,29 @@ public class OverlayContainer extends Model implements HasTag,
 	private final boolean modal;
 
 	private boolean visible = false;
+	/*
+	 * Used by the ViewportRelative.Transform
+	 */
+
+	private String className;
+
+	@Binding(type = Type.CSS_CLASS)
+	public String getClassName() {
+		return className;
+	}
 
 	OverlayContainer(Overlay contents, ContainerOptions containerOptions) {
 		this.contents = contents;
+		List<String> classes = new ArrayList<>();
+		classes.add("overlay-container");
+		if (containerOptions.position.viewportRelative != null) {
+			classes.add("viewport-"
+					+ Ax.cssify(containerOptions.position.viewportRelative));
+		}
+		if (Ax.notBlank(contents.getCssClass())) {
+			classes.add(contents.getCssClass());
+		}
+		className = classes.stream().collect(Collectors.joining(" "));
 		this.containerOptions = containerOptions;
 		this.modal = containerOptions.modal;
 		bindings()
@@ -57,13 +81,6 @@ public class OverlayContainer extends Model implements HasTag,
 	@Directed
 	public Model getContents() {
 		return this.contents;
-	}
-
-	@Binding(
-		type = Type.CSS_CLASS,
-		transform = OverlayPosition.ViewportRelative.Transform.class)
-	public ViewportRelative getViewportRelative() {
-		return containerOptions.position.viewportRelative;
 	}
 
 	@Binding(

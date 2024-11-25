@@ -9,10 +9,8 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DoublePair;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.ToStringFunction;
 
 /**
  * Models a set of positioning constraints between a DomRect and an element (or
@@ -29,15 +27,6 @@ public class OverlayPosition {
 		TOP_LEFT, TOP_CENTER, TOP_RIGHT, //
 		MIDDLE_LEFT, MIDDLE_CENTER, MIDDLE_RIGHT, //
 		BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT;
-
-		@Reflected
-		public static class Transform
-				implements ToStringFunction<ViewportRelative> {
-			@Override
-			public String apply(ViewportRelative t) {
-				return "viewport-" + Ax.cssify(t);
-			}
-		}
 	}
 
 	ViewportRelative viewportRelative;

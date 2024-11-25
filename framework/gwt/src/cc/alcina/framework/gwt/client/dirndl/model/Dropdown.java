@@ -39,7 +39,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  *
  *
  */
-@Directed(bindings = @Binding(from = "open", type = Type.CSS_CLASS))
+@Directed
 public class Dropdown extends Model
 		implements DropdownButtonClicked.Handler, ModelEvents.Closed.Handler {
 	private boolean open;
@@ -137,6 +137,7 @@ public class Dropdown extends Model
 		return this.xalign;
 	}
 
+	@Binding(type = Type.CSS_CLASS)
 	public boolean isOpen() {
 		return this.open;
 	}
