@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration.MergeStra
 import cc.alcina.framework.common.client.logic.reflection.Registration.NonGenericSubtypes;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
@@ -195,6 +196,10 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 			AbstractMergeStrategy.SingleResultMergeStrategy.ClassOnly<Reflected> {
 	}
 
+	public static class BeanMergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.ClassOnly<Bean> {
+	}
+
 	public static class RegistrationMergeStrategy
 			extends AdditiveMergeStrategy<Registration> {
 		static Class typeModelToJdkType(JClassType type) {
@@ -333,6 +338,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 				mergeStrategy = new RegistrationMergeStrategy();
 			} else if (mergeStrategyClass == Reflected.MergeStrategy.class) {
 				mergeStrategy = new ReflectedMergeStrategy();
+			} else if (mergeStrategyClass == Bean.MergeStrategy.class) {
+				mergeStrategy = new BeanMergeStrategy();
 			} else {
 				throw new UnsupportedOperationException();
 			}

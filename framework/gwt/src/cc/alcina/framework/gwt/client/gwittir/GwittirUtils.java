@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
@@ -141,7 +141,7 @@ public class GwittirUtils {
 	}
 
 	public static boolean isIntrospectable(Class clazz) {
-		return Reflections.at(clazz).has(Bean.class);
+		return new AnnotationLocation(clazz, null).hasAnnotation(Bean.class);
 	}
 
 	public static void refreshAllTextBoxes(Binding binding) {

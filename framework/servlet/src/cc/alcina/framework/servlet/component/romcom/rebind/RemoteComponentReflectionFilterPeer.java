@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.romcom.rebind;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
 
+import cc.alcina.framework.entity.gwt.reflection.AnnotationExistenceResolver;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilterPeer;
 
 public class RemoteComponentReflectionFilterPeer
@@ -31,7 +32,8 @@ public class RemoteComponentReflectionFilterPeer
 	}
 
 	@Override
-	public boolean isVisibleType(JType type) {
+	public boolean isVisibleType(JType type,
+			AnnotationExistenceResolver existenceResolver) {
 		// allow invoke on element + document bean methods
 		if (type.getQualifiedSourceName()
 				.equals("com.google.gwt.dom.client.Element")) {
@@ -47,6 +49,7 @@ public class RemoteComponentReflectionFilterPeer
 			// and Style.Unit etc
 			return true;
 		}
-		return ClientReflectionFilterPeer.super.isVisibleType(type);
+		return ClientReflectionFilterPeer.super.isVisibleType(type,
+				existenceResolver);
 	}
 }

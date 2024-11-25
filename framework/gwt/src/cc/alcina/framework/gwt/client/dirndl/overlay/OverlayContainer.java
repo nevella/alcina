@@ -44,7 +44,7 @@ public class OverlayContainer extends Model implements HasTag,
 
 	private String className;
 
-	@Binding(type = Type.CSS_CLASS)
+	@Binding(type = Type.CLASS_PROPERTY)
 	public String getClassName() {
 		return className;
 	}

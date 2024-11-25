@@ -19,8 +19,6 @@ public interface ClientReflectionFilter {
 
 	boolean emitType(JClassType type);
 
-	boolean isVisibleType(JType type);
-
 	boolean isWhitelistReflectable(JClassType t);
 
 	void onGenerationComplete(AppImplRegistrations registrations,
@@ -28,4 +26,6 @@ public interface ClientReflectionFilter {
 			String emitMessage) throws UnableToCompleteException;
 
 	void updateReachableTypes(List<JClassType> types);
+
+	boolean isVisibleType(JType type, AnnotationExistenceResolver resolver);
 }

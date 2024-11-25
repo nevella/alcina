@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -54,7 +55,6 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.transform.ClassrefScanner.ClassrefScannerMetadata;
-import cc.alcina.framework.entity.util.AnnotationUtils;
 
 /**
  * @author Nick Reddel
@@ -277,17 +277,18 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			 * code - otherwise could be sending classes not compiled into
 			 * client code)
 			 */
-			boolean bi = clazz.isAnnotationPresent(Bean.class);
-			boolean in = AnnotationUtils.hasAnnotationNamed(clazz,
-					Reflected.class);
+			boolean bi = new AnnotationLocation(clazz, null)
+					.hasAnnotation(Bean.class);
+			boolean refl = new AnnotationLocation(clazz, null)
+					.hasAnnotation(Reflected.class);
 			boolean dtp = clazz
 					.isAnnotationPresent(DomainTransformPersistable.class);
 			boolean nonPersistent = clazz
 					.isAnnotationPresent(NonDomainTransformPersistable.class);
 			if (!nonPersistent
 					&& (Entity.class.isAssignableFrom(clazz)
-							&& (in || bi || dtp))
-					|| (clazz.isEnum() && (in || dtp))) {
+							&& (refl || bi || dtp))
+					|| (clazz.isEnum() && (refl || dtp))) {
 				out.isClassRef = true;
 			} else {
 			}

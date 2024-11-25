@@ -7,6 +7,7 @@ import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JType;
 
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.entity.gwt.reflection.AnnotationExistenceResolver;
 
 public interface ReflectionVisibility {
 	boolean isVisibleAnnotation(Class<? extends Annotation> annotationType);
@@ -28,5 +29,6 @@ public interface ReflectionVisibility {
 		return true;
 	}
 
-	boolean isVisibleType(JType type);
+	boolean isVisibleType(JType type,
+			AnnotationExistenceResolver existenceResolver);
 }

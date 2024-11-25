@@ -87,7 +87,8 @@ import cc.alcina.framework.entity.gwt.reflection.reflector.ReflectionVisibility;
  *
  *
  */
-public class ClientReflectionGenerator extends IncrementalGenerator {
+public class ClientReflectionGenerator extends IncrementalGenerator
+		implements AnnotationExistenceResolver {
 	public static final String DATA_FOLDER_CONFIGURATION_KEY = "ClientReflectionGenerator.ReachabilityData.folder";
 
 	public static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
@@ -321,9 +322,12 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		return GENERATOR_VERSION_ID;
 	}
 
-	<A extends Annotation> boolean has(JClassType t, Class<A> annotationClass) {
+	@Override
+	public <A extends Annotation> boolean has(JClassType t,
+			Class<A> annotationClass) {
 		if (annotationClass == Reflected.class
-				|| annotationClass == Registration.class) {
+				|| annotationClass == Registration.class
+				|| annotationClass == Bean.class) {
 			return new AnnotationLocationTypeInfo(t, annotationResolver)
 					.hasAnnotation(annotationClass);
 		}
@@ -645,7 +649,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			super(type, classReflectorType, false);
 			this.reflection = new ClassReflection(type,
 					sourcesPropertyChangeEvents(), visibleAnnotationFilter,
-					providesTypeBounds);
+					providesTypeBounds, ClientReflectionGenerator.this);
 		}
 
 		@Override
@@ -1197,9 +1201,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		private Multiset<JClassType, Set<JClassType>> computeSettableTypes() {
 			Multiset<JClassType, Set<JClassType>> result = new Multiset<JClassType, Set<JClassType>>();
 			Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> t.isAnnotationPresent(Bean.class))
-					.forEach(t -> result.put(t.getErasedType(),
-							computeSetterArguments(t)));
+					.filter(t -> has(t, Bean.class)).forEach(t -> result
+							.put(t.getErasedType(), computeSetterArguments(t)));
 			return result;
 		}
 
@@ -1613,8 +1616,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		@Override
-		public boolean isVisibleType(JType type) {
-			return filter.isVisibleType(type);
+		public boolean isVisibleType(JType type,
+				AnnotationExistenceResolver existenceResolver) {
+			return filter.isVisibleType(type, existenceResolver);
 		}
 	}
 }

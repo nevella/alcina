@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ClassUtilEntity;
+import cc.alcina.framework.entity.gwt.reflection.AnnotationExistenceResolver;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo;
 import cc.alcina.framework.entity.gwt.reflection.reflector.PropertyReflection.PropertyAccessor;
 
@@ -118,11 +119,15 @@ public class ClassReflection extends ReflectionElement {
 
 	AnnotationLocationTypeInfo typeAnnotationLocation;
 
+	AnnotationExistenceResolver annotationExistenceResolver;
+
 	public ClassReflection(JType type, boolean sourcesPropertyChanges,
 			ReflectionVisibility reflectionVisibility,
-			ProvidesTypeBounds providesTypeBounds) {
+			ProvidesTypeBounds providesTypeBounds,
+			AnnotationExistenceResolver annotationExistenceResolver) {
 		this.sourcesPropertyChanges = sourcesPropertyChanges;
 		this.providesTypeBounds = providesTypeBounds;
+		this.annotationExistenceResolver = annotationExistenceResolver;
 		this.type = type instanceof JClassType ? (JClassType) type : null;
 		this.reflectionVisibility = reflectionVisibility;
 	}
@@ -316,7 +321,7 @@ public class ClassReflection extends ReflectionElement {
 
 	void prepareProperties() {
 		boolean hasReflectableProperties = reflectionVisibility
-				.isVisibleType(type);
+				.isVisibleType(type, annotationExistenceResolver);
 		if (!hasReflectableProperties) {
 			return;
 		}

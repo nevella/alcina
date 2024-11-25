@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -323,10 +324,13 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 			} else {
 				/*
 				 */
-				boolean bi = clazz.isAnnotationPresent(Bean.class);
-				boolean refl = clazz.isAnnotationPresent(Reflected.class);
+				boolean bi = new AnnotationLocation(clazz, null)
+						.hasAnnotation(Bean.class);
+				boolean refl = new AnnotationLocation(clazz, null)
+						.hasAnnotation(Reflected.class);
 				if (bi
-				// || refl - no, not reflected
+				// || refl - no, not reflected (don't check props of @reflected
+				// types)
 				) {
 					try {
 						clazz.getDeclaredFields();

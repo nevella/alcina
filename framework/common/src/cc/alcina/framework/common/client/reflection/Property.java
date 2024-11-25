@@ -12,17 +12,26 @@ import java.util.List;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
+ * <p>
  * Models a bean property, client/server
  * 
+ * <p>
  * FIXME - dirndl - the current 'java transient modifier -&gt; non-property'
  * should be removed - but that'll need a refactor task to check existing usages
  * (replace with Proeprty.Not or AlcinaTransient as appropriate) - it's
  * perfectly valid to have a transient property, and it's better to use private
  * rather than transient to denote non-property via a java modifier
+ * 
+ * <p>
+ * Note re reflection - annotation access does *not* resolve - it essentially
+ * tracks JDK annotation behaviour. Use {@link AnnotationLocation} to resolve
+ * annotations at a property. e.g. *don't* expect Property.has(Bean.class) to
+ * work, since that's a property with a resolution strategy
  */
 public class Property implements HasAnnotations {
 	private final String name;
@@ -35,7 +44,7 @@ public class Property implements HasAnnotations {
 
 	private final Class owningType;
 
-	private final AnnotationProvider annotationResolver;
+	private final AnnotationProvider annotationProvider;
 
 	private final Class declaringType;
 
@@ -44,12 +53,12 @@ public class Property implements HasAnnotations {
 	public Property(Property property) {
 		this(property.name, property.getter, property.setter, property.type,
 				property.owningType, property.declaringType,
-				property.typeBounds, property.annotationResolver);
+				property.typeBounds, property.annotationProvider);
 	}
 
 	public Property(String name, Method getter, Method setter,
 			Class propertyType, Class owningType, Class declaringType,
-			TypeBounds typeBounds, AnnotationProvider annotationResolver) {
+			TypeBounds typeBounds, AnnotationProvider annotationProvider) {
 		this.name = name;
 		this.getter = getter;
 		this.setter = setter;
@@ -57,18 +66,18 @@ public class Property implements HasAnnotations {
 		this.owningType = owningType;
 		this.declaringType = declaringType;
 		this.typeBounds = typeBounds;
-		this.annotationResolver = annotationResolver;
+		this.annotationProvider = annotationProvider;
 	}
 
 	@Override
 	public <A extends Annotation> A annotation(Class<A> annotationClass) {
-		return annotationResolver.getAnnotation(annotationClass);
+		return annotationProvider.getAnnotation(annotationClass);
 	}
 
 	@Override
 	public <A extends Annotation> List<A>
 			annotations(Class<A> annotationClass) {
-		return annotationResolver.getAnnotations(annotationClass);
+		return annotationProvider.getAnnotations(annotationClass);
 	}
 
 	public void copy(Object from, Object to) {
@@ -115,7 +124,7 @@ public class Property implements HasAnnotations {
 	}
 
 	public <A extends Annotation> boolean has(Class<A> annotationClass) {
-		return annotationResolver.hasAnnotation(annotationClass);
+		return annotationProvider.hasAnnotation(annotationClass);
 	}
 
 	public boolean isDefiningType(Class type) {
@@ -222,6 +231,7 @@ public class Property implements HasAnnotations {
 		return false;
 	}
 
+	@Override
 	public boolean isOrIsPropertyAncestor(Property property) {
 		if (property == this) {
 			return true;

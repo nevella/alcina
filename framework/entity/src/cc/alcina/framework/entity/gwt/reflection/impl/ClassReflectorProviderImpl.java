@@ -5,12 +5,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 
+import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
+import cc.alcina.framework.entity.gwt.reflection.AnnotationExistenceResolver;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.TypeOracle;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
 import cc.alcina.framework.entity.gwt.reflection.reflector.ReflectionVisibility;
@@ -41,7 +45,7 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		ClassReflector reflector = null;
 		ClassReflection reflection = new ClassReflection(type,
 				sourcesPropertyChanges(clazz), visibleAnnotationFilter,
-				typeOracle);
+				typeOracle, new AnnotationExistenceResolverJdkImpl());
 		reflection.prepare();
 		ClassReflector<?> typemodelReflector = reflection.asReflector();
 		reflector = typemodelReflector;
@@ -85,6 +89,21 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		}
 	}
 
+	class AnnotationExistenceResolverJdkImpl
+			implements AnnotationExistenceResolver {
+		@Override
+		public <A extends Annotation> boolean has(JClassType t,
+				Class<A> annotationClass) {
+			try {
+				Class clazz = Reflections.forName(t.getQualifiedBinaryName());
+				return new AnnotationLocation(clazz, null)
+						.hasAnnotation(annotationClass);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	static class MethodInvokerImpl<T>
 			implements BiFunction<Object, Object[], T> {
 		private java.lang.reflect.Method reflectMethod;
@@ -112,7 +131,8 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		}
 
 		@Override
-		public boolean isVisibleType(JType type) {
+		public boolean isVisibleType(JType type,
+				AnnotationExistenceResolver existenceResolver) {
 			return true;
 		}
 	}

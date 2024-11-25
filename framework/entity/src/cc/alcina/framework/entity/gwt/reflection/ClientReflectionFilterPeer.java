@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ReflectionModule;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.ModuleTypes;
-import cc.alcina.framework.entity.gwt.reflection.reflector.ClassReflection;
 
 public interface ClientReflectionFilterPeer {
 	default <A extends Annotation> boolean emitAnnotation(JClassType type,
@@ -51,8 +50,9 @@ public interface ClientReflectionFilterPeer {
 		}
 	}
 
-	default boolean isVisibleType(JType type) {
-		return ClassReflection.has((JClassType) type, Bean.class);
+	default boolean isVisibleType(JType type,
+			AnnotationExistenceResolver existenceResolver) {
+		return existenceResolver.has((JClassType) type, Bean.class);
 	}
 
 	default boolean isWhitelistReflectable(JClassType t) {

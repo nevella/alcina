@@ -26,11 +26,20 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
 
-/*
+/**
+ * <p>
+ * Models reflective information for a type.
+ * <p>
+ * Note re reflection - annotation access does *not* resolve - it essentially
+ * tracks JDK annotation behaviour. Use {@link AnnotationLocation} to resolve
+ * annotations at a property
+ * 
+ * <p>
  * TODO - caching annotation facade? Or cache on the resolver (possibly latter)
  */
 public class ClassReflector<T> implements HasAnnotations {
@@ -157,13 +166,15 @@ public class ClassReflector<T> implements HasAnnotations {
 
 	private List<Class> classes;
 
+	private transient Boolean isReflective;
+
 	public ClassReflector(Class<T> reflectedClass, List<Property> properties,
-			Map<String, Property> byName, AnnotationProvider annotationResolver,
+			Map<String, Property> byName, AnnotationProvider annotationProvider,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
 			List<Class> interfaces, TypeBounds genericBounds,
 			List<Class> classes, boolean isAbstract, boolean isFinal) {
 		this();
-		init(reflectedClass, properties, byName, annotationResolver,
+		init(reflectedClass, properties, byName, annotationProvider,
 				constructor, assignableTo, interfaces, genericBounds, classes,
 				isAbstract, isFinal);
 	}
@@ -299,7 +310,11 @@ public class ClassReflector<T> implements HasAnnotations {
 	// generally is only reachable with a reflectable object (but check
 	// associationpropagationlistener)
 	public boolean provideIsReflective() {
-		return has(Bean.class);
+		if (isReflective == null) {
+			isReflective = new AnnotationLocation(reflectedClass, null)
+					.hasAnnotation(Bean.class);
+		}
+		return isReflective;
 	}
 
 	public T templateInstance() {

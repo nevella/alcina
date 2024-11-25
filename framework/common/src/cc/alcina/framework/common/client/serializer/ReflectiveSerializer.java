@@ -237,8 +237,8 @@ public class ReflectiveSerializer {
 				});
 				toResolve = next;
 			}
-			boolean resolveWithReflectiveTypeSerializer = Reflections.at(clazz)
-					.has(Bean.class);
+			boolean resolveWithReflectiveTypeSerializer = new AnnotationLocation(
+					clazz, null).hasAnnotation(Bean.class);
 			if (!GWT.isClient()) {
 				resolveWithReflectiveTypeSerializer |= Reflections
 						.isAssignableFrom(TreeSerializable.class, lookupClass)

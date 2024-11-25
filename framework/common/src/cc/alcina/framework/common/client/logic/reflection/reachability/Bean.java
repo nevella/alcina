@@ -15,11 +15,13 @@ package cc.alcina.framework.common.client.logic.reflection.reachability;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -43,19 +45,25 @@ import cc.alcina.framework.common.client.reflection.Reflections;
  * </ul>
  *
  * <p>
- * Currently an annotation rather than an interface (no-params annotations are
- * basically equivalent) to allow descendants to declare themselves 'not a bean'
+ * {@link cc.alcina.framework.common.client.reflection}
  * 
  * <p>
- * {@link cc.alcina.framework.common.client.reflection}
+ * This annotation can be inherited via an interface
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
+@Resolution(
+	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE },
+	mergeStrategy = Bean.MergeStrategy.class)
 @Documented
 @ClientVisible
 @Target({ ElementType.TYPE })
 public @interface Bean {
+	@Reflected
+	public static class MergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.ClassOnly<Bean> {
+	}
+
 	PropertySource value() default PropertySource.BEAN_METHODS;
 
 	/**

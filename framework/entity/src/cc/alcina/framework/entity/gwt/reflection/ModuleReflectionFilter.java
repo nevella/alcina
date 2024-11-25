@@ -101,8 +101,9 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 	}
 
 	@Override
-	public boolean isVisibleType(JType type) {
-		return peer.isVisibleType(type);
+	public boolean isVisibleType(JType type,
+			AnnotationExistenceResolver resolver) {
+		return peer.isVisibleType(type, resolver);
 	}
 
 	@Override
