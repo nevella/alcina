@@ -31,20 +31,24 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.traversal.RenderedSelections.Variant;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SecondaryAreaDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelContainment;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelDescendant;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SelectionFilterModelView;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.ToggleHelp;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowKeyboardShortcuts;
@@ -55,13 +59,14 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.Selection
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryArea;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
 
 @Directed(
 	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
 @TypedProperties
 class Page extends Model.All
-		implements TraversalEvents.SelectionSelected.Handler,
+		implements HasPage, TraversalEvents.SelectionSelected.Handler,
 		TraversalEvents.SelectionTypeSelected.Handler,
 		TraversalEvents.FilterSelections.Handler,
 		TraversalCommand.ClearFilter.Handler,
@@ -73,7 +78,9 @@ class Page extends Model.All
 		TraversalCommand.FocusSearch.Handler,
 		TraversalEvents.SetSettingTableRows.Handler, FlightEventCommandHandlers,
 		TraversalCommand.ShowKeyboardShortcuts.Handler,
-		TraversalEvents.LayerSelectionChange.Handler, HasPage {
+		TraversalEvents.LayerSelectionChange.Handler,
+		TraversalBrowserCommand.ToggleHelp.Handler,
+		ModelEvents.ApplicationHelp.Handler {
 	public Page providePage() {
 		return this;
 	}
@@ -115,8 +122,10 @@ class Page extends Model.All
 
 	Page() {
 		TraversalBrowser.Ui.logConstructor(this);
-		header = new Header(this);
 		this.ui = Ui.get();
+		this.ui.page = this;
+		header = new Header(this);
+		layers = new SelectionLayers(this);
 		// FIXME - dirndl - bindings - change addListener to a ModelBinding with
 		// a prebind (setleft) phase....maybe? that might be a bit too
 		// tree-shaped, even for me
@@ -138,32 +147,41 @@ class Page extends Model.All
 				.accept(place -> logger.info("place change :: {}", place));
 		bindings().addListener(() -> TraversalHistories.get()
 				.subscribe(traversalPath, this::setHistory));
+		bindings().from(this).on(properties.history)
+				.map(ObservableHistory::getObservable)
+				.typed(SelectionTraversal.class).to(ui)
+				.on(Ui.properties.traversal).oneWay();
 		// place selections will be invalid if history changes
 		bindings().from(this).on(properties.history)
 				.signal(this::clearPlaceSelections);
 		bindings().from(this).on(properties.history).value(this)
-				.map(SelectionLayers::new).to(this).on(properties.layers)
-				.oneWay();
-		bindings().from(this).on(properties.history).value(this)
 				.map(PropertiesArea::new).to(this).on(properties.propertiesArea)
 				.oneWay();
-		bindings().from(this).on(properties.history)
-				.value(() -> new RenderedSelections(this, Variant.input))
+		bindings().from(TraversalSettings.get())
+				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+				.value(() -> renderedSelectionsIfVisible(SecondaryArea.INPUT))
 				.to(this).on(properties.input).oneWay();
-		bindings().from(this).on(properties.history)
-				.value(() -> new RenderedSelections(this, Variant.output))
+		bindings().from(TraversalSettings.get())
+				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+				.value(() -> renderedSelectionsIfVisible(SecondaryArea.OUTPUT))
 				.to(this).on(properties.output).oneWay();
-		bindings().from(this).on(properties.history)
-				.value(() -> new RenderedSelections(this, Variant.table))
+		bindings().from(TraversalSettings.get())
+				.on(TraversalSettings.properties.secondaryAreaDisplayMode)
+				.value(() -> renderedSelectionsIfVisible(SecondaryArea.TABLE))
 				.to(this).on(properties.table).oneWay();
-		bindings().from(ui).on(Ui.properties.place).value(this)
-				.map(SelectionLayers::new).to(this).on(properties.layers)
-				.oneWay();
 		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on("filterText").oneWay();
 		bindings().from(TraversalBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
+	}
+
+	RenderedSelections renderedSelectionsIfVisible(SecondaryArea area) {
+		if (TraversalSettings.get().secondaryAreaDisplayMode.isVisible(area)) {
+			return new RenderedSelections(this, area);
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -409,5 +427,15 @@ class Page extends Model.All
 			to.selectLayer(event.getModel());
 		}
 		to.go();
+	}
+
+	@Override
+	public void onToggleHelp(ToggleHelp event) {
+		event.reemitAs(this, ApplicationHelp.class);
+	}
+
+	@Override
+	public void onApplicationHelp(ApplicationHelp event) {
+		HelpPlace.toggleRoot(Ui.place().copy()).go();
 	}
 }

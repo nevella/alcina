@@ -73,6 +73,11 @@ public class FormatBuilder {
 		return this;
 	}
 
+	FormatBuilder append(char c) {
+		sb.append(c);
+		return this;
+	}
+
 	/**
 	 * Append a multi-line block of text to the buffer
 	 *
@@ -372,6 +377,19 @@ public class FormatBuilder {
 	public FormatBuilder indent(int indent) {
 		this.indent = indent;
 		return this;
+	}
+
+	/**
+	 * Return a string containing n spaces
+	 * 
+	 * @param n
+	 *            Number of spaces to return
+	 * @return The string of n spaces
+	 */
+	public static String spaces(int n) {
+		StringBuilder sb = new StringBuilder();
+		IntStream.range(0, n).forEach(i -> sb.append(' '));
+		return sb.toString();
 	}
 
 	/**

@@ -207,6 +207,7 @@ public class ModelBinding<T> {
 	 * The source of the binding property changes
 	 */
 	public ModelBinding<T> from(BaseSourcesPropertyChangeEvents from) {
+		Preconditions.checkNotNull(from);
 		this.fromPropertyChangeSource = from;
 		return this;
 	}
@@ -287,6 +288,7 @@ public class ModelBinding<T> {
 
 	public <BSP extends BaseSourcesPropertyChangeEvents> TargetBinding<BSP, T>
 			to(BSP to) {
+		Preconditions.checkNotNull(to);
 		return new TargetBinding(this, to);
 	}
 
@@ -408,7 +410,7 @@ public class ModelBinding<T> {
 			return this;
 		}
 
-		public TargetBinding<BSP, T2> on(TypedProperty<BSP, T2> on) {
+		public TargetBinding<BSP, T2> on(TypedProperty<BSP, ? super T2> on) {
 			this.on = on;
 			return (TargetBinding<BSP, T2>) this;
 		}

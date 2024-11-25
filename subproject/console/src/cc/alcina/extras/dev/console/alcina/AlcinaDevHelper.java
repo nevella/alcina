@@ -1,12 +1,12 @@
 package cc.alcina.extras.dev.console.alcina;
 
 import java.io.File;
+import java.util.List;
 
 import cc.alcina.extras.dev.console.DevHelper;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
@@ -61,20 +61,13 @@ public class AlcinaDevHelper extends DevHelper {
 		return getConsoleSourceRelativePath("alcina.console.properties");
 	}
 
-	protected String getConsoleSourcePath() {
-		return getClass().getProtectionDomain().getCodeSource().getLocation()
-				.toString()//
-				.replaceFirst("(file:)(.+)(/bin)", "$2/src/")
-				+ getClass().getPackageName().replace(".", "/");
-	}
-
-	protected String getConsoleSourceRelativePath(String relativePath) {
-		return Ax.format("%s/%s", getConsoleSourcePath(), relativePath);
-	}
-
 	@Override
 	protected String getNonVcsJavaDevmodeProcessObserverFilePath() {
 		return getConsoleSourceRelativePath("AlcinaProcessObserver.java");
+	}
+
+	protected List<String> getNonVcsAdditionalTemplateFiles() {
+		return List.of("AlcinaStoryTellers.java");
 	}
 
 	@Override

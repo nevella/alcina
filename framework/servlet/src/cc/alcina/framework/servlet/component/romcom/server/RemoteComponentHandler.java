@@ -212,7 +212,8 @@ public class RemoteComponentHandler {
 						.map(n -> Ax.format("%s=%s", n, request.getHeader(n)))
 						.collect(Collectors.toList());
 				session = component.createEnvironment(request);
-				logger.info("Created environment - {} - http headers: {}",
+				logger.info("Created environment - {} ", session);
+				logger.debug("Environment headers - {} - http headers: {}",
 						session, headers);
 			} catch (Exception e) {
 				sessionCreationException = e;

@@ -6,8 +6,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.cmp.help.Help;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -65,10 +64,7 @@ class Header extends Model.All {
 	}
 
 	class Right extends Model.All {
-		@Directed(
-			reemits = { DomEvents.Click.class,
-					ModelEvents.ApplicationHelp.class })
-		String help = "?";
+		Help.HeaderButton help = new Help.HeaderButton();
 
 		Dotburger dotburger = new Dotburger();
 	}

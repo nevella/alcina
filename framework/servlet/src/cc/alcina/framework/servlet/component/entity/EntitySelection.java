@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.entity;
 
 import java.util.Comparator;
+import java.util.Objects;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -19,6 +20,21 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 public class EntitySelection extends AbstractSelection<Entity> {
 	public EntitySelection(Selection parent, Entity entity) {
 		super(parent, entity, String.valueOf(entity.getId()));
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof EntitySelection) {
+			EntitySelection o = (EntitySelection) obj;
+			return Objects.equals(get(), o.get());
+		} else {
+			return super.equals(obj);
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(get());
 	}
 
 	static class View extends AbstractSelection.View<EntitySelection> {

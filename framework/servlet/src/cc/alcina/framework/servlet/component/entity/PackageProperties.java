@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.entity;
 
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
@@ -28,6 +29,7 @@ public class PackageProperties {
       public TypedProperty<EntityBrowser.Ui, TraversalPlace> place = new TypedProperty<>(EntityBrowser.Ui.class, "place");
       public TypedProperty<EntityBrowser.Ui, SelectionMarkup> selectionMarkup = new TypedProperty<>(EntityBrowser.Ui.class, "selectionMarkup");
       public TypedProperty<EntityBrowser.Ui, TraversalSettings> settings = new TypedProperty<>(EntityBrowser.Ui.class, "settings");
+      public TypedProperty<EntityBrowser.Ui, SelectionTraversal> traversal = new TypedProperty<>(EntityBrowser.Ui.class, "traversal");
       public TypedProperty<EntityBrowser.Ui, String> traversalId = new TypedProperty<>(EntityBrowser.Ui.class, "traversalId");
       public TypedProperty<EntityBrowser.Ui, String> traversalPath = new TypedProperty<>(EntityBrowser.Ui.class, "traversalPath");
       public TypedProperty<EntityBrowser.Ui, Boolean> useSelectionSegmentPath = new TypedProperty<>(EntityBrowser.Ui.class, "useSelectionSegmentPath");

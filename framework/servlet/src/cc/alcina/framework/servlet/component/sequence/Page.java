@@ -25,8 +25,8 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
-import cc.alcina.framework.gwt.client.dirndl.cmp.told.ToldPlace;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -411,15 +411,7 @@ class Page extends Model.Fields
 
 	@Override
 	public void onApplicationHelp(ApplicationHelp event) {
-		SequencePlace place = Ui.place().copy();
-		if (place.fragments().has(ToldPlace.class)) {
-			place.fragments().remove(ToldPlace.class);
-		} else {
-			place.fragments().ensure(ToldPlace.class)
-					.withNodePath(ToldPlace.ROOT);
-		}
-		String tokenString = place.toTokenString();
-		place.go();
+		HelpPlace.toggleRoot(Ui.place().copy()).go();
 	}
 
 	@Override

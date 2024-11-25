@@ -26,6 +26,14 @@ public interface SourceFinder {
 		}
 	}
 
+	static File findSourceFileUnchecked(Class clazz) {
+		try {
+			return findSourceFile(clazz);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
 	static File findSourceFile(Class clazz) throws Exception {
 		ensureDefaultFinders();
 		clazz = clazz.getNestHost();
@@ -104,14 +112,21 @@ public interface SourceFinder {
 				if (file4.exists()) {
 					return file4;
 				}
+				sourceFileLocation = new URI(sourceFileLocation.toString()
+						.replace("/alcina/framework/gwt/src/",
+								"/alcina/framework/servlet/src/")).toURL();
+				File file5 = new File(toPath(sourceFileLocation));
+				if (file5.exists()) {
+					return file5;
+				}
 				Optional<SourceFinderFsHelper> helper = Registry
 						.optional(SourceFinderFsHelper.class);
 				if (helper.isPresent()) {
 					sourceFileLocation = new URI(sourceFileLocation.toString()
 							.replace("/alcina/framework/entity/src/",
 									"/alcina/framework/common/src/")).toURL();
-					File file5 = new File(toPath(sourceFileLocation));
-					if (file5.exists()) {
+					File file6 = new File(toPath(sourceFileLocation));
+					if (file6.exists()) {
 						return file5;
 					}
 				}

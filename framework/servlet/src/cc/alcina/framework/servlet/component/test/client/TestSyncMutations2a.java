@@ -1,13 +1,9 @@
 package cc.alcina.framework.servlet.component.test.client;
 
-import java.util.stream.Collectors;
-
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.RootPanel;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
@@ -47,12 +43,12 @@ class TestSyncMutations2a {
 			@Override
 			public void onFailure(Throwable e) {
 				e.printStackTrace();
-				ClientUtils.consoleInfo("   [TestSyncMutations2] Failed");
+				ClientUtils.consoleInfo("   [TestSyncMutations2a] Failed");
 			}
 
 			@Override
 			public void onSuccess(Object arg0) {
-				ClientUtils.consoleInfo("   [TestSyncMutations2] Passed");
+				ClientUtils.consoleInfo("   [TestSyncMutations2a] Passed");
 			}
 		});
 		consort.start();
@@ -226,17 +222,7 @@ class TestSyncMutations2a {
 			public void run() {
 				try {
 					consoleLog("Running " + getClass().getSimpleName(), false);
-					RootPanel.get().clear();
-					RootPanel.get().getElement().streamChildren().filter(n -> {
-						switch (n.getNodeName().toLowerCase()) {
-						case "iframe":
-						case "script":
-							return false;
-						default:
-							return true;
-						}
-					}).collect(Collectors.toList())
-							.forEach(Node::removeFromParent);
+					AlcinaGwtTestClient.Utils.clearRootPanel();
 					TestContainer cont = new TestContainer(color);
 					Rendered rendered = new DirectedLayout().render(cont)
 							.getRendered();

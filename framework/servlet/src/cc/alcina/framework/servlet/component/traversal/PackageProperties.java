@@ -3,9 +3,11 @@ package cc.alcina.framework.servlet.component.traversal;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -23,6 +25,7 @@ import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Integer;
 import java.lang.String;
+import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
@@ -33,6 +36,7 @@ public class PackageProperties {
     static _Page page = new _Page();
     static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
     static _RenderedSelections renderedSelections = new _RenderedSelections();
+    static _SelectionLayers_LayersContainer selectionLayers_layersContainer = new _SelectionLayers_LayersContainer();
     public static _TraversalBrowser_Ui traversalBrowser_ui = new _TraversalBrowser_Ui();
     public static _TraversalSettings traversalSettings = new _TraversalSettings();
     
@@ -70,7 +74,12 @@ public class PackageProperties {
       TypedProperty<RenderedSelections, RenderedSelections.SelectionMarkupArea> selectionMarkupArea = new TypedProperty<>(RenderedSelections.class, "selectionMarkupArea");
       TypedProperty<RenderedSelections, SelectionTableArea> selectionTable = new TypedProperty<>(RenderedSelections.class, "selectionTable");
       TypedProperty<RenderedSelections, Model> style = new TypedProperty<>(RenderedSelections.class, "style");
-      TypedProperty<RenderedSelections, RenderedSelections.Variant> variant = new TypedProperty<>(RenderedSelections.class, "variant");
+      TypedProperty<RenderedSelections, TraversalSettings.SecondaryArea> variant = new TypedProperty<>(RenderedSelections.class, "variant");
+    }
+    
+    static class _SelectionLayers_LayersContainer implements TypedProperty.Container {
+      TypedProperty<SelectionLayers.LayersContainer, CollectionDeltaModel> collectionRepresentation = new TypedProperty<>(SelectionLayers.LayersContainer.class, "collectionRepresentation");
+      TypedProperty<SelectionLayers.LayersContainer, List> layers = new TypedProperty<>(SelectionLayers.LayersContainer.class, "layers");
     }
     
     public static class _TraversalBrowser_Ui implements TypedProperty.Container {
@@ -84,6 +93,7 @@ public class PackageProperties {
       public TypedProperty<TraversalBrowser.Ui, Layer> selectedLayer0 = new TypedProperty<>(TraversalBrowser.Ui.class, "selectedLayer0");
       public TypedProperty<TraversalBrowser.Ui, SelectionMarkup> selectionMarkup = new TypedProperty<>(TraversalBrowser.Ui.class, "selectionMarkup");
       public TypedProperty<TraversalBrowser.Ui, TraversalSettings> settings = new TypedProperty<>(TraversalBrowser.Ui.class, "settings");
+      public TypedProperty<TraversalBrowser.Ui, SelectionTraversal> traversal = new TypedProperty<>(TraversalBrowser.Ui.class, "traversal");
       public TypedProperty<TraversalBrowser.Ui, String> traversalPath = new TypedProperty<>(TraversalBrowser.Ui.class, "traversalPath");
       public TypedProperty<TraversalBrowser.Ui, Boolean> useSelectionSegmentPath = new TypedProperty<>(TraversalBrowser.Ui.class, "useSelectionSegmentPath");
     }

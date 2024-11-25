@@ -9,19 +9,16 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
  * <p>
  * Sketch
  * <ul>
- * <li>Interface: provider - provides essentially story nodes + kids
- * <li>UI can be overlay or another window. It accepts a PlaceFragment (new
- * thing)
- * <li>BasePlace.PlaceFragment - a double-slash is a fragment separator -
- * baseplace provides getplacefragments -
- * <li>DirectedActivity handler fires secondary activities (from fragments) on a
- * different topic
+ * <li>Interface: provider - provides essentially story nodes + kids as a
+ * structuredcontent object
+ * <li>The UI can be an overlay or another window. If an overlay,
+ * routing/history is modelled in a BasePlace.fragments element
  * </ul>
  * 
  */
 /*
- * FIXME - romcom - gwt module goes away (although module concept may staty -
- * models + places + events)
+ * FIXME - romcom - gwt module goes away, initial load speed is better handled
+ * with romcom (although module concept may staty - models + places + events)
  * 
  * Test - alc/traversal ui demo test
  */
@@ -29,28 +26,30 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
 @Feature.Parent(Feature_Dirndl.class)
 public interface Feature_HelpModule extends Feature {
 	/**
-	 * The help area - header (including search, tree, contents/results)
+	 * The help area - see {@link Feature_ContentBrowserModule._Area} for
+	 * implementation docs
 	 */
 	@Feature.Parent(Feature_HelpModule.class)
 	public interface _Area extends Feature {
 	}
 
 	/**
-	 * [Title :: Search/omni field]; dotburger (expand/collapse tree;
-	 * fullscreen; wide; document view); close
+	 * <p>
+	 * The help system loads content (initially the whole tree) from a provider.
+	 * For Alcina romcom apps, this will be a simple fs deserialization of a
+	 * Story traversal record.
+	 * 
+	 * <p>
+	 * TODO
+	 * <ul>
+	 * <li>Header content: App title, doc info
+	 * <li>Nav content: structure
+	 * <li>Search support: api/results
+	 * <li>Content element (element - element + descendants :: rewrites images
+	 * based on resolution)
+	 * </ul>
 	 */
-	@Feature.Parent(_Area.class)
-	public interface _Header extends Feature {
-	}
-
-	@Feature.Parent(_Area.class)
-	public interface _Topics extends Feature {
-	}
-
-	/**
-	 * Either displays current node or search results/extracts
-	 */
-	@Feature.Parent(_Area.class)
-	public interface _Content extends Feature {
+	@Feature.Parent(Feature_HelpModule.class)
+	public interface _ContentProviders extends Feature {
 	}
 }

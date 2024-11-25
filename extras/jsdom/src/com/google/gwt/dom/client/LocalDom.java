@@ -1112,11 +1112,13 @@ public class LocalDom implements ContextFrame {
 		try {
 			domIds.verifyIdList(idList);
 		} catch (RuntimeException e) {
+			String remoteHtml = elem.jsoRemote().getInnerHTML0();
+			String localHtml = elem.local().getInnerHTML();
+			consoleLog("setHtml::validation issue (probably wonky html)", true);
 			/* probably some odd dom - compare to roundtripped
 			@formatter:off
-			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), html.replace("&nbsp;","\u00A0").getBytes());
-			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), elem.local()
-			 el.replace("&nbsp;","\u00A0").getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"),  remoteHtml.replace("&nbsp;","\u00A0").getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), localHtml.replace("&nbsp;","\u00A0").getBytes());
 			 @formatter:on
 			 */
 			throw e;

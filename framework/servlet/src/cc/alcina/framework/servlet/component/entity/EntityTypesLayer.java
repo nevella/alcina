@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.entity;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
@@ -9,7 +11,6 @@ import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
-import cc.alcina.framework.servlet.component.traversal.SelectionTableArea;
 
 class EntityTypesLayer extends Layer<DomainGraphSelection> {
 	@Override
@@ -26,6 +27,21 @@ class EntityTypesLayer extends Layer<DomainGraphSelection> {
 			implements Selection.HasTableRepresentation.Children {
 		public TypeSelection(Selection parent, Class<? extends Entity> value) {
 			super(parent, value, NestedName.get(value).toLowerCase());
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof TypeSelection) {
+				TypeSelection o = (TypeSelection) obj;
+				return Objects.equals(get(), o.get());
+			} else {
+				return super.equals(obj);
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(get());
 		}
 	}
 }

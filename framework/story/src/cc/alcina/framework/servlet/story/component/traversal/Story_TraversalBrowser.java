@@ -7,7 +7,16 @@ import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser;
 import cc.alcina.framework.servlet.story.console.Story_Console;
 
 /**
+ * <p>
  * The story of the {@link Feature_TraversalBrowser}
+ * 
+ * <p>
+ * To traverse/tell it,
+ * <code>/g/alcina/subproject/console/sh/launch.alcina.devconsole.sh tell-traversal</code>
+ * 
+ * <p>
+ * To modify the telling context, modify the local class
+ * AlcinaStoryTellers.Story_TraversalBrowser_PeerImpl
  */
 @Feature.Ref(Feature_TraversalBrowser.class)
 public class Story_TraversalBrowser implements Story {

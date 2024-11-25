@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
@@ -123,6 +124,12 @@ public class RemoteComponentObservables<T> {
 		String id;
 
 		long observableEvictionTimeMs;
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s", getClass().getSimpleName(),
+					NestedName.get(observable));
+		}
 
 		public ObservableHistory(T observable, String id) {
 			this.observable = observable;

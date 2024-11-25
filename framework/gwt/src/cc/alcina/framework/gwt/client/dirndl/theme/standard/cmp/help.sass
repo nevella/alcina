@@ -1,0 +1,20 @@
+@use '../../theme/theme'
+@use '../../theme/color'
+@use 'context-menu'
+@use 'panel'
+@use 'story'
+
+
+@mixin help-area
+  height: 50vh
+  width: 25vw
+  @include panel.content
+  @include context-menu.dropdown
+  margin: 0.5rem
+  padding: 1.0rem
+  user-select: auto
+
+@mixin contents
+  help-area
+    @include help-area
+    @include story.contents

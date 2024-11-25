@@ -10,6 +10,14 @@ public class StoryDocPart implements TellerContext.Part {
 
 	public RendererConfiguration rendererConfiguration;
 
+	/**
+	 * Used when telling a story to generate help content (which is stored in a
+	 * persistent location, normally a VCS folder)
+	 */
+	public boolean replacePersistent;
+
+	public String persistentPath;
+
 	public static class RendererConfiguration {
 		public Class<? extends StoryDocRenderer> renderer = DocumentRenderer.class;
 

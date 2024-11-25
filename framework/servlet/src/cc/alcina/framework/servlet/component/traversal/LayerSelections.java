@@ -12,12 +12,16 @@ import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.History;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.View;
 import cc.alcina.framework.common.client.traversal.Selection.ViewAsync;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceAdapter;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.Configuration;
@@ -32,6 +36,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.Answe
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.SuggestionSelected;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
@@ -66,13 +71,51 @@ class LayerSelections extends Model.All {
 	public LayerSelections(SelectionLayers selectionLayers, Layer layer) {
 		this.selectionLayers = selectionLayers;
 		this.layer = layer;
-		selectionsArea = new SelectionsArea();
-		// after selectionsArea, since it requires the #selections rendered
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof LayerSelections) {
+			LayerSelections o = (LayerSelections) obj;
+			return HasEquivalence.areEquivalent(LayerEquivalence.class, layer,
+					o.layer);
+		} else {
+			return super.equals(obj);
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return new LayerEquivalence().withReferent(layer).equivalenceHash();
+	}
+
+	/*
+	 * Models equivalence for rendering purposes
+	 */
+	static class LayerEquivalence
+			extends HasEquivalenceAdapter<Layer, LayerEquivalence> {
+		@Override
+		public int equivalenceHash() {
+			return Objects.hash(o.index, o.getClass(), o.getSelections());
+		}
+
+		@Override
+		public boolean equivalentTo(LayerEquivalence other) {
+			return CommonUtils.equals(o.index, other.o.index, o.getClass(),
+					other.o.getClass(), o.getSelections(),
+					other.o.getSelections());
+		}
+	}
+
+	@Override
+	public void onBeforeRender(BeforeRender event) {
 		nameArea = new NameArea();
+		selectionsArea = new SelectionsArea();
+		super.onBeforeRender(event);
 	}
 
 	String computeOutputs() {
-		int unfiliteredSelectionCount = unfiliteredSelectionCount();
+		int unfiliteredSelectionCount = unfilteredSelectionCount();
 		int filteredSelectionCount = selectionsArea.filtered.size();
 		if (unfiliteredSelectionCount != 0) {
 			if (filteredSelectionCount != unfiliteredSelectionCount
@@ -84,7 +127,7 @@ class LayerSelections extends Model.All {
 			}
 		}
 		Layer firstLeaf = layer.firstLeaf();
-		int firstLeafSize = selectionLayers.traversal.getSelections(firstLeaf)
+		int firstLeafSize = selectionLayers.traversal().getSelections(firstLeaf)
 				.size();
 		if (firstLeafSize != 0) {
 			return "-";
@@ -93,8 +136,14 @@ class LayerSelections extends Model.All {
 		}
 	}
 
-	int unfiliteredSelectionCount() {
-		return selectionLayers.traversal.getSelections(layer).size();
+	int unfilteredSelectionCount() {
+		return selectionLayers.traversal().getSelections(layer).size();
+	}
+
+	@Property.Not
+	StandardLayerAttributes.Filter getLayerFilterAttribute() {
+		return Ui.place().ensureAttributes(layer.index)
+				.get(StandardLayerAttributes.Filter.class);
 	}
 
 	// FIXME - once inner classes allow static (JDK16) use typedproperties,
@@ -130,19 +179,21 @@ class LayerSelections extends Model.All {
 					() -> this.selected = selected);
 		}
 
-		NameArea() {
+		@Override
+		public void onBeforeRender(BeforeRender event) {
 			FormatBuilder keyBuilder = new FormatBuilder();
 			keyBuilder.indent(layer.depth());
 			keyBuilder.append(layer.getName());
 			String keyString = keyBuilder.toString();
+			bindings().from(selectionLayers.page.ui).on(Ui.properties.place)
+					.map(this::computeSelected).to(this).on("selected")
+					.oneWay();
 			outputs = computeOutputs();
 			key = new TextTitle(keyString,
 					Ax.format("%s : %s", keyString, outputs));
 			filter = new Filter();
 			hasFilter = filter.existing != null;
-			bindings().from(selectionLayers.page.ui).on(Ui.properties.place)
-					.map(this::computeSelected).to(this).on("selected")
-					.oneWay();
+			super.onBeforeRender(event);
 		}
 
 		boolean computeSelected(Place place) {
@@ -170,9 +221,7 @@ class LayerSelections extends Model.All {
 			Filter() {
 				button = Link.of(ModelEvents.Filter.class).withoutHref(true)
 						.withClassName("filter").withText("");
-				StandardLayerAttributes.Filter attr = Ui.place()
-						.ensureAttributes(layer.index)
-						.get(StandardLayerAttributes.Filter.class);
+				StandardLayerAttributes.Filter attr = getLayerFilterAttribute();
 				if (attr != null) {
 					this.existing = new TextTitle(attr.toString());
 				}
@@ -252,7 +301,7 @@ class LayerSelections extends Model.All {
 		List<SelectionArea> filtered;
 
 		SelectionsArea() {
-			Stream<Selection> stream = selectionLayers.traversal
+			Stream<Selection> stream = selectionLayers.traversal()
 					.getSelections(layer).stream();
 			parallel = Configuration.is(LayerSelections.class, "parallelTest");
 			snapshot = LooseContext.getContext().snapshot();

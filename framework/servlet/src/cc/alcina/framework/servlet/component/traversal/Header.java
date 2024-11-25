@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.gwt.client.dirndl.cmp.help.Help;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
 
@@ -36,6 +37,8 @@ class Header extends Model.All {
 	}
 
 	class Right extends Model.All {
+		Help.HeaderButton help = new Help.HeaderButton();
+
 		Dotburger dotburger = new Dotburger();
 	}
 
