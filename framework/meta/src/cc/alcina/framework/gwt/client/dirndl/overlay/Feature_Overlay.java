@@ -23,4 +23,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 @Feature.Status.Ref(Feature.Status.Open.class)
 @Feature.Parent(Feature_Ui_support.class)
 public interface Feature_Overlay extends Feature {
+	/**
+	 * Tracks fixes to overlay code when the parent is fixed/sticky
+	 */
+	@Feature.Parent(Feature_Overlay.class)
+	public interface _FixedPositioning extends Feature {
+	}
 }
