@@ -720,14 +720,14 @@ public abstract class DevConsole implements ClipboardOwner {
 		}
 	}
 
-	public void performCommand(String command) {
-		if (command.isEmpty()) {
-			command = this.lastCommand;
+	public void performCommand(String commandStr) {
+		if (commandStr.isEmpty()) {
+			commandStr = this.lastCommand;
 		}
 		emitIfFirst(new StatCategory_Console.InitCommands.Start());
-		this.lastCommand = command;
+		this.lastCommand = commandStr;
 		StreamTokenizer tokenizer = new StreamTokenizer(
-				new StringReader(command));
+				new StringReader(commandStr));
 		tokenizer.ordinaryChars('0', '9');
 		tokenizer.wordChars('0', '9');
 		tokenizer.ordinaryChars('.', '.');
@@ -743,7 +743,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		int token;
 		try {
 			String cmd = null;
-			final List<String> args = new ArrayList<String>();
+			List<String> args = new ArrayList<String>();
 			while ((token = tokenizer.nextToken()) != StreamTokenizer.TT_EOF) {
 				switch (tokenizer.ttype) {
 				case StreamTokenizer.TT_WORD:
@@ -776,12 +776,12 @@ public abstract class DevConsole implements ClipboardOwner {
 				cmdHelp.run(new String[0]);
 				return;
 			}
-			final DevConsoleCommand c = template.getClass()
+			DevConsoleCommand command = template.getClass()
 					.getDeclaredConstructor().newInstance();
-			prepareCommand(c);
+			prepareCommand(command);
 			for (DevConsoleCommand c2 : runningJobs) {
-				if (c2.getClass() == c.getClass()
-						&& !c.isAllowParallelExecution()) {
+				if (c2.getClass() == command.getClass()
+						&& !command.isAllowParallelExecution()) {
 					System.err.format("Command '%s' already running\n",
 							c2.getClass().getSimpleName());
 					return;
@@ -793,13 +793,13 @@ public abstract class DevConsole implements ClipboardOwner {
 				@Override
 				public void run() {
 					LooseContext.putSnapshotProperties(snapshot);
-					performCommandInThread(args, c, true);
+					performCommandInThread(args, command, true);
 					currentCommandLatch.countDown();
 				}
 			};
 			currentCommandLatch = new CountDownLatch(1);
 			new AlcinaChildContextRunner(
-					"dev-runner-" + c.getClass().getSimpleName())
+					"dev-runner-" + command.getClass().getSimpleName())
 							.callNewThread(runnable);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -807,32 +807,34 @@ public abstract class DevConsole implements ClipboardOwner {
 	}
 
 	protected void performCommandInThread(List<String> args,
-			DevConsoleCommand c, boolean topLevel) {
+			DevConsoleCommand command, boolean topLevel) {
 		try {
 			LooseContext.push();
 			PermissionsManager.get().pushUser(DevHelper.getDefaultUser(),
 					LoginState.LOGGED_IN);
-			runningJobs.add(c);
+			runningJobs.add(command);
 			if (!noHistory) {
 				history.addCommand(lastCommand);
 			}
-			if (!c.silent()) {
+			if (!command.silent()) {
 				System.out.format("%s...\n", lastCommand);
 			}
 			long l1 = System.currentTimeMillis();
-			c.configure();
-			if (c.clsBeforeRun()) {
+			command.configure();
+			if (command.clsBeforeRun()) {
 				clear();
 			}
-			String msg = c
+			command.args = args;
+			String msg = command
 					.run((String[]) args.toArray(new String[args.size()]));
-			c.cleanup();
+			command.cleanup();
 			long l2 = System.currentTimeMillis();
 			if (msg != null) {
 				ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
 			}
-			if (topLevel && !c.ignoreForCommandHistory() && !noHistory) {
-				String modCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
+			if (topLevel && !command.ignoreForCommandHistory() && !noHistory) {
+				String modCommand = command.rerunIfMostRecentOnRestart()
+						? lastCommand
 						: "";
 				if (!Objects.equals(modCommand, props.lastCommand)) {
 					props.lastCommand = modCommand;
@@ -851,7 +853,7 @@ public abstract class DevConsole implements ClipboardOwner {
 			PermissionsManager.get().popUser();
 			Transaction.end();
 			LooseContext.pop();
-			runningJobs.remove(c);
+			runningJobs.remove(command);
 			if (launchConfiguration.exitAfterCommand) {
 				// delay to ensure props etc written?
 				try {

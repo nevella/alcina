@@ -22,6 +22,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ import java.util.zip.ZipOutputStream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.SEUtilities;
 
 /**
  *
@@ -184,5 +187,19 @@ public class ZipUtil {
 			}
 		}
 		s.close();
+	}
+
+	public static void createZip(File outputFile, List<File> inputFiles) {
+		try {
+			Path tempDirWithPrefix = Files.createTempDirectory("zip");
+			File tempDir = tempDirWithPrefix.toFile();
+			for (File input : inputFiles) {
+				SEUtilities.copyFile(input, tempDir);
+			}
+			new ZipUtil().createZip(outputFile, tempDir, Map.of());
+			SEUtilities.deleteDirectory(tempDir);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 }

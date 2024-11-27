@@ -102,6 +102,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TextUtils;
+import cc.alcina.framework.entity.util.FileUtils;
 
 /**
  * FIXME - dirndl - remove all property descriptor code (use
@@ -311,6 +312,9 @@ public class SEUtilities {
 			out.getParentFile().mkdirs();
 			out.createNewFile();
 		} else {
+			if (out.isDirectory() && !in.isDirectory()) {
+				out = FileUtils.child(out, in.getName());
+			}
 			if (out.lastModified() >= in.lastModified() && !overwriteNewer) {
 				return 0;
 			}

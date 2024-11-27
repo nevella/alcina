@@ -88,6 +88,11 @@ public abstract class DevConsoleCommand {
 
 	private StringBuilder commandOutputBuffer = new StringBuilder();
 
+	/*
+	 * The args passed to the command
+	 */
+	public List<String> args;
+
 	public void cancel() {
 		cancelled = true;
 	}

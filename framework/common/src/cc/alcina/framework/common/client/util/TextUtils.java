@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -388,5 +389,25 @@ public class TextUtils {
 				throw new IllegalArgumentException("Duplicate strings");
 			}
 		}
+	}
+
+	public static String longestCommon(Collection<String> strings) {
+		String longestCommon = null;
+		for (String string : strings) {
+			if (longestCommon == null) {
+				longestCommon = string;
+			} else {
+				int idx = 0;
+				for (; idx < string.length()
+						&& idx < longestCommon.length(); idx++) {
+					if (string.charAt(idx) == longestCommon.charAt(idx)) {
+					} else {
+						break;
+					}
+				}
+				longestCommon = longestCommon.substring(0, idx);
+			}
+		}
+		return longestCommon;
 	}
 }
