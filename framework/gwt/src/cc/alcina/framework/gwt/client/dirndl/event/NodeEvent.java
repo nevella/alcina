@@ -51,7 +51,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	 * If a subclass overrides this, it must also have a no-args constructor
 	 */
 	public Class<H> getHandlerClass() {
-		return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+		return Reflections.at(getClass()).firstGenericBound();
 	}
 
 	// special case when re-emitting an event from its handler - marks the event

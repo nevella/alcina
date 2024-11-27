@@ -366,6 +366,7 @@ public class ModelBinding<T> {
 
 		private Property ensureProperty() {
 			if (property == null) {
+				Preconditions.checkNotNull(on);
 				property = Reflections.at(to).property(on);
 			}
 			return property;

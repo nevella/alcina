@@ -42,6 +42,8 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
  * </ul>
  * <p>
  * Note that fragments are separated by <code>//</code>
+ * <p>
+ * TODO - move most of the api up to Place (e.g. go())
  */
 @Reflected
 @Registration(BasePlace.class)

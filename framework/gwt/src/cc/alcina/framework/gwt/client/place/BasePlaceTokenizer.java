@@ -170,7 +170,7 @@ public abstract class BasePlaceTokenizer<P extends BasePlace>
 	protected abstract void getToken0(P place);
 
 	public Class<P> getTokenizedClass() {
-		return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+		return Reflections.at(getClass()).firstGenericBound();
 	}
 
 	public boolean handles(String token) {

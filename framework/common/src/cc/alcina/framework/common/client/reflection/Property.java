@@ -239,4 +239,8 @@ public class Property implements HasAnnotations {
 		return declaringType == property.declaringType
 				&& Objects.equals(getName(), property.getName());
 	}
+
+	public Class firstGenericBound() {
+		return getTypeBounds().bounds.get(0);
+	}
 }

@@ -50,7 +50,7 @@ public class PlainTextDocumentSelection extends TextSelection
 		String load(S selection) throws Exception;
 
 		default Class<S> selectionClass() {
-			return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+			return Reflections.at(getClass()).firstGenericBound();
 		}
 	}
 

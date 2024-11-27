@@ -118,8 +118,7 @@ class SerializerReflection {
 						property.getType())
 				&& property.getTypeBounds().bounds.size() == 1) {
 			PropertySerialization.Impl impl = new PropertySerialization.Impl();
-			impl.setTypes(
-					new Class[] { property.getTypeBounds().bounds.get(0) });
+			impl.setTypes(new Class[] { property.firstGenericBound() });
 			annotation = impl;
 		}
 		return annotation;

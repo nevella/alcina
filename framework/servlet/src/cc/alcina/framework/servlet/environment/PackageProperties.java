@@ -5,7 +5,9 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
+import cc.alcina.framework.servlet.environment.AbstractUi;
 import com.google.gwt.place.shared.Place;
+import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
@@ -16,9 +18,11 @@ public class PackageProperties {
     
     public static class _AbstractUi implements TypedProperty.Container {
       public TypedProperty<AbstractUi, Set> appCommandContexts = new TypedProperty<>(AbstractUi.class, "appCommandContexts");
+      public TypedProperty<AbstractUi, AbstractUi.ClientExceptionNotificationPolicy> clientExceptionNotificationPolicy = new TypedProperty<>(AbstractUi.class, "clientExceptionNotificationPolicy");
       public TypedProperty<AbstractUi, CommandContext.Provider> commandContextProvider = new TypedProperty<>(AbstractUi.class, "commandContextProvider");
       public TypedProperty<AbstractUi, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(AbstractUi.class, "keybindingsHandler");
       public TypedProperty<AbstractUi, DirectedLayout> layout = new TypedProperty<>(AbstractUi.class, "layout");
+      public TypedProperty<AbstractUi, List> notifiedExceptions = new TypedProperty<>(AbstractUi.class, "notifiedExceptions");
       public TypedProperty<AbstractUi, Place> place = new TypedProperty<>(AbstractUi.class, "place");
       public TypedProperty<AbstractUi, RemoteComponentProtocol.Session> session = new TypedProperty<>(AbstractUi.class, "session");
     }

@@ -21,7 +21,7 @@ public interface ProcessObserver<T extends ProcessObservable>
 	}
 
 	default Class<T> getObservableClass() {
-		return Reflections.at(this).getGenericBounds().bounds.get(0);
+		return Reflections.at(this).firstGenericBound();
 	}
 
 	default void unbind() {

@@ -68,7 +68,7 @@ public abstract class DecoratorNode<E extends Entity> extends FragmentNode {
 	public String content = "";
 
 	protected Class<E> entityClass() {
-		return Reflections.at(this).getGenericBounds().bounds.get(0);
+		return Reflections.at(this).firstGenericBound();
 	}
 
 	public abstract Descriptor<E> getDescriptor();

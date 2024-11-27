@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 public abstract class DomainCriterionHandler<SC extends SearchCriterion>
 		implements DomainCriterionFilter<SC> {
 	public Class<SC> handlesSearchCriterion() {
-		return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+		return Reflections.at(getClass()).firstGenericBound();
 	}
 
 	public abstract Class<? extends SearchDefinition> handlesSearchDefinition();

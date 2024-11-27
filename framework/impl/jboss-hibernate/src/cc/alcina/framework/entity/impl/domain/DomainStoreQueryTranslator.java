@@ -319,7 +319,7 @@ public class DomainStoreQueryTranslator {
 		FieldHelper fieldHelper = new FieldHelper();
 
 		protected final Class<C> getHandledClass() {
-			return Reflections.at(getClass()).getGenericBounds().bounds.get(0);
+			return Reflections.at(getClass()).firstGenericBound();
 		}
 
 		public String getStringFieldValue(Criterion criterion,

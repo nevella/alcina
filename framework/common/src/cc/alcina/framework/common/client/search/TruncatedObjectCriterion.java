@@ -95,7 +95,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	}
 
 	public Class<E> getObjectClass() {
-		return Reflections.at(this).getGenericBounds().bounds.get(0);
+		return Reflections.at(this).firstGenericBound();
 	}
 
 	@XmlTransient
