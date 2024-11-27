@@ -438,7 +438,9 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
-	private Stream<Job> provideToRelated(JobRelationType type) {
+	// this looks wrong but it's not - the 'toRelated' are the other endpoints
+	// of fromRelations
+	public Stream<Job> provideToRelated(JobRelationType type) {
 		if (getFromRelations().isEmpty()) {
 			return Stream.empty();
 		}
@@ -449,6 +451,8 @@ public abstract class Job extends VersionableEntity<Job>
 				.map(JobRelation::getTo).filter(Objects::nonNull);
 	}
 
+	// this looks wrong but it's not - the 'fromRelated' are the other endpoints
+	// of toRelations
 	private Stream<Job> provideFromRelated(JobRelationType type) {
 		if (getToRelations().isEmpty()) {
 			return Stream.empty();

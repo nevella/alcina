@@ -825,6 +825,8 @@ public class JobScheduler {
 
 		protected boolean shouldResubmit(Job job, AbortReason reason) {
 			return job.provideIsTopLevel() && job.getRunAt() != null
+					&& job.provideToRelated(JobRelationType.RESUBMIT).findAny()
+							.isEmpty()
 					&& job.getState().isResubmittable();
 		}
 
