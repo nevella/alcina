@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.story;
+package cc.alcina.framework.servlet.story.doc;
 
 import java.util.Arrays;
 import java.util.List;
@@ -10,9 +10,12 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.gwt.client.story.Waypoint.TextInterpolator;
 
-class DocUtil {
+@Registration(TextInterpolator.class)
+public class TextInterpolatorImpl implements TextInterpolator {
 	static class InterpolationResult {
 		String content;
 
@@ -29,7 +32,7 @@ class DocUtil {
 		}
 	}
 
-	public static String interpolate(Class<?> clazz, String value) {
+	public String interpolate(Class<?> clazz, String value) {
 		InterpolationResult result = null;
 		if (value.startsWith("res:")) {
 			String resourcePath = value.substring(4);
@@ -49,7 +52,7 @@ class DocUtil {
 		return result.escapedContent();
 	}
 
-	static String markdownToHtml(String markdown) {
+	String markdownToHtml(String markdown) {
 		List<Extension> extensions = Arrays.asList(TablesExtension.create());
 		Parser parser = Parser.builder().extensions(extensions).build();
 		Node document = parser.parse(markdown);

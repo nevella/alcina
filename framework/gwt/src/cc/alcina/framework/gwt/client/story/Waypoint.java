@@ -184,7 +184,8 @@ public class Waypoint implements Story.Point {
 			Story.Decl.Description ann = reflector
 					.annotation(Story.Decl.Description.class);
 			if (ann != null) {
-				description = DocUtil.interpolate(getClass(), ann.value());
+				description = Registry.impl(TextInterpolator.class)
+						.interpolate(getClass(), ann.value());
 			}
 		}
 		if (action == null) {
@@ -240,5 +241,9 @@ public class Waypoint implements Story.Point {
 				conditional.exitOkOnFalse = Set.of(exitOkOnFalseAnn.value());
 			}
 		}
+	}
+
+	public interface TextInterpolator {
+		String interpolate(Class<?> waypointClass, String value);
 	}
 }
