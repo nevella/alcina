@@ -7,8 +7,21 @@ import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_Header;
 
 @Decl.Feature(Feature_TraversalBrowser_Header.class)
+/*
+ * Children
+ */
+@Decl.Child(_Header._Doc.class)
 @Decl.Child(_Header.Dotburger.class)
 class _Header extends Waypoint {
+	@Decl.Label("Ui Header Area")
+	@Decl.Description("Displays app status and the search and settings components")
+	@Decl.Location.Xpath(_Header.XPATH_HEADER)
+	@Decl.Action.Annotate.HighlightScreenshotClear
+	static class _Doc extends Waypoint {
+	}
+
+	static final String XPATH_HEADER = "//header";
+
 	static final String XPATH_DOTBURGER_ICON = "//header/right/dropdown/button[@class='dotburger']";
 
 	static final String XPATH_DOTBURGER_MENU = "//overlay[@class='dotburger dropdown overlay menu']";

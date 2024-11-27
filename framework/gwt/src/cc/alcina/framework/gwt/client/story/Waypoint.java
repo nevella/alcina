@@ -140,7 +140,7 @@ public class Waypoint implements Story.Point {
 		ClassReflector<? extends Waypoint> reflector = Reflections
 				.at(getClass());
 		if (name == null) {
-			name = getClass().getSimpleName();
+			name = getClass().getSimpleName().replaceFirst("^_", "");
 		}
 		if (requires == null) {
 			List<Story.Decl.Require> requireAnns = reflector
@@ -184,7 +184,7 @@ public class Waypoint implements Story.Point {
 			Story.Decl.Description ann = reflector
 					.annotation(Story.Decl.Description.class);
 			if (ann != null) {
-				description = ann.value();
+				description = DocUtil.interpolate(getClass(), ann.value());
 			}
 		}
 		if (action == null) {

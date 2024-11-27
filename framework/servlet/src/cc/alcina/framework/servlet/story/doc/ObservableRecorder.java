@@ -155,7 +155,7 @@ class ObservableRecorder {
 			implements ProcessObserver<StoryTeller.AfterStory> {
 		@Override
 		public void topicPublished(StoryTeller.AfterStory message) {
-			logger.info("stored observables to %s", storage.folder);
+			logger.info("stored observables to {}", storage.folder);
 			RendererConfiguration rendererConfiguration = storyDoc.part.rendererConfiguration;
 			if (rendererConfiguration != null) {
 				List<StoryDocObservable> observables = storage.getObservables();

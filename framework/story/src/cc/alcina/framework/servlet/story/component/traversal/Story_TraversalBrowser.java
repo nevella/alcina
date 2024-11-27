@@ -2,13 +2,12 @@ package cc.alcina.framework.servlet.story.component.traversal;
 
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.story.Story;
-import cc.alcina.framework.gwt.client.story.Waypoint;
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser;
-import cc.alcina.framework.servlet.story.console.Story_Console;
 
 /**
  * <p>
- * The story of the {@link Feature_TraversalBrowser}
+ * The story of the {@link Feature_TraversalBrowser}, traversing the
+ * Croissanteria example traversal
  * 
  * <p>
  * To traverse/tell it,
@@ -30,31 +29,12 @@ public class Story_TraversalBrowser implements Story {
 		//@formatter:on
 	}
 
-	//
-	@Decl.Feature(Feature_TraversalBrowser.class)
-	/*
-	 * All points in the story will require these states. They (the states)
-	 * could also be represented as a depends chain - i.e.
-	 * CroissanteriaTraversalPerformed requires ConsoleRunning (which is true),
-	 * this is just a tad clearer
-	 */
-	@Decl.Require(Story_Console.State.ConsoleConditionalRestart.class)
-	@Decl.Require(Story_Console.State.ConsoleRunning.class)
-	@Decl.Require(State.CroissanteriaTraversalPerformed.class)
-	@Decl.Require(State.TraversalUiLoaded.class)
-	/*
-	 * Children
-	 */
-	@Decl.Child(_Header.class)
-	static class Top extends Waypoint {
-	}
-
 	Point top;
 
 	@Override
 	public Point getPoint() {
 		if (top == null) {
-			top = new Top();
+			top = new _Top();
 		}
 		return top;
 	}

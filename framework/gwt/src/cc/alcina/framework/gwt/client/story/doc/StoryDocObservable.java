@@ -41,7 +41,8 @@ public abstract class StoryDocObservable
 	static transient IdCounter counter = new IdCounter();
 
 	public String path() {
-		return ancestorDisplayNames.stream().collect(Collectors.joining(" > "));
+		return ancestorDisplayNames.stream().skip(1)
+				.collect(Collectors.joining(" > "));
 	}
 
 	protected StoryDocObservable() {

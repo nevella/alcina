@@ -219,7 +219,33 @@ public class TraversalBrowser {
 		}
 	}
 
+	/**
+	 * The default documentation is for the RecipeMarkupParser traversal. Other
+	 * traversals can register via {@link SelectionTraversal.Context} (if the
+	 * Context implements {@link HelpContentProvider})
+	 */
 	static class HelpContentProviderImpl implements HelpContentProvider {
+		HelpContentProviderImpl_Default _default = new HelpContentProviderImpl_Default();
+
+		public String getHelpMarkup() {
+			return delegate().getHelpMarkup();
+		}
+
+		HelpContentProvider delegate() {
+			SelectionTraversal traversal = Ui.traversal();
+			if (traversal != null) {
+				HelpContentProvider contextProvider = traversal
+						.context(HelpContentProvider.class);
+				if (contextProvider != null) {
+					return contextProvider;
+				}
+			}
+			return _default;
+		}
+	}
+
+	static class HelpContentProviderImpl_Default
+			implements HelpContentProvider {
 		public String getHelpMarkup() {
 			return Io.read().resource("story/document.html").asDomDocument()
 					.html().body().getInnerMarkup();

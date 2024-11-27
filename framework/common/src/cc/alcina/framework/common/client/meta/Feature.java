@@ -207,5 +207,6 @@ public interface Feature extends Registration.AllSubtypes {
 		 */
 		public interface Ui_implementation extends Type{}
 		public interface Ui_support extends Type{}
+		public interface Ui_example extends Type{}
 	}
 }

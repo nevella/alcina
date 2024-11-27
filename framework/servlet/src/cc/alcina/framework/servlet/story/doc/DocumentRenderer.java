@@ -12,6 +12,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.Img;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafTransforms;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
@@ -111,14 +112,14 @@ public class DocumentRenderer implements StoryDocRenderer {
 
 			String path;
 
-			String description;
+			LeafModel.HtmlBlock description;
 
 			Img screenshot;
 
 			VisitArea(StoryDocObservable observable) {
 				this.observable = observable;
 				path = observable.path();
-				description = observable.description;
+				description = new LeafModel.HtmlBlock(observable.description);
 				if (observable.screenshot != null) {
 					String base64 = Base64.getEncoder()
 							.encodeToString(observable.screenshot);
