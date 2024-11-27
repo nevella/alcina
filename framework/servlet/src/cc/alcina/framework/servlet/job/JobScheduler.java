@@ -736,7 +736,7 @@ public class JobScheduler {
 	}
 
 	public static class NoResubmitPolicy extends ExceptionPolicy {
-		protected boolean shouldResubmit(Job job, AbortReason reason) {
+		protected boolean shouldResubmitOnAbort(Job job, AbortReason reason) {
 			return false;
 		};
 	}
@@ -756,7 +756,8 @@ public class JobScheduler {
 		}
 
 		@Override
-		public boolean shouldResubmit(Job toAbortJob, AbortReason reason) {
+		public boolean shouldResubmitOnAbort(Job toAbortJob,
+				AbortReason reason) {
 			if (!Ax.isTest() && requiresSystemUser) {
 				if (toAbortJob.getUser() != UserlandProvider.get()
 						.getSystemUser()) {
@@ -823,11 +824,12 @@ public class JobScheduler {
 			return resubmit;
 		}
 
-		protected boolean shouldResubmit(Job job, AbortReason reason) {
-			return job.provideIsTopLevel() && job.getRunAt() != null
-					&& job.provideToRelated(JobRelationType.RESUBMIT).findAny()
-							.isEmpty()
-					&& job.getState().isResubmittable();
+		/*
+		 * By default, only try to resubmit top-level jobs that made it to
+		 * processing (non-null runAt) before abort
+		 */
+		protected boolean shouldResubmitOnAbort(Job job, AbortReason reason) {
+			return job.provideIsTopLevel() && job.getRunAt() != null;
 		}
 
 		protected boolean shouldResubmitAfterException(Job job) {
@@ -835,7 +837,9 @@ public class JobScheduler {
 		}
 
 		public void onBeforeAbort(Job job, AbortReason reason) {
-			if (shouldResubmit(job, reason)) {
+			boolean canResubmit = job.provideToRelated(JobRelationType.RESUBMIT)
+					.findAny().isEmpty() && job.getState().isResubmittable();
+			if (canResubmit && shouldResubmitOnAbort(job, reason)) {
 				resubmit(job);
 				/*
 				 * this interim commit is to handle what appears to be a
