@@ -76,7 +76,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		root.mkdirs();
 		this.clazz = clazz;
 		this.pathToValue = pathToValue;
-		existsCache = Arrays.stream(root.list()).collect(Collectors.toSet());
+		existsCache = Arrays.stream(root.listFiles()).map(this::getCacheKey)
+				.collect(Collectors.toSet());
 	}
 
 	private boolean checkExists(String path) {
@@ -198,6 +199,15 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	public File getCacheFile(String path) {
 		return new File(Ax.format("%s/%s.%s", root.getPath(), path,
 				serializationStrategy.getFileSuffix()));
+	}
+
+	public String getCacheKey(File file) {
+		String key = file.getName();
+		if (key.endsWith(serializationStrategy.getFileSuffix())) {
+			key = key.substring(0, key.length()
+					- serializationStrategy.getFileSuffix().length() - 1);
+		}
+		return key;
 	}
 
 	private ClassStringKeyLock getLock(String path) {
