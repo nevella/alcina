@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.HasEquivalenceString;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
@@ -1081,12 +1082,14 @@ public abstract class Job extends VersionableEntity<Job>
 		if (cachedDisplayName == null) {
 			try {
 				cachedDisplayName = toDisplayName0();
-			} catch (RuntimeException e) {
+			} catch (Throwable e) {
 				e.printStackTrace();
 				cachedDisplayName = Ax.format(
-						"Exception generating displayName: %s",
+						"DEVEXZ - 0 - Exception generating displayName: %s",
 						CommonUtils.toSimpleExceptionMessage(e));
-				throw e;
+				if (EntityLayerUtils.isTestOrTestServer()) {
+					throw e;
+				}
 			}
 		}
 		return cachedDisplayName;
