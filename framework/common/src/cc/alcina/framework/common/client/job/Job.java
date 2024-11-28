@@ -46,12 +46,12 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.HasEquivalenceString;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
@@ -1088,7 +1088,7 @@ public abstract class Job extends VersionableEntity<Job>
 						getId(), CommonUtils.toSimpleExceptionMessage(e));
 				cachedDisplayName = Ax.format(
 						"Exception generating job name - id: %s", getId());
-				if (EntityLayerUtils.isTestOrTestServer()) {
+				if (Al.isNonProduction()) {
 					throw e;
 				}
 			}
