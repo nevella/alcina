@@ -1084,9 +1084,10 @@ public abstract class Job extends VersionableEntity<Job>
 				cachedDisplayName = toDisplayName0();
 			} catch (Throwable e) {
 				e.printStackTrace();
+				Ax.out("DEVEXZ - 0 - Exception generating displayName: %s : %s ",
+						getId(), CommonUtils.toSimpleExceptionMessage(e));
 				cachedDisplayName = Ax.format(
-						"DEVEXZ - 0 - Exception generating displayName: %s",
-						CommonUtils.toSimpleExceptionMessage(e));
+						"Exception generating job name - id: %s", getId());
 				if (EntityLayerUtils.isTestOrTestServer()) {
 					throw e;
 				}
