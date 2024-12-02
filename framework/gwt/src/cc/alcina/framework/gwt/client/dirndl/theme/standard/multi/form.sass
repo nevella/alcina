@@ -183,7 +183,8 @@
   &[inert] > form
     opacity: 0.7
 
-  > heading 
+  > heading
+    display: block 
     font-weight: 500
     padding-bottom: 0.2em
     padding-left: 3px
@@ -240,8 +241,16 @@
       color: color.$validation-error-color
       margin-top: 2rem
 
+
+@mixin separated-heading
+  bean-editor > heading
+    padding-bottom: 1.0rem
+    padding-left: 0
+
 bean-editor
   @include bean-editor
+
+
 
 /*
 will always have single-line bean-editor, pad label until we work out baseline alignment

@@ -5,7 +5,7 @@
   flex-direction: column
   margin: 1rem 0
   box-sizing: border-box
-  overflow-y: scroll
+  overflow-y: auto
   overflow-x: auto
 
   > heading, > heading-actions
@@ -38,3 +38,11 @@
   > a
     display: block
     margin: 0 0 0.2rem
+
+@mixin standard-bordered
+  border: solid 1px #ccc
+  padding: 1rem
+
+@mixin x2-bordered
+  border: solid 1px #ccc
+  padding: 1.5rem 2rem
