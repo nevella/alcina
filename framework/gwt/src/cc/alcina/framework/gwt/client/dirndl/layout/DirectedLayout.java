@@ -336,7 +336,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * very simple caching, but lowers allocation *a lot*
 	 */
 	Class<? extends DirectedRenderer> resolveModelRenderer(Object model,
-			boolean collection) {
+			boolean collection, AnnotationLocation location) {
 		return modelRenderers.computeIfAbsent(model.getClass(), clazz -> {
 			// Object.class itself (not as the root of the class hieararchy)
 			// resolves to a Container. It's generally used for images or
@@ -360,10 +360,10 @@ public class DirectedLayout implements AlcinaProcess {
 				return registration;
 			} catch (RuntimeException e) {
 				throw new RendererNotFoundException(Ax.format(
-						"Renderer for %s not found - if a class to be rendered does not extend Model.class"
+						"Renderer for %s not found at %s - if a class to be rendered does not extend Model.class"
 								+ ", it will require a registered DirectedRenderer class "
 								+ "- for examples of such classes, see the nested classes of LeafRenderer.class",
-						clazz.getSimpleName()), e);
+						clazz.getSimpleName(), location), e);
 			}
 		});
 	}
@@ -378,7 +378,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 		if (rendererClass == DirectedRenderer.ModelClass.class) {
 			rendererClass = resolveModelRenderer(model,
-					model instanceof Collection);
+					model instanceof Collection, location);
 		}
 		return Reflections.newInstance(rendererClass);
 	}

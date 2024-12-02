@@ -189,7 +189,8 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
-	void populateValuesFromNodeContext(Node node, Predicate<T> valueFilter) {
+	protected void populateValuesFromNodeContext(Node node,
+			Predicate<T> valueFilter) {
 		if (node == null) {
 			return;
 		}

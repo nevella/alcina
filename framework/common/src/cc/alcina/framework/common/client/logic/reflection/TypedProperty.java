@@ -1,6 +1,8 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 
 /**
  * <p>
@@ -43,5 +45,10 @@ public class TypedProperty<S extends BaseSourcesPropertyChangeEvents, T>
 	 */
 	public void set(S propertySource, T newValue) {
 		propertySource.set(name, newValue);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s.%s", NestedName.get(definingType), name);
 	}
 }

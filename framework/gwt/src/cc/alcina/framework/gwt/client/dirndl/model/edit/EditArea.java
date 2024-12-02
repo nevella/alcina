@@ -26,7 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 /**
  * <p>
  * This class models an editable dom area. It maintains bi-directional sync
- * between the dom tree and the dirndl node/featurenode tree via the
+ * between the dom tree and the dirndl node/fragmentnode tree via the
  * FragmentModel helper, routing DOM mutation events to it
  *
  *
