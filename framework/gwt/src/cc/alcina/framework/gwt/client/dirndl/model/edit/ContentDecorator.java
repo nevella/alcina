@@ -46,7 +46,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * <li>Input event interception checks if the state is valid for content
  * decoration (particularly that the cursor (DOM selection) is collapsed) - see
  * {@link #onInput(Input)} for details - and, if checks pass it (the
- * {@link DecoratorNode.Descriptor}):
+ * {@link EntityNode.Descriptor}):
  * <ul>
  * <li>splits the text node if necessary
  * <li>wraps the '@' in a DecoratorNode, e.g. {@code <mention>@</mention>}
@@ -127,7 +127,7 @@ public class ContentDecorator<T>
 	/*
 	 * The decorator node currently being edited
 	 */
-	DecoratorNode<?> decorator;
+	EntityNode<?> decorator;
 
 	/*
 	 * The chooser used to edit the current decorator
@@ -150,7 +150,7 @@ public class ContentDecorator<T>
 	 * Models the characteristics of the decorator - what the trigger key
 	 * sequence is etc
 	 */
-	DecoratorNode.Descriptor<?> descriptor;
+	EntityNode.Descriptor<?> descriptor;
 
 	private ContentDecorator(ContentDecorator.Builder builder) {
 		this.descriptor = builder.descriptor;
@@ -285,7 +285,7 @@ public class ContentDecorator<T>
 		if (event.getContext().getPrevious().node.getModel() == chooser) {
 			decorator.toNonEditable();
 			decorator.putEntity(event.getModel());
-			decorator.positionCursorPostEntitySelection();
+			decorator.positionCursorPostReferencedSelection();
 		}
 	}
 
@@ -325,10 +325,10 @@ public class ContentDecorator<T>
 		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
 		Optional<DomNode> partiallySelectedAncestor = relativeInput
 				.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
-						.getFragmentNode(n) instanceof DecoratorNode);
+						.getFragmentNode(n) instanceof EntityNode);
 		if (partiallySelectedAncestor.isPresent()) {
 			DomNode node = partiallySelectedAncestor.get();
-			DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
+			EntityNode decoratorNode = (EntityNode) fragmentModel
 					.getFragmentNode(node);
 			if (!decoratorNode.contentEditable) {
 				relativeInput.extendSelectionToIncludeAllOf(node);
@@ -341,7 +341,7 @@ public class ContentDecorator<T>
 
 		BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider;
 
-		DecoratorNode.Descriptor<?> descriptor;
+		EntityNode.Descriptor<?> descriptor;
 
 		public ContentDecorator build() {
 			Preconditions.checkNotNull(decoratorParent);
@@ -360,7 +360,7 @@ public class ContentDecorator<T>
 			this.decoratorParent = decoratorParent;
 		}
 
-		public void setDescriptor(DecoratorNode.Descriptor<?> descriptor) {
+		public void setDescriptor(EntityNode.Descriptor<?> descriptor) {
 			this.descriptor = descriptor;
 		}
 	}

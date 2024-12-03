@@ -14,9 +14,9 @@
  * events nnd hosting the {@code contenteditable } dom node
  * <li>{@link FragmentModel} - maintains a bidi mapping between the dom
  * structure and the {@link FragmentNode} model structure
- * <li>{@link DecoratorNode} - an abstract FragmentNode subclass modelling a
+ * <li>{@link EntityNode} - an abstract FragmentNode subclass modelling a
  * decorator, such as a hash tag or a user mention
- * <li>{@link DecoratorNode.Descriptor} - describes the characteristics of a
+ * <li>{@link EntityNode.Descriptor} - describes the characteristics of a
  * decorator node subclass, such as the triggering string ('#' or '@') and the
  * renderer which maps what the user decorates the node <i>with> to a string
  * <li>{@link ContentDecorator} - (one per decorator node type) responsible for

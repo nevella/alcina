@@ -21,29 +21,28 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 @Bean(PropertySource.FIELDS)
 public class MultipleSuggestor<T> extends Multiple<T> {
-	@Override
-	@Directed.Transform(EditSuggestor.To.class)
-	public List<Choice<T>> getChoices() {
-		return super.getChoices();
-	}
-
-	@Override
-	protected void populateValuesFromNodeContext(Node node,
-			Predicate<T> valueFilter) {
-		// provides access to ListSuggestor
-		super.populateValuesFromNodeContext(node, valueFilter);
-	}
-
 	/**
 	 * Renders a set of choices as a contenteditable - suitable for email
 	 * 'to/cc/bcc' fields, etc
 	 */
 	@TypedProperties
 	@Directed.Delegating
-	static class EditSuggestor extends Model.Fields {
+	public static class EditSuggestor extends Model.Fields {
+		public static class To implements ModelTransform<List, EditSuggestor> {
+			@Override
+			public EditSuggestor apply(List t) {
+				EditSuggestor suggest = new EditSuggestor();
+				EditSuggestor.properties.choices.set(suggest, t);
+				return suggest;
+			}
+		}
+
 		static PackageProperties._MultipleSuggestor_EditSuggestor properties = PackageProperties.multipleSuggestor_editSuggestor;
 
+		@Directed
 		EditArea area;
+
+		List<Choice<?>> choices;
 
 		EditSuggestor() {
 			area = new EditArea();
@@ -58,17 +57,6 @@ public class MultipleSuggestor<T> extends Multiple<T> {
 
 		void areaContentsFromChoices(List choices) {
 		}
-
-		List<Choice<?>> choices;
-
-		public static class To implements ModelTransform<List, EditSuggestor> {
-			@Override
-			public EditSuggestor apply(List t) {
-				EditSuggestor suggest = new EditSuggestor();
-				EditSuggestor.properties.choices.set(suggest, t);
-				return suggest;
-			}
-		}
 	}
 
 	/*
@@ -79,11 +67,23 @@ public class MultipleSuggestor<T> extends Multiple<T> {
 	public static class ListSuggestor<T> extends Model.Value<List<T>>
 			implements ModelEvents.SelectionChanged.Handler {
 		@Directed
+		public String captionish = "ish";
+
+		@Directed
 		public MultipleSuggestor<T> suggest;
 
 		private List<T> value;
 
 		public ListSuggestor() {
+		}
+
+		public static class To implements ModelTransform<List, ListSuggestor> {
+			@Override
+			public ListSuggestor apply(List t) {
+				ListSuggestor suggest = new ListSuggestor();
+				suggest.value = t;
+				return suggest;
+			}
 		}
 
 		@Override
@@ -110,5 +110,18 @@ public class MultipleSuggestor<T> extends Multiple<T> {
 		public void onSelectionChanged(SelectionChanged event) {
 			setValue(suggest.getSelectedValues());
 		}
+	}
+
+	@Override
+	@Directed.Transform(EditSuggestor.To.class)
+	public List<Choice<T>> getChoices() {
+		return super.getChoices();
+	}
+
+	@Override
+	protected void populateValuesFromNodeContext(Node node,
+			Predicate<T> valueFilter) {
+		// provides access to ListSuggestor
+		super.populateValuesFromNodeContext(node, valueFilter);
 	}
 }
