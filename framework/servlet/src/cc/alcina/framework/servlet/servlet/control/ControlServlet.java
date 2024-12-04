@@ -163,7 +163,8 @@ public class ControlServlet extends AlcinaServlet {
 			if (trimStart == -1) {
 				trimStart = lcMessage.indexOf("<html");
 			}
-			if (trimStart != -1) {
+			if (trimStart != -1
+					&& executionType != TaskExecutionType.WAIT_RETURN_LARGE_OBJECT_SERIALIZED) {
 				response.setContentType("text/html");
 				response.getWriter().write(message.substring(trimStart));
 				response.getWriter().close();

@@ -465,6 +465,15 @@ public abstract class FragmentNode extends Model.Fields
 			modelRef.register(other);
 		}
 
+		public void wrapWith(FragmentNode other) {
+			// get a ref before removing
+			FragmentModel modelRef = fragmentModel();
+			withMutating(() -> provideParentNode()
+					.replaceChild(FragmentNode.this, other));
+			modelRef.register(other);
+			other.nodes().append(FragmentNode.this);
+		}
+
 		public void strip() {
 			withMutating(() -> provideNode().strip());
 		}
@@ -519,5 +528,13 @@ public abstract class FragmentNode extends Model.Fields
 	@Target({ ElementType.TYPE })
 	public @interface Transformer {
 		Class<? extends NodeTransformer> value();
+	}
+
+	public boolean isNotType(Class<? extends FragmentNode> clazz) {
+		return !Reflections.isAssignableFrom(clazz, getClass());
+	}
+
+	public boolean isType(Class<? extends FragmentNode> clazz) {
+		return Reflections.isAssignableFrom(clazz, getClass());
 	}
 }
