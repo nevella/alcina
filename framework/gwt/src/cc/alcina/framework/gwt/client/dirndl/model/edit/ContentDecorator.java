@@ -284,7 +284,7 @@ public class ContentDecorator<T>
 	public void onReferenceSelected(ReferenceSelected event) {
 		if (event.getContext().getPrevious().node.getModel() == chooser) {
 			decorator.toNonEditable();
-			decorator.putEntity(event.getModel());
+			decorator.putReferenced(event.getModel());
 			decorator.positionCursorPostReferencedSelection();
 		}
 	}

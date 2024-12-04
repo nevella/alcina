@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Ref;
@@ -338,6 +339,11 @@ public abstract class Choices<T> extends Model implements
 		public void onChoiceSelected(ChoiceSelected event) {
 			event.reemitAs(this, ModelEvents.Selected.class, this);
 		}
+
+		@Override
+		public String toString() {
+			return CommonUtils.nullSafeToString(value);
+		}
 	}
 
 	@Directed(tag = "select")
@@ -442,17 +448,27 @@ public abstract class Choices<T> extends Model implements
 
 		public void setSelectedValues(List<T> values) {
 			List<T> oldValues = getSelectedValues();
-			Set valuesSet = new HashSet(values);
-			choices.forEach(c -> c.setSelected(valuesSet.contains(c.value)));
+			updateSelectedValuesInternal(values);
 			List<T> newValues = getSelectedValues();
 			if (!Objects.equals(oldValues, newValues)) {
-				emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class,
-						newValues);
-				emitEvent(
-						ModelEvents.BeforeSelectionChangedDispatchDescent.class,
-						newValues);
-				emitEvent(ModelEvents.SelectionChanged.class, newValues);
+				emitChangeModelEvents(newValues);
+				propertyChangeSupport().firePropertyChange("selectedValues",
+						oldValues, newValues);
 			}
+		}
+
+		// do the actual update of selectedValues
+		protected void updateSelectedValuesInternal(List<T> values) {
+			Set valuesSet = new HashSet(values);
+			choices.forEach(c -> c.setSelected(valuesSet.contains(c.value)));
+		}
+
+		protected void emitChangeModelEvents(List<T> newValues) {
+			emitEvent(ModelEvents.BeforeSelectionChangedDispatch.class,
+					newValues);
+			emitEvent(ModelEvents.BeforeSelectionChangedDispatchDescent.class,
+					newValues);
+			emitEvent(ModelEvents.SelectionChanged.class, newValues);
 		}
 	}
 

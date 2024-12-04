@@ -11,9 +11,12 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.remote.ReflectiveCommonRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.RepresentableToStringTransform.FromStringRepresentation;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.RepresentableToStringTransform.ToStringRepresentation;
 import cc.alcina.framework.gwt.client.util.Async;
 
 /**
@@ -55,7 +58,7 @@ public abstract class EntityNode<E extends Entity>
 		}
 	}
 
-	public void putEntity(Entity entity) {
+	public void putReferenced(E entity) {
 		setStringRepresentable(entity.toLocator());
 		String text = getDescriptor().triggerSequence()
 				+ ((Function) getDescriptor().itemRenderer()).apply(entity);
@@ -92,29 +95,20 @@ public abstract class EntityNode<E extends Entity>
 		}
 	}
 
-	public static class ContextLocatorTransform
-			implements Binding.Bidi<EntityLocator> {
-		@Override
-		public Function<EntityLocator, String> leftToRight() {
-			return new ContextLocatorTransformLeft();
-		}
-
-		@Override
-		public Function<String, EntityLocator> rightToLeft() {
-			return new ContextLocatorTransformRight();
-		}
-	}
-
+	@Registration({ ToStringRepresentation.class, EntityLocator.class })
 	public static class ContextLocatorTransformLeft
-			extends Binding.AbstractContextSensitiveTransform<EntityLocator> {
+			extends Binding.AbstractContextSensitiveTransform<EntityLocator>
+			implements ToStringRepresentation<EntityLocator> {
 		@Override
 		public String apply(EntityLocator t) {
 			return t == null ? null : t.toRecoverableNumericString();
 		}
 	}
 
+	@Registration({ FromStringRepresentation.class, EntityLocator.class })
 	public static class ContextLocatorTransformRight extends
-			Binding.AbstractContextSensitiveReverseTransform<EntityLocator> {
+			Binding.AbstractContextSensitiveReverseTransform<EntityLocator>
+			implements FromStringRepresentation<EntityLocator> {
 		@Override
 		public EntityLocator apply(String t) {
 			EntityNode contextNode = node.getModel();
@@ -124,6 +118,10 @@ public abstract class EntityNode<E extends Entity>
 	}
 
 	public static abstract class Descriptor<WT extends Entity>
-			extends DecoratorNode.Descriptor<WT, EntityNode> {
+			extends DecoratorNode.Descriptor<WT, EntityLocator, EntityNode> {
+		@Override
+		protected EntityLocator toStringRepresentable(WT wrappedType) {
+			return wrappedType.toLocator();
+		}
 	}
 }

@@ -11,6 +11,8 @@ import com.google.gwt.dom.client.Text;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.ContextSensitiveReverseTransform;
@@ -21,7 +23,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.EntityNode.ContextLocatorTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
@@ -33,7 +34,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 	 * triggers its creation
 	 *
 	 */
-	public static abstract class Descriptor<WT, DN extends DecoratorNode>
+	public static abstract class Descriptor<WT, SR, DN extends DecoratorNode>
 			implements ModelEvents.Commit.Handler {
 		public abstract DN createNode();
 
@@ -62,6 +63,8 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 			selection.collapse(text.jsoRemote(), text.getLength());
 			return created;
 		}
+
+		protected abstract SR toStringRepresentable(WT wrappedType);
 	}
 
 	@Directed(tag = "span", className = "cursor-target")
@@ -89,12 +92,12 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 				() -> this.stringRepresentable = stringRepresentable);
 	}
 
-	public abstract Descriptor<WT, ?> getDescriptor();
+	public abstract Descriptor<WT, SR, ?> getDescriptor();
 
 	@Binding(
 		type = Type.PROPERTY,
 		to = "uid",
-		transform = ContextLocatorTransform.class)
+		transform = RepresentableToStringTransform.class)
 	public SR getStringRepresentable() {
 		return this.stringRepresentable;
 	}
@@ -152,6 +155,35 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 				}
 			}
 		}
+
+		@Registration({ ToStringRepresentation.class, String.class })
+		public static class PassthroughTransformLeft
+				extends Binding.AbstractContextSensitiveTransform<String>
+				implements ToStringRepresentation<String> {
+			@Override
+			public String apply(String t) {
+				return t;
+			}
+		}
+
+		@Registration({ FromStringRepresentation.class, String.class })
+		public static class PassthroughTransformRight
+				extends Binding.AbstractContextSensitiveReverseTransform<String>
+				implements FromStringRepresentation<String> {
+			@Override
+			public String apply(String t) {
+				return t;
+			}
+		}
+	}
+
+	public void putReferenced(WT wrappedType) {
+		setStringRepresentable(
+				getDescriptor().toStringRepresentable(wrappedType));
+		String text = getDescriptor().triggerSequence()
+				+ ((Function) getDescriptor().itemRenderer())
+						.apply(wrappedType);
+		setContent(text);
 	}
 
 	public void setContent(String content) {

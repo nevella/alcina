@@ -1,62 +1,134 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Multiple;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
+ * <p>
  * Renders a set of choices as a contenteditable - suitable for email
  * 'to/cc/bcc' fields, etc
+ * 
+ * <p>
+ * Unlike the parent (and other {@link Choices} subtypes), this doesn't have a
+ * fixed set of choices, so does not render the {@link #getChoices()} property
+ * 
+ * <p>
+ * The {@link #getSelectedValues()} property is modelled directly
  */
 @Bean(PropertySource.FIELDS)
+@TypedProperties
 public class MultipleSuggestor<T> extends Multiple<T> {
-	/**
-	 * Renders a set of choices as a contenteditable - suitable for email
-	 * 'to/cc/bcc' fields, etc
-	 */
-	@TypedProperties
-	@Directed.Delegating
-	public static class EditSuggestor extends Model.Fields {
-		public static class To implements ModelTransform<List, EditSuggestor> {
+	static PackageProperties._MultipleSuggestor properties = PackageProperties.multipleSuggestor;
+
+	@Directed
+	EditArea area;
+
+	List<T> selectedValues;
+
+	@Override
+	public List<T> getSelectedValues() {
+		return selectedValues;
+	}
+
+	@Override
+	protected void updateSelectedValuesInternal(List<T> values) {
+		this.selectedValues = values;
+	}
+
+	public MultipleSuggestor() {
+		area = new EditArea();
+		area.provideFragmentModel().addModelled(ChoiceNode.class);
+		bindings().from(this).on(properties.selectedValues)
+				.accept(this::updateAreaFromSelectedValues);
+	}
+
+	// FIXME - fragmentNode - can this initial deferral be avoided?
+	void updateAreaFromSelectedValues0(List<T> values) {
+		values.stream().map(Choice::new).map(ChoiceNode::new)
+				.forEach(area.fragmentModel.getFragmentRoot()::append);
+	}
+
+	void updateAreaFromSelectedValues(List<T> values) {
+		Client.eventBus().queued()
+				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
+	}
+
+	@Directed(tag = "choice-node")
+	@Bean(PropertySource.FIELDS)
+	static class ChoiceNode extends DecoratorNode<Choice, String> {
+		@Override
+		public DecoratorNode.Descriptor<Choice, String, ?> getDescriptor() {
+			return new ChoiceNode.Descriptor();
+		}
+
+		ChoiceNode() {
+		}
+
+		ChoiceNode(Choice choice) {
+			putReferenced(choice);
+		}
+
+		static class Descriptor
+				extends DecoratorNode.Descriptor<Choice, String, ChoiceNode> {
 			@Override
-			public EditSuggestor apply(List t) {
-				EditSuggestor suggest = new EditSuggestor();
-				EditSuggestor.properties.choices.set(suggest, t);
-				return suggest;
+			public ChoiceNode createNode() {
+				return new ChoiceNode();
+			}
+
+			@Override
+			public Function<Choice, String> itemRenderer() {
+				return MultipleSuggestor::choiceToString;
+			}
+
+			@Override
+			public void onCommit(Commit event) {
+				// TODO - fire changes
+			}
+
+			@Override
+			public String triggerSequence() {
+				return "";
+			}
+
+			@Override
+			protected String toStringRepresentable(Choice wrappedType) {
+				return choiceToString(wrappedType);
 			}
 		}
+	}
 
-		static PackageProperties._MultipleSuggestor_EditSuggestor properties = PackageProperties.multipleSuggestor_editSuggestor;
+	static String choiceToString(Choice choice) {
+		return CommonUtils.nullSafeToString(choice.getValue());
+	}
 
-		@Directed
-		EditArea area;
+	void areaContentsFromChoices0(List<Choice<?>> choices) {
+		choices.forEach(choice -> {
+			ChoiceNode choiceNode = new ChoiceNode();
+			choiceNode.putReferenced(choice);
+			area.fragmentModel.getFragmentRoot().append(choiceNode);
+		});
+	}
 
-		List<Choice<?>> choices;
-
-		EditSuggestor() {
-			area = new EditArea();
-			// area.provideFragmentModel().addModelled(type);
-			bindings().from(this).on(properties.choices)
-					.accept(this::areaContentsFromChoices);
-		}
-		// @Directed(tag = "mention")
-		// @Bean(PropertySource.FIELDS)
-		// static class ChoiceNode extends DecoratorNode<Choice> {
-		// }
-
-		void areaContentsFromChoices(List choices) {
-		}
+	void areaContentsFromChoices(List<Choice<?>> choices) {
+		Client.eventBus().queued()
+				.lambda(() -> areaContentsFromChoices0(choices)).dispatch();
 	}
 
 	/*
@@ -113,7 +185,7 @@ public class MultipleSuggestor<T> extends Multiple<T> {
 	}
 
 	@Override
-	@Directed.Transform(EditSuggestor.To.class)
+	@Directed.Exclude
 	public List<Choice<T>> getChoices() {
 		return super.getChoices();
 	}
@@ -121,7 +193,5 @@ public class MultipleSuggestor<T> extends Multiple<T> {
 	@Override
 	protected void populateValuesFromNodeContext(Node node,
 			Predicate<T> valueFilter) {
-		// provides access to ListSuggestor
-		super.populateValuesFromNodeContext(node, valueFilter);
 	}
 }
