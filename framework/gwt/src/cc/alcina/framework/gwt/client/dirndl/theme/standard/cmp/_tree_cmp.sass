@@ -1,9 +1,9 @@
 @use '../../theme/theme'
 
 /*
-  - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
-  - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
-  */
+ - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
+ - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
+ */
 
 @mixin tree
   .tree,
@@ -15,12 +15,12 @@
 
   .tree
     &.root-hidden>.node
-      >label
+      >node-label
         display: none
       >nodes
         padding-left: 0
     .node
-      >label
+      >node-label
         position: relative
         display: block
         margin-bottom: 5px
@@ -38,10 +38,10 @@
           margin-top: 5px
           margin-right: 8px
           cursor: pointer
-        >label
+        >node-label
           display: inline-block
           cursor: pointer
-      &:not(.open)>label>span:before
+      &:not(.open)>node-label>span:before
         content: ' '
         position: absolute
         border-radius: 3px
@@ -51,9 +51,9 @@
         height: 6px
         left: 3px
         top: 7.5px
-      &.leaf>label>span
+      &.leaf>node-label>span
         visibility: hidden
-      &.keyboard-selected>label
+      &.keyboard-selected>node-label
         background-color: theme.$tree-selected-background-color
       >nodes
         padding-left: 20px
@@ -69,5 +69,5 @@
       color: #bbb
 
 @mixin open-toggle-hidden()
-  .node > label > span:first-child
+  .node > node-label > span:first-child
     display: none
