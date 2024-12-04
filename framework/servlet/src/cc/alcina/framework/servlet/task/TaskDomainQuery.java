@@ -52,11 +52,50 @@ public class TaskDomainQuery extends PerformerTask.Fields
 	@Bean(PropertySource.FIELDS)
 	public static class ResultNodes {
 		public List<ResultNode> nodes = new ArrayList<>();
+
+		@Override
+		public String toString() {
+			return CommonUtils.joinWithNewlines(nodes);
+		}
+
+		public Stream<ResultNode> at(String path) {
+			return nodes.stream().flatMap(rn -> rn.at(path));
+		}
+
+		public ResultNode first(String path) {
+			return nodes.stream().flatMap(rn -> rn.at(path)).findFirst()
+					.orElse(null);
+		}
 	}
 
 	@Bean(PropertySource.FIELDS)
 	public static class ResultNode {
 		public String value;
+
+		public Stream<ResultNode> at(String path) {
+			ensureProperties();
+			if (path.contains(".")) {
+				String segment = path.replaceFirst("(.+?)\\..+", "$1");
+				String remainder = path.replaceFirst("(.+?)\\.(.+)", "$2");
+				if (properties.containsKey(segment)) {
+					return properties.get(segment).at(remainder);
+				} else {
+					return stream().flatMap(rn -> rn.at(path));
+				}
+			} else {
+				if (elements.isEmpty()) {
+					return Stream.of(this);
+				} else {
+					if (properties.containsKey(path)) {
+						return Stream.of(properties.get(path))
+								.flatMap(rn -> rn.at(""));
+					} else {
+						return path.isEmpty() ? stream()
+								: stream().flatMap(rn -> rn.at(path));
+					}
+				}
+			}
+		}
 
 		transient Map<String, ResultNode> properties;
 
@@ -93,17 +132,39 @@ public class TaskDomainQuery extends PerformerTask.Fields
 			return Ax.first(elements);
 		}
 
+		public boolean filter(String path, String value) {
+			ResultNode test = at(path).findFirst().orElse(null);
+			if (test == null) {
+				return false;
+			} else {
+				return Objects.equals(test.value, value);
+			}
+		}
+
 		public synchronized ResultNode get(String key) {
+			return ensureProperties().get(key);
+		}
+
+		Map<String, ResultNode> ensureProperties() {
 			if (properties == null) {
 				properties = elements.stream()
 						.collect(AlcinaCollectors.toKeyMap(n -> n.path));
 			}
-			return properties.get(key);
+			return properties;
 		}
 
 		public String value(String key) {
 			ResultNode node = get(key);
 			return node == null ? null : node.value;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder format = new FormatBuilder();
+			format.line(value);
+			ensureProperties().entrySet().stream().forEach(
+					e -> format.line(" %s: %s", e.getKey(), value(e.getKey())));
+			return format.toString();
 		}
 	}
 
