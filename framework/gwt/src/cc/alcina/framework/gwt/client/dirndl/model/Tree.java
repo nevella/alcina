@@ -554,7 +554,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			}
 
 			public void setLabel(Object label) {
-				set("node-label", this.label, label, () -> this.label = label);
+				set("label", this.label, label, () -> this.label = label);
 			}
 
 			public void setTitle(String title) {
