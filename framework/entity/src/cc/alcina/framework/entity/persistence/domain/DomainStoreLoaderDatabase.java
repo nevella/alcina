@@ -13,6 +13,7 @@ import java.sql.Timestamp;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.Iterator;
@@ -644,7 +645,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						e.getValue()));
 			});
 			invokeAllWithThrow(tasks, iLoaderExecutor);
-			transforms.forEach(request.getEvents()::add);
+			transforms.stream()
+					.sorted(Comparator
+							.comparing(DomainTransformEventPersistent::getId))
+					.forEach(request.getEvents()::add);
 			return request;
 		} finally {
 			releaseConn(conn);
