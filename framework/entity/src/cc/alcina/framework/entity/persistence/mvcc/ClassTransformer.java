@@ -1262,6 +1262,12 @@ class ClassTransformer {
 				return type.getName();
 			}
 
+			/**
+			 * FIXME - mvcc - this should throw if it doesn't encounter a
+			 * matching method (there was an issue due to a varargs method
+			 * parameter in an entity class that was ... unfortunate, and masked
+			 * by the absence of fail-fast
+			 */
 			private boolean isNonPrivateInstanceNonInterfaceMethod(
 					List<Method> allClassMethods, CtMethod ctMethod)
 					throws Exception {
@@ -1302,7 +1308,15 @@ class ClassTransformer {
 			}
 
 			private boolean matches(CtClass ctClass, Class<?> clazz) {
-				return getClassName(ctClass).equals(clazz.getName());
+				String ctClassName = getClassName(ctClass);
+				String altFormCtClassName = ctClassName;
+				if (ctClassName.endsWith("[]")) {
+					altFormCtClassName = Ax.format("[L%s;",
+							ctClassName.replaceFirst("(.+)\\[\\]", "$1"));
+				}
+				String className = clazz.getName();
+				return ctClassName.equals(className)
+						|| altFormCtClassName.equals(className);
 			}
 
 			private class MethodNameArgTypes {
