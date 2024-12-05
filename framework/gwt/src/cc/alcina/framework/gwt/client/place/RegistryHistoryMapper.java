@@ -23,6 +23,10 @@ import cc.alcina.framework.gwt.client.ClientTopics;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
 
+/**
+ * This must be registered manually (different apps use different mappers, and
+ * it's trickier to isolate the classpaths than register manually)
+ */
 @Reflected
 @EnvironmentSingleton
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
