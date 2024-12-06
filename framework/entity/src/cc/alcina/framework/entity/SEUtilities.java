@@ -1291,6 +1291,10 @@ public class SEUtilities {
 		Stack<File> folders = new Stack<File>();
 		List<File> results = new ArrayList<File>();
 		File root = new File(initialPath);
+		if (!root.exists()) {
+			throw new IllegalArgumentException(
+					Ax.format("%s does not exist", initialPath));
+		}
 		folders.add(root);
 		while (!folders.isEmpty()) {
 			File folder = folders.pop();
