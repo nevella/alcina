@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * <p>
@@ -296,8 +297,8 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		return data.mouseWheelVelocityY;
 	}
 
-	public final NativeBeforeInputEvent getNativeBeforeInputEvent() {
-		return new NativeBeforeInputEvent(jso);
+	public BeforeInputEventData getBeforeInputEventData() {
+		return new BeforeInputEventData();
 	}
 
 	/**
@@ -461,7 +462,7 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		getShiftKey();
 		getCtrlKey();
 		getString();
-		getType();
+		data.populateBeforeInput(this);
 		data.toSerializableForm();
 		jso = null;
 	}
@@ -535,12 +536,32 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 
 		String key;
 
+		String beforeInputData;
+
+		String beforeInputDataTransfer;
+
+		String beforeInputType;
+
+		Boolean beforeInputComposing;
+
 		void toSerializableForm() {
 			this.eventTarget = EventTarget.serializableForm(this.eventTarget);
 			this.relatedEventTarget = EventTarget
 					.serializableForm(this.relatedEventTarget);
 			this.currentEventTarget = EventTarget
 					.serializableForm(this.currentEventTarget);
+		}
+
+		void populateBeforeInput(NativeEvent event) {
+			if (event.getType().equals(BrowserEvents.BEFOREINPUT)) {
+				NativeBeforeInputEvent nativeBeforeInputEvent = new NativeBeforeInputEvent(
+						event.jso);
+				beforeInputData = nativeBeforeInputEvent.getData();
+				beforeInputDataTransfer = nativeBeforeInputEvent
+						.getDataTransfer();
+				beforeInputType = nativeBeforeInputEvent.getInputType();
+				beforeInputComposing = nativeBeforeInputEvent.getIsComposing();
+			}
 		}
 
 		void populateWrapperDefaults() {
@@ -586,26 +607,44 @@ public class NativeEvent implements JavascriptObjectEquivalent {
 		}
 	}
 
-	public static class NativeBeforeInputEvent {
+	public class BeforeInputEventData {
+		public String getData() {
+			return data.beforeInputData;
+		}
+
+		public String getDataTransfer() {
+			return data.beforeInputDataTransfer;
+		}
+
+		public String getInputType() {
+			return data.beforeInputType;
+		}
+
+		public boolean getIsComposing() {
+			return data.beforeInputComposing;
+		}
+	}
+
+	static class NativeBeforeInputEvent {
 		private NativeEventJso eventJso;
 
 		NativeBeforeInputEvent(NativeEventJso eventJso) {
 			this.eventJso = eventJso;
 		}
 
-		public native String getData() /*-{
+		native String getData() /*-{
       return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.data;
 		}-*/;
 
-		public native String getDataTransfer() /*-{
+		native String getDataTransfer() /*-{
       return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.dataTransfer;
 		}-*/;
 
-		public native String getInputType() /*-{
+		native String getInputType() /*-{
       return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.inputType;
 		}-*/;
 
-		public native boolean getIsComposing() /*-{
+		native boolean getIsComposing() /*-{
       return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.isComposing;
 		}-*/;
 	}

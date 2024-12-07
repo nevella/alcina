@@ -66,7 +66,7 @@ public final class MutationNode {
 
 	public transient org.w3c.dom.Node w3cNode;
 
-	public AttachId attachId = new AttachId();
+	public AttachId attachId;
 
 	public short nodeType;
 

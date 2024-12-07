@@ -69,7 +69,12 @@ public abstract class MessageHandlerServer<PM extends Message>
 			 */
 			Preconditions.checkState(message.domMutations.isEmpty());
 			Preconditions.checkState(message.eventSystemMutations.isEmpty());
-			env.applyLocationMutation(message.locationMutation, false);
+			if (message.locationMutation != null) {
+				env.applyLocationMutation(message.locationMutation, false);
+			}
+			if (message.getSelectionMutation() != null) {
+				env.applySelectionMutation(message.getSelectionMutation());
+			}
 		}
 	}
 

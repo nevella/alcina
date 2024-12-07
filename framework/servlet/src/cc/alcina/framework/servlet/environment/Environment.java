@@ -23,6 +23,7 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
@@ -502,6 +503,13 @@ class Environment {
 				});
 			}
 		}
+
+		void applySelectionMutation(SelectionRecord selectionMutation) {
+			queue.invoke(() -> {
+				document.attachIdRemote()
+						.onSelectionMutationReceived(selectionMutation);
+			});
+		}
 	}
 
 	static final transient String CONTEXT_ENVIRONMENT = Environment.class
@@ -731,6 +739,7 @@ class Environment {
 	private void startup(MessageProcessingToken token, Startup message) {
 		access().applyMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
+		access().applySelectionMutation(message.getSelectionMutation());
 		initialiseSettings(message.settings);
 		startClient();
 	}

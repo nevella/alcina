@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import org.w3c.dom.DOMException;
 
 public class DocumentLocal extends NodeLocal implements ClientDomDocument {
-	public Document document;
+	Document document;
 
 	private Element bodyElement;
 
@@ -14,7 +14,12 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 
 	private int gwtLuid = 1;
 
-	public DocumentLocal() {
+	public SelectionLocal getSelection() {
+		return document.getSelection().local();
+	}
+
+	public DocumentLocal(Document document) {
+		this.document = document;
 	}
 
 	@Override

@@ -228,6 +228,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		}
 		currentEventMessage.eventContext = new DomEventContextGenerator()
 				.generate();
+		Ax.out(currentEventMessage);
 		ClientRpc.send(currentEventMessage);
 		currentEventMessage = null;
 	}

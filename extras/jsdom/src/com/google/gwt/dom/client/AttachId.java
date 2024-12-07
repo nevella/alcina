@@ -37,6 +37,20 @@ public final class AttachId {
 		this.id = id;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof AttachId) {
+			return ((AttachId) obj).id == id;
+		} else {
+			return super.equals(obj);
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return id;
+	}
+
 	public Node node() {
 		return Document.get().implAccess().getNode(this);
 	}

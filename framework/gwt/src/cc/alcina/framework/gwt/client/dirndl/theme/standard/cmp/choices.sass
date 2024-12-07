@@ -4,7 +4,7 @@
 
 //various choices style mixins
 
-@mixin vertical()
+@mixin vertical
   display: flex
   flex-direction: column
   gap: 2px
@@ -19,7 +19,7 @@
     &[_selected]
       font-weight: bold
 
-@mixin horizontal()
+@mixin horizontal
   display: flex
   gap: 2rem
 
@@ -32,3 +32,23 @@
 
     &[_selected]
       text-decoration: underline
+
+@mixin suggestor
+  > edit
+    border: solid 1px #ddd
+    padding: 0.5rem
+    min-width: 20rem
+    display: flex
+    gap: 1rem
+    flex-wrap: wrap
+
+    > choice-node
+      background-color:#ddd
+      display: inline-block
+      padding: 5px 8px
+      border-radius: 8px
+
+@mixin multi-suggestor-tag
+  multi-suggestor
+    @include suggestor
+    

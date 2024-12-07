@@ -96,9 +96,9 @@ public class Document extends Node
 	 */
 	public boolean htmlTags = true;
 
+	Selection selection;
+
 	protected Document(RemoteType remoteType) {
-		this.local = new DocumentLocal();
-		this.local.document = this;
 		this.remoteType = remoteType;
 		domDocument = DomDocument.from(this, true);
 		switch (remoteType) {
@@ -109,6 +109,8 @@ public class Document extends Node
 			remote = new DocumentAttachId(this);
 			break;
 		}
+		this.selection = new Selection(this);
+		this.local = new DocumentLocal(this);
 		localDom = new LocalDom();
 	}
 
@@ -1173,5 +1175,13 @@ public class Document extends Node
 
 	public List<Element> querySelectorAll(String selector) {
 		return remote.querySelectorAll(selector);
+	}
+
+	public Selection getSelection() {
+		return selection;
+	}
+
+	public void onDocumentEventSystemInit() {
+		selection.onDocumentEventSystemInit();
 	}
 }

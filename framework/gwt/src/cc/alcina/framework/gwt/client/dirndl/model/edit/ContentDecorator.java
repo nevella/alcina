@@ -8,7 +8,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent;
+import com.google.gwt.dom.client.NativeEvent.BeforeInputEventData;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -127,7 +127,7 @@ public class ContentDecorator<T>
 	/*
 	 * The decorator node currently being edited
 	 */
-	EntityNode<?> decorator;
+	DecoratorNode<?, ?> decorator;
 
 	/*
 	 * The chooser used to edit the current decorator
@@ -150,7 +150,7 @@ public class ContentDecorator<T>
 	 * Models the characteristics of the decorator - what the trigger key
 	 * sequence is etc
 	 */
-	EntityNode.Descriptor<?> descriptor;
+	DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
 	private ContentDecorator(ContentDecorator.Builder builder) {
 		this.descriptor = builder.descriptor;
@@ -173,8 +173,8 @@ public class ContentDecorator<T>
 
 	@Override
 	public void onBeforeInput(BeforeInput event) {
-		NativeBeforeInputEvent nativeBefore = event.getNativeBeforeInputEvent();
-		String data = nativeBefore.getData();
+		BeforeInputEventData beforeData = event.getBeforeInputEventData();
+		String data = beforeData.getData();
 		checkNextInput = Objects.equals(data, descriptor.triggerSequence());
 	}
 
@@ -322,6 +322,9 @@ public class ContentDecorator<T>
 
 	protected void validateSelection0() {
 		RelativeInputModel relativeInput = new RelativeInputModel();
+		if (!relativeInput.hasSelection()) {
+			return;
+		}
 		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
 		Optional<DomNode> partiallySelectedAncestor = relativeInput
 				.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
@@ -341,7 +344,7 @@ public class ContentDecorator<T>
 
 		BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider;
 
-		EntityNode.Descriptor<?> descriptor;
+		DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
 		public ContentDecorator build() {
 			Preconditions.checkNotNull(decoratorParent);
@@ -360,7 +363,8 @@ public class ContentDecorator<T>
 			this.decoratorParent = decoratorParent;
 		}
 
-		public void setDescriptor(EntityNode.Descriptor<?> descriptor) {
+		public void
+				setDescriptor(DecoratorNode.Descriptor<?, ?, ?> descriptor) {
 			this.descriptor = descriptor;
 		}
 	}

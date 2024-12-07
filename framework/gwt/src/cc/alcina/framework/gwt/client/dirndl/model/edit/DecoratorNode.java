@@ -6,12 +6,11 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
-import com.google.gwt.dom.client.SelectionJso;
+import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.Text;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -58,9 +57,9 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 			textFragment.nodes().insertBeforeThis(created);
 			created.nodes().append(textFragment);
 			LocalDom.flush();
-			SelectionJso selection = Document.get().jsoRemote().getSelection();
+			Selection selection = Document.get().getSelection();
 			Text text = (Text) splits.contents.w3cNode();
-			selection.collapse(text.jsoRemote(), text.getLength());
+			selection.collapse(text, text.getLength());
 			return created;
 		}
 
@@ -213,10 +212,8 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 		FragmentNode.TextNode cursorTarget = textNode.fragmentTree()
 				.nextTextNode(true).get();
 		Node cursorNode = cursorTarget.domNode().gwtNode();
-		SelectionJso selection = Document.get().jsoRemote().getSelection();
-		NodeJso remote = cursorNode.jsoRemote();
-		NodeJso rr1 = remote.getParentNodeJso();
-		selection.collapse(remote, 1);// after zws
+		Selection selection = Document.get().getSelection();
+		selection.collapse(cursorNode, 1);// after zws
 	}
 
 	void stripIfInvalid() {

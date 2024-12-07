@@ -102,6 +102,7 @@ public abstract class Client implements ContextFrame {
 			EventFrame.contextProvider = ContextProvider.createProvider(
 					ctx -> new EventFrame(), null, null, EventFrame.class,
 					false);
+			Document.get().onDocumentEventSystemInit();
 		}
 
 		public static boolean isComplete() {

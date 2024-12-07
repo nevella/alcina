@@ -6,11 +6,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.AttachId;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DomEventContext;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.dom.client.mutations.SelectionRecord;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -194,7 +196,8 @@ public class RemoteComponentProtocol {
 		/*
 		 * An album by Beck. Amazing.
 		 */
-		public static class Mutations extends Message {
+		public static class Mutations extends Message
+				implements HasSelectionMutation {
 			public static Mutations ofLocation() {
 				Mutations result = new Mutations();
 				result.locationMutation = LocationMutation.ofWindow(false);
@@ -207,13 +210,24 @@ public class RemoteComponentProtocol {
 
 			public List<EventSystemMutation> eventSystemMutations = new ArrayList<>();
 
+			private SelectionRecord selectionMutation;
+
+			public SelectionRecord getSelectionMutation() {
+				return selectionMutation;
+			}
+
+			public void
+					setSelectionMutation(SelectionRecord selectionMutation) {
+				this.selectionMutation = selectionMutation;
+			}
+
 			public LocationMutation locationMutation;
 
 			@Override
 			public String toDebugString() {
 				return FormatBuilder.keyValues("dom", domMutations.size(),
 						"event", eventSystemMutations.size(), "loc",
-						locationMutation);
+						locationMutation, "sel", selectionMutation);
 			}
 
 			@Override
@@ -225,6 +239,8 @@ public class RemoteComponentProtocol {
 					return eventSystemMutations.stream()
 							.map(esm -> esm.eventTypeName).distinct()
 							.collect(Collectors.joining(", "));
+				} else if (selectionMutation != null) {
+					return selectionMutation.toString();
 				} else {
 					return "";
 				}
@@ -264,10 +280,17 @@ public class RemoteComponentProtocol {
 			}
 		}
 
+		public interface HasSelectionMutation {
+			SelectionRecord getSelectionMutation();
+
+			void setSelectionMutation(SelectionRecord selectionMutation);
+		}
+
 		/*
 		 * Sent by the client on startup, to initialise the server dom
 		 */
-		public static class Startup extends Message {
+		public static class Startup extends Message
+				implements HasSelectionMutation {
 			public static Startup forClient() {
 				Startup result = new Startup();
 				result.maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
@@ -288,6 +311,17 @@ public class RemoteComponentProtocol {
 			public LocationMutation locationMutation;
 
 			public List<MutationRecord> domMutations = new ArrayList<>();
+
+			SelectionRecord selectionMutation;
+
+			public SelectionRecord getSelectionMutation() {
+				return selectionMutation;
+			}
+
+			public void
+					setSelectionMutation(SelectionRecord selectionMutation) {
+				this.selectionMutation = selectionMutation;
+			}
 
 			public int maxCharsPerTextNode;
 

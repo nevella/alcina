@@ -7,7 +7,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
-import com.google.gwt.dom.client.SelectionJso;
+import com.google.gwt.dom.client.Selection;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 public class RelativeInputModel {
-	SelectionJso selection;
+	Selection selection;
 
 	boolean triggerable;
 
@@ -34,6 +34,8 @@ public class RelativeInputModel {
 
 	Node focusDomNode;
 
+	boolean hasSelection;
+
 	/*
 	 * Note
 	 *
@@ -45,11 +47,14 @@ public class RelativeInputModel {
 	 * probably 'maybe',
 	 */
 	public RelativeInputModel() {
-		selection = Document.get().jsoRemote().getSelection();
+		selection = Document.get().getSelection();
 		collapsed = selection.isCollapsed();
+		hasSelection = selection.hasSelection();
+		if (!hasSelection) {
+			return;
+		}
 		{
-			NodeJso focusNode = selection.getFocusNode();
-			focusDomNode = focusNode.node();
+			focusDomNode = selection.getFocusNode();
 			if (focusDomNode != null) {
 				focusOffset = selection.getFocusOffset();
 				focusLocation = focusDomNode.asDomNode().asLocation()
@@ -63,6 +68,7 @@ public class RelativeInputModel {
 				anchorLocation = anchorDomNode.asDomNode().asLocation()
 						.createRelativeLocation(anchorOffset, false);
 				range = new Location.Range(anchorLocation, focusLocation);
+			} else {
 			}
 		}
 		if (collapsed && focusLocation != null) {
@@ -123,17 +129,16 @@ public class RelativeInputModel {
 			}
 		}
 		if (modifiedAnchorLocation != null) {
-			selection.collapse(
-					modifiedAnchorLocation.containingNode.gwtNode().jsoRemote(),
+			selection.collapse(modifiedAnchorLocation.containingNode.gwtNode(),
 					modifiedAnchorLocation.indexInNode());
 			Location extendTo = modifiedFocusLocation != null
 					? modifiedFocusLocation
 					: focusLocation;
-			selection.extend(extendTo.containingNode.gwtNode().jsoRemote(),
+			selection.extend(extendTo.containingNode.gwtNode(),
 					extendTo.indexInNode());
 		} else if (modifiedFocusLocation != null) {
 			Location extendTo = modifiedFocusLocation;
-			selection.extend(extendTo.containingNode.gwtNode().jsoRemote(),
+			selection.extend(extendTo.containingNode.gwtNode(),
 					extendTo.indexInNode());
 		}
 	}
@@ -190,5 +195,9 @@ public class RelativeInputModel {
 	@Override
 	public String toString() {
 		return FormatBuilder.keyValues("range", range);
+	}
+
+	public boolean hasSelection() {
+		return hasSelection;
 	}
 }
