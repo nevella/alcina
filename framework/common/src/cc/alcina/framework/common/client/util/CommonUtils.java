@@ -1947,8 +1947,9 @@ public class CommonUtils {
 				&& s.substring(maxChars - 10, maxChars).indexOf(" ") == -1) {
 			return s.substring(0, maxChars) + ellipsis;
 		}
-		return s.substring(0, s.substring(0, maxChars).lastIndexOf(' '))
-				+ ellipsis;
+		int lastIndex = s.substring(0, maxChars).lastIndexOf(' ');
+		lastIndex = lastIndex == -1 ? maxChars : lastIndex;
+		return s.substring(0, lastIndex) + ellipsis;
 	}
 
 	public static String trimToWsCharsMiddle(String s, int maxChars) {

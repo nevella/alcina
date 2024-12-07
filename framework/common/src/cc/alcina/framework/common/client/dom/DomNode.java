@@ -689,6 +689,17 @@ public class DomNode {
 			return null;
 		}
 
+		public DomNode tagAndClassIs(String tagName, String className) {
+			DomNode cursor = getStartingCursor();
+			while (cursor != null) {
+				if (cursor.tagAndClassIs(tagName, className)) {
+					return cursor;
+				}
+				cursor = cursor.parent();
+			}
+			return null;
+		}
+
 		private DomNode getStartingCursor() {
 			return orSelf ? DomNode.this : DomNode.this.parent();
 		}
