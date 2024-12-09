@@ -213,7 +213,7 @@ public class ElementQuery {
 	}
 
 	public void sendKeys(String text) {
-		getElement().sendKeys(text);
+		withElement(elem -> elem.sendKeys(text));
 	}
 
 	public void setSelected(String optionText, boolean selected) {
