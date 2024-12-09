@@ -5,14 +5,13 @@ import java.util.List;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.BeforeInput;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorChooser.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
@@ -26,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
  */
 public interface HasDecorators
 		extends DecoratorChooser.BeforeChooserClosed.Handler,
-		DomEvents.BeforeInput.Handler, DomEvents.Input.Handler,
+		DomEvents.Input.Handler, DomEvents.SelectionChanged.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		// routes overlay closed events back to the referencedecorators
 		ModelEvents.Closed.Handler,
@@ -37,7 +36,7 @@ public interface HasDecorators
 		// routes MouseUp events to decorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
 		FragmentModel.Has {
-	boolean canDecorate(RelativeInputModel relativeInput);
+	boolean canDecorate(RelativeSelection relativeInput);
 
 	public List<ContentDecorator> getDecorators();
 
@@ -46,9 +45,8 @@ public interface HasDecorators
 	}
 
 	@Override
-	default void onBeforeInput(BeforeInput event) {
-		RelativeInputModel relativeInputModel = new RelativeInputModel();
-		getDecorators().forEach(d -> d.onBeforeInput(event));
+	default void onSelectionChanged(DomEvents.SelectionChanged event) {
+		getDecorators().forEach(d -> d.onSelectionChanged(event));
 	}
 
 	@Override

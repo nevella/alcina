@@ -7,11 +7,13 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -22,9 +24,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Multiple;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
-import cc.alcina.framework.common.client.meta.Feature;
 
 /**
  * <p>
@@ -241,7 +242,7 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	}
 
 	@Override
-	public boolean canDecorate(RelativeInputModel relativeInput) {
+	public boolean canDecorate(RelativeSelection relativeInput) {
 		return true;
 	}
 

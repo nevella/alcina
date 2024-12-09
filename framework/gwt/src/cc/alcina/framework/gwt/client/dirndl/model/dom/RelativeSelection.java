@@ -6,16 +6,21 @@ import java.util.function.Predicate;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.Selection;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedName;
 
-public class RelativeInputModel {
+/**
+ * A utility wrapper around a DOM Selection, for use by annotators and
+ * decorators
+ */
+public class RelativeSelection {
 	Selection selection;
 
 	boolean triggerable;
@@ -32,7 +37,14 @@ public class RelativeInputModel {
 
 	Location.Range range;
 
-	Node focusDomNode;
+	/*
+	 * the range from the start of the caret textnode to the caret, if any
+	 */
+	Location.Range priorRange;
+
+	DomNode focusDomNode;
+
+	DomNode anchorDomNode;
 
 	boolean hasSelection;
 
@@ -46,7 +58,7 @@ public class RelativeInputModel {
 	 * And...this gives rise to 'do we need Location.after' - and answer is
 	 * probably 'maybe',
 	 */
-	public RelativeInputModel() {
+	public RelativeSelection() {
 		selection = Document.get().getSelection();
 		collapsed = selection.isCollapsed();
 		hasSelection = selection.hasSelection();
@@ -54,20 +66,31 @@ public class RelativeInputModel {
 			return;
 		}
 		{
-			focusDomNode = selection.getFocusNode();
+			focusDomNode = selection.getFocusNode() == null ? null
+					: selection.getFocusNode().asDomNode();
 			if (focusDomNode != null) {
 				focusOffset = selection.getFocusOffset();
-				focusLocation = focusDomNode.asDomNode().asLocation()
+				focusLocation = focusDomNode.asLocation()
 						.createRelativeLocation(focusOffset, false);
 			}
 		}
 		{
-			Node anchorDomNode = selection.getAnchorNode().node();
+			anchorDomNode = selection.getAnchorNode() == null ? null
+					: selection.getAnchorNode().asDomNode();
 			if (anchorDomNode != null) {
+				Ax.out("anchorDomNode-attachId:%s",
+						anchorDomNode.gwtNode().getAttachId());
 				anchorOffset = selection.getAnchorOffset();
-				anchorLocation = anchorDomNode.asDomNode().asLocation()
+				anchorLocation = anchorDomNode.asLocation()
 						.createRelativeLocation(anchorOffset, false);
 				range = new Location.Range(anchorLocation, focusLocation);
+				if (anchorDomNode.isText()) {
+					// non-rtl
+					Location anchorTextStartLocation = anchorDomNode
+							.asLocation();
+					priorRange = new Location.Range(anchorTextStartLocation,
+							anchorLocation);
+				}
 			} else {
 			}
 		}
@@ -144,7 +167,7 @@ public class RelativeInputModel {
 	}
 
 	public DomNode focusNode() {
-		return focusDomNode.asDomNode();
+		return focusDomNode;
 	}
 
 	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(
@@ -194,7 +217,11 @@ public class RelativeInputModel {
 
 	@Override
 	public String toString() {
-		return FormatBuilder.keyValues("range", range);
+		FormatBuilder format = new FormatBuilder().separator("  ");
+		format.append(NestedName.get(this));
+		format.appendKeyValues("range", range).toString();
+		format.appendKeyValues("priorRange", priorRange).toString();
+		return format.toString();
 	}
 
 	public boolean hasSelection() {

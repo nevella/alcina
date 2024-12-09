@@ -8,24 +8,25 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.NativeEvent.BeforeInputEventData;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.BeforeInput;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
@@ -102,21 +103,14 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * sides
  */
 @Feature.Ref(Feature_Dirndl_ContentDecorator.class)
-public class ContentDecorator<T>
-		implements DomEvents.BeforeInput.Handler, DomEvents.Input.Handler,
+public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		DomEvents.MouseUp.Handler, DomEvents.KeyDown.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
-		ModelEvents.Commit.Handler {
+		ModelEvents.Commit.Handler, DomEvents.SelectionChanged.Handler {
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
 	}
-
-	/*
-	 * modified by onBeforeInput, determines whether onInput will inspect the
-	 * current dom selection surrounds
-	 */
-	boolean checkNextInput = false;
 
 	/*
 	 * Used to route (keyboard navigation) events from the HasDecorators -> this
@@ -158,7 +152,7 @@ public class ContentDecorator<T>
 		this.decoratorParent = builder.decoratorParent;
 	}
 
-	boolean canDecorate(RelativeInputModel relativeInput) {
+	boolean canDecorate(RelativeSelection relativeInput) {
 		return decoratorParent.canDecorate(relativeInput);
 	}
 
@@ -169,13 +163,6 @@ public class ContentDecorator<T>
 	boolean isSpaceOrLeftBracketish(String characterString) {
 		return characterString != null
 				&& characterString.matches("[ \u200B({\\[]");
-	}
-
-	@Override
-	public void onBeforeInput(BeforeInput event) {
-		BeforeInputEventData beforeData = event.getBeforeInputEventData();
-		String data = beforeData.getData();
-		checkNextInput = Objects.equals(data, descriptor.triggerSequence());
 	}
 
 	@Override
@@ -207,20 +194,50 @@ public class ContentDecorator<T>
 	 */
 	@Override
 	public void onInput(Input event) {
-		if (checkNextInput) {
-			checkNextInput = false;
-			RelativeInputModel relativeInput = new RelativeInputModel();
-			if (relativeInput.isTriggerable()) {
-				/*
-				 * requires mutations to be processed, so schedule
-				 */
-				Scheduler.get().scheduleFinally(() -> onInput0(relativeInput));
-			}
-		}
+		checkTrigger();
 		topicInput.publish(event);
 	}
 
-	void onInput0(RelativeInputModel relativeInput) {
+	CancelledDecoratorSuggestion cancelledDecoratorSuggestion = new CancelledDecoratorSuggestion();
+
+	class CancelledDecoratorSuggestion {
+	}
+
+	Runnable checkTrigger0Runnable = this::checkTrigger0;
+
+	Runnable validateSelection0Runnable = this::validateSelection0;
+
+	void checkTrigger() {
+		/*
+		 * handling requires mutations to be processed (and FN mutations), so
+		 * defer
+		 */
+		Client.eventBus().queued().lambda(checkTrigger0Runnable).distinct()
+				.dispatch();
+	}
+
+	/*
+ * @formatter:off
+ * 
+ * - populate the RelativeSelectionModel
+ * - if collapsed
+ * - if currenttextnode matches:
+ * -- preceding text matches trigger
+ * -- text prior to trigger is ok punctuation (space; start-of-node; left-paren)
+ * - wrap in decorator node
+ * - reposition selection (ROMCOM!)
+ * - show suggestion-choices
+ * 
+ * * @formatter:on
+ */
+	void checkTrigger0() {
+		RelativeSelection selection = new RelativeSelection();
+		if (selection.isTriggerable()) {
+			Ax.out(selection);
+		}
+	}
+
+	void onInput0(RelativeSelection relativeInput) {
 		boolean trigger = false;
 		// FIXME - DN -
 		if (!decoratorParent.canDecorate(relativeInput)) {
@@ -312,29 +329,37 @@ public class ContentDecorator<T>
 			 * Defer helps handle alt-shift-arrow Keyboard cursor selection -
 			 * and also adds a check for chooser creation
 			 */
-			Scheduler.get().scheduleDeferred(() -> {
-				if (chooser == null) {
-					validateSelection0();
-				}
-			});
+			Client.eventBus().queued().lambda(validateSelection0Runnable)
+					.distinct().dispatch();
 		}
 	}
 
 	protected void validateSelection0() {
-		RelativeInputModel relativeInput = new RelativeInputModel();
-		if (!relativeInput.hasSelection()) {
+		if ("".isEmpty()) {
+			return;// FIXME - contentdecorator - ah, this *is* being triggered n
+					// breakin stuff
+		}
+		RelativeSelection selection = new RelativeSelection();
+		if (!selection.hasSelection()) {
 			return;
 		}
-		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
-		Optional<DomNode> partiallySelectedAncestor = relativeInput
-				.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
-						.getFragmentNode(n) instanceof EntityNode);
-		if (partiallySelectedAncestor.isPresent()) {
-			DomNode node = partiallySelectedAncestor.get();
-			EntityNode decoratorNode = (EntityNode) fragmentModel
-					.getFragmentNode(node);
-			if (!decoratorNode.contentEditable) {
-				relativeInput.extendSelectionToIncludeAllOf(node);
+		if (chooser == null) {
+			/*
+			 * ensure the selection doesn't contain a partial decoratornode (in
+			 * dom terms it's totally fine, but not in FN terms)
+			 */
+			FragmentModel fragmentModel = decoratorParent
+					.provideFragmentModel();
+			Optional<DomNode> partiallySelectedAncestor = selection
+					.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
+							.getFragmentNode(n) instanceof DecoratorNode);
+			if (partiallySelectedAncestor.isPresent()) {
+				DomNode node = partiallySelectedAncestor.get();
+				DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
+						.getFragmentNode(node);
+				if (!decoratorNode.contentEditable) {
+					selection.extendSelectionToIncludeAllOf(node);
+				}
 			}
 		}
 	}
@@ -367,5 +392,10 @@ public class ContentDecorator<T>
 				setDescriptor(DecoratorNode.Descriptor<?, ?, ?> descriptor) {
 			this.descriptor = descriptor;
 		}
+	}
+
+	@Override
+	public void onSelectionChanged(SelectionChanged event) {
+		checkTrigger();
 	}
 }

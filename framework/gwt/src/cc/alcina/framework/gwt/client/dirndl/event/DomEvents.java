@@ -23,6 +23,7 @@ import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.ScrollEvent;
+import com.google.gwt.event.dom.client.SelectionChangedEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
@@ -244,6 +245,26 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onKeyDown(KeyDown event);
+		}
+	}
+
+	public static class SelectionChanged
+			extends NodeEvent<SelectionChanged.Handler> {
+		@Override
+		public void dispatch(SelectionChanged.Handler handler) {
+			handler.onSelectionChanged(this);
+		}
+
+		public static class BindingImpl extends DomBinding<SelectionChanged> {
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::fireEvent,
+						SelectionChangedEvent.getType());
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionChanged(SelectionChanged event);
 		}
 	}
 

@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
@@ -44,7 +44,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 
 		public abstract String triggerSequence();
 
-		DN splitAndWrap(RelativeInputModel relativeInput,
+		DN splitAndWrap(RelativeSelection relativeInput,
 				FragmentModel fragmentModel) {
 			SplitResult splits = relativeInput.splitAt(-1, 0);
 			DomNode splitContents = splits.contents;

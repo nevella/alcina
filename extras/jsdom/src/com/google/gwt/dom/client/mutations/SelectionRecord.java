@@ -100,8 +100,9 @@ public final class SelectionRecord implements Serializable {
 
 	public Object toNodeString() {
 		populateNodes();
-		return FormatBuilder.keyValues("anchorNode", anchorNode, "anchorOffset",
-				anchorOffset, "focusNode", focusNode, "focusOffset",
-				focusOffset);
+		return FormatBuilder.keyValues("anchorNodeId", anchorNodeId,
+				"anchorNode", anchorNode, "anchorOffset", anchorOffset,
+				"focusNodeId", focusNodeId, "focusNode", focusNode,
+				"focusOffset", focusOffset);
 	}
 }

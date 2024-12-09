@@ -414,7 +414,13 @@ class Environment {
 			queue.stop();
 		}
 
-		void applyMutations(List<MutationRecord> mutations) {
+		void applyDomMutations(List<MutationRecord> mutations) {
+			if (mutations.isEmpty()) {
+				return;
+			}
+			Ax.out("-------==========--------\n");
+			Ax.out(mutations);
+			Ax.out("\n-------==========--------\n");
 			queue.invoke(() -> LocalDom.attachIdRepresentations()
 					.applyMutations(mutations, false));
 		}
@@ -514,17 +520,6 @@ class Environment {
 			queue.invoke(() -> {
 				document.attachIdRemote()
 						.onSelectionMutationReceived(selectionMutation);
-			});
-		}
-
-		public void applyDomMutations(List<MutationRecord> domMutations) {
-			if (domMutations.isEmpty()) {
-				return;
-			}
-			queue.invoke(() -> {
-				LocalDom.getRemoteMutations()
-						.applyDetachedMutations(domMutations, false);
-				int debug = 3;
 			});
 		}
 	}
@@ -754,7 +749,7 @@ class Environment {
 	}
 
 	private void startup(MessageProcessingToken token, Startup message) {
-		access().applyMutations(message.domMutations);
+		access().applyDomMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
 		access().applySelectionMutation(message.getSelectionMutation());
 		initialiseSettings(message.settings);
