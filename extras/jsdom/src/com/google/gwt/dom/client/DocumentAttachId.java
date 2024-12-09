@@ -16,6 +16,7 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class DocumentAttachId extends NodeAttachId
 		implements ClientDomDocument {

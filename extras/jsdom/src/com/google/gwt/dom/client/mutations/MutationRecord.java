@@ -37,6 +37,36 @@ import elemental.json.JsonValue;
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 @SuppressWarnings("deprecation")
 public final class MutationRecord {
+	public interface Flag {
+	}
+
+	public interface FlagTransportMarkupTree extends Flag {
+	}
+
+	@Reflected
+	public enum Type {
+		attributes, characterData, childList, innerMarkup
+	}
+
+	enum ApplyDirection {
+		history, history_reversed
+	}
+
+	enum ApplyTo {
+		local, mutations_reversed;
+
+		ApplyDirection direction() {
+			switch (this) {
+			case local:
+				return ApplyDirection.history;
+			case mutations_reversed:
+				return ApplyDirection.history_reversed;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+	}
+
 	static final transient String CONTEXT_FLAGS = MutationRecord.class.getName()
 			+ ".CONTEXT_FLAGS";
 
@@ -136,16 +166,6 @@ public final class MutationRecord {
 		}
 	}
 
-	static MutationRecord generateMarkupMutationRecord(Node node) {
-		Element elem = (Element) node;
-		MutationRecord markupRecord = new MutationRecord();
-		markupRecord.type = Type.innerMarkup;
-		markupRecord.newValue = elem.getInnerHTML();
-		markupRecord.target = MutationNode.attachId(node);
-		markupRecord.attachIds = elem.getSubtreeIds();
-		return markupRecord;
-	}
-
 	/**
 	 * Generates a remove mutation for the oldChild node
 	 *
@@ -158,11 +178,6 @@ public final class MutationRecord {
 		record.type = Type.childList;
 		record.removedNodes.add(MutationNode.attachId(oldChild));
 		return record;
-	}
-
-	static boolean hasContextFlag(Class<? extends Flag> flag) {
-		List<Class<? extends Flag>> flags = LooseContext.get(CONTEXT_FLAGS);
-		return flags != null && flags.contains(flag);
 	}
 
 	public static void runWithFlag(Class<? extends Flag> flag,
@@ -178,6 +193,21 @@ public final class MutationRecord {
 			MutationRecord.deltaFlag(flag, false);
 			LooseContext.pop();
 		}
+	}
+
+	static MutationRecord generateMarkupMutationRecord(Node node) {
+		Element elem = (Element) node;
+		MutationRecord markupRecord = new MutationRecord();
+		markupRecord.type = Type.innerMarkup;
+		markupRecord.newValue = elem.getInnerHTML();
+		markupRecord.target = MutationNode.attachId(node);
+		markupRecord.attachIds = elem.getSubtreeIds();
+		return markupRecord;
+	}
+
+	static boolean hasContextFlag(Class<? extends Flag> flag) {
+		List<Class<? extends Flag>> flags = LooseContext.get(CONTEXT_FLAGS);
+		return flags != null && flags.contains(flag);
 	}
 
 	transient MutationRecordJso jso;
@@ -278,6 +308,51 @@ public final class MutationRecord {
 		}
 	}
 
+	public boolean hasFlag(Class<? extends Flag> flag) {
+		return flags != null && flags.contains(flag);
+	}
+
+	public boolean provideIsStructuralMutation() {
+		return type == Type.childList;
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder format = new FormatBuilder().separator("\n");
+		format.appendIfNotBlankKv("target", target);
+		format.appendIfNotBlankKv("type", type);
+		format.appendIfNotBlankKv("  previous", previousSibling);
+		format.appendIfNotBlankKv("  next", nextSibling);
+		format.appendIfNotBlankKv("  attributeName", attributeName);
+		format.appendIfNotBlankKv("  oldValue", oldValue);
+		format.appendIfNotBlankKv("  newValue", newValue);
+		if (!addedNodes.isEmpty()) {
+			format.append("  addedNodes:");
+			addedNodes.forEach(n -> format
+					.append("    " + n.toString().replace("\n", "\n    ")));
+		}
+		if (!removedNodes.isEmpty()) {
+			format.append("  removedNodes:");
+			removedNodes.forEach(n -> format
+					.append("    " + n.toString().replace("\n", "\n    ")));
+		}
+		format.newLine();
+		return format.toString();
+	}
+
+	@Property.Not
+	public boolean isNonTree() {
+		switch (type) {
+		case attributes:
+		case characterData:
+			return true;
+		case childList:
+			return false;
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	void apply(ApplyTo applyTo) {
 		ApplyDirection applyDirection = applyTo.direction();
 		MutationRecord record = this;
@@ -370,16 +445,8 @@ public final class MutationRecord {
 		removedNodes.forEach(this::connectMutationNodeRef);
 	}
 
-	public boolean hasFlag(Class<? extends Flag> flag) {
-		return flags != null && flags.contains(flag);
-	}
-
 	MutationNode mutationNode(NodeJso nodeJso) {
 		return sync.mutationNode(nodeJso);
-	}
-
-	public boolean provideIsStructuralMutation() {
-		return type == Type.childList;
 	}
 
 	private String stringOrNull(JsonObject jsonObj, String string) {
@@ -391,70 +458,9 @@ public final class MutationRecord {
 		}
 	}
 
-	@Override
-	public String toString() {
-		FormatBuilder format = new FormatBuilder().separator("\n");
-		format.appendIfNotBlankKv("target", target);
-		format.appendIfNotBlankKv("type", type);
-		format.appendIfNotBlankKv("  previous", previousSibling);
-		format.appendIfNotBlankKv("  next", nextSibling);
-		format.appendIfNotBlankKv("  attributeName", attributeName);
-		format.appendIfNotBlankKv("  oldValue", oldValue);
-		format.appendIfNotBlankKv("  newValue", newValue);
-		if (!addedNodes.isEmpty()) {
-			format.append("  addedNodes:");
-			addedNodes.forEach(n -> format
-					.append("    " + n.toString().replace("\n", "\n    ")));
-		}
-		if (!removedNodes.isEmpty()) {
-			format.append("  removedNodes:");
-			removedNodes.forEach(n -> format
-					.append("    " + n.toString().replace("\n", "\n    ")));
-		}
-		format.newLine();
-		return format.toString();
-	}
-
-	enum ApplyDirection {
-		history, history_reversed
-	}
-
-	enum ApplyTo {
-		local, mutations_reversed;
-
-		ApplyDirection direction() {
-			switch (this) {
-			case local:
-				return ApplyDirection.history;
-			case mutations_reversed:
-				return ApplyDirection.history_reversed;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-	}
-
-	public interface Flag {
-	}
-
-	public interface FlagTransportMarkupTree extends Flag {
-	}
-
-	@Reflected
-	public enum Type {
-		attributes, characterData, childList, innerMarkup
-	}
-
-	@Property.Not
-	public boolean isNonTree() {
-		switch (type) {
-		case attributes:
-		case characterData:
-			return true;
-		case childList:
-			return false;
-		default:
-			throw new UnsupportedOperationException();
-		}
+	public void populateAttachIds() {
+		MutationNode.populateAttachId(target);
+		addedNodes.forEach(MutationNode::populateAttachId);
+		removedNodes.forEach(MutationNode::populateAttachId);
 	}
 }

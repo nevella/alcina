@@ -64,6 +64,12 @@ public final class MutationNode {
 		return result;
 	}
 
+	static void populateAttachId(MutationNode node) {
+		if (node != null) {
+			node.attachId = AttachId.forNode(node.remoteNode);
+		}
+	}
+
 	public transient org.w3c.dom.Node w3cNode;
 
 	public AttachId attachId;

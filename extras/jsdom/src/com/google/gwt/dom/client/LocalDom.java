@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.client.impl.Impl;
@@ -78,12 +79,13 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  */
 public class LocalDom implements ContextFrame {
-	// FIXME - remcom - move to Document
 	public int maxCharsPerTextNode = 65536;
 
-	public Topic<Exception> topicPublishException;
+	Topic<Exception> topicPublishException;
 
-	public Topic<String> topicUnableToParse;
+	Topic<String> topicUnableToParse;
+
+	Topic<List<MutationRecord>> topicMutationsAppliedToLocal;
 
 	Topic<Exception> topicReportException;
 
@@ -424,6 +426,7 @@ public class LocalDom implements ContextFrame {
 		topicPublishException = Topic.create();
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
+		topicMutationsAppliedToLocal = Topic.create();
 		topicReportException.add(this::handleReportedException);
 		domIds = new AttachIds();
 	}
@@ -957,6 +960,14 @@ public class LocalDom implements ContextFrame {
 		public Node remoteToLocal(NodeJso nodeJso) {
 			return NodeJso.toNode(nodeJso);
 		}
+
+		public void onRemoteMutationsApplied(List<MutationRecord> records,
+				boolean hadException) {
+			if (!hadException) {
+				records.forEach(MutationRecord::populateAttachIds);
+				topicMutationsAppliedToLocal.publish(records);
+			}
+		}
 	}
 
 	/*
@@ -1058,6 +1069,10 @@ public class LocalDom implements ContextFrame {
 
 	public static Topic<String> topicUnableToParse() {
 		return get().topicUnableToParse;
+	}
+
+	public static Topic<List<MutationRecord>> topicMutationsAppliedToLocal() {
+		return get().topicMutationsAppliedToLocal;
 	}
 
 	void onAttach(Node node) {

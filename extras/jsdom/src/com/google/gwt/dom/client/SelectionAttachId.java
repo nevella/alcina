@@ -4,12 +4,15 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 public class SelectionAttachId implements ClientDomSelection {
 	private Selection selectionObject;
 
 	private SelectionRecord selectionRecord;
 
 	public void setSelectionRecord(SelectionRecord selectionRecord) {
+		Ax.out("sel-change: %s", selectionRecord.toNodeString());
 		this.selectionRecord = selectionRecord;
 	}
 

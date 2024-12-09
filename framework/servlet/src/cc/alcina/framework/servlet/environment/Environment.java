@@ -485,6 +485,9 @@ class Environment {
 
 		void onDomEventMessage(DomEventMessage message) {
 			queue.invoke(() -> {
+				if (message.getSelectionMutation() != null) {
+					applySelectionMutation(message.getSelectionMutation());
+				}
 				document.attachIdRemote()
 						.onRemoteUiContextReceived(message.eventContext);
 				message.events.forEach(eventData -> LocalDom
@@ -505,9 +508,23 @@ class Environment {
 		}
 
 		void applySelectionMutation(SelectionRecord selectionMutation) {
+			if (selectionMutation == null) {
+				return;
+			}
 			queue.invoke(() -> {
 				document.attachIdRemote()
 						.onSelectionMutationReceived(selectionMutation);
+			});
+		}
+
+		public void applyDomMutations(List<MutationRecord> domMutations) {
+			if (domMutations.isEmpty()) {
+				return;
+			}
+			queue.invoke(() -> {
+				LocalDom.getRemoteMutations()
+						.applyDetachedMutations(domMutations, false);
+				int debug = 3;
 			});
 		}
 	}

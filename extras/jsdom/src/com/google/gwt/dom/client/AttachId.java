@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.reflection.Property;
  */
 @Bean(PropertySource.FIELDS)
 public final class AttachId {
-	public static AttachId forNode(Node node) {
+	public static AttachId forNode(ClientDomNode node) {
 		if (node == null) {
 			return null;
 		}

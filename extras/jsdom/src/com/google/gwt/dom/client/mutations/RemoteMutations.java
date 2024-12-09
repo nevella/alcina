@@ -3,6 +3,7 @@ package com.google.gwt.dom.client.mutations;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -19,6 +20,7 @@ import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class RemoteMutations {
 	/*
@@ -236,10 +238,12 @@ public class RemoteMutations {
 	private void syncMutations0(JsArray<MutationRecordJso> records) {
 		SyncMutations syncMutations = new SyncMutations(mutationsAccess);
 		history.currentMutations = syncMutations;
-		syncMutations.sync(records);
+		List<MutationRecord> recordList = syncMutations.sync(records);
 		hadExceptions |= syncMutations.hadException;
 		log(Ax.format("%s records", records.length()), false);
 		history.currentMutations = null;
+		mutationsAccess.onRemoteMutationsApplied(recordList,
+				syncMutations.hadException);
 	}
 
 	public void syncMutationsAndStopObserving() {

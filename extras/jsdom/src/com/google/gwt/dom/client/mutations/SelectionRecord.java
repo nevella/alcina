@@ -97,4 +97,11 @@ public final class SelectionRecord implements Serializable {
 		return CommonUtils.equals(anchorNodeId, focusNodeId, anchorOffset,
 				focusOffset);
 	}
+
+	public Object toNodeString() {
+		populateNodes();
+		return FormatBuilder.keyValues("anchorNode", anchorNode, "anchorOffset",
+				anchorOffset, "focusNode", focusNode, "focusOffset",
+				focusOffset);
+	}
 }

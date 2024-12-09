@@ -205,8 +205,10 @@ class SyncMutations {
 
 	/**
 	 * Applies a sequence of remote (browser) dom mutations to the local dom
+	 * 
+	 * @return
 	 */
-	public void sync(JsArray<MutationRecordJso> records) {
+	List<MutationRecord> sync(JsArray<MutationRecordJso> records) {
 		long start = System.currentTimeMillis();
 		List<MutationRecord> recordList = null;
 		try {
@@ -222,6 +224,7 @@ class SyncMutations {
 					System.currentTimeMillis() - start);
 		}
 		MutationHistory.Event.publish(Type.MUTATIONS, recordList);
+		return recordList;
 	}
 
 	/*

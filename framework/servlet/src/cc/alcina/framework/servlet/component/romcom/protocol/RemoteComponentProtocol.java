@@ -87,7 +87,8 @@ public class RemoteComponentProtocol {
 		/*
 		 * Not an album by Beck.
 		 */
-		public static class DomEventMessage extends Message {
+		public static class DomEventMessage extends Message
+				implements HasSelectionMutation {
 			public List<DomEventData> events = new ArrayList<>();
 
 			public DomEventContext eventContext;
@@ -96,6 +97,17 @@ public class RemoteComponentProtocol {
 			protected String provideMessageData() {
 				return events.stream().map(e -> e.event.getType()).distinct()
 						.collect(Collectors.joining(", "));
+			}
+
+			private SelectionRecord selectionMutation;
+
+			public SelectionRecord getSelectionMutation() {
+				return selectionMutation;
+			}
+
+			public void
+					setSelectionMutation(SelectionRecord selectionMutation) {
+				this.selectionMutation = selectionMutation;
 			}
 		}
 
@@ -212,6 +224,8 @@ public class RemoteComponentProtocol {
 
 			private SelectionRecord selectionMutation;
 
+			public LocationMutation locationMutation;
+
 			public SelectionRecord getSelectionMutation() {
 				return selectionMutation;
 			}
@@ -220,8 +234,6 @@ public class RemoteComponentProtocol {
 					setSelectionMutation(SelectionRecord selectionMutation) {
 				this.selectionMutation = selectionMutation;
 			}
-
-			public LocationMutation locationMutation;
 
 			@Override
 			public String toDebugString() {
@@ -314,6 +326,10 @@ public class RemoteComponentProtocol {
 
 			SelectionRecord selectionMutation;
 
+			public int maxCharsPerTextNode;
+
+			public String settings;
+
 			public SelectionRecord getSelectionMutation() {
 				return selectionMutation;
 			}
@@ -322,10 +338,6 @@ public class RemoteComponentProtocol {
 					setSelectionMutation(SelectionRecord selectionMutation) {
 				this.selectionMutation = selectionMutation;
 			}
-
-			public int maxCharsPerTextNode;
-
-			public String settings;
 		}
 
 		/*
@@ -364,19 +376,19 @@ public class RemoteComponentProtocol {
 					getClass().getSimpleName(), messageData);
 		}
 
-		/*
-		 * for toString() - e.g. for a DomEvent, the event type
-		 */
-		protected String provideMessageData() {
-			return "";
-		}
-
 		public boolean canMerge(Message message) {
 			return false;
 		}
 
 		public void merge(Message message) {
 			throw new UnsupportedOperationException();
+		}
+
+		/*
+		 * for toString() - e.g. for a DomEvent, the event type
+		 */
+		protected String provideMessageData() {
+			return "";
 		}
 	}
 
