@@ -69,8 +69,8 @@ public class ContentDeliveryLocalFilesystem implements ContentDelivery {
 							.collect(Collectors.toList()));
 			longestCommon = Ax.blankTo(longestCommon, "archive");
 			String zipPath = Ax.format("%s/%s.zip", path, longestCommon);
-			ZipUtil.createZip(new File(zipPath),
-					observed.stream().map(FileGenerated::file).toList());
+			ZipUtil.createZip(new File(zipPath), observed.stream()
+					.map(FileGenerated::file).collect(Collectors.toList()));
 			LoggerFactory.getLogger(getClass()).info(
 					"Archived {} generated files to {}", observed.size(),
 					zipPath);
