@@ -13,7 +13,6 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.client.impl.Impl;
@@ -771,6 +770,8 @@ public class LocalDom implements ContextFrame {
 			if (!element.isAttached()) {
 				return;
 			} else {
+				// FIXME - localdom - handle empty text nodes here - possibly by
+				// reverting to non-markup if we encounter any
 				remoteMutations.emitInnerMarkupMutation(element);
 				linkSubtreeToAttachIdRemotes(element);
 			}
@@ -930,8 +931,12 @@ public class LocalDom implements ContextFrame {
 					mutationNode.attachId);
 		}
 
-		public void putRemote(Node node, NodeAttachId nodeAttachId) {
-			node.putRemote(nodeAttachId);
+		public void putRemoteAttachId(Node node) {
+			ClientDomNode remote = node.remote();
+			if (remote != null && remote.getAttachId() == node.getAttachId()) {
+				return;
+			}
+			node.putRemote(NodeAttachId.create(node));
 		}
 
 		public void setDetached(Node node) {

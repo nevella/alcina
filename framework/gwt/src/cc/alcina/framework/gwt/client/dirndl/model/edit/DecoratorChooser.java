@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -29,13 +30,15 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * <p>
  * Subclasses just need to customise the trigger sequence ('@' in the above
  * example) and the Suggestor {@link Answer} implementation which provides
- * entities filter on user text
+ * entities filter on user text (FIXME - actually ... more) - FIXME - to
+ * decoratorselection, decoratorchoiceselection
  */
 @Directed(
 	// but see
 	// cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.computeCssClass()
 	className = "decorator-chooser",
 	emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class DecoratorChooser extends Model.Fields
 		implements ModelEvents.BeforeSelectionChangedDispatch.Handler,
 		ModelEvents.SelectionChanged.Handler, ModelEvents.Closed.Handler,

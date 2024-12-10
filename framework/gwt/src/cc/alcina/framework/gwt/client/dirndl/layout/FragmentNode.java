@@ -385,6 +385,7 @@ public abstract class FragmentNode extends Model.Fields
 		public String tag;
 
 		public GenericElement() {
+			int debugh = 4;
 		}
 
 		public GenericElement(String tag) {
@@ -518,6 +519,11 @@ public abstract class FragmentNode extends Model.Fields
 
 		public void setValue(String value) {
 			set("value", this.value, value, () -> this.value = value);
+		}
+
+		// FIXME - FN - fix (remove)once rv text update works
+		public String liveValue() {
+			return provideNode().getRendered().getNode().getNodeValue();
 		}
 	}
 

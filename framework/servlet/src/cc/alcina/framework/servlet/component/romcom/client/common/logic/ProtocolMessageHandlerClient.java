@@ -6,12 +6,15 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HrefElement;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
+import com.google.gwt.dom.client.Selection;
+import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
@@ -240,6 +243,16 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 				Message.Mutations message) {
 			LocalDom.attachIdRepresentations()
 					.applyMutations(message.domMutations, true);
+			SelectionRecord selectionMutation = message.getSelectionMutation();
+			if (selectionMutation != null) {
+				LocalDom.flush();
+				selectionMutation.populateNodes();
+				Selection selection = Document.get().getSelection();
+				selection.collapse(selectionMutation.anchorNode,
+						selectionMutation.anchorOffset);
+				selection.extend(selectionMutation.focusNode,
+						selectionMutation.focusOffset);
+			}
 			message.eventSystemMutations.forEach(m -> {
 				try {
 					Element elem = (Element) m.nodeId.node();

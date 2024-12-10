@@ -16,7 +16,6 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.util.Ax;
 
 public class DocumentAttachId extends NodeAttachId
 		implements ClientDomDocument {
@@ -36,7 +35,6 @@ public class DocumentAttachId extends NodeAttachId
 		super(document);
 		this.document = document;
 		this.invokeProxy = new RemoteUiState();
-		this.selection = new SelectionAttachId(document.selection);
 	}
 
 	public void registerToRemoteInvokeProxy(InvokeProxy invokeProxy) {
@@ -840,7 +838,17 @@ public class DocumentAttachId extends NodeAttachId
 		return selection;
 	}
 
+	@Override
+	public ClientDomSelection ensureRemoteSelection(Selection selection) {
+		this.selection = new SelectionAttachId(selection);
+		return this.selection;
+	}
+
 	public void onSelectionMutationReceived(SelectionRecord selectionMutation) {
 		getSelection().setSelectionRecord(selectionMutation);
+	}
+
+	public SelectionRecord getPendingSelectionMutationAndClear() {
+		return getSelection().getPendingSelectionMutationAndClear();
 	}
 }

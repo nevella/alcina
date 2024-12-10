@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.AttachId;
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DomEventContext;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
@@ -244,18 +243,26 @@ public class RemoteComponentProtocol {
 
 			@Override
 			protected String provideMessageData() {
+				FormatBuilder format = new FormatBuilder().separator(" - ");
 				if (domMutations.size() > 0) {
-					return domMutations.stream().map(dm -> dm.target.nodeName)
-							.distinct().collect(Collectors.joining(", "));
-				} else if (eventSystemMutations.size() > 0) {
-					return eventSystemMutations.stream()
-							.map(esm -> esm.eventTypeName).distinct()
-							.collect(Collectors.joining(", "));
-				} else if (selectionMutation != null) {
-					return selectionMutation.toString();
-				} else {
-					return "";
+					format.append(domMutations.stream()
+							.map(dm -> dm.target.nodeName).distinct()
+							.collect(Collectors.joining(", ")));
 				}
+				if (domMutations.isEmpty() && selectionMutation == null
+						&& eventSystemMutations.size() > 0) {
+					format.append(eventSystemMutations.stream()
+							.map(esm -> esm.eventTypeName).distinct()
+							.collect(Collectors.joining(", ")));
+				}
+				if (selectionMutation != null) {
+					format.format("[selection: %s]", selectionMutation);
+				}
+				return format.toString();
+			}
+
+			public void addDomMutation(MutationRecord mutationRecord) {
+				domMutations.add(mutationRecord);
 			}
 		}
 

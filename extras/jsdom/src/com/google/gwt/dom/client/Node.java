@@ -628,6 +628,9 @@ public abstract class Node
 			ClientDomNode remote = remote();
 			onDetach();
 			if (attachRoot) {
+				if (this instanceof Text && remote != null) {
+					int dbg4 = 4;
+				}
 				putRemote(remote);
 			}
 		}

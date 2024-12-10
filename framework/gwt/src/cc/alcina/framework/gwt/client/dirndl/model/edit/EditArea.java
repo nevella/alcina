@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.stream.Collectors;
+
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -21,6 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel.ModelMutation;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 
 /**
@@ -36,10 +39,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 @Directed(emits = { ModelEvents.Input.class })
 @DirectedContextResolver(FragmentResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
-public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
-		DomEvents.Input.Handler, DomEvents.BeforeInput.Handler,
-		LayoutEvents.BeforeRender.Handler, DomEvents.Focusout.Handler,
-		InferredDomEvents.Mutation.Handler, FragmentModel.Has {
+public class EditArea extends Model.Fields
+		implements FocusOnBind, HasTag, DomEvents.Input.Handler,
+		DomEvents.BeforeInput.Handler, LayoutEvents.BeforeRender.Handler,
+		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
+		FragmentModel.Has, ModelMutation.Handler {
 	@Binding(type = Type.INNER_HTML)
 	public String value;
 
@@ -169,5 +173,18 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		String old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
+	}
+
+	@Override
+	public void onModelMutation(ModelMutation event) {
+		refreshSpacers(event);
+	}
+
+	void refreshSpacers(ModelMutation event) {
+		if (event.getData().entries.size() > 0) {
+			fragmentModel.byTypeAssignable(DecoratorNode.class)
+					.collect(Collectors.toList())
+					.forEach(DecoratorNode::ensureSpacers);
+		}
 	}
 }

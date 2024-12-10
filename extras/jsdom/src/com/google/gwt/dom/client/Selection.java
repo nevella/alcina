@@ -15,18 +15,9 @@
  */
 package com.google.gwt.dom.client;
 
-import static com.google.gwt.dom.client.DomStyleConstants.*;
-
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
-
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
-import cc.alcina.framework.common.client.reflection.Property;
 
 /**
  * Models the browser selection object
@@ -39,7 +30,7 @@ public class Selection implements ClientDomSelection {
 
 	protected Selection(Document document) {
 		local = new SelectionLocal(this);
-		remote = document.remote().getSelection();
+		remote = document.remote().ensureRemoteSelection(this);
 	}
 
 	protected SelectionLocal local() {

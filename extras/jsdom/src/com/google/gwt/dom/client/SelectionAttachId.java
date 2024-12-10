@@ -1,8 +1,6 @@
 package com.google.gwt.dom.client;
 
 import com.google.gwt.dom.client.mutations.SelectionRecord;
-import com.google.gwt.user.client.Event;
-import com.google.gwt.user.client.Event.NativePreviewEvent;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -10,6 +8,8 @@ public class SelectionAttachId implements ClientDomSelection {
 	private Selection selectionObject;
 
 	private SelectionRecord selectionRecord;
+
+	SelectionRecord pendingRemoteRecord;
 
 	public void setSelectionRecord(SelectionRecord selectionRecord) {
 		Ax.out("sel-change: %s", selectionRecord.toNodeString());
@@ -31,30 +31,25 @@ public class SelectionAttachId implements ClientDomSelection {
 
 	@Override
 	public void collapse(Node node) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'collapse'");
+		collapse(node, 0);
 	}
 
 	@Override
 	public void collapse(Node node, int offset) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'collapse'");
+		/*
+		 * TODO - have an outgoing selection
+		 */
+		pendingRemoteRecord = selectionObject.local.getSelectionRecord();
 	}
 
 	@Override
 	public void extend(Node node) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'extend'");
+		extend(node, 0);
 	}
 
 	@Override
 	public void extend(Node node, int offset) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'extend'");
+		pendingRemoteRecord = selectionObject.local.getSelectionRecord();
 	}
 
 	@Override
@@ -118,5 +113,11 @@ public class SelectionAttachId implements ClientDomSelection {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'removeAllRanges'");
+	}
+
+	SelectionRecord getPendingSelectionMutationAndClear() {
+		SelectionRecord pendingRemoteRecord = this.pendingRemoteRecord;
+		this.pendingRemoteRecord = null;
+		return pendingRemoteRecord;
 	}
 }

@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 
@@ -62,36 +61,28 @@ public class RelativeSelection {
 		selection = Document.get().getSelection();
 		collapsed = selection.isCollapsed();
 		hasSelection = selection.hasSelection();
+		focusDomNode = selection.getFocusNode() == null ? null
+				: selection.getFocusNode().asDomNode();
+		anchorDomNode = selection.getAnchorNode() == null ? null
+				: selection.getAnchorNode().asDomNode();
 		if (!hasSelection) {
 			return;
 		}
-		{
-			focusDomNode = selection.getFocusNode() == null ? null
-					: selection.getFocusNode().asDomNode();
-			if (focusDomNode != null) {
-				focusOffset = selection.getFocusOffset();
-				focusLocation = focusDomNode.asLocation()
-						.createRelativeLocation(focusOffset, false);
-			}
+		if (focusDomNode != null) {
+			focusOffset = selection.getFocusOffset();
+			focusLocation = focusDomNode.asLocation()
+					.createRelativeLocation(focusOffset, false);
 		}
-		{
-			anchorDomNode = selection.getAnchorNode() == null ? null
-					: selection.getAnchorNode().asDomNode();
-			if (anchorDomNode != null) {
-				Ax.out("anchorDomNode-attachId:%s",
-						anchorDomNode.gwtNode().getAttachId());
-				anchorOffset = selection.getAnchorOffset();
-				anchorLocation = anchorDomNode.asLocation()
-						.createRelativeLocation(anchorOffset, false);
-				range = new Location.Range(anchorLocation, focusLocation);
-				if (anchorDomNode.isText()) {
-					// non-rtl
-					Location anchorTextStartLocation = anchorDomNode
-							.asLocation();
-					priorRange = new Location.Range(anchorTextStartLocation,
-							anchorLocation);
-				}
-			} else {
+		if (anchorDomNode != null) {
+			anchorOffset = selection.getAnchorOffset();
+			anchorLocation = anchorDomNode.asLocation()
+					.createRelativeLocation(anchorOffset, false);
+			range = new Location.Range(anchorLocation, focusLocation);
+			if (anchorDomNode.isText() && collapsed) {
+				// non-rtl
+				Location anchorTextStartLocation = anchorDomNode.asLocation();
+				priorRange = new Location.Range(anchorTextStartLocation,
+						anchorLocation);
 			}
 		}
 		if (collapsed && focusLocation != null) {
@@ -204,6 +195,11 @@ public class RelativeSelection {
 	}
 
 	public SplitResult splitAt(int from, int to) {
+		if (focusOffset > focusNode().textContent().length()) {
+			// temporary hack - focusNode has been mutated without a selection
+			// update
+			focusOffset = focusNode().textContent().length();
+		}
 		return focusNode().text().split(from + focusOffset, to + focusOffset);
 	}
 
@@ -226,5 +222,13 @@ public class RelativeSelection {
 
 	public boolean hasSelection() {
 		return hasSelection;
+	}
+
+	public Location.Range getTriggerableRangePrecedingFocus() {
+		return priorRange;
+	}
+
+	public SplitResult splitAtTriggerRange(String triggerSequence) {
+		return splitAt(-triggerSequence.length(), 0);
 	}
 }

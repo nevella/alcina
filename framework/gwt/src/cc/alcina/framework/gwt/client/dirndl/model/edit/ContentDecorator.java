@@ -1,17 +1,15 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -25,9 +23,11 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
@@ -231,44 +231,25 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
  * * @formatter:on
  */
 	void checkTrigger0() {
+		validateSelection0();
 		RelativeSelection selection = new RelativeSelection();
 		if (selection.isTriggerable()) {
-			Ax.out(selection);
-		}
-	}
-
-	void onInput0(RelativeSelection relativeInput) {
-		boolean trigger = false;
-		// FIXME - DN -
-		if (!decoratorParent.canDecorate(relativeInput)) {
-		} else {
-			String relativeString = relativeInput.relativeString(-1, 0);
-			if (Objects.equals(relativeString, descriptor.triggerSequence())) {
-				boolean startOfTextNode = relativeInput.getFocusOffset() == 1;
-				String relativeContextLeftString = relativeInput
-						.relativeString(-2, -1);
-				// relativeContextLeftString null check is probably
-				// redundant (since startOfTextNode check will be true
-				// in that case)
-				// but left for clarity - true means cursor is at [start
-				// of contenteditable+1])
-				/*
-				 * this checks that the surrounding text of the entered trigger
-				 * sequence permit decorator insert
-				 */
-				if (relativeContextLeftString == null || startOfTextNode
-						|| isSpaceOrLeftBracketish(relativeContextLeftString)) {
-					trigger = true;
-				}
+			validateSelection0();
+			String triggerSequence = null;
+			if (!decoratorParent.canDecorate(selection)) {
+			} else {
+				String potentialTrigger = selection
+						.getTriggerableRangePrecedingFocus().text();
+				triggerSequence = descriptor.getTriggerSequence(selection);
 			}
-		}
-		// if triggerable, wrap in the decorator tag (possiby splitting
-		// the source text node) and connect the suggestor overlay
-		// split
-		if (trigger) {
-			decorator = descriptor.splitAndWrap(relativeInput,
-					decoratorParent.provideFragmentModel());
-			showOverlay(decorator.domNode());
+			// if triggerable, wrap in the decorator tag (possiby splitting
+			// the source text node) and connect the suggestor overlay
+			// split
+			if (triggerSequence != null) {
+				decorator = descriptor.splitAndWrap(selection,
+						decoratorParent.provideFragmentModel());
+				// showOverlay(decorator.domNode());
+			}
 		}
 	}
 
@@ -335,21 +316,23 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	}
 
 	protected void validateSelection0() {
-		if ("".isEmpty()) {
-			return;// FIXME - contentdecorator - ah, this *is* being triggered n
-					// breakin stuff
-		}
+		// if ("".isEmpty()) {
+		// return;// FIXME - contentdecorator - ah, this *is* being triggered n
+		// // breakin stuff
+		// }
 		RelativeSelection selection = new RelativeSelection();
 		if (!selection.hasSelection()) {
 			return;
 		}
+		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
+		List<? extends FragmentNode> list = fragmentModel.stream().toList();
+		fragmentModel.byType(ZeroWidthCursorTarget.class)
+				.forEach(ZeroWidthCursorTarget::unwrapIfContainsNonZwsText);
 		if (chooser == null) {
 			/*
 			 * ensure the selection doesn't contain a partial decoratornode (in
 			 * dom terms it's totally fine, but not in FN terms)
 			 */
-			FragmentModel fragmentModel = decoratorParent
-					.provideFragmentModel();
 			Optional<DomNode> partiallySelectedAncestor = selection
 					.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
 							.getFragmentNode(n) instanceof DecoratorNode);
@@ -358,6 +341,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
 						.getFragmentNode(node);
 				if (!decoratorNode.contentEditable) {
+					// FIXME - FN
 					selection.extendSelectionToIncludeAllOf(node);
 				}
 			}

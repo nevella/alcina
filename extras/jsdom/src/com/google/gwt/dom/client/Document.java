@@ -109,8 +109,8 @@ public class Document extends Node
 			remote = new DocumentAttachId(this);
 			break;
 		}
-		this.selection = new Selection(this);
 		this.local = new DocumentLocal(this);
+		this.selection = new Selection(this);
 		localDom = new LocalDom();
 	}
 
@@ -1183,5 +1183,11 @@ public class Document extends Node
 
 	public void onDocumentEventSystemInit() {
 		selection.onDocumentEventSystemInit();
+	}
+
+	@Override
+	public ClientDomSelection ensureRemoteSelection(Selection selection) {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'ensureRemoteSelection'");
 	}
 }

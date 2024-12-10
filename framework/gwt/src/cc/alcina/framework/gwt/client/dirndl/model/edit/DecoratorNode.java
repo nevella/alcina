@@ -1,18 +1,24 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.dom.client.Text;
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.ContextSensitiveReverseTransform;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.ContextSensitiveTransform;
@@ -44,16 +50,19 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 
 		public abstract String triggerSequence();
 
-		DN splitAndWrap(RelativeSelection relativeInput,
+		DN splitAndWrap(RelativeSelection relativeSelection,
 				FragmentModel fragmentModel) {
-			SplitResult splits = relativeInput.splitAt(-1, 0);
+			String triggerSequence = getTriggerSequence(relativeSelection);
+			SplitResult splits = relativeSelection
+					.splitAtTriggerRange(triggerSequence);
 			DomNode splitContents = splits.contents;
-			// may need to flush
+			// may need to flush (to populate FNs) - note for romcom, want to
+			// not force remote
 			LocalDom.flush();
 			FragmentNode textFragment = fragmentModel
 					.getFragmentNode(splitContents);
 			DN created = createNode();
-			created.contentEditable = true;
+			created.setContentEditable(true);
 			textFragment.nodes().insertBeforeThis(created);
 			created.nodes().append(textFragment);
 			LocalDom.flush();
@@ -64,14 +73,63 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 		}
 
 		protected abstract SR toStringRepresentable(WT wrappedType);
+
+		public boolean isTriggerSequence(String potentialTrigger) {
+			return potentialTrigger.startsWith(triggerSequence());
+		}
+
+		public String getTriggerSequence(RelativeSelection relativeSelection) {
+			String potentialTrigger = relativeSelection
+					.getTriggerableRangePrecedingFocus().text();
+			if (triggerSequence().isEmpty()) {
+				return potentialTrigger;
+			} else {
+				String pattern = Ax.format(".*(^|[ \\u200B({\\[])(%s.*)",
+						triggerSequence());
+				RegExp regExp = RegExp.compile(pattern);
+				MatchResult matchResult = regExp.exec(potentialTrigger);
+				return matchResult == null ? null : matchResult.getGroup(2);
+			}
+		}
 	}
 
 	@Directed(tag = "span", className = "cursor-target")
 	public static class ZeroWidthCursorTarget extends FragmentNode {
-		// @Binding(type = Type.INNER_TEXT)
-		// nope, require a distinct dirndl node
-		@Directed
-		public TextNode text = new TextNode("\u200B");
+		static final String ZWS_CONTENT = "\u200B";
+
+		@Override
+		public void onFragmentRegistration() {
+			nodes().append(new TextNode(ZWS_CONTENT));
+		}
+
+		@Property.Not
+		public TextNode getSoleTextNode() {
+			if (provideChildNodes().size() != 1) {
+				return null;
+			}
+			FragmentNode child = children().findFirst().get();
+			return child instanceof TextNode ? (TextNode) child : null;
+		}
+
+		public void unwrapIfContainsNonZwsText() {
+			TextNode soleTextNode = getSoleTextNode();
+			if (soleTextNode == null
+					|| !Objects.equals(soleTextNode.liveValue(), ZWS_CONTENT)) {
+				List<TextNode> childTexts = (List) byType(TextNode.class)
+						.collect(Collectors.toList());
+				childTexts.forEach(text -> {
+					String nodeValue = text.liveValue();
+					String replaceValue = nodeValue.replace(ZWS_CONTENT, "");
+					if (!Objects.equals(nodeValue, replaceValue)) {
+						// this may move the selection cursor! so requires more
+						// bubbling/event chaining, non-deferred
+						text.setValue(replaceValue);
+					}
+				});
+				// FIXME - strip before replace - due to LD issue
+				strip();
+			}
+		}
 	}
 
 	@Binding(
@@ -190,6 +248,9 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 	}
 
 	public void setContentEditable(boolean contentEditable) {
+		if (!contentEditable && this.contentEditable) {
+			int debug = 3;
+		}
 		set("contentEditable", this.contentEditable, contentEditable,
 				() -> this.contentEditable = contentEditable);
 	}
@@ -229,13 +290,22 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 
 	public void toNonEditable() {
 		setContentEditable(false);
-		/*
-		 * FIXME - dn - don't insert if unnecessary. 'necessary' test is: ensure
-		 * editable text before. tree iterate before, find first text. if it
-		 * doesn't exist, is in a CE or a different block, insert a
-		 * cursor-target span
-		 */
-		nodes().insertBeforeThis(new ZeroWidthCursorTarget());
-		nodes().insertAfterThis(new ZeroWidthCursorTarget());
+	}
+
+	void ensureSpacers() {
+		if (!isEditableTextNodeOrSpace(nodes().previousSibling())) {
+			nodes().insertBeforeThis(new ZeroWidthCursorTarget());
+		}
+		if (!isEditableTextNodeOrSpace(nodes().nextSibling())) {
+			nodes().insertAfterThis(new ZeroWidthCursorTarget());
+		}
+	}
+
+	boolean isEditableTextNodeOrSpace(FragmentNode sibling) {
+		if (sibling == null) {
+			return false;
+		}
+		return sibling instanceof ZeroWidthCursorTarget
+				|| sibling instanceof TextNode;
 	}
 }

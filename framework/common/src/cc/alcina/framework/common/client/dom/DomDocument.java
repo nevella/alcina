@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -319,7 +320,6 @@ public class DomDocument extends DomNode implements Cloneable {
 			Location location = byNode.get(domNode);
 			if (location == null) {
 				// FIXME - measure
-				Ax.err("Missing domNode/location: %s", domNode);
 				invalidateLookups();
 				ensureLookups();
 				location = byNode.get(domNode);

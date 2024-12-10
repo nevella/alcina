@@ -270,7 +270,9 @@ class Environment {
 
 		@Override
 		public void onMutation(MutationRecord mutationRecord) {
-			runWithMutations(() -> mutations.domMutations.add(mutationRecord));
+			runWithMutations(() -> {
+				mutations.addDomMutation(mutationRecord);
+			});
 		}
 
 		@Override
@@ -423,6 +425,8 @@ class Environment {
 			Ax.out("\n-------==========--------\n");
 			queue.invoke(() -> LocalDom.attachIdRepresentations()
 					.applyMutations(mutations, false));
+			// // FIXME - measure (this shouldn't be required)
+			Document.get().domDocument.invalidateLocations();
 		}
 
 		/*
@@ -661,6 +665,7 @@ class Environment {
 		SchedulerFrame.contextProvider.registerFrame(scheduler);
 		EventFrame.contextProvider.registerFrame(eventFrame);
 		Document.contextProvider.registerFrame(document);
+		Document.get().onDocumentEventSystemInit();
 		GWTBridgeHeadless.inClient.set(true);
 	}
 
@@ -736,8 +741,14 @@ class Environment {
 	}
 
 	void emitMutations() {
+		SelectionRecord pendingSelectionMutation = Document.get()
+				.attachIdRemote().getPendingSelectionMutationAndClear();
+		if (mutations == null && pendingSelectionMutation != null) {
+			mutations = new Message.Mutations();
+		}
 		if (mutations != null) {
 			Document.get().attachIdRemote().flushSinkEventsQueue();
+			mutations.setSelectionMutation(pendingSelectionMutation);
 			queue.sendToClient(mutations);
 			mutations = null;
 		}

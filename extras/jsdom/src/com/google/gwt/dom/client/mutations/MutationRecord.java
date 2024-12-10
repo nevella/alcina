@@ -202,6 +202,10 @@ public final class MutationRecord {
 		markupRecord.newValue = elem.getInnerHTML();
 		markupRecord.target = MutationNode.attachId(node);
 		markupRecord.attachIds = elem.getSubtreeIds();
+		if (markupRecord.newValue.isEmpty()
+				&& markupRecord.attachIds.ids.size() > 0) {
+			int debug = 3;
+		}
 		return markupRecord;
 	}
 

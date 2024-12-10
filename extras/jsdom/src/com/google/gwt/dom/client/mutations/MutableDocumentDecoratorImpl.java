@@ -7,7 +7,8 @@ import cc.alcina.framework.common.client.dom.DomDocument.MutableDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Topic;
 
-@Registration(DomDocument.MutableDocumentDecorator.class)
+@Registration.Singleton(DomDocument.MutableDocumentDecorator.class)
+@Registration.EnvironmentSingleton
 public class MutableDocumentDecoratorImpl
 		implements DomDocument.MutableDocumentDecorator {
 	@Override

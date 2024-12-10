@@ -6,13 +6,11 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.gwt.activity.shared.Activity;
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -143,7 +141,6 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 			layout.layoutResult.getRoot().dispatch(eventType, null);
 		}, getCommandContextProvider());
 		Client.eventBus().addHandler(PlaceChangeEvent.TYPE, placeChangeHandler);
-		Document.get().domDocument.setReadonly(true);
 		layout = render0();
 	}
 

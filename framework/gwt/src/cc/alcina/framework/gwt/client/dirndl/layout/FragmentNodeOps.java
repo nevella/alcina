@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /*
@@ -13,6 +14,12 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 public interface FragmentNodeOps {
 	default <N extends FragmentNode> Stream<N> byType(Class<N> clazz) {
 		return (Stream<N>) stream().filter(n -> n.getClass() == clazz);
+	}
+
+	default <N extends FragmentNode> Stream<N>
+			byTypeAssignable(Class<N> clazz) {
+		return (Stream<N>) stream()
+				.filter(n -> Reflections.isAssignableFrom(clazz, n.getClass()));
 	}
 
 	default <N extends FragmentNode> List<N> byTypeList(Class<N> clazz) {

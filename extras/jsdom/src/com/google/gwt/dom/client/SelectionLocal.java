@@ -52,11 +52,13 @@ public class SelectionLocal implements ClientDomSelection {
 
 	@Override
 	public void collapse(Node node, int offset) {
-		SelectionRecord record = getSelectionRecord();
-		record.anchorNode = node;
-		record.anchorOffset = offset;
-		record.focusNode = record.anchorNode;
-		record.focusOffset = record.anchorOffset;
+		SelectionRecord selectionRecord = getSelectionRecord().copy();
+		selectionRecord.anchorNode = node;
+		selectionRecord.anchorOffset = offset;
+		selectionRecord.focusNode = selectionRecord.anchorNode;
+		selectionRecord.focusOffset = selectionRecord.anchorOffset;
+		selectionRecord.populateNodeIds();
+		this.selectionRecord = selectionRecord;
 	}
 
 	@Override
@@ -66,9 +68,11 @@ public class SelectionLocal implements ClientDomSelection {
 
 	@Override
 	public void extend(Node node, int offset) {
-		SelectionRecord record = getSelectionRecord();
-		record.focusNode = node;
-		record.focusOffset = offset;
+		SelectionRecord selectionRecord = getSelectionRecord();
+		selectionRecord.focusNode = node;
+		selectionRecord.focusOffset = offset;
+		selectionRecord.populateNodeIds();
+		this.selectionRecord = selectionRecord;
 	}
 
 	@Override

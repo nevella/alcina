@@ -62,25 +62,27 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	}
 
 	@Override
-	public String log(DomNode xmlNode, boolean pretty) {
-		if (isGwtDocument(xmlNode.document.domDoc())) {
-			if (xmlNode.isElement()) {
-				return xmlNode.gwtElement().getOuterHtml(pretty);
+	public String log(DomNode domNode, boolean pretty) {
+		if (isGwtDocument(domNode.document.domDoc())) {
+			if (domNode.isElement()) {
+				return domNode.gwtElement().getOuterHtml(pretty);
+			} else if (domNode.isDocumentNode()) {
+				return log(domNode.document.getDocumentElementNode(), pretty);
 			} else {
-				return xmlNode.toString();
+				return domNode.w3cNode().toString();
 			}
 		}
 		try {
 			LooseContext.pushWithTrue(XmlUtils.CONTEXT_MUTE_XML_SAX_EXCEPTIONS);
 			if (pretty) {
-				XmlUtils.logToFilePretty(xmlNode.w3cNode());
+				XmlUtils.logToFilePretty(domNode.w3cNode());
 			} else {
-				XmlUtils.logToFile(xmlNode.w3cNode());
+				XmlUtils.logToFile(domNode.w3cNode());
 			}
 			return "ok";
 		} catch (Exception e) {
 			try {
-				XmlUtils.logToFile(xmlNode.w3cNode());
+				XmlUtils.logToFile(domNode.w3cNode());
 				return "could not log pretty - logged raw instead";
 			} catch (Exception e1) {
 				throw new WrappedRuntimeException(e);

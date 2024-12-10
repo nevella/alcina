@@ -3,6 +3,7 @@ package cc.alcina.extras.webdriver.story;
 import java.util.Objects;
 
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -120,11 +121,14 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 				query.clear();
 			}
 			String text = action.getText();
-			query.sendKeys(text);
-			if (Objects.equals(query.getElement().getAttribute("type"),
-					"file")) {
-				// handle chrome weirdness
-				query.emitChangeEvent();
+			WebElement elem = query.sendKeys(text);
+			try {
+				if (Objects.equals(elem.getAttribute("type"), "file")) {
+					// handle chrome weirdness
+					query.emitChangeEvent();
+				}
+			} catch (StaleElementReferenceException sfre) {
+				// squelch, removed by cascading mutation
 			}
 			wdPerformer.context.log("Keys :: '%s' --> %s", text, query);
 		}

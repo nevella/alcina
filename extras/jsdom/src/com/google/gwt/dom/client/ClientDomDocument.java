@@ -1188,4 +1188,6 @@ public interface ClientDomDocument extends ClientDomNode {
 	List<Element> querySelectorAll(String selector);
 
 	ClientDomSelection getSelection();
+
+	ClientDomSelection ensureRemoteSelection(Selection selection);
 }

@@ -47,12 +47,8 @@ public final class SelectionRecord implements Serializable {
 	}
 
 	public void populateNodeIds() {
-		if (anchorNode != null) {
-			anchorNodeId = AttachId.forNode(anchorNode);
-		}
-		if (focusNode != null) {
-			focusNodeId = AttachId.forNode(focusNode);
-		}
+		anchorNodeId = anchorNode == null ? null : AttachId.forNode(anchorNode);
+		focusNodeId = focusNode == null ? null : AttachId.forNode(focusNode);
 	}
 
 	@Override

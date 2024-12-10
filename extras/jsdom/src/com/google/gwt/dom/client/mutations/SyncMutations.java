@@ -84,8 +84,7 @@ class SyncMutations {
 				record.addedNodes.forEach(added -> {
 					record.connectMutationNodeRef(added);
 					if (!Al.isBrowser()) {
-						mutationsAccess.putRemote(added.node,
-								NodeAttachId.create(added.node));
+						mutationsAccess.putRemoteAttachId(added.node);
 					}
 				});
 			});

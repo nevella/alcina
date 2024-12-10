@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -64,7 +63,7 @@ public class MultipleSuggestions<T> extends Multiple<T>
 		return this.decorators;
 	}
 
-	KeyboardNavigation keyboardNavigation;
+	transient KeyboardNavigation keyboardNavigation;
 
 	@Override
 	public void onKeyDown(KeyDown event) {
@@ -82,6 +81,8 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	public MultipleSuggestions() {
 		editArea = new EditArea();
 		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
+		provideFragmentModel()
+				.addModelled(DecoratorNode.ZeroWidthCursorTarget.class);
 		keyboardNavigation = new KeyboardNavigation(this);
 		bindings().from(this).on(properties.selectedValues)
 				.accept(this::updateAreaFromSelectedValues);
@@ -121,11 +122,6 @@ public class MultipleSuggestions<T> extends Multiple<T>
 
 		ChoiceNode(Choice choice) {
 			putReferenced(choice);
-		}
-
-		@Override
-		public void onFragmentRegistration() {
-			toNonEditable();
 		}
 
 		static class Descriptor
