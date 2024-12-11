@@ -419,7 +419,7 @@ public class LocalDom implements ContextFrame {
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
-	AttachIds domIds;
+	AttachIds attachIds;
 
 	LocalDom() {
 		topicPublishException = Topic.create();
@@ -427,7 +427,7 @@ public class LocalDom implements ContextFrame {
 		topicUnableToParse = Topic.create();
 		topicMutationsAppliedToLocal = Topic.create();
 		topicReportException.add(this::handleReportedException);
-		domIds = new AttachIds();
+		attachIds = new AttachIds();
 	}
 
 	Node createAndInsertAfter(Node parentNode, Node previousSibling,
@@ -597,7 +597,7 @@ public class LocalDom implements ContextFrame {
 				// noop, just trigger a finally flush of mutations
 			});
 		}
-		domIds.releaseRemoved();
+		attachIds.releaseRemoved();
 	}
 
 	void handleReportedException(Exception exception) {
@@ -720,7 +720,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	void localToRemoteInner(Element element, String markup) {
-		IdList subtreeIds = domIds.getSubtreeIds(element);
+		IdList subtreeIds = attachIds.getSubtreeIds(element);
 		pendingSync.remove(element);
 		MarkupToken markupToken = new MarkupToken(element, markup, subtreeIds);
 		new MarkupJso().markup(markupToken);
@@ -744,7 +744,7 @@ public class LocalDom implements ContextFrame {
 				Preconditions.checkState(childCount == 1);
 			} else {
 				String localMarkup = local.getInnerHTML();
-				IdList subtreeIds = domIds.getSubtreeIds(element);
+				IdList subtreeIds = attachIds.getSubtreeIds(element);
 				MarkupToken markupToken = new MarkupToken(element, localMarkup,
 						subtreeIds);
 				new MarkupJso().markup(markupToken);
@@ -800,7 +800,7 @@ public class LocalDom implements ContextFrame {
 				throw new IllegalStateException(
 						"Remote should always be registered");
 			} else {
-				Node node = domIds.getNode(new AttachId(attachId));
+				Node node = attachIds.getNode(new AttachId(attachId));
 				if (node == null) {
 					// removed from localdom, but remotedom removal still
 					// pending
@@ -927,7 +927,7 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public void applyPreRemovalAttachId(MutationNode mutationNode) {
-			domIds.applyPreRemovalAttachId(mutationNode.node,
+			attachIds.applyPreRemovalAttachId(mutationNode.node,
 					mutationNode.attachId);
 		}
 
@@ -944,7 +944,7 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public Node getNode(int attachId) {
-			return domIds.getNode(new AttachId(attachId));
+			return attachIds.getNode(new AttachId(attachId));
 		}
 
 		public void insertAttachedBefore(Node newChild, Node refChild) {
@@ -1081,11 +1081,11 @@ public class LocalDom implements ContextFrame {
 	}
 
 	void onAttach(Node node) {
-		domIds.onAttach(node);
+		attachIds.onAttach(node);
 	}
 
 	void onDetach(Node node) {
-		domIds.onDetach(node);
+		attachIds.onDetach(node);
 	}
 
 	static boolean wasRemoved(ElementJso elemJso) {
@@ -1097,7 +1097,7 @@ public class LocalDom implements ContextFrame {
 		if (attachId == 0) {
 			return true;
 		}
-		Node node = domIds.getNode(new AttachId(attachId));
+		Node node = attachIds.getNode(new AttachId(attachId));
 		return node == null;
 	}
 
@@ -1127,10 +1127,10 @@ public class LocalDom implements ContextFrame {
 		if (elem.linkedAndNotPending()) {
 			ensurePending(elem);
 		}
-		domIds.readFromIdList(elem, idList);
+		attachIds.readFromIdList(elem, idList);
 		elem.local().setInnerHTML(html);
 		try {
-			domIds.verifyIdList(idList);
+			attachIds.verifyIdList(idList);
 		} catch (RuntimeException e) {
 			String remoteHtml = elem.jsoRemote().getInnerHTML0();
 			String localHtml = elem.local().getInnerHTML();

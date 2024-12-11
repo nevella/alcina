@@ -126,9 +126,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	/*
 	 * The chooser used to edit the current decorator
 	 */
-	DecoratorChooser chooser;
+	DecoratorSuggestions chooser;
 
-	BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider;
+	BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider;
 
 	/*
 	 * The controller responsible for routing dom events to here, etc
@@ -248,7 +248,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			if (triggerSequence != null) {
 				decorator = descriptor.splitAndWrap(selection,
 						decoratorParent.provideFragmentModel());
-				// showOverlay(decorator.domNode());
+				showOverlay(decorator.domNode());
 			}
 		}
 	}
@@ -351,7 +351,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	public static class Builder<T> {
 		HasDecorators decoratorParent;
 
-		BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider;
+		BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider;
 
 		DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
@@ -364,7 +364,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		}
 
 		public void setChooserProvider(
-				BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider) {
+				BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider) {
 			this.chooserProvider = chooserProvider;
 		}
 

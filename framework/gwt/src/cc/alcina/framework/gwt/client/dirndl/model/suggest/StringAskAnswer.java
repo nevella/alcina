@@ -3,9 +3,16 @@ package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import com.google.gwt.user.client.ui.SuggestOracle;
 
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.UntypedSuggestion;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
  * Filters a list of models by a string query, and returns a corresponding list
@@ -35,5 +42,17 @@ public class StringAskAnswer<T> {
 		}).filter(Objects::nonNull).forEach(
 				suggestion -> result.add(suggestion, ask.getResultRange()));
 		return result;
+	}
+
+	/*
+	 * Local emulation of an rpc suggest callback (for local values)
+	 */
+	public static SuggestOracle.Response selectValues(List<?> values,
+			StringAsk ask) {
+		List<UntypedSuggestion> suggestions = values.stream()
+				.filter(v -> SearchUtils.matches(ask.getValue(), v))
+				.map(BoundSuggestOracleResponseElement.UntypedSuggestion::new)
+				.collect(Collectors.toList());
+		return new SuggestOracle.Response(suggestions);
 	}
 }

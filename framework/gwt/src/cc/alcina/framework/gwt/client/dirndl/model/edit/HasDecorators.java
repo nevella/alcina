@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
@@ -13,7 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorChooser.BeforeChooserClosed;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestions.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
@@ -24,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
  *
  */
 public interface HasDecorators
-		extends DecoratorChooser.BeforeChooserClosed.Handler,
+		extends DecoratorSuggestions.BeforeChooserClosed.Handler,
 		DomEvents.Input.Handler, DomEvents.SelectionChanged.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		// routes overlay closed events back to the referencedecorators
@@ -36,7 +37,17 @@ public interface HasDecorators
 		// routes MouseUp events to decorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
 		FragmentModel.Has {
-	boolean canDecorate(RelativeSelection relativeInput);
+	default boolean canDecorate(RelativeSelection relativeSelection) {
+		DomNode focusNode = relativeSelection.focusNode();
+		if (focusNode.ancestors().has("a")) {
+			return false;
+		} else if (provideFragmentModel().getFragmentNode(focusNode).ancestors()
+				.has(DecoratorNode.class)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 
 	public List<ContentDecorator> getDecorators();
 

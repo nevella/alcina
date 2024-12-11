@@ -23,7 +23,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Multiple;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
@@ -91,8 +90,9 @@ public class MultipleSuggestions<T> extends Multiple<T>
 
 	ContentDecorator createChoiceDecorator() {
 		ContentDecorator.Builder<Choice> builder = ContentDecorator.builder();
-		builder.setChooserProvider((decorator,
-				decoratorNode) -> new ChoiceChooser(decorator, decoratorNode));
+		builder.setChooserProvider(
+				(decorator, decoratorNode) -> new ChoiceSuggestions(this,
+						decorator, decoratorNode));
 		builder.setDescriptor(ChoiceNode.Descriptor.INSTANCE);
 		builder.setDecoratorParent(this);
 		return builder.build();
@@ -230,16 +230,6 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	@Directed.Exclude
 	public List<Choice<T>> getChoices() {
 		return super.getChoices();
-	}
-
-	@Override
-	protected void populateValuesFromNodeContext(Node node,
-			Predicate<T> valueFilter) {
-	}
-
-	@Override
-	public boolean canDecorate(RelativeSelection relativeInput) {
-		return true;
 	}
 
 	@Override

@@ -1127,7 +1127,7 @@ public class Document extends Node
 		}
 
 		public Node getNode(AttachId attachId) {
-			return localDom.domIds.getNode(attachId);
+			return localDom.attachIds.getNode(attachId);
 		}
 	}
 
@@ -1158,7 +1158,7 @@ public class Document extends Node
 	 * same ids
 	 */
 	public void setNextAttachId(int id) {
-		localDom.domIds.setNextAttachId(id);
+		localDom.attachIds.setNextAttachId(id);
 	}
 
 	@Override

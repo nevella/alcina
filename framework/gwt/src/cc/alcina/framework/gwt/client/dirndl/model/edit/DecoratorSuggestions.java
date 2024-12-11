@@ -13,7 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorChooser.BeforeChooserClosed;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestions.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.SuggestOnBind;
@@ -39,7 +39,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 	className = "decorator-chooser",
 	emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
-public abstract class DecoratorChooser extends Model.Fields
+public abstract class DecoratorSuggestions extends Model.Fields
 		implements ModelEvents.BeforeSelectionChangedDispatch.Handler,
 		ModelEvents.SelectionChanged.Handler, ModelEvents.Closed.Handler,
 		ModelEvents.BeforeClosed.Handler {
@@ -52,7 +52,7 @@ public abstract class DecoratorChooser extends Model.Fields
 
 	protected TagEditor tagEditor;
 
-	public DecoratorChooser(ContentDecorator contentDecorator,
+	public DecoratorSuggestions(ContentDecorator contentDecorator,
 			DomNode decoratorNode) {
 		this.contentDecorator = contentDecorator;
 		this.decoratorNode = decoratorNode;
@@ -123,7 +123,7 @@ public abstract class DecoratorChooser extends Model.Fields
 	}
 
 	public interface Provider {
-		DecoratorChooser provideChooser(ContentDecorator contentDecorator,
+		DecoratorSuggestions provideChooser(ContentDecorator contentDecorator,
 				DomNode decorator, String triggerSequence);
 	}
 }

@@ -43,10 +43,14 @@
     flex-wrap: wrap
 
     > choice-node
-      background-color:#ddd
+      background-color:#eee
       display: inline-block
       padding: 5px 8px
       border-radius: 8px
+      border: solid 1px #ddd
+
+      &[contenteditable=true]
+        background: none
 
 @mixin multiple-suggestions-tag
   multiple-suggestions

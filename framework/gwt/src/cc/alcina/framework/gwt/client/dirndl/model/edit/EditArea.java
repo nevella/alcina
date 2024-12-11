@@ -133,10 +133,20 @@ public class EditArea extends Model.Fields
 		// removeZeroWidthSpace
 		// .forEach(n -> n.setText(n.textContent().replace("\u200b", "")));
 		String elementValue = elementValue();
+		boolean bindingsDisabled = true;
 		if (Ax.ntrim(elementValue.replaceAll("<br>", "")).isEmpty()) {
+			/*
+			 * *DO* rewrite
+			 */
+			bindingsDisabled = false;
 			elementValue = "";
 		}
-		setValue(elementValue);
+		try {
+			provideNode().setBindingsDisabled(bindingsDisabled);
+			setValue(elementValue);
+		} finally {
+			provideNode().setBindingsDisabled(false);
+		}
 	}
 
 	@Override

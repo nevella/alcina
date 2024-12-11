@@ -5,12 +5,13 @@ import java.io.Serializable;
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 
 @ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
-public interface BoundSuggestOracleResponseType {
+public interface BoundSuggestOracleResponseElement {
 	default String toSuggestionResultString() {
 		return toSuggestionString();
 	}
@@ -25,6 +26,33 @@ public interface BoundSuggestOracleResponseType {
 			implements BoundSuggestOracleModel {
 	}
 
+	public static class UntypedSuggestion extends Bindable.Fields
+			implements Suggestion, Serializable {
+		public UntypedSuggestion() {
+		}
+
+		public UntypedSuggestion(Object suggestion) {
+			this.suggestion = suggestion;
+		}
+
+		@PropertySerialization(notTestable = true)
+		public Object suggestion;
+
+		@Override
+		public String getDisplayString() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'getDisplayString'");
+		}
+
+		@Override
+		public String getReplacementString() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'getReplacementString'");
+		}
+	}
+
 	public static class BoundSuggestOracleSuggestion extends Bindable
 			implements Suggestion, Serializable {
 		public static Object nullSuggestion() {
@@ -35,13 +63,13 @@ public interface BoundSuggestOracleResponseType {
 
 		private String displayString;
 
-		private BoundSuggestOracleResponseType typedValue;
+		private BoundSuggestOracleResponseElement typedValue;
 
 		public BoundSuggestOracleSuggestion() {
 		}
 
 		public BoundSuggestOracleSuggestion(
-				BoundSuggestOracleResponseType typedValue) {
+				BoundSuggestOracleResponseElement typedValue) {
 			this.setTypedValue(typedValue);
 			displayString = typedValue.toSuggestionString();
 		}
@@ -56,7 +84,7 @@ public interface BoundSuggestOracleResponseType {
 			return null;
 		}
 
-		public BoundSuggestOracleResponseType getTypedValue() {
+		public BoundSuggestOracleResponseElement getTypedValue() {
 			return typedValue;
 		}
 
@@ -64,7 +92,8 @@ public interface BoundSuggestOracleResponseType {
 			this.displayString = displayString;
 		}
 
-		public void setTypedValue(BoundSuggestOracleResponseType typedValue) {
+		public void
+				setTypedValue(BoundSuggestOracleResponseElement typedValue) {
 			this.typedValue = typedValue;
 		}
 
