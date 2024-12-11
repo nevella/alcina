@@ -2026,8 +2026,7 @@ public class DomNode {
 
 	public String getInnerMarkup() {
 		StringBuilder builder = new StringBuilder();
-		children.elements()
-				.forEach(child -> builder.append(child.fullToString()));
+		children.nodes.forEach(child -> builder.append(child.fullToString()));
 		return builder.toString();
 	}
 }
