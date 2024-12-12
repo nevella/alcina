@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.job;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.AlcinaParallel.AlcinaParallelJobChecker;
 
 @Registration(
@@ -16,6 +17,7 @@ public class AlcinaParallelJobCheckerJobRegistry
 
 	@Override
 	public boolean isCancelled() {
+		Transaction.ensureBegun();
 		return jobContext != null && jobContext.getJob().provideIsComplete();
 	}
 }
