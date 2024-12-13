@@ -33,6 +33,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.EntityLocatorMap;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy.RemoteInvocationProxyInterceptor;
 
 /**
@@ -120,7 +121,10 @@ public class RemoteInvocation {
 							.getServerAsClientInstance();
 				}
 				params.clientInstanceId = clientInstance.getId();
-				params.clientInstanceAuth = clientInstance.getAuth();
+				ClientInstance f_clientInstance = clientInstance;
+				params.clientInstanceAuth = MethodContext.instance()
+						.withWrappingTransaction()
+						.call(f_clientInstance::getAuth);
 			}
 			params.context = new LinkedHashMap<>();
 			LooseContext.getContext().snapshot().getProperties()

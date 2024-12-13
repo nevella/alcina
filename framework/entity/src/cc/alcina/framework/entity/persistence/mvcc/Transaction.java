@@ -203,6 +203,17 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	private static Transaction currentNoThrow() {
+		Transaction transaction = provideCurrentThreadTransaction();
+		if (transaction == null
+				|| (transaction.getPhase() == TransactionPhase.TO_DB_ABORTED
+						&& !LooseContext.is(CONTEXT_ALLOW_ABORTED_TX_ACCESS))) {
+			return null;
+		} else {
+			return transaction;
+		}
+	}
+
 	/*
 	 * Called in locations a transaction *should* be active, but isn't
 	 */
@@ -220,12 +231,13 @@ public class Transaction implements Comparable<Transaction> {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
-		if (getPerThreadTransaction() == null) {
+		Transaction perThreadTransaction = getPerThreadTransaction();
+		if (perThreadTransaction == null) {
 			logger.error(
 					"Attempting to end transaction when one is not present");
 		}
-		getPerThreadTransaction().endTransaction();
-		logger.debug("Removing tx - {} {} {}", getPerThreadTransaction(),
+		perThreadTransaction.endTransaction();
+		logger.debug("Removing tx - {} {} {}", perThreadTransaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
 		removeThreadLocalTransaction();
@@ -882,8 +894,9 @@ public class Transaction implements Comparable<Transaction> {
 	 */
 	public static void ensureAndRestartIfOlderThan(long ageMs) {
 		ensureBegun();
-		Transaction current = current();
-		if (!TimeConstants.within(current.startTime, ageMs)) {
+		Transaction current = currentNoThrow();
+		if (current == null
+				|| !TimeConstants.within(current.startTime, ageMs)) {
 			endAndBeginNew();
 		}
 	}
