@@ -872,7 +872,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		warmupTransaction = Transaction.current();
-		warmupTransaction.setTimeout(60 * TimeConstants.ONE_MINUTE_MS);
+		warmupTransaction.setMaxAge(60 * TimeConstants.ONE_MINUTE_MS);
 		transformSequencer.setInitialised(true);
 		transformSequencer.waitForWritableTransactionsToTerminate();
 		{

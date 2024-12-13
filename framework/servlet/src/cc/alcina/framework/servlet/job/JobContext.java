@@ -134,6 +134,9 @@ public class JobContext {
 
 	public static void checkCancelled() {
 		if (has()) {
+			// ensure tx *with headroom*
+			Transaction.ensureAndRestartIfOlderThan(
+					Transaction.getMaxAgeOrDefault() / 2);
 			get().checkCancelled0(false);
 		}
 	}

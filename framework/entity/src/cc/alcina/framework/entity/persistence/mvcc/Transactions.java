@@ -385,6 +385,13 @@ public class Transactions {
 				Iterator<Transaction> iterator = activeTransactions.values()
 						.iterator();
 				boolean seenStandardTransactionTimeout = false;
+				/*
+				 * the logic for the first test
+				 * (!seenStandardTransactionTimeout) is that txs are in order,
+				 * and any custom timeout will be gt standardTransactionTimeout
+				 * - so the test only needs to check up to the first tx with
+				 * timeout==standardTransactionTimeout
+				 */
 				while (!seenStandardTransactionTimeout && iterator.hasNext()) {
 					Transaction transaction = iterator.next();
 					long age = System.currentTimeMillis()
@@ -410,18 +417,17 @@ public class Transactions {
 									"No originating thread :: {}", transaction);
 						}
 					}
-					long timeout = Configuration.getInt(Transaction.class,
-							"maxAgeSecs") * TimeConstants.ONE_SECOND_MS;
-					if (transaction.getTimeout() == 0) {
+					long maxAge = Transaction.getDefaultMaxAge();
+					if (transaction.getMaxAge() == 0) {
 						seenStandardTransactionTimeout = true;
 					} else {
-						timeout = transaction.getTimeout();
+						maxAge = transaction.getMaxAge();
 					}
-					if (age > timeout) {
+					if (age > maxAge) {
 						try {
 							Transaction.logger.error(
 									"Cancelling timed out transaction :: {} :: timeout {}",
-									transaction, timeout);
+									transaction, maxAge);
 							transaction.toTimedOut();
 							// only the tx thread should end the transaction
 							// (otherwise calls
