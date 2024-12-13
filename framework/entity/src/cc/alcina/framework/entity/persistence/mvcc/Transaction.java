@@ -421,7 +421,7 @@ public class Transaction implements Comparable<Transaction> {
 	TransactionId highestVisibleCommittedTransactionId;
 
 	// if zero, use system default (for abort)
-	private long timeout;
+	private long maxAge;
 
 	Boolean emptyCommitted = null;
 
@@ -599,10 +599,6 @@ public class Transaction implements Comparable<Transaction> {
 		return null;
 	}
 
-	public long getTimeout() {
-		return this.timeout;
-	}
-
 	long getTransformRequestId() {
 		return this.transformRequestId;
 	}
@@ -730,9 +726,9 @@ public class Transaction implements Comparable<Transaction> {
 		this.populatingPureTransactional = populatingPureTransactional;
 	}
 
-	public void setTimeout(long timeout) {
-		logger.debug("{} :: Setting timeout to {}", this, timeout);
-		this.timeout = timeout;
+	public void setMaxAge(long maxAge) {
+		logger.debug("{} :: Setting timeout to {}", this, maxAge);
+		this.maxAge = maxAge;
 	}
 
 	public void toDbAborted() {
@@ -890,5 +886,25 @@ public class Transaction implements Comparable<Transaction> {
 		if (!TimeConstants.within(current.startTime, ageMs)) {
 			endAndBeginNew();
 		}
+	}
+
+	public static long getMaxAgeOrDefault() {
+		ensureBegun();
+		Transaction current = current();
+		return current.maxAge == 0 ? getDefaultMaxAge() : current.maxAge;
+	}
+
+	private static transient long defaultMaxAge = -1;
+
+	public static long getDefaultMaxAge() {
+		if (defaultMaxAge == -1) {
+			defaultMaxAge = Configuration.getInt("maxAgeSecs")
+					* TimeConstants.ONE_SECOND_MS;
+		}
+		return defaultMaxAge;
+	}
+
+	public long getMaxAge() {
+		return maxAge;
 	}
 }

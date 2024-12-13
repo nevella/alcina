@@ -55,6 +55,7 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.cellview.client.HasKeyboardPagingPolicy.KeyboardPagingPolicy;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
@@ -1301,7 +1302,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			// if (text.length() < charWidth) {
 			// this is just too hacky - use mouseover highlight to differentiate
 			// instead
-			setHTML("<span style='white-space:nowrap'>" + text + "</span>");
+			setHTML("<span style='white-space:nowrap'>"
+					+ SafeHtmlUtils.htmlEscape(text) + "</span>");
 			// } else {
 			// setHTML("<br />" + text + "<br />");
 			// }

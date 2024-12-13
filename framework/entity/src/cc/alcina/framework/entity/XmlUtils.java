@@ -81,6 +81,7 @@ import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolverHtml;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
+import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -1860,5 +1861,31 @@ public class XmlUtils {
 			Collections.reverse(parts);
 			return CommonUtils.join(parts, "/");
 		}
+	}
+
+	public static String trimMarkup(String string, int maxHlLength) {
+		if (string.length() < maxHlLength) {
+			return string;
+		}
+		DomDocument doc = DomDocument.from(Ax.format("<div>%s</div>", string));
+		doc.setReadonly(true);
+		if (doc.getDocumentElementNode().asRange().end.index < maxHlLength) {
+			return string;
+		}
+		Location clip = doc.getDocumentElementNode().asLocation()
+				.createRelativeLocation(maxHlLength, true).toTextLocation(true);
+		DomNode containingNode = clip.getContainingNode();
+		String replaceContents = Ax.trim(containingNode.textContent(),
+				maxHlLength - clip.index);
+		containingNode.setText(replaceContents);
+		DomNodeTree tree = doc.getDocumentElementNode().tree();
+		tree.setCurrentNode(containingNode);
+		while (tree.hasNext()) {
+			DomNode next = tree.next();
+			if (next.isText() && next != containingNode) {
+				next.setText("");
+			}
+		}
+		return doc.getDocumentElementNode().getInnerMarkup();
 	}
 }
