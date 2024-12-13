@@ -135,4 +135,8 @@ public class Selection implements ClientDomSelection {
 	public boolean hasSelection() {
 		return !Objects.equals("None", getType());
 	}
+
+	public void validate() {
+		local.validate();
+	}
 }

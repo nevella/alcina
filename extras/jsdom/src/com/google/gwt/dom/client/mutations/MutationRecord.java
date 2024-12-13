@@ -464,6 +464,8 @@ public final class MutationRecord {
 
 	public void populateAttachIds() {
 		MutationNode.populateAttachId(target);
+		MutationNode.populateAttachId(previousSibling);
+		MutationNode.populateAttachId(nextSibling);
 		addedNodes.forEach(MutationNode::populateAttachId);
 		removedNodes.forEach(MutationNode::populateAttachId);
 	}

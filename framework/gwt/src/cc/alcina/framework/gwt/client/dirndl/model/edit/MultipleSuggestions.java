@@ -2,8 +2,9 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -18,7 +19,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Multiple;
@@ -85,7 +85,23 @@ public class MultipleSuggestions<T> extends Multiple<T>
 		keyboardNavigation = new KeyboardNavigation(this);
 		bindings().from(this).on(properties.selectedValues)
 				.accept(this::updateAreaFromSelectedValues);
+		bindings().from(editArea).on(EditArea.properties.value)
+				.withSetOnInitialise(false).signal(this::onEditCommit);
 		decorators.add(createChoiceDecorator());
+	}
+
+	void onEditCommit() {
+		List<T> selectedValues = editArea.fragmentModel.byType(ChoiceNode.class)
+				.map(cn -> cn.getStringRepresentable()).filter(Objects::nonNull)
+				.map(this::selectedValueFromString)
+				.collect(Collectors.toList());
+		setSelectedValues(selectedValues);
+	}
+
+	T selectedValueFromString(String uid) {
+		return getValues().stream().filter(
+				t -> Objects.equals(CommonUtils.nullSafeToString(t), uid))
+				.findFirst().orElse(null);
 	}
 
 	ContentDecorator createChoiceDecorator() {
@@ -100,6 +116,10 @@ public class MultipleSuggestions<T> extends Multiple<T>
 
 	// FIXME - fragmentNode - can this initial deferral be avoided?
 	void updateAreaFromSelectedValues0(List<T> values) {
+		// FIXME - FN - this should be a sync
+		if (editArea.fragmentModel.byType(ChoiceNode.class).count() > 0) {
+			return;
+		}
 		values.stream().map(Choice::new).map(ChoiceNode::new)
 				.forEach(editArea.fragmentModel.getFragmentRoot()::append);
 	}
@@ -138,14 +158,13 @@ public class MultipleSuggestions<T> extends Multiple<T>
 				return MultipleSuggestions::choiceToString;
 			}
 
-			@Override
 			public void onCommit(Commit event) {
-				// TODO - fire changes
+				// NOOP - ancestor handles changes
 			}
 
 			@Override
 			public String triggerSequence() {
-				return "#";
+				return "@";
 			}
 
 			@Override

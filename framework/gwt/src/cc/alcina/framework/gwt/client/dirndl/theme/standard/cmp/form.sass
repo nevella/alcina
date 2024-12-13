@@ -9,6 +9,10 @@
     color: #aaa
     font-style: italic
 
+@mixin bordered
+  border-color: #aaa
+    background-color: color.$light_alpha_20
+
 @mixin fancy-input
   @include focus-placeholder
   font-size: 16px
@@ -22,8 +26,7 @@
   box-sizing: border-box
 
   &:hover
-    border-color: #aaa
-    background-color: color.$light_alpha_20
+    @include bordered
 
   &:focus
     border-color: #555

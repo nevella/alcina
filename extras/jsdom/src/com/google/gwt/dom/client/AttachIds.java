@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
@@ -102,7 +101,6 @@ public class AttachIds {
 		byId.remove(attachId);
 		removed.put(node, attachId);
 		node.setAttachId(0);
-		Ax.out("%s :: detach :: was [%s]", node, attachId);
 	}
 
 	/*

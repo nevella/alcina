@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -795,6 +794,11 @@ public class DomDocument extends DomNode implements Cloneable {
 			public int compare(Location l1, Location l2) {
 				return compareIndexOnly(l1, l2);
 			}
+		}
+
+		@Override
+		public void invalidate() {
+			invalidateLookups();
 		}
 	}
 

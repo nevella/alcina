@@ -65,7 +65,7 @@ public class RelativeSelection {
 				: selection.getFocusNode().asDomNode();
 		anchorDomNode = selection.getAnchorNode() == null ? null
 				: selection.getAnchorNode().asDomNode();
-		if (!hasSelection) {
+		if (!hasSelection || !focusDomNode.gwtNode().isAttached()) {
 			return;
 		}
 		if (focusDomNode != null) {

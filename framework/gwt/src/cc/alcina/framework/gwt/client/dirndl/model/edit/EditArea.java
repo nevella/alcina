@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -39,11 +40,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 @Directed(emits = { ModelEvents.Input.class })
 @DirectedContextResolver(FragmentResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
+@TypedProperties
 public class EditArea extends Model.Fields
 		implements FocusOnBind, HasTag, DomEvents.Input.Handler,
 		DomEvents.BeforeInput.Handler, LayoutEvents.BeforeRender.Handler,
 		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
 		FragmentModel.Has, ModelMutation.Handler {
+	public static PackageProperties._EditArea properties = PackageProperties.editArea;
+
 	@Binding(type = Type.INNER_HTML)
 	public String value;
 

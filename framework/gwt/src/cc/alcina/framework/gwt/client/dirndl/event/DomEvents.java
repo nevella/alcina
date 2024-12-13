@@ -248,6 +248,15 @@ public class DomEvents {
 		}
 	}
 
+	/**
+	 * <p>
+	 * DO NOT USE (here for completeness)
+	 * 
+	 * <p>
+	 * Since this event fires on the document, not the element containing the
+	 * selection, routing can't be done here - use the corresponding
+	 * {@link InferredDomEvents.SelectionChanged} event
+	 */
 	public static class SelectionChanged
 			extends NodeEvent<SelectionChanged.Handler> {
 		@Override

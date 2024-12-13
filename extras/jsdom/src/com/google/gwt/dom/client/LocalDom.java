@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -981,6 +982,8 @@ public class LocalDom implements ContextFrame {
 	 */
 	public class AttachIdRepresentations {
 		public void applyEvent(DomEventData eventData) {
+			boolean selectionEvent = Objects.equals(eventData.event.getType(),
+					BrowserEvents.SELECTIONCHANGE);
 			try {
 				EventTarget eventTarget = eventData.event.getEventTarget();
 				switch (eventTarget.type) {
@@ -1001,22 +1004,26 @@ public class LocalDom implements ContextFrame {
 					return;
 				}
 				case document:
+					if (!selectionEvent) {
+						return;
+					}
+					break;
 				case other:
 					// not currently handled, could be implemented
 					return;
 				case element:
 					// continue method, most common case
+					if (!Element.is(eventTarget)) {
+						// event target (client) has been removed from the
+						// canonical dom (server)
+						return;
+					}
 					break;
 				}
-				if (!Element.is(eventTarget)) {
-					// event target (client) has been removed from the
-					// canonical dom (server)
-					return;
-				}
-				Element target = Element.as(eventTarget);
 				if (eventData.preview) {
 					DOM.previewEvent(eventData.event);
 				} else {
+					Element target = Element.as(eventTarget);
 					Element firstReceiver = (Element) eventData.firstReceiver
 							.node();
 					if (firstReceiver == null) {

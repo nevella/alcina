@@ -89,4 +89,7 @@ public interface LocationContext {
 	String textContent(Range range);
 
 	int toValidIndex(int idx);
+
+	// FIXME - FN - remove once framework complete
+	void invalidate();
 }

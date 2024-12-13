@@ -19,7 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.SelectionChanged;
+import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
@@ -107,7 +107,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		DomEvents.MouseUp.Handler, DomEvents.KeyDown.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
-		ModelEvents.Commit.Handler, DomEvents.SelectionChanged.Handler {
+		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler {
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
 	}
@@ -213,7 +213,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		 * defer
 		 */
 		Client.eventBus().queued().lambda(checkTrigger0Runnable).distinct()
-				.dispatch();
+				.deferred().dispatch();
 	}
 
 	/*
@@ -238,8 +238,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			String triggerSequence = null;
 			if (!decoratorParent.canDecorate(selection)) {
 			} else {
-				String potentialTrigger = selection
-						.getTriggerableRangePrecedingFocus().text();
 				triggerSequence = descriptor.getTriggerSequence(selection);
 			}
 			// if triggerable, wrap in the decorator tag (possiby splitting
@@ -379,7 +377,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	}
 
 	@Override
-	public void onSelectionChanged(SelectionChanged event) {
+	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
 		checkTrigger();
 	}
 }

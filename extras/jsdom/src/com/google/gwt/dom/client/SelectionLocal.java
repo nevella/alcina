@@ -4,6 +4,8 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
+import cc.alcina.framework.common.client.dom.DomNode;
+
 public class SelectionLocal implements ClientDomSelection {
 	private Selection selectionObject;
 
@@ -120,5 +122,22 @@ public class SelectionLocal implements ClientDomSelection {
 	public void removeAllRanges() {
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'removeAllRanges'");
+	}
+
+	void validate() {
+		getSelectionRecord().focusOffset = validateOffset(getFocusNode(),
+				getFocusOffset());
+		getSelectionRecord().anchorOffset = validateOffset(getAnchorNode(),
+				getAnchorOffset());
+	}
+
+	int validateOffset(Node node, int offset) {
+		if (node != null) {
+			DomNode domNode = node.asDomNode();
+			if (domNode.isText() && offset > domNode.textContent().length()) {
+				return domNode.textContent().length();
+			}
+		}
+		return offset;
 	}
 }

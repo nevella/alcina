@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.event;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -28,6 +29,7 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -78,6 +80,29 @@ public class InferredDomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onClickOutside(ClickOutside event);
+		}
+	}
+
+	public static class SelectionChanged
+			extends NodeEvent<SelectionChanged.Handler> {
+		@Override
+		public void dispatch(SelectionChanged.Handler handler) {
+			handler.onSelectionChanged(this);
+		}
+
+		@Registration({ DomBinding.class, SelectionChanged.class })
+		public static class BindingImpl
+				extends NativePreviewBinding<SelectionChanged> {
+			@Override
+			protected boolean isObservedEvent(NativePreviewEvent event) {
+				return Objects.equals(
+						Event.as(event.getNativeEvent()).getType(),
+						BrowserEvents.SELECTIONCHANGE);
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionChanged(SelectionChanged event);
 		}
 	}
 
@@ -167,6 +192,38 @@ public class InferredDomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onEscapePressed(EscapePressed event);
+		}
+	}
+
+	static abstract class NativePreviewBinding<E extends NodeEvent>
+			extends DomBinding<E> implements NativePreviewHandler {
+		@Override
+		protected HandlerRegistration bind0(Element element, Object model) {
+			Ax.out("BNPPE: %s", element);
+			return Event.addNativePreviewHandler(this);
+		}
+
+		@Override
+		protected HandlerRegistration bind1(Element element) {
+			// never called
+			throw new UnsupportedOperationException();
+		}
+
+		protected abstract boolean isObservedEvent(NativePreviewEvent event);
+
+		@Override
+		public void onPreviewNativeEvent(NativePreviewEvent event) {
+			if (!isObservedEvent(event)) {
+				return;
+			}
+			Event nativeEvent = Event.as(event.getNativeEvent());
+			Scheduler.get().scheduleFinally(() -> {
+				if (handlerRegistration == null) {
+					// was unbound by a prior finally event
+					return;
+				}
+				fireEvent(new NativePreviewEventAsync(nativeEvent));
+			});
 		}
 	}
 

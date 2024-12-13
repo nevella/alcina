@@ -15,8 +15,8 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.remote.ReflectiveCommonRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.RepresentableToStringTransform.FromStringRepresentation;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.RepresentableToStringTransform.ToStringRepresentation;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.FromStringRepresentation;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.ToStringRepresentation;
 import cc.alcina.framework.gwt.client.util.Async;
 
 /**
@@ -93,6 +93,11 @@ public abstract class EntityNode<E extends Entity>
 			ReflectiveCommonRemoteServiceAsync.get()
 					.getPersistentLocators(locators, callback);
 		}
+	}
+
+	@Override
+	public Class<EntityLocator> stringRepresentableType() {
+		return EntityLocator.class;
 	}
 
 	@Registration({ ToStringRepresentation.class, EntityLocator.class })

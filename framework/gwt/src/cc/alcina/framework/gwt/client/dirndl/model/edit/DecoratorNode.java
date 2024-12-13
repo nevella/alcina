@@ -15,25 +15,30 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.ContextSensitiveReverseTransform;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.ContextSensitiveTransform;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.HasStringRepresentableType;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
  * 
  */
-public abstract class DecoratorNode<WT, SR> extends FragmentNode {
+public abstract class DecoratorNode<WT, SR> extends FragmentNode
+		implements HasStringRepresentableType<SR> {
+	@Override
+	public Class<SR> stringRepresentableType() {
+		return Reflections.at(this).getGenericBounds().bounds.get(1);
+	}
+
 	/**
 	 * The characteristics of the decorator, such as the key sequence which
 	 * triggers its creation
@@ -95,7 +100,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 
 	@Directed(tag = "span", className = "cursor-target")
 	public static class ZeroWidthCursorTarget extends FragmentNode {
-		static final String ZWS_CONTENT = "\u200B";
+		public static final String ZWS_CONTENT = "\u200B";
 
 		@Override
 		public void onFragmentRegistration() {
@@ -120,13 +125,18 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 				childTexts.forEach(text -> {
 					String nodeValue = text.liveValue();
 					String replaceValue = nodeValue.replace(ZWS_CONTENT, "");
-					if (!Objects.equals(nodeValue, replaceValue)) {
+					if (!Objects.equals(nodeValue, replaceValue) &&
+					// localdom doesn't like 0-length text nodes
+							replaceValue.length() > 0) {
 						// this may move the selection cursor! so requires more
 						// bubbling/event chaining, non-deferred
 						text.setValue(replaceValue);
+						// this is the non-bubbling, quick hack - FIXME FN
+						Document.get().getSelection().validate();
+						text.domNode().asLocation().locationContext
+								.invalidate();
 					}
 				});
-				// FIXME - strip before replace - due to LD issue
 				strip();
 			}
 		}
@@ -159,81 +169,6 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 		return this.stringRepresentable;
 	}
 
-	/**
-	 * Transforms the referenced object to/from a string representation (which
-	 * will populate the decorated node's <code>uid</code> field)
-	 */
-	public static class RepresentableToStringTransform<SR>
-			implements Binding.Bidi<SR> {
-		@Override
-		public Function<SR, String> leftToRight() {
-			return new Left();
-		}
-
-		@Override
-		public Function<String, SR> rightToLeft() {
-			return new Right();
-		}
-
-		public static interface ToStringRepresentation<SR>
-				extends ContextSensitiveTransform<SR> {
-		}
-
-		public static interface FromStringRepresentation<SR>
-				extends ContextSensitiveReverseTransform<SR> {
-		}
-
-		class Left extends Binding.AbstractContextSensitiveTransform<SR> {
-			@Override
-			public String apply(SR t) {
-				if (t == null) {
-					return null;
-				} else {
-					ToStringRepresentation<SR> impl = Registry
-							.impl(ToStringRepresentation.class, t.getClass());
-					impl.withContextNode(node);
-					return impl.apply(t);
-				}
-			}
-		}
-
-		class Right
-				extends Binding.AbstractContextSensitiveReverseTransform<SR> {
-			@Override
-			public SR apply(String t) {
-				if (t == null) {
-					return null;
-				} else {
-					Object contextModel = node.getModel();
-					FromStringRepresentation<SR> impl = Registry
-							.impl(FromStringRepresentation.class, t.getClass());
-					impl.withContextNode(node);
-					return (SR) impl.apply(t);
-				}
-			}
-		}
-
-		@Registration({ ToStringRepresentation.class, String.class })
-		public static class PassthroughTransformLeft
-				extends Binding.AbstractContextSensitiveTransform<String>
-				implements ToStringRepresentation<String> {
-			@Override
-			public String apply(String t) {
-				return t;
-			}
-		}
-
-		@Registration({ FromStringRepresentation.class, String.class })
-		public static class PassthroughTransformRight
-				extends Binding.AbstractContextSensitiveReverseTransform<String>
-				implements FromStringRepresentation<String> {
-			@Override
-			public String apply(String t) {
-				return t;
-			}
-		}
-	}
-
 	public void putReferenced(WT wrappedType) {
 		setStringRepresentable(
 				getDescriptor().toStringRepresentable(wrappedType));
@@ -264,6 +199,9 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 	void positionCursorPostReferencedSelection() {
 		LocalDom.flush();
 		LocalDom.flushLocalMutations();
+		if (provideIsUnbound()) {
+			return;// removed
+		}
 		FragmentNode.TextNode textNode = (TextNode) children().findFirst()
 				.get();
 		// TODO - position cursor at the end of the mention, then allow the
@@ -271,7 +209,18 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode {
 		// try positioning cursor immediately after the decorator
 		// guaranteed non-null (due to zws insertion)
 		FragmentNode.TextNode cursorTarget = textNode.fragmentTree()
-				.nextTextNode(true).get();
+				.nextTextNode(true).orElse(null);
+		/*
+		 * well - what's the dispatch model for ZWS insertion? Maybe it is
+		 * null...maybe we've lost focus...
+		 */
+		if (cursorTarget == null) {
+			int debug = 3;
+			// Client.eventBus().queued()
+			// .lambda(this::positionCursorPostReferencedSelection)
+			// .deferred().dispatch();
+			return;
+		}
 		Node cursorNode = cursorTarget.domNode().gwtNode();
 		Selection selection = Document.get().getSelection();
 		selection.collapse(cursorNode, 1);// after zws

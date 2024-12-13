@@ -40,14 +40,12 @@ public interface BoundSuggestOracleResponseElement {
 
 		@Override
 		public String getDisplayString() {
-			// TODO Auto-generated method stub
 			throw new UnsupportedOperationException(
 					"Unimplemented method 'getDisplayString'");
 		}
 
 		@Override
 		public String getReplacementString() {
-			// TODO Auto-generated method stub
 			throw new UnsupportedOperationException(
 					"Unimplemented method 'getReplacementString'");
 		}
