@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Document;
@@ -173,5 +174,14 @@ public class MarkupHighlights extends Model.Fields {
 		selected = wrappedRanges.get(rangeIdx);
 		selected.scrollTo();
 		selected.setSelected(true);
+	}
+
+	public void updateRanges(List<IntPair> numericRanges) {
+		if (Objects.equals(numericRanges, this.numericRanges)) {
+			return;
+		} else {
+			putRanges(numericRanges, 0);
+			wrapRangesAndGo();
+		}
 	}
 }

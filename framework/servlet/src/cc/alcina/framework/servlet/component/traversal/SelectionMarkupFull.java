@@ -114,8 +114,7 @@ public class SelectionMarkupFull extends SelectionMarkup {
 					pair = pair.shiftRight(-contentsNode.asLocation().index);
 					pairs = List.of(pair);
 				}
-				markupHighlights.putRanges(pairs, 0);
-				markupHighlights.wrapRangesAndGo();
+				markupHighlights.updateRanges(pairs);
 			}
 		}
 
