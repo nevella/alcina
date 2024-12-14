@@ -59,22 +59,15 @@ class RenderedSelections extends Model.Fields {
 		this.variant = variant;
 		this.heading = new Heading(Ax.friendly(variant));
 		bindings().from(page.ui).on(Ui.properties.place)
-				.typed(TraversalPlace.class)
-				.map(p -> p.provideSelection(SelectionType.VIEW))
-				.accept(this::setSelection);
+				.signal(this::populateViewSlection);
+		bindings().from(page.ui).on(Ui.properties.traversal)
+				.signal(this::populateViewSlection);
 		bindings().from(this).on("selection").signal(this::onSelectionChange);
 	}
 
-	public void
-			setSelectionMarkupArea(SelectionMarkupArea selectionMarkupArea) {
-		set("selectionMarkupArea", this.selectionMarkupArea,
-				selectionMarkupArea,
-				() -> this.selectionMarkupArea = selectionMarkupArea);
-	}
-
-	public void setSelection(Selection selection) {
-		set("selection", this.selection, selection,
-				() -> this.selection = selection);
+	void populateViewSlection() {
+		Selection selection = page.place().provideSelection(SelectionType.VIEW);
+		properties.selection.set(this, selection);
 	}
 
 	void onSelectionChange() {
@@ -84,7 +77,7 @@ class RenderedSelections extends Model.Fields {
 	private void conditionallyPopulate() {
 		if (selection == null) {
 			properties.selectionTable.set(this, null);
-			setSelectionMarkupArea(null);
+			properties.selectionMarkupArea.set(this, null);
 			return;
 		}
 		// workaround for vs.code (or eclipse) compilation issue - the local
@@ -113,7 +106,7 @@ class RenderedSelections extends Model.Fields {
 		}
 		SelectionMarkup markup = page.getSelectionMarkup();
 		if (markup == null) {
-			setSelectionMarkupArea(null);
+			properties.selectionMarkupArea.set(this, null);
 			return;
 		}
 		String styleScope = Ax
@@ -127,7 +120,7 @@ class RenderedSelections extends Model.Fields {
 		}
 		SelectionMarkupArea selectionMarkupArea = new SelectionMarkupArea(
 				model);
-		setSelectionMarkupArea(selectionMarkupArea);
+		properties.selectionMarkupArea.set(this, selectionMarkupArea);
 		if (style == null) {
 			Model style = new Style(query.getCss());
 			setStyle(style);

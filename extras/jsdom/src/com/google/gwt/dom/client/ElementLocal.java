@@ -955,4 +955,10 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	public IntPair getScrollPosition() {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void scrollIntoView(int hPad, int vPad) {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'scrollIntoView'");
+	}
 }

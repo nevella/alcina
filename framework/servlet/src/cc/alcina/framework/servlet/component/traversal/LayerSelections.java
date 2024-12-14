@@ -13,6 +13,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.View;
@@ -53,7 +54,10 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
+@TypedProperties
 class LayerSelections extends Model.All {
+	static PackageProperties._LayerSelections properties = PackageProperties.layerSelections;
+
 	@Binding(type = Type.PROPERTY)
 	boolean empty;
 
@@ -149,21 +153,23 @@ class LayerSelections extends Model.All {
 	// FIXME - once inner classes allow static (JDK16) use typedproperties,
 	// remvoe setters
 	@Directed(className = "bordered-area")
+	@TypedProperties
 	class NameArea extends Model.All
 			implements ModelEvents.Closed.Handler, DomEvents.Click.Handler {
 		@Directed
 		LeafModel.TextTitle key;
+
+		NameArea() {
+			bindings().from(selectionLayers.page.ui).on(Ui.properties.place)
+					.map(this::computeSelected).to(this).on("selected")
+					.oneWay();
+		}
 
 		@Binding(type = Type.PROPERTY)
 		boolean hasFilter;
 
 		@Binding(type = Type.PROPERTY)
 		boolean filterEditorOpen;
-
-		public void setFilterEditorOpen(boolean filterEditorOpen) {
-			set("filterEditorOpen", this.filterEditorOpen, filterEditorOpen,
-					() -> this.filterEditorOpen = filterEditorOpen);
-		}
 
 		@Directed
 		Filter filter;
@@ -174,26 +180,28 @@ class LayerSelections extends Model.All {
 		@Binding(type = Type.PROPERTY)
 		boolean selected;
 
-		public void setSelected(boolean selected) {
-			set("selected", this.selected, selected,
-					() -> this.selected = selected);
-		}
-
 		@Override
 		public void onBeforeRender(BeforeRender event) {
+			bindings().from(LayerSelections.this.selectionsArea)
+					.on(_SelectionsArea_properties.selections).nonNull()
+					.signal(this::render);
+			super.onBeforeRender(event);
+		}
+
+		void render() {
+			Client.eventBus().queued().lambda(this::render0).dispatch();
+		}
+
+		void render0() {
 			FormatBuilder keyBuilder = new FormatBuilder();
 			keyBuilder.indent(layer.depth());
 			keyBuilder.append(layer.getName());
 			String keyString = keyBuilder.toString();
-			bindings().from(selectionLayers.page.ui).on(Ui.properties.place)
-					.map(this::computeSelected).to(this).on("selected")
-					.oneWay();
 			outputs = computeOutputs();
-			key = new TextTitle(keyString,
-					Ax.format("%s : %s", keyString, outputs));
-			filter = new Filter();
-			hasFilter = filter.existing != null;
-			super.onBeforeRender(event);
+			_NameArea_properties.key.set(this, new TextTitle(keyString,
+					Ax.format("%s : %s", keyString, outputs)));
+			_NameArea_properties.filter.set(this, new Filter());
+			_NameArea_properties.hasFilter.set(this, filter.existing != null);
 		}
 
 		boolean computeSelected(Place place) {
@@ -279,17 +287,25 @@ class LayerSelections extends Model.All {
 								provideElement().getBoundingClientRect(), this,
 								new FilterSuggestor())
 						.build();
-				setFilterEditorOpen(true);
+				_NameArea_properties.filterEditorOpen.set(NameArea.this, true);
 				overlay.open();
 			}
 		}
 
 		@Override
 		public void onClosed(Closed event) {
-			setFilterEditorOpen(false);
+			_NameArea_properties.filterEditorOpen.set(NameArea.this, false);
 		}
 	}
 
+	static PackageProperties._LayerSelections_SelectionsArea _SelectionsArea_properties = PackageProperties.layerSelections_selectionsArea;
+
+	static PackageProperties._LayerSelections_NameArea _NameArea_properties = PackageProperties.layerSelections_nameArea;
+
+	/*
+	 * Models the (possibly filtered) selections in a leyer
+	 */
+	@TypedProperties
 	class SelectionsArea extends Model.Fields {
 		@Directed
 		List<Object> selections;
@@ -301,6 +317,19 @@ class LayerSelections extends Model.All {
 		List<SelectionArea> filtered;
 
 		SelectionsArea() {
+			bindings().from(Ui.get()).on(Ui.properties.place)
+					.signal(this::update);
+		}
+
+		void update() {
+			if (testHistory != null && testHistory.isCurrent()) {
+				filtered.forEach(SelectionArea::updateSelected);
+			} else {
+				render();
+			}
+		}
+
+		void render() {
 			Stream<Selection> stream = selectionLayers.traversal()
 					.getSelections(layer).stream();
 			parallel = Configuration.is(LayerSelections.class, "parallelTest");
@@ -308,7 +337,7 @@ class LayerSelections extends Model.All {
 			if (parallel) {
 				stream.parallel();
 			}
-			testHistory.beforeFilter();
+			testHistory.textFilter();
 			List<Selection> filteredSelections = stream.filter(this::test)
 					.limit(maxRenderedSelections).collect(Collectors.toList());
 			boolean sortSelectedFirst = Ui.place()
@@ -328,38 +357,45 @@ class LayerSelections extends Model.All {
 			filtered = filteredSelections.stream().map(SelectionArea::new)
 					.collect(Collectors.toList());
 			empty = filtered.isEmpty();
-			selections = filtered.stream().collect(Collectors.toList());
+			List<Object> selections = filtered.stream()
+					.collect(Collectors.toList());
 			for (int idx = selections.size(); idx <
 			// hardcoded, matches the css grid
 					250; idx++) {
 				selections.add(new Spacer());
 			}
-			bindings().from(Ui.get()).on(Ui.properties.place)
-					.signal(this::updateSelected);
-		}
-
-		void updateSelected() {
-			filtered.forEach(SelectionArea::updateSelected);
+			_SelectionsArea_properties.selections.set(this, selections);
 		}
 
 		/*
 		 * Cache test results for a given selection/string
 		 */
 		class TestHistory {
-			String testFilter = "";
+			String textFilter = "";
 
 			Map<Selection, Boolean> results = new ConcurrentHashMap<>();
 
 			boolean checkForExistingTest;
 
-			void beforeFilter() {
-				String incomingFilter = Ui.place().getTextFilter();
-				checkForExistingTest = Objects.equals(testFilter,
-						incomingFilter);
-				if (!checkForExistingTest) {
-					testFilter = incomingFilter;
+			SelectionType firstSelectionType;
+
+			void textFilter() {
+				String textFilter = Ui.place().getTextFilter();
+				SelectionType firstSelectionType = Ui.place()
+						.firstSelectionType();
+				if (!isCurrent()) {
+					this.textFilter = textFilter;
+					this.firstSelectionType = firstSelectionType;
 					results.clear();
 				}
+			}
+
+			boolean isCurrent() {
+				String textFilter = Ui.place().getTextFilter();
+				SelectionType firstSelectionType = Ui.place()
+						.firstSelectionType();
+				return CommonUtils.equals(textFilter, this.textFilter,
+						firstSelectionType, this.firstSelectionType);
 			}
 
 			Boolean getExistingResult(Selection selection) {

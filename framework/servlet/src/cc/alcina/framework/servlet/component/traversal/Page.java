@@ -344,7 +344,7 @@ class Page extends Model.All
 	}
 
 	void changeSelectionType(SelectionType selectionType) {
-		if (Ui.place().lastSelectionType() == selectionType) {
+		if (Ui.place().firstSelectionType() == selectionType) {
 			return;
 		}
 		TraversalPlace to = place().copy().withSelectionType(selectionType);

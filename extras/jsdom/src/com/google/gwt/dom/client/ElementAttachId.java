@@ -351,6 +351,12 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	}
 
 	@Override
+	public final void scrollIntoView(int hPad, int vPad) {
+		invokeAsync("scrollIntoView", List.of(int.class, int.class),
+				List.of(hPad, vPad));
+	}
+
+	@Override
 	public void setAttribute(String name, String value) {
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.attributes;

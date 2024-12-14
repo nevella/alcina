@@ -43,7 +43,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
  * to-&gt;from)
  * 
  * <p>
- * See
+ * The {@link IfNotExisting} interface can be used to prevent bindings from
+ * actually firing if the existing property value is 'good enough'
  * 
  * @param <T>
  */

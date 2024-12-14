@@ -151,7 +151,8 @@ public class MarkupHighlights extends Model.Fields {
 			Element gwtElement = wrapped.get(0).gwtElement();
 			// FIXME - this is to workaround out-of-order client processing -
 			// revisit with romcom.trans
-			Timer.Provider.get().getTimer(() -> gwtElement.scrollIntoView())
+			Timer.Provider.get()
+					.getTimer(() -> gwtElement.scrollIntoView(0, 75))
 					.schedule(100);
 		}
 
