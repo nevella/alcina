@@ -1,6 +1,9 @@
 package cc.alcina.framework.gwt.client.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Window;
@@ -81,6 +84,28 @@ public class StyleUtil {
 		public Query withPositioningContainer(boolean positioningContainer) {
 			this.positioningContainer = positioningContainer;
 			return this;
+		}
+	}
+
+	public static ClassAttributeBuilder classAttribute() {
+		return new ClassAttributeBuilder();
+	}
+
+	public static class ClassAttributeBuilder {
+		List<String> names = new ArrayList<>();
+
+		public ClassAttributeBuilder add(String name) {
+			this.names.add(name);
+			return this;
+		}
+
+		public ClassAttributeBuilder add(List<String> names) {
+			this.names.addAll(names);
+			return this;
+		}
+
+		public String classAttributeValue() {
+			return names.stream().collect(Collectors.joining(" "));
 		}
 	}
 }
