@@ -903,8 +903,9 @@ public class Transaction implements Comparable<Transaction> {
 
 	public static long getMaxAgeOrDefault() {
 		ensureBegun();
-		Transaction current = current();
-		return current.maxAge == 0 ? getDefaultMaxAge() : current.maxAge;
+		Transaction current = currentNoThrow();
+		return current == null || current.maxAge == 0 ? getDefaultMaxAge()
+				: current.maxAge;
 	}
 
 	private static transient long defaultMaxAge = -1;
