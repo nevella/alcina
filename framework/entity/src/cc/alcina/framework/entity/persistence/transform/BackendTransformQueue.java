@@ -224,9 +224,6 @@ public class BackendTransformQueue {
 	}
 
 	public int enqueue(Runnable runnable, String queueName) {
-		if (queueName != null && queueName.contains("JobR")) {
-			int debug = 3;
-		}
 		CollectingListener collectingListener = new CollectingListener();
 		try {
 			TransformManager.get()
