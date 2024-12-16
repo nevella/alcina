@@ -45,18 +45,23 @@ public class RemoteComponentObservables<T> {
 	TimerTask evictTask = new TimerTask() {
 		@Override
 		public void run() {
-			synchronized (histories) {
-				histories.entrySet().stream()
-						.filter(e -> e.getValue().getPublished() != null
-								&& e.getValue().getPublished().shouldEvict())
-						.forEach(RemoteComponentObservables.this::evict);
-			}
+			checkEvict(false);
 		}
 	};
+
+	void checkEvict(boolean log) {
+		synchronized (histories) {
+			histories.entrySet().stream()
+					.filter(e -> e.getValue().getPublished() != null
+							&& e.getValue().getPublished().shouldEvict(log))
+					.forEach(RemoteComponentObservables.this::evict);
+		}
+	}
 
 	void evict(Map.Entry<String, Topic<ObservableHistory>> entry) {
 		ObservableHistory published = entry.getValue().getPublished();
 		entry.getValue().clearPublished();
+		logger.info("evicted-ObservableHistory - key: [{}]", entry.getKey());
 		if (published != null) {
 			EnvironmentManager.get()
 					.deregisterSource(published.toEnvironmentSource());
@@ -140,8 +145,12 @@ public class RemoteComponentObservables<T> {
 					.getLong(CONTEXT_OVERRIDE_EVICTION_TIME);
 			if (overrideEvictionTime != null) {
 				observableEvictionTimeMs = overrideEvictionTime;
-				logger.warn("Observed component observable: {} {}",
-						observable.getClass().getName(), id);
+				if (overrideEvictionTime > evictionTimeMs) {
+					// no need to warn if the eviction is _shorter_ than default
+					logger.warn(
+							"Override eviction - Observed component observable: {} {}",
+							observable.getClass().getName(), id);
+				}
 			}
 		}
 
@@ -161,9 +170,15 @@ public class RemoteComponentObservables<T> {
 			return observableDisplayName.apply(observable);
 		}
 
-		public boolean shouldEvict() {
-			return id != null && !TimeConstants.within(lastAccessed,
-					observableEvictionTimeMs);
+		public boolean shouldEvict(boolean log) {
+			if (log) {
+				logger.info(
+						"Check eviction - id: {} - lastAccessed: {} - observableEvictionTimeMs: {}",
+						id, lastAccessed, observableEvictionTimeMs);
+			}
+			boolean evictNullId = Configuration.is("evictNullId");
+			return (id != null || evictNullId) && !TimeConstants
+					.within(lastAccessed, observableEvictionTimeMs);
 		}
 	}
 

@@ -964,6 +964,11 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	@Override
+	public void scrollIntoView(int hPad, int vPad) {
+		runIfWithRemote(true, () -> remote().scrollIntoView(hPad, vPad));
+	}
+
+	@Override
 	public void setAttribute(String name, String value) {
 		String current = local().getAttribute(name);
 		if (Objects.equals(current, value)) {
@@ -1329,9 +1334,15 @@ public class Element extends Node implements ClientDomElement,
 				elem.focus();
 				return null;
 			case "scrollIntoView":
-				Preconditions.checkArgument(argumentTypes.isEmpty());
-				elem.scrollIntoView();
-				return null;
+				if (argumentTypes.size() == 2) {
+					elem.scrollIntoView((int) arguments.get(0),
+							(int) arguments.get(1));
+					return null;
+				} else {
+					Preconditions.checkArgument(argumentTypes.isEmpty());
+					elem.scrollIntoView();
+					return null;
+				}
 			case "getPropertyString":
 				if (argumentTypes.size() == 1) {
 					return elem.getPropertyString((String) arguments.get(0));

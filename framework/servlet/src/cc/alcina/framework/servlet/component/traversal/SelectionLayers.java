@@ -27,6 +27,10 @@ class SelectionLayers extends Model.Fields {
 	class LayersContainer extends Model.Fields implements TransmitState {
 		List<LayerSelections> layers;
 
+		/*
+		 * This (rather than just the layers property/field) supports
+		 * incremental rendering of the list
+		 */
 		@Directed
 		CollectionDeltaModel collectionRepresentation = new CollectionDeltaModel();
 

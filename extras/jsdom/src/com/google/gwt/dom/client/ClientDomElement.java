@@ -247,6 +247,8 @@ public interface ClientDomElement extends ClientDomNode {
 	 */
 	void scrollIntoView();
 
+	void scrollIntoView(int hPad, int vPad);
+
 	void setAttribute(String name, String value);
 
 	void setClassName(String className);

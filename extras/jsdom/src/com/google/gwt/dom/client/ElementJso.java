@@ -762,12 +762,15 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * modified version of the gwt impl (mmoved from DomImpl to here)
 	 */
 	@Override
-	public final native void scrollIntoView() /*-{
-	  @com.google.gwt.dom.client.ElementJso::scrollElemIntoView(Lcom/google/gwt/dom/client/ElementJso;)(this);
-		//this.scrollIntoView();
-	}-*/;
+	public final void scrollIntoView() {
+		scrollIntoView(0, 0);
+	}
 
-	static native void scrollElemIntoView(ElementJso elem) /*-{
+	public final void scrollIntoView(int hPad, int vPad) {
+		ElementJso.scrollElemIntoView(this, hPad, vPad);
+	}
+
+	static native void scrollElemIntoView(ElementJso elem, int hPad, int vPad) /*-{
     //safer to rely on emulated behaviour
     //        if (elem.scrollIntoView) {
     //            elem.scrollIntoView();
@@ -790,12 +793,11 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	  if (left < cur.scrollLeft) {
         cur.scrollLeft = left;
       }
-      
-      if (top + height > cur.scrollTop + cur.clientHeight) {
-        cur.scrollTop = (top + height) - cur.clientHeight;
+      if (top + height+vPad > cur.scrollTop + cur.clientHeight) {
+        cur.scrollTop = (top + height) - cur.clientHeight +vPad;
       }
-	  if (top < cur.scrollTop) {
-        cur.scrollTop = top;
+	  if (top-vPad < cur.scrollTop) {
+        cur.scrollTop = top-vPad;
       }
 
       var offsetLeft = cur.offsetLeft, offsetTop = cur.offsetTop;

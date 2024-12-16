@@ -119,7 +119,7 @@ public class EntityBrowser {
 			peer.initialiseTraversal();
 			MethodContext.instance().withContextValue(
 					RemoteComponentObservables.CONTEXT_OVERRIDE_EVICTION_TIME,
-					TimeConstants.ONE_HOUR_MS)
+					5 * TimeConstants.ONE_SECOND_MS)
 					.run(() -> peer.traversal.traverse());
 			long end = System.currentTimeMillis();
 			Ax.out("egv/traverse: %sms", end - start);

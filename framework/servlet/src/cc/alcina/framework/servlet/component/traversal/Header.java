@@ -1,29 +1,35 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.Help;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 class Header extends Model.All {
+	static PackageProperties._Header_Left _Left_properties = PackageProperties.header_left;
+
+	@TypedProperties
 	class Left extends Model.All {
 		String name;
 
-		public void setName(String name) {
-			set("name", this.name, name, () -> this.name = name);
-		}
-
 		Left() {
 			bindings().from(Header.this.page).on(Page.properties.history)
-					.typed(ObservableHistory.class).map(this::computeName)
-					.accept(this::setName);
+					.value(this::computeName).to(this).on(_Left_properties.name)
+					.oneWay();
+			bindings().from(Header.this.page.ui).on(Ui.properties.place)
+					.value(this::computeName).to(this).on(_Left_properties.name)
+					.oneWay();
 		}
 
-		String computeName(ObservableHistory history) {
+		String computeName() {
 			FormatBuilder format = new FormatBuilder().separator(" - ");
 			format.append(TraversalBrowser.Ui.get().getMainCaption());
-			format.appendIfNonNull(history, ObservableHistory::displayName);
+			if (page.history != null) {
+				format.append(page.history.displayName());
+			}
+			format.appendIfNonNull(page.place(), TraversalPlace::getTextFilter);
 			return format.toString();
 		}
 	}
