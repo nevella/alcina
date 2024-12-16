@@ -1,13 +1,7 @@
 CACHE MANIFEST
-<<<<<<< HEAD
-# Version: CE8A90C557AD2965E53D2156717CF5CE
+# Version: 8C6D149CA515581A6B90EFD7C03FBC3F
 CACHE:
-/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/3D71C14B2D08AE67D84394AEDF744308.cache.js
-=======
-# Version: 2510ABBD6C092F18A05D30841D84B48C
-CACHE:
-/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/3A20C17057AEA65B53A80D7AD8FDA04B.cache.js
->>>>>>> dev
+/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/AFFCAECCA62C87D3DDAC9C01D7D1751F.cache.js
 /cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/Alcina-dep.css
 /cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/WebSocketTransport.js
 /cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient/cc.alcina.framework.servlet.component.romcom.RemoteObjectModelComponentClient.devmode.js

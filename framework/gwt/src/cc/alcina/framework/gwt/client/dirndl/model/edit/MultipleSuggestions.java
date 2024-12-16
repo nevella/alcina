@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -63,6 +64,17 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	}
 
 	transient KeyboardNavigation keyboardNavigation;
+
+	@Override
+	public void onSelected(Selected event) {
+		/*
+		 * this will be from the decorator Selected event, and should be
+		 * squelched
+		 */
+		/*
+		 * NOOP
+		 */
+	}
 
 	@Override
 	public void onKeyDown(KeyDown event) {
