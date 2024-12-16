@@ -185,7 +185,7 @@ public abstract class ActionViewProviderBase
 		private PropertyChangeListener progressPcl = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-				if (actionProgress.getJobInfo().isComplete()) {
+				if (actionProgress.getJobTracker().isComplete()) {
 					redraw();
 				}
 			}

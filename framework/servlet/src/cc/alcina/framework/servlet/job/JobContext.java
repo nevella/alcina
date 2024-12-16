@@ -345,8 +345,7 @@ public class JobContext {
 
 		void debounceMessage(String message) {
 			debouncer.eventOccurred(() -> {
-				JobRegistry.get().environment.updateJobStatus(JobContext.this,
-						() -> updateJobStatusDebounced(message));
+				updateJobStatusDebounced(message);
 				MethodContext.instance().withThreadName(thread.getName())
 						.run(() -> LoggerFactory.getLogger(JobContext.class)
 								.info("status message: {}", message));

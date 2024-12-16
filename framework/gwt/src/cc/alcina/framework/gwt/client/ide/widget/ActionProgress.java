@@ -56,7 +56,7 @@ public class ActionProgress extends Composite
 
 	private FlowPanel fp;
 
-	private JobTracker tracker = new JobTracker();
+	private JobTracker jobTracker = new JobTracker();
 
 	private Grid grid;
 
@@ -166,22 +166,22 @@ public class ActionProgress extends Composite
 					}
 
 					@Override
-					public void onSuccess(JobTracker info) {
+					public void onSuccess(JobTracker tracker) {
 						onReturned();
-						if (info == null) {
-							info = new JobTracker();
-							info.setJobName("Unknown job");
-							info.setComplete(true);
-							info.setProgressMessage("---");
+						if (tracker == null) {
+							tracker = new JobTracker();
+							tracker.setJobName("Unknown job");
+							tracker.setComplete(true);
+							tracker.setProgressMessage("---");
 						}
-						if (info.isComplete()) {
+						if (tracker.isComplete()) {
 							stopTimer();
 							if (ActionProgress.this.completionCallback != null) {
 								ActionProgress.this.completionCallback
-										.onSuccess(info);
+										.onSuccess(tracker);
 							}
 						}
-						setJobInfo(info);
+						setJobTracker(tracker);
 						fireUnspecifiedPropertyChange("Updated");
 					}
 				};
@@ -274,8 +274,8 @@ public class ActionProgress extends Composite
 		return this.id;
 	}
 
-	public JobTracker getJobInfo() {
-		return tracker;
+	public JobTracker getJobTracker() {
+		return jobTracker;
 	}
 
 	public int getMaxConnectionFailure() {
@@ -342,8 +342,8 @@ public class ActionProgress extends Composite
 		this.id = id;
 	}
 
-	public void setJobInfo(JobTracker jobTracker) {
-		this.tracker = jobTracker;
+	public void setJobTracker(JobTracker jobTracker) {
+		this.jobTracker = jobTracker;
 		updateProgress();
 	}
 
@@ -364,36 +364,36 @@ public class ActionProgress extends Composite
 	}
 
 	private void updateProgress() {
-		jobName.setText(tracker.getJobName());
-		String time = tracker.getStartTime() == null ? ""
-				: "Start: "
-						+ DateStyle.DATE_TIME_MS.format(tracker.getStartTime());
-		if (tracker.getEndTime() != null) {
+		jobName.setText(jobTracker.getJobName());
+		String time = jobTracker.getStartTime() == null ? ""
+				: "Start: " + DateStyle.DATE_TIME_MS
+						.format(jobTracker.getStartTime());
+		if (jobTracker.getEndTime() != null) {
 			time += "<br>End: "
-					+ DateStyle.DATE_TIME_MS.format(tracker.getEndTime());
+					+ DateStyle.DATE_TIME_MS.format(jobTracker.getEndTime());
 		}
 		times.setHTML(time);
-		String msg = tracker.getProgressMessage();
+		String messageText = jobTracker.getProgressMessage();
 		if (useTreeProgress) {
-			msg = tracker.getLeafCount();
+			messageText = jobTracker.getLeafCount();
 		}
-		if (tracker.getJobResultType() == JobResultType.FAIL) {
-			msg = tracker.getJobResult();
+		if (jobTracker.getJobResultType() == JobResultType.FAIL) {
+			messageText = jobTracker.getJobResult();
 			message.addStyleName("error");
 		}
-		if (!tracker.isComplete()
+		if (!jobTracker.isComplete()
 				&& cancellingStatusMessage.getText().equals(CANCELLED)) {
 			cancellingStatusMessage.setVisible(false);
 			cancelLink.setVisible(true);
 		}
-		message.setText(msg);
-		if (tracker.isComplete()) {
-			tracker.setPercentComplete(
-					Math.max(1.0, tracker.getPercentComplete()));
+		message.setText(messageText);
+		if (jobTracker.isComplete()) {
+			jobTracker.setPercentComplete(
+					Math.max(1.0, jobTracker.getPercentComplete()));
 		}
 		if (isAttached()) {
 			progress.setWidth(Math.max(0, ((int) (bar.getOffsetWidth() - 2)
-					* tracker.getPercentComplete())) + "px");
+					* jobTracker.getPercentComplete())) + "px");
 		}
 	}
 
