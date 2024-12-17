@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*
@@ -17,6 +18,7 @@ public interface Timer {
 
 	void scheduleDeferredIfOnUIThread();
 
+	@Reflected
 	public interface Provider {
 		public static Timer.Provider get() {
 			return Registry.impl(Timer.Provider.class);
