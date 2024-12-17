@@ -17,7 +17,10 @@ public class AlcinaParallelJobCheckerJobRegistry
 
 	@Override
 	public boolean isCancelled() {
+		if (jobContext == null) {
+			return false;
+		}
 		Transaction.ensureBegun();
-		return jobContext != null && jobContext.getJob().provideIsComplete();
+		return jobContext.getJob().provideIsComplete();
 	}
 }
