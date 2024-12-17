@@ -22,7 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel.ModelMutation;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
@@ -157,7 +157,7 @@ public class EditArea extends Model.Fields
 	public void onInput(Input event) {
 		currentValue = elementValue();
 		if (stripFontTagsOnInput) {
-			new RelativeSelection().strip(provideElement(), "font");
+			new EditSelection().strip(provideElement(), "font");
 		}
 		event.reemitAs(this, ModelEvents.Input.class);
 	}

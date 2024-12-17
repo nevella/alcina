@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -19,7 +20,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Multiple;
@@ -68,8 +68,8 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	@Override
 	public void onSelected(Selected event) {
 		/*
-		 * this will be from the decorator Selected event, and should be
-		 * squelched
+		 * this will be from the decorator Selected event (so unrelated to the
+		 * selections of *this* area) and should be squelched
 		 */
 		/*
 		 * NOOP
@@ -107,6 +107,7 @@ public class MultipleSuggestions<T> extends Multiple<T>
 				.map(cn -> cn.getStringRepresentable()).filter(Objects::nonNull)
 				.map(this::selectedValueFromString)
 				.collect(Collectors.toList());
+		Ax.out(editArea.fragmentModel.toStringTree());
 		setSelectedValues(selectedValues);
 	}
 
@@ -176,7 +177,7 @@ public class MultipleSuggestions<T> extends Multiple<T>
 
 			@Override
 			public String triggerSequence() {
-				return "@";
+				return "";
 			}
 
 			@Override
@@ -252,7 +253,7 @@ public class MultipleSuggestions<T> extends Multiple<T>
 		}
 
 		@Override
-		public void onSelectionChanged(SelectionChanged event) {
+		public void onSelectionChanged(ModelEvents.SelectionChanged event) {
 			setValue(suggest.getSelectedValues());
 		}
 	}

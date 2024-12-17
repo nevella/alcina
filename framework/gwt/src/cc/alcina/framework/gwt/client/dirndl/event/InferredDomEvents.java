@@ -83,6 +83,10 @@ public class InferredDomEvents {
 		}
 	}
 
+	/**
+	 * This effectively models a DOM selection changed on the element (or
+	 * subtree)
+	 */
 	public static class SelectionChanged
 			extends NodeEvent<SelectionChanged.Handler> {
 		@Override

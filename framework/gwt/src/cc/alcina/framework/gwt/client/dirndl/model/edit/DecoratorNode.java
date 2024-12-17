@@ -24,7 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.HasStringRepresentableType;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
@@ -40,8 +40,8 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 	}
 
 	/**
-	 * The characteristics of the decorator, such as the key sequence which
-	 * triggers its creation
+	 * Models the characteristics of the content decorator, such as the key
+	 * sequence which triggers its creation, the class reference modelled, etc
 	 *
 	 */
 	public static abstract class Descriptor<WT, SR, DN extends DecoratorNode>
@@ -55,10 +55,10 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 
 		public abstract String triggerSequence();
 
-		DN splitAndWrap(RelativeSelection relativeSelection,
+		DN splitAndWrap(EditSelection editSelection,
 				FragmentModel fragmentModel) {
-			String triggerSequence = getTriggerSequence(relativeSelection);
-			SplitResult splits = relativeSelection
+			String triggerSequence = getTriggerSequence(editSelection);
+			SplitResult splits = editSelection
 					.splitAtTriggerRange(triggerSequence);
 			DomNode splitContents = splits.contents;
 			// may need to flush (to populate FNs) - note for romcom, want to
@@ -83,8 +83,8 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 			return potentialTrigger.startsWith(triggerSequence());
 		}
 
-		public String getTriggerSequence(RelativeSelection relativeSelection) {
-			String potentialTrigger = relativeSelection
+		public String getTriggerSequence(EditSelection editSelection) {
+			String potentialTrigger = editSelection
 					.getTriggerableRangePrecedingFocus().text();
 			if (triggerSequence().isEmpty()) {
 				return potentialTrigger;
@@ -137,7 +137,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 								.invalidate();
 					}
 				});
-				strip();
+				nodes().strip();
 			}
 		}
 	}
@@ -228,7 +228,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 
 	void stripIfInvalid() {
 		if (!isValid()) {
-			strip();
+			nodes().strip();
 			/*
 			 * FIXME - dn - tree change listener (FragmentModel?) should
 			 * probably merge adjacent FragmentNode.Text children if any result

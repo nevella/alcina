@@ -1,15 +1,9 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
-import java.util.Objects;
-
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.AttachId;
-import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.HrefElement;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
@@ -28,7 +22,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 
 /*
@@ -126,116 +119,6 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 			}-*/;
 	}
 
-	static DomEventMessage currentEventMessage = null;
-
-	static void dispatchEventMessage(Event event, Element listenerElement,
-			boolean preview) {
-		/*
-		 * FIXME - shouldn't need to dedpue
-		 */
-		if (preview) {
-			switch (event.getType().toLowerCase()) {
-			case "mouseout":
-			case "mouseenter":
-			case "mouseleave":
-			case "mousemove":
-			case "mouseover":
-				return;
-			}
-		}
-		if (event.getEventTarget().isDetachedElement()) {
-			return;
-		}
-		if (currentEventMessage == null) {
-			currentEventMessage = new Message.DomEventMessage();
-			Scheduler.get().scheduleDeferred(() -> {
-				sendCurrentEventMessage();
-			});
-		}
-		DomEventData eventData = new DomEventData();
-		currentEventMessage.events.add(eventData);
-		eventData.event = event.serializableForm();
-		eventData.preview = preview;
-		/*
-		 * Unused, informative only. This is the element that has a browser
-		 * listener - but those will mostly be coalesced.
-		 * 
-		 * The element that the event will be fired from (server-side) is the
-		 * eventData.eventTarget
-		 */
-		eventData.firstReceiver = listenerElement == null ? null
-				: AttachId.forNode(listenerElement);
-		String eventType = event.getType();
-		if (Element.is(event.getEventTarget())) {
-			Element elem = Element.as(event.getEventTarget());
-			/*
-			 * Cancel a few events if they're in a form (assume form auto-submit
-			 * just not wanted). This is because - since event handling is async
-			 * - we can't wait for the remote handler to call preventDefault
-			 * 
-			 * 
-			 */
-			boolean focusEvent = false;
-			switch (eventType) {
-			case BrowserEvents.FOCUS:
-			case BrowserEvents.BLUR:
-			case BrowserEvents.FOCUSIN:
-			case BrowserEvents.FOCUSOUT:
-				focusEvent = true;
-				break;
-			}
-			if (!focusEvent) {
-				if (elem.asDomNode().ancestors().has("form")) {
-					boolean explicitPrevent = false;
-					if (eventType.equals("keydown") && event.getKeyCode() == 13
-							&& !elem.hasTagName("textarea")) {
-						explicitPrevent = true;
-					}
-					if (elem instanceof HrefElement
-							&& !((HrefElement) elem).hasLinkHref()) {
-						explicitPrevent = true;
-					}
-					if (explicitPrevent) {
-						event.preventDefault();
-					}
-				}
-				// prevent default action on <a> with no href
-				// TODO - space on <a> with no href?
-				if (eventType.equals("click") || eventType.equals("keydown")) {
-					if (Ax.isBlank(elem.getAttribute("href"))
-							&& elem.hasTagName("a")) {
-						event.preventDefault();
-					}
-				}
-			}
-			/*
-			 * Propagate value + inputValue property changes
-			 */
-			if (Objects.equals(eventType, "change")) {
-				eventData.value = elem.getPropertyString("value");
-			}
-			if (Objects.equals(eventType, "input")) {
-				eventData.inputValue = elem.getPropertyString("value");
-			}
-		}
-		if (event.getType().equals(BrowserEvents.PAGEHIDE)) {
-			// immediate dispatch
-			sendCurrentEventMessage();
-		}
-	}
-
-	static void sendCurrentEventMessage() {
-		// may have been removed by a 'fire-now'
-		if (currentEventMessage == null) {
-			return;
-		}
-		currentEventMessage.eventContext = new DomEventContextGenerator()
-				.generate();
-		Ax.out(currentEventMessage);
-		ClientRpc.send(currentEventMessage);
-		currentEventMessage = null;
-	}
-
 	public static class MutationsHandler
 			extends ProtocolMessageHandlerClient<Message.Mutations> {
 		@Override
@@ -287,7 +170,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 
 			@Override
 			public void onBrowserEvent(Event event) {
-				dispatchEventMessage(event, elem, false);
+				ClientEventDispatch.dispatchEventMessage(event, elem, false);
 			}
 		}
 	}

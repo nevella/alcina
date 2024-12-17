@@ -420,9 +420,9 @@ class Environment {
 			if (mutations.isEmpty()) {
 				return;
 			}
-			Ax.out("-------==========--------\n");
-			Ax.out(mutations);
-			Ax.out("\n-------==========--------\n");
+			// Ax.out("-------==========--------\n");
+			// Ax.out(mutations);
+			// Ax.out("\n-------==========--------\n");
 			queue.invoke(() -> LocalDom.attachIdRepresentations()
 					.applyMutations(mutations, false));
 			// // FIXME - measure (this shouldn't be required)

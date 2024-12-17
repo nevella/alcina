@@ -16,7 +16,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answer;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleSuggestion;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 
 public class ChoiceSuggestions extends DecoratorSuggestions {
@@ -31,7 +30,7 @@ public class ChoiceSuggestions extends DecoratorSuggestions {
 	@Override
 	protected Suggestor.Attributes createSuggestorAttributes() {
 		Suggestor.Attributes attributes = super.createSuggestorAttributes();
-		attributes.withInputPrompt("Select user");
+		attributes.withInputPrompt("Select...");
 		attributes.withAnswer(new AnswerImpl());
 		return attributes;
 	}

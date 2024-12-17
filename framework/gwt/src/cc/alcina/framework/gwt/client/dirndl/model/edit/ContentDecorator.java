@@ -10,6 +10,7 @@ import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -25,7 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
@@ -40,17 +41,20 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * <p>
  * The whole process is reasonably complex - and a WIP. Here's a sketch:
  * <ul>
- * <li>User enters some triggering key events - say the '@' key
- * <li>BeforeInput event interception marks the next input event as requiring a
- * check (query - can we just check the input data?)(answer - beforeinput is
- * easier, since it tells us about the delta)
- * <li>Input event interception checks if the state is valid for content
- * decoration (particularly that the cursor (DOM selection) is collapsed) - see
- * {@link #onInput(Input)} for details - and, if checks pass it (the
- * {@link EntityNode.Descriptor}):
+ * <li>User enters some triggering key events - say the '@' key - or a
+ * start-of-input if the trigger is empty
+ * <li>A {@link InferredDomEvents.SelectionChanged} event interception instructs
+ * the decorator to check for editable {@link ContentDecorator} generation (and
+ * {@link Suggestor} presentation)
+ * <li>SelectionChanged event interception checks if the state is valid for
+ * content decoration (particularly that the cursor (DOM selection) is
+ * collapsed-ish) - see
+ * {@link #onSelectionChanged(InferredDomEvents.SelectionChanged)} for details -
+ * and, if checks pass it (the {@link DecoratorNode.Descriptor}):
  * <ul>
  * <li>splits the text node if necessary
- * <li>wraps the '@' in a DecoratorNode, e.g. {@code <mention>@</mention>}
+ * <li>wraps the trigger (or start-of-input) in a DecoratorNode, e.g.
+ * {@code <mention>@</mention>}
  * <li>ensures the selection cursor is after the '@'
  * <li>triggers the overlay display
  * </ul>
@@ -152,7 +156,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		this.decoratorParent = builder.decoratorParent;
 	}
 
-	boolean canDecorate(RelativeSelection relativeInput) {
+	boolean canDecorate(EditSelection relativeInput) {
 		return decoratorParent.canDecorate(relativeInput);
 	}
 
@@ -219,7 +223,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	/*
  * @formatter:off
  * 
- * - populate the RelativeSelectionModel
+ * - populate the EditSelection
  * - if collapsed
  * - if currenttextnode matches:
  * -- preceding text matches trigger
@@ -232,7 +236,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
  */
 	void checkTrigger0() {
 		validateSelection0();
-		RelativeSelection selection = new RelativeSelection();
+		EditSelection selection = new EditSelection();
 		if (selection.isTriggerable()) {
 			validateSelection0();
 			String triggerSequence = null;
@@ -244,8 +248,11 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			// the source text node) and connect the suggestor overlay
 			// split
 			if (triggerSequence != null) {
-				decorator = descriptor.splitAndWrap(selection,
-						decoratorParent.provideFragmentModel());
+				FragmentModel fragmentModel = decoratorParent
+						.provideFragmentModel();
+				decorator = descriptor.splitAndWrap(selection, fragmentModel);
+				Ax.err("\n\n========================\nFragmentModel %s - checkTrigger0\n%s\n\n========================\n\n",
+						fragmentModel.hashCode(), fragmentModel.toStringTree());
 				showOverlay(decorator.domNode());
 			}
 		}
@@ -318,7 +325,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		// return;// FIXME - contentdecorator - ah, this *is* being triggered n
 		// // breakin stuff
 		// }
-		RelativeSelection selection = new RelativeSelection();
+		EditSelection selection = new EditSelection();
 		if (!selection.hasSelection()) {
 			return;
 		}

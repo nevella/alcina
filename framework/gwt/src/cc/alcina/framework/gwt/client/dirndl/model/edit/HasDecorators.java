@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeSelection;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestions.BeforeChooserClosed;
@@ -29,7 +29,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
  * <p>
- * A decorator host (a contentEditable model which can be decorated)
+ * A decorator host (HasDecorators implementor) is a contentEditable model which
+ * can be decorated
  *
  *
  *
@@ -47,14 +48,14 @@ public interface HasDecorators
 		// routes MouseUp events to decorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
 		FragmentModel.Has {
-	default boolean canDecorate(RelativeSelection relativeSelection) {
-		DomNode focusNode = relativeSelection.focusNode();
+	default boolean canDecorate(EditSelection editSelection) {
+		DomNode focusNode = editSelection.focusNode();
 		FragmentNode fragmentNode = provideFragmentModel()
 				.getFragmentNode(focusNode);
 		if (focusNode.ancestors().has("a") ||
 		// the current node really wants to be a text, this will be null if not.
 		// the restriction *might* be to drastic
-				relativeSelection.getTriggerableRangePrecedingFocus() == null) {
+				editSelection.getTriggerableRangePrecedingFocus() == null) {
 			return false;
 		} else {
 			if (fragmentNode == null

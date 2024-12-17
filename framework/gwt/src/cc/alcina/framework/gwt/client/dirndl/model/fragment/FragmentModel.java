@@ -150,6 +150,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		});
 	}
 
+	@Override
+	public String toStringTree() {
+		return fragmentRoot.toStringTree();
+	}
+
 	public void addModelled(Class<? extends FragmentNode> type) {
 		addModelled(List.of(type));
 	}
@@ -265,6 +270,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		// sketch
 		// collate - changes by node
 		for (MutationRecord record : event.records) {
+			/*
+			 * Skip changes made by code to the FragmentModel itself (the FM
+			 * handles those changes as they occur)
+			 */
 			if (record.hasFlag(FlagMutating.class)) {
 				continue;
 			}

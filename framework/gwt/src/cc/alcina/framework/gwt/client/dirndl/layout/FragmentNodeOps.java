@@ -45,6 +45,8 @@ public interface FragmentNodeOps {
 						.filter(n -> n instanceof FragmentNode);
 	}
 
+	String toStringTree();
+
 	default List<Class<? extends FragmentNode>> types() {
 		return stream().map(FragmentNode::getClass).distinct()
 				.collect(Collectors.toList());

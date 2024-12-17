@@ -80,6 +80,19 @@ public abstract class FragmentNode extends Model.Fields
 	}
 
 	@Override
+	public String toStringTree() {
+		FormatBuilder format = new FormatBuilder();
+		stream().forEach(fn -> {
+			if (fn != this) {
+				format.newLine();
+			}
+			format.appendPadLeft(fn.nodes().depthFrom(this) * 2,
+					Ax.ntrim(fn.toString()));
+		});
+		return format.toString();
+	}
+
+	@Override
 	public Stream<? extends FragmentNode> children() {
 		List<Node> childNodes = provideChildNodes();
 		return childNodes == null ? Stream.empty()
@@ -212,15 +225,16 @@ public abstract class FragmentNode extends Model.Fields
 		return provideNode().parent;
 	}
 
-	public void strip() {
-		provideNode().strip();
-	}
-
 	@Override
 	public String toString() {
 		FormatBuilder format = new FormatBuilder().separator(" - ");
 		format.append(getClass().getSimpleName());
-		format.append(provideNode().getRendered().asDomNode());
+		Node node = provideNode();
+		if (node == null) {
+			format.append("[not attached]");
+		} else {
+			format.append(node.getRendered().asDomNode());
+		}
 		return format.toString();
 	}
 
@@ -231,6 +245,14 @@ public abstract class FragmentNode extends Model.Fields
 		return new FragmentTree(false);
 	}
 
+	/*
+	 * Note - withMutating is key for stable FragmentModel events - otherwise
+	 * there's double-emission:
+	 * 
+	 * - fire the FragmentNodeMutation event directly during runnable exec -
+	 * runnable exec causes a local DOM mutation, which is transformed to an
+	 * additional FragmentNodeMutation
+	 */
 	void withMutating(Runnable runnable) {
 		FragmentModel.withMutating(runnable);
 	}
@@ -318,6 +340,12 @@ public abstract class FragmentNode extends Model.Fields
 			FragmentModel
 					.withMutating(() -> rootModel.provideNode().append(child));
 			fragmentModel.register(child);
+		}
+
+		@Override
+		public String toStringTree() {
+			return children().map(FragmentNode::toStringTree)
+					.collect(Collectors.joining("\n"));
 		}
 
 		@Override
@@ -420,6 +448,16 @@ public abstract class FragmentNode extends Model.Fields
 			withMutating(() -> provideNode().append(child));
 			fragmentModel().register(child);
 			return (FN) child;
+		}
+
+		public int depthFrom(FragmentNode ancestor) {
+			FragmentNode cursor = FragmentNode.this;
+			int depth = 0;
+			while (cursor != ancestor) {
+				depth++;
+				cursor = cursor.parent();
+			}
+			return depth;
 		}
 
 		public void insertAfterThis(FragmentNode fragmentNode) {
