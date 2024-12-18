@@ -375,14 +375,21 @@ public class JobDomain {
 	}
 
 	public void onAllocatorEventListenersAttached() {
-		/*
-		 * Block queues mutation (which ensures all values exist during
-		 * iteration)
-		 */
-		synchronized (queues) {
-			TransactionEnvironment.get().endAndBeginNew();
-			allocatorEventListenersAttached = true;
-			queues.values().forEach(AllocationQueue::fireInitialCreationEvents);
+		synchronized (DomainStore.writableStore().getPostProcessMonitor()) {
+			/*
+			 * Block queues mutation (which ensures all values exist during
+			 * iteration). Note - FIXME - that this is redundant double-checking
+			 * - queues should only be modified during DomainStore.postProcess
+			 */
+			synchronized (queues) {
+				TransactionEnvironment.get().endAndBeginNew();
+				allocatorEventListenersAttached = true;
+				logger.info(
+						"Firing initial AllocationQueue creation events: [{} queues]",
+						queues.size());
+				queues.values()
+						.forEach(AllocationQueue::fireInitialCreationEvents);
+			}
 		}
 	}
 
@@ -546,6 +553,7 @@ public class JobDomain {
 		}
 
 		void flushBufferedEvents() {
+			// FIXME - not needed (coarser lock used)
 			synchronized (bufferedEvents) {
 				Iterator<Event> itr = bufferedEvents.iterator();
 				while (itr.hasNext()) {
@@ -842,6 +850,9 @@ public class JobDomain {
 	 * Old completed jobs will have a wide spread of client instances - which we
 	 * don't need (only needed pre-completion for execution constraints). So
 	 * filter appropriately
+	 * 
+	 * This uses some fairly complex locking, so the only non-commit
+	 * (DomainStore.postProcess) mutation code ()
 	 */
 
 	class AllocationQueueProjection implements DomainProjection<Job> {
