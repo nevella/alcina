@@ -316,6 +316,20 @@ public class DomainStore implements IDomainStore {
 
 	private ConcurrentHashMap<EntityLocator, Entity> promotedEntitiesByPrePromotion = new ConcurrentHashMap<>();
 
+	/*
+	 * lock the post-process processing (index mutation etc)
+	 */
+	Object postProcessMonitor = new Object();
+
+	/**
+	 * For bulk indexing changes (e.g. job system initialisation post domain
+	 * initialisation), holding a lock on this monitor prevents potential
+	 * lower-level deadlocks
+	 */
+	public Object getPostProcessMonitor() {
+		return postProcessMonitor;
+	}
+
 	private DomainStore() {
 		persistenceListener = new DomainStorePersistenceListener();
 		this.persistenceEvents = new DomainTransformPersistenceEvents(this);
@@ -725,6 +739,12 @@ public class DomainStore implements IDomainStore {
 		cache.put(newInstance);
 	}
 
+	void postProcess(DomainTransformPersistenceEvent persistenceEvent) {
+		synchronized (getPostProcessMonitor()) {
+			postProcess0(persistenceEvent);
+		}
+	}
+
 	// We only have one thread allowed here - but that doesn't block any
 	// non-to-domain transactions
 	// FIXME - mvcc.5 - review optimiseation
@@ -738,8 +758,8 @@ public class DomainStore implements IDomainStore {
 	 * cc.alcina.framework.common.client.domain.DomainProjection.
 	 * isIgnoreForIndexing(EntityCollation)
 	 */
-	synchronized void
-			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
+	private void
+			postProcess0(DomainTransformPersistenceEvent persistenceEvent) {
 		if (persistenceEvent.getDomainTransformLayerWrapper().persistentRequests
 				.isEmpty()) {
 			Transaction.endAndBeginNew();
