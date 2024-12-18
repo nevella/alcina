@@ -87,8 +87,12 @@ public abstract class DirectedRenderer {
 		return Ax.blankTo(directedTag, tagName(modelClass));
 	}
 
+	/*
+	 * Trims the trailing 'Model' or 'Area' from the class name
+	 */
 	public static String tagName(Class clazz) {
-		return Ax.cssify(clazz.getSimpleName());
+		return Ax.cssify(clazz.getSimpleName()
+				.replaceFirst("^(.+?)(Model|Area)$", "$1"));
 	}
 
 	protected void applyCssClass(Node node, Element element) {
