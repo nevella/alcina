@@ -279,7 +279,8 @@ public class BeanForm extends Model {
 			@BeanViewModifiers(
 				editable = true,
 				nodeEditors = true,
-				adjunct = true)
+				adjunct = true,
+				cancel = false)
 			@BeanForm.ActionsFromParent
 			public Bindable getBindable() {
 				return super.getBindable();

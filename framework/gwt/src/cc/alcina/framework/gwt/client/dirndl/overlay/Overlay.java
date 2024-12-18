@@ -311,7 +311,9 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		if (attributes.submitHandler != null) {
 			attributes.submitHandler.onSubmit(event);
 		}
-		event.reemit();
+		if (!attributes.consumeSubmit) {
+			event.reemit();
+		}
 	}
 
 	public void open() {

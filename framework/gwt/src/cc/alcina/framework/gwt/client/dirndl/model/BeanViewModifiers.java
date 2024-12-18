@@ -14,7 +14,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD })
 public @interface BeanViewModifiers {
 	/*
-	 * the rendered form changes the bound bean directly, without save/cancel
+	 * if false, the rendered form changes the bound bean directly, without
+	 * save/cancel
 	 */
 	boolean adjunct() default false;
 
@@ -37,4 +38,9 @@ public @interface BeanViewModifiers {
 	 * do not bind to changes
 	 */
 	boolean detached() default false;
+
+	/*
+	 * Show a cancel action when adjunct
+	 */
+	boolean cancel() default true;
 }
