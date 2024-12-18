@@ -10,7 +10,6 @@ import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -251,8 +250,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				FragmentModel fragmentModel = decoratorParent
 						.provideFragmentModel();
 				decorator = descriptor.splitAndWrap(selection, fragmentModel);
-				Ax.err("\n\n========================\nFragmentModel %s - checkTrigger0\n%s\n\n========================\n\n",
-						fragmentModel.hashCode(), fragmentModel.toStringTree());
 				showOverlay(decorator.domNode());
 			}
 		}
@@ -298,13 +295,14 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		if (parent.tagIs("font")) {
 			// Webkit style-preserving?
 		}
-		Overlay.Builder builder = Overlay.builder();
+		Overlay.Attributes attributes = Overlay.attributes();
 		Element domElement = (Element) decorator.w3cElement();
 		chooser = chooserProvider.apply(this, decorator);
-		builder.withCssClass("decorator-chooser");
-		overlay = builder.dropdown(OverlayPosition.Position.START,
+		attributes.withCssClass("decorator-chooser");
+		attributes.withConsumeSubmit(true);
+		overlay = attributes.dropdown(OverlayPosition.Position.START,
 				domElement.getBoundingClientRect(), (Model) decoratorParent,
-				chooser).build();
+				chooser).create();
 		overlay.open();
 	}
 

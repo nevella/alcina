@@ -50,8 +50,8 @@ public class Expandable extends Model.Fields
 			DomRect rect = provideNode().getRendered().asElement()
 					.getBoundingClientRect();
 			Log contents = new Log(string);
-			Overlay.builder().dropdown(Position.CENTER, rect, this,
-					new Expanded(contents)).build().open();
+			Overlay.attributes().dropdown(Position.CENTER, rect, this,
+					new Expanded(contents)).create().open();
 			if (fullSupplier != null) {
 				fullSupplier.accept(Async.<String> callbackBuilder()
 						.success(contents::setString).build());

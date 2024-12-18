@@ -13,16 +13,18 @@
  */
 package cc.alcina.framework.common.client.gwittir.validator;
 
+import java.util.Collection;
+
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Reflected
-public class NotBlankValidator implements Validator {
+public class NotEmptyValidator implements Validator {
 	@Override
 	public Object validate(Object value) throws ValidationException {
-		if (value == null || value.toString().isEmpty()) {
+		if (value == null || ((Collection) value).isEmpty()) {
 			throw new ValidationException("Required", NotBlankValidator.class);
 		}
 		return value;

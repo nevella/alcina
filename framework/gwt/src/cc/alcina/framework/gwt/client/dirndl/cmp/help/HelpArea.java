@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Builder;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Attributes;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.ViewportRelative;
 
 @TypedProperties
@@ -57,7 +57,7 @@ class HelpArea extends Model.Fields {
 			// register in spite of non-public access
 			implements Registration.AllSubtypes {
 		@Override
-		public void position(Builder builder) {
+		public void position(Attributes builder) {
 			builder.positionViewportRelative(ViewportRelative.BOTTOM_RIGHT);
 		}
 	}

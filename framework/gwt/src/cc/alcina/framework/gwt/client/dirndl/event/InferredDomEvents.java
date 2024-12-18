@@ -29,7 +29,6 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -203,7 +202,6 @@ public class InferredDomEvents {
 			extends DomBinding<E> implements NativePreviewHandler {
 		@Override
 		protected HandlerRegistration bind0(Element element, Object model) {
-			Ax.out("BNPPE: %s", element);
 			return Event.addNativePreviewHandler(this);
 		}
 

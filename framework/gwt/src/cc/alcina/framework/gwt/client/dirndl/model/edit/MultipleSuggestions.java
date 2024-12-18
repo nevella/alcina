@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -107,7 +106,6 @@ public class MultipleSuggestions<T> extends Multiple<T>
 				.map(cn -> cn.getStringRepresentable()).filter(Objects::nonNull)
 				.map(this::selectedValueFromString)
 				.collect(Collectors.toList());
-		Ax.out(editArea.fragmentModel.toStringTree());
 		setSelectedValues(selectedValues);
 	}
 
@@ -211,9 +209,6 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	@Bean(PropertySource.FIELDS)
 	public static class ListSuggestions<T> extends Model.Value<List<T>>
 			implements ModelEvents.SelectionChanged.Handler {
-		@Directed
-		public String captionish = "ish";
-
 		@Directed
 		public MultipleSuggestions<T> suggest;
 

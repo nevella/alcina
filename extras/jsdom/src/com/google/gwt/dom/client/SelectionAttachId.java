@@ -2,8 +2,6 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
-import cc.alcina.framework.common.client.util.Ax;
-
 public class SelectionAttachId implements ClientDomSelection {
 	private Selection selectionObject;
 
@@ -12,7 +10,6 @@ public class SelectionAttachId implements ClientDomSelection {
 	SelectionRecord pendingRemoteRecord;
 
 	public void setSelectionRecord(SelectionRecord selectionRecord) {
-		Ax.out("sel-change: %s", selectionRecord.toNodeString());
 		this.selectionRecord = selectionRecord;
 	}
 

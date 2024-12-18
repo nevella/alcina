@@ -62,11 +62,11 @@ public class RootArea extends Model.Fields
 		ChannelOverlay(Class<? extends BasePlace> channel,
 				DirectedActivity activity) {
 			this.channel = channel;
-			Overlay.Builder builder = Overlay.builder().withContents(this)
-					.withRemoveOnMouseDownOutside(false);
+			Overlay.Attributes attributes = Overlay.attributes()
+					.withContents(this).withRemoveOnMouseDownOutside(false);
 			Registry.impl(ChannelOverlayPosition.class, channel)
-					.position(builder);
-			this.overlay = builder.build();
+					.position(attributes);
+			this.overlay = attributes.create();
 			overlay.open();
 		}
 
@@ -82,8 +82,8 @@ public class RootArea extends Model.Fields
 	 */
 	@Registration(ChannelOverlayPosition.class)
 	public static class ChannelOverlayPosition {
-		public void position(Overlay.Builder builder) {
-			builder.positionViewportCentered();
+		public void position(Overlay.Attributes attributes) {
+			attributes.positionViewportCentered();
 		}
 	}
 

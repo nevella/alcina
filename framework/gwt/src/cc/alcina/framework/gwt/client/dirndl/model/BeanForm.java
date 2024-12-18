@@ -274,5 +274,16 @@ public class BeanForm extends Model {
 			transformSupport.withContextNode(contextNode);
 			return this;
 		}
+
+		public static class Adjunct extends Editor {
+			@BeanViewModifiers(
+				editable = true,
+				nodeEditors = true,
+				adjunct = true)
+			@BeanForm.ActionsFromParent
+			public Bindable getBindable() {
+				return super.getBindable();
+			}
+		}
 	}
 }
