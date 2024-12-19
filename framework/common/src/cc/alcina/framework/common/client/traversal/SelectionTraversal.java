@@ -148,11 +148,18 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
-	public static final String CONTEXT_SELECTION = SelectionTraversal.class
-			.getName() + ".CONTEXT_SELECTION";
+	static final String CONTEXT_TRAVERSAL = SelectionTraversal.class.getName()
+			+ ".CONTEXT_TRAVERSAL";
+
+	static final String CONTEXT_SELECTION = SelectionTraversal.class.getName()
+			+ ".CONTEXT_SELECTION";
 
 	public static <S extends Selection> S contextSelection() {
 		return LooseContext.get(CONTEXT_SELECTION);
+	}
+
+	public static SelectionTraversal contextTraversal() {
+		return LooseContext.get(CONTEXT_TRAVERSAL);
 	}
 
 	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
@@ -428,6 +435,16 @@ public class SelectionTraversal
 	}
 
 	public void traverse() {
+		try {
+			LooseContext.push();
+			LooseContext.set(CONTEXT_TRAVERSAL, this);
+			traverse0();
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	void traverse0() {
 		if (id == null) {
 			id = Ax.format("%s.%s", ClientInstance.self() == null ? 0
 					: ClientInstance.self().getId(), counter.nextId());
