@@ -180,8 +180,14 @@ class JobAllocator {
 							awaitJobExistenceBeforeContinueToExit.toLocator());
 					Job domainVisible = awaitJobExistenceBeforeContinueToExit
 							.toLocator().find();
+					/*
+					 * a spinlock is incorrect if in a single-threaded tx
+					 * environment
+					 */
 					if (domainVisible != null
-							&& JobRegistry.get().hasAllocator(domainVisible)) {
+							|| !JobRegistry.get().hasAllocator(domainVisible)
+									&& TransactionEnvironment.get()
+											.isMultiple()) {
 						awaitJobExistenceBeforeContinueToExit = null;
 						Transaction.endAndBeginNew();
 						break;
