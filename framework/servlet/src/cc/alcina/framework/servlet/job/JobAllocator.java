@@ -413,7 +413,11 @@ class JobAllocator {
 				long start = System.currentTimeMillis();
 				while (TimeConstants.within(start,
 						TimeConstants.ONE_MINUTE_MS)) {
-					if (awaitJobExistenceBeforeContinueToExit == null) {
+					if (awaitJobExistenceBeforeContinueToExit == null ||
+					/*
+					 * for a non-multiple-tx env - spinlock would not work
+					 */
+							!TransactionEnvironment.get().isMultiple()) {
 						Transaction.endAndBeginNew();
 						break;
 					} else {
