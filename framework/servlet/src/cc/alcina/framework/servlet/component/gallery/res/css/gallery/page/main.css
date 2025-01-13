@@ -1,0 +1,960 @@
+bean-editor {
+  padding: 1em 2em;
+  line-height: 2em;
+  padding-bottom: 1px;
+  display: block;
+  /* FIXME - 2022 - either move to per-app style of theme - 
+  * */
+}
+bean-editor.vertical-validation {
+  line-height: 2.6rem;
+}
+bean-editor.vertical-validation > form > section > form-element > value > validation-feedback > message {
+  top: 0.3rem;
+  left: 1rem;
+  line-height: 1;
+}
+bean-editor.horizontal-validation > form > section > form-element > value {
+  display: flex;
+  flex-direction: row;
+}
+bean-editor.horizontal-validation > form > section > form-element > value > validation-feedback > message {
+  left: 1rem;
+  white-space: nowrap;
+}
+bean-editor.label-over form-element {
+  position: relative;
+  margin-bottom: 0.8rem;
+}
+bean-editor.label-over form-element > label:has(+ value > :is(input, select)) {
+  position: absolute;
+  background-color: #fefdfb;
+  color: #555;
+  font-family: "Helvetica Neue", Arial;
+  font-style: normal;
+  padding: 0 5px;
+  line-height: 100%;
+  z-index: 1;
+  left: 6px;
+  top: -5px;
+  font-size: 65%;
+}
+bean-editor.label-over form-element > label:has(+ value > input:placeholder-shown) {
+  cursor: text;
+  max-width: 66.66%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform-origin: left bottom;
+  transform: translate(0px, 10px) scale(1);
+  white-space: nowrap;
+  color: #999;
+  padding-left: 1px;
+  top: -5px;
+  left: 6px;
+  font-size: 65%;
+}
+bean-editor.label-over form-element > label:not(:has(+ value > input:placeholder-shown)), bean-editor.label-over form-element > label:has(+ value > input:focus) {
+  transform: translate(0, 0) scale(1);
+  cursor: pointer;
+  left: 6px;
+  top: -5px;
+  font-size: 65%;
+}
+bean-editor.label-over form-element > label, bean-editor.label-over form-element > value > input {
+  transition: all 0.2s;
+  touch-action: manipulation;
+}
+bean-editor.bordered {
+  margin: 1em 0;
+  border-top: solid 1px #ccc;
+  border: none;
+  background-color: #f9f9f9;
+}
+bean-editor:empty {
+  display: none;
+}
+bean-editor.not-first {
+  padding-top: 0;
+}
+bean-editor.no-labels form label {
+  display: none;
+}
+bean-editor.single-line {
+  display: inline-block;
+  flex: 1;
+  min-width: auto;
+  width: 100%;
+}
+bean-editor.single-line form {
+  display: flex;
+}
+bean-editor.single-line form section {
+  display: inline-block;
+  flex: 1;
+}
+bean-editor.single-line form section form-element,
+bean-editor.single-line form section select {
+  display: inline-block;
+}
+bean-editor.single-line form section form-element {
+  padding-right: 1rem;
+}
+bean-editor.single-line form actions {
+  display: inline-block;
+  margin: 0;
+}
+bean-editor.wide form input,
+bean-editor.wide form select,
+bean-editor.wide form textarea {
+  line-height: 1.4em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  border: solid 1px #ddd;
+  font-size: 15px;
+  font-family: "Helvetica Neue", Arial;
+}
+bean-editor.wide form input:focus,
+bean-editor.wide form select:focus,
+bean-editor.wide form textarea:focus {
+  border-color: transparent;
+  box-shadow: #5299e3 0 0 3px;
+}
+bean-editor.wide form select {
+  padding-top: 2px;
+  box-sizing: content-box;
+  padding-right: 2px;
+}
+bean-editor.wide form textarea {
+  padding-top: 1px;
+}
+bean-editor.wide form input,
+bean-editor.wide form select,
+bean-editor.wide form textarea {
+  width: 20em;
+}
+bean-editor.wide form div.ol-select {
+  display: inline-block;
+}
+bean-editor.grid > form {
+  display: block;
+}
+bean-editor.grid > form > section {
+  display: grid;
+  grid-template-columns: min-content 1fr;
+  row-gap: 0.5rem;
+}
+bean-editor.grid > form > section > div, bean-editor.grid > form > section form-element {
+  display: contents;
+}
+bean-editor.grid > form > section > div > label, bean-editor.grid > form > section form-element > label {
+  white-space: nowrap;
+  padding-right: 2em;
+}
+bean-editor.grid.tight-rows {
+  line-height: 1.2;
+}
+bean-editor.grid.tight-rows > form > section > form-element > value {
+  display: flex;
+}
+bean-editor.over-only > form input:not(:hover):not(:focus), bean-editor.over-only > form input[readonly],
+bean-editor.over-only > form select:not(:hover):not(:focus),
+bean-editor.over-only > form select[readonly],
+bean-editor.over-only > form textarea:not(:hover):not(:focus),
+bean-editor.over-only > form textarea[readonly] {
+  background: none;
+  border: solid 1px transparent;
+  -webkit-appearance: none;
+}
+bean-editor.over-only > form input:not(:hover):not(:focus)[type=checkbox], bean-editor.over-only > form input[readonly][type=checkbox],
+bean-editor.over-only > form select:not(:hover):not(:focus)[type=checkbox],
+bean-editor.over-only > form select[readonly][type=checkbox],
+bean-editor.over-only > form textarea:not(:hover):not(:focus)[type=checkbox],
+bean-editor.over-only > form textarea[readonly][type=checkbox] {
+  background: initial;
+  border: initial;
+  -webkit-appearance: auto;
+  width: initial;
+}
+bean-editor.over-only > form input[type=checkbox],
+bean-editor.over-only > form select[type=checkbox],
+bean-editor.over-only > form textarea[type=checkbox] {
+  width: initial;
+}
+bean-editor.over-only > form input,
+bean-editor.over-only > form select,
+bean-editor.over-only > form textarea {
+  line-height: 1.4em;
+  padding-left: 0.5em;
+  padding-top: 4px;
+  border: solid 1px #ddd;
+  font-size: 15px;
+  font-family: "Helvetica Neue", Arial;
+}
+bean-editor.over-only > form input:focus,
+bean-editor.over-only > form select:focus,
+bean-editor.over-only > form textarea:focus {
+  border-color: transparent;
+  box-shadow: #5299e3 0 0 3px;
+}
+bean-editor.over-only > form select {
+  padding-top: 2px;
+  box-sizing: content-box;
+  padding-right: 2px;
+}
+bean-editor.over-only > form textarea {
+  padding-top: 1px;
+}
+bean-editor.tight {
+  padding: 0.5rem 1rem;
+}
+bean-editor.tight form-element {
+  line-height: 1.3em;
+}
+bean-editor.tight form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 100px;
+}
+bean-editor.tight180 {
+  padding: 0.5rem 1rem;
+}
+bean-editor.tight180 form-element {
+  line-height: 1.3em;
+}
+bean-editor.tight180 form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 180px;
+}
+bean-editor.tight230 {
+  padding: 0.25rem 0.5rem;
+}
+bean-editor.tight230 form-element {
+  line-height: 1.3em;
+}
+bean-editor.tight230 form-element > label.ol-label {
+  display: inline-block;
+  white-space: nowrap;
+  width: 230px;
+}
+bean-editor[inert] > form {
+  opacity: 0.7;
+}
+bean-editor > heading {
+  display: block;
+  font-weight: 500;
+  padding-bottom: 0.2em;
+  padding-left: 3px;
+}
+bean-editor > description {
+  line-height: 1.3rem;
+  display: block;
+}
+bean-editor > description:not(:empty) {
+  margin-bottom: 1rem;
+}
+bean-editor > form > section > form-element {
+  display: block;
+}
+bean-editor > form > section > form-element[invalid] select, bean-editor > form > section > form-element[invalid] input {
+  border-color: #FF5030;
+}
+bean-editor > form > section > form-element > value {
+  position: relative;
+}
+bean-editor > form > section > form-element > value > validation-feedback {
+  display: block;
+  position: relative;
+  color: #FF5030;
+}
+bean-editor > form > section > form-element > value > validation-feedback > message {
+  position: absolute;
+  font-size: 90%;
+}
+bean-editor > form > actions {
+  margin: 1em;
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+}
+bean-editor > form > actions > * {
+  display: inline-block;
+  line-height: 1.5rem;
+  padding: 0 0.5em;
+}
+bean-editor > form > actions.right {
+  justify-content: flex-end;
+}
+bean-editor > form > form-validation {
+  display: block;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: #FF5030;
+  margin-top: 2rem;
+}
+
+/* will always have single-line bean-editor, pad label until we work out baseline alignment
+ * */
+edit-value > label {
+  padding-top: 2px;
+}
+edit-value:not(.dirty) actions {
+  visibility: hidden;
+}
+edit-value section > div {
+  width: 100%;
+}
+edit-value input,
+edit-value textarea {
+  width: 100%;
+}
+
+/* copied from suggestor FIXME actions should be split out into buttons
+ *
+ *  TODO - move some/most to dropdown
+ * */
+.dl-status {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  padding: 20px;
+  z-index: 1;
+}
+.dl-status > .element {
+  display: block;
+  background-color: #323232;
+  color: #f1f1f1;
+  min-height: 48px;
+  min-width: 20rem;
+  max-width: 35rem;
+  padding: 16px 24px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.26);
+  border-radius: 2px;
+  margin: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  cursor: default;
+  white-space: pre-wrap;
+  max-height: 70vh;
+  overflow: auto;
+}
+.dl-status > .element.removing {
+  transition: transform 0.5s, opacity 0.5s;
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+caught {
+  display: block;
+  padding: 1em;
+  white-space: pre-wrap;
+}
+
+status-reason {
+  display: block;
+}
+status-reason.ERROR {
+  color: #c33;
+  white-space: pre-wrap;
+}
+
+body > .overlay-container {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  /* leaving the rest as an exercise
+  * */
+}
+body > .overlay-container.viewport-middle-center > * {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+body > .overlay-container.viewport-bottom-right > * {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+}
+body > .overlay-container > overlay {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+body > .overlay-container > overlay > actions {
+  display: flex;
+  justify-content: center;
+}
+body > .overlay-container > overlay > actions:not(:empty) {
+  margin-bottom: 1rem;
+}
+body > .overlay-container > overlay > actions > a {
+  cursor: pointer;
+  color: #333;
+}
+body > .overlay-container > overlay > actions > a:hover {
+  color: #777;
+}
+
+body > overlay-container-modal {
+  display: block;
+  bottom: 0;
+  right: 0;
+  /* leaving the rest as an exercise
+  * */
+}
+body > overlay-container-modal:last-of-type {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+body > overlay-container-modal.viewport-middle-center > * {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+body > overlay-container-modal.viewport-bottom-right > * {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+}
+body > overlay-container-modal > overlay {
+  background-color: white;
+}
+
+body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts-area {
+  top: 3rem;
+  transform: translate(-50%, 0%);
+}
+
+overlay > menu {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  padding: 0.5rem 0;
+}
+overlay > menu > action {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 15px 1fr;
+  padding: 4px 0;
+  align-items: baseline;
+}
+overlay > menu > action:hover, overlay > menu > action[index-selected] {
+  background-color: #00000010;
+}
+overlay > menu > action > icon {
+  width: 15px;
+  height: 15px;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position-y: 1px;
+}
+overlay > menu > action {
+  padding: 0 1.5rem;
+  grid-template-columns: 1fr;
+}
+overlay > menu > action > icon {
+  display: none;
+}
+overlay > menu > heading {
+  display: block;
+  font-weight: bold;
+  color: #999;
+  line-height: 2;
+}
+overlay > menu > choices {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 0.5rem;
+}
+overlay > menu > choices > choice {
+  display: block;
+  cursor: pointer;
+}
+overlay > menu > choices > choice:hover {
+  background-color: #f7f7f7;
+}
+overlay > menu > choices > choice[_selected] {
+  font-weight: bold;
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #333;
+  cursor: pointer;
+}
+button:hover {
+  color: #777;
+}
+
+spacer {
+  display: inline-block;
+  height: 1px;
+  flex-shrink: 0;
+}
+
+a, a:active, a:hover, a:visited {
+  color: #3050FF;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #5070FF;
+  text-decoration: underline;
+}
+
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Arial;
+  font-size: 16px;
+  background: #eee;
+}
+
+td, th {
+  vertical-align: top;
+}
+
+body > page {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+  grid-template-rows: 50px 1fr;
+  height: 100vh;
+  width: 100vw;
+  gap: 1px;
+}
+body > page > * {
+  min-height: 0;
+  position: relative;
+}
+body > page > * > heading {
+  margin-bottom: 0.2rem;
+  height: 2rem;
+  display: flex;
+  padding-left: 1rem;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  background: white;
+  color: #888;
+}
+body > page > header {
+  width: 100%;
+  height: 50px;
+  font-family: Arial;
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr 34rem 1fr;
+  grid-template-areas: "left mid right";
+  align-content: center;
+  box-sizing: border-box;
+  justify-self: center;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #84A4FC;
+  color: white;
+  padding: 0.5rem 2rem;
+  justify-self: stretch;
+  grid-column: 1/-1;
+  column-gap: 1rem;
+  border-bottom: solid 1px #aaa;
+}
+body > page > header a:hover, body > page > header button:hover {
+  color: black;
+}
+body > page > header > left, body > page > header > right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+body > page > header > left {
+  justify-content: flex-start;
+  grid-area: left;
+}
+body > page > header > left > a > img {
+  height: 50px;
+}
+body > page > header > left > a.name {
+  white-space: nowrap;
+  color: white;
+  text-decoration: none;
+}
+body > page > header > left > a.name:hover {
+  color: white;
+  text-decoration: underline;
+}
+body > page > header > mid {
+  grid-area: mid;
+  display: flex;
+  justify-content: center;
+}
+body > page > header > right {
+  justify-content: flex-end;
+  grid-area: right;
+}
+body > page > header > right > * {
+  cursor: pointer;
+}
+body > page > header > right > dropdown {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+body > page > header > right > dropdown > button {
+  filter: invert(1);
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+body > page > header > right > dropdown > button:hover {
+  filter: invert(0.5);
+}
+body > page > header > right > dropdown > button.dotburger {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48dGl0bGU+aW9uaWNvbnMtdjUtZjwvdGl0bGU+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSI0OCIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjQxNiIgcj0iNDgiLz48Y2lyY2xlIGN4PSIyNTYiIGN5PSI5NiIgcj0iNDgiLz48L3N2Zz4=");
+}
+body > page > gallery-area {
+  display: block;
+}
+body > page > gallery-area .gallery {
+  width: calc(100vw - 8rem);
+  box-sizing: border-box;
+  margin: 0 auto;
+  min-height: calc(100vh - 50px);
+  overflow-x: auto;
+  display: block;
+  background-color: white;
+}
+body > page > gallery-area .gallery > bean-editor {
+  max-width: 600px;
+  margin: 2rem auto;
+  display: block;
+}
+
+app-suggestor {
+  display: block;
+  color: #555;
+  position: relative;
+  overflow-x: visible;
+  top: 0;
+  border: solid 1px #d0d0d0;
+  border-radius: 4px;
+  width: 34rem;
+  font-family: Arial;
+  background-color: #FFF;
+}
+app-suggestor:focus-within {
+  border-color: #bfbfbf;
+  border-width: 2px;
+}
+app-suggestor > editor > input {
+  padding: 0.2rem 0.75rem;
+  border: none;
+  min-width: 95%;
+  font-size: 1.1rem;
+  line-height: 1.5rem;
+  outline: none;
+  font-family: Arial;
+  color: #555;
+}
+app-suggestor > editor > input::placeholder {
+  opacity: 0.6;
+}
+app-suggestor > results {
+  display: block;
+  font-size: 1.1rem;
+}
+app-suggestor > results > spinner {
+  margin: 1rem;
+}
+app-suggestor > results > choice {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+  display: block;
+}
+app-suggestor > results > choice:hover, app-suggestor > results > choice[index-selected] {
+  background-color: #00000010;
+}
+app-suggestor > results > choice > suggestion > app-suggestion {
+  text-align: left;
+  display: grid;
+  grid-template-columns: 1fr 10px;
+  gap: 1em;
+  width: 100%;
+  line-height: 1.5em;
+  padding: 0.2em 0;
+  color: #444;
+}
+app-suggestor > results > choice > suggestion > app-suggestion > contents > first,
+app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
+  display: inline-block;
+}
+app-suggestor > results > choice > suggestion > app-suggestion > contents > first {
+  font-weight: normal;
+}
+app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
+  color: #777;
+  padding-left: 1em;
+}
+app-suggestor > results > choice > suggestion > app-suggestion > contents > options {
+  display: block;
+}
+
+overlay.app-suggestor > results {
+  display: block;
+  font-size: 1.1rem;
+  width: 34rem;
+  border: solid 1px #d0d0d0;
+  background: white;
+}
+overlay.app-suggestor > results > spinner {
+  margin: 1rem;
+}
+overlay.app-suggestor > results > choice {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+  display: block;
+}
+overlay.app-suggestor > results > choice:hover, overlay.app-suggestor > results > choice[index-selected] {
+  background-color: #00000010;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion {
+  text-align: left;
+  display: grid;
+  grid-template-columns: 1fr 10px;
+  gap: 1em;
+  width: 100%;
+  line-height: 1.5em;
+  padding: 0.2em 0;
+  color: #444;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > first,
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
+  display: inline-block;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > first {
+  font-weight: normal;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > second {
+  color: #777;
+  padding-left: 1em;
+}
+overlay.app-suggestor > results > choice > suggestion > app-suggestion > contents > options {
+  display: block;
+}
+
+keyboard-shortcuts-area {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  padding: 1rem 2rem 2rem;
+  font-size: 1.1rem;
+  width: 750px;
+  min-height: 50vh;
+  user-select: auto;
+}
+keyboard-shortcuts-area > heading {
+  margin: 1rem 0;
+  font-size: 1.5rem;
+  display: block;
+}
+keyboard-shortcuts-area > contents-filter {
+  display: block;
+  padding: 0 0 1rem;
+  font-size: 1.1rem;
+}
+keyboard-shortcuts-area > contents-filter > input {
+  border: solid 1px #ddd;
+  padding: 4px 6px;
+  width: 20rem;
+  outline: none;
+}
+keyboard-shortcuts-area > shortcuts {
+  display: grid;
+  grid-template-columns: 3rem 2rem 1fr;
+  margin-top: 1rem;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+  max-height: 50vh;
+  overflow: auto;
+}
+keyboard-shortcuts-area > shortcuts > shortcut {
+  display: contents;
+}
+keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell {
+  text-align: right;
+  isplay: inline-block;
+  margin-top: -2px;
+}
+keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell > modifier {
+  border: solid 1px #777;
+  border-radius: 3px;
+  padding: 2px;
+  font-size: 0.8rem;
+  color: #777;
+}
+keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell > modifier:empty {
+  border: none;
+}
+
+help-area {
+  height: 50vh;
+  width: 25vw;
+  display: flex;
+  flex-direction: column;
+  margin: 1rem 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: auto;
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  margin: 0.5rem;
+  padding: 1rem;
+  user-select: auto;
+}
+help-area > heading, help-area > heading-actions {
+  margin: 0 0 0.5rem;
+  display: flex;
+  width: 100%;
+  font-weight: bold;
+  justify-content: space-between;
+}
+help-area > heading-actions > actions {
+  font-weight: normal;
+  display: flex;
+  gap: 1em;
+}
+help-area > heading-actions > actions a {
+  cursor: pointer;
+}
+help-area > key-values {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 1rem;
+  row-gap: 0.1rem;
+}
+help-area > key-values > key-value {
+  display: contents;
+}
+help-area > key-values > key-value > key {
+  color: #777;
+}
+help-area > a {
+  display: block;
+  margin: 0 0 0.2rem;
+}
+help-area sequence {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: white;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+help-area sequence a, help-area sequence a.link, help-area sequence a.visited {
+  text-decoration: none;
+  color: black;
+}
+help-area sequence a:hover, help-area sequence a.link:hover, help-area sequence a.visited:hover {
+  color: #387ed3;
+}
+help-area sequence > heading {
+  display: block;
+  font-weight: bold;
+  color: #0f4589;
+  margin: 1rem 0;
+}
+help-area sequence > doc-header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+help-area sequence > doc-header img {
+  width: 200px;
+}
+help-area sequence > doc-header heading {
+  font-size: 18px;
+  font-weight: bold;
+}
+help-area sequence > doc-header spacer {
+  display: block;
+  width: 200px;
+}
+help-area sequence > table {
+  box-sizing: border-box;
+  margin-bottom: 2rem;
+  margin-top: 1rem;
+  border-collapse: separate;
+  border-spacing: 1rem 0.5rem;
+}
+help-area sequence > table th {
+  text-align: left;
+  width: 12rem;
+}
+help-area sequence > table td > value {
+  white-space: pre-wrap;
+}
+help-area sequence > table td > value:not(:last-child):after {
+  content: ", ";
+}
+help-area sequence > visit-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 5rem;
+}
+help-area sequence > visit-area > path {
+  font-weight: bold;
+}
+help-area sequence > visit-area > description {
+  margin-bottom: 1rem;
+}
+help-area sequence > visit-area > img {
+  max-width: 100%;
+}
+
+bean-editor > heading {
+  padding-bottom: 1rem;
+  padding-left: 0;
+}
