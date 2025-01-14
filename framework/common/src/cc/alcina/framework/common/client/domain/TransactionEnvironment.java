@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.domain;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
@@ -15,6 +16,7 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
  * MvccTransaction, fact is that the latter is much more heavily used. So leave
  * as is
  */
+@Reflected
 public interface TransactionEnvironment {
 	static TransactionEnvironment get() {
 		return Registry.impl(TransactionEnvironment.class);

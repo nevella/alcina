@@ -153,9 +153,6 @@ public class TraversalPlace extends BasePlace {
 						selectionFromPathAttempted = true;
 					}
 				}
-				if (selection == null) {
-					int debug = 3;
-				}
 			}
 			return selection;
 		}

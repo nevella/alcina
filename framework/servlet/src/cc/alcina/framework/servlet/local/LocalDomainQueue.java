@@ -1,5 +1,9 @@
 package cc.alcina.framework.servlet.local;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -12,9 +16,12 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
+import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.servlet.local.LocalDomainQueue.QueueExecutor.RunnableEntry;
 
 @Registration.Singleton
 public class LocalDomainQueue {
@@ -57,12 +64,46 @@ public class LocalDomainQueue {
 
 	QueueExecutor queueExecutor;
 
+	RunnableEntry activeEntry = null;
+
 	public LocalDomainQueue() {
 		this.queueExecutor = new QueueExecutor();
 	}
 
 	private void execute0(ThrowingRunnable runnable) {
 		queueExecutor.queue(runnable);
+	}
+
+	public void conditionallyStartWatchdogTimer() {
+		if (Configuration.is("startWatchdog")) {
+			Timer timer = new Timer();
+			timer.scheduleAtFixedRate(new TimerTask() {
+				@Override
+				public void run() {
+					logCurrentActiveEntry();
+				}
+			}, 0L, 1000L);
+		}
+	}
+
+	void logCurrentActiveEntry() {
+		FormatBuilder format = new FormatBuilder();
+		format.line("LDQ:");
+		RunnableEntry entry = activeEntry;
+		if (entry == null) {
+			format.line("[no active entry]");
+		} else {
+			format.line("[runnable]: %s", entry.id);
+			format.line("[thread]: %s", entry.thread);
+			Map<Thread, StackTraceElement[]> allStackTraces = Thread
+					.getAllStackTraces();
+			StackTraceElement[] stackTraceElements = allStackTraces
+					.get(entry.thread);
+			if (stackTraceElements != null) {
+				Arrays.stream(stackTraceElements).forEach(format::line);
+			}
+		}
+		Ax.out(format);
 	}
 
 	/**
@@ -136,6 +177,8 @@ public class LocalDomainQueue {
 
 			Throwable throwable;
 
+			Thread thread;
+
 			long id;
 
 			RunnableEntry(ThrowingRunnable runnable) {
@@ -157,11 +200,14 @@ public class LocalDomainQueue {
 			void execute() {
 				try {
 					LooseContext.pushWithTrue(CONTEXT_IN_DOMAIN);
+					thread = Thread.currentThread();
+					activeEntry = this;
 					runnable.run();
 				} catch (Throwable t) {
 					logger.warn("Local domain access issue", t);
 					this.throwable = t;
 				} finally {
+					activeEntry = null;
 					LooseContext.pop();
 				}
 			}

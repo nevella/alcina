@@ -8,11 +8,11 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
-    static _MultipleSuggestor_EditSuggestor multipleSuggestor_editSuggestor = new _MultipleSuggestor_EditSuggestor();
+    static _MultipleSuggestions_EditSuggestor multipleSuggestions_editSuggestor = new _MultipleSuggestions_EditSuggestor();
     
-    static class _MultipleSuggestor_EditSuggestor implements TypedProperty.Container {
-      TypedProperty<MultipleSuggestor.EditSuggestor, EditArea> area = new TypedProperty<>(MultipleSuggestor.EditSuggestor.class, "area");
-      TypedProperty<MultipleSuggestor.EditSuggestor, List> choices = new TypedProperty<>(MultipleSuggestor.EditSuggestor.class, "choices");
+    static class _MultipleSuggestions_EditSuggestor implements TypedProperty.Container {
+      TypedProperty<MultipleSuggestions.EditSuggestor, EditArea> area = new TypedProperty<>(MultipleSuggestions.EditSuggestor.class, "area");
+      TypedProperty<MultipleSuggestions.EditSuggestor, List> choices = new TypedProperty<>(MultipleSuggestions.EditSuggestor.class, "choices");
     }
     
 //@formatter:on

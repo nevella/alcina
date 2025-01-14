@@ -20,7 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * 'to/cc/bcc' fields, etc
  */
 @Bean(PropertySource.FIELDS)
-public class MultipleSuggestor<T> extends Multiple<T> {
+public class MultipleSuggestions<T> extends Multiple<T> {
 	@Override
 	@Directed.Transform(EditSuggestor.To.class)
 	public List<Choice<T>> getChoices() {
@@ -41,7 +41,7 @@ public class MultipleSuggestor<T> extends Multiple<T> {
 	@TypedProperties
 	@Directed.Delegating
 	static class EditSuggestor extends Model.Fields {
-		static PackageProperties._MultipleSuggestor_EditSuggestor properties = PackageProperties.multipleSuggestor_editSuggestor;
+		static PackageProperties._MultipleSuggestions_EditSuggestor properties = PackageProperties.multipleSuggestions_editSuggestor;
 
 		EditArea area;
 
@@ -72,14 +72,14 @@ public class MultipleSuggestor<T> extends Multiple<T> {
 	}
 
 	/*
-	 * * Binds a collection property (in an editor) to a MultipleSuggestor
+	 * * Binds a collection property (in an editor) to a MultipleSuggestions
 	 */
 	@Directed.Delegating
 	@Bean(PropertySource.FIELDS)
 	public static class ListSuggestor<T> extends Model.Value<List<T>>
 			implements ModelEvents.SelectionChanged.Handler {
 		@Directed
-		public MultipleSuggestor<T> suggest;
+		public MultipleSuggestions<T> suggest;
 
 		private List<T> value;
 
@@ -88,7 +88,7 @@ public class MultipleSuggestor<T> extends Multiple<T> {
 
 		@Override
 		public void onBeforeRender(BeforeRender event) {
-			suggest = new MultipleSuggestor<>();
+			suggest = new MultipleSuggestions<>();
 			// populate the delegate values from this node's AnnotationLocation
 			suggest.populateValuesFromNodeContext(event.node, null);
 			value = suggest.getSelectedValues();
