@@ -184,10 +184,9 @@ class JobAllocator {
 					 * a spinlock is incorrect if in a single-threaded tx
 					 * environment
 					 */
-					if (domainVisible != null
-							|| !JobRegistry.get().hasAllocator(domainVisible)
-									&& TransactionEnvironment.get()
-											.isMultiple()) {
+					if (!TransactionEnvironment.get().isMultiple()
+							|| (domainVisible != null && JobRegistry.get()
+									.hasAllocator(domainVisible))) {
 						awaitJobExistenceBeforeContinueToExit = null;
 						Transaction.endAndBeginNew();
 						break;
