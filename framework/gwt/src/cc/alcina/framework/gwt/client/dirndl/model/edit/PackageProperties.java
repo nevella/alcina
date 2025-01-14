@@ -9,8 +9,8 @@ import java.lang.String;
 import java.util.List;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _EditArea editArea = new _EditArea();
     public static _MultipleSuggestions multipleSuggestions = new _MultipleSuggestions();

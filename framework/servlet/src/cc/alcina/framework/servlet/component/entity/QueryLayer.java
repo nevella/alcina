@@ -47,7 +47,8 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 	}
 
 	void processEntityTypeSelection(TypeSelection selection) {
-		String segmentPath = Ui.place().viewPath().nthSegmentPath(index);
+		String segmentPath = Ui.traversingPlace().viewPath()
+				.nthSegmentPath(index);
 		Entity selected = segmentPath != null
 				? Domain.find(selection.get(), Long.parseLong(segmentPath))
 				: null;
@@ -72,7 +73,7 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 
 	void addStream(Selection selection, Stream stream) {
 		Layer layer = getTraversal().getLayer(selection);
-		Filter filter = Ui.place().attributesOrEmpty(layer.index + 1)
+		Filter filter = Ui.traversingPlace().attributesOrEmpty(layer.index + 1)
 				.get(Filter.class);
 		if (filter != null) {
 			stream = applyFilter(stream, filter);
