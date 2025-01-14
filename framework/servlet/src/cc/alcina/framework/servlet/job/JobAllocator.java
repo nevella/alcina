@@ -180,8 +180,13 @@ class JobAllocator {
 							awaitJobExistenceBeforeContinueToExit.toLocator());
 					Job domainVisible = awaitJobExistenceBeforeContinueToExit
 							.toLocator().find();
-					if (domainVisible != null
-							&& JobRegistry.get().hasAllocator(domainVisible)) {
+					/*
+					 * a spinlock is incorrect if in a single-threaded tx
+					 * environment
+					 */
+					if (!TransactionEnvironment.get().isMultiple()
+							|| (domainVisible != null && JobRegistry.get()
+									.hasAllocator(domainVisible))) {
 						awaitJobExistenceBeforeContinueToExit = null;
 						Transaction.endAndBeginNew();
 						break;
@@ -413,7 +418,11 @@ class JobAllocator {
 				long start = System.currentTimeMillis();
 				while (TimeConstants.within(start,
 						TimeConstants.ONE_MINUTE_MS)) {
-					if (awaitJobExistenceBeforeContinueToExit == null) {
+					if (awaitJobExistenceBeforeContinueToExit == null ||
+					/*
+					 * for a non-multiple-tx env - spinlock would not work
+					 */
+							!TransactionEnvironment.get().isMultiple()) {
 						Transaction.endAndBeginNew();
 						break;
 					} else {

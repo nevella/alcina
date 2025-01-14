@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -78,6 +79,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  *
  * @author Nick Reddel
  */
+@Reflected
 public class CommitToStorageTransformListener
 		implements DomainTransformListener {
 	// FIXME - model - this should just be Scheduler.scheduleFinally
