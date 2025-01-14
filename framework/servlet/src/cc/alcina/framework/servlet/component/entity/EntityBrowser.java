@@ -108,14 +108,18 @@ public class EntityBrowser {
 
 		public String getTraversalPath() {
 			traversalId = SEUtilities.generatePrettyUuid();
-			traverse();
+			traverse(place());
 			return traversalId;
 		}
 
-		void traverse() {
+		static TraversalPlace traversingPlace() {
+			return cast().peer.place;
+		}
+
+		void traverse(TraversalPlace place) {
 			long start = System.currentTimeMillis();
 			evictPeer();
-			peer = new EntityPeer();
+			peer = new EntityPeer(place);
 			peer.initialiseTraversal();
 			MethodContext.instance().withContextValue(
 					RemoteComponentObservables.CONTEXT_OVERRIDE_EVICTION_TIME,
@@ -139,8 +143,9 @@ public class EntityBrowser {
 		@Override
 		public void setPlace(TraversalPlace place) {
 			if (!Objects.equals(place, this.place)) {
+				// this must happen before setPlace
+				traverse(place);
 				super.setPlace(place);
-				traverse();
 				if (traversal() == null) {
 					return;
 				}
@@ -185,6 +190,12 @@ public class EntityBrowser {
 
 			RootLayer rootLayer;
 
+			TraversalPlace place;
+
+			public EntityPeer(TraversalPlace place) {
+				this.place = place;
+			}
+
 			void initialiseTraversal() {
 				traversal = new SelectionTraversal(this);
 				traversal.id = traversalId;
@@ -196,7 +207,6 @@ public class EntityBrowser {
 			}
 
 			boolean isSelected(Selection selection) {
-				TraversalPlace place = Client.currentPlace();
 				SelectionPath firstSelectionPath = place.firstSelectionPath();
 				return firstSelectionPath != null && firstSelectionPath
 						.nthSegmentPathIs(selection.processNode().depth() - 1,
@@ -204,7 +214,6 @@ public class EntityBrowser {
 			}
 
 			int queryDepth() {
-				TraversalPlace place = Client.currentPlace();
 				SelectionPath firstSelectionPath = place.firstSelectionPath();
 				return firstSelectionPath == null ? 0
 						: firstSelectionPath.segmentCount();

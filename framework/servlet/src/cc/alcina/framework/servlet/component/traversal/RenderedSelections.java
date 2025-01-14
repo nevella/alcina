@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup.Query;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -59,13 +60,14 @@ class RenderedSelections extends Model.Fields {
 		this.variant = variant;
 		this.heading = new Heading(Ax.friendly(variant));
 		bindings().from(page.ui).on(Ui.properties.place)
-				.signal(this::populateViewSlection);
+				.signal(this::populateViewSelection);
 		bindings().from(page.ui).on(Ui.properties.traversal)
-				.signal(this::populateViewSlection);
+				.signal(this::populateViewSelection);
 		bindings().from(this).on("selection").signal(this::onSelectionChange);
 	}
 
-	void populateViewSlection() {
+	void populateViewSelection() {
+		page.place().clearSelections();
 		Selection selection = page.place().provideSelection(SelectionType.VIEW);
 		properties.selection.set(this, selection);
 	}
