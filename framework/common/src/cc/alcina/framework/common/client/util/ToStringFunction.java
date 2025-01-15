@@ -74,6 +74,22 @@ public interface ToStringFunction<T> extends Function<T, String> {
 	}
 
 	@Reflected
+	public static class Friendly implements ToStringFunction<Object> {
+		@Override
+		public String apply(Object t) {
+			return Ax.friendly(t);
+		}
+	}
+
+	@Reflected
+	public static class FriendlyLower implements ToStringFunction<Object> {
+		@Override
+		public String apply(Object t) {
+			return Ax.friendly(t).toLowerCase();
+		}
+	}
+
+	@Reflected
 	public static class Existence implements ToStringFunction<Boolean> {
 		@Override
 		public String apply(Boolean t) {
