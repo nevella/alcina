@@ -48,6 +48,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
@@ -71,6 +72,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.util.ClassNames;
+import cc.alcina.framework.gwt.client.util.StyleUtil;
 
 /**
  *
@@ -1323,7 +1325,7 @@ public class DirectedLayout implements AlcinaProcess {
 				Element element = rendered.isElement() ? rendered.asElement()
 						: null;
 				org.w3c.dom.Node node = rendered.getNode();
-				org.w3c.dom.Element domElement = node
+				org.w3c.dom.Element w3cElement = node
 						.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
 								? (org.w3c.dom.Element) node
 								: null;
@@ -1347,15 +1349,22 @@ public class DirectedLayout implements AlcinaProcess {
 							? "class"
 							: binding.to().isEmpty() ? Ax.cssify(binding.from())
 									: binding.to();
-					if (domElement.hasAttribute(propertyName)) {
-						stringValue = domElement.getAttribute(propertyName);
+					if (w3cElement.hasAttribute(propertyName)) {
+						stringValue = w3cElement.getAttribute(propertyName);
 					}
 					break;
 				}
 				case CSS_CLASS:
 				case SWITCH_CSS_CLASS:
-				case STYLE_ATTRIBUTE:
 					throw new UnsupportedOperationException();
+				case STYLE_ATTRIBUTE:
+					if (w3cElement.hasAttribute("style")) {
+						StringMap styleMap = StyleUtil.styleAttributeToMap(
+								w3cElement.getAttribute("style"));
+						String key = Ax.cssify(property.getName());
+						stringValue = styleMap.get(key);
+					}
+					break;
 				default:
 					throw new UnsupportedOperationException();
 				}
@@ -1384,6 +1393,8 @@ public class DirectedLayout implements AlcinaProcess {
 						value = Boolean.valueOf(stringValue);
 					} else if (property.getType() == int.class) {
 						value = Integer.parseInt(stringValue);
+					} else if (property.getType() == double.class) {
+						value = Double.parseDouble(stringValue);
 					}
 				}
 				property.set(model, value);
@@ -1409,7 +1420,7 @@ public class DirectedLayout implements AlcinaProcess {
 				Element element = rendered.isElement() ? rendered.asElement()
 						: null;
 				org.w3c.dom.Node node = rendered.getNode();
-				org.w3c.dom.Element domElement = node
+				org.w3c.dom.Element w3cElement = node
 						.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
 								? (org.w3c.dom.Element) node
 								: null;
@@ -1482,14 +1493,14 @@ public class DirectedLayout implements AlcinaProcess {
 								&& Objects.equals(propertyName, "class")) {
 							// don't overwrite @Directed.cssClass
 						} else {
-							domElement.removeAttribute(propertyName);
+							w3cElement.removeAttribute(propertyName);
 						}
 					} else {
 						if (element != null) {
 							element.setPropertyString(propertyName,
 									stringValue);
 						} else {
-							domElement.setAttribute(propertyName, stringValue);
+							w3cElement.setAttribute(propertyName, stringValue);
 						}
 						lastValue = stringValue;
 					}
@@ -1521,15 +1532,14 @@ public class DirectedLayout implements AlcinaProcess {
 						if (element != null) {
 							element.setClassName(cssClass, present);
 						} else {
-							org.w3c.dom.Element w3cElem = (org.w3c.dom.Element) node;
-							String existingClassNames = w3cElem
+							String existingClassNames = w3cElement
 									.getAttribute("class");
 							String updated = present
 									? ClassNames.addClassName(
 											existingClassNames, cssClass)
 									: ClassNames.removeClassName(
 											existingClassNames, cssClass);
-							w3cElem.setAttribute("class", updated);
+							w3cElement.setAttribute("class", updated);
 						}
 					}
 					if (element != null) {
@@ -1537,9 +1547,8 @@ public class DirectedLayout implements AlcinaProcess {
 							element.removeAttribute("class");
 						}
 					} else {
-						org.w3c.dom.Element w3cElem = (org.w3c.dom.Element) node;
-						if (w3cElem.getAttribute("class").isEmpty()) {
-							w3cElem.removeAttribute("class");
+						if (w3cElement.getAttribute("class").isEmpty()) {
+							w3cElement.removeAttribute("class");
 						}
 					}
 				}
@@ -1559,11 +1568,29 @@ public class DirectedLayout implements AlcinaProcess {
 					String attributeName = binding.to().isEmpty()
 							? binding.from()
 							: binding.to();
-					if (Ax.notBlank(stringValue)) {
-						element.getStyle().setProperty(attributeName,
-								stringValue);
+					if (element != null) {
+						if (Ax.notBlank(stringValue)) {
+							element.getStyle().setProperty(attributeName,
+									stringValue);
+						} else {
+							element.getStyle().removeProperty(attributeName);
+						}
 					} else {
-						element.getStyle().removeProperty(attributeName);
+						StringMap styleMap = StyleUtil.styleAttributeToMap(
+								w3cElement.getAttribute("style"));
+						String key = Ax.cssify(attributeName);
+						if (Ax.notBlank(stringValue)) {
+							Preconditions.checkArgument(
+									stringValue.matches("[^'\":;=\n]+"));
+							styleMap.put(key, stringValue);
+						} else {
+							styleMap.remove(key);
+						}
+						w3cElement.setAttribute("style",
+								StyleUtil.styleMapToAttribute(styleMap));
+						if (w3cElement.getAttribute("style").isEmpty()) {
+							w3cElement.removeAttribute("style");
+						}
 					}
 					break;
 				default:

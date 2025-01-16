@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.util.StringMap;
+
 public class StyleUtil {
 	public static Action action(Element target) {
 		return new Action(target);
@@ -107,5 +109,15 @@ public class StyleUtil {
 		public String classAttributeValue() {
 			return names.stream().collect(Collectors.joining(" "));
 		}
+	}
+
+	public static StringMap styleAttributeToMap(String styleAttributeValue) {
+		return StringMap.fromPropertyString(styleAttributeValue
+				.replaceAll(":\s*", "=").replaceAll(";\n*", "\n"));
+	}
+
+	public static String styleMapToAttribute(StringMap styleMap) {
+		return styleMap.toPropertyString().replaceAll("=", ": ")
+				.replaceAll("\n+", ";") + ";";
 	}
 }
