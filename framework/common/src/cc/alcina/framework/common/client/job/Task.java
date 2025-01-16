@@ -7,6 +7,9 @@ import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 
+/**
+ * <p>
+ */
 public interface Task extends TreeSerializable, HasEquivalence {
 	default Job ensurePending() {
 		return Registry.impl(Performer.class).ensurePending(this, true);
@@ -36,6 +39,17 @@ public interface Task extends TreeSerializable, HasEquivalence {
 		// noop
 	}
 
+	/**
+	 * <p>
+	 * Instruct the job system to perform this task. Note that the task instance
+	 * used during performance is not <code>this</code>, but a clone
+	 * instantiated during performance - so do not attempt to access
+	 * "result-like" fields on the task post performance.
+	 * 
+	 * 
+	 * 
+	 * @return the {@link Job} tracking the performance of the task
+	 */
 	default Job perform() {
 		return Registry.impl(Performer.class).perform(this);
 	}

@@ -20,8 +20,9 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
  *
  * <p>
  * SelfPerformer exposes methods for processing a task outside a JobContext -
- * call run() (or performAction()) directly on them to bypass the Job system -
- * perform() will execute in a job context
+ * call run() (or performAction()) directly on them to bypass the Job system,
+ * one benefit of which is easy access to any result fields on the {@link Task}
+ * - perform() will execute in a job context
  *
  * @author Nick Reddel
  */
