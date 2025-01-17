@@ -113,7 +113,7 @@ public class StyleUtil {
 
 	public static StringMap styleAttributeToMap(String styleAttributeValue) {
 		return StringMap.fromPropertyString(styleAttributeValue
-				.replaceAll(":\s*", "=").replaceAll(";\n*", "\n"));
+				.replaceAll(":\\s*", "=").replaceAll(";\n*", "\n"));
 	}
 
 	public static String styleMapToAttribute(StringMap styleMap) {

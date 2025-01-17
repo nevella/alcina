@@ -34,8 +34,6 @@ class MultipleSuggestionsGalleryArea
 		implements ModelEvents.Submit.Handler {
 	static PackageProperties._MultipleSuggestionsGalleryArea properties = PackageProperties.multipleSuggestionsGalleryArea;
 
-	String self = "multiple suggers";
-
 	@Directed(tag = "definition-editor")
 	@Directed(bindToModel = false)
 	@Directed.Transform(BeanForm.Editor.Adjunct.class)

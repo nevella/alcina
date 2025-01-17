@@ -6,6 +6,7 @@
 @use '../../dirndl/cmp/overlay'
 @use '../../dirndl/cmp/help'
 @use '../../dirndl/cmp/keyboard-shortcuts'
+@use '../../dirndl/cmp/choices'
 @use '../multi/common'
 
 @use 'header'
@@ -56,7 +57,7 @@ body > page
     .gallery
       @include common.bordered-full
 
-      > bean-editor
+      > definition-editor
         @include common.definition-editor
       
 
@@ -64,6 +65,8 @@ body > page
 @include keyboard-shortcuts.contents
 @include help.contents
 @include form.separated-heading
+@include choices.multiple-suggestions-tag
+@include choices.chooser-decorator
 
 
 

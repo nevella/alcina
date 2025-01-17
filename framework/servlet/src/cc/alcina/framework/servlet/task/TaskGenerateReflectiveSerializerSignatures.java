@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -154,6 +155,9 @@ public class TaskGenerateReflectiveSerializerSignatures extends PerformerTask {
 				.filter(Property::provideReadWriteNonTransient)
 				.filter(property -> !property.has(AlcinaTransient.class)
 						&& !property.has(Omit.class))
+				.filter(property -> !(property.has(PropertySerialization.class)
+						&& property.annotation(PropertySerialization.class)
+								.notTestable()))
 				.forEach(property -> {
 					Class<?> type = property.getType();
 					boolean result = ReflectiveSerializer.hasSerializer(type);

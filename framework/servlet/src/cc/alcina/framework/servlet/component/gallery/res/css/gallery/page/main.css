@@ -654,7 +654,7 @@ body > page > gallery-area .gallery {
   display: block;
   background-color: white;
 }
-body > page > gallery-area .gallery > bean-editor {
+body > page > gallery-area .gallery > definition-editor {
   max-width: 600px;
   margin: 2rem auto;
   display: block;
@@ -957,4 +957,82 @@ help-area sequence > visit-area > img {
 bean-editor > heading {
   padding-bottom: 1rem;
   padding-left: 0;
+}
+
+multiple-suggestions > edit {
+  font-size: 16px;
+  color: #666;
+  width: 100%;
+  background-color: transparent;
+  border: solid 1px transparent;
+  font-family: "Helvetica Neue", Arial;
+  resize: none;
+  padding: 0.4rem 0.4rem;
+  box-sizing: border-box;
+  border-color: #aaa;
+  border-color-background-color: #ffffff20;
+  display: block;
+  color: #333;
+  height: 100%;
+  line-height: 145%;
+  width: 30rem;
+}
+multiple-suggestions > edit::-webkit-input-placeholder {
+  color: transparent;
+}
+multiple-suggestions > edit:focus::-webkit-input-placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+multiple-suggestions > edit:hover {
+  border-color: #aaa;
+  border-color-background-color: #ffffff20;
+}
+multiple-suggestions > edit:focus {
+  border-color: #555;
+  background-color: #FFF;
+}
+multiple-suggestions > edit choice-node:not([contentEditable=false]) {
+  color: blue;
+}
+multiple-suggestions > edit choice-node[contentEditable=false] {
+  background: #e3e3e3;
+  border-radius: 14px;
+  border: solid 1px #ddd;
+}
+multiple-suggestions > edit choice-node {
+  padding: 1px 4px;
+}
+
+overlay > .decorator-chooser {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  display: block;
+  width: 20rem;
+  padding: 0;
+}
+overlay > .decorator-chooser > suggestor {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+overlay > .decorator-chooser > suggestor > results {
+  display: contents;
+}
+overlay > .decorator-chooser > suggestor > choice, overlay > .decorator-chooser > suggestor > results > choice {
+  padding: 0.4rem 1rem;
+  /* use padding, not line-height, so hover bkg is vertically centered*/
+  line-height: 2;
+  cursor: pointer;
+}
+overlay > .decorator-chooser > suggestor > choice:hover, overlay > .decorator-chooser > suggestor > choice[index-selected], overlay > .decorator-chooser > suggestor > results > choice:hover, overlay > .decorator-chooser > suggestor > results > choice[index-selected] {
+  background-color: #00000010;
 }
