@@ -16,7 +16,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
-import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Builder;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Attributes;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Spinner;
 
 /*
@@ -54,14 +54,16 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		if (ensure) {
 			visible = true;
 			if (useOverlay()) {
-				Builder builder = Overlay.builder();
-				builder.dropdown(suggestor.attributes.getSuggestionXAlign(),
-						suggestor.provideElement().getBoundingClientRect(),
-						suggestor, contents)
+				Attributes attributes = Overlay.attributes();
+				attributes
+						.dropdown(suggestor.attributes.getSuggestionXAlign(),
+								suggestor.provideElement()
+										.getBoundingClientRect(),
+								suggestor, contents)
 						.withLogicalAncestors(
 								suggestor.attributes.getLogicalAncestors())
 						.withLogicalParent(suggestor);
-				overlay = builder.build();
+				overlay = attributes.create();
 				overlay.open();
 			} else {
 				suggestor.setNonOverlaySuggestionResults(contents);

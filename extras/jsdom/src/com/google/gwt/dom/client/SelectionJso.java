@@ -16,65 +16,153 @@
 package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.dom.client.mutations.SelectionRecord;
 
 /*
  * Derived from elemental.js.html.JsSelection.
  */
-public class SelectionJso extends JavaScriptObject {
+public final class SelectionJso extends JavaScriptObject
+		implements ClientDomSelection {
 	protected SelectionJso() {
 	}
 
-	public final native void collapse(NodeJso node) /*-{
+	final native void collapse0(NodeJso node) /*-{
     this.collapse(node);
 	}-*/;
 
-	public final native void collapse(NodeJso node, int offset) /*-{
+	final native void collapse0(NodeJso node, int offset) /*-{
     this.collapse(node, offset);
 	}-*/;
 
-	public final native void extend(NodeJso node) /*-{
+	final native void extend0(NodeJso node) /*-{
     this.extend(node);
 	}-*/;
 
-	public final native void extend(NodeJso node, int offset) /*-{
+	final native void extend0(NodeJso node, int offset) /*-{
     this.extend(node, offset);
 	}-*/;
 
-	public final native NodeJso getAnchorNode() /*-{
+	final native NodeJso getAnchorNode0() /*-{
     return this.anchorNode;
 	}-*/;
 
-	public final native int getAnchorOffset() /*-{
+	final native int getAnchorOffset0() /*-{
     return this.anchorOffset;
 	}-*/;
 
-	public final native DomRect getClientRect()/*-{
+	final native DomRect getClientRect0()/*-{
+		if(this.rangeCount == 0){
+			return null;
+		}
 		var rect = this.getRangeAt(0).getBoundingClientRect();
 		 return @com.google.gwt.dom.client.DomRect::new(Lcom/google/gwt/dom/client/DomRectJso;)(rect);
 	}-*/;
 
-	public final native NodeJso getFocusNode() /*-{
+	final native NodeJso getFocusNode0() /*-{
     return this.focusNode;
 	}-*/;
 
-	public final native int getFocusOffset() /*-{
+	final native int getFocusOffset0() /*-{
     return this.focusOffset;
 	}-*/;
 
-	public final native String getType() /*-{
+	final native String getType0() /*-{
     return this.type;
 	}-*/;
 
-	public final native boolean isCollapsed() /*-{
+	final native boolean isCollapsed0() /*-{
     return this.isCollapsed;
 	}-*/;
 
-	public final native void modify(String alter, String direction,
+	final native void modify0(String alter, String direction,
 			String granularity) /*-{
     this.modify(alter, direction, granularity);
 	}-*/;
 
-	public final native void removeAllRanges() /*-{
+	final native void removeAllRanges0() /*-{
     this.removeAllRanges();
 	}-*/;
+
+	public final Selection selectionObject() {
+		return Document.get().getSelection();
+	}
+
+	@Override
+	public final void collapse(Node node) {
+		collapse0(node.jsoRemote());
+	}
+
+	@Override
+	public final void collapse(Node node, int offset) {
+		collapse0(node.jsoRemote(), offset);
+	}
+
+	@Override
+	public final void extend(Node node) {
+		extend0(node.jsoRemote());
+	}
+
+	@Override
+	public final void extend(Node node, int offset) {
+		extend0(node.jsoRemote(), offset);
+	}
+
+	@Override
+	public final Node getAnchorNode() {
+		return Node.as(getAnchorNode0());
+	}
+
+	@Override
+	public final int getAnchorOffset() {
+		return getAnchorOffset0();
+	}
+
+	@Override
+	public final DomRect getClientRect() {
+		return getClientRect0();
+	}
+
+	@Override
+	public final Node getFocusNode() {
+		return Node.as(getFocusNode0());
+	}
+
+	@Override
+	public final int getFocusOffset() {
+		return getFocusOffset0();
+	}
+
+	@Override
+	public final String getType() {
+		return getType0();
+	}
+
+	@Override
+	public final boolean isCollapsed() {
+		return isCollapsed0();
+	}
+
+	@Override
+	public final void modify(String alter, String direction,
+			String granularity) {
+		modify0(alter, direction, granularity);
+	}
+
+	@Override
+	public final void removeAllRanges() {
+		removeAllRanges0();
+	}
+
+	@Override
+	public final SelectionRecord getSelectionRecord() {
+		SelectionRecord record = new SelectionRecord();
+		record.anchorNode = getAnchorNode();
+		record.anchorOffset = getAnchorOffset();
+		record.focusNode = getFocusNode();
+		record.focusOffset = getFocusOffset();
+		record.clientRect = getClientRect();
+		record.type = getType();
+		record.populateNodeIds();
+		return record;
+	}
 }

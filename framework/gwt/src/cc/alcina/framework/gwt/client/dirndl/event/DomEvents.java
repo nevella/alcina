@@ -5,7 +5,7 @@ import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent;
+import com.google.gwt.dom.client.NativeEvent.BeforeInputEventData;
 import com.google.gwt.dom.client.TextAreaElement;
 import com.google.gwt.event.dom.client.BeforeInputEvent;
 import com.google.gwt.event.dom.client.BlurEvent;
@@ -23,27 +23,28 @@ import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.ScrollEvent;
+import com.google.gwt.event.dom.client.SelectionChangedEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 
 public class DomEvents {
 	public static class BeforeInput extends NodeEvent<BeforeInput.Handler> {
-		private NativeBeforeInputEvent nativeBeforeInputEvent;
+		private BeforeInputEventData beforeInputEventData;
+
+		public BeforeInputEventData getBeforeInputEventData() {
+			return beforeInputEventData;
+		}
 
 		@Override
 		public void dispatch(BeforeInput.Handler handler) {
-			if (nativeBeforeInputEvent == null) {
+			if (beforeInputEventData == null) {
 				NativeEvent nativeEvent = ((BeforeInputEvent) getContext()
 						.getGwtEvent()).getNativeEvent();
-				this.nativeBeforeInputEvent = nativeEvent
-						.getNativeBeforeInputEvent();
+				this.beforeInputEventData = nativeEvent
+						.getBeforeInputEventData();
 			}
 			handler.onBeforeInput(this);
-		}
-
-		public NativeBeforeInputEvent getNativeBeforeInputEvent() {
-			return this.nativeBeforeInputEvent;
 		}
 
 		public static class BindingImpl extends DomBinding<BeforeInput> {
@@ -244,6 +245,35 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onKeyDown(KeyDown event);
+		}
+	}
+
+	/**
+	 * <p>
+	 * DO NOT USE (here for completeness)
+	 * 
+	 * <p>
+	 * Since this event fires on the document, not the element containing the
+	 * selection, routing can't be done here - use the corresponding
+	 * {@link InferredDomEvents.SelectionChanged} event
+	 */
+	public static class SelectionChanged
+			extends NodeEvent<SelectionChanged.Handler> {
+		@Override
+		public void dispatch(SelectionChanged.Handler handler) {
+			handler.onSelectionChanged(this);
+		}
+
+		public static class BindingImpl extends DomBinding<SelectionChanged> {
+			@Override
+			protected HandlerRegistration bind1(Element element) {
+				return element.addDomHandler(this::fireEvent,
+						SelectionChangedEvent.getType());
+			}
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionChanged(SelectionChanged event);
 		}
 	}
 

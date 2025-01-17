@@ -282,11 +282,11 @@ class LayerSelections extends Model.All {
 			public void onFilter(ModelEvents.Filter event) {
 				WidgetUtils.squelchCurrentEvent();
 				FilterSuggestor suggestor = new FilterSuggestor();
-				overlay = Overlay.builder()
+				overlay = Overlay.attributes()
 						.dropdown(Position.START,
 								provideElement().getBoundingClientRect(), this,
 								new FilterSuggestor())
-						.build();
+						.create();
 				_NameArea_properties.filterEditorOpen.set(NameArea.this, true);
 				overlay.open();
 			}

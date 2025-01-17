@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.search.TextCriterion.TextCriterionType;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.DateUtil;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 public class SearchUtils {
 	static SearchUtilsIdsHelper idsHelper;
@@ -77,6 +78,23 @@ public class SearchUtils {
 	public static Set<Long> idsTextToSet(String idsText) {
 		return TransformManager
 				.idListToLongSet(idsText.replaceFirst("ids?: ?", ""));
+	}
+
+	public static boolean matches(String query, Object o) {
+		if (o == null) {
+			return false;
+		}
+		if (o instanceof HasDisplayName) {
+			if (containsIgnoreCase(((HasDisplayName) o).displayName(), query)) {
+				return true;
+			}
+		}
+		if (o instanceof Enum) {
+			if (matchesEnum(query, (Enum) o)) {
+				return true;
+			}
+		}
+		return containsIgnoreCase(o.toString(), query);
 	}
 
 	public static boolean matchesEnum(String query, Enum e) {

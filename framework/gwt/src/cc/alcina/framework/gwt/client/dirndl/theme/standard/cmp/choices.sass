@@ -1,10 +1,12 @@
 @use '../../theme/theme'
 @use '../../theme/color'
+@use '../../dirndl/cmp/form'
 @use '../multi/base'
+@use 'context-menu'
 
 //various choices style mixins
 
-@mixin vertical()
+@mixin vertical
   display: flex
   flex-direction: column
   gap: 2px
@@ -19,7 +21,7 @@
     &[_selected]
       font-weight: bold
 
-@mixin horizontal()
+@mixin horizontal
   display: flex
   gap: 2rem
 
@@ -32,3 +34,42 @@
 
     &[_selected]
       text-decoration: underline
+
+@mixin suggestions
+  > edit
+    @include form.fancy-input
+    @include form.bordered
+    display: block
+    color: #333
+    height: 100%
+    line-height: 145%
+    width: 30rem
+
+    choice-node:not([contentEditable='false'])
+      color: blue
+
+    choice-node[contentEditable='false']
+      background:#e3e3e3
+      border-radius: 14px
+      border: solid 1px #ddd
+
+    choice-node
+      padding: 1px 4px
+
+@mixin multiple-suggestions-tag
+  multiple-suggestions
+    @include suggestions
+    
+//FIXME - rename - decorator-suggestion-choices?
+@mixin chooser-decorator
+  overlay 
+    //sass-unify: edit-area
+    > .decorator-chooser
+      @include context-menu.dropdown
+
+      display: block
+      width: 20rem
+      padding: 0
+
+      > suggestor
+        @include context-menu.dropdown-choices

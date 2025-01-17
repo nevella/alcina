@@ -9,12 +9,12 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleModel;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement.BoundSuggestOracleSuggestion;
 
 @Registration.NonGenericSubtypes(BoundSuggestOracleRequestHandler.class)
-public abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
+public abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseElement> {
 	protected abstract List<T> getResponses(String query,
 			BoundSuggestOracleModel model, String hint);
 

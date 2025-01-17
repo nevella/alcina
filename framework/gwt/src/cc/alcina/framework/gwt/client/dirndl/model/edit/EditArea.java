@@ -1,6 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.stream.Collectors;
+
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -19,8 +22,9 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel.ModelMutation;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 
 /**
@@ -36,10 +40,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
 @Directed(emits = { ModelEvents.Input.class })
 @DirectedContextResolver(FragmentResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
-public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
-		DomEvents.Input.Handler, DomEvents.BeforeInput.Handler,
-		LayoutEvents.BeforeRender.Handler, DomEvents.Focusout.Handler,
-		InferredDomEvents.Mutation.Handler, FragmentModel.Has {
+@TypedProperties
+public class EditArea extends Model.Fields
+		implements FocusOnBind, HasTag, DomEvents.Input.Handler,
+		DomEvents.BeforeInput.Handler, LayoutEvents.BeforeRender.Handler,
+		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
+		FragmentModel.Has, ModelMutation.Handler {
+	public static PackageProperties._EditArea properties = PackageProperties.editArea;
+
 	@Binding(type = Type.INNER_HTML)
 	public String value;
 
@@ -129,17 +137,27 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		// removeZeroWidthSpace
 		// .forEach(n -> n.setText(n.textContent().replace("\u200b", "")));
 		String elementValue = elementValue();
+		boolean bindingsDisabled = true;
 		if (Ax.ntrim(elementValue.replaceAll("<br>", "")).isEmpty()) {
+			/*
+			 * *DO* rewrite
+			 */
+			bindingsDisabled = false;
 			elementValue = "";
 		}
-		setValue(elementValue);
+		try {
+			provideNode().setBindingsDisabled(bindingsDisabled);
+			setValue(elementValue);
+		} finally {
+			provideNode().setBindingsDisabled(false);
+		}
 	}
 
 	@Override
 	public void onInput(Input event) {
 		currentValue = elementValue();
 		if (stripFontTagsOnInput) {
-			new RelativeInputModel().strip(provideElement(), "font");
+			new EditSelection().strip(provideElement(), "font");
 		}
 		event.reemitAs(this, ModelEvents.Input.class);
 	}
@@ -169,5 +187,18 @@ public class EditArea extends Model.Fields implements FocusOnBind, HasTag,
 		String old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
+	}
+
+	@Override
+	public void onModelMutation(ModelMutation event) {
+		refreshSpacers(event);
+	}
+
+	void refreshSpacers(ModelMutation event) {
+		if (event.getData().entries.size() > 0) {
+			fragmentModel.byTypeAssignable(DecoratorNode.class)
+					.collect(Collectors.toList())
+					.forEach(DecoratorNode::ensureSpacers);
+		}
 	}
 }

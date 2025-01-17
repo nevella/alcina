@@ -8,6 +8,7 @@ import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
@@ -24,6 +25,8 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.HasSelectionMutation;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
@@ -69,8 +72,28 @@ public class ClientRpc implements HandlerContext {
 	}
 
 	static void send(Message message) {
+		get().prepareMessage(message);
 		get().transportLayer.sendMessage(message);
 	}
+
+	void prepareMessage(Message message) {
+		if (message instanceof HasSelectionMutation) {
+			HasSelectionMutation hasSelectionMutation = (HasSelectionMutation) message;
+			conditionallyPopulateSelectionMutation(hasSelectionMutation);
+		}
+	}
+
+	void conditionallyPopulateSelectionMutation(
+			HasSelectionMutation hasSelectionMutation) {
+		SelectionRecord currentSelectionRecord = Document.get().getSelection()
+				.getSelectionRecord();
+		if (!Objects.equals(lastSelectionRecord, currentSelectionRecord)) {
+			lastSelectionRecord = currentSelectionRecord;
+			hasSelectionMutation.setSelectionMutation(currentSelectionRecord);
+		}
+	}
+
+	SelectionRecord lastSelectionRecord;
 
 	MessageTransportLayerClient transportLayer;
 

@@ -12,6 +12,7 @@ import org.w3c.dom.ProcessingInstruction;
 
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -27,6 +28,8 @@ public class DocumentAttachId extends NodeAttachId
 	// hack-ish - the element path is not necessarily determined at sink events
 	// time
 	List<Runnable> sinkEventsQueue = new ArrayList<>();
+
+	private SelectionAttachId selection;
 
 	public DocumentAttachId(Document document) {
 		super(document);
@@ -828,5 +831,24 @@ public class DocumentAttachId extends NodeAttachId
 
 	public void onRemoteUiContextReceived(DomEventContext eventContext) {
 		invokeProxy.eventContext = eventContext;
+	}
+
+	@Override
+	public SelectionAttachId getSelection() {
+		return selection;
+	}
+
+	@Override
+	public ClientDomSelection ensureRemoteSelection(Selection selection) {
+		this.selection = new SelectionAttachId(selection);
+		return this.selection;
+	}
+
+	public void onSelectionMutationReceived(SelectionRecord selectionMutation) {
+		getSelection().setSelectionRecord(selectionMutation);
+	}
+
+	public SelectionRecord getPendingSelectionMutationAndClear() {
+		return getSelection().getPendingSelectionMutationAndClear();
 	}
 }

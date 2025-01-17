@@ -60,9 +60,10 @@ public class OverlayPositions {
 		DirectedLayout layout = new DirectedLayout();
 		ContextResolver resolver = ContextResolver.Default.get()
 				.createResolver();
-		if (model.logicalParent != null
-				&& model.logicalParent.provideIsBound()) {
-			resolver = model.logicalParent.provideNode().getResolver();
+		if (model.attributes.logicalParent != null
+				&& model.attributes.logicalParent.provideIsBound()) {
+			resolver = model.attributes.logicalParent.provideNode()
+					.getResolver();
 		}
 		Rendered rendered = layout
 				.render(resolver, new OverlayContainer(model, containerOptions))

@@ -1052,4 +1052,9 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
     var nodeList = this.querySelectorAll(selector);
     return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/ClientDomNodeList;)(nodeList);
 	}-*/;
+
+	@Override
+	public final ClientDomSelection ensureRemoteSelection(Selection selection) {
+		return getSelection();
+	}
 }

@@ -20,7 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.model.DropdownEvents.DropdownButtonClicked;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
-import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Builder;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Attributes;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -247,17 +247,17 @@ public class Dropdown extends Model
 				dropdownStack.clear();
 				setDropdown(dropdownSupplier.get());
 			}
-			Builder builder = Overlay.builder();
-			builder.dropdown(getXalign(),
+			Attributes attributes = Overlay.attributes();
+			attributes.dropdown(getXalign(),
 					provideElement().getBoundingClientRect(), this, dropdown);
 			if (dropdownStack.size() == 1 && logicalAncestorsSupplier != null) {
-				builder.withLogicalAncestors(logicalAncestorsSupplier.get());
+				attributes.withLogicalAncestors(logicalAncestorsSupplier.get());
 			}
 			if (logicalParent == null) {
 				logicalParent = this;
 			}
-			builder.withLogicalParent(logicalParent);
-			overlay = builder.build();
+			attributes.withLogicalParent(logicalParent);
+			overlay = attributes.create();
 			overlay.open();
 		} else {
 			overlay.close(null, false);

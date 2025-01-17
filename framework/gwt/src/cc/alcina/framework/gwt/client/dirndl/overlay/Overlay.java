@@ -81,39 +81,15 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
 		InferredDomEvents.MouseDownOutside.Handler, ModelEvents.Submit.Handler,
 		ModelEvents.Closed.Handler {
-	public static Builder builder() {
-		return new Builder();
+	public static Attributes attributes() {
+		return new Attributes();
 	}
 
-	private final Model contents;
-
-	private final OverlayPosition position;
-
-	private final Actions actions;
-
-	private boolean modal;
-
-	private boolean removeOnMouseDownOutside;
-
-	private boolean allowCloseWithoutSubmit = true;
-
 	private boolean open;
-
-	private String cssClass;
-
-	Model logicalParent;
-
 	/*
 	 * For event bubbling - if the logicalParent is detached, try the secondary
 	 * (if it exists)
 	 */
-	Model secondaryLogicalEventReroute;
-
-	private List<Class<? extends Model>> logicalAncestors;
-
-	private ModelEvents.Submit.Handler submitHandler;
-
-	private ModelEvents.Closed.Handler closedHandler;
 
 	/*
 	 * Don't close this overlay if the child is the event target
@@ -122,19 +98,12 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	private String cssClassParameter;
 
-	private Overlay(Builder builder) {
-		contents = builder.contents;
-		position = builder.position;
-		actions = builder.actions;
-		modal = builder.modal;
-		allowCloseWithoutSubmit = builder.allowCloseWithoutSubmit;
-		removeOnMouseDownOutside = builder.removeOnMouseDownOutside;
-		logicalParent = builder.logicalParent;
-		secondaryLogicalEventReroute = builder.secondaryLogicalEventReroute;
-		logicalAncestors = builder.logicalAncestors;
-		submitHandler = builder.submitHandler;
-		closedHandler = builder.closedHandler;
-		cssClassParameter = builder.cssClass;
+	Attributes attributes;
+
+	private String cssClass;
+
+	private Overlay(Attributes attributes) {
+		this.attributes = attributes;
 		computeCssClass();
 	}
 
@@ -149,7 +118,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		if (!open) {
 			return true;
 		}
-		if (!submit && !allowCloseWithoutSubmit) {
+		if (!submit && !attributes.allowCloseWithoutSubmit) {
 			return false;
 		}
 		if (childOverlay != null) {
@@ -204,8 +173,9 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		// FIXME - dirndl 1x3 - actually, at least for contentdecorator it would
 		// be nice
 		Stream<String> derivedClasses = Stream
-				.concat(logicalAncestors.stream(),
-						Stream.of(logicalParent, this, contents))
+				.concat(attributes.logicalAncestors.stream(),
+						Stream.of(attributes.logicalParent, this,
+								attributes.contents))
 				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
 				.map(Class::getSimpleName);
 		String cssClass = Stream
@@ -217,7 +187,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	@Directed
 	public Actions getActions() {
-		return this.actions;
+		return attributes.actions;
 	}
 
 	protected Overlay getChildOverlay() {
@@ -226,38 +196,40 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	@Directed
 	public Model getContents() {
-		return this.contents;
+		return attributes.contents;
 	}
 
 	@Binding(type = Type.CLASS_PROPERTY)
 	public String getCssClass() {
-		return this.cssClass;
+		return attributes.cssClass;
 	}
 
 	public OverlayPosition getPosition() {
-		return this.position;
+		return attributes.position;
 	}
 
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
-		if (logicalParent != null && logicalParent instanceof HasNode) {
-			Node sourceNode = ((HasNode) logicalParent).provideNode();
+		if (attributes.logicalParent != null
+				&& attributes.logicalParent instanceof HasNode) {
+			Node sourceNode = ((HasNode) attributes.logicalParent)
+					.provideNode();
 			Overlay ancestorOverlay = DirndlAccess.ComponentAncestorAccess
 					.getAncestor(sourceNode, this);
 			if (ancestorOverlay != null) {
 				ancestorOverlay.setChildOverlay(event.isBound() ? this : null);
 				// and inherit logical ancestry for styling. order is (ancestor)
 				// ancestors > parent > overlay > contents
-				if (logicalAncestors.isEmpty()) {
-					logicalAncestors = Stream
-							.concat(ancestorOverlay.logicalAncestors.stream(),
-									Stream.of(
-											ancestorOverlay.logicalParent
-													.getClass(),
-											ancestorOverlay.getClass(),
-											ancestorOverlay.contents
-													.getClass()))
+				if (attributes.logicalAncestors.isEmpty()) {
+					attributes.logicalAncestors = Stream.concat(
+							ancestorOverlay.attributes.logicalAncestors
+									.stream(),
+							Stream.of(
+									ancestorOverlay.attributes.logicalParent
+											.getClass(),
+									ancestorOverlay.getClass(),
+									ancestorOverlay.getContents().getClass()))
 							.collect(Collectors.toList());
 					computeCssClass();
 				}
@@ -288,8 +260,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			event.bubble();
 			return;
 		}
-		if (closedHandler != null) {
-			closedHandler.onClosed(event);
+		if (attributes.closedHandler != null) {
+			attributes.closedHandler.onClosed(event);
 		}
 		try {
 			reemittingClose = true;
@@ -313,7 +285,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	@Override
 	public void onMouseDownOutside(MouseDownOutside event) {
-		if (removeOnMouseDownOutside) {
+		if (attributes.removeOnMouseDownOutside) {
 			GwtEvent gwtEvent = event.getContext().getOriginatingGwtEvent();
 			// don't close if a descendant overlay received the event
 			if (gwtEvent instanceof HasNativeEvent) {
@@ -336,15 +308,17 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		if (event.checkReemitted(this)) {
 			return;
 		}
-		if (submitHandler != null) {
-			submitHandler.onSubmit(event);
+		if (attributes.submitHandler != null) {
+			attributes.submitHandler.onSubmit(event);
 		}
-		event.reemit();
+		if (!attributes.consumeSubmit) {
+			event.reemit();
+		}
 	}
 
 	public void open() {
-		ContainerOptions options = new ContainerOptions().withModal(modal)
-				.withPosition(position);
+		ContainerOptions options = new ContainerOptions()
+				.withModal(attributes.modal).withPosition(attributes.position);
 		OverlayPositions.get().show(this, options);
 		open = true;
 	}
@@ -375,7 +349,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 	public String toString() {
 		return Ax.format(
 				"Overlay:\n\tcontents:     %s\n\tlogicalParent: %s\n\tchildOverlay: %s",
-				contents, logicalParent, childOverlay);
+				attributes.contents, attributes.logicalParent, childOverlay);
 	}
 
 	public static class Actions extends Model implements HasLinks {
@@ -416,7 +390,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		}
 	}
 
-	public static class Builder {
+	public static class Attributes {
 		Model secondaryLogicalEventReroute;
 
 		List<Class<? extends Model>> logicalAncestors = List.of();
@@ -441,16 +415,23 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		String cssClass;
 
-		public Overlay build() {
+		boolean consumeSubmit;
+
+		public Attributes withConsumeSubmit(boolean consumeSubmit) {
+			this.consumeSubmit = consumeSubmit;
+			return this;
+		}
+
+		public Overlay create() {
 			return new Overlay(this);
 		}
 
-		public Builder centerDropdown(DomRect rect, Model model) {
+		public Attributes centerDropdown(DomRect rect, Model model) {
 			return dropdown(Position.CENTER, rect, null, model);
 		}
 
-		public Builder dropdown(OverlayPosition.Position xalign, DomRect rect,
-				Model logicalParent, Model contents) {
+		public Attributes dropdown(OverlayPosition.Position xalign,
+				DomRect rect, Model logicalParent, Model contents) {
 			position.dropdown(xalign, rect);
 			withLogicalParent(logicalParent);
 			withContents(contents);
@@ -458,39 +439,39 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			return this;
 		}
 
-		public Builder positionViewportCentered() {
+		public Attributes positionViewportCentered() {
 			position.viewportCentered();
 			return this;
 		}
 
-		public Builder
+		public Attributes
 				positionViewportRelative(ViewportRelative viewportRelative) {
 			position.viewportRelative(viewportRelative);
 			return this;
 		}
 
-		public Builder
+		public Attributes
 				withAllowCloseWithoutSubmit(boolean allowCloseWithoutSubmit) {
 			this.allowCloseWithoutSubmit = allowCloseWithoutSubmit;
 			return this;
 		}
 
-		public Builder withClose() {
+		public Attributes withClose() {
 			actions = Actions.close();
 			return this;
 		}
 
-		public Builder withContents(Model contents) {
+		public Attributes withContents(Model contents) {
 			this.contents = contents;
 			return this;
 		}
 
-		public Builder withCssClass(String cssClass) {
+		public Attributes withCssClass(String cssClass) {
 			this.cssClass = cssClass;
 			return this;
 		}
 
-		public Builder withLogicalAncestors(
+		public Attributes withLogicalAncestors(
 				List<Class<? extends Model>> logicalAncestors) {
 			this.logicalAncestors = logicalAncestors;
 			return this;
@@ -500,7 +481,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		 * Will be used as both an event bubbler and a link to the parent
 		 * overlay (if any)
 		 */
-		public Builder withLogicalParent(Model logicalParent) {
+		public Attributes withLogicalParent(Model logicalParent) {
 			this.logicalParent = logicalParent;
 			return this;
 		}
@@ -509,44 +490,38 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		 * Will be used as a secondary event bubbler (if the logical parent is
 		 * attached)
 		 */
-		public Builder withSecondaryLogicalEventReroute(
+		public Attributes withSecondaryLogicalEventReroute(
 				Model secondaryLogicalEventReroute) {
 			this.secondaryLogicalEventReroute = secondaryLogicalEventReroute;
 			return this;
 		}
 
-		public Builder withModal(boolean modal) {
+		public Attributes withModal(boolean modal) {
 			this.modal = modal;
 			return this;
 		}
 
-		public Builder
+		public Attributes
 				withClosedHandler(ModelEvents.Closed.Handler closedHandler) {
 			this.closedHandler = closedHandler;
 			return this;
 		}
 
-		public Builder
+		public Attributes
 				withSubmitHandler(ModelEvents.Submit.Handler submitHandler) {
 			this.submitHandler = submitHandler;
 			return this;
 		}
 
-		public Builder withOk() {
+		public Attributes withOk() {
 			actions = Actions.ok();
 			return this;
 		}
 
-		public Builder
+		public Attributes
 				withRemoveOnMouseDownOutside(boolean removeOnMouseDownOutside) {
 			this.removeOnMouseDownOutside = removeOnMouseDownOutside;
 			return this;
-		}
-
-		public void withFixed(boolean fixed) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'withFixed'");
 		}
 	}
 

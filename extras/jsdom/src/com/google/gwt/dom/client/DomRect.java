@@ -1,12 +1,20 @@
 package com.google.gwt.dom.client;
 
+import java.io.Serializable;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 
 /**
  * Note - it's really rare that x!=left, y!=top - but they differ when
  * width/height are negative
  */
-public final class DomRect extends Bindable.Fields {
+@Bean(PropertySource.FIELDS)
+@TypeSerialization(propertyOrder = PropertyOrder.FIELD)
+public final class DomRect implements Serializable {
 	public double bottom;
 
 	public double height;

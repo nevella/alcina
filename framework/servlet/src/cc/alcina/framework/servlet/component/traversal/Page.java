@@ -110,13 +110,6 @@ class Page extends Model.All
 
 	private StyleElement styleElement;
 
-	private KeyboardShortcuts shortcuts;
-
-	private KeybindingsHandler keybindingsHandler = new KeybindingsHandler(
-			eventType -> {
-				provideNode().dispatch(eventType, null);
-			}, new CommandContextProviderImpl());
-
 	@Property.Not
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -129,7 +122,7 @@ class Page extends Model.All
 		// FIXME - dirndl - bindings - change addListener to a ModelBinding with
 		// a prebind (setleft) phase....maybe? that might be a bit too
 		// tree-shaped, even for me
-		bindings().addBindHandler(this::bindKeyboardShortcuts);
+		bindings().addBindHandler(ui::bindKeyboardShortcuts);
 		/*
 		 * The traversl path can be specified by say the url
 		 * /traversal?path=/traversal/0.1
@@ -320,14 +313,6 @@ class Page extends Model.All
 			commandContexts.add(FlightEventCommand.CommandContext.class);
 			return commandContexts;
 		}
-	}
-
-	private void bindKeyboardShortcuts(boolean bound) {
-		if (bound) {
-			shortcuts = new KeyboardShortcuts();
-			Event.addNativePreviewHandler(shortcuts);
-		}
-		shortcuts.deltaHandler(keybindingsHandler, bound);
 	}
 
 	@Override

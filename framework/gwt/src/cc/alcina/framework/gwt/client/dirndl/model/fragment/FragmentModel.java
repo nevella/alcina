@@ -150,6 +150,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		});
 	}
 
+	@Override
+	public String toStringTree() {
+		return fragmentRoot.toStringTree();
+	}
+
 	public void addModelled(Class<? extends FragmentNode> type) {
 		addModelled(List.of(type));
 	}
@@ -201,9 +206,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	void emitMutationEvent() {
-		NodeEvent.Context.fromNode(rootModel.provideNode())
-				.dispatch(ModelMutation.class, currentModelMutation.getData());
-		currentModelMutation = new ModelMutation();
+		if (currentModelMutation != null) {
+			NodeEvent.Context.fromNode(rootModel.provideNode()).dispatch(
+					ModelMutation.class, currentModelMutation.getData());
+		}
+		currentModelMutation = new ModelMutation(this);
 		eventScheduled = false;
 	}
 
@@ -259,10 +266,14 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	@Override
 	public void onMutation(Mutation event) {
-		currentModelMutation = new ModelMutation(this);
+		emitMutationEvent();
 		// sketch
 		// collate - changes by node
 		for (MutationRecord record : event.records) {
+			/*
+			 * Skip changes made by code to the FragmentModel itself (the FM
+			 * handles those changes as they occur)
+			 */
 			if (record.hasFlag(FlagMutating.class)) {
 				continue;
 			}
@@ -379,12 +390,11 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	public static class ModelMutation
 			extends ModelEvent<ModelMutation.Data, ModelMutation.Handler> {
 		public ModelMutation() {
-			setModel(new Data());
 		}
 
 		public ModelMutation(FragmentModel fragmentModel) {
 			this();
-			getData().fragmentModel = fragmentModel;
+			setModel(new Data(fragmentModel));
 		}
 
 		public void addEntry(FragmentNodeOps parent, Model model, Type type) {
@@ -415,6 +425,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			public List<Entry> entries = new ArrayList<>();
 
 			FragmentModel fragmentModel;
+
+			Data(FragmentModel fragmentModel) {
+				this.fragmentModel = fragmentModel;
+			}
 
 			public void add(Entry entry) {
 				entries.add(entry);

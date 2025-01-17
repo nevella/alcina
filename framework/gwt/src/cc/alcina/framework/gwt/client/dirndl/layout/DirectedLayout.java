@@ -522,6 +522,16 @@ public class DirectedLayout implements AlcinaProcess {
 
 		boolean lastForModel;
 
+		boolean bindingsDisabled;
+
+		public boolean isBindingsDisabled() {
+			return bindingsDisabled;
+		}
+
+		public void setBindingsDisabled(boolean bindingsDisabled) {
+			this.bindingsDisabled = bindingsDisabled;
+		}
+
 		protected Node(ContextResolver resolver, Node parent,
 				AnnotationLocation annotationLocation, Object model,
 				boolean lastForModel) {
@@ -1290,8 +1300,11 @@ public class DirectedLayout implements AlcinaProcess {
 				if (this.binding.from().length() > 0
 						&& model instanceof Bindable) {
 					this.listener = new RemovablePropertyChangeListener(
-							(Bindable) model, this.binding.from(),
-							evt -> setRight());
+							(Bindable) model, this.binding.from(), evt -> {
+								if (!bindingsDisabled) {
+									setRight();
+								}
+							});
 					this.listener.bind();
 				}
 			}

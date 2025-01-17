@@ -115,7 +115,7 @@ import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 import cc.alcina.framework.gwt.client.logic.process.ProcessMetric;
 import cc.alcina.framework.gwt.client.logic.process.ProcessMetric.Observer;
 import cc.alcina.framework.gwt.client.logic.process.ProcessMetrics;
@@ -909,7 +909,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public Response suggest(BoundSuggestOracleRequest request) {
 		try {
 			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
-			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
+			Class<? extends BoundSuggestOracleResponseElement> clazz = (Class<? extends BoundSuggestOracleResponseElement>) Class
 					.forName(request.getTargetClassName());
 			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
 					.handleRequest(clazz, request, request.getHint());

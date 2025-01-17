@@ -67,9 +67,12 @@ public abstract class MessageHandlerServer<PM extends Message>
 			 * Currently romcom doesn't handle non-localdom browser .js mutation
 			 * of the dom - it's planned that it will
 			 */
-			Preconditions.checkState(message.domMutations.isEmpty());
+			env.applyDomMutations(message.domMutations);
 			Preconditions.checkState(message.eventSystemMutations.isEmpty());
-			env.applyLocationMutation(message.locationMutation, false);
+			if (message.locationMutation != null) {
+				env.applyLocationMutation(message.locationMutation, false);
+			}
+			env.applySelectionMutation(message.getSelectionMutation());
 		}
 	}
 

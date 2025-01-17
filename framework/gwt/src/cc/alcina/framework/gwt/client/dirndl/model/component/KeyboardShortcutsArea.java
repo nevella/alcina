@@ -70,9 +70,9 @@ public class KeyboardShortcutsArea extends Model.All
 	}
 
 	public static void show(KeybindingsHandler keybindingsHandler) {
-		Overlay.builder()
+		Overlay.attributes()
 				.withContents(new KeyboardShortcutsArea(keybindingsHandler))
 				.positionViewportCentered().withRemoveOnMouseDownOutside(true)
-				.build().open();
+				.create().open();
 	}
 }

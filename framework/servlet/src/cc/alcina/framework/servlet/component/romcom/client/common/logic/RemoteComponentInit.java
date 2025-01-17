@@ -1,7 +1,10 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
+import java.util.List;
+
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
@@ -43,6 +46,8 @@ public class RemoteComponentInit implements NativePreviewHandler {
 		 * correctly, the general case is not
 		 */
 		LocalDom.topicPublishException().add(this::onLocalDomException);
+		LocalDom.topicMutationsAppliedToLocal()
+				.add(this::onMutationsAppliedToLocal);
 		ClientRpc.get().transportLayer.session = ReflectiveSerializer
 				.deserializeRpc(ClientUtils.wndString(
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
@@ -63,11 +68,17 @@ public class RemoteComponentInit implements NativePreviewHandler {
 		ClientRpc.send(processingException);
 	}
 
+	void onMutationsAppliedToLocal(List<MutationRecord> mutationRecords) {
+		Message.Mutations mutations = new Message.Mutations();
+		mutations.domMutations = mutationRecords;
+		ClientRpc.send(mutations);
+	}
+
 	// FIXME - dirndl - this can just be sent via normal event creation (ehich
 	// now handles window events)
 	void onPageHideNativeEvent() {
 		Event event = new Event(BrowserEvents.PAGEHIDE);
-		ProtocolMessageHandlerClient.dispatchEventMessage(event, null, false);
+		ClientEventDispatch.dispatchEventMessage(event, null, false);
 	}
 
 	final native void initWindowListeners() /*-{
@@ -79,7 +90,7 @@ public class RemoteComponentInit implements NativePreviewHandler {
 
 	@Override
 	public void onPreviewNativeEvent(NativePreviewEvent event) {
-		ProtocolMessageHandlerClient.dispatchEventMessage(
-				(Event) event.getNativeEvent(), null, true);
+		ClientEventDispatch.dispatchEventMessage((Event) event.getNativeEvent(),
+				null, true);
 	}
 }

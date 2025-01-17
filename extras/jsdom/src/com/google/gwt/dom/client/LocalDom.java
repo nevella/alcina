@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -78,12 +79,13 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  */
 public class LocalDom implements ContextFrame {
-	// FIXME - remcom - move to Document
 	public int maxCharsPerTextNode = 65536;
 
-	public Topic<Exception> topicPublishException;
+	Topic<Exception> topicPublishException;
 
-	public Topic<String> topicUnableToParse;
+	Topic<String> topicUnableToParse;
+
+	Topic<List<MutationRecord>> topicMutationsAppliedToLocal;
 
 	Topic<Exception> topicReportException;
 
@@ -418,14 +420,15 @@ public class LocalDom implements ContextFrame {
 
 	boolean markNonStructuralNodesAsSyncedOnSync;
 
-	AttachIds domIds;
+	AttachIds attachIds;
 
 	LocalDom() {
 		topicPublishException = Topic.create();
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
+		topicMutationsAppliedToLocal = Topic.create();
 		topicReportException.add(this::handleReportedException);
-		domIds = new AttachIds();
+		attachIds = new AttachIds();
 	}
 
 	Node createAndInsertAfter(Node parentNode, Node previousSibling,
@@ -595,7 +598,7 @@ public class LocalDom implements ContextFrame {
 				// noop, just trigger a finally flush of mutations
 			});
 		}
-		domIds.releaseRemoved();
+		attachIds.releaseRemoved();
 	}
 
 	void handleReportedException(Exception exception) {
@@ -718,7 +721,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	void localToRemoteInner(Element element, String markup) {
-		IdList subtreeIds = domIds.getSubtreeIds(element);
+		IdList subtreeIds = attachIds.getSubtreeIds(element);
 		pendingSync.remove(element);
 		MarkupToken markupToken = new MarkupToken(element, markup, subtreeIds);
 		new MarkupJso().markup(markupToken);
@@ -742,7 +745,7 @@ public class LocalDom implements ContextFrame {
 				Preconditions.checkState(childCount == 1);
 			} else {
 				String localMarkup = local.getInnerHTML();
-				IdList subtreeIds = domIds.getSubtreeIds(element);
+				IdList subtreeIds = attachIds.getSubtreeIds(element);
 				MarkupToken markupToken = new MarkupToken(element, localMarkup,
 						subtreeIds);
 				new MarkupJso().markup(markupToken);
@@ -768,6 +771,8 @@ public class LocalDom implements ContextFrame {
 			if (!element.isAttached()) {
 				return;
 			} else {
+				// FIXME - localdom - handle empty text nodes here - possibly by
+				// reverting to non-markup if we encounter any
 				remoteMutations.emitInnerMarkupMutation(element);
 				linkSubtreeToAttachIdRemotes(element);
 			}
@@ -796,7 +801,7 @@ public class LocalDom implements ContextFrame {
 				throw new IllegalStateException(
 						"Remote should always be registered");
 			} else {
-				Node node = domIds.getNode(new AttachId(attachId));
+				Node node = attachIds.getNode(new AttachId(attachId));
 				if (node == null) {
 					// removed from localdom, but remotedom removal still
 					// pending
@@ -923,12 +928,16 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public void applyPreRemovalAttachId(MutationNode mutationNode) {
-			domIds.applyPreRemovalAttachId(mutationNode.node,
+			attachIds.applyPreRemovalAttachId(mutationNode.node,
 					mutationNode.attachId);
 		}
 
-		public void putRemote(Node node, NodeAttachId nodeAttachId) {
-			node.putRemote(nodeAttachId);
+		public void putRemoteAttachId(Node node) {
+			ClientDomNode remote = node.remote();
+			if (remote != null && remote.getAttachId() == node.getAttachId()) {
+				return;
+			}
+			node.putRemote(NodeAttachId.create(node));
 		}
 
 		public void setDetached(Node node) {
@@ -936,7 +945,7 @@ public class LocalDom implements ContextFrame {
 		}
 
 		public Node getNode(int attachId) {
-			return domIds.getNode(new AttachId(attachId));
+			return attachIds.getNode(new AttachId(attachId));
 		}
 
 		public void insertAttachedBefore(Node newChild, Node refChild) {
@@ -957,6 +966,14 @@ public class LocalDom implements ContextFrame {
 		public Node remoteToLocal(NodeJso nodeJso) {
 			return NodeJso.toNode(nodeJso);
 		}
+
+		public void onRemoteMutationsApplied(List<MutationRecord> records,
+				boolean hadException) {
+			if (!hadException) {
+				records.forEach(MutationRecord::populateAttachIds);
+				topicMutationsAppliedToLocal.publish(records);
+			}
+		}
 	}
 
 	/*
@@ -965,6 +982,8 @@ public class LocalDom implements ContextFrame {
 	 */
 	public class AttachIdRepresentations {
 		public void applyEvent(DomEventData eventData) {
+			boolean selectionEvent = Objects.equals(eventData.event.getType(),
+					BrowserEvents.SELECTIONCHANGE);
 			try {
 				EventTarget eventTarget = eventData.event.getEventTarget();
 				switch (eventTarget.type) {
@@ -985,22 +1004,26 @@ public class LocalDom implements ContextFrame {
 					return;
 				}
 				case document:
+					if (!selectionEvent) {
+						return;
+					}
+					break;
 				case other:
 					// not currently handled, could be implemented
 					return;
 				case element:
 					// continue method, most common case
+					if (!Element.is(eventTarget)) {
+						// event target (client) has been removed from the
+						// canonical dom (server)
+						return;
+					}
 					break;
 				}
-				if (!Element.is(eventTarget)) {
-					// event target (client) has been removed from the
-					// canonical dom (server)
-					return;
-				}
-				Element target = Element.as(eventTarget);
 				if (eventData.preview) {
 					DOM.previewEvent(eventData.event);
 				} else {
+					Element target = Element.as(eventTarget);
 					Element firstReceiver = (Element) eventData.firstReceiver
 							.node();
 					if (firstReceiver == null) {
@@ -1060,12 +1083,16 @@ public class LocalDom implements ContextFrame {
 		return get().topicUnableToParse;
 	}
 
+	public static Topic<List<MutationRecord>> topicMutationsAppliedToLocal() {
+		return get().topicMutationsAppliedToLocal;
+	}
+
 	void onAttach(Node node) {
-		domIds.onAttach(node);
+		attachIds.onAttach(node);
 	}
 
 	void onDetach(Node node) {
-		domIds.onDetach(node);
+		attachIds.onDetach(node);
 	}
 
 	static boolean wasRemoved(ElementJso elemJso) {
@@ -1077,7 +1104,7 @@ public class LocalDom implements ContextFrame {
 		if (attachId == 0) {
 			return true;
 		}
-		Node node = domIds.getNode(new AttachId(attachId));
+		Node node = attachIds.getNode(new AttachId(attachId));
 		return node == null;
 	}
 
@@ -1107,10 +1134,10 @@ public class LocalDom implements ContextFrame {
 		if (elem.linkedAndNotPending()) {
 			ensurePending(elem);
 		}
-		domIds.readFromIdList(elem, idList);
+		attachIds.readFromIdList(elem, idList);
 		elem.local().setInnerHTML(html);
 		try {
-			domIds.verifyIdList(idList);
+			attachIds.verifyIdList(idList);
 		} catch (RuntimeException e) {
 			String remoteHtml = elem.jsoRemote().getInnerHTML0();
 			String localHtml = elem.local().getInnerHTML();

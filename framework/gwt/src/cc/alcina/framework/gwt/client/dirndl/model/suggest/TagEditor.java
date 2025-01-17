@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Editor;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.SuggestorEvents.EditorAsk;
@@ -59,6 +60,8 @@ public class TagEditor extends Model implements Suggestor.Editor,
 		String textContent = inputContainer.streamChildren()
 				.filter(n -> n.getNodeType() == Node.TEXT_NODE)
 				.map(Node::getTextContent).collect(Collectors.joining());
+		textContent = textContent.replace(ZeroWidthCursorTarget.ZWS_CONTENT,
+				"");
 		return textContent;
 	}
 

@@ -33,7 +33,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser
 import cc.alcina.framework.gwt.client.gwittir.renderer.ReflectInstantiableToStringRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracle;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 
 @Reflected
 /**
@@ -189,23 +189,23 @@ public class DomainObjectSuggestCustomiser
 
 		boolean showOnFocus() default false;
 
-		Class<? extends BoundSuggestOracleResponseType> targetClass();
+		Class<? extends BoundSuggestOracleResponseElement> targetClass();
 	}
 
 	@Reflected
 	public static class BoundSuggestOracleResponseTypeRenderer
-			implements Renderer<BoundSuggestOracleResponseType, String> {
+			implements Renderer<BoundSuggestOracleResponseElement, String> {
 		@Override
-		public String render(BoundSuggestOracleResponseType o) {
+		public String render(BoundSuggestOracleResponseElement o) {
 			return o == null ? null : o.toSuggestionResultString();
 		}
 	}
 
 	@Reflected
 	public static class BoundSuggestOracleResponseTypeSuggestionRenderer
-			implements Renderer<BoundSuggestOracleResponseType, String> {
+			implements Renderer<BoundSuggestOracleResponseElement, String> {
 		@Override
-		public String render(BoundSuggestOracleResponseType o) {
+		public String render(BoundSuggestOracleResponseElement o) {
 			return o == null ? null : o.toSuggestionString();
 		}
 	}

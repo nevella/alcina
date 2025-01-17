@@ -23,6 +23,7 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.NodeAttachId;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
+import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
@@ -269,7 +270,9 @@ class Environment {
 
 		@Override
 		public void onMutation(MutationRecord mutationRecord) {
-			runWithMutations(() -> mutations.domMutations.add(mutationRecord));
+			runWithMutations(() -> {
+				mutations.addDomMutation(mutationRecord);
+			});
 		}
 
 		@Override
@@ -413,9 +416,17 @@ class Environment {
 			queue.stop();
 		}
 
-		void applyMutations(List<MutationRecord> mutations) {
+		void applyDomMutations(List<MutationRecord> mutations) {
+			if (mutations.isEmpty()) {
+				return;
+			}
+			// Ax.out("-------==========--------\n");
+			// Ax.out(mutations);
+			// Ax.out("\n-------==========--------\n");
 			queue.invoke(() -> LocalDom.attachIdRepresentations()
 					.applyMutations(mutations, false));
+			// // FIXME - measure (this shouldn't be required)
+			Document.get().domDocument.invalidateLocations();
 		}
 
 		/*
@@ -484,6 +495,9 @@ class Environment {
 
 		void onDomEventMessage(DomEventMessage message) {
 			queue.invoke(() -> {
+				if (message.getSelectionMutation() != null) {
+					applySelectionMutation(message.getSelectionMutation());
+				}
 				document.attachIdRemote()
 						.onRemoteUiContextReceived(message.eventContext);
 				message.events.forEach(eventData -> LocalDom
@@ -501,6 +515,16 @@ class Environment {
 							message.exceptionClassName));
 				});
 			}
+		}
+
+		void applySelectionMutation(SelectionRecord selectionMutation) {
+			if (selectionMutation == null) {
+				return;
+			}
+			queue.invoke(() -> {
+				document.attachIdRemote()
+						.onSelectionMutationReceived(selectionMutation);
+			});
 		}
 	}
 
@@ -641,6 +665,7 @@ class Environment {
 		SchedulerFrame.contextProvider.registerFrame(scheduler);
 		EventFrame.contextProvider.registerFrame(eventFrame);
 		Document.contextProvider.registerFrame(document);
+		Document.get().onDocumentEventSystemInit();
 		GWTBridgeHeadless.inClient.set(true);
 	}
 
@@ -716,8 +741,14 @@ class Environment {
 	}
 
 	void emitMutations() {
+		SelectionRecord pendingSelectionMutation = Document.get()
+				.attachIdRemote().getPendingSelectionMutationAndClear();
+		if (mutations == null && pendingSelectionMutation != null) {
+			mutations = new Message.Mutations();
+		}
 		if (mutations != null) {
 			Document.get().attachIdRemote().flushSinkEventsQueue();
+			mutations.setSelectionMutation(pendingSelectionMutation);
 			queue.sendToClient(mutations);
 			mutations = null;
 		}
@@ -729,8 +760,9 @@ class Environment {
 	}
 
 	private void startup(MessageProcessingToken token, Startup message) {
-		access().applyMutations(message.domMutations);
+		access().applyDomMutations(message.domMutations);
 		access().applyLocationMutation(message.locationMutation, true);
+		access().applySelectionMutation(message.getSelectionMutation());
 		initialiseSettings(message.settings);
 		startClient();
 	}

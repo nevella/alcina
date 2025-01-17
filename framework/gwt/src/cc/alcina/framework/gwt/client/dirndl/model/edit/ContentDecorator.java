@@ -1,32 +1,33 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.BeforeInput;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
+import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.dom.RelativeInputModel;
+import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
@@ -39,17 +40,20 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * <p>
  * The whole process is reasonably complex - and a WIP. Here's a sketch:
  * <ul>
- * <li>User enters some triggering key events - say the '@' key
- * <li>BeforeInput event interception marks the next input event as requiring a
- * check (query - can we just check the input data?)(answer - beforeinput is
- * easier, since it tells us about the delta)
- * <li>Input event interception checks if the state is valid for content
- * decoration (particularly that the cursor (DOM selection) is collapsed) - see
- * {@link #onInput(Input)} for details - and, if checks pass it (the
- * {@link DecoratorNode.Descriptor}):
+ * <li>User enters some triggering key events - say the '@' key - or a
+ * start-of-input if the trigger is empty
+ * <li>A {@link InferredDomEvents.SelectionChanged} event interception instructs
+ * the decorator to check for editable {@link ContentDecorator} generation (and
+ * {@link Suggestor} presentation)
+ * <li>SelectionChanged event interception checks if the state is valid for
+ * content decoration (particularly that the cursor (DOM selection) is
+ * collapsed-ish) - see
+ * {@link #onSelectionChanged(InferredDomEvents.SelectionChanged)} for details -
+ * and, if checks pass it (the {@link DecoratorNode.Descriptor}):
  * <ul>
  * <li>splits the text node if necessary
- * <li>wraps the '@' in a DecoratorNode, e.g. {@code <mention>@</mention>}
+ * <li>wraps the trigger (or start-of-input) in a DecoratorNode, e.g.
+ * {@code <mention>@</mention>}
  * <li>ensures the selection cursor is after the '@'
  * <li>triggers the overlay display
  * </ul>
@@ -102,21 +106,14 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * sides
  */
 @Feature.Ref(Feature_Dirndl_ContentDecorator.class)
-public class ContentDecorator<T>
-		implements DomEvents.BeforeInput.Handler, DomEvents.Input.Handler,
+public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		DomEvents.MouseUp.Handler, DomEvents.KeyDown.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
-		ModelEvents.Commit.Handler {
+		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler {
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
 	}
-
-	/*
-	 * modified by onBeforeInput, determines whether onInput will inspect the
-	 * current dom selection surrounds
-	 */
-	boolean checkNextInput = false;
 
 	/*
 	 * Used to route (keyboard navigation) events from the HasDecorators -> this
@@ -127,14 +124,14 @@ public class ContentDecorator<T>
 	/*
 	 * The decorator node currently being edited
 	 */
-	DecoratorNode<?> decorator;
+	DecoratorNode<?, ?> decorator;
 
 	/*
 	 * The chooser used to edit the current decorator
 	 */
-	DecoratorChooser chooser;
+	DecoratorSuggestions chooser;
 
-	BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider;
+	BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider;
 
 	/*
 	 * The controller responsible for routing dom events to here, etc
@@ -150,7 +147,7 @@ public class ContentDecorator<T>
 	 * Models the characteristics of the decorator - what the trigger key
 	 * sequence is etc
 	 */
-	DecoratorNode.Descriptor<?> descriptor;
+	DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
 	private ContentDecorator(ContentDecorator.Builder builder) {
 		this.descriptor = builder.descriptor;
@@ -158,7 +155,7 @@ public class ContentDecorator<T>
 		this.decoratorParent = builder.decoratorParent;
 	}
 
-	boolean canDecorate(RelativeInputModel relativeInput) {
+	boolean canDecorate(EditSelection relativeInput) {
 		return decoratorParent.canDecorate(relativeInput);
 	}
 
@@ -169,13 +166,6 @@ public class ContentDecorator<T>
 	boolean isSpaceOrLeftBracketish(String characterString) {
 		return characterString != null
 				&& characterString.matches("[ \u200B({\\[]");
-	}
-
-	@Override
-	public void onBeforeInput(BeforeInput event) {
-		NativeBeforeInputEvent nativeBefore = event.getNativeBeforeInputEvent();
-		String data = nativeBefore.getData();
-		checkNextInput = Objects.equals(data, descriptor.triggerSequence());
 	}
 
 	@Override
@@ -207,51 +197,61 @@ public class ContentDecorator<T>
 	 */
 	@Override
 	public void onInput(Input event) {
-		if (checkNextInput) {
-			checkNextInput = false;
-			RelativeInputModel relativeInput = new RelativeInputModel();
-			if (relativeInput.isTriggerable()) {
-				/*
-				 * requires mutations to be processed, so schedule
-				 */
-				Scheduler.get().scheduleFinally(() -> onInput0(relativeInput));
-			}
-		}
+		checkTrigger();
 		topicInput.publish(event);
 	}
 
-	void onInput0(RelativeInputModel relativeInput) {
-		boolean trigger = false;
-		// FIXME - DN -
-		if (!decoratorParent.canDecorate(relativeInput)) {
-		} else {
-			String relativeString = relativeInput.relativeString(-1, 0);
-			if (Objects.equals(relativeString, descriptor.triggerSequence())) {
-				boolean startOfTextNode = relativeInput.getFocusOffset() == 1;
-				String relativeContextLeftString = relativeInput
-						.relativeString(-2, -1);
-				// relativeContextLeftString null check is probably
-				// redundant (since startOfTextNode check will be true
-				// in that case)
-				// but left for clarity - true means cursor is at [start
-				// of contenteditable+1])
-				/*
-				 * this checks that the surrounding text of the entered trigger
-				 * sequence permit decorator insert
-				 */
-				if (relativeContextLeftString == null || startOfTextNode
-						|| isSpaceOrLeftBracketish(relativeContextLeftString)) {
-					trigger = true;
-				}
+	CancelledDecoratorSuggestion cancelledDecoratorSuggestion = new CancelledDecoratorSuggestion();
+
+	class CancelledDecoratorSuggestion {
+	}
+
+	Runnable checkTrigger0Runnable = this::checkTrigger0;
+
+	Runnable validateSelection0Runnable = this::validateSelection0;
+
+	void checkTrigger() {
+		/*
+		 * handling requires mutations to be processed (and FN mutations), so
+		 * defer
+		 */
+		Client.eventBus().queued().lambda(checkTrigger0Runnable).distinct()
+				.deferred().dispatch();
+	}
+
+	/*
+ * @formatter:off
+ * 
+ * - populate the EditSelection
+ * - if collapsed
+ * - if currenttextnode matches:
+ * -- preceding text matches trigger
+ * -- text prior to trigger is ok punctuation (space; start-of-node; left-paren)
+ * - wrap in decorator node
+ * - reposition selection (ROMCOM!)
+ * - show suggestion-choices
+ * 
+ * * @formatter:on
+ */
+	void checkTrigger0() {
+		validateSelection0();
+		EditSelection selection = new EditSelection();
+		if (selection.isTriggerable()) {
+			validateSelection0();
+			String triggerSequence = null;
+			if (!decoratorParent.canDecorate(selection)) {
+			} else {
+				triggerSequence = descriptor.getTriggerSequence(selection);
 			}
-		}
-		// if triggerable, wrap in the decorator tag (possiby splitting
-		// the source text node) and connect the suggestor overlay
-		// split
-		if (trigger) {
-			decorator = descriptor.splitAndWrap(relativeInput,
-					decoratorParent.provideFragmentModel());
-			showOverlay(decorator.domNode());
+			// if triggerable, wrap in the decorator tag (possiby splitting
+			// the source text node) and connect the suggestor overlay
+			// split
+			if (triggerSequence != null) {
+				FragmentModel fragmentModel = decoratorParent
+						.provideFragmentModel();
+				decorator = descriptor.splitAndWrap(selection, fragmentModel);
+				showOverlay(decorator.domNode());
+			}
 		}
 	}
 
@@ -284,8 +284,8 @@ public class ContentDecorator<T>
 	public void onReferenceSelected(ReferenceSelected event) {
 		if (event.getContext().getPrevious().node.getModel() == chooser) {
 			decorator.toNonEditable();
-			decorator.putEntity(event.getModel());
-			decorator.positionCursorPostEntitySelection();
+			decorator.putReferenced(event.getModel());
+			decorator.positionCursorPostReferencedSelection();
 		}
 	}
 
@@ -295,13 +295,14 @@ public class ContentDecorator<T>
 		if (parent.tagIs("font")) {
 			// Webkit style-preserving?
 		}
-		Overlay.Builder builder = Overlay.builder();
+		Overlay.Attributes attributes = Overlay.attributes();
 		Element domElement = (Element) decorator.w3cElement();
 		chooser = chooserProvider.apply(this, decorator);
-		builder.withCssClass("decorator-chooser");
-		overlay = builder.dropdown(OverlayPosition.Position.START,
+		attributes.withCssClass("decorator-chooser");
+		attributes.withConsumeSubmit(true);
+		overlay = attributes.dropdown(OverlayPosition.Position.START,
 				domElement.getBoundingClientRect(), (Model) decoratorParent,
-				chooser).build();
+				chooser).create();
 		overlay.open();
 	}
 
@@ -312,26 +313,40 @@ public class ContentDecorator<T>
 			 * Defer helps handle alt-shift-arrow Keyboard cursor selection -
 			 * and also adds a check for chooser creation
 			 */
-			Scheduler.get().scheduleDeferred(() -> {
-				if (chooser == null) {
-					validateSelection0();
-				}
-			});
+			Client.eventBus().queued().lambda(validateSelection0Runnable)
+					.distinct().dispatch();
 		}
 	}
 
 	protected void validateSelection0() {
-		RelativeInputModel relativeInput = new RelativeInputModel();
+		// if ("".isEmpty()) {
+		// return;// FIXME - contentdecorator - ah, this *is* being triggered n
+		// // breakin stuff
+		// }
+		EditSelection selection = new EditSelection();
+		if (!selection.hasSelection()) {
+			return;
+		}
 		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
-		Optional<DomNode> partiallySelectedAncestor = relativeInput
-				.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
-						.getFragmentNode(n) instanceof DecoratorNode);
-		if (partiallySelectedAncestor.isPresent()) {
-			DomNode node = partiallySelectedAncestor.get();
-			DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
-					.getFragmentNode(node);
-			if (!decoratorNode.contentEditable) {
-				relativeInput.extendSelectionToIncludeAllOf(node);
+		List<? extends FragmentNode> list = fragmentModel.stream().toList();
+		fragmentModel.byType(ZeroWidthCursorTarget.class)
+				.forEach(ZeroWidthCursorTarget::unwrapIfContainsNonZwsText);
+		if (chooser == null) {
+			/*
+			 * ensure the selection doesn't contain a partial decoratornode (in
+			 * dom terms it's totally fine, but not in FN terms)
+			 */
+			Optional<DomNode> partiallySelectedAncestor = selection
+					.getFocusNodePartiallySelectedAncestor(n -> fragmentModel
+							.getFragmentNode(n) instanceof DecoratorNode);
+			if (partiallySelectedAncestor.isPresent()) {
+				DomNode node = partiallySelectedAncestor.get();
+				DecoratorNode decoratorNode = (DecoratorNode) fragmentModel
+						.getFragmentNode(node);
+				if (!decoratorNode.contentEditable) {
+					// FIXME - FN
+					selection.extendSelectionToIncludeAllOf(node);
+				}
 			}
 		}
 	}
@@ -339,9 +354,9 @@ public class ContentDecorator<T>
 	public static class Builder<T> {
 		HasDecorators decoratorParent;
 
-		BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider;
+		BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider;
 
-		DecoratorNode.Descriptor<?> descriptor;
+		DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
 		public ContentDecorator build() {
 			Preconditions.checkNotNull(decoratorParent);
@@ -352,7 +367,7 @@ public class ContentDecorator<T>
 		}
 
 		public void setChooserProvider(
-				BiFunction<ContentDecorator, DomNode, DecoratorChooser> chooserProvider) {
+				BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider) {
 			this.chooserProvider = chooserProvider;
 		}
 
@@ -360,8 +375,14 @@ public class ContentDecorator<T>
 			this.decoratorParent = decoratorParent;
 		}
 
-		public void setDescriptor(DecoratorNode.Descriptor<?> descriptor) {
+		public void
+				setDescriptor(DecoratorNode.Descriptor<?, ?, ?> descriptor) {
 			this.descriptor = descriptor;
 		}
+	}
+
+	@Override
+	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
+		checkTrigger();
 	}
 }

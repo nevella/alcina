@@ -319,7 +319,6 @@ public class DomDocument extends DomNode implements Cloneable {
 			Location location = byNode.get(domNode);
 			if (location == null) {
 				// FIXME - measure
-				Ax.err("Missing domNode/location: %s", domNode);
 				invalidateLookups();
 				ensureLookups();
 				location = byNode.get(domNode);
@@ -795,6 +794,11 @@ public class DomDocument extends DomNode implements Cloneable {
 			public int compare(Location l1, Location l2) {
 				return compareIndexOnly(l1, l2);
 			}
+		}
+
+		@Override
+		public void invalidate() {
+			invalidateLookups();
 		}
 	}
 

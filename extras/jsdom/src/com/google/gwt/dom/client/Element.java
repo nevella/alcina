@@ -1368,7 +1368,7 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	public AttachIds.IdList getSubtreeIds() {
-		return getOwnerDocument().localDom.domIds.getSubtreeIds(this);
+		return getOwnerDocument().localDom.attachIds.getSubtreeIds(this);
 	}
 
 	public String getOuterHtml(boolean pretty) {

@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 public class NotBlankValidator implements Validator {
 	@Override
 	public Object validate(Object value) throws ValidationException {
-		if ((value == null) || (value.toString().isEmpty())) {
+		if (value == null || value.toString().isEmpty()) {
 			throw new ValidationException("Required", NotBlankValidator.class);
 		}
 		return value;

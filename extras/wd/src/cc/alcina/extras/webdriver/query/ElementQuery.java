@@ -212,8 +212,8 @@ public class ElementQuery {
 		setSelected(optionText, true);
 	}
 
-	public void sendKeys(String text) {
-		getElement().sendKeys(text);
+	public WebElement sendKeys(String text) {
+		return withElement(elem -> elem.sendKeys(text));
 	}
 
 	public void setSelected(String optionText, boolean selected) {
@@ -315,10 +315,27 @@ public class ElementQuery {
 		}
 	}
 
-	public void withElement(Consumer<WebElement> consumer) {
-		Consumer<List<WebElement>> intermediate = list -> consumer
-				.accept(list.get(0));
-		withElements(intermediate);
+	public WebElement withElement(Consumer<WebElement> consumer) {
+		SingleElementConsumer singleElementConsumer = new SingleElementConsumer(
+				consumer);
+		withElements(singleElementConsumer);
+		return singleElementConsumer.first;
+	}
+
+	class SingleElementConsumer implements Consumer<List<WebElement>> {
+		WebElement first = null;
+
+		Consumer<WebElement> delegate;
+
+		public SingleElementConsumer(Consumer<WebElement> consumer) {
+			this.delegate = consumer;
+		}
+
+		@Override
+		public void accept(List<WebElement> list) {
+			first = Ax.first(list);
+			delegate.accept(first);
+		}
 	}
 
 	void withElements(Consumer<List<WebElement>> consumer) {

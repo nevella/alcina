@@ -95,6 +95,8 @@ public class BrowserEvents {
 
 	public static final String SCROLL = "scroll";
 
+	public static final String SELECTIONCHANGE = "selectionchange";
+
 	public static final String TOUCHCANCEL = "touchcancel";
 
 	public static final String TOUCHEND = "touchend";

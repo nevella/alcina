@@ -192,6 +192,9 @@ public class FormModel extends Model
 	private Model formValidationResult;
 
 	private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
+		if (!Registry.has(CommitToStorageTransformListener.class)) {
+			return;
+		}
 		CommitToStorageTransformListener.get().flush();
 		// FIXME - mvcc.adjunct - need to ask adjuncts
 		if (TransformManager.has() && TransformManager.get()
@@ -460,6 +463,7 @@ public class FormModel extends Model
 				attributes.nodeEditors = args.nodeEditors();
 				attributes.editable = args.editable();
 				attributes.lifecycleControls = args.lifecycleControls();
+				attributes.cancel = args.cancel();
 			}
 			try {
 				LooseContext.push();
@@ -783,6 +787,8 @@ public class FormModel extends Model
 
 		private Bindable model;
 
+		boolean cancel;
+
 		// FIXME - dirndl 1x2 - general property binding rethink. Declarative?
 		// Using propertyenum?
 		public Binding formBinding = new Binding();
@@ -919,8 +925,10 @@ public class FormModel extends Model
 				new Link().withModelEvent(ModelEvents.Submit.class)
 						.withClassName(Link.PRIMARY_ACTION)
 						.withTextFromModelEvent().addTo(formModel.actions);
-				new Link().withModelEvent(ModelEvents.Cancel.class)
-						.withTextFromModelEvent().addTo(formModel.actions);
+				if (state.cancel) {
+					new Link().withModelEvent(ModelEvents.Cancel.class)
+							.withTextFromModelEvent().addTo(formModel.actions);
+				}
 			} else {
 				if (state.presentationModel != null) {
 					ObjectActions actions = Reflections

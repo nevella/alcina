@@ -69,13 +69,13 @@ public class OverlayContainer extends Model implements HasTag,
 
 	@Override
 	public Model rerouteBubbledEventsTo() {
-		if (contents.logicalParent == null) {
+		if (contents.attributes.logicalParent == null) {
 			return null;
 		}
-		if (contents.logicalParent.provideNode() != null) {
-			return contents.logicalParent;
+		if (contents.attributes.logicalParent.provideNode() != null) {
+			return contents.attributes.logicalParent;
 		}
-		return contents.secondaryLogicalEventReroute;
+		return contents.attributes.secondaryLogicalEventReroute;
 	}
 
 	@Directed
