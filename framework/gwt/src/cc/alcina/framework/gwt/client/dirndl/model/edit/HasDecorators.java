@@ -9,6 +9,9 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
@@ -48,6 +51,16 @@ public interface HasDecorators
 		// routes MouseUp events to decorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
 		FragmentModel.Has {
+	/*
+	 * Marker attribute
+	 */
+	@Binding(
+		type = Type.PROPERTY,
+		to = DecoratorBehavior.ExtendKeyboardNavigationAction.ATTR_NAME)
+	default boolean isMagicName() {
+		return true;
+	}
+
 	default boolean canDecorate(EditSelection editSelection) {
 		DomNode focusNode = editSelection.focusNode();
 		FragmentNode fragmentNode = provideFragmentModel()

@@ -598,7 +598,6 @@ public class Event extends NativeEvent {
 		 * Classes overriding this method should still call super.cancel().
 		 */
 		public void cancel() {
-			String type = nativeEvent.getType();
 			isCanceled = true;
 		}
 

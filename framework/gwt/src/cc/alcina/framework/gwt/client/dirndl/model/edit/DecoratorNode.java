@@ -24,21 +24,20 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.HasStringRepresentableType;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
- * 
+ * The base class for a visual model of a decorated measure, such as a hashtag
+ * or mention in a document, or a selected choice in a dropdown suggestor
  */
+@Directed(className = "decorator-node")
 public abstract class DecoratorNode<WT, SR> extends FragmentNode
-		implements HasStringRepresentableType<SR> {
-	@Override
-	public Class<SR> stringRepresentableType() {
-		return Reflections.at(this).getGenericBounds().bounds.get(1);
-	}
-
+		implements HasStringRepresentableType<SR>, FragmentIsolate {
 	/**
 	 * Models the characteristics of the content decorator, such as the key
 	 * sequence which triggers its creation, the class reference modelled, etc
@@ -54,30 +53,6 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		public abstract void onCommit(Commit event);
 
 		public abstract String triggerSequence();
-
-		DN splitAndWrap(EditSelection editSelection,
-				FragmentModel fragmentModel) {
-			String triggerSequence = getTriggerSequence(editSelection);
-			SplitResult splits = editSelection
-					.splitAtTriggerRange(triggerSequence);
-			DomNode splitContents = splits.contents;
-			// may need to flush (to populate FNs) - note for romcom, want to
-			// not force remote
-			LocalDom.flush();
-			FragmentNode textFragment = fragmentModel
-					.getFragmentNode(splitContents);
-			DN created = createNode();
-			created.setContentEditable(true);
-			textFragment.nodes().insertBeforeThis(created);
-			created.nodes().append(textFragment);
-			LocalDom.flush();
-			Selection selection = Document.get().getSelection();
-			Text text = (Text) splits.contents.w3cNode();
-			selection.collapse(text, text.getLength());
-			return created;
-		}
-
-		protected abstract SR toStringRepresentable(WT wrappedType);
 
 		public boolean isTriggerSequence(String potentialTrigger) {
 			return potentialTrigger.startsWith(triggerSequence());
@@ -96,11 +71,51 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 				return matchResult == null ? null : matchResult.getGroup(2);
 			}
 		}
+
+		protected abstract SR toStringRepresentable(WT wrappedType);
+
+		DN splitAndWrap(EditSelection editSelection,
+				FragmentModel fragmentModel) {
+			String triggerSequence = getTriggerSequence(editSelection);
+			SplitResult splits = editSelection
+					.splitAtTriggerRange(triggerSequence);
+			DomNode splitContents = splits.contents;
+			// may need to flush (to populate FNs) - note for romcom, want to
+			// not force remote
+			LocalDom.flush();
+			FragmentNode textFragment = fragmentModel
+					.getFragmentNode(splitContents);
+			FragmentNode parent = textFragment.parent();
+			/*
+			 * key - but it'd be nice to handle more elegantly (?named
+			 * behaviour?)
+			 */
+			if (parent instanceof ZeroWidthCursorTarget) {
+				parent.nodes().strip();
+			}
+			DN created = createNode();
+			created.setContentEditable(true);
+			textFragment.nodes().insertBeforeThis(created);
+			created.nodes().append(textFragment);
+			LocalDom.flush();
+			Selection selection = Document.get().getSelection();
+			Text text = (Text) splits.contents.w3cNode();
+			selection.collapse(text, text.getLength());
+			return created;
+		}
 	}
 
 	@Directed(tag = "span", className = "cursor-target")
 	public static class ZeroWidthCursorTarget extends FragmentNode {
 		public static final String ZWS_CONTENT = "\u200B";
+
+		public static boolean is(String text) {
+			return Objects.equals(text, ZWS_CONTENT);
+		}
+
+		public static boolean isOneOrMore(String text) {
+			return text.matches("\u200B+");
+		}
 
 		@Override
 		public void onFragmentRegistration() {
@@ -142,6 +157,18 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		}
 	}
 
+	/*
+	 * WIP - the internal model of the decorator. Normally this is just a simple
+	 * text node
+	 */
+	class InternalModel extends FragmentModel {
+		InternalModel(Model rootModel) {
+			super(rootModel);
+		}
+	}
+
+	InternalModel internalModel;
+
 	@Binding(
 		type = Type.PROPERTY,
 		to = "contentEditable",
@@ -152,6 +179,19 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 	public String content = "";
 
 	protected SR stringRepresentable;
+
+	@Override
+	public Class<SR> stringRepresentableType() {
+		return Reflections.at(this).getGenericBounds().bounds.get(1);
+	}
+
+	@Override
+	public FragmentModel getFragmentModel() {
+		if (internalModel == null) {
+			internalModel = new InternalModel(this);
+		}
+		return internalModel;
+	}
 
 	public void setStringRepresentable(SR stringRepresentable) {
 		set("stringRepresentable", this.stringRepresentable,
@@ -190,6 +230,10 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 				() -> this.contentEditable = contentEditable);
 	}
 
+	public void toNonEditable() {
+		setContentEditable(false);
+	}
+
 	boolean isValid() {
 		// FIXME - DN server shd validate entity on update. and other
 		// validations (e.g. not contained in a decorator)
@@ -202,14 +246,17 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		if (provideIsUnbound()) {
 			return;// removed
 		}
-		FragmentNode.TextNode textNode = (TextNode) children().findFirst()
-				.get();
-		// TODO - position cursor at the end of the mention, then allow the
+		FragmentNode nextSibling = nodes().nextSibling();
+		// FIXME - fragment.isolate - position cursor at the end of the mention,
+		// then allow the
 		// 'cursor validator' to move it to a correct location
+		//
+		// current:
 		// try positioning cursor immediately after the decorator
 		// guaranteed non-null (due to zws insertion)
-		FragmentNode.TextNode cursorTarget = textNode.fragmentTree()
-				.nextTextNode(true).orElse(null);
+		FragmentNode.TextNode cursorTarget = nextSibling instanceof FragmentNode.TextNode
+				? (FragmentNode.TextNode) nextSibling
+				: nextSibling.fragmentTree().nextTextNode(true).orElse(null);
 		/*
 		 * well - what's the dispatch model for ZWS insertion? Maybe it is
 		 * null...maybe we've lost focus...
@@ -235,10 +282,6 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 			 * from the strip
 			 */
 		}
-	}
-
-	public void toNonEditable() {
-		setContentEditable(false);
 	}
 
 	void ensureSpacers() {

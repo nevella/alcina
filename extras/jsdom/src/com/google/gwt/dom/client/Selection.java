@@ -19,6 +19,8 @@ import java.util.Objects;
 
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
+import cc.alcina.framework.common.client.dom.Location;
+
 /**
  * Models the browser selection object
  *
@@ -141,5 +143,10 @@ public class Selection implements ClientDomSelection {
 
 	public void validate() {
 		local.validate();
+	}
+
+	public Location getAnchorLocation() {
+		return getAnchorNode().asDomNode().asLocation()
+				.createTextRelativeLocation(getAnchorOffset(), false);
 	}
 }

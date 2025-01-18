@@ -690,6 +690,11 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	@Override
+	public boolean hasAttributes() {
+		return local().hasAttributes();
+	}
+
+	@Override
 	public boolean hasClassName(String className) {
 		return local().hasClassName(className);
 	}

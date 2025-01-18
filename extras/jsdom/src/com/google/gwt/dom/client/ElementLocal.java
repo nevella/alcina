@@ -29,6 +29,146 @@ import cc.alcina.framework.common.client.util.IntPair;
 
 // FIXME - dirndl - move all event code from Element to here?
 public class ElementLocal extends NodeLocal implements ClientDomElement {
+	class AttributeMap implements NamedNodeMap {
+		@Override
+		public int getLength() {
+			return attributes.size();
+		}
+
+		@Override
+		public org.w3c.dom.Node getNamedItem(String name) {
+			return new AttrImpl(attributes.entrySet().stream()
+					.filter(e -> e.getKey().equals(name)).findFirst()
+					.orElse(null));
+		}
+
+		@Override
+		public org.w3c.dom.Node getNamedItemNS(String namespaceURI,
+				String localName) throws DOMException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public org.w3c.dom.Node item(int index) {
+			List<String> keys = getAttributeMap().keySet().stream()
+					.collect(Collectors.toList());
+			return getNamedItem(keys.get(index));
+		}
+
+		@Override
+		public org.w3c.dom.Node removeNamedItem(String name)
+				throws DOMException {
+			org.w3c.dom.Node existing = getNamedItem(name);
+			attributes.remove(name);
+			return existing;
+		}
+
+		@Override
+		public org.w3c.dom.Node removeNamedItemNS(String namespaceURI,
+				String localName) throws DOMException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public org.w3c.dom.Node setNamedItem(org.w3c.dom.Node arg)
+				throws DOMException {
+			Preconditions.checkArgument(arg instanceof org.w3c.dom.Attr);
+			attributes.put(arg.getNodeName(), arg.getNodeValue());
+			return getNamedItem(arg.getNodeName());
+		}
+
+		@Override
+		public org.w3c.dom.Node setNamedItemNS(org.w3c.dom.Node arg)
+				throws DOMException {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	static class AttrImpl extends Node implements org.w3c.dom.Attr {
+		Entry<String, String> entry;
+
+		AttrImpl(Map.Entry<String, String> entry) {
+			this.entry = entry;
+		}
+
+		@Override
+		public <T extends JavascriptObjectEquivalent> T cast() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getName() {
+			return entry.getKey();
+		}
+
+		@Override
+		public org.w3c.dom.Element getOwnerElement() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public TypeInfo getSchemaTypeInfo() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean getSpecified() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public String getTextContent() throws DOMException {
+			return getValue();
+		}
+
+		@Override
+		public String getValue() {
+			return entry.getValue();
+		}
+
+		@Override
+		public boolean isId() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public NodeJso jsoRemote() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Node node() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setValue(String value) throws DOMException {
+			entry.setValue(value);
+		}
+
+		@Override
+		protected <T extends NodeLocal> T local() {
+			throw new UnsupportedOperationException();
+		}
+
+		protected void putRemote(ClientDomNode remote) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected <T extends ClientDomNode> T remote() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void resetRemote0() {
+		}
+	}
+
+	enum AttrParseState {
+		START, NAME, EQ, VALUE
+	}
+
 	static transient IntCounter _idCounter = new IntCounter(1);
 
 	private static final RegExp PERMITTED_TAGS = RegExp
@@ -42,6 +182,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	private Element element;
 
+	// this could be lazy (most elements don't have attributes)
 	protected LightMap<String, String> attributes = new LightMap<>();
 
 	boolean requiresSync;
@@ -60,70 +201,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	@Override
 	public final boolean addClassName(String className) {
 		return ClientDomElementStatic.addClassName(this, className);
-	}
-
-	private void appendChildContents(UnsafeHtmlBuilder builder) {
-		if (containsUnescapedText()) {
-			getChildren().stream().forEach(
-					node -> ((TextLocal) node).appendUnescaped(builder));
-		} else {
-			getChildren().stream()
-					.forEach(child -> child.appendOuterHtml(builder));
-		}
-	}
-
-	@Override
-	void appendOuterHtml(UnsafeHtmlBuilder builder) {
-		builder.appendHtmlConstantNoCheck("<");
-		builder.appendHtmlConstant(tagName);
-		String styleAttributeValue = attributes.get("style");
-		if (!attributes.isEmpty()) {
-			boolean applyStyleAttribute = !element.hasStyle()
-					|| hasUnparsedStyle && getStyle().local.isEmpty();
-			attributes.entrySet().forEach(e -> {
-				// ignore if we have a valid style object
-				if (e.getKey().equals("style") && !applyStyleAttribute) {
-					return;
-				}
-				builder.appendHtmlConstantNoCheck(" ");
-				// invalid attr names will die on the voine
-				builder.appendEscaped(e.getKey());
-				builder.appendHtmlConstantNoCheck("=\"");
-				builder.appendEscaped(e.getValue());
-				builder.appendHtmlConstantNoCheck("\"");
-			});
-		}
-		if (element.getStyle() != null
-				&& !element.getStyle().local().isEmpty()) {
-			builder.appendHtmlConstantNoCheck(" style=\"");
-			if (Ax.notBlank(styleAttributeValue)) {
-				builder.appendUnsafeHtml(styleAttributeValue);
-				builder.appendHtmlConstantNoCheck("; ");
-			}
-			((StyleLocal) element.getStyle().local()).properties.entrySet()
-					.forEach(e -> {
-						builder.appendEscaped(
-								LocalDom.declarativeCssName(e.getKey()));
-						builder.appendHtmlConstantNoCheck(":");
-						builder.appendEscaped(e.getValue());
-						builder.appendHtmlConstantNoCheck("; ");
-					});
-			builder.appendHtmlConstantNoCheck("\"");
-		}
-		builder.appendHtmlConstantNoCheck(">");
-		builder.modifyDepth(1);
-		appendChildContents(builder);
-		builder.modifyDepth(-1);
-		if (!(builder.htmlTags && HtmlParser.isSelfClosingTag(tagName))) {
-			builder.appendHtmlConstantNoCheck("</");
-			builder.appendHtmlConstant(tagName);
-			builder.appendHtmlConstantNoCheck(">");
-		}
-	}
-
-	@Override
-	void appendTextContent(StringBuilder builder) {
-		getChildren().stream().forEach(node -> node.appendTextContent(builder));
 	}
 
 	@Override
@@ -149,17 +226,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 					.forEach(cn -> clone.appendChild(cn.cloneNode(true)));
 		}
 		return clone;
-	}
-
-	private boolean containsUnescapedText() {
-		if (tagName.equalsIgnoreCase("style")
-				|| tagName.equalsIgnoreCase("script")) {
-			Preconditions.checkState(getChildren().stream()
-					.allMatch(c -> c.getNodeType() == Node.TEXT_NODE));
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	public Element createOrReturnChild(String tagName) {
@@ -216,30 +282,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	public LightMap<String, String> getAttributeMap() {
-		return attributes;
-	}
-
-	Map<String, String> getAttributeMapIncludingStyles() {
-		if (element.getStyle() == null
-				|| element.getStyle().local().isEmpty()) {
-			return this.attributes;
-		}
-		LightMap<String, String> attributes = this.attributes.clone();
-		StringBuilder styleBuilder = new StringBuilder();
-		String styleAttributeValue = attributes.get("style");
-		if (Ax.notBlank(styleAttributeValue)) {
-			styleBuilder.append(styleAttributeValue);
-			styleBuilder.append("; ");
-		}
-		((StyleLocal) element.getStyle().local()).properties.entrySet()
-				.forEach(e -> {
-					styleBuilder
-							.append(LocalDom.declarativeCssName(e.getKey()));
-					styleBuilder.append(":");
-					styleBuilder.append(e.getValue());
-					styleBuilder.append("; ");
-				});
-		attributes.put("style", styleBuilder.toString());
 		return attributes;
 	}
 
@@ -496,27 +538,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	@Override
 	public Node node() {
 		return element;
-	}
-
-	int orSunkEventsOfAllChildren(int sunk) {
-		for (NodeLocal child : getChildren()) {
-			if (child instanceof ElementLocal) {
-				sunk = ((ElementLocal) child).orSunkEventsOfAllChildren(sunk);
-			}
-		}
-		sunk |= eventBits;
-		return sunk;
-	}
-
-	void orSunkBitlessEventsOfAllChildren(Set<String> sunk) {
-		for (NodeLocal child : getChildren()) {
-			if (child instanceof ElementLocal) {
-				((ElementLocal) child).orSunkBitlessEventsOfAllChildren(sunk);
-			}
-		}
-		if (bitlessEvents != null) {
-			sunk.addAll(bitlessEvents);
-		}
 	}
 
 	public void putElement(Element element) {
@@ -782,146 +803,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		return format.toString();
 	}
 
-	class AttributeMap implements NamedNodeMap {
-		@Override
-		public int getLength() {
-			return attributes.size();
-		}
-
-		@Override
-		public org.w3c.dom.Node getNamedItem(String name) {
-			return new AttrImpl(attributes.entrySet().stream()
-					.filter(e -> e.getKey().equals(name)).findFirst()
-					.orElse(null));
-		}
-
-		@Override
-		public org.w3c.dom.Node getNamedItemNS(String namespaceURI,
-				String localName) throws DOMException {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public org.w3c.dom.Node item(int index) {
-			List<String> keys = getAttributeMap().keySet().stream()
-					.collect(Collectors.toList());
-			return getNamedItem(keys.get(index));
-		}
-
-		@Override
-		public org.w3c.dom.Node removeNamedItem(String name)
-				throws DOMException {
-			org.w3c.dom.Node existing = getNamedItem(name);
-			attributes.remove(name);
-			return existing;
-		}
-
-		@Override
-		public org.w3c.dom.Node removeNamedItemNS(String namespaceURI,
-				String localName) throws DOMException {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public org.w3c.dom.Node setNamedItem(org.w3c.dom.Node arg)
-				throws DOMException {
-			Preconditions.checkArgument(arg instanceof org.w3c.dom.Attr);
-			attributes.put(arg.getNodeName(), arg.getNodeValue());
-			return getNamedItem(arg.getNodeName());
-		}
-
-		@Override
-		public org.w3c.dom.Node setNamedItemNS(org.w3c.dom.Node arg)
-				throws DOMException {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	static class AttrImpl extends Node implements org.w3c.dom.Attr {
-		Entry<String, String> entry;
-
-		AttrImpl(Map.Entry<String, String> entry) {
-			this.entry = entry;
-		}
-
-		@Override
-		public <T extends JavascriptObjectEquivalent> T cast() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String getName() {
-			return entry.getKey();
-		}
-
-		@Override
-		public org.w3c.dom.Element getOwnerElement() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public TypeInfo getSchemaTypeInfo() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean getSpecified() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String getTextContent() throws DOMException {
-			return getValue();
-		}
-
-		@Override
-		public String getValue() {
-			return entry.getValue();
-		}
-
-		@Override
-		public boolean isId() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public NodeJso jsoRemote() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		protected <T extends NodeLocal> T local() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Node node() {
-			throw new UnsupportedOperationException();
-		}
-
-		protected void putRemote(ClientDomNode remote) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		protected <T extends ClientDomNode> T remote() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		protected void resetRemote0() {
-		}
-
-		@Override
-		public void setValue(String value) throws DOMException {
-			entry.setValue(value);
-		}
-	}
-
-	enum AttrParseState {
-		START, NAME, EQ, VALUE
-	}
-
 	@Override
 	public DomRect getBoundingClientRect() {
 		throw new UnsupportedOperationException(
@@ -939,6 +820,120 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 				"Unimplemented method 'setSelectionRange'");
 	}
 
+	@Override
+	public IntPair getScrollPosition() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void scrollIntoView(int hPad, int vPad) {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'scrollIntoView'");
+	}
+
+	public boolean hasAttributes() {
+		return !attributes.isEmpty();
+	}
+
+	@Override
+	void appendOuterHtml(UnsafeHtmlBuilder builder) {
+		builder.appendHtmlConstantNoCheck("<");
+		builder.appendHtmlConstant(tagName);
+		String styleAttributeValue = attributes.get("style");
+		if (!attributes.isEmpty()) {
+			boolean applyStyleAttribute = !element.hasStyle()
+					|| hasUnparsedStyle && getStyle().local.isEmpty();
+			attributes.entrySet().forEach(e -> {
+				// ignore if we have a valid style object
+				if (e.getKey().equals("style") && !applyStyleAttribute) {
+					return;
+				}
+				builder.appendHtmlConstantNoCheck(" ");
+				// invalid attr names will die on the voine
+				builder.appendEscaped(e.getKey());
+				builder.appendHtmlConstantNoCheck("=\"");
+				builder.appendEscaped(e.getValue());
+				builder.appendHtmlConstantNoCheck("\"");
+			});
+		}
+		if (element.getStyle() != null
+				&& !element.getStyle().local().isEmpty()) {
+			builder.appendHtmlConstantNoCheck(" style=\"");
+			if (Ax.notBlank(styleAttributeValue)) {
+				builder.appendUnsafeHtml(styleAttributeValue);
+				builder.appendHtmlConstantNoCheck("; ");
+			}
+			((StyleLocal) element.getStyle().local()).properties.entrySet()
+					.forEach(e -> {
+						builder.appendEscaped(
+								LocalDom.declarativeCssName(e.getKey()));
+						builder.appendHtmlConstantNoCheck(":");
+						builder.appendEscaped(e.getValue());
+						builder.appendHtmlConstantNoCheck("; ");
+					});
+			builder.appendHtmlConstantNoCheck("\"");
+		}
+		builder.appendHtmlConstantNoCheck(">");
+		builder.modifyDepth(1);
+		appendChildContents(builder);
+		builder.modifyDepth(-1);
+		if (!(builder.htmlTags && HtmlParser.isSelfClosingTag(tagName))) {
+			builder.appendHtmlConstantNoCheck("</");
+			builder.appendHtmlConstant(tagName);
+			builder.appendHtmlConstantNoCheck(">");
+		}
+	}
+
+	@Override
+	void appendTextContent(StringBuilder builder) {
+		getChildren().stream().forEach(node -> node.appendTextContent(builder));
+	}
+
+	Map<String, String> getAttributeMapIncludingStyles() {
+		if (element.getStyle() == null
+				|| element.getStyle().local().isEmpty()) {
+			return this.attributes;
+		}
+		LightMap<String, String> attributes = this.attributes.clone();
+		StringBuilder styleBuilder = new StringBuilder();
+		String styleAttributeValue = attributes.get("style");
+		if (Ax.notBlank(styleAttributeValue)) {
+			styleBuilder.append(styleAttributeValue);
+			styleBuilder.append("; ");
+		}
+		((StyleLocal) element.getStyle().local()).properties.entrySet()
+				.forEach(e -> {
+					styleBuilder
+							.append(LocalDom.declarativeCssName(e.getKey()));
+					styleBuilder.append(":");
+					styleBuilder.append(e.getValue());
+					styleBuilder.append("; ");
+				});
+		attributes.put("style", styleBuilder.toString());
+		return attributes;
+	}
+
+	int orSunkEventsOfAllChildren(int sunk) {
+		for (NodeLocal child : getChildren()) {
+			if (child instanceof ElementLocal) {
+				sunk = ((ElementLocal) child).orSunkEventsOfAllChildren(sunk);
+			}
+		}
+		sunk |= eventBits;
+		return sunk;
+	}
+
+	void orSunkBitlessEventsOfAllChildren(Set<String> sunk) {
+		for (NodeLocal child : getChildren()) {
+			if (child instanceof ElementLocal) {
+				((ElementLocal) child).orSunkBitlessEventsOfAllChildren(sunk);
+			}
+		}
+		if (bitlessEvents != null) {
+			sunk.addAll(bitlessEvents);
+		}
+	}
+
 	/*
 	 * During initialisation, construct the parent->child binding (without
 	 * remote side-effects or attach)
@@ -951,14 +946,24 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		parentNode.getChildren().add(this);
 	}
 
-	@Override
-	public IntPair getScrollPosition() {
-		throw new UnsupportedOperationException();
+	private void appendChildContents(UnsafeHtmlBuilder builder) {
+		if (containsUnescapedText()) {
+			getChildren().stream().forEach(
+					node -> ((TextLocal) node).appendUnescaped(builder));
+		} else {
+			getChildren().stream()
+					.forEach(child -> child.appendOuterHtml(builder));
+		}
 	}
 
-	@Override
-	public void scrollIntoView(int hPad, int vPad) {
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'scrollIntoView'");
+	private boolean containsUnescapedText() {
+		if (tagName.equalsIgnoreCase("style")
+				|| tagName.equalsIgnoreCase("script")) {
+			Preconditions.checkState(getChildren().stream()
+					.allMatch(c -> c.getNodeType() == Node.TEXT_NODE));
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

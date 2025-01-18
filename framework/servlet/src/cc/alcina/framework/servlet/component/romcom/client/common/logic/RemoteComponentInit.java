@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.AttributeBehaviorHandler.BehaviorRegistry;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -29,6 +30,7 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtoc
 public class RemoteComponentInit implements NativePreviewHandler {
 	public void init() {
 		Event.addNativePreviewHandler(this);
+		BehaviorRegistry.get().init(true);
 		initWindowListeners();
 		History.addValueChangeHandler(hash -> {
 			if (!RemoteObjectModelComponentState.get().firingLocationMutation) {
@@ -90,7 +92,7 @@ public class RemoteComponentInit implements NativePreviewHandler {
 
 	@Override
 	public void onPreviewNativeEvent(NativePreviewEvent event) {
-		ClientEventDispatch.dispatchEventMessage((Event) event.getNativeEvent(),
-				null, true);
+		Event nativeEvent = (Event) event.getNativeEvent();
+		ClientEventDispatch.dispatchEventMessage(nativeEvent, null, true);
 	}
 }

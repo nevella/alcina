@@ -71,10 +71,10 @@ public class EditSelection {
 		hasEditSelection = true;
 		focusOffset = selection.getFocusOffset();
 		focusLocation = focusDomNode.asLocation()
-				.createRelativeLocation(focusOffset, false);
+				.createTextRelativeLocation(focusOffset, false);
 		anchorOffset = selection.getAnchorOffset();
 		anchorLocation = anchorDomNode.asLocation()
-				.createRelativeLocation(anchorOffset, false);
+				.createTextRelativeLocation(anchorOffset, false);
 		range = new Location.Range(anchorLocation, focusLocation);
 		if (anchorDomNode.isText() && collapsed) {
 			// non-rtl

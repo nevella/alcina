@@ -3,8 +3,10 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
 
@@ -24,10 +26,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
@@ -36,7 +40,12 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
 /**
  * <p>
  * This class supports decoration of a document 'measure' (range). The first
- * uses are '@ mentions' and '# tags'.
+ * uses are '@ mentions' and '# tags'. It's possible that these 'decorations'
+ * will always be logically a signifier that the decorated node references
+ * something (an entity, a suggestion choice) - so the whole shebang could be
+ * named "Reference" - 'ContentReference' etc rather than "Decorator". But
+ * "Decorator" is about the _visual_ representation - which is in line with the
+ * Dirndl naming convention - 'what it is, not what it does'.
  * <p>
  * The whole process is reasonably complex - and a WIP. Here's a sketch:
  * <ul>
@@ -60,7 +69,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
  * <li>The overlay
  * <ul>
  * <li>Generally displays a {@link Suggestor}, with the filter input that
- * restricts the suggestions display being the decorator tag (in the
+ * restricts the suggestions display being the decorator tag contents (in the
  * ContentEditable DOM subtree)
  * <li>Routes up/down/enter/escape keys (cursor/focus in the CE) to the
  * Suggestor
@@ -150,6 +159,11 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
 	private ContentDecorator(ContentDecorator.Builder builder) {
+		/*
+		 * AttributeBehaviorHandler registration is required
+		 */
+		Preconditions.checkState(
+				AttributeBehaviorHandler.BehaviorRegistry.isInitialised());
 		this.descriptor = builder.descriptor;
 		this.chooserProvider = builder.chooserProvider;
 		this.decoratorParent = builder.decoratorParent;
@@ -214,6 +228,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		/*
 		 * handling requires mutations to be processed (and FN mutations), so
 		 * defer
+		 * 
+		 * FIXME - fn.isolate - check if this causes two sends in romcom. It may
+		 * not, if it does, look at an 'after scheduleFinally' queue
 		 */
 		Client.eventBus().queued().lambda(checkTrigger0Runnable).distinct()
 				.deferred().dispatch();
@@ -236,7 +253,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	void checkTrigger0() {
 		validateSelection0();
 		EditSelection selection = new EditSelection();
-		if (selection.isTriggerable()) {
+		if (selection.isTriggerable() && chooser == null) {
 			validateSelection0();
 			String triggerSequence = null;
 			if (!decoratorParent.canDecorate(selection)) {
@@ -319,10 +336,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	}
 
 	protected void validateSelection0() {
-		// if ("".isEmpty()) {
-		// return;// FIXME - contentdecorator - ah, this *is* being triggered n
-		// // breakin stuff
-		// }
 		EditSelection selection = new EditSelection();
 		if (!selection.hasSelection()) {
 			return;
@@ -348,7 +361,45 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 					selection.extendSelectionToIncludeAllOf(node);
 				}
 			}
+			/*
+			 * Strip any editable DNs (they'll have not been assigned a
+			 * referent/representable)
+			 */
+			fragmentModel.byTypeAssignable(DecoratorNode.class)
+					.filter(dn -> dn.contentEditable)
+					.forEach(this::stripRemovingZws);
+			fragmentModel.byTypeAssignable(ZeroWidthCursorTarget.class)
+					.forEach(zwct -> {
+						FragmentNode previousSibling = zwct.nodes()
+								.previousSibling();
+						if (previousSibling instanceof ZeroWidthCursorTarget) {
+							previousSibling.nodes().removeFromParent();
+						}
+					});
 		}
+	}
+
+	void stripRemovingZws(FragmentNode node) {
+		List<? extends FragmentNode> children = node.children()
+				.collect(Collectors.toList());
+		if (node instanceof FragmentIsolate) {
+			children = ((FragmentIsolate) node).getFragmentModel().children()
+					.collect(Collectors.toList());
+		}
+		node.nodes().strip();
+		children.stream()
+				.filter(child -> child instanceof FragmentNode.TextNode)
+				.forEach(child -> {
+					FragmentNode.TextNode textNode = (TextNode) child;
+					String value = textNode.getValue();
+					String newValue = value
+							.replace(ZeroWidthCursorTarget.ZWS_CONTENT, "");
+					if (newValue.isEmpty()) {
+						child.nodes().removeFromParent();
+					} else {
+						textNode.setValue(newValue);
+					}
+				});
 	}
 
 	public static class Builder<T> {

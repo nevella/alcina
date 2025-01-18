@@ -39,6 +39,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.Transformer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer;
 
@@ -94,6 +95,9 @@ public abstract class FragmentNode extends Model.Fields
 
 	@Override
 	public Stream<? extends FragmentNode> children() {
+		if (this instanceof FragmentIsolate) {
+			return Stream.empty();
+		}
 		List<Node> childNodes = provideChildNodes();
 		return childNodes == null ? Stream.empty()
 				: (Stream<FragmentNode>) (Stream<?>) childNodes.stream()

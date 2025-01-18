@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.HasNativeEvent;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -110,6 +111,28 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		public static Context fromNode(Node node) {
 			Context context = new Context(node);
 			return context;
+		}
+
+		/**
+		 * Utility methods for the event
+		 */
+		public class Util {
+			/**
+			 * Should only be called if its known that the NodeEvent was caused
+			 * by a NativeEvent
+			 * 
+			 * @return true if a modifier key is being held down
+			 */
+			public boolean hasKeyboardModifier() {
+				NativeEvent nativeEvent = ((DomEvent) getOriginatingGwtEvent())
+						.getNativeEvent();
+				return nativeEvent.getShiftKey() || nativeEvent.getCtrlKey()
+						|| nativeEvent.getMetaKey() || nativeEvent.getAltKey();
+			}
+		}
+
+		public Util util() {
+			return new Util();
 		}
 
 		private Context previous;

@@ -1,0 +1,119 @@
+package com.google.gwt.dom.client;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Event.NativePreviewEvent;
+import com.google.gwt.user.client.Event.NativePreviewHandler;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
+
+/**
+ * Check if a dom node has a magic attribute set, and if so perform a specific
+ * behavior
+ */
+/**
+ * Perform a few actions client-side that require blocking (such as keyboard
+ * navigation)
+ * 
+ */
+@Registration.Self
+public interface AttributeBehaviorHandler extends NativePreviewHandler {
+	String getMagicAttributeName();
+
+	String getEventType();
+
+	default boolean matches(Element elem) {
+		return elem.hasAttribute(getMagicAttributeName());
+	}
+
+	/**
+	 * Currently this is all or nothing (otherwise it's hard to avoid
+	 * main-app-init dependency on behaviours). It's probably better to
+	 * manipulate the registry to explicitly remove any handlers you don't want,
+	 * rather than have imperative custom initialization.
+	 */
+	@Registration.Singleton
+	public static class BehaviorRegistry implements NativePreviewHandler {
+		public static BehaviorRegistry get() {
+			return Registry.impl(BehaviorRegistry.class);
+		}
+
+		List<AttributeBehaviorHandler> handlers;
+
+		/*
+		 * Used to test uniqueness of magic names
+		 */
+		Set<String> magicAttributeNames;
+
+		Set<String> eventTypes = AlcinaCollections.newUniqueSet();
+
+		/**
+		 * In a romcom context, the server does *not* need to populate the
+		 * handlers (the browser client will)
+		 * 
+		 * @param registerHandlers
+		 */
+		public void init(boolean registerHandlers) {
+			handlers = registerHandlers
+					? Registry.query(AttributeBehaviorHandler.class)
+							.implementations().collect(Collectors.toList())
+					: List.of();
+			magicAttributeNames = new LinkedHashSet<>();
+			addMagicName(NodeAttachId.ATTR_NAME_TRANSMIT_STATE);
+			handlers.stream()
+					.map(AttributeBehaviorHandler::getMagicAttributeName)
+					.forEach(this::addMagicName);
+			handlers.stream().map(AttributeBehaviorHandler::getEventType)
+					.forEach(eventTypes::add);
+			if (registerHandlers) {
+				Event.addNativePreviewHandler(this);
+			}
+		}
+
+		void addMagicName(String name) {
+			Preconditions.checkArgument(magicAttributeNames.add(name));
+		}
+
+		public static boolean isInitialised() {
+			return get().handlers != null;
+		}
+
+		@Override
+		public void onPreviewNativeEvent(NativePreviewEvent event) {
+			if (event.isCanceled()) {
+				return;
+			}
+			Event nativeEvent = (Event) event.getNativeEvent();
+			String type = nativeEvent.getType();
+			if (!eventTypes.contains(type)) {
+				return;
+			}
+			EventTarget eventTarget = nativeEvent.getEventTarget();
+			if (!eventTarget.isElement()) {
+				return;
+			}
+			if (handlers.isEmpty()) {
+				return;
+			}
+			Element targetElement = eventTarget.asElement();
+			Element cursor = targetElement;
+			while (cursor != null) {
+				Element test = cursor;
+				if (test.hasAttributes()) {
+					handlers.stream().filter(h -> h.matches(test))
+							.forEach(h -> h.onPreviewNativeEvent(event));
+				}
+				cursor = cursor.getParentElement();
+			}
+		}
+	}
+}

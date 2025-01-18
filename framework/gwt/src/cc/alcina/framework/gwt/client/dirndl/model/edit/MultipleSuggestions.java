@@ -12,6 +12,8 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
@@ -43,7 +45,107 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 @Directed(tag = "multiple-suggestions")
 public class MultipleSuggestions<T> extends Multiple<T>
 		implements HasDecorators {
+	/*
+	 * * Binds a collection property (in an editor) to a MultipleSuggestor
+	 */
+	@Directed.Delegating
+	@Bean(PropertySource.FIELDS)
+	public static class ListSuggestions<T> extends Model.Value<List<T>>
+			implements ModelEvents.SelectionChanged.Handler {
+		public static class To
+				implements ModelTransform<List, ListSuggestions> {
+			@Override
+			public ListSuggestions apply(List t) {
+				ListSuggestions suggest = new ListSuggestions();
+				suggest.value = t;
+				return suggest;
+			}
+		}
+
+		@Directed
+		public MultipleSuggestions<T> suggest;
+
+		private List<T> value;
+
+		public ListSuggestions() {
+		}
+
+		@Override
+		public void onBeforeRender(BeforeRender event) {
+			suggest = new MultipleSuggestions<>();
+			// populate the delegate values from this node's AnnotationLocation
+			suggest.populateValuesFromNodeContext(event.node, null);
+			value = suggest.getSelectedValues();
+			super.onBeforeRender(event);
+		}
+
+		@Override
+		public List<T> getValue() {
+			return value;
+		}
+
+		@Override
+		public void setValue(List<T> value) {
+			set("value", this.value, value, () -> this.value = value);
+			suggest.setSelectedValues(value);
+		}
+
+		@Override
+		public void onSelectionChanged(ModelEvents.SelectionChanged event) {
+			setValue(suggest.getSelectedValues());
+		}
+	}
+
+	@Directed(tag = "choice-node")
+	@Bean(PropertySource.FIELDS)
+	static class ChoiceNode extends DecoratorNode<Choice, String> {
+		static class Descriptor
+				extends DecoratorNode.Descriptor<Choice, String, ChoiceNode> {
+			static transient Descriptor INSTANCE = new Descriptor();
+
+			@Override
+			public ChoiceNode createNode() {
+				return new ChoiceNode();
+			}
+
+			@Override
+			public Function<Choice, String> itemRenderer() {
+				return MultipleSuggestions::choiceToString;
+			}
+
+			public void onCommit(Commit event) {
+				// NOOP - ancestor handles changes
+			}
+
+			@Override
+			public String triggerSequence() {
+				return "";
+			}
+
+			@Override
+			protected String toStringRepresentable(Choice wrappedType) {
+				return choiceToString(wrappedType);
+			}
+		}
+
+		ChoiceNode() {
+		}
+
+		ChoiceNode(Choice choice) {
+			putReferenced(choice);
+		}
+
+		@Override
+		public DecoratorNode.Descriptor<Choice, String, ?> getDescriptor() {
+			return new ChoiceNode.Descriptor();
+		}
+	}
+
 	static PackageProperties._MultipleSuggestions properties = PackageProperties.multipleSuggestions;
+
+	static String choiceToString(Choice choice) {
+		return CommonUtils.nullSafeToString(choice.getValue());
+	}
 
 	@Directed
 	EditArea editArea;
@@ -51,6 +153,21 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	List<T> selectedValues;
 
 	List<ContentDecorator> decorators = new ArrayList<>();
+
+	transient KeyboardNavigation keyboardNavigation;
+
+	public MultipleSuggestions() {
+		editArea = new EditArea();
+		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
+		provideFragmentModel()
+				.addModelled(DecoratorNode.ZeroWidthCursorTarget.class);
+		keyboardNavigation = new KeyboardNavigation(this);
+		bindings().from(this).on(properties.selectedValues)
+				.accept(this::updateAreaFromSelectedValues);
+		bindings().from(editArea).on(EditArea.properties.value)
+				.withSetOnInitialise(false).signal(this::onEditCommit);
+		decorators.add(createChoiceDecorator());
+	}
 
 	@Override
 	public List<T> getSelectedValues() {
@@ -62,7 +179,18 @@ public class MultipleSuggestions<T> extends Multiple<T>
 		return this.decorators;
 	}
 
-	transient KeyboardNavigation keyboardNavigation;
+	/**
+	 * FIXME - reflection - this shouldn't be needed (should be resolved from
+	 * {@link HasDecorators} - that's possibly a gwt vs jdk typemodel
+	 * inconsistency )
+	 */
+	@Binding(
+		type = Type.PROPERTY,
+		to = DecoratorBehavior.ExtendKeyboardNavigationAction.ATTR_NAME)
+	@Override
+	public boolean isMagicName() {
+		return true;
+	}
 
 	@Override
 	public void onSelected(Selected event) {
@@ -84,21 +212,23 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	}
 
 	@Override
-	protected void updateSelectedValuesInternal(List<T> values) {
-		this.selectedValues = values;
+	@Directed.Exclude
+	public List<Choice<T>> getChoices() {
+		return super.getChoices();
 	}
 
-	public MultipleSuggestions() {
-		editArea = new EditArea();
-		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
-		provideFragmentModel()
-				.addModelled(DecoratorNode.ZeroWidthCursorTarget.class);
-		keyboardNavigation = new KeyboardNavigation(this);
-		bindings().from(this).on(properties.selectedValues)
-				.accept(this::updateAreaFromSelectedValues);
-		bindings().from(editArea).on(EditArea.properties.value)
-				.withSetOnInitialise(false).signal(this::onEditCommit);
-		decorators.add(createChoiceDecorator());
+	@Override
+	public FragmentModel provideFragmentModel() {
+		return editArea.provideFragmentModel();
+	}
+
+	@Override
+	public void validateDecorators() {
+	}
+
+	@Override
+	protected void updateSelectedValuesInternal(List<T> values) {
+		this.selectedValues = values;
 	}
 
 	void onEditCommit() {
@@ -140,55 +270,6 @@ public class MultipleSuggestions<T> extends Multiple<T>
 				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
 	}
 
-	@Directed(tag = "choice-node")
-	@Bean(PropertySource.FIELDS)
-	static class ChoiceNode extends DecoratorNode<Choice, String> {
-		@Override
-		public DecoratorNode.Descriptor<Choice, String, ?> getDescriptor() {
-			return new ChoiceNode.Descriptor();
-		}
-
-		ChoiceNode() {
-		}
-
-		ChoiceNode(Choice choice) {
-			putReferenced(choice);
-		}
-
-		static class Descriptor
-				extends DecoratorNode.Descriptor<Choice, String, ChoiceNode> {
-			static transient Descriptor INSTANCE = new Descriptor();
-
-			@Override
-			public ChoiceNode createNode() {
-				return new ChoiceNode();
-			}
-
-			@Override
-			public Function<Choice, String> itemRenderer() {
-				return MultipleSuggestions::choiceToString;
-			}
-
-			public void onCommit(Commit event) {
-				// NOOP - ancestor handles changes
-			}
-
-			@Override
-			public String triggerSequence() {
-				return "";
-			}
-
-			@Override
-			protected String toStringRepresentable(Choice wrappedType) {
-				return choiceToString(wrappedType);
-			}
-		}
-	}
-
-	static String choiceToString(Choice choice) {
-		return CommonUtils.nullSafeToString(choice.getValue());
-	}
-
 	void areaContentsFromChoices0(List<Choice<?>> choices) {
 		choices.forEach(choice -> {
 			ChoiceNode choiceNode = new ChoiceNode();
@@ -200,71 +281,5 @@ public class MultipleSuggestions<T> extends Multiple<T>
 	void areaContentsFromChoices(List<Choice<?>> choices) {
 		Client.eventBus().queued()
 				.lambda(() -> areaContentsFromChoices0(choices)).dispatch();
-	}
-
-	/*
-	 * * Binds a collection property (in an editor) to a MultipleSuggestor
-	 */
-	@Directed.Delegating
-	@Bean(PropertySource.FIELDS)
-	public static class ListSuggestions<T> extends Model.Value<List<T>>
-			implements ModelEvents.SelectionChanged.Handler {
-		@Directed
-		public MultipleSuggestions<T> suggest;
-
-		private List<T> value;
-
-		public ListSuggestions() {
-		}
-
-		public static class To
-				implements ModelTransform<List, ListSuggestions> {
-			@Override
-			public ListSuggestions apply(List t) {
-				ListSuggestions suggest = new ListSuggestions();
-				suggest.value = t;
-				return suggest;
-			}
-		}
-
-		@Override
-		public void onBeforeRender(BeforeRender event) {
-			suggest = new MultipleSuggestions<>();
-			// populate the delegate values from this node's AnnotationLocation
-			suggest.populateValuesFromNodeContext(event.node, null);
-			value = suggest.getSelectedValues();
-			super.onBeforeRender(event);
-		}
-
-		@Override
-		public List<T> getValue() {
-			return value;
-		}
-
-		@Override
-		public void setValue(List<T> value) {
-			set("value", this.value, value, () -> this.value = value);
-			suggest.setSelectedValues(value);
-		}
-
-		@Override
-		public void onSelectionChanged(ModelEvents.SelectionChanged event) {
-			setValue(suggest.getSelectedValues());
-		}
-	}
-
-	@Override
-	@Directed.Exclude
-	public List<Choice<T>> getChoices() {
-		return super.getChoices();
-	}
-
-	@Override
-	public FragmentModel provideFragmentModel() {
-		return editArea.provideFragmentModel();
-	}
-
-	@Override
-	public void validateDecorators() {
 	}
 }

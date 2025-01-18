@@ -53,7 +53,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * <li>In server code, batch handling must be triggered via a call to
  * LocalDom.flush()
  * <li>Note that a future, better implementation would add on-demand mutation
- * processing - any call which might be affected the results of mutation
+ * processing - any call which might be affected by the results of mutation
  * processing would first trigger a flush
  * </ul>
  * <li>The model converts dommutations into changes to its model structure,
@@ -65,7 +65,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * <li>Attribute values are synced from dom to model (model to dom is provided
  * by Dirndl). In fact, the whole dom -&gt; model mapping uses a 'reverse
  * dirndl' transformation - currently without support for the more baroque
- * transformations (delegated etc), but that's coming.
+ * transformations (delegated etc), but that's coming. (sic - that will probably
+ * never happen, because of ambiguous resolution. If you need that sort of
+ * behaviour, consider using a {@link FragmentIsolate})
  *
  * </ul>
  * <p>
@@ -75,19 +77,30 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * present.
  * </ul>
  *
- * <pre>
- * <code>
- - fragmentmodel/mutations
-  - since fn mutations don't need reflection in dom (although other listeners may
-   be interested in the mutations), mark the mutation events as such
-  - for completeness, this shouldn't be necessary - mutations should:
-    - preserve model/dom correspondence
-    - not be fired if the current dom is equivalent to the union state of the mutations
-
-
-</code>
- * </pre>
- *
+ * <h3>fragmentmodel/mutations</h3>
+ * <ul>
+ * <li>- since fn mutations don't need reflection in dom (although other
+ * listeners may be interested in the mutations), mutation events from
+ * fragmentmodel mutations are marked as such (via {@link FlagMutating}). [note
+ * - this is shorthand for "ignore the dom mutations as a source of
+ * modelmutations (which would change the fragmentmodel), since the
+ * fragmentmodel mutation in this case is the cause of the dommutation "]
+ * <li>for completeness, this shouldn't be necessary - mutations should:
+ * <li>preserve model/dom correspondence
+ * <li>not be fired if the current dom is equivalent to the union state of the
+ * mutations
+ * <li>[later note - I'm not sure that this "completeness" is possible or
+ * performant, it'd be nice but... - in fact, thinking a bit, consideration of
+ * this may require a bit of theory - there are two models (dom, fragment) being
+ * synchronized by events (dommutation, modelmutation) - what's the correct way
+ * to do this, particularly considering batching aka transactions]?
+ * 
+ * 
+ * </ul>
+ * <h3>documentation todos</h3>
+ * <p>
+ * There are some fairly complex processes happening here - say UpdateRecord and
+ * ModelMutation. Give examples (and codepaths) of how these work
  *
  *
  *
@@ -224,7 +237,8 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 
 	/*
 	 * Note that some DOM nodes inserted by transformations (NodeBoundary
-	 * contents) will not have a corresponding FragmentNode
+	 * contents, in a tagging editor system (openlaw)) will not have a
+	 * corresponding FragmentNode
 	 */
 	public FragmentNode getFragmentNode(DomNode node) {
 		NodeTransformer transformer = domNodeTransformer.get(node);

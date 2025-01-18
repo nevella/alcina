@@ -633,6 +633,14 @@ public class ClientUtils {
 		}
 		}-*/;
 
+	public static native void logSelection() /*-{
+			try {
+			  $wnd.console.info($doc.getSelection());
+			} catch (e) {
+		
+			}
+			}-*/;
+
 	public static void consoleInfo(String template, Object... args) {
 		consoleInfo0(Ax.format(template, args));
 	}

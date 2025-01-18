@@ -648,4 +648,9 @@ public class NativeEvent implements JavascriptObjectEquivalent {
       return this.@com.google.gwt.dom.client.NativeEvent.NativeBeforeInputEvent::eventJso.isComposing;
 		}-*/;
 	}
+
+	public void squelch() {
+		preventDefault();
+		stopPropagation();
+	}
 }

@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.text.AttributedCharacterIterator.Attribute;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
@@ -121,6 +123,7 @@ public class EnvironmentManager {
 				Window.Resources.class, true);
 		EventFrame.contextProvider = ContextProvider.createProvider(
 				ctx -> new EventFrame(), null, null, EventFrame.class, true);
+		AttributeBehaviorHandler.BehaviorRegistry.get().init(false);
 		flightRecordingEnabled = Configuration.is("flightRecordingEnabled");
 		if (flightRecordingEnabled) {
 			startFlightRecording();
