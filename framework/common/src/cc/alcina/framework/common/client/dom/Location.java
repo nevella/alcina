@@ -162,8 +162,14 @@ public class Location implements Comparable<Location> {
 		return new Content();
 	}
 
-	public Location createRelativeLocation(int offset, boolean after) {
-		return locationContext.createRelativeLocation(this, offset, after);
+	/**
+	 * 
+	 * This creates a *text* relative location, rather than traversing the
+	 * location tree (which unifies the node and text sequences).
+	 * 
+	 */
+	public Location createTextRelativeLocation(int offset, boolean after) {
+		return locationContext.createTextRelativeLocation(this, offset, after);
 	}
 
 	public void detach() {
@@ -330,7 +336,7 @@ public class Location implements Comparable<Location> {
 			if (idx == 0) {
 				return Location.this;
 			} else {
-				return createRelativeLocation(idx, after);
+				return createTextRelativeLocation(idx, after);
 			}
 		}
 	}
@@ -527,9 +533,9 @@ public class Location implements Comparable<Location> {
 					.filter(endContainers::contains).reduce(Ax.last()).get();
 			Location minimalLocation = minimal.asLocation();
 			return new Range(
-					minimalLocation.createRelativeLocation(
+					minimalLocation.createTextRelativeLocation(
 							start.index - minimalLocation.index, start.after),
-					minimalLocation.createRelativeLocation(
+					minimalLocation.createTextRelativeLocation(
 							end.index - minimalLocation.index, end.after));
 		}
 
@@ -545,35 +551,35 @@ public class Location implements Comparable<Location> {
 
 		public Range truncateAbsolute(int startIndex, int endIndex) {
 			Location modifiedEnd = end
-					.createRelativeLocation(endIndex - end.index, true);
-			Location modifiedStart = start
-					.createRelativeLocation(startIndex - start.index, false);
+					.createTextRelativeLocation(endIndex - end.index, true);
+			Location modifiedStart = start.createTextRelativeLocation(
+					startIndex - start.index, false);
 			return new Range(modifiedStart, modifiedEnd);
 		}
 
 		public Range truncateRelative(int startIndex, int endIndex) {
-			Location modifiedEnd = end.createRelativeLocation(
+			Location modifiedEnd = end.createTextRelativeLocation(
 					start.index + endIndex - end.index, true);
-			Location modifiedStart = start.createRelativeLocation(startIndex,
-					false);
+			Location modifiedStart = start
+					.createTextRelativeLocation(startIndex, false);
 			return new Range(modifiedStart, modifiedEnd);
 		}
 
 		public Range truncateToEndNode() {
 			Location modifiedStart = end
-					.createRelativeLocation(start.index - end.index, false);
+					.createTextRelativeLocation(start.index - end.index, false);
 			return new Range(modifiedStart, end);
 		}
 
 		public Range truncateToIndexEnd(int endIndex) {
-			Location modifiedEnd = end.createRelativeLocation(
+			Location modifiedEnd = end.createTextRelativeLocation(
 					endIndex - (end.index - start.index), true);
 			return new Range(start, modifiedEnd);
 		}
 
 		public Range truncateToIndexStart(int startIndex) {
-			Location modifiedStart = start.createRelativeLocation(startIndex,
-					false);
+			Location modifiedStart = start
+					.createTextRelativeLocation(startIndex, false);
 			return new Range(modifiedStart, end);
 		}
 
@@ -609,6 +615,35 @@ public class Location implements Comparable<Location> {
 		public interface Has {
 			Range provideRange();
 		}
+
+		/**
+		 * Extend the range via text movement
+		 */
+		public Location.Range extendText(int delta) {
+			if (delta < 0) {
+				return new Range(start.createTextRelativeLocation(-1, false),
+						end);
+			} else {
+				return new Range(start,
+						end.createTextRelativeLocation(1, false));
+			}
+		}
+
+		public void delete() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'delete'");
+		}
+
+		public Location provideEndpoint(int numericDirection) {
+			if (numericDirection < 0) {
+				return start;
+			} else if (numericDirection > 0) {
+				return end;
+			} else {
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 
 	public enum RelativeDirection {
@@ -633,5 +668,9 @@ public class Location implements Comparable<Location> {
 		if (textOffsetInNode != 0 && textOffsetInNode != length) {
 			((Text) containingNode.w3cNode()).splitText(textOffsetInNode);
 		}
+	}
+
+	public Range asRange() {
+		return new Range(this, this);
 	}
 }

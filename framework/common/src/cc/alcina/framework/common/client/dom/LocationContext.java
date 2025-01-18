@@ -66,7 +66,8 @@ public interface LocationContext {
 		return l1.index - l2.index;
 	}
 
-	Location createRelativeLocation(Location location, int offset, boolean end);
+	Location createTextRelativeLocation(Location location, int offset,
+			boolean end);
 
 	DomNode getContainingNode(Location location);
 

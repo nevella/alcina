@@ -145,11 +145,11 @@ public class Measure extends Location.Range {
 	public Measure subMeasure(int startOffset, int endOffset, Token token,
 			boolean toTextLocations) {
 		Location subStart = this.start
-				.createRelativeLocation(startOffset, false)
+				.createTextRelativeLocation(startOffset, false)
 				.toTextLocation(toTextLocations).toStartTextLocationIfAtEnd();
 		Location subEnd = endOffset == length()
 				? this.end.toTextLocation(toTextLocations)
-				: this.start.createRelativeLocation(endOffset, false);
+				: this.start.createTextRelativeLocation(endOffset, false);
 		if (startOffset != endOffset) {
 			subEnd = subEnd.toTextLocation(toTextLocations)
 					.toEndTextLocationIfAtStart();

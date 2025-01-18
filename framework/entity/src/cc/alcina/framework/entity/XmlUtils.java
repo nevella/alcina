@@ -1873,7 +1873,8 @@ public class XmlUtils {
 			return string;
 		}
 		Location clip = doc.getDocumentElementNode().asLocation()
-				.createRelativeLocation(maxHlLength, true).toTextLocation(true);
+				.createTextRelativeLocation(maxHlLength, true)
+				.toTextLocation(true);
 		DomNode containingNode = clip.getContainingNode();
 		String replaceContents = Ax.trim(containingNode.textContent(),
 				maxHlLength - clip.index);

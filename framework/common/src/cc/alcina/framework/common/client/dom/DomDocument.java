@@ -331,8 +331,8 @@ public class DomDocument extends DomNode implements Cloneable {
 			Location start = asLocation(domNode);
 			Location end = null;
 			if (domNode.isText()) {
-				end = createRelativeLocation(start, contentLengths.get(domNode),
-						true);
+				end = createTextRelativeLocation(start,
+						contentLengths.get(domNode), true);
 			} else {
 				end = asLocation(domNode).clone();
 				end.index += contentLengths.get(domNode);
@@ -351,8 +351,8 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 
 		@Override
-		public Location createRelativeLocation(Location location, int offset,
-				boolean after) {
+		public Location createTextRelativeLocation(Location location,
+				int offset, boolean after) {
 			ensureLookups();
 			int index = location.index + offset;
 			/*
@@ -507,7 +507,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			while (!start.isTextNode()) {
 				start = start.relativeLocation(RelativeDirection.NEXT_LOCATION);
 			}
-			Location test = start.createRelativeLocation(index, after);
+			Location test = start.createTextRelativeLocation(index, after);
 			Location containingLocation = test;
 			while (!containingLocation.isTextNode()) {
 				containingLocation = containingLocation
@@ -536,8 +536,15 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 
 		/**
+		 * <p>
 		 * Implementation for text is a little complicated, because "next"
 		 * depends on the caller to a degree
+		 * 
+		 * <p>
+		 * Note - don't use this for purely text traversal (e.g. mimicking
+		 * actions of a keyevent), instead just increment/decrement
+		 * location.index, and use
+		 * {@link #createTextRelativeLocation(Location, int, boolean)}
 		 */
 		@Override
 		public Location getRelativeLocation(Location location,
