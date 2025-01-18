@@ -30,7 +30,10 @@ public class Selection implements ClientDomSelection {
 
 	protected Selection(Document document) {
 		local = new SelectionLocal(this);
-		remote = document.remote().ensureRemoteSelection(this);
+		ClientDomDocument remoteDocument = document.remote();
+		if (remoteDocument != null) {
+			remote = remoteDocument.ensureRemoteSelection(this);
+		}
 	}
 
 	protected SelectionLocal local() {

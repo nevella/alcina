@@ -39,7 +39,7 @@ class MultipleSuggestionsGalleryArea
 	@Directed.Transform(BeanForm.Editor.Adjunct.class)
 	@BeanForm.Classes({ ClassName.vertical, ClassName.grid,
 			ClassName.tight_rows, ClassName.horizontal_validation })
-	@BeanForm.Headings(heading = "Report Definition")
+	@BeanForm.Headings(heading = "Demo Model (contains users collection)")
 	MultipleSuggestionsGalleryPlace.Definition definition;
 
 	InfoModel model;

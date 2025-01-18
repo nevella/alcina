@@ -6,6 +6,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.story.StoryTeller;
 import cc.alcina.framework.gwt.client.story.StoryTellerPeer;
 import cc.alcina.framework.servlet.example.traversal.recipe.markup.RecipeMarkupParser;
+import cc.alcina.framework.servlet.story.component.gallery.Story_GalleryBrowser;
 import cc.alcina.framework.servlet.story.component.traversal.Story_TraversalBrowser;
 
 public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
@@ -93,6 +94,38 @@ public abstract class AlcinaDevConsoleCommand extends DevConsoleCommand {
 		@Override
 		public String run(String[] argv) throws Exception {
 			Story_TraversalBrowser story = new Story_TraversalBrowser();
+			StoryTellerPeer peer = Registry.impl(StoryTellerPeer.class,
+					story.getClass());
+			StoryTeller teller = new StoryTeller(peer);
+			teller.tell(story);
+			return "told";
+		}
+	}
+
+	public static class CmdTellGallery extends AlcinaDevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "tell-gallery" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Tell the gallery story";
+		}
+
+		@Override
+		public String getUsage() {
+			return "";
+		}
+
+		@Override
+		public boolean rerunIfMostRecentOnRestart() {
+			return false;
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			Story_GalleryBrowser story = new Story_GalleryBrowser();
 			StoryTellerPeer peer = Registry.impl(StoryTellerPeer.class,
 					story.getClass());
 			StoryTeller teller = new StoryTeller(peer);
