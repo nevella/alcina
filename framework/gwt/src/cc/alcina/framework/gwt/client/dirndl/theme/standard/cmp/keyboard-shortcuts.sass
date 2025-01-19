@@ -5,7 +5,7 @@
 @use '../../dirndl/cmp/filter'
 
 @mixin contents
-  keyboard-shortcuts-area   
+  keyboard-shortcuts
     @include context-menu.dropdown
     padding: 1rem 2rem 2rem
     font-size: 1.1rem
@@ -47,6 +47,6 @@
             &:empty
               border: none
     
-body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts-area
+body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts
   top: 3rem
   transform: translate(-50%, 0%)

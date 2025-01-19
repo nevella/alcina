@@ -353,6 +353,7 @@ bean-editor[inert] > form {
   opacity: 0.7;
 }
 bean-editor > heading {
+  display: block;
   font-weight: 500;
   padding-bottom: 0.2em;
   padding-left: 3px;
@@ -458,7 +459,7 @@ overlay-container overlay.filter-suggestor > suggestor input {
   width: 250px;
 }
 
-body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts-area {
+body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts {
   top: 3rem;
   transform: translate(-50%, 0%);
 }
@@ -645,7 +646,7 @@ body > page > layers > layers > layer-selections {
   display: contents;
   position: relative;
 }
-body > page > layers > layers > layer-selections .bordered-area {
+body > page > layers > layers > layer-selections .bordered {
   border: solid 1px #ccc;
   padding: 0.5rem;
   overflow-x: hidden;
@@ -654,10 +655,10 @@ body > page > layers > layers > layer-selections .bordered-area {
   min-height: 3rem;
   cursor: pointer;
 }
-body > page > layers > layers > layer-selections[empty=true] .bordered-area {
+body > page > layers > layers > layer-selections[empty=true] .bordered {
   min-height: 1rem;
 }
-body > page > layers > layers > layer-selections > name-area {
+body > page > layers > layers > layer-selections > name {
   display: flex;
   flex-direction: column;
   background: #f7fffe;
@@ -666,11 +667,11 @@ body > page > layers > layers > layer-selections > name-area {
   left: 0;
   align-self: start;
 }
-body > page > layers > layers > layer-selections > name-area > filter {
+body > page > layers > layers > layer-selections > name > filter {
   display: flex;
   gap: 4px;
 }
-body > page > layers > layers > layer-selections > name-area > filter > a.filter {
+body > page > layers > layers > layer-selections > name > filter > a.filter {
   display: inline-block;
   width: 16px;
   height: 16px;
@@ -681,42 +682,42 @@ body > page > layers > layers > layer-selections > name-area > filter > a.filter
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNNDQ4LDI1NmMwLTEwNi04Ni0xOTItMTkyLTE5MlM2NCwxNTAsNjQsMjU2czg2LDE5MiwxOTIsMTkyUzQ0OCwzNjIsNDQ4LDI1NloiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjMyIi8+PGxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMzIiIHgxPSIxNDQiIHgyPSIzNjgiIHkxPSIyMDgiIHkyPSIyMDgiLz48bGluZSBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgeDE9IjE3NiIgeDI9IjMzNiIgeTE9IjI3MiIgeTI9IjI3MiIvPjxsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjMyIiB4MT0iMjI0IiB4Mj0iMjg4IiB5MT0iMzM2IiB5Mj0iMzM2Ii8+PC9zdmc+");
   margin-top: 1px;
 }
-body > page > layers > layers > layer-selections > name-area > filter > a.filter:hover {
+body > page > layers > layers > layer-selections > name > filter > a.filter:hover {
   filter: invert(0.5);
 }
-body > page > layers > layers > layer-selections > name-area > filter > existing {
+body > page > layers > layers > layer-selections > name > filter > existing {
   max-width: 80%;
 }
-body > page > layers > layers > layer-selections > name-area[filter-editor-open] > filter > existing {
+body > page > layers > layers > layer-selections > name[filter-editor-open] > filter > existing {
   visibility: hidden;
 }
-body > page > layers > layers > layer-selections > name-area:not([has-filter]):not(:hover) > filter {
+body > page > layers > layers > layer-selections > name:not([has-filter]):not(:hover) > filter {
   visibility: hidden;
 }
-body > page > layers > layers > layer-selections > name-area[selected] {
+body > page > layers > layers > layer-selections > name[selected] {
   background: #e3fae3;
 }
-body > page > layers > layers > layer-selections > selections-area {
+body > page > layers > layers > layer-selections > selections {
   display: contents;
 }
-body > page > layers > layers > layer-selections > selections-area > selection-area {
+body > page > layers > layers > layer-selections > selections > selection {
   display: flex;
   flex-direction: column;
   background: #fff;
 }
-body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=VIEW] {
+body > page > layers > layers > layer-selections > selections > selection[selectionType=VIEW] {
   background: #fdd;
 }
-body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=CONTAINMENT] {
+body > page > layers > layers > layer-selections > selections > selection[selectionType=CONTAINMENT] {
   background: #dfd;
 }
-body > page > layers > layers > layer-selections > selections-area > selection-area[selectionType=DESCENT] {
+body > page > layers > layers > layer-selections > selections > selection[selectionType=DESCENT] {
   background: #ddf;
 }
-body > page > layers > layers > layer-selections > selections-area > selection-area[secondary-descendant-relation], body > page > layers > layers > layer-selections > selections-area > selection-area[ancestor-of-selected] {
+body > page > layers > layers > layer-selections > selections > selection[secondary-descendant-relation], body > page > layers > layers > layer-selections > selections > selection[ancestor-of-selected] {
   background: #eaeafa;
 }
-body > page > layers > layers > layer-selections > selections-area > selection-area[selected] {
+body > page > layers > layers > layer-selections > selections > selection[selected] {
   background: #e3fae3;
 }
 body > page > properties {
@@ -770,13 +771,13 @@ body > page > properties bean-editor form-element[name=extended] table th, body 
 body > page > selections {
   display: block;
 }
-body > page > selections > selection-markup-area {
+body > page > selections > selection-markup {
   display: block;
   padding: 0 0.5em;
   max-height: calc(100% - 2.2rem);
   overflow: scroll;
 }
-body > page > selections > selection-markup-area .__markup_highlight {
+body > page > selections > selection-markup .__markup_highlight {
   background: #eaeafa;
 }
 body > page > selections.input {
@@ -788,78 +789,78 @@ body > page > selections.output {
 body > page > selections.table {
   grid-area: table;
 }
-body > page > selections > selection-area {
+body > page > selections > selection {
   display: flex;
   flex-direction: column;
   background: #fff;
 }
-body > page > selections > selection-area[selectionType=VIEW] {
+body > page > selections > selection[selectionType=VIEW] {
   background: #fdd;
 }
-body > page > selections > selection-area[selectionType=CONTAINMENT] {
+body > page > selections > selection[selectionType=CONTAINMENT] {
   background: #dfd;
 }
-body > page > selections > selection-area[selectionType=DESCENT] {
+body > page > selections > selection[selectionType=DESCENT] {
   background: #ddf;
 }
-body > page > selections > selection-area[secondary-descendant-relation], body > page > selections > selection-area[ancestor-of-selected] {
+body > page > selections > selection[secondary-descendant-relation], body > page > selections > selection[ancestor-of-selected] {
   background: #eaeafa;
 }
-body > page > selections > selection-area[selected] {
+body > page > selections > selection[selected] {
   background: #e3fae3;
 }
-body > page > selections > selection-table-area {
+body > page > selections > selection-table {
   display: block;
   width: 100%;
   overflow-x: scroll;
 }
-body > page > selections > selection-table-area > table {
+body > page > selections > selection-table > table {
   border-spacing: 0;
 }
-body > page > selections > selection-table-area > table > tbody > tr:nth-of-type(even) {
+body > page > selections > selection-table > table > tbody > tr:nth-of-type(even) {
   background-color: #f3f3fa;
 }
-body > page > selections > selection-table-area > table > tbody > tr:first-of-type td {
+body > page > selections > selection-table > table > tbody > tr:first-of-type td {
   padding-top: 8px;
 }
-body > page > selections > selection-table-area > table > thead > tr > th {
+body > page > selections > selection-table > table > thead > tr > th {
   border-bottom: solid 1px #bbb;
   cursor: pointer;
   white-space: nowrap;
 }
-body > page > selections > selection-table-area > table td, body > page > selections > selection-table-area > table th {
+body > page > selections > selection-table > table td, body > page > selections > selection-table > table th {
   padding: 6px 2px;
 }
-body > page > selections > selection-table-area > table td > value {
+body > page > selections > selection-table > table td > value {
   display: block;
 }
-body > page > selections > selection-table-area > table td > value.numeric {
+body > page > selections > selection-table > table td > value.numeric {
   text-align: right;
   padding-right: 1rem;
 }
-body > page > selections > selection-table-area > table td > value.nowrap {
+body > page > selections > selection-table > table td > value.nowrap {
   white-space: nowrap;
 }
-body > page > selections > selection-table-area > table td > * {
+body > page > selections > selection-table > table td > * {
   white-space: nowrap;
   overflow-x: scroll;
   display: inline-block;
   max-width: 14rem;
 }
-body > page > selections > selection-table-area > table td > *:not(:first-child) {
+body > page > selections > selection-table > table td > *:not(:first-child) {
   display: none;
 }
-body > page > selections > selection-table-area > table th {
+body > page > selections > selection-table > table th {
   text-align: left;
   padding-right: 2rem;
 }
-body > page > selections > selection-table-area > table td > *.wide {
+body > page > selections > selection-table > table td > *.wide {
   max-width: 28rem;
 }
-body > page > selections > selection-table-area > table tr:hover {
+body > page > selections > selection-table > table tr:hover {
   cursor: pointer;
 }
-body > page > selections > selection-table-area > table tr:hover > td {
+body > page > selections > selection-table > table tr:hover > td {
   background-color: #eee;
 }
 
@@ -979,7 +980,7 @@ overlay.app-suggestor > results > choice > suggestion > app-suggestion > content
   display: block;
 }
 
-keyboard-shortcuts-area {
+keyboard-shortcuts {
   background: white;
   user-select: none;
   padding: 1rem 0;
@@ -989,24 +990,25 @@ keyboard-shortcuts-area {
   font-size: 1.1rem;
   width: 750px;
   min-height: 50vh;
+  user-select: auto;
 }
-keyboard-shortcuts-area > heading {
+keyboard-shortcuts > heading {
   margin: 1rem 0;
   font-size: 1.5rem;
   display: block;
 }
-keyboard-shortcuts-area > contents-filter {
+keyboard-shortcuts > contents-filter {
   display: block;
   padding: 0 0 1rem;
   font-size: 1.1rem;
 }
-keyboard-shortcuts-area > contents-filter > input {
+keyboard-shortcuts > contents-filter > input {
   border: solid 1px #ddd;
   padding: 4px 6px;
   width: 20rem;
   outline: none;
 }
-keyboard-shortcuts-area > shortcuts {
+keyboard-shortcuts > shortcuts {
   display: grid;
   grid-template-columns: 3rem 2rem 1fr;
   margin-top: 1rem;
@@ -1015,33 +1017,33 @@ keyboard-shortcuts-area > shortcuts {
   max-height: 50vh;
   overflow: auto;
 }
-keyboard-shortcuts-area > shortcuts > shortcut {
+keyboard-shortcuts > shortcuts > shortcut {
   display: contents;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell {
   text-align: right;
   isplay: inline-block;
   margin-top: -2px;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell > modifier {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell > modifier {
   border: solid 1px #777;
   border-radius: 3px;
   padding: 2px;
   font-size: 0.8rem;
   color: #777;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell > modifier:empty {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell > modifier:empty {
   border: none;
 }
 
-help-area {
+help {
   height: 50vh;
   width: 25vw;
   display: flex;
   flex-direction: column;
   margin: 1rem 0;
   box-sizing: border-box;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: auto;
   background: white;
   user-select: none;
@@ -1052,38 +1054,38 @@ help-area {
   padding: 1rem;
   user-select: auto;
 }
-help-area > heading, help-area > heading-actions {
+help > heading, help > heading-actions {
   margin: 0 0 0.5rem;
   display: flex;
   width: 100%;
   font-weight: bold;
   justify-content: space-between;
 }
-help-area > heading-actions > actions {
+help > heading-actions > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-help-area > heading-actions > actions a {
+help > heading-actions > actions a {
   cursor: pointer;
 }
-help-area > key-values {
+help > key-values {
   display: grid;
   grid-template-columns: max-content 1fr;
   column-gap: 1rem;
   row-gap: 0.1rem;
 }
-help-area > key-values > key-value {
+help > key-values > key-value {
   display: contents;
 }
-help-area > key-values > key-value > key {
+help > key-values > key-value > key {
   color: #777;
 }
-help-area > a {
+help > a {
   display: block;
   margin: 0 0 0.2rem;
 }
-help-area sequence {
+help sequence {
   display: flex;
   flex-direction: column;
   max-width: 1200px;
@@ -1093,65 +1095,65 @@ help-area sequence {
   min-height: 100vh;
   align-items: flex-start;
 }
-help-area sequence a, help-area sequence a.link, help-area sequence a.visited {
+help sequence a, help sequence a.link, help sequence a.visited {
   text-decoration: none;
   color: black;
 }
-help-area sequence a:hover, help-area sequence a.link:hover, help-area sequence a.visited:hover {
+help sequence a:hover, help sequence a.link:hover, help sequence a.visited:hover {
   color: #387ed3;
 }
-help-area sequence > heading {
+help sequence > heading {
   display: block;
   font-weight: bold;
   color: #0f4589;
   margin: 1rem 0;
 }
-help-area sequence > doc-header {
+help sequence > doc-header {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
 }
-help-area sequence > doc-header img {
+help sequence > doc-header img {
   width: 200px;
 }
-help-area sequence > doc-header heading {
+help sequence > doc-header heading {
   font-size: 18px;
   font-weight: bold;
 }
-help-area sequence > doc-header spacer {
+help sequence > doc-header spacer {
   display: block;
   width: 200px;
 }
-help-area sequence > table {
+help sequence > table {
   box-sizing: border-box;
   margin-bottom: 2rem;
   margin-top: 1rem;
   border-collapse: separate;
   border-spacing: 1rem 0.5rem;
 }
-help-area sequence > table th {
+help sequence > table th {
   text-align: left;
   width: 12rem;
 }
-help-area sequence > table td > value {
+help sequence > table td > value {
   white-space: pre-wrap;
 }
-help-area sequence > table td > value:not(:last-child):after {
+help sequence > table td > value:not(:last-child):after {
   content: ", ";
 }
-help-area sequence > visit-area {
+help sequence > visit {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 5rem;
 }
-help-area sequence > visit-area > path {
+help sequence > visit > path {
   font-weight: bold;
 }
-help-area sequence > visit-area > description {
+help sequence > visit > description {
   margin-bottom: 1rem;
 }
-help-area sequence > visit-area > img {
+help sequence > visit > img {
   max-width: 100%;
 }

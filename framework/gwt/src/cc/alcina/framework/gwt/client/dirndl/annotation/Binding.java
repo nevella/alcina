@@ -77,8 +77,12 @@ public @interface Binding {
 
 	public interface ContextSensitiveReverseTransform<T>
 			extends FromStringFunction<T> {
-		public ContextSensitiveReverseTransform<T>
+		ContextSensitiveReverseTransform<T>
 				withContextNode(DirectedLayout.Node node);
+	}
+
+	public interface ContextPropertySensitiveReverseTransform {
+		void putContextProperty(Property property);
 	}
 
 	public interface ContextSensitiveTransform<T> extends ToStringFunction<T> {
@@ -112,6 +116,36 @@ public @interface Binding {
 		@Override
 		public Function<String, Boolean> rightToLeft() {
 			return Boolean::parseBoolean;
+		}
+	}
+
+	@Reflected
+	public static class FriendlyLowerBidi implements Binding.Bidi<Enum> {
+		@Override
+		public Function<Enum, String> leftToRight() {
+			return (Function) new ToStringFunction.FriendlyLower();
+		}
+
+		@Override
+		public Function<String, Enum> rightToLeft() {
+			return new Reverse();
+		}
+
+		static class Reverse
+				extends AbstractContextSensitiveReverseTransform<Enum>
+				implements ContextPropertySensitiveReverseTransform {
+			Property property;
+
+			@Override
+			public Enum apply(String t) {
+				Class<? extends Enum> enumType = property.getType();
+				return CommonUtils.getEnumValueOrNull(enumType, t, true, null);
+			}
+
+			@Override
+			public void putContextProperty(Property property) {
+				this.property = property;
+			}
 		}
 	}
 

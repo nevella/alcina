@@ -30,6 +30,7 @@ public class PackageProperties {
       public TypedProperty<MultipleSuggestions, List> choices = new TypedProperty<>(MultipleSuggestions.class, "choices");
       public TypedProperty<MultipleSuggestions, List> decorators = new TypedProperty<>(MultipleSuggestions.class, "decorators");
       public TypedProperty<MultipleSuggestions, EditArea> editArea = new TypedProperty<>(MultipleSuggestions.class, "editArea");
+      public TypedProperty<MultipleSuggestions, Boolean> magicName = new TypedProperty<>(MultipleSuggestions.class, "magicName");
       public TypedProperty<MultipleSuggestions, List> selectedValues = new TypedProperty<>(MultipleSuggestions.class, "selectedValues");
       public TypedProperty<MultipleSuggestions, Class> valueTransformer = new TypedProperty<>(MultipleSuggestions.class, "valueTransformer");
       public TypedProperty<MultipleSuggestions, List> values = new TypedProperty<>(MultipleSuggestions.class, "values");

@@ -22,7 +22,7 @@
       display: contents
       position: relative
 
-      .bordered-area
+      .bordered
         
         border: solid 1px #ccc
         padding: 0.5rem
@@ -32,10 +32,10 @@
         min-height: 3rem
         cursor: pointer
         
-      &[empty='true'] .bordered-area
+      &[empty='true'] .bordered
         min-height: 1rem
 
-      > name-area
+      > name
         display: flex
         flex-direction: column
         background: #f7fffe
@@ -66,10 +66,10 @@
         &[selected]
           background: #e3fae3
 
-      > selections-area
+      > selections
         display: contents
 
-        > selection-area
+        > selection
           display: flex
           flex-direction: column
           background: #fff

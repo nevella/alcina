@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.CloneHelper.FieldwiseCloner;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalCollection;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -255,6 +256,13 @@ public class ObjectUtil {
 			} else {
 				field.set(cursor, newValue);
 			}
+		}
+	}
+
+	public static class FieldwiseClonerImpl implements FieldwiseCloner {
+		@Override
+		public <T> T fieldwiseClone(T source) {
+			return ObjectUtil.fieldwiseClone(source);
 		}
 	}
 }

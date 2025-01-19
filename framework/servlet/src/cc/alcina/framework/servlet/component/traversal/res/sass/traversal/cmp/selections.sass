@@ -3,7 +3,7 @@
 @mixin contents
   display: block
 
-  > selection-markup-area
+  > selection-markup
     display: block
     padding: 0 0.5em
     max-height: calc(100% - 2.2rem)
@@ -21,7 +21,7 @@
   &.table
     grid-area: table
 
-  > selection-area
+  > selection
     display: flex
     flex-direction: column
     background: #fff
@@ -41,7 +41,7 @@
     &[selected]
       background: #e3fae3
 
-  > selection-table-area
+  > selection-table
     display: block
     width: 100%
     overflow-x: scroll

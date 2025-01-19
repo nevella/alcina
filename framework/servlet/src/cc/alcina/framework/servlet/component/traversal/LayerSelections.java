@@ -152,7 +152,7 @@ class LayerSelections extends Model.All {
 
 	// FIXME - once inner classes allow static (JDK16) use typedproperties,
 	// remvoe setters
-	@Directed(className = "bordered-area")
+	@Directed(className = "bordered")
 	@TypedProperties
 	class NameArea extends Model.All
 			implements ModelEvents.Closed.Handler, DomEvents.Click.Handler {
@@ -431,7 +431,7 @@ class LayerSelections extends Model.All {
 			return result;
 		}
 
-		@Directed(className = "bordered-area")
+		@Directed(className = "bordered")
 		class SelectionArea extends Model.All
 				implements DomEvents.Click.Handler {
 			String pathSegment;

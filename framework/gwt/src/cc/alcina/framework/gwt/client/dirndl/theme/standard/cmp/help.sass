@@ -5,7 +5,7 @@
 @use 'story'
 
 
-@mixin help-area
+@mixin help
   height: 50vh
   width: 25vw
   @include panel.content
@@ -15,6 +15,6 @@
   user-select: auto
 
 @mixin contents
-  help-area
-    @include help-area
+  help
+    @include help
     @include story.contents

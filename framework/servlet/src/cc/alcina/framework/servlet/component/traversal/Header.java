@@ -43,7 +43,7 @@ class Header extends Model.All {
 	}
 
 	class Right extends Model.All {
-		Help.HeaderButton help = new Help.HeaderButton();
+		Help.HeaderButton helpButton = new Help.HeaderButton();
 
 		Dotburger dotburger = new Dotburger();
 	}

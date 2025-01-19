@@ -4,7 +4,6 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.multiplesuggestions.MultipleSuggestionsGalleryArea;
 import cc.alcina.framework.servlet.component.gallery.model.multiplesuggestions.MultipleSuggestionsGalleryPlace;
-import java.lang.String;
 import java.util.List;
 
 public class PackageProperties {
@@ -18,7 +17,6 @@ public class PackageProperties {
       TypedProperty<MultipleSuggestionsGalleryArea, MultipleSuggestionsGalleryPlace.Definition> definition = new TypedProperty<>(MultipleSuggestionsGalleryArea.class, "definition");
       TypedProperty<MultipleSuggestionsGalleryArea, MultipleSuggestionsGalleryArea.InfoModel> model = new TypedProperty<>(MultipleSuggestionsGalleryArea.class, "model");
       TypedProperty<MultipleSuggestionsGalleryArea, GalleryPlace> place = new TypedProperty<>(MultipleSuggestionsGalleryArea.class, "place");
-      TypedProperty<MultipleSuggestionsGalleryArea, String> self = new TypedProperty<>(MultipleSuggestionsGalleryArea.class, "self");
     }
     
     public static class _MultipleSuggestionsGalleryPlace_Definition implements TypedProperty.Container {

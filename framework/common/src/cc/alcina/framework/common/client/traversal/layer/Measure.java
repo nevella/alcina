@@ -59,6 +59,10 @@ public class Measure extends Location.Range {
 
 	private Measure aliasedFrom;
 
+	public Location.Range toRange() {
+		return new Location.Range(start, end);
+	}
+
 	public Measure(Location start, Location end, Token token) {
 		super(start, end);
 		Preconditions.checkNotNull(token);

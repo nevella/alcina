@@ -1394,7 +1394,7 @@ public class DirectedLayout implements AlcinaProcess {
 					}
 					if (transform instanceof Binding.ContextPropertySensitiveReverseTransform) {
 						((Binding.ContextPropertySensitiveReverseTransform) transform)
-								.putContextProperty(property);
+								.putContextProperty(getProperty());
 					}
 					value = transform.apply(stringValue);
 				} else {
@@ -1524,67 +1524,39 @@ public class DirectedLayout implements AlcinaProcess {
 					break;
 				}
 				case CSS_CLASS: {
-					/*
-					 * Note (and probably fixme) - if the property value (or
-					 * transformed value) is a string, this implementation
-					 * currently assumes the string is invariant.
-					 * 
-					 * That could be changed - but there's a risk of classname
-					 * collision in that case (prop A + B both
-					 * transforming/representing CN C). Almost certainly better
-					 * if the string is variant would be to map to a
-					 * variant-valued property rather than a classname
-					 */
-					boolean present = false;
 					String cssClass = null;
-					// almost (see class_property) only place we need to
-					// store the last value
-					// We'd either have to store the "added" value, or
-					// assume readonly
+					boolean present=false;
 					if (hasTransform) {
-						cssClass = stringValue;
-						present = value != null && cssClass != null;
-					} else {
-						if (value instanceof Boolean) {
-							cssClass = binding.literal().isEmpty()
-									? Ax.cssify(binding.from())
-									: binding.literal();
-							present = (boolean) value;
-						} else if (value instanceof String) {
-							cssClass = (String) value;
-							present = cssClass != null;
+						// almost (see class_property) only place we need to
+						// store the last value
+						// We'd either have to store the "added" value, or
+						// assume readonly
+						 present = value != null;
+						 cssClass=stringValue;
+					}else{}
+						if (present) {
+							if (stringValue.length() > 0) {
+								element.setClassName(stringValue, true);
+								lastValue = stringValue;
+							}
 						} else {
-							Preconditions.checkArgument(value == null);
+							if (Ax.notBlank(lastValue)) {
+								element.setClassName(lastValue, false);
+								lastValue = null;
+							}
 						}
-					}
-					if (present) {
-						if (cssClass.length() > 0) {
-							if (cssClass.equals("null")) {
-								int debug = 3;
-							}
-							if (element != null) {
-								element.setClassName(cssClass, true);
-							} else {
-								String existingClassNames = w3cElement
-										.getAttribute("class");
-								String updated = ClassNames.addClassName(
-										existingClassNames, cssClass);
-								w3cElement.setAttribute("class", updated);
-							}
-							lastValue = cssClass;
-						}
-					} else {
-						if (Ax.notBlank(lastValue)) {
-							if (element != null) {
-								element.setClassName(cssClass, false);
-							} else {
-								String existingClassNames = w3cElement
-										.getAttribute("class");
-								String updated = ClassNames.removeClassName(
-										existingClassNames, cssClass);
-								w3cElement.setAttribute("class", updated);
-							}
-							lastValue = null;
+						
+						if (element != null) {
+							element.setClassName(cssClass, present);
+						} else {
+							String existingClassNames = w3cElement
+									.getAttribute("class");
+							String updated = present
+									? ClassNames.addClassName(
+											existingClassNames, cssClass)
+									: ClassNames.removeClassName(
+											existingClassNames, cssClass);
+							w3cElement.setAttribute("class", updated);
 						}
 					}
 					if (element != null) {
@@ -1596,8 +1568,8 @@ public class DirectedLayout implements AlcinaProcess {
 							w3cElement.removeAttribute("class");
 						}
 					}
-					break;
 				}
+					break;
 				case SWITCH_CSS_CLASS: {
 					String[] parts = binding.literal().split("\\|");
 					boolean part1 = (boolean) value;
@@ -1641,502 +1613,499 @@ public class DirectedLayout implements AlcinaProcess {
 				default:
 					throw new UnsupportedOperationException();
 				}
-			}
-
-			void unbind() {
-				if (listener != null) {
-					listener.unbind();
-				}
-			}
 		}
 
-		class PropertyBindings {
-			List<PropertyBinding> bindings = new ArrayList<>();
-
-			PropertyBindings() {
+		void unbind() {
+			if (listener != null) {
+				listener.unbind();
 			}
-
-			/*
-			 * FIXME - dirndl - validate (only 1 innertext/innerhtml, no
-			 * duplicate property anns)
-			 */
-			void bind(boolean leftToRight) {
-				resolver.getBindings(directed, model).stream()
-						.map(PropertyBinding::new).forEach(binding -> {
-							if (leftToRight) {
-								binding.setRight();
-							} else {
-								binding.setLeft();
-							}
-							binding.bind();
-						});
-			}
-
-			public void setLeft() {
-				bindings.forEach(PropertyBinding::setLeft);
-			}
-
-			void unbind() {
-				bindings.forEach(PropertyBinding::unbind);
-			}
-		}
-
-		/*
-		 * Use for debugging model/node bindings across layouts
-		 */
-		public String provideLayoutId() {
-			return String.valueOf(DirectedLayout.this.hashCode());
 		}
 	}
 
-	static class ReceivesEmitsEvents {
-		static ReceivesEmitsEvents instance;
+	class PropertyBindings {
+		List<PropertyBinding> bindings = new ArrayList<>();
 
-		static ClassData get(Class clazz) {
-			if (instance == null) {
-				synchronized (ReceivesEmitsEvents.class) {
-					if (instance == null) {
-						instance = new ReceivesEmitsEvents();
-					}
-				}
-			}
-			return instance.get0(clazz);
+		PropertyBindings() {
 		}
 
-		Map<Class, ClassData> classData;
-
-		Map<Class<? extends NodeEvent.Handler>, Class<? extends NodeEvent>> handlerEvents;
-
-		Map<Class<? extends ModelEvent.Emitter>, Class<? extends ModelEvent>> emitterEvents;
-
-		ReceivesEmitsEvents() {
-			classData = CollectionCreators.Bootstrap.createConcurrentClassMap();
-			// FIXME - reflection - rebuild on registry change
-			handlerEvents = (Map) CollectionCreators.Bootstrap
-					.createConcurrentClassMap();
-			emitterEvents = (Map) CollectionCreators.Bootstrap
-					.createConcurrentClassMap();
-			Registry.query(NodeEvent.class).registrations()
-					.filter(clazz -> !Reflections
-							.isAssignableFrom(DirectlyInvoked.class, clazz))
-					.forEach(eventClass -> {
-						ClassReflector<? extends NodeEvent> reflector = Reflections
-								.at(eventClass);
-						Class<? extends NodeEvent.Handler> handlerClass = reflector
-								.hasNoArgsConstructor()
-										? reflector.newInstance()
-												.getHandlerClass()
-										: reflector.getGenericBounds().bounds
-												.get(0);
-						handlerEvents.put(handlerClass, eventClass);
-						if (Reflections.isAssignableFrom(DescendantEvent.class,
-								eventClass)) {
-							Class<? extends ModelEvent.Emitter> emitterClass = ((DescendantEvent) reflector
-									.newInstance()).getEmitterClass();
-							emitterEvents.put(emitterClass,
-									(Class<? extends ModelEvent>) eventClass);
+		/*
+		 * FIXME - dirndl - validate (only 1 innertext/innerhtml, no duplicate
+		 * property anns)
+		 */
+		void bind(boolean leftToRight) {
+			resolver.getBindings(directed, model).stream()
+					.map(PropertyBinding::new).forEach(binding -> {
+						if (leftToRight) {
+							binding.setRight();
+						} else {
+							binding.setLeft();
 						}
+						binding.bind();
 					});
 		}
 
-		ClassData get0(Class clazz) {
-			return classData.computeIfAbsent(clazz, ClassData::new);
+		public void setLeft() {
+			bindings.forEach(PropertyBinding::setLeft);
 		}
 
-		class ClassData {
-			List<Class<? extends NodeEvent>> receives = new ArrayList<>();
-
-			List<Class<? extends NodeEvent>> emitsDescendant = new ArrayList<>();
-
-			Class<?> clazz;
-
-			ClassData(Class<?> clazz) {
-				this.clazz = clazz;
-				Reflections.at(clazz).provideAllImplementedInterfaces()
-						.<Class<? extends NodeEvent>> map(handlerEvents::get)
-						.filter(Objects::nonNull).forEach(receives::add);
-				Reflections.at(clazz).provideAllImplementedInterfaces()
-						.<Class<? extends NodeEvent>> map(emitterEvents::get)
-						.filter(Objects::nonNull).forEach(emitsDescendant::add);
-			}
+		void unbind() {
+			bindings.forEach(PropertyBinding::unbind);
 		}
 	}
 
-	class RecursionTest {
-		private Object model;
-
-		private AnnotationLocation annotationLocation;
-
-		RecursionTest(Node node) {
-			this.model = node.model;
-			this.annotationLocation = node.annotationLocation;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof RecursionTest) {
-				RecursionTest test = (RecursionTest) obj;
-				return CommonUtils.equals(test.annotationLocation,
-						annotationLocation, test.model, model);
-			} else {
-				return false;
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(model, annotationLocation);
-		}
-
-		Object model() {
-			return model;
-		}
-
-		@Override
-		public String toString() {
-			return FormatBuilder.keyValues("location", annotationLocation,
-					"model", model);
-		}
-	}
-
-	/**
-	 * The output of RendererInputs - for Uis with events the default is a GWT
-	 * element
-	 *
-	 *
-	 *
+	/*
+	 * Use for debugging model/node bindings across layouts
 	 */
-	public interface Rendered {
-		void append(Rendered rendered);
+	public String provideLayoutId() {
+		return String.valueOf(DirectedLayout.this.hashCode());
+	}
+}
 
-		boolean hasAttributes();
+static class ReceivesEmitsEvents {
+	static ReceivesEmitsEvents instance;
 
-		void appendToRoot();
-
-		<T> T as(Class<T> class1);
-
-		default DomNode asDomNode() {
-			return DomNode.from(getNode());
+	static ClassData get(Class clazz) {
+		if (instance == null) {
+			synchronized (ReceivesEmitsEvents.class) {
+				if (instance == null) {
+					instance = new ReceivesEmitsEvents();
+				}
+			}
 		}
-
-		Element asElement();
-
-		org.w3c.dom.Element asW3cElement();
-
-		int getChildCount();
-
-		int getChildIndex(Rendered after);
-
-		org.w3c.dom.Node getNode();
-
-		void insertAsFirstChild(Rendered rendered);
-
-		void insertChild(Rendered rendered, int i);
-
-		boolean isElement();
-
-		void removeFromParent();
+		return instance.get0(clazz);
 	}
 
-	/**
-	 * Instances act as an input and process state token for the
-	 * layout/transformation algorithm
-	 *
-	 * Note that the resolver is modified (if at all) *after* init,
-	 * so @DirectedContextResolver applies to children, not the node itself.
-	 * This simplifies processing, but makes customisation a little more work in
-	 * certain cases - see {@link Choices.Select}
-	 *
-	 *
-	 *
-	 *
-	 */
-	class RendererInput implements Traversable {
-		Node before;
+	Map<Class, ClassData> classData;
 
-		ContextResolver resolver;
+	Map<Class<? extends NodeEvent.Handler>, Class<? extends NodeEvent>> handlerEvents;
 
-		// effectively final
-		Object model;
+	Map<Class<? extends ModelEvent.Emitter>, Class<? extends ModelEvent>> emitterEvents;
 
-		AnnotationLocation location;
-
-		List<Directed> directeds;
-
-		Node parentNode;
-
-		Node node;
-
-		Node replace;
-
-		/*
-		 * preserve previous render (e.g. dom nodes) if possible (when moving
-		 * nodes due to a FragmentModel mutation)
-		 */
-		Rendered rendered;
-
-		private RendererInput() {
-		}
-
-		void afterRender() {
-			// must occur after insertion (onBind expects dom attach)
-			node.postRender();
-			if (node.hasRendered()) {
-				Optional<Rendered> firstAncestorRendered = firstAncestorRendered();
-				if (firstAncestorRendered.isPresent()) {
-					Rendered container = firstAncestorRendered.get();
-					// in most cases, insertionPoint will be the default (LAST),
-					// so don't set the field in that case . But use here to
-					// make the logic clearer
-					InsertionPoint insertionPoint = node.insertionPoint != null
-							? node.insertionPoint
-							: new InsertionPoint();
-					switch (insertionPoint.point) {
-					// FIRST and AFTER only occur during replace (and that not
-					// at the end of a parent's children)
-					case FIRST:
-						container.insertChild(node.rendered, 0);
-						// bump insertion point
-						insertionPoint.point = Point.AFTER;
-						insertionPoint.after = node.rendered;
-						break;
-					case AFTER:
-						int insertAfterIndex = container
-								.getChildIndex(insertionPoint.after);
-						if (insertAfterIndex < container.getChildCount() - 1) {
-							container.insertChild(node.rendered,
-									insertAfterIndex + 1);
-							// bump insertion point
-							insertionPoint.after = node.rendered;
-						} else {
-							container.append(node.rendered);
-							// bump insertion point
-							insertionPoint.point = Point.LAST;
-						}
-						break;
-					case LAST:
-						container.append(node.rendered);
-						break;
+	ReceivesEmitsEvents() {
+		classData = CollectionCreators.Bootstrap.createConcurrentClassMap();
+		// FIXME - reflection - rebuild on registry change
+		handlerEvents = (Map) CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
+		emitterEvents = (Map) CollectionCreators.Bootstrap
+				.createConcurrentClassMap();
+		Registry.query(NodeEvent.class).registrations()
+				.filter(clazz -> !Reflections
+						.isAssignableFrom(DirectlyInvoked.class, clazz))
+				.forEach(eventClass -> {
+					ClassReflector<? extends NodeEvent> reflector = Reflections
+							.at(eventClass);
+					Class<? extends NodeEvent.Handler> handlerClass = reflector
+							.hasNoArgsConstructor()
+									? reflector.newInstance().getHandlerClass()
+									: reflector.getGenericBounds().bounds
+											.get(0);
+					handlerEvents.put(handlerClass, eventClass);
+					if (Reflections.isAssignableFrom(DescendantEvent.class,
+							eventClass)) {
+						Class<? extends ModelEvent.Emitter> emitterClass = ((DescendantEvent) reflector
+								.newInstance()).getEmitterClass();
+						emitterEvents.put(emitterClass,
+								(Class<? extends ModelEvent>) eventClass);
 					}
-					// the node *did* provide a widget, so its children will
-					// just insert normally (LAST), no insertionpoint required
-					node.insertionPoint = null;
-				} else {
-					// root can't have a sibling
-					Preconditions.checkState(before == null);
-					// root - if this is a replace, append to root panel
-					if (replace != null) {
-						resolver.replaceRoot(node.rendered);
-					}
-				}
-			}
-			node.postDomAttach();
-			if (directeds.size() > 1) {
-				enqueueInput(resolver, model, location,
-						directeds.subList(1, directeds.size()), node);
-			}
-		}
-
-		void beforeRender() {
-			/*
-			 * This event is fired directly (as method calls), not via
-			 * bubbling/dispatch
-			 */
-			LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
-					node, model);
-			resolver.onBeforeRender(beforeRender);
-			if (model instanceof LayoutEvents.BeforeRender.Handler) {
-				((LayoutEvents.BeforeRender.Handler) model)
-						.onBeforeRender(beforeRender);
-			}
-		}
-
-		@Override
-		public Iterator children() {
-			throw new UnsupportedOperationException();
-		}
-
-		void enqueueInput(ContextResolver resolver, Object model,
-				AnnotationLocation location, List<Directed> directeds,
-				Node parentNode) {
-			DirectedLayout.this.enqueueInput(resolver, model, location,
-					directeds, parentNode);
-		}
-
-		@Override
-		public void enter() {
-		}
-
-		@Override
-		public void exit() {
-		}
-
-		Optional<Rendered> firstAncestorRendered() {
-			return parentNode == null ? Optional.empty()
-					: parentNode.firstSelfOrAncestorRendered(true);
-		}
-
-		private Directed firstDirected() {
-			return directeds.get(0);
-		}
-
-		void init(ContextResolver resolver, Object model,
-				AnnotationLocation location, List<Directed> directeds,
-				Node parentNode) {
-			/*
-			 * compute the new resolver, if any
-			 */
-			ContextResolver newResolver = null;
-			if (model != null && model instanceof ContextResolver.Has) {
-				newResolver = ((ContextResolver.Has) model)
-						.getContextResolver(location);
-			}
-			if (newResolver == null) {
-				DirectedContextResolver resolverAnnotation = location
-						.getAnnotation(DirectedContextResolver.class);
-				if (resolverAnnotation != null) {
-					newResolver = Reflections
-							.newInstance(resolverAnnotation.value());
-				}
-			}
-			if (newResolver != null) {
-				newResolver.init(resolver, resolver.layout, model);
-				resolver = newResolver;
-				// legal (modifying the location's resolver)! note that new
-				// resolver will have an empty resolution
-				// cache
-				location.setResolver(resolver);
-			}
-			this.resolver = resolver;
-			/*
-			 * Now compute other fields (using the resolver)
-			 */
-			this.model = resolver.resolveModel(model);
-			if (this.model != model) {
-				if (this.model instanceof Model.ResetDirecteds) {
-					location = new AnnotationLocation(this.model.getClass(),
-							null, resolver);
-				}
-			}
-			this.location = location;
-			this.parentNode = parentNode;
-			this.directeds = directeds != null ? directeds
-					: location.getAnnotations(Directed.class);
-			// generate the node (1-1 with input)
-			node = new Node(resolver, parentNode, location, this.model,
-					this.directeds.size() == 1);
-			node.directed = firstDirected();
-		}
-
-		@Override
-		public void release() {
-			resolver = null;
-			model = null;
-			location = null;
-			directeds = null;
-			parentNode = null;
-			node = null;
-			replace = null;
-			before = null;
-		}
-
-		void render() {
-			ProcessObservers.publish(RenderObservable.class,
-					() -> new RenderObservable(node));
-			if (replace != null) {
-				node.insertionPoint = replace.resolveInsertionPoint();
-				DirectedLayout.this.insertionPoint = node.insertionPoint;
-				int indexInParentChildren = parentNode.children
-						.indexOf(replace);
-				replace.remove(true);
-				parentNode.children.add(indexInParentChildren, node);
-			} else if (before != null) {
-				node.insertionPoint = before.resolveInsertionPoint();
-				DirectedLayout.this.insertionPoint = node.insertionPoint;
-				int indexInParentChildren = parentNode.children.indexOf(before);
-				parentNode.children.add(indexInParentChildren, node);
-			} else {
-				if (parentNode != null) {
-					// add fairly late, to ensure we're in insertion order
-					parentNode.ensureChildren();
-					parentNode.children.add(node);
-					// complexities of delegation and child replacement
-					if (parentNode.insertionPoint != null) {
-						node.insertionPoint = parentNode.insertionPoint;
-					}
-				}
-			}
-			beforeRender();
-			if (model != null
-					|| Reflections.isAssignableFrom(RendersNull.class,
-							node.directed.renderer())
-					|| node.has(Directed.RenderNull.class)) {
-				if (rendered != null) {
-					// preserve domNode/model identity
-					node.rendered = rendered;
-				}
-				DirectedRenderer renderer = resolveRenderer();
-				renderer.render(this);
-			}
-			afterRender();
-		}
-
-		DirectedRenderer resolveRenderer() {
-			return DirectedLayout.this.resolveRenderer(node.directed, location,
-					model);
-		}
-
-		Directed soleDirected() {
-			Preconditions.checkState(directeds.size() == 1);
-			return directeds.get(0);
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("Node:\n%s\n\nLocation: %s", node.toParentStack(),
-					location.toString());
-		}
+				});
 	}
 
-	static class RendererNotFoundException extends RuntimeException {
-		public RendererNotFoundException(String message, Throwable cause) {
-			super(message, cause);
-		}
+	ClassData get0(Class clazz) {
+		return classData.computeIfAbsent(clazz, ClassData::new);
 	}
 
-	/**
-	 * Usage:
-	 *
-	 * <code>
-	 * <pre>
-	public class MyClientObservers extends ProcessObserver.AppDebug {
-	public MyClientObservers() {j
-		ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
-			if (o.node.getModel() instanceof MyModel) {
-				boolean breakpointHere = true;
-			}
-		}, true);
-	}
-	}
-	 * </pre>
-	 *</code>
-	 *
-	 *
-	 *
-	 *
-	 */
-	public static class RenderObservable implements ProcessObservable {
-		public Node node;
+	class ClassData {
+		List<Class<? extends NodeEvent>> receives = new ArrayList<>();
 
-		public RenderObservable(Node node) {
-			this.node = node;
-		}
+		List<Class<? extends NodeEvent>> emitsDescendant = new ArrayList<>();
 
-		@Override
-		public String toString() {
-			FormatBuilder fb = new FormatBuilder().separator("\n");
-			fb.append(node);
-			return fb.toString();
+		Class<?> clazz;
+
+		ClassData(Class<?> clazz) {
+			this.clazz = clazz;
+			Reflections.at(clazz).provideAllImplementedInterfaces()
+					.<Class<? extends NodeEvent>> map(handlerEvents::get)
+					.filter(Objects::nonNull).forEach(receives::add);
+			Reflections.at(clazz).provideAllImplementedInterfaces()
+					.<Class<? extends NodeEvent>> map(emitterEvents::get)
+					.filter(Objects::nonNull).forEach(emitsDescendant::add);
 		}
 	}
 }
+
+class RecursionTest {
+	private Object model;
+
+	private AnnotationLocation annotationLocation;
+
+	RecursionTest(Node node) {
+		this.model = node.model;
+		this.annotationLocation = node.annotationLocation;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof RecursionTest) {
+			RecursionTest test = (RecursionTest) obj;
+			return CommonUtils.equals(test.annotationLocation,
+					annotationLocation, test.model, model);
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(model, annotationLocation);
+	}
+
+	Object model() {
+		return model;
+	}
+
+	@Override
+	public String toString() {
+		return FormatBuilder.keyValues("location", annotationLocation, "model",
+				model);
+	}
+}
+
+/**
+ * The output of RendererInputs - for Uis with events the default is a GWT
+ * element
+ *
+ *
+ *
+ */
+public interface Rendered {
+	void append(Rendered rendered);
+
+	boolean hasAttributes();
+
+	void appendToRoot();
+
+	<T> T as(Class<T> class1);
+
+	default DomNode asDomNode() {
+		return DomNode.from(getNode());
+	}
+
+	Element asElement();
+
+	org.w3c.dom.Element asW3cElement();
+
+	int getChildCount();
+
+	int getChildIndex(Rendered after);
+
+	org.w3c.dom.Node getNode();
+
+	void insertAsFirstChild(Rendered rendered);
+
+	void insertChild(Rendered rendered, int i);
+
+	boolean isElement();
+
+	void removeFromParent();
+}
+
+/**
+ * Instances act as an input and process state token for the
+ * layout/transformation algorithm
+ *
+ * Note that the resolver is modified (if at all) *after* init,
+ * so @DirectedContextResolver applies to children, not the node itself. This
+ * simplifies processing, but makes customisation a little more work in certain
+ * cases - see {@link Choices.Select}
+ *
+ *
+ *
+ *
+ */
+class RendererInput implements Traversable {
+	Node before;
+
+	ContextResolver resolver;
+
+	// effectively final
+	Object model;
+
+	AnnotationLocation location;
+
+	List<Directed> directeds;
+
+	Node parentNode;
+
+	Node node;
+
+	Node replace;
+
+	/*
+	 * preserve previous render (e.g. dom nodes) if possible (when moving nodes
+	 * due to a FragmentModel mutation)
+	 */
+	Rendered rendered;
+
+	private RendererInput() {
+	}
+
+	void afterRender() {
+		// must occur after insertion (onBind expects dom attach)
+		node.postRender();
+		if (node.hasRendered()) {
+			Optional<Rendered> firstAncestorRendered = firstAncestorRendered();
+			if (firstAncestorRendered.isPresent()) {
+				Rendered container = firstAncestorRendered.get();
+				// in most cases, insertionPoint will be the default (LAST),
+				// so don't set the field in that case . But use here to
+				// make the logic clearer
+				InsertionPoint insertionPoint = node.insertionPoint != null
+						? node.insertionPoint
+						: new InsertionPoint();
+				switch (insertionPoint.point) {
+				// FIRST and AFTER only occur during replace (and that not
+				// at the end of a parent's children)
+				case FIRST:
+					container.insertChild(node.rendered, 0);
+					// bump insertion point
+					insertionPoint.point = Point.AFTER;
+					insertionPoint.after = node.rendered;
+					break;
+				case AFTER:
+					int insertAfterIndex = container
+							.getChildIndex(insertionPoint.after);
+					if (insertAfterIndex < container.getChildCount() - 1) {
+						container.insertChild(node.rendered,
+								insertAfterIndex + 1);
+						// bump insertion point
+						insertionPoint.after = node.rendered;
+					} else {
+						container.append(node.rendered);
+						// bump insertion point
+						insertionPoint.point = Point.LAST;
+					}
+					break;
+				case LAST:
+					container.append(node.rendered);
+					break;
+				}
+				// the node *did* provide a widget, so its children will
+				// just insert normally (LAST), no insertionpoint required
+				node.insertionPoint = null;
+			} else {
+				// root can't have a sibling
+				Preconditions.checkState(before == null);
+				// root - if this is a replace, append to root panel
+				if (replace != null) {
+					resolver.replaceRoot(node.rendered);
+				}
+			}
+		}
+		node.postDomAttach();
+		if (directeds.size() > 1) {
+			enqueueInput(resolver, model, location,
+					directeds.subList(1, directeds.size()), node);
+		}
+	}
+
+	void beforeRender() {
+		/*
+		 * This event is fired directly (as method calls), not via
+		 * bubbling/dispatch
+		 */
+		LayoutEvents.BeforeRender beforeRender = new LayoutEvents.BeforeRender(
+				node, model);
+		resolver.onBeforeRender(beforeRender);
+		if (model instanceof LayoutEvents.BeforeRender.Handler) {
+			((LayoutEvents.BeforeRender.Handler) model)
+					.onBeforeRender(beforeRender);
+		}
+	}
+
+	@Override
+	public Iterator children() {
+		throw new UnsupportedOperationException();
+	}
+
+	void enqueueInput(ContextResolver resolver, Object model,
+			AnnotationLocation location, List<Directed> directeds,
+			Node parentNode) {
+		DirectedLayout.this.enqueueInput(resolver, model, location, directeds,
+				parentNode);
+	}
+
+	@Override
+	public void enter() {
+	}
+
+	@Override
+	public void exit() {
+	}
+
+	Optional<Rendered> firstAncestorRendered() {
+		return parentNode == null ? Optional.empty()
+				: parentNode.firstSelfOrAncestorRendered(true);
+	}
+
+	private Directed firstDirected() {
+		return directeds.get(0);
+	}
+
+	void init(ContextResolver resolver, Object model,
+			AnnotationLocation location, List<Directed> directeds,
+			Node parentNode) {
+		/*
+		 * compute the new resolver, if any
+		 */
+		ContextResolver newResolver = null;
+		if (model != null && model instanceof ContextResolver.Has) {
+			newResolver = ((ContextResolver.Has) model)
+					.getContextResolver(location);
+		}
+		if (newResolver == null) {
+			DirectedContextResolver resolverAnnotation = location
+					.getAnnotation(DirectedContextResolver.class);
+			if (resolverAnnotation != null) {
+				newResolver = Reflections
+						.newInstance(resolverAnnotation.value());
+			}
+		}
+		if (newResolver != null) {
+			newResolver.init(resolver, resolver.layout, model);
+			resolver = newResolver;
+			// legal (modifying the location's resolver)! note that new
+			// resolver will have an empty resolution
+			// cache
+			location.setResolver(resolver);
+		}
+		this.resolver = resolver;
+		/*
+		 * Now compute other fields (using the resolver)
+		 */
+		this.model = resolver.resolveModel(model);
+		if (this.model != model) {
+			if (this.model instanceof Model.ResetDirecteds) {
+				location = new AnnotationLocation(this.model.getClass(), null,
+						resolver);
+			}
+		}
+		this.location = location;
+		this.parentNode = parentNode;
+		this.directeds = directeds != null ? directeds
+				: location.getAnnotations(Directed.class);
+		// generate the node (1-1 with input)
+		node = new Node(resolver, parentNode, location, this.model,
+				this.directeds.size() == 1);
+		node.directed = firstDirected();
+	}
+
+	@Override
+	public void release() {
+		resolver = null;
+		model = null;
+		location = null;
+		directeds = null;
+		parentNode = null;
+		node = null;
+		replace = null;
+		before = null;
+	}
+
+	void render() {
+		ProcessObservers.publish(RenderObservable.class,
+				() -> new RenderObservable(node));
+		if (replace != null) {
+			node.insertionPoint = replace.resolveInsertionPoint();
+			DirectedLayout.this.insertionPoint = node.insertionPoint;
+			int indexInParentChildren = parentNode.children.indexOf(replace);
+			replace.remove(true);
+			parentNode.children.add(indexInParentChildren, node);
+		} else if (before != null) {
+			node.insertionPoint = before.resolveInsertionPoint();
+			DirectedLayout.this.insertionPoint = node.insertionPoint;
+			int indexInParentChildren = parentNode.children.indexOf(before);
+			parentNode.children.add(indexInParentChildren, node);
+		} else {
+			if (parentNode != null) {
+				// add fairly late, to ensure we're in insertion order
+				parentNode.ensureChildren();
+				parentNode.children.add(node);
+				// complexities of delegation and child replacement
+				if (parentNode.insertionPoint != null) {
+					node.insertionPoint = parentNode.insertionPoint;
+				}
+			}
+		}
+		beforeRender();
+		if (model != null
+				|| Reflections.isAssignableFrom(RendersNull.class,
+						node.directed.renderer())
+				|| node.has(Directed.RenderNull.class)) {
+			if (rendered != null) {
+				// preserve domNode/model identity
+				node.rendered = rendered;
+			}
+			DirectedRenderer renderer = resolveRenderer();
+			renderer.render(this);
+		}
+		afterRender();
+	}
+
+	DirectedRenderer resolveRenderer() {
+		return DirectedLayout.this.resolveRenderer(node.directed, location,
+				model);
+	}
+
+	Directed soleDirected() {
+		Preconditions.checkState(directeds.size() == 1);
+		return directeds.get(0);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("Node:\n%s\n\nLocation: %s", node.toParentStack(),
+				location.toString());
+	}
+}
+
+static class RendererNotFoundException extends RuntimeException {
+	public RendererNotFoundException(String message, Throwable cause) {
+		super(message, cause);
+	}
+}
+
+/**
+ * Usage:
+ *
+ * <code>
+ * <pre>
+public class MyClientObservers extends ProcessObserver.AppDebug {
+public MyClientObservers() {j
+	ProcessObservers.observe(DirectedLayout.RenderObservable.class, o -> {
+		if (o.node.getModel() instanceof MyModel) {
+			boolean breakpointHere = true;
+		}
+	}, true);
+}
+}
+ * </pre>
+ *</code>
+ *
+ *
+ *
+ *
+ */
+public static class RenderObservable implements ProcessObservable {
+	public Node node;
+
+	public RenderObservable(Node node) {
+		this.node = node;
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder fb = new FormatBuilder().separator("\n");
+		fb.append(node);
+		return fb.toString();
+	}
+}}

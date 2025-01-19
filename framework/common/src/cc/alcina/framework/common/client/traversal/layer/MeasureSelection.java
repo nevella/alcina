@@ -161,7 +161,8 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	}
 
 	public MeasureSelection truncateTo(IntPair range) {
-		Ax.err("Attempting to truncate %s to %s", NestedName.get(this), range);
+		Ax.err("[base measure-selection - perhaps override?] Attempting to truncate %s to %s",
+				NestedName.get(this), range);
 		throw new UnsupportedOperationException();
 	}
 

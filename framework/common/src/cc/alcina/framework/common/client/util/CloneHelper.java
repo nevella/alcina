@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -184,5 +185,23 @@ public class CloneHelper {
 			return CommonUtils.shallowCollectionClone((Collection) o);
 		}
 		return o;
+	}
+
+	/**
+	 * <p>
+	 * This will only work on a jdk, but is registered here to prevent
+	 * dependency failures
+	 * 
+	 * @param <T>
+	 * @param source
+	 * @return
+	 */
+	public static <T> T fieldwiseClone(T source) {
+		return Registry.impl(FieldwiseCloner.class).fieldwiseClone(source);
+	}
+
+	@Registration.Self
+	public interface FieldwiseCloner {
+		<T> T fieldwiseClone(T source);
 	}
 }

@@ -11,6 +11,6 @@ public class Help {
 		@Directed(
 			reemits = { DomEvents.Click.class,
 					ModelEvents.ApplicationHelp.class })
-		String help = "?";
+		String helpButton = "?";
 	}
 }
