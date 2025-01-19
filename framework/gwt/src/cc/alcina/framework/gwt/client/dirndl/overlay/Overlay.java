@@ -201,7 +201,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	@Binding(type = Type.CLASS_PROPERTY)
 	public String getCssClass() {
-		return attributes.cssClass;
+		return this.cssClass;
 	}
 
 	public OverlayPosition getPosition() {
