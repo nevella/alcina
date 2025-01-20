@@ -53,15 +53,12 @@ public abstract class SequenceBrowserCommand<T, H extends NodeEvent.Handler>
 
 		@Registration({ TopLevelHandler.class, ReloadApp.class })
 		public static class HandlerImpl implements Handler, TopLevelHandler {
+			boolean fired = false;
+
 			@Override
 			public void onReloadApp(ReloadApp event) {
-				/*
-				 * FIXME - trav - per-environment registry/MessageManager
-				 */
-				StatusModule.get().showMessageTransitional(
-						"Reloading dev console + traversal view");
-				RemoteUi.get().flush();
-				ServletLayerTopics.topicRestartConsole.signal();
+				RemoteUi.get()
+						.reloadApp("Reloading dev console + sequence view");
 			}
 		}
 	}

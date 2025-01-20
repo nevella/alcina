@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.activity.shared.Activity;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeEvent;
@@ -19,8 +20,10 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
+import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 
@@ -68,6 +71,23 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 					return false;
 				}
 			}
+		}
+	}
+
+	boolean reloading;
+
+	@Override
+	public void reloadApp(String message) {
+		/*
+		 * edge-case - because restart will interfere with message passing (and
+		 * cause multiple fires), ignore all except first call
+		 */
+		if (!reloading) {
+			Preconditions.checkState(Ax.isTest());
+			reloading = true;
+			StatusModule.get().showMessageTransitional(message);
+			RemoteUi.get().flush();
+			ServletLayerTopics.topicRestartConsole.signal();
 		}
 	}
 

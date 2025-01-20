@@ -167,4 +167,6 @@ public interface RemoteUi {
 	}
 
 	boolean isNotifyException(ProcessingException message);
+
+	void reloadApp(String message);
 }

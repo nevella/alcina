@@ -38,13 +38,8 @@ public abstract class GalleryBrowserCommand<T, H extends NodeEvent.Handler>
 		public static class HandlerImpl implements Handler, TopLevelHandler {
 			@Override
 			public void onReloadApp(ReloadApp event) {
-				/*
-				 * FIXME - trav - per-environment registry/MessageManager
-				 */
-				StatusModule.get().showMessageTransitional(
-						"Reloading dev console + traversal view");
-				RemoteUi.get().flush();
-				ServletLayerTopics.topicRestartConsole.signal();
+				RemoteUi.get()
+						.reloadApp("Reloading dev console + gallery view");
 			}
 		}
 	}
