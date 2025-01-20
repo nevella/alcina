@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.google.common.base.Preconditions;
 import com.google.gwt.activity.shared.ActivityManager;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Document.PerDocumentSupplierGwtImpl;
 import com.google.gwt.dom.client.Document.RemoteType;
@@ -102,6 +103,7 @@ public abstract class Client implements ContextFrame {
 			EventFrame.contextProvider = ContextProvider.createProvider(
 					ctx -> new EventFrame(), null, null, EventFrame.class,
 					false);
+			AttributeBehaviorHandler.BehaviorRegistry.get().init(true);
 			Document.get().onDocumentEventSystemInit();
 		}
 
