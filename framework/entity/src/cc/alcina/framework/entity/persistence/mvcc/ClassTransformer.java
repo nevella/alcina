@@ -53,6 +53,7 @@ import com.github.javaparser.ast.stmt.SwitchStmt;
 import com.github.javaparser.ast.stmt.SynchronizedStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
@@ -605,8 +606,7 @@ class ClassTransformer {
 				return !innerNonStatic && !Entity.class.isAssignableFrom(clazz);
 			}
 
-			private void logSolverException(Expression expr,
-					RuntimeException e) {
+			private void logSolverException(Node expr, RuntimeException e) {
 				if (expr.toString().matches("[A-Z].+?\\.[A-Z].+?")) {
 					// javaparser issue with nested static refs --
 					// TransformManager.Serializer.get() --
@@ -795,31 +795,36 @@ class ClassTransformer {
 					return;
 				}
 				ClassOrInterfaceType type = expr.getType();
-				ResolvedType creationType = transformer.solver.getType(expr);
-				ResolvedReferenceTypeDeclaration creationTypeDeclaration = creationType
-						.asReferenceType().getTypeDeclaration().get();
-				if (creationTypeDeclaration instanceof JavaParserClassDeclaration) {
-					try {
-						Class clazz = getJvmClassFromTypeDeclaration(
-								creationTypeDeclaration);
-						boolean innerNonStatic = isInnerNonStatic(clazz);
-						if (innerNonStatic) {
-							// not allowed, must be annotated with
-							// @MvccAccessCorrect - see
-							// cc.alcina.framework.entity.persistence.mvcc.MvccTestEntity.valid_InnerConstructor()
-							addProblematicAccess(
-									MvccCorrectnessIssueType.InnerClassConstructor);
+				try {
+					ResolvedType creationType = transformer.solver
+							.getType(expr);
+					ResolvedReferenceTypeDeclaration creationTypeDeclaration = creationType
+							.asReferenceType().getTypeDeclaration().get();
+					if (creationTypeDeclaration instanceof JavaParserClassDeclaration) {
+						try {
+							Class clazz = getJvmClassFromTypeDeclaration(
+									creationTypeDeclaration);
+							boolean innerNonStatic = isInnerNonStatic(clazz);
+							if (innerNonStatic) {
+								// not allowed, must be annotated with
+								// @MvccAccessCorrect - see
+								// cc.alcina.framework.entity.persistence.mvcc.MvccTestEntity.valid_InnerConstructor()
+								addProblematicAccess(
+										MvccCorrectnessIssueType.InnerClassConstructor);
+							}
+						} catch (Exception e) {
+							throw new WrappedRuntimeException(e);
+						} catch (VerifyError vr) {
+							Logger logger = LoggerFactory.getLogger(getClass());
+							logger.warn("Verify error in visitor: {} - {}",
+									CommonUtils.toSimpleExceptionMessage(vr),
+									classOrInterfaceDeclaration.getName()
+											.toString());
+							logger.warn("Verify error", vr);
 						}
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					} catch (VerifyError vr) {
-						Logger logger = LoggerFactory.getLogger(getClass());
-						logger.warn("Verify error in visitor: {} - {}",
-								CommonUtils.toSimpleExceptionMessage(vr),
-								classOrInterfaceDeclaration.getName()
-										.toString());
-						logger.warn("Verify error", vr);
 					}
+				} catch (RuntimeException e) {
+					logSolverException(expr, e);
 				}
 			}
 
