@@ -45,6 +45,10 @@ This aids encapsulation
 
 - Package-level (non-public) classes follow the same rules as inner classes - avoid full prefixing
 
+## asX vs toX
+
+to is an irreversible transformation (toString), as is not (e.g. GWT Node.asDomNode is reversible)
+
 ## See also
 
 - [Devex styles](misc/notes.md)
