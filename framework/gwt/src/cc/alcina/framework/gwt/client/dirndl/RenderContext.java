@@ -20,6 +20,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -168,8 +169,27 @@ public class RenderContext extends LooseContextInstance {
 		set(SUPPRESS_VALIDATION_FEEDBACK_FOR, widget);
 	}
 
+	@Override
+	public void push() {
+		if (!Al.isBrowser()) {
+			return;
+		}
+		super.push();
+	}
+
+	@Override
+	public void pop() {
+		if (!Al.isBrowser()) {
+			return;
+		}
+		super.pop();
+	}
+
 	public void setValidationFeedbackSupplier(
 			Function<String, ValidationFeedback> validationFeedbackSupplier) {
+		if (!Al.isBrowser()) {
+			return;
+		}
 		set(VALIDATION_FEEDBACK_SUPPLIER, validationFeedbackSupplier);
 	}
 

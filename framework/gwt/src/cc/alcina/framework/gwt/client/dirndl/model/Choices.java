@@ -498,8 +498,11 @@ public abstract class Choices<T> extends Model implements
 			SelectElement selectElement = (SelectElement) node.getRendered()
 					.asElement();
 			int index = selectElement.getSelectedIndex();
-			Choice<T> choice = choices.get(index);
-			T value = index >= 0 ? choice.getValue() : null;
+			Choice<T> choice = null;
+			if (index >= 0) {
+				choice = choices.get(index);
+			}
+			T value = choice != null ? choice.getValue() : null;
 			setSelectedValue(value);
 			event.reemitAs(this, ModelEvents.Selected.class, choice);
 		}

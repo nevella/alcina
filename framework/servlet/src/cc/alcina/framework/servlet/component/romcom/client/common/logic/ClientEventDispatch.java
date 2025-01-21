@@ -99,6 +99,8 @@ class ClientEventDispatch {
 					}
 				}
 			}
+			// TODO - why (why just this)? should probably be an attrbehavior.
+			// In general, a.withoutLink shd probably preventdefault
 			if (mouseDownEvent) {
 				if (eventTargetDomNode.ancestors().has("choice-suggestions")) {
 					event.preventDefault();

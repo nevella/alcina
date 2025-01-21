@@ -20,11 +20,28 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Submit;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.QueryValidity;
+import cc.alcina.framework.gwt.client.dirndl.model.FormEvents.ValidationResultEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormModelProvider;
 
+/**
+ * <p>
+ * This class transforms a {@link Bindable} into a labelled, possibly editable
+ * form
+ * <p>
+ * Topic/notes:
+ * <ul>
+ * <li>Multiple section edit UIs: use a {@link MultipleEditorSupport}
+ * <ul>
+ * <li>Use a
+ * </ul>
+ * </ul>
+ */
 @Directed(tag = "bean-editor")
 public class BeanForm extends Model {
 	private String heading;
@@ -36,6 +53,66 @@ public class BeanForm extends Model {
 	private String className;
 
 	private boolean inert;
+
+	/*
+	 * @formatter:off
+
+
+
+	 * @formatter:on
+	 */
+	public static class MultipleEditorSupport implements
+			ModelEvents.Submit.Handler, FormEvents.QueryValidity.Emitter,
+			FormEvents.ValidationResultEvent.Handler {
+		Host host;
+
+		public MultipleEditorSupport(Host host) {
+			this.host = host;
+		}
+
+		List<Bindable> bindables;
+
+		int validBindableCount;
+
+		@Override
+		public void onValidationResult(ValidationResultEvent event) {
+			switch (event.getModel().state) {
+			case VALID:
+				validBindableCount++;
+				if (validBindableCount == bindables.size()) {
+					event.reemitAs(host.provideModel(),
+							FormEvents.ValidationSuccessMultiple.class);
+				}
+				break;
+			case INVALID:
+				host.setInert(false);
+				host.setValidationMessage(event.getModel().exceptionMessage);
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		@Override
+		public void onSubmit(Submit event) {
+			host.setInert(true);
+			host.setValidationMessage(null);
+			validBindableCount = 0;
+			event.reemitAs(host.provideModel(), QueryValidity.class);
+		}
+
+		public interface Host {
+			void setInert(boolean inert);
+
+			void setValidationMessage(String validationMessage);
+
+			List<Bindable> provideBindables();
+
+			default Model provideModel() {
+				return (Model) this;
+			}
+		}
+	}
 
 	@Directed.Transform(FormTransform.class)
 	public Bindable getBindable() {

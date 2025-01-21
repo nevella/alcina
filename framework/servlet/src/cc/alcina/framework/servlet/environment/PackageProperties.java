@@ -7,6 +7,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import com.google.gwt.place.shared.Place;
+import java.lang.Boolean;
 import java.util.List;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ public class PackageProperties {
       public TypedProperty<AbstractUi, DirectedLayout> layout = new TypedProperty<>(AbstractUi.class, "layout");
       public TypedProperty<AbstractUi, List> notifiedExceptions = new TypedProperty<>(AbstractUi.class, "notifiedExceptions");
       public TypedProperty<AbstractUi, Place> place = new TypedProperty<>(AbstractUi.class, "place");
+      public TypedProperty<AbstractUi, Boolean> reloading = new TypedProperty<>(AbstractUi.class, "reloading");
       public TypedProperty<AbstractUi, RemoteComponentProtocol.Session> session = new TypedProperty<>(AbstractUi.class, "session");
     }
     

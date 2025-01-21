@@ -212,7 +212,9 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public int getPropertyInt(String name) {
-		throw new UnsupportedOperationException();
+		String propertyString = getPropertyString(name);
+		return Ax.isBlank(propertyString) ? -1
+				: Integer.parseInt(propertyString);
 	}
 
 	@Override
@@ -227,8 +229,10 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public String getPropertyString(String name) {
-		if (Objects.equals(name, "value")) {
-			// the cached value field is updated by onInput events, so if value
+		switch (name) {
+		case "value": {
+			// the cached value field is updated by onInput events, so if
+			// value
 			// is null the value will be the original (local dom tree) value
 			if (value == null) {
 				Element elem = elementFor();
@@ -244,8 +248,14 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 				}
 			}
 			return value;
-		} else {
+		}
+		case "selectedIndex": {
+			return invokeSync("getPropertyString", List.of(String.class),
+					List.of(name));
+		}
+		default: {
 			return getAttribute(name);
+		}
 		}
 	}
 
@@ -427,7 +437,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public void setPropertyInt(String name, int value) {
-		throw new UnsupportedOperationException();
+		setPropertyString(name, String.valueOf(value));
 	}
 
 	@Override

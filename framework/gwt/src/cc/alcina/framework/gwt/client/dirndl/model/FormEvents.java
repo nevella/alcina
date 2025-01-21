@@ -15,11 +15,33 @@ public class FormEvents {
 	 * Note that a result can be intermediate - i.e. with a non-complete state
 	 */
 	public static class ValidationResult extends Bindable.Fields {
+		public static ValidationResult invalid(Throwable e) {
+			return invalid(CommonUtils.toSimpleExceptionMessage(e));
+		}
+
+		public static ValidationResult invalid(String message) {
+			return new ValidationResult(null, ValidationState.INVALID, message);
+		}
+
 		public ValidationState state;
 
 		public String exceptionMessage;
 
 		transient ModelEvent originatingEvent;
+
+		public ValidationResult() {
+		}
+
+		public ValidationResult(ValidationState state) {
+			this(null, state, null);
+		}
+
+		ValidationResult(ModelEvent originatingEvent, ValidationState state,
+				String exceptionMessage) {
+			this.originatingEvent = originatingEvent;
+			this.state = state;
+			this.exceptionMessage = exceptionMessage;
+		}
 
 		@Override
 		public boolean equals(Object obj) {
@@ -38,20 +60,6 @@ public class FormEvents {
 			return Objects.hash(state, exceptionMessage, originatingEvent);
 		}
 
-		ValidationResult(ModelEvent originatingEvent, ValidationState state,
-				String exceptionMessage) {
-			this.originatingEvent = originatingEvent;
-			this.state = state;
-			this.exceptionMessage = exceptionMessage;
-		}
-
-		public ValidationResult() {
-		}
-
-		public ValidationResult(ValidationState state) {
-			this(null, state, null);
-		}
-
 		@Override
 		public String toString() {
 			return FormatBuilder.keyValues("state", state, "exceptionMessage",
@@ -67,18 +75,14 @@ public class FormEvents {
 			return new ValidationResult(originatingEvent, state,
 					exceptionMessage);
 		}
-
-		public static ValidationResult invalid(Throwable e) {
-			return invalid(CommonUtils.toSimpleExceptionMessage(e));
-		}
-
-		public static ValidationResult invalid(String message) {
-			return new ValidationResult(null, ValidationState.INVALID, message);
-		}
 	}
 
 	public static class PropertyValidationChange
 			extends ModelEvent<Boolean, PropertyValidationChange.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onPropertyValidationChange(PropertyValidationChange event);
+		}
+
 		@Override
 		public void dispatch(PropertyValidationChange.Handler handler) {
 			handler.onPropertyValidationChange(this);
@@ -86,10 +90,6 @@ public class FormEvents {
 
 		public boolean isValid() {
 			return getModel();
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onPropertyValidationChange(PropertyValidationChange event);
 		}
 	}
 
@@ -99,40 +99,52 @@ public class FormEvents {
 	 */
 	public static class QueryValidity extends
 			ModelEvent.DescendantEvent<Object, QueryValidity.Handler, QueryValidity.Emitter> {
-		@Override
-		public void dispatch(QueryValidity.Handler handler) {
-			handler.onQueryValidity(this);
-		}
-
 		public interface Handler extends NodeEvent.Handler {
 			void onQueryValidity(QueryValidity event);
 		}
 
 		public interface Emitter extends ModelEvent.Emitter {
 		}
+
+		@Override
+		public void dispatch(QueryValidity.Handler handler) {
+			handler.onQueryValidity(this);
+		}
 	}
 
 	public static class ValidationResultEvent extends
 			ModelEvent<FormEvents.ValidationResult, ValidationResultEvent.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onValidationResult(ValidationResultEvent event);
+		}
+
 		@Override
 		public void dispatch(ValidationResultEvent.Handler handler) {
 			handler.onValidationResult(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onValidationResult(ValidationResultEvent event);
 		}
 	}
 
 	public static class ValidationFailed
 			extends ModelEvent<String, ValidationFailed.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onValidationFailed(ValidationFailed event);
+		}
+
 		@Override
 		public void dispatch(ValidationFailed.Handler handler) {
 			handler.onValidationFailed(this);
 		}
+	}
 
+	public static class ValidationSuccessMultiple
+			extends ModelEvent<Object, ValidationSuccessMultiple.Handler> {
 		public interface Handler extends NodeEvent.Handler {
-			void onValidationFailed(ValidationFailed event);
+			void onValidationSuccessMultiple(ValidationSuccessMultiple event);
+		}
+
+		@Override
+		public void dispatch(ValidationSuccessMultiple.Handler handler) {
+			handler.onValidationSuccessMultiple(this);
 		}
 	}
 }

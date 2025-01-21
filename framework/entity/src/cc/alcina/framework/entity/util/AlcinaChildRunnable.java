@@ -318,4 +318,21 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 		private Runnable runnable;
 	}
+
+	public static void runWithoutContext(String name, Runnable runnable) {
+		new Thread(name) {
+			@Override
+			public void run() {
+				try {
+					LooseContext.push();
+					runnable.run();
+				} catch (Throwable t) {
+					t.printStackTrace();
+					throw t;
+				} finally {
+					LooseContext.pop();
+				}
+			}
+		}.start();
+	}
 }

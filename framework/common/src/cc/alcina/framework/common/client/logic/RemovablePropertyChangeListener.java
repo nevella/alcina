@@ -27,9 +27,16 @@ public class RemovablePropertyChangeListener
 
 	private boolean bound;
 
+	private boolean fireOnBind;
+
 	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents source,
 			Object propertyName) {
 		this(source, propertyName, null);
+	}
+
+	public RemovablePropertyChangeListener withFireOnBind(boolean fireOnBind) {
+		this.fireOnBind = fireOnBind;
+		return this;
 	}
 
 	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents source,
@@ -48,6 +55,9 @@ public class RemovablePropertyChangeListener
 			source.addPropertyChangeListener(this);
 		} else {
 			source.addPropertyChangeListener(propertyName, this);
+		}
+		if (fireOnBind) {
+			handler.accept(null);
 		}
 	}
 
