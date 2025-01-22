@@ -303,6 +303,10 @@ public class Shell {
 			fb.line("error:\n%s\n", error);
 			return fb.toString();
 		}
+
+		public void logOutput() {
+			Ax.out(this);
+		}
 	}
 
 	@Registration.Singleton

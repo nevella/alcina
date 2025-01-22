@@ -196,4 +196,8 @@ public class LongPair
 			return parseLongPair(original);
 		}
 	}
+
+	public boolean startAfterEnd() {
+		return l1 > l2;
+	}
 }
