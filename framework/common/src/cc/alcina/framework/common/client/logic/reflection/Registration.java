@@ -101,7 +101,8 @@ public @interface Registration {
 
 	/**
 	 * A marker interface, all subtypes should be registered irrespective of
-	 * public/abstract/interface rules
+	 * public/abstract/interface rules [not visible in compiled gwt code, use
+	 * AllSubtypesClient for that]
 	 *
 	 */
 	public interface AllSubtypes {

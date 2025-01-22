@@ -3,13 +3,10 @@ package cc.alcina.framework.servlet.component.entity;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 
 import com.google.gwt.dom.client.StyleInjector;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.Layer;
@@ -20,8 +17,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui.EntityPeer;
@@ -35,6 +30,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
+import cc.alcina.framework.servlet.environment.DomainUi;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 import cc.alcina.framework.servlet.job.JobContext;
 
@@ -56,14 +52,8 @@ public class EntityBrowser {
 		return Ui.cast().peer;
 	}
 
-	public static class Ui extends TraversalBrowser.Ui {
+	public static class Ui extends TraversalBrowser.Ui implements DomainUi {
 		String traversalId;
-
-		static CountDownLatch loadedLatch = new CountDownLatch(1);
-		static {
-			DomainStore.topicStoreLoadingComplete
-					.addWithPublishedCheck(loadedLatch::countDown);
-		}
 
 		public Ui() {
 		}
@@ -85,35 +75,14 @@ public class EntityBrowser {
 
 		EntityPeer peer;
 
-		@Override
-		public void onBeforeEnterContext() {
-			try {
-				loadedLatch.await();
-			} catch (Exception e) {
-				throw WrappedRuntimeException.wrap(e);
-			}
-		}
-
-		@Override
-		public void onEnterIteration() {
-			PermissionsManager.get().pushSystemUser();
-			Transaction.ensureBegun();
-		}
-
-		@Override
-		public void onExitIteration() {
-			Transaction.end();
-			PermissionsManager.get().popSystemUser();
+		static TraversalPlace traversingPlace() {
+			return cast().peer.place;
 		}
 
 		public String getTraversalPath() {
 			traversalId = SEUtilities.generatePrettyUuid();
 			traverse(place());
 			return traversalId;
-		}
-
-		static TraversalPlace traversingPlace() {
-			return cast().peer.place;
 		}
 
 		void traverse(TraversalPlace place) {

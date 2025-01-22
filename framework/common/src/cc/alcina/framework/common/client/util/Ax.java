@@ -285,7 +285,7 @@ public class Ax {
 		if (object == null) {
 			return null;
 		}
-		return trim(object.toString().replace("\n", "\\n"), 1000);
+		return trim(object.toString().replace("\n", "\n"), 1000);
 	}
 
 	public static double twoPlaces(double d) {
@@ -336,5 +336,9 @@ public class Ax {
 
 	public static long appMillis(Date date) {
 		return date.getTime() - appStartup;
+	}
+
+	public static <T> Optional<T> last(Stream<T> stream) {
+		return stream.reduce(Ax.last());
 	}
 }
