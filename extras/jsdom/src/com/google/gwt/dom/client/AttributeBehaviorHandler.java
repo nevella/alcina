@@ -3,7 +3,6 @@ package com.google.gwt.dom.client;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -14,7 +13,6 @@ import com.google.gwt.user.client.Event.NativePreviewHandler;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  * Check if a dom node has a magic attribute set, and if so perform a specific
