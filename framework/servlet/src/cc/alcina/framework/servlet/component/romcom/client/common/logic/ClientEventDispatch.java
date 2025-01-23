@@ -111,6 +111,10 @@ class ClientEventDispatch {
 			 */
 			if (Objects.equals(eventType, "change")) {
 				eventData.value = elem.getPropertyString("value");
+				if (eventTargetDomNode.nameIs("select")) {
+					eventData.selectedIndex = elem
+							.getPropertyInt("selectedIndex");
+				}
 			}
 			if (Objects.equals(eventType, "input")) {
 				eventData.inputValue = elem.getPropertyString("value");
