@@ -25,9 +25,17 @@ public final class DomEventData {
 	// But wait - is this serializable? Yes, it is!
 	public Event event;
 
+	public boolean preview;
+
+	/*
+	 * updated element value, to avoid round-tripping
+	 */
 	public String inputValue;
 
-	public boolean preview;
+	/*
+	 * updated element value, to avoid round-tripping
+	 */
+	public Integer selectedIndex;
 
 	@Override
 	public String toString() {

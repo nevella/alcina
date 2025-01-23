@@ -20,6 +20,14 @@ import cc.alcina.framework.common.client.util.IntPair;
  * That support could be generalised.
  */
 public class ElementAttachId extends NodeAttachId implements ElementRemote {
+	/*
+	 * remote value caches - could be converted to an on-demand map (less memory
+	 * pressure)
+	 */
+	String value;
+
+	Integer selectedIndex = -1;
+
 	ElementAttachId(Node node) {
 		super(node);
 	}
@@ -231,9 +239,10 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	public String getPropertyString(String name) {
 		switch (name) {
 		case "value": {
-			// the cached value field is updated by onInput events, so if
-			// value
-			// is null the value will be the original (local dom tree) value
+			/*
+			 * the cached value field is updated by onInput events, so if value
+			 * is null the value will be the original (local dom tree) value
+			 */
 			if (value == null) {
 				Element elem = elementFor();
 				switch (elem.getNodeName()) {
@@ -250,8 +259,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 			return value;
 		}
 		case "selectedIndex": {
-			return invokeSync("getPropertyString", List.of(String.class),
-					List.of(name));
+			return selectedIndex == null ? null : String.valueOf(selectedIndex);
 		}
 		default: {
 			return getAttribute(name);
@@ -321,17 +329,6 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public int indexInParentChildren() {
-		throw new UnsupportedOperationException();
-	}
-
-	void mirrorClassName() {
-		/*
-		 * mirror from local, since there's no other copy of the remote value
-		 */
-		setClassName(getClassName());
-	}
-
-	int orSunkEventsOfAllChildren(int sunk) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -450,12 +447,11 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 		throw new UnsupportedOperationException();
 	}
 
-	String value;
-
 	@Override
 	public void setPropertyString(String name, String value) {
-		if (Objects.equals(name, "value")
-				|| Objects.equals(name, "inputValue")) {
+		switch (name) {
+		case "value":
+		case "inputValue": {
 			if (Objects.equals(value, this.value)) {
 			} else {
 				// local caching to prevent roundtrips (although those do work)
@@ -465,9 +461,26 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 						// not list.of - does not allow nulls
 						Arrays.asList(name, value));
 			}
-		} else {
+			break;
+		}
+		case "selectedIndex": {
+			Integer toValue = value == null ? null : Integer.parseInt(value);
+			if (Objects.equals(toValue, this.selectedIndex)) {
+			} else {
+				// local caching to prevent roundtrips (although those do work)
+				this.selectedIndex = toValue;
+				invokeAsync("setPropertyString",
+						List.of(String.class, String.class),
+						// not list.of - does not allow nulls
+						Arrays.asList(name, value));
+			}
+			break;
+		}
+		default: {
 			// almost all other properties are attributes
 			setAttribute(name, value);
+			break;
+		}
 		}
 	}
 
@@ -530,5 +543,16 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	@Override
 	public IntPair getScrollPosition() {
 		return invokeSync("getScrollPosition");
+	}
+
+	void mirrorClassName() {
+		/*
+		 * mirror from local, since there's no other copy of the remote value
+		 */
+		setClassName(getClassName());
+	}
+
+	int orSunkEventsOfAllChildren(int sunk) {
+		throw new UnsupportedOperationException();
 	}
 }
