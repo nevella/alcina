@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.environment;
 
+import java.util.function.Consumer;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
@@ -9,6 +11,12 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 public class SettingsSupport {
 	public static <T extends Bindable> T deserializeSettings(Class<T> clazz,
 			String settings) {
+		return deserializeSettings(clazz, settings, newInstance -> {
+		});
+	}
+
+	public static <T extends Bindable> T deserializeSettings(Class<T> clazz,
+			String settings, Consumer<T> newSettingsCustomiser) {
 		T result = null;
 		if (settings != null) {
 			try {
@@ -19,6 +27,7 @@ public class SettingsSupport {
 		}
 		if (result == null) {
 			result = Reflections.newInstance(clazz);
+			newSettingsCustomiser.accept(result);
 		}
 		result.addPropertyChangeListener(
 				evt -> persistSettings(evt.getSource()));

@@ -25,4 +25,19 @@ public interface Feature_RemoteObjectComponent extends Feature {
 	@Feature.Parent(Feature_RemoteObjectComponent.class)
 	public interface Feature_EnvironmentManager extends Feature {
 	}
+
+	/**
+	 * <p>
+	 * the client transport emits an observable when the longrunningmessage
+	 * state is changed (active, longrunning)
+	 * <p>
+	 * The top level handler:
+	 * <ul>
+	 * <li>modifies a property on $wnd [__romcom_activeEventMessage]
+	 * <li>displays a longrunning notifiation (say 'Awaiting server response')
+	 * </ul>
+	 */
+	@Feature.Parent(Feature_RemoteObjectComponent.class)
+	public interface Feature_ClientMessageState extends Feature {
+	}
 }

@@ -64,18 +64,18 @@ sequence > table td > value {
 sequence > table td > value:not(:last-child):after {
   content: ", ";
 }
-sequence > visit-area {
+sequence > visit {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 5rem;
 }
-sequence > visit-area > path {
+sequence > visit > path {
   font-weight: bold;
 }
-sequence > visit-area > description {
+sequence > visit > description {
   margin-bottom: 1rem;
 }
-sequence > visit-area > img {
+sequence > visit > img {
   max-width: 100%;
 }

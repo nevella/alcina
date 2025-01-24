@@ -56,6 +56,14 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 		}
 	}
 
+	public static class Wait implements TypedPerformer<Story.Action.Ui.Wait> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.Wait action) throws Exception {
+			Thread.sleep(action.getValue());
+		}
+	}
+
 	public static class Click implements TypedPerformer<Story.Action.Ui.Click> {
 		@Override
 		public void perform(WdActionPerformer wdPerformer,

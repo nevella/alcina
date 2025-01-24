@@ -243,7 +243,13 @@ public final class MutationNode {
 	}
 
 	Node node() {
-		return node != null ? node : remoteNode.node();
+		if (node != null) {
+			return node;
+		} else if (remoteNode != null) {
+			return remoteNode.node();
+		} else {
+			return null;
+		}
 	}
 
 	boolean provideParentModified() {

@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.story.Story.Decl.Action.DeclarativeAction;
 import cc.alcina.framework.gwt.client.story.Story.Decl.Location.DeclarativeLocation;
 
@@ -186,6 +187,9 @@ public class Waypoint implements Story.Point {
 			if (ann != null) {
 				description = Registry.impl(TextInterpolator.class)
 						.interpolate(getClass(), ann.value());
+			}
+			if (Ax.isBlank(description) && Ax.notBlank(label)) {
+				description = label;
 			}
 		}
 		if (action == null) {

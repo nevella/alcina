@@ -30,8 +30,11 @@ import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
 import cc.alcina.framework.servlet.environment.DomainUi;
 import cc.alcina.framework.servlet.environment.RemoteUi;
+import cc.alcina.framework.servlet.environment.SettingsSupport;
 import cc.alcina.framework.servlet.job.JobContext;
 
 public class EntityBrowser {
@@ -83,6 +86,15 @@ public class EntityBrowser {
 			traversalId = SEUtilities.generatePrettyUuid();
 			traverse(place());
 			return traversalId;
+		}
+
+		@Override
+		public void initialiseSettings(String settings) {
+			this.settings = SettingsSupport.deserializeSettings(
+					TraversalSettings.class, settings, newInstance -> {
+						newInstance.secondaryAreaDisplayMode = SecondaryAreaDisplayMode.TABLE;
+					});
+			int debug = 3;
 		}
 
 		void traverse(TraversalPlace place) {

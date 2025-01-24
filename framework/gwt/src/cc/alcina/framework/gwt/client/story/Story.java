@@ -508,6 +508,28 @@ public interface Story {
 					}
 				}
 
+				/**
+				 * A wait action. Use sparingly (normally prefer waiting for
+				 * some ui change to indicate ready-to-proceed, but that's not
+				 * always easy with romcom)
+				 */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface Wait {
+					int value();
+
+					public static class ConverterImpl
+							implements Converter<Wait> {
+						@Override
+						public Story.Action convert(Wait ann) {
+							return new Story.Action.Ui.Wait()
+									.withValue(ann.value());
+						}
+					}
+				}
+
 				/** An AwaitAttributePresent action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -719,7 +741,10 @@ public interface Story {
 			String value();
 		}
 
-		/** The point's description */
+		/**
+		 * The point's description. If not present and a label is present, the
+		 * label will be used
+		 */
 		@Retention(RetentionPolicy.RUNTIME)
 		@Documented
 		@Target({ ElementType.TYPE })
@@ -994,6 +1019,23 @@ public interface Story {
 				}
 			}
 
+			abstract static class ActionWithInt implements Ui {
+				int value;
+
+				public int getValue() {
+					return value;
+				}
+
+				public void setValue(int value) {
+					this.value = value;
+				}
+
+				public Ui withValue(int value) {
+					setValue(value);
+					return this;
+				}
+			}
+
 			abstract static class ActionWithNameText extends ActionWithText {
 				String name;
 
@@ -1032,6 +1074,9 @@ public interface Story {
 			}
 
 			public static class SelectByText extends ActionWithText {
+			}
+
+			public static class Wait extends ActionWithInt {
 			}
 
 			public static class SelectByValue extends ActionWithText {

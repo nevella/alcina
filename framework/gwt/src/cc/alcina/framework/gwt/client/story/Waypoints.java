@@ -20,4 +20,11 @@ public class Waypoints {
 	@Decl.Action.UI.AwaitAbsent
 	public static class AwaitBodyRemoval extends Waypoint {
 	}
+
+	/*
+	 * wait 100 ms
+	 */
+	@Decl.Action.UI.Wait(100)
+	public static class Wait100 extends Waypoint {
+	}
 }
