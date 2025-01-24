@@ -26,8 +26,14 @@ div.alcina-TopContainer {
 div.alcina-Header {
   background: #217d4d url(/_pix/bg-header.jpg) 0 0 repeat-x;
   height: 67px;
-  position: relative;
+  position: sticky;
+  z-index: 1000;
 }
+
+.header-visible {
+    top: 0;
+}
+
 
 /* Main content-area containers */
 div.alcina-MainContent {
