@@ -7,6 +7,9 @@ import com.google.gwt.aria.client.Roles;
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.Window.ScrollEvent;
+import com.google.gwt.user.client.Window.ScrollHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.IsWidget;
@@ -57,6 +60,21 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 			barPanel.add(left);
 			barPanel.add(center);
 			barPanel.add(right);
+			// add listener to scroll
+			Window.addWindowScrollHandler(new ScrollHandler() {
+				@Override
+				public void onWindowScroll(ScrollEvent event) {
+					int currentScrollTop = Window.getScrollTop();
+					if (currentScrollTop < lastScrollTop) {
+						// scroll up
+						tabBar.addStyleName("alcina-MainMenu2-visible");
+					} else {
+						// scroll down
+						tabBar.removeStyleName("alcina-MainMenu2-visible");
+					}
+					lastScrollTop = currentScrollTop;
+				}
+			});
 		}
 
 		class Left extends Composite {
@@ -174,6 +192,8 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 	SimplePanel deckContainer = new SimplePanel();
 
 	List<IsWidget> nonTabButtons;
+
+	private int lastScrollTop = 0;
 
 	public MainTabPanel2(List<IsWidget> nonTabButtons) {
 		this.nonTabButtons = nonTabButtons;
