@@ -13,6 +13,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -25,16 +26,27 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.C
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResultsReuse;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityRefs.Ref;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
+import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentLoader;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.SimpleAtomModel.AtomKey;
 
 /**
+ * <p>
  * TODO - this isn't as well-adapted to mvcc as it could be (see e.g. the
  * parallelisation of LaterItem.resolve by segmentRefs to handle resolution in
  * different phases) - but....it works. Fix would involve making notifyLater()
  * be sensitive to phase
+ * <p>
+ * Actually - replacing with DomainSegmentRemoteLoader
+ * 
  */
-public abstract class DomainSegmentLoader implements ConnResultsReuse {
+public abstract class DomainSegmentDbLoader
+		implements DomainSegmentLoader, ConnResultsReuse {
+	@Override
+	public ConnResultsReuse getConnResultsReuse() {
+		return this;
+	}
+
 	List<Ref> toResolve = new ArrayList<>();
 
 	Multiset<Class, Set<Long>> toLoadIds = new Multiset<>();
@@ -59,7 +71,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	// class,propertyname,id->ref_id
 	MultikeyMap<Long> segmentRefs = new UnsortedMultikeyMap<>(3);
 
-	public DomainSegmentLoader() {
+	public DomainSegmentDbLoader() {
 	}
 
 	protected DomainSegmentLoaderProperty addProperty(
@@ -120,19 +132,23 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 		}
 	}
 
-	public void initialise() throws Exception {
-		if (isReload()) {
-			try {
-				loadSegmentData();
-			} catch (Exception e) {
-				e.printStackTrace();
-				new File(getFilename()).delete();
+	public void init() {
+		try {
+			if (isReload()) {
+				try {
+					loadSegmentData();
+				} catch (Exception e) {
+					e.printStackTrace();
+					new File(getFilename()).delete();
+				}
 			}
-		}
-		initialiseProperties();
-		if (!isReload()) {
-			initialiseSeedLookup0();
-			toLoadIds.addAll(initialToLoadIds);
+			initialiseProperties();
+			if (!isReload()) {
+				initialiseSeedLookup0();
+				toLoadIds.addAll(initialToLoadIds);
+			}
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
 		}
 	}
 

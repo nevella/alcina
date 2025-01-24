@@ -92,11 +92,12 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
-import cc.alcina.framework.entity.persistence.domain.DomainSegmentLoader.DomainSegmentLoaderPhase;
-import cc.alcina.framework.entity.persistence.domain.DomainSegmentLoader.DomainSegmentLoaderProperty;
-import cc.alcina.framework.entity.persistence.domain.DomainSegmentLoader.DomainSegmentPropertyType;
+import cc.alcina.framework.entity.persistence.domain.DomainSegmentDbLoader.DomainSegmentLoaderPhase;
+import cc.alcina.framework.entity.persistence.domain.DomainSegmentDbLoader.DomainSegmentLoaderProperty;
+import cc.alcina.framework.entity.persistence.domain.DomainSegmentDbLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityRefs.Ref;
+import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentLoader;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -280,9 +281,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	private void initialiseDomainSegment() throws Exception {
-		DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
-				.getDomainSegmentLoader();
-		segmentLoader.initialise();
+		getSegmentLoader().init();
 	}
 
 	private void invokeAllWithThrow(List tasks) throws Exception {
@@ -301,26 +300,26 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		initialList.clear();
 	}
 
-	private void loadDomainSegment() throws Exception {
+	private void loadDomainDbSegment() throws Exception {
 		List<Callable> calls = new ArrayList<Callable>();
-		DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
+		DomainSegmentDbLoader segmentDbLoader = (DomainSegmentDbLoader) domainDescriptor
 				.getDomainSegmentLoader();
 		Set<Class> segmentClasses = new LinkedHashSet<>();
 		for (DomainSegmentLoaderPhase phase : DomainSegmentLoaderPhase
 				.iterateOver()) {
-			segmentLoader.phase = phase;
+			segmentDbLoader.phase = phase;
 			int maxPasses = 240;
 			int pass = 0;
 			long start = System.currentTimeMillis();
 			int lastTotal = -1;
 			int total = 0;
-			while ((segmentLoader.pendingCount() != 0 || lastTotal != total)
+			while ((segmentDbLoader.pendingCount() != 0 || lastTotal != total)
 					&& pass++ < maxPasses) {
-				Set<Entry<Class, Set<Long>>> perClass = segmentLoader.toLoadIds
+				Set<Entry<Class, Set<Long>>> perClass = segmentDbLoader.toLoadIds
 						.entrySet();
 				List<EntityRefs> entityRefss = new ArrayList<>();
 				for (Entry<Class, Set<Long>> entry : perClass) {
-					EntityRefs entityRefs = new EntityRefs(segmentLoader);
+					EntityRefs entityRefs = new EntityRefs(segmentDbLoader);
 					entityRefss.add(entityRefs);
 					segmentClasses.add(entry.getKey());
 					calls.add(() -> {
@@ -328,12 +327,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						ids = ids.stream().distinct().sorted()
 								.collect(Collectors.toList());
 						Class clazz = entry.getKey();
-						ids = segmentLoader.filterForQueried(clazz, "id", ids);
+						ids = segmentDbLoader.filterForQueried(clazz, "id",
+								ids);
 						if (ids.size() > 0) {
 							loadTableSegment(clazz, Ax.format(" id in %s",
 									longsToIdClause(ids)), entityRefs);
 						}
-						segmentLoader.loadedInPhase(clazz, ids);
+						segmentDbLoader.loadedInPhase(clazz, ids);
 						entry.getValue().clear();
 						return null;
 					});
@@ -341,13 +341,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				invokeAllWithThrow(calls);
 				// resolve what we can (last pass)
 				EntityRefs lastPassLookup = new EntityRefs();
-				lastPassLookup.list.addAll(segmentLoader.toResolve);
-				segmentLoader.toResolve.clear();
-				lastPassLookup.resolve(segmentLoader);
-				entityRefss.forEach(ll -> ll.resolve(segmentLoader));
+				lastPassLookup.list.addAll(segmentDbLoader.toResolve);
+				segmentDbLoader.toResolve.clear();
+				lastPassLookup.resolve(segmentDbLoader);
+				entityRefss.forEach(ll -> ll.resolve(segmentDbLoader));
 				entityRefss.clear();
-				if (segmentLoader.pendingCount() == 0) {
-					for (DomainSegmentLoaderProperty property : segmentLoader.properties) {
+				if (segmentDbLoader.pendingCount() == 0) {
+					for (DomainSegmentLoaderProperty property : segmentDbLoader.properties) {
 						if (property.isIgnoreForPhase(phase)) {
 							continue;
 						}
@@ -356,7 +356,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									.keys(property.clazz2);
 							ids = ids.stream().distinct().sorted()
 									.collect(Collectors.toList());
-							ids = segmentLoader.filterForQueried(
+							ids = segmentDbLoader.filterForQueried(
 									property.clazz1, property.propertyName1,
 									ids);
 							String sqlFilter = Ax.format(" %s in %s",
@@ -366,7 +366,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							if (ids.size() > 0) {
 								calls.add(() -> {
 									EntityRefs entityRefs = new EntityRefs(
-											segmentLoader);
+											segmentDbLoader);
 									entityRefss.add(entityRefs);
 									loadTableSegment(property.clazz1, sqlFilter,
 											entityRefs);
@@ -379,19 +379,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							}
 							Collection<Long> ids = store.cache
 									.stream(property.clazz1).map(HasId::getId)
-									.map(id -> segmentLoader.segmentRefs.get(
+									.map(id -> segmentDbLoader.segmentRefs.get(
 											property.clazz1,
 											property.propertyName1, id))
 									.distinct().filter(Objects::nonNull)
 									.sorted().collect(Collectors.toList());
-							ids = segmentLoader.filterForQueried(
+							ids = segmentDbLoader.filterForQueried(
 									property.clazz2, "id", ids);
 							String sqlFilter = Ax.format(" id in %s",
 									longsToIdClause(ids));
 							segmentClasses.add(property.clazz2);
 							calls.add(() -> {
 								EntityRefs entityRefs = new EntityRefs(
-										segmentLoader);
+										segmentDbLoader);
 								entityRefss.add(entityRefs);
 								loadTableSegment(property.clazz2, sqlFilter,
 										entityRefs);
@@ -400,7 +400,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						}
 					}
 					invokeAllWithThrow(calls);
-					entityRefss.forEach(ll -> ll.resolve(segmentLoader));
+					entityRefss.forEach(ll -> ll.resolve(segmentDbLoader));
 				}
 				lastTotal = total;
 				Integer size = segmentClasses.stream().collect(Collectors
@@ -411,13 +411,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						phase, pass, size, System.currentTimeMillis() - start);
 				segmentClasses.forEach(clazz -> store.logger.debug("{}: {}",
 						clazz.getSimpleName(), store.cache.keys(clazz).size()));
-				segmentClasses.forEach(segmentLoader::ensureClass);
+				segmentClasses.forEach(segmentDbLoader::ensureClass);
 			}
 			if (pass >= maxPasses) {
 				throw Ax.runtimeException("did our max passes and lost");
 			}
 		}
-		segmentLoader.saveSegmentData();
+		segmentDbLoader.saveSegmentData();
 	}
 
 	Loader loader() {
@@ -861,6 +861,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		return new Date(timeLocal);
 	}
 
+	DomainSegmentLoader getSegmentLoader() {
+		return domainDescriptor.getDomainSegmentLoader();
+	}
+
 	@Override
 	public void warmup() throws Exception {
 		new StatCategory_DomainStore.Warmup.Loader().emit();
@@ -889,7 +893,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		new StatCategory_DomainStore.Warmup.Loader.Mark().emit();
 		// get non-many-many obj
 		// lazy tables, load a segment (for large db dev work)
-		if (domainDescriptor.getDomainSegmentLoader() != null) {
+		if (getSegmentLoader() != null) {
 			MetricLogging.get().start("initialise-domain-segment");
 			initialiseDomainSegment();
 			MetricLogging.get().end("initialise-domain-segment");
@@ -925,9 +929,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		new StatCategory_DomainStore.Warmup.Loader.Xrefs().emit();
 		warmupEntityRefs.clear();
 		// lazy tables, load a segment (for large db dev work)
-		if (domainDescriptor.getDomainSegmentLoader() != null) {
+		if (getSegmentLoader() != null) {
 			MetricLogging.get().start("domain-segment");
-			loadDomainSegment();
+			if (getSegmentLoader() instanceof DomainSegmentDbLoader) {
+				loadDomainDbSegment();
+			} else {
+				// hookup domainsegment as the connrs provider
+				throw new UnsupportedOperationException();
+			}
 			MetricLogging.get().end("domain-segment");
 		}
 		new StatCategory_DomainStore.Warmup.Loader.Segment().emit();
@@ -1716,13 +1725,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	interface ConnResultsReuse {
+	public interface ConnResultsReuse {
 		default Iterator<ValueContainer[]> getIterator(ConnResults connResults,
 				ConnResultsIterator itr) {
 			return itr;
 		}
 
 		default void onNext(ConnResults connResults, ValueContainer[] cached) {
+		}
+
+		public interface Has {
+			ConnResultsReuse getConnResultsReuse();
 		}
 	}
 
@@ -1746,12 +1759,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private CustomResolver customResolver;
 
-		private DomainSegmentLoader segmentLoader;
+		private DomainSegmentDbLoader segmentLoader;
 
 		public EntityRefs() {
 		}
 
-		public EntityRefs(DomainSegmentLoader segmentLoader) {
+		public EntityRefs(DomainSegmentDbLoader segmentLoader) {
 			this.segmentLoader = segmentLoader;
 		}
 
@@ -1780,7 +1793,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			doResolve();
 		}
 
-		void resolve(DomainSegmentLoader segmentLoader) {
+		void resolve(DomainSegmentDbLoader segmentLoader) {
 			this.segmentLoader = segmentLoader;
 			doResolve();
 		}

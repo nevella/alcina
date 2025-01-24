@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentLoader;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
