@@ -1,12 +1,19 @@
 package cc.alcina.framework.entity.persistence.domain.segment;
 
+import java.util.Iterator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResultsReuse;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
+import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.FsObjectCache;
 
@@ -19,10 +26,14 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 
 	DomainSegment segment;
 
-	@Override
-	public void init() {
+	public DomainSegmentRemoteLoader() {
 		this.cache = new FsObjectCache<>(DataFolderProvider.get().getSubFolder(
 				getClass().getSimpleName()), DomainSegment.class, null);
+	}
+
+	@Override
+	public void init() {
+		TransformCommit.setCommitTestTransforms(false);
 		this.definition = Reflections
 				.newInstance(Configuration.get("definitionClassName"));
 		this.definition.configureLocal();
@@ -38,7 +49,11 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 		DomainSegment remoteUpdates = Registry.impl(RemoteLoader.class)
 				.load(definition, localState);
 		localState.merge(remoteUpdates);
-		cache.persist(definition.name(), remoteUpdates);
+		persist(definition.name(), localState);
+	}
+
+	public void persist(String name, DomainSegment segment) {
+		cache.persist(name, segment);
 	}
 
 	public interface RemoteLoader {
@@ -52,8 +67,26 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 
 	@Override
 	public ConnResultsReuse getConnResultsReuse() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getConnResultsReuse'");
+		return new ConnResultsReuseImpl();
+	}
+
+	class ConnResultsReuseImpl implements ConnResultsReuse {
+		DomainSegment.Lookup lookup = segment.new Lookup();
+
+		@Override
+		public Iterator<ValueContainer[]> getIterator(ConnResults connResults,
+				ConnResultsIterator itr) {
+			Class clazz = connResults.clazz;
+			if (clazz != null && Entity.class.isAssignableFrom(clazz)) {
+				if (definition.getPassthroughClasses().contains(clazz)) {
+				} else {
+					return lookup.getValues(clazz).iterator();
+				}
+			} else {
+				// join table classes
+				int debug = 3;
+			}
+			return ConnResultsReuse.super.getIterator(connResults, itr);
+		}
 	}
 }

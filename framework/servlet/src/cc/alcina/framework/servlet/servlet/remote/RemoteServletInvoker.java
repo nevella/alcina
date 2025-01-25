@@ -7,5 +7,5 @@ import cc.alcina.framework.common.client.job.Task;
  * a console-visible class (not dev server-visible)
  */
 public interface RemoteServletInvoker {
-	<T> T invokeRemoteTaskReturnResult(Task task);
+	String invokeRemoteTaskReturnResult(Task task);
 }

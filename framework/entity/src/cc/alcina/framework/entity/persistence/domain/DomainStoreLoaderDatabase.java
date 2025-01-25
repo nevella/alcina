@@ -935,8 +935,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (getSegmentLoader() instanceof DomainSegmentDbLoader) {
 				loadDomainDbSegment();
 			} else {
-				// hookup domainsegment as the connrs provider
-				throw new UnsupportedOperationException();
+				// remote loader initialised at this point, noop
 			}
 			MetricLogging.get().end("domain-segment");
 		}
@@ -1457,7 +1456,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	static class ConnResults implements Iterable<ValueContainer[]> {
+	public static class ConnResults implements Iterable<ValueContainer[]> {
 		public static Builder builder() {
 			return new Builder();
 		}
@@ -1468,7 +1467,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private List<ColumnDescriptor> columnDescriptors;
 
-		Class clazz;
+		public Class clazz;
 
 		String sqlFilter;
 
@@ -1507,7 +1506,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			DomainSegmentLoader segmentLoader = domainDescriptor
 					.getDomainSegmentLoader();
 			boolean hasSegmentLoader = segmentLoader != null;
-			this.rsReuse = hasSegmentLoader ? (ConnResultsReuse) segmentLoader
+			this.rsReuse = hasSegmentLoader
+					? segmentLoader.getConnResultsReuse()
 					: new ConnResultsReusePassthrough();
 			this.lazyProperties = builder.populateLazyPropertyValues;
 			itr = new ConnResultsIterator(hasSegmentLoader);
@@ -1640,7 +1640,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
-		class ConnResultsIterator implements Iterator<ValueContainer[]> {
+		public class ConnResultsIterator implements Iterator<ValueContainer[]> {
 			ValueContainer[] current = null;
 
 			boolean peeked = false;

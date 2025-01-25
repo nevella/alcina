@@ -1059,4 +1059,9 @@ public class TransformCommit {
 	public static class ReuseIUserHolder {
 		public IUser iUser;
 	}
+
+	public static void setCommitTestTransforms(boolean b) {
+		Configuration.properties.set(TransformCommit.class,
+				"commitTestTransforms", String.valueOf(false));
+	}
 }

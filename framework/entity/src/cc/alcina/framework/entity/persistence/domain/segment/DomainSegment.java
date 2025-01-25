@@ -18,7 +18,10 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.permissions.IGroup;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -33,10 +36,15 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFiel
  * A json-serializable representation of a domain segment
  */
 public class DomainSegment implements Serializable {
-	transient static Logger logger = LoggerFactory
-			.getLogger(DomainSegment.class);
-
 	public static class SegmentEntity implements Serializable {
+		transient Class<? extends Entity> entityClass;
+
+		public long id;
+
+		public long lastModificationTime;
+
+		public ValueContainer[] values;
+
 		public SegmentEntity() {
 		}
 
@@ -50,14 +58,6 @@ public class DomainSegment implements Serializable {
 			mapper.setProperties(entity, this);
 		}
 
-		transient Class<? extends Entity> entityClass;
-
-		public long id;
-
-		public long lastModificationTime;
-
-		public ValueContainer[] values;
-
 		public SegmentEntity toMemberRef() {
 			SegmentEntity result = new SegmentEntity();
 			result.id = lastModificationTime;
@@ -67,18 +67,18 @@ public class DomainSegment implements Serializable {
 	}
 
 	public static class SegmentCollection implements Serializable {
+		public Class<? extends Entity> entityClass;
+
+		public List<SegmentEntity> segmentEntities = new ArrayList<>();
+
+		transient Map<Long, SegmentEntity> idToEntity = new LinkedHashMap<>();
+
 		public SegmentCollection() {
 		}
 
 		public SegmentCollection(Class<? extends Entity> entityClass) {
 			this.entityClass = entityClass;
 		}
-
-		public Class<? extends Entity> entityClass;
-
-		public List<SegmentEntity> segmentEntities = new ArrayList<>();
-
-		transient Map<Long, SegmentEntity> idToEntity = new LinkedHashMap<>();
 
 		public SegmentCollection toMemberRefs() {
 			SegmentCollection result = new SegmentCollection();
@@ -116,15 +116,6 @@ public class DomainSegment implements Serializable {
 				}
 			}
 		}
-	}
-
-	List<SegmentCollection> collections = new ArrayList<>();
-
-	public DomainSegment toLocalState() {
-		DomainSegment result = new DomainSegment();
-		result.collections = collections.stream()
-				.map(SegmentCollection::toMemberRefs).toList();
-		return result;
 	}
 
 	/**
@@ -237,28 +228,26 @@ public class DomainSegment implements Serializable {
 		default String asString() {
 			return getClass().getSimpleName();
 		}
-	}
 
-	@Override
-	public String toString() {
-		return Ax.format("%s collections - %s entities", collections.size(),
-				entitySize());
-	}
-
-	int entitySize() {
-		return collections.stream().collect(
-				Collectors.summingInt(sc -> sc.segmentEntities.size()));
-	}
-
-	public void merge(DomainSegment remoteUpdates) {
-		Lookup remoteLookup = remoteUpdates.new Lookup();
-		Lookup toLookup = new Lookup();
-		remoteLookup.allValues().forEach(toLookup::add);
-		toLookup.indexToList();
+		/**
+		 * This will normally be at least the {@link ClassRef}, {@link IUser}
+		 * and {@link IGroup} implementations for the domain
+		 */
+		Set<Class<? extends Entity>> getPassthroughClasses();
 	}
 
 	class Lookup {
 		Map<Class<? extends Entity>, SegmentCollection> entityCollection;
+
+		public List<ValueContainer[]> getValues(Class<? extends Entity> clazz) {
+			SegmentCollection segmentCollection = entityCollection.get(clazz);
+			if (segmentCollection == null) {
+				return List.of();
+			} else {
+				return segmentCollection.segmentEntities.stream()
+						.map(e -> e.values).toList();
+			}
+		}
 
 		Lookup() {
 			entityCollection = collections.stream()
@@ -314,6 +303,31 @@ public class DomainSegment implements Serializable {
 		}
 	}
 
+	transient static Logger logger = LoggerFactory
+			.getLogger(DomainSegment.class);
+
+	List<SegmentCollection> collections = new ArrayList<>();
+
+	public DomainSegment toLocalState() {
+		DomainSegment result = new DomainSegment();
+		result.collections = collections.stream()
+				.map(SegmentCollection::toMemberRefs).toList();
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s collections - %s entities", collections.size(),
+				entitySize());
+	}
+
+	public void merge(DomainSegment remoteUpdates) {
+		Lookup remoteLookup = remoteUpdates.new Lookup();
+		Lookup toLookup = new Lookup();
+		remoteLookup.allValues().forEach(toLookup::add);
+		toLookup.indexToList();
+	}
+
 	public void addCache(DetachedEntityCache cache) {
 		Lookup lookup = new Lookup();
 		ValueMapper mapper = new ValueMapper();
@@ -326,5 +340,10 @@ public class DomainSegment implements Serializable {
 		Lookup localLookup = localState.new Lookup();
 		localLookup.allValues().forEach(toLookup::removeIfUnchanged);
 		toLookup.applyIndexRemovals();
+	}
+
+	int entitySize() {
+		return collections.stream().collect(
+				Collectors.summingInt(sc -> sc.segmentEntities.size()));
 	}
 }

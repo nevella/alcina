@@ -3,8 +3,10 @@ package cc.alcina.framework.servlet.domain.segment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.segment.DomainSegment;
 import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentRemoteLoader;
 import cc.alcina.framework.servlet.servlet.remote.RemoteServletInvoker;
@@ -37,6 +39,7 @@ import cc.alcina.framework.servlet.servlet.remote.RemoteServletInvoker;
 public class DomainSegmentRpc {
 	static Logger logger = LoggerFactory.getLogger(DomainSegmentRpc.class);
 
+	@Registration(DomainSegmentRemoteLoader.RemoteLoader.class)
 	public static class RemoteLoaderImpl
 			implements DomainSegmentRemoteLoader.RemoteLoader {
 		@Override
@@ -49,8 +52,11 @@ public class DomainSegmentRpc {
 			logger.info(
 					"Loading remote segment -- definition: {} - local state: {}",
 					definition.asString(), localState);
-			return Registry.impl(RemoteServletInvoker.class)
+			String resultB64gz = Registry.impl(RemoteServletInvoker.class)
 					.invokeRemoteTaskReturnResult(task);
+			DomainSegment segment = Io.read().base64String(resultB64gz)
+					.withDecompress(true).asObject();
+			return segment;
 		}
 	}
 }
