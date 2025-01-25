@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.domain;
 
 import java.beans.PropertyDescriptor;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -1739,6 +1740,26 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
+	public EntityValuesMapper
+			getEntityValuesMapper(Class<? extends Entity> clazz) {
+		return new EntityValuesMapper(clazz);
+	}
+
+	public class EntityValuesMapper {
+		Class<? extends Entity> clazz;
+
+		EntityValuesMapper(Class<? extends Entity> clazz) {
+			this.clazz = clazz;
+		}
+
+		public ValueContainer[] getValues(Entity entity) {
+			List<PdOperator> operators = descriptors.get(entity.entityClass());
+			List<ValueContainer> list = operators.stream()
+					.map(op -> ValueContainer.of(op, entity)).toList();
+			return list.toArray(new ValueContainer[list.size()]);
+		}
+	}
+
 	static class ConnResultsReusePassthrough implements ConnResultsReuse {
 	}
 
@@ -2502,7 +2523,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	static class ValueContainer {
+	public static class ValueContainer implements Serializable {
 		boolean b;
 
 		int i;
@@ -2528,6 +2549,32 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return i;
 			} else {
 				return o;
+			}
+		}
+
+		static ValueContainer of(PdOperator op, Entity entity) {
+			ValueContainer result = new ValueContainer();
+			Object value = op.get(entity);
+			Class<?> type = op.field.getType();
+			result.unbox(type, value);
+			return result;
+		}
+
+		void unbox(Class<?> type, Object value) {
+			if (value instanceof Long) {
+				l = (Long) value;
+			} else if (value instanceof Double) {
+				d = (Double) value;
+			} else if (value instanceof Float) {
+				f = (Float) value;
+			} else if (value instanceof Boolean) {
+				b = (Boolean) value;
+			} else if (value instanceof Integer) {
+				i = (Integer) value;
+			} else if (value instanceof Entity) {
+				l = ((Entity) value).getId();
+			} else {
+				o = value;
 			}
 		}
 

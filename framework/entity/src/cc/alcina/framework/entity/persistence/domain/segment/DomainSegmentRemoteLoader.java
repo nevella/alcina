@@ -25,7 +25,8 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 				getClass().getSimpleName()), DomainSegment.class, null);
 		this.definition = Reflections
 				.newInstance(Configuration.get("definitionClassName"));
-		logger.info("Definition :: {}", definition.name());
+		this.definition.configureLocal();
+		logger.info("Definition :: {}", definition.asString());
 		load();
 		if (Configuration.is("refresh")) {
 			refresh();

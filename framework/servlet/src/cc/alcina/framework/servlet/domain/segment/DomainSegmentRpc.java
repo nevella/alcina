@@ -1,6 +1,13 @@
 package cc.alcina.framework.servlet.domain.segment;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.entity.persistence.domain.segment.DomainSegment;
+import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentRemoteLoader;
+import cc.alcina.framework.servlet.servlet.remote.RemoteServletInvoker;
 
 /**
  * <p>
@@ -28,4 +35,22 @@ import cc.alcina.framework.common.client.meta.Feature;
  */
 @Feature.Ref(Feature_DomainSegment.class)
 public class DomainSegmentRpc {
+	static Logger logger = LoggerFactory.getLogger(DomainSegmentRpc.class);
+
+	public static class RemoteLoaderImpl
+			implements DomainSegmentRemoteLoader.RemoteLoader {
+		@Override
+		public DomainSegment load(DomainSegment.Definition definition,
+				DomainSegment localState) {
+			TaskGetDomainSegment task = new TaskGetDomainSegment();
+			task.definition = definition;
+			task.localState = localState;
+			task.serialize();
+			logger.info(
+					"Loading remote segment -- definition: {} - local state: {}",
+					definition.asString(), localState);
+			return Registry.impl(RemoteServletInvoker.class)
+					.invokeRemoteTaskReturnResult(task);
+		}
+	}
 }
