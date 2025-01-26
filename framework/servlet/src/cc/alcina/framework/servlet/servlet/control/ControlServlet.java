@@ -237,6 +237,7 @@ public class ControlServlet extends AlcinaServlet {
 					}
 					case WAIT_RETURN_LARGE_OBJECT_SERIALIZED: {
 						Job job = task.perform();
+						job.throwIfException();
 						return JobRegistry.get().getLargeResult(job);
 					}
 					default:

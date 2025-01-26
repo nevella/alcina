@@ -4,7 +4,6 @@ import java.io.File;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.KryoUtils;
 
@@ -73,38 +72,6 @@ public interface SerializationStrategy {
 		@Override
 		public <T> void serializeToFile(T t, File cacheFile) {
 			KryoUtils.serializeToFile(t, cacheFile);
-		}
-	}
-
-	public static class SerializationStrategy_WrappedObject
-			implements SerializationStrategy {
-		@Override
-		public <T> T deserializeFromFile(File cacheFile, Class<T> clazz) {
-			return JaxbUtils.xmlDeserialize(clazz,
-					Io.read().file(cacheFile).asString());
-		}
-
-		@Override
-		public String getFileSuffix() {
-			return "xml";
-		}
-
-		@Override
-		public <T> byte[] serializeToByteArray(T t) {
-			try {
-				return JaxbUtils.xmlSerialize(t).getBytes("UTF-8");
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		@Override
-		public <T> void serializeToFile(T t, File cacheFile) {
-			try {
-				Io.write().bytes(serializeToByteArray(t)).toFile(cacheFile);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
 		}
 	}
 }

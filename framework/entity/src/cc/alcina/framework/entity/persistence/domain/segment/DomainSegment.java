@@ -15,6 +15,8 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
@@ -28,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
@@ -35,8 +38,8 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFiel
  * <p>
  * A json-serializable representation of a domain segment
  */
-public class DomainSegment implements Serializable {
-	public static class SegmentEntity implements Serializable {
+public class DomainSegment {
+	public static class SegmentEntity {
 		transient Class<? extends Entity> entityClass;
 
 		public long id;
@@ -46,6 +49,12 @@ public class DomainSegment implements Serializable {
 		public ValueContainer[] values;
 
 		public SegmentEntity() {
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s", entityClass.getSimpleName(),
+					CommonUtils.padEight((int) id));
 		}
 
 		public SegmentEntity(Entity entity, ValueMapper mapper) {
@@ -60,13 +69,13 @@ public class DomainSegment implements Serializable {
 
 		public SegmentEntity toMemberRef() {
 			SegmentEntity result = new SegmentEntity();
-			result.id = lastModificationTime;
+			result.id = id;
 			result.lastModificationTime = lastModificationTime;
 			return result;
 		}
 	}
 
-	public static class SegmentCollection implements Serializable {
+	public static class SegmentCollection {
 		public Class<? extends Entity> entityClass;
 
 		public List<SegmentEntity> segmentEntities = new ArrayList<>();
@@ -84,7 +93,8 @@ public class DomainSegment implements Serializable {
 			SegmentCollection result = new SegmentCollection();
 			result.entityClass = entityClass;
 			result.segmentEntities = segmentEntities.stream()
-					.map(SegmentEntity::toMemberRef).toList();
+					.map(SegmentEntity::toMemberRef)
+					.collect(Collectors.toList());
 			return result;
 		}
 
@@ -99,7 +109,8 @@ public class DomainSegment implements Serializable {
 		}
 
 		void indexToList() {
-			segmentEntities = idToEntity.values().stream().toList();
+			segmentEntities = idToEntity.values().stream()
+					.collect(Collectors.toList());
 		}
 
 		void index(SegmentEntity entity) {
@@ -207,18 +218,17 @@ public class DomainSegment implements Serializable {
 	}
 
 	/**
-	 * Models the definition of the segment - the roots and the filter
+	 * Models the definition of the segment - the roots and the filter. The
+	 * 'getters' are named provide to avoid serialization
 	 * 
 	 */
 	@Bean(PropertySource.FIELDS)
 	public interface Definition {
-		@Property.Not
-		Stream<? extends Entity> getRoots();
+		Stream<? extends Entity> provideRoots();
 
 		void configureLocal();
 
-		@Property.Not
-		ProjectionFilter getProjectionFilter();
+		ProjectionFilter provideProjectionFilter();
 
 		default String name() {
 			return getClass().getSimpleName();
@@ -233,7 +243,7 @@ public class DomainSegment implements Serializable {
 		 * This will normally be at least the {@link ClassRef}, {@link IUser}
 		 * and {@link IGroup} implementations for the domain
 		 */
-		Set<Class<? extends Entity>> getPassthroughClasses();
+		Set<Class<? extends Entity>> providePassthroughClasses();
 	}
 
 	class Lookup {
@@ -311,7 +321,8 @@ public class DomainSegment implements Serializable {
 	public DomainSegment toLocalState() {
 		DomainSegment result = new DomainSegment();
 		result.collections = collections.stream()
-				.map(SegmentCollection::toMemberRefs).toList();
+				.map(SegmentCollection::toMemberRefs)
+				.collect(Collectors.toList());
 		return result;
 	}
 

@@ -87,6 +87,8 @@ public class Io {
 
 		private boolean decompressIfDotGz;
 
+		private Class<?> kryoType;
+
 		public byte[] asBytes() {
 			try {
 				InputStream stream = resource.getStream();
@@ -161,13 +163,18 @@ public class Io {
 
 		public <T> T asObject() {
 			try {
-				byte[] bytes = asBytes();
-				try (ObjectInputStream in = new ObjectInputStream(
-						new ByteArrayInputStream(bytes))) {
-					try {
-						return (T) in.readObject();
-					} catch (Exception e) {
-						throw new IOException(e);
+				if (kryoType != null) {
+					return (T) KryoUtils.deserializeFromBase64(asString(),
+							kryoType);
+				} else {
+					byte[] bytes = asBytes();
+					try (ObjectInputStream in = new ObjectInputStream(
+							new ByteArrayInputStream(bytes))) {
+						try {
+							return (T) in.readObject();
+						} catch (Exception e) {
+							throw new IOException(e);
+						}
 					}
 				}
 			} catch (Exception e) {
@@ -271,6 +278,11 @@ public class Io {
 
 		public ReadOp withDecompress(boolean decompress) {
 			this.decompress = decompress;
+			return this;
+		}
+
+		public ReadOp withKryoType(Class<?> kryoType) {
+			this.kryoType = kryoType;
 			return this;
 		}
 
@@ -546,9 +558,16 @@ public class Io {
 
 			private boolean reflectiveSerialized;
 
+			private boolean kryo;
+
 			public Contents
 					asReflectiveSerialized(boolean reflectiveSerialized) {
 				this.reflectiveSerialized = reflectiveSerialized;
+				return this;
+			}
+
+			public Contents asKryo(boolean kryo) {
+				this.kryo = kryo;
 				return this;
 			}
 
@@ -573,6 +592,9 @@ public class Io {
 			public Resource object(Object object) {
 				if (reflectiveSerialized) {
 					this.string = ReflectiveSerializer.serialize(object);
+					return WriteOp.this.resource;
+				} else if (kryo) {
+					this.string = KryoUtils.serializeToBase64(object);
 					return WriteOp.this.resource;
 				} else {
 					try {

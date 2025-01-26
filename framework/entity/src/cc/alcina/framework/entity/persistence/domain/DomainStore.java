@@ -118,6 +118,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityValuesMapper;
+import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentLoader;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
@@ -2265,5 +2266,9 @@ public class DomainStore implements IDomainStore {
 			getEntityValuesMapper(Class<? extends Entity> entityClass) {
 		return ((DomainStoreLoaderDatabase) loader)
 				.getEntityValuesMapper(entityClass);
+	}
+
+	public DomainSegmentLoader getDomainSegmentLoader() {
+		return ((DomainStoreLoaderDatabase) loader).getSegmentLoader();
 	}
 }

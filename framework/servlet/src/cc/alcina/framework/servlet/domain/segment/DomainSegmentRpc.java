@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.persistence.domain.segment.DomainSegment;
 import cc.alcina.framework.entity.persistence.domain.segment.DomainSegmentRemoteLoader;
@@ -54,9 +55,17 @@ public class DomainSegmentRpc {
 					definition.asString(), localState);
 			String resultB64gz = Registry.impl(RemoteServletInvoker.class)
 					.invokeRemoteTaskReturnResult(task);
-			DomainSegment segment = Io.read().base64String(resultB64gz)
-					.withDecompress(true).asObject();
-			return segment;
+			try {
+				DomainSegment segment = Io.read().base64String(resultB64gz)
+						.withDecompress(true).withKryoType(DomainSegment.class)
+						.asObject();
+				return segment;
+			} catch (RuntimeException e) {
+				e.printStackTrace();
+				Ax.out("Problematic result");
+				Ax.out(Ax.trimForLogging(resultB64gz));
+				throw e;
+			}
 		}
 	}
 }

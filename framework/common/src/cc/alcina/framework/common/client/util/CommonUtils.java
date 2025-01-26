@@ -1426,11 +1426,11 @@ public class CommonUtils {
 	}
 
 	public static String padEight(int number) {
-		if (number < 10000000) {
-			String s = String.valueOf(number);
+		String s = String.valueOf(number);
+		if (s.length() < 8) {
 			return "00000000".substring(s.length()) + s;
 		} else {
-			return String.valueOf(number);
+			return s;
 		}
 	}
 
