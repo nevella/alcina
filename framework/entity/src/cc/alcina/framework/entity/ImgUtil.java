@@ -45,8 +45,8 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 
 /**

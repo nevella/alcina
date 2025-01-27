@@ -26,7 +26,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.widget.ToggleLink;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;

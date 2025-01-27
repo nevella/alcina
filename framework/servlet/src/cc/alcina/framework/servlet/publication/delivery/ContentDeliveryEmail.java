@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -46,7 +47,6 @@ import cc.alcina.framework.common.client.publication.DeliveryModel.MailAttachmen
 import cc.alcina.framework.common.client.publication.DeliveryModel.MailInlineImage;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_PDF;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.servlet.publication.EntityCleaner;

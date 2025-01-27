@@ -17,8 +17,8 @@ import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 

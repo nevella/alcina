@@ -48,13 +48,13 @@ import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.ClassReflector.TypeInvoker;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  * All HTML element interfaces derive from this class.

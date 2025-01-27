@@ -3,11 +3,11 @@ package cc.alcina.framework.common.client.dom;
 import java.util.List;
 import java.util.function.Consumer;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Cell;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 public class DomNodeHtmlTableBuilder extends DomNodeBuilder {

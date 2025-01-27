@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.remote;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerializerOptions;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 /*
  * Marker for dev remoteservice call handlers

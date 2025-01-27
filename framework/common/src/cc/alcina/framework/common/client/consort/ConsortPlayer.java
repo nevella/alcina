@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.consort;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 public interface ConsortPlayer {

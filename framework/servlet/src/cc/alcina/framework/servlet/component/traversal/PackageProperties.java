@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
-import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Header_Left header_left = new _Header_Left();

@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.gwittir;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 
 public class BeanValidationOnlyValidator implements Validator {

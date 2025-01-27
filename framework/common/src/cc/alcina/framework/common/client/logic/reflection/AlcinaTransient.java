@@ -11,8 +11,8 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  * <p>

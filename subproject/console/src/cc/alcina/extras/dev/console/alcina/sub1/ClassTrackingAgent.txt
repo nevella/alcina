@@ -502,8 +502,8 @@ cc.alcina.framework.common.client.util.ListenerReference$1
 cc.alcina.framework.common.client.util.LooseContext
 cc.alcina.framework.common.client.util.LooseContext$ClientLooseContextProvider
 cc.alcina.framework.common.client.util.LooseContext$LooseContextStackException
-cc.alcina.framework.common.client.util.LooseContextInstance
-cc.alcina.framework.common.client.util.LooseContextInstance$Frame
+cc.alcina.framework.common.client.context.LooseContextInstance
+cc.alcina.framework.common.client.context.LooseContextInstance$Frame
 cc.alcina.framework.common.client.util.MultikeyMap
 cc.alcina.framework.common.client.util.MultikeyMapBase
 cc.alcina.framework.common.client.util.Multimap

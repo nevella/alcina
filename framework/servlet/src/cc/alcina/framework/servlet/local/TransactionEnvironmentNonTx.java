@@ -4,9 +4,9 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.domain.TransactionId;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 

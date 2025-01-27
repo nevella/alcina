@@ -12,6 +12,7 @@ import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.History;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
@@ -23,8 +24,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceAdapter;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;

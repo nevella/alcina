@@ -9,8 +9,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.process.ProcessObservable;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 public abstract class WDDriverHandlerExt implements WDDriverHandler {
 	static Map<Class, RemoteWebDriver> lastDrivers = new LinkedHashMap<>();

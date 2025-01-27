@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.local;
 
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.servlet.job.JobEnvironmentNonTx;
 import cc.alcina.framework.servlet.job.JobRegistry;
 

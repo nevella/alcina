@@ -13704,7 +13704,7 @@ function $forName_1(this$static, className){
       return $clinit_Client_PlaceNavigatorImpl___refImpl() , Lcc_alcina_framework_gwt_client_Client$PlaceNavigatorImpl_2_classLit;
     case 'cc.alcina.framework.gwt.client.place.BasePlace$PlaceNavigator':
       return $clinit_BasePlace_PlaceNavigator___refImpl() , Lcc_alcina_framework_gwt_client_place_BasePlace$PlaceNavigator_2_classLit;
-    case 'cc.alcina.framework.common.client.util.LooseContextInstance':
+    case 'cc.alcina.framework.common.client.context.LooseContextInstance':
       return $clinit_LooseContextInstance___refImpl() , Lcc_alcina_framework_common_client_util_LooseContextInstance_2_classLit;
     case 'com.google.gwt.activity.shared.Activity':
       return $clinit_Activity___refImpl() , Lcom_google_gwt_activity_shared_Activity_2_classLit;
@@ -14154,7 +14154,7 @@ function $getClassReflector__1(this$static, className){
       return new Client_PlaceNavigatorImpl___refImpl;
     case 'cc.alcina.framework.gwt.client.place.BasePlace$PlaceNavigator':
       return new BasePlace_PlaceNavigator___refImpl;
-    case 'cc.alcina.framework.common.client.util.LooseContextInstance':
+    case 'cc.alcina.framework.common.client.context.LooseContextInstance':
       return new LooseContextInstance___refImpl;
     case 'com.google.gwt.activity.shared.Activity':
       return new Activity___refImpl;

@@ -1,9 +1,9 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 @Reflected
 @Registration.Singleton

@@ -9,8 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 public class JobJettyHandler extends AbstractHandler {
 	public JobJettyHandler() {

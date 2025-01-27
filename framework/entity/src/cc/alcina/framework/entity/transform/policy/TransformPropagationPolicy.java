@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -21,7 +22,6 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.NotPersistentObjectCriteriaGroup;
 import cc.alcina.framework.common.client.search.PersistentObjectCriterion;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 
 @Registration.Singleton(TransformPropagationPolicy.class)

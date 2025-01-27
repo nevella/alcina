@@ -12,6 +12,7 @@ import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -20,7 +21,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.LooseContext;
 import elemental.json.Json;
 import elemental.json.JsonNull;
 import elemental.json.JsonObject;

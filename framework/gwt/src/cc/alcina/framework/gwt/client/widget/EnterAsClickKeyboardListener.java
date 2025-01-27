@@ -22,7 +22,7 @@ import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.TextBoxBase;
 
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext;
 
 /**
  *

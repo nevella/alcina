@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.log4j.Layout;
 import org.apache.log4j.WriterAppender;
 
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.logging.PerThreadLoggingHandler.PerThreadBuffer;
 

@@ -7,8 +7,8 @@ import java.util.Arrays;
 import java.util.Locale;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.AlcinaConstants;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 public class BiPrintStream extends PrintStream {
 	public static String debugMarker = null;

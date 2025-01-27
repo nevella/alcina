@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.serializer;
 
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext;
 
 public class Serializers {
 	public static final String CONTEXT_DESERIALIZING = FlatTreeSerializer.class

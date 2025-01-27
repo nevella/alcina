@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.objecttree;
 
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.context.LooseContextInstance;
 
 public interface HasRenderContext {
 	public abstract LooseContextInstance getRenderContext();

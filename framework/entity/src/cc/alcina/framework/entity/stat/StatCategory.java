@@ -3,9 +3,9 @@ package cc.alcina.framework.entity.stat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 public abstract class StatCategory {
 	public static final transient String CONTEXT_MUTED = StatCategory.class

@@ -10,10 +10,10 @@ import org.w3c.dom.ProcessingInstruction;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document.RemoteType;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.util.DomUtils;
 

@@ -4,6 +4,8 @@ import java.util.Collections;
 
 import com.google.gwt.dom.client.StyleInjector;
 
+import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainHandlerClient;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -14,8 +16,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;

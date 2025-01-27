@@ -137,7 +137,7 @@ public class StandardRulesets {
 			cc.alcina.framework.common.client.util.HasReflectiveEquivalence.class,
 			cc.alcina.framework.common.client.util.HasStringId.class,
 			cc.alcina.framework.common.client.util.IntPair.class,
-			cc.alcina.framework.common.client.util.LooseContextInstance.class,
+			cc.alcina.framework.common.client.context.LooseContextInstance.class,
 			cc.alcina.framework.common.client.util.TopicListener.class,
 			cc.alcina.framework.common.client.util.TopicPublisher.class,
 			cc.alcina.framework.gwt.client.Client.class,

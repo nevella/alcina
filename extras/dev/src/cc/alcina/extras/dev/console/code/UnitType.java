@@ -19,9 +19,9 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 public class UnitType {
 	public static transient boolean evaluateSuperclassFqn = false;

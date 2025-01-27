@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.domain;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 public interface IDomainStore extends MemoryStatProvider {
 	String CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT = IDomainStore.class.getName()

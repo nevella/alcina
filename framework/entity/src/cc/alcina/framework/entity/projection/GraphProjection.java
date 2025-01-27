@@ -51,6 +51,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.GArrayList;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.GraphProjectionTransient;
@@ -73,7 +74,6 @@ import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;

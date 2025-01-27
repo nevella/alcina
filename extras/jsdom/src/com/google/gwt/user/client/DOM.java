@@ -35,9 +35,9 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Window.Resources;
 import com.google.gwt.user.client.impl.DOMImpl;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  * This class provides a set of static methods that allow you to manipulate the

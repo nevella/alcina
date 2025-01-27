@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.KnownNodeMetadata.KnownNodeProperty;
 import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
 import cc.alcina.framework.common.client.csobjects.KnownStatusRule;
@@ -24,7 +25,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;

@@ -4,8 +4,6 @@ import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.util.LooseContext;
-
 public interface ContextProvider<C, F extends ContextFrame> {
 	static <C, F extends ContextFrame> ContextProvider<C, F> createProvider(
 			Function<C, F> frameConstructor, Runnable onPostRegisterCreated,

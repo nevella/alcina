@@ -6,8 +6,8 @@ import java.lang.reflect.Proxy;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationParameters.Api;
 

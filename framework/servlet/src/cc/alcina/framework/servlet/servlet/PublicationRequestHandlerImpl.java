@@ -1,11 +1,11 @@
 package cc.alcina.framework.servlet.servlet;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.PublicationRequestHandler;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.publication.Publisher;
 
 public class PublicationRequestHandlerImpl
