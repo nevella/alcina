@@ -500,6 +500,11 @@ public abstract class MessageTransportLayer {
 			}
 		}
 
+		public boolean activeMessagesAreAwaitRemoteOnly() {
+			return activeMessages.stream()
+					.allMatch(m -> m.message instanceof Message.AwaitRemote);
+		}
+
 		boolean shouldSendMessagesOrMetadata() {
 			synchronized (activeMessages) {
 				return activeMessages.stream()

@@ -16,6 +16,7 @@
 package com.google.gwt.dom.client;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -973,6 +974,10 @@ public class Document extends Node
 	@Override
 	public String getVisibilityState() {
 		return remote.getVisibilityState();
+	}
+
+	public boolean isVisibilityStateVisible() {
+		return Objects.equals(getVisibilityState(), "visible");
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
@@ -114,8 +115,19 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		 */
 		@Override
 		protected boolean isDispatchAvailable() {
-			return !(RemoteObjectModelComponentState.get().finished
+			boolean finished = (RemoteObjectModelComponentState.get().finished
 					|| willFinish);
+			if (finished) {
+				return false;
+			}
+			/*
+			 * There's no need to send AwaitRemote messages if the tab is not
+			 * visible, and it causes spam on console restart/remote server
+			 * issues
+			 */
+			boolean shouldSend = Document.get().isVisibilityStateVisible()
+					|| !sendChannel().activeMessagesAreAwaitRemoteOnly();
+			return shouldSend;
 		}
 
 		int getInflightCount() {
