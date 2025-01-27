@@ -1433,6 +1433,7 @@ public class DirectedLayout implements AlcinaProcess {
 					value = transform.apply(value);
 				}
 				String stringValue = value == null ? "null" : value.toString();
+				boolean nullNoTransform = value == null && !hasTransform;
 				Rendered rendered = verifySingleRendered();
 				Element element = rendered.isElement() ? rendered.asElement()
 						: null;
@@ -1614,7 +1615,7 @@ public class DirectedLayout implements AlcinaProcess {
 							? binding.from()
 							: binding.to();
 					if (element != null) {
-						if (Ax.notBlank(stringValue)) {
+						if (Ax.notBlank(stringValue) && !nullNoTransform) {
 							element.getStyle().setProperty(attributeName,
 									stringValue);
 						} else {
@@ -1624,7 +1625,7 @@ public class DirectedLayout implements AlcinaProcess {
 						StringMap styleMap = StyleUtil.styleAttributeToMap(
 								w3cElement.getAttribute("style"));
 						String key = Ax.cssify(attributeName);
-						if (Ax.notBlank(stringValue)) {
+						if (Ax.notBlank(stringValue) && !nullNoTransform) {
 							Preconditions.checkArgument(
 									stringValue.matches("[^'\":;=\n]+"));
 							styleMap.put(key, stringValue);

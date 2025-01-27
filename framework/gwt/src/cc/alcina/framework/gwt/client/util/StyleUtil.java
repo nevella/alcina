@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.beust.jcommander.internal.Maps;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Window;
 
@@ -117,7 +118,8 @@ public class StyleUtil {
 	}
 
 	public static String styleMapToAttribute(StringMap styleMap) {
-		return styleMap.toPropertyString().replaceAll("=", ": ")
-				.replaceAll("\n+", ";") + ";";
+		String mapString = styleMap.toPropertyString().replaceAll("=", ": ");
+		mapString = mapString.isEmpty() ? mapString : mapString + "\n";
+		return mapString.replaceAll("\n+", ";");
 	}
 }
