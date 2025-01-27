@@ -2124,4 +2124,12 @@ public class SEUtilities {
 		}
 		return null;
 	}
+
+	public static void sleep(int delayMs) {
+		try {
+			Thread.sleep(delayMs);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
 }

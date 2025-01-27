@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.context.ScopeKey;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -91,6 +92,9 @@ boolean enabled = Configuration.is(Foo.class,"enabled");
  * existing configuration + write a checking tool
  */
 public class Configuration {
+	public static final LooseContext.Key CONTEXT_SUPPRESS_WARN_MISSING = LooseContext
+			.key(Configuration.class, "warnMissing");
+
 	public final static Properties properties = new Properties();
 
 	/*
@@ -99,12 +103,8 @@ public class Configuration {
 	public static boolean useStackTraceCallingClass;
 
 	public static String get(Class clazz, String key) {
-		return get(clazz, key, true);
-	}
-
-	public static String get(Class clazz, String key, boolean required) {
 		String value = properties.get(new Key(clazz, key));
-		if (value == null && required) {
+		if (value == null && !CONTEXT_SUPPRESS_WARN_MISSING.is()) {
 			Ax.sysLogHigh("Warning - no configuration for class/key %s.%s",
 					NestedName.get(clazz), key);
 		}
@@ -152,7 +152,7 @@ public class Configuration {
 	}
 
 	public static boolean has(Class clazz, String keyPart) {
-		return new Key(clazz, keyPart).has();
+		return key(clazz, keyPart).has();
 	}
 
 	public static boolean is(Class clazz, String key) {
@@ -268,7 +268,7 @@ public class Configuration {
 	/*
 	 *
 	 */
-	public static class Key {
+	public static class Key implements ScopeKey {
 		// public for tooling, can remove once migration
 		// (TaskRefactorConfigSets) complete
 		public static Key stringKey(String key) {
@@ -284,6 +284,11 @@ public class Configuration {
 		String stringRepresentation;
 
 		String nestedStringRepresentation;
+
+		@Override
+		public String getPath() {
+			return nestedStringRepresentation;
+		}
 
 		private Key(Class clazz, String keyPart, boolean allowNullClass) {
 			Preconditions.checkState(clazz != null || allowNullClass);

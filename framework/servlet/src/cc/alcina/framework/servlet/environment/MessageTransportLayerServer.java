@@ -6,6 +6,8 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -57,10 +59,16 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 	}
 
 	class ReceiveChannelImpl extends ReceiveChannel {
+		static final Configuration.Key RECEIVE_DELAY = Configuration
+				.key(ReceiveChannelImpl.class, "receiveDelay");
+
 		public Date lastEnvelopeReceived = new Date(0);
 
 		@Override
 		public void onEnvelopeReceived(MessageEnvelope envelope) {
+			if (RECEIVE_DELAY.intValue() != 0) {
+				SEUtilities.sleep(RECEIVE_DELAY.intValue());
+			}
 			lastEnvelopeReceived = new Date();
 			super.onEnvelopeReceived(envelope);
 		}

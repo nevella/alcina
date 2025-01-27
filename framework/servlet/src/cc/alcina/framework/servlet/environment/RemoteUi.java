@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivityManager;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete.EnvironmentSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 
 /**
@@ -49,6 +50,9 @@ public interface RemoteUi {
 	}
 
 	void render();
+
+	default void customizeEnvironmentSettings(EnvironmentSettings settings) {
+	}
 
 	default RemoteResolver resolver() {
 		return new RemoteResolver();

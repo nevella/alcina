@@ -18,6 +18,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -489,12 +490,15 @@ public abstract class MessageTransportLayer {
 		transportEvents.onTransportSuccess();
 	}
 
+	public class ActiveMessagesChanged implements ProcessObservable {
+	}
+
 	public abstract class Channel {
 		protected List<MessageToken> activeMessages = new ArrayList<>();
 
 		protected Map<MessageId, MessageToken> messageIdActiveMessage = new LinkedHashMap<>();
 
-		protected List<MessageToken> snapshotActiveMessages() {
+		public List<MessageToken> snapshotActiveMessages() {
 			synchronized (activeMessages) {
 				return new ArrayList<>(activeMessages);
 			}
@@ -520,19 +524,17 @@ public abstract class MessageTransportLayer {
 						channelName(),
 						message.transportHistory.toTransportDebugString());
 				activeMessages.add(message);
+				new ActiveMessagesChanged().publish();
 				messageIdActiveMessage.put(message.transportHistory.messageId,
 						message);
 			}
 		}
 
 		void removeMessage(MessageToken message) {
-			synchronized (activeMessages) {
-				activeMessages.remove(message);
-				messageIdActiveMessage
-						.remove(message.transportHistory.messageId);
-				logger.debug("Message acknowledged + removed :: {}",
-						message.transportHistory.messageId);
-			}
+			activeMessages.remove(message);
+			messageIdActiveMessage.remove(message.transportHistory.messageId);
+			logger.debug("Message acknowledged + removed :: {}",
+					message.transportHistory.messageId);
 		}
 
 		MessageToken getActiveMessage(MessageId messageId) {
@@ -547,7 +549,10 @@ public abstract class MessageTransportLayer {
 						active -> active.acknowledged && (!publishesMessages()
 								|| active.transportHistory.published != null))
 						.collect(Collectors.toList());
-				toRemove.forEach(this::removeMessage);
+				if (toRemove.size() > 0) {
+					toRemove.forEach(this::removeMessage);
+					new ActiveMessagesChanged().publish();
+				}
 			}
 		}
 

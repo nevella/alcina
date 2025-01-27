@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.context.LooseContextInstance;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.ThrowingSupplier;
@@ -192,6 +193,51 @@ public abstract class LooseContext {
 
 	public static void pop() {
 		getContext().pop();
+	}
+
+	public static Key key(Class clazz, String keyPart) {
+		return new Key(clazz, keyPart);
+	}
+
+	public static class Key implements ScopeKey {
+		Class clazz;
+
+		String keyPart;
+
+		String contextKey;
+
+		public Key(Class clazz, String keyPart) {
+			this.clazz = clazz;
+			this.keyPart = keyPart;
+			this.contextKey = Ax.format("%s.%s",
+					clazz.getName().replace("$", "."), keyPart);
+		}
+
+		public String get() {
+			return LooseContext.getString(contextKey);
+		}
+
+		public int intValue() {
+			return LooseContext.getInteger(contextKey);
+		}
+
+		public boolean is() {
+			return LooseContext.is(contextKey);
+		}
+
+		public boolean has() {
+			return LooseContext.has(contextKey);
+		}
+
+		@Override
+		public long longValue() {
+			return LooseContext.getLong(contextKey);
+		}
+
+		@Override
+		public String getPath() {
+			return contextKey;
+		}
 	}
 
 	public static void push() {

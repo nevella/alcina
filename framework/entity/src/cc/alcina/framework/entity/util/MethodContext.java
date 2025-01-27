@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext.Key;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
@@ -48,7 +49,7 @@ public class MethodContext {
 	public <T> T call(Callable<T> callable) {
 		if (runInNewThread) {
 			String name = callable.getClass().getName();
-			if (name.contains("$Lambda")) {
+			if (name.contains("")) {
 				name = "(lambda)";
 			}
 			AlcinaChildRunnable.runInTransactionNewThread(
@@ -189,5 +190,9 @@ public class MethodContext {
 	public MethodContext withThreadName(String threadName) {
 		this.threadName = threadName;
 		return this;
+	}
+
+	public MethodContext withContextTrue(LooseContext.Key contextKey) {
+		return withContextTrue(contextKey.getPath());
 	}
 }

@@ -1240,4 +1240,19 @@ public class Window {
 			return this;
 		}
 	}
+
+	/*
+	 * Should only be called on the client (romcom)
+	 */
+	public static void setOrRemoveProperty(String name, boolean value) {
+		setOrRemoveProperty0(name, value);
+	}
+
+	private static native void setOrRemoveProperty0(String name, boolean value) /*-{
+	if(value){
+		$wnd[name] = true;
+	}else{
+		delete $wnd.name
+	}
+		}-*/;
 }

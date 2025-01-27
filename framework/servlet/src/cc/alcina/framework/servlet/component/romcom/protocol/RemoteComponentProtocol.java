@@ -72,9 +72,17 @@ public class RemoteComponentProtocol {
 		}
 
 		/*
-		 * Sent by the server to instruct the client to begin the await loop
+		 * Sent by the server to instruct the client that server environment
+		 * init has completed (so the client startup should begin the await
+		 * loop)
 		 */
-		public static class BeginAwaitLoop extends Message {
+		public static class EnvironmentInitComplete extends Message {
+			public EnvironmentSettings environmentSettings = new EnvironmentSettings();
+
+			@Bean(PropertySource.FIELDS)
+			public static class EnvironmentSettings {
+				public int longRunningMessageTimeMs = 2000;
+			}
 		}
 
 		public interface Handler<M extends Message> {

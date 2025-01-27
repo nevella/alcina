@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -24,6 +25,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
+import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.HasSelectionMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Mutations;
@@ -99,7 +101,10 @@ public class ClientRpc implements HandlerContext {
 
 	ExceptionHandler exceptionHandler;
 
-	ClientRpc() {
+	RemoteComponentUi ui;
+
+	ClientRpc(RemoteComponentUi ui) {
+		this.ui = ui;
 		transportLayer = new MessageTransportLayerClient();
 		exceptionHandler = new ExceptionHandler();
 		transportLayer.topicMessageReceived.add(this::onMessageReceived);
@@ -111,20 +116,7 @@ public class ClientRpc implements HandlerContext {
 		try {
 			handler.handle(this, message);
 		} catch (Throwable e) {
-			// FIXME - ask the context to log
-			Ax.out("Exception handling message %s\n"
-					+ "================\nSerialized form:\n%s", message, "??");
-			e.printStackTrace();
-			/*
-			 * FIXME - devex - 0 - once syncmutations.3 is stable, this should
-			 * not occur (ha!)
-			 *
-			 * Serious, the romcom client is a bounded piece of code that just
-			 * propagates server changes to the client dom, so all exceptions
-			 * *should* be server-only (unless client dom is mashed by an
-			 * extension)
-			 */
-			Window.alert(CommonUtils.toSimpleExceptionMessage(e));
+			ui.messageStateRouter.onMessageHandlingException(message, e);
 		}
 	}
 
@@ -178,7 +170,11 @@ public class ClientRpc implements HandlerContext {
 		}
 	}
 
-	static class ExceptionHandler
+	enum ExceptionState {
+		ok, err_recoverable, err_finished
+	}
+
+	class ExceptionHandler
 			implements BiConsumer<RemoteComponentRequest, Throwable> {
 		@Override
 		public void accept(RemoteComponentRequest t, Throwable u) {
@@ -188,31 +184,24 @@ public class ClientRpc implements HandlerContext {
 				switch (statusCode) {
 				case 0:
 				case 404:
-					setState(State.err_recoverable);
+					setState(ExceptionState.err_recoverable);
 					get().awaitDelay++;
 					break;
 				default:
-					setState(State.err_finished);
+					setState(ExceptionState.err_finished);
 					RemoteObjectModelComponentState.get().finished = true;
 					break;
 				}
 			}
 		}
 
-		enum State {
-			ok, err_recoverable, err_finished
-		}
+		ExceptionState state = ExceptionState.ok;
 
-		State state = State.ok;
-
-		void setState(State state) {
-			State old_state = this.state;
+		void setState(ExceptionState state) {
+			ExceptionState old_state = this.state;
 			this.state = state;
 			if (state != old_state) {
-				if (notificationElement != null) {
-					notificationElement.removeFromParent();
-					notificationElement = null;
-				}
+				ui.messageStateRouter.clearRpcStateMessage();
 				String message = null;
 				switch (state) {
 				case ok:
@@ -228,27 +217,13 @@ public class ClientRpc implements HandlerContext {
 					throw new UnsupportedOperationException();
 				}
 				if (message != null) {
-					notificationElement = Document.get()
-							.createElement("romcom-notification");
-					notificationElement.setTextContent(message);
-					Document.get().getBody().appendChild(notificationElement);
-					LocalDom.flush();
-					String display = notificationElement.implAccess()
-							.ensureJsoRemote().getComputedStyle().getDisplay();
-					if (Objects.equals(display, "inline")) {
-						// not set by the app, add our own
-						notificationElement.setAttribute("style",
-								"position: absolute; top:5px; left: 5px; padding: 0.5rem 1rem; "
-										+ "display: block; background-color: #333; border: solid 1px #ccc; color: #cc5; z-index: 999");
-					}
+					ui.messageStateRouter.displayRpcStateMessage(message);
 				}
 			}
 		}
 
-		Element notificationElement;
-
 		void onSuccessReceived() {
-			setState(State.ok);
+			setState(ExceptionState.ok);
 		}
 	}
 
@@ -260,7 +235,7 @@ public class ClientRpc implements HandlerContext {
 		}
 	}
 
-	public static void beginAwaitLoop() {
-		send(new Message.AwaitRemote());
+	List<MessageToken> getActiveMessages() {
+		return transportLayer.sendChannel.snapshotActiveMessages();
 	}
 }

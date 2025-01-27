@@ -48,6 +48,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.EventSystemMutation
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ExceptionTransport;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
@@ -704,6 +705,10 @@ class Environment {
 	}
 
 	private void startClient() {
+		EnvironmentInitComplete environmentInitComplete = new EnvironmentInitComplete();
+		ui.customizeEnvironmentSettings(
+				environmentInitComplete.environmentSettings);
+		access.dispatchToClient(environmentInitComplete);
 		/*
 		 * will cause mutations event (the initial render) to be queued in the
 		 * queue.toClientQueue

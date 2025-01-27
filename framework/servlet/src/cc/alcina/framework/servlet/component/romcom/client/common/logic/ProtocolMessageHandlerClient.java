@@ -40,12 +40,13 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 	public interface HandlerContext {
 	}
 
-	public static class BeginAwaitLoopHandler
-			extends ProtocolMessageHandlerClient<Message.BeginAwaitLoop> {
+	public static class EnvironmentInitCompleteHandler extends
+			ProtocolMessageHandlerClient<Message.EnvironmentInitComplete> {
 		@Override
 		public void handle(HandlerContext handlerContext,
-				Message.BeginAwaitLoop message) {
-			ClientRpc.beginAwaitLoop();
+				Message.EnvironmentInitComplete message) {
+			ClientRpc
+					.get().ui.environmentSettings = message.environmentSettings;
 		}
 	}
 
