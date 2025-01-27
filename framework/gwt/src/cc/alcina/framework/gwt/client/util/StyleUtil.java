@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.beust.jcommander.internal.Maps;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Window;
 
