@@ -31,7 +31,7 @@
 	</target>
 	<target name="compile-task" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 			</classpath>
@@ -42,7 +42,7 @@
 
 
 		<mkdir dir="${extras.rpc.client.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${extras.rpc.client.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" destdir="${extras.rpc.client.build.dir}">
 			<src path="${extras.rpc.client.src.dir}" />
 			<exclude name="com/google/gwt/user/client/translatable/**" />
 			<classpath>
@@ -52,7 +52,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.rpc.servlet.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${extras.rpc.servlet.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" destdir="${extras.rpc.servlet.build.dir}">
 			<src path="${extras.rpc.client.src.dir}" />
 			<src path="${extras.rpc.servlet.src.dir}" />
 			<exclude name="com/google/gwt/user/client/translatable/**" />
@@ -64,7 +64,7 @@
 		</javac>
 
 		<mkdir dir="${extras.cluster.tasks.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${extras.cluster.tasks.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" destdir="${extras.cluster.tasks.build.dir}">
 			<classpath>
 				<path refid="extras.cluster.lib.path" />
 				<path refid="framework.common.lib.path" />
@@ -74,7 +74,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.jvmclient.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${framework.jvmclient.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" destdir="${framework.jvmclient.build.dir}">
 			<src path="${framework.jvmclient.src.dir}" />
 			<exclude name="cc/alcina/framework/common/translatable/**" />
 			<classpath>
@@ -84,7 +84,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.servlet.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
 			<classpath>
 				<pathelement path="${framework.entity.build.dir}" />
 				<path refid="framework.common.lib.path" />
@@ -93,7 +93,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.dev.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" destdir="${extras.dev.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" destdir="${extras.dev.build.dir}">
 			<src path="${extras.dev.src.dir}" />
 			<src path="${framework.jscodeserver.src.dir}" />
 			<classpath>
@@ -105,7 +105,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.wd.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" srcdir="${extras.wd.src.dir}" destdir="${extras.wd.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" srcdir="${extras.wd.src.dir}" destdir="${extras.wd.build.dir}">
 			<classpath>
 				<pathelement path="${framework.entity.build.dir}" />
 				<pathelement path="${framework.servlet.build.dir}" />
@@ -116,7 +116,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.impl.jboss-hibernate.build.dir}" />
-		<javac target="11" source="11" includeantruntime="false" debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
+		<javac target="17" source="17" includeantruntime="false" debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.impl.jboss-hibernate.lib.path" />

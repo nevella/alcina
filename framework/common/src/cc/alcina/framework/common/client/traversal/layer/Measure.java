@@ -50,6 +50,11 @@ public class Measure extends Location.Range {
 		return new Measure(range.start, range.end, token);
 	}
 
+	public Measure withData(Object data) {
+		this.data = data;
+		return this;
+	}
+
 	public final Token token;
 
 	/**
