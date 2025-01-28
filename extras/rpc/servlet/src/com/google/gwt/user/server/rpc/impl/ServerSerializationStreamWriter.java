@@ -41,7 +41,7 @@ import com.google.gwt.user.server.rpc.SerializationPolicy;
 
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 
 /**
@@ -890,8 +890,8 @@ public final class ServerSerializationStreamWriter
 		@Override
 		public String toString() {
 			if (totalCount > 100000) {
-				AlcinaTopics.devWarning.publish(
-						new Exception("IE - writing large blob"));
+				AlcinaTopics.devWarning
+						.publish(new Exception("IE - writing large blob"));
 			}
 			if (buffers.size() > 1) {
 				StringBuilder b2 = new StringBuilder();
@@ -991,6 +991,7 @@ public final class ServerSerializationStreamWriter
 				stream.writeString((String) instance);
 			}
 		};
+
 		abstract void write(ServerSerializationStreamWriter stream,
 				Object instance) throws SerializationException;
 	}
@@ -1109,6 +1110,7 @@ public final class ServerSerializationStreamWriter
 				}
 			}
 		};
+
 		abstract void write(ServerSerializationStreamWriter stream,
 				Object instance) throws SerializationException;
 	}
