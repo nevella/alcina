@@ -956,6 +956,9 @@ public interface Story {
 		 * A UI action.
 		 */
 		public interface Ui extends Story.Action {
+			public interface CausesDomEvent {
+			}
+
 			default String text() {
 				return null;
 			}
@@ -963,7 +966,7 @@ public interface Story {
 			/**
 			 * Click the located element
 			 */
-			public static class Click implements Ui {
+			public static class Click implements Ui, CausesDomEvent {
 			}
 
 			/**
@@ -1053,7 +1056,8 @@ public interface Story {
 				}
 			}
 
-			public static class Keys extends ActionWithText {
+			public static class Keys extends ActionWithText
+					implements CausesDomEvent {
 				boolean clear;
 
 				public boolean isClear() {
@@ -1073,13 +1077,15 @@ public interface Story {
 			public static class Mark implements Ui {
 			}
 
-			public static class SelectByText extends ActionWithText {
+			public static class SelectByText extends ActionWithText
+					implements CausesDomEvent {
 			}
 
 			public static class Wait extends ActionWithInt {
 			}
 
-			public static class SelectByValue extends ActionWithText {
+			public static class SelectByValue extends ActionWithText
+					implements CausesDomEvent {
 			}
 
 			public static class AwaitAttributePresent extends ActionWithText {

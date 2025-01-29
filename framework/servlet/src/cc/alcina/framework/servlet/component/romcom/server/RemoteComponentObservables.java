@@ -117,6 +117,12 @@ public class RemoteComponentObservables<T> {
 	}
 
 	public class ObservableHistory {
+		public static final Configuration.Key evictionDisabled = Configuration
+				.key(ObservableHistory.class, "evictionDisabled");
+
+		public static final Configuration.Key evictNullId = Configuration
+				.key(ObservableHistory.class, "evictNullId");
+
 		T observable;
 
 		public T getObservable() {
@@ -176,8 +182,10 @@ public class RemoteComponentObservables<T> {
 						"Check eviction - id: {} - lastAccessed: {} - observableEvictionTimeMs: {}",
 						id, lastAccessed, observableEvictionTimeMs);
 			}
-			boolean evictNullId = Configuration.is("evictNullId");
-			return (id != null || evictNullId) && !TimeConstants
+			if (evictionDisabled.is()) {
+				return false;
+			}
+			return (id != null || evictNullId.is()) && !TimeConstants
 					.within(lastAccessed, observableEvictionTimeMs);
 		}
 	}

@@ -62,7 +62,7 @@ public abstract class WdActionPerformer<A extends Story.Action>
 			int timeout = wdPerformer.context
 					.getAttribute(
 							StoryPerformer.PerformerAttribute.Timeout.class)
-					.orElse(5);
+					.orElse(wdPerformer.wdContext.getDefaultTimeout());
 			return ElementQuery
 					.xpath(wdPerformer.wdContext.token.getWebDriver(),
 							xpath.getText())

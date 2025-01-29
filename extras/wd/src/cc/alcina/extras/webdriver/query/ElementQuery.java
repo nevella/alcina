@@ -29,7 +29,8 @@ public class ElementQuery {
 
 	class RequiredElementNotFoundException extends RuntimeException {
 		RequiredElementNotFoundException() {
-			super(String.format("Timed out - %s", ElementQuery.this));
+			super(String.format("Timed out - %s ms - %s",
+					ElementQuery.this.timeout * 1000, ElementQuery.this));
 		}
 	}
 

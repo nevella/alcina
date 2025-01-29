@@ -1252,7 +1252,7 @@ public class Window {
 	if(value){
 		$wnd[name] = true;
 	}else{
-		delete $wnd.name
+		delete $wnd[name]
 	}
 		}-*/;
 }

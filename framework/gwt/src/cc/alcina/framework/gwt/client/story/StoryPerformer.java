@@ -7,6 +7,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.gwt.client.story.Story.Action;
 import cc.alcina.framework.gwt.client.story.Story.Action.Annotate;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Location;
@@ -20,6 +22,10 @@ import cc.alcina.framework.gwt.client.util.LineCallback;
 public class StoryPerformer {
 	public interface PerformerAttribute<T> extends Story.Attribute<T> {
 		public static interface Timeout extends PerformerAttribute<Integer> {
+		}
+
+		public static interface RomcomMessageQueueAwaitDisabled
+				extends PerformerAttribute<Boolean> {
 		}
 	}
 
@@ -122,6 +128,7 @@ public class StoryPerformer {
 				actionClass);
 		try {
 			performer.perform(context, action);
+			new ActionPerformed(context, action).publish();
 		} catch (Throwable t) {
 			System.out.println();
 			t.printStackTrace();
@@ -147,6 +154,7 @@ public class StoryPerformer {
 					.impl(ActionTypePerformer.class, actionClass);
 			try {
 				performer.perform(context, annotate);
+				new ActionPerformed(context, annotate).publish();
 			} catch (Throwable t) {
 				System.out.println();
 				t.printStackTrace();
@@ -161,6 +169,18 @@ public class StoryPerformer {
 	public interface ActionTypePerformer<A extends Story.Action>
 			extends Registration.AllSubtypes {
 		void perform(Story.Action.Context context, A action) throws Exception;
+	}
+
+	public static class ActionPerformed implements ProcessObservable {
+		public Context context;
+
+		public Action action;
+
+		public ActionPerformed(Story.Action.Context context,
+				Story.Action action) {
+			this.context = context;
+			this.action = action;
+		}
 	}
 
 	public static class Code implements ActionTypePerformer<Story.Action.Code> {

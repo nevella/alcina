@@ -18,6 +18,7 @@ import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -26,17 +27,18 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
+import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.ActiveMessagesChanged;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentWindowProperties;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete.EnvironmentSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentWindowProperties;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer;
 
 /*
@@ -56,6 +58,7 @@ public class RemoteComponentUi {
 	 * Transforms some rpc messages observables into UI mods (for testing,
 	 * long-running message processing indication)
 	 */
+	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientMessageState.class)
 	class MessageStateRouter {
 		void onMessageHandlingException(Message message, Throwable e) {
 			// FIXME - ask the context to log
