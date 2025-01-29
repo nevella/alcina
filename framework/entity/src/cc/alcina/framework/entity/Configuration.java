@@ -172,6 +172,15 @@ public class Configuration {
 		return is(clazz, key);
 	}
 
+	/**
+	 * <p>
+	 * Create a configuration key for a given class and key name
+	 * <p>
+	 * Note that this won't work (JDK&lt;21) for static fields of a non-static
+	 * inner class - that would fail with a
+	 * {@code non-static class Foo.Bar cannot be referenced from a static context}
+	 * counter-intuitively use the {@code key(String keyPart)} format
+	 */
 	public static Key key(Class clazz, String keyPart) {
 		return new Key(clazz, keyPart);
 	}

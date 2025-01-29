@@ -60,7 +60,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 	class ReceiveChannelImpl extends ReceiveChannel {
 		static final Configuration.Key RECEIVE_DELAY = Configuration
-				.key(ReceiveChannelImpl.class, "receiveDelay");
+				.key("receiveDelay");
 
 		public Date lastEnvelopeReceived = new Date(0);
 

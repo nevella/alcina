@@ -118,10 +118,10 @@ public class RemoteComponentObservables<T> {
 
 	public class ObservableHistory {
 		public static final Configuration.Key evictionDisabled = Configuration
-				.key(ObservableHistory.class, "evictionDisabled");
+				.key("evictionDisabled");
 
 		public static final Configuration.Key evictNullId = Configuration
-				.key(ObservableHistory.class, "evictNullId");
+				.key("evictNullId");
 
 		T observable;
 
