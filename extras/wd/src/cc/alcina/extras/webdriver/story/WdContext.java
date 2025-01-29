@@ -37,19 +37,19 @@ public class WdContext implements PerformerResource {
 		try {
 			LooseContext.push();
 			LooseContext.set(WDDriverHandler.CONTEXT_REUSE_SESSION,
-					part.isReuseSession());
+					part.reuseSession);
 			WebDriver driver = token.getDriverHandler().getDriver();
 			token.setWebDriver(driver);
 		} finally {
 			LooseContext.pop();
 		}
 		exec = new WdExec();
-		exec.timeout(part.getDefaultTimeout());
+		exec.timeout(part.defaultTimeout);
 		exec.token(token);
-		if (part.isShouldMaximiseTab()) {
+		if (part.shouldMaximiseTab) {
 			token.getWebDriver().manage().window().maximize();
 		}
-		if (part.isShouldFocusTab()) {
+		if (part.shouldFocusTab) {
 			new StoryAfterStoryObserver().bind();
 		}
 	}

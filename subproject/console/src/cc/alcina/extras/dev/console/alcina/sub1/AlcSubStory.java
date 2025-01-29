@@ -21,7 +21,7 @@ public class AlcSubStory extends AlcinaDevConsoleRunnable {
 		public void init(StoryTeller storyTeller) {
 			super.init(storyTeller);
 			WdContextPart wdContextPart = new WdContextPart();
-			wdContextPart.setShouldMaximiseTab(true);
+			wdContextPart.shouldFocusTab = true;
 			addPart(WdContextPart.class, wdContextPart);
 			storyTeller.setAttribute(
 					Story_Console.Attribute.ConsoleShouldRestart.class, true);
