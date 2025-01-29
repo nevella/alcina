@@ -145,8 +145,7 @@ public class GraphProjection {
 	private static final String CONTEXT_LAST_CONTEXT_LOOKUPS = GraphProjection.class
 			.getName() + ".CONTEXT_LAST_CONTEXT_LOOKUPS";
 
-	public static final String CONTEXT_MAX_REACHED = GraphProjection.class
-			.getName() + ".CONTEXT_MAX_REACHED";
+	public static final String CONTEXT_MAX_REACHED = "GraphProjection.maxReached";
 
 	public static final Topic<Integer> topicProjectCountDelta = Topic.create();
 

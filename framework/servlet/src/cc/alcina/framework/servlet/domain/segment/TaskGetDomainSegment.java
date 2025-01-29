@@ -6,8 +6,6 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
-import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.segment.DomainSegment;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilterWithCache;
@@ -40,9 +38,6 @@ public class TaskGetDomainSegment extends PerformerTask.Remote {
 		CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache();
 		LooseContext.set(GraphProjection.CONTEXT_MAX_REACHED,
 				String.valueOf(Integer.MAX_VALUE));
-		LooseContext.setTrue(KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
-		LooseContext.setBoolean(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
-				false);
 		new GraphProjection(definition.provideProjectionFilter(), dataFilter)
 				.project(definition.provideRoots().toList(), null);
 		DetachedEntityCache cache = dataFilter.getCache();
