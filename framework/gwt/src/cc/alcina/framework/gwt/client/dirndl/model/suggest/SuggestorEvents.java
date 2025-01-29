@@ -14,6 +14,10 @@ public class SuggestorEvents {
 		public interface Handler extends NodeEvent.Handler {
 			void onEditorAsk(EditorAsk event);
 		}
+
+		public boolean isEmptyAsk() {
+			return getModel().isEmpty();
+		}
 	}
 
 	public static class EditorExit

@@ -146,6 +146,7 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 		this.state = state;
 		switch (state) {
 		case UNBOUND:
+		case CLOSED:
 			ensureVisible(false);
 			break;
 		case LOADING:

@@ -11,8 +11,10 @@ import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.Client;
@@ -49,10 +51,13 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  *
  */
 @Directed(emits = ModelEvents.SelectionChanged.class)
+@TypedProperties
 public class Suggestor extends Model implements
 		SuggestorEvents.EditorAsk.Handler, ModelEvents.SelectionChanged.Handler,
 		HasSelectedValue, KeyboardNavigation.Navigation.Handler,
 		ModelEvents.Closed.Handler, Model.TransmitState {
+	public static PackageProperties._Suggestor properties = PackageProperties.suggestor;
+
 	// FIXME - dirndl 1x1e - add a default impl, which routes via a Debounce
 	// (which doesn't send if inflight, but has a timeout)
 	public interface Answer<A extends Ask> {
@@ -121,6 +126,8 @@ public class Suggestor extends Model implements
 	 */
 	public interface Ask {
 		IntPair getResultRange();
+
+		boolean isEmpty();
 	}
 
 	public enum SuggestOnBind {
@@ -158,6 +165,8 @@ public class Suggestor extends Model implements
 		String inputTag;
 
 		boolean inputExpandable;
+
+		boolean closeSuggestionsOnEmptyAsk;
 
 		public String getInputTag() {
 			return inputTag;
@@ -224,6 +233,12 @@ public class Suggestor extends Model implements
 
 		public Attributes withFocusOnBind(boolean focusOnBind) {
 			this.focusOnBind = focusOnBind;
+			return this;
+		}
+
+		public Attributes withCloseSuggestionsOnEmptyAsk(
+				boolean closeSuggestionsOnEmptyAsk) {
+			this.closeSuggestionsOnEmptyAsk = closeSuggestionsOnEmptyAsk;
 			return this;
 		}
 
@@ -310,10 +325,6 @@ public class Suggestor extends Model implements
 		boolean hasNonEmptyInput();
 	}
 
-	public enum Property implements PropertyEnum {
-		value
-	}
-
 	public static class StringAsk implements Ask {
 		private String value;
 
@@ -340,6 +351,12 @@ public class Suggestor extends Model implements
 		public String toString() {
 			return FormatBuilder.keyValues("value", value, "resultRange",
 					resultRange);
+		}
+
+		@Property.Not
+		@Override
+		public boolean isEmpty() {
+			return Ax.isBlank(getValue());
 		}
 	}
 
@@ -448,7 +465,7 @@ public class Suggestor extends Model implements
 	public interface Suggestions
 			extends HasSelectedValue, ModelEvents.Closed.Handler {
 		public static enum State {
-			LOADING, LOADED, EXCEPTION, UNBOUND
+			LOADING, LOADED, EXCEPTION, UNBOUND, CLOSED
 		}
 
 		void close();
@@ -555,7 +572,11 @@ public class Suggestor extends Model implements
 
 	@Override
 	public void onEditorAsk(EditorAsk event) {
-		suggestions.toState(State.LOADING);
+		if (event.isEmptyAsk() && attributes.closeSuggestionsOnEmptyAsk) {
+			suggestions.toState(State.CLOSED);
+		} else {
+			suggestions.toState(State.LOADING);
+		}
 		attributes.answer.ask(event.getModel(), this::onAnswers,
 				this::onAskException);
 	}

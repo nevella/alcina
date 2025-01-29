@@ -240,6 +240,7 @@ public class AppSuggestor extends Model.Fields
 	protected Suggestor.Attributes createSuggestorAttributes() {
 		Suggestor.Attributes attributes = Suggestor.attributes();
 		attributes.withFocusOnBind(true);
+		attributes.withCloseSuggestionsOnEmptyAsk(true);
 		attributes.withSelectAllOnFocus(true);
 		attributes.withSuggestOnBind(SuggestOnBind.NON_EMPTY_VALUE);
 		/*
