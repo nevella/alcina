@@ -1,10 +1,12 @@
 package cc.alcina.framework.servlet.domain.segment;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.segment.DomainSegment;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
@@ -36,9 +38,16 @@ public class TaskGetDomainSegment extends PerformerTask.Remote {
 				.withDecompress(true).withKryoType(DomainSegment.class)
 				.asObject();
 		CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache();
+		LooseContext.set(GraphProjection.CONTEXT_MAX_REACHED,
+				String.valueOf(Integer.MAX_VALUE));
+		LooseContext.setTrue(KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
+		LooseContext.setBoolean(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
+				false);
 		new GraphProjection(definition.provideProjectionFilter(), dataFilter)
 				.project(definition.provideRoots().toList(), null);
 		DetachedEntityCache cache = dataFilter.getCache();
+		Ax.out("Projected:\n%s\nAll values: %s", cache.sizes(),
+				cache.allValues().size());
 		this.result = new DomainSegment();
 		result.addCache(cache);
 		result.filterExisting(localState);

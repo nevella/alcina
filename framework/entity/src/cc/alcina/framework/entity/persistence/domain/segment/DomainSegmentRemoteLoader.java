@@ -19,6 +19,11 @@ import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.FsObjectCache;
 
 public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
+	public static final Configuration.Key refresh = Configuration
+			.key("refresh");
+
+	public static final Configuration.Key clear = Configuration.key("clear");
+
 	FsObjectCache<DomainSegment> cache;
 
 	DomainSegment.Definition definition;
@@ -39,8 +44,12 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 				.newInstance(Configuration.get("definitionClassName"));
 		this.definition.configureLocal();
 		logger.info("Definition :: {}", definition.asString());
+		if (clear.is()) {
+			logger.warn("Cache cleared :: {}", definition.asString());
+			cache.clear();
+		}
 		load();
-		if (Configuration.is("refresh")) {
+		if (refresh.is()) {
 			refresh();
 		}
 	}

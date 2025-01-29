@@ -1334,7 +1334,7 @@ public class GraphProjection {
 	 * fast. Also, the interplay with object monitor metadata in the object
 	 * header (JVM-dependent) might be slowing us down.
 	 */
-	private static class ProjectionIdentityMap extends AbstractMap {
+	public static class ProjectionIdentityMap extends AbstractMap {
 		ClassIdKey queryKey = new ClassIdKey();
 
 		/*
@@ -1354,6 +1354,14 @@ public class GraphProjection {
 
 		public ProjectionIdentityMap(int maxSize) {
 			this.maxSize = maxSize;
+		}
+
+		public void dumpSizes() {
+			CountingMap<String> counts = new CountingMap<>();
+			entities.keySet().forEach(k -> counts.add(k.clazzName));
+			nonEntities.keySet()
+					.forEach(k -> counts.add(k.getClass().getSimpleName()));
+			counts.toLinkedHashMap(true).entrySet().forEach(Ax::out);
 		}
 
 		@Override
