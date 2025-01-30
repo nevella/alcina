@@ -8,7 +8,7 @@ div.alcina-MainMenu2 {
   display: grid;
   grid-template-columns: min-content 1fr min-content;
   position: sticky;
-  z-index: 1000;
+  z-index: 2;
 }
 div.alcina-MainMenu2 > div {
   display: flex;
