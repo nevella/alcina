@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
@@ -58,9 +57,9 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 		DomainSegment localState = segment.toLocalState();
 		DomainSegment remoteUpdates = Registry.impl(RemoteLoader.class)
 				.load(definition, localState);
-		logger.info("Local state refresh: {} entities :: {} mods",
-				localState.new Lookup().allValues().count(),
-				remoteUpdates.new Lookup().allValues().count());
+		logger.info(
+				"State pre-refresh - local :: {} entities - remote delta :: {} ",
+				localState.new Lookup().allValues().count(), remoteUpdates);
 		segment.merge(remoteUpdates);
 		persist(definition.name(), segment);
 	}

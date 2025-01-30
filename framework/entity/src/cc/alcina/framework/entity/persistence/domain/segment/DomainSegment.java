@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.persistence.domain.segment;
 
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,22 +14,21 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
-import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
@@ -72,6 +70,10 @@ public class DomainSegment {
 			result.id = id;
 			result.lastModificationTime = lastModificationTime;
 			return result;
+		}
+
+		public EntityLocator toLocator() {
+			return new EntityLocator(entityClass, id, 0L);
 		}
 	}
 
@@ -126,6 +128,10 @@ public class DomainSegment {
 					itr.remove();
 				}
 			}
+		}
+
+		void remove(long id) {
+			idToEntity.remove(id);
 		}
 	}
 
@@ -231,12 +237,12 @@ public class DomainSegment {
 		ProjectionFilter provideProjectionFilter();
 
 		default String name() {
-			return getClass().getSimpleName();
+			return NestedName.get(this);
 		}
 
 		// interface toString, basically
 		default String asString() {
-			return getClass().getSimpleName();
+			return name();
 		}
 
 		/**
@@ -269,6 +275,15 @@ public class DomainSegment {
 			collections.forEach(SegmentCollection::indexToList);
 		}
 
+		void remove(EntityLocator locator) {
+			Class<? extends Entity> entityClass = locator.clazz;
+			SegmentCollection segmentCollection = entityCollection
+					.get(entityClass);
+			if (segmentCollection != null) {
+				segmentCollection.remove(locator.id);
+			}
+		}
+
 		void add(SegmentEntity entity) {
 			Class<? extends Entity> entityClass = entity.entityClass;
 			SegmentCollection segmentCollection = entityCollection
@@ -286,12 +301,13 @@ public class DomainSegment {
 					.flatMap(sc -> sc.idToEntity.values().stream());
 		}
 
-		void removeIfUnchanged(SegmentEntity existing) {
-			SegmentEntity local = get(existing);
-			if (local != null
-					&& local.lastModificationTime >= existing.lastModificationTime) {
-				entityCollection.get(existing.entityClass).idToEntity
-						.remove(existing.id);
+		void applySyncReceiverEntity(SegmentEntity syncReceiverEntity) {
+			SegmentEntity resultEntity = get(syncReceiverEntity);
+			if (resultEntity == null) {
+				deleted.add(syncReceiverEntity.toLocator());
+			} else if (resultEntity.lastModificationTime >= syncReceiverEntity.lastModificationTime) {
+				entityCollection.get(syncReceiverEntity.entityClass).idToEntity
+						.remove(syncReceiverEntity.id);
 			}
 		}
 
@@ -318,6 +334,8 @@ public class DomainSegment {
 
 	List<SegmentCollection> collections = new ArrayList<>();
 
+	List<EntityLocator> deleted = new ArrayList<>();
+
 	public DomainSegment toLocalState() {
 		DomainSegment result = new DomainSegment();
 		result.collections = collections.stream()
@@ -328,14 +346,15 @@ public class DomainSegment {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s collections - %s entities", collections.size(),
-				entitySize());
+		return Ax.format("%s collections - %s entities - %s removals",
+				collections.size(), entitySize(), deleted.size());
 	}
 
 	public void merge(DomainSegment remoteUpdates) {
 		Lookup remoteLookup = remoteUpdates.new Lookup();
 		Lookup toLookup = new Lookup();
 		remoteLookup.allValues().forEach(toLookup::add);
+		remoteUpdates.deleted.forEach(toLookup::remove);
 		toLookup.indexToList();
 	}
 
@@ -346,11 +365,12 @@ public class DomainSegment {
 				.forEach(lookup::add);
 	}
 
-	public void filterExisting(DomainSegment localState) {
-		Lookup toLookup = new Lookup();
-		Lookup localLookup = localState.new Lookup();
-		localLookup.allValues().forEach(toLookup::removeIfUnchanged);
-		toLookup.applyIndexRemovals();
+	public void filterExisting(DomainSegment syncReceiverState) {
+		Lookup resultLookup = new Lookup();
+		Lookup syncReceiverLookup = syncReceiverState.new Lookup();
+		syncReceiverLookup.allValues()
+				.forEach(resultLookup::applySyncReceiverEntity);
+		resultLookup.applyIndexRemovals();
 	}
 
 	int entitySize() {

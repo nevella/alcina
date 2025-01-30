@@ -28,6 +28,8 @@ public class TaskGetDomainSegment extends PerformerTask.Remote {
 	public void serialize() {
 		localStateSerialized = Io.write().asKryo(true).object(localState)
 				.withCompress(true).toBase64String();
+		logger.info("localstate size (rpc) :: {} bytes",
+				localStateSerialized.length());
 	}
 
 	@Override
@@ -41,7 +43,7 @@ public class TaskGetDomainSegment extends PerformerTask.Remote {
 		new GraphProjection(definition.provideProjectionFilter(), dataFilter)
 				.project(definition.provideRoots().toList(), null);
 		DetachedEntityCache cache = dataFilter.getCache();
-		Ax.out("Projected:\n%s\nAll values: %s", cache.sizes(),
+		logger.info("Projected:\n{}\nAll values: {}", cache.sizes(),
 				cache.allValues().size());
 		this.result = new DomainSegment();
 		result.addCache(cache);
