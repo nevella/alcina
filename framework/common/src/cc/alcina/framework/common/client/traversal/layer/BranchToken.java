@@ -367,6 +367,51 @@ public interface BranchToken extends Token, BranchGroupMember {
 			public Group getGroup() {
 				return Group.of(WHITESPACE_NODE).withMatchesZeroToAny();
 			}
+		},
+		OPTIONAL_WHITESPACE {
+			public Group getGroup() {
+				return Group.of(WHITESPACE).withMatchesZeroOrOne();
+			}
+		},
+		NON_WHITESPACE {
+			Pattern PATTERN = Pattern.compile("\\S+");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
+			}
 		};
+	}
+
+	/**
+	 * Match a non-ws or double-quote delimited string. Does not handle escaping
+	 */
+	public enum Strings implements BranchToken {
+		STRING_VALUE {
+			public Group getGroup() {
+				return Group.oneOf(Standard.NON_WHITESPACE, QUOTED);
+			}
+		},
+		DOUBLE_QUOTE {
+			Pattern PATTERN = Pattern.compile("\"");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
+			}
+		},
+		NON_DOUBLE_QUOTE {
+			Pattern PATTERN = Pattern.compile("^[\"]+");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
+			}
+		},
+		QUOTED {
+			public Group getGroup() {
+				return Group.of(DOUBLE_QUOTE, NON_DOUBLE_QUOTE, DOUBLE_QUOTE);
+			}
+		}
 	}
 }
