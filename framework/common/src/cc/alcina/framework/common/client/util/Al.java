@@ -41,13 +41,17 @@ public class Al {
 	}
 
 	public static boolean isNonProduction() {
+		return !isProduction();
+	}
+
+	public static boolean isProduction() {
 		switch (context) {
 		case gwt_script:
 		case production_webapp:
 		case android_app_production:
-			return false;
-		default:
 			return true;
+		default:
+			return false;
 		}
 	}
 }
