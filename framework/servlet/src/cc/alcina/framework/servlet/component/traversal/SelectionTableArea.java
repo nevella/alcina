@@ -9,11 +9,14 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.RowView;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
@@ -33,15 +36,19 @@ public class SelectionTableArea extends Model.Fields
 
 	Selection.HasTableRepresentation hasTable;
 
+	TraversalPlace appendRowSelectionTo;
+
 	public SelectionTableArea(Selection<?> selection) {
 		hasTable = (Selection.HasTableRepresentation) selection;
 		selectionBindables = hasTable.getSelectionBindables();
+		appendRowSelectionTo = Ui.place();
 	}
 
 	public SelectionTableArea(Layer layer) {
 		TraversalBrowser.Ui.logConstructor(this);
 		hasTable = new LayerToTable(layer);
 		selectionBindables = hasTable.getSelectionBindables();
+		appendRowSelectionTo = Ui.place().truncateTo(layer.index);
 	}
 
 	class LayerToTable implements Selection.HasTableRepresentation {
@@ -60,8 +67,22 @@ public class SelectionTableArea extends Model.Fields
 		}
 
 		@Override
+		public boolean equals(Object input) {
+			if (input instanceof LayerToTable) {
+				LayerToTable typed = (LayerToTable) input;
+				return Objects.equals(typed.layer, layer);
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return 1;// force equals comparison
+		}
+
+		@Override
 		public Selection selectionFor(Object object) {
-			// TODO Auto-generated method stub
 			throw new UnsupportedOperationException(
 					"Unimplemented method 'selectionFor'");
 		}
@@ -69,9 +90,24 @@ public class SelectionTableArea extends Model.Fields
 
 	@Override
 	public void onRowClicked(TableEvents.RowClicked event) {
-		Ui.place()
+		appendRowSelectionTo
 				.appendSelections(List.of(hasTable
 						.selectionFor(event.getModel().getOriginalRowModel())))
 				.go();
+	}
+
+	@Override
+	public boolean equals(Object input) {
+		if (input instanceof SelectionTableArea) {
+			SelectionTableArea typed = (SelectionTableArea) input;
+			return typed != null && Objects.equals(typed.hasTable, hasTable);
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return 1;// force equals comparison
 	}
 }

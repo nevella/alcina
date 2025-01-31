@@ -3,8 +3,10 @@ package cc.alcina.framework.servlet.component.entity;
 import java.util.Comparator;
 import java.util.Objects;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
@@ -96,6 +98,15 @@ public class EntitySelection extends AbstractSelection<Entity> {
 					Ax.out("click :: %s", selection.get());
 				}
 			}
+		}
+	}
+
+	@Registration(value = { Selection.RowView.class, EntitySelection.class })
+	public static class RowViewImpl<S extends EntitySelection>
+			extends AbstractSelection.RowView<S> {
+		@Override
+		public Bindable provideBindable() {
+			return selection.get();
 		}
 	}
 

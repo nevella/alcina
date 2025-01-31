@@ -1,6 +1,9 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
@@ -22,6 +25,22 @@ public abstract class SelectionMarkup {
 		public boolean input;
 
 		public String styleScope;
+
+		@Override
+		public boolean equals(Object o) {
+			if (o instanceof Query) {
+				Query typed = (Query) o;
+				return CommonUtils.equals(selection, typed.selection, input,
+						typed.input, styleScope, typed.styleScope);
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(selection, input, styleScope);
+		}
 
 		Query(Selection<?> selection, String styleScope, boolean input) {
 			this.selection = selection;

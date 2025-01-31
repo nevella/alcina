@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -10,9 +12,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
@@ -23,12 +27,16 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings.Seconda
 class RenderedSelections extends Model.Fields {
 	static PackageProperties._RenderedSelections properties = PackageProperties.renderedSelections;
 
-	class SelectionMarkupArea extends Model.All {
-		SelectionMarkupArea(Model model) {
+	class SelectionMarkupArea extends Model.Fields {
+		Query query;
+
+		SelectionMarkupArea(Query query, Model model) {
+			this.query = query;
 			TraversalBrowser.Ui.logConstructor(this, variant);
 			this.model = model;
 		}
 
+		@Directed
 		Model model;
 	}
 
@@ -36,10 +44,6 @@ class RenderedSelections extends Model.Fields {
 
 	@Directed
 	Model style;
-
-	public void setStyle(Model style) {
-		set("style", this.style, style, () -> this.style = style);
-	}
 
 	@Directed
 	Heading heading;
@@ -61,9 +65,12 @@ class RenderedSelections extends Model.Fields {
 		this.heading = new Heading(Ax.friendly(variant));
 		bindings().from(page.ui).on(Ui.properties.place)
 				.signal(this::populateViewSelection);
+		bindings().from(page.ui).on(Ui.properties.place)
+				.signal(this::conditionallyPopulate);
 		bindings().from(page.ui).on(Ui.properties.traversal)
 				.signal(this::populateViewSelection);
-		bindings().from(this).on("selection").signal(this::onSelectionChange);
+		bindings().from(this).on(properties.selection)
+				.signal(this::onSelectionChange);
 	}
 
 	void populateViewSelection() {
@@ -77,7 +84,7 @@ class RenderedSelections extends Model.Fields {
 	}
 
 	private void conditionallyPopulate() {
-		if (selection == null) {
+		if (selection == null && Ui.getSelectedLayer() == null) {
 			properties.selectionTable.set(this, null);
 			properties.selectionMarkupArea.set(this, null);
 			return;
@@ -115,18 +122,16 @@ class RenderedSelections extends Model.Fields {
 				.format("selections.%s > selection-markup-area > div", variant);
 		Query query = markup.query(selection, styleScope,
 				variant == SecondaryArea.INPUT);
-		Model model = query.getModel();
-		if (this.selectionMarkupArea != null
-				&& this.selectionMarkupArea.model == model) {
+		if (selectionMarkupArea != null
+				&& Objects.equals(query, selectionMarkupArea.query)) {
 			return;
 		}
-		SelectionMarkupArea selectionMarkupArea = new SelectionMarkupArea(
+		Model model = query.getModel();
+		SelectionMarkupArea selectionMarkupArea = new SelectionMarkupArea(query,
 				model);
 		properties.selectionMarkupArea.set(this, selectionMarkupArea);
-		if (style == null) {
-			Model style = new Style(query.getCss());
-			setStyle(style);
-		}
+		Model style = new Style(query.getCss());
+		properties.style.set(this, style);
 	}
 
 	class Style extends Model.Fields implements RestrictedHtmlTag {
@@ -136,5 +141,20 @@ class RenderedSelections extends Model.Fields {
 
 		@Binding(type = Type.INNER_TEXT)
 		String style;
+
+		@Override
+		public boolean equals(Object input) {
+			if (input instanceof Style) {
+				Style typed = (Style) input;
+				return typed != null && Objects.equals(typed.style, style);
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return 1;// force equals comparison
+		}
 	}
 }

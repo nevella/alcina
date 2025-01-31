@@ -16,6 +16,10 @@ package cc.alcina.framework.gwt.client.dirndl.model;
  * target property is bound to input properties from different sources, those
  * sources will all need to implement a common interface (such as HasPage in the
  * TraversalBrowser)
+ * 
+ * <p>
+ * ...Walking this back a bit, actually overriding Object.equals is maybe
+ * better?
  */
 public interface IfNotExisting<I> {
 	boolean testExistingSatisfies(I input);
