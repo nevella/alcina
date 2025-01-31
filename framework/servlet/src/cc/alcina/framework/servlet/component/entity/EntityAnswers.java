@@ -30,10 +30,11 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui;
 import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
+import cc.alcina.framework.servlet.component.entity.property.PropertyFilterParser;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
-import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 
 class EntityAnswers extends TraversalAnswerSupplier {

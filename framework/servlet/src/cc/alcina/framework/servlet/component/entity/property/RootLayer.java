@@ -2,7 +2,7 @@ package cc.alcina.framework.servlet.component.entity.property;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.servlet.component.entity.property.PropertyFilterParser2.Query;
+import cc.alcina.framework.servlet.component.entity.property.PropertyFilterParser.Query;
 import cc.alcina.framework.servlet.component.traversal.TraversalHistories.RootLayerNamer;
 
 /*

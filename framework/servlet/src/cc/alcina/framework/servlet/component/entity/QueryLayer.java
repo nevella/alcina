@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui;
 import cc.alcina.framework.servlet.component.entity.EntityTypesLayer.TypeSelection;
+import cc.alcina.framework.servlet.component.entity.property.PropertyFilterParser;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 

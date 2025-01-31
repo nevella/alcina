@@ -85,6 +85,10 @@ public class Measure extends Location.Range {
 		return new MeasureSelection(parent, this);
 	}
 
+	public boolean hasDataAssignableClass(Class<?> dataClass) {
+		return data != null && dataClass.isAssignableFrom(data.getClass());
+	}
+
 	/**
 	 * if order == null, containment will be true if the measure ranges are
 	 * equal ( A contains B and B contains A)

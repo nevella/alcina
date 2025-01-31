@@ -401,7 +401,7 @@ public interface BranchToken extends Token, BranchGroupMember {
 			}
 		},
 		NON_DOUBLE_QUOTE {
-			Pattern PATTERN = Pattern.compile("^[\"]+");
+			Pattern PATTERN = Pattern.compile("[^\"]+");
 
 			@Override
 			public Measure match(ParserState state) {

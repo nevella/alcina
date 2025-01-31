@@ -30,6 +30,10 @@ public class StringMatches {
 
 			boolean matches;
 
+			boolean exact() {
+				return query.length() == src.length();
+			}
+
 			public class Region {
 				public IntPair srcRange = new IntPair();
 
@@ -84,6 +88,13 @@ public class StringMatches {
 			}
 
 			public boolean matches() {
+				if (requireFirstLetterMatch) {
+					if (src.length() > 0 && query.length() > 0
+							&& !src.substring(0, 1)
+									.equalsIgnoreCase(query.substring(0, 1))) {
+						return false;
+					}
+				}
 				regions.add(new Region());
 				for (;;) {
 					Region current = Ax.last(regions);
@@ -120,11 +131,33 @@ public class StringMatches {
 			int longestRegion;
 		}
 
+		boolean matchPartialsIfExactMatch = false;
+
+		boolean requireFirstLetterMatch = true;
+
+		public StringMatches.PartialSubstring withMatchPartialsIfExactMatch(
+				boolean matchPartialsIfExactMatch) {
+			this.matchPartialsIfExactMatch = matchPartialsIfExactMatch;
+			return this;
+		}
+
+		public StringMatches.PartialSubstring
+				withRequireFirstLetterMatch(boolean requireFirstLetterMatch) {
+			this.requireFirstLetterMatch = requireFirstLetterMatch;
+			return this;
+		}
+
 		public List<Match> match(List<T> values, Function<T, String> toString,
 				String query) {
-			return values.stream().map(v -> match(v, toString, query))
+			List<PartialSubstring<T>.Match> result = values.stream()
+					.map(v -> match(v, toString, query))
 					.filter(Objects::nonNull).sorted()
 					.collect(Collectors.toList());
+			if (!matchPartialsIfExactMatch
+					&& result.stream().anyMatch(r -> r.exact())) {
+				result.removeIf(r -> !r.exact());
+			}
+			return result;
 		}
 
 		Match match(T v, Function<T, String> toString, String query) {
