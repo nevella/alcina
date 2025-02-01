@@ -1,9 +1,11 @@
 package com.google.gwt.dom.client.mutations;
 
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * 'Location' being browser window.location
@@ -13,6 +15,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
  */
 @Bean(PropertySource.FIELDS)
 public class LocationMutation {
+	public boolean replace;
+
 	public static LocationMutation ofWindow(boolean startup) {
 		LocationMutation result = new LocationMutation();
 		result.path = Window.Location.getPath();
@@ -21,6 +25,7 @@ public class LocationMutation {
 		result.host = Window.Location.getHost();
 		result.port = Window.Location.getPort();
 		result.protocol = Window.Location.getProtocol();
+		result.replace = History.CONTEXT_REPLACING.is();
 		if (startup) {
 			Navigator navigator = new Navigator();
 			result.navigator = navigator;
@@ -64,5 +69,10 @@ public class LocationMutation {
 	public String hash;
 
 	public LocationMutation() {
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("location mutation - hash: %s", hash);
 	}
 }

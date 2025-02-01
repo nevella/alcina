@@ -91,8 +91,17 @@ public class HistoryImpl {
     $wnd.location.hash = this.@com.google.gwt.user.client.HistoryImpl::encodeFragment(Ljava/lang/String;)(historyToken);
 	}-*/;
 
+	public native void replaceState(String historyToken) /*-{
+		var hash = this.@com.google.gwt.user.client.HistoryImpl::encodeFragment(Ljava/lang/String;)(historyToken);
+		$wnd.history.replaceState(null,"","#"+hash);
+		}-*/;
+
 	public void newToken(String historyToken) {
-		nativeUpdate(historyToken);
+		if (History.CONTEXT_REPLACING.is()) {
+			replaceState(historyToken);
+		} else {
+			nativeUpdate(historyToken);
+		}
 	}
 
 	public void replaceToken(String historyToken) {

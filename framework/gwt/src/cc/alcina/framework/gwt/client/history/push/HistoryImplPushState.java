@@ -55,7 +55,7 @@ public class HistoryImplPushState extends HistoryImpl {
     $wnd.history.pushState(state, $doc.title, token);
 	}-*/;
 
-	private static native void replaceState(final String token) /*-{
+	private static native void replaceState0(final String token) /*-{
     var state = {
       historyToken : token
     };

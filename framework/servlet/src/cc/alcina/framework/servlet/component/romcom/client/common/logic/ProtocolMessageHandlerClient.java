@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -155,7 +154,9 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 				try {
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = true;
-					History.newItem(message.locationMutation.hash);
+					History.CONTEXT_REPLACING.runWith(
+							message.locationMutation.replace, () -> History
+									.newItem(message.locationMutation.hash));
 				} finally {
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = false;

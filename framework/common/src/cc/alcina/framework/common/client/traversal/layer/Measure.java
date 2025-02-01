@@ -86,7 +86,8 @@ public class Measure extends Location.Range {
 	}
 
 	public boolean hasDataAssignableClass(Class<?> dataClass) {
-		return data != null && dataClass.isAssignableFrom(data.getClass());
+		return data != null
+				&& Reflections.isAssignableFrom(dataClass, data.getClass());
 	}
 
 	/**

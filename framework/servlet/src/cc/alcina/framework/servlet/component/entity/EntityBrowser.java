@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.google.gwt.dom.client.StyleInjector;
+import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -59,6 +60,10 @@ public class EntityBrowser {
 		String traversalId;
 
 		public Ui() {
+		}
+
+		public boolean isClearPostSelectionLayers() {
+			return true;
 		}
 
 		public static Ui cast() {
@@ -140,9 +145,13 @@ public class EntityBrowser {
 					if (selections.size() == 1) {
 						Selection next = selections.iterator().next();
 						if (next.get() instanceof Entity) {
-							place = place.appendSelections(List.of(next));
-							Client.eventBus().queued().deferred()
-									.lambda(place::go).dispatch();
+							TraversalPlace f_place = place
+									.appendSelections(List.of(next));
+							Client.eventBus().queued().deferred().lambda(() -> {
+								// key! never do cascading history changes
+								// without this!
+								History.runReplacing(() -> f_place.go());
+							}).dispatch();
 							/*
 							 * do not fall through to super.setPlace (the place
 							 * will be replaced during the deferred place.go())

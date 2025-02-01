@@ -127,10 +127,11 @@ public class GWTBridgeHeadless extends GWTBridge {
 	}
 
 	/**
-	 * This may not be correct - double encoding is always a bit tricky to
-	 * reason about. But given any server-side calls are going to be coupled
-	 * with client-side calls (with non-trivial implementations), I feel this is
-	 * OK
+	 * I'm pretty sure this passthroguh converter is correct - double encoding
+	 * is always a bit tricky to reason about. But given any server-side calls
+	 * are going to be coupled with client-side calls (with non-trivial
+	 * implementations), I feel this is OK. Note that intercepted browser
+	 * changes (e.g. forward/back) to the url are decoded on receipt
 	 * 
 	 * 
 	 *

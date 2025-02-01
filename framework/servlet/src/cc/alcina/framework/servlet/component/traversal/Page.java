@@ -57,6 +57,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.LayerSele
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryArea;
@@ -317,8 +318,13 @@ class Page extends Model.All
 
 	@Override
 	public void onSelectionSelected(SelectionSelected event) {
-		TraversalPlace to = place().copy().withSelection(event.getModel());
+		SelectionPath selectionPath = event.getModel();
+		TraversalPlace to = place().copy().withSelection(selectionPath);
 		to.clearLayerSelection();
+		if (Ui.get().isClearPostSelectionLayers()) {
+			int index = Ui.traversal().getLayer(selectionPath.selection).index;
+			to.clearLayersPost(index);
+		}
 		goPreserveScrollPosition(to);
 	}
 

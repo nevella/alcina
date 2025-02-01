@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.apache.xpath.operations.Equals;
+
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -25,6 +28,8 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import cc.alcina.framework.gwt.client.place.UnparseablePlaceException;
 
 /**
  * <p>
@@ -256,7 +261,7 @@ public class TraversalPlace extends BasePlace {
 	}
 
 	static class Data extends Bindable.Fields implements TreeSerializable {
-		public static TreeSerializable from(TraversalPlace place) {
+		public static Data from(TraversalPlace place) {
 			Data data = new Data();
 			data.textFilter = place.textFilter;
 			data.paths = place.paths;
@@ -489,5 +494,9 @@ public class TraversalPlace extends BasePlace {
 	public int provideSelectedLayerIndex() {
 		return layers.entrySet().stream().filter(e -> e.getValue().selected)
 				.map(e -> e.getKey()).findFirst().orElse(-1);
+	}
+
+	public void clearLayersPost(int index) {
+		layers.keySet().removeIf(idx -> idx > index);
 	}
 }

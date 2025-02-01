@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
@@ -237,6 +236,19 @@ public abstract class LooseContext {
 		@Override
 		public String getPath() {
 			return contextKey;
+		}
+
+		public void runWithTrue(Runnable runnable) {
+			runWith(true, runnable);
+		}
+
+		public void runWith(boolean b, Runnable runnable) {
+			try {
+				LooseContext.pushWithBoolean(getPath(), b);
+				runnable.run();
+			} finally {
+				LooseContext.pop();
+			}
 		}
 	}
 

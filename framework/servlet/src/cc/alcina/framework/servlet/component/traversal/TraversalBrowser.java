@@ -208,6 +208,10 @@ public class TraversalBrowser {
 					"Constructor :: {} {}", NestedName.get(model),
 					additional.length == 0 ? "" : List.of(additional));
 		}
+
+		public boolean isClearPostSelectionLayers() {
+			return false;
+		}
 	}
 
 	@Reflected

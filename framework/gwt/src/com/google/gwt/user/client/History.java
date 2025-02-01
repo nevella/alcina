@@ -27,6 +27,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
+import cc.alcina.framework.common.client.context.LooseContext;
 
 /**
  * This class allows you to interact with the browser's history stack. Each
@@ -73,6 +74,9 @@ import cc.alcina.framework.common.client.context.ContextProvider;
  */
 public class History implements ContextFrame {
 	public static ContextProvider<Void, History> contextProvider;
+
+	public static LooseContext.Key CONTEXT_REPLACING = LooseContext
+			.key(History.class, "CONTEXT_REPLACING");
 
 	public static Function<String, String> tokenInterceptor = null;
 
@@ -211,10 +215,11 @@ public class History implements ContextFrame {
 		 * We guard against firing events twice, some browser (e.g. safari) tend
 		 * to fire events on startup if HTML5 pushstate is used.
 		 */
-		String hashToken = get().getDecodedHash();
-		if (!hashToken.equals(getToken())) {
-			get().token = hashToken;
-			get().historyEventSource.fireValueChangedEvent(hashToken);
+		String newToken = get().getDecodedHash();
+		String currentToken = getToken();
+		if (!newToken.equals(currentToken)) {
+			get().token = newToken;
+			get().historyEventSource.fireValueChangedEvent(newToken);
 		}
 	}
 
@@ -401,5 +406,9 @@ public class History implements ContextFrame {
 		public void onValueChange(ValueChangeEvent<String> event) {
 			listener.onHistoryChanged(event.getValue());
 		}
+	}
+
+	public static void runReplacing(Runnable runnable) {
+		CONTEXT_REPLACING.runWithTrue(runnable);
 	}
 }
