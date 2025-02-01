@@ -203,7 +203,7 @@ public class Location implements Comparable<Location> {
 
 	@Override
 	public int hashCode() {
-		return treeIndex ^ index ^ (after ? 1 : 0);
+		return treeIndex + index + treeIndex ^ index ^ (after ? 1 : 0);
 	}
 
 	public int indexInNode() {
@@ -477,7 +477,8 @@ public class Location implements Comparable<Location> {
 
 		@Override
 		public int hashCode() {
-			return start.hashCode() ^ end.hashCode();
+			return start.hashCode() + end.hashCode() + start.hashCode()
+					^ end.hashCode();
 		}
 
 		@Property.Not

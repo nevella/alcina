@@ -50,3 +50,7 @@ and fired at com.google.gwt.user.client.DOM.dispatchEventImpl(Event event, Eleme
 # cascading history changes
 
 it breaks stuff! always history.replace for any cascaded changes
+
+# hash collisions for ranges
+
+[1,3] shouldn't be hash(1)^hash(3) - you get collisions with the delta. instead, hash(1)+hash(3)+hash(1^3)

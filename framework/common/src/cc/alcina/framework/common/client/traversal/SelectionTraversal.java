@@ -229,7 +229,12 @@ public class SelectionTraversal
 		List<Node> selectionPath = node.asNodePath();
 		Node last = CommonUtils.last(selectionPath);
 		Selection value = (Selection) last.getValue();
-		Layer layer = getLayer(value);
+		// Layer layer = getLayer(value);
+		/*
+		 * a little counterintuitively, emit the current layer (using the
+		 * selection as an input), not the layer the selection was generated in
+		 */
+		Layer layer = currentLayer();
 		if (layer != null) {
 			position.format("Layer: [%s/%s]", layer.layerPath(),
 					layer.root().getChildren().size());
