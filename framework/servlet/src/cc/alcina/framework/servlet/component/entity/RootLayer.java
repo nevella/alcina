@@ -13,7 +13,7 @@ public class RootLayer extends Layer<DomainGraphSelection> {
 		addChild(new EntityTypesLayer());
 		int depth = EntityBrowser.peer().queryDepth();
 		for (int idx = 1; idx < depth; idx++) {
-			addChild(new QueryLayer());
+			addChild(new EntityTraversalQueryLayer());
 		}
 	}
 

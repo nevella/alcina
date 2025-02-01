@@ -59,6 +59,7 @@ public class PackageProperties {
     }
     
     static class _Header_Left implements TypedProperty.Container {
+      TypedProperty<Header.Left, List> additional = new TypedProperty<>(Header.Left.class, "additional");
       TypedProperty<Header.Left, String> name = new TypedProperty<>(Header.Left.class, "name");
     }
     
@@ -118,6 +119,7 @@ public class PackageProperties {
     
     public static class _TraversalBrowser_Ui implements TypedProperty.Container {
       public TypedProperty<TraversalBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(TraversalBrowser.Ui.class, "appCommandContexts");
+      public TypedProperty<TraversalBrowser.Ui, Boolean> clearPostSelectionLayers = new TypedProperty<>(TraversalBrowser.Ui.class, "clearPostSelectionLayers");
       public TypedProperty<TraversalBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(TraversalBrowser.Ui.class, "commandContextProvider");
       public TypedProperty<TraversalBrowser.Ui, RemoteComponentObservables.ObservableHistory> history = new TypedProperty<>(TraversalBrowser.Ui.class, "history");
       public TypedProperty<TraversalBrowser.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(TraversalBrowser.Ui.class, "keybindingsHandler");

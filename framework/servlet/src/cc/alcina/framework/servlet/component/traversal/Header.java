@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.List;
+
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -14,6 +16,8 @@ class Header extends Model.All {
 	class Left extends Model.All {
 		String name;
 
+		List<?> additional;
+
 		Left() {
 			bindings().from(Header.this.page).on(Page.properties.history)
 					.value(this::computeName).to(this).on(_Left_properties.name)
@@ -21,6 +25,7 @@ class Header extends Model.All {
 			bindings().from(Header.this.page.ui).on(Ui.properties.place)
 					.value(this::computeName).to(this).on(_Left_properties.name)
 					.oneWay();
+			additional = Ui.get().createAdditionalLeftHeader();
 		}
 
 		String computeName() {

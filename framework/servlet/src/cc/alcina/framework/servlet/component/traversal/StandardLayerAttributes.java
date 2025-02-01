@@ -1,9 +1,13 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
+import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassUtil;
 
 public class StandardLayerAttributes {
 	@TypeSerialization("sort-selected-first")
@@ -68,7 +72,20 @@ public class StandardLayerAttributes {
 		}
 
 		public String normalisedValue() {
-			return value.replaceFirst("^'(.+)'$", "$1");
+			return value == null ? null
+					: value.replaceFirst("^'(.+)'$", "public");
+		}
+
+		public DomainFilter toDomainFilter(Class<?> filteredClass) {
+			switch (op) {
+			case MATCHES:
+				return null;
+			}
+			String normalisedValue = normalisedValue();
+			Property property = Reflections.at(filteredClass).property(key);
+			Object filterValue = ClassUtil.fromStringValue(normalisedValue,
+					property.getType());
+			return new DomainFilter(key, filterValue, op);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.entity;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,6 +11,7 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -28,7 +30,8 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 /*
  * inputs can be any of several types, so non-typed
  */
-class QueryLayer extends Layer implements InputsFromPreviousSibling {
+class EntityTraversalQueryLayer extends Layer
+		implements InputsFromPreviousSibling {
 	@Override
 	public void process(Selection selection) throws Exception {
 		if (!EntityBrowser.peer().isSelected(selection)) {
@@ -50,13 +53,26 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 	void processEntityTypeSelection(TypeSelection selection) {
 		String segmentPath = Ui.traversingPlace().viewPath()
 				.nthSegmentPath(index);
+		Class<? extends Entity> entityClass = selection.get();
 		Entity selected = segmentPath != null
-				? Domain.find(selection.get(), Long.parseLong(segmentPath))
+				? Domain.find(entityClass, Long.parseLong(segmentPath))
 				: null;
-		Stream<Entity> stream = Stream
-				.concat(Stream.of(selected), Domain.stream(selection.get()))
+		Layer layer = getTraversal().getLayer(selection);
+		Filter filter = Ui.traversingPlace().attributesOrEmpty(layer.index + 1)
+				.get(Filter.class);
+		DomainFilter domainFilter = filter == null ? null
+				: filter.toDomainFilter(entityClass);
+		String cacheMarker = filter != null && domainFilter == null
+				? Ui.traversingPlace().truncateTo(layer.index + 1)
+						.toTokenString()
+				: null;
+		// note this code double filters - but the second application will be
+		// already filtered, so low perf impact
+		Stream domainStream = domainFilter == null ? Domain.stream(entityClass)
+				: Domain.query(entityClass).filter(domainFilter).stream();
+		Stream<Entity> stream = Stream.concat(Stream.of(selected), domainStream)
 				.distinct().filter(Objects::nonNull);
-		addStream(selection, stream);
+		addStream(selection, stream, cacheMarker);
 	}
 
 	void processPropertySelection(PropertySelection selection) {
@@ -68,20 +84,31 @@ class QueryLayer extends Layer implements InputsFromPreviousSibling {
 			Entity childEntity = (Entity) value;
 			select(new EntitySelection(selection, childEntity));
 		} else if (value instanceof Set) {
-			addStream(selection, ((Set) value).stream());
+			// don't try and cache this (won't help)
+			addStream(selection, ((Set) value).stream(), null);
 		}
 	}
 
-	void addStream(Selection selection, Stream stream) {
+	void addStream(Selection selection, Stream stream, String cacheMarker) {
 		Layer layer = getTraversal().getLayer(selection);
 		Filter filter = Ui.traversingPlace().attributesOrEmpty(layer.index + 1)
 				.get(Filter.class);
 		if (filter != null) {
 			stream = applyFilter(stream, filter);
+			if (cacheMarker != null) {
+				List list = Ui.cast().cache.get(cacheMarker);
+				if (list != null) {
+					stream = list.stream();
+				}
+			}
 		}
 		AtomicInteger valueCounter = new AtomicInteger();
 		int limit = TraversalSettings.get().tableRows;
-		stream.limit(limit).forEach(elem -> {
+		List results = stream.limit(limit).toList();
+		if (cacheMarker != null) {
+			Ui.cast().cache.put(cacheMarker, results);
+		}
+		results.forEach(elem -> {
 			if (elem instanceof Entity) {
 				Entity childEntity = (Entity) elem;
 				select(new EntitySelection(selection, childEntity));

@@ -86,7 +86,7 @@ public class EntitySelection extends AbstractSelection<Entity> {
 					this.property = property;
 					Entity entity = selection.get();
 					Object v = property.get(entity);
-					value = Ax.trim(String.valueOf(v), 100);
+					value = Ax.trim(String.valueOf(v), 300);
 				}
 
 				void addTo(PropertyValues propertyValues) {

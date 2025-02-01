@@ -62,6 +62,13 @@ public class EntityBrowser {
 		public Ui() {
 		}
 
+		@Override
+		protected List<?> createAdditionalLeftHeader() {
+			return List.of(cache.createUi());
+		}
+
+		NonOptimisedQueryCache cache = new NonOptimisedQueryCache();
+
 		public boolean isClearPostSelectionLayers() {
 			return true;
 		}

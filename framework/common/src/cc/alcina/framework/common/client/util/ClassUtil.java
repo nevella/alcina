@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.util;
 import java.util.Comparator;
 
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /*
  * GWT-safe class utils
@@ -84,5 +85,35 @@ public class ClassUtil {
 			cursor = cursor.getSuperclass();
 		}
 		return false;
+	}
+
+	public static Object fromStringValue(String stringValue, Class valueClass) {
+		if (stringValue == null) {
+			return stringValue;
+		}
+		if (valueClass == String.class) {
+			return stringValue;
+		}
+		if (valueClass == Class.class) {
+			return Reflections.forName(stringValue);
+		}
+		if (valueClass == Long.class || valueClass == long.class) {
+			long id = Long.parseLong(stringValue);
+			return id;
+		}
+		if (valueClass == Double.class || valueClass == double.class) {
+			return Double.valueOf(stringValue);
+		}
+		if (valueClass == Integer.class || valueClass == int.class) {
+			return Integer.valueOf(stringValue);
+		}
+		if (valueClass == Boolean.class || valueClass == boolean.class) {
+			return Boolean.valueOf(stringValue);
+		}
+		if (Reflections.isAssignableFrom(Enum.class, valueClass)) {
+			return CommonUtils.getEnumValueOrNull(valueClass, stringValue, true,
+					null);
+		}
+		throw new UnsupportedOperationException();
 	}
 }

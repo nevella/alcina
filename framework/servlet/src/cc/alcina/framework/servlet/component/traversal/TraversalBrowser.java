@@ -212,6 +212,13 @@ public class TraversalBrowser {
 		public boolean isClearPostSelectionLayers() {
 			return false;
 		}
+
+		/*
+		 * create additional leftheader models
+		 */
+		protected List<?> createAdditionalLeftHeader() {
+			return null;
+		}
 	}
 
 	@Reflected
