@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FileLogger;
 import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.NestedName;
 
@@ -144,8 +145,13 @@ public class Measure extends Location.Range {
 				aliasedFrom);
 	}
 
-	public void log() {
-		Ax.out("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
+	public String log() {
+		String markup = markup();
+		String result = Ax.format("%s :: %s", toIntPair(),
+				Ax.trimForLogging(markup));
+		Ax.out(result);
+		FileLogger.log(markup);
+		return result;
 	}
 
 	public void setData(Object data) {

@@ -31,8 +31,10 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FileLogger;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -689,6 +691,14 @@ public class Io {
 				WriteOp.this.noUpdateIdentical = noUpdateIdentical;
 				return this;
 			}
+		}
+	}
+
+	@Registration.Singleton(FileLogger.class)
+	public static class FileLoggerImpl implements FileLogger {
+		@Override
+		public void logImpl(String text) {
+			Io.log().toFile(text);
 		}
 	}
 }

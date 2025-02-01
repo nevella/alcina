@@ -51,7 +51,7 @@ public class MeasureContainment {
 				measures);
 		computation.compute();
 		root = containments.values().stream().filter(c -> c.parent() == null)
-				.findFirst().get();
+				.findFirst().orElse(null);
 	}
 
 	public Stream<Containment> containments() {
@@ -90,7 +90,7 @@ public class MeasureContainment {
 			this.selection = selection;
 		}
 
-		Stream<Containment> ancestors(boolean includeSelf) {
+		public Stream<Containment> ancestors(boolean includeSelf) {
 			Set<Containment> ancestorList = AlcinaCollections
 					.newLinkedHashSet();
 			if (includeSelf) {
@@ -306,7 +306,7 @@ public class MeasureContainment {
 	public static class ContainmentMap<T extends MeasureSelection> {
 		Order order;
 
-		MeasureContainment containment;
+		public MeasureContainment containment;
 
 		public ContainmentMap(Measure.Token.Order order,
 				Collection<T> selections) {

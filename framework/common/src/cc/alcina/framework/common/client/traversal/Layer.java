@@ -252,6 +252,11 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 		return state.traversalState.selections.get(clazz, false);
 	}
 
+	protected <T extends Selection> List<T>
+			selectionsWithSubtypes(Class<T> clazz) {
+		return state.traversalState.selections.get(clazz, true);
+	}
+
 	/*
 	 * Ensure a given input is only processed once
 	 */
