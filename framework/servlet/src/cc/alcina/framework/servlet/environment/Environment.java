@@ -32,6 +32,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Url;
@@ -52,6 +53,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Invoke.JsResponseType;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.InvokeResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolRequest;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolResponse;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Startup;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
@@ -529,6 +532,32 @@ class Environment {
 						.onSelectionMutationReceived(selectionMutation);
 			});
 		}
+
+		void emitServerDebugProtocolResponse(
+				ServerDebugProtocolRequest message) {
+			Environment.this.emitServerDebugProtocolResponse(message);
+		}
+	}
+
+	private void emitServerDebugProtocolResponse(
+			ServerDebugProtocolRequest message) {
+		logger.info("Client requested protocol dump -- client state:\n{}",
+				message.clientState);
+		FormatBuilder format = new FormatBuilder();
+		format.line("Server execution/transport state");
+		format.dashedLine();
+		format.line("execution thread:");
+		Thread thread = queue.executionThread;
+		format.line(SEUtilities.dumpStackTrace(thread));
+		format.dashedLine();
+		format.line("transport:");
+		format.line(queue.transportLayer.toStateDebugString());
+		ServerDebugProtocolResponse responseMessage = new ServerDebugProtocolResponse();
+		responseMessage.serverState = format.toString();
+		logger.info("Server protocol response state:\n{}",
+				responseMessage.serverState);
+		queue.sendToClient(responseMessage);
+		queue.flush();
 	}
 
 	static final transient String CONTEXT_ENVIRONMENT = Environment.class

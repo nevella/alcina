@@ -35,4 +35,21 @@ public interface Feature_RemoteObjectComponent extends Feature {
 	@Feature.Parent(Feature_RemoteObjectComponent.class)
 	public interface Feature_ClientMessageState extends Feature {
 	}
+
+	/**
+	 * <p>
+	 * a devtools call to __romcom_dp() will dump the protocol state:
+	 * <ul>
+	 * <li>client dumps its own state (active messages)
+	 * <li>client sends a message 'dumpstate'
+	 * <li>server dumps its state, sends response
+	 * <li>client dumps server state
+	 * <li>the client transport emits an observable when the inflight client to
+	 * server message state is changed, which may be used by the ui to indicate
+	 * slow processing time, or inflight-message state (for test clients)
+	 * </ul>
+	 */
+	@Feature.Parent(Feature_RemoteObjectComponent.class)
+	public interface Feature_ClientDebug extends Feature {
+	}
 }

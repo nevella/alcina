@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.http.client.Request;
@@ -17,6 +18,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
@@ -24,6 +26,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
@@ -138,7 +141,10 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		Map<EnvelopeId, EnvelopeTransportHistory> inflightEnvelope = new LinkedHashMap<>();
 
 		class EnvelopeTransportHistory {
+			MessageEnvelope envelope;
+
 			EnvelopeTransportHistory(MessageEnvelope envelope) {
+				this.envelope = envelope;
 				id = envelope.envelopeId;
 				sent = new Date();
 			}
@@ -148,6 +154,23 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 			Date expectedReceipt;
 
 			EnvelopeId id;
+
+			String toDebugString() {
+				FormatBuilder format = new FormatBuilder();
+				format.line("envelope :: %s - sent :: %s", id,
+						Ax.appMillis(sent));
+				format.line("  transport history :: %s",
+						envelope.toTransportDebugString());
+				format.line("  messages :: %s",
+						envelope.toMessageDebugString());
+				return format.toString();
+			}
+		}
+
+		public String toDebugString() {
+			return inflightEnvelope.values().stream()
+					.map(EnvelopeTransportHistory::toDebugString)
+					.collect(Collectors.joining("\n"));
 		}
 
 		@Override
@@ -261,12 +284,24 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 	}
 
 	void debugProtocol() {
-		ClientUtils.consoleInfo("A message");
+		FormatBuilder format = new FormatBuilder();
+		format.line("Protocol state: client");
+		format.dashedLine();
+		format.line("Active messages:");
+		format.append(sendChannel().toActiveStateString());
+		format.line("Inflight envelopes:");
+		format.append(envelopeDispatcher.toDebugString());
+		String clientState = format.toString();
+		ClientUtils.consoleInfo(clientState);
+		ServerDebugProtocolRequest debugProtocolRequest = new ServerDebugProtocolRequest();
+		debugProtocolRequest.clientState = clientState;
+		sendMessage(debugProtocolRequest);
 	}
 
 	native final void attachRpcDebugMethod() /*-{
+		var self=this;
 		$wnd.__romcom_dp = function(){
-		this.@cc.alcina.framework.servlet.component.romcom.client.common.logic.MessageTransportLayerClient::debugProtocol()();
+		self.@cc.alcina.framework.servlet.component.romcom.client.common.logic.MessageTransportLayerClient::debugProtocol()();
 		};
 		}-*/;
 }

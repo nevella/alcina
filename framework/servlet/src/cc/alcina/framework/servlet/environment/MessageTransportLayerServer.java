@@ -3,9 +3,11 @@ package cc.alcina.framework.servlet.environment;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
@@ -118,6 +120,13 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 				return token.request.messageEnvelope.packets.stream()
 						.anyMatch(pkt -> pkt.message instanceof AwaitRemote);
 			}
+		}
+
+		public String toDebugString() {
+			return dispatchableTokens.stream().map(t -> Ax.format("%s\n\t%s",
+					t.token.request.messageEnvelope.toTransportDebugString(),
+					t.token.request.messageEnvelope.toMessageSummaryString()))
+					.collect(Collectors.joining("\n"));
 		}
 
 		// FIXME - DOC - this is really the key for metadata exchange
@@ -346,5 +355,19 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		synchronized void add(Message message) {
 			messages.add(message);
 		}
+	}
+
+	String toStateDebugString() {
+		FormatBuilder format = new FormatBuilder();
+		format.line("Messages:");
+		List<MessageToken> snapshotActiveMessages = sendChannel
+				.snapshotActiveMessages();
+		snapshotActiveMessages.stream().map(MessageToken::toDebugString)
+				.forEach(format::line);
+		format.line("Envelopes:");
+		synchronized (envelopeDispatcher()) {
+			format.line(envelopeDispatcher().toDebugString());
+		}
+		return format.toString();
 	}
 }

@@ -58,7 +58,7 @@ class ClientExecutionQueue implements Runnable {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	private Thread executionThread;
+	Thread executionThread;
 
 	MessageTransportLayerServer transportLayer;
 

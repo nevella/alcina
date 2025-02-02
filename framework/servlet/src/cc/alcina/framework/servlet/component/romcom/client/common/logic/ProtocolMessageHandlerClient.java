@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
@@ -45,6 +46,16 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		public void handle(HandlerContext handlerContext,
 				Message.EnvironmentInitComplete message) {
 			ClientRpc.get().onEnvironmentInitComplete(message);
+		}
+	}
+
+	public static class ServerDebugProtocolResponseHandler extends
+			ProtocolMessageHandlerClient<Message.ServerDebugProtocolResponse> {
+		@Override
+		public void handle(HandlerContext handlerContext,
+				Message.ServerDebugProtocolResponse message) {
+			ClientUtils.consoleInfo("Server protocol state:");
+			ClientUtils.consoleInfo(message.serverState);
 		}
 	}
 

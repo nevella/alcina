@@ -176,6 +176,14 @@ public class RemoteComponentProtocol {
 			public String value;
 		}
 
+		public static class ServerDebugProtocolRequest extends Message {
+			public String clientState;
+		}
+
+		public static class ServerDebugProtocolResponse extends Message {
+			public String serverState;
+		}
+
 		// FIXME - doc this annotation
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class InvokeResponse extends Message {
@@ -358,16 +366,6 @@ public class RemoteComponentProtocol {
 		}
 
 		/*
-		 * A dirndl UI example
-		 */
-		@Bean(PropertySource.FIELDS)
-		@Directed
-		static class HelloBeans1x5 {
-			@Directed
-			String world = "World!";
-		}
-
-		/*
 		 * The request/response (server->client) is marked as synchronous, the
 		 * server thread will not continue until the (possibly out-of-order)
 		 * response is processed
@@ -380,7 +378,7 @@ public class RemoteComponentProtocol {
 		public int messageId;
 
 		public String toDebugString() {
-			return "";
+			return toString();
 		}
 
 		@Override

@@ -455,6 +455,12 @@ public abstract class MessageTransportLayer {
 		public String toString() {
 			return Ax.format("%s - %s", transportHistory.messageId, message);
 		}
+
+		public String toDebugString() {
+			return Ax.format("%s ::\n%s",
+					transportHistory.toTransportDebugString(),
+					message.toDebugString());
+		}
 	}
 
 	public static class TransportEvent {
@@ -895,6 +901,12 @@ public abstract class MessageTransportLayer {
 
 		void sendAcknowledgments() {
 			conditionallySend();
+		}
+
+		public String toActiveStateString() {
+			List<MessageToken> snapshotActiveMessages = snapshotActiveMessages();
+			return snapshotActiveMessages.stream().map(MessageToken::toString)
+					.collect(Collectors.joining("\n"));
 		}
 	}
 

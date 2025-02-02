@@ -72,4 +72,6 @@ public abstract class EnvelopeDispatcher {
 	}
 
 	protected abstract boolean shouldSendReceiveChannelMetadata();
+
+	public abstract String toDebugString();
 }

@@ -526,6 +526,21 @@ public class SEUtilities {
 		return sb.toString();
 	}
 
+	public static String dumpStackTrace(Thread thread) {
+		StackTraceElement[] traces = thread.getStackTrace();
+		StringBuilder sb = new StringBuilder();
+		sb.append(thread);
+		sb.append("\n");
+		// max 400 lines
+		int skip = Math.max(0, traces.length - 400);
+		Arrays.stream(traces).forEach(element -> {
+			sb.append("\t");
+			sb.append(element);
+			sb.append("\n");
+		});
+		return sb.toString();
+	}
+
 	public static void dumpBytes(byte[] bs, int width) {
 		dumpBytes(bs, width, true);
 	}

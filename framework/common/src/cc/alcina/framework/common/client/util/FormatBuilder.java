@@ -580,4 +580,8 @@ public class FormatBuilder {
 	public void out() {
 		Ax.out(this);
 	}
+
+	public void dashedLine() {
+		line("--------------------------");
+	}
 }
