@@ -47,11 +47,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 public class CollectionDeltaModel extends Model.Fields {
 	public static PackageProperties._CollectionDeltaModel properties = PackageProperties.collectionDeltaModel;
 
-	/*
-	 * FIXME - jdk16 - move to static member of inner class
-	 */
-	static PackageProperties._CollectionDeltaModel_RelativeInsert RelativeInsert_properties = PackageProperties.collectionDeltaModel_relativeInsert;
-
 	enum InsertDirection {
 		/*
 		 * if before == null, to before, otherwise to 'most-after-before'
@@ -74,6 +69,8 @@ public class CollectionDeltaModel extends Model.Fields {
 	@TypedProperties
 	@Directed.Delegating
 	class RelativeInsert extends Model.All {
+		static PackageProperties._CollectionDeltaModel_RelativeInsert properties = PackageProperties.collectionDeltaModel_relativeInsert;
+
 		RelativeInsert(RelativeInsert parent) {
 			this.parent = parent;
 		}
@@ -129,7 +126,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		RelativeInsert validatingNext() {
 			RelativeInsert next = next();
 			if (element != null && !Objects.equals(element, update.current)) {
-				RelativeInsert_properties.element.set(this, null);
+				properties.element.set(this, null);
 			}
 			/*
 			 * in the future, could *possibly* simplify the RelativeInsert
@@ -171,7 +168,7 @@ public class CollectionDeltaModel extends Model.Fields {
 						if (after == null) {
 							RelativeInsert child = new RelativeInsert(this);
 							RelativeInsert grand = child.append(object);
-							RelativeInsert_properties.after.set(this, child);
+							properties.after.set(this, child);
 							return grand;
 						} else {
 							RelativeInsert firstDescendantOrSelfOfAfter = after
@@ -184,8 +181,8 @@ public class CollectionDeltaModel extends Model.Fields {
 							RelativeInsert child = new RelativeInsert(
 									firstDescendantOrSelfOfAfter);
 							RelativeInsert grand = child.append(object);
-							RelativeInsert_properties.before
-									.set(firstDescendantOrSelfOfAfter, child);
+							properties.before.set(firstDescendantOrSelfOfAfter,
+									child);
 							return grand;
 						}
 					}
@@ -194,7 +191,7 @@ public class CollectionDeltaModel extends Model.Fields {
 				if (before == null) {
 					RelativeInsert child = new RelativeInsert(this);
 					RelativeInsert grand = child.append(object);
-					RelativeInsert_properties.before.set(this, child);
+					properties.before.set(this, child);
 					return grand;
 				} else {
 					RelativeInsert lastDescendantOrSelfOfBefore = after
@@ -206,8 +203,7 @@ public class CollectionDeltaModel extends Model.Fields {
 					RelativeInsert child = new RelativeInsert(
 							lastDescendantOrSelfOfBefore);
 					RelativeInsert grand = child.append(object);
-					RelativeInsert_properties.after
-							.set(lastDescendantOrSelfOfBefore, child);
+					properties.after.set(lastDescendantOrSelfOfBefore, child);
 					return grand;
 				}
 			}
@@ -285,7 +281,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		}
 
 		void flushPending() {
-			RelativeInsert_properties.flushedContents.set(this, contents);
+			properties.flushedContents.set(this, contents);
 		}
 
 		boolean canAppend() {
@@ -399,7 +395,7 @@ public class CollectionDeltaModel extends Model.Fields {
 		}
 
 		void setCollectionElement(Object current) {
-			RelativeInsert_properties.element.set(this, current);
+			properties.element.set(this, current);
 		}
 	}
 

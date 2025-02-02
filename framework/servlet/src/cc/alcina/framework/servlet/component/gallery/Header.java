@@ -11,9 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-@TypedProperties
 class Header extends Model.All {
-	@TypedProperties
 	static class Left extends Model.All {
 		@Directed.Transform(NameTransform.class)
 		String name;

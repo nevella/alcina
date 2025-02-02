@@ -27,8 +27,6 @@ public class PackageProperties {
     public static _GalleryContents galleryContents = new _GalleryContents();
     static _GalleryPage galleryPage = new _GalleryPage();
     static _GalleryPage_ActivityRoute galleryPage_activityRoute = new _GalleryPage_ActivityRoute();
-    static _Header header = new _Header();
-    static _Header_Left header_left = new _Header_Left();
     
     static class _Dotburger_Menu implements TypedProperty.Container {
       TypedProperty<Dotburger.Menu, Link> keyboardShortcuts = new TypedProperty<>(Dotburger.Menu.class, "keyboardShortcuts");
@@ -64,16 +62,6 @@ public class PackageProperties {
       TypedProperty<GalleryPage.ActivityRoute, Class> channel = new TypedProperty<>(GalleryPage.ActivityRoute.class, "channel");
       TypedProperty<GalleryPage.ActivityRoute, GalleryPage> page = new TypedProperty<>(GalleryPage.ActivityRoute.class, "page");
       TypedProperty<GalleryPage.ActivityRoute, BasePlace> place = new TypedProperty<>(GalleryPage.ActivityRoute.class, "place");
-    }
-    
-    static class _Header implements TypedProperty.Container {
-      TypedProperty<Header, Header.Left> left = new TypedProperty<>(Header.class, "left");
-      TypedProperty<Header, Header.Mid> mid = new TypedProperty<>(Header.class, "mid");
-      TypedProperty<Header, Header.Right> right = new TypedProperty<>(Header.class, "right");
-    }
-    
-    static class _Header_Left implements TypedProperty.Container {
-      TypedProperty<Header.Left, String> name = new TypedProperty<>(Header.Left.class, "name");
     }
     
 //@formatter:on

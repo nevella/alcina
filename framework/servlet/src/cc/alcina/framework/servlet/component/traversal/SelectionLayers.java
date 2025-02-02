@@ -16,8 +16,6 @@ class SelectionLayers extends Model.Fields {
 	@Directed
 	Heading header = new Heading("Selection layers");
 
-	static PackageProperties._SelectionLayers_LayersContainer layersContainer_properties = PackageProperties.selectionLayers_layersContainer;
-
 	/*
 	 * @Directed.Wrap is not used (rather, a container class) because it's a
 	 * scroll container, so code wants access to the rendered element
@@ -25,6 +23,8 @@ class SelectionLayers extends Model.Fields {
 	@Directed(tag = "layers")
 	@TypedProperties
 	class LayersContainer extends Model.Fields implements TransmitState {
+		static PackageProperties._SelectionLayers_LayersContainer properties = PackageProperties.selectionLayers_layersContainer;
+
 		List<LayerSelections> layers;
 
 		/*
@@ -35,7 +35,7 @@ class SelectionLayers extends Model.Fields {
 		CollectionDeltaModel collectionRepresentation = new CollectionDeltaModel();
 
 		LayersContainer() {
-			bindings().from(this).on(layersContainer_properties.layers)
+			bindings().from(this).on(properties.layers)
 					.to(collectionRepresentation)
 					.on(CollectionDeltaModel.properties.collection).oneWay();
 		}
@@ -55,7 +55,7 @@ class SelectionLayers extends Model.Fields {
 		this.page = page;
 		bindings().from(page.ui).on(Ui.properties.traversal)
 				.map(this::toLayerSelections).to(layersContainer)
-				.on(layersContainer_properties.layers).oneWay();
+				.on(LayersContainer.properties.layers).oneWay();
 	}
 
 	List<LayerSelections> toLayerSelections(SelectionTraversal traversal) {
@@ -65,7 +65,7 @@ class SelectionLayers extends Model.Fields {
 		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers
 				&& layer.unfilteredSelectionCount() == 0
 				&& layer.getLayerFilterAttribute() == null);
-		layersContainer_properties.layers.set(layersContainer, layers);
+		LayersContainer.properties.layers.set(layersContainer, layers);
 		return layers;
 	}
 }

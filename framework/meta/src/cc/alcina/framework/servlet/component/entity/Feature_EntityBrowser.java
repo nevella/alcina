@@ -11,4 +11,13 @@ import cc.alcina.framework.common.client.meta.Feature_Ui_app;
 @Feature.Status.Ref(Feature.Status.Open.class)
 @Feature.Parent(Feature_Ui_app.class)
 public interface Feature_EntityBrowser extends Feature {
+	/*
+	 * A minimal query cache for full-table queries - useful for deeper
+	 * navigation
+	 * 
+	 * This cache can be cleared via the ui area
+	 */
+	@Feature.Parent(Feature_EntityBrowser.class)
+	public interface _QueryCache extends Feature {
+	}
 }

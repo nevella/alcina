@@ -9,6 +9,7 @@ import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -38,6 +39,7 @@ import cc.alcina.framework.servlet.environment.RemoteUi;
 import cc.alcina.framework.servlet.environment.SettingsSupport;
 import cc.alcina.framework.servlet.job.JobContext;
 
+@Feature.Ref(Feature_EntityBrowser.class)
 public class EntityBrowser {
 	@Registration(RemoteComponent.class)
 	public static class Component implements RemoteComponent {
