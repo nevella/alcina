@@ -156,8 +156,6 @@ class LayerSelections extends Model.All {
 	@TypedProperties
 	class NameArea extends Model.All
 			implements ModelEvents.Closed.Handler, DomEvents.Click.Handler {
-		static PackageProperties._LayerSelections_NameArea properties = PackageProperties.layerSelections_nameArea;
-
 		@Directed
 		LeafModel.TextTitle key;
 
@@ -185,7 +183,7 @@ class LayerSelections extends Model.All {
 		@Override
 		public void onBeforeRender(BeforeRender event) {
 			bindings().from(LayerSelections.this.selectionsArea)
-					.on(SelectionsArea.properties.selections).nonNull()
+					.on(_SelectionsArea_properties.selections).nonNull()
 					.signal(this::render);
 			super.onBeforeRender(event);
 		}
@@ -200,10 +198,10 @@ class LayerSelections extends Model.All {
 			keyBuilder.append(layer.getName());
 			String keyString = keyBuilder.toString();
 			outputs = computeOutputs();
-			properties.key.set(this, new TextTitle(keyString,
+			_NameArea_properties.key.set(this, new TextTitle(keyString,
 					Ax.format("%s : %s", keyString, outputs)));
-			properties.filter.set(this, new Filter());
-			properties.hasFilter.set(this, filter.existing != null);
+			_NameArea_properties.filter.set(this, new Filter());
+			_NameArea_properties.hasFilter.set(this, filter.existing != null);
 		}
 
 		boolean computeSelected(Place place) {
@@ -289,24 +287,26 @@ class LayerSelections extends Model.All {
 								provideElement().getBoundingClientRect(), this,
 								new FilterSuggestor())
 						.create();
-				properties.filterEditorOpen.set(NameArea.this, true);
+				_NameArea_properties.filterEditorOpen.set(NameArea.this, true);
 				overlay.open();
 			}
 		}
 
 		@Override
 		public void onClosed(Closed event) {
-			properties.filterEditorOpen.set(NameArea.this, false);
+			_NameArea_properties.filterEditorOpen.set(NameArea.this, false);
 		}
 	}
+
+	static PackageProperties._LayerSelections_SelectionsArea _SelectionsArea_properties = PackageProperties.layerSelections_selectionsArea;
+
+	static PackageProperties._LayerSelections_NameArea _NameArea_properties = PackageProperties.layerSelections_nameArea;
 
 	/*
 	 * Models the (possibly filtered) selections in a leyer
 	 */
 	@TypedProperties
 	class SelectionsArea extends Model.Fields {
-		static PackageProperties._LayerSelections_SelectionsArea properties = PackageProperties.layerSelections_selectionsArea;
-
 		@Directed
 		List<Object> selections;
 
@@ -364,7 +364,7 @@ class LayerSelections extends Model.All {
 					250; idx++) {
 				selections.add(new Spacer());
 			}
-			properties.selections.set(this, selections);
+			_SelectionsArea_properties.selections.set(this, selections);
 		}
 
 		/*

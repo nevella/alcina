@@ -38,10 +38,10 @@ class NonOptimisedQueryCache {
 		entrySummary.updateItems();
 	}
 
+	static PackageProperties._NonOptimisedQueryCache_EntrySummary EntrySummary_properties = PackageProperties.nonOptimisedQueryCache_entrySummary;
+
 	@TypedProperties
 	class EntrySummary extends Model.All implements DomEvents.Click.Handler {
-		static PackageProperties._NonOptimisedQueryCache_EntrySummary properties = PackageProperties.nonOptimisedQueryCache_entrySummary;
-
 		Object message;
 
 		@Override
@@ -59,7 +59,7 @@ class NonOptimisedQueryCache {
 						.collect(Collectors.joining("\n"));
 				message = new LeafModel.TextTitle(label, title);
 			}
-			properties.message.set(this, message);
+			EntrySummary_properties.message.set(this, message);
 		}
 	}
 }
