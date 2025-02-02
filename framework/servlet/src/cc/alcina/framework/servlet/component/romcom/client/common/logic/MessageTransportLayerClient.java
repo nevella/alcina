@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
@@ -258,4 +259,14 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 	protected EnvelopeDispatcher envelopeDispatcher() {
 		return envelopeDispatcher;
 	}
+
+	void debugProtocol() {
+		ClientUtils.consoleInfo("A message");
+	}
+
+	native final void attachRpcDebugMethod() /*-{
+		$wnd.__romcom_dp = function(){
+		this.@cc.alcina.framework.servlet.component.romcom.client.common.logic.MessageTransportLayerClient::debugProtocol()();
+		};
+		}-*/;
 }

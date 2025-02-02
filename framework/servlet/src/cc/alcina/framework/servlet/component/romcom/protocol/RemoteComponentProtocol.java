@@ -82,6 +82,8 @@ public class RemoteComponentProtocol {
 			@Bean(PropertySource.FIELDS)
 			public static class EnvironmentSettings {
 				public int longRunningMessageTimeMs = 2000;
+
+				public boolean attachRpcDebugMethod = true;
 			}
 		}
 

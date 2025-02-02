@@ -44,8 +44,7 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 		@Override
 		public void handle(HandlerContext handlerContext,
 				Message.EnvironmentInitComplete message) {
-			ClientRpc
-					.get().ui.environmentSettings = message.environmentSettings;
+			ClientRpc.get().onEnvironmentInitComplete(message);
 		}
 	}
 

@@ -27,6 +27,7 @@ import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComp
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.HasSelectionMutation;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Mutations;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
@@ -237,5 +238,12 @@ public class ClientRpc implements HandlerContext {
 
 	List<MessageToken> getActiveMessages() {
 		return transportLayer.sendChannel.snapshotActiveMessages();
+	}
+
+	void onEnvironmentInitComplete(EnvironmentInitComplete message) {
+		ui.environmentSettings = message.environmentSettings;
+		if (ui.environmentSettings.attachRpcDebugMethod) {
+			transportLayer.attachRpcDebugMethod();
+		}
 	}
 }
