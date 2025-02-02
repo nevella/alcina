@@ -18,7 +18,7 @@ public class SystemoutCounter {
 	public static SystemoutCounter standardJobCounter(int size, String name) {
 		SystemoutCounter counter = new SystemoutCounter(size / 400, 20, size,
 				true);
-		counter.name(name + "::jobProgress");
+		counter.withName(name + "::jobProgress");
 		return counter;
 	}
 
@@ -72,7 +72,7 @@ public class SystemoutCounter {
 		return this.logger;
 	}
 
-	public SystemoutCounter name(String name) {
+	public SystemoutCounter withName(String name) {
 		this.name = name;
 		return this;
 	}
