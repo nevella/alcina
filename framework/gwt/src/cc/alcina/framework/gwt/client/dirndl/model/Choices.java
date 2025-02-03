@@ -61,6 +61,28 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.EnumValues.EnumSupplier;
 
+/**
+ * <p>
+ * A generalised selection UI base class
+ * 
+ * <p>
+ * If the set of selectable values is small and can be determined by the client
+ * at render time (such as en enum, or a set of app-context buttons), the
+ * selectable values are modelled by {@link #values} - concrete subclasses are:
+ * <ul>
+ * <li>{@link Choices.Select},{@link Choices.MultipleSelect} - render the
+ * selectable values as an HTML select *
+ * <li>{@link Choices.Single},{@link Choices.Multiple} - render the selectable
+ * values as a set of {@link Choice} elements
+ * </ul>
+ * <p>
+ * Note that in this first case, {@link #values} models <i>selectable</i>
+ * values, not selected - the selected set or singleton is provided by
+ * getSelectedValue(s) - and changes are signallred by
+ * {@link ModelEvents.SelectionChanged}
+ * <p>
+ * When the selectable model is large - often remote, use
+ */
 @Directed(tag = "choices")
 /*
  * I'm not entirely happy with 'Choices' firing 'Selection' events (could it not
@@ -799,6 +821,9 @@ public abstract class Choices<T> extends Model implements
 			}
 		}
 
+		/**
+		 * A simple variant of {@link Single} for use in suggestor dropdowns
+		 */
 		@Directed.Delegating
 		public static class Delegating<T> extends Single<T> {
 			public Delegating(List<T> values) {

@@ -37,7 +37,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
  * fixed set of choices, so does not render the {@link #getChoices()} property
  * 
  * <p>
- * The {@link #getSelectedValues()} property is modelled directly
+ * The {@link #getSelectedValues()} property is modelled directly by the
+ * {@link #selectedValues} field.
+ * 
+ * <p>
+ * Note: this doesn't share much implementation with other {@link Choices}
+ * subtypes, but very much shares behavior, so I'm happy with the type structure
+ * (sure, Choices could be abstracted further to an interface, but...)
  */
 @Bean(PropertySource.FIELDS)
 @TypedProperties
