@@ -122,6 +122,12 @@ public class JacksonUtils {
 				.withAllowUnknownProperties().serialize(object);
 	}
 
+	public static String serializeNoTypesElideDefaults(Object object) {
+		return new JacksonJsonObjectSerializer().withIdRefs()
+				.withDefaults(false).withAllowUnknownProperties()
+				.serialize(object);
+	}
+
 	public static String serializeNoTypesInterchange(Object object) {
 		return new JacksonJsonObjectSerializer().withPrettyPrint()
 				.withWrapRootValue().withAllowUnknownProperties()
