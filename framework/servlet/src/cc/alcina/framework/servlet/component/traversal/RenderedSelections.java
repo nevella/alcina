@@ -9,14 +9,11 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup.Query;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
-import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
@@ -106,6 +103,8 @@ class RenderedSelections extends Model.Fields {
 		} else if (selection instanceof Selection.HasTableRepresentation) {
 			properties.selectionTable.set(this,
 					new SelectionTableArea(selection));
+		} else {
+			properties.selectionTable.set(this, null);
 		}
 	}
 

@@ -24,9 +24,8 @@ import cc.alcina.framework.common.client.traversal.layer.BranchingParser;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.StringMatches;
 import cc.alcina.framework.common.client.util.StringMatches.PartialSubstring;
-import cc.alcina.framework.servlet.component.entity.property.QueryPartLayer.PartSelection;
 import cc.alcina.framework.servlet.component.entity.property.QueryPartLayer.EntryToken;
-import cc.alcina.framework.servlet.component.entity.property.QueryPartLayer.IntermediateToken;
+import cc.alcina.framework.servlet.component.entity.property.QueryPartLayer.PartSelection;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
 import cc.alcina.framework.servlet.job.JobContext;
@@ -81,11 +80,13 @@ public class PropertyFilterParser {
 					.stream().sorted(Comparator.comparing(Property::getName))
 					.collect(Collectors.toList());
 			List<Property> candidates = new StringMatches.PartialSubstring<Property>()
+					.withMatchPartialsIfExactMatch(true)
 					.match(properties, Property::getName, propertyNamePart)
 					.stream().map(PartialSubstring.Match::getValue)
 					.collect(Collectors.toList());
 			List<Property> sortCandidates = sortKey == null ? List.of()
 					: new StringMatches.PartialSubstring<Property>()
+							.withMatchPartialsIfExactMatch(true)
 							.match(properties, Property::getName, sortKey)
 							.stream().map(PartialSubstring.Match::getValue)
 							.limit(3).collect(Collectors.toList());
@@ -205,6 +206,7 @@ public class PropertyFilterParser {
 					.stream().sorted(Comparator.comparing(Property::getName))
 					.collect(Collectors.toList());
 			List<Property> candidates = new StringMatches.PartialSubstring<Property>()
+					.withMatchPartialsIfExactMatch(true)
 					.match(properties, Property::getName, text).stream()
 					.map(PartialSubstring.Match::getValue)
 					.collect(Collectors.toList());

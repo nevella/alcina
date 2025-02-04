@@ -135,13 +135,13 @@ public class StringMatches {
 
 		boolean requireFirstLetterMatch = true;
 
-		public StringMatches.PartialSubstring withMatchPartialsIfExactMatch(
+		public StringMatches.PartialSubstring<T> withMatchPartialsIfExactMatch(
 				boolean matchPartialsIfExactMatch) {
 			this.matchPartialsIfExactMatch = matchPartialsIfExactMatch;
 			return this;
 		}
 
-		public StringMatches.PartialSubstring
+		public StringMatches.PartialSubstring<T>
 				withRequireFirstLetterMatch(boolean requireFirstLetterMatch) {
 			this.requireFirstLetterMatch = requireFirstLetterMatch;
 			return this;
