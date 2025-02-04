@@ -2,32 +2,19 @@ package cc.alcina.framework.servlet.component.romcom.client.common.logic;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
-import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.protocol.EnvelopeDispatcher;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ServerDebugProtocolRequest;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
 /**
@@ -102,147 +89,6 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 		receiveChannel().onEnvelopeReceived(response.messageEnvelope);
 	}
 
-	class EnvelopeDispatcherImpl extends EnvelopeDispatcher {
-		EnvelopeDispatcherImpl() {
-			super(MessageTransportLayerClient.this);
-		}
-
-		@Override
-		protected boolean shouldSendReceiveChannelMetadata() {
-			return true;
-		}
-
-		/*
-		 * Because http/2 - there's no reason to not send messages as they come
-		 * in (except possibly server load, but trying to gate that from the
-		 * client is dubiousx)
-		 */
-		@Override
-		protected boolean isDispatchAvailable() {
-			boolean finished = (RemoteObjectModelComponentState.get().finished
-					|| willFinish);
-			if (finished) {
-				return false;
-			}
-			/*
-			 * There's no need to send AwaitRemote messages if the tab is not
-			 * visible, and it causes spam on console restart/remote server
-			 * issues
-			 */
-			boolean shouldSend = Document.get().isVisibilityStateVisible()
-					|| !sendChannel().activeMessagesAreAwaitRemoteOnly();
-			return shouldSend;
-		}
-
-		int getInflightCount() {
-			return inflightEnvelope.size();
-		}
-
-		Map<EnvelopeId, EnvelopeTransportHistory> inflightEnvelope = new LinkedHashMap<>();
-
-		class EnvelopeTransportHistory {
-			MessageEnvelope envelope;
-
-			EnvelopeTransportHistory(MessageEnvelope envelope) {
-				this.envelope = envelope;
-				id = envelope.envelopeId;
-				sent = new Date();
-			}
-
-			Date sent;
-
-			Date expectedReceipt;
-
-			EnvelopeId id;
-
-			String toDebugString() {
-				FormatBuilder format = new FormatBuilder();
-				format.line("envelope :: %s - sent :: %s", id,
-						Ax.appMillis(sent));
-				format.line("  transport history :: %s",
-						envelope.toTransportDebugString());
-				format.line("  messages :: %s",
-						envelope.toMessageDebugString());
-				return format.toString();
-			}
-		}
-
-		public String toDebugString() {
-			return inflightEnvelope.values().stream()
-					.map(EnvelopeTransportHistory::toDebugString)
-					.collect(Collectors.joining("\n"));
-		}
-
-		@Override
-		protected void dispatch(List<MessageToken> sendMessagesIn,
-				List<MessageToken> receivedMessages) {
-			/*
-			 * make a copy of the parameter for post-rpc processing, avoid
-			 * synchronization issues
-			 */
-			List<MessageToken> sendMessages = new ArrayList<>(sendMessagesIn);
-			MessageEnvelope envelope = createEnvelope(sendMessages,
-					receivedMessages);
-			RemoteComponentRequest request = new RemoteComponentRequest();
-			request.messageEnvelope = envelope;
-			request.session = session;
-			/*
-			 * serialize, send as RPC
-			 */
-			String payload = ReflectiveSerializer.serializeForRpc(request);
-			String path = Window.Location.getPath();
-			RequestBuilder builder = new RequestBuilder(RequestBuilder.POST,
-					path);
-			Date sendTime = new Date();
-			RequestCallback callback = new RequestCallback() {
-				@Override
-				public void onError(Request httpRequest, Throwable exception) {
-					onReturned();
-					remoteExceptions
-							.add(new RemoteExceptionEvent(exception, sendTime));
-					sendMessages.forEach(uak -> uak.onSendException(exception));
-					onRequestReturnedPostFinishCheck();
-				}
-
-				void onReturned() {
-					inflightEnvelope.remove(envelope.envelopeId);
-				}
-
-				@Override
-				public void onResponseReceived(Request httpRequest,
-						Response httpResponse) {
-					onReturned();
-					if (httpResponse.getStatusCode() == 0
-							|| httpResponse.getStatusCode() >= 400) {
-						onError(httpRequest,
-								new StatusCodeException(httpResponse));
-						return;
-					}
-					onReceiveSuccess();
-					String text = httpResponse.getText();
-					RemoteComponentResponse response = ReflectiveSerializer
-							.deserializeRpc(text);
-					getLogger().debug("envelope returned :: {} :: {}/{}",
-							Ax.appMillis(), envelope.envelopeId,
-							response.messageEnvelope.envelopeId);
-					willFinish |= response.messageEnvelope.packets.stream()
-							.map(MessagePacket::message).anyMatch(
-									ProtocolMessageHandlerClient::isClientFinished);
-					onRequestReturnedPostFinishCheck();
-					onComponentResponse(response);
-				}
-			};
-			try {
-				inflightEnvelope.put(envelope.envelopeId,
-						new EnvelopeTransportHistory(envelope));
-				builder.sendRequest(payload, callback);
-				getLogger().debug("envelope sent :: {}", envelope.envelopeId);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
 	static class StatusCodeException extends Exception {
 		Response httpResponse;
 
@@ -255,12 +101,12 @@ public class MessageTransportLayerClient extends MessageTransportLayer {
 
 	ReceiveChannelImpl receiveChannel;
 
-	EnvelopeDispatcherImpl envelopeDispatcher;
+	EnvelopeDispatcherClient envelopeDispatcher;
 
 	MessageTransportLayerClient() {
 		sendChannel = new SendChannelImpl();
 		receiveChannel = new ReceiveChannelImpl();
-		envelopeDispatcher = new EnvelopeDispatcherImpl();
+		envelopeDispatcher = new EnvelopeDispatcherClient(this);
 	}
 
 	@Override

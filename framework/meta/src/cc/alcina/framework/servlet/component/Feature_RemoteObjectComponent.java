@@ -52,4 +52,18 @@ public interface Feature_RemoteObjectComponent extends Feature {
 	@Feature.Parent(Feature_RemoteObjectComponent.class)
 	public interface Feature_ClientDebug extends Feature {
 	}
+
+	/**
+	 * <p>
+	 * repeated events (mousewheel, scroll) can overload the rpc system, so
+	 * throttle in two ways:
+	 * <ul>
+	 * <li>limit the permissible in-flight envelope count
+	 * <li>squelch the preview of repeating events
+	 * <li>(if needed) throttle (EventCollator) those event types
+	 * </ul>
+	 */
+	@Feature.Parent(Feature_RemoteObjectComponent.class)
+	public interface Feature_ClientEventThrottling extends Feature {
+	}
 }

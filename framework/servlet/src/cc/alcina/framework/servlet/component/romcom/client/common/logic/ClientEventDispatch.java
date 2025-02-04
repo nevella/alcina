@@ -11,11 +11,14 @@ import com.google.gwt.dom.client.HrefElement;
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.DomEventMessage;
 
 class ClientEventDispatch {
+	@Feature.Ref(Feature_RemoteObjectComponent.Feature_ClientEventThrottling.class)
 	static void dispatchEventMessage(Event event, Element listenerElement,
 			boolean preview) {
 		/*
@@ -28,6 +31,8 @@ class ClientEventDispatch {
 			case "mouseleave":
 			case "mousemove":
 			case "mouseover":
+			case "mousewheel":
+			case "scroll":
 				return;
 			}
 		}
