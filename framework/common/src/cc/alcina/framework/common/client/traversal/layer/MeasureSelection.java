@@ -185,7 +185,12 @@ public class MeasureSelection extends AbstractSelection<Measure>
 
 		@Override
 		public String getMarkup(MeasureSelection selection) {
-			return selection.get().markup();
+			try {
+				return selection.get().markup();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return "Unable to parse markup (possibly namespace issue)";
+			}
 		}
 
 		@Override

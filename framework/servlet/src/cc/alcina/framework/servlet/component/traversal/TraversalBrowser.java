@@ -191,7 +191,8 @@ public class TraversalBrowser {
 
 		protected Layer getSelectedLayer0() {
 			int selectedLayerIndex = place().provideSelectedLayerIndex();
-			return traversal().getLayer(selectedLayerIndex);
+			return traversal() == null ? null
+					: traversal().getLayer(selectedLayerIndex);
 		}
 
 		@Override

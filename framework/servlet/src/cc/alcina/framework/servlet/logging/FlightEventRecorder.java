@@ -6,6 +6,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.flight.FlightEvent;
 import cc.alcina.framework.common.client.flight.FlightEventWrappable;
@@ -19,6 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
+import cc.alcina.framework.entity.LogUtil;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.util.FileUtils;
@@ -58,6 +61,8 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 			implements ProcessObserver<PersistRecordedEvents> {
 		@Override
 		public synchronized void topicPublished(PersistRecordedEvents message) {
+			Preconditions.checkState(enabled.is(),
+					"Flight events not enabled!");
 			copyEventsToExtractFolder();
 		}
 	}
@@ -88,10 +93,13 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		}
 	}
 
+	static final Configuration.Key enabled = Configuration.key("enabled");
+
 	@Override
 	public void onApplicationStartup() {
 		boolean finished = false;
-		if (!Configuration.is("enabled")) {
+		if (!enabled.is()) {
+			new PersistRecordedEventsObserver().bind();
 			return;
 		}
 		new FlightEventObserver().bind();
@@ -160,6 +168,7 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		try {
 			File copiedTo = new File(Configuration.get("extractFolder"));
 			SEUtilities.copyFile(file, copiedTo);
+			LogUtil.classLogger().warn("Logged flight events to: {}", copiedTo);
 			return copiedTo;
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);

@@ -13,6 +13,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
@@ -24,7 +25,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceAdapter;
-import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -359,10 +359,13 @@ class LayerSelections extends Model.All {
 			empty = filtered.isEmpty();
 			List<Object> selections = filtered.stream()
 					.collect(Collectors.toList());
-			for (int idx = selections.size(); idx <
+			int start = selections.size();
 			// hardcoded, matches the css grid
-					250; idx++) {
-				selections.add(new Spacer());
+			int end = 250;
+			if (start < end) {
+				// offsets allow for name area, the fact that the line index is
+				// +1 (one based) +1 (end of grid item)
+				selections.add(new Spacer(start + 2, end + 2));
 			}
 			_SelectionsArea_properties.selections.set(this, selections);
 		}
@@ -520,6 +523,22 @@ class LayerSelections extends Model.All {
 		}
 	}
 
-	static class Spacer extends Model {
+	static class Spacer extends Model.Fields {
+		// @Binding(type = Type.STYLE_ATTRIBUTE)
+		int gridColumnStart;
+
+		// @Binding(type = Type.STYLE_ATTRIBUTE)
+		int gridColumnEnd;
+
+		// chrome bug -
+		// https://stackoverflow.com/questions/74935509/why-does-chrome-devtools-complain-that-i-should-not-use-grid-column-end-on-an-el
+		@Binding(type = Type.STYLE_ATTRIBUTE)
+		String gridColumn;
+
+		Spacer(int start, int end) {
+			this.gridColumnStart = start;
+			this.gridColumnEnd = end;
+			gridColumn = Ax.format("%s/%s", start, end);
+		}
 	}
 }

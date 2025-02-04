@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -80,6 +81,7 @@ public class SelectionMarkupFull extends SelectionMarkup {
 					contentsNode = body != null ? body
 							: containingNode.document.getDocumentElementNode();
 					String markup = contentsNode.fullToString();
+					markup = XmlUtils.removeNamespaceInfo(markup);
 					this.markupHighlights = new MarkupHighlights(markup, true,
 							List.of(), -1);
 				} else {

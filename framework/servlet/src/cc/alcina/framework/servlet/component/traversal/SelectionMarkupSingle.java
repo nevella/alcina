@@ -24,7 +24,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.environment.style.StyleScoper;
 
 /**
- * SelectionMarkup implementation for a single document
+ * SelectionMarkup implementation for a single document (naive, only used in
+ * RecipeParser)
  */
 public class SelectionMarkupSingle extends SelectionMarkup {
 	final SelectionTraversal traversal;

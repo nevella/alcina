@@ -138,7 +138,11 @@ public class MarkupHighlights extends Model.Fields {
 						- domNode.asLocation().index;
 				return n.isText() && index >= numericRange.i1
 						&& index < numericRange.i2;
-			}).collect(Collectors.toList());
+			}).filter(t ->
+			// FIXME - hard-coded - this should go in the element, poss
+			// derived from html spec?
+			!t.parent().tagIsOneOf("table", "thead", "tbody", "tr", "tfoot"))
+					.collect(Collectors.toList());
 			wrapped = wrap.stream()
 					.map(t -> t.builder().tag("span")
 							.className(MARKUP_HIGHLIGHT).wrap())
