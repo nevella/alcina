@@ -61,4 +61,8 @@ public class DatePair
 	public String toString() {
 		return Ax.format("[%s -> %s]", d1, d2);
 	}
+
+	public static DatePair since(Date date) {
+		return new DatePair(date, null);
+	}
 }
