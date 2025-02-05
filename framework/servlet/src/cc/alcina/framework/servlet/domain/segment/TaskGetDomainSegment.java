@@ -37,10 +37,11 @@ public class TaskGetDomainSegment extends PerformerTask.Remote {
 		localState = Io.read().base64String(localStateSerialized)
 				.withDecompress(true).withKryoType(DomainSegment.class)
 				.asObject();
-		CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache();
+		CollectionProjectionFilterWithCache dataFilter = definition
+				.provideDataFilter();
 		LooseContext.set(GraphProjection.CONTEXT_MAX_REACHED,
 				String.valueOf(Integer.MAX_VALUE));
-		new GraphProjection(definition.provideProjectionFilter(), dataFilter)
+		new GraphProjection(definition.provideFieldFilter(), dataFilter)
 				.project(definition.provideRoots().toList(), null);
 		DetachedEntityCache cache = dataFilter.getCache();
 		logger.info("Projected:\n{}\nAll values: {}", cache.sizes(),

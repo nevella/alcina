@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
+import cc.alcina.framework.entity.projection.CollectionProjectionFilterWithCache;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
 /**
@@ -234,7 +235,11 @@ public class DomainSegment {
 
 		void configureLocal();
 
-		ProjectionFilter provideProjectionFilter();
+		ProjectionFilter provideFieldFilter();
+
+		default CollectionProjectionFilterWithCache provideDataFilter() {
+			return new CollectionProjectionFilterWithCache();
+		}
 
 		default String name() {
 			return NestedName.get(this);
