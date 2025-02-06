@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
-import cc.alcina.framework.servlet.component.traversal.TraversalHistories.RootLayerNamer;
+import cc.alcina.framework.servlet.component.traversal.TraversalObserver.RootLayerNamer;
 
 public class RootLayer extends Layer<DomainGraphSelection> {
 	public RootLayer() {

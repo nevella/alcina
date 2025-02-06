@@ -14,7 +14,6 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
-import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -25,23 +24,23 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
-import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
-import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableHistory;
+import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableEntry;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SecondaryAreaDisplayCycle;
@@ -104,7 +103,7 @@ class Page extends Model.All
 	RenderedSelections table;
 
 	@Directed.Exclude
-	RemoteComponentObservables<SelectionTraversal>.ObservableHistory history;
+	RemoteComponentObservables<SelectionTraversal>.ObservableEntry history;
 
 	@Property.Not
 	Ui ui;
@@ -113,6 +112,8 @@ class Page extends Model.All
 
 	@Property.Not
 	Logger logger = LoggerFactory.getLogger(getClass());
+
+	Timer observableObservedTimer;
 
 	Page() {
 		TraversalBrowser.Ui.logConstructor(this);
@@ -130,7 +131,7 @@ class Page extends Model.All
 		 */
 		String traversalPath = Ui.get().getTraversalPath();
 		// one-off (to get the initial value)
-		TraversalHistories.get().subscribe(traversalPath, this::setHistory)
+		TraversalObserver.get().subscribe(traversalPath, this::setHistory)
 				.remove();
 		/*
 		 * logging
@@ -139,10 +140,10 @@ class Page extends Model.All
 				history -> logger.info("history change :: {}", history));
 		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.accept(place -> logger.info("place change :: {}", place));
-		bindings().addListener(() -> TraversalHistories.get()
+		bindings().addListener(() -> TraversalObserver.get()
 				.subscribe(traversalPath, this::setHistory));
 		bindings().from(this).on(properties.history)
-				.map(ObservableHistory::getObservable)
+				.map(ObservableEntry::getObservable)
 				.typed(SelectionTraversal.class).to(ui)
 				.on(Ui.properties.traversal).oneWay();
 		// place selections will be invalid if history changes
@@ -343,9 +344,24 @@ class Page extends Model.All
 	}
 
 	void setHistory(
-			RemoteComponentObservables<SelectionTraversal>.ObservableHistory history) {
+			RemoteComponentObservables<SelectionTraversal>.ObservableEntry history) {
 		set(properties.history, this.history, history,
 				() -> this.history = history);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			observableObservedTimer = Timer.Provider.get()
+					.getTimer(this::observableAccessed);
+		} else {
+			observableObservedTimer.cancel();
+		}
+	}
+
+	void observableAccessed() {
+		TraversalObserver.get().observableObserved(Ui.traversal());
 	}
 
 	@Override

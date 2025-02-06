@@ -28,8 +28,8 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObserv
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
-import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
-import cc.alcina.framework.servlet.component.traversal.TraversalHistories.TraversalDoesNotPublishNullObservable;
+import cc.alcina.framework.servlet.component.traversal.TraversalObserver;
+import cc.alcina.framework.servlet.component.traversal.TraversalObserver.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
@@ -126,7 +126,7 @@ public class EntityBrowser {
 
 		void evictPeer() {
 			if (peer != null) {
-				TraversalHistories.get().evict(peer.traversal);
+				TraversalObserver.get().evict(peer.traversal);
 			}
 		}
 

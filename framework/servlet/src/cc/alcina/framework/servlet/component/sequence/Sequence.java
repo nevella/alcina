@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.util.Ax;
@@ -155,5 +156,18 @@ public interface Sequence<T> {
 			}
 			return sequence;
 		}
+	}
+
+	public static class SequenceGenerationComplete
+			implements ProcessObservable {
+		public Sequence sequence;
+
+		public SequenceGenerationComplete(Sequence sequence) {
+			this.sequence = sequence;
+		}
+	}
+
+	default String getUid() {
+		return getName();
 	}
 }

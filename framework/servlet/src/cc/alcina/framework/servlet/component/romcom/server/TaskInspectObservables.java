@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.component.romcom.server;
 
-import cc.alcina.framework.servlet.component.traversal.TraversalHistories;
+import cc.alcina.framework.servlet.component.traversal.TraversalObserver;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
 /**
@@ -9,6 +9,6 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 public class TaskInspectObservables extends PerformerTask.Remote {
 	@Override
 	public void run() throws Exception {
-		TraversalHistories.get().observables.checkEvict(true);
+		TraversalObserver.get().observables.checkEvict(true);
 	}
 }

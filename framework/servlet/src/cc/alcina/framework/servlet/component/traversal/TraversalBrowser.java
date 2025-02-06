@@ -114,7 +114,7 @@ public class TraversalBrowser {
 			return new TypedPlaceClient(TraversalPlace.class);
 		}
 
-		public RemoteComponentObservables<SelectionTraversal>.ObservableHistory
+		public RemoteComponentObservables<SelectionTraversal>.ObservableEntry
 				getHistory() {
 			return page.history;
 		}

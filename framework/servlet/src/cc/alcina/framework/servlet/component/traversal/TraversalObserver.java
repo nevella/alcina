@@ -19,14 +19,14 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObserv
  * 
  */
 @Registration.Singleton
-public class TraversalHistories extends LifecycleService.AlsoDev {
-	public static TraversalHistories get() {
-		return Registry.impl(TraversalHistories.class);
+public class TraversalObserver extends LifecycleService.AlsoDev {
+	public static TraversalObserver get() {
+		return Registry.impl(TraversalObserver.class);
 	}
 
 	public RemoteComponentObservables<SelectionTraversal> observables;
 
-	public TraversalHistories() {
+	public TraversalObserver() {
 		observables = new RemoteComponentObservables<>(
 				TraversalBrowser.Component.class, SelectionTraversal.class,
 				t -> {
@@ -67,7 +67,7 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 	}
 
 	public ListenerReference subscribe(String traversalKey,
-			TopicListener<RemoteComponentObservables<SelectionTraversal>.ObservableHistory> subscriber) {
+			TopicListener<RemoteComponentObservables<SelectionTraversal>.ObservableEntry> subscriber) {
 		return observables.subscribe(traversalKey, subscriber);
 	}
 
@@ -81,5 +81,9 @@ public class TraversalHistories extends LifecycleService.AlsoDev {
 
 	public void evict(SelectionTraversal traversal) {
 		observables.evict(traversal.id);
+	}
+
+	void observableObserved(SelectionTraversal traversal) {
+		observables.observed(traversal.id);
 	}
 }

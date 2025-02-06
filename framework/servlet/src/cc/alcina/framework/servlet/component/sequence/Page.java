@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasFilterableText;
 import cc.alcina.framework.common.client.util.HasFilterableText.Query;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -28,6 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
@@ -154,6 +156,8 @@ class Page extends Model.Fields
 	SequencePlace lastHighlightTestPlace = null;
 
 	SequencePlace lastSelectedIndexChangePlace = null;
+
+	Timer observableObservedTimer;
 
 	Page() {
 		this.ui = Ui.get();
@@ -314,11 +318,32 @@ class Page extends Model.Fields
 
 	//
 	void reloadSequence() {
-		String sequenceKey = Ax.blankToEmpty(ui.settings.sequenceKey);
+		String sequenceKey = null;
+		if (Ax.notBlank(ui.place.sequenceKey)) {
+			sequenceKey = ui.place.sequenceKey;
+		} else {
+			sequenceKey = ui.settings.sequenceKey;
+		}
+		sequenceKey = Ax.blankToEmpty(sequenceKey);
 		Sequence.Loader loader = Sequence.Loader.getLoader(sequenceKey);
 		Sequence<?> sequence = loader.load(sequenceKey);
 		filteredSequenceElements = filteredSequenceElements(sequence);
 		properties.sequence.set(this, sequence);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			observableObservedTimer = Timer.Provider.get()
+					.getTimer(this::observableAccessed);
+		} else {
+			observableObservedTimer.cancel();
+		}
+	}
+
+	void observableAccessed() {
+		SequenceObserver.get().observableObserved(sequence);
 	}
 
 	void updateStyles(SequenceSettings settings) {

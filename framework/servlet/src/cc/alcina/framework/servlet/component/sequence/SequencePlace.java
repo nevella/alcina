@@ -18,6 +18,8 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 @Bean(PropertySource.FIELDS)
 public class SequencePlace extends BasePlace
 		implements SequenceBrowserPlace, TreeSerializable {
+	public String sequenceKey;
+
 	public String filter;
 
 	public String highlight;
@@ -78,6 +80,11 @@ public class SequencePlace extends BasePlace
 
 	public SequencePlace withSelectedRange(IntPair selectedRange) {
 		this.selectedRange = selectedRange;
+		return this;
+	}
+
+	public SequencePlace withSequenceKey(String sequenceKey) {
+		this.sequenceKey = sequenceKey;
 		return this;
 	}
 

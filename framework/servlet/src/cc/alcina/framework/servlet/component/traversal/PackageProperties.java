@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.List;
+import java.util.Set;
+
 import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.traversal.Layer;
@@ -15,25 +18,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
-import cc.alcina.framework.servlet.component.traversal.Header;
-import cc.alcina.framework.servlet.component.traversal.LayerSelections;
-import cc.alcina.framework.servlet.component.traversal.Page;
-import cc.alcina.framework.servlet.component.traversal.PropertiesArea;
-import cc.alcina.framework.servlet.component.traversal.RenderedSelections;
-import cc.alcina.framework.servlet.component.traversal.SelectionLayers;
-import cc.alcina.framework.servlet.component.traversal.SelectionTableArea;
-import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
-import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
-import java.lang.Boolean;
-import java.lang.Class;
-import java.lang.Integer;
-import java.lang.String;
-import java.util.List;
-import java.util.Set;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Header_Left header_left = new _Header_Left();
@@ -88,7 +76,7 @@ public class PackageProperties {
     
     static class _Page implements TypedProperty.Container {
       TypedProperty<Page, Header> header = new TypedProperty<>(Page.class, "header");
-      TypedProperty<Page, RemoteComponentObservables.ObservableHistory> history = new TypedProperty<>(Page.class, "history");
+      TypedProperty<Page, RemoteComponentObservables.ObservableEntry> history = new TypedProperty<>(Page.class, "history");
       TypedProperty<Page, RenderedSelections> input = new TypedProperty<>(Page.class, "input");
       TypedProperty<Page, SelectionLayers> layers = new TypedProperty<>(Page.class, "layers");
       TypedProperty<Page, RenderedSelections> output = new TypedProperty<>(Page.class, "output");
@@ -121,7 +109,7 @@ public class PackageProperties {
       public TypedProperty<TraversalBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(TraversalBrowser.Ui.class, "appCommandContexts");
       public TypedProperty<TraversalBrowser.Ui, Boolean> clearPostSelectionLayers = new TypedProperty<>(TraversalBrowser.Ui.class, "clearPostSelectionLayers");
       public TypedProperty<TraversalBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(TraversalBrowser.Ui.class, "commandContextProvider");
-      public TypedProperty<TraversalBrowser.Ui, RemoteComponentObservables.ObservableHistory> history = new TypedProperty<>(TraversalBrowser.Ui.class, "history");
+      public TypedProperty<TraversalBrowser.Ui, RemoteComponentObservables.ObservableEntry> history = new TypedProperty<>(TraversalBrowser.Ui.class, "history");
       public TypedProperty<TraversalBrowser.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(TraversalBrowser.Ui.class, "keybindingsHandler");
       public TypedProperty<TraversalBrowser.Ui, String> mainCaption = new TypedProperty<>(TraversalBrowser.Ui.class, "mainCaption");
       public TypedProperty<TraversalBrowser.Ui, Page> page = new TypedProperty<>(TraversalBrowser.Ui.class, "page");

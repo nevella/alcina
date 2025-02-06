@@ -50,16 +50,16 @@ public class RemoteComponentObservables<T> {
 	};
 
 	void checkEvict(boolean log) {
-		synchronized (histories) {
-			histories.entrySet().stream()
+		synchronized (keyObservable) {
+			keyObservable.entrySet().stream()
 					.filter(e -> e.getValue().getPublished() != null
 							&& e.getValue().getPublished().shouldEvict(log))
 					.forEach(RemoteComponentObservables.this::evict);
 		}
 	}
 
-	void evict(Map.Entry<String, Topic<ObservableHistory>> entry) {
-		ObservableHistory published = entry.getValue().getPublished();
+	void evict(Map.Entry<String, Topic<ObservableEntry>> entry) {
+		ObservableEntry published = entry.getValue().getPublished();
 		entry.getValue().clearPublished();
 		logger.info("evicted-ObservableHistory - key: [{}]", entry.getKey());
 		if (published != null) {
@@ -68,11 +68,11 @@ public class RemoteComponentObservables<T> {
 		}
 	}
 
-	Map<String, Topic<ObservableHistory>> histories = new LinkedHashMap<>();
+	Map<String, Topic<ObservableEntry>> keyObservable = new LinkedHashMap<>();
 
 	public void evict(String key) {
-		synchronized (histories) {
-			histories.entrySet().stream()
+		synchronized (keyObservable) {
+			keyObservable.entrySet().stream()
 					.filter(e -> Objects.equals(e.getKey(), key))
 					.forEach(this::evict);
 		}
@@ -89,8 +89,8 @@ public class RemoteComponentObservables<T> {
 		this.evictionTimeMs = evictionTimeMs;
 	}
 
-	synchronized Topic<ObservableHistory> ensureTopic(String traversalKey) {
-		return histories.computeIfAbsent(traversalKey,
+	synchronized Topic<ObservableEntry> ensureTopic(String traversalKey) {
+		return keyObservable.computeIfAbsent(traversalKey,
 				k -> Topic.create().withRetainPublished(true));
 	}
 
@@ -106,17 +106,17 @@ public class RemoteComponentObservables<T> {
 				return;
 			}
 		}
-		ObservableHistory history = new ObservableHistory(observable, id);
+		ObservableEntry history = new ObservableEntry(observable, id);
 		EnvironmentManager.get().registerSource(history.toEnvironmentSource());
 		ensureTopic(id).publish(history);
 	}
 
 	public ListenerReference subscribe(String traversalKey,
-			TopicListener<ObservableHistory> subscriber) {
+			TopicListener<ObservableEntry> subscriber) {
 		return ensureTopic(traversalKey).addWithPublishedCheck(subscriber);
 	}
 
-	public class ObservableHistory {
+	public class ObservableEntry {
 		public static final Configuration.Key evictionDisabled = Configuration
 				.key("evictionDisabled");
 
@@ -126,7 +126,7 @@ public class RemoteComponentObservables<T> {
 		T observable;
 
 		public T getObservable() {
-			lastAccessed = System.currentTimeMillis();
+			onObserved();
 			return observable;
 		}
 
@@ -142,11 +142,15 @@ public class RemoteComponentObservables<T> {
 					NestedName.get(observable));
 		}
 
-		public ObservableHistory(T observable, String id) {
+		void onObserved() {
+			lastAccessed = System.currentTimeMillis();
+		}
+
+		public ObservableEntry(T observable, String id) {
 			this.observable = observable;
 			this.id = id;
 			lastAccessed = System.currentTimeMillis();
-			observableEvictionTimeMs = evictionTimeMs;
+			onObserved();
 			Long overrideEvictionTime = LooseContext
 					.getLong(CONTEXT_OVERRIDE_EVICTION_TIME);
 			if (overrideEvictionTime != null) {
@@ -193,5 +197,15 @@ public class RemoteComponentObservables<T> {
 	public static void setOverrideEvictionTime(long overrideEvictionTimeMs) {
 		LooseContext.set(CONTEXT_OVERRIDE_EVICTION_TIME,
 				overrideEvictionTimeMs);
+	}
+
+	public void observed(String key) {
+		synchronized (keyObservable) {
+			keyObservable.entrySet().stream()
+					.filter(e -> Objects.equals(e.getKey(), key))
+					.map(e -> e.getValue().getPublished())
+					.filter(Objects::nonNull)
+					.forEach(ObservableEntry::onObserved);
+		}
 	}
 }
