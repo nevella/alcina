@@ -36,6 +36,10 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 
 	private SearchOrders searchOrders = new SearchOrders<>();
 
+	/**
+	 * Note that the subclass constructor must call init() immediately after
+	 * super - this classes constructor does not. That can possibly be improved
+	 */
 	public BindableSearchDefinition() {
 		super();
 	}

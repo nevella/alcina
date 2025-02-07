@@ -116,7 +116,6 @@ class Page extends Model.All
 	Timer observableObservedTimer;
 
 	Page() {
-		TraversalBrowser.Ui.logConstructor(this);
 		this.ui = Ui.get();
 		this.ui.page = this;
 		header = new Header(this);

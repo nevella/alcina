@@ -328,6 +328,10 @@ public class FlatTreeSerializer {
 		this.state = state;
 	}
 
+	static Class[] types(PropertySerialization propertySerialization) {
+		return PropertySerialization.Support.types(propertySerialization);
+	}
+
 	private <T> void addWithUniquenessCheck(Map<String, T> map, String key,
 			T value, Node cursor) {
 		T existingValue = map.put(key, value);
@@ -363,7 +367,7 @@ public class FlatTreeSerializer {
 	private void checkReachableTestingTypes(Node childNode) {
 		if (state.serializerOptions.reachables != null
 				&& childNode.path.propertySerialization != null) {
-			for (Class clazz : childNode.path.propertySerialization.types()) {
+			for (Class clazz : types(childNode.path.propertySerialization)) {
 				if (isTreeSerializableWithInstantiationChecks(clazz)) {
 					state.serializerOptions.reachables.add(clazz);
 				}
@@ -677,7 +681,7 @@ public class FlatTreeSerializer {
 					.getPropertySerialization(k.property);
 			Class[] availableTypes = propertySerialization == null
 					? new Class[0]
-					: propertySerialization.types();
+					: types(propertySerialization);
 			boolean defaultType = availableTypes.length == 1;
 			Map<String, Class> map = new LinkedHashMap<>();
 			if (defaultType) {
@@ -948,8 +952,8 @@ public class FlatTreeSerializer {
 			collection = new ArrayList<>();
 		}
 		if (collection != null) {
-			if (propertySerialization.types().length > 0) {
-				for (Class clazz : propertySerialization.types()) {
+			if (types(propertySerialization).length > 0) {
+				for (Class clazz : types(propertySerialization)) {
 					if (isValueType(clazz)) {
 						collection.add(synthesiseSimpleValue(clazz));
 					} else {
@@ -963,8 +967,8 @@ public class FlatTreeSerializer {
 			}
 			return collection;
 		}
-		if (propertySerialization.types().length > 0) {
-			type = propertySerialization.types()[0];
+		if (types(propertySerialization).length > 0) {
+			type = types(propertySerialization)[0];
 		} else {
 			try {
 				Object value = property.get(node.value);
@@ -1115,8 +1119,8 @@ public class FlatTreeSerializer {
 			if (path != null) {
 				if (path.parent.propertySerialization != null) {
 					PropertySerialization propertySerialization = path.parent.propertySerialization;
-					if (propertySerialization.types().length == 1
-							&& propertySerialization.types()[0] == clazz) {
+					if (types(propertySerialization).length == 1
+							&& types(propertySerialization)[0] == clazz) {
 						shortenedClassName = "";
 					}
 				}
@@ -1262,9 +1266,12 @@ public class FlatTreeSerializer {
 				return false;
 			}
 			if (value instanceof Collection) {
-				return path.propertySerialization != null
-						&& path.propertySerialization.types().length == 1
-						&& isValueType(path.propertySerialization.types()[0]);
+				if (path.propertySerialization == null) {
+					return false;
+				}
+				Class[] types = types(path.propertySerialization);
+				return path.propertySerialization != null && types.length == 1
+						&& isValueType(types[0]);
 			}
 			return true;
 		}
@@ -1575,7 +1582,7 @@ public class FlatTreeSerializer {
 
 		boolean isMultipleTypes() {
 			return propertySerialization != null
-					&& propertySerialization.types().length > 1;
+					&& types(propertySerialization).length > 1;
 		}
 
 		public boolean isPutDefaultValue(Object value) {
@@ -1601,11 +1608,11 @@ public class FlatTreeSerializer {
 
 		public Class soleType() {
 			if (propertySerialization != null
-					&& propertySerialization.types().length > 0) {
-				if (propertySerialization.types().length > 1) {
+					&& types(propertySerialization).length > 0) {
+				if (types(propertySerialization).length > 1) {
 					throw new UnsupportedOperationException();
 				}
-				return propertySerialization.types()[0];
+				return types(propertySerialization)[0];
 			}
 			return property.getType();
 		}
@@ -1676,7 +1683,7 @@ public class FlatTreeSerializer {
 
 		public void verifyProvidesElementTypeInfo() {
 			boolean valid = propertySerialization != null
-					&& propertySerialization.types().length > 0;
+					&& types(propertySerialization).length > 0;
 			if (!valid) {
 				throw new MissingElementTypeException(Ax.format(
 						"Unable to determine element type for collection property %s.%s",

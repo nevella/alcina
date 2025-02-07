@@ -5,6 +5,8 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -29,6 +31,11 @@ public class SequencePlace extends BasePlace
 	public int selectedElementIdx = -1;
 
 	public IntPair selectedRange;
+
+	@PropertySerialization(
+		typesProvider = { TypesProvider_Registry.class,
+				SequenceSearchDefinition.class })
+	public SequenceSearchDefinition search;
 
 	@Override
 	public SequencePlace copy() {
@@ -120,6 +127,11 @@ public class SequencePlace extends BasePlace
 		if (selectedElementIdx >= size) {
 			selectedElementIdx = size == 0 ? -1 : 0;
 		}
+		return this;
+	}
+
+	public SequencePlace withDevGeneratorLocation() {
+		this.sequenceKey = "location_";
 		return this;
 	}
 }

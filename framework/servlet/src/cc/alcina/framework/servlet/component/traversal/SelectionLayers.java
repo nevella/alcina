@@ -51,7 +51,6 @@ class SelectionLayers extends Model.Fields {
 	}
 
 	SelectionLayers(Page page) {
-		TraversalBrowser.Ui.logConstructor(this);
 		this.page = page;
 		bindings().from(page.ui).on(Ui.properties.traversal)
 				.map(this::toLayerSelections).to(layersContainer)

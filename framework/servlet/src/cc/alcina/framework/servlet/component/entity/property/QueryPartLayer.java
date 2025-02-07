@@ -166,6 +166,11 @@ class QueryPartLayer extends Layer<DocumentLayer.Document> {
 				}
 				String value = parseResult
 						.measure(BranchToken.Strings.STRING_VALUE).text();
+				Measure quoteContents = parseResult
+						.measure(BranchToken.Strings.NON_DOUBLE_QUOTE);
+				if (quoteContents != null) {
+					value = quoteContents.text();
+				}
 				return proposer.proposePropertyFilters(entityType, name,
 						operator, value, sortKey, sortDirection);
 			}

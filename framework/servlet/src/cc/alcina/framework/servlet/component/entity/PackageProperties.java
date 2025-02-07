@@ -1,19 +1,23 @@
 package cc.alcina.framework.servlet.component.entity;
 
-import java.util.Set;
-
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.servlet.component.entity.EntityBrowser;
+import cc.alcina.framework.servlet.component.entity.NonOptimisedQueryCache;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
+import java.lang.Boolean;
+import java.lang.Object;
+import java.lang.String;
+import java.util.Set;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _EntityBrowser_Ui entityBrowser_ui = new _EntityBrowser_Ui();
     static _NonOptimisedQueryCache_EntrySummary nonOptimisedQueryCache_entrySummary = new _NonOptimisedQueryCache_EntrySummary();

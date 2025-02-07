@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
@@ -45,6 +46,9 @@ public class SequenceBrowser {
 
 	@TypedProperties
 	static class Ui extends AbstractUi<SequencePlace> {
+		public static final Configuration.Key elementLimit = Configuration
+				.key("elementLimit");
+
 		static PackageProperties._SequenceBrowser_Ui properties = PackageProperties.sequenceBrowser_ui;
 
 		public static Ui get() {
@@ -97,6 +101,10 @@ public class SequenceBrowser {
 		public Set<Class<? extends cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext>>
 				getAppCommandContexts() {
 			return Set.of(CommandContext.class);
+		}
+
+		int elementLimit() {
+			return elementLimit.intValue();
 		}
 	}
 

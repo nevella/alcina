@@ -20,8 +20,13 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -95,6 +100,8 @@ public @interface PropertySerialization {
 	 */
 	Class[] types() default {};
 
+	Class[] typesProvider() default {};
+
 	public static class Impl implements PropertySerialization {
 		private boolean defaultProperty = false;
 
@@ -113,6 +120,16 @@ public @interface PropertySerialization {
 		private Class<? extends Serializer> serializer = Serializer.None.class;
 
 		private Class[] types = CommonUtils.EMPTY_CLASS_ARRAY;
+
+		private Class[] typesProvider = CommonUtils.EMPTY_CLASS_ARRAY;
+
+		public Class[] getTypesProvider() {
+			return typesProvider;
+		}
+
+		public void setTypeProvider(Class[] typesProvider) {
+			this.typesProvider = typesProvider;
+		}
 
 		@Override
 		public final Class<? extends Annotation> annotationType() {
@@ -204,6 +221,11 @@ public @interface PropertySerialization {
 		public Class[] types() {
 			return types;
 		}
+
+		@Override
+		public Class[] typesProvider() {
+			return typesProvider;
+		}
 	}
 
 	public static interface Serializer<T> {
@@ -225,6 +247,37 @@ public @interface PropertySerialization {
 			public String serializeValue(Object t) {
 				return null;
 			}
+		}
+	}
+
+	public static interface TypesProvider {
+		Class[] provideTypes(Class<?>[] typesProvider);
+	}
+
+	public static class TypesProvider_Registry implements TypesProvider {
+		@Override
+		public Class[] provideTypes(Class<?>[] typesProviderValue) {
+			List<?> list = Registry.query(typesProviderValue[1]).registrations()
+					.toList();
+			return list.toArray(new Class[list.size()]);
+		}
+	}
+
+	public static class Support {
+		static Map<PropertySerialization, Class[]> propertySerializationTypes = Registry
+				.impl(CollectionCreators.ConcurrentMapCreator.class).create();
+
+		public static Class[]
+				types(PropertySerialization propertySerialization) {
+			return propertySerializationTypes
+					.computeIfAbsent(propertySerialization, ps -> {
+						if (ps.typesProvider().length == 0) {
+							return ps.types();
+						}
+						TypesProvider provider = (TypesProvider) Reflections
+								.newInstance(ps.typesProvider()[0]);
+						return provider.provideTypes(ps.typesProvider());
+					});
 		}
 	}
 }

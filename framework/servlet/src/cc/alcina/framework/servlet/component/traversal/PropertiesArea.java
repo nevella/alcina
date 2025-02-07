@@ -34,7 +34,6 @@ class PropertiesArea extends Model.Fields {
 	Page page;
 
 	PropertiesArea(Page page) {
-		TraversalBrowser.Ui.logConstructor(this);
 		this.page = page;
 		this.filter = new Choices.Single<>(
 				TraversalPlace.SelectionType.values());

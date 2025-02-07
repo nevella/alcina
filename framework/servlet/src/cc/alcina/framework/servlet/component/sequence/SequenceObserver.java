@@ -69,9 +69,9 @@ public class SequenceObserver extends LifecycleService.AlsoDev {
 		observables.evict(sequence.getUid());
 	}
 
-	static class ObservedSequenceLoader implements Sequence.Loader,
+	public static class ObservedSequenceLoader implements Sequence.Loader,
 			TopicListener<RemoteComponentObservables<Sequence>.ObservableEntry> {
-		static Pattern locationPattern = Pattern.compile("location\\.(.*)");
+		static Pattern locationPattern = Pattern.compile("location_(.*)");
 
 		class ParsedLocation {
 			boolean matches;

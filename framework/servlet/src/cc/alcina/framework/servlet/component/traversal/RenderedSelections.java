@@ -29,7 +29,6 @@ class RenderedSelections extends Model.Fields {
 
 		SelectionMarkupArea(Query query, Model model) {
 			this.query = query;
-			TraversalBrowser.Ui.logConstructor(this, variant);
 			this.model = model;
 		}
 
@@ -56,7 +55,6 @@ class RenderedSelections extends Model.Fields {
 	SecondaryArea variant;
 
 	RenderedSelections(Page page, SecondaryArea variant) {
-		TraversalBrowser.Ui.logConstructor(this, variant);
 		this.page = page;
 		this.variant = variant;
 		this.heading = new Heading(Ax.friendly(variant));
@@ -101,9 +99,19 @@ class RenderedSelections extends Model.Fields {
 		if (layer != null) {
 			properties.selectionTable.set(this, new SelectionTableArea(layer));
 		} else if (selection instanceof Selection.HasTableRepresentation) {
-			properties.selectionTable.set(this,
-					new SelectionTableArea(selection));
+			properties.selectionTable.set(this, new SelectionTableArea(
+					traversal.getLayer(selection), selection));
 		} else {
+			if (selectionTable != null) {
+				Layer currentSelectionLayer = selectionTable.selectionLayer;
+				if (currentSelectionLayer != null) {
+					Layer incomingLayer = traversal.getLayer(selection);
+					if (incomingLayer.index >= currentSelectionLayer.index) {
+						// don't change the current table
+						return;
+					}
+				}
+			}
 			properties.selectionTable.set(this, null);
 		}
 	}

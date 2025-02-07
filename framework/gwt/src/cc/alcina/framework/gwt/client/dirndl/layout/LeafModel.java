@@ -6,6 +6,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -195,6 +196,14 @@ public abstract class LeafModel {
 		public TextTitle(String text, String title) {
 			this.text = text;
 			this.title = title;
+		}
+
+		public static class To implements ModelTransform<Object, TextTitle> {
+			@Override
+			public TextTitle apply(Object t) {
+				String text = CommonUtils.nullSafeToString(t);
+				return new TextTitle(text, text);
+			}
 		}
 	}
 

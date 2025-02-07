@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.sequence;
 
+import cc.alcina.framework.common.client.collections.PublicCloneable;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.TransformRenderer;
@@ -15,7 +16,7 @@ class DetailArea extends Model.Fields {
 	@Directed
 	Heading header = new Heading("Detail");
 
-	@Directed(tag = "properties")
+	@Directed(tag = "properties", bindToModel = false)
 	@Directed(renderer = TransformRenderer.class)
 	@Directed.Transform(Tables.Single.class)
 	Object transformedSequenceElement;
@@ -34,6 +35,11 @@ class DetailArea extends Model.Fields {
 		// todo - use a declarative transform on DetailArea.sequenceElement
 		transformedSequenceElement = ((ModelTransform) page.sequence
 				.getDetailTransform()).apply(sequenceElement);
+		if (transformedSequenceElement instanceof PublicCloneable) {
+			// need to clone, cos may be bound
+			transformedSequenceElement = ((PublicCloneable) transformedSequenceElement)
+					.clone();
+		}
 		if (transformedSequenceElement instanceof HasStringRepresentation) {
 			String rep = ((HasStringRepresentation) transformedSequenceElement)
 					.provideStringRepresentation();

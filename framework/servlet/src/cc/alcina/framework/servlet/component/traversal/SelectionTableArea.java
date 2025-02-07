@@ -9,14 +9,11 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.RowView;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
-import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
@@ -38,14 +35,17 @@ public class SelectionTableArea extends Model.Fields
 
 	TraversalPlace appendRowSelectionTo;
 
-	public SelectionTableArea(Selection<?> selection) {
+	Layer selectionLayer;
+
+	public SelectionTableArea(Layer layer, Selection<?> selection) {
 		hasTable = (Selection.HasTableRepresentation) selection;
+		selectionLayer = layer;
 		selectionBindables = hasTable.getSelectionBindables();
 		appendRowSelectionTo = Ui.place();
 	}
 
 	public SelectionTableArea(Layer layer) {
-		TraversalBrowser.Ui.logConstructor(this);
+		selectionLayer = layer;
 		hasTable = new LayerToTable(layer);
 		selectionBindables = hasTable.getSelectionBindables();
 		appendRowSelectionTo = Ui.place().truncateTo(layer.index);

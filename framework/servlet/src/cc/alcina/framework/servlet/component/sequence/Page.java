@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gwt.activity.shared.PlaceUpdateable;
 import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
 
+import cc.alcina.framework.common.client.domain.search.BindableSearchFilter;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -389,10 +391,16 @@ class Page extends Model.Fields
 	}
 
 	List<?> filteredSequenceElements(Sequence sequence) {
+		Stream<?> stream = sequence.getElements().stream();
+		SequenceSearchDefinition search = ui.place.search;
+		if (search != null) {
+			BindableSearchFilter bsf = new BindableSearchFilter(search);
+			stream = stream.filter(bsf).sorted(bsf);
+		}
 		/*
-		 * because filtering works better on the transformed elts, transform to
-		 * test - but the elements of SequenceArea.filteredElements are the
-		 * original sequence elements.
+		 * because *text* filtering works better on the transformed elts,
+		 * transform to test - but the elements of SequenceArea.filteredElements
+		 * are the original sequence elements.
 		 * 
 		 * There's a double-transform cost there, but it preserves the dirndl
 		 * way of 'delay transformation til yr at the edge', and makes
@@ -401,10 +409,10 @@ class Page extends Model.Fields
 		Query<Model> query = HasFilterableText.Query.of(ui.place.filter)
 				.withCaseInsensitive(true).withRegex(true);
 		ModelTransform sequenceRowTransform = sequence.getRowTransform();
-		List<?> filteredElements = (List<?>) sequence.getElements().stream()
+		List<?> filteredElements = (List<?>) stream
 				.filter(new IndexPredicate(ui.place.selectedRange))
 				.filter(e -> query.test(sequenceRowTransform.apply(e)))
-				.collect(Collectors.toList());
+				.limit(ui.elementLimit()).collect(Collectors.toList());
 		return filteredElements;
 	}
 

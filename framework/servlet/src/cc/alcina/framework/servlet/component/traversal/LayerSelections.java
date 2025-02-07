@@ -356,7 +356,7 @@ class LayerSelections extends Model.All {
 			}
 			filtered = filteredSelections.stream().map(SelectionArea::new)
 					.collect(Collectors.toList());
-			empty = filtered.isEmpty();
+			empty = filtered.isEmpty() && getLayerFilterAttribute() == null;
 			List<Object> selections = filtered.stream()
 					.collect(Collectors.toList());
 			int start = selections.size();

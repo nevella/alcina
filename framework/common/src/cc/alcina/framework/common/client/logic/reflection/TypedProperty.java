@@ -1,5 +1,8 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
+import java.util.List;
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -16,6 +19,13 @@ import cc.alcina.framework.common.client.util.NestedName;
  */
 public class TypedProperty<S extends BaseSourcesPropertyChangeEvents, T>
 		implements PropertyEnum {
+	public static int indexOf(List<TypedProperty> properties, String name) {
+		TypedProperty match = properties.stream()
+				.filter(p -> Objects.equals(p.name, name)).findFirst()
+				.orElse(null);
+		return match == null ? -1 : properties.indexOf(match);
+	}
+
 	public Class<?> definingType;
 
 	/*
