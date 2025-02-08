@@ -114,8 +114,14 @@ public class TagEditor extends Model implements Suggestor.Editor,
 	}
 
 	@Override
-	public boolean hasNonEmptyInput() {
+	public boolean hasTriggeringInput() {
 		// is not an 'input'
 		return false;
+	}
+
+	@Override
+	public void setAcceptedFilterText(String acceptedFilterText) {
+		throw new UnsupportedOperationException(
+				"Unimplemented method 'setAcceptedFilterText'");
 	}
 }

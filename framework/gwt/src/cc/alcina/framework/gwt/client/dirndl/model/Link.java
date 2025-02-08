@@ -49,6 +49,30 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * ModelEvent.Handler
  */
 public class Link extends Model implements DomEvents.Click.Handler, HasTag {
+	public static class AnchorTransform
+			implements ModelTransform<Object, Link> {
+		@Override
+		public Link apply(Object t) {
+			return new Link().withId(t.toString());
+		}
+	}
+
+	public static class HrefTransform implements ModelTransform<Object, Link> {
+		@Override
+		public Link apply(Object t) {
+			if (t == null) {
+				return null;
+			}
+			String url = t.toString();
+			return new Link().withHref(url)
+					.withText(CommonUtils.shortenPath(url, 60)).withTitle(url);
+		}
+	}
+
+	private static final transient String INITIAL_HREF = "#";
+
+	public static final transient String PRIMARY_ACTION = "primary-action";
+
 	public static Link of(Class<? extends ModelEvent> modelEvent) {
 		return new Link().withModelEvent(modelEvent).withTextFromModelEvent();
 	}
@@ -56,10 +80,6 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	public static Link button(Class<? extends ModelEvent> modelEvent) {
 		return of(modelEvent).withTag("button");
 	}
-
-	private static final transient String INITIAL_HREF = "#";
-
-	public static final transient String PRIMARY_ACTION = "primary-action";
 
 	private String href = INITIAL_HREF;
 
@@ -85,7 +105,23 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	private Class<? extends PermissibleAction> nonStandardObjectAction;
 
+	private Object modelEventData;
+
 	public Link() {
+	}
+
+	@AlcinaTransient
+	public Object getModelEventData() {
+		return modelEventData;
+	}
+
+	public void setModelEventData(Object modelEventData) {
+		this.modelEventData = modelEventData;
+	}
+
+	public Link withModelEventData(Object modelEventData) {
+		this.modelEventData = modelEventData;
+		return this;
 	}
 
 	public void addTo(Collection<Link> hasLinks) {
@@ -154,7 +190,7 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 		if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			if (modelEvent != null) {
 				WidgetUtils.squelchCurrentEvent();
-				event.reemitAs(this, modelEvent);
+				event.reemitAs(this, modelEvent, modelEventData);
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
 				DefaultPermissibleActionHandler.handleAction(
@@ -327,26 +363,6 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	public Link withTitle(String title) {
 		setTitle(title);
 		return this;
-	}
-
-	public static class AnchorTransform
-			implements ModelTransform<Object, Link> {
-		@Override
-		public Link apply(Object t) {
-			return new Link().withId(t.toString());
-		}
-	}
-
-	public static class HrefTransform implements ModelTransform<Object, Link> {
-		@Override
-		public Link apply(Object t) {
-			if (t == null) {
-				return null;
-			}
-			String url = t.toString();
-			return new Link().withHref(url)
-					.withText(CommonUtils.shortenPath(url, 60)).withTitle(url);
-		}
 	}
 
 	public Link withText(Object textSource) {

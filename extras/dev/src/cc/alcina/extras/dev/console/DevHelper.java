@@ -39,6 +39,7 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.extras.dev.console.DevHelper.MessagingWriter;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -59,6 +60,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.ConsoleUtil;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
@@ -444,6 +446,14 @@ public abstract class DevHelper {
 			m.invoke(null, new GWTBridgeHeadless());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static class CopyToClipboardImpl
+			extends ConsoleUtil.CopyToClipboard {
+		@Override
+		public void copy(String s) {
+			DevConsole.get().setClipboardContents(s);
 		}
 	}
 

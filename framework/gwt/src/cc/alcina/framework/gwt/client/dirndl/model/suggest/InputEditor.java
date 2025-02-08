@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.suggest;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -43,6 +45,8 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	KeyboardNavigation keyboardNavigation;
 
 	Suggestor suggestor;
+
+	String acceptedFilterText;
 
 	@Override
 	public void onChange(Change event) {
@@ -134,7 +138,23 @@ public class InputEditor extends Model implements Suggestor.Editor,
 	}
 
 	@Override
-	public boolean hasNonEmptyInput() {
-		return Ax.notBlank(input.getValue());
+	public boolean hasTriggeringInput() {
+		if (Ax.notBlank(input.getValue())) {
+			if (acceptedFilterText != null) {
+				boolean result = !Objects.equals(input.getValue(),
+						acceptedFilterText);
+				acceptedFilterText = null;
+				return result;
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public void setAcceptedFilterText(String acceptedFilterText) {
+		this.acceptedFilterText = acceptedFilterText;
 	}
 }

@@ -779,6 +779,17 @@ body > page > properties bean-editor form-element[name=extended] table th {
 body > page > properties bean-editor form-element[name=extended] table th, body > page > properties bean-editor form-element[name=extended] table td {
   vertical-align: top;
 }
+body > page > properties bean-editor form-element[name=treePath] tree-path {
+  display: flex;
+  column-gap: 2rem;
+}
+body > page > properties bean-editor form-element[name=treePath] tree-path > a {
+  text-decoration: none;
+  color: #77f;
+}
+body > page > properties bean-editor form-element[name=treePath] tree-path > a:hover {
+  text-decoration: underline;
+}
 body > page > selections {
   display: block;
 }
@@ -867,6 +878,12 @@ body > page > selections > selection-table > table th {
 }
 body > page > selections > selection-table > table td > *.wide {
   max-width: 28rem;
+}
+body > page > selections > selection-table > table td > *.x-wide {
+  max-width: 40rem;
+}
+body > page > selections > selection-table > table td > *.xx-wide {
+  max-width: 56rem;
 }
 body > page > selections > selection-table > table tr:hover {
   cursor: pointer;

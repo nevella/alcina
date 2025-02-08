@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.Selection.TreePathModel;
 import cc.alcina.framework.common.client.traversal.Selection.View;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -59,7 +60,7 @@ class PropertiesArea extends Model.Fields {
 	@PropertyOrder(fieldOrder = true)
 	static class SelectionArea extends Model.All
 			implements ModelTransform<Selection, SelectionArea> {
-		String treePath;
+		TreePathModel treePath;
 
 		String layer;
 

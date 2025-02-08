@@ -24,6 +24,7 @@ public class PackageProperties {
     
     public static class _EntityBrowser_Ui implements TypedProperty.Container {
       public TypedProperty<EntityBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(EntityBrowser.Ui.class, "appCommandContexts");
+      public TypedProperty<EntityBrowser.Ui, Boolean> appendTableSelections = new TypedProperty<>(EntityBrowser.Ui.class, "appendTableSelections");
       public TypedProperty<EntityBrowser.Ui, NonOptimisedQueryCache> cache = new TypedProperty<>(EntityBrowser.Ui.class, "cache");
       public TypedProperty<EntityBrowser.Ui, Boolean> clearPostSelectionLayers = new TypedProperty<>(EntityBrowser.Ui.class, "clearPostSelectionLayers");
       public TypedProperty<EntityBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(EntityBrowser.Ui.class, "commandContextProvider");

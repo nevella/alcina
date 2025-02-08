@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -25,7 +26,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasFilterableString;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
@@ -38,6 +45,222 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  * @param <T>
  */
 public interface Selection<T> extends HasProcessNode<Selection> {
+	public static class OnetimeStack<T> extends LinkedList<T> {
+		Set<T> tested = new LinkedHashSet<>();
+
+		public boolean allowNulls = false;
+
+		@Override
+		public boolean add(T e) {
+			if (e == null && !allowNulls) {
+				return false;
+			}
+			if (!tested.add(e)) {
+				return true;
+			}
+			return super.add(e);
+		}
+	}
+
+	public static class DuplicateSelectionException
+			extends IllegalArgumentException {
+		public DuplicateSelectionException() {
+		}
+
+		public DuplicateSelectionException(String message) {
+			super(message);
+		}
+	}
+
+	/*
+	 * 
+	 */
+	public static class Relations {
+		public interface Type {
+			public interface SecondaryParent extends Type {
+			}
+
+			public interface SecondaryChild extends Type {
+			}
+		}
+
+		static class Entry {
+			Class<? extends Type> type;
+
+			Selection selection;
+
+			Entry(Class<? extends Type> type, Selection selection) {
+				this.type = type;
+				this.selection = selection;
+			}
+		}
+
+		List<Entry> entries = Collections.synchronizedList(new ArrayList<>());
+
+		Selection<?> selection;
+
+		Relations(Selection<?> selection) {
+			this.selection = selection;
+		}
+
+		public void addSecondaryParent(Selection secondaryParent) {
+			if (secondaryParent == null) {
+				return;
+			}
+			addRelation(Type.SecondaryParent.class, secondaryParent);
+			secondaryParent.getRelations()
+					.addRelation(Type.SecondaryChild.class, this.selection);
+		}
+
+		public void addRelation(Class<? extends Type> type,
+				Selection toSelection) {
+			entries.add(new Entry(type, toSelection));
+		}
+
+		Stream<Selection> stream(Class<? extends Relations.Type> clazz) {
+			return entries.stream().filter(e -> e.type == clazz)
+					.map(e -> e.selection);
+		}
+	}
+
+	public interface Has {
+		Selection provideSelection();
+	}
+
+	/*
+	 * A marker, selections of this type cannot be select once used as the
+	 * inputs of a lyer
+	 */
+	public interface ImmutableInput {
+	}
+
+	@Registration.NonGenericSubtypes(View.class)
+	public interface View<S extends Selection>
+			extends Registration.AllSubtypes {
+		default String getDiscriminator(S selection) {
+			return "";
+		}
+
+		default String getMarkup(S selection) {
+			return "";
+		}
+
+		default String getPathSegment(S selection) {
+			return selection.getPathSegment();
+		}
+
+		default String getText(S selection) {
+			return HasFilterableString.filterableString(selection.get());
+		}
+
+		default TreePathModel getTreePath(Selection selection) {
+			return new TreePathModel(selection);
+		}
+
+		default Model getExtended(S selection) {
+			return null;
+		}
+	}
+
+	@Reflected
+	static class TreePathModel extends Model.All {
+		String path;
+
+		Link link;
+
+		TreePathModel(Selection selection) {
+			path = selection.processNode().treePath();
+			link = new Link().withModelEvent(CopySelectionFilter.class)
+					.withText("Copy filter").withModelEventData(selection);
+		}
+	}
+
+	public static class CopySelectionFilter
+			extends ModelEvent<Selection, CopySelectionFilter.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onCopySelectionFilter(CopySelectionFilter event);
+		}
+
+		@Override
+		public void dispatch(CopySelectionFilter.Handler handler) {
+			handler.onCopySelectionFilter(this);
+		}
+	}
+
+	@Registration.NonGenericSubtypes(View.class)
+	public interface RowView<S extends Selection>
+			extends Registration.AllSubtypes, IsBindable {
+		void putSelection(S selection);
+
+		S getSelection();
+	}
+
+	/*
+	 * Marker, view should be lazy-loaded. It's not an inner interface of view
+	 * to avoid class structure cycles
+	 */
+	public interface ViewAsync {
+	}
+
+	/*
+	 * Marker, the selection is a logical output of a deep (e.g. document)
+	 * transformation traversal
+	 */
+	public interface Output {
+	}
+
+	public interface WithRange<T> extends Selection<T>, Location.Range.Has {
+	}
+
+	/**
+	 * Support for UI representations of the selection
+	 */
+	public interface HasTableRepresentation {
+		/*
+		 * returns the current selection children as table-viewables if they are
+		 * all of the same (Bindable) type
+		 */
+		public interface Children extends HasTableRepresentation {
+			@Override
+			default List<? extends Bindable> getSelectionBindables() {
+				Selection selection = (Selection) this;
+				List list = selection.processNode().getChildren().stream()
+						.map(pn -> ((Selection) pn.getValue()).get())
+						.collect(Collectors.toList());
+				Ref<Class> sameTypeCheck = Ref.empty();
+				if (list.stream().allMatch(o -> {
+					if (!(o instanceof Bindable)) {
+						return false;
+					}
+					if (sameTypeCheck.isEmpty()) {
+						sameTypeCheck.set(o.getClass());
+					} else {
+						if (sameTypeCheck.get() != o.getClass()) {
+							return false;
+						}
+					}
+					return true;
+				})) {
+					return list;
+				} else {
+					return null;
+				}
+			}
+
+			@Override
+			default Selection selectionFor(Object value) {
+				Selection selection = (Selection) this;
+				return selection.processNode().getChildren().stream()
+						.map(pn -> ((Selection) pn.getValue()))
+						.filter(sel -> sel.get() == value).findFirst().get();
+			}
+		}
+
+		List<? extends Bindable> getSelectionBindables();
+
+		Selection selectionFor(Object object);
+	};
+
 	default <V> V ancestorImplementing(Class<V> clazz) {
 		Selection cursor = this;
 		while (cursor != null) {
@@ -47,7 +270,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			cursor = cursor.parentSelection();
 		}
 		return null;
-	}
+	};
 
 	default <V extends Selection> V ancestorSelection(Class<V> clazz) {
 		Selection cursor = this;
@@ -58,7 +281,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			cursor = cursor.parentSelection();
 		}
 		return null;
-	}
+	};
 
 	default Stream<Selection> ancestorSelections() {
 		return processNode().asNodePath().stream()
@@ -75,10 +298,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	 * context properties
 	 */
 	default void enterContext() {
-	}
+	};
 
 	default void exitContext() {
-	}
+	};
 
 	default String fullPath() {
 		Selection cursor = this;
@@ -125,7 +348,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 	default boolean hasDescendantRelation(Selection selection) {
 		return hasDescendantRelation(selection, false);
-	};
+	}
 
 	default boolean hasDescendantRelation(Selection selection,
 			boolean descentSelectionIncludesSecondaryRelations) {
@@ -133,28 +356,11 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 				descentSelectionIncludesSecondaryRelations)
 				|| this.isSelfOrAncestor(selection,
 						descentSelectionIncludesSecondaryRelations);
-	};
+	}
 
 	@Property.Not
 	default boolean isContainedBy(Selection selection) {
 		return selection.isSelfOrAncestor(this, false);
-	};
-
-	public static class OnetimeStack<T> extends LinkedList<T> {
-		Set<T> tested = new LinkedHashSet<>();
-
-		public boolean allowNulls = false;
-
-		@Override
-		public boolean add(T e) {
-			if (e == null && !allowNulls) {
-				return false;
-			}
-			if (!tested.add(e)) {
-				return true;
-			}
-			return super.add(e);
-		}
 	}
 
 	boolean hasRelations();
@@ -192,14 +398,14 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			}
 			return false;
 		}
-	};
+	}
 
 	default boolean matchesText(String textFilter) {
 		View view = view();
 		return SearchUtils.containsIgnoreCase(textFilter, view.getText(this),
 				view.getDiscriminator(this), getPathSegment(),
 				processNode().treePath());
-	};
+	}
 
 	default void onDuplicatePathSelection(Layer layer, Selection selection) {
 		LoggerFactory.getLogger(Selection.class).warn(
@@ -220,16 +426,6 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 						selection.getPathSegment(), layer));
 	}
 
-	public static class DuplicateSelectionException
-			extends IllegalArgumentException {
-		public DuplicateSelectionException() {
-		}
-
-		public DuplicateSelectionException(String message) {
-			super(message);
-		}
-	}
-
 	default Selection<?> parentSelection() {
 		Node parent = processNode().getParent();
 		if (parent == null) {
@@ -240,57 +436,6 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			return (Selection) parentValue;
 		} else {
 			return null;
-		}
-	}
-
-	/*
-	 * 
-	 */
-	public static class Relations {
-		public interface Type {
-			public interface SecondaryParent extends Type {
-			}
-
-			public interface SecondaryChild extends Type {
-			}
-		}
-
-		static class Entry {
-			Entry(Class<? extends Type> type, Selection selection) {
-				this.type = type;
-				this.selection = selection;
-			}
-
-			Class<? extends Type> type;
-
-			Selection selection;
-		}
-
-		List<Entry> entries = Collections.synchronizedList(new ArrayList<>());
-
-		Selection<?> selection;
-
-		Relations(Selection<?> selection) {
-			this.selection = selection;
-		}
-
-		Stream<Selection> stream(Class<? extends Relations.Type> clazz) {
-			return entries.stream().filter(e -> e.type == clazz)
-					.map(e -> e.selection);
-		}
-
-		public void addSecondaryParent(Selection secondaryParent) {
-			if (secondaryParent == null) {
-				return;
-			}
-			addRelation(Type.SecondaryParent.class, secondaryParent);
-			secondaryParent.getRelations()
-					.addRelation(Type.SecondaryChild.class, this.selection);
-		}
-
-		public void addRelation(Class<? extends Type> type,
-				Selection toSelection) {
-			entries.add(new Entry(type, toSelection));
 		}
 	}
 
@@ -345,115 +490,4 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	View view();
 
 	RowView rowView();
-
-	public interface Has {
-		Selection provideSelection();
-	}
-
-	/*
-	 * A marker, selections of this type cannot be select once used as the
-	 * inputs of a lyer
-	 */
-	public interface ImmutableInput {
-	}
-
-	@Registration.NonGenericSubtypes(View.class)
-	public interface View<S extends Selection>
-			extends Registration.AllSubtypes {
-		default String getDiscriminator(S selection) {
-			return "";
-		}
-
-		default String getMarkup(S selection) {
-			return "";
-		}
-
-		default String getPathSegment(S selection) {
-			return selection.getPathSegment();
-		}
-
-		default String getText(S selection) {
-			return HasFilterableString.filterableString(selection.get());
-		}
-
-		default String getTreePath(Selection selection) {
-			return selection.processNode().treePath();
-		}
-
-		default Model getExtended(S selection) {
-			return null;
-		}
-	}
-
-	@Registration.NonGenericSubtypes(View.class)
-	public interface RowView<S extends Selection>
-			extends Registration.AllSubtypes, IsBindable {
-		void putSelection(S selection);
-	}
-
-	/*
-	 * Marker, view should be lazy-loaded. It's not an inner interface of view
-	 * to avoid class structure cycles
-	 */
-	public interface ViewAsync {
-	}
-
-	/*
-	 * Marker, the selection is a logical output of a deep (e.g. document)
-	 * transformation traversal
-	 */
-	public interface Output {
-	}
-
-	public interface WithRange<T> extends Selection<T>, Location.Range.Has {
-	}
-
-	/**
-	 * Support for UI representations of the selection
-	 */
-	public interface HasTableRepresentation {
-		List<? extends Bindable> getSelectionBindables();
-
-		/*
-		 * returns the current selection children as table-viewables if they are
-		 * all of the same (Bindable) type
-		 */
-		public interface Children extends HasTableRepresentation {
-			@Override
-			default List<? extends Bindable> getSelectionBindables() {
-				Selection selection = (Selection) this;
-				List list = selection.processNode().getChildren().stream()
-						.map(pn -> ((Selection) pn.getValue()).get())
-						.collect(Collectors.toList());
-				Ref<Class> sameTypeCheck = Ref.empty();
-				if (list.stream().allMatch(o -> {
-					if (!(o instanceof Bindable)) {
-						return false;
-					}
-					if (sameTypeCheck.isEmpty()) {
-						sameTypeCheck.set(o.getClass());
-					} else {
-						if (sameTypeCheck.get() != o.getClass()) {
-							return false;
-						}
-					}
-					return true;
-				})) {
-					return list;
-				} else {
-					return null;
-				}
-			}
-
-			@Override
-			default Selection selectionFor(Object value) {
-				Selection selection = (Selection) this;
-				return selection.processNode().getChildren().stream()
-						.map(pn -> ((Selection) pn.getValue()))
-						.filter(sel -> sel.get() == value).findFirst().get();
-			}
-		}
-
-		Selection selectionFor(Object object);
-	}
 }

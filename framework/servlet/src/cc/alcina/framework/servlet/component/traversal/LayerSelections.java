@@ -506,9 +506,6 @@ class LayerSelections extends Model.All {
 
 			@Override
 			public void onClick(Click event) {
-				DomEvent domEvent = (DomEvent) event.getContext()
-						.getOriginatingGwtEvent();
-				NativeEvent nativeEvent = domEvent.getNativeEvent();
 				TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
 				SelectionPath selectionPath = new TraversalPlace.SelectionPath();
 				selectionPath.selection = selection;

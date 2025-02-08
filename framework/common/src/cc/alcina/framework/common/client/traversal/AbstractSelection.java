@@ -174,6 +174,12 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 		@Property.Not
 		protected S selection;
 
+		@Directed.Exclude
+		@Display.Exclude
+		public S getSelection() {
+			return selection;
+		}
+
 		@Override
 		public void putSelection(S selection) {
 			this.selection = selection;
@@ -185,6 +191,7 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 				extends RowView<S> {
 			public String type;
 
+			@Directed(className = "x-wide")
 			public String text;
 
 			@Override

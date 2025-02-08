@@ -83,6 +83,13 @@ public class ModelBinding<T> {
 	 */
 	boolean debug;
 
+	/*
+	 * only fire once
+	 */
+	boolean fireOnce;
+
+	boolean fired;
+
 	TargetBinding targetBinding;
 
 	public ModelBinding(Bindings bindings) {
@@ -98,6 +105,12 @@ public class ModelBinding<T> {
 	}
 
 	void acceptStreamElement(Object obj) {
+		if (fireOnce) {
+			if (fired) {
+				return;
+			}
+		}
+		fired = true;
 		Consumer<Runnable> dispatch = ensureDispatch();
 		if (dispatch == null) {
 			acceptStreamElement0(obj);
@@ -412,7 +425,8 @@ public class ModelBinding<T> {
 			return this;
 		}
 
-		public TargetBinding<BSP, T2> on(TypedProperty<BSP, ? super T2> on) {
+		public TargetBinding<BSP, T2>
+				on(TypedProperty<? super BSP, ? super T2> on) {
 			this.on = on;
 			return (TargetBinding<BSP, T2>) this;
 		}
@@ -424,6 +438,11 @@ public class ModelBinding<T> {
 
 		public TargetBinding on(String on) {
 			this.on = on;
+			return this;
+		}
+
+		public TargetBinding withFireOnce() {
+			binding.fireOnce = true;
 			return this;
 		}
 

@@ -206,6 +206,13 @@ public class TraversalBrowser {
 		protected List<?> createAdditionalLeftHeader() {
 			return null;
 		}
+
+		/*
+		 * For a decision chain (EntityBrowser), return true
+		 */
+		public boolean isAppendTableSelections() {
+			return false;
+		}
 	}
 
 	@Reflected

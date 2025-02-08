@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.History;
 
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -36,10 +37,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Suggestion.
 @Directed(renderer = DirectedRenderer.Delegating.class)
 @TypeSerialization(reflectiveSerializable = false)
 @DirectedContextResolver(AppSuggestor.Resolver.class)
+@TypedProperties
 public class AppSuggestor extends Model.Fields
 		implements ModelEvents.SelectionChanged.Handler,
 		ModelEvents.Closed.Handler, ModelEvents.Opened.Handler,
 		AppSuggestorEvents.Close.Handler, ModelEvents.SelectionHandled.Handler {
+	public static PackageProperties._AppSuggestor properties = PackageProperties.appSuggestor;
+
 	public static class Attributes {
 		public final AnswerSupplier answerSupplier;
 
@@ -204,6 +208,13 @@ public class AppSuggestor extends Model.Fields
 
 	@Override
 	public void onOpened(Opened event) {
+	}
+
+	/*
+	 * This text will not cause an Ask to be emitted
+	 */
+	public void setAcceptedFilterText(String acceptedFilterText) {
+		suggestor.getEditor().setAcceptedFilterText(acceptedFilterText);
 	}
 
 	public void setFilterText(String filterText) {

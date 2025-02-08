@@ -81,6 +81,7 @@ public class PackageProperties {
     
     static class _LayerSelections_SelectionsArea implements TypedProperty.Container {
       TypedProperty<LayerSelections.SelectionsArea, List> filtered = new TypedProperty<>(LayerSelections.SelectionsArea.class, "filtered");
+      TypedProperty<LayerSelections.SelectionsArea, List> filteredSelections = new TypedProperty<>(LayerSelections.SelectionsArea.class, "filteredSelections");
       TypedProperty<LayerSelections.SelectionsArea, Boolean> parallel = new TypedProperty<>(LayerSelections.SelectionsArea.class, "parallel");
       TypedProperty<LayerSelections.SelectionsArea, List> selections = new TypedProperty<>(LayerSelections.SelectionsArea.class, "selections");
       TypedProperty<LayerSelections.SelectionsArea, LooseContextInstance> snapshot = new TypedProperty<>(LayerSelections.SelectionsArea.class, "snapshot");
@@ -121,6 +122,7 @@ public class PackageProperties {
     
     public static class _TraversalBrowser_Ui implements TypedProperty.Container {
       public TypedProperty<TraversalBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(TraversalBrowser.Ui.class, "appCommandContexts");
+      public TypedProperty<TraversalBrowser.Ui, Boolean> appendTableSelections = new TypedProperty<>(TraversalBrowser.Ui.class, "appendTableSelections");
       public TypedProperty<TraversalBrowser.Ui, Boolean> clearPostSelectionLayers = new TypedProperty<>(TraversalBrowser.Ui.class, "clearPostSelectionLayers");
       public TypedProperty<TraversalBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(TraversalBrowser.Ui.class, "commandContextProvider");
       public TypedProperty<TraversalBrowser.Ui, RemoteComponentObservables.ObservableEntry> history = new TypedProperty<>(TraversalBrowser.Ui.class, "history");

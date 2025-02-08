@@ -322,7 +322,9 @@ public class Suggestor extends Model implements
 
 		void setFilterText(String filterText);
 
-		boolean hasNonEmptyInput();
+		boolean hasTriggeringInput();
+
+		void setAcceptedFilterText(String acceptedFilterText);
 	}
 
 	public static class StringAsk implements Ask {
@@ -550,7 +552,7 @@ public class Suggestor extends Model implements
 				suggest = true;
 				break;
 			case NON_EMPTY_VALUE:
-				suggest = editor.hasNonEmptyInput();
+				suggest = editor.hasTriggeringInput();
 				break;
 			}
 			if (suggest) {

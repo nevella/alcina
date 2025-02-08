@@ -69,6 +69,11 @@ public class EntityBrowser {
 			return List.of(cache.createUi());
 		}
 
+		@Override
+		public boolean isAppendTableSelections() {
+			return true;
+		}
+
 		NonOptimisedQueryCache cache = new NonOptimisedQueryCache();
 
 		public boolean isClearPostSelectionLayers() {

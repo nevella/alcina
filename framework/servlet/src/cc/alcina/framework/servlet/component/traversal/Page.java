@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.activity.shared.PlaceUpdateable;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.StyleElement;
@@ -20,17 +22,22 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.SelectionFilter;
+import cc.alcina.framework.common.client.traversal.Selection.CopySelectionFilter;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Timer;
+import cc.alcina.framework.entity.ConsoleUtil;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
@@ -82,7 +89,8 @@ class Page extends Model.All
 		TraversalCommand.ShowKeyboardShortcuts.Handler,
 		TraversalEvents.LayerSelectionChange.Handler,
 		TraversalBrowserCommand.ToggleHelp.Handler,
-		ModelEvents.ApplicationHelp.Handler {
+		ModelEvents.ApplicationHelp.Handler,
+		Selection.CopySelectionFilter.Handler {
 	public Page providePage() {
 		return this;
 	}
@@ -167,7 +175,11 @@ class Page extends Model.All
 				.to(this).on(properties.table).oneWay();
 		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
-				.on("filterText").oneWay();
+				.on(AppSuggestor.properties.acceptedFilterText).withFireOnce()
+				.oneWay();
+		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
+				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
+				.on(AppSuggestor.properties.filterText).oneWay();
 		bindings().from(TraversalBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
 	}
@@ -449,5 +461,15 @@ class Page extends Model.All
 
 	public List<? extends Selection> getFilteredSelections(Layer layer) {
 		return layers.getFilteredSelections(layer);
+	}
+
+	@Override
+	public void onCopySelectionFilter(CopySelectionFilter event) {
+		Selection selection = event.getModel();
+		SelectionFilter filter = SelectionFilter
+				.ofSelections(List.of(selection));
+		String serialized = FlatTreeSerializer.serializeSingleLine(filter);
+		ConsoleUtil.copyToClipboard(serialized);
+		StatusModule.get().showMessageTransitional("Copied selection filter");
 	}
 }

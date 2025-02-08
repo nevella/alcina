@@ -18,6 +18,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
 /*
  * TODO - extend the heck out of this
@@ -88,17 +90,25 @@ public class SelectionTableArea extends Model.Fields
 
 		@Override
 		public Selection selectionFor(Object object) {
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'selectionFor'");
+			return ((RowView) object).getSelection();
 		}
 	}
 
 	@Override
 	public void onRowClicked(TableEvents.RowClicked event) {
-		appendRowSelectionTo
-				.appendSelections(List.of(hasTable
-						.selectionFor(event.getModel().getOriginalRowModel())))
-				.go();
+		Selection selection = hasTable
+				.selectionFor(event.getModel().getOriginalRowModel());
+		if (Ui.get().isAppendTableSelections()) {
+			appendRowSelectionTo.appendSelections(List.of(selection)).go();
+		} else {
+			TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
+			SelectionPath selectionPath = new TraversalPlace.SelectionPath();
+			selectionPath.selection = selection;
+			selectionPath.path = selection.processNode().treePath();
+			selectionPath.type = selectionType;
+			event.reemitAs(this, TraversalEvents.SelectionSelected.class,
+					selectionPath);
+		}
 	}
 
 	@Override

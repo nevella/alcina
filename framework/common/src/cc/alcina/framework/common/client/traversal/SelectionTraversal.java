@@ -357,24 +357,7 @@ public class SelectionTraversal
 	}
 
 	public SelectionFilter provideExceptionSelectionFilter() {
-		SelectionFilter filter = new SelectionFilter();
-		Multimap<Class<? extends Selection>, List<String>> selectionTypeSegments = new Multimap<>();
-		selectionExceptions.keySet().forEach(selection -> {
-			Selection cursor = selection;
-			while (cursor != null) {
-				String pathSegment = cursor.getPathSegment();
-				Preconditions.checkState(Ax.notBlank(pathSegment));
-				selectionTypeSegments.add(cursor.getClass(), pathSegment);
-				cursor = cursor.parentSelection();
-			}
-		});
-		selectionTypeSegments.forEach((k, v) -> {
-			String pathSegmentRegex = Ax.format("^(%s)$",
-					v.stream().distinct().map(CommonUtils::escapeRegex)
-							.collect(Collectors.joining("|")));
-			filter.addLayerFilter(k, pathSegmentRegex);
-		});
-		return filter;
+		return SelectionFilter.ofSelections(selectionExceptions.keySet());
 	}
 
 	/*
