@@ -20,6 +20,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.traversal.Layer;
+import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
@@ -443,5 +445,9 @@ class Page extends Model.All
 	@Override
 	public void onApplicationHelp(ApplicationHelp event) {
 		HelpPlace.toggleRoot(Ui.place().copy()).go();
+	}
+
+	public List<? extends Selection> getFilteredSelections(Layer layer) {
+		return layers.getFilteredSelections(layer);
 	}
 }

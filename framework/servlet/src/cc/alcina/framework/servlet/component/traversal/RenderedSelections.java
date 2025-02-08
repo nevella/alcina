@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.List;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -97,7 +98,10 @@ class RenderedSelections extends Model.Fields {
 		}
 		Layer layer = Ui.getSelectedLayer();
 		if (layer != null) {
-			properties.selectionTable.set(this, new SelectionTableArea(layer));
+			List<? extends Selection> filteredLayerSelections = page
+					.getFilteredSelections(layer);
+			properties.selectionTable.set(this,
+					new SelectionTableArea(layer, filteredLayerSelections));
 		} else if (selection instanceof Selection.HasTableRepresentation) {
 			properties.selectionTable.set(this, new SelectionTableArea(
 					traversal.getLayer(selection), selection));

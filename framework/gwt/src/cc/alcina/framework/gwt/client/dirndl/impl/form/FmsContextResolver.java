@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsValueModel;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm.FmsFormElement;
+import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm.FmsFormModel;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm.FmsLabelModel;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsTable.FmsTableCell;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsTable.FmsTableColumn;
@@ -45,6 +46,11 @@ public class FmsContextResolver extends ContextResolver {
 			modifiedClass = FmsValueModel.class;
 		} else if (incomingClass == TableValueModel.class) {
 			modifiedClass = FmsValueModel.class;
+		} else if (incomingClass == FmsFormModel.class) {
+			if (ancestors(false)
+					.anyMatch(res -> res instanceof FmsContextResolver)) {
+				modifiedClass = FmsFormModel.NestedForm.class;
+			}
 		}
 		if (modifiedClass != null) {
 			outgoingLocation = new AnnotationLocation(modifiedClass,

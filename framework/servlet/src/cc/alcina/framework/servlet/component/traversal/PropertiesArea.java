@@ -61,6 +61,8 @@ class PropertiesArea extends Model.Fields {
 			implements ModelTransform<Selection, SelectionArea> {
 		String treePath;
 
+		String layer;
+
 		String pathSegment;
 
 		String type;
@@ -81,6 +83,7 @@ class PropertiesArea extends Model.Fields {
 			View view = Registry.impl(Selection.View.class,
 					selection.getClass());
 			treePath = view.getTreePath(selection);
+			layer = Ui.traversal().getLayer(selection).getName();
 			pathSegment = view.getPathSegment(selection);
 			type = NestedName.get(selection);
 			discriminator = view.getDiscriminator(selection);

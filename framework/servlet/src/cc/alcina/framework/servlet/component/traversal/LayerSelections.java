@@ -65,7 +65,8 @@ class LayerSelections extends Model.All {
 
 	SelectionsArea selectionsArea;
 
-	private Layer layer;
+	@Property.Not
+	Layer layer;
 
 	private SelectionLayers selectionLayers;
 
@@ -316,6 +317,8 @@ class LayerSelections extends Model.All {
 
 		List<SelectionArea> filtered;
 
+		List<Selection> filteredSelections;
+
 		SelectionsArea() {
 			bindings().from(Ui.get()).on(Ui.properties.place)
 					.signal(this::update);
@@ -332,13 +335,16 @@ class LayerSelections extends Model.All {
 		void render() {
 			Stream<Selection> stream = selectionLayers.traversal()
 					.getSelections(layer).stream();
+			if (layer.getName().equals("VersionList.JsonLayer")) {
+				int debug = 3;
+			}
 			parallel = Configuration.is(LayerSelections.class, "parallelTest");
 			snapshot = LooseContext.getContext().snapshot();
 			if (parallel) {
 				stream.parallel();
 			}
-			testHistory.textFilter();
-			List<Selection> filteredSelections = stream.filter(this::test)
+			testHistory.refreshTextFilter();
+			filteredSelections = stream.filter(this::test)
 					.limit(maxRenderedSelections).collect(Collectors.toList());
 			boolean sortSelectedFirst = Ui.place()
 					.attributesOrEmpty(layer.index)
@@ -382,7 +388,7 @@ class LayerSelections extends Model.All {
 
 			SelectionType firstSelectionType;
 
-			void textFilter() {
+			void refreshTextFilter() {
 				String textFilter = Ui.place().getTextFilter();
 				SelectionType firstSelectionType = Ui.place()
 						.firstSelectionType();

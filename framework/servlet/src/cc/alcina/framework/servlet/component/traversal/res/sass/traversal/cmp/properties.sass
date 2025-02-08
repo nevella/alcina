@@ -27,16 +27,25 @@
       padding-bottom: 1rem
       display: block
 
+      > value
+        > action > label
+          color: blue
+
+          &:hover
+            text-decoration: underline
+
     label
       display: block
       color: #666
       padding-bottom: 0.3rem
 
-    form-element[name='markup'] > value > value, form-element[name='text'] > value > value
-      max-width: 100%
-      overflow: scroll
-      white-space: pre
-      font-family: "Courier New", couriter, monospace
+    form-element[name='markup'],form-element[name='text'],form-element[name='json'] 
+      > value > value
+        max-width: 100%
+        overflow: scroll
+        white-space: pre
+        font-family: "Courier New", couriter, monospace
+        user-select: all
 
     form-element[name='extended'] table
       th

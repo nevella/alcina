@@ -103,7 +103,7 @@ public class EntitySelection extends AbstractSelection<Entity> {
 
 	@Registration(value = { Selection.RowView.class, EntitySelection.class })
 	public static class RowViewImpl<S extends EntitySelection>
-			extends AbstractSelection.RowView<S> {
+			extends AbstractSelection.RowView.Default<S> {
 		@Override
 		public Bindable provideBindable() {
 			return selection.get();

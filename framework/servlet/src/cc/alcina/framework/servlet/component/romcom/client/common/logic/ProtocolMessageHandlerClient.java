@@ -165,8 +165,9 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = true;
 					History.CONTEXT_REPLACING.runWith(
-							message.locationMutation.replace, () -> History
-									.newItem(message.locationMutation.hash));
+							() -> History
+									.newItem(message.locationMutation.hash),
+							message.locationMutation.replace);
 				} finally {
 					RemoteObjectModelComponentState
 							.get().firingLocationMutation = false;

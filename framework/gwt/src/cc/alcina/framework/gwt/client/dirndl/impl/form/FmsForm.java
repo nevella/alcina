@@ -66,6 +66,15 @@ public class FmsForm {
 		value = FormModel.class,
 		priority = Registration.Priority.REMOVE)
 	public static class FmsFormModel extends FormModel {
+		@Directed(
+			tag = "nested-form",
+			bindings = @Binding(
+				to = "autocomplete",
+				type = Type.PROPERTY,
+				literal = "off"))
+		public static class NestedForm extends FmsFormModel {
+		}
+
 		public FmsFormModel() {
 		}
 

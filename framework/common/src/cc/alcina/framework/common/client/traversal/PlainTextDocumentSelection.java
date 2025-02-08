@@ -12,6 +12,8 @@ public class PlainTextDocumentSelection extends TextSelection
 
 	protected Loader loader;
 
+	public Exception loadException;
+
 	public void setLoader(Loader loader) {
 		this.loader = loader;
 	}
@@ -39,6 +41,9 @@ public class PlainTextDocumentSelection extends TextSelection
 		if (text == null) {
 			try {
 				text = loader.load(ancestorSelection(loader.selectionClass()));
+				if (text == null) {
+					loadException = new Exception("loader returned null");
+				}
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}

@@ -115,7 +115,7 @@ public class TreeProcess {
 		return this.logAsLevelledPosition;
 	}
 
-	public int levelSize(int depth) {
+	public synchronized int levelSize(int depth) {
 		if (levelSizes.size() == depth) {
 			levelSizes.add(0);
 		}

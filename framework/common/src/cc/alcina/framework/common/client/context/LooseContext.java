@@ -3,8 +3,10 @@ package cc.alcina.framework.common.client.context;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -239,13 +241,28 @@ public abstract class LooseContext {
 		}
 
 		public void runWithTrue(Runnable runnable) {
-			runWith(true, runnable);
+			runWith(runnable, true);
 		}
 
-		public void runWith(boolean b, Runnable runnable) {
+		public void runWith(Runnable runnable, boolean b) {
 			try {
 				LooseContext.pushWithBoolean(getPath(), b);
 				runnable.run();
+			} finally {
+				LooseContext.pop();
+			}
+		}
+
+		public <T> T callWithTrue(Callable<T> callable) {
+			return callWith(callable, true);
+		}
+
+		public <T> T callWith(Callable<T> callable, boolean b) {
+			try {
+				LooseContext.pushWithBoolean(getPath(), b);
+				return callable.call();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
 			} finally {
 				LooseContext.pop();
 			}

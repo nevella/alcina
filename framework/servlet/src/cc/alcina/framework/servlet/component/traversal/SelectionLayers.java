@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.traversal.Layer;
+import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
@@ -39,6 +41,12 @@ class SelectionLayers extends Model.Fields {
 					.to(collectionRepresentation)
 					.on(CollectionDeltaModel.properties.collection).oneWay();
 		}
+
+		List<? extends Selection> getFilteredSelections(Layer layer) {
+			return layers.stream().filter(ls -> ls.layer == layer).findFirst()
+					.map(ls -> ls.selectionsArea.filteredSelections)
+					.orElse(List.of());
+		}
 	}
 
 	@Directed
@@ -66,5 +74,9 @@ class SelectionLayers extends Model.Fields {
 				&& layer.getLayerFilterAttribute() == null);
 		layersContainer_properties.layers.set(layersContainer, layers);
 		return layers;
+	}
+
+	List<? extends Selection> getFilteredSelections(Layer layer) {
+		return layersContainer.getFilteredSelections(layer);
 	}
 }

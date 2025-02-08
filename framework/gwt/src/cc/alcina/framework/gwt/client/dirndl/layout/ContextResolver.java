@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -124,6 +125,20 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 */
 	public ContextResolver parent() {
 		return parent;
+	}
+
+	/*
+	 * As per parent() - minimise, but use when needed. The alternative is
+	 * firing descent events
+	 */
+	protected Stream<ContextResolver> ancestors(boolean includeSelf) {
+		List<ContextResolver> ancestors = new ArrayList<>();
+		ContextResolver cursor = includeSelf ? this : parent;
+		while (cursor != null) {
+			ancestors.add(cursor);
+			cursor = cursor.parent();
+		}
+		return ancestors.stream();
 	}
 
 	public void appendToRoot(Rendered rendered) {

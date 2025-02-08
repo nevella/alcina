@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
@@ -151,8 +152,11 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	protected static class View<S extends AbstractSelection>
 			implements Selection.View<S> {
+		@Property.Not
 		String text;
 
+		@Directed.Exclude
+		@Display.Exclude
 		public final String getText(S selection) {
 			if (text == null) {
 				text = computeText(selection);
@@ -165,25 +169,31 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 		}
 	}
 
-	@Registration(value = { Selection.RowView.class, AbstractSelection.class })
-	public static class RowView<S extends AbstractSelection> extends Model.All
-			implements Selection.RowView<S> {
-		public String type;
-
-		public String text;
-
+	public abstract static class RowView<S extends AbstractSelection>
+			extends Model.All implements Selection.RowView<S> {
 		@Property.Not
 		protected S selection;
-
-		public RowView() {
-		}
 
 		@Override
 		public void putSelection(S selection) {
 			this.selection = selection;
-			Selection.View view = selection.view();
-			this.type = NestedName.get(selection);
-			this.text = view.getText(selection);
+		}
+
+		@Registration(
+			value = { Selection.RowView.class, AbstractSelection.class })
+		public static class Default<S extends AbstractSelection>
+				extends RowView<S> {
+			public String type;
+
+			public String text;
+
+			@Override
+			public void putSelection(S selection) {
+				super.putSelection(selection);
+				Selection.View view = selection.view();
+				this.type = NestedName.get(selection);
+				this.text = view.getText(selection);
+			}
 		}
 	}
 }

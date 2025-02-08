@@ -44,9 +44,10 @@ public class SelectionTableArea extends Model.Fields
 		appendRowSelectionTo = Ui.place();
 	}
 
-	public SelectionTableArea(Layer layer) {
+	public SelectionTableArea(Layer layer,
+			List<? extends Selection> filteredLayerSelections) {
 		selectionLayer = layer;
-		hasTable = new LayerToTable(layer);
+		hasTable = new LayerToTable(layer, filteredLayerSelections);
 		selectionBindables = hasTable.getSelectionBindables();
 		appendRowSelectionTo = Ui.place().truncateTo(layer.index);
 	}
@@ -54,13 +55,17 @@ public class SelectionTableArea extends Model.Fields
 	class LayerToTable implements Selection.HasTableRepresentation {
 		Layer layer;
 
-		LayerToTable(Layer layer) {
+		List<? extends Selection> filteredLayerSelections;
+
+		LayerToTable(Layer layer,
+				List<? extends Selection> filteredLayerSelections) {
 			this.layer = layer;
+			this.filteredLayerSelections = filteredLayerSelections;
 		}
 
 		@Override
 		public List<? extends Bindable> getSelectionBindables() {
-			return (List) layer.getSelections().stream().map(sel -> {
+			return (List) filteredLayerSelections.stream().map(sel -> {
 				RowView rowView = ((Selection) sel).rowView();
 				return rowView == null ? null : rowView.provideBindable();
 			}).filter(Objects::nonNull).collect(Collectors.toList());
