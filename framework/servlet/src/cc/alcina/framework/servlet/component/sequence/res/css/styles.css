@@ -353,6 +353,7 @@ bean-editor[inert] > form {
   opacity: 0.7;
 }
 bean-editor > heading {
+  display: block;
   font-weight: 500;
   padding-bottom: 0.2em;
   padding-left: 3px;
@@ -426,7 +427,7 @@ edit-value textarea {
  *
  *  TODO - move some/most to dropdown
  * */
-body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts-area {
+body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts {
   top: 3rem;
   transform: translate(-50%, 0%);
 }
@@ -442,6 +443,7 @@ overlay > menu {
   flex-direction: column;
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
   padding: 0.5rem 0;
 }
 overlay > menu > action {
@@ -476,6 +478,9 @@ overlay > menu > heading {
   font-weight: bold;
   color: #999;
   line-height: 2;
+}
+overlay > menu > heading:not(:first-of-type) {
+  margin-top: 1rem;
 }
 overlay > menu > choices {
   display: flex;
@@ -654,6 +659,12 @@ body > page > sequence > table th {
 body > page > sequence > table td > *.wide {
   max-width: 28rem;
 }
+body > page > sequence > table td > *.x-wide {
+  max-width: 40rem;
+}
+body > page > sequence > table td > *.xx-wide {
+  max-width: 56rem;
+}
 body > page > sequence > table tr:hover {
   cursor: pointer;
 }
@@ -819,7 +830,7 @@ overlay.app-suggestor > results > choice > suggestion > app-suggestion > content
   display: block;
 }
 
-keyboard-shortcuts-area {
+keyboard-shortcuts {
   background: white;
   user-select: none;
   padding: 1rem 0;
@@ -829,24 +840,25 @@ keyboard-shortcuts-area {
   font-size: 1.1rem;
   width: 750px;
   min-height: 50vh;
+  user-select: auto;
 }
-keyboard-shortcuts-area > heading {
+keyboard-shortcuts > heading {
   margin: 1rem 0;
   font-size: 1.5rem;
   display: block;
 }
-keyboard-shortcuts-area > contents-filter {
+keyboard-shortcuts > contents-filter {
   display: block;
   padding: 0 0 1rem;
   font-size: 1.1rem;
 }
-keyboard-shortcuts-area > contents-filter > input {
+keyboard-shortcuts > contents-filter > input {
   border: solid 1px #ddd;
   padding: 4px 6px;
   width: 20rem;
   outline: none;
 }
-keyboard-shortcuts-area > shortcuts {
+keyboard-shortcuts > shortcuts {
   display: grid;
   grid-template-columns: 3rem 2rem 1fr;
   margin-top: 1rem;
@@ -855,33 +867,33 @@ keyboard-shortcuts-area > shortcuts {
   max-height: 50vh;
   overflow: auto;
 }
-keyboard-shortcuts-area > shortcuts > shortcut {
+keyboard-shortcuts > shortcuts > shortcut {
   display: contents;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell {
   text-align: right;
   isplay: inline-block;
   margin-top: -2px;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell > modifier {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell > modifier {
   border: solid 1px #777;
   border-radius: 3px;
   padding: 2px;
   font-size: 0.8rem;
   color: #777;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell > modifier:empty {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell > modifier:empty {
   border: none;
 }
 
-help-area {
+help {
   height: 50vh;
   width: 25vw;
   display: flex;
   flex-direction: column;
   margin: 1rem 0;
   box-sizing: border-box;
-  overflow-y: scroll;
+  overflow-y: auto;
   overflow-x: auto;
   background: white;
   user-select: none;
@@ -892,34 +904,106 @@ help-area {
   padding: 1rem;
   user-select: auto;
 }
-help-area > heading, help-area > heading-actions {
+help > heading, help > heading-actions {
   margin: 0 0 0.5rem;
   display: flex;
   width: 100%;
   font-weight: bold;
   justify-content: space-between;
 }
-help-area > heading-actions > actions {
+help > heading-actions > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-help-area > heading-actions > actions a {
+help > heading-actions > actions a {
   cursor: pointer;
 }
-help-area > key-values {
+help > key-values {
   display: grid;
   grid-template-columns: max-content 1fr;
   column-gap: 1rem;
   row-gap: 0.1rem;
 }
-help-area > key-values > key-value {
+help > key-values > key-value {
   display: contents;
 }
-help-area > key-values > key-value > key {
+help > key-values > key-value > key {
   color: #777;
 }
-help-area > a {
+help > a {
   display: block;
   margin: 0 0 0.2rem;
+}
+help sequence {
+  display: flex;
+  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: white;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+help sequence a, help sequence a.link, help sequence a.visited {
+  text-decoration: none;
+  color: black;
+}
+help sequence a:hover, help sequence a.link:hover, help sequence a.visited:hover {
+  color: #387ed3;
+}
+help sequence > heading {
+  display: block;
+  font-weight: bold;
+  color: #0f4589;
+  margin: 1rem 0;
+}
+help sequence > doc-header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+}
+help sequence > doc-header img {
+  width: 200px;
+}
+help sequence > doc-header heading {
+  font-size: 18px;
+  font-weight: bold;
+}
+help sequence > doc-header spacer {
+  display: block;
+  width: 200px;
+}
+help sequence > table {
+  box-sizing: border-box;
+  margin-bottom: 2rem;
+  margin-top: 1rem;
+  border-collapse: separate;
+  border-spacing: 1rem 0.5rem;
+}
+help sequence > table th {
+  text-align: left;
+  width: 12rem;
+}
+help sequence > table td > value {
+  white-space: pre-wrap;
+}
+help sequence > table td > value:not(:last-child):after {
+  content: ", ";
+}
+help sequence > visit {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 5rem;
+}
+help sequence > visit > path {
+  font-weight: bold;
+}
+help sequence > visit > description {
+  margin-bottom: 1rem;
+}
+help sequence > visit > img {
+  max-width: 100%;
 }
