@@ -1,6 +1,8 @@
 package cc.alcina.framework.entity.util;
 
 import java.io.File;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.gwittir.widget.FileData;
@@ -43,5 +45,12 @@ public class FileUtils {
 
 	public static File sibling(File file, String siblingFileName) {
 		return child(file.getParentFile(), siblingFileName);
+	}
+
+	public static String fileNameFromUrl(String strUrl) {
+		Pattern p = Pattern.compile(".+/(.+)");
+		Matcher m = p.matcher(strUrl);
+		m.matches();
+		return m.group(1);
 	}
 }
