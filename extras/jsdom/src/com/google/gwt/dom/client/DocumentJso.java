@@ -1057,4 +1057,13 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	public final ClientDomSelection ensureRemoteSelection(Selection selection) {
 		return getSelection();
 	}
+
+	public native Element getFocussedDocumentElement()/*-{
+		if (this.activeElement) {
+		  var tagName = this.activeElement.tagName.toLowerCase();
+		  return tagName != "body" && tagName != "html" ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(this.activeElement)
+			  : null;
+		}
+		return null;
+		}-*/;
 }

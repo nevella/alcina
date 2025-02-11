@@ -9,6 +9,7 @@ import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.mutations.HTMLInputElementSelectionRangeRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
@@ -94,7 +95,15 @@ public class ClientRpc implements HandlerContext {
 			lastSelectionRecord = currentSelectionRecord;
 			hasSelectionMutation.setSelectionMutation(currentSelectionRecord);
 		}
+		// HTMLInputElementSelectionRangeRecord currentSelectionRecord =
+		// Document.get().getf
+		if (!Objects.equals(lastSelectionRecord, currentSelectionRecord)) {
+			lastSelectionRecord = currentSelectionRecord;
+			hasSelectionMutation.setSelectionMutation(currentSelectionRecord);
+		}
 	}
+
+	HTMLInputElementSelectionRangeRecord lastHtmlInputElementSelectionRangeMutation;
 
 	SelectionRecord lastSelectionRecord;
 

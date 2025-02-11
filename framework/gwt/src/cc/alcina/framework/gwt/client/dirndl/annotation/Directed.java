@@ -683,6 +683,10 @@ public @interface Directed {
 	 * <p>
 	 * Renders the model as two nodes, the first having tag value() - i.e. sugar
 	 * for: <code>@Directed.Multiple({@Directed(tag="value"),@Directed})</code>
+	 * 
+	 * <p>
+	 * Note that currently the outer tag also has {@link Binding} annotations
+	 * applied - so eschew things like Binding.Type.INNER_TEXT
 	 *
 	 */
 	@Retention(RetentionPolicy.RUNTIME)

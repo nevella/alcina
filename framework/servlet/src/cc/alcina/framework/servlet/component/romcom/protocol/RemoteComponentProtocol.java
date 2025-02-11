@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.DomEventContext;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.mutations.HTMLInputElementSelectionRangeRecord;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
@@ -77,14 +78,14 @@ public class RemoteComponentProtocol {
 		 * loop)
 		 */
 		public static class EnvironmentInitComplete extends Message {
-			public EnvironmentSettings environmentSettings = new EnvironmentSettings();
-
 			@Bean(PropertySource.FIELDS)
 			public static class EnvironmentSettings {
 				public int longRunningMessageTimeMs = 2000;
 
 				public boolean attachRpcDebugMethod = true;
 			}
+
+			public EnvironmentSettings environmentSettings = new EnvironmentSettings();
 		}
 
 		public interface Handler<M extends Message> {
@@ -102,13 +103,9 @@ public class RemoteComponentProtocol {
 
 			public DomEventContext eventContext;
 
-			@Override
-			protected String provideMessageData() {
-				return events.stream().map(e -> e.event.getType()).distinct()
-						.collect(Collectors.joining(", "));
-			}
-
 			private SelectionRecord selectionMutation;
+
+			private HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord;
 
 			public SelectionRecord getSelectionMutation() {
 				return selectionMutation;
@@ -117,6 +114,22 @@ public class RemoteComponentProtocol {
 			public void
 					setSelectionMutation(SelectionRecord selectionMutation) {
 				this.selectionMutation = selectionMutation;
+			}
+
+			public HTMLInputElementSelectionRangeRecord
+					getHtmlInputElementSelectionRangeRecord() {
+				return htmlInputElementSelectionRangeRecord;
+			}
+
+			public void setHtmlInputElementSelectionRangeRecord(
+					HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord) {
+				this.htmlInputElementSelectionRangeRecord = htmlInputElementSelectionRangeRecord;
+			}
+
+			@Override
+			protected String provideMessageData() {
+				return events.stream().map(e -> e.event.getType()).distinct()
+						.collect(Collectors.joining(", "));
 			}
 		}
 
@@ -241,7 +254,19 @@ public class RemoteComponentProtocol {
 
 			private SelectionRecord selectionMutation;
 
+			private HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord;
+
 			public LocationMutation locationMutation;
+
+			public HTMLInputElementSelectionRangeRecord
+					getHtmlInputElementSelectionRangeRecord() {
+				return htmlInputElementSelectionRangeRecord;
+			}
+
+			public void setHtmlInputElementSelectionRangeRecord(
+					HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord) {
+				this.htmlInputElementSelectionRangeRecord = htmlInputElementSelectionRangeRecord;
+			}
 
 			public SelectionRecord getSelectionMutation() {
 				return selectionMutation;
@@ -257,6 +282,10 @@ public class RemoteComponentProtocol {
 				return FormatBuilder.keyValues("dom", domMutations.size(),
 						"event", eventSystemMutations.size(), "loc",
 						locationMutation, "sel", selectionMutation);
+			}
+
+			public void addDomMutation(MutationRecord mutationRecord) {
+				domMutations.add(mutationRecord);
 			}
 
 			@Override
@@ -277,10 +306,6 @@ public class RemoteComponentProtocol {
 					format.format("[selection: %s]", selectionMutation);
 				}
 				return format.toString();
-			}
-
-			public void addDomMutation(MutationRecord mutationRecord) {
-				domMutations.add(mutationRecord);
 			}
 		}
 
@@ -321,6 +346,12 @@ public class RemoteComponentProtocol {
 			SelectionRecord getSelectionMutation();
 
 			void setSelectionMutation(SelectionRecord selectionMutation);
+
+			public HTMLInputElementSelectionRangeRecord
+					getHtmlInputElementSelectionRangeRecord();
+
+			public void setHtmlInputElementSelectionRangeRecord(
+					HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord);
 		}
 
 		/*
@@ -351,9 +382,21 @@ public class RemoteComponentProtocol {
 
 			SelectionRecord selectionMutation;
 
+			HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord;
+
 			public int maxCharsPerTextNode;
 
 			public String settings;
+
+			public HTMLInputElementSelectionRangeRecord
+					getHtmlInputElementSelectionRangeRecord() {
+				return htmlInputElementSelectionRangeRecord;
+			}
+
+			public void setHtmlInputElementSelectionRangeRecord(
+					HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord) {
+				this.htmlInputElementSelectionRangeRecord = htmlInputElementSelectionRangeRecord;
+			}
 
 			public SelectionRecord getSelectionMutation() {
 				return selectionMutation;

@@ -4,6 +4,8 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import com.google.gwt.dom.client.DomStyleConstants;
+
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -15,6 +17,7 @@ import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 
 @Reflected
 // Obviously similar to JobStatus - but broader applicability
@@ -36,7 +39,12 @@ public enum Status implements ProvidesStatus {
 		return this;
 	}
 
-	@Directed
+	@Directed(
+		bindings = { @Binding(
+			from = "status",
+			to = DomStyleConstants.STYLE_BACKGROUND_COLOR,
+			type = Type.STYLE_ATTRIBUTE,
+			transform = StatusTransform.class) })
 	public static class StatusReason extends Model.Fields
 			implements ProvidesStatus {
 		public static StatusReason check(boolean condition,
@@ -125,7 +133,7 @@ public enum Status implements ProvidesStatus {
 
 		public static transient int DEFAULT_MAX_CHARS = -1;
 
-		@Binding(from = "displayText", type = Type.INNER_TEXT)
+		@Directed(renderer = LeafRenderer.TextNode.class)
 		public Object getDisplayText() {
 			String text = "[null]";
 			if (value != null) {
@@ -168,9 +176,8 @@ public enum Status implements ProvidesStatus {
 		}
 	}
 
-	@Registration(StatusTransform.class)
 	public interface StatusTransform extends ToStringFunction<Status> {
-		public static class DefaultImpl implements StatusTransform {
+		public static class ColourImpl implements StatusTransform {
 			@Override
 			public String apply(Status t) {
 				switch (t) {
@@ -183,6 +190,14 @@ public enum Status implements ProvidesStatus {
 				default:
 					throw new UnsupportedOperationException();
 				}
+			}
+		}
+
+		@Registration(StatusTransform.class)
+		public static class DefaultImpl implements StatusTransform {
+			@Override
+			public String apply(Status t) {
+				return null;
 			}
 		}
 	}

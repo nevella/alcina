@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -89,11 +90,25 @@ public class Io {
 
 		private boolean decompressIfDotGz;
 
+		private InputStream stream;
+
+		InputStream ensureStream() {
+			if (stream == null) {
+				try {
+					stream = resource.getStream();
+				} catch (Exception e) {
+					Ax.out("Error accessing resource :: %s", resource);
+					throw WrappedRuntimeException.wrap(e);
+				}
+			}
+			return stream;
+		}
+
 		private Class<?> kryoType;
 
 		public byte[] asBytes() {
 			try {
-				InputStream stream = resource.getStream();
+				InputStream stream = ensureStream();
 				int bufLength = stream.available() <= 1024 ? 1024 * 64
 						: stream.available();
 				ByteArrayOutputStream baos = new Streams.DisposableByteArrayOutputStream(
@@ -453,6 +468,14 @@ public class Io {
 
 		public String asBase64String() {
 			return Base64.getEncoder().encodeToString(asBytes());
+		}
+
+		public Optional<String> asStringOptional() {
+			if (ensureStream() == null) {
+				return Optional.empty();
+			} else {
+				return Optional.of(asString());
+			}
 		}
 	}
 

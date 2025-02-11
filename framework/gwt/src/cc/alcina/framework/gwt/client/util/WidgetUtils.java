@@ -597,14 +597,9 @@ public class WidgetUtils {
     return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/ClientDomNodeList;)(nodeList);
 	}-*/;
 
-	public static native Element getFocussedDocumentElement()/*-{
-    if ($doc.activeElement) {
-      var tagName = $doc.activeElement.tagName.toLowerCase();
-      return tagName != "body" && tagName != "html" ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)($doc.activeElement)
-          : null;
-    }
-    return null;
-	}-*/;
+	public static Element getFocussedDocumentElement() {
+		return Document.get().jsoRemote().getFocussedDocumentElement();
+	}
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{
     var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();

@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
  */
 @Bean(PropertySource.FIELDS)
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
-public final class SelectionRecord implements Serializable {
+public final class SelectionRecord {
 	public AttachId anchorNodeId;
 
 	public int anchorOffset;
