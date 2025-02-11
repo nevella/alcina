@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.entity.property;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -108,6 +109,11 @@ public class PropertyFilterParser {
 			if (op == null) {
 				if (type == String.class) {
 					ops = List.of(FilterOperator.EQ, FilterOperator.MATCHES);
+				} else if (Reflections.isAssignableFrom(Entity.class, type)) {
+					ops = List.of(FilterOperator.MATCHES);
+				} else if (Reflections.isAssignableFrom(Collection.class,
+						type)) {
+					ops = List.of(FilterOperator.MATCHES);
 				} else {
 					ops = List.of(FilterOperator.EQ);
 				}
@@ -124,7 +130,7 @@ public class PropertyFilterParser {
 		Stream<ValueProposal> proposeValue(Property property,
 				String propertyValuePart) {
 			String lcQuery = propertyValuePart.toLowerCase();
-			switch (getValueType(property)) {
+			switch (getValueType(property, propertyValuePart)) {
 			case NUMERIC:
 				if (propertyValuePart.matches("\\d+")) {
 					return Stream.of(new ValueProposal(
@@ -157,10 +163,11 @@ public class PropertyFilterParser {
 		}
 	}
 
-	public static PropertyValueType getValueType(Property property) {
+	public static PropertyValueType getValueType(Property property,
+			String propertyValuePart) {
 		Class type = property.getType();
 		if (Number.class.isAssignableFrom(type) || type == long.class
-				|| type == int.class || Entity.class.isAssignableFrom(type)) {
+				|| type == int.class) {
 			return PropertyValueType.NUMERIC;
 		}
 		if (type == Boolean.class || type == boolean.class) {
@@ -171,6 +178,16 @@ public class PropertyFilterParser {
 		}
 		if (type == String.class) {
 			return PropertyValueType.STRING;
+		}
+		if (Collection.class.isAssignableFrom(type)) {
+			return PropertyValueType.STRING;
+		}
+		if (Entity.class.isAssignableFrom(type)) {
+			if (propertyValuePart.matches("\\d+")) {
+				return PropertyValueType.NUMERIC;
+			} else {
+				return PropertyValueType.STRING;
+			}
 		}
 		return PropertyValueType.UNMATCHABLE;
 	}

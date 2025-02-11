@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
+
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -77,15 +80,41 @@ public class StandardLayerAttributes {
 		}
 
 		public DomainFilter toDomainFilter(Class<?> filteredClass) {
-			switch (op) {
-			case MATCHES:
-				return null;
-			}
 			String normalisedValue = normalisedValue();
 			Property property = Reflections.at(filteredClass).property(key);
-			Object filterValue = ClassUtil.fromStringValue(normalisedValue,
-					property.getType());
-			return new DomainFilter(key, filterValue, op);
+			switch (op) {
+			case MATCHES:
+				return new DomainFilter(
+						new MatchesPredicate(property, normalisedValue));
+			default:
+				Object filterValue = ClassUtil.fromStringValue(normalisedValue,
+						property.getType());
+				return new DomainFilter(key, filterValue, op);
+			}
+		}
+
+		class MatchesPredicate implements Predicate<Object> {
+			Property property;
+
+			String normalisedValue;
+
+			Pattern pattern;
+
+			MatchesPredicate(Property property, String normalisedValue) {
+				this.property = property;
+				pattern = Pattern.compile(normalisedValue,
+						Pattern.CASE_INSENSITIVE);
+				this.normalisedValue = normalisedValue.toLowerCase();
+			}
+
+			@Override
+			public boolean test(Object t) {
+				Object obj = property.get(t);
+				if (obj == null) {
+					return normalisedValue.equals("null");
+				}
+				return pattern.matcher(obj.toString()).find();
+			}
 		}
 	}
 }

@@ -147,7 +147,7 @@ class LayerSelections extends Model.All {
 
 	@Property.Not
 	StandardLayerAttributes.Filter getLayerFilterAttribute() {
-		return Ui.place().ensureAttributes(layer.index)
+		return Ui.activePlace().ensureAttributes(layer.index)
 				.get(StandardLayerAttributes.Filter.class);
 	}
 

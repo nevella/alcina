@@ -108,6 +108,11 @@ public class EntityBrowser {
 		}
 
 		@Override
+		protected TraversalPlace activePlace0() {
+			return traversingPlace();
+		}
+
+		@Override
 		public void initialiseSettings(String settings) {
 			this.settings = SettingsSupport.deserializeSettings(
 					TraversalSettings.class, settings, newInstance -> {

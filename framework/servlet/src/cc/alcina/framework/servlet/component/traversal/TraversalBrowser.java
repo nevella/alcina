@@ -213,6 +213,14 @@ public class TraversalBrowser {
 		public boolean isAppendTableSelections() {
 			return false;
 		}
+
+		public static TraversalPlace activePlace() {
+			return get().activePlace0();
+		}
+
+		protected TraversalPlace activePlace0() {
+			return place;
+		}
 	}
 
 	@Reflected

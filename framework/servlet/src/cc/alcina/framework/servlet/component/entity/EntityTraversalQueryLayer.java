@@ -202,7 +202,8 @@ class EntityTraversalQueryLayer extends Layer
 		Object getTypedValue(Property property, String propertyValuePart) {
 			String lcQuery = propertyValuePart.toLowerCase();
 			Class type = property.getType();
-			switch (PropertyFilterParser.getValueType(property)) {
+			switch (PropertyFilterParser.getValueType(property,
+					propertyValuePart)) {
 			case NUMERIC:
 				long value = Long.parseLong(propertyValuePart);
 				if (Entity.class.isAssignableFrom(type)) {
