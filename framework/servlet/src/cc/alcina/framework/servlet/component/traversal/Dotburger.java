@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ValueChange;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
@@ -52,6 +53,10 @@ class Dotburger extends Model.Fields {
 		Link keyboardShortcuts = Link
 				.of(TraversalCommand.ShowKeyboardShortcuts.class);
 
+		Heading section5 = new Heading("Other");
+
+		String rows;
+
 		Menu() {
 			bindings().from(TraversalSettings.get())
 					.on(TraversalSettings.properties.secondaryAreaDisplayMode)
@@ -59,6 +64,10 @@ class Dotburger extends Model.Fields {
 			bindings().from(TraversalSettings.get())
 					.on(TraversalSettings.properties.propertyDisplayMode)
 					.to(this).on(properties.propertyDisplayMode).bidi();
+			bindings().from(TraversalSettings.get())
+					.on(TraversalSettings.properties.tableRows)
+					.map(rowCount -> Ax.format("Table rows: %s", rowCount))
+					.to(this).on(properties.rows).oneWay();
 		}
 	}
 

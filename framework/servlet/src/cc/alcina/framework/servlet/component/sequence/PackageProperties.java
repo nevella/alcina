@@ -37,8 +37,8 @@ public class PackageProperties {
     public static _SequenceSettings sequenceSettings = new _SequenceSettings();
     
     static class _Dotburger_Menu implements TypedProperty.Container {
+      TypedProperty<Dotburger.Menu, SequenceSettings.DetailDisplayMode> detailDisplayMode = new TypedProperty<>(Dotburger.Menu.class, "detailDisplayMode");
       TypedProperty<Dotburger.Menu, Link> keyboardShortcuts = new TypedProperty<>(Dotburger.Menu.class, "keyboardShortcuts");
-      TypedProperty<Dotburger.Menu, SequenceSettings.PropertyDisplayMode> propertyDisplayMode = new TypedProperty<>(Dotburger.Menu.class, "propertyDisplayMode");
       TypedProperty<Dotburger.Menu, Heading> section2 = new TypedProperty<>(Dotburger.Menu.class, "section2");
       TypedProperty<Dotburger.Menu, Heading> section4 = new TypedProperty<>(Dotburger.Menu.class, "section4");
     }
@@ -96,7 +96,7 @@ public class PackageProperties {
     
     public static class _SequenceSettings implements TypedProperty.Container {
       public TypedProperty<SequenceSettings, SequenceSettings.ColumnSet> columnSet = new TypedProperty<>(SequenceSettings.class, "columnSet");
-      public TypedProperty<SequenceSettings, SequenceSettings.PropertyDisplayMode> propertyDisplayMode = new TypedProperty<>(SequenceSettings.class, "propertyDisplayMode");
+      public TypedProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode = new TypedProperty<>(SequenceSettings.class, "detailDisplayMode");
       public TypedProperty<SequenceSettings, String> sequenceKey = new TypedProperty<>(SequenceSettings.class, "sequenceKey");
     }
     

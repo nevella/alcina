@@ -14,13 +14,13 @@ public class SequenceSettings extends Bindable.Fields {
 
 	static PackageProperties._SequenceSettings properties = PackageProperties.sequenceSettings;
 
-	public PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
+	public DetailDisplayMode detailDisplayMode = DetailDisplayMode.QUARTER_WIDTH;
 
 	public ColumnSet columnSet = ColumnSet.STANDARD;
 
 	public String sequenceKey;
 
-	public enum PropertyDisplayMode {
+	public enum DetailDisplayMode {
 		QUARTER_WIDTH, HALF_WIDTH, FULL_WIDTH, NONE
 	}
 
@@ -28,11 +28,11 @@ public class SequenceSettings extends Bindable.Fields {
 		STANDARD, DETAIL
 	}
 
-	public PropertyDisplayMode nextPropertyDisplayMode() {
-		PropertyDisplayMode next = PropertyDisplayMode
-				.values()[(propertyDisplayMode.ordinal() + 1)
-						% PropertyDisplayMode.values().length];
-		properties.propertyDisplayMode.set(this, next);
+	public DetailDisplayMode nextDetailDisplayMode() {
+		DetailDisplayMode next = DetailDisplayMode
+				.values()[(detailDisplayMode.ordinal() + 1)
+						% DetailDisplayMode.values().length];
+		properties.detailDisplayMode.set(this, next);
 		return next;
 	}
 

@@ -19,18 +19,18 @@ public abstract class SequenceBrowserCommand<T, H extends NodeEvent.Handler>
 		extends ModelEvent<T, H> implements AppSuggestorEvent {
 	@AppSuggestorCommand(
 		parent = SequenceBrowserCommand.class,
-		name = "property display: cycle",
-		description = "Property display: cycle mode")
-	@KeyBinding(key = "p")
-	public static class PropertyDisplayCycle extends
-			SequenceBrowserCommand<Object, PropertyDisplayCycle.Handler> {
+		name = "detail display: cycle",
+		description = "Detail display: cycle mode")
+	@KeyBinding(key = "d")
+	public static class DetailDisplayCycle
+			extends SequenceBrowserCommand<Object, DetailDisplayCycle.Handler> {
 		@Override
-		public void dispatch(PropertyDisplayCycle.Handler handler) {
+		public void dispatch(DetailDisplayCycle.Handler handler) {
 			handler.onPropertyDisplayCycle(this);
 		}
 
 		public interface Handler extends NodeEvent.Handler {
-			void onPropertyDisplayCycle(PropertyDisplayCycle event);
+			void onPropertyDisplayCycle(DetailDisplayCycle event);
 		}
 	}
 

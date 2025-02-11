@@ -43,7 +43,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ColumnSetCycle;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
-import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.PropertyDisplayCycle;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.DetailDisplayCycle;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ToggleHelp;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
@@ -52,7 +52,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequenc
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NextSelectable;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousSelectable;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
 
 /*
  * TODO - look at an approach to prevent double-fires of say reloadSequence -
@@ -72,7 +72,7 @@ class Page extends Model.Fields
 		SequenceEvents.PreviousSelectable.Handler,
 		SequenceEvents.LoadSequence.Handler,
 		SequenceBrowserCommand.ClearFilter.Handler,
-		SequenceBrowserCommand.PropertyDisplayCycle.Handler,
+		SequenceBrowserCommand.DetailDisplayCycle.Handler,
 		SequenceBrowserCommand.ColumnSetCycle.Handler,
 		SequenceBrowserCommand.FocusSearch.Handler,
 		SequenceEvents.HighlightModelChanged.Emitter,
@@ -203,11 +203,11 @@ class Page extends Model.Fields
 	}
 
 	@Override
-	public void onPropertyDisplayCycle(PropertyDisplayCycle event) {
+	public void onPropertyDisplayCycle(DetailDisplayCycle event) {
 		SequenceSettings settings = SequenceBrowser.Ui.get().settings;
-		PropertyDisplayMode next = settings.nextPropertyDisplayMode();
+		DetailDisplayMode next = settings.nextDetailDisplayMode();
 		StatusModule.get().showMessageTransitional(
-				Ax.format("Property display mode -> %s", next));
+				Ax.format("Detail display mode -> %s", next));
 	}
 
 	@Override
@@ -358,20 +358,20 @@ class Page extends Model.Fields
 			 */
 			List<String> rows = new ArrayList<>();
 			rows.add("header header header header");
-			switch (settings.propertyDisplayMode) {
+			switch (settings.detailDisplayMode) {
 			case QUARTER_WIDTH:
-				rows.add("sequence sequence sequence props");
+				rows.add("sequence sequence sequence detail");
 				break;
 			case HALF_WIDTH:
-				rows.add("sequence sequence props props");
+				rows.add("sequence sequence detail detail");
 				break;
 			case FULL_WIDTH:
-				rows.add("props props props props");
+				rows.add("detail detail detail detail");
 				builder.line("body > page > sequence{display: none;}");
 				break;
 			case NONE:
 				rows.add("sequence sequence sequence sequence");
-				builder.line("body > page > properties{display: none;}");
+				builder.line("body > page > detail{display: none;}");
 				break;
 			default:
 				throw new UnsupportedOperationException();

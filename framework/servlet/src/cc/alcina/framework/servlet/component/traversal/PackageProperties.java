@@ -51,11 +51,13 @@ public class PackageProperties {
     static class _Dotburger_Menu implements TypedProperty.Container {
       TypedProperty<Dotburger.Menu, Link> keyboardShortcuts = new TypedProperty<>(Dotburger.Menu.class, "keyboardShortcuts");
       TypedProperty<Dotburger.Menu, TraversalSettings.PropertyDisplayMode> propertyDisplayMode = new TypedProperty<>(Dotburger.Menu.class, "propertyDisplayMode");
+      TypedProperty<Dotburger.Menu, String> rows = new TypedProperty<>(Dotburger.Menu.class, "rows");
       TypedProperty<Dotburger.Menu, TraversalSettings.SecondaryAreaDisplayMode> secondaryAreaDisplayMode = new TypedProperty<>(Dotburger.Menu.class, "secondaryAreaDisplayMode");
       TypedProperty<Dotburger.Menu, Heading> section1 = new TypedProperty<>(Dotburger.Menu.class, "section1");
       TypedProperty<Dotburger.Menu, Heading> section2 = new TypedProperty<>(Dotburger.Menu.class, "section2");
       TypedProperty<Dotburger.Menu, Heading> section3 = new TypedProperty<>(Dotburger.Menu.class, "section3");
       TypedProperty<Dotburger.Menu, Heading> section4 = new TypedProperty<>(Dotburger.Menu.class, "section4");
+      TypedProperty<Dotburger.Menu, Heading> section5 = new TypedProperty<>(Dotburger.Menu.class, "section5");
       TypedProperty<Dotburger.Menu, TraversalPlace.SelectionType> selectionType = new TypedProperty<>(Dotburger.Menu.class, "selectionType");
     }
     

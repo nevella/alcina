@@ -11,7 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
-import cc.alcina.framework.servlet.component.sequence.SequenceSettings.PropertyDisplayMode;
+import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand;
 
 /*
@@ -28,11 +28,11 @@ class Dotburger extends Model.Fields {
 	static class Menu extends Model.All implements ValueChange.Container {
 		static PackageProperties._Dotburger_Menu properties = PackageProperties.dotburger_menu;
 
-		Heading section2 = new Heading("Property display mode");
+		Heading section2 = new Heading("Detail display mode");
 
 		@Directed.Transform(Choices.Single.To.class)
-		@Choices.EnumValues(PropertyDisplayMode.class)
-		PropertyDisplayMode propertyDisplayMode = PropertyDisplayMode.QUARTER_WIDTH;
+		@Choices.EnumValues(DetailDisplayMode.class)
+		DetailDisplayMode detailDisplayMode = DetailDisplayMode.QUARTER_WIDTH;
 
 		Heading section4 = new Heading("Actions");
 
@@ -41,8 +41,8 @@ class Dotburger extends Model.Fields {
 
 		Menu() {
 			bindings().from(SequenceSettings.get())
-					.on(SequenceSettings.properties.propertyDisplayMode)
-					.to(this).on(properties.propertyDisplayMode).bidi();
+					.on(SequenceSettings.properties.detailDisplayMode).to(this)
+					.on(properties.detailDisplayMode).bidi();
 		}
 	}
 

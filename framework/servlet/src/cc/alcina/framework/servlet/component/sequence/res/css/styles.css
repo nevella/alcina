@@ -509,7 +509,7 @@ body > page {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   grid-template-rows: auto;
-  grid-template-areas: "header header header header" "sequence sequence sequence props";
+  grid-template-areas: "header header header header" "sequence sequence sequence detail";
   grid-template-rows: 50px 1fr 260px;
   height: 100vh;
   width: 100vw;
@@ -690,7 +690,7 @@ body > page > sequence[column-set=DETAIL] > table td > value.wide {
 body > page > detail {
   display: grid;
   grid-template-rows: min-content min-content 1fr;
-  grid-area: props;
+  grid-area: detail;
   overflow: auto;
   padding: 0.5rem;
 }

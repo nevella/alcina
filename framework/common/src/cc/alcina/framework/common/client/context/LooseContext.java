@@ -267,6 +267,10 @@ public abstract class LooseContext {
 				LooseContext.pop();
 			}
 		}
+
+		public void setTrue() {
+			LooseContext.setTrue(getPath());
+		}
 	}
 
 	public static void push() {
