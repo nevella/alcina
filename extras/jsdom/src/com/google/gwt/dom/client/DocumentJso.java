@@ -12,7 +12,7 @@ import org.w3c.dom.ProcessingInstruction;
 import com.google.gwt.core.client.GWT;
 
 @SuppressWarnings("deprecation")
-public class DocumentJso extends NodeJso implements ClientDomDocument {
+public final class DocumentJso extends NodeJso implements ClientDomDocument {
 	/**
 	 * We cache Document.nativeGet() in DevMode, because crossing the JSNI
 	 * boundary thousands of times just to read a constant value is slow.
@@ -44,252 +44,251 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	}
 
 	@Override
-	public final AnchorElement createAnchorElement() {
+	public AnchorElement createAnchorElement() {
 		return ClientDomDocumentStatic.createAnchorElement(this);
 	}
 
 	@Override
-	public final AreaElement createAreaElement() {
+	public AreaElement createAreaElement() {
 		return ClientDomDocumentStatic.createAreaElement(this);
 	}
 
 	@Override
-	public final AudioElement createAudioElement() {
+	public AudioElement createAudioElement() {
 		return ClientDomDocumentStatic.createAudioElement(this);
 	}
 
 	@Override
-	public final BaseElement createBaseElement() {
+	public BaseElement createBaseElement() {
 		return ClientDomDocumentStatic.createBaseElement(this);
 	}
 
 	@Override
-	public final QuoteElement createBlockQuoteElement() {
+	public QuoteElement createBlockQuoteElement() {
 		return ClientDomDocumentStatic.createBlockQuoteElement(this);
 	}
 
 	@Override
-	public final NativeEvent createBlurEvent() {
+	public NativeEvent createBlurEvent() {
 		return ClientDomDocumentStatic.createBlurEvent(this);
 	}
 
 	@Override
-	public final BRElement createBRElement() {
+	public BRElement createBRElement() {
 		return ClientDomDocumentStatic.createBRElement(this);
 	}
 
 	@Override
-	public final ButtonElement createButtonElement() {
+	public ButtonElement createButtonElement() {
 		return ClientDomDocumentStatic.createButtonElement(this);
 	}
 
 	@Override
-	public final InputElement createButtonInputElement() {
+	public InputElement createButtonInputElement() {
 		return ClientDomDocumentStatic.createButtonInputElement(this);
 	}
 
 	@Override
-	public final CanvasElement createCanvasElement() {
+	public CanvasElement createCanvasElement() {
 		return ClientDomDocumentStatic.createCanvasElement(this);
 	}
 
 	@Override
-	public final TableCaptionElement createCaptionElement() {
+	public TableCaptionElement createCaptionElement() {
 		return ClientDomDocumentStatic.createCaptionElement(this);
 	}
 
 	@Override
-	public final CDATASection createCDATASection(String data)
-			throws DOMException {
+	public CDATASection createCDATASection(String data) throws DOMException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final NativeEvent createChangeEvent() {
+	public NativeEvent createChangeEvent() {
 		return ClientDomDocumentStatic.createChangeEvent(this);
 	}
 
 	@Override
-	public final InputElement createCheckInputElement() {
+	public InputElement createCheckInputElement() {
 		return ClientDomDocumentStatic.createCheckInputElement(this);
 	}
 
 	@Override
-	public final NativeEvent createClickEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey) {
+	public NativeEvent createClickEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey) {
 		return ClientDomDocumentStatic.createClickEvent(this, detail, screenX,
 				screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey);
 	}
 
 	@Override
-	public final TableColElement createColElement() {
+	public TableColElement createColElement() {
 		return ClientDomDocumentStatic.createColElement(this);
 	}
 
 	@Override
-	public final TableColElement createColGroupElement() {
+	public TableColElement createColGroupElement() {
 		return ClientDomDocumentStatic.createColGroupElement(this);
 	}
 
 	@Override
-	public final Comment createComment(String data) {
+	public Comment createComment(String data) {
 		CommentJso remote = createCommentNode0(data);
 		return LocalDom.nodeFor(remote);
 	}
 
-	native final CommentJso createCommentNode0(String data) /*-{
+	native CommentJso createCommentNode0(String data) /*-{
     return this.createComment(data);
 	}-*/;
 
 	@Override
-	public final NativeEvent createContextMenuEvent() {
+	public NativeEvent createContextMenuEvent() {
 		return ClientDomDocumentStatic.createContextMenuEvent(this);
 	}
 
 	@Override
-	public final NativeEvent createDblClickEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey) {
+	public NativeEvent createDblClickEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey) {
 		return ClientDomDocumentStatic.createDblClickEvent(this, detail,
 				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
 				metaKey);
 	}
 
 	@Override
-	public final ModElement createDelElement() {
+	public ModElement createDelElement() {
 		return ClientDomDocumentStatic.createDelElement(this);
 	}
 
 	@Override
-	public final DivElement createDivElement() {
+	public DivElement createDivElement() {
 		return ClientDomDocumentStatic.createDivElement(this);
 	}
 
 	@Override
-	public final DListElement createDLElement() {
+	public DListElement createDLElement() {
 		return ClientDomDocumentStatic.createDLElement(this);
 	}
 
 	@Override
-	public final Element createElement(String tagName) {
+	public Element createElement(String tagName) {
 		return ClientDomDocumentStatic.createElement(this, tagName);
 	}
 
-	native final ElementJso createElementNode0(String tagName) /*-{
+	native ElementJso createElementNode0(String tagName) /*-{
     return this.createElement(tagName);
 	}-*/;
 
 	@Override
-	public final NativeEvent createErrorEvent() {
+	public NativeEvent createErrorEvent() {
 		return ClientDomDocumentStatic.createErrorEvent(this);
 	}
 
 	@Override
-	public final FieldSetElement createFieldSetElement() {
+	public FieldSetElement createFieldSetElement() {
 		return ClientDomDocumentStatic.createFieldSetElement(this);
 	}
 
 	@Override
-	public final InputElement createFileInputElement() {
+	public InputElement createFileInputElement() {
 		return ClientDomDocumentStatic.createFileInputElement(this);
 	}
 
 	@Override
-	public final NativeEvent createFocusEvent() {
+	public NativeEvent createFocusEvent() {
 		return ClientDomDocumentStatic.createFocusEvent(this);
 	}
 
 	@Override
-	public final FormElement createFormElement() {
+	public FormElement createFormElement() {
 		return ClientDomDocumentStatic.createFormElement(this);
 	}
 
 	@Override
-	public final FrameElement createFrameElement() {
+	public FrameElement createFrameElement() {
 		return ClientDomDocumentStatic.createFrameElement(this);
 	}
 
 	@Override
-	public final FrameSetElement createFrameSetElement() {
+	public FrameSetElement createFrameSetElement() {
 		return ClientDomDocumentStatic.createFrameSetElement(this);
 	}
 
 	@Override
-	public final HeadElement createHeadElement() {
+	public HeadElement createHeadElement() {
 		return ClientDomDocumentStatic.createHeadElement(this);
 	}
 
 	@Override
-	public final HeadingElement createHElement(int n) {
+	public HeadingElement createHElement(int n) {
 		return ClientDomDocumentStatic.createHElement(this, n);
 	}
 
 	@Override
-	public final InputElement createHiddenInputElement() {
+	public InputElement createHiddenInputElement() {
 		return ClientDomDocumentStatic.createHiddenInputElement(this);
 	}
 
 	@Override
-	public final HRElement createHRElement() {
+	public HRElement createHRElement() {
 		return ClientDomDocumentStatic.createHRElement(this);
 	}
 
 	@Override
-	public final NativeEvent createHtmlEvent(String type, boolean canBubble,
+	public NativeEvent createHtmlEvent(String type, boolean canBubble,
 			boolean cancelable) {
 		return ClientDomDocumentStatic.createHtmlEvent(this, type, canBubble,
 				cancelable);
 	}
 
 	@Override
-	public final IFrameElement createIFrameElement() {
+	public IFrameElement createIFrameElement() {
 		return ClientDomDocumentStatic.createIFrameElement(this);
 	}
 
 	@Override
-	public final ImageElement createImageElement() {
+	public ImageElement createImageElement() {
 		return ClientDomDocumentStatic.createImageElement(this);
 	}
 
 	@Override
-	public final InputElement createImageInputElement() {
+	public InputElement createImageInputElement() {
 		return ClientDomDocumentStatic.createImageInputElement(this);
 	}
 
 	@Override
-	public final NativeEvent createInputEvent() {
+	public NativeEvent createInputEvent() {
 		return ClientDomDocumentStatic.createInputEvent(this);
 	}
 
 	@Override
-	public final ModElement createInsElement() {
+	public ModElement createInsElement() {
 		return ClientDomDocumentStatic.createInsElement(this);
 	}
 
 	@Override
-	public final NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
+	public NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
 		return ClientDomDocumentStatic.createKeyCodeEvent(this, type, ctrlKey,
 				altKey, shiftKey, metaKey, keyCode);
 	}
 
 	@Override
-	public final NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
+	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
 		return ClientDomDocumentStatic.createKeyDownEvent(this, ctrlKey, altKey,
 				shiftKey, metaKey, keyCode);
 	}
 
 	@Override
-	public final NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
+	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
 		return ClientDomDocumentStatic.createKeyDownEvent(this, ctrlKey, altKey,
 				shiftKey, metaKey, keyCode, charCode);
 	}
 
 	@Override
-	public final NativeEvent createKeyEvent(String type, boolean canBubble,
+	public NativeEvent createKeyEvent(String type, boolean canBubble,
 			boolean cancelable, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
 		return ClientDomDocumentStatic.createKeyEvent(this, type, canBubble,
@@ -298,71 +297,70 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	}
 
 	@Override
-	public final NativeEvent createKeyPressEvent(boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
+	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int charCode) {
 		return ClientDomDocumentStatic.createKeyPressEvent(this, ctrlKey,
 				altKey, shiftKey, metaKey, charCode);
 	}
 
 	@Override
-	public final NativeEvent createKeyPressEvent(boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode,
-			int charCode) {
+	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
 		return ClientDomDocumentStatic.createKeyPressEvent(this, ctrlKey,
 				altKey, shiftKey, metaKey, keyCode, charCode);
 	}
 
 	@Override
-	public final NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
+	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode) {
 		return ClientDomDocumentStatic.createKeyUpEvent(this, ctrlKey, altKey,
 				shiftKey, metaKey, keyCode);
 	}
 
 	@Override
-	public final NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
+	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
 		return ClientDomDocumentStatic.createKeyUpEvent(this, ctrlKey, altKey,
 				shiftKey, metaKey, keyCode, charCode);
 	}
 
 	@Override
-	public final LabelElement createLabelElement() {
+	public LabelElement createLabelElement() {
 		return ClientDomDocumentStatic.createLabelElement(this);
 	}
 
 	@Override
-	public final LegendElement createLegendElement() {
+	public LegendElement createLegendElement() {
 		return ClientDomDocumentStatic.createLegendElement(this);
 	}
 
 	@Override
-	public final LIElement createLIElement() {
+	public LIElement createLIElement() {
 		return ClientDomDocumentStatic.createLIElement(this);
 	}
 
 	@Override
-	public final LinkElement createLinkElement() {
+	public LinkElement createLinkElement() {
 		return ClientDomDocumentStatic.createLinkElement(this);
 	}
 
 	@Override
-	public final NativeEvent createLoadEvent() {
+	public NativeEvent createLoadEvent() {
 		return ClientDomDocumentStatic.createLoadEvent(this);
 	}
 
 	@Override
-	public final MapElement createMapElement() {
+	public MapElement createMapElement() {
 		return ClientDomDocumentStatic.createMapElement(this);
 	}
 
 	@Override
-	public final MetaElement createMetaElement() {
+	public MetaElement createMetaElement() {
 		return ClientDomDocumentStatic.createMetaElement(this);
 	}
 
 	@Override
-	public final NativeEvent createMouseDownEvent(int detail, int screenX,
+	public NativeEvent createMouseDownEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
 		return ClientDomDocumentStatic.createMouseDownEvent(this, detail,
@@ -371,7 +369,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	}
 
 	@Override
-	public final NativeEvent createMouseEvent(String type, boolean canBubble,
+	public NativeEvent createMouseEvent(String type, boolean canBubble,
 			boolean cancelable, int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
@@ -382,7 +380,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	}
 
 	@Override
-	public final NativeEvent createMouseMoveEvent(int detail, int screenX,
+	public NativeEvent createMouseMoveEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
 		return ClientDomDocumentStatic.createMouseMoveEvent(this, detail,
@@ -391,9 +389,9 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	}
 
 	@Override
-	public final NativeEvent createMouseOutEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button,
+	public NativeEvent createMouseOutEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
 		return ClientDomDocumentStatic.createMouseOutEvent(this, detail,
 				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
@@ -401,7 +399,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	}
 
 	@Override
-	public final NativeEvent createMouseOverEvent(int detail, int screenX,
+	public NativeEvent createMouseOverEvent(int detail, int screenX,
 			int screenY, int clientX, int clientY, boolean ctrlKey,
 			boolean altKey, boolean shiftKey, boolean metaKey, int button,
 			Element relatedTarget) {
@@ -411,157 +409,157 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	}
 
 	@Override
-	public final NativeEvent createMouseUpEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
+	public NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button) {
 		return ClientDomDocumentStatic.createMouseUpEvent(this, detail, screenX,
 				screenY, clientX, clientY, ctrlKey, altKey, shiftKey, metaKey,
 				button);
 	}
 
 	@Override
-	public final ObjectElement createObjectElement() {
+	public ObjectElement createObjectElement() {
 		return ClientDomDocumentStatic.createObjectElement(this);
 	}
 
 	@Override
-	public final OListElement createOLElement() {
+	public OListElement createOLElement() {
 		return ClientDomDocumentStatic.createOLElement(this);
 	}
 
 	@Override
-	public final OptGroupElement createOptGroupElement() {
+	public OptGroupElement createOptGroupElement() {
 		return ClientDomDocumentStatic.createOptGroupElement(this);
 	}
 
 	@Override
-	public final OptionElement createOptionElement() {
+	public OptionElement createOptionElement() {
 		return ClientDomDocumentStatic.createOptionElement(this);
 	}
 
 	@Override
-	public final ParamElement createParamElement() {
+	public ParamElement createParamElement() {
 		return ClientDomDocumentStatic.createParamElement(this);
 	}
 
 	@Override
-	public final InputElement createPasswordInputElement() {
+	public InputElement createPasswordInputElement() {
 		return ClientDomDocumentStatic.createPasswordInputElement(this);
 	}
 
 	@Override
-	public final ParagraphElement createPElement() {
+	public ParagraphElement createPElement() {
 		return ClientDomDocumentStatic.createPElement(this);
 	}
 
 	@Override
-	public final PreElement createPreElement() {
+	public PreElement createPreElement() {
 		return ClientDomDocumentStatic.createPreElement(this);
 	}
 
 	@Override
-	public final ProcessingInstruction createProcessingInstruction(
-			String target, String data) throws DOMException {
+	public ProcessingInstruction createProcessingInstruction(String target,
+			String data) throws DOMException {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final ButtonElement createPushButtonElement() {
+	public ButtonElement createPushButtonElement() {
 		return ClientDomDocumentStatic.createPushButtonElement(this);
 	}
 
 	@Override
-	public final QuoteElement createQElement() {
+	public QuoteElement createQElement() {
 		return ClientDomDocumentStatic.createQElement(this);
 	}
 
 	@Override
-	public final InputElement createRadioInputElement(String name) {
+	public InputElement createRadioInputElement(String name) {
 		return ClientDomDocumentStatic.createRadioInputElement(this, name);
 	}
 
 	@Override
-	public final ButtonElement createResetButtonElement() {
+	public ButtonElement createResetButtonElement() {
 		return ClientDomDocumentStatic.createResetButtonElement(this);
 	}
 
 	@Override
-	public final InputElement createResetInputElement() {
+	public InputElement createResetInputElement() {
 		return ClientDomDocumentStatic.createResetInputElement(this);
 	}
 
 	@Override
-	public final ScriptElement createScriptElement() {
+	public ScriptElement createScriptElement() {
 		return ClientDomDocumentStatic.createScriptElement(this);
 	}
 
 	@Override
-	public final ScriptElement createScriptElement(String source) {
+	public ScriptElement createScriptElement(String source) {
 		return ClientDomDocumentStatic.createScriptElement(this, source);
 	}
 
 	@Override
-	public final NativeEvent createScrollEvent() {
+	public NativeEvent createScrollEvent() {
 		return ClientDomDocumentStatic.createScrollEvent(this);
 	}
 
 	@Override
-	public final SelectElement createSelectElement() {
+	public SelectElement createSelectElement() {
 		return ClientDomDocumentStatic.createSelectElement(this);
 	}
 
 	@Override
-	public final SelectElement createSelectElement(boolean multiple) {
+	public SelectElement createSelectElement(boolean multiple) {
 		return ClientDomDocumentStatic.createSelectElement(this, multiple);
 	}
 
 	@Override
-	public final SourceElement createSourceElement() {
+	public SourceElement createSourceElement() {
 		return ClientDomDocumentStatic.createSourceElement(this);
 	}
 
 	@Override
-	public final SpanElement createSpanElement() {
+	public SpanElement createSpanElement() {
 		return ClientDomDocumentStatic.createSpanElement(this);
 	}
 
 	@Override
-	public final StyleElement createStyleElement() {
+	public StyleElement createStyleElement() {
 		return ClientDomDocumentStatic.createStyleElement(this);
 	}
 
 	@Override
-	public final ButtonElement createSubmitButtonElement() {
+	public ButtonElement createSubmitButtonElement() {
 		return ClientDomDocumentStatic.createSubmitButtonElement(this);
 	}
 
 	@Override
-	public final InputElement createSubmitInputElement() {
+	public InputElement createSubmitInputElement() {
 		return ClientDomDocumentStatic.createSubmitInputElement(this);
 	}
 
 	@Override
-	public final TableElement createTableElement() {
+	public TableElement createTableElement() {
 		return ClientDomDocumentStatic.createTableElement(this);
 	}
 
 	@Override
-	public final TableSectionElement createTBodyElement() {
+	public TableSectionElement createTBodyElement() {
 		return ClientDomDocumentStatic.createTBodyElement(this);
 	}
 
 	@Override
-	public final TableCellElement createTDElement() {
+	public TableCellElement createTDElement() {
 		return ClientDomDocumentStatic.createTDElement(this);
 	}
 
 	@Override
-	public final TextAreaElement createTextAreaElement() {
+	public TextAreaElement createTextAreaElement() {
 		return ClientDomDocumentStatic.createTextAreaElement(this);
 	}
 
 	@Override
-	public final InputElement createTextInputElement() {
+	public InputElement createTextInputElement() {
 		return ClientDomDocumentStatic.createTextInputElement(this);
 	}
 
@@ -573,42 +571,42 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the newly created element
 	 */
 	@Override
-	public final Text createTextNode(String data) {
+	public Text createTextNode(String data) {
 		TextJso remote = createTextNode0(data);
 		return LocalDom.nodeFor(remote);
 	}
 
-	native final TextJso createTextNode0(String data) /*-{
+	native TextJso createTextNode0(String data) /*-{
     return this.createTextNode(data);
 	}-*/;
 
 	@Override
-	public final TableSectionElement createTFootElement() {
+	public TableSectionElement createTFootElement() {
 		return ClientDomDocumentStatic.createTFootElement(this);
 	}
 
 	@Override
-	public final TableSectionElement createTHeadElement() {
+	public TableSectionElement createTHeadElement() {
 		return ClientDomDocumentStatic.createTHeadElement(this);
 	}
 
 	@Override
-	public final TableCellElement createTHElement() {
+	public TableCellElement createTHElement() {
 		return ClientDomDocumentStatic.createTHElement(this);
 	}
 
 	@Override
-	public final TitleElement createTitleElement() {
+	public TitleElement createTitleElement() {
 		return ClientDomDocumentStatic.createTitleElement(this);
 	}
 
 	@Override
-	public final TableRowElement createTRElement() {
+	public TableRowElement createTRElement() {
 		return ClientDomDocumentStatic.createTRElement(this);
 	}
 
 	@Override
-	public final UListElement createULElement() {
+	public UListElement createULElement() {
 		return ClientDomDocumentStatic.createULElement(this);
 	}
 
@@ -620,7 +618,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return a unique identifier
 	 */
 	@Override
-	public native final String createUniqueId() /*-{
+	public native String createUniqueId() /*-{
     // In order to force uid's to be document-unique across multiple modules,
     // we hang a counter from the document.
     if (!this.gwt_uid) {
@@ -631,12 +629,12 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	}-*/;
 
 	@Override
-	public final VideoElement createVideoElement() {
+	public VideoElement createVideoElement() {
 		return ClientDomDocumentStatic.createVideoElement(this);
 	}
 
 	@Override
-	public final Document documentFor() {
+	public Document documentFor() {
 		return (Document) node();
 	}
 
@@ -647,19 +645,19 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 *            whether scrolling should be enabled or disabled
 	 */
 	@Override
-	public final void enableScrolling(boolean enable) {
+	public void enableScrolling(boolean enable) {
 		getViewportElement().getStyle().setProperty("overflow",
 				enable ? "auto" : "hidden");
 	}
 
-	final native ElementJso generateFromOuterHtml(String outer) /*-{
+	native ElementJso generateFromOuterHtml(String outer) /*-{
     var div = this.createElement("div");
     div.innerHTML = outer;
     return div.childNodes[0];
 	}-*/;
 
 	@Override
-	public final BodyElement getBody() {
+	public BodyElement getBody() {
 		return nodeFor(getBody0());
 	}
 
@@ -669,7 +667,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 *
 	 * @return the document's body
 	 */
-	private final native NodeJso getBody0() /*-{
+	private native NodeJso getBody0() /*-{
     return this.body;
 	}-*/;
 
@@ -699,7 +697,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the left offset of the body's positioning coordinate system
 	 */
 	@Override
-	public final int getBodyOffsetLeft() {
+	public int getBodyOffsetLeft() {
 		return DOMImpl.impl.getBodyOffsetLeft(documentFor());
 	}
 
@@ -712,7 +710,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @see #getBodyOffsetLeft()
 	 */
 	@Override
-	public final int getBodyOffsetTop() {
+	public int getBodyOffsetTop() {
 		return DOMImpl.impl.getBodyOffsetTop(documentFor());
 	}
 
@@ -722,7 +720,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document's client height
 	 */
 	@Override
-	public final int getClientHeight() {
+	public int getClientHeight() {
 		return getViewportElement().getClientHeight();
 	}
 
@@ -732,7 +730,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document's client width
 	 */
 	@Override
-	public final int getClientWidth() {
+	public int getClientWidth() {
 		return getViewportElement().getClientWidth();
 	}
 
@@ -743,7 +741,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return one of "BackCompat" or "CSS1Compat"
 	 */
 	@Override
-	public final native String getCompatMode() /*-{
+	public native String getCompatMode() /*-{
     return this.compatMode;
 	}-*/;
 
@@ -753,11 +751,11 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document element
 	 */
 	@Override
-	public final Element getDocumentElement() {
+	public Element getDocumentElement() {
 		return LocalDom.nodeFor(getDocumentElement0());
 	}
 
-	final native ElementJso getDocumentElement0() /*-{
+	native ElementJso getDocumentElement0() /*-{
     return this.documentElement;
 	}-*/;
 
@@ -768,7 +766,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document's domain, or <code>null</code> if none exists
 	 */
 	@Override
-	public final native String getDomain() /*-{
+	public native String getDomain() /*-{
     return this.domain;
 	}-*/;
 
@@ -782,16 +780,16 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the matching element
 	 */
 	@Override
-	public final Element getElementById(String elementId) {
+	public Element getElementById(String elementId) {
 		return LocalDom.nodeFor(getElementById0(elementId));
 	}
 
-	final native ElementJso getElementById0(String elementId) /*-{
+	native ElementJso getElementById0(String elementId) /*-{
     return this.getElementById(elementId);
 	}-*/;
 
 	@Override
-	public final NodeList<Element> getElementsByTagName(String tagName) {
+	public NodeList<Element> getElementsByTagName(String tagName) {
 		return new NodeList(getElementsByTagName0(tagName));
 	}
 
@@ -805,7 +803,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 *            <code>"*"</code> matches all tags)
 	 * @return a list containing all the matched elements
 	 */
-	final native NodeListJso<Element> getElementsByTagName0(String tagName) /*-{
+	native NodeListJso<Element> getElementsByTagName0(String tagName) /*-{
     return this.getElementsByTagName(tagName);
 	}-*/;
 
@@ -816,7 +814,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document's head
 	 */
 	@Override
-	public final native HeadElement getHead() /*-{
+	public native HeadElement getHead() /*-{
     // IE8 does not have document.head
     // when removing IE8 support we remove the second statement
     return this.head || this.getElementsByTagName('head')[0];
@@ -830,7 +828,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the referrer URI
 	 */
 	@Override
-	public final native String getReferrer() /*-{
+	public native String getReferrer() /*-{
     return this.referrer;
 	}-*/;
 
@@ -840,7 +838,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the height of the document's scrollable area
 	 */
 	@Override
-	public final int getScrollHeight() {
+	public int getScrollHeight() {
 		// TODO(dramaix): Use document.scrollingElement when its available. See
 		// getScrollLeft().
 		return getViewportElement().getScrollHeight();
@@ -858,7 +856,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document's left scroll position
 	 */
 	@Override
-	public final int getScrollLeft() {
+	public int getScrollLeft() {
 		return DOMImpl.impl.getScrollLeft(documentFor());
 	}
 
@@ -869,7 +867,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document's top scroll position
 	 */
 	@Override
-	public final int getScrollTop() {
+	public int getScrollTop() {
 		return DOMImpl.impl.getScrollTop(documentFor());
 	}
 
@@ -879,13 +877,13 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the width of the document's scrollable area
 	 */
 	@Override
-	public final int getScrollWidth() {
+	public int getScrollWidth() {
 		// TODO(dramaix): Use document.scrollingElement when its available. See
 		// getScrollLeft().
 		return getViewportElement().getScrollWidth();
 	}
 
-	public native final SelectionJso getSelection()/*-{
+	public native SelectionJso getSelection()/*-{
     return this.getSelection();
 	}-*/;
 
@@ -896,7 +894,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document's title
 	 */
 	@Override
-	public final native String getTitle() /*-{
+	public native String getTitle() /*-{
     return this.title;
 	}-*/;
 
@@ -906,7 +904,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document URI
 	 */
 	@Override
-	public final native String getURL() /*-{
+	public native String getURL() /*-{
     return this.URL;
 	}-*/;
 
@@ -921,17 +919,17 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return the document's viewport element
 	 */
 	@Override
-	public final Element getViewportElement() {
+	public Element getViewportElement() {
 		return isCSS1Compat() ? getDocumentElement() : getBody();
 	}
 
 	@Override
-	public final native String getVisibilityState() /*-{
+	public native String getVisibilityState() /*-{
     return this.visibilityState;
 	}-*/;
 
 	@Override
-	public final native boolean hasFocus() /*-{
+	public native boolean hasFocus() /*-{
     return this.hasFocus();
 	}-*/;
 
@@ -960,7 +958,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 *            itself, as explained above
 	 */
 	@Override
-	public final native void importNode(Node node, boolean deep) /*-{
+	public native void importNode(Node node, boolean deep) /*-{
     this.importNode(node, deep);
 	}-*/;
 
@@ -971,7 +969,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 * @return <code>true</code> if the document is in CSS1Compat mode
 	 */
 	@Override
-	public final boolean isCSS1Compat() {
+	public boolean isCSS1Compat() {
 		return getCompatMode().equals("CSS1Compat");
 	}
 
@@ -983,7 +981,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 *            the document's left scroll position
 	 */
 	@Override
-	public final void setScrollLeft(int left) {
+	public void setScrollLeft(int left) {
 		DOMImpl.impl.setScrollLeft(documentFor(), left);
 	}
 
@@ -995,7 +993,7 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 *            the document's top scroll position
 	 */
 	@Override
-	public final void setScrollTop(int top) {
+	public void setScrollTop(int top) {
 		DOMImpl.impl.setScrollTop(documentFor(), top);
 	}
 
@@ -1007,54 +1005,53 @@ public class DocumentJso extends NodeJso implements ClientDomDocument {
 	 *            the document's new title
 	 */
 	@Override
-	public final native void setTitle(String title) /*-{
+	public native void setTitle(String title) /*-{
     this.title = title;
 	}-*/;
 
-	final String validateHtml(String html) {
+	String validateHtml(String html) {
 		ElementJso elementJso = createElementNode0("div");
 		return elementJso.sanitizeHTML(html);
 	}
 
 	@Override
-	public final <T> T invoke(Supplier<T> supplier, Class clazz,
-			String methodName, List<Class> argumentTypes, List<?> arguments,
-			boolean sync) {
+	public <T> T invoke(Supplier<T> supplier, Class clazz, String methodName,
+			List<Class> argumentTypes, List<?> arguments, boolean sync) {
 		// this supplier will always just be a lambda(-esque) wrapping a JSNI
 		// call
 		return supplier.get();
 	}
 
 	@Override
-	public final void invoke(Runnable runnable, Class clazz, String methodName,
+	public void invoke(Runnable runnable, Class clazz, String methodName,
 			List<Class> argumentTypes, List<?> arguments, boolean sync) {
 		ClientDomDocumentStatic.invoke(this, runnable, clazz, methodName,
 				argumentTypes, arguments, sync);
 	}
 
 	@Override
-	public final Element getActiveElement() {
+	public Element getActiveElement() {
 		ElementJso activeElementJso = getActiveElement0();
 		return activeElementJso == null ? null : activeElementJso.elementFor();
 	}
 
-	final native ElementJso getActiveElement0()/*-{
+	native ElementJso getActiveElement0()/*-{
 		return this.activeElement;
 		}-*/;
 
 	@Override
-	public final List<Element> querySelectorAll(String selector) {
+	public List<Element> querySelectorAll(String selector) {
 		return querySelectorAll0(selector).stream()
 				.collect(Collectors.toList());
 	}
 
-	native final NodeList<Element> querySelectorAll0(String selector) /*-{
+	native NodeList<Element> querySelectorAll0(String selector) /*-{
     var nodeList = this.querySelectorAll(selector);
     return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/ClientDomNodeList;)(nodeList);
 	}-*/;
 
 	@Override
-	public final ClientDomSelection ensureRemoteSelection(Selection selection) {
+	public ClientDomSelection ensureRemoteSelection(Selection selection) {
 		return getSelection();
 	}
 

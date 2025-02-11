@@ -30,422 +30,422 @@ public final class StyleJso extends JavaScriptObject implements ClientDomStyle {
 	}
 
 	@Override
-	public final void clearBackgroundColor() {
+	public void clearBackgroundColor() {
 		ClientDomStyleStatic.clearBackgroundColor(this);
 	}
 
 	@Override
-	public final void clearBackgroundImage() {
+	public void clearBackgroundImage() {
 		ClientDomStyleStatic.clearBackgroundImage(this);
 	}
 
 	@Override
-	public final void clearBorderColor() {
+	public void clearBorderColor() {
 		ClientDomStyleStatic.clearBorderColor(this);
 	}
 
 	@Override
-	public final void clearBorderStyle() {
+	public void clearBorderStyle() {
 		ClientDomStyleStatic.clearBorderStyle(this);
 	}
 
 	@Override
-	public final void clearBorderWidth() {
+	public void clearBorderWidth() {
 		ClientDomStyleStatic.clearBorderWidth(this);
 	}
 
 	@Override
-	public final void clearBottom() {
+	public void clearBottom() {
 		ClientDomStyleStatic.clearBottom(this);
 	}
 
 	@Override
-	public final void clearClear() {
+	public void clearClear() {
 		ClientDomStyleStatic.clearClear(this);
 	}
 
 	@Override
-	public final void clearColor() {
+	public void clearColor() {
 		ClientDomStyleStatic.clearColor(this);
 	}
 
 	@Override
-	public final void clearCursor() {
+	public void clearCursor() {
 		ClientDomStyleStatic.clearCursor(this);
 	}
 
 	@Override
-	public final void clearDisplay() {
+	public void clearDisplay() {
 		ClientDomStyleStatic.clearDisplay(this);
 	}
 
 	@Override
-	public final void clearFloat() {
+	public void clearFloat() {
 		ClientDomStyleStatic.clearFloat(this);
 	}
 
 	@Override
-	public final void clearFontSize() {
+	public void clearFontSize() {
 		ClientDomStyleStatic.clearFontSize(this);
 	}
 
 	@Override
-	public final void clearFontStyle() {
+	public void clearFontStyle() {
 		ClientDomStyleStatic.clearFontStyle(this);
 	}
 
 	@Override
-	public final void clearFontWeight() {
+	public void clearFontWeight() {
 		ClientDomStyleStatic.clearFontWeight(this);
 	}
 
 	@Override
-	public final void clearHeight() {
+	public void clearHeight() {
 		ClientDomStyleStatic.clearHeight(this);
 	}
 
 	@Override
-	public final void clearLeft() {
+	public void clearLeft() {
 		ClientDomStyleStatic.clearLeft(this);
 	}
 
 	@Override
-	public final void clearLineHeight() {
+	public void clearLineHeight() {
 		ClientDomStyleStatic.clearLineHeight(this);
 	}
 
 	@Override
-	public final void clearListStyleType() {
+	public void clearListStyleType() {
 		ClientDomStyleStatic.clearListStyleType(this);
 	}
 
 	@Override
-	public final void clearMargin() {
+	public void clearMargin() {
 		ClientDomStyleStatic.clearMargin(this);
 	}
 
 	@Override
-	public final void clearMarginBottom() {
+	public void clearMarginBottom() {
 		ClientDomStyleStatic.clearMarginBottom(this);
 	}
 
 	@Override
-	public final void clearMarginLeft() {
+	public void clearMarginLeft() {
 		ClientDomStyleStatic.clearMarginLeft(this);
 	}
 
 	@Override
-	public final void clearMarginRight() {
+	public void clearMarginRight() {
 		ClientDomStyleStatic.clearMarginRight(this);
 	}
 
 	@Override
-	public final void clearMarginTop() {
+	public void clearMarginTop() {
 		ClientDomStyleStatic.clearMarginTop(this);
 	}
 
 	@Override
-	public final void clearOpacity() {
+	public void clearOpacity() {
 		ClientDomStyleStatic.clearOpacity(this);
 	}
 
 	@Override
-	public final void clearOutlineColor() {
+	public void clearOutlineColor() {
 		ClientDomStyleStatic.clearOutlineColor(this);
 	}
 
 	@Override
-	public final void clearOutlineStyle() {
+	public void clearOutlineStyle() {
 		ClientDomStyleStatic.clearOutlineStyle(this);
 	}
 
 	@Override
-	public final void clearOutlineWidth() {
+	public void clearOutlineWidth() {
 		ClientDomStyleStatic.clearOutlineWidth(this);
 	}
 
 	@Override
-	public final void clearOverflow() {
+	public void clearOverflow() {
 		ClientDomStyleStatic.clearOverflow(this);
 	}
 
 	@Override
-	public final void clearOverflowX() {
+	public void clearOverflowX() {
 		ClientDomStyleStatic.clearOverflowX(this);
 	}
 
 	@Override
-	public final void clearOverflowY() {
+	public void clearOverflowY() {
 		ClientDomStyleStatic.clearOverflowY(this);
 	}
 
 	@Override
-	public final void clearPadding() {
+	public void clearPadding() {
 		ClientDomStyleStatic.clearPadding(this);
 	}
 
 	@Override
-	public final void clearPaddingBottom() {
+	public void clearPaddingBottom() {
 		ClientDomStyleStatic.clearPaddingBottom(this);
 	}
 
 	@Override
-	public final void clearPaddingLeft() {
+	public void clearPaddingLeft() {
 		ClientDomStyleStatic.clearPaddingLeft(this);
 	}
 
 	@Override
-	public final void clearPaddingRight() {
+	public void clearPaddingRight() {
 		ClientDomStyleStatic.clearPaddingRight(this);
 	}
 
 	@Override
-	public final void clearPaddingTop() {
+	public void clearPaddingTop() {
 		ClientDomStyleStatic.clearPaddingTop(this);
 	}
 
 	@Override
-	public final void clearPosition() {
+	public void clearPosition() {
 		ClientDomStyleStatic.clearPosition(this);
 	}
 
 	@Override
-	public final void clearProperty(String name) {
+	public void clearProperty(String name) {
 		ClientDomStyleStatic.clearProperty(this, name);
 	}
 
 	@Override
-	public final void clearRight() {
+	public void clearRight() {
 		ClientDomStyleStatic.clearRight(this);
 	}
 
 	@Override
-	public final void clearTableLayout() {
+	public void clearTableLayout() {
 		ClientDomStyleStatic.clearTableLayout(this);
 	}
 
 	@Override
-	public final void clearTextAlign() {
+	public void clearTextAlign() {
 		ClientDomStyleStatic.clearTextAlign(this);
 	}
 
 	@Override
-	public final void clearTextDecoration() {
+	public void clearTextDecoration() {
 		ClientDomStyleStatic.clearTextDecoration(this);
 	}
 
 	@Override
-	public final void clearTextIndent() {
+	public void clearTextIndent() {
 		ClientDomStyleStatic.clearTextIndent(this);
 	}
 
 	@Override
-	public final void clearTextJustify() {
+	public void clearTextJustify() {
 		ClientDomStyleStatic.clearTextJustify(this);
 	}
 
 	@Override
-	public final void clearTextOverflow() {
+	public void clearTextOverflow() {
 		ClientDomStyleStatic.clearTextOverflow(this);
 	}
 
 	@Override
-	public final void clearTextTransform() {
+	public void clearTextTransform() {
 		ClientDomStyleStatic.clearTextTransform(this);
 	}
 
 	@Override
-	public final void clearTop() {
+	public void clearTop() {
 		ClientDomStyleStatic.clearTop(this);
 	}
 
 	@Override
-	public final void clearVisibility() {
+	public void clearVisibility() {
 		ClientDomStyleStatic.clearVisibility(this);
 	}
 
 	@Override
-	public final void clearWhiteSpace() {
+	public void clearWhiteSpace() {
 		ClientDomStyleStatic.clearWhiteSpace(this);
 	}
 
 	@Override
-	public final void clearWidth() {
+	public void clearWidth() {
 		ClientDomStyleStatic.clearWidth(this);
 	}
 
 	@Override
-	public final void clearZIndex() {
+	public void clearZIndex() {
 		ClientDomStyleStatic.clearZIndex(this);
 	}
 
 	@Override
-	public final String getBackgroundColor() {
+	public String getBackgroundColor() {
 		return ClientDomStyleStatic.getBackgroundColor(this);
 	}
 
 	@Override
-	public final String getBackgroundImage() {
+	public String getBackgroundImage() {
 		return ClientDomStyleStatic.getBackgroundImage(this);
 	}
 
 	@Override
-	public final String getBorderColor() {
+	public String getBorderColor() {
 		return ClientDomStyleStatic.getBorderColor(this);
 	}
 
 	@Override
-	public final String getBorderStyle() {
+	public String getBorderStyle() {
 		return ClientDomStyleStatic.getBorderStyle(this);
 	}
 
 	@Override
-	public final String getBorderWidth() {
+	public String getBorderWidth() {
 		return ClientDomStyleStatic.getBorderWidth(this);
 	}
 
 	@Override
-	public final String getBottom() {
+	public String getBottom() {
 		return ClientDomStyleStatic.getBottom(this);
 	}
 
 	@Override
-	public final String getClear() {
+	public String getClear() {
 		return ClientDomStyleStatic.getClear(this);
 	}
 
 	@Override
-	public final String getColor() {
+	public String getColor() {
 		return ClientDomStyleStatic.getColor(this);
 	}
 
 	@Override
-	public final String getCursor() {
+	public String getCursor() {
 		return ClientDomStyleStatic.getCursor(this);
 	}
 
 	@Override
-	public final String getDisplay() {
+	public String getDisplay() {
 		return ClientDomStyleStatic.getDisplay(this);
 	}
 
 	@Override
-	public final Style.Display getDisplayTyped() {
+	public Style.Display getDisplayTyped() {
 		return ClientDomStyleStatic.getDisplayTyped(this);
 	}
 
 	@Override
-	public final String getFontSize() {
+	public String getFontSize() {
 		return ClientDomStyleStatic.getFontSize(this);
 	}
 
 	@Override
-	public final String getFontStyle() {
+	public String getFontStyle() {
 		return ClientDomStyleStatic.getFontStyle(this);
 	}
 
 	@Override
-	public final String getFontWeight() {
+	public String getFontWeight() {
 		return ClientDomStyleStatic.getFontWeight(this);
 	}
 
 	@Override
-	public final String getHeight() {
+	public String getHeight() {
 		return ClientDomStyleStatic.getHeight(this);
 	}
 
 	@Override
-	public final String getLeft() {
+	public String getLeft() {
 		return ClientDomStyleStatic.getLeft(this);
 	}
 
 	@Override
-	public final String getLineHeight() {
+	public String getLineHeight() {
 		return ClientDomStyleStatic.getLineHeight(this);
 	}
 
 	@Override
-	public final String getListStyleType() {
+	public String getListStyleType() {
 		return ClientDomStyleStatic.getListStyleType(this);
 	}
 
 	@Override
-	public final String getMargin() {
+	public String getMargin() {
 		return ClientDomStyleStatic.getMargin(this);
 	}
 
 	@Override
-	public final String getMarginBottom() {
+	public String getMarginBottom() {
 		return ClientDomStyleStatic.getMarginBottom(this);
 	}
 
 	@Override
-	public final String getMarginLeft() {
+	public String getMarginLeft() {
 		return ClientDomStyleStatic.getMarginLeft(this);
 	}
 
 	@Override
-	public final String getMarginRight() {
+	public String getMarginRight() {
 		return ClientDomStyleStatic.getMarginRight(this);
 	}
 
 	@Override
-	public final String getMarginTop() {
+	public String getMarginTop() {
 		return ClientDomStyleStatic.getMarginTop(this);
 	}
 
 	@Override
-	public final String getOpacity() {
+	public String getOpacity() {
 		return ClientDomStyleStatic.getOpacity(this);
 	}
 
 	@Override
-	public final String getOverflow() {
+	public String getOverflow() {
 		return ClientDomStyleStatic.getOverflow(this);
 	}
 
 	@Override
-	public final String getOverflowX() {
+	public String getOverflowX() {
 		return ClientDomStyleStatic.getOverflowX(this);
 	}
 
 	@Override
-	public final String getOverflowY() {
+	public String getOverflowY() {
 		return ClientDomStyleStatic.getOverflowY(this);
 	}
 
 	@Override
-	public final String getPadding() {
+	public String getPadding() {
 		return ClientDomStyleStatic.getPadding(this);
 	}
 
 	@Override
-	public final String getPaddingBottom() {
+	public String getPaddingBottom() {
 		return ClientDomStyleStatic.getPaddingBottom(this);
 	}
 
 	@Override
-	public final String getPaddingLeft() {
+	public String getPaddingLeft() {
 		return ClientDomStyleStatic.getPaddingLeft(this);
 	}
 
 	@Override
-	public final String getPaddingRight() {
+	public String getPaddingRight() {
 		return ClientDomStyleStatic.getPaddingRight(this);
 	}
 
 	@Override
-	public final String getPaddingTop() {
+	public String getPaddingTop() {
 		return ClientDomStyleStatic.getPaddingTop(this);
 	}
 
 	@Override
-	public final String getPosition() {
+	public String getPosition() {
 		return ClientDomStyleStatic.getPosition(this);
 	}
 
 	@Override
-	public final Style.Position getPositionTyped() {
+	public Style.Position getPositionTyped() {
 		return ClientDomStyleStatic.getPositionTyped(this);
 	}
 
@@ -455,273 +455,273 @@ public final class StyleJso extends JavaScriptObject implements ClientDomStyle {
 	}
 
 	@Override
-	public final String getProperty(String name) {
+	public String getProperty(String name) {
 		return ClientDomStyleStatic.getProperty(this, name);
 	}
 
 	@Override
 	// called for direct StyleRemote (computedStyle e.g.) access
-	public final native String getPropertyImpl(String name) /*-{
+	public native String getPropertyImpl(String name) /*-{
     return this[name];
 	}-*/;
 
 	@Override
-	public final String getRight() {
+	public String getRight() {
 		return ClientDomStyleStatic.getRight(this);
 	}
 
 	@Override
-	public final String getTableLayout() {
+	public String getTableLayout() {
 		return ClientDomStyleStatic.getTableLayout(this);
 	}
 
 	@Override
-	public final String getTextAlign() {
+	public String getTextAlign() {
 		return ClientDomStyleStatic.getTextAlign(this);
 	}
 
 	@Override
-	public final String getTextDecoration() {
+	public String getTextDecoration() {
 		return ClientDomStyleStatic.getTextDecoration(this);
 	}
 
 	@Override
-	public final String getTextIndent() {
+	public String getTextIndent() {
 		return ClientDomStyleStatic.getTextIndent(this);
 	}
 
 	@Override
-	public final String getTextJustify() {
+	public String getTextJustify() {
 		return ClientDomStyleStatic.getTextJustify(this);
 	}
 
 	@Override
-	public final String getTextOverflow() {
+	public String getTextOverflow() {
 		return ClientDomStyleStatic.getTextOverflow(this);
 	}
 
 	@Override
-	public final String getTextTransform() {
+	public String getTextTransform() {
 		return ClientDomStyleStatic.getTextTransform(this);
 	}
 
 	@Override
-	public final String getTop() {
+	public String getTop() {
 		return ClientDomStyleStatic.getTop(this);
 	}
 
 	@Override
-	public final String getVerticalAlign() {
+	public String getVerticalAlign() {
 		return ClientDomStyleStatic.getVerticalAlign(this);
 	}
 
 	@Override
-	public final String getVisibility() {
+	public String getVisibility() {
 		return ClientDomStyleStatic.getVisibility(this);
 	}
 
 	@Override
-	public final String getWhiteSpace() {
+	public String getWhiteSpace() {
 		return ClientDomStyleStatic.getWhiteSpace(this);
 	}
 
 	@Override
-	public final String getWidth() {
+	public String getWidth() {
 		return ClientDomStyleStatic.getWidth(this);
 	}
 
 	@Override
-	public final String getZIndex() {
+	public String getZIndex() {
 		return ClientDomStyleStatic.getZIndex(this);
 	}
 
 	@Override
-	public final void setBackgroundColor(String value) {
+	public void setBackgroundColor(String value) {
 		ClientDomStyleStatic.setBackgroundColor(this, value);
 	}
 
 	@Override
-	public final void setBackgroundImage(String value) {
+	public void setBackgroundImage(String value) {
 		ClientDomStyleStatic.setBackgroundImage(this, value);
 	}
 
 	@Override
-	public final void setBorderColor(String value) {
+	public void setBorderColor(String value) {
 		ClientDomStyleStatic.setBorderColor(this, value);
 	}
 
 	@Override
-	public final void setBorderStyle(BorderStyle value) {
+	public void setBorderStyle(BorderStyle value) {
 		ClientDomStyleStatic.setBorderStyle(this, value);
 	}
 
 	@Override
-	public final void setBorderWidth(double value, Unit unit) {
+	public void setBorderWidth(double value, Unit unit) {
 		ClientDomStyleStatic.setBorderWidth(this, value, unit);
 	}
 
 	@Override
-	public final void setBottom(double value, Unit unit) {
+	public void setBottom(double value, Unit unit) {
 		ClientDomStyleStatic.setBottom(this, value, unit);
 	}
 
 	@Override
-	public final void setClear(Clear value) {
+	public void setClear(Clear value) {
 		ClientDomStyleStatic.setClear(this, value);
 	}
 
 	@Override
-	public final void setColor(String value) {
+	public void setColor(String value) {
 		ClientDomStyleStatic.setColor(this, value);
 	}
 
 	@Override
-	public final void setCursor(Cursor value) {
+	public void setCursor(Cursor value) {
 		ClientDomStyleStatic.setCursor(this, value);
 	}
 
 	@Override
-	public final void setDisplay(Display value) {
+	public void setDisplay(Display value) {
 		ClientDomStyleStatic.setDisplay(this, value);
 	}
 
 	@Override
-	public final void setFloat(Float value) {
+	public void setFloat(Float value) {
 		ClientDomStyleStatic.setFloat(this, value);
 	}
 
 	@Override
-	public final void setFontSize(double value, Unit unit) {
+	public void setFontSize(double value, Unit unit) {
 		ClientDomStyleStatic.setFontSize(this, value, unit);
 	}
 
 	@Override
-	public final void setFontStyle(FontStyle value) {
+	public void setFontStyle(FontStyle value) {
 		ClientDomStyleStatic.setFontStyle(this, value);
 	}
 
 	@Override
-	public final void setFontWeight(FontWeight value) {
+	public void setFontWeight(FontWeight value) {
 		ClientDomStyleStatic.setFontWeight(this, value);
 	}
 
 	@Override
-	public final void setHeight(double value, Unit unit) {
+	public void setHeight(double value, Unit unit) {
 		ClientDomStyleStatic.setHeight(this, value, unit);
 	}
 
 	@Override
-	public final void setLeft(double value, Unit unit) {
+	public void setLeft(double value, Unit unit) {
 		ClientDomStyleStatic.setLeft(this, value, unit);
 	}
 
 	@Override
-	public final void setLineHeight(double value, Unit unit) {
+	public void setLineHeight(double value, Unit unit) {
 		ClientDomStyleStatic.setLineHeight(this, value, unit);
 	}
 
 	@Override
-	public final void setListStyleType(ListStyleType value) {
+	public void setListStyleType(ListStyleType value) {
 		ClientDomStyleStatic.setListStyleType(this, value);
 	}
 
 	@Override
-	public final void setMargin(double value, Unit unit) {
+	public void setMargin(double value, Unit unit) {
 		ClientDomStyleStatic.setMargin(this, value, unit);
 	}
 
 	@Override
-	public final void setMarginBottom(double value, Unit unit) {
+	public void setMarginBottom(double value, Unit unit) {
 		ClientDomStyleStatic.setMarginBottom(this, value, unit);
 	}
 
 	@Override
-	public final void setMarginLeft(double value, Unit unit) {
+	public void setMarginLeft(double value, Unit unit) {
 		ClientDomStyleStatic.setMarginLeft(this, value, unit);
 	}
 
 	@Override
-	public final void setMarginRight(double value, Unit unit) {
+	public void setMarginRight(double value, Unit unit) {
 		ClientDomStyleStatic.setMarginRight(this, value, unit);
 	}
 
 	@Override
-	public final void setMarginTop(double value, Unit unit) {
+	public void setMarginTop(double value, Unit unit) {
 		ClientDomStyleStatic.setMarginTop(this, value, unit);
 	}
 
 	@Override
-	public final void setOpacity(String value) {
+	public void setOpacity(String value) {
 		ClientDomStyleStatic.setOpacity(this, value);
 	}
 
 	@Override
-	public final void setOutlineColor(String value) {
+	public void setOutlineColor(String value) {
 		ClientDomStyleStatic.setOutlineColor(this, value);
 	}
 
 	@Override
-	public final void setOutlineStyle(OutlineStyle value) {
+	public void setOutlineStyle(OutlineStyle value) {
 		ClientDomStyleStatic.setOutlineStyle(this, value);
 	}
 
 	@Override
-	public final void setOutlineWidth(double value, Unit unit) {
+	public void setOutlineWidth(double value, Unit unit) {
 		ClientDomStyleStatic.setOutlineWidth(this, value, unit);
 	}
 
 	@Override
-	public final void setOverflow(Overflow value) {
+	public void setOverflow(Overflow value) {
 		ClientDomStyleStatic.setOverflow(this, value);
 	}
 
 	@Override
-	public final void setOverflowX(Overflow value) {
+	public void setOverflowX(Overflow value) {
 		ClientDomStyleStatic.setOverflowX(this, value);
 	}
 
 	@Override
-	public final void setOverflowY(Overflow value) {
+	public void setOverflowY(Overflow value) {
 		ClientDomStyleStatic.setOverflowY(this, value);
 	}
 
 	@Override
-	public final void setPadding(double value, Unit unit) {
+	public void setPadding(double value, Unit unit) {
 		ClientDomStyleStatic.setPadding(this, value, unit);
 	}
 
 	@Override
-	public final void setPaddingBottom(double value, Unit unit) {
+	public void setPaddingBottom(double value, Unit unit) {
 		ClientDomStyleStatic.setPaddingBottom(this, value, unit);
 	}
 
 	@Override
-	public final void setPaddingLeft(double value, Unit unit) {
+	public void setPaddingLeft(double value, Unit unit) {
 		ClientDomStyleStatic.setPaddingLeft(this, value, unit);
 	}
 
 	@Override
-	public final void setPaddingRight(double value, Unit unit) {
+	public void setPaddingRight(double value, Unit unit) {
 		ClientDomStyleStatic.setPaddingRight(this, value, unit);
 	}
 
 	@Override
-	public final void setPaddingTop(double value, Unit unit) {
+	public void setPaddingTop(double value, Unit unit) {
 		ClientDomStyleStatic.setPaddingTop(this, value, unit);
 	}
 
 	@Override
-	public final void setPosition(Position value) {
+	public void setPosition(Position value) {
 		ClientDomStyleStatic.setPosition(this, value);
 	}
 
 	@Override
-	public final void setProperty(String name, double value, Unit unit) {
+	public void setProperty(String name, double value, Unit unit) {
 		ClientDomStyleStatic.setProperty(this, name, value, unit);
 	}
 
 	@Override
-	public final void setProperty(String name, String value) {
+	public void setProperty(String name, String value) {
 		ClientDomStyleStatic.setProperty(this, name, value);
 	}
 
@@ -729,98 +729,98 @@ public final class StyleJso extends JavaScriptObject implements ClientDomStyle {
 	 * Sets the value of a named property.
 	 */
 	@Override
-	public final native void setPropertyImpl(String name, String value) /*-{
+	public native void setPropertyImpl(String name, String value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
 
 	@Override
-	public final void setPropertyPx(String name, int value) {
+	public void setPropertyPx(String name, int value) {
 		ClientDomStyleStatic.setPropertyPx(this, name, value);
 	}
 
 	@Override
-	public final void setRight(double value, Unit unit) {
+	public void setRight(double value, Unit unit) {
 		ClientDomStyleStatic.setRight(this, value, unit);
 	}
 
 	@Override
-	public final void setTableLayout(TableLayout value) {
+	public void setTableLayout(TableLayout value) {
 		ClientDomStyleStatic.setTableLayout(this, value);
 	}
 
 	@Override
-	public final void setTextAlign(TextAlign value) {
+	public void setTextAlign(TextAlign value) {
 		ClientDomStyleStatic.setTextAlign(this, value);
 	}
 
 	@Override
-	public final void setTextDecoration(TextDecoration value) {
+	public void setTextDecoration(TextDecoration value) {
 		ClientDomStyleStatic.setTextDecoration(this, value);
 	}
 
 	@Override
-	public final void setTextIndent(double value, Unit unit) {
+	public void setTextIndent(double value, Unit unit) {
 		ClientDomStyleStatic.setTextIndent(this, value, unit);
 	}
 
 	@Override
-	public final void setTextJustify(TextJustify value) {
+	public void setTextJustify(TextJustify value) {
 		ClientDomStyleStatic.setTextJustify(this, value);
 	}
 
 	@Override
-	public final void setTextOverflow(TextOverflow value) {
+	public void setTextOverflow(TextOverflow value) {
 		ClientDomStyleStatic.setTextOverflow(this, value);
 	}
 
 	@Override
-	public final void setTextTransform(TextTransform value) {
+	public void setTextTransform(TextTransform value) {
 		ClientDomStyleStatic.setTextTransform(this, value);
 	}
 
 	@Override
-	public final void setTop(double value, Unit unit) {
+	public void setTop(double value, Unit unit) {
 		ClientDomStyleStatic.setTop(this, value, unit);
 	}
 
 	@Override
-	public final void setVerticalAlign(double value, Unit unit) {
+	public void setVerticalAlign(double value, Unit unit) {
 		ClientDomStyleStatic.setVerticalAlign(this, value, unit);
 	}
 
 	@Override
-	public final void setVerticalAlign(VerticalAlign value) {
+	public void setVerticalAlign(VerticalAlign value) {
 		ClientDomStyleStatic.setVerticalAlign(this, value);
 	}
 
 	@Override
-	public final void setVisibility(Visibility value) {
+	public void setVisibility(Visibility value) {
 		ClientDomStyleStatic.setVisibility(this, value);
 	}
 
 	@Override
-	public final void setWhiteSpace(WhiteSpace value) {
+	public void setWhiteSpace(WhiteSpace value) {
 		ClientDomStyleStatic.setWhiteSpace(this, value);
 	}
 
 	@Override
-	public final void setWidth(double value, Unit unit) {
+	public void setWidth(double value, Unit unit) {
 		ClientDomStyleStatic.setWidth(this, value, unit);
 	}
 
 	@Override
-	public final void setZIndex(int value) {
+	public void setZIndex(int value) {
 		ClientDomStyleStatic.setZIndex(this, value);
 	}
 
 	@Override
-	public final Style styleObject() {
+	public Style styleObject() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final native void removeProperty(String key) /*-{
+	public native void removeProperty(String key) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
      this.removeProperty(key);
 	}-*/;

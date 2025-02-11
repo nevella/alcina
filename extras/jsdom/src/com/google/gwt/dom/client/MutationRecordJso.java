@@ -2,23 +2,23 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public class MutationRecordJso extends JavaScriptObject {
+public final class MutationRecordJso extends JavaScriptObject {
 	protected MutationRecordJso() {
 	}
 
-	public final native NodeListJso<Node> getAddedNodes() /*-{
+	public native NodeListJso<Node> getAddedNodes() /*-{
     return this.addedNodes;
 	}-*/;
 
-	public final native String getAttributeName() /*-{
+	public native String getAttributeName() /*-{
     return this.attributeName;
 	}-*/;
 
-	public final native String getAttributeNamespace() /*-{
+	public native String getAttributeNamespace() /*-{
     return this.attributeNamespace;
 	}-*/;
 
-	public final native String getInterchangeJson() /*-{
+	public native String getInterchangeJson() /*-{
 	var newValue =  @com.google.gwt.dom.client.MutationRecordJso::getNewValue(Lcom/google/gwt/dom/client/MutationRecordJso;)(this);
     var obj = {
       addedNodes : this.addedNodes.length,
@@ -34,11 +34,11 @@ public class MutationRecordJso extends JavaScriptObject {
     return JSON.stringify(obj);
 	}-*/;
 
-	public final MutationRecordType getMutationRecordType() {
+	public MutationRecordType getMutationRecordType() {
 		return MutationRecordType.valueOf(getType());
 	}
 
-	static final native String getNewValue(MutationRecordJso record)/*-{
+	static native String getNewValue(MutationRecordJso record)/*-{
 		var newValue = null;
 		switch(record.type){
 		case "attributes":
@@ -53,31 +53,31 @@ public class MutationRecordJso extends JavaScriptObject {
 		return newValue;
 		}-*/;
 
-	public final native String getNewValue() /*-{
+	public native String getNewValue() /*-{
 	return @com.google.gwt.dom.client.MutationRecordJso::getNewValue(Lcom/google/gwt/dom/client/MutationRecordJso;)(this);
 	}-*/;
 
-	public final native NodeJso getNextSibling() /*-{
+	public native NodeJso getNextSibling() /*-{
     return this.nextSibling;
 	}-*/;
 
-	public final native String getOldValue() /*-{
+	public native String getOldValue() /*-{
     return this.oldValue;
 	}-*/;
 
-	public final native NodeJso getPreviousSibling() /*-{
+	public native NodeJso getPreviousSibling() /*-{
     return this.previousSibling;
 	}-*/;
 
-	public final native NodeListJso<Node> getRemovedNodes() /*-{
+	public native NodeListJso<Node> getRemovedNodes() /*-{
     return this.removedNodes;
 	}-*/;
 
-	public final native NodeJso getTarget() /*-{
+	public native NodeJso getTarget() /*-{
     return this.target;
 	}-*/;
 
-	public final native String getType() /*-{
+	public native String getType() /*-{
     return this.type;
 	}-*/;
 }

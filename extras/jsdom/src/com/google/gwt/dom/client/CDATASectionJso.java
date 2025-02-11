@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client;
 
-public class CDATASectionJso extends NodeJso implements ClientDomCDATASection {
+public final class CDATASectionJso extends NodeJso
+		implements ClientDomCDATASection {
 	// https://developer.mozilla.org/en-US/docs/Web/API/ProcessingInstruction
 	// has no representation in the browser HTML dom (only the XML dom) -
 	// all code should emit Comment nodes if it will be pushed to DOM
@@ -10,37 +11,37 @@ public class CDATASectionJso extends NodeJso implements ClientDomCDATASection {
 	}
 
 	@Override
-	public final void deleteData(int offset, int length) {
+	public void deleteData(int offset, int length) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final String getData() {
+	public String getData() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final int getLength() {
+	public int getLength() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final void insertData(int offset, String data) {
+	public void insertData(int offset, String data) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final void replaceData(int offset, int length, String data) {
+	public void replaceData(int offset, int length, String data) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final void setData(String data) {
+	public void setData(String data) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final Text splitText(int offset) {
+	public Text splitText(int offset) {
 		throw new UnsupportedOperationException();
 	}
 

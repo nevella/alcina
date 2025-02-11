@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
 
-public class ElementJso extends NodeJso implements ElementRemote {
+public final class ElementJso extends NodeJso implements ElementRemote {
 	/*
 	 * Non-private for access from bytecode generated (ElementJso$)
 	 */
@@ -122,7 +122,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	}
 
 	@Override
-	public final boolean addClassName(String className) {
+	public boolean addClassName(String className) {
 		return ClientDomElementStatic.addClassName(this, className);
 	}
 
@@ -130,7 +130,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * Removes keyboard focus from this element.
 	 */
 	@Override
-	public final native void blur() /*-{
+	public native void blur() /*-{
     this.blur();
 	}-*/;
 
@@ -140,7 +140,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *
 	 * FIXME dirndl 1x3 - probably remove
 	 */
-	final native String buildOuterHtml()/*-{
+	native String buildOuterHtml()/*-{
 
     function escapeHtml(str, buffer) {
       var node = document.createTextNode(str);
@@ -233,12 +233,12 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            the event to be dispatched
 	 */
 	@Override
-	public final void dispatchEvent(NativeEvent evt) {
+	public void dispatchEvent(NativeEvent evt) {
 		DOMImpl.impl.dispatchEvent(elementFor(), evt.jso);
 	}
 
 	@Override
-	public final Element elementFor() {
+	public Element elementFor() {
 		return LocalDom.nodeFor(this);
 	}
 
@@ -246,7 +246,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * Gives keyboard focus to this element.
 	 */
 	@Override
-	public final native void focus() /*-{
+	public native void focus() /*-{
     this.focus();
 	}-*/;
 
@@ -255,7 +255,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * system.
 	 */
 	@Override
-	public final int getAbsoluteBottom() {
+	public int getAbsoluteBottom() {
 		return getAbsoluteTop() + getOffsetHeight();
 	}
 
@@ -264,7 +264,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * system.
 	 */
 	@Override
-	public final int getAbsoluteLeft() {
+	public int getAbsoluteLeft() {
 		return DOMImpl.impl.getAbsoluteLeft(elementFor());
 	}
 
@@ -273,7 +273,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * system.
 	 */
 	@Override
-	public final int getAbsoluteRight() {
+	public int getAbsoluteRight() {
 		return getAbsoluteLeft() + getOffsetWidth();
 	}
 
@@ -282,7 +282,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * system.
 	 */
 	@Override
-	public final int getAbsoluteTop() {
+	public int getAbsoluteTop() {
 		return DOMImpl.impl.getAbsoluteTop(elementFor());
 	}
 
@@ -298,11 +298,11 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *         does not have a specified or default value
 	 */
 	@Override
-	public final String getAttribute(String name) {
+	public String getAttribute(String name) {
 		return DOMImpl.impl.getAttribute(elementFor(), name);
 	}
 
-	private final native JsArrayString getAttributeList()/*-{
+	private native JsArrayString getAttributeList()/*-{
     var result = [];
     var attrs = this.attributes;
     for (var i = 0; i < attrs.length; i++) {
@@ -313,7 +313,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	}-*/;
 
 	@Override
-	public final Map<String, String> getAttributeMap() {
+	public Map<String, String> getAttributeMap() {
 		StringMap result = new StringMap();
 		JsArrayString arr = getAttributeList();
 		for (int idx = 0; idx < arr.length(); idx += 2) {
@@ -323,7 +323,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	}
 
 	@Override
-	public final native DomRect getBoundingClientRect()/*-{
+	public native DomRect getBoundingClientRect()/*-{
 		var rect = this.getBoundingClientRect();
 		return @com.google.gwt.dom.client.DomRect::new(Lcom/google/gwt/dom/client/DomRectJso;)(rect);
 	}-*/;
@@ -337,7 +337,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *      W3C HTML Specification</a>
 	 */
 	@Override
-	public final native String getClassName() /*-{
+	public native String getClassName() /*-{
     return this.className || "";
 	}-*/;
 
@@ -348,7 +348,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * @return the element's client height
 	 */
 	@Override
-	public final int getClientHeight() {
+	public int getClientHeight() {
 		return toInt32(getSubPixelClientHeight());
 	}
 
@@ -359,11 +359,11 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * @return the element's client width
 	 */
 	@Override
-	public final int getClientWidth() {
+	public int getClientWidth() {
 		return toInt32(getSubPixelClientWidth());
 	}
 
-	public final native StyleJso getComputedStyle() /*-{
+	public native StyleJso getComputedStyle() /*-{
     return $wnd.getComputedStyle(this);
 	}-*/;
 
@@ -372,7 +372,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * directionality of tables.
 	 */
 	@Override
-	public final native String getDir() /*-{
+	public native String getDir() /*-{
     return this.dir;
 	}-*/;
 
@@ -383,12 +383,12 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *         {@link #DRAGGABLE_TRUE}
 	 */
 	@Override
-	public final native String getDraggable() /*-{
+	public native String getDraggable() /*-{
     return this.draggable || null;
 	}-*/;
 
 	@Override
-	public final NodeList<Element> getElementsByTagName(String tagName) {
+	public NodeList<Element> getElementsByTagName(String tagName) {
 		return new NodeList(getElementsByTagName0(tagName));
 	}
 
@@ -402,12 +402,12 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            all tags
 	 * @return A list of matching Element nodes
 	 */
-	private final native NodeListJso<Element> getElementsByTagName0(String name) /*-{
+	private native NodeListJso<Element> getElementsByTagName0(String name) /*-{
     return this.getElementsByTagName(name);
 	}-*/;
 
 	@Override
-	public final Element getFirstChildElement() {
+	public Element getFirstChildElement() {
 		return ClientDomElementStatic.getFirstChildElement(this);
 	}
 
@@ -419,21 +419,21 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *      W3C HTML Specification</a>
 	 */
 	@Override
-	public final native String getId() /*-{
+	public native String getId() /*-{
     return this.id;
 	}-*/;
 
 	@Override
-	public final String getInnerHTML() {
+	public String getInnerHTML() {
 		return ClientDomElementStatic.getInnerHTML(this);
 	}
 
-	final native String getInnerHTML0()/*-{
+	native String getInnerHTML0()/*-{
     return this.innerHTML;
 	}-*/;
 
 	@Override
-	public final String getInnerText() {
+	public String getInnerText() {
 		return ClientDomElementStatic.getInnerText(this);
 	}
 
@@ -441,12 +441,12 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * Language code defined in RFC 1766.
 	 */
 	@Override
-	public final native String getLang() /*-{
+	public native String getLang() /*-{
     return this.lang;
 	}-*/;
 
 	@Override
-	public final Element getNextSiblingElement() {
+	public Element getNextSiblingElement() {
 		return ClientDomElementStatic.getNextSiblingElement(this);
 	}
 
@@ -454,7 +454,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * The height of an element relative to the layout.
 	 */
 	@Override
-	public final int getOffsetHeight() {
+	public int getOffsetHeight() {
 		return toInt32(getSubPixelOffsetHeight());
 	}
 
@@ -463,7 +463,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * offset to the left within the offsetParent node.
 	 */
 	@Override
-	public final int getOffsetLeft() {
+	public int getOffsetLeft() {
 		return toInt32(getSubPixelOffsetLeft());
 	}
 
@@ -472,7 +472,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * containment hierarchy) positioned containing element.
 	 */
 	@Override
-	public final native Element getOffsetParent() /*-{
+	public native Element getOffsetParent() /*-{
     var elem = this.offsetParent ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(this.offsetParent)
         : null;
     return elem;
@@ -483,7 +483,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * offset to the top within the offsetParent node.
 	 */
 	@Override
-	public final int getOffsetTop() {
+	public int getOffsetTop() {
 		return toInt32(getSubPixelOffsetTop());
 	}
 
@@ -491,17 +491,17 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * The width of an element relative to the layout.
 	 */
 	@Override
-	public final int getOffsetWidth() {
+	public int getOffsetWidth() {
 		return toInt32(getSubPixelOffsetWidth());
 	}
 
 	@Override
-	public final native String getOuterHtml()/*-{
+	public native String getOuterHtml()/*-{
     return this.outerHTML;
 	}-*/;
 
 	@Override
-	public final Element getPreviousSiblingElement() {
+	public Element getPreviousSiblingElement() {
 		return ClientDomElementStatic.getPreviousSiblingElement(this);
 	}
 
@@ -513,7 +513,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * @return the property value
 	 */
 	@Override
-	public final native boolean getPropertyBoolean(String name) /*-{
+	public native boolean getPropertyBoolean(String name) /*-{
     return !!this[name];
 	}-*/;
 
@@ -525,7 +525,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * @return the property value
 	 */
 	@Override
-	public final native double getPropertyDouble(String name) /*-{
+	public native double getPropertyDouble(String name) /*-{
     return parseFloat(this[name]) || 0.0;
 	}-*/;
 
@@ -537,7 +537,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * @return the property value
 	 */
 	@Override
-	public final native int getPropertyInt(String name) /*-{
+	public native int getPropertyInt(String name) /*-{
     return parseInt(this[name]) | 0;
 	}-*/;
 
@@ -549,7 +549,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * @return the property value
 	 */
 	@Override
-	public final native JavaScriptObject getPropertyJSO(String name) /*-{
+	public native JavaScriptObject getPropertyJSO(String name) /*-{
     return this[name] || null;
 	}-*/;
 
@@ -561,12 +561,12 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * @return the property value
 	 */
 	@Override
-	public final native Object getPropertyObject(String name) /*-{
+	public native Object getPropertyObject(String name) /*-{
     return this[name];
 	}-*/;
 
 	@Override
-	public final String getPropertyString(String name) {
+	public String getPropertyString(String name) {
 		return getPropertyString0(jsoPropertyName(name));
 	}
 
@@ -577,7 +577,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            the name of the property to be retrieved
 	 * @return the property value
 	 */
-	private final native String getPropertyString0(String name) /*-{
+	private native String getPropertyString0(String name) /*-{
     return (this[name] == null) ? null : String(this[name]);
 	}-*/;
 
@@ -585,12 +585,12 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * The height of the scroll view of an element.
 	 */
 	@Override
-	public final int getScrollHeight() {
+	public int getScrollHeight() {
 		return toInt32(getSubPixelScrollHeight());
 	}
 
 	@Override
-	public final int getScrollLeft() {
+	public int getScrollLeft() {
 		return ClientDomElementStatic.getScrollLeft(this);
 	}
 
@@ -598,7 +598,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * The number of pixels that an element's content is scrolled from the top.
 	 */
 	@Override
-	public final int getScrollTop() {
+	public int getScrollTop() {
 		return toInt32(getSubPixelScrollTop());
 	}
 
@@ -606,12 +606,12 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * The width of the scroll view of an element.
 	 */
 	@Override
-	public final int getScrollWidth() {
+	public int getScrollWidth() {
 		return toInt32(getSubPixelScrollWidth());
 	}
 
 	@Override
-	public final String getString() {
+	public String getString() {
 		return ClientDomElementStatic.getString(this);
 	}
 
@@ -619,69 +619,69 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * Gets this element's {@link Style} object.
 	 */
 	@Override
-	public final Style getStyle() {
+	public Style getStyle() {
 		throw new UnsupportedOperationException();
 	}
 
 	/**
 	 * Gets this element's {@link Style} object.
 	 */
-	final native StyleJso getStyle0() /*-{
+	native StyleJso getStyle0() /*-{
     return this.style;
 	}-*/;
 
 	@Override
-	public final StyleJso getStyleRemote() {
+	public StyleJso getStyleRemote() {
 		return getStyle0();
 	}
 
-	private final native double getSubPixelClientHeight() /*-{
+	private native double getSubPixelClientHeight() /*-{
     return this.clientHeight;
 	}-*/;
 
-	private final native double getSubPixelClientWidth() /*-{
+	private native double getSubPixelClientWidth() /*-{
     return this.clientWidth;
 	}-*/;
 
-	private final native double getSubPixelOffsetHeight() /*-{
+	private native double getSubPixelOffsetHeight() /*-{
     return this.offsetHeight || 0;
 	}-*/;
 
-	private final native double getSubPixelOffsetLeft() /*-{
+	private native double getSubPixelOffsetLeft() /*-{
     return this.offsetLeft || 0;
 	}-*/;
 
-	private final native double getSubPixelOffsetTop() /*-{
+	private native double getSubPixelOffsetTop() /*-{
     return this.offsetTop || 0;
 	}-*/;
 
-	private final native double getSubPixelOffsetWidth() /*-{
+	private native double getSubPixelOffsetWidth() /*-{
     return this.offsetWidth || 0;
 	}-*/;
 
-	private final native double getSubPixelScrollHeight() /*-{
+	private native double getSubPixelScrollHeight() /*-{
     return this.scrollHeight || 0;
 	}-*/;
 
-	private final native double getSubPixelScrollTop() /*-{
+	private native double getSubPixelScrollTop() /*-{
     return this.scrollTop || 0;
 	}-*/;
 
-	private final native double getSubPixelScrollWidth() /*-{
+	private native double getSubPixelScrollWidth() /*-{
     return this.scrollWidth || 0;
 	}-*/;
 
 	@Override
-	public final int getTabIndex() {
+	public int getTabIndex() {
 		return ClientDomElementStatic.getTabIndex(this);
 	}
 
 	@Override
-	public final String getTagName() {
+	public String getTagName() {
 		return ClientDomElementStatic.getTagName(this);
 	}
 
-	final native String getTagNameRemote()/*-{
+	native String getTagNameRemote()/*-{
     return this.tagName;
 	}-*/;
 
@@ -689,30 +689,30 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * The element's advisory title.
 	 */
 	@Override
-	public final native String getTitle() /*-{
+	public native String getTitle() /*-{
     return this.title;
 	}-*/;
 
 	@Override
-	public final boolean hasAttribute(String name) {
+	public boolean hasAttribute(String name) {
 		return ClientDomElementStatic.hasAttribute(this, name);
 	}
 
 	@Override
-	public final boolean hasClassName(String className) {
+	public boolean hasClassName(String className) {
 		return ClientDomElementStatic.hasClassName(this, className);
 	}
 
 	@Override
-	public final boolean hasTagName(String tagName) {
+	public boolean hasTagName(String tagName) {
 		return ClientDomElementStatic.hasTagName(this, tagName);
 	}
 
-	final boolean hasTagNameInternal(String tag) {
+	boolean hasTagNameInternal(String tag) {
 		return getTagNameRemote().equals(tag);
 	}
 
-	final String jsoPropertyName(String name) {
+	String jsoPropertyName(String name) {
 		return Objects.equals(name, "class") ? "className" : name;
 	}
 
@@ -720,7 +720,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * only allowed (and only called) when telling all local nodes that they're
 	 * detached
 	 **/
-	final Node removeAllChildren0() {
+	Node removeAllChildren0() {
 		LocalDom.verifyMutatingState();
 		setInnerHTML("");
 		return node();
@@ -730,29 +730,28 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * Removes an attribute by name.
 	 */
 	@Override
-	public final native void removeAttribute(String name) /*-{
+	public native void removeAttribute(String name) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.removeAttribute(name);
 	}-*/;
 
 	@Override
-	public final boolean removeClassName(String className) {
+	public boolean removeClassName(String className) {
 		return ClientDomElementStatic.removeClassName(this, className);
 	}
 
-	final native void removeFromParent0()/*-{
+	native void removeFromParent0()/*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.parentElement.removeChild(this);
 	}-*/;
 
 	@Override
-	public final void replaceClassName(String oldClassName,
-			String newClassName) {
+	public void replaceClassName(String oldClassName, String newClassName) {
 		ClientDomElementStatic.replaceClassName(this, oldClassName,
 				newClassName);
 	}
 
-	public final void replaceWith(ElementJso replacement) {
+	public void replaceWith(ElementJso replacement) {
 		getParentElementJso().insertBefore0(replacement, this);
 		removeFromParent0();
 	}
@@ -762,11 +761,11 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * modified version of the gwt impl (mmoved from DomImpl to here)
 	 */
 	@Override
-	public final void scrollIntoView() {
+	public void scrollIntoView() {
 		scrollIntoView(0, 0);
 	}
 
-	public final void scrollIntoView(int hPad, int vPad) {
+	public void scrollIntoView(int hPad, int vPad) {
 		ElementJso.scrollElemIntoView(this, hPad, vPad);
 	}
 
@@ -822,7 +821,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            Value to set in string form
 	 */
 	@Override
-	public final native void setAttribute(String name, String value) /*-{
+	public native void setAttribute(String name, String value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.setAttribute(name, value);
 	}-*/;
@@ -836,7 +835,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *      W3C HTML Specification</a>
 	 */
 	@Override
-	public final native void setClassName(String className) /*-{
+	public native void setClassName(String className) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.className = className || "";
 	}-*/;
@@ -846,12 +845,12 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * directionality of tables.
 	 */
 	@Override
-	public final native void setDir(String dir) /*-{
+	public native void setDir(String dir) /*-{
     this.dir = dir;
 	}-*/;
 
 	@Override
-	public final void setDraggable(String draggable) {
+	public void setDraggable(String draggable) {
 		ClientDomElementStatic.setDraggable(this, draggable);
 	}
 
@@ -863,7 +862,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *      W3C HTML Specification</a>
 	 */
 	@Override
-	public final native void setId(String id) /*-{
+	public native void setId(String id) /*-{
     this.id = id;
 	}-*/;
 
@@ -871,24 +870,24 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * All of the markup and content within a given element.
 	 */
 	@Override
-	public final native void setInnerHTML(@IsSafeHtml
+	public native void setInnerHTML(@IsSafeHtml
 	String html) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.innerHTML = html || '';
 	}-*/;
 
-	final native String sanitizeHTML(String html) /*-{
+	native String sanitizeHTML(String html) /*-{
     this.innerHTML = html || '';
 	return this.innerHTML;
 	}-*/;
 
 	@Override
-	public final void setInnerSafeHtml(SafeHtml html) {
+	public void setInnerSafeHtml(SafeHtml html) {
 		ClientDomElementStatic.setInnerSafeHtml(this, html);
 	}
 
 	@Override
-	public final void setInnerText(String text) {
+	public void setInnerText(String text) {
 		ClientDomElementStatic.setInnerText(this, text);
 	}
 
@@ -896,7 +895,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * Language code defined in RFC 1766.
 	 */
 	@Override
-	public final native void setLang(String lang) /*-{
+	public native void setLang(String lang) /*-{
     this.lang = lang;
 	}-*/;
 
@@ -909,7 +908,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            the new property value
 	 */
 	@Override
-	public final native void setPropertyBoolean(String name, boolean value) /*-{
+	public native void setPropertyBoolean(String name, boolean value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
@@ -923,7 +922,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            the new property value
 	 */
 	@Override
-	public final native void setPropertyDouble(String name, double value) /*-{
+	public native void setPropertyDouble(String name, double value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
@@ -937,7 +936,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            the new property value
 	 */
 	@Override
-	public final native void setPropertyInt(String name, int value) /*-{
+	public native void setPropertyInt(String name, int value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
@@ -951,7 +950,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            the new property value
 	 */
 	@Override
-	public final native void setPropertyJSO(String name, JavaScriptObject value) /*-{
+	public native void setPropertyJSO(String name, JavaScriptObject value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
@@ -965,7 +964,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            the new property value
 	 */
 	@Override
-	public final native void setPropertyObject(String name, Object value) /*-{
+	public native void setPropertyObject(String name, Object value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this[name] = value;
 	}-*/;
@@ -979,7 +978,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *            the new property value
 	 */
 	@Override
-	public final void setPropertyString(String name, String value) {
+	public void setPropertyString(String name, String value) {
 		setPropertyString0(jsoPropertyName(name), value);
 	}
 
@@ -989,7 +988,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * 
 	 * but attr first
 	 */
-	final native void setPropertyString0(String name, String value) /*-{
+	native void setPropertyString0(String name, String value) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
 	var attrName = name=='className'?'class':name;
 	this.setAttribute(attrName,value);
@@ -997,7 +996,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	}-*/;
 
 	@Override
-	public final void setScrollLeft(int scrollLeft) {
+	public void setScrollLeft(int scrollLeft) {
 		ClientDomElementStatic.setScrollLeft(this, scrollLeft);
 	}
 
@@ -1005,7 +1004,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * The number of pixels that an element's content is scrolled to the top.
 	 */
 	@Override
-	public final native void setScrollTop(int scrollTop) /*-{
+	public native void setScrollTop(int scrollTop) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.scrollTop = scrollTop;
 	}-*/;
@@ -1018,7 +1017,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 *      W3C HTML Specification</a>
 	 */
 	@Override
-	public final native void setTabIndex(int tabIndex) /*-{
+	public native void setTabIndex(int tabIndex) /*-{
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
     this.tabIndex = tabIndex;
 	}-*/;
@@ -1027,7 +1026,7 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	 * The element's advisory title.
 	 */
 	@Override
-	public final native void setTitle(String title) /*-{
+	public native void setTitle(String title) /*-{
     // Setting the title to null results in the string "null" being displayed
     // on some browsers.
     @com.google.gwt.dom.client.LocalDom::verifyMutatingState();
@@ -1036,38 +1035,38 @@ public class ElementJso extends NodeJso implements ElementRemote {
 
 	// event handlers should (currently) be added pre-dom-attach
 	@Override
-	public final void sinkBitlessEvent(String eventTypeName) {
+	public void sinkBitlessEvent(String eventTypeName) {
 		throw new UnsupportedOperationException();
 	}
 
 	// event handlers should (currently) be added pre-dom-attach
 	@Override
-	public final void sinkEvents(int eventBits) {
+	public void sinkEvents(int eventBits) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public final void toggleClassName(String className) {
+	public void toggleClassName(String className) {
 		ClientDomElementStatic.toggleClassName(this, className);
 	}
 
-	static class ElementJsoIndex extends JavaScriptObject {
+	static final class ElementJsoIndex extends JavaScriptObject {
 		protected ElementJsoIndex() {
 		}
 
-		final native JsArray ancestors()/*-{
+		native JsArray ancestors()/*-{
       return this.ancestors;
 		}-*/;
 
-		final native String debugData()/*-{
+		native String debugData()/*-{
       return this.debugData.join("\n\n");
 		}-*/;
 
-		final native String debugLog()/*-{
+		native String debugLog()/*-{
       return this.debugLog;
 		}-*/;
 
-		public final String getString() {
+		public String getString() {
 			FormatBuilder fb = new FormatBuilder();
 			fb.line("Element remote:\n===========");
 			fb.line("Indicies (lowest first):\n%s", stringIndicies());
@@ -1079,11 +1078,11 @@ public class ElementJso extends NodeJso implements ElementRemote {
 			return fb.toString();
 		}
 
-		final native ElementJso hasNode()/*-{
+		native ElementJso hasNode()/*-{
       return this.hasNode;
 		}-*/;
 
-		final boolean hasRemoteDefined() {
+		boolean hasRemoteDefined() {
 			for (Boolean value : remoteDefined()) {
 				if (value) {
 					return true;
@@ -1092,39 +1091,39 @@ public class ElementJso extends NodeJso implements ElementRemote {
 			return false;
 		}
 
-		final List<Integer> indicies() {
+		List<Integer> indicies() {
 			return commaSeparatedIntsToList(stringIndicies());
 		}
 
-		final native JsArrayInteger jsIndicies()/*-{
+		native JsArrayInteger jsIndicies()/*-{
       return this.indicies;
 		}-*/;
 
-		final native JsArrayInteger jsSizes()/*-{
+		native JsArrayInteger jsSizes()/*-{
       return this.sizes;
 		}-*/;
 
-		final List<Boolean> remoteDefined() {
+		List<Boolean> remoteDefined() {
 			return commaSeparatedBoolsToList(stringRemoteDefined());
 		}
 
-		final native ElementJso root()/*-{
+		native ElementJso root()/*-{
       return this.root;
 		}-*/;
 
-		final List<Integer> sizes() {
+		List<Integer> sizes() {
 			return commaSeparatedIntsToList(stringSizes());
 		}
 
-		final native String stringIndicies()/*-{
+		native String stringIndicies()/*-{
       return this.indicies.join(",");
 		}-*/;
 
-		final native String stringRemoteDefined()/*-{
+		native String stringRemoteDefined()/*-{
       return this.remoteDefined.join(",");
 		}-*/;
 
-		final native String stringSizes()/*-{
+		native String stringSizes()/*-{
       return this.sizes.join(",");
 		}-*/;
 	}
@@ -1143,13 +1142,13 @@ public class ElementJso extends NodeJso implements ElementRemote {
 	}
 
 	@Override
-	final public void setSelectionRange(int pos, int length) {
+	public void setSelectionRange(int pos, int length) {
 		((TextBoxImpl) GWT.create(TextBoxImpl.class))
 				.setSelectionRange((Element) node(), pos, length);
 	}
 
 	@Override
-	public final IntPair getScrollPosition() {
+	public IntPair getScrollPosition() {
 		return new IntPair(getScrollLeft(), getScrollTop());
 	}
 }

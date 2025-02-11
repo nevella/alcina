@@ -32,13 +32,13 @@ import com.google.gwt.core.client.JavaScriptObject;
  * @param <T>
  *            the type of contained node
  */
-public class NodeListJso<T extends Node> extends JavaScriptObject
+public final class NodeListJso<T extends Node> extends JavaScriptObject
 		implements ClientDomNodeList<T> {
 	protected NodeListJso() {
 	}
 
 	@Override
-	public final T getItem(int index) {
+	public T getItem(int index) {
 		return LocalDom.nodeFor(getItem0(index));
 	}
 
@@ -51,7 +51,7 @@ public class NodeListJso<T extends Node> extends JavaScriptObject
 	 * @return the node at the indexth position in the NodeList, or null if that
 	 *         is not a valid index.
 	 */
-	final native NodeJso getItem0(int index) /*-{
+	native NodeJso getItem0(int index) /*-{
     return this[index];
 	}-*/;
 
@@ -60,16 +60,16 @@ public class NodeListJso<T extends Node> extends JavaScriptObject
 	 * 0 to length-1 inclusive.
 	 */
 	@Override
-	public final native int getLength() /*-{
+	public native int getLength() /*-{
     return this.length;
 	}-*/;
 
 	@Override
-	public final Stream<T> stream() {
+	public Stream<T> stream() {
 		return ClientDomNodeListStatic.stream0(this);
 	}
 
-	final Stream<NodeJso> streamRemote() {
+	Stream<NodeJso> streamRemote() {
 		List<NodeJso> list = new ArrayList<>();
 		for (int idx = 0; idx < this.getLength(); idx++) {
 			list.add(this.getItem0(idx));
