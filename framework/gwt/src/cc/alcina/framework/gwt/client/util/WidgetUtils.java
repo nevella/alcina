@@ -26,6 +26,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.DocumentJso;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
@@ -449,7 +450,13 @@ public class WidgetUtils {
 		return elements;
 	}
 
-	public static native Element getElementByNameOrId(Document doc, String name) /*-{
+	public static Element getElementByNameOrId(Document doc, String name) {
+		ElementJso elementJso = getElementByNameOrId0(doc.jsoRemote(), name);
+		return elementJso == null ? null : elementJso.elementFor();
+	}
+
+	private static native ElementJso getElementByNameOrId0(DocumentJso doc,
+			String name) /*-{
     var e = doc.getElementById(name);
     if (!e) {
       e = doc.getElementsByName(name)
