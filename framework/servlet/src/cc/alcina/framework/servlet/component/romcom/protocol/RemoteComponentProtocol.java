@@ -9,7 +9,7 @@ import com.google.gwt.dom.client.AttachId;
 import com.google.gwt.dom.client.DomEventContext;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.LocalDom;
-import com.google.gwt.dom.client.mutations.HTMLInputElementSelectionRangeRecord;
+import com.google.gwt.dom.client.mutations.ElementSelectionRangeRecord;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
@@ -105,7 +105,7 @@ public class RemoteComponentProtocol {
 
 			private SelectionRecord selectionMutation;
 
-			private HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord;
+			private ElementSelectionRangeRecord elementSelectionRangeRecord;
 
 			public SelectionRecord getSelectionMutation() {
 				return selectionMutation;
@@ -116,14 +116,14 @@ public class RemoteComponentProtocol {
 				this.selectionMutation = selectionMutation;
 			}
 
-			public HTMLInputElementSelectionRangeRecord
-					getHtmlInputElementSelectionRangeRecord() {
-				return htmlInputElementSelectionRangeRecord;
+			public ElementSelectionRangeRecord
+					getElementSelectionRangeRecord() {
+				return elementSelectionRangeRecord;
 			}
 
-			public void setHtmlInputElementSelectionRangeRecord(
-					HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord) {
-				this.htmlInputElementSelectionRangeRecord = htmlInputElementSelectionRangeRecord;
+			public void setElementSelectionRangeRecord(
+					ElementSelectionRangeRecord elementSelectionRangeRecord) {
+				this.elementSelectionRangeRecord = elementSelectionRangeRecord;
 			}
 
 			@Override
@@ -254,18 +254,18 @@ public class RemoteComponentProtocol {
 
 			private SelectionRecord selectionMutation;
 
-			private HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord;
+			private ElementSelectionRangeRecord elementSelectionRangeRecord;
 
 			public LocationMutation locationMutation;
 
-			public HTMLInputElementSelectionRangeRecord
-					getHtmlInputElementSelectionRangeRecord() {
-				return htmlInputElementSelectionRangeRecord;
+			public ElementSelectionRangeRecord
+					getElementSelectionRangeRecord() {
+				return elementSelectionRangeRecord;
 			}
 
-			public void setHtmlInputElementSelectionRangeRecord(
-					HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord) {
-				this.htmlInputElementSelectionRangeRecord = htmlInputElementSelectionRangeRecord;
+			public void setElementSelectionRangeRecord(
+					ElementSelectionRangeRecord elementSelectionRangeRecord) {
+				this.elementSelectionRangeRecord = elementSelectionRangeRecord;
 			}
 
 			public SelectionRecord getSelectionMutation() {
@@ -347,11 +347,10 @@ public class RemoteComponentProtocol {
 
 			void setSelectionMutation(SelectionRecord selectionMutation);
 
-			public HTMLInputElementSelectionRangeRecord
-					getHtmlInputElementSelectionRangeRecord();
+			public ElementSelectionRangeRecord getElementSelectionRangeRecord();
 
-			public void setHtmlInputElementSelectionRangeRecord(
-					HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord);
+			public void setElementSelectionRangeRecord(
+					ElementSelectionRangeRecord elementSelectionRangeRecord);
 		}
 
 		/*
@@ -382,20 +381,20 @@ public class RemoteComponentProtocol {
 
 			SelectionRecord selectionMutation;
 
-			HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord;
+			ElementSelectionRangeRecord elementSelectionRangeRecord;
 
 			public int maxCharsPerTextNode;
 
 			public String settings;
 
-			public HTMLInputElementSelectionRangeRecord
-					getHtmlInputElementSelectionRangeRecord() {
-				return htmlInputElementSelectionRangeRecord;
+			public ElementSelectionRangeRecord
+					getElementSelectionRangeRecord() {
+				return elementSelectionRangeRecord;
 			}
 
-			public void setHtmlInputElementSelectionRangeRecord(
-					HTMLInputElementSelectionRangeRecord htmlInputElementSelectionRangeRecord) {
-				this.htmlInputElementSelectionRangeRecord = htmlInputElementSelectionRangeRecord;
+			public void setElementSelectionRangeRecord(
+					ElementSelectionRangeRecord elementSelectionRangeRecord) {
+				this.elementSelectionRangeRecord = elementSelectionRangeRecord;
 			}
 
 			public SelectionRecord getSelectionMutation() {
