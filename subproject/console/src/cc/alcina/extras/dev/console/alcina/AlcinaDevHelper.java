@@ -67,7 +67,7 @@ public class AlcinaDevHelper extends DevHelper {
 	}
 
 	protected List<String> getNonVcsAdditionalTemplateFiles() {
-		return List.of("AlcinaStoryTellers.java");
+		return List.of("AlcinaStoryTellers.java", "sass-paths.properties");
 	}
 
 	@Override

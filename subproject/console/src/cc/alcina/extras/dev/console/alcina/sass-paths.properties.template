@@ -1,0 +1,16 @@
+tb.desc
+TraversalBrowser
+tb.path
+/g/alcina/framework/servlet/src/cc/alcina/framework/servlet/component/traversal/res
+sb.desc
+SequenceBrowser
+sb.path
+/g/alcina/framework/servlet/src/cc/alcina/framework/servlet/component/sequence/res
+ft.desc
+FeatureTree
+ft.path
+/g/alcina/framework/servlet/src/cc/alcina/framework/servlet/component/featuretree/res
+g.desc
+Gallery (Alcina components)
+g.path
+/g/alcina/framework/servlet/src/cc/alcina/framework/servlet/component/gallery/res
