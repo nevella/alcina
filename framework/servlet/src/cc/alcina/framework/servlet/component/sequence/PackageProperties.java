@@ -63,6 +63,7 @@ public class PackageProperties {
       TypedProperty<Page, SequencePlace> lastFilterTestPlace = new TypedProperty<>(Page.class, "lastFilterTestPlace");
       TypedProperty<Page, SequencePlace> lastHighlightTestPlace = new TypedProperty<>(Page.class, "lastHighlightTestPlace");
       TypedProperty<Page, SequencePlace> lastSelectedIndexChangePlace = new TypedProperty<>(Page.class, "lastSelectedIndexChangePlace");
+      TypedProperty<Page, String> lastSequenceKey = new TypedProperty<>(Page.class, "lastSequenceKey");
       TypedProperty<Page, Timer> observableObservedTimer = new TypedProperty<>(Page.class, "observableObservedTimer");
       TypedProperty<Page, Sequence> sequence = new TypedProperty<>(Page.class, "sequence");
       TypedProperty<Page, SequenceArea> sequenceArea = new TypedProperty<>(Page.class, "sequenceArea");

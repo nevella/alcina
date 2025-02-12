@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.sequence;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -12,6 +13,7 @@ import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
 
+import cc.alcina.framework.common.client.collections.PublicCloneable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchFilter;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -42,8 +44,8 @@ import cc.alcina.framework.servlet.component.sequence.HighlightModel.Match;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ColumnSetCycle;
-import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.DetailDisplayCycle;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ToggleHelp;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
@@ -161,6 +163,8 @@ class Page extends Model.Fields
 
 	Timer observableObservedTimer;
 
+	String lastSequenceKey;
+
 	Page() {
 		this.ui = Ui.get();
 		this.ui.page = this;
@@ -217,7 +221,7 @@ class Page extends Model.Fields
 
 	@Override
 	public void onFilterElements(FilterElements event) {
-		new SequencePlace().withFilter(event.getModel()).go();
+		ui.place.copy().withHighlight(null).withFilter(event.getModel()).go();
 	}
 
 	@Override
@@ -327,8 +331,15 @@ class Page extends Model.Fields
 			sequenceKey = ui.settings.sequenceKey;
 		}
 		sequenceKey = Ax.blankToEmpty(sequenceKey);
-		Sequence.Loader loader = Sequence.Loader.getLoader(sequenceKey);
-		Sequence<?> sequence = loader.load(sequenceKey);
+		Sequence<?> sequence = null;
+		if (!Objects.equals(sequenceKey, lastSequenceKey)
+				|| !(this.sequence instanceof PublicCloneable)) {
+			Sequence.Loader loader = Sequence.Loader.getLoader(sequenceKey);
+			sequence = loader.load(sequenceKey);
+		} else {
+			sequence = (Sequence<?>) ((PublicCloneable) this.sequence).clone();
+		}
+		lastSequenceKey = sequenceKey;
 		filteredSequenceElements = filteredSequenceElements(sequence);
 		properties.sequence.set(this, sequence);
 	}
