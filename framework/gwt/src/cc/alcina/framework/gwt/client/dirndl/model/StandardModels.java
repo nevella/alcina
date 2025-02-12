@@ -5,6 +5,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -61,7 +62,10 @@ public class StandardModels {
 	}
 
 	@Directed(className = "panel")
+	@TypedProperties
 	public static abstract class Panel extends Model.Fields {
+		public static PackageProperties._StandardModels_Panel properties = PackageProperties.standardModels_panel;
+
 		@Directed
 		public final HeadingActions header;
 

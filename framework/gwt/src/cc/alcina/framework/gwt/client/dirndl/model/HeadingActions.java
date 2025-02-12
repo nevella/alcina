@@ -3,12 +3,16 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 /**
  * A panel heading with actions
  */
+@TypedProperties
 public class HeadingActions extends Model.All {
+	public static PackageProperties._HeadingActions properties = PackageProperties.headingActions;
+
 	@Directed
 	public String heading;
 
