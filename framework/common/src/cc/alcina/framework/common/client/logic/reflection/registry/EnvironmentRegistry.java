@@ -114,6 +114,9 @@ public class EnvironmentRegistry extends Registry {
 
 		@Override
 		public V impl() {
+			if (type.getName().contains("ReflectiveRpcRemoteServiceAsync")) {
+				int debug = 3;
+			}
 			boolean hasEnvironmentSingleton = hasEnvironmentSingleton(type);
 			boolean hasEnvironmentRegistration = hasEnvironmentRegistration(
 					type);

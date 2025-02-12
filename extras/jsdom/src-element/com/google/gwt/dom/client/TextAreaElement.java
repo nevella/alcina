@@ -25,7 +25,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  *      W3C HTML Specification</a>
  */
 @TagName(TextAreaElement.TAG)
-public class TextAreaElement extends Element {
+public class TextAreaElement extends Element implements HasSelectionRange {
 	public static final String TAG = "textarea";
 
 	/**

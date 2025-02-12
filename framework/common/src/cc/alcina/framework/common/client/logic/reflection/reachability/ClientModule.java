@@ -9,6 +9,8 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
+import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.gwt.client.util.Async;
 
 public abstract class ClientModule<T extends ClientModule> {
 	protected static Map<Class<? extends ClientModule>, ClientModule> registered = new LinkedHashMap<>();
@@ -26,7 +28,7 @@ public abstract class ClientModule<T extends ClientModule> {
 
 	private void register(Class<? extends ClientModule> moduleClass,
 			ClientModule<T> clientModule) {
-		if (!registered.containsKey(moduleClass)) {
+		if (!registered.containsKey(moduleClass) && Al.isBrowser()) {
 			registered.put(moduleClass, clientModule);
 			ModuleReflector moduleReflector = moduleClass == ClientModule.class
 					? GWT.create(LeftoverReflector.class)
@@ -40,5 +42,15 @@ public abstract class ClientModule<T extends ClientModule> {
 
 	@ReflectionModule(ReflectionModule.LEFTOVER)
 	public abstract static class LeftoverReflector extends ModuleReflector {
+	}
+
+	public static <T extends ClientModule> void asyncInModule(Class<T> clazz,
+			Supplier<T> supplier, Consumer<T> callback) {
+		if (Al.isBrowser()) {
+			GWT.runAsync(clazz, Async.runAsyncBuilder()
+					.success(() -> callback.accept(supplier.get())).build());
+		} else {
+			callback.accept(supplier.get());
+		}
 	}
 }

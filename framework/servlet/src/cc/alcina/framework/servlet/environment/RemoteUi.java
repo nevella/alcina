@@ -173,4 +173,8 @@ public interface RemoteUi {
 	boolean isNotifyException(ProcessingException message);
 
 	void reloadApp(String message);
+
+	// complete setup (custom registry etc)
+	default void onEnterContext() {
+	}
 }

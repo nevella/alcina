@@ -277,7 +277,7 @@ public class Configuration {
 	/*
 	 *
 	 */
-	public static class Key implements ScopeKey {
+	public static class Key<T> implements ScopeKey<T> {
 		// public for tooling, can remove once migration
 		// (TaskRefactorConfigSets) complete
 		public static Key stringKey(String key) {
@@ -361,7 +361,15 @@ public class Configuration {
 			return this;
 		}
 
-		public void set(Object value) {
+		/*
+		 * really only for LooseContext
+		 */
+		@Override
+		public T getTyped() {
+			throw new UnsupportedOperationException();
+		}
+
+		public void set(T value) {
 			properties.set(clazz, keyPart, String.valueOf(value));
 		}
 

@@ -17,7 +17,11 @@ import cc.alcina.framework.common.client.util.Ax;
  * <p>
  * Instances should always be static final fields
  */
-public interface ScopeKey {
+public interface ScopeKey<T> {
+	T getTyped();
+
+	void set(T t);
+
 	String get();
 
 	boolean has();

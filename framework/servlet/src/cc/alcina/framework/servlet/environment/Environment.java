@@ -340,6 +340,7 @@ class Environment {
 
 		void enterContext() {
 			Environment.this.enterContext();
+			ui.onEnterContext();
 		}
 
 		void enterIteration() {

@@ -30,7 +30,7 @@ import com.google.gwt.core.client.JavaScriptObject;
  *      W3C HTML Specification</a>
  */
 @TagName(InputElement.TAG)
-public class InputElement extends Element {
+public class InputElement extends Element implements HasSelectionRange {
 	public static final String TAG = "input";
 
 	/**
@@ -493,5 +493,13 @@ public class InputElement extends Element {
 	 */
 	public final boolean useMap() {
 		return getPropertyBoolean("useMap");
+	}
+
+	public void setSelectionEnd(int selectionEnd) {
+		this.setPropertyInt("selectionEnd", selectionEnd);
+	}
+
+	public void setSelectionStart(int selectionStart) {
+		this.setPropertyInt("selectionStart", selectionStart);
 	}
 }

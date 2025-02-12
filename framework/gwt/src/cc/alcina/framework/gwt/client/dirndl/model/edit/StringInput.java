@@ -494,7 +494,7 @@ public class StringInput extends Model.Value<String>
 		}
 
 		void apply(Element element) {
-			TextBoxImpl.setTextBoxSelectionRange(element, selectionStart,
+			element.setSelectionRange(selectionStart,
 					selectionEnd - selectionStart);
 		}
 

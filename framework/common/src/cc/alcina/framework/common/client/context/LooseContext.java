@@ -200,7 +200,7 @@ public abstract class LooseContext {
 		return new Key(clazz, keyPart);
 	}
 
-	public static class Key implements ScopeKey {
+	public static class Key<T> implements ScopeKey<T> {
 		Class clazz;
 
 		String keyPart;
@@ -216,6 +216,14 @@ public abstract class LooseContext {
 
 		public String get() {
 			return LooseContext.getString(contextKey);
+		}
+
+		public void set(T t) {
+			LooseContext.set(contextKey, t);
+		}
+
+		public T getTyped() {
+			return LooseContext.get(contextKey);
 		}
 
 		public int intValue() {
@@ -270,6 +278,10 @@ public abstract class LooseContext {
 
 		public void setTrue() {
 			LooseContext.setTrue(getPath());
+		}
+
+		public Optional<T> optional() {
+			return Optional.ofNullable(getTyped());
 		}
 	}
 
