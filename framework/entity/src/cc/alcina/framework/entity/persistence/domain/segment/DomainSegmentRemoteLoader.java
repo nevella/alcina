@@ -48,7 +48,7 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 			cache.clear();
 		}
 		load();
-		if (refresh.is()) {
+		if (refresh.is() || segment.collections.isEmpty()) {
 			refresh();
 		}
 	}

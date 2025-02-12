@@ -43,14 +43,4 @@ public abstract class ClientModule<T extends ClientModule> {
 	@ReflectionModule(ReflectionModule.LEFTOVER)
 	public abstract static class LeftoverReflector extends ModuleReflector {
 	}
-
-	public static <T extends ClientModule> void asyncInModule(Class<T> clazz,
-			Supplier<T> supplier, Consumer<T> callback) {
-		if (Al.isBrowser()) {
-			GWT.runAsync(clazz, Async.runAsyncBuilder()
-					.success(() -> callback.accept(supplier.get())).build());
-		} else {
-			callback.accept(supplier.get());
-		}
-	}
 }
