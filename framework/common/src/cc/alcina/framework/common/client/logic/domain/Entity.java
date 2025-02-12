@@ -316,11 +316,11 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	public interface EntityBrowser {
-		public static EntityBrowser get() {
-			return Registry.impl(EntityBrowser.class);
-		}
+		public EntityBrowser withEntity(Entity entity);
 
-		void browse(Entity entity);
+		void browse();
+
+		String remoteUrl();
 	}
 
 	public class DomainSupport {
@@ -395,8 +395,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 			Domain.logTree(Entity.this, paths);
 		}
 
-		public void browse() {
-			EntityBrowser.get().browse(Entity.this);
+		public EntityBrowser browser() {
+			return Registry.impl(EntityBrowser.class).withEntity(Entity.this);
 		}
 
 		public boolean notRemoved() {

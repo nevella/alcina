@@ -21,6 +21,9 @@ class DetailArea extends Model.Fields {
 	@Directed.Transform(Tables.Single.class)
 	Object transformedSequenceElement;
 
+	@Directed(tag = "properties", bindToModel = false)
+	Object transformedAdditional;
+
 	@Directed(tag = "string-representation")
 	MarkupHighlights markupHighlights;
 
@@ -40,6 +43,8 @@ class DetailArea extends Model.Fields {
 			transformedSequenceElement = ((PublicCloneable) transformedSequenceElement)
 					.clone();
 		}
+		transformedAdditional = ((ModelTransform) page.sequence
+				.getDetailTransformAdditional()).apply(sequenceElement);
 		if (transformedSequenceElement instanceof HasStringRepresentation) {
 			String rep = ((HasStringRepresentation) transformedSequenceElement)
 					.provideStringRepresentation();

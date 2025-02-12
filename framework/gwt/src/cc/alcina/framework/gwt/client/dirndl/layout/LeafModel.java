@@ -207,6 +207,35 @@ public abstract class LeafModel {
 		}
 	}
 
+	/*
+	 * Simple fixed-width *without* sass/classnames - for use when the code
+	 * can't easily manipulate the sass (sequence browser detail, e.g.)
+	 */
+	@Directed(tag = "div")
+	public static class DivLabel extends Model.Fields {
+		@Directed(
+			tag = "span",
+			bindings = @Binding(
+				to = "style",
+				type = Type.PROPERTY,
+				literal = "display: inline-block; width: 15em"))
+		public String label;
+
+		@Directed(
+			tag = "span",
+			bindings = @Binding(
+				to = "style",
+				type = Type.PROPERTY,
+				literal = "display: inline-block; width: 15em"))
+		@Directed
+		public Object model;
+
+		public DivLabel(String label, Object model) {
+			this.label = label;
+			this.model = model;
+		}
+	}
+
 	@Directed
 	public static class Button extends Model.Fields {
 		@Binding(type = Type.PROPERTY)

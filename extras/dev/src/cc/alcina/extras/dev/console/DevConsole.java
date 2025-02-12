@@ -43,6 +43,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils.LogMuter;
@@ -65,7 +66,6 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Diff;
 import cc.alcina.framework.common.client.util.Diff.Change;
-import cc.alcina.framework.common.client.context.LooseContextInstance;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
@@ -1117,12 +1117,17 @@ public abstract class DevConsole implements ClipboardOwner {
 		}
 	}
 
-	@Registration.Singleton(
+	@Registration(
 		value = EntityBrowser.class,
 		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class EntityBrowser_DevConsole implements EntityBrowser {
+		public static Configuration.Key remoteEntityBrowserHostAndPath = Configuration
+				.key("remoteEntityBrowserHostAndPath");
+
+		private Entity entity;
+
 		@Override
-		public void browse(Entity entity) {
+		public void browse() {
 			try {
 				int port = Configuration.getInt(DevConsoleRemote.class, "port");
 				String strUrl = Ax.format(
@@ -1134,6 +1139,22 @@ public abstract class DevConsole implements ClipboardOwner {
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
+		}
+
+		@Override
+		public String remoteUrl() {
+			return Ax.format(
+					"%s/entity#traversal/layers.index=1:layers.sort-selected-first.present=true:layers-1.index=2:layers-1.sort-selected-first.present=true:layers-2.index=3:layers-2.sort-selected-first.present=true:paths.segmentPath=domain.%s.%s",
+					remoteEntityBrowserHostAndPath.get(),
+					Domain.resolveEntityClass(entity.getClass()).getSimpleName()
+							.toLowerCase(),
+					entity.getId());
+		}
+
+		@Override
+		public EntityBrowser withEntity(Entity entity) {
+			this.entity = entity;
+			return this;
 		}
 	}
 

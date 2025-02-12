@@ -32,6 +32,10 @@ public interface Sequence<T> {
 
 	ModelTransform<T, ? extends Model> getDetailTransform();
 
+	default ModelTransform<T, ? extends Model> getDetailTransformAdditional() {
+		return t -> null;
+	}
+
 	public abstract static class Abstract<T> implements Sequence<T> {
 		public List<T> elements;
 
