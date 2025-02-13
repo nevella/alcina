@@ -166,7 +166,7 @@ class Page extends Model.Fields
 	String lastSequenceKey;
 
 	Page() {
-		this.ui = Ui.get();
+		this.ui = ui.get();
 		this.ui.page = this;
 		header = new Header(this);
 		bindings().addBindHandler(ui::bindKeyboardShortcuts);
@@ -191,8 +191,9 @@ class Page extends Model.Fields
 		bindings().from(ui).on(Ui.properties.place)
 				.filter(this::filterSelectedIndexChange)
 				.signal(this::onSelectedIndexChange);
-		bindings().from(SequenceBrowser.Ui.get().settings)
-				.accept(this::updateStyles);
+		bindings().from(ui.settings).signal(this::updateStyles);
+		bindings().from(this).on(properties.sequence)
+				.signal(this::updateStyles);
 	}
 
 	void onSelectedIndexChange() {
@@ -208,7 +209,7 @@ class Page extends Model.Fields
 
 	@Override
 	public void onPropertyDisplayCycle(DetailDisplayCycle event) {
-		SequenceSettings settings = SequenceBrowser.Ui.get().settings;
+		SequenceSettings settings = ui.settings;
 		DetailDisplayMode next = settings.nextDetailDisplayMode();
 		StatusModule.get().showMessageTransitional(
 				Ax.format("Detail display mode -> %s", next));
@@ -359,7 +360,8 @@ class Page extends Model.Fields
 		SequenceObserver.get().observableObserved(sequence);
 	}
 
-	void updateStyles(SequenceSettings settings) {
+	void updateStyles() {
+		SequenceSettings settings = ui.settings;
 		FormatBuilder builder = new FormatBuilder();
 		{
 			/*
@@ -392,6 +394,8 @@ class Page extends Model.Fields
 			String areas = rows.stream().map(s -> Ax.format("\"%s\"", s))
 					.collect(Collectors.joining(" "));
 			builder.line("body > page {grid-template-areas: %s;}", areas);
+		}
+		if (sequence != null) {
 		}
 		String text = builder.toString();
 		if (styleElement == null) {
@@ -440,7 +444,7 @@ class Page extends Model.Fields
 
 	@Override
 	public void onColumnSetCycle(ColumnSetCycle event) {
-		SequenceSettings settings = SequenceBrowser.Ui.get().settings;
+		SequenceSettings settings = ui.settings;
 		ColumnSet next = settings.nextColumnSet();
 		StatusModule.get()
 				.showMessageTransitional(Ax.format("Column set -> %s", next));
@@ -449,8 +453,7 @@ class Page extends Model.Fields
 
 	@Override
 	public void onShowKeyboardShortcuts(ShowKeyboardShortcuts event) {
-		KeyboardShortcutsArea
-				.show(SequenceBrowser.Ui.get().getKeybindingsHandler());
+		KeyboardShortcutsArea.show(ui.getKeybindingsHandler());
 	}
 
 	@Override

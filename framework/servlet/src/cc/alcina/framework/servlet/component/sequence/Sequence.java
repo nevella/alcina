@@ -23,6 +23,20 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/**
+ * <p>
+ * Note that this is not really a totally abstract sequence, it's a sequence
+ * _plus_ UI generation support
+ * 
+ * <p>
+ * The two could be teased apart via the registry, but I don't see any
+ * application for that (yet)
+ * <p>
+ * Currently the sequence specifies the sequence elements, and three transforms:
+ * element to row, element to detail (properties) and elemenets to detail
+ * (additional). It also allows the specification of additional css/sass to
+ * support the transform models
+ */
 public interface Sequence<T> {
 	List<T> getElements();
 
@@ -34,6 +48,10 @@ public interface Sequence<T> {
 
 	default ModelTransform<T, ? extends Model> getDetailTransformAdditional() {
 		return t -> null;
+	}
+
+	default String getCss() {
+		return null;
 	}
 
 	public abstract static class Abstract<T> implements Sequence<T> {
