@@ -179,4 +179,8 @@ public interface RemoteUi {
 	default void onEnterContext() {
 		StatusModule.get();
 	}
+
+	default boolean isSendFullExceptionMessage() {
+		return true;
+	}
 }

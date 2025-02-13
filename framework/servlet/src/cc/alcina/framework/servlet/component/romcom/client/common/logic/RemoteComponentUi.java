@@ -209,7 +209,7 @@ public class RemoteComponentUi {
 
 	void onLocalDomException(Exception exception) {
 		ProcessingException processingException = RemoteComponentProtocol.Message.ProcessingException
-				.wrap(exception);
+				.wrap(exception, true);
 		ClientRpc.send(processingException);
 	}
 

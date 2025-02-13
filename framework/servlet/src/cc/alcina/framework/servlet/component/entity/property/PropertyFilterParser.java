@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -135,6 +136,9 @@ public class PropertyFilterParser {
 				if (propertyValuePart.matches("\\d+")) {
 					return Stream.of(new ValueProposal(
 							Long.parseLong(propertyValuePart)));
+				} else if (propertyValuePart.matches("\\(\\d+(, ?\\d+)+\\)")) {
+					return Stream.of(new ValueProposal(
+							TransformManager.idListToLongs(propertyValuePart)));
 				} else {
 					return Stream.of();
 				}

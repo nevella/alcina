@@ -315,11 +315,14 @@ public class RemoteComponentProtocol {
 		 */
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class ProcessingException extends Message {
-			public static ProcessingException wrap(Exception e) {
+			public static ProcessingException wrap(Exception e,
+					boolean includeFullTrace) {
 				Message.ProcessingException processingException = new Message.ProcessingException();
 				processingException.exceptionClassName = e.getClass().getName();
 				processingException.exceptionMessage = CommonUtils
 						.toSimpleExceptionMessage(e);
+				processingException.exceptionTrace = CommonUtils
+						.getFullExceptionMessage(e);
 				if (e instanceof ProtocolException) {
 					processingException.protocolException = (ProtocolException) e;
 				}
@@ -331,6 +334,8 @@ public class RemoteComponentProtocol {
 			public String exceptionClassName;
 
 			public String exceptionMessage;
+
+			public String exceptionTrace;
 
 			public Class<? extends ProtocolException> exceptionClass() {
 				try {

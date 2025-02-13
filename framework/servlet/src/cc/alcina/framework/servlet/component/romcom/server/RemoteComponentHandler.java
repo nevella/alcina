@@ -309,7 +309,8 @@ public class RemoteComponentHandler {
 					SendChannelId sendChannelId = SendChannelId.SERVER_TO_CLIENT;
 					response.messageEnvelope.envelopeId = new EnvelopeId(
 							sendChannelId, -1);
-					ProcessingException message = ProcessingException.wrap(e);
+					ProcessingException message = ProcessingException.wrap(e,
+							false);
 					MessageId messageId = new MessageId(sendChannelId, -1);
 					response.messageEnvelope.packets
 							.add(new MessagePacket(messageId, message));

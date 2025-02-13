@@ -5,6 +5,8 @@ import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
@@ -86,6 +88,21 @@ public class StandardLayerAttributes {
 			case MATCHES:
 				return new DomainFilter(
 						new MatchesPredicate(property, normalisedValue));
+			case IN:
+				if (property.getName().equals("id")) {
+					if (property.getType() == long.class
+							|| Reflections.isAssignableFrom(Entity.class,
+									property.getType())) {
+						Object filterValue = TransformManager
+								.idListToLongs(normalisedValue);
+						return new DomainFilter(key, filterValue, op);
+					} else {
+						throw new UnsupportedOperationException();
+					}
+				} else {
+					// force non-domain (xx.user for instance)
+					return null;
+				}
 			default:
 				Object filterValue = ClassUtil.fromStringValue(normalisedValue,
 						property.getType());

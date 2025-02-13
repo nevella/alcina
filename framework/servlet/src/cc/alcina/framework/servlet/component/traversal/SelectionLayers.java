@@ -44,7 +44,8 @@ class SelectionLayers extends Model.Fields {
 
 		List<? extends Selection> getFilteredSelections(Layer layer) {
 			return layers.stream().filter(ls -> ls.layer == layer).findFirst()
-					.map(ls -> ls.selectionsArea.filteredSelections)
+					.map(ls -> ls.selectionsArea == null ? null
+							: ls.selectionsArea.filteredSelections)
 					.orElse(List.of());
 		}
 	}

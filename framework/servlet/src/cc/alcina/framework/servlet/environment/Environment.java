@@ -538,6 +538,10 @@ class Environment {
 				ServerDebugProtocolRequest message) {
 			Environment.this.emitServerDebugProtocolResponse(message);
 		}
+
+		boolean isSendFullExceptionMessage() {
+			return ui.isSendFullExceptionMessage();
+		}
 	}
 
 	private void emitServerDebugProtocolResponse(

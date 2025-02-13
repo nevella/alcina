@@ -8,11 +8,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
@@ -159,6 +162,10 @@ class EntityTraversalQueryLayer extends Layer
 	class StreamFilter implements Predicate {
 		Filter filter;
 
+		Property property;
+
+		List<?> inValues;
+
 		StreamFilter(Filter filter) {
 			this.filter = filter;
 		}
@@ -175,7 +182,13 @@ class EntityTraversalQueryLayer extends Layer
 				return matchesOrContains(string, filter.normalisedValue());
 			} else {
 				// FIXME - very inefficient (possibly reuse domainquery)
-				Property property = Reflections.at(o).property(filter.key);
+				if (this.property == null) {
+					this.property = Reflections.at(o).property(filter.key);
+					if (filter.op == FilterOperator.IN) {
+						inValues = TransformManager
+								.idListToLongs(filter.normalisedValue());
+					}
+				}
 				Object propertyValue = property.get(o);
 				if (propertyValue == null) {
 					return false;
@@ -183,6 +196,17 @@ class EntityTraversalQueryLayer extends Layer
 				if (filter.op == FilterOperator.MATCHES) {
 					return matchesOrContains(propertyValue.toString(),
 							filter.normalisedValue());
+				}
+				if (filter.op == FilterOperator.IN) {
+					if (propertyValue instanceof Long) {
+						return inValues.contains(propertyValue);
+					} else if (propertyValue instanceof Entity) {
+						return inValues
+								.contains(((Entity) propertyValue).getId());
+					} else {
+						throw new IllegalArgumentException(
+								"Unsupported property type");
+					}
 				}
 				Object filterValue = getTypedValue(property,
 						filter.normalisedValue());

@@ -414,4 +414,44 @@ public interface BranchToken extends Token, BranchGroupMember {
 			}
 		}
 	}
+
+	public enum Clause implements BranchToken {
+		LEFT_BRACKET {
+			Pattern PATTERN = Pattern.compile("\\(");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
+			}
+		},
+		RIGHT_BRACKET {
+			Pattern PATTERN = Pattern.compile("\\(");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
+			}
+		},
+		SEPARATOR {
+			Pattern PATTERN = Pattern.compile(", ?");
+
+			@Override
+			public Measure match(ParserState state) {
+				return state.patternMatcher().match(this, PATTERN);
+			}
+		},
+		UN_BRACKETED_DIGITS {
+			public Group getGroup() {
+				return Group.of(Standard.DIGITS,
+						Group.of(Group.of(SEPARATOR, Standard.DIGITS))
+								.withMatchesZeroToAny());
+			}
+		},
+		BRACKETED_DIGITS {
+			public Group getGroup() {
+				return Group.of(LEFT_BRACKET, UN_BRACKETED_DIGITS,
+						RIGHT_BRACKET);
+			}
+		}
+	}
 }

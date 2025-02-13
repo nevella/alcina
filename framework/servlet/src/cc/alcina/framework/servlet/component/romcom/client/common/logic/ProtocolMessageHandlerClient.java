@@ -204,6 +204,8 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 			String clientMessage = Ax.format(
 					"Exception occurred - ui stopped: %s",
 					message.exceptionMessage);
+			ClientUtils.consoleError(clientMessage);
+			ClientUtils.consoleInfo(message.exceptionTrace);
 			if (protocolException instanceof InvalidClientException) {
 				InvalidClientException invalidClientException = (InvalidClientException) protocolException;
 				switch (invalidClientException.action) {

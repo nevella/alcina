@@ -984,68 +984,62 @@ public class LocalDom implements ContextFrame {
 		public void applyEvent(DomEventData eventData) {
 			boolean selectionEvent = Objects.equals(eventData.event.getType(),
 					BrowserEvents.SELECTIONCHANGE);
-			try {
-				EventTarget eventTarget = eventData.event.getEventTarget();
-				switch (eventTarget.type) {
-				case window: {
-					if (eventData.preview) {
-						// as below, this special casing is just munge - remove
-						// (and handle non-element events as per element events)
-						return;//
-					}
-					Event event = eventData.event;
-					switch (event.getType()) {
-					case BrowserEvents.PAGEHIDE:
-						Window.onPageHide();
-						break;
-					default:
-						// ignore, could be implemented
-					}
-					return;
-				}
-				case document:
-					if (!selectionEvent) {
-						return;
-					}
-					break;
-				case other:
-					// not currently handled, could be implemented
-					return;
-				case element:
-					// continue method, most common case
-					if (!Element.is(eventTarget)) {
-						// event target (client) has been removed from the
-						// canonical dom (server)
-						return;
-					}
-					break;
-				}
+			EventTarget eventTarget = eventData.event.getEventTarget();
+			switch (eventTarget.type) {
+			case window: {
 				if (eventData.preview) {
-					DOM.previewEvent(eventData.event);
-				} else {
-					Element target = Element.as(eventTarget);
-					Element firstReceiver = (Element) eventData.firstReceiver
-							.node();
-					if (firstReceiver == null) {
-						return;
-					}
-					if (eventData.eventValue() != null) {
-						target.attachIdRemote().value = eventData.eventValue();
-					}
-					if (eventData.selectedIndex != null) {
-						target.attachIdRemote().selectedIndex = eventData.selectedIndex;
-					}
-					// FIXME - romcom - attach probably not being called.
-					// This can probably be removed
-					Preconditions
-							.checkState(firstReceiver.eventListener != null);
-					// um, is it that easy?
-					DOM.dispatchEvent(eventData.event, firstReceiver,
-							firstReceiver.eventListener);
+					// as below, this special casing is just munge - remove
+					// (and handle non-element events as per element events)
+					return;//
 				}
-			} catch (RuntimeException e) {
-				// handler exception
-				e.printStackTrace();
+				Event event = eventData.event;
+				switch (event.getType()) {
+				case BrowserEvents.PAGEHIDE:
+					Window.onPageHide();
+					break;
+				default:
+					// ignore, could be implemented
+				}
+				return;
+			}
+			case document:
+				if (!selectionEvent) {
+					return;
+				}
+				break;
+			case other:
+				// not currently handled, could be implemented
+				return;
+			case element:
+				// continue method, most common case
+				if (!Element.is(eventTarget)) {
+					// event target (client) has been removed from the
+					// canonical dom (server)
+					return;
+				}
+				break;
+			}
+			if (eventData.preview) {
+				DOM.previewEvent(eventData.event);
+			} else {
+				Element target = Element.as(eventTarget);
+				Element firstReceiver = (Element) eventData.firstReceiver
+						.node();
+				if (firstReceiver == null) {
+					return;
+				}
+				if (eventData.eventValue() != null) {
+					target.attachIdRemote().value = eventData.eventValue();
+				}
+				if (eventData.selectedIndex != null) {
+					target.attachIdRemote().selectedIndex = eventData.selectedIndex;
+				}
+				// FIXME - romcom - attach probably not being called.
+				// This can probably be removed
+				Preconditions.checkState(firstReceiver.eventListener != null);
+				// um, is it that easy?
+				DOM.dispatchEvent(eventData.event, firstReceiver,
+						firstReceiver.eventListener);
 			}
 		}
 

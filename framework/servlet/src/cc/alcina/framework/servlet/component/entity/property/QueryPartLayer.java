@@ -142,6 +142,7 @@ class QueryPartLayer extends Layer<DocumentLayer.Document> {
 			List<Filter> proposePropertyFilters(
 					Class<? extends Entity> entityType, Result parseResult,
 					PropertyProposer proposer) {
+				String r = parseResult.toStructuredString();
 				String name = parseResult
 						.measure(IntermediateToken.PROPERTY_NAME).text();
 				FilterOperator operator = null;
@@ -186,8 +187,8 @@ class QueryPartLayer extends Layer<DocumentLayer.Document> {
 					Class<? extends Entity> entityType, Result parseResult,
 					PropertyProposer proposer) {
 				String value = parseResult.rootMeasure().text();
-				return proposer.proposePropertyFilters(entityType, "id", null,
-						value, null, null);
+				return proposer.proposePropertyFilters(entityType, "id",
+						FilterOperator.EQ, value, null, null);
 			}
 		};
 

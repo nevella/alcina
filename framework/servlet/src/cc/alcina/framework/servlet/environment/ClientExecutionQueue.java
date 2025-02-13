@@ -125,6 +125,8 @@ class ClientExecutionQueue implements Runnable {
 	}
 
 	void onLoopException(Exception e) {
+		transportLayer.sendMessage(ProcessingException.wrap(e,
+				environment.access().isSendFullExceptionMessage()));
 		logger.warn("loop exception:\n=====================================",
 				e);
 	}
@@ -242,7 +244,6 @@ class ClientExecutionQueue implements Runnable {
 					.forMessage(token.message);
 			messageHandler.handle(token, environment.access(), token.message);
 		} catch (Exception e) {
-			transportLayer.sendMessage(ProcessingException.wrap(e));
 			logger.warn(
 					"Exception in server queue (in response to invokesync)");
 			onLoopException(e);
