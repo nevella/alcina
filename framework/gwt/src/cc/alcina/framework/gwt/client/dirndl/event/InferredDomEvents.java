@@ -29,6 +29,7 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.layout.DomBinding;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -702,13 +703,7 @@ public class InferredDomEvents {
 
 			@Override
 			protected HandlerRegistration bind1(Element element) {
-				Scheduler.get().scheduleFinally(() -> {
-					if (!removed) {
-						resizeObserver = ResizeObserver.observerFor(this,
-								element.implAccess().ensureJsoRemote());
-					}
-				});
-				return new HandlerRegistration() {
+				HandlerRegistration registration = new HandlerRegistration() {
 					@Override
 					public void removeHandler() {
 						removed = true;
@@ -717,6 +712,16 @@ public class InferredDomEvents {
 						}
 					}
 				};
+				// FIXME - romcom.emul -
+				if (Al.isBrowser()) {
+					Scheduler.get().scheduleFinally(() -> {
+						if (!removed) {
+							resizeObserver = ResizeObserver.observerFor(this,
+									element.implAccess().ensureJsoRemote());
+						}
+					});
+				}
+				return registration;
 			}
 
 			public void fireEvent() {

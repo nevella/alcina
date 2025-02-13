@@ -98,9 +98,11 @@ class ClientEventDispatch {
 				// prevent default action on <a> with no href
 				// TODO - space on <a> with no href?
 				if (eventType.equals("click") || eventType.equals("keydown")) {
-					if (Ax.isBlank(elem.getAttribute("href"))
-							&& elem.hasTagName("a")) {
-						event.preventDefault();
+					if (elem.hasTagName("a")) {
+						String href = elem.getAttribute("href");
+						if (Ax.isBlank(href) || href.equals("#")) {
+							event.preventDefault();
+						}
 					}
 				}
 			}

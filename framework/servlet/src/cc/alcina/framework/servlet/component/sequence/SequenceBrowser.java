@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.util.HasStringRepresentation;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
+import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;

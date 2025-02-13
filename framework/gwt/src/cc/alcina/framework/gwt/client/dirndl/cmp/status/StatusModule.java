@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.cmp.status;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.common.client.process.NotificationObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Ax;
@@ -54,11 +55,20 @@ public class StatusModule {
 				.add(message -> showMessage(message,
 						Channel.EXCEPTION_MESSAGE_PUBLISHED));
 		new NotificationObserver().bind();
+		new ContextNotificationObserver().bind();
 	}
 
 	@Reflected
 	class NotificationObserver
 			implements ProcessObserver<NotificationObservable> {
+		@Override
+		public void topicPublished(NotificationObservable message) {
+			showMessage(message.message, Channel.MESSAGE_PUBLISHED);
+		}
+	}
+	@Reflected
+	class ContextNotificationObserver
+			implements ContextObservers.Observer<NotificationObservable> {
 		@Override
 		public void topicPublished(NotificationObservable message) {
 			showMessage(message.message, Channel.MESSAGE_PUBLISHED);

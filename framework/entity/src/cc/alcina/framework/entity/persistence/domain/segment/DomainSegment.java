@@ -330,7 +330,9 @@ public class DomainSegment {
 			int before = entitySize();
 			collections.forEach(SegmentCollection::applyIndexRemovals);
 			int after = entitySize();
-			logger.info("Index removals: {} -> {} entities", before, after);
+			logger.info(
+					"Removing unchanged entities: {} total entities -> {} changed entities",
+					before, after);
 		}
 	}
 

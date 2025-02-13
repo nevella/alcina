@@ -764,7 +764,7 @@ public class DocumentAttachId extends NodeAttachId
 
 	@Override
 	public void setTitle(String title) {
-		throw new UnsupportedOperationException();
+		invokeAsync("setTitle", List.of(String.class), List.of(title));
 	}
 
 	@Override
