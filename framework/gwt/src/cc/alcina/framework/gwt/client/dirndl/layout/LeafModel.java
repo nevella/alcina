@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -212,6 +213,7 @@ public abstract class LeafModel {
 	 * can't easily manipulate the sass (sequence browser detail, e.g.)
 	 */
 	@Directed(tag = "div")
+	@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 	public static class DivLabel extends Model.Fields {
 		@Directed(
 			tag = "span",

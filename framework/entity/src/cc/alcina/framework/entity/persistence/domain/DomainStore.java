@@ -103,6 +103,8 @@ import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.service.InstanceOracle.Query;
+import cc.alcina.framework.common.client.service.InstanceProvider;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
@@ -194,12 +196,15 @@ public class DomainStore implements IDomainStore {
 	public static final Topic<DomainStoreUpdateException> topicUpdateException = Topic
 			.create();
 
+	/*
+	 * The store is loaded, but app-specific load is *not* complete
+	 */
 	public static final Topic<Void> topicStoreLoaded = Topic.create();
 
 	/*
 	 * App-specific (allows for post-load configuration)
 	 */
-	public static Topic<Void> topicStoreLoadingComplete = Topic.create();
+	public static Topic<DomainStore> topicStoreLoadingComplete = Topic.create();
 
 	public static Builder builder() {
 		return new Builder();
@@ -2270,5 +2275,17 @@ public class DomainStore implements IDomainStore {
 
 	public DomainSegmentLoader getDomainSegmentLoader() {
 		return ((DomainStoreLoaderDatabase) loader).getSegmentLoader();
+	}
+
+	public static class Awaiter extends InstanceProvider.Awaiter<DomainStore> {
+		@Override
+		protected void start(Query<DomainStore> query) {
+			DomainStore.topicStoreLoadingComplete
+					.addWithPublishedCheck(this::loaded);
+		}
+	}
+
+	public static void onAppSpecificLoadComplete() {
+		topicStoreLoadingComplete.publish(writableStore());
 	}
 }

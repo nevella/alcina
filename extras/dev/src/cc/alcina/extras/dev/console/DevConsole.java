@@ -269,7 +269,7 @@ public abstract class DevConsole implements ClipboardOwner {
 		JobRegistry.get().init();
 		JobLogTimer.get().init();
 		AlcinaTopics.applicationRestart.add(v -> get().restart());
-		DomainStore.topicStoreLoadingComplete.signal();
+		DomainStore.onAppSpecificLoadComplete();
 	}
 
 	public String breakAndPad(int tabCount, int width, String text,

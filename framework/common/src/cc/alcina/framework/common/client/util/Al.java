@@ -1,10 +1,15 @@
 package cc.alcina.framework.common.client.util;
 
+import cc.alcina.framework.common.client.context.LooseContext;
+
 /**
  * A centralised location for application contexts - 'am I running in a console
  * environment? gwt? a production server'
  */
 public class Al {
+	public static final LooseContext.Key<Boolean> CONTEXT_multiThreaded = LooseContext
+			.key(Al.class, "CONTEXT_multiThreaded");
+
 	public enum Context {
 		not_set, console, gwt_dev, gwt_script, test_webapp, production_webapp,
 		android_shell, android_app_dev, android_app_production
@@ -53,5 +58,9 @@ public class Al {
 		default:
 			return false;
 		}
+	}
+
+	public static boolean isMultiThreaded() {
+		return !isBrowser() && CONTEXT_multiThreaded.optional().orElse(true);
 	}
 }

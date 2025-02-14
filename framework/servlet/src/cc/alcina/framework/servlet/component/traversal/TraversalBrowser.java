@@ -65,6 +65,13 @@ public class TraversalBrowser {
 		}
 	}
 
+	// Allows project-specific customisation of
+	// TraversalBrowser.onBeforeEnterContext()
+	@Registration.Self
+	public interface BeforeEnterContext {
+		void onBeforeEnterContext();
+	}
+
 	/**
 	 * <p>
 	 * Although UI logically contains page, traversal and history are both
@@ -117,6 +124,12 @@ public class TraversalBrowser {
 
 		public String getMainCaption() {
 			return "Traversal ";
+		}
+
+		@Override
+		public void onBeforeEnterContext() {
+			Registry.optional(BeforeEnterContext.class)
+					.ifPresent(BeforeEnterContext::onBeforeEnterContext);
 		}
 
 		@Override
