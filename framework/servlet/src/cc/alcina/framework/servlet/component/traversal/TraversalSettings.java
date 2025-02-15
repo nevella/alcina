@@ -25,6 +25,8 @@ public class TraversalSettings extends Bindable.Fields {
 
 	public int tableRows = 50;
 
+	public int selectionAreaHeight = 260;
+
 	public TraversalSettings() {
 	}
 
@@ -72,5 +74,10 @@ public class TraversalSettings extends Bindable.Fields {
 
 	public void putTableRows(String tableRowsStr) {
 		properties.tableRows.set(this, Integer.parseInt(tableRowsStr));
+	}
+
+	public void putSelectionAreaHeight(String selectionAreaHeightStr) {
+		properties.selectionAreaHeight.set(this,
+				Integer.parseInt(selectionAreaHeightStr));
 	}
 }

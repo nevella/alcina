@@ -286,18 +286,37 @@ public class TraversalBrowser {
 			this.fromLayer = forLayer;
 		}
 
+		// FIXME - tb - docco
 		public static void proposeSetRowSuggestion(String query,
 				List<AppSuggestion> suggestions) {
-			Pattern pattern = Pattern.compile("set rows (\\d+)");
-			Matcher matcher = pattern.matcher(query);
-			if (matcher.matches()) {
-				AppSuggestionEntry suggestion = new AppSuggestionEntry();
-				suggestion.eventData = matcher.group(1);
-				int tableRows = TraversalSettings.get().tableRows;
-				suggestion.match = Ax.format("Set rows: '%s' (current=%s)",
-						suggestion.eventData, tableRows);
-				suggestion.modelEvent = TraversalEvents.SetSettingTableRows.class;
-				suggestions.add(suggestion);
+			{
+				Pattern pattern = Pattern.compile("set rows (\\d+)");
+				Matcher matcher = pattern.matcher(query);
+				if (matcher.matches()) {
+					AppSuggestionEntry suggestion = new AppSuggestionEntry();
+					suggestion.eventData = matcher.group(1);
+					int tableRows = TraversalSettings.get().tableRows;
+					suggestion.match = Ax.format("Set rows: '%s' (current=%s)",
+							suggestion.eventData, tableRows);
+					suggestion.modelEvent = TraversalEvents.SetSettingTableRows.class;
+					suggestions.add(suggestion);
+				}
+			}
+			{
+				Pattern pattern = Pattern
+						.compile("set selectionAreaHeight (\\d+)");
+				Matcher matcher = pattern.matcher(query);
+				if (matcher.matches()) {
+					AppSuggestionEntry suggestion = new AppSuggestionEntry();
+					suggestion.eventData = matcher.group(1);
+					int selectionAreaHeight = TraversalSettings
+							.get().selectionAreaHeight;
+					suggestion.match = Ax.format(
+							"Set selectionAreaHeight: '%s' (current=%s)",
+							suggestion.eventData, selectionAreaHeight);
+					suggestion.modelEvent = TraversalEvents.SetSettingSelectionAreaHeight.class;
+					suggestions.add(suggestion);
+				}
 			}
 		}
 	}

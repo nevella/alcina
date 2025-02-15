@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
@@ -76,16 +77,14 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				this.input = input;
 				DomNode containingNode = getContainingNode(
 						rangeSelectionSequence.getRange(input));
-				if (containingNode != null) {
-					DomNode body = containingNode.document.html().body();
-					contentsNode = body != null ? body
-							: containingNode.document.getDocumentElementNode();
-					String markup = contentsNode.fullToString();
-					markup = XmlUtils.removeNamespaceInfo(markup);
-					this.markupHighlights = new MarkupHighlights(markup, true,
-							List.of(), -1);
-				} else {
-				}
+				DomNode body = containingNode.document.html().body();
+				contentsNode = body != null ? body
+						: containingNode.document.getDocumentElementNode();
+				contentsNode = DomDocument.ensureGwtNode(contentsNode);
+				String markup = contentsNode.fullToString();
+				markup = XmlUtils.removeNamespaceInfo(markup);
+				this.markupHighlights = new MarkupHighlights(markup, true,
+						List.of(), -1);
 			}
 
 			DomNode getContainingNode(Selection.WithRange withRangeSelection) {
@@ -106,7 +105,8 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				DomNode containingNode = getContainingNode(
 						rangeSelectionSequence.getRange(this.input));
 				List<IntPair> pairs = null;
-				if (containingNode == null
+				if (rangeSelectionSequence.fullDocument
+						|| containingNode == null
 						|| !containingNode.isAttachedToDocument()
 						|| !contentsNode.asRange()
 								.contains(containingNode.asRange())) {

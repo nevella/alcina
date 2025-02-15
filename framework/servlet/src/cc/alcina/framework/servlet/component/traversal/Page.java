@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.component.traversal;
 
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,7 +9,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.activity.shared.PlaceUpdateable;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.StyleElement;
@@ -25,8 +23,8 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
-import cc.alcina.framework.common.client.traversal.SelectionFilter;
 import cc.alcina.framework.common.client.traversal.Selection.CopySelectionFilter;
+import cc.alcina.framework.common.client.traversal.SelectionFilter;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
@@ -64,6 +62,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSel
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.LayerSelectionChange;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingSelectionAreaHeight;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
@@ -85,7 +84,9 @@ class Page extends Model.All
 		TraversalBrowserCommand.PropertyDisplayCycle.Handler,
 		TraversalBrowserCommand.SecondaryAreaDisplayCycle.Handler,
 		TraversalCommand.FocusSearch.Handler,
-		TraversalEvents.SetSettingTableRows.Handler, FlightEventCommandHandlers,
+		TraversalEvents.SetSettingTableRows.Handler,
+		TraversalEvents.SetSettingSelectionAreaHeight.Handler,
+		FlightEventCommandHandlers,
 		TraversalCommand.ShowKeyboardShortcuts.Handler,
 		TraversalEvents.LayerSelectionChange.Handler,
 		TraversalBrowserCommand.ToggleHelp.Handler,
@@ -286,6 +287,8 @@ class Page extends Model.All
 			String areas = rows.stream().map(s -> Ax.format("\"%s\"", s))
 					.collect(Collectors.joining(" "));
 			builder.line("body > page {grid-template-areas: %s;}", areas);
+			builder.line("body > page {grid-template-rows: 50px 1fr %spx;}",
+					settings.selectionAreaHeight);
 		}
 		String text = builder.toString();
 		if (styleElement == null) {
@@ -471,5 +474,12 @@ class Page extends Model.All
 		String serialized = FlatTreeSerializer.serializeSingleLine(filter);
 		ConsoleUtil.copyToClipboard(serialized);
 		StatusModule.get().showMessageTransitional("Copied selection filter");
+	}
+
+	@Override
+	public void onSetSettingSelectionAreaHeight(
+			SetSettingSelectionAreaHeight event) {
+		String model = event.getModel();
+		TraversalBrowser.Ui.get().settings.putSelectionAreaHeight(model);
 	}
 }

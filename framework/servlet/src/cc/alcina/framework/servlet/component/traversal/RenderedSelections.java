@@ -79,17 +79,23 @@ class RenderedSelections extends Model.Fields {
 		conditionallyPopulate();
 	}
 
-	private void conditionallyPopulate() {
-		if (selection == null && Ui.getSelectedLayer() == null) {
-			properties.selectionTable.set(this, null);
-			properties.selectionMarkupArea.set(this, null);
+	void conditionallyPopulate() {
+		if (page.history == null) {
+			return;
+		}
+		SelectionTraversal traversal = page.history.getObservable();
+		if (traversal == null) {
 			return;
 		}
 		// workaround for vs.code (or eclipse) compilation issue - the local
-		// traversal variable is a required intermediate
-		SelectionTraversal traversal = page.history.getObservable();
+		// traversal variable is a required intermediate (rather than just
+		// page.history.getObservable)
 		conditionallyPopulateMarkup(traversal);
-		conditionallyPopulateTable(traversal);
+		if (selection == null && Ui.getSelectedLayer() == null) {
+			properties.selectionTable.set(this, null);
+		} else {
+			conditionallyPopulateTable(traversal);
+		}
 	}
 
 	void conditionallyPopulateTable(SelectionTraversal traversal) {

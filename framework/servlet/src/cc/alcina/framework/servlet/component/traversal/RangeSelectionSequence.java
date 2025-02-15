@@ -26,10 +26,26 @@ class RangeSelectionSequence {
 
 	Selection.WithRange<?> from;
 
+	boolean fullDocument;
+
 	RangeSelectionSequence(SelectionTraversal traversal, Query query) {
 		this.traversal = traversal;
 		this.query = query;
 		Selection fromCursor = query.selection;
+		// query.selection will be the whole (input/output) doc if not defined
+		if (fromCursor == null) {
+			WithRange inputSelection = traversal
+					.getSelections(Selection.WithRange.class, true).stream()
+					.findFirst().orElse(null);
+			WithRange outputSelection = traversal
+					.getSelections(Selection.WithRange.class, true).stream()
+					.filter(this::isOutput).findFirst().orElse(null);
+			fromCursor = query.input ? inputSelection : outputSelection;
+			fullDocument = true;
+		}
+		if (fromCursor == null) {
+			return;
+		}
 		while (!(fromCursor instanceof Selection.WithRange<?>)) {
 			fromCursor = fromCursor.parentSelection();
 		}

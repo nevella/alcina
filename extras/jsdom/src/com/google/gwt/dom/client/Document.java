@@ -17,6 +17,7 @@ package com.google.gwt.dom.client;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Stack;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -30,6 +31,8 @@ import org.w3c.dom.EntityReference;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.w3c.dom.traversal.TreeWalker;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
@@ -109,6 +112,8 @@ public class Document extends Node
 		case REF_ID:
 			remote = new DocumentAttachId(this);
 			break;
+		default:
+			throw new UnsupportedOperationException();
 		}
 		this.local = new DocumentLocal(this);
 		this.selection = new Selection(this);
@@ -1021,9 +1026,41 @@ public class Document extends Node
 	}
 
 	@Override
-	public org.w3c.dom.Node importNode(org.w3c.dom.Node arg0, boolean arg1)
-			throws DOMException {
-		throw new UnsupportedOperationException();
+	public Node importNode(org.w3c.dom.Node w3cNode, boolean deep) {
+		Preconditions.checkState(remote instanceof NodeAttachId);
+		if (deep) {
+			return new NodeImport(w3cNode).run();
+		} else {
+			return null;
+		}
+	}
+
+	class NodeImport {
+		class InOut {
+			org.w3c.dom.Node in;
+
+			Node outParent;
+
+			public InOut(org.w3c.dom.Node in, Node outParent) {
+				this.in = in;
+				this.outParent = outParent;
+			}
+		}
+
+		Stack<InOut> stack = new Stack<>();
+
+		NodeImport(org.w3c.dom.Node in) {
+			stack.add(new InOut(in, null));
+			while (stack.size() > 0) {
+				stack.pop();
+			}
+		}
+
+		Node run() {
+			return result;
+		}
+
+		Node result;
 	}
 
 	@Override

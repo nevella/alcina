@@ -144,6 +144,7 @@ public class PackageProperties {
       public TypedProperty<TraversalSettings, Boolean> descentSelectionIncludesSecondaryRelations = new TypedProperty<>(TraversalSettings.class, "descentSelectionIncludesSecondaryRelations");
       public TypedProperty<TraversalSettings, TraversalSettings.PropertyDisplayMode> propertyDisplayMode = new TypedProperty<>(TraversalSettings.class, "propertyDisplayMode");
       public TypedProperty<TraversalSettings, TraversalSettings.SecondaryAreaDisplayMode> secondaryAreaDisplayMode = new TypedProperty<>(TraversalSettings.class, "secondaryAreaDisplayMode");
+      public TypedProperty<TraversalSettings, Integer> selectionAreaHeight = new TypedProperty<>(TraversalSettings.class, "selectionAreaHeight");
       public TypedProperty<TraversalSettings, Boolean> showContainerLayers = new TypedProperty<>(TraversalSettings.class, "showContainerLayers");
       public TypedProperty<TraversalSettings, Integer> tableRows = new TypedProperty<>(TraversalSettings.class, "tableRows");
     }

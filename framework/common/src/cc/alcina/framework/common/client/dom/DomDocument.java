@@ -865,4 +865,23 @@ public class DomDocument extends DomNode implements Cloneable {
 			this.maxSize = maxSize;
 		}
 	}
+
+	/*
+	 * This is either passthrough or effectively a rewrite of a xerces (possibly
+	 * HTML) doc as a GWT/XML doc, for consistent markup writing etc
+	 */
+	public static DomNode ensureGwtNode(DomNode domNode) {
+		if (domNode.w3cNode() instanceof com.google.gwt.dom.client.Node) {
+			return domNode;
+		}
+		try {
+			Document gwtDoc = (Document) DomEnvironment.get()
+					.loadFromXml("<d/>", true);
+			Node importedNode = gwtDoc.importNode(domNode.w3cNode(), true);
+			gwtDoc.getDocumentElement().appendChild(importedNode);
+			return DomNode.from(importedNode);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
 }

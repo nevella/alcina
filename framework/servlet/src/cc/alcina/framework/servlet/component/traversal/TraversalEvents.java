@@ -59,6 +59,19 @@ public class TraversalEvents {
 		}
 	}
 
+	public static class SetSettingSelectionAreaHeight
+			extends ModelEvent<String, SetSettingSelectionAreaHeight.Handler> {
+		@Override
+		public void dispatch(SetSettingSelectionAreaHeight.Handler handler) {
+			handler.onSetSettingSelectionAreaHeight(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSetSettingSelectionAreaHeight(
+					SetSettingSelectionAreaHeight event);
+		}
+	}
+
 	public static class LayerSelectionChange
 			extends ModelEvent<Layer, LayerSelectionChange.Handler> {
 		@Override
