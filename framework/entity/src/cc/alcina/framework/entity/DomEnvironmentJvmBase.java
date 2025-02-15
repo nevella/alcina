@@ -64,13 +64,9 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public String log(DomNode domNode, boolean pretty) {
 		if (isGwtDocument(domNode.document.domDoc())) {
-			if (domNode.isElement()) {
-				return domNode.gwtElement().getOuterHtml(pretty);
-			} else if (domNode.isDocumentNode()) {
-				return log(domNode.document.getDocumentElementNode(), pretty);
-			} else {
-				return domNode.w3cNode().toString();
-			}
+			String markup = getGwtNodeMarkup(domNode, pretty);
+			Io.log().toFile(markup);
+			return "ok";
 		}
 		try {
 			LooseContext.pushWithTrue(XmlUtils.CONTEXT_MUTE_XML_SAX_EXCEPTIONS);
@@ -92,6 +88,19 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 		}
 	}
 
+	String getGwtNodeMarkup(DomNode domNode, boolean pretty) {
+		String markup = null;
+		if (domNode.isElement()) {
+			markup = domNode.gwtElement().getOuterHtml(pretty);
+		} else if (domNode.isDocumentNode()) {
+			markup = getGwtNodeMarkup(domNode.document.getDocumentElementNode(),
+					pretty);
+		} else {
+			markup = domNode.w3cNode().toString();
+		}
+		return markup;
+	}
+
 	@Override
 	public String prettyPrint(Document w3cDoc) {
 		if (isGwtDocument(w3cDoc)) {
@@ -105,7 +114,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public String prettyToString(DomNode xmlNode) {
 		if (isGwtDocument(xmlNode.document.domDoc())) {
-			return log(xmlNode, true);
+			return getGwtNodeMarkup(xmlNode, true);
 		} else {
 			Node node = xmlNode.w3cNode();
 			try {
@@ -166,7 +175,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public String toXml(Node node) {
 		if (isGwtDocument(node.getOwnerDocument())) {
-			return log(DomNode.from(node), true);
+			return getGwtNodeMarkup(DomNode.from(node), false);
 		} else {
 			return XmlUtils.streamXML(node);
 		}

@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -93,6 +94,8 @@ public class LocalDom implements ContextFrame {
 
 	private static Map<String, String> declarativeCssNames;
 
+	private static Map<String, String> jsCssNames;
+
 	private static boolean disableRemoteWrite;
 
 	// FIXME - localdom - remove (once there's better general logging)
@@ -142,6 +145,21 @@ public class LocalDom implements ContextFrame {
 		});
 	}
 
+	synchronized static String jsCssName(String key) {
+		return jsCssNames.computeIfAbsent(key, k -> {
+			StringBuilder builder = new StringBuilder();
+			Arrays.stream(k.split("-")).forEach(part -> {
+				if (builder.isEmpty()) {
+					builder.append(k);
+				} else {
+					builder.append(String.valueOf(k.charAt(0)).toUpperCase());
+					builder.append(k.substring(1));
+				}
+			});
+			return builder.toString();
+		});
+	}
+
 	static void ensureRemoteDocument() {
 		nodeFor(Document.get().jsoRemote().getDocumentElement0());
 	}
@@ -188,6 +206,7 @@ public class LocalDom implements ContextFrame {
 			collections = new LocalDomCollections();
 		}
 		declarativeCssNames = collections.createStringMap();
+		jsCssNames = collections.createStringMap();
 		elementCreators = collections.createIdentityEqualsMap(String.class);
 		initElementCreators();
 	}

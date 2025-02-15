@@ -35,12 +35,18 @@ class RenderedSelections extends Model.Fields {
 
 		@Directed
 		Model model;
+
+		void updateQuery(Query query2) {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'updateQuery'");
+		}
 	}
 
 	Page page;
 
 	@Directed
-	Model style;
+	Style style;
 
 	@Directed
 	Heading heading;
@@ -140,18 +146,24 @@ class RenderedSelections extends Model.Fields {
 		Query query = markup.query(selection, styleScope,
 				variant == SecondaryArea.INPUT);
 		if (selectionMarkupArea != null
-				&& Objects.equals(query, selectionMarkupArea.query)) {
+				&& markup instanceof SelectionMarkupFull) {
+			Style.properties.style.set(style, query.getCss());
+			((SelectionMarkupFull) markup).updateQuery(query);
 			return;
+		} else {
+			Model model = query.getModel();
+			SelectionMarkupArea selectionMarkupArea = new SelectionMarkupArea(
+					query, model);
+			properties.selectionMarkupArea.set(this, selectionMarkupArea);
+			Style style = new Style(query.getCss());
+			properties.style.set(this, style);
 		}
-		Model model = query.getModel();
-		SelectionMarkupArea selectionMarkupArea = new SelectionMarkupArea(query,
-				model);
-		properties.selectionMarkupArea.set(this, selectionMarkupArea);
-		Model style = new Style(query.getCss());
-		properties.style.set(this, style);
 	}
 
-	class Style extends Model.Fields implements RestrictedHtmlTag {
+	@TypedProperties
+	static class Style extends Model.Fields implements RestrictedHtmlTag {
+		static PackageProperties._RenderedSelections_Style properties = PackageProperties.renderedSelections_style;
+
 		Style(String style) {
 			this.style = style;
 		}

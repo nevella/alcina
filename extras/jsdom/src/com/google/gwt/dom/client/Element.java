@@ -142,7 +142,7 @@ public class Element extends Node implements ClientDomElement,
 
 	private ClientDomElement remote;
 
-	private Style style;
+	Style style;
 
 	/*
 	 * FIXME - romcom - all event dispatch code should not directly reference
@@ -163,6 +163,10 @@ public class Element extends Node implements ClientDomElement,
 	private HandlerManager handlerManager;
 
 	protected Element() {
+	}
+
+	Element(ElementLocal local) {
+		this.local = local;
 	}
 
 	/**

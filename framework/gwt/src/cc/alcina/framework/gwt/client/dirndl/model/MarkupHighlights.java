@@ -120,8 +120,8 @@ public class MarkupHighlights extends Model.Fields {
 			}
 			DomNode domNode = highlitMarkup.provideElement().asDomNode();
 			// not strictly true, but mutation invalidation is handled manually
-			Range range = domNode.asRange();
 			domNode.document.invalidateLocations();
+			Range range = domNode.asRange();
 			// split the boundary text nodes
 			Range truncated = range.truncateRelative(numericRange.i1,
 					numericRange.i2);

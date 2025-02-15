@@ -39,7 +39,7 @@ import cc.alcina.framework.common.client.reflection.Property;
  * @see Element#getStyle()
  */
 public class Style implements ClientDomStyle {
-	private Element element;
+	Element element;
 
 	StyleLocal local;
 

@@ -11,12 +11,10 @@ import java.util.stream.Collectors;
 
 import org.w3c.dom.DOMException;
 import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.TypeInfo;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -37,7 +35,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 		@Override
 		public org.w3c.dom.Node getNamedItem(String name) {
-			return new AttrImpl(attributes.entrySet().stream()
+			return new Attr(attributes.entrySet().stream()
 					.filter(e -> e.getKey().equals(name)).findFirst()
 					.orElse(null));
 		}
@@ -84,87 +82,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		}
 	}
 
-	static class AttrImpl extends Node implements org.w3c.dom.Attr {
-		Entry<String, String> entry;
-
-		AttrImpl(Map.Entry<String, String> entry) {
-			this.entry = entry;
-		}
-
-		@Override
-		public <T extends JavascriptObjectEquivalent> T cast() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String getName() {
-			return entry.getKey();
-		}
-
-		@Override
-		public org.w3c.dom.Element getOwnerElement() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public TypeInfo getSchemaTypeInfo() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean getSpecified() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String getTextContent() throws DOMException {
-			return getValue();
-		}
-
-		@Override
-		public String getValue() {
-			return entry.getValue();
-		}
-
-		@Override
-		public boolean isId() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public NodeJso jsoRemote() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Node node() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void setValue(String value) throws DOMException {
-			entry.setValue(value);
-		}
-
-		@Override
-		protected <T extends NodeLocal> T local() {
-			throw new UnsupportedOperationException();
-		}
-
-		protected void putRemote(ClientDomNode remote) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		protected <T extends ClientDomNode> T remote() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		protected void resetRemote0() {
-		}
-	}
-
 	enum AttrParseState {
 		START, NAME, EQ, VALUE
 	}
@@ -195,6 +112,15 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		if (!GWT.isScript() && GWT.isClient()) {
 			// . is legal - but gets very confusing with css, so don't permit
 			Preconditions.checkArgument(PERMITTED_TAGS.exec(tagName) != null);
+		}
+	}
+
+	public ElementLocal(DocumentLocal local, org.w3c.dom.Element w3cTyped) {
+		this(local, w3cTyped.getNodeName());
+		NamedNodeMap attrs = w3cTyped.getAttributes();
+		for (int idx = 0; idx < attrs.getLength(); idx++) {
+			org.w3c.dom.Attr attr = (org.w3c.dom.Attr) attrs.item(idx);
+			setAttribute(attr.getName(), attr.getValue());
 		}
 	}
 
@@ -856,8 +782,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 				builder.appendHtmlConstantNoCheck("\"");
 			});
 		}
-		if (element.getStyle() != null
-				&& !element.getStyle().local().isEmpty()) {
+		if (element.style != null && !element.getStyle().local().isEmpty()) {
 			builder.appendHtmlConstantNoCheck(" style=\"");
 			if (Ax.notBlank(styleAttributeValue)) {
 				builder.appendUnsafeHtml(styleAttributeValue);

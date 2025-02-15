@@ -1,5 +1,6 @@
 package com.google.gwt.dom.client;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import com.google.gwt.dom.client.Style.BorderStyle;
@@ -25,6 +26,8 @@ import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 public class StyleLocal implements ClientDomStyle {
 	LightMap<String, String> properties = new LightMap<>();
@@ -33,6 +36,15 @@ public class StyleLocal implements ClientDomStyle {
 
 	public StyleLocal(Style style) {
 		this.styleObject = style;
+		String styleAttribute = style.element.getAttribute("style");
+		if (Ax.notBlank(styleAttribute)) {
+			Arrays.stream(styleAttribute.split(";")).forEach(entry -> {
+				String kv = TextUtils.normalizeWhitespaceAndTrim(entry);
+				String key = kv.replaceFirst("(.+?):\\s?(.+)", "$1");
+				String value = kv.replaceFirst("(.+?):\\s?(.+)", "$2");
+				setPropertyImpl(LocalDom.jsCssName(key), value);
+			});
+		}
 	}
 
 	@Override

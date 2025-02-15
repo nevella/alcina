@@ -15,9 +15,9 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Stack;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -286,7 +286,7 @@ public class Document extends Node
 			boolean attachToParent) {
 		documentElement = new HtmlParser().parse(markup, null, true);
 		if (attachToParent) {
-			documentElement.local().parentNode = this.local();
+			local().appendChild(documentElement);
 			documentElement.setAttached(true, true);
 		}
 		return documentElement;
@@ -1031,7 +1031,53 @@ public class Document extends Node
 		if (deep) {
 			return new NodeImport(w3cNode).run();
 		} else {
-			return null;
+			switch (w3cNode.getNodeType()) {
+			case Node.ATTRIBUTE_NODE:
+			case Node.DOCUMENT_FRAGMENT_NODE:
+			case Node.DOCUMENT_NODE:
+			case Node.DOCUMENT_TYPE_NODE:
+			case Node.ENTITY_REFERENCE_NODE:
+			case Node.ENTITY_NODE:
+			case Node.NOTATION_NODE:
+				throw new UnsupportedOperationException();
+			case Node.CDATA_SECTION_NODE: {
+				org.w3c.dom.CDATASection w3cTyped = (org.w3c.dom.CDATASection) w3cNode;
+				CDATASection cdataSection = new CDATASection(
+						new CDATASectionLocal(local, w3cTyped));
+				cdataSection.local().putCDATASection(cdataSection);
+				return cdataSection;
+			}
+			case Node.COMMENT_NODE: {
+				org.w3c.dom.Comment w3cTyped = (org.w3c.dom.Comment) w3cNode;
+				Comment comment = new Comment(
+						new CommentLocal(local, w3cTyped));
+				comment.local().putComment(comment);
+				return comment;
+			}
+			case Node.ELEMENT_NODE: {
+				org.w3c.dom.Element w3cTyped = (org.w3c.dom.Element) w3cNode;
+				Element element = new Element(
+						new ElementLocal(local, w3cTyped));
+				element.local().putElement(element);
+				return element;
+			}
+			case Node.PROCESSING_INSTRUCTION_NODE: {
+				org.w3c.dom.ProcessingInstruction w3cTyped = (org.w3c.dom.ProcessingInstruction) w3cNode;
+				ProcessingInstruction processingInstruction = new ProcessingInstruction(
+						new ProcessingInstructionLocal(local, w3cTyped));
+				processingInstruction.local()
+						.putProcessingInstruction(processingInstruction);
+				return processingInstruction;
+			}
+			case Node.TEXT_NODE: {
+				org.w3c.dom.Text w3cTyped = (org.w3c.dom.Text) w3cNode;
+				Text text = new Text(new TextLocal(local, w3cTyped));
+				text.local().putText(text);
+				return text;
+			}
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 	}
 
@@ -1047,20 +1093,30 @@ public class Document extends Node
 			}
 		}
 
-		Stack<InOut> stack = new Stack<>();
+		LinkedList<InOut> stack = new LinkedList<>();
 
 		NodeImport(org.w3c.dom.Node in) {
 			stack.add(new InOut(in, null));
-			while (stack.size() > 0) {
-				stack.pop();
-			}
 		}
 
 		Node run() {
+			Node result = null;
+			while (stack.size() > 0) {
+				// don't pop, append in insert order
+				InOut cursor = stack.remove(0);
+				Node imported = importNode(cursor.in, false);
+				if (cursor.outParent != null) {
+					cursor.outParent.appendChild(imported);
+				} else {
+					result = imported;
+				}
+				org.w3c.dom.NodeList childNodes = cursor.in.getChildNodes();
+				for (int idx = 0; idx < childNodes.getLength(); idx++) {
+					stack.add(new InOut(childNodes.item(idx), imported));
+				}
+			}
 			return result;
 		}
-
-		Node result;
 	}
 
 	@Override

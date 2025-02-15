@@ -1,3 +1,5 @@
+package java.util.concurrent;
+
 /**
  * To allow GWT compilation of blocking async-handled tasks (although illegal on
  * the browser)

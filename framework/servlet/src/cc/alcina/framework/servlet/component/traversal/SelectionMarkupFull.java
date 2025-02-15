@@ -2,7 +2,6 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
@@ -80,9 +79,9 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				DomNode body = containingNode.document.html().body();
 				contentsNode = body != null ? body
 						: containingNode.document.getDocumentElementNode();
-				contentsNode = DomDocument.ensureGwtNode(contentsNode);
 				String markup = contentsNode.fullToString();
 				markup = XmlUtils.removeNamespaceInfo(markup);
+				markup = markup.replaceAll("(</?body)([^>]+>)", "$1-sub$2");
 				this.markupHighlights = new MarkupHighlights(markup, true,
 						List.of(), -1);
 			}
@@ -105,6 +104,7 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				DomNode containingNode = getContainingNode(
 						rangeSelectionSequence.getRange(this.input));
 				List<IntPair> pairs = null;
+				containingNode.document.invalidateLocations();
 				if (rangeSelectionSequence.fullDocument
 						|| containingNode == null
 						|| !containingNode.isAttachedToDocument()
@@ -140,5 +140,9 @@ public class SelectionMarkupFull extends SelectionMarkup {
 	 */
 	public interface IsBlock {
 		boolean isBlock(DomNode node);
+	}
+
+	void updateQuery(Query query) {
+		toMarkupHighlights.highlight(query);
 	}
 }

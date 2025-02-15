@@ -12,6 +12,10 @@ public class TextLocal extends NodeLocal implements ClientDomText {
 		setData(text);
 	}
 
+	public TextLocal(DocumentLocal local, org.w3c.dom.Text w3cTyped) {
+		this(local, w3cTyped.getNodeValue());
+	}
+
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		builder.appendEscapedNoQuotes(text);

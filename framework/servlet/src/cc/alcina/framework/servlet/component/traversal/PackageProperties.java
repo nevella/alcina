@@ -13,7 +13,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.Header;
@@ -44,6 +43,7 @@ public class PackageProperties {
     static _Page page = new _Page();
     static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
     static _RenderedSelections renderedSelections = new _RenderedSelections();
+    static _RenderedSelections_Style renderedSelections_style = new _RenderedSelections_Style();
     static _SelectionLayers_LayersContainer selectionLayers_layersContainer = new _SelectionLayers_LayersContainer();
     public static _TraversalBrowser_Ui traversalBrowser_ui = new _TraversalBrowser_Ui();
     public static _TraversalSettings traversalSettings = new _TraversalSettings();
@@ -58,6 +58,7 @@ public class PackageProperties {
       TypedProperty<Dotburger.Menu, Heading> section3 = new TypedProperty<>(Dotburger.Menu.class, "section3");
       TypedProperty<Dotburger.Menu, Heading> section4 = new TypedProperty<>(Dotburger.Menu.class, "section4");
       TypedProperty<Dotburger.Menu, Heading> section5 = new TypedProperty<>(Dotburger.Menu.class, "section5");
+      TypedProperty<Dotburger.Menu, String> selectionAreaHeight = new TypedProperty<>(Dotburger.Menu.class, "selectionAreaHeight");
       TypedProperty<Dotburger.Menu, TraversalPlace.SelectionType> selectionType = new TypedProperty<>(Dotburger.Menu.class, "selectionType");
     }
     
@@ -113,8 +114,12 @@ public class PackageProperties {
       TypedProperty<RenderedSelections, Selection> selection = new TypedProperty<>(RenderedSelections.class, "selection");
       TypedProperty<RenderedSelections, RenderedSelections.SelectionMarkupArea> selectionMarkupArea = new TypedProperty<>(RenderedSelections.class, "selectionMarkupArea");
       TypedProperty<RenderedSelections, SelectionTableArea> selectionTable = new TypedProperty<>(RenderedSelections.class, "selectionTable");
-      TypedProperty<RenderedSelections, Model> style = new TypedProperty<>(RenderedSelections.class, "style");
+      TypedProperty<RenderedSelections, RenderedSelections.Style> style = new TypedProperty<>(RenderedSelections.class, "style");
       TypedProperty<RenderedSelections, TraversalSettings.SecondaryArea> variant = new TypedProperty<>(RenderedSelections.class, "variant");
+    }
+    
+    static class _RenderedSelections_Style implements TypedProperty.Container {
+      TypedProperty<RenderedSelections.Style, String> style = new TypedProperty<>(RenderedSelections.Style.class, "style");
     }
     
     static class _SelectionLayers_LayersContainer implements TypedProperty.Container {

@@ -12,6 +12,10 @@ public class CommentLocal extends NodeLocal implements ClientDomComment {
 		setData(text);
 	}
 
+	public CommentLocal(DocumentLocal local, org.w3c.dom.Comment w3cTyped) {
+		this(local, w3cTyped.getNodeValue());
+	}
+
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		builder.appendUnsafeHtml("<!--");

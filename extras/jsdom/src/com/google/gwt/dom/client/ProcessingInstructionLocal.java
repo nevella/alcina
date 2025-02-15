@@ -17,6 +17,11 @@ public class ProcessingInstructionLocal extends NodeLocal
 		setData(data);
 	}
 
+	public ProcessingInstructionLocal(DocumentLocal local,
+			org.w3c.dom.ProcessingInstruction w3cTyped) {
+		this(local, w3cTyped.getTarget(), w3cTyped.getData());
+	}
+
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		// <?PITarget PIContent?>

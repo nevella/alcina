@@ -222,12 +222,24 @@ public abstract class Node
 
 	@Override
 	public String getLocalName() {
-		throw new UnsupportedOperationException();
+		String nodeName = getNodeName();
+		int idx = nodeName.indexOf(":");
+		if (idx != -1) {
+			return nodeName.substring(idx + 1);
+		} else {
+			return nodeName;
+		}
 	}
 
 	@Override
 	public String getNamespaceURI() {
-		throw new UnsupportedOperationException();
+		String nodeName = getNodeName();
+		int idx = nodeName.indexOf(":");
+		if (idx != -1) {
+			return nodeName.substring(0, idx);
+		} else {
+			return null;
+		}
 	}
 
 	@Override

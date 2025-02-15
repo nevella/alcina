@@ -57,6 +57,8 @@ class Dotburger extends Model.Fields {
 
 		String rows;
 
+		String selectionAreaHeight;
+
 		Menu() {
 			bindings().from(TraversalSettings.get())
 					.on(TraversalSettings.properties.secondaryAreaDisplayMode)
@@ -68,6 +70,11 @@ class Dotburger extends Model.Fields {
 					.on(TraversalSettings.properties.tableRows)
 					.map(rowCount -> Ax.format("Table rows: %s", rowCount))
 					.to(this).on(properties.rows).oneWay();
+			bindings().from(TraversalSettings.get())
+					.on(TraversalSettings.properties.selectionAreaHeight)
+					.map(rowCount -> Ax.format("Sel. area height: %s",
+							rowCount))
+					.to(this).on(properties.selectionAreaHeight).oneWay();
 		}
 	}
 

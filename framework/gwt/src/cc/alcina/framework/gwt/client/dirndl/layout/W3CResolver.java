@@ -14,6 +14,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 public class W3CResolver extends ContextResolver {
 	protected DomDocument document;
 
+	protected boolean asGwtDoc;
+
 	@Override
 	public void renderElement(Node layoutNode, String tagName) {
 		if (layoutNode.rendered != null) {
@@ -22,6 +24,9 @@ public class W3CResolver extends ContextResolver {
 		DomNode domNode = null;
 		if (document == null) {
 			document = DomDocument.from(Ax.format("<%s/>", tagName));
+			if (asGwtDoc) {
+				document = DomDocument.toGwtDocument(document);
+			}
 			domNode = document.getDocumentElementNode();
 		} else {
 			Element element = document.domDoc().createElement(tagName);

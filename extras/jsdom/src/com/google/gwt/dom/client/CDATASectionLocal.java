@@ -13,6 +13,11 @@ public class CDATASectionLocal extends NodeLocal
 		setData(text);
 	}
 
+	public CDATASectionLocal(DocumentLocal local,
+			org.w3c.dom.CDATASection w3cTyped) {
+		this(local, w3cTyped.getNodeValue());
+	}
+
 	@Override
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		builder.appendUnsafeHtml("<![CDATA[");
