@@ -528,6 +528,13 @@ public abstract class FragmentNode extends Model.Fields
 		public FragmentNode lastChild() {
 			return children().reduce(Ax.last()).orElse(null);
 		}
+
+		public boolean isLeaf() {
+			if (FragmentNode.this instanceof FragmentIsolate) {
+				return true;
+			}
+			return provideChildNodes().isEmpty();
+		}
 	}
 
 	// text DOM structure

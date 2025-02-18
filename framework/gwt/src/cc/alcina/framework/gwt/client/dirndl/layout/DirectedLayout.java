@@ -1404,6 +1404,8 @@ public class DirectedLayout implements AlcinaProcess {
 							value = Boolean.valueOf(stringValue);
 						} else if (property.getType() == Integer.class) {
 							value = Integer.parseInt(stringValue);
+						} else if (property.getType() == Double.class) {
+							value = Double.parseDouble(stringValue);
 						}
 					}
 					if (property.getType() == boolean.class) {
