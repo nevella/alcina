@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.Measure.Token.NodeTraversalToken;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Topic;
 
@@ -456,6 +457,12 @@ public class LayerParser {
 
 		public LayerParserPeer peer() {
 			return parserPeer;
+		}
+
+		public String getSubsequentSubstring(Measure match) {
+			IntPair matchPair = match.toIntPair();
+			IntPair inputPair = input.toIntPair();
+			return input.text().substring(matchPair.i2 - inputPair.i1);
 		}
 	}
 }
