@@ -89,7 +89,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	static transient IntCounter _idCounter = new IntCounter(1);
 
 	private static final RegExp PERMITTED_TAGS = RegExp
-			.compile("[A-Za-z0-9\\-_]+");
+			.compile("^[A-Za-z0-9\\-_]+$");
 
 	private String tagName;
 

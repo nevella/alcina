@@ -201,18 +201,21 @@ public class ExpandableLabel extends AbstractBoundWidget {
 			String vis = CommonUtils.trimToWsChars(fullText, maxC);
 			com.google.gwt.user.client.ui.Label label;
 			if (fullText.length() == vis.length()) {
-				label = isShowNewlinesAsBreaks() ? new InlineHTML(fullText)
+				label = isShowNewlinesAsBreaks()
+						? new InlineHTML(SafeHtmlUtils.htmlEscape(fullText))
 						: new InlineLabel(fullText);
 				fp.add(label);
 			} else {
 				vis = vis.replace("<br>", "");
-				label = isShowNewlinesAsBreaks() ? new InlineHTML(vis)
+				label = isShowNewlinesAsBreaks()
+						? new InlineHTML(SafeHtmlUtils.htmlEscape(vis))
 						: new InlineLabel(vis);
 				fp.add(label);
 				hidden = true;
 				if (!isShowAsPopup()) {
 					String notVis = fullText.substring(vis.length());
-					label = isShowNewlinesAsBreaks() ? new InlineHTML(notVis)
+					label = isShowNewlinesAsBreaks()
+							? new InlineHTML(SafeHtmlUtils.htmlEscape(notVis))
 							: new InlineLabel(notVis);
 					label.setVisible(false);
 					fp.add(label);
