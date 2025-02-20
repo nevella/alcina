@@ -344,12 +344,11 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	public String getOuterHtml() {
-		return getOuterHtml(false);
+		return getOuterHtml(false, getOwnerDocument().htmlTags);
 	}
 
-	public String getOuterHtml(boolean pretty) {
-		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder(
-				getOwnerDocument().htmlTags, pretty);
+	public String getOuterHtml(boolean pretty, boolean asHtml) {
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder(asHtml, pretty);
 		appendOuterHtml(builder);
 		return builder.toSafeHtml().asString();
 	}

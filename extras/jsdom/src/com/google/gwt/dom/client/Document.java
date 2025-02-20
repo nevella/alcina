@@ -112,6 +112,8 @@ public class Document extends Node
 		case REF_ID:
 			remote = new DocumentAttachId(this);
 			break;
+		case NONE:
+			break;
 		default:
 			throw new UnsupportedOperationException();
 		}

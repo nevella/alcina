@@ -1381,7 +1381,11 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	public String getOuterHtml(boolean pretty) {
-		return local().getOuterHtml(pretty);
+		return getOuterHtml(pretty, getOwnerDocument().htmlTags);
+	}
+
+	public String getOuterHtml(boolean pretty, boolean asHtml) {
+		return local().getOuterHtml(pretty, asHtml);
 	}
 
 	@Override

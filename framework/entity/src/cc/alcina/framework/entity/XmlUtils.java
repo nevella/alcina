@@ -183,7 +183,7 @@ public class XmlUtils {
 	}
 
 	public static String balanceForXhtml(String htmlContent) {
-		htmlContent = htmlContent.replaceAll("(?i)<(META|BR|IMG)(.*?)>",
+		htmlContent = htmlContent.replaceAll("(?i)<(META|BR|IMG)([^>]*?)>",
 				"<$1$2/>");
 		return htmlContent;
 	}

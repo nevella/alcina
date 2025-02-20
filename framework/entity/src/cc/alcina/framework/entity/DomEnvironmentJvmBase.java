@@ -64,7 +64,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public String log(DomNode domNode, boolean pretty) {
 		if (isGwtDocument(domNode.document.domDoc())) {
-			String markup = getGwtNodeMarkup(domNode, pretty);
+			String markup = getGwtNodeMarkup(domNode, pretty, true);
 			Io.log().toFile(markup);
 			return "ok";
 		}
@@ -88,13 +88,13 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 		}
 	}
 
-	String getGwtNodeMarkup(DomNode domNode, boolean pretty) {
+	String getGwtNodeMarkup(DomNode domNode, boolean pretty, boolean asXml) {
 		String markup = null;
 		if (domNode.isElement()) {
-			markup = domNode.gwtElement().getOuterHtml(pretty);
+			markup = domNode.gwtElement().getOuterHtml(pretty, !asXml);
 		} else if (domNode.isDocumentNode()) {
 			markup = getGwtNodeMarkup(domNode.document.getDocumentElementNode(),
-					pretty);
+					pretty, asXml);
 		} else {
 			markup = domNode.w3cNode().toString();
 		}
@@ -114,7 +114,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public String prettyToString(DomNode xmlNode) {
 		if (isGwtDocument(xmlNode.document.domDoc())) {
-			return getGwtNodeMarkup(xmlNode, true);
+			return getGwtNodeMarkup(xmlNode, true, true);
 		} else {
 			Node node = xmlNode.w3cNode();
 			try {
@@ -164,7 +164,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public String toHtml(DomDocument doc, boolean pretty) {
 		if (isGwtDocument(doc.domDoc())) {
-			return log(doc, pretty);
+			return getGwtNodeMarkup(doc, pretty, false);
 		} else {
 			String xml = pretty ? doc.prettyToString() : doc.fullToString();
 			xml = XmlUtils.expandEmptyElements(xml);
@@ -175,7 +175,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public String toXml(Node node) {
 		if (isGwtDocument(node.getOwnerDocument())) {
-			return getGwtNodeMarkup(DomNode.from(node), false);
+			return getGwtNodeMarkup(DomNode.from(node), false, true);
 		} else {
 			return XmlUtils.streamXML(node);
 		}

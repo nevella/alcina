@@ -9,6 +9,7 @@ import org.w3c.dom.ProcessingInstruction;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document.RemoteType;
+import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
@@ -371,11 +372,16 @@ public class HtmlParser {
 					builder.append(c);
 					tokenState = TokenState.EXPECTING_PROCESSING_INSTRUCTION;
 				} else {
+					boolean handled = false;
 					if (isWhiteSpace) {
-						tag = tagLookahead.toLowerCase();
-						resetBuilder();
-						tokenState = TokenState.EXPECTING_ATTRIBUTES;
-					} else {
+						if (isLookaheadValidTag(tagLookahead)) {
+							tag = tagLookahead.toLowerCase();
+							handled = true;
+							resetBuilder();
+							tokenState = TokenState.EXPECTING_ATTRIBUTES;
+						}
+					}
+					if (!handled) {
 						switch (c) {
 						case '/':
 							if (builder.length() > 0) {
@@ -385,7 +391,12 @@ public class HtmlParser {
 							}
 							break;
 						case '>':
-							emitElement();
+							if (isLookaheadValidTag(tagLookahead)) {
+								emitElement();
+							} else {
+								logInvalidMarkup(tagLookahead);
+								tokenState = TokenState.EXPECTING_NODE;
+							}
 							resetBuilder();
 							break;
 						default:
@@ -502,6 +513,27 @@ public class HtmlParser {
 		if (hasSyntheticContainer) {
 		}
 		return rootResult;
+	}
+
+	void logInvalidMarkup(String tagLookahead) {
+		if (debugCursor) {
+			Ax.out("!! omit invalid markup: '%s' [%s]", tagLookahead,
+					lineNumber);
+		}
+	}
+
+	static RegExp validTag = RegExp.compile("^[a-z_][0-9a-z:_\\-.]*$");
+
+	boolean isLookaheadValidTag(String tagLookahead) {
+		String tag = tagLookahead.toLowerCase();
+		if (tag.startsWith("/")) {
+			tag = tag.substring(1);
+		}
+		if (validTag.exec(tag) != null) {
+			return !tag.startsWith("xml");
+		} else {
+			return false;
+		}
 	}
 
 	void resetBuilder() {
