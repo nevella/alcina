@@ -47,7 +47,7 @@ class ClientDomStyleStatic {
 	 * @param name
 	 *            the property name
 	 */
-	static void assertCamelCase(String name) {
+	public static void assertCamelCase(String name) {
 		assert !name.contains("-") : "The style name '" + name
 				+ "' should be in camelCase format";
 	}

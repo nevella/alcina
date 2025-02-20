@@ -150,10 +150,11 @@ public class LocalDom implements ContextFrame {
 			StringBuilder builder = new StringBuilder();
 			Arrays.stream(k.split("-")).forEach(part -> {
 				if (builder.isEmpty()) {
-					builder.append(k);
+					builder.append(part);
 				} else {
-					builder.append(String.valueOf(k.charAt(0)).toUpperCase());
-					builder.append(k.substring(1));
+					builder.append(
+							String.valueOf(part.charAt(0)).toUpperCase());
+					builder.append(part.substring(1));
 				}
 			});
 			return builder.toString();

@@ -3,6 +3,7 @@ package com.google.gwt.dom.client;
 import java.util.Arrays;
 import java.util.Map;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Clear;
 import com.google.gwt.dom.client.Style.Cursor;
@@ -762,6 +763,9 @@ public class StyleLocal implements ClientDomStyle {
 
 	@Override
 	public void setPropertyImpl(String name, String value) {
+		if (!GWT.isScript()) {
+			ClientDomStyleStatic.assertCamelCase(name);
+		}
 		properties.put(name, value);
 	}
 
