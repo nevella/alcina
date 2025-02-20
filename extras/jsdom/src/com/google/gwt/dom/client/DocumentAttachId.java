@@ -23,7 +23,7 @@ public class DocumentAttachId extends NodeAttachId
 
 	public MutationProxy mutationProxy;
 
-	RemoteUiState invokeProxy;
+	RemoteWindowState invokeProxy;
 
 	// hack-ish - the element path is not necessarily determined at sink events
 	// time
@@ -34,7 +34,7 @@ public class DocumentAttachId extends NodeAttachId
 	public DocumentAttachId(Document document) {
 		super(document);
 		this.document = document;
-		this.invokeProxy = new RemoteUiState();
+		this.invokeProxy = new RemoteWindowState();
 	}
 
 	public void registerToRemoteInvokeProxy(InvokeProxy invokeProxy) {
@@ -632,12 +632,12 @@ public class DocumentAttachId extends NodeAttachId
 
 	@Override
 	public int getClientHeight() {
-		throw new UnsupportedOperationException();
+		return invokeSync("getClientHeight");
 	}
 
 	@Override
 	public int getClientWidth() {
-		throw new UnsupportedOperationException();
+		return invokeSync("getClientWidth");
 	}
 
 	@Override

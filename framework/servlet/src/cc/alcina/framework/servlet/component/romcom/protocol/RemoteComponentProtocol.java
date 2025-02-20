@@ -98,14 +98,22 @@ public class RemoteComponentProtocol {
 		 * Not an album by Beck.
 		 */
 		public static class DomEventMessage extends Message
-				implements HasSelectionMutation {
+				implements HasWindowState {
 			public List<DomEventData> events = new ArrayList<>();
 
-			public DomEventContext eventContext;
+			private DomEventContext eventContext;
 
 			private SelectionRecord selectionMutation;
 
 			private ElementSelectionRangeRecord elementSelectionRangeRecord;
+
+			public DomEventContext getEventContext() {
+				return eventContext;
+			}
+
+			public void setEventContext(DomEventContext eventContext) {
+				this.eventContext = eventContext;
+			}
 
 			public SelectionRecord getSelectionMutation() {
 				return selectionMutation;
@@ -239,7 +247,7 @@ public class RemoteComponentProtocol {
 		 * An album by Beck. Amazing.
 		 */
 		public static class Mutations extends Message
-				implements HasSelectionMutation {
+				implements HasWindowState {
 			public static Mutations ofLocation() {
 				Mutations result = new Mutations();
 				result.locationMutation = LocationMutation.ofWindow(false);
@@ -257,6 +265,16 @@ public class RemoteComponentProtocol {
 			private ElementSelectionRangeRecord elementSelectionRangeRecord;
 
 			public LocationMutation locationMutation;
+
+			private DomEventContext eventContext;
+
+			public DomEventContext getEventContext() {
+				return eventContext;
+			}
+
+			public void setEventContext(DomEventContext eventContext) {
+				this.eventContext = eventContext;
+			}
 
 			public ElementSelectionRangeRecord
 					getElementSelectionRangeRecord() {
@@ -347,7 +365,7 @@ public class RemoteComponentProtocol {
 			}
 		}
 
-		public interface HasSelectionMutation {
+		public interface HasWindowState {
 			SelectionRecord getSelectionMutation();
 
 			void setSelectionMutation(SelectionRecord selectionMutation);
@@ -356,13 +374,16 @@ public class RemoteComponentProtocol {
 
 			public void setElementSelectionRangeRecord(
 					ElementSelectionRangeRecord elementSelectionRangeRecord);
+
+			public DomEventContext getEventContext();
+
+			public void setEventContext(DomEventContext eventContext);
 		}
 
 		/*
 		 * Sent by the client on startup, to initialise the server dom
 		 */
-		public static class Startup extends Message
-				implements HasSelectionMutation {
+		public static class Startup extends Message implements HasWindowState {
 			public static Startup forClient() {
 				Startup result = new Startup();
 				result.maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
@@ -378,6 +399,8 @@ public class RemoteComponentProtocol {
 				return result;
 			}
 
+			private DomEventContext eventContext;
+
 			public String settingsException;
 
 			public LocationMutation locationMutation;
@@ -391,6 +414,14 @@ public class RemoteComponentProtocol {
 			public int maxCharsPerTextNode;
 
 			public String settings;
+
+			public DomEventContext getEventContext() {
+				return eventContext;
+			}
+
+			public void setEventContext(DomEventContext eventContext) {
+				this.eventContext = eventContext;
+			}
 
 			public ElementSelectionRangeRecord
 					getElementSelectionRangeRecord() {

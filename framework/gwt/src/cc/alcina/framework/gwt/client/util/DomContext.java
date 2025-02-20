@@ -4,8 +4,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
+@EnvironmentRegistration
 public abstract class DomContext {
 	public static void clearReferences() {
 		get().clearReferences0();

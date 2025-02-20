@@ -65,6 +65,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Rect;
@@ -1065,6 +1066,10 @@ public class WidgetUtils {
 
 	public static void scrollIntoView(Element elem, int fromTop,
 			boolean forceFromTop) {
+		if (!Al.isBrowser()) {
+			Ax.err("scrollIntoView :: %s", elem);
+			return;
+		}
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
 		int y2 = y1 + Window.getClientHeight();
 		Element parent = elem.getParentElement();

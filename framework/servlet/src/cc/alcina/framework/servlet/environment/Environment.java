@@ -506,7 +506,7 @@ class Environment {
 					applySelectionMutation(message.getSelectionMutation());
 				}
 				document.attachIdRemote()
-						.onRemoteUiContextReceived(message.eventContext);
+						.onRemoteUiContextReceived(message.getEventContext());
 				message.events.forEach(eventData -> LocalDom
 						.attachIdRepresentations().applyEvent(eventData));
 			});

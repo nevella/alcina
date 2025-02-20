@@ -7,8 +7,6 @@ import java.util.function.BiConsumer;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.RunAsyncCallback;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.mutations.ElementSelectionRangeRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.http.client.Request;
@@ -21,16 +19,13 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.component.romcom.client.RemoteObjectModelComponentState;
 import cc.alcina.framework.servlet.component.romcom.client.common.logic.ProtocolMessageHandlerClient.HandlerContext;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayer.MessageToken;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.HasSelectionMutation;
-import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.Mutations;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.HasWindowState;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
 
@@ -81,26 +76,27 @@ public class ClientRpc implements HandlerContext {
 	}
 
 	void prepareMessage(Message message) {
-		if (message instanceof HasSelectionMutation) {
-			HasSelectionMutation hasSelectionMutation = (HasSelectionMutation) message;
-			conditionallyPopulateSelectionMutation(hasSelectionMutation);
+		if (message instanceof HasWindowState) {
+			HasWindowState hasWindowState = (HasWindowState) message;
+			conditionallyPopulateWindowState(hasWindowState);
 		}
 	}
 
-	void conditionallyPopulateSelectionMutation(
-			HasSelectionMutation hasSelectionMutation) {
+	void conditionallyPopulateWindowState(HasWindowState hasWindowState) {
 		SelectionRecord currentSelectionRecord = Document.get().getSelection()
 				.getSelectionRecord();
 		if (!Objects.equals(lastSelectionRecord, currentSelectionRecord)) {
 			lastSelectionRecord = currentSelectionRecord;
-			hasSelectionMutation.setSelectionMutation(currentSelectionRecord);
+			hasWindowState.setSelectionMutation(currentSelectionRecord);
 		}
 		// HTMLInputElementSelectionRangeRecord currentSelectionRecord =
 		// Document.get().getf
 		if (!Objects.equals(lastSelectionRecord, currentSelectionRecord)) {
 			lastSelectionRecord = currentSelectionRecord;
-			hasSelectionMutation.setSelectionMutation(currentSelectionRecord);
+			hasWindowState.setSelectionMutation(currentSelectionRecord);
 		}
+		hasWindowState
+				.setEventContext(new DomEventContextGenerator().generate());
 	}
 
 	ElementSelectionRangeRecord lastElementSelectionRangeMutation;

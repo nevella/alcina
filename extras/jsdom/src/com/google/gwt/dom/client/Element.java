@@ -66,8 +66,15 @@ import cc.alcina.framework.common.client.util.IntPair;
  */
 public class Element extends Node implements ClientDomElement,
 		org.w3c.dom.Element, EventListener, HasHandlers {
-	public static final Predicate<Element> DISPLAY_NONE = e -> e.jsoRemote()
-			.getComputedStyle().getDisplayTyped() == Style.Display.NONE;
+	public static final Predicate<Element> DISPLAY_NONE = e -> {
+		if (e.implAccess().isJsoRemote()) {
+			return e.jsoRemote().getComputedStyle()
+					.getDisplayTyped() == Style.Display.NONE;
+		} else {
+			// FIXME - romcom
+			return false;
+		}
+	};
 
 	/**
 	 * Constant returned from {@link #getDraggable()}.

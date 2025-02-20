@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaM
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -38,6 +39,7 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
  */
 @Reflected
 @Registration.Singleton
+@EnvironmentSingleton
 public class DeltaStore {
 	public static final String CONTENT = "content:";
 
@@ -209,6 +211,10 @@ public class DeltaStore {
 		DomainModelDeltaSignature sig = new DomainModelDeltaSignature()
 				.clazz(clazz);
 		cache.invalidate(sig);
+	}
+
+	public void initialiseNoOffline() {
+		cache = new DomainModelDeltaLookup();
 	}
 
 	public void mergeResponse(final LoadObjectsResponse response,

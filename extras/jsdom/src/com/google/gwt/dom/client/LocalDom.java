@@ -387,7 +387,13 @@ public class LocalDom implements ContextFrame {
 
 	public static String validateHtml(String html) {
 		if (GWT.isClient()) {
-			return Document.get().jsoRemote().validateHtml(html);
+			if (Al.isBrowser()) {
+				return Document.get().jsoRemote().validateHtml(html);
+			} else {
+				// FIXME - romcom - but basically there's no quick way except
+				// pre-caching
+				return html;
+			}
 		} else {
 			return html;
 		}

@@ -140,8 +140,6 @@ class ClientEventDispatch {
 		if (currentEventMessage == null) {
 			return;
 		}
-		currentEventMessage.eventContext = new DomEventContextGenerator()
-				.generate();
 		Ax.out(currentEventMessage);
 		ClientRpc.send(currentEventMessage);
 		currentEventMessage = null;

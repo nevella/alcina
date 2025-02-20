@@ -9,6 +9,7 @@ import com.google.gwt.dom.client.DomEventContext;
 import com.google.gwt.dom.client.DomEventContext.NodeUiState;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeAttachId;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 
@@ -30,6 +31,10 @@ class DomEventContextGenerator {
 		List<Element> withStateAttributes = doc.querySelectorAll(
 				NodeAttachId.ATTR_NAME_TRANSMIT_STATE_SELECTOR);
 		withStateAttributes.forEach(this::addRect);
+		result.clientHeight = Window.getClientHeight();
+		result.clientWidth = Window.getClientWidth();
+		result.scrollTop = Window.getScrollTop();
+		result.scrollLeft = Window.getScrollLeft();
 		return result;
 	}
 

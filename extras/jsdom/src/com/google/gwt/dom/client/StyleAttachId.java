@@ -108,7 +108,7 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void clearHeight() {
-		throw new UnsupportedOperationException();
+		ClientDomStyleStatic.clearHeight(this);
 	}
 
 	@Override
@@ -218,7 +218,7 @@ public class StyleAttachId implements ClientDomStyle {
 
 	@Override
 	public void clearProperty(String name) {
-		throw new UnsupportedOperationException();
+		removeProperty(name);
 	}
 
 	@Override

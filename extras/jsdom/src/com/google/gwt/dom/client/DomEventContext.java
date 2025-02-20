@@ -42,6 +42,14 @@ public final class DomEventContext {
 
 	transient Map<Integer, NodeUiState> idUiState;
 
+	public int clientHeight;
+
+	public int clientWidth;
+
+	public int scrollTop;
+
+	public int scrollLeft;
+
 	public NodeUiState uiStateFor(int attachId) {
 		if (idUiState == null) {
 			idUiState = nodeUiStates.stream().collect(
