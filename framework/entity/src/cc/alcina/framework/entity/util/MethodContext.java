@@ -116,6 +116,11 @@ public class MethodContext {
 					Transaction.end();
 				}
 				if (executeOutsideTransaction && inTransaction) {
+					/*
+					 * a transaction may have been (incorrectly) started during
+					 * the method code
+					 */
+					Transaction.ensureEnded();
 					Transaction.begin();
 				}
 			} catch (Throwable e) {
