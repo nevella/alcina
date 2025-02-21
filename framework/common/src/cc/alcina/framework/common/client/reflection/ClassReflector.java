@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.gwt.reflection.impl.typemodel.JClassType;
@@ -71,6 +72,14 @@ public class ClassReflector<T> implements HasAnnotations {
 						matchResult.getGroup(2).toLowerCase(),
 						matchResult.getGroup(3));
 				Property property = Reflections.at(bean).property(propertyName);
+				if (property == null && Al.isBrowser()) {
+					/*
+					 * Due to download size economics, Element subtypes aren't
+					 * modelled
+					 */
+					property = Reflections.at(bean.getClass().getSuperclass())
+							.property(propertyName);
+				}
 				if (get) {
 					return property.get(bean);
 				} else {

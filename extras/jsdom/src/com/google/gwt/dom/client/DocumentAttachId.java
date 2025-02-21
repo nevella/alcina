@@ -710,7 +710,8 @@ public class DocumentAttachId extends NodeAttachId
 
 	@Override
 	public int getScrollLeft() {
-		throw new UnsupportedOperationException();
+		// FIXME - romcom - optimise
+		return invokeSync("getScrollLeft");
 	}
 
 	@Override

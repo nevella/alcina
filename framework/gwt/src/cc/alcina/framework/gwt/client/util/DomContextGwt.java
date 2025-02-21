@@ -16,7 +16,7 @@ public class DomContextGwt extends DomContext {
 	@Override
 	protected int getAbsoluteTop0(org.w3c.dom.Element w3cElem) {
 		Element elem = (Element) w3cElem;
-		return elem.getAbsoluteTop();
+		return (int) elem.getBoundingClientRect().top;
 	}
 
 	@Override

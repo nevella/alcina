@@ -658,7 +658,7 @@ public class TableModel extends Model implements NodeEditorContext {
 		return this.actions;
 	}
 
-	@Directed
+	// @Directed
 	public Model getEmptyResults() {
 		return emptyResults;
 	}

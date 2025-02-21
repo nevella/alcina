@@ -27,6 +27,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DocumentJso;
+import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
@@ -786,7 +787,11 @@ public class WidgetUtils {
 	}
 
 	public static boolean isZeroOffsetDims(Element e) {
-		return e.getOffsetHeight() == 0 || e.getOffsetWidth() == 0;
+		if (!e.isAttached()) {
+			return true;
+		}
+		DomRect rect = e.getBoundingClientRect();
+		return rect.height == 0 || rect.width == 0;
 	}
 
 	public static void maximiseWidget(Widget widget) {

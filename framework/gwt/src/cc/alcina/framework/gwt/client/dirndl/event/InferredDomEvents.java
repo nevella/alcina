@@ -463,12 +463,16 @@ public class InferredDomEvents {
 
 			@Override
 			protected HandlerRegistration bind1(Element element) {
-				Scheduler.get().scheduleFinally(() -> {
-					if (!removed) {
-						intersectionObserver = IntersectionObserver.observerFor(
-								this, element.implAccess().ensureJsoRemote());
-					}
-				});
+				// FIXME - romcom.emul -
+				if (Al.isBrowser()) {
+					Scheduler.get().scheduleFinally(() -> {
+						if (!removed) {
+							intersectionObserver = IntersectionObserver
+									.observerFor(this, element.implAccess()
+											.ensureJsoRemote());
+						}
+					});
+				}
 				return new HandlerRegistration() {
 					@Override
 					public void removeHandler() {
