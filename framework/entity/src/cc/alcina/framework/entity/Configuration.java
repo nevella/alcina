@@ -337,6 +337,10 @@ public class Configuration {
 			return Configuration.properties.has(this);
 		}
 
+		public boolean notBlank() {
+			return Ax.notBlank(get());
+		}
+
 		public int intValue() {
 			String value = get();
 			return Integer.valueOf(value);
