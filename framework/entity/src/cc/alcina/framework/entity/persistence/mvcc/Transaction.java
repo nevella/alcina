@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -410,8 +409,6 @@ public class Transaction implements Comparable<Transaction> {
 
 	TransactionId id;
 
-	private Map<DomainStore, StoreTransaction> storeTransactions = new LightMap();
-
 	TransactionPhase phase;
 
 	long startTime;
@@ -439,8 +436,6 @@ public class Transaction implements Comparable<Transaction> {
 
 	private Transaction(TransactionPhase initialPhase,
 			Transaction copyVisibleTransactionsFrom) {
-		DomainStore.stores().stream().forEach(store -> storeTransactions
-				.put(store, new StoreTransaction(store)));
 		this.phase = initialPhase;
 		Transactions.get().initialiseTransaction(this,
 				copyVisibleTransactionsFrom);
@@ -458,8 +453,7 @@ public class Transaction implements Comparable<Transaction> {
 
 	public <T extends Entity> T create(Class<T> clazz, DomainStore store,
 			long objectId, long localId) {
-		StoreTransaction storeTransaction = storeTransactions.get(store);
-		T t = storeTransaction.getMvcc().create(clazz);
+		T t = store.getMvcc().create(clazz);
 		if (t == null) {
 			try {
 				// non-transactional entity
@@ -800,8 +794,6 @@ public class Transaction implements Comparable<Transaction> {
 						&& ThreadlocalTransformManager.get().getTransforms()
 								.isEmpty());
 		this.databaseCommitTimestamp = timestamp;
-		StoreTransaction storeTransaction = storeTransactions.get(store);
-		storeTransaction.committingSequenceId = sequenceId;
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
 

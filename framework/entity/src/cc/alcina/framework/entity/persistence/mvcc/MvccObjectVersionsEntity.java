@@ -169,9 +169,4 @@ class MvccObjectVersionsEntity<T extends Entity>
 		ProcessObservers.publish(MvccObservable.VersionsRemovalEvent.class,
 				() -> new MvccObservable.VersionsRemovalEvent(this, false));
 	}
-
-	int findVersion(Object from) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
 }

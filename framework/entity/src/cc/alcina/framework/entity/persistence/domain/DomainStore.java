@@ -279,6 +279,8 @@ public class DomainStore implements IDomainStore {
 
 	private boolean debug;
 
+	boolean deregistered = false;
+
 	long timzoneOffset = -1;
 
 	Calendar startupCal = Calendar.getInstance();
@@ -402,6 +404,7 @@ public class DomainStore implements IDomainStore {
 
 	public void close() {
 		loader.close();
+		deregistered = true;
 	}
 
 	public void enableAndAddValues(DomainListener listener) {
@@ -1642,6 +1645,11 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	public static class Deregistered implements ProcessObservable {
+		public Deregistered() {
+		}
+	}
+
 	@Registration.Singleton
 	public static class DomainStores {
 		// not concurrent, handle in methods
@@ -1670,6 +1678,7 @@ public class DomainStore implements IDomainStore {
 		public synchronized void deregister(DomainStore store) {
 			store.close();
 			descriptorMap.remove(store.domainDescriptor);
+			new Deregistered().publish();
 		}
 
 		public synchronized boolean hasInitialisedDatabaseStore() {
@@ -1835,6 +1844,10 @@ public class DomainStore implements IDomainStore {
 				Class clazz = entity.entityClass();
 				return storeHandler(clazz).wasRemoved(entity);
 			}
+		}
+
+		public Set<DomainStore> getRegisteredStores() {
+			return new LinkedHashSet<>(stores);
 		}
 	}
 

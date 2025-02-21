@@ -116,8 +116,8 @@ class Vacuum {
 			Transactions.get().cancelTimedOutTransactions();
 			List<Transaction> vacuumableTransactionList = Transactions.get()
 					.getVacuumableCommittedTransactions();
-			vacuumableTransactionList.addAll(
-					Transactions.get().getCompletedNonDomainTransactions());
+			vacuumableTransactionList.addAll(Transactions.get()
+					.getCompletedNonDomainTransactionsBuffer());
 			List<Transaction> withVacuumableObjectsList = new ArrayList<>(
 					vacuumableTransactionList);
 			withVacuumableObjectsList.retainAll(vacuumables.keySet());
