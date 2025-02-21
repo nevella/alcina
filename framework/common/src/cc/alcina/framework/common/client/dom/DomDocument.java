@@ -293,7 +293,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	 *
 	 *
 	 */
-	class Locations implements LocationContext {
+	public class Locations implements LocationContext {
 		private Map<DomNode, Location> byNode;
 
 		private Map<Integer, DomNode> byTreeIndex;

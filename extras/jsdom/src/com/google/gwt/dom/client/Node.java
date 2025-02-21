@@ -72,12 +72,12 @@ public abstract class Node
 	class ChildNodeList extends AbstractList<Node> {
 		@Override
 		public Node get(int index) {
-			return local().getChildren().get(index).node();
+			return local().children().get(index).node();
 		}
 
 		@Override
 		public int size() {
-			return local().getChildren().size();
+			return local().children().size();
 		}
 	}
 
@@ -504,7 +504,7 @@ public abstract class Node
 	}
 
 	public List<Node> getChildren() {
-		return local().getChildren().stream().map(NodeLocal::node)
+		return local().children().nodes.stream().map(NodeLocal::node)
 				.collect(Collectors.toList());
 	}
 

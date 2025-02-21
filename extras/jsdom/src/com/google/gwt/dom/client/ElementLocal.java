@@ -135,7 +135,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	}
 
 	public void clearChildrenAndAttributes0() {
-		getChildren().clear();
+		children().clear();
 		attributes.clear();
 	}
 
@@ -289,8 +289,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 			// possibly dodgy - at least in UiBinder
 			return null;
 		}
-		for (int idx = 0; idx < parentNode.getChildren().size(); idx++) {
-			NodeLocal node = parentNode.getChildren().get(idx);
+		for (int idx = 0; idx < parentNode.children().size(); idx++) {
+			NodeLocal node = parentNode.children().get(idx);
 			if (node == this) {
 				seen = true;
 			} else {
@@ -356,8 +356,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	@Override
 	public final Element getPreviousSiblingElement() {
 		boolean seen = false;
-		for (int idx = parentNode.getChildren().size() - 1; idx >= 0; idx--) {
-			NodeLocal node = parentNode.getChildren().get(idx);
+		for (int idx = parentNode.children().size() - 1; idx >= 0; idx--) {
+			NodeLocal node = parentNode.children().get(idx);
 			if (node == this) {
 				seen = true;
 			} else {
@@ -565,7 +565,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	public void setInnerText(String text) {
 		if (Ax.isBlank(text)) {
 		} else {
-			getChildren().clear();
+			children().clear();
 			HtmlParser.appendTextNodes(ownerDocument, this, text);
 		}
 	}
@@ -810,7 +810,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	void appendTextContent(StringBuilder builder) {
-		getChildren().stream().forEach(node -> node.appendTextContent(builder));
+		children().nodes.stream()
+				.forEach(node -> node.appendTextContent(builder));
 	}
 
 	Map<String, String> getAttributeMapIncludingStyles() {
@@ -838,7 +839,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	}
 
 	int orSunkEventsOfAllChildren(int sunk) {
-		for (NodeLocal child : getChildren()) {
+		for (NodeLocal child : children().nodes) {
 			if (child instanceof ElementLocal) {
 				sunk = ((ElementLocal) child).orSunkEventsOfAllChildren(sunk);
 			}
@@ -848,7 +849,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	}
 
 	void orSunkBitlessEventsOfAllChildren(Set<String> sunk) {
-		for (NodeLocal child : getChildren()) {
+		for (NodeLocal child : children().nodes) {
 			if (child instanceof ElementLocal) {
 				((ElementLocal) child).orSunkBitlessEventsOfAllChildren(sunk);
 			}
@@ -867,15 +868,15 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	 */
 	void putParent(DocumentLocal local) {
 		parentNode = local;
-		parentNode.getChildren().add(this);
+		parentNode.children().add(this);
 	}
 
 	private void appendChildContents(UnsafeHtmlBuilder builder) {
 		if (containsUnescapedText()) {
-			getChildren().stream().forEach(
+			children().nodes.stream().forEach(
 					node -> ((TextLocal) node).appendUnescaped(builder));
 		} else {
-			getChildren().stream()
+			children().nodes.stream()
 					.forEach(child -> child.appendOuterHtml(builder));
 		}
 	}
@@ -883,7 +884,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	private boolean containsUnescapedText() {
 		if (tagName.equalsIgnoreCase("style")
 				|| tagName.equalsIgnoreCase("script")) {
-			Preconditions.checkState(getChildren().stream()
+			Preconditions.checkState(children().nodes.stream()
 					.allMatch(c -> c.getNodeType() == Node.TEXT_NODE));
 			return true;
 		} else {

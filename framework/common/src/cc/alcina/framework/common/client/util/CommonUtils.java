@@ -1013,19 +1013,6 @@ public class CommonUtils {
 		return format("\n\n%s%s\n%s\n%s%s\n\n", star, star, inner, star, star);
 	}
 
-	public static <T> T indexedOrNullWithDelta(List<T> list, T item,
-			int delta) {
-		int idx = list.indexOf(item);
-		if (idx == -1) {
-			return null;
-		}
-		idx += delta;
-		if (idx < 0 || idx >= list.size()) {
-			return null;
-		}
-		return list.get(idx);
-	}
-
 	// https://stackoverflow.com/questions/21341027/find-indexof-a-byte-array-within-another-byte-array
 	public static int indexOf(byte[] source, int sourceOffset, int sourceCount,
 			byte[] target, int targetOffset, int targetCount, int fromIndex) {

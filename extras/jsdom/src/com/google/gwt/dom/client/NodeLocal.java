@@ -2,22 +2,111 @@ package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 
 public abstract class NodeLocal implements ClientDomNode {
 	private static Node nodeFor(NodeLocal nodeLocal) {
 		return nodeLocal == null ? null : nodeLocal.node();
 	}
 
-	private List<NodeLocal> children;
+	private Children children;
 
 	protected NodeLocal parentNode;
 
 	protected DocumentLocal ownerDocument;
+
+	class Children {
+		List<NodeLocal> nodes = new ArrayList<>();
+
+		Map<NodeLocal, Integer> ordinals = null;
+
+		NodeLocal firstChild() {
+			return Ax.first(nodes);
+		}
+
+		NodeLocal lastChild() {
+			return Ax.last(nodes);
+		}
+
+		void add(NodeLocal local) {
+			nodes.add(local);
+			invalidateLookup();
+		}
+
+		void invalidateLookup() {
+			ordinals = null;
+		}
+
+		public void clear() {
+			nodes.clear();
+			invalidateLookup();
+		}
+
+		public Node getRelativeChild(NodeLocal nodeLocal, int delta) {
+			int idx = indexOf(nodeLocal);
+			if (idx == -1) {
+				return null;
+			}
+			int targetIdx = idx + delta;
+			if (targetIdx < 0 || targetIdx >= size()) {
+				return null;
+			}
+			NodeLocal sibling = nodes.get(targetIdx);
+			return nodeFor(sibling);
+		}
+
+		int size() {
+			return nodes.size();
+		}
+
+		int indexOf(NodeLocal nodeLocal) {
+			int idx = -1;
+			/*
+			 * handle common cases
+			 */
+			if (nodeLocal == firstChild()) {
+				idx = 0;
+			} else if (nodeLocal == lastChild()) {
+				idx = nodes.size() - 1;
+			} else {
+				if (ordinals == null) {
+					/*
+					 * make a lookup
+					 */
+					ordinals = AlcinaCollections.newUnqiueMap();
+					nodes.forEach(n -> {
+						ordinals.put(n, ordinals.size());
+					});
+				}
+				return ordinals.get(nodeLocal);
+			}
+			return idx;
+		}
+
+		void add(int idx, NodeLocal local) {
+			nodes.add(idx, local);
+			invalidateLookup();
+		}
+
+		NodeLocal get(int idx) {
+			return nodes.get(idx);
+		}
+
+		void remove(NodeLocal local) {
+			int idx = indexOf(local);
+			if (idx != -1) {
+				nodes.remove(idx);
+				invalidateLookup();
+			}
+		}
+	}
 
 	protected NodeLocal() {
 	}
@@ -25,7 +114,7 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		NodeLocal local = newChild.local();
-		getChildren().add(local);
+		children().add(local);
 		((NodeLocal) newChild.local()).setParentNode(this);
 		return newChild;
 	}
@@ -59,24 +148,24 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	@Override
 	public NodeList<Node> getChildNodes() {
-		return new NodeList(new NodeListLocal(getChildren()));
+		return new NodeList(new NodeListLocal(children().nodes));
 	}
 
-	protected List<NodeLocal> getChildren() {
+	Children children() {
 		if (children == null) {
-			children = new ArrayList<>();
+			children = new Children();
 		}
 		return children;
 	}
 
 	@Override
 	public Node getFirstChild() {
-		return nodeFor(CommonUtils.first(getChildren()));
+		return children == null ? null : nodeFor(children.firstChild());
 	}
 
 	@Override
 	public Node getLastChild() {
-		return nodeFor(CommonUtils.last(getChildren()));
+		return children == null ? null : nodeFor(children.lastChild());
 	}
 
 	/**
@@ -88,13 +177,7 @@ public abstract class NodeLocal implements ClientDomNode {
 			// detached nodes don't have siblings...sorta
 			return null;
 		}
-		NodeLocal nextLocal = CommonUtils
-				.indexedOrNullWithDelta(parentNode.getChildren(), this, 1);
-		if (nextLocal == this) {
-			// issue with DomModification? break for now
-			return null;
-		}
-		return nodeFor(nextLocal);
+		return parentNode.children().getRelativeChild(this, 1);
 	}
 
 	@Override
@@ -128,13 +211,12 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public Node getPreviousSibling() {
 		return parentNode == null ? null
-				: nodeFor(CommonUtils.indexedOrNullWithDelta(
-						parentNode.getChildren(), this, -1));
+				: parentNode.children().getRelativeChild(this, -1);
 	}
 
 	@Override
 	public boolean hasChildNodes() {
-		return getChildren().size() > 0;
+		return children().size() > 0;
 	}
 
 	@Override
@@ -144,7 +226,7 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	@Override
 	public final int indexInParentChildren() {
-		return parentNode.getChildren().indexOf(this);
+		return parentNode.children().indexOf(this);
 	}
 
 	@Override
@@ -155,12 +237,12 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
 		if (refChild == null) {
-			getChildren().add(newChild.local());
+			children().add(newChild.local());
 		} else {
-			int idx = getChildren().indexOf(refChild.local());
+			int idx = children().indexOf(refChild.local());
 			Preconditions.checkArgument(idx != -1,
 					"refchild not a child of this node");
-			getChildren().add(idx, newChild.local());
+			children().add(idx, newChild.local());
 		}
 		((NodeLocal) newChild.local()).setParentNode(this);
 		return newChild;
@@ -212,8 +294,8 @@ public abstract class NodeLocal implements ClientDomNode {
 		case 8:
 		case 7:
 			buf.append("[");
-			buf.append(node.getNodeValue().replace("\n", "\\n")
-					.replace("\t", "\\t").replace("\r", "\\r"));
+			buf.append(node.getNodeValue().replace("\n", "\n")
+					.replace("\t", "\t").replace("\r", "\r"));
 			buf.append("]");
 			break;
 		case 1:
@@ -224,8 +306,8 @@ public abstract class NodeLocal implements ClientDomNode {
 		buf.append("\n");
 		if (node.getNodeType() == 1) {
 			int idx = 0;
-			for (; idx < getChildren().size(); idx++) {
-				NodeLocal child = getChildren().get(idx);
+			for (; idx < children().size(); idx++) {
+				NodeLocal child = children().get(idx);
 				child.provideLocalDomTree0(buf, depth + 1);
 			}
 		}
@@ -241,7 +323,7 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public Node removeChild(Node oldChild) {
 		((NodeLocal) oldChild.local()).setParentNode(null);
-		getChildren().remove(oldChild.local());
+		children().remove(oldChild.local());
 		return oldChild;
 	}
 
@@ -265,7 +347,7 @@ public abstract class NodeLocal implements ClientDomNode {
 				&& newParentNode != null) {
 			// otherwise we go all loopy (do this instead of
 			// parentNode.removeChild(this)
-			parentNode.getChildren().remove(this);
+			parentNode.children().remove(this);
 		}
 		parentNode = newParentNode;
 		boolean newAttached = newParentNode != null
@@ -275,8 +357,8 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	public void walk(Consumer<NodeLocal> consumer) {
 		consumer.accept(this);
-		for (int idx = 0; idx < getChildren().size(); idx++) {
-			getChildren().get(idx).walk(consumer);
+		for (int idx = 0; idx < children().size(); idx++) {
+			children().get(idx).walk(consumer);
 		}
 	}
 
