@@ -350,7 +350,7 @@ public class Transactions {
 	private ConcurrentSkipListSet<Transaction> committedTransactions = new ConcurrentSkipListSet<>(
 			Collections.reverseOrder());
 
-	private List<Transaction> completedNonDomainCommittedTransactions = new ArrayList<>();
+	private List<Transaction> completedNonDomainCommittedTransactionsBuffer = new ArrayList<>();
 
 	// these will be in start order
 	private Map<TransactionId, Transaction> activeTransactions = new LinkedHashMap<>();
@@ -457,10 +457,10 @@ public class Transactions {
 		return new TransactionsStats();
 	}
 
-	public List<Transaction> getCompletedNonDomainTransactions() {
+	public List<Transaction> getCompletedNonDomainTransactionsBuffer() {
 		synchronized (transactionMetadataLock) {
-			List<Transaction> result = completedNonDomainCommittedTransactions;
-			completedNonDomainCommittedTransactions = new ArrayList<>();
+			List<Transaction> result = completedNonDomainCommittedTransactionsBuffer;
+			completedNonDomainCommittedTransactionsBuffer = new ArrayList<>();
 			return result;
 		}
 	}
@@ -602,7 +602,7 @@ public class Transactions {
 			case VACUUM_ENDED:
 				break;
 			default:
-				completedNonDomainCommittedTransactions.add(transaction);
+				completedNonDomainCommittedTransactionsBuffer.add(transaction);
 				break;
 			}
 			if (transaction.phase != TransactionPhase.VACUUM_ENDED) {
