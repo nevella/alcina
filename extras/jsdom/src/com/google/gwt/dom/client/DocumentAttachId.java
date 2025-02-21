@@ -1,7 +1,9 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -16,6 +18,7 @@ import com.google.gwt.dom.client.mutations.SelectionRecord;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 
 public class DocumentAttachId extends NodeAttachId
 		implements ClientDomDocument {
@@ -577,8 +580,22 @@ public class DocumentAttachId extends NodeAttachId
 		throw new UnsupportedOperationException();
 	}
 
+	/*
+	 * Doesn't attempt removal on node removal, since AttachIds are cheap
+	 */
+	Map<String, AttachId> elementsById = AlcinaCollections.newLinkedHashMap();
+
 	@Override
 	public void emitMutation(MutationRecord mutation) {
+		switch (mutation.type) {
+		case attributes:
+			switch (mutation.attributeName) {
+			case "id":
+				elementsById.put(mutation.newValue, mutation.target.attachId);
+				break;
+			}
+			break;
+		}
 		mutationProxy.onMutation(mutation);
 	}
 
@@ -657,7 +674,8 @@ public class DocumentAttachId extends NodeAttachId
 
 	@Override
 	public Element getElementById(String elementId) {
-		throw new UnsupportedOperationException();
+		AttachId attachId = elementsById.get(elementId);
+		return attachId == null ? null : (Element) attachId.node();
 	}
 
 	@Override
