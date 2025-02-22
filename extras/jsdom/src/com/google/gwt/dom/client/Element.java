@@ -1230,7 +1230,7 @@ public class Element extends Node implements ClientDomElement,
 			fb.format("\n\t");
 			NodeLocal cursor = local();
 			while (cursor.getChildCount() > 0) {
-				cursor = cursor.children().firstChild();
+				cursor = cursor.firstChild;
 				fb.format("%s ", cursor.getNodeName());
 			}
 		}

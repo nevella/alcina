@@ -1652,7 +1652,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		@Override
 		public ElementArray<Element> getCells(Element row) {
 			return new ElementArray<Element>(
-					(List) ((TableRowElement) row).provideChildNodeList());
+					(List) ((TableRowElement) row).getChildren());
 		}
 
 		native JsArray<ElementJso> getCells0(ElementJso row) /*-{
@@ -1662,8 +1662,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		@Override
 		public ElementArray<Element> getRows(Element tbody) {
 			return new ElementArray<Element>(
-					(List) ((TableSectionElement) tbody)
-							.provideChildNodeList());
+					(List) ((TableSectionElement) tbody).getChildren());
 		}
 
 		native JsArray<ElementJso> getRows0(ElementJso tbody) /*-{

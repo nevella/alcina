@@ -134,8 +134,15 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		ClientDomElementStatic.blur(this);
 	}
 
-	public void clearChildrenAndAttributes0() {
-		children().clear();
+	void clearChildren() {
+		childIterator().stream()
+				.forEach(n -> n.setParentNode(null, false, true));
+		// clear child refs
+		firstChild = null;
+		lastChild = null;
+	}
+
+	void clearChildrenAndAttributes0() {
 		attributes.clear();
 	}
 
@@ -283,23 +290,10 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	}
 
 	@Override
-	public final Element getNextSiblingElement() {
-		boolean seen = false;
-		if (parentNode == null) {
-			// possibly dodgy - at least in UiBinder
-			return null;
-		}
-		for (int idx = 0; idx < parentNode.children().size(); idx++) {
-			NodeLocal node = parentNode.children().get(idx);
-			if (node == this) {
-				seen = true;
-			} else {
-				if (seen && node.getNodeType() == Node.ELEMENT_NODE) {
-					return (Element) node.node();
-				}
-			}
-		}
-		return null;
+	public Element getNextSiblingElement() {
+		return (Element) siblingIterator().stream().skip(1)
+				.filter(n -> n.getNodeType() == Node.ELEMENT_NODE).findFirst()
+				.map(NodeLocal::node).orElse(null);
 	}
 
 	@Override
@@ -355,18 +349,9 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	public final Element getPreviousSiblingElement() {
-		boolean seen = false;
-		for (int idx = parentNode.children().size() - 1; idx >= 0; idx--) {
-			NodeLocal node = parentNode.children().get(idx);
-			if (node == this) {
-				seen = true;
-			} else {
-				if (seen && node.getNodeType() == Node.ELEMENT_NODE) {
-					return (Element) node.node();
-				}
-			}
-		}
-		return null;
+		return (Element) previousSiblingIterator().stream().skip(1)
+				.filter(n -> n.getNodeType() == Node.ELEMENT_NODE).findFirst()
+				.map(NodeLocal::node).orElse(null);
 	}
 
 	@Override
@@ -565,7 +550,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	public void setInnerText(String text) {
 		if (Ax.isBlank(text)) {
 		} else {
-			children().clear();
+			clearChildren();
 			HtmlParser.appendTextNodes(ownerDocument, this, text);
 		}
 	}
@@ -810,7 +795,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	void appendTextContent(StringBuilder builder) {
-		children().nodes.stream()
+		childIterator().stream()
 				.forEach(node -> node.appendTextContent(builder));
 	}
 
@@ -839,7 +824,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	}
 
 	int orSunkEventsOfAllChildren(int sunk) {
-		for (NodeLocal child : children().nodes) {
+		for (NodeLocal child : childIterator().toList()) {
 			if (child instanceof ElementLocal) {
 				sunk = ((ElementLocal) child).orSunkEventsOfAllChildren(sunk);
 			}
@@ -849,7 +834,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	}
 
 	void orSunkBitlessEventsOfAllChildren(Set<String> sunk) {
-		for (NodeLocal child : children().nodes) {
+		for (NodeLocal child : childIterator().toList()) {
 			if (child instanceof ElementLocal) {
 				((ElementLocal) child).orSunkBitlessEventsOfAllChildren(sunk);
 			}
@@ -868,15 +853,17 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	 */
 	void putParent(DocumentLocal local) {
 		parentNode = local;
-		parentNode.children().add(this);
+		parentNode.childCount++;
+		parentNode.firstChild = this;
+		parentNode.lastChild = this;
 	}
 
 	private void appendChildContents(UnsafeHtmlBuilder builder) {
 		if (containsUnescapedText()) {
-			children().nodes.stream().forEach(
+			childIterator().stream().forEach(
 					node -> ((TextLocal) node).appendUnescaped(builder));
 		} else {
-			children().nodes.stream()
+			childIterator().stream()
 					.forEach(child -> child.appendOuterHtml(builder));
 		}
 	}
@@ -884,7 +871,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	private boolean containsUnescapedText() {
 		if (tagName.equalsIgnoreCase("style")
 				|| tagName.equalsIgnoreCase("script")) {
-			Preconditions.checkState(children().nodes.stream()
+			Preconditions.checkState(childIterator().stream()
 					.allMatch(c -> c.getNodeType() == Node.TEXT_NODE));
 			return true;
 		} else {

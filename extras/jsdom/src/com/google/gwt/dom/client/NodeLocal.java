@@ -1,121 +1,58 @@
 package com.google.gwt.dom.client;
 
-import java.util.ArrayList;
+import java.util.AbstractList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import com.google.common.base.Preconditions;
-
-import cc.alcina.framework.common.client.util.AlcinaCollections;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CollectionCreators;
 
 public abstract class NodeLocal implements ClientDomNode {
 	private static Node nodeFor(NodeLocal nodeLocal) {
 		return nodeLocal == null ? null : nodeLocal.node();
 	}
 
-	private Children children;
-
 	protected NodeLocal parentNode;
 
 	protected DocumentLocal ownerDocument;
 
-	class Children {
-		List<NodeLocal> nodes = new ArrayList<>();
+	NodeLocal firstChild;
 
-		Map<NodeLocal, Integer> ordinals = null;
+	NodeLocal lastChild;
 
-		NodeLocal firstChild() {
-			return Ax.first(nodes);
-		}
+	NodeLocal previousSibling;
 
-		NodeLocal lastChild() {
-			return Ax.last(nodes);
-		}
+	NodeLocal nextSibling;
 
-		void add(NodeLocal local) {
-			nodes.add(local);
-			invalidateLookup();
-		}
-
-		void invalidateLookup() {
-			ordinals = null;
-		}
-
-		public void clear() {
-			nodes.clear();
-			invalidateLookup();
-		}
-
-		public Node getRelativeChild(NodeLocal nodeLocal, int delta) {
-			int idx = indexOf(nodeLocal);
-			if (idx == -1) {
-				return null;
-			}
-			int targetIdx = idx + delta;
-			if (targetIdx < 0 || targetIdx >= size()) {
-				return null;
-			}
-			NodeLocal sibling = nodes.get(targetIdx);
-			return nodeFor(sibling);
-		}
-
-		int size() {
-			return nodes.size();
-		}
-
-		int indexOf(NodeLocal nodeLocal) {
-			int idx = -1;
-			/*
-			 * handle common cases
-			 */
-			if (nodeLocal == firstChild()) {
-				idx = 0;
-			} else if (nodeLocal == lastChild()) {
-				idx = nodes.size() - 1;
-			} else {
-				if (ordinals == null) {
-					/*
-					 * make a lookup
-					 */
-					ordinals = AlcinaCollections.newUnqiueMap();
-					nodes.forEach(n -> {
-						ordinals.put(n, ordinals.size());
-					});
-				}
-				return ordinals.get(nodeLocal);
-			}
-			return idx;
-		}
-
-		void add(int idx, NodeLocal local) {
-			nodes.add(idx, local);
-			invalidateLookup();
-		}
-
-		NodeLocal get(int idx) {
-			return nodes.get(idx);
-		}
-
-		void remove(NodeLocal local) {
-			int idx = indexOf(local);
-			if (idx != -1) {
-				nodes.remove(idx);
-				invalidateLookup();
-			}
-		}
-	}
+	int childCount;
 
 	protected NodeLocal() {
+	}
+
+	void updateSiblingRefs(NodeLocal before, NodeLocal target,
+			NodeLocal after) {
+		if (before != null) {
+			before.nextSibling = target;
+			target.previousSibling = before;
+		}
+		if (after != null) {
+			after.previousSibling = target;
+			target.nextSibling = after;
+		}
 	}
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		NodeLocal local = newChild.local();
-		children().add(local);
-		((NodeLocal) newChild.local()).setParentNode(this);
+		updateSiblingRefs(lastChild, local, null);
+		lastChild = local;
+		if (firstChild == null) {
+			firstChild = local;
+		}
+		local.setParentNode(this, true, true);
+		childCount++;
 		return newChild;
 	}
 
@@ -140,32 +77,48 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	@Override
 	public int getChildCount() {
-		if (children == null) {
-			return 0;
-		}
-		return ClientDomNodeStatic.getChildCount(this);
+		return childCount;
 	}
 
 	@Override
 	public NodeList<Node> getChildNodes() {
-		return new NodeList(new NodeListLocal(children().nodes));
+		return new NodeList(new NodeListImpl());
 	}
 
-	Children children() {
-		if (children == null) {
-			children = new Children();
+	class NodeListImpl<T extends Node> implements ClientDomNodeList<T> {
+		ChildNodeList list = null;
+
+		ChildNodeList ensureList() {
+			if (list == null) {
+				list = new ChildNodeList(NodeLocal.this);
+			}
+			return list;
 		}
-		return children;
+
+		@Override
+		public T getItem(int index) {
+			return (T) ensureList().get(index).node();
+		}
+
+		@Override
+		public int getLength() {
+			return getChildCount();
+		}
+
+		@Override
+		public Stream<T> stream() {
+			return (Stream) list.stream().map(nl -> nl.node());
+		}
 	}
 
 	@Override
 	public Node getFirstChild() {
-		return children == null ? null : nodeFor(children.firstChild());
+		return nodeFor(firstChild);
 	}
 
 	@Override
 	public Node getLastChild() {
-		return children == null ? null : nodeFor(children.lastChild());
+		return nodeFor(lastChild);
 	}
 
 	/**
@@ -173,11 +126,7 @@ public abstract class NodeLocal implements ClientDomNode {
 	 */
 	@Override
 	public Node getNextSibling() {
-		if (parentNode == null) {
-			// detached nodes don't have siblings...sorta
-			return null;
-		}
-		return parentNode.children().getRelativeChild(this, 1);
+		return nodeFor(nextSibling);
 	}
 
 	@Override
@@ -210,13 +159,12 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	@Override
 	public Node getPreviousSibling() {
-		return parentNode == null ? null
-				: parentNode.children().getRelativeChild(this, -1);
+		return nodeFor(previousSibling);
 	}
 
 	@Override
 	public boolean hasChildNodes() {
-		return children().size() > 0;
+		return childCount > 0;
 	}
 
 	@Override
@@ -226,7 +174,16 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	@Override
 	public final int indexInParentChildren() {
-		return parentNode.children().indexOf(this);
+		if (parentNode == null) {
+			return -1;
+		}
+		int idx = -1;
+		SiblingIterator itr = parentNode.childIterator();
+		while (itr.hasNext()) {
+			idx++;
+			itr.next();
+		}
+		return idx;
 	}
 
 	@Override
@@ -237,15 +194,21 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
 		if (refChild == null) {
-			children().add(newChild.local());
+			return appendChild(newChild);
 		} else {
-			int idx = children().indexOf(refChild.local());
-			Preconditions.checkArgument(idx != -1,
+			NodeLocal localRefChild = refChild.local();
+			Preconditions.checkArgument(localRefChild.parentNode == this,
 					"refchild not a child of this node");
-			children().add(idx, newChild.local());
+			NodeLocal local = newChild.local();
+			updateSiblingRefs(localRefChild.previousSibling, local,
+					localRefChild);
+			if (localRefChild == firstChild) {
+				firstChild = local;
+			}
+			local.setParentNode(this, true, true);
+			childCount++;
+			return newChild;
 		}
-		((NodeLocal) newChild.local()).setParentNode(this);
-		return newChild;
 	}
 
 	@Override
@@ -305,11 +268,8 @@ public abstract class NodeLocal implements ClientDomNode {
 		}
 		buf.append("\n");
 		if (node.getNodeType() == 1) {
-			int idx = 0;
-			for (; idx < children().size(); idx++) {
-				NodeLocal child = children().get(idx);
-				child.provideLocalDomTree0(buf, depth + 1);
-			}
+			childIterator().stream().forEach(
+					child -> child.provideLocalDomTree0(buf, depth + 1));
 		}
 		return buf;
 	}
@@ -322,8 +282,23 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	@Override
 	public Node removeChild(Node oldChild) {
-		((NodeLocal) oldChild.local()).setParentNode(null);
-		children().remove(oldChild.local());
+		NodeLocal oldLocal = (NodeLocal) oldChild.local();
+		if (oldLocal.previousSibling != null) {
+			oldLocal.previousSibling.nextSibling = oldLocal.nextSibling;
+		}
+		if (oldLocal.nextSibling != null) {
+			oldLocal.nextSibling.previousSibling = oldLocal.previousSibling;
+		}
+		if (firstChild == oldLocal) {
+			firstChild = oldLocal.nextSibling;
+		}
+		if (lastChild == oldLocal) {
+			lastChild = oldLocal.previousSibling;
+		}
+		oldLocal.previousSibling = null;
+		oldLocal.nextSibling = null;
+		oldLocal.setParentNode(null, false, true);
+		childCount--;
 		return oldChild;
 	}
 
@@ -342,24 +317,85 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public abstract void setNodeValue(String nodeValue);
 
-	void setParentNode(NodeLocal newParentNode) {
-		if (parentNode != newParentNode && parentNode != null
-				&& newParentNode != null) {
-			// otherwise we go all loopy (do this instead of
-			// parentNode.removeChild(this)
-			parentNode.children().remove(this);
+	static class SiblingIterator implements Iterator<NodeLocal> {
+		NodeLocal next;
+
+		boolean forwards;
+
+		SiblingIterator(NodeLocal start, boolean forwards) {
+			next = start;
+			this.forwards = forwards;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return next != null;
+		}
+
+		@Override
+		public NodeLocal next() {
+			NodeLocal result = next;
+			next = forwards ? next.nextSibling : next.previousSibling;
+			return result;
+		}
+
+		Stream<NodeLocal> stream() {
+			Iterable<NodeLocal> iterable = () -> this;
+			return StreamSupport.stream(iterable.spliterator(), false);
+		}
+
+		List<NodeLocal> toList() {
+			return stream().toList();
+		}
+	}
+
+	static class ChildNodeList extends AbstractList<Node> {
+		List<NodeLocal> list;
+
+		ChildNodeList(NodeLocal local) {
+			this.list = local.childIterator().toList();
+		}
+
+		@Override
+		public Node get(int index) {
+			return list.get(index).node();
+		}
+
+		@Override
+		public int size() {
+			return list.size();
+		}
+	}
+
+	SiblingIterator siblingIterator() {
+		return new SiblingIterator(this, true);
+	}
+
+	SiblingIterator childIterator() {
+		return new SiblingIterator(firstChild, true);
+	}
+
+	SiblingIterator previousSiblingIterator() {
+		return new SiblingIterator(this, false);
+	}
+
+	void setParentNode(NodeLocal newParentNode, boolean removeFromOldParent,
+			boolean fireAttach) {
+		if (removeFromOldParent && parentNode != newParentNode
+				&& parentNode != null) {
+			parentNode.removeChild(node());
 		}
 		parentNode = newParentNode;
-		boolean newAttached = newParentNode != null
-				&& newParentNode.node().attached;
-		node().setAttached(newAttached, true);
+		if (fireAttach) {
+			boolean newAttached = newParentNode != null
+					&& newParentNode.node().attached;
+			node().setAttached(newAttached, true);
+		}
 	}
 
 	public void walk(Consumer<NodeLocal> consumer) {
 		consumer.accept(this);
-		for (int idx = 0; idx < children().size(); idx++) {
-			children().get(idx).walk(consumer);
-		}
+		childIterator().stream().forEach(nl -> nl.walk(consumer));
 	}
 
 	@Override

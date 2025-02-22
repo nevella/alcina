@@ -15,7 +15,6 @@
  */
 package com.google.gwt.dom.client;
 
-import java.util.AbstractList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -69,18 +68,6 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 @Reflected
 public abstract class Node
 		implements JavascriptObjectEquivalent, ClientDomNode, org.w3c.dom.Node {
-	class ChildNodeList extends AbstractList<Node> {
-		@Override
-		public Node get(int index) {
-			return local().children().get(index).node();
-		}
-
-		@Override
-		public int size() {
-			return local().children().size();
-		}
-	}
-
 	/**
 	 * Assert that the given {@link JavaScriptObject} is a DOM node and
 	 * automatically typecast it.
@@ -399,10 +386,6 @@ public abstract class Node
 		throw new UnsupportedOperationException();
 	}
 
-	public List<Node> provideChildNodeList() {
-		return new ChildNodeList();
-	}
-
 	public boolean provideIsElement() {
 		return getNodeType() == ELEMENT_NODE;
 	}
@@ -504,8 +487,7 @@ public abstract class Node
 	}
 
 	public List<Node> getChildren() {
-		return local().children().nodes.stream().map(NodeLocal::node)
-				.collect(Collectors.toList());
+		return new NodeLocal.ChildNodeList(local());
 	}
 
 	public Stream<Node> traverse() {
