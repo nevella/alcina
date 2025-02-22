@@ -11,16 +11,11 @@ package cc.alcina.framework.gwt.client.dirndl.model;
  * This is a fairly key UI optimisation - see the Traversal Browser and
  * integration with {@link ModelBinding}
  * 
- * <p>
- * I - the input type (bean), not the input property type. Note that if the
- * target property is bound to input properties from different sources, those
- * sources will all need to implement a common interface (such as HasPage in the
- * TraversalBrowser)
+ * 
  * 
  * <p>
- * ...Walking this back a bit, actually overriding Object.equals is maybe
- * better?
+ * The test used will be Object.equals - if the two objects are equal, the
+ * corresponding property will not be set
  */
-public interface IfNotExisting<I> {
-	boolean testExistingSatisfies(I input);
+public interface IfNotExisting {
 }

@@ -120,19 +120,6 @@ public class ModelBinding<T> {
 	}
 
 	void acceptStreamElement0(Object obj) {
-		if (targetBinding != null) {
-			Class<?> toType = targetBinding.getTargetPropertyType();
-			if (Reflections.isAssignableFrom(IfNotExisting.class, toType)) {
-				IfNotExisting existing = (IfNotExisting) targetBinding
-						.getExistingValue();
-				if (existing != null) {
-					if (existing
-							.testExistingSatisfies(fromPropertyChangeSource)) {
-						return;
-					}
-				}
-			}
-		}
 		if (preSupplierPredicate != null
 				&& !((Predicate) preSupplierPredicate).test(obj)) {
 			return;
@@ -147,6 +134,18 @@ public class ModelBinding<T> {
 		if (postMapPredicate != null
 				&& !((Predicate) postMapPredicate).test(o2)) {
 			return;
+		}
+		if (targetBinding != null) {
+			Class<?> toType = targetBinding.getTargetPropertyType();
+			if (Reflections.isAssignableFrom(IfNotExisting.class, toType)) {
+				IfNotExisting existing = (IfNotExisting) targetBinding
+						.getExistingValue();
+				if (existing != null) {
+					if (Objects.equals(existing, o2)) {
+						return;
+					}
+				}
+			}
 		}
 		Preconditions.checkState(consumer != null,
 				"No consumer - possibly you forgot to call bind(), "

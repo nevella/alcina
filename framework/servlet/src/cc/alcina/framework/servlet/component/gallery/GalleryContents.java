@@ -14,12 +14,17 @@ public abstract class GalleryContents<RP extends GalleryPlace> extends Model.All
 	public RP place;
 
 	@Override
-	public boolean testExistingSatisfies(Object input) {
-		/*
-		 * All place updates should be handled by the GalleryContents subtype,
-		 * _if_ the place type is unchanged
-		 */
-		return getClass() == input.getClass();
+	public int hashCode() {
+		return 1;
+	}
+
+	/*
+	 * All place updates should be handled by the GalleryContents subtype, _if_
+	 * the place type is unchanged
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		return obj != null && obj.getClass() == getClass();
 	}
 
 	static <RP extends GalleryPlace> GalleryContents<RP> forPlace(RP place) {

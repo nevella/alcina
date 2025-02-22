@@ -130,7 +130,6 @@ class Page extends Model.All
 		this.ui = Ui.get();
 		this.ui.page = this;
 		header = new Header(this);
-		layers = new SelectionLayers(this);
 		// FIXME - dirndl - bindings - change addListener to a ModelBinding with
 		// a prebind (setleft) phase....maybe? that might be a bit too
 		// tree-shaped, even for me
@@ -181,6 +180,9 @@ class Page extends Model.All
 		bindings().from(ui).on(Ui.properties.place).typed(TraversalPlace.class)
 				.map(TraversalPlace::getTextFilter).to(header.mid.suggestor)
 				.on(AppSuggestor.properties.filterText).oneWay();
+		bindings().from(ui).on(Ui.properties.place)
+				.value(() -> new SelectionLayers(this)).to(this)
+				.on(properties.layers).oneWay();
 		bindings().from(TraversalBrowser.Ui.get().settings)
 				.accept(this::updateStyles);
 	}
@@ -314,7 +316,7 @@ class Page extends Model.All
 		Element scrollableLayers = layers.layersContainer.provideElement();
 		int top = scrollableLayers.getScrollTop();
 		place.go();
-		layers.provideElement().getChildElement(1).setScrollTop(top);
+		// layers.provideElement().getChildElement(1).setScrollTop(top);
 	}
 
 	public static class CommandContextProviderImpl
