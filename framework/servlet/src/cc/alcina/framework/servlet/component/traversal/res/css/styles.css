@@ -797,6 +797,8 @@ body > page > properties bean-editor form-element[name=treePath] tree-path {
 }
 body > page > properties bean-editor form-element[name=treePath] tree-path > a {
   text-decoration: none;
+}
+body > page > properties bean-editor form-element[name=treePath] tree-path > a, body > page > properties bean-editor form-element[name=treePath] tree-path > a:visited {
   color: #77f;
 }
 body > page > properties bean-editor form-element[name=treePath] tree-path > a:hover {
@@ -1196,4 +1198,62 @@ help sequence > visit > description {
 }
 help sequence > visit > img {
   max-width: 100%;
+}
+
+overlay.string-area string-area-expanded {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  padding-top: 0.5rem;
+  display: grid;
+  grid-template-rows: min-content minmax(min-content, 30vh);
+}
+overlay.string-area string-area-expanded > heading, overlay.string-area string-area-expanded > heading-actions {
+  margin: 0 0 0.5rem;
+  display: flex;
+  width: 100%;
+  font-weight: bold;
+  justify-content: space-between;
+}
+overlay.string-area string-area-expanded > heading-actions > actions {
+  font-weight: normal;
+  display: flex;
+  gap: 1em;
+}
+overlay.string-area string-area-expanded > heading-actions > actions a {
+  cursor: pointer;
+}
+overlay.string-area string-area-expanded > heading-actions > heading {
+  margin-bottom: 0.2rem;
+  height: 2rem;
+  display: flex;
+  padding-left: 1rem;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  background: white;
+  color: #888;
+}
+overlay.string-area string-area-expanded > heading-actions > actions {
+  align-items: center;
+  margin-right: 1rem;
+}
+overlay.string-area string-area-expanded > heading-actions > actions > a {
+  text-decoration: none;
+}
+overlay.string-area string-area-expanded > heading-actions > actions > a, overlay.string-area string-area-expanded > heading-actions > actions > a:visited {
+  color: #77f;
+}
+overlay.string-area string-area-expanded > heading-actions > actions > a:hover {
+  text-decoration: underline;
+}
+overlay.string-area string-area-expanded > value {
+  display: block;
+  border: solid 1px #ccc;
+  margin: 0.2rem 1rem;
+  padding: 0.4rem;
+  white-space: pre;
+  overflow: auto;
 }

@@ -44,10 +44,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CopyToClipboard;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableEntry;
+import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SecondaryAreaDisplayCycle;
@@ -91,7 +93,7 @@ class Page extends Model.All
 		TraversalEvents.LayerSelectionChange.Handler,
 		TraversalBrowserCommand.ToggleHelp.Handler,
 		ModelEvents.ApplicationHelp.Handler,
-		Selection.CopySelectionFilter.Handler {
+		Selection.CopySelectionFilter.Handler, CopyToClipboardHandler {
 	public Page providePage() {
 		return this;
 	}
@@ -473,8 +475,7 @@ class Page extends Model.All
 		SelectionFilter filter = SelectionFilter
 				.ofSelections(List.of(selection));
 		String serialized = FlatTreeSerializer.serializeSingleLine(filter);
-		ConsoleUtil.copyToClipboard(serialized);
-		StatusModule.get().showMessageTransitional("Copied selection filter");
+		event.reemitAs(this, CopyToClipboard.class, serialized);
 	}
 
 	@Override

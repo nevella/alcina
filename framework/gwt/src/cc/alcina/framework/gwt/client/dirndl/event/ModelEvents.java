@@ -210,6 +210,29 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Copy extends ModelEvent<Object, Copy.Handler> {
+		@Override
+		public void dispatch(Copy.Handler handler) {
+			handler.onCopy(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCopy(Copy event);
+		}
+	}
+
+	public static class CopyToClipboard
+			extends ModelEvent<String, CopyToClipboard.Handler> {
+		@Override
+		public void dispatch(CopyToClipboard.Handler handler) {
+			handler.onCopyToClipboard(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCopyToClipboard(CopyToClipboard event);
+		}
+	}
+
 	public static class Create extends ModelEvent<Object, Create.Handler> {
 		@Override
 		public void dispatch(Create.Handler handler) {

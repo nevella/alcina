@@ -56,11 +56,12 @@ public class DelegatingValue extends Model.Value<Object>
 		}
 
 		@Override
-		protected Object resolveModel(Object model) {
+		protected Object resolveModel(AnnotationLocation location,
+				Object model) {
 			if (model == value) {
 				return Reflections.newInstance(valueTransformer).apply(model);
 			}
-			return super.resolveModel(model);
+			return super.resolveModel(location, model);
 		}
 	}
 

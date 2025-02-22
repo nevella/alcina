@@ -25,6 +25,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
  * Renders some DOM with highlights + scroll to
  * <ul>
  * <li>Initializer can take plain text (it'll be wrapped in a pre)
+ * <li>If the markup is invalid (so when setInnerHtml is called in the browser,
+ * the resultant DOM structure != the local structure), you'll need to fix the
+ * incoming markup, there's no way to be consistent in the presence of those
+ * sort of errors
  * </ul>
  */
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)

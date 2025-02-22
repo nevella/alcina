@@ -1,12 +1,14 @@
 package cc.alcina.framework.gwt.client.dirndl.resolver;
 
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -22,8 +24,8 @@ public class PermissibleModelResolver extends ContextResolver {
 	}
 
 	@Override
-	protected Object resolveModel(Object model) {
-		return support.resolveModel(model);
+	protected Object resolveModel(AnnotationLocation location, Object model) {
+		return support.resolveModel(location, model);
 	}
 
 	/*
@@ -32,15 +34,16 @@ public class PermissibleModelResolver extends ContextResolver {
 	public static class Support {
 		Map<Class, Boolean> hasPermissions = AlcinaCollections.newUnqiueMap();
 
-		Function superResolveModel;
+		BiFunction<AnnotationLocation, Object, Object> superResolveModel;
 
-		public Support(Function superResolveModel) {
+		public Support(
+				BiFunction<AnnotationLocation, Object, Object> superResolveModel) {
 			this.superResolveModel = superResolveModel;
 		}
 
-		public Object resolveModel(Object model) {
+		public Object resolveModel(AnnotationLocation location, Object model) {
 			if (model == null) {
-				return superResolveModel.apply(model);
+				return superResolveModel.apply(location, model);
 			}
 			Class<? extends Object> modelClass = model.getClass();
 			boolean hasPermission = hasPermissions.computeIfAbsent(modelClass,
@@ -53,7 +56,7 @@ public class PermissibleModelResolver extends ContextResolver {
 			if (!PermissionsManager.isPermitted(model)) {
 				return new AccessDenied(model);
 			}
-			return superResolveModel.apply(model);
+			return superResolveModel.apply(location, model);
 		}
 	}
 

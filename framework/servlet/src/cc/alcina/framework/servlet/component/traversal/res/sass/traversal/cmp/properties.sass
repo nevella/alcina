@@ -1,4 +1,5 @@
 @use '../../dirndl/multi/base'
+@use '../../dirndl/cmp/string-area'
 
 @mixin contents
   display: block
@@ -58,11 +59,8 @@
       column-gap: 2rem 
 
       > a
-        text-decoration: none
-        color: #77f
+        @include base.blue-link
 
-        &:hover
-          text-decoration: underline
-
-
-
+@mixin overlay
+  overlay.string-area
+    @include string-area.tag

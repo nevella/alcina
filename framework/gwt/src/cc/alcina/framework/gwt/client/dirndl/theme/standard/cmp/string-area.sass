@@ -1,0 +1,36 @@
+@use '../multi/base'
+@use 'context-menu'
+@use 'heading'
+@use 'panel'
+
+@mixin contents
+  display: block
+
+@mixin tag
+  string-area-expanded
+    @include context-menu.dropdown
+    padding-top: 0.5rem
+    display: grid
+    grid-template-rows: min-content minmax(min-content, 30vh)
+    @include panel.heading
+
+    > heading-actions 
+      > heading
+        @include heading.panel-lg
+
+      > actions
+        align-items: center
+        margin-right: 1rem
+
+        > a
+          @include base.blue-link
+
+    > value
+      display: block
+      border: solid 1px #ccc
+      margin: 0.2rem 1rem
+      padding: 0.4rem
+      white-space: pre
+      overflow: auto
+
+

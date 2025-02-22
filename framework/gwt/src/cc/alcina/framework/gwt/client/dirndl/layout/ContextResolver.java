@@ -381,18 +381,23 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 * of a reasonable usage would be "set the tag of each Link instance to
 	 * 'button'" - since there's no declarative (annotation modification) way to
 	 * change the tag of all links in a subtree
-	 * 
 	 * <p>
 	 * Or - forbid access to a model if it fails permissions tests
 	 * <p>
+	 * Or render all strings as some more complex object (StringArea)
+	 * <p>
+	 * The main reason I think it's nasty is because it's an undemocratic
+	 * clobberer - it doesn't allow input/merge from other resolvers.
+	 * 
+	 * @param model2
 	 * 
 	 */
 	/*
 	 * TODO - use ContextService rather than resolveModelAscends
 	 */
-	protected Object resolveModel(Object model) {
+	protected Object resolveModel(AnnotationLocation location, Object model) {
 		if (resolveModelAscends && parent != null) {
-			return parent.resolveModel(model);
+			return parent.resolveModel(location, model);
 		} else {
 			return model;
 		}

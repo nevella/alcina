@@ -55,6 +55,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NextSelecta
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousSelectable;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
+import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
 
 /*
  * TODO - look at an approach to prevent double-fires of say reloadSequence -
@@ -81,7 +82,7 @@ class Page extends Model.Fields
 		SequenceEvents.SelectedIndexChanged.Emitter,
 		SequenceBrowserCommand.ShowKeyboardShortcuts.Handler,
 		ModelEvents.ApplicationHelp.Handler,
-		SequenceBrowserCommand.ToggleHelp.Handler {
+		SequenceBrowserCommand.ToggleHelp.Handler, CopyToClipboardHandler {
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)

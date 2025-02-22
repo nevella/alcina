@@ -3,22 +3,28 @@ package cc.alcina.framework.servlet.component.traversal;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.TreePathModel;
 import cc.alcina.framework.common.client.traversal.Selection.View;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanForm;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanForm.ClassName;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.component.StringArea;
+import cc.alcina.framework.servlet.component.traversal.PropertiesArea.StringAreaResolver;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
 @Directed(tag = "properties")
+@DirectedContextResolver(StringAreaResolver.class)
 class PropertiesArea extends Model.Fields {
 	@Directed
 	Heading header = new Heading("Properties");
@@ -31,6 +37,25 @@ class PropertiesArea extends Model.Fields {
 	@Directed(bindToModel = false)
 	@Directed.Transform(SelectionArea.class)
 	Selection selection;
+
+	/**
+	 * Transform all Strings to StringArea
+	 */
+	public static class StringAreaResolver extends ContextResolver {
+		@Override
+		protected Object resolveModel(AnnotationLocation location,
+				Object model) {
+			if (location.property != null
+					&& location.property.getOwningType() == StringArea.class) {
+				return model;
+			}
+			if (model instanceof String) {
+				return new StringArea(location, (String) model);
+			} else {
+				return model;
+			}
+		}
+	}
 
 	Page page;
 

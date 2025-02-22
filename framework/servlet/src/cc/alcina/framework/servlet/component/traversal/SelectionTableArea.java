@@ -92,7 +92,9 @@ public class SelectionTableArea extends Model.Fields
 
 		@Override
 		public Selection selectionFor(Object object) {
-			return ((RowView) object).getSelection();
+			return filteredLayerSelections.stream()
+					.filter(sel -> sel.get() == object).findFirst()
+					.orElse(null);
 		}
 	}
 

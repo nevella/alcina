@@ -5,8 +5,10 @@
 @use '../cmp/layer-selections'
 @use '../cmp/properties'
 @use '../cmp/selections'
+@use '../multi/common'
 @use '../../dirndl/cmp/status'
 @use '../../dirndl/cmp/overlay'
+@use '../../dirndl/cmp/heading'
 @use '../../dirndl/cmp/keyboard-shortcuts'
 @use '../../dirndl/cmp/help'
 
@@ -34,17 +36,7 @@ body > page
     position: relative
 
     > heading
-      margin-bottom: 0.2rem
-      height: 2.0rem
-      display: flex
-      padding-left: 1rem
-      align-items: center
-      //background: #e8e8e8
-      //border-bottom: solid 1px #aaa
-      width: 100%
-      box-sizing: border-box
-      background: white
-      color: #888
+      @include heading.panel-lg
 
   > header
     @include header.contents
@@ -61,3 +53,4 @@ body > page
 @include app-suggestor.contents
 @include keyboard-shortcuts.contents
 @include help.contents
+@include properties.overlay
