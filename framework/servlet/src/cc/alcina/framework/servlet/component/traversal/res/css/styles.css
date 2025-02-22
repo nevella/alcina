@@ -632,16 +632,28 @@ body > page > header > right > dropdown > button.dotburger {
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48dGl0bGU+aW9uaWNvbnMtdjUtZjwvdGl0bGU+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSI0OCIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjQxNiIgcj0iNDgiLz48Y2lyY2xlIGN4PSIyNTYiIGN5PSI5NiIgcj0iNDgiLz48L3N2Zz4=");
 }
 body > page > layers {
-  display: block;
+  display: grid;
+  min-height: 100%;
   grid-area: layers;
+  grid-template-rows: min-content min-content 1fr;
+  grid-template-areas: "heading" "layers" "spacer";
   background: #f7f7f7;
+}
+body > page > layers > heading {
+  grid-area: heading;
+}
+body > page > layers > layers {
+  grid-area: layers;
+}
+body > page > layers > spacer {
+  display: block;
+  grid-area: spacer;
 }
 body > page > layers > layers {
   display: grid;
   gap: 1rem;
   grid-template-columns: 18rem repeat(250, 200px);
   overflow: scroll;
-  max-height: calc(100% - 3.2rem);
   margin-top: 1rem;
   box-sizing: border-box;
   margin-bottom: 1rem;

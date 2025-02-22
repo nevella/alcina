@@ -255,7 +255,8 @@ class Page extends Model.All
 			default:
 				throw new UnsupportedOperationException();
 			}
-			builder.line("body > page {grid-template-rows: 50px 1fr 260px;}");
+			builder.line("body > page {grid-template-rows: 50px 1fr %spx;}",
+					settings.selectionAreaHeight);
 			switch (settings.secondaryAreaDisplayMode) {
 			case INPUT_OUTPUT:
 				rows.add("input input output output");
@@ -287,8 +288,6 @@ class Page extends Model.All
 			String areas = rows.stream().map(s -> Ax.format("\"%s\"", s))
 					.collect(Collectors.joining(" "));
 			builder.line("body > page {grid-template-areas: %s;}", areas);
-			builder.line("body > page {grid-template-rows: 50px 1fr %spx;}",
-					settings.selectionAreaHeight);
 		}
 		String text = builder.toString();
 		if (styleElement == null) {

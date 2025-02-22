@@ -15,11 +15,6 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 @Directed(tag = "layers")
 class SelectionLayers extends Model.Fields {
-	@Directed
-	Heading header = new Heading("Selection layers");
-
-	static PackageProperties._SelectionLayers_LayersContainer layersContainer_properties = PackageProperties.selectionLayers_layersContainer;
-
 	/*
 	 * @Directed.Wrap is not used (rather, a container class) because it's a
 	 * scroll container, so code wants access to the rendered element
@@ -50,20 +45,28 @@ class SelectionLayers extends Model.Fields {
 		}
 	}
 
+	static PackageProperties._SelectionLayers_LayersContainer layersContainer_properties = PackageProperties.selectionLayers_layersContainer;
+
+	@Directed
+	Heading header = new Heading("Selection layers");
+
 	@Directed
 	LayersContainer layersContainer = new LayersContainer();
 
-	Page page;
+	@Directed
+	Object spacer = new Object();
 
-	SelectionTraversal traversal() {
-		return Ui.traversal();
-	}
+	Page page;
 
 	SelectionLayers(Page page) {
 		this.page = page;
 		bindings().from(page.ui).on(Ui.properties.traversal)
 				.map(this::toLayerSelections).to(layersContainer)
 				.on(layersContainer_properties.layers).oneWay();
+	}
+
+	SelectionTraversal traversal() {
+		return Ui.traversal();
 	}
 
 	List<LayerSelections> toLayerSelections(SelectionTraversal traversal) {

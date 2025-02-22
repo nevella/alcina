@@ -4,16 +4,27 @@
 @use '../../dirndl/multi/icons/filter-circle-outline.svg.data-url-rule' as filter-circle
 
 @mixin contents
-  display: block
+  display: grid
+  min-height: 100%
   grid-area: layers
+  grid-template-rows: min-content min-content 1fr
+  grid-template-areas: "heading" "layers" "spacer"
+
   background: #f7f7f7
+
+  > heading
+    grid-area: heading
+  > layers
+    grid-area: layers
+  > spacer
+    display: block
+    grid-area: spacer
 
   > layers
     display: grid
     gap: 1rem
     grid-template-columns: 18rem repeat(250, 200px)
     overflow: scroll
-    max-height: calc(100% - 3.2rem)
     margin-top: 1rem
     box-sizing: border-box
     margin-bottom: 1rem
