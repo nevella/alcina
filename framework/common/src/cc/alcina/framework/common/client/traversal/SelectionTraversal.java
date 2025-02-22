@@ -23,12 +23,16 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.process.AlcinaProcess;
+import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.common.client.process.ProcessContextProvider;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal.BeforeLayerSelection;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal.SelectionException;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal.StatsLogger;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal.State.SelectionLayers.LayerSelections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -181,7 +185,7 @@ public class SelectionTraversal
 
 	Map<Selection, Integer> selectionIndicies = new ConcurrentHashMap<>();
 
-	Map<Selection, Exception> selectionExceptions = new ConcurrentHashMap<>();
+	public Map<Selection, Exception> selectionExceptions = new ConcurrentHashMap<>();
 
 	private SelectionFilter filter;
 
@@ -221,6 +225,19 @@ public class SelectionTraversal
 
 	private void exitSelectionContext(Selection<?> selection) {
 		selection.ancestorSelections().forEach(Selection::exitContext);
+	}
+
+	/*
+	 * An exception suppressed [to keep the traversal flow/logs clean], but
+	 * required for end-of-traversal exception wrangling
+	 */
+	public static class SuppressedException
+			implements ContextObservers.Observable {
+		Exception e;
+
+		public SuppressedException(Exception e) {
+			this.e = e;
+		}
 	}
 
 	@Override
@@ -426,9 +443,18 @@ public class SelectionTraversal
 		try {
 			LooseContext.push();
 			LooseContext.set(CONTEXT_TRAVERSAL, this);
+			new SuppressedExceptionObserver().bind();
 			traverse0();
 		} finally {
 			LooseContext.pop();
+		}
+	}
+
+	class SuppressedExceptionObserver
+			implements ContextObservers.Observer<SuppressedException> {
+		@Override
+		public void topicPublished(SuppressedException message) {
+			selectionExceptions.put(contextSelection(), message.e);
 		}
 	}
 
