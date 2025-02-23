@@ -23,6 +23,8 @@ public class LightSet<H> extends AbstractSet<H>
 		implements Cloneable, Serializable {
 	static final transient long serialVersionUID = 1;
 
+	static transient int nullWriteNotificationCounter = 0;
+
 	private static final transient int DEGENERATE_THRESHOLD = 30;
 
 	private static final transient int INITIAL_SIZE = 4;
@@ -40,6 +42,13 @@ public class LightSet<H> extends AbstractSet<H>
 
 	private transient Set<H> degenerate;
 
+	transient boolean notifyNullWrites = false;
+
+	public LightSet<H> withNotifyNullWrites() {
+		this.notifyNullWrites = true;
+		return this;
+	}
+
 	public LightSet() {
 	}
 
@@ -49,6 +58,12 @@ public class LightSet<H> extends AbstractSet<H>
 
 	@Override
 	public boolean add(H e) {
+		if (e == null && notifyNullWrites) {
+			if (nullWriteNotificationCounter++ < 5) {
+				new IllegalArgumentException("DEVEX-0 :: null-write")
+						.printStackTrace();
+			}
+		}
 		if (degenerate != null) {
 			return degenerate.add(e);
 		}

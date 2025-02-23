@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.search;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -60,6 +62,8 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
  * <li>string representation
  * <li>serialization
  * </ul>
+ * 
+ * 
  *
  * @author nick@alcina.cc
  *
@@ -90,7 +94,8 @@ public abstract class SearchDefinition extends Bindable
 
 	private String orderName;
 
-	private Set<CriteriaGroup> criteriaGroups = new LightSet<CriteriaGroup>();
+	private Set<CriteriaGroup> criteriaGroups = new LightSet<CriteriaGroup>()
+			.withNotifyNullWrites();
 
 	private Set<OrderGroup> orderGroups = new LightSet<OrderGroup>();
 
@@ -128,11 +133,10 @@ public abstract class SearchDefinition extends Bindable
 	}
 
 	public Set<SearchCriterion> allCriteria() {
-		LinkedHashSet<SearchCriterion> result = new LinkedHashSet<SearchCriterion>();
-		for (CriteriaGroup cg : getCriteriaGroups()) {
-			result.addAll(cg.getCriteria());
-		}
-		return result;
+		return (Set<SearchCriterion>) getCriteriaGroups().stream()
+				.filter(Objects::nonNull).map(CriteriaGroup::getCriteria)
+				.flatMap(Collection::stream)
+				.collect(AlcinaCollectors.toLinkedHashSet());
 	}
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
@@ -142,11 +146,10 @@ public abstract class SearchDefinition extends Bindable
 	}
 
 	public Set<OrderCriterion> allOrderCriteria() {
-		LinkedHashSet<OrderCriterion> result = new LinkedHashSet<OrderCriterion>();
-		for (OrderGroup cg : getOrderGroups()) {
-			result.addAll(cg.getCriteria());
-		}
-		return result;
+		return (Set<OrderCriterion>) getOrderGroups().stream()
+				.filter(Objects::nonNull).map(CriteriaGroup::getCriteria)
+				.flatMap(Collection::stream)
+				.collect(AlcinaCollectors.toLinkedHashSet());
 	}
 
 	public void clearAllCriteria() {
