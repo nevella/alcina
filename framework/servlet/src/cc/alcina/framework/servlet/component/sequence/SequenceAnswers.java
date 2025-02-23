@@ -15,6 +15,8 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorComman
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.MatchStyle;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents;
+import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 
 class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 	public SequenceAnswers() {
@@ -37,6 +39,8 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 		List<AppSuggestion> suggestions = new ArrayList<>();
 		addLoadSuggestion(query, suggestions);
 		addHighlightSuggestion(query, suggestions);
+		addSetSuggestion(query, suggestions);
+		addExecSuggestion(query, suggestions);
 		{
 			// add filter selection
 			AppSuggestionEntry suggestion = new AppSuggestionEntry();
@@ -78,6 +82,38 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 					suggestion.eventData);
 			suggestion.modelEvent = SequenceEvents.HighlightElements.class;
 			suggestions.add(suggestion);
+		}
+	}
+
+	void addSetSuggestion(String query, List<AppSuggestion> suggestions) {
+		{
+			Pattern pattern = Pattern.compile("set rows (\\d+)");
+			Matcher matcher = pattern.matcher(query);
+			if (matcher.matches()) {
+				AppSuggestionEntry suggestion = new AppSuggestionEntry();
+				suggestion.eventData = matcher.group(1);
+				int tableRows = SequenceSettings.get().maxElementRows;
+				suggestion.match = Ax.format("Set rows: '%s' (current=%s)",
+						suggestion.eventData, tableRows);
+				suggestion.modelEvent = SequenceEvents.SetSettingMaxElementRows.class;
+				suggestions.add(suggestion);
+			}
+		}
+	}
+
+	void addExecSuggestion(String query, List<AppSuggestion> suggestions) {
+		{
+			Pattern pattern = Pattern.compile("exec (\\S+)");
+			Matcher matcher = pattern.matcher(query);
+			if (matcher.matches()) {
+				AppSuggestionEntry suggestion = new AppSuggestionEntry();
+				suggestion.eventData = matcher.group(1);
+				suggestion.match = Ax.format(
+						"Exec '%s' ['list' lists available commands]",
+						suggestion.eventData);
+				suggestion.modelEvent = SequenceEvents.ExecCommand.class;
+				suggestions.add(suggestion);
+			}
 		}
 	}
 }

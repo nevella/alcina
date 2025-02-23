@@ -48,11 +48,13 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.Det
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ToggleHelp;
+import cc.alcina.framework.servlet.component.sequence.SequenceEvents.ExecCommand;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequence;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.NextSelectable;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.PreviousSelectable;
+import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SetSettingMaxElementRows;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
 import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
@@ -74,6 +76,8 @@ class Page extends Model.Fields
 		SequenceEvents.NextSelectable.Handler,
 		SequenceEvents.PreviousSelectable.Handler,
 		SequenceEvents.LoadSequence.Handler,
+		SequenceEvents.SetSettingMaxElementRows.Handler,
+		SequenceEvents.ExecCommand.Handler,
 		SequenceBrowserCommand.ClearFilter.Handler,
 		SequenceBrowserCommand.DetailDisplayCycle.Handler,
 		SequenceBrowserCommand.ColumnSetCycle.Handler,
@@ -465,5 +469,17 @@ class Page extends Model.Fields
 	@Override
 	public void onToggleHelp(ToggleHelp event) {
 		event.reemitAs(this, ApplicationHelp.class);
+	}
+
+	@Override
+	public void onSetSettingMaxElementRows(SetSettingMaxElementRows event) {
+		String model = event.getModel();
+		SequenceBrowser.Ui.get().settings.putMaxElementRows(model);
+	}
+
+	@Override
+	public void onExecCommand(ExecCommand event) {
+		Sequence.CommandExecutor.Support.execCommand(event,
+				filteredSequenceElements, event.getModel());
 	}
 }

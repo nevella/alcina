@@ -19,6 +19,7 @@ import cc.alcina.framework.servlet.component.sequence.SequencePlace;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings;
 import com.google.gwt.dom.client.StyleElement;
 import java.lang.Class;
+import java.lang.Integer;
 import java.lang.String;
 import java.util.List;
 import java.util.Set;
@@ -98,6 +99,7 @@ public class PackageProperties {
     public static class _SequenceSettings implements TypedProperty.Container {
       public TypedProperty<SequenceSettings, SequenceSettings.ColumnSet> columnSet = new TypedProperty<>(SequenceSettings.class, "columnSet");
       public TypedProperty<SequenceSettings, SequenceSettings.DetailDisplayMode> detailDisplayMode = new TypedProperty<>(SequenceSettings.class, "detailDisplayMode");
+      public TypedProperty<SequenceSettings, Integer> maxElementRows = new TypedProperty<>(SequenceSettings.class, "maxElementRows");
       public TypedProperty<SequenceSettings, String> sequenceKey = new TypedProperty<>(SequenceSettings.class, "sequenceKey");
     }
     

@@ -287,7 +287,7 @@ public class TraversalBrowser {
 		}
 
 		// FIXME - tb - docco
-		public static void proposeSetRowSuggestion(String query,
+		public static void proposeSetSuggestions(String query,
 				List<AppSuggestion> suggestions) {
 			{
 				Pattern pattern = Pattern.compile("set rows (\\d+)");

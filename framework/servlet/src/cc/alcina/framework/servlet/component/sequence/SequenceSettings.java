@@ -20,6 +20,8 @@ public class SequenceSettings extends Bindable.Fields {
 
 	public String sequenceKey;
 
+	public int maxElementRows = 999;
+
 	public enum DetailDisplayMode {
 		QUARTER_WIDTH, HALF_WIDTH, FULL_WIDTH, NONE
 	}
@@ -41,5 +43,10 @@ public class SequenceSettings extends Bindable.Fields {
 				% ColumnSet.values().length];
 		properties.columnSet.set(this, next);
 		return next;
+	}
+
+	public void putMaxElementRows(String maxElementRowsStr) {
+		properties.maxElementRows.set(this,
+				Integer.parseInt(maxElementRowsStr));
 	}
 }

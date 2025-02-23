@@ -1,4 +1,6 @@
 @use '../../dirndl/multi/base'
+@use '../../dirndl/cmp/string-area'
+@use '../../dirndl/cmp/context-menu'
 
 @mixin contents
   display: grid
@@ -27,3 +29,19 @@
 
     .__selected_markup_highlight
       background-color: orange
+
+@mixin overlay
+  overlay.string-area
+    @include string-area.tag
+
+  overlay.pre-text
+    @include context-menu.dropdown
+    padding: 1rem 2rem 2rem
+    font-size: 1.1rem
+
+    pre-text
+      min-width: 30vw
+      min-height: 30vh
+      background: white
+      display: block
+      user-select: text

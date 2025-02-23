@@ -109,7 +109,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 
 		List<AppSuggestion> handle() {
 			if (withCommandSuggestions) {
-				proposeSetRowSuggestion(query, suggestions);
+				proposeSetSuggestions(query, suggestions);
 				proposeCommandSuggestions();
 			}
 			proposePlaceContextSuggestions();

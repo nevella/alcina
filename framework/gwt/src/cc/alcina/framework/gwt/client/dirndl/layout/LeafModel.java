@@ -157,6 +157,19 @@ public abstract class LeafModel {
 	}
 
 	@Directed
+	public static class PreText extends Model.Fields {
+		@Binding(type = Type.INNER_TEXT)
+		public final String text;
+
+		@Binding(type = Binding.Type.PROPERTY)
+		public final String style = "display: block; white-space: pre";
+
+		public PreText(String text) {
+			this.text = text;
+		}
+	}
+
+	@Directed
 	public static class TagText extends Model.Fields implements HasTag {
 		@Binding(type = Type.INNER_TEXT)
 		public final String text;

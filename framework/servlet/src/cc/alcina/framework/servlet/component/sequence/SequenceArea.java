@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -112,9 +113,10 @@ class SequenceArea extends Model.Fields
 	}
 
 	SequenceArea(Page page) {
-		header = new Heading("Sequence elements");
 		this.page = page;
 		filteredElements = page.filteredSequenceElements;
+		header = new Heading(
+				Ax.format("Sequence elements [%s]", filteredElements.size()));
 		bindings().from(SequenceSettings.get())
 				.on(SequenceSettings.properties.columnSet).to(this)
 				.on(properties.columnSet).oneWay();

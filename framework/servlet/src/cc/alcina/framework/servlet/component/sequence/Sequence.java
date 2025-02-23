@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.sequence;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -11,17 +12,22 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.NotificationObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.PreText;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 
 /**
  * <p>
@@ -65,6 +71,55 @@ public interface Sequence<T> {
 
 		public String getName() {
 			return name;
+		}
+	}
+
+	@Registration.Self
+	public interface CommandExecutor<T> {
+		default String name() {
+			return getClass().getSimpleName();
+		}
+
+		void execCommand(ModelEvent event, List<T> filteredElements);
+
+		public static class ListCommands implements CommandExecutor {
+			@Override
+			public String name() {
+				return "list";
+			}
+
+			@Override
+			public void execCommand(ModelEvent event, List filteredElements) {
+				Support.showAvailableCommands();
+			}
+		}
+
+		static class Support {
+			public static void showAvailableCommands() {
+				String message = Registry.query(CommandExecutor.class)
+						.implementations()
+						.map(qe -> Ax.format("%s - %s", qe.name(),
+								NestedName.get(qe)))
+						.collect(Collectors.joining("\n"));
+				Overlay.attributes().withContents(new PreText(message))
+						.positionViewportCentered()
+						.withRemoveOnMouseDownOutside(true).create().open();
+			}
+
+			static void execCommand(ModelEvent event,
+					List filteredSequenceElements, String commandString) {
+				Optional<CommandExecutor> exec = Registry
+						.query(CommandExecutor.class).implementations()
+						.filter(i -> i.name().equals(commandString))
+						.findFirst();
+				if (exec.isPresent()) {
+					exec.get().execCommand(event, filteredSequenceElements);
+				} else {
+					NotificationObservable
+							.of("No command '%s' found", commandString)
+							.publish();
+				}
+			}
 		}
 	}
 

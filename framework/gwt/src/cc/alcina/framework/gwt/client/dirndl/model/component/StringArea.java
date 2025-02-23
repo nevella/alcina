@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.model.component;
 
-import java.util.List;
-
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
@@ -13,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Copy;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CopyToClipboard;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Attributes;
@@ -56,12 +55,34 @@ public class StringArea extends Model.Fields
 		Expanded() {
 			value = StringArea.this.value;
 			headingActions = new HeadingActions("Expanded");
-			headingActions.withModelActions(ModelEvents.Copy.class);
+			if (value.startsWith("http")) {
+				headingActions.actions.add(new Link().withText("Navigate")
+						.withHref(value).withTargetBlank());
+			}
+			headingActions.actions.add(Link.of(ModelEvents.Copy.class));
 		}
 
 		@Override
 		public void onCopy(Copy event) {
 			event.reemitAs(this, CopyToClipboard.class, value);
+		}
+	}
+
+	/**
+	 * Transform all Strings to StringArea
+	 */
+	public static class StringAreaResolver extends ContextResolver {
+		@Override
+		public Object resolveModel(AnnotationLocation location, Object model) {
+			if (location.property != null
+					&& location.property.getOwningType() == StringArea.class) {
+				return model;
+			}
+			if (model instanceof String) {
+				return new StringArea(location, (String) model);
+			} else {
+				return model;
+			}
 		}
 	}
 
@@ -78,7 +99,8 @@ public class StringArea extends Model.Fields
 			overlay = attributes.create();
 			overlay.open();
 		} else {
-			overlay.close();
+			// FIXME - double dispatch/listen?
+			// overlay.close();
 		}
 	}
 

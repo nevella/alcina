@@ -47,9 +47,6 @@ public class SequenceBrowser {
 
 	@TypedProperties
 	static class Ui extends AbstractUi<SequencePlace> {
-		public static final Configuration.Key elementLimit = Configuration
-				.key("elementLimit");
-
 		static PackageProperties._SequenceBrowser_Ui properties = PackageProperties.sequenceBrowser_ui;
 
 		public static Ui get() {
@@ -105,7 +102,7 @@ public class SequenceBrowser {
 		}
 
 		int elementLimit() {
-			return elementLimit.intValue();
+			return settings.maxElementRows;
 		}
 	}
 

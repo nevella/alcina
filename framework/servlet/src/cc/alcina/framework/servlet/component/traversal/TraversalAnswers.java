@@ -40,7 +40,7 @@ class TraversalAnswers extends TraversalAnswerSupplier {
 		suggestion.eventData = query;
 		// suggestion.
 		suggestions.add(suggestion);
-		proposeSetRowSuggestion(query, suggestions);
+		proposeSetSuggestions(query, suggestions);
 		List<CommandNode> commandNodes = AppSuggestorCommands.get()
 				.getCommandNodes(request, MatchStyle.any_substring);
 		commandNodes.stream().map(TraversalAnswers::createSuggestion)

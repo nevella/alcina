@@ -29,6 +29,30 @@ public class SequenceEvents {
 		}
 	}
 
+	public static class SetSettingMaxElementRows
+			extends ModelEvent<String, SetSettingMaxElementRows.Handler> {
+		@Override
+		public void dispatch(SetSettingMaxElementRows.Handler handler) {
+			handler.onSetSettingMaxElementRows(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSetSettingMaxElementRows(SetSettingMaxElementRows event);
+		}
+	}
+
+	public static class ExecCommand
+			extends ModelEvent<String, ExecCommand.Handler> {
+		@Override
+		public void dispatch(ExecCommand.Handler handler) {
+			handler.onExecCommand(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onExecCommand(ExecCommand event);
+		}
+	}
+
 	@KeyBinding(key = ".", context = SequenceBrowser.CommandContext.class)
 	public static class NextSelectable
 			extends ModelEvent<Object, NextSelectable.Handler> {
