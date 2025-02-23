@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.component;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
@@ -25,6 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
  * 
  * So all styles should be applied to inner
  */
+@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public class StringArea extends Model.Fields
 		implements DomEvents.Click.Handler, ModelEvents.Closed.Handler {
 	@Directed(tag = "string-value")
