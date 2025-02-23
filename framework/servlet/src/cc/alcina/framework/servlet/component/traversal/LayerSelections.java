@@ -507,14 +507,8 @@ class LayerSelections extends Model.All implements IfNotExisting {
 
 			@Override
 			public void onClick(Click event) {
-				TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
-				SelectionPath selectionPath = new TraversalPlace.SelectionPath();
-				selectionPath.selection = selection;
-				selectionPath.path = selection.processNode().treePath();
-				if (TraversalBrowser.Ui.get().isUseSelectionSegmentPath()) {
-					selectionPath.segmentPath = selection.fullPath();
-				}
-				selectionPath.type = selectionType;
+				SelectionPath selectionPath = TraversalBrowser.Ui.get()
+						.getSelectionPath(selection);
 				event.reemitAs(this, TraversalEvents.SelectionSelected.class,
 						selectionPath);
 			}

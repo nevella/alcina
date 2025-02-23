@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,15 +25,13 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasFilterableString;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
@@ -210,6 +209,15 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	}
 
 	public interface WithRange<T> extends Selection<T>, Location.Range.Has {
+		public static class MostSpecificComparator
+				implements Comparator<WithRange> {
+			@Override
+			public int compare(WithRange o1, WithRange o2) {
+				return IntPair.MostSpecificComparator.INSTANCE.compare(
+						o1.provideRange().toIntPair(),
+						o2.provideRange().toIntPair());
+			}
+		}
 	}
 
 	/**

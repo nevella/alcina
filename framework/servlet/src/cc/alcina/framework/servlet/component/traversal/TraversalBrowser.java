@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
+import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,6 +30,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
 import cc.alcina.framework.servlet.environment.AbstractUi;
 import cc.alcina.framework.servlet.environment.RemoteUi;
@@ -233,6 +236,18 @@ public class TraversalBrowser {
 
 		protected TraversalPlace activePlace0() {
 			return place;
+		}
+
+		public SelectionPath getSelectionPath(Selection selection) {
+			TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
+			SelectionPath selectionPath = new TraversalPlace.SelectionPath();
+			selectionPath.selection = selection;
+			selectionPath.path = selection.processNode().treePath();
+			if (isUseSelectionSegmentPath()) {
+				selectionPath.segmentPath = selection.fullPath();
+			}
+			selectionPath.type = selectionType;
+			return selectionPath;
 		}
 	}
 

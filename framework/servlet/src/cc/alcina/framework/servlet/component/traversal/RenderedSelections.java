@@ -3,6 +3,8 @@ package cc.alcina.framework.servlet.component.traversal;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.gwt.dom.client.Element;
+
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -16,8 +18,11 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
+import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights;
+import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights.MarkupClick;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryArea;
 
@@ -26,7 +31,8 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings.Seconda
 class RenderedSelections extends Model.Fields implements IfNotExisting {
 	static PackageProperties._RenderedSelections properties = PackageProperties.renderedSelections;
 
-	class SelectionMarkupArea extends Model.Fields {
+	class SelectionMarkupArea extends Model.Fields
+			implements MarkupHighlights.MarkupClick.Handler {
 		Query query;
 
 		SelectionMarkupArea(Query query, Model model) {
@@ -37,10 +43,21 @@ class RenderedSelections extends Model.Fields implements IfNotExisting {
 		@Directed
 		Model model;
 
-		void updateQuery(Query query2) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'updateQuery'");
+		@Override
+		public void onMarkupClick(MarkupClick event) {
+			if (!event.getContext().getOriginatingNativeEvent().getAltKey()) {
+				return;
+			}
+			Element source = (Element) event.getContext()
+					.getOriginatingNativeEvent().getEventTarget().asElement();
+			Selection selection = query.elementToSelection.getSelection(query,
+					provideElement(), source);
+			if (selection != null) {
+				SelectionPath selectionPath = TraversalBrowser.Ui.get()
+						.getSelectionPath(selection);
+				event.reemitAs(this, TraversalEvents.SelectionSelected.class,
+						selectionPath);
+			}
 		}
 	}
 

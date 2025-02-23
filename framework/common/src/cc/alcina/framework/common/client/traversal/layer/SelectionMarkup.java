@@ -2,6 +2,9 @@ package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.Objects;
 
+import com.google.gwt.dom.client.Element;
+
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -13,6 +16,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * <p>
  * To render correctly, this can involve replicating the ancestor tag structure
  * of the selected range
+ * 
  */
 public abstract class SelectionMarkup {
 	public interface Has {
@@ -20,11 +24,18 @@ public abstract class SelectionMarkup {
 	}
 
 	public class Query {
+		public interface ElementToSelection {
+			Selection getSelection(Query query, Element container,
+					Element source);
+		}
+
 		public Selection<?> selection;
 
 		public boolean input;
 
 		public String styleScope;
+
+		public ElementToSelection elementToSelection;
 
 		@Override
 		public boolean equals(Object o) {

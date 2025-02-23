@@ -47,6 +47,10 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		this(parent, measure, null);
 	}
 
+	public Token token() {
+		return get().token;
+	}
+
 	@Override
 	public void releaseResources() {
 		super.releaseResources();

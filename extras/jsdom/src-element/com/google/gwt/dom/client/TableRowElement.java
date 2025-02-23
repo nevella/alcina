@@ -21,6 +21,8 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 
+import cc.alcina.framework.common.client.util.TextUtils;
+
 /**
  * A row in a table.
  * 
@@ -246,6 +248,10 @@ public class TableRowElement extends Element {
 			String tagName = newChild.getNodeName().toLowerCase();
 			Preconditions
 					.checkState(tagName.equals("th") || tagName.equals("td"));
+		}
+		if (newChild.provideIsText()) {
+			Preconditions.checkState(
+					TextUtils.isWhitespaceOrEmpty(newChild.getTextContent()));
 		}
 		super.validateInsert(newChild);
 	}

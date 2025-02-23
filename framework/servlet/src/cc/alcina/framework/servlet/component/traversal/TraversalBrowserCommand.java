@@ -54,7 +54,7 @@ public abstract class TraversalBrowserCommand<T, H extends NodeEvent.Handler>
 		parent = TraversalBrowserCommand.class,
 		name = "selection filter mode: containment",
 		description = "Selection filter mode: containment")
-	@KeyBinding(key = "c")
+	@KeyBinding(key = "m")
 	public static class SelectionFilterModelContainment extends
 			TraversalBrowserCommand<Object, SelectionFilterModelContainment.Handler> {
 		@Override

@@ -37,11 +37,12 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 public abstract class NodeAttachId implements ClientDomNode, NodeRemote {
 	/*
-	 * Can be added to a Dirndl model with interface TransmitState
+	 * Can be added to a Dirndl model with interface TransmitState. Lower-case
+	 * because browser dom is
 	 */
-	public static final String ATTR_NAME_TRANSMIT_STATE = "__attachId_ts";
+	public static final String ATTR_NAME_TRANSMIT_STATE = "__attachid_ts";
 
-	public static final String ATTR_NAME_TRANSMIT_STATE_SELECTOR = "[__attachId_ts]";
+	public static final String ATTR_NAME_TRANSMIT_STATE_SELECTOR = "[__attachid_ts]";
 
 	public static NodeAttachId create(Node node) {
 		switch (node.getNodeType()) {

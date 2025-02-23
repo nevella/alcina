@@ -756,25 +756,32 @@ public class DomDocument extends DomNode implements Cloneable {
 					return node.prettyToString();
 				}
 			} else {
-				org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) domDoc())
-						.createRange();
-				if (range.start.containingNode.isText()) {
-					w3cRange.setStart(range.start.containingNode.node,
-							range.start.indexInNode());
+				if (!(domDoc() instanceof DocumentRange)) {
+					Ax.sysLogHigh(
+							"truncating markup - DocumentRange not implemented for gwt docs");
+					return range.start.containingNode.fullToString();
 				} else {
-					w3cRange.setStartBefore(range.start.containingNode.node);
+					org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) domDoc())
+							.createRange();
+					if (range.start.containingNode.isText()) {
+						w3cRange.setStart(range.start.containingNode.node,
+								range.start.indexInNode());
+					} else {
+						w3cRange.setStartBefore(
+								range.start.containingNode.node);
+					}
+					if (range.end.containingNode.isText()) {
+						w3cRange.setEnd(range.end.containingNode.node,
+								range.end.indexInNode());
+					} else {
+						w3cRange.setEndAfter(range.end.containingNode.node);
+					}
+					DocumentFragment fragment = w3cRange.cloneContents();
+					Element fragmentContainer = domDoc()
+							.createElement("fragment-container");
+					fragmentContainer.appendChild(fragment);
+					return DomNode.from(fragmentContainer).fullToString();
 				}
-				if (range.end.containingNode.isText()) {
-					w3cRange.setEnd(range.end.containingNode.node,
-							range.end.indexInNode());
-				} else {
-					w3cRange.setEndAfter(range.end.containingNode.node);
-				}
-				DocumentFragment fragment = w3cRange.cloneContents();
-				Element fragmentContainer = domDoc()
-						.createElement("fragment-container");
-				fragmentContainer.appendChild(fragment);
-				return DomNode.from(fragmentContainer).fullToString();
 			}
 		}
 

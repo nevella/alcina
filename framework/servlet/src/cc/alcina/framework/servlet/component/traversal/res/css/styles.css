@@ -637,6 +637,7 @@ body > page > layers {
   grid-area: layers;
   grid-template-rows: min-content min-content 1fr;
   grid-template-areas: "heading" "layers" "spacer";
+  overflow: auto;
   background: #f7f7f7;
 }
 body > page > layers > heading {
@@ -653,7 +654,6 @@ body > page > layers > layers {
   display: grid;
   gap: 1rem;
   grid-template-columns: 18rem repeat(250, 200px);
-  overflow: scroll;
   margin-top: 1rem;
   box-sizing: border-box;
   margin-bottom: 1rem;
@@ -1209,6 +1209,7 @@ overlay.string-area string-area-expanded {
   padding-top: 0.5rem;
   display: grid;
   grid-template-rows: min-content minmax(min-content, 30vh);
+  user-select: text;
 }
 overlay.string-area string-area-expanded > heading, overlay.string-area string-area-expanded > heading-actions {
   margin: 0 0 0.5rem;

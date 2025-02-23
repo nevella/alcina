@@ -13,6 +13,9 @@ import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup.Query;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
+/*
+ * computes the input + output selections from a given selection
+ */
 class RangeSelectionSequence {
 	Selection.WithRange<?> input;
 
@@ -68,6 +71,12 @@ class RangeSelectionSequence {
 			});
 			output = filtered.findFirst()
 					.map(n -> (Selection.WithRange) n.getValue()).orElse(null);
+			if (output == null) {
+				output = traversal
+						.getSelections(Selection.WithRange.class, true).stream()
+						.filter(this::isOutput).findFirst().orElse(null);
+				fullDocument = true;
+			}
 		}
 		if (output != null) {
 			output.provideRange();

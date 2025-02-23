@@ -2,10 +2,16 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
 
+import com.google.gwt.dom.client.Element;
+
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.Selection.WithRange;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
+import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup.Query.ElementToSelection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -16,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  * SelectionMarkup implementation for a single document
+ * 
  */
 public class SelectionMarkupFull extends SelectionMarkup {
 	final SelectionTraversal traversal;
@@ -47,7 +54,7 @@ public class SelectionMarkupFull extends SelectionMarkup {
 		return toMarkupHighlights.getModel(query);
 	}
 
-	class ToMarkupHighlights {
+	class ToMarkupHighlights implements ElementToSelection {
 		VariantHighlights input;
 
 		VariantHighlights output;
@@ -63,6 +70,7 @@ public class SelectionMarkupFull extends SelectionMarkup {
 		private void updateSequence(Query query) {
 			rangeSelectionSequence = new RangeSelectionSequence(traversal,
 					query);
+			query.elementToSelection = this;
 		}
 
 		class VariantHighlights {
@@ -103,8 +111,10 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				}
 				DomNode containingNode = getContainingNode(
 						rangeSelectionSequence.getRange(this.input));
+				if (containingNode != null) {
+					containingNode.document.invalidateLocations();
+				}
 				List<IntPair> pairs = null;
-				containingNode.document.invalidateLocations();
 				if (rangeSelectionSequence.fullDocument
 						|| containingNode == null
 						|| !containingNode.isAttachedToDocument()
@@ -132,6 +142,31 @@ public class SelectionMarkupFull extends SelectionMarkup {
 
 		Model getModel(Query query) {
 			return getHighlights(query).markupHighlights;
+		}
+
+		@Override
+		public Selection getSelection(Query query, Element container,
+				Element source) {
+			Range elementRange = source.asDomNode().asRange();
+			VariantHighlights highlights = query.input ? input : output;
+			Range containingRange = container.asDomNode().asRange();
+			int originalDocOffset = highlights.contentsNode.asLocation().index;
+			int originalDocIndex = elementRange.toIntPair().i1
+					- containingRange.toIntPair().i1 + originalDocOffset;
+			List<WithRange> matching = traversal
+					.getSelections(Selection.WithRange.class, true).stream()
+					.filter(sel -> sel.provideRange() != null
+							&& sel.provideRange().toIntPair()
+									.contains(originalDocIndex))
+					.filter(sel -> query.input ? true : this.isOutput(sel))
+					.sorted(new Selection.WithRange.MostSpecificComparator())
+					.toList();
+			return Ax.first(matching);
+		}
+
+		boolean isOutput(Selection cursor) {
+			Layer layer = traversal.getLayer(cursor);
+			return layer.layerContext(Layer.Output.class) != null;
 		}
 	}
 

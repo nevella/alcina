@@ -262,8 +262,15 @@ public class Measure extends Location.Range {
 		 * can correspond to measures with recursive containment should
 		 * implement this interface and allow appropriate containments
 		 */
-		public interface AllowsContainment {
-			boolean allowsContainment(Token otherToken);
+		public interface AllowDescendantContainment extends Token {
+			boolean allowDescendantContainment(Token otherToken);
+		}
+
+		/*
+		 * This class handles containments which would invalidate DOM
+		 */
+		public interface RestrictedChildContainment extends Token {
+			boolean allowChildContainment(Token otherToken);
 		}
 
 		/*

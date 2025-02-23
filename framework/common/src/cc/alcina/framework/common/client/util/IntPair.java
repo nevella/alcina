@@ -185,6 +185,31 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 				: i1 > ip.i1 ? 1 : i2 < ip.i2 ? -1 : i2 > ip.i2 ? 1 : 0;
 	}
 
+	/*
+	 * later before earler; smaller before larger; (which handles overlaps) -
+	 * this is a superset of contained is before containing
+	 */
+	public static class MostSpecificComparator implements Comparator<IntPair> {
+		public static final transient MostSpecificComparator INSTANCE = new MostSpecificComparator();
+
+		@Override
+		public int compare(IntPair o1, IntPair o2) {
+			{
+				int cmp = o1.i1 - o2.i1;
+				if (cmp != 0) {
+					return cmp > 0 ? -1 : 1;
+				}
+			}
+			{
+				int cmp = o1.i2 - o2.i2;
+				if (cmp != 0) {
+					return cmp < 0 ? -1 : 1;
+				}
+			}
+			return 0;
+		}
+	}
+
 	/**
 	 * Incluseive!!
 	 * 

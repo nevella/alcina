@@ -16,9 +16,14 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
-import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 
 /**
  * <p>
@@ -38,7 +43,7 @@ public class MarkupHighlights extends Model.Fields {
 	private static final String SELECTED_MARKUP_HIGHLIGHT = "__selected_markup_highlight";
 
 	@Directed
-	LeafModel.TagMarkup highlitMarkup;
+	HighlitMarkup highlitMarkup;
 
 	List<WrappedRange> wrappedRanges = new ArrayList<>();
 
@@ -59,7 +64,34 @@ public class MarkupHighlights extends Model.Fields {
 					.setText(content);
 			content = doc.fullToString();
 		}
-		highlitMarkup = new LeafModel.TagMarkup("div", content);
+		highlitMarkup = new HighlitMarkup(content);
+	}
+
+	public static class MarkupClick
+			extends ModelEvent<Object, MarkupClick.Handler> {
+		@Override
+		public void dispatch(MarkupClick.Handler handler) {
+			handler.onMarkupClick(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onMarkupClick(MarkupClick event);
+		}
+	}
+
+	@Directed(tag = "div")
+	class HighlitMarkup extends Model.All implements DomEvents.Click.Handler {
+		@Binding(type = Type.INNER_HTML)
+		String markup;
+
+		HighlitMarkup(String markup) {
+			this.markup = markup;
+		}
+
+		@Override
+		public void onClick(Click event) {
+			event.reemitAs(this, MarkupClick.class);
+		}
 	}
 
 	public void putRanges(List<IntPair> numericRanges, int goToRangeIndex) {

@@ -88,6 +88,10 @@ public class TraversalPlace extends BasePlace {
 			this.index = index;
 		}
 
+		boolean hasData() {
+			return attributes.size() > 0 || selected;
+		}
+
 		public int index() {
 			return index;
 		}
@@ -266,6 +270,7 @@ public class TraversalPlace extends BasePlace {
 			data.textFilter = place.textFilter;
 			data.paths = place.paths;
 			data.layers = place.layers.values().stream()
+					.filter(LayerAttributes::hasData)
 					.collect(Collectors.toList());
 			return data;
 		}
