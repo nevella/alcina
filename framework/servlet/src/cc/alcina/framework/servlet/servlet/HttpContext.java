@@ -70,8 +70,14 @@ public class HttpContext implements AuthenticationTokenStore {
 		cookie.setPath("/");
 		cookie.setMaxAge(86400 * 365 * 10);
 		cookie.setHttpOnly(true);
-		cookie.setSecure(Configuration.is("secure"));
+		cookie.setSecure(isSecure());
 		CookieUtils.addToRequestAndResponse(request, response, cookie);
+	}
+
+	boolean isSecure() {
+		return Configuration.is("secure")
+				|| (Configuration.is("secureIfContextSecure") && request != null
+						&& request.isSecure());
 	}
 
 	@Registration.Singleton
