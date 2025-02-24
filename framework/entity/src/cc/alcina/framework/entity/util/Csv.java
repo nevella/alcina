@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -12,11 +13,157 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionUtil;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Io;
 
+/**
+ * <p>
+ * A fairly rich model of a csv (or tsv) document, with various input/output
+ * methods
+ * 
+ * <p>
+ * To parse csv/tsv text, call {@link #parseCsv(String)} or
+ * {@link #parseTsv(String)}
+ * 
+ * <p>
+ * To convert a collection of beans to a CSV,
+ */
 public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
+	public static class Row {
+		private int rowIdx;
+
+		private Csv csv;
+
+		public Row(Csv csv, int idx) {
+			this.csv = csv;
+			this.rowIdx = idx;
+		}
+
+		public boolean containsKey(String key) {
+			return getColumnIndex(key) != -1;
+		}
+
+		public String get(Enum key) {
+			return get(Ax.friendly(key));
+		}
+
+		public String get(String key) {
+			return csv.grid.get(rowIdx).get(getColumnIndex(key));
+		}
+
+		public boolean getBoolean(String key) {
+			return Boolean.parseBoolean(get(key));
+		}
+
+		public long getLong(String key) {
+			String s = get(key);
+			return Ax.isBlank(s) ? -1 : Long.parseLong(s);
+		}
+
+		public int getRowIdx() {
+			return this.rowIdx;
+		}
+
+		public boolean has(String key) {
+			return get(key).length() > 0;
+		}
+
+		public Map<String, String> map() {
+			StringMap map = new StringMap();
+			for (String header : csv.headers()) {
+				map.put(header, get(header));
+			}
+			return map;
+		}
+
+		public Stream<String> values() {
+			return map().values().stream();
+		}
+
+		public void set(Enum e, Object value) {
+			set(Ax.friendly(e), value);
+		}
+
+		public String set(String key, Object value) {
+			ArrayList<String> list = (ArrayList<String>) csv.grid.get(rowIdx);
+			int columnIndex = getColumnIndex(key);
+			for (; list.size() <= columnIndex;) {
+				list.add("");
+			}
+			return list.set(columnIndex,
+					value == null ? null : String.valueOf(value));
+		}
+
+		@Override
+		public String toString() {
+			return map().entrySet().stream().map(Object::toString)
+					.collect(Collectors.joining("\n"));
+		}
+
+		private int getColumnIndex(String key) {
+			Integer index = csv.colLookup.get(key);
+			if (index != null) {
+				return index;
+			}
+			index = csv.colLcLookup.get(key.toLowerCase());
+			if (index != null) {
+				return index;
+			}
+			index = csv.colLcLookup.get(key.toLowerCase().replace(' ', '_'));
+			if (index != null) {
+				return index;
+			}
+			return -1;
+		}
+	}
+
+	/**
+	 * Output a collection of beans as a separated-value string
+	 */
+	public static class FromCollection {
+		Collection<?> collection;
+
+		boolean quoteHeaders;
+
+		boolean tsv;
+
+		public FromCollection(Collection<?> collection) {
+			this.collection = collection;
+		}
+
+		public FromCollection withQuoteHeaders(boolean quoteHeaders) {
+			this.quoteHeaders = quoteHeaders;
+			return this;
+		}
+
+		public FromCollection withTsv(boolean tsv) {
+			this.tsv = tsv;
+			return this;
+		}
+
+		public Csv toCsv() {
+			Csv csv = new Csv("");
+			Class<?> commonType = CollectionUtil.getCommonType(collection);
+			List<Property> properties = Reflections.at(commonType).properties()
+					.stream().filter(Property::isReadable).toList();
+			properties.stream().map(Property::getName).forEach(csv::addColumn);
+			collection.forEach(elem -> {
+				Row row = csv.addRow();
+				properties.stream()
+						.forEach(p -> row.set(p.getName(), p.get(elem)));
+			});
+			return csv;
+		}
+
+		public String toOutputString() {
+			return toCsv().toOutputString(quoteHeaders, tsv);
+		}
+	}
+
 	public static Csv parse(File file) {
 		return new Csv(Io.read().file(file).asString());
 	}
@@ -37,6 +184,10 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 
 	public static Csv parseTsv(String tsv) {
 		return new Csv(CsvUtils.parseCsv(tsv, true));
+	}
+
+	public static FromCollection fromCollection(Collection<?> collection) {
+		return new FromCollection(collection);
 	}
 
 	Map<String, Integer> colLookup = new LinkedHashMap<>();
@@ -101,7 +252,6 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 		List<String> keys = colLookup.keySet().stream()
 				.collect(Collectors.toList());
 		Collections.reverse(keys);
-		;
 		for (String k : keys) {
 			if (!colNames.contains(k)) {
 				int idx = colLookup.get(k);
@@ -133,114 +283,28 @@ public class Csv implements Iterable<Csv.Row>, Iterator<Csv.Row> {
 		return StreamSupport.stream(this.spliterator(), false);
 	}
 
-	public String toCsv() {
-		return toCsv(false);
+	public String toCsvString() {
+		return toCsvString(false);
 	}
 
-	public String toCsv(boolean quoteHeaders) {
-		return CsvUtils.headerValuesToCsv(
-				colLookup.keySet().stream().collect(Collectors.toList()),
-				grid.subList(1, grid.size()), quoteHeaders).toString();
+	public String toCsvString(boolean quoteHeaders) {
+		return toOutputString(quoteHeaders, false);
 	}
 
-	public String toTsv(boolean quoteHeaders) {
+	public String toTsvString(boolean quoteHeaders) {
+		return toOutputString(quoteHeaders, true);
+	}
+
+	public void write(String path) {
+		Io.write().string(toCsvString()).toPath(path);
+	}
+
+	String toOutputString(boolean quoteHeaders, boolean tsv) {
 		return CsvUtils
 				.headerValuesToOutput(
 						colLookup.keySet().stream()
 								.collect(Collectors.toList()),
-						grid.subList(1, grid.size()), quoteHeaders, true)
+						grid.subList(1, grid.size()), quoteHeaders, tsv)
 				.toString();
-	}
-
-	public void write(String path) {
-		Io.write().string(toCsv()).toPath(path);
-	}
-
-	public static class Row {
-		private int rowIdx;
-
-		private Csv csv;
-
-		public Row(Csv csv, int idx) {
-			this.csv = csv;
-			this.rowIdx = idx;
-		}
-
-		public boolean containsKey(String key) {
-			return getColumnIndex(key) != -1;
-		}
-
-		public String get(Enum key) {
-			return get(Ax.friendly(key));
-		}
-
-		public String get(String key) {
-			return csv.grid.get(rowIdx).get(getColumnIndex(key));
-		}
-
-		public boolean getBoolean(String key) {
-			return Boolean.parseBoolean(get(key));
-		}
-
-		private int getColumnIndex(String key) {
-			Integer index = csv.colLookup.get(key);
-			if (index != null) {
-				return index;
-			}
-			index = csv.colLcLookup.get(key.toLowerCase());
-			if (index != null) {
-				return index;
-			}
-			index = csv.colLcLookup.get(key.toLowerCase().replace(' ', '_'));
-			if (index != null) {
-				return index;
-			}
-			return -1;
-		}
-
-		public long getLong(String key) {
-			String s = get(key);
-			return Ax.isBlank(s) ? -1 : Long.parseLong(s);
-		}
-
-		public int getRowIdx() {
-			return this.rowIdx;
-		}
-
-		public boolean has(String key) {
-			return get(key).length() > 0;
-		}
-
-		public Map<String, String> map() {
-			StringMap map = new StringMap();
-			for (String header : csv.headers()) {
-				map.put(header, get(header));
-			}
-			return map;
-		}
-
-		public Stream<String> values() {
-			return map().values().stream();
-		}
-
-		public void set(Enum e, Object value) {
-			set(Ax.friendly(e), value);
-		}
-
-		public String set(String key, Object value) {
-			ArrayList<String> list = (ArrayList<String>) csv.grid.get(rowIdx);
-			int columnIndex = getColumnIndex(key);
-			for (; list.size() <= columnIndex;) {
-				list.add("");
-			}
-			return list.set(columnIndex,
-					value == null ? null : String.valueOf(value));
-		}
-
-		@Override
-		public String toString() {
-			return map().entrySet().stream().map(Object::toString)
-					.collect(Collectors.joining("\n"));
-		}
 	}
 }

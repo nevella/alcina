@@ -165,7 +165,8 @@ public class BasicGridPublisher {
 			} else if (deliveryModel
 					.provideTargetFormat() == FormatConversionTarget.CSV) {
 				Csv csv = new Csv((List) exporter.getCellList());
-				results.bytes = csv.toCsv().getBytes(StandardCharsets.UTF_8);
+				results.bytes = csv.toCsvString()
+						.getBytes(StandardCharsets.UTF_8);
 			} else if (deliveryModel
 					.provideTargetFormat() == FormatConversionTarget.JSON) {
 				List<List> cellList = exporter.getCellList();

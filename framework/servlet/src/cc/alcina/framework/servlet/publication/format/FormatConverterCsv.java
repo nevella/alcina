@@ -23,7 +23,7 @@ public class FormatConverterCsv
 			Document doc = ee.getTemplate();
 			ee.addCollectionToBook(fcm.rows, doc, "results");
 			Csv csv = new Csv((List) ee.getCellList());
-			fcm.bytes = csv.toCsv().getBytes(StandardCharsets.UTF_8);
+			fcm.bytes = csv.toCsvString().getBytes(StandardCharsets.UTF_8);
 		}
 		return new ByteArrayInputStream(fcm.bytes);
 	}
