@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -104,6 +105,15 @@ public class EntityLayerLogging {
 
 	public static void setLevel(Class clazz, Level level) {
 		setLevel(clazz.getName(), level);
+	}
+
+	public static Level getLevel(org.slf4j.Logger slf4jlogger) {
+		try {
+			Logger l4logger = Logger.getLogger(slf4jlogger.getName());
+			return l4logger.getLevel();
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
