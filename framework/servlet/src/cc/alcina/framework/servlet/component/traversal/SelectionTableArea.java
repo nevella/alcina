@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
-import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
@@ -28,7 +28,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionT
 @DirectedContextResolver(FmsContentCells.FmsCellsContextResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
 public class SelectionTableArea extends Model.Fields
-		implements TableEvents.RowClicked.Handler, IfNotExisting {
+		implements TableEvents.RowClicked.Handler, IfNotEqual {
 	@Directed.Transform(TableView.class)
 	@BeanViewModifiers(detached = true, nodeEditors = true)
 	@DirectedContextResolver(DisplayAllMixin.class)
@@ -55,8 +55,7 @@ public class SelectionTableArea extends Model.Fields
 		appendRowSelectionTo = Ui.place().truncateTo(layer.index);
 	}
 
-	class LayerToTable
-			implements Selection.HasTableRepresentation, IfNotExisting {
+	class LayerToTable implements Selection.HasTableRepresentation, IfNotEqual {
 		Layer layer;
 
 		List<? extends Selection> filteredLayerSelections;

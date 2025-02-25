@@ -43,12 +43,111 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
  * to-&gt;from)
  * 
  * <p>
- * The {@link IfNotExisting} interface can be used to prevent bindings from
+ * The {@link IfNotEqual} interface can be used to prevent bindings from
  * actually firing if the existing property value is 'good enough'
  * 
  * @param <T>
  */
 public class ModelBinding<T> {
+	public static class TargetBinding<BSP extends BaseSourcesPropertyChangeEvents, T2> {
+		BSP to;
+
+		Object on;
+
+		Function map;
+
+		ModelBinding<T2> binding;
+
+		Property property;
+
+		TargetBinding(ModelBinding<T2> binding, BSP to) {
+			this.binding = binding;
+			binding.targetBinding = this;
+			this.to = to;
+		}
+
+		public ModelBinding<T2> bidi() {
+			acceptLeftToRight();
+			ModelBinding source = binding;
+			ModelBinding<?> reverse = new ModelBinding<>(binding.bindings);
+			binding.bindings.modelBindings.add(reverse);
+			reverse.fromPropertyChangeSource = to;
+			reverse.map = map;
+			reverse.on = on;
+			TargetBinding reverseTargetBinding = reverse
+					.to(source.fromPropertyChangeSource);
+			reverseTargetBinding.on = source.on;
+			reverseTargetBinding.acceptLeftToRight();
+			return (ModelBinding<T2>) reverse;
+		}
+
+		public TargetBinding<BSP, ?> onUntyped(PropertyEnum on) {
+			this.on = on;
+			return this;
+		}
+
+		public TargetBinding<BSP, T2>
+				on(TypedProperty<? super BSP, ? super T2> on) {
+			this.on = on;
+			return (TargetBinding<BSP, T2>) this;
+		}
+
+		public <T3> TargetBinding map(Function<T2, T3> map) {
+			this.map = (Function) map;
+			return this;
+		}
+
+		public TargetBinding on(String on) {
+			this.on = on;
+			return this;
+		}
+
+		public TargetBinding withFireOnce() {
+			binding.fireOnce = true;
+			return this;
+		}
+
+		public void oneWay() {
+			acceptLeftToRight();
+		}
+
+		@Override
+		public String toString() {
+			return ensureProperty().toLocationString();
+		}
+
+		Object getExistingValue() {
+			return ensureProperty().get(to);
+		}
+
+		Class<?> getTargetPropertyType() {
+			return ensureProperty().getType();
+		}
+
+		void acceptLeftToRight() {
+			binding.accept(newValue -> {
+				try {
+					ensureProperty().set(to, newValue);
+				} catch (Exception e) {
+					LoggerFactory.getLogger(getClass()).warn(
+							"Exception executing model binding on {} to {} :: {}",
+							NestedName.get(binding.bindings.model()),
+							NestedName.get(to), on);
+					e.printStackTrace();
+					throw WrappedRuntimeException.wrap(e);
+				}
+			});
+		}
+
+		private Property ensureProperty() {
+			if (property == null) {
+				Preconditions.checkNotNull(on);
+				property = Reflections.at(to).property(on);
+			}
+			return property;
+		}
+	}
+
 	Bindings bindings;
 
 	BaseSourcesPropertyChangeEvents fromPropertyChangeSource;
@@ -92,8 +191,15 @@ public class ModelBinding<T> {
 
 	TargetBinding targetBinding;
 
+	boolean ifNotEqual;
+
 	public ModelBinding(Bindings bindings) {
 		this.bindings = bindings;
+	}
+
+	public ModelBinding ifNotEqual() {
+		ifNotEqual = true;
+		return this;
 	}
 
 	/**
@@ -102,83 +208,6 @@ public class ModelBinding<T> {
 	 */
 	public void accept(Consumer<T> consumer) {
 		this.consumer = consumer;
-	}
-
-	void acceptStreamElement(Object obj) {
-		if (fireOnce) {
-			if (fired) {
-				return;
-			}
-		}
-		fired = true;
-		Consumer<Runnable> dispatch = ensureDispatch();
-		if (dispatch == null) {
-			acceptStreamElement0(obj);
-		} else {
-			dispatch.accept(() -> acceptStreamElement0(obj));
-		}
-	}
-
-	void acceptStreamElement0(Object obj) {
-		if (preSupplierPredicate != null
-				&& !((Predicate) preSupplierPredicate).test(obj)) {
-			return;
-		}
-		Object o1 = supplier == null ? obj : supplier.get();
-		if (preMapPredicate != null
-				&& !((Predicate) preMapPredicate).test(o1)) {
-			return;
-		}
-		Object o2 = map == null || (o1 == null && !transformsNull) ? o1
-				: ((Function) map).apply(o1);
-		if (postMapPredicate != null
-				&& !((Predicate) postMapPredicate).test(o2)) {
-			return;
-		}
-		if (targetBinding != null) {
-			Class<?> toType = targetBinding.getTargetPropertyType();
-			if (Reflections.isAssignableFrom(IfNotExisting.class, toType)) {
-				IfNotExisting existing = (IfNotExisting) targetBinding
-						.getExistingValue();
-				if (existing != null) {
-					if (Objects.equals(existing, o2)) {
-						return;
-					}
-				}
-			}
-		}
-		Preconditions.checkState(consumer != null,
-				"No consumer - possibly you forgot to call bind(), "
-						+ "or  onewWay()/bidi() if this is a property binding");
-		((Consumer) consumer).accept(o2);
-	}
-
-	void bind() {
-		if (fromPropertyChangeSource != null) {
-			listener = bindings.addPropertyChangeListener(
-					fromPropertyChangeSource, on,
-					evt -> acceptStreamElement(on != null ? evt.getNewValue()
-							: fromPropertyChangeSource));
-		} else if (fromTopic != null) {
-			listener = fromTopic.add(t -> ((Consumer) consumer).accept(t))
-					.asBinding();
-			listener.bind();
-		} else {
-			// noop (from is null)
-		}
-	}
-
-	Consumer<Runnable> ensureDispatch() {
-		if (dispatchRef == null) {
-			if (bindings.model().provideIsBound()) {
-				dispatchRef = bindings.model().provideNode().getResolver()
-						.dispatch();
-			} else {
-				// pre-binding, return null
-				return null;
-			}
-		}
-		return dispatchRef.get();
 	}
 
 	/**
@@ -262,35 +291,6 @@ public class ModelBinding<T> {
 		return (ModelBinding<P>) this;
 	}
 
-	void prepare() {
-		try {
-			if (setOnInitialise) {
-				if (fromPropertyChangeSource != null) {
-					acceptStreamElement(resolvePropertyChangeValue());
-				} else if (fromTopic != null) {
-					fromTopic.fireIfPublished((Consumer) consumer);
-				} else {
-					// noop - from is null
-				}
-			}
-		} catch (Exception e) {
-			LoggerFactory.getLogger(getClass()).warn(
-					"Exception preparing model binding on {} from {} :: {}",
-					NestedName.get(bindings.model()),
-					NestedName.get(fromPropertyChangeSource), on);
-			throw WrappedRuntimeException.wrap(e);
-		}
-	}
-
-	private Object resolvePropertyChangeValue() {
-		return on != null ? fromProperty().get(fromPropertyChangeSource)
-				: fromPropertyChangeSource;
-	}
-
-	private Property fromProperty() {
-		return Reflections.at(fromPropertyChangeSource).property(on);
-	}
-
 	/**
 	 * add a terminal runnable (i.e. the actual action performer) to the end of
 	 * the pipeline
@@ -310,12 +310,6 @@ public class ModelBinding<T> {
 	 */
 	public <V> ModelBinding<V> typed(Class<V> propertyType) {
 		return (ModelBinding<V>) this;
-	}
-
-	void unbind() {
-		if (listener != null) {
-			listener.unbind();
-		}
 	}
 
 	/**
@@ -356,105 +350,6 @@ public class ModelBinding<T> {
 		return this;
 	}
 
-	public static class TargetBinding<BSP extends BaseSourcesPropertyChangeEvents, T2> {
-		BSP to;
-
-		Object on;
-
-		Function map;
-
-		ModelBinding<T2> binding;
-
-		Property property;
-
-		TargetBinding(ModelBinding<T2> binding, BSP to) {
-			this.binding = binding;
-			binding.targetBinding = this;
-			this.to = to;
-		}
-
-		Object getExistingValue() {
-			return ensureProperty().get(to);
-		}
-
-		private Property ensureProperty() {
-			if (property == null) {
-				Preconditions.checkNotNull(on);
-				property = Reflections.at(to).property(on);
-			}
-			return property;
-		}
-
-		Class<?> getTargetPropertyType() {
-			return ensureProperty().getType();
-		}
-
-		void acceptLeftToRight() {
-			binding.accept(newValue -> {
-				try {
-					ensureProperty().set(to, newValue);
-				} catch (Exception e) {
-					LoggerFactory.getLogger(getClass()).warn(
-							"Exception executing model binding on {} to {} :: {}",
-							NestedName.get(binding.bindings.model()),
-							NestedName.get(to), on);
-					e.printStackTrace();
-					throw WrappedRuntimeException.wrap(e);
-				}
-			});
-		}
-
-		public ModelBinding<T2> bidi() {
-			acceptLeftToRight();
-			ModelBinding source = binding;
-			ModelBinding<?> reverse = new ModelBinding<>(binding.bindings);
-			binding.bindings.modelBindings.add(reverse);
-			reverse.fromPropertyChangeSource = to;
-			reverse.map = map;
-			reverse.on = on;
-			TargetBinding reverseTargetBinding = reverse
-					.to(source.fromPropertyChangeSource);
-			reverseTargetBinding.on = source.on;
-			reverseTargetBinding.acceptLeftToRight();
-			return (ModelBinding<T2>) reverse;
-		}
-
-		public TargetBinding<BSP, ?> onUntyped(PropertyEnum on) {
-			this.on = on;
-			return this;
-		}
-
-		public TargetBinding<BSP, T2>
-				on(TypedProperty<? super BSP, ? super T2> on) {
-			this.on = on;
-			return (TargetBinding<BSP, T2>) this;
-		}
-
-		public <T3> TargetBinding map(Function<T2, T3> map) {
-			this.map = (Function) map;
-			return this;
-		}
-
-		public TargetBinding on(String on) {
-			this.on = on;
-			return this;
-		}
-
-		public TargetBinding withFireOnce() {
-			binding.fireOnce = true;
-			return this;
-		}
-
-		public void oneWay() {
-			acceptLeftToRight();
-		}
-
-		@Override
-		public String toString() {
-			return ensureProperty().toLocationString();
-		}
-	}
-
 	@Override
 	public String toString() {
 		FormatBuilder format = new FormatBuilder();
@@ -465,5 +360,117 @@ public class ModelBinding<T> {
 			format.format(" --> %s", targetBinding);
 		}
 		return format.toString();
+	}
+
+	void acceptStreamElement(Object obj) {
+		if (fireOnce) {
+			if (fired) {
+				return;
+			}
+		}
+		fired = true;
+		Consumer<Runnable> dispatch = ensureDispatch();
+		if (dispatch == null) {
+			acceptStreamElement0(obj);
+		} else {
+			dispatch.accept(() -> acceptStreamElement0(obj));
+		}
+	}
+
+	void acceptStreamElement0(Object obj) {
+		if (preSupplierPredicate != null
+				&& !((Predicate) preSupplierPredicate).test(obj)) {
+			return;
+		}
+		Object o1 = supplier == null ? obj : supplier.get();
+		if (preMapPredicate != null
+				&& !((Predicate) preMapPredicate).test(o1)) {
+			return;
+		}
+		Object o2 = map == null || (o1 == null && !transformsNull) ? o1
+				: ((Function) map).apply(o1);
+		if (postMapPredicate != null
+				&& !((Predicate) postMapPredicate).test(o2)) {
+			return;
+		}
+		if (targetBinding != null) {
+			Class<?> toType = targetBinding.getTargetPropertyType();
+			if (Reflections.isAssignableFrom(IfNotEqual.class, toType)
+					|| ifNotEqual) {
+				Object existing = targetBinding.getExistingValue();
+				if (existing != null) {
+					if (Objects.equals(existing, o2)) {
+						return;
+					}
+				}
+			}
+		}
+		Preconditions.checkState(consumer != null,
+				"No consumer - possibly you forgot to call bind(), "
+						+ "or  onewWay()/bidi() if this is a property binding");
+		((Consumer) consumer).accept(o2);
+	}
+
+	void bind() {
+		if (fromPropertyChangeSource != null) {
+			listener = bindings.addPropertyChangeListener(
+					fromPropertyChangeSource, on,
+					evt -> acceptStreamElement(on != null ? evt.getNewValue()
+							: fromPropertyChangeSource));
+		} else if (fromTopic != null) {
+			listener = fromTopic.add(t -> ((Consumer) consumer).accept(t))
+					.asBinding();
+			listener.bind();
+		} else {
+			// noop (from is null)
+		}
+	}
+
+	Consumer<Runnable> ensureDispatch() {
+		if (dispatchRef == null) {
+			if (bindings.model().provideIsBound()) {
+				dispatchRef = bindings.model().provideNode().getResolver()
+						.dispatch();
+			} else {
+				// pre-binding, return null
+				return null;
+			}
+		}
+		return dispatchRef.get();
+	}
+
+	void prepare() {
+		try {
+			if (setOnInitialise) {
+				if (fromPropertyChangeSource != null) {
+					acceptStreamElement(resolvePropertyChangeValue());
+				} else if (fromTopic != null) {
+					fromTopic.fireIfPublished((Consumer) consumer);
+				} else {
+					// noop - from is null
+				}
+			}
+		} catch (Exception e) {
+			LoggerFactory.getLogger(getClass()).warn(
+					"Exception preparing model binding on {} from {} :: {}",
+					NestedName.get(bindings.model()),
+					NestedName.get(fromPropertyChangeSource), on);
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
+	void unbind() {
+		if (listener != null) {
+			listener.unbind();
+		}
+	}
+
+	private Object resolvePropertyChangeValue() {
+		return on != null ? fromProperty().get(fromPropertyChangeSource)
+				: fromPropertyChangeSource;
+	}
+
+	private Property fromProperty() {
+		return Reflections.at(fromPropertyChangeSource).property(on);
 	}
 }

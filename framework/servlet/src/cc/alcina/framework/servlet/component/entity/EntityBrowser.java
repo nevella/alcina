@@ -155,31 +155,31 @@ public class EntityBrowser {
 				if (traversal() == null) {
 					return;
 				}
-				// if the filter matches exactly one entity, append it to the
+				// if the last layer matches exactly one entity, append it to
+				// the
 				// place + re-set
 				Layer lastLayer = Ax.last(traversal().getVisitedLayers());
-				if (place.attributesOrEmpty(lastLayer.index)
-						.has(StandardLayerAttributes.Filter.class)) {
-					Collection<Selection> selections = lastLayer
-							.getSelections();
-					if (selections.size() == 1) {
-						Selection next = selections.iterator().next();
-						if (next.get() instanceof Entity) {
-							TraversalPlace f_place = place
-									.appendSelections(List.of(next));
-							Client.eventBus().queued().deferred().lambda(() -> {
-								// key! never do cascading history changes
-								// without this!
-								History.runReplacing(() -> f_place.go());
-							}).dispatch();
-							/*
-							 * do not fall through to super.setPlace (the place
-							 * will be replaced during the deferred place.go())
-							 */
-							return;
-						}
+				// if (place.attributesOrEmpty(lastLayer.index)
+				// .has(StandardLayerAttributes.Filter.class)) {
+				Collection<Selection> selections = lastLayer.getSelections();
+				if (selections.size() == 1) {
+					Selection next = selections.iterator().next();
+					if (next.get() instanceof Entity) {
+						TraversalPlace f_place = place
+								.appendSelections(List.of(next));
+						Client.eventBus().queued().deferred().lambda(() -> {
+							// key! never do cascading history changes
+							// without this!
+							History.runReplacing(() -> f_place.go());
+						}).dispatch();
+						/*
+						 * do not fall through to super.setPlace (the place will
+						 * be replaced during the deferred place.go())
+						 */
+						return;
 					}
 				}
+				// }
 			}
 		}
 

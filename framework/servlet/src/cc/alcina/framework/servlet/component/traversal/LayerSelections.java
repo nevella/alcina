@@ -44,7 +44,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
-import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
@@ -56,7 +56,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionP
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
 @TypedProperties
-class LayerSelections extends Model.All implements IfNotExisting {
+class LayerSelections extends Model.All implements IfNotEqual {
 	static PackageProperties._LayerSelections properties = PackageProperties.layerSelections;
 
 	@Binding(type = Type.PROPERTY)

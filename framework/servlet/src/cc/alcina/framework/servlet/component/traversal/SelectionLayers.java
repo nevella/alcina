@@ -1,18 +1,21 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
-import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.traversal.LayerSelections.LayerEquivalence;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 /**
@@ -24,14 +27,14 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
  * This forces a redraw iff the place filters change
  */
 @Directed(tag = "layers")
-class SelectionLayers extends Model.Fields implements IfNotExisting {
+class SelectionLayers extends Model.Fields implements IfNotEqual {
 	/*
 	 * @Directed.Wrap is not used (rather, a container class) because it's a
 	 * scroll container, so code wants access to the rendered element
 	 */
 	@Directed(tag = "layers")
 	@TypedProperties
-	class LayersContainer extends Model.Fields implements TransmitState {
+	class LayersContainer extends Model.Fields implements Model.TransmitState {
 		List<LayerSelections> layers;
 
 		/*
@@ -48,7 +51,10 @@ class SelectionLayers extends Model.Fields implements IfNotExisting {
 		}
 
 		List<? extends Selection> getFilteredSelections(Layer layer) {
-			return layers.stream().filter(ls -> ls.layer == layer).findFirst()
+			return layers.stream()
+					.filter(ls -> HasEquivalence.areEquivalent(
+							LayerEquivalence.class, layer, ls.layer))
+					.findFirst()
 					.map(ls -> ls.selectionsArea == null ? null
 							: ls.selectionsArea.filteredSelections)
 					.orElse(List.of());
@@ -97,7 +103,7 @@ class SelectionLayers extends Model.Fields implements IfNotExisting {
 		this.page = page;
 		this.place = page.place();
 		bindings().from(page.ui).on(Ui.properties.traversal)
-				.map(this::toLayerSelections).to(layersContainer)
+				.map(this::toLayerSelections).ifNotEqual().to(layersContainer)
 				.on(layersContainer_properties.layers).oneWay();
 	}
 
@@ -112,7 +118,8 @@ class SelectionLayers extends Model.Fields implements IfNotExisting {
 		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers
 				&& layer.unfilteredSelectionCount() == 0
 				&& layer.getLayerFilterAttribute() == null);
-		layersContainer_properties.layers.set(layersContainer, layers);
+		layersContainer_properties.layers.setIfNotEqual(layersContainer,
+				layers);
 		return layers;
 	}
 

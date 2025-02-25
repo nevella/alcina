@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
-import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights;
 import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights.MarkupClick;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -28,7 +28,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings.Seconda
 
 @Directed(tag = "selections")
 @TypedProperties
-class RenderedSelections extends Model.Fields implements IfNotExisting {
+class RenderedSelections extends Model.Fields implements IfNotEqual {
 	static PackageProperties._RenderedSelections properties = PackageProperties.renderedSelections;
 
 	class SelectionMarkupArea extends Model.Fields

@@ -7,4 +7,4 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;;

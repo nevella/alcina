@@ -4,12 +4,12 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.model.IfNotExisting;
+import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @TypedProperties
 public abstract class GalleryContents<RP extends GalleryPlace> extends Model.All
-		implements Registration.AllSubtypes, IfNotExisting {
+		implements Registration.AllSubtypes, IfNotEqual {
 	@Directed.Exclude
 	public RP place;
 

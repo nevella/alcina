@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 
@@ -57,8 +58,22 @@ public class TypedProperty<S extends BaseSourcesPropertyChangeEvents, T>
 		propertySource.set(name, newValue);
 	}
 
+	public T get(S propertySource) {
+		return (T) Reflections.at(definingType).property(name)
+				.get(propertySource);
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("%s.%s", NestedName.get(definingType), name);
+	}
+
+	public void setIfNotEqual(S propertySource, T newValue) {
+		T existing = get(propertySource);
+		if (Objects.equals(existing, newValue)) {
+			return;
+		} else {
+			set(propertySource, newValue);
+		}
 	}
 }

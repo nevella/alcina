@@ -16,6 +16,9 @@ package cc.alcina.framework.gwt.client.dirndl.model;
  * <p>
  * The test used will be Object.equals - if the two objects are equal, the
  * corresponding property will not be set
+ * 
+ * <p>
+ * For collection properties, you'll need to set ifNotEqual on the binding
  */
-public interface IfNotExisting {
+public interface IfNotEqual {
 }
