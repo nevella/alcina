@@ -23,12 +23,11 @@ public abstract class SelectionMarkup {
 		SelectionMarkup getSelectionMarkup();
 	}
 
-	public class Query {
-		public interface ElementToSelection {
-			Selection getSelection(Query query, Element container,
-					Element source);
-		}
+	public interface ElementToSelection {
+		Selection getSelection(Query query, Element container, Element source);
+	}
 
+	public class Query {
 		public Selection<?> selection;
 
 		public boolean input;
