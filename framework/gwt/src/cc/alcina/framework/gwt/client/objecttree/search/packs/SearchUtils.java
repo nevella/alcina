@@ -22,8 +22,10 @@ import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.search.TextCriterion.TextCriterionType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.DateUtil;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 public class SearchUtils {
@@ -304,6 +306,48 @@ public class SearchUtils {
 				return false;
 			}
 			return regExp.exec(entity.toString()) != null;
+		}
+	}
+
+	public static LongestSubstringMatch getLongestSubstringMatch(String text,
+			String match) {
+		return new LongestSubstringMatch(text, match);
+	}
+
+	public static class LongestSubstringMatch {
+		String text;
+
+		String match;
+
+		public int longestSubstringMatchIdx;
+
+		public String longestSubstringMatch;
+
+		public String subsequentToLongestSubstringMatch;
+
+		LongestSubstringMatch(String text, String match) {
+			this.text = text;
+			this.match = match;
+			for (int substringLength = match
+					.length(); substringLength >= 0; substringLength--) {
+				String test = match.substring(0, substringLength);
+				int idx = text.indexOf(test);
+				if (idx != -1) {
+					longestSubstringMatchIdx = idx;
+					longestSubstringMatch = test;
+					subsequentToLongestSubstringMatch = text
+							.substring(idx + test.length());
+					break;
+				}
+			}
+		}
+
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("longestSubstringMatchIdx",
+					longestSubstringMatchIdx, "longestSubstringMatch",
+					longestSubstringMatch, "subsequentToLongestSubstringMatch",
+					Ax.trim(subsequentToLongestSubstringMatch, 50));
 		}
 	}
 }
