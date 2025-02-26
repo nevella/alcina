@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * measureselections with overlaps
  */
 public class MeasureContainment {
-	Map<MeasureSelection, Containment> containments = AlcinaCollections
+	public Map<MeasureSelection, Containment> containments = AlcinaCollections
 			.newLinkedHashMap();
 
 	public List<Overlap> overlaps = new ArrayList<>();

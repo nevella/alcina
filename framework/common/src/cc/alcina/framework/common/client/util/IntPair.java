@@ -461,4 +461,8 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 			return of(i2, i1);
 		}
 	}
+
+	public boolean isContiguousWith(IntPair o) {
+		return i2 == o.i1;
+	}
 }
