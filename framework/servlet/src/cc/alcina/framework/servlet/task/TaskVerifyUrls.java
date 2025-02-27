@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.Io;
@@ -15,7 +16,8 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
 public class TaskVerifyUrls extends PerformerTask.Remote {
 	public List<String> urls;
 
-	public List<Result> results;
+	@AlcinaTransient
+	public transient List<Result> results;
 
 	public static class Result {
 		public Result(String url) {
