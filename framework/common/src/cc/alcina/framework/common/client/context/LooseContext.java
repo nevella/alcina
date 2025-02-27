@@ -261,6 +261,17 @@ public abstract class LooseContext {
 			}
 		}
 
+		public void runWithValue(ThrowingRunnable runnable, T t) {
+			try {
+				LooseContext.pushWithKey(getPath(), t);
+				runnable.run();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			} finally {
+				LooseContext.pop();
+			}
+		}
+
 		public <T> T callWithTrue(Callable<T> callable) {
 			return callWith(callable, true);
 		}

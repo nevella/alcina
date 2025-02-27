@@ -402,35 +402,30 @@ public abstract class DevConsole implements ClipboardOwner {
 	 */
 	public String getClipboardContents() {
 		String result = "";
-		try {
-			Clipboard clipboard = Toolkit.getDefaultToolkit()
-					.getSystemClipboard();
-			// odd: the Object param of getContents is not currently used
-			Transferable contents = clipboard.getContents(null);
-			boolean hasTransferableText = (contents != null)
-					&& contents.isDataFlavorSupported(DataFlavor.stringFlavor);
-			if (hasTransferableText) {
-				try {
-					result = (String) contents
-							.getTransferData(DataFlavor.stringFlavor);
-				} catch (UnsupportedFlavorException ex) {
-					// highly unlikely since we are using a standard DataFlavor
-					System.out.println(ex);
-					ex.printStackTrace();
-				} catch (IOException ex) {
-					System.out.println(ex);
-					ex.printStackTrace();
-				}
+		if (isOsX()) {
+			try {
+				Output output = new Shell().noLogging().runShell("", "pbpaste");
+				return output.output;
+			} catch (Exception e2) {
+				throw new WrappedRuntimeException(e2);
 			}
-		} catch (HeadlessException e) {
-			if (isOsX()) {
-				try {
-					Output output = new Shell().noLogging().runShell("",
-							"pbpaste");
-					return output.output;
-				} catch (Exception e2) {
-					throw new WrappedRuntimeException(e2);
-				}
+		}
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		// odd: the Object param of getContents is not currently used
+		Transferable contents = clipboard.getContents(null);
+		boolean hasTransferableText = (contents != null)
+				&& contents.isDataFlavorSupported(DataFlavor.stringFlavor);
+		if (hasTransferableText) {
+			try {
+				result = (String) contents
+						.getTransferData(DataFlavor.stringFlavor);
+			} catch (UnsupportedFlavorException ex) {
+				// highly unlikely since we are using a standard DataFlavor
+				System.out.println(ex);
+				ex.printStackTrace();
+			} catch (IOException ex) {
+				System.out.println(ex);
+				ex.printStackTrace();
 			}
 		}
 		return result;

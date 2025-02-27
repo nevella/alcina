@@ -722,8 +722,6 @@ public abstract class DevConsoleCommand {
 	}
 
 	public static class CmdExtractIdList extends DevConsoleCommand {
-		private LinkedHashSet<Long> ids;
-
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "idle" };
@@ -747,14 +745,13 @@ public abstract class DevConsoleCommand {
 			idle = idle.isEmpty() ? console.getClipboardContents() : idle;
 			System.out.format("Creating list:\n%s\n\n",
 					console.padLeft(idle, 1, 0));
-			Pattern p1 = Pattern.compile("\\d+");
+			Pattern p1 = Pattern.compile("(av\\.)?\\d+");
 			Matcher m1 = p1.matcher(idle);
-			ids = new LinkedHashSet<Long>();
+			Set<String> jrlStrings = new LinkedHashSet<>();
 			while (m1.find()) {
-				ids.add(Long.parseLong(m1.group()));
+				jrlStrings.add(m1.group());
 			}
-			List<Long> uids = new ArrayList<Long>(ids);
-			uids = CommonUtils.dedupe(uids);
+			List<String> uids = new ArrayList<>(jrlStrings);
 			if (random) {
 				Collections.shuffle(uids);
 			}

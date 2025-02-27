@@ -20,9 +20,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.Csv;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CopyToClipboard;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.PreText;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
@@ -91,6 +93,26 @@ public interface Sequence<T> {
 			@Override
 			public void execCommand(ModelEvent event, List filteredElements) {
 				Support.showAvailableCommands();
+			}
+		}
+
+		public static class ExportToCsv implements CommandExecutor {
+			@Override
+			public String name() {
+				return "csv";
+			}
+
+			@Override
+			public void execCommand(ModelEvent event, List filteredElements) {
+				String csvText = Csv.fromCollection(filteredElements)
+						.toOutputString();
+				event.reemitAs(event.getContext().node.getModel(),
+						CopyToClipboard.class, csvText);
+				String path = "/tmp/sequence.csv";
+				Io.write().string(csvText).toPath(path);
+				NotificationObservable
+						.of("CSV copied to clipboard and written to %s", path)
+						.publish();
 			}
 		}
 

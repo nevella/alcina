@@ -16,8 +16,8 @@ public class SystemoutCounter {
 	}
 
 	public static SystemoutCounter standardJobCounter(int size, String name) {
-		SystemoutCounter counter = new SystemoutCounter(size / 400, 20, size,
-				true);
+		SystemoutCounter counter = new SystemoutCounter(Math.max(1, size / 400),
+				20, size, true);
 		counter.withName(name + "::jobProgress");
 		return counter;
 	}
