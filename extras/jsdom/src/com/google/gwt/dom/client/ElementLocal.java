@@ -140,6 +140,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		// clear child refs
 		firstChild = null;
 		lastChild = null;
+		childCount = 0;
 	}
 
 	void clearChildrenAndAttributes0() {

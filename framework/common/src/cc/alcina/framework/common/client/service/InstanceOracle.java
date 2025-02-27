@@ -28,6 +28,13 @@ import cc.alcina.framework.common.client.util.Al;
  * <p>
  * Services objects without eviction requirements should continue to use the
  * Registry
+ * <p>
+ * As a general note, the contract of an InstanceOracle is really another type
+ * of name (or address) - as are sets of Registry keys, or static Topic
+ * instances, or the class types of ProcessObservable subtypes.
+ * <p>
+ * They all provide a subscription/indirection/decoupling mechanism -
+ * InstanceOracle is just the latest and most complex of the provider types
  * 
  */
 /*

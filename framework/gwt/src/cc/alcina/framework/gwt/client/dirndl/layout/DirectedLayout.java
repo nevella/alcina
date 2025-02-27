@@ -879,7 +879,8 @@ public class DirectedLayout implements AlcinaProcess {
 			Node oldNode = newChildModel.provideNode();
 			removeChildNode(newChildModel);
 			RendererInput input = getResolver().layout.enqueueInput(
-					getResolver(), newChildModel, oldNode.property,
+					getResolver(), newChildModel,
+					oldNode == null ? null : oldNode.property,
 					annotationLocation.copyWithClassLocationOf(newChildModel),
 					null, this);
 			input.before = refChildModel == null ? null
