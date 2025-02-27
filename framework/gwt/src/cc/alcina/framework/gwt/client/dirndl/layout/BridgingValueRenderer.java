@@ -119,7 +119,8 @@ public class BridgingValueRenderer extends DirectedRenderer {
 		AnnotationLocation valueLocation = new AnnotationLocation(void.class,
 				field.getProperty(), valueResolver);
 		valueResolver.valueLocation = valueLocation;
-		input.enqueueInput(valueResolver, null, valueLocation, null, node);
+		input.enqueueInput(valueResolver, null, null, valueLocation, null,
+				node);
 	}
 
 	void renderWidget() {

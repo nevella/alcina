@@ -196,7 +196,8 @@ public abstract class DirectedRenderer {
 				// inelegant, but works to avoid double-transform
 				location.ensureResolutionState().addConsumed(input.location
 						.getAnnotation(Directed.TransformElements.class));
-				input.enqueueInput(input.resolver, transformedModel, location,
+				input.enqueueInput(input.resolver, transformedModel, null,
+						location,
 						// force resolution
 						null, input.node);
 			});
@@ -253,7 +254,7 @@ public abstract class DirectedRenderer {
 					// add input even if childModel==null
 					Class locationType = ClassUtil
 							.resolveEnumSubclassAndSynthetic(childModel);
-					input.enqueueInput(input.resolver, childModel,
+					input.enqueueInput(input.resolver, childModel, property,
 							new AnnotationLocation(locationType,
 									directedProperty, input.resolver),
 							null, input.node);
@@ -393,8 +394,8 @@ public abstract class DirectedRenderer {
 					.asList(descendantResolvedPropertyAnnotation);
 			location.ensureResolutionState().addConsumed(
 					input.location.getAnnotation(Directed.Transform.class));
-			input.enqueueInput(input.resolver, transformedModel, location, null,
-					input.node);
+			input.enqueueInput(input.resolver, transformedModel, null, location,
+					null, input.node);
 		}
 	}
 

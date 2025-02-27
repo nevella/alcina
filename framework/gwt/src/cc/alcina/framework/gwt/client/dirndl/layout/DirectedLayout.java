@@ -261,8 +261,8 @@ public class DirectedLayout implements AlcinaProcess {
 	public Consumer<Runnable> mutationDispatch = Runnable::run;
 
 	RendererInput enqueueInput(ContextResolver resolver, Object model,
-			AnnotationLocation location, List<Directed> directeds,
-			Node parentNode) {
+			Property property, AnnotationLocation location,
+			List<Directed> directeds, Node parentNode) {
 		// Even if model == null (so no widget will be emitted), nodes must be
 		// added to the structure for a later change to non-null
 		// if (model == null) {
@@ -277,7 +277,7 @@ public class DirectedLayout implements AlcinaProcess {
 		} else {
 			input = rendererInputs.add();
 		}
-		input.init(resolver, model, location, directeds, parentNode);
+		input.init(resolver, model, property, location, directeds, parentNode);
 		return input;
 	}
 
@@ -324,7 +324,7 @@ public class DirectedLayout implements AlcinaProcess {
 		resolver.layout = this;
 		AnnotationLocation location = new AnnotationLocation(model.getClass(),
 				null, resolver);
-		enqueueInput(resolver, model, location, null, null);
+		enqueueInput(resolver, model, null, location, null, null);
 		layout();
 		this.layoutResult = new LayoutResult();
 		return layoutResult;
@@ -500,6 +500,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		final AnnotationLocation annotationLocation;
 
+		final Property property;
+
 		// below are nullable
 		Node parent;
 
@@ -534,11 +536,12 @@ public class DirectedLayout implements AlcinaProcess {
 			this.bindingsDisabled = bindingsDisabled;
 		}
 
-		protected Node(ContextResolver resolver, Node parent,
+		protected Node(ContextResolver resolver, Node parent, Property property,
 				AnnotationLocation annotationLocation, Object model,
 				boolean lastForModel) {
 			this.resolver = resolver;
 			this.parent = parent;
+			this.property = property;
 			this.annotationLocation = annotationLocation;
 			this.model = model;
 			this.lastForModel = lastForModel;
@@ -591,6 +594,13 @@ public class DirectedLayout implements AlcinaProcess {
 			if (classData.receives.isEmpty()
 					&& classData.emitsDescendant.isEmpty()
 					&& directed.reemits().length == 0) {
+				return;
+			}
+			/*
+			 * Directed.Wrap (or equivalents) should not bind, only the last
+			 * directed derived from a model
+			 */
+			if (!lastForModel) {
 				return;
 			}
 			eventBindings = new ArrayList<>();
@@ -669,6 +679,9 @@ public class DirectedLayout implements AlcinaProcess {
 			//
 			if (parent.parent != null && parent.model == parent.parent.model
 					&& getProperty() == parent.getProperty()) {
+				return;
+			}
+			if (!(parent.model instanceof Bindable)) {
 				return;
 			}
 			// even though the parent handles changes,
@@ -812,8 +825,15 @@ public class DirectedLayout implements AlcinaProcess {
 			return (T) this.model;
 		}
 
+		/*
+		 * annotationLocation.property will *normally* be the bound property,
+		 * unless annotations are sourced from a different property (the
+		 * original property in that case will be the Node.property field)
+		 * 
+		 * 
+		 */
 		Property getProperty() {
-			return annotationLocation.property;
+			return property != null ? property : annotationLocation.property;
 		}
 
 		public DirectedLayout.Rendered getRendered() {
@@ -859,7 +879,7 @@ public class DirectedLayout implements AlcinaProcess {
 			Node oldNode = newChildModel.provideNode();
 			removeChildNode(newChildModel);
 			RendererInput input = getResolver().layout.enqueueInput(
-					getResolver(), newChildModel,
+					getResolver(), newChildModel, oldNode.property,
 					annotationLocation.copyWithClassLocationOf(newChildModel),
 					null, this);
 			input.before = refChildModel == null ? null
@@ -877,7 +897,7 @@ public class DirectedLayout implements AlcinaProcess {
 		 */
 		public Node insertFragmentChild(Model childModel,
 				org.w3c.dom.Node childW3cNode) {
-			Node node = new Node(resolver, this, new AnnotationLocation(
+			Node node = new Node(resolver, this, null, new AnnotationLocation(
 					childModel.getClass(), null, resolver), childModel, true);
 			node.rendered = new RenderedW3cNode(childW3cNode);
 			node.directed = node.annotation(Directed.class);
@@ -1047,11 +1067,11 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void replaceChild(Model oldModel, Model newModel) {
+			Node oldNode = oldModel.provideNode();
 			RendererInput input = getResolver().layout.enqueueInput(
-					getResolver(), newModel,
+					getResolver(), newModel, oldNode.property,
 					annotationLocation.copyWithClassLocationOf(newModel), null,
 					this);
-			Node oldNode = oldModel.provideNode();
 			input.replace = oldNode;
 			getResolver().layout.layout();
 			moveChildren(oldNode, newModel.provideNode());
@@ -1246,10 +1266,11 @@ public class DirectedLayout implements AlcinaProcess {
 				// model differs)
 				Object newValue = evt.getNewValue();
 				mutationDispatch.accept(() -> {
-					RendererInput input = getResolver().layout.enqueueInput(
-							getResolver(), newValue, annotationLocation
-									.copyWithClassLocationOf(newValue),
-							null, parent);
+					RendererInput input = getResolver().layout
+							.enqueueInput(getResolver(), newValue,
+									getProperty(), annotationLocation
+											.copyWithClassLocationOf(newValue),
+									null, parent);
 					input.replace = Node.this;
 					getResolver().layout.layout();
 				});
@@ -1862,6 +1883,8 @@ public class DirectedLayout implements AlcinaProcess {
 		// effectively final
 		Object model;
 
+		Property property;
+
 		AnnotationLocation location;
 
 		List<Directed> directeds;
@@ -1935,7 +1958,7 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 			node.postDomAttach();
 			if (directeds.size() > 1) {
-				enqueueInput(resolver, model, location,
+				enqueueInput(resolver, model, property, location,
 						directeds.subList(1, directeds.size()), node);
 			}
 		}
@@ -1960,10 +1983,10 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		void enqueueInput(ContextResolver resolver, Object model,
-				AnnotationLocation location, List<Directed> directeds,
-				Node parentNode) {
-			DirectedLayout.this.enqueueInput(resolver, model, location,
-					directeds, parentNode);
+				Property property, AnnotationLocation location,
+				List<Directed> directeds, Node parentNode) {
+			DirectedLayout.this.enqueueInput(resolver, model, property,
+					location, directeds, parentNode);
 		}
 
 		@Override
@@ -1983,13 +2006,14 @@ public class DirectedLayout implements AlcinaProcess {
 			return directeds.get(0);
 		}
 
-		void init(ContextResolver resolver, Object model,
+		void init(ContextResolver resolver, Object model, Property property,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
 			/*
 			 * compute the new resolver, if any
 			 */
 			ContextResolver newResolver = null;
+			this.property = property;
 			if (model != null && model instanceof ContextResolver.Has) {
 				newResolver = ((ContextResolver.Has) model)
 						.getContextResolver(location);
@@ -2026,8 +2050,8 @@ public class DirectedLayout implements AlcinaProcess {
 			this.directeds = directeds != null ? directeds
 					: location.getAnnotations(Directed.class);
 			// generate the node (1-1 with input)
-			node = new Node(resolver, parentNode, location, this.model,
-					this.directeds.size() == 1);
+			node = new Node(resolver, parentNode, property, location,
+					this.model, this.directeds.size() == 1);
 			node.directed = firstDirected();
 		}
 

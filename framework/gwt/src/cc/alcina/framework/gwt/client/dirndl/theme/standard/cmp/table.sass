@@ -1,12 +1,49 @@
 @use '../../theme/theme'
 @use '../../theme/color'
+@use 'action'
+@use '../multi/icons/filter-circle-outline.svg.data-url-rule' as filter-circle
+@use '../multi/icons/ellipsis-vertical.svg.data-url-rule' as ellipsis-vertical
+@use '../multi/icons/chevron-up-circle-outline.svg.data-url-rule' as chevron-up
+@use '../multi/icons/chevron-down-circle-outline.svg.data-url-rule' as chevron-down
+@use '../multi/icons/chevron-up-down-circle-outline.svg.data-url-rule' as chevron-up-down
+
 
 @mixin bound
   th
-    text-align: left
+    padding-right: 1rem
 
-    &:hover
-      cursor: pointer
+    > ch-content
+      display: grid
+      width: 100%
+      grid-template-columns: 1fr min-content min-content
+
+      > span
+        padding-right: 1.5rem
+
+      > column-filter, > sort-direction
+        @include action.content(16px)
+        visibility: hidden
+        
+      > column-filter
+        padding-right: 0.5rem
+        @include filter-circle.content
+
+      > sort-direction
+        @include chevron-up-down.content
+
+        &[direction]
+          visibility: visible
+
+        &[direction='DESCENDING']
+          @include chevron-down.content
+
+        &[direction='ASCENDING']
+          @include chevron-up.content
+
+      &:hover
+        cursor: pointer
+        > column-filter, > sort-direction
+          visibility: visible
 
 @mixin data-table
   border-spacing: 0

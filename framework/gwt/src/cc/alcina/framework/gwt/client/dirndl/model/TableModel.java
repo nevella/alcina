@@ -29,12 +29,15 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.HasDisplayName;
@@ -61,6 +64,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.DirectedEntitySearchActivityTransformer.TableContainer;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn.CustomOrder;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
@@ -276,11 +280,19 @@ public class TableModel extends Model implements NodeEditorContext {
 
 			private boolean selected;
 
+			Set<Object> flags = AlcinaCollections.newUniqueSet();
+
+			int index;
+
+			RowMeta(TableRow row) {
+				this.row = row;
+				row.rowMeta = this;
+				this.index = meta.size();
+			}
+
 			public boolean isSelected() {
 				return selected;
 			}
-
-			Set<Object> flags = AlcinaCollections.newUniqueSet();
 
 			public void setFlag(Object flag, boolean present) {
 				if (present) {
@@ -290,23 +302,6 @@ public class TableModel extends Model implements NodeEditorContext {
 				}
 				updateRow();
 			}
-
-			void updateRow() {
-				String className = null;
-				if (!flags.isEmpty()) {
-					className = flags.stream().map(Object::toString)
-							.collect(Collectors.joining(" "));
-				}
-				row.setClassName(className);
-			}
-
-			RowMeta(TableRow row) {
-				this.row = row;
-				row.rowMeta = this;
-				this.index = meta.size();
-			}
-
-			int index;
 
 			@Override
 			public void onRowClicked(RowClicked event) {
@@ -328,21 +323,30 @@ public class TableModel extends Model implements NodeEditorContext {
 				this.selected = selected;
 				setFlag("selected", selected);
 			}
-		}
 
-		public int getSelectedRowIndex() {
-			return selectedRowIndex;
+			void updateRow() {
+				String className = null;
+				if (!flags.isEmpty()) {
+					className = flags.stream().map(Object::toString)
+							.collect(Collectors.joining(" "));
+				}
+				row.setClassName(className);
+			}
 		}
 
 		int selectedRowIndex = -1;
 
 		public Topic<Void> topicSelectedRowsChanged = Topic.create();
 
+		public List<RowMeta> meta = new ArrayList<>();
+
+		public int getSelectedRowIndex() {
+			return selectedRowIndex;
+		}
+
 		public void addRow(TableRow row) {
 			meta.add(new RowMeta(row));
 		}
-
-		public List<RowMeta> meta = new ArrayList<>();
 
 		public IntPair getSelectedRowsRange() {
 			int i1 = -1;
@@ -430,20 +434,27 @@ public class TableModel extends Model implements NodeEditorContext {
 		}
 	}
 
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (event.isBound()) {
-			event.reemitAs(this, RowsModelAttached.class, rowsModel);
-			// a dirndl theme - fire an initialising event on attach
-			rowsModel.topicSelectedRowsChanged.signal();
-		}
-	}
-
 	@Feature.Ref(Feature_Dirndl_TableModel._TableColumn.class)
 	@TypeSerialization(reflectiveSerializable = false)
+	@TypedProperties
+	@PropertyOrder(value = {}, custom = CustomOrder.class)
 	public static class TableColumn extends Model
 			implements DomEvents.Click.Handler {
+		public static class CustomOrder implements PropertyOrder.Custom {
+			List<TypedProperty> defaultOrder = List.of(properties.caption,
+					properties.columnFilter, properties.sortDirection);
+
+			@Override
+			public int compare(String o1, String o2) {
+				return ordinal(o1) - ordinal(o2);
+			}
+
+			int ordinal(String name) {
+				int idx = TypedProperty.indexOf(defaultOrder, name);
+				return idx == -1 ? defaultOrder.size() : idx;
+			}
+		}
+
 		public static class ColumnFilter extends Model
 				implements DomEvents.Click.Handler {
 			Field field;
@@ -460,6 +471,21 @@ public class TableModel extends Model implements NodeEditorContext {
 			}
 		}
 
+		@Directed(tag = "sort-direction")
+		public static class SortDirectionModel extends Model.All
+				implements ModelTransform<SortDirection, SortDirectionModel> {
+			@Binding(type = Type.PROPERTY)
+			SortDirection direction;
+
+			@Override
+			public SortDirectionModel apply(SortDirection direction) {
+				this.direction = direction;
+				return this;
+			}
+		}
+
+		static PackageProperties._TableModel_TableColumn properties = PackageProperties.tableModel_tableColumn;
+
 		private Field field;
 
 		private SortDirection sortDirection;
@@ -469,10 +495,6 @@ public class TableModel extends Model implements NodeEditorContext {
 		private Class valueClass;
 
 		private ColumnFilter columnFilter;
-
-		public ColumnFilter getColumnFilter() {
-			return columnFilter;
-		}
 
 		public TableColumn() {
 		}
@@ -486,6 +508,10 @@ public class TableModel extends Model implements NodeEditorContext {
 			this.sortDirection = sortDirection;
 			this.caption = field.getLabel();
 			this.columnFilter = new ColumnFilter(field);
+		}
+
+		public ColumnFilter getColumnFilter() {
+			return columnFilter;
 		}
 
 		public String getCaption() {
@@ -537,7 +563,8 @@ public class TableModel extends Model implements NodeEditorContext {
 		}
 
 		public void setSortDirection(SortDirection sortDirection) {
-			this.sortDirection = sortDirection;
+			set("sortDirection", this.sortDirection, sortDirection,
+					() -> this.sortDirection = sortDirection);
 		}
 	}
 
@@ -614,16 +641,6 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		String className;
 
-		@Binding(type = Type.CLASS_PROPERTY)
-		public String getClassName() {
-			return className;
-		}
-
-		public void setClassName(String className) {
-			set("className", this.className, className,
-					() -> this.className = className);
-		}
-
 		public TableRow() {
 		}
 
@@ -634,6 +651,16 @@ public class TableModel extends Model implements NodeEditorContext {
 			model.header.columns.stream()
 					.map(column -> new TableCell(column, this))
 					.forEach(cells::add);
+		}
+
+		@Binding(type = Type.CLASS_PROPERTY)
+		public String getClassName() {
+			return className;
+		}
+
+		public void setClassName(String className) {
+			set("className", this.className, className,
+					() -> this.className = className);
 		}
 
 		public Object getRowModel() {
@@ -681,6 +708,16 @@ public class TableModel extends Model implements NodeEditorContext {
 	protected RowsModel rowsModel = new RowsModel();
 
 	public TableModel() {
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			event.reemitAs(this, RowsModelAttached.class, rowsModel);
+			// a dirndl theme - fire an initialising event on attach
+			rowsModel.topicSelectedRowsChanged.signal();
+		}
 	}
 
 	public void addRow(TableRow row) {

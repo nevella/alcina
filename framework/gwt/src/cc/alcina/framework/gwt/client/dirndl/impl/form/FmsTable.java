@@ -13,6 +13,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn.ColumnFilter;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableHeader;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableValueModel;
 
@@ -32,18 +34,26 @@ public class FmsTable {
 		}
 	}
 
-	@Directed(
-		tag = "th",
-		bindings = @Binding(
-			from = "sortDirection",
-			type = Type.CSS_CLASS,
-			transform = ToSortColumnTransform.class))
+	@Directed(tag = "th")
+	@Directed(tag = "ch-content")
 	public static class FmsTableColumn extends Model {
 		public FmsTableColumn() {
 		}
 
 		@Directed(tag = "span", renderer = LeafRenderer.Text.class)
 		public String getCaption() {
+			return null;
+		}
+
+		@Directed
+		public ColumnFilter getColumnFilter() {
+			return null;
+		}
+
+		@Directed.Transform(
+			value = TableColumn.SortDirectionModel.class,
+			transformsNull = true)
+		public SortDirection getSortDirection() {
 			return null;
 		}
 	}
@@ -66,25 +76,6 @@ public class FmsTable {
 		}
 
 		public void setRows(List<TableModel.TableRow> rows) {
-		}
-	}
-
-	@Reflected
-	public static class ToSortColumnTransform
-			implements ToStringFunction<SortDirection> {
-		@Override
-		public String apply(SortDirection t) {
-			if (t == null) {
-				return "";
-			}
-			switch (t) {
-			case ASCENDING:
-				return "-sort-ascending";
-			case DESCENDING:
-				return "-sort-descending";
-			default:
-				throw new UnsupportedOperationException();
-			}
 		}
 	}
 }
