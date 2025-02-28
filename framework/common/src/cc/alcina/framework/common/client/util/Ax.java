@@ -17,6 +17,7 @@ import java.util.stream.StreamSupport;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 
 public class Ax {
@@ -340,5 +341,13 @@ public class Ax {
 
 	public static <T> Optional<T> last(Stream<T> stream) {
 		return stream.reduce(Ax.last());
+	}
+
+	public static String utf8String(byte[] bytes) {
+		try {
+			return new String(bytes, "UTF-8");
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 }

@@ -74,7 +74,7 @@ public class UrlBuilder {
 			sb.append("?");
 			sb.append(queryString);
 		}
-		if (queryString != null) {
+		if (hash != null) {
 			sb.append("#");
 			sb.append(hash);
 		}
@@ -94,6 +94,10 @@ public class UrlBuilder {
 	}
 
 	public UrlBuilder path(String path) {
+		if (path.contains("#") || path.contains("?")) {
+			throw new IllegalArgumentException(
+					"Illegal path chars - probably use populateFrom()");
+		}
 		this.path = path;
 		return this;
 	}
