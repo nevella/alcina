@@ -14,7 +14,7 @@ import cc.alcina.framework.servlet.schedule.PerformerTask;
  * Simplistic url verifier
  */
 public class TaskVerifyUrls extends PerformerTask.Remote {
-	public List<String> urls;
+	public List<String> urls = new ArrayList<>();
 
 	@AlcinaTransient
 	public transient List<Result> results;
