@@ -348,12 +348,41 @@ public @interface Binding {
 		}
 	}
 
-	@Reflected
-	public static class VisibilityVisibleHidden
+	static abstract class ToggleAttributeName
 			implements ToStringFunction<Boolean> {
+		String trueValue;
+
+		String falseValue;
+
+		ToggleAttributeName(String trueValue, String falseValue) {
+			this.trueValue = trueValue;
+			this.falseValue = falseValue;
+		}
+
 		@Override
 		public String apply(Boolean t) {
-			return CommonUtils.bv(t) ? "visible" : "hidden";
+			return CommonUtils.bv(t) ? trueValue : falseValue;
+		}
+	}
+
+	@Reflected
+	public static class VisibilityVisibleHidden extends ToggleAttributeName {
+		public VisibilityVisibleHidden() {
+			super("visible", "hidden");
+		}
+	}
+
+	@Reflected
+	public static class WhiteSpacePreWrapPre extends ToggleAttributeName {
+		public WhiteSpacePreWrapPre() {
+			super("pre-wrap", "pre");
+		}
+	}
+
+	@Reflected
+	public static class MonospaceInherit extends ToggleAttributeName {
+		public MonospaceInherit() {
+			super("monospace", "inherit");
 		}
 	}
 }

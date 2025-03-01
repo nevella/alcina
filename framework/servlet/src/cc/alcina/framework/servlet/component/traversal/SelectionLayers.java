@@ -1,16 +1,17 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
+import cc.alcina.framework.common.client.util.CollectionUtil;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
@@ -51,10 +52,11 @@ class SelectionLayers extends Model.Fields implements IfNotEqual {
 		}
 
 		List<? extends Selection> getFilteredSelections(Layer layer) {
-			return layers.stream()
+			Optional<LayerSelections> match = layers.stream()
 					.filter(ls -> HasEquivalence.areEquivalent(
 							LayerEquivalence.class, layer, ls.layer))
-					.findFirst()
+					.findFirst();
+			return match
 					.map(ls -> ls.selectionsArea == null ? null
 							: ls.selectionsArea.filteredSelections)
 					.orElse(List.of());
@@ -87,14 +89,6 @@ class SelectionLayers extends Model.Fields implements IfNotEqual {
 		}
 	}
 
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (!event.isBound()) {
-			int debug = 3;
-		}
-	}
-
 	Page page;
 
 	TraversalPlace place;
@@ -118,8 +112,7 @@ class SelectionLayers extends Model.Fields implements IfNotEqual {
 		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers
 				&& layer.unfilteredSelectionCount() == 0
 				&& layer.getLayerFilterAttribute() == null);
-		layersContainer_properties.layers.setIfNotEqual(layersContainer,
-				layers);
+		layers = CollectionUtil.preferExisting(layersContainer.layers, layers);
 		return layers;
 	}
 

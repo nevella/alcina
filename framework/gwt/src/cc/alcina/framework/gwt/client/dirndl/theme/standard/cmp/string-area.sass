@@ -13,6 +13,7 @@
     display: grid
     grid-template-rows: min-content minmax(min-content, 30vh)
     user-select: text
+    white-space: pre
     @include panel.heading
 
     > heading-actions 
@@ -22,6 +23,7 @@
       > actions
         align-items: center
         margin-right: 1rem
+        white-space: nowrap
 
         > a
           @include base.blue-link
@@ -31,7 +33,6 @@
       border: solid 1px #ccc
       margin: 0.2rem 1rem
       padding: 0.4rem
-      white-space: pre
       overflow: auto
 
 

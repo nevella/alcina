@@ -138,8 +138,10 @@ public class CollectionDeltaModel extends Model.Fields {
 			return next;
 		}
 
+		// deliberately require object identity, not equals - if you want to
+		// retain some elements, the collection elements shd not change
 		boolean matches(Object element) {
-			return Objects.equals(this.element, element);
+			return this.element == element;
 		}
 
 		RelativeInsert lastDescendantOrSelf() {
