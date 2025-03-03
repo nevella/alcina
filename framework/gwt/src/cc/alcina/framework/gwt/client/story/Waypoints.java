@@ -27,4 +27,8 @@ public class Waypoints {
 	@Decl.Action.UI.Wait(100)
 	public static class Wait100 extends Waypoint {
 	}
+
+	@Decl.Action.UI.Wait(5000)
+	public static class Wait5000 extends Waypoint {
+	}
 }

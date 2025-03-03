@@ -355,6 +355,22 @@ public interface Story {
 					}
 				}
 
+				/** A hover action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				//
+				public @interface Hover {
+					public static class ConverterImpl
+							implements Converter<Hover> {
+						@Override
+						public Story.Action convert(Hover ann) {
+							return new Story.Action.Ui.Hover();
+						}
+					}
+				}
+
 				/** A TestPresent action */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
@@ -431,7 +447,13 @@ public interface Story {
 					}
 				}
 
-				/** A (send) keys action */
+				/**
+				 * <p>
+				 * A (send) keys action
+				 * <p>
+				 * To send a control code, use
+				 * KeyConstant(org.openqa.selenium.Keys.RETURN) etc
+				 */
 				@Retention(RetentionPolicy.RUNTIME)
 				@Documented
 				@Target({ ElementType.TYPE })
@@ -448,6 +470,23 @@ public interface Story {
 							return new Story.Action.Ui.Keys()
 									.withClear(ann.clear())
 									.withText(ann.value());
+						}
+					}
+				}
+
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface KeyConstant {
+					org.openqa.selenium.Keys value() default org.openqa.selenium.Keys.NULL;
+
+					public static class ConverterImpl
+							implements Converter<KeyConstant> {
+						@Override
+						public Story.Action convert(KeyConstant ann) {
+							return new Story.Action.Ui.Keys()
+									.withConstant(ann.value());
 						}
 					}
 				}
@@ -970,6 +1009,12 @@ public interface Story {
 			}
 
 			/**
+			 * Hover over the located element
+			 */
+			public static class Hover implements Ui, CausesDomEvent {
+			}
+
+			/**
 			 * Await the presence of the document locator
 			 */
 			public static class AwaitPresent implements Ui {
@@ -1060,8 +1105,19 @@ public interface Story {
 					implements CausesDomEvent {
 				boolean clear;
 
+				org.openqa.selenium.Keys constant;
+
+				public org.openqa.selenium.Keys getConstant() {
+					return constant;
+				}
+
 				public boolean isClear() {
 					return clear;
+				}
+
+				public Keys withConstant(org.openqa.selenium.Keys value) {
+					this.constant = value;
+					return this;
 				}
 
 				public void setClear(boolean clear) {

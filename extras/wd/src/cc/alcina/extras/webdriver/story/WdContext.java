@@ -1,7 +1,5 @@
 package cc.alcina.extras.webdriver.story;
 
-import java.util.Arrays;
-
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 
@@ -18,7 +16,6 @@ import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
-import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context.PerformerResource;
@@ -64,7 +61,11 @@ public class WdContext implements PerformerResource {
 		if (part.shouldMaximiseTab) {
 			token.getWebDriver().manage().window().maximize();
 		}
-		if (part.shouldFocusTab) {
+		if (part.shouldFocusTabAtStart) {
+			token.getWebDriver().switchTo()
+					.window(token.getWebDriver().getWindowHandle());
+		}
+		if (part.shouldFocusTabAtEnd) {
 			new AfterStoryObserver().bind();
 		}
 	}

@@ -8,7 +8,9 @@ import cc.alcina.framework.gwt.client.story.TellerContext;
 public class WdContextPart implements TellerContext.Part {
 	public boolean shouldMaximiseTab;
 
-	public boolean shouldFocusTab;
+	public boolean shouldFocusTabAtEnd;
+
+	public boolean shouldFocusTabAtStart;
 
 	public boolean reuseSession = true;
 

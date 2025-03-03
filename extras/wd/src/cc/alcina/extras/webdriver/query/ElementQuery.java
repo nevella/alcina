@@ -15,6 +15,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Ref;
 
@@ -25,6 +26,9 @@ public class ElementQuery {
 		}
 
 		WebDriver getDriver();
+	}
+
+	public class RequiredlementNotFound implements ProcessObservable {
 	}
 
 	class RequiredElementNotFoundException extends RuntimeException {
@@ -92,6 +96,10 @@ public class ElementQuery {
 			WebDriver driver = (WebDriver) context;
 			drivers.set(driver);
 		}
+	}
+
+	public static WebDriver contextDriver() {
+		return drivers.get();
 	}
 
 	/*
@@ -215,6 +223,10 @@ public class ElementQuery {
 
 	public WebElement sendKeys(String text) {
 		return withElement(elem -> elem.sendKeys(text));
+	}
+
+	public WebElement sendKeys(org.openqa.selenium.Keys keys) {
+		return withElement(elem -> elem.sendKeys(keys));
 	}
 
 	public void setSelected(String optionText, boolean selected) {
@@ -378,6 +390,7 @@ public class ElementQuery {
 			}
 		}
 		if (required) {
+			new RequiredlementNotFound().publish();
 			throw new RequiredElementNotFoundException();
 		} else {
 			consumer.accept(new ArrayList<>());

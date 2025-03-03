@@ -6,6 +6,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 
 import com.google.common.base.Preconditions;
 
@@ -74,6 +75,19 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 		}
 	}
 
+	public static class Hover implements TypedPerformer<Story.Action.Ui.Hover> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.Hover action) throws Exception {
+			ElementQuery query = WdActionPerformer.createQuery(wdPerformer);
+			WebElement element = query.getElement();
+			Actions actions = new Actions(ElementQuery.contextDriver());
+			// there's something weird about these moves...but this combo works
+			actions.moveToElement(element, 20, 10).build().perform();
+			wdPerformer.context.log("Click --> %s", query);
+		}
+	}
+
 	public static class TestPresent
 			implements TypedPerformer<Story.Action.Ui.TestPresent> {
 		@Override
@@ -128,8 +142,17 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 			if (action.isClear()) {
 				query.clear();
 			}
-			String text = action.getText();
-			WebElement elem = query.sendKeys(text);
+			String actionString = null;
+			WebElement elem = null;
+			if (action.getText() != null) {
+				String text = action.getText();
+				actionString = text;
+				elem = query.sendKeys(text);
+			} else {
+				org.openqa.selenium.Keys keys = action.getConstant();
+				actionString = keys.name();
+				elem = query.sendKeys(keys);
+			}
 			try {
 				if (Objects.equals(elem.getAttribute("type"), "file")) {
 					// handle chrome weirdness
@@ -138,7 +161,7 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 			} catch (StaleElementReferenceException sfre) {
 				// squelch, removed by cascading mutation
 			}
-			wdPerformer.context.log("Keys :: '%s' --> %s", text, query);
+			wdPerformer.context.log("Keys :: '%s' --> %s", actionString, query);
 		}
 	}
 

@@ -8,7 +8,7 @@ import cc.alcina.framework.gwt.client.story.TellerContext;
 public class StoryDocPart implements TellerContext.Part {
 	public String path;
 
-	public RendererConfiguration rendererConfiguration;
+	public RendererConfiguration rendererConfiguration = new StoryDocPart.RendererConfiguration();
 
 	/**
 	 * Used when telling a story to generate help content (which is stored in a

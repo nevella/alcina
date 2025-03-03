@@ -129,11 +129,12 @@ public class StoryPerformer {
 		try {
 			performer.perform(context, action);
 			new ActionPerformed(context, action).publish();
-		} catch (Throwable t) {
+		} catch (Throwable throwable) {
 			System.out.println();
-			t.printStackTrace();
+			new ActionException(context, action, throwable).publish();
+			throwable.printStackTrace();
 			visit.result.ok = false;
-			visit.result.throwable = t;
+			visit.result.throwable = throwable;
 		}
 	}
 
@@ -155,11 +156,12 @@ public class StoryPerformer {
 			try {
 				performer.perform(context, annotate);
 				new ActionPerformed(context, annotate).publish();
-			} catch (Throwable t) {
+			} catch (Throwable throwable) {
+				new ActionException(context, annotate, throwable).publish();
 				System.out.println();
-				t.printStackTrace();
+				throwable.printStackTrace();
 				visit.result.ok = false;
-				visit.result.throwable = t;
+				visit.result.throwable = throwable;
 				break;
 			}
 		}
@@ -180,6 +182,21 @@ public class StoryPerformer {
 				Story.Action action) {
 			this.context = context;
 			this.action = action;
+		}
+	}
+
+	public static class ActionException implements ProcessObservable {
+		public Context context;
+
+		public Action action;
+
+		public Throwable throwable;
+
+		public ActionException(Story.Action.Context context,
+				Story.Action action, Throwable throwable) {
+			this.context = context;
+			this.action = action;
+			this.throwable = throwable;
 		}
 	}
 
