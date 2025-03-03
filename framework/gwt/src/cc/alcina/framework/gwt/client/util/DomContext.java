@@ -9,6 +9,17 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @EnvironmentRegistration
 public abstract class DomContext {
+	// transitional, use boundingclientrect for positioning computations
+	private boolean useBoundingClientRect;
+
+	public boolean isUseBoundingClientRect() {
+		return useBoundingClientRect;
+	}
+
+	public void setUseBoundingClientRect(boolean useBoundingClientRect) {
+		this.useBoundingClientRect = useBoundingClientRect;
+	}
+
 	public static void clearReferences() {
 		get().clearReferences0();
 	}
@@ -17,8 +28,8 @@ public abstract class DomContext {
 		return Registry.impl(DomContext.class);
 	}
 
-	public static int getAbsoluteTop(Element parentElement) {
-		return get().getAbsoluteTop0(parentElement);
+	public static int getAbsoluteTop(Element elem) {
+		return get().getAbsoluteTop0(elem);
 	}
 
 	/* ensure cache exists at a given context level */
@@ -63,6 +74,10 @@ public abstract class DomContext {
 		return get().getXmlDoc(domDocument);
 	}
 
+	public static boolean isZeroOffsetDims(Element elem) {
+		return get().isZeroOffsetDims0(elem);
+	}
+
 	protected abstract void clearReferences0();
 
 	protected abstract int getAbsoluteTop0(Element parentElement);
@@ -79,6 +94,8 @@ public abstract class DomContext {
 	protected abstract DomDocument getXmlDoc(Document domDocument);
 
 	protected abstract boolean isVisibleAncestorChain0(Element elem);
+
+	protected abstract boolean isZeroOffsetDims0(Element elem);
 
 	protected abstract void putXmlDoc0(DomDocument doc);
 

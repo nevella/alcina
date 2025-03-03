@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.util;
 
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
@@ -16,7 +17,25 @@ public class DomContextGwt extends DomContext {
 	@Override
 	protected int getAbsoluteTop0(org.w3c.dom.Element w3cElem) {
 		Element elem = (Element) w3cElem;
-		return (int) elem.getBoundingClientRect().top;
+		if (isUseBoundingClientRect()) {
+			return (int) elem.getBoundingClientRect().top;
+		} else {
+			return elem.getAbsoluteTop();
+		}
+	}
+
+	@Override
+	protected boolean isZeroOffsetDims0(org.w3c.dom.Element w3cElem) {
+		Element elem = (Element) w3cElem;
+		if (isUseBoundingClientRect()) {
+			if (!elem.isAttached()) {
+				return true;
+			}
+			DomRect rect = elem.getBoundingClientRect();
+			return rect.height == 0 || rect.width == 0;
+		} else {
+			return elem.getOffsetHeight() == 0 || elem.getOffsetWidth() == 0;
+		}
 	}
 
 	@Override

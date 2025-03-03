@@ -32,6 +32,11 @@ public class DomContextServlet extends DomContext {
 	}
 
 	@Override
+	protected boolean isZeroOffsetDims0(Element elem) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	protected Document getDocument0() {
 		throw new UnsupportedOperationException();
 	}

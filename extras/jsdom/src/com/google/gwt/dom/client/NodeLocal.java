@@ -46,6 +46,7 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		NodeLocal local = newChild.local();
+		NodeLocal entryLastChild = lastChild;
 		updateSiblingRefs(lastChild, local, null);
 		lastChild = local;
 		if (firstChild == null) {
@@ -200,12 +201,14 @@ public abstract class NodeLocal implements ClientDomNode {
 			Preconditions.checkArgument(localRefChild.parentNode == this,
 					"refchild not a child of this node");
 			NodeLocal local = newChild.local();
+			// key - don't want this to be parented when updating sibling refs,
+			// so do it first
+			local.setParentNode(this, true, true);
 			updateSiblingRefs(localRefChild.previousSibling, local,
 					localRefChild);
 			if (localRefChild == firstChild) {
 				firstChild = local;
 			}
-			local.setParentNode(this, true, true);
 			childCount++;
 			return newChild;
 		}
@@ -277,7 +280,9 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public Node removeAllChildren() {
 		// respects local/remote; OK
-		return ClientDomNodeStatic.removeAllChildren(this);
+		Node result = ClientDomNodeStatic.removeAllChildren(this);
+		childCount = 0;
+		return result;
 	}
 
 	@Override
