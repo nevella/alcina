@@ -8,11 +8,13 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -22,8 +24,18 @@ import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken.Pass;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
-public class TransformPersister {
+/**
+ * <p>
+ * Persists a {@link DomainTransformRequest} to a Postgres database via EJB
+ * 
+ * <p>
+ * This process is connected to the {@link CommitToStorageTransformListener} and
+ * {@link DomainTransformPersistenceEvents} processes
+ */
+public class TransformPersister implements AlcinaProcess {
 	public static final String CONTEXT_TRANSFORM_LAYER_WRAPPER = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_TRANSFORM_LAYER_WRAPPER";
 
