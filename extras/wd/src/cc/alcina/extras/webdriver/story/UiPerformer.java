@@ -149,7 +149,8 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 				actionString = text;
 				elem = query.sendKeys(text);
 			} else {
-				org.openqa.selenium.Keys keys = action.getConstant();
+				org.openqa.selenium.Keys keys = org.openqa.selenium.Keys
+						.valueOf(action.getConstant().name());
 				actionString = keys.name();
 				elem = query.sendKeys(keys);
 			}

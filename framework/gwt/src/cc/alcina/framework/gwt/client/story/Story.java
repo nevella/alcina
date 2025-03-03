@@ -479,7 +479,7 @@ public interface Story {
 				@Target({ ElementType.TYPE })
 				@Registration(DeclarativeAction.class)
 				public @interface KeyConstant {
-					org.openqa.selenium.Keys value() default org.openqa.selenium.Keys.NULL;
+					SeleniumKeys value() default SeleniumKeys.NULL;
 
 					public static class ConverterImpl
 							implements Converter<KeyConstant> {
@@ -1105,9 +1105,9 @@ public interface Story {
 					implements CausesDomEvent {
 				boolean clear;
 
-				org.openqa.selenium.Keys constant;
+				SeleniumKeys constant;
 
-				public org.openqa.selenium.Keys getConstant() {
+				public SeleniumKeys getConstant() {
 					return constant;
 				}
 
@@ -1115,7 +1115,7 @@ public interface Story {
 					return clear;
 				}
 
-				public Keys withConstant(org.openqa.selenium.Keys value) {
+				public Keys withConstant(SeleniumKeys value) {
 					this.constant = value;
 					return this;
 				}
