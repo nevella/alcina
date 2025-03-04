@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.Io;
@@ -51,6 +52,8 @@ public class TaskVerifyUrls extends PerformerTask.Remote {
 			result.load();
 			counter.tick();
 		}
+		Ax.out("Invalid:");
+		Ax.out(asInvalidUrlStringList());
 	}
 
 	public String asInvalidUrlStringList() {

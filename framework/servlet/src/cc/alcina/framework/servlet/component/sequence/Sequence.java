@@ -87,7 +87,7 @@ public interface Sequence<T> {
 		public static class ListCommands implements CommandExecutor {
 			@Override
 			public String name() {
-				return "list";
+				return "l";
 			}
 
 			@Override

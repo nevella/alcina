@@ -109,7 +109,7 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 				AppSuggestionEntry suggestion = new AppSuggestionEntry();
 				suggestion.eventData = matcher.group(1);
 				suggestion.match = Ax.format(
-						"Exec '%s' ['list' lists available commands]",
+						"Exec '%s' ['l' lists available commands]",
 						suggestion.eventData);
 				suggestion.modelEvent = SequenceEvents.ExecCommand.class;
 				suggestions.add(suggestion);
