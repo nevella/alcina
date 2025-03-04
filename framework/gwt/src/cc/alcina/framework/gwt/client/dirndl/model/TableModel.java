@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -455,8 +456,8 @@ public class TableModel extends Model implements NodeEditorContext {
 			}
 		}
 
-		public static class ColumnFilter extends Model
-				implements DomEvents.Click.Handler {
+		public class ColumnFilter extends Model
+				implements DomEvents.Click.Handler, Property.Has {
 			Field field;
 
 			protected ColumnFilter(Field field) {
@@ -465,9 +466,15 @@ public class TableModel extends Model implements NodeEditorContext {
 
 			@Override
 			public void onClick(Click event) {
-				// TODO Auto-generated method stub
-				throw new UnsupportedOperationException(
-						"Unimplemented method 'onClick'");
+				event.getContext().getOriginatingNativeEvent()
+						.stopPropagation();
+				event.reemitAs(this, TableColumnMetadata.EditFilter.class,
+						this);
+			}
+
+			@Override
+			public Property provideProperty() {
+				return field.getProperty();
 			}
 		}
 
@@ -507,6 +514,7 @@ public class TableModel extends Model implements NodeEditorContext {
 			this.field = field;
 			this.sortDirection = sortDirection;
 			this.caption = field.getLabel();
+			// TODO - only populate columnfilter on TableColumnMetadata receipt
 			this.columnFilter = new ColumnFilter(field);
 		}
 

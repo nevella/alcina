@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults;
@@ -48,9 +49,15 @@ public class DomainSegmentRemoteLoader implements DomainSegmentLoader {
 			cache.clear();
 		}
 		load();
+		if (clear.is()) {
+			new LoadedWithClear().publish();
+		}
 		if (refresh.is() || segment.collections.isEmpty()) {
 			refresh();
 		}
+	}
+
+	public static class LoadedWithClear implements ProcessObservable {
 	}
 
 	void refresh() {

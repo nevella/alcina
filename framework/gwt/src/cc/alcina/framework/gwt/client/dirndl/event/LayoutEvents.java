@@ -4,6 +4,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
+/**
+ * The nested Event classes are special - they're not called by standard (Node,
+ * Model) event pipelines, rather during render. But because the call site looks
+ * the same, the NodeEvent class is reused
+ */
 public class LayoutEvents {
 	/**
 	 * <p>
@@ -103,5 +108,32 @@ public class LayoutEvents {
 	public static abstract class LayoutEvent<H extends NodeEvent.Handler>
 			extends NodeEvent<H>
 			implements NodeEvent.WithoutDomBinding, NodeEvent.DirectlyInvoked {
+	}
+
+	/**
+	 * How to call this? Cross layer event broadcast? Short-circuiting the
+	 * classic management idiom? When two models are separated by &gt;1
+	 * intermediate models but have a direct logical binding, this initiialises
+	 * communication from the _ancestor_
+	 */
+	public static class EmitDescent extends LayoutEvent<EmitDescent.Handler> {
+		public Object model;
+
+		public Node node;
+
+		public EmitDescent(DirectedLayout.Node node, Object model) {
+			this.model = model;
+			this.node = node;
+			setContext(Context.fromNode(node));
+		}
+
+		@Override
+		public void dispatch(EmitDescent.Handler handler) {
+			handler.onEmitDescent(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEmitDescent(EmitDescent event);
+		}
 	}
 }

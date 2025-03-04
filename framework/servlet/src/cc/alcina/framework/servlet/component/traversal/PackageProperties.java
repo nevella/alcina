@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Header_Left header_left = new _Header_Left();
@@ -74,7 +74,7 @@ public class PackageProperties {
     }
     
     static class _LayerSelections_NameArea implements TypedProperty.Container {
-      TypedProperty<LayerSelections.NameArea, LayerSelections.NameArea.Filter> filter = new TypedProperty<>(LayerSelections.NameArea.class, "filter");
+      TypedProperty<LayerSelections.NameArea, LayerFilterEditor> filter = new TypedProperty<>(LayerSelections.NameArea.class, "filter");
       TypedProperty<LayerSelections.NameArea, Boolean> filterEditorOpen = new TypedProperty<>(LayerSelections.NameArea.class, "filterEditorOpen");
       TypedProperty<LayerSelections.NameArea, Boolean> hasFilter = new TypedProperty<>(LayerSelections.NameArea.class, "hasFilter");
       TypedProperty<LayerSelections.NameArea, LeafModel.TextTitle> key = new TypedProperty<>(LayerSelections.NameArea.class, "key");

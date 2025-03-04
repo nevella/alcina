@@ -26,10 +26,13 @@ import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata.ColumnMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.gwt.client.place.UnparseablePlaceException;
+import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
 
 /**
  * <p>
@@ -444,12 +447,12 @@ public class TraversalPlace extends BasePlace {
 				&& viewSelection.isContainedBy(selection);
 	}
 
-	public LayerAttributes attributesOrEmpty(int depth) {
-		return layers.getOrDefault(depth, new LayerAttributes(depth));
+	public LayerAttributes attributesOrEmpty(int index) {
+		return layers.getOrDefault(index, new LayerAttributes(index));
 	}
 
-	public LayerAttributes ensureAttributes(int depth) {
-		return layers.computeIfAbsent(depth, LayerAttributes::new);
+	public LayerAttributes ensureAttributes(int index) {
+		return layers.computeIfAbsent(index, LayerAttributes::new);
 	}
 
 	public SelectionPath viewPath() {
@@ -503,5 +506,16 @@ public class TraversalPlace extends BasePlace {
 
 	public void clearLayersPost(int index) {
 		layers.keySet().removeIf(idx -> idx > index);
+	}
+
+	public ColumnMetadata getColumnMetadata(Layer selectionLayer,
+			Property property) {
+		LayerAttributes attributes = ensureAttributes(selectionLayer.index);
+		Filter filter = attributes.get(StandardLayerAttributes.Filter.class);
+		boolean filtered = filter != null && filter.op != null
+				&& Objects.equals(filter.key, property.getName());
+		// FIXME - sortDirection
+		SortDirection sortDirection = null;
+		return new ColumnMetadata.Standard(sortDirection, filtered);
 	}
 }

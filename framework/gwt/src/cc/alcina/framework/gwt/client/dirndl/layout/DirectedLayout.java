@@ -64,6 +64,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.Emitter;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.EmitDescent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.DirectlyInvoked;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
@@ -999,6 +1000,10 @@ public class DirectedLayout implements AlcinaProcess {
 
 		void postDomAttach() {
 			bind(true);
+			if (model instanceof LayoutEvents.EmitDescent.Handler) {
+				((LayoutEvents.EmitDescent.Handler) model).onEmitDescent(
+						new LayoutEvents.EmitDescent(this, true));
+			}
 		}
 
 		public Node previousSibling() {

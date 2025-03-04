@@ -683,11 +683,11 @@ body > page > layers > layers > layer-selections > name {
   left: 0;
   align-self: start;
 }
-body > page > layers > layers > layer-selections > name > filter {
+body > page > layers > layers > layer-selections > name > layer-filter-editor {
   display: flex;
   gap: 4px;
 }
-body > page > layers > layers > layer-selections > name > filter > a.filter {
+body > page > layers > layers > layer-selections > name > layer-filter-editor > a.filter {
   display: inline-block;
   width: 16px;
   height: 16px;
@@ -698,16 +698,16 @@ body > page > layers > layers > layer-selections > name > filter > a.filter {
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNNDQ4LDI1NmMwLTEwNi04Ni0xOTItMTkyLTE5MlM2NCwxNTAsNjQsMjU2czg2LDE5MiwxOTIsMTkyUzQ0OCwzNjIsNDQ4LDI1NloiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjMyIi8+PGxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMzIiIHgxPSIxNDQiIHgyPSIzNjgiIHkxPSIyMDgiIHkyPSIyMDgiLz48bGluZSBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIzMiIgeDE9IjE3NiIgeDI9IjMzNiIgeTE9IjI3MiIgeTI9IjI3MiIvPjxsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjMyIiB4MT0iMjI0IiB4Mj0iMjg4IiB5MT0iMzM2IiB5Mj0iMzM2Ii8+PC9zdmc+");
   margin-top: 1px;
 }
-body > page > layers > layers > layer-selections > name > filter > a.filter:hover {
+body > page > layers > layers > layer-selections > name > layer-filter-editor > a.filter:hover {
   filter: invert(0.5);
 }
-body > page > layers > layers > layer-selections > name > filter > existing {
+body > page > layers > layers > layer-selections > name > layer-filter-editor > existing {
   max-width: 80%;
 }
-body > page > layers > layers > layer-selections > name[filter-editor-open] > filter > existing {
+body > page > layers > layers > layer-selections > name[filter-editor-open] > layer-filter-editor > existing {
   visibility: hidden;
 }
-body > page > layers > layers > layer-selections > name:not([has-filter]):not(:hover) > filter {
+body > page > layers > layers > layer-selections > name:not([has-filter]):not(:hover) > layer-filter-editor {
   visibility: hidden;
 }
 body > page > layers > layers > layer-selections > name[selected] {

@@ -54,7 +54,7 @@
         left: 0
         align-self: start
 
-        > filter
+        > layer-filter-editor
           display: flex
           gap: 4px
 
@@ -66,11 +66,11 @@
           > existing
             max-width: 80%
 
-        &[filter-editor-open] > filter > existing
+        &[filter-editor-open] > layer-filter-editor > existing
           visibility: hidden
 
         &:not([has-filter]):not(:hover)
-          > filter
+          > layer-filter-editor
             visibility: hidden
 
         &[selected]

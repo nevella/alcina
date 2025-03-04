@@ -9,15 +9,43 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 
 public interface TableColumnMetadata {
-	SortDirection getSortDirection();
+	public interface ColumnMetadata {
+		public static class Standard implements ColumnMetadata {
+			SortDirection sortDirection;
 
-	FilterData getFilterData();
+			boolean filtered;
 
-	public static class FilterData {
-		public Map<Property, String> filterValues = new LinkedHashMap<>();
+			public Standard(SortDirection sortDirection, boolean filtered) {
+				this.sortDirection = sortDirection;
+				this.filtered = filtered;
+			}
 
-		public boolean hasFilter(Property property) {
-			return filterValues.containsKey(property);
+			public SortDirection getSortDirection() {
+				return sortDirection;
+			}
+
+			public boolean isFiltered() {
+				return filtered;
+			}
+		}
+
+		SortDirection getSortDirection();
+
+		boolean isFiltered();
+	}
+
+	public static class Change extends
+			ModelEvent.DescendantEvent<TableColumnMetadata, Change.Handler, Change.Emitter> {
+		public interface Handler extends NodeEvent.Handler {
+			void onChange(Change event);
+		}
+
+		public interface Emitter extends ModelEvent.Emitter {
+		}
+
+		@Override
+		public void dispatch(Change.Handler handler) {
+			handler.onChange(this);
 		}
 	}
 
@@ -26,14 +54,16 @@ public interface TableColumnMetadata {
 	}
 
 	public static class EditFilter
-			extends ModelEvent<FilterData, EditFilter.Handler> {
+			extends ModelEvent<Property.Has, EditFilter.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onEditFilter(EditFilter event);
+		}
+
 		@Override
 		public void dispatch(EditFilter.Handler handler) {
 			handler.onEditFilter(this);
 		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onEditFilter(EditFilter event);
-		}
 	}
+
+	ColumnMetadata getColumnMetadata(Property property);
 }

@@ -4,20 +4,31 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.google.gwt.dom.client.Element;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.RowView;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.EmitDescent;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata.EditFilter;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
+import cc.alcina.framework.servlet.component.traversal.LayerFilterEditor.FilterSuggestor;
+import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
@@ -28,7 +39,10 @@ import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionT
 @DirectedContextResolver(FmsContentCells.FmsCellsContextResolver.class)
 @TypeSerialization(reflectiveSerializable = false)
 public class SelectionTableArea extends Model.Fields
-		implements TableEvents.RowClicked.Handler, IfNotEqual {
+		implements TableEvents.RowClicked.Handler, IfNotEqual,
+		TableColumnMetadata.Change.Emitter,
+		TableColumnMetadata.EditFilter.Handler,
+		LayoutEvents.EmitDescent.Handler {
 	@Directed.Transform(TableView.class)
 	@BeanViewModifiers(detached = true, nodeEditors = true)
 	@DirectedContextResolver(DisplayAllMixin.class)
@@ -127,5 +141,62 @@ public class SelectionTableArea extends Model.Fields
 	@Override
 	public int hashCode() {
 		return 1;// force equals comparison
+	}
+
+	class TableColumnMetadataImpl implements TableColumnMetadata {
+		@Override
+		public ColumnMetadata getColumnMetadata(Property property) {
+			return Ui.place().getColumnMetadata(selectionLayer, property);
+		}
+	}
+
+	@Override
+	public void onEmitDescent(EmitDescent event) {
+		event.reemitAs(this, TableColumnMetadata.Change.class,
+				new TableColumnMetadataImpl());
+	}
+
+	@Override
+	public void onEditFilter(EditFilter event) {
+		new FilterHostImpl(event).open();
+	}
+
+	class FilterHostImpl implements LayerFilterEditor.Host {
+		Property property;
+
+		Element relativeTo;
+
+		Overlay overlay;
+
+		FilterHostImpl(EditFilter event) {
+			this.property = event.getModel().provideProperty();
+			this.relativeTo = ((Model) event.getModel()).provideElement();
+			FilterSuggestor suggestor = new FilterSuggestor(this);
+			overlay = Overlay.attributes()
+					.dropdown(Position.START,
+							provideElement().getBoundingClientRect(),
+							SelectionTableArea.this, suggestor)
+					.create();
+		}
+
+		void open() {
+			overlay.open();
+		}
+
+		@Override
+		public Filter getLayerFilterAttribute() {
+			return Ui.place().ensureAttributes(selectionLayer.index)
+					.get(StandardLayerAttributes.Filter.class);
+		}
+
+		@Override
+		public Layer getLayer() {
+			return selectionLayer;
+		}
+
+		@Override
+		public void setFilterEditorOpen(boolean open) {
+			// we're causing this imperatively
+		}
 	}
 }

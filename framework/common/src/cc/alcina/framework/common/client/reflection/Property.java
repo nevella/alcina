@@ -50,6 +50,10 @@ public class Property implements HasAnnotations {
 
 	private final TypeBounds typeBounds;
 
+	public interface Has {
+		Property provideProperty();
+	}
+
 	public Property(Property property) {
 		this(property.name, property.getter, property.setter, property.type,
 				property.owningType, property.declaringType,

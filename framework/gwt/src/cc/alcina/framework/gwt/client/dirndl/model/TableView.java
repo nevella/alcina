@@ -54,6 +54,14 @@ public class TableView extends
 		return tableContainer;
 	}
 
+	/*
+	 * Note that if an ancestor implements TableColumnMetadata.Emitter (and
+	 * handles sort), this should just pass it through and not handle
+	 * onSortTable.
+	 * 
+	 * But the initial use case of TableColumnMetadata.Emitter _doesn't_ handle
+	 * sort (TraversalBrowser), so currently sort stops here
+	 */
 	@Directed.Delegating
 	class TableContainer extends Model.All
 			implements TableEvents.SortTable.Handler {
