@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
@@ -19,6 +20,7 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
  * 
  */
 @Bean(PropertySource.FIELDS)
+@ReflectiveSerializer.Checks(ignore = true)
 public class SequencePlace extends BasePlace
 		implements SequenceBrowserPlace, TreeSerializable {
 	public InstanceQuery instanceQuery = new InstanceQuery();

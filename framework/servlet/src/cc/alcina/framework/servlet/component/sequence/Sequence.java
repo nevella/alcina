@@ -16,7 +16,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.NotificationObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 import cc.alcina.framework.common.client.service.InstanceProvider;
@@ -206,10 +208,20 @@ public interface Sequence<T> {
 
 	@Registration(Loader.class)
 	public interface Loader {
+		@TypeSerialization(
+			value = "type",
+			properties = @PropertySerialization(
+				defaultProperty = true,
+				types = Class.class))
 		public static class LoaderType
 				extends InstanceQuery.Parameter<Class<? extends Loader>> {
 		}
 
+		@TypeSerialization(
+			value = "location",
+			properties = @PropertySerialization(
+				defaultProperty = true,
+				types = String.class))
 		public static class LoaderLocation
 				extends InstanceQuery.Parameter<String> {
 		}

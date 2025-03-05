@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.Prop
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 
@@ -19,6 +20,7 @@ import cc.alcina.framework.common.client.service.InstanceOracle.Query;
  * process is executed
  */
 @Bean(PropertySource.FIELDS)
+@ReflectiveSerializer.Checks(ignore = true)
 public final class InstanceQuery implements TreeSerializable {
 	@Bean(PropertySource.FIELDS)
 	@Registration.Self
@@ -58,6 +60,7 @@ public final class InstanceQuery implements TreeSerializable {
 	/**
 	 * The result type
 	 */
+	@PropertySerialization(name = "querytype")
 	public Class type;
 
 	@PropertySerialization(
