@@ -52,7 +52,7 @@ class DetailArea extends Model.Fields {
 			String rep = ((HasStringRepresentation) transformedSequenceElement)
 					.provideStringRepresentation();
 			if (rep != null) {
-				markupHighlights = new MarkupHighlights(rep, false,
+				markupHighlights = new MarkupHighlights(rep, "", false,
 						page.getSelectedElementHighlights(),
 						page.getSelectedElementHighlightIndex());
 				bindings().from(page.ui).on(Ui.properties.place)

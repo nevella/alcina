@@ -6,6 +6,8 @@ import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.traversal.DocumentTransformationTraversal;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.WithRange;
@@ -18,6 +20,7 @@ import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.environment.style.StyleScoper;
 
 /**
  * SelectionMarkup implementation for a single document
@@ -32,7 +35,16 @@ public class SelectionMarkupFull extends SelectionMarkup {
 
 	@Override
 	protected String getCss(Query query) {
-		return "";
+		String documentCss = new DocumentTransformationTraversal(traversal)
+				.getDocumentCss(query.input);
+		String scopedCss = Registry.impl(StyleScoper.class).scope(documentCss,
+				query.styleScope);
+		return scopedCss;
+	}
+
+	protected String getContainerClassNames(boolean input) {
+		return new DocumentTransformationTraversal(traversal)
+				.getMarkupContainerClassnames(input);
 	}
 
 	ToMarkupHighlights toMarkupHighlights;
@@ -89,8 +101,8 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				String markup = contentsNode.fullToString();
 				markup = XmlUtils.removeNamespaceInfo(markup);
 				markup = markup.replaceAll("(</?body)([^>]+>)", "$1-sub$2");
-				this.markupHighlights = new MarkupHighlights(markup, true,
-						List.of(), -1);
+				this.markupHighlights = new MarkupHighlights(markup,
+						getContainerClassNames(input), true, List.of(), -1);
 			}
 
 			DomNode getContainingNode(Selection.WithRange withRangeSelection) {

@@ -30,9 +30,6 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.traversal.SelectionTraversal.BeforeLayerSelection;
-import cc.alcina.framework.common.client.traversal.SelectionTraversal.SelectionException;
-import cc.alcina.framework.common.client.traversal.SelectionTraversal.StatsLogger;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal.State.SelectionLayers.LayerSelections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -42,7 +39,6 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IdCounter;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -265,19 +261,6 @@ public class SelectionTraversal
 		}
 		// unsupported?
 		return "[Root position]";
-	}
-
-	public String getDocumentMarkup(boolean input) {
-		if (input) {
-			Object rootValue = getRootSelection().get();
-			return rootValue instanceof HasMarkup
-					? ((HasMarkup) rootValue).provideMarkup()
-					: null;
-		} else {
-			return outputContainer instanceof HasMarkup
-					? ((HasMarkup) outputContainer).provideMarkup()
-					: null;
-		}
 	}
 
 	public Executor getExecutor() {

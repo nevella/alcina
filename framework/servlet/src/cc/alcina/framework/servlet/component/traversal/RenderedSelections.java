@@ -1,9 +1,11 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.StyleElement;
+import com.google.gwt.dom.client.StyleInjector;
+import com.google.gwt.dom.client.Text;
 
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.traversal.Layer;
@@ -12,10 +14,8 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup.Query;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.layout.RestrictedHtmlTag;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights;
@@ -64,9 +64,6 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 	Page page;
 
 	@Directed
-	Style style;
-
-	@Directed
 	Heading heading;
 
 	@Directed
@@ -78,6 +75,8 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 	Selection<?> selection;
 
 	SecondaryArea variant;
+
+	StyleElement styleElement;
 
 	RenderedSelections(Page page, SecondaryArea variant) {
 		this.page = page;
@@ -91,6 +90,15 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 				.signal(this::populateViewSelection);
 		bindings().from(this).on(properties.selection)
 				.signal(this::onSelectionChange);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (!event.isBound() && styleElement != null) {
+			styleElement.removeFromParent();
+			styleElement = null;
+		}
 	}
 
 	void populateViewSelection() {
@@ -160,48 +168,32 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 			return;
 		}
 		String styleScope = Ax
-				.format("selections.%s > selection-markup-area > div", variant);
+				.format("selections.%s > selection-markup > markup-highlights ",
+						variant)
+				.toLowerCase();
 		Query query = markup.query(selection, styleScope,
 				variant == SecondaryArea.INPUT);
 		if (selectionMarkupArea != null
 				&& markup instanceof SelectionMarkupFull) {
-			Style.properties.style.set(style, query.getCss());
 			((SelectionMarkupFull) markup).updateQuery(query);
-			return;
 		} else {
 			Model model = query.getModel();
 			SelectionMarkupArea selectionMarkupArea = new SelectionMarkupArea(
 					query, model);
 			properties.selectionMarkupArea.set(this, selectionMarkupArea);
-			Style style = new Style(query.getCss());
-			properties.style.set(this, style);
 		}
-	}
-
-	@TypedProperties
-	static class Style extends Model.Fields implements RestrictedHtmlTag {
-		static PackageProperties._RenderedSelections_Style properties = PackageProperties.renderedSelections_style;
-
-		Style(String style) {
-			this.style = style;
-		}
-
-		@Binding(type = Type.INNER_TEXT)
-		String style;
-
-		@Override
-		public boolean equals(Object input) {
-			if (input instanceof Style) {
-				Style typed = (Style) input;
-				return typed != null && Objects.equals(typed.style, style);
-			} else {
-				return false;
+		if (Ax.isBlank(query.getCss())) {
+			if (styleElement != null) {
+				styleElement.removeFromParent();
 			}
-		}
-
-		@Override
-		public int hashCode() {
-			return 1;// force equals comparison
+		} else {
+			if (styleElement == null) {
+				styleElement = StyleInjector
+						.createAndAttachElement(query.getCss());
+			} else {
+				((Text) styleElement.getChild(0))
+						.setTextContent(query.getCss());
+			}
 		}
 	}
 }

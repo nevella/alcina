@@ -16,6 +16,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.Header;
+import cc.alcina.framework.servlet.component.traversal.LayerFilterEditor;
 import cc.alcina.framework.servlet.component.traversal.LayerSelections;
 import cc.alcina.framework.servlet.component.traversal.Page;
 import cc.alcina.framework.servlet.component.traversal.PropertiesArea;
@@ -24,6 +25,7 @@ import cc.alcina.framework.servlet.component.traversal.SelectionLayers;
 import cc.alcina.framework.servlet.component.traversal.SelectionTableArea;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
+import com.google.gwt.dom.client.StyleElement;
 import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Integer;
@@ -32,8 +34,8 @@ import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Header_Left header_left = new _Header_Left();
@@ -43,7 +45,6 @@ public class PackageProperties {
     static _Page page = new _Page();
     static _Page_ActivityRoute page_activityRoute = new _Page_ActivityRoute();
     static _RenderedSelections renderedSelections = new _RenderedSelections();
-    static _RenderedSelections_Style renderedSelections_style = new _RenderedSelections_Style();
     static _SelectionLayers_LayersContainer selectionLayers_layersContainer = new _SelectionLayers_LayersContainer();
     public static _TraversalBrowser_Ui traversalBrowser_ui = new _TraversalBrowser_Ui();
     public static _TraversalSettings traversalSettings = new _TraversalSettings();
@@ -114,12 +115,8 @@ public class PackageProperties {
       TypedProperty<RenderedSelections, Selection> selection = new TypedProperty<>(RenderedSelections.class, "selection");
       TypedProperty<RenderedSelections, RenderedSelections.SelectionMarkupArea> selectionMarkupArea = new TypedProperty<>(RenderedSelections.class, "selectionMarkupArea");
       TypedProperty<RenderedSelections, SelectionTableArea> selectionTable = new TypedProperty<>(RenderedSelections.class, "selectionTable");
-      TypedProperty<RenderedSelections, RenderedSelections.Style> style = new TypedProperty<>(RenderedSelections.class, "style");
+      TypedProperty<RenderedSelections, StyleElement> styleElement = new TypedProperty<>(RenderedSelections.class, "styleElement");
       TypedProperty<RenderedSelections, TraversalSettings.SecondaryArea> variant = new TypedProperty<>(RenderedSelections.class, "variant");
-    }
-    
-    static class _RenderedSelections_Style implements TypedProperty.Container {
-      TypedProperty<RenderedSelections.Style, String> style = new TypedProperty<>(RenderedSelections.Style.class, "style");
     }
     
     static class _SelectionLayers_LayersContainer implements TypedProperty.Container {

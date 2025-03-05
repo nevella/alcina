@@ -53,7 +53,7 @@ public class MarkupHighlights extends Model.Fields {
 
 	int goToRangeIndex;
 
-	public MarkupHighlights(String content, boolean markup,
+	public MarkupHighlights(String content, String classNames, boolean markup,
 			List<IntPair> numericRanges, int goToRangeIndex) {
 		putRanges(numericRanges, goToRangeIndex);
 		Document.get().asDomNode().document.setReadonly(true);
@@ -64,7 +64,7 @@ public class MarkupHighlights extends Model.Fields {
 					.setText(content);
 			content = doc.fullToString();
 		}
-		highlitMarkup = new HighlitMarkup(content);
+		highlitMarkup = new HighlitMarkup(content, classNames);
 	}
 
 	public static class MarkupClick
@@ -84,8 +84,12 @@ public class MarkupHighlights extends Model.Fields {
 		@Binding(type = Type.INNER_HTML)
 		String markup;
 
-		HighlitMarkup(String markup) {
+		@Binding(type = Type.CLASS_PROPERTY)
+		String classNames;
+
+		HighlitMarkup(String markup, String classNames) {
 			this.markup = markup;
+			this.classNames = classNames;
 		}
 
 		@Override

@@ -6,7 +6,7 @@
     position: relative
     margin-bottom: 0.8rem
 
-    > label:has(+value>:is(input,select))
+    > label:has(+value>*:is(input,select))
       position: absolute
       background-color: hsl(46.3, 57%, 99%)
       color: theme.$placeholder-color
