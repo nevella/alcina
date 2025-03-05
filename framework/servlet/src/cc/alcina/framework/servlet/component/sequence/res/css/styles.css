@@ -137,7 +137,7 @@ bean-editor.label-over form-element {
   position: relative;
   margin-bottom: 0.8rem;
 }
-bean-editor.label-over form-element > label:has(+ value > :is(input, select)) {
+bean-editor.label-over form-element > label:has(+ value > *:is(input, select)) {
   position: absolute;
   background-color: #fefdfb;
   color: #555;
@@ -1018,6 +1018,7 @@ overlay.string-area string-area-expanded {
   display: grid;
   grid-template-rows: min-content minmax(min-content, 30vh);
   user-select: text;
+  white-space: pre;
 }
 overlay.string-area string-area-expanded > heading, overlay.string-area string-area-expanded > heading-actions {
   margin: 0 0 0.5rem;
@@ -1048,6 +1049,7 @@ overlay.string-area string-area-expanded > heading-actions > heading {
 overlay.string-area string-area-expanded > heading-actions > actions {
   align-items: center;
   margin-right: 1rem;
+  white-space: nowrap;
 }
 overlay.string-area string-area-expanded > heading-actions > actions > a {
   text-decoration: none;
@@ -1063,7 +1065,6 @@ overlay.string-area string-area-expanded > value {
   border: solid 1px #ccc;
   margin: 0.2rem 1rem;
   padding: 0.4rem;
-  white-space: pre;
   overflow: auto;
 }
 

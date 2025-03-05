@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
@@ -39,6 +40,18 @@ public class EntitySelection extends AbstractSelection<Entity> {
 		return Objects.hash(get());
 	}
 
+	@Directed(tag = "entity-type-extended")
+	@Registration.NonGenericSubtypes(EntityTypeExtended.class)
+	public abstract static class EntityTypeExtended<E extends Entity>
+			extends Model.All implements Registration.AllSubtypes {
+		@Directed.Exclude
+		protected E entity;
+
+		public void withEntity(E entity) {
+			this.entity = entity;
+		}
+	}
+
 	static class View extends AbstractSelection.View<EntitySelection> {
 		@Override
 		public Model getExtended(EntitySelection selection) {
@@ -56,6 +69,8 @@ public class EntitySelection extends AbstractSelection<Entity> {
 		static class EntityExtended extends Model.All {
 			String id;
 
+			EntityTypeExtended entityTypeExtended;
+
 			@Directed.Transform(Tables.Single.class)
 			Tables.Single.PropertyValues propertyValues = new Tables.Single.PropertyValues();
 
@@ -64,6 +79,12 @@ public class EntitySelection extends AbstractSelection<Entity> {
 				if (entity == null) {
 					return;
 				}
+				Registry.query(EntityTypeExtended.class)
+						.addKeys(entity.entityClass()).optional()
+						.ifPresent(ete -> {
+							ete.withEntity(entity);
+							entityTypeExtended = ete;
+						});
 				entity.domain().ensurePopulated();
 				id = entity.toStringId();
 				Reflections.at(selection.entityType()).properties().stream()

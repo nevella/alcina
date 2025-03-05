@@ -137,7 +137,7 @@ bean-editor.label-over form-element {
   position: relative;
   margin-bottom: 0.8rem;
 }
-bean-editor.label-over form-element > label:has(+ value > :is(input, select)) {
+bean-editor.label-over form-element > label:has(+ value > *:is(input, select)) {
   position: absolute;
   background-color: #fefdfb;
   color: #555;
@@ -802,6 +802,21 @@ body > page > properties bean-editor form-element[name=treePath] tree-path > a, 
   color: #77f;
 }
 body > page > properties bean-editor form-element[name=treePath] tree-path > a:hover {
+  text-decoration: underline;
+}
+body > page > properties bean-editor entity-extended {
+  display: flex;
+  margin-top: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+body > page > properties bean-editor entity-extended a {
+  text-decoration: none;
+}
+body > page > properties bean-editor entity-extended a, body > page > properties bean-editor entity-extended a:visited {
+  color: #77f;
+}
+body > page > properties bean-editor entity-extended a:hover {
   text-decoration: underline;
 }
 body > page > selections {
