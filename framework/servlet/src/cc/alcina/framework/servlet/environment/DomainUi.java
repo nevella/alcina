@@ -11,18 +11,28 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 public interface DomainUi extends RemoteUi {
 	@Override
 	default void onBeforeEnterContext() {
-		InstanceOracle.query(DomainStore.class).await();
+		if (isDomain()) {
+			InstanceOracle.query(DomainStore.class).await();
+		}
 	}
 
 	@Override
 	default void onEnterIteration() {
-		PermissionsManager.get().pushSystemUser();
-		Transaction.ensureBegun();
+		if (isDomain()) {
+			PermissionsManager.get().pushSystemUser();
+			Transaction.ensureBegun();
+		}
+	}
+
+	default boolean isDomain() {
+		return true;
 	}
 
 	@Override
 	default void onExitIteration() {
-		Transaction.end();
-		PermissionsManager.get().popSystemUser();
+		if (isDomain()) {
+			Transaction.end();
+			PermissionsManager.get().popSystemUser();
+		}
 	}
 }

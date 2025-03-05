@@ -1,10 +1,13 @@
 package cc.alcina.framework.common.client.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -13,6 +16,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
  * <p>
@@ -116,20 +120,17 @@ public class InstanceOracle {
 			if (provider == null) {
 				provider = Registry.query(InstanceProvider.class)
 						.addKeys(query.clazz).impl();
-				if (provider.isAsync()) {
-					/*
-					 * tmp, no use case for non-one-off at this time
-					 * 
-					 * to implement for multiple async queries with the same
-					 * provider, multicast the response callback
-					 */
-					provider.provideAsync(query);
-				} else {
-					instance = provider.provide(query);
-					ensureLatch();
-					awaitLatch.countDown();
-				}
+				ensureLatch();
+				provider.provide(query, this::acceptInstance);
 			}
+		}
+
+		/*
+		 * both sync + async instance provision route back to here
+		 */
+		void acceptInstance(T instance) {
+			this.instance = instance;
+			awaitLatch.countDown();
 		}
 
 		synchronized void add(Query<T> query) {
@@ -182,15 +183,32 @@ public class InstanceOracle {
 		}
 	}
 
-	// TODO - add argtypes, argvalues
-	public static class Query<T> {
+	public static class Query<T> implements HasBind {
 		Class<T> clazz;
 
+		List<InstanceQuery.Parameter<?>> parameters = new ArrayList<>();
+
 		AsyncCallback<T> callback;
+
+		Consumer<T> instanceConsumer;
+
+		boolean bound;
 
 		@Override
 		public int hashCode() {
 			return clazz.hashCode();
+		}
+
+		public Query<T>
+				addParameters(InstanceQuery.Parameter<?>... parameters) {
+			addParameters(Arrays.asList(parameters));
+			return this;
+		}
+
+		public Query<T>
+				addParameters(List<InstanceQuery.Parameter<?>> parameters) {
+			this.parameters.addAll(parameters);
+			return this;
 		}
 
 		@Override
@@ -223,6 +241,40 @@ public class InstanceOracle {
 		 */
 		public void await() {
 			get();
+		}
+
+		@Override
+		public void bind() {
+			bound = true;
+			InstanceOracle.get().submit(this);
+		}
+
+		@Override
+		public void unbind() {
+			bound = false;
+			InstanceOracle.get().checkEviction();
+		}
+
+		public void setInstanceConsumer(Consumer<T> instanceConsumer) {
+			this.instanceConsumer = instanceConsumer;
+		}
+
+		public void reemit() {
+			// FIXME - instanceoracle
+			// // TODO Auto-generated method stub
+			// throw new UnsupportedOperationException(
+			// "Unimplemented method 'reemit'");
+		}
+
+		public <PT extends InstanceQuery.Parameter> PT
+				typedParameter(Class<PT> clazz) {
+			return optionalParameter(clazz).orElse(null);
+		}
+
+		public <PT extends InstanceQuery.Parameter> Optional<PT>
+				optionalParameter(Class<PT> clazz) {
+			return (Optional<PT>) parameters.stream()
+					.filter(p -> p.getClass() == clazz).findFirst();
 		}
 	}
 }

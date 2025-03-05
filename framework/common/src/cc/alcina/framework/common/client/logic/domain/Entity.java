@@ -456,6 +456,20 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 	}
 
+	public static class LastModifiedComparator
+			implements Comparator<VersionableEntity> {
+		public static final LastModifiedComparator INSTANCE = new LastModifiedComparator();
+
+		public static final Comparator<VersionableEntity> REVERSED_INSTANCE = new LastModifiedComparator()
+				.reversed();
+
+		@Override
+		public int compare(VersionableEntity o1, VersionableEntity o2) {
+			return CommonUtils.compareDates(o1.getLastModificationDate(),
+					o2.getLastModificationDate());
+		}
+	}
+
 	public static class EntityComparator implements Comparator<Entity> {
 		public static final EntityComparator INSTANCE = new EntityComparator();
 

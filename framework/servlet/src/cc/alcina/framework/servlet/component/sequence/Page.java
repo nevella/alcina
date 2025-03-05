@@ -2,7 +2,6 @@ package cc.alcina.framework.servlet.component.sequence;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -13,13 +12,14 @@ import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Text;
 
-import cc.alcina.framework.common.client.collections.PublicCloneable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchFilter;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.service.InstanceOracle;
+import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasFilterableText;
@@ -168,10 +168,8 @@ class Page extends Model.Fields
 
 	Timer observableObservedTimer;
 
-	String lastSequenceKey;
-
 	Page() {
-		this.ui = ui.get();
+		this.ui = Ui.get();
 		this.ui.page = this;
 		header = new Header(this);
 		bindings().addBindHandler(ui::bindKeyboardShortcuts);
@@ -199,6 +197,11 @@ class Page extends Model.Fields
 		bindings().from(ui.settings).signal(this::updateStyles);
 		bindings().from(this).on(properties.sequence)
 				.signal(this::updateStyles);
+		/*
+		 * Initialise with an empty sequence, it's easier than adding null
+		 * checks throughout
+		 */
+		putSequence(Sequence.Blank.createInstance());
 	}
 
 	void onSelectedIndexChange() {
@@ -328,26 +331,41 @@ class Page extends Model.Fields
 		emitEvent(SequenceEvents.HighlightModelChanged.class);
 	}
 
+	InstanceOracle.Query<?> oracleQuery;
+
 	//
 	void reloadSequence() {
 		String sequenceKey = null;
-		if (Ax.notBlank(ui.place.sequenceKey)) {
-			sequenceKey = ui.place.sequenceKey;
-		} else {
+		InstanceQuery instanceQuery = ui.place.instanceQuery;
+		if (instanceQuery.isBlank()) {
 			sequenceKey = ui.settings.sequenceKey;
-		}
-		sequenceKey = Ax.blankToEmpty(sequenceKey);
-		Sequence<?> sequence = null;
-		if (!Objects.equals(sequenceKey, lastSequenceKey)
-				|| !(this.sequence instanceof PublicCloneable)) {
+			sequenceKey = Ax.blankToEmpty(sequenceKey);
 			Sequence.Loader loader = Sequence.Loader.getLoader(sequenceKey);
-			sequence = loader.load(sequenceKey);
-		} else {
-			sequence = (Sequence<?>) ((PublicCloneable) this.sequence).clone();
+			instanceQuery = loader.getQuery();
 		}
-		lastSequenceKey = sequenceKey;
+		InstanceOracle.Query<? extends Sequence> oracleQuery = instanceQuery
+				.toOracleQuery();
+		if (oracleQuery.equals(this.oracleQuery)) {
+			oracleQuery.reemit();
+			return;
+		}
+		unbindOracleQuery();
+		this.oracleQuery = oracleQuery;
+		oracleQuery.setInstanceConsumer(this::putSequence);
+		oracleQuery.bind();
+	}
+
+	void putSequence(Sequence sequence) {
 		filteredSequenceElements = filteredSequenceElements(sequence);
 		properties.sequence.set(this, sequence);
+	}
+
+	void unbindOracleQuery() {
+		if (this.oracleQuery != null) {
+			this.oracleQuery.unbind();
+			this.sequence = null;// just de-ref, no need to fire changes
+			this.oracleQuery = null;
+		}
 	}
 
 	@Override
@@ -358,6 +376,7 @@ class Page extends Model.Fields
 					.getTimer(this::observableAccessed);
 		} else {
 			observableObservedTimer.cancel();
+			unbindOracleQuery();
 		}
 	}
 

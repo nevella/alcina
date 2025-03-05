@@ -3,17 +3,17 @@ package cc.alcina.framework.servlet.component.sequence;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
-import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.environment.AbstractUi;
+import cc.alcina.framework.servlet.environment.DomainUi;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 import cc.alcina.framework.servlet.environment.SettingsSupport;
 
@@ -45,9 +45,22 @@ public class SequenceBrowser {
 		}
 	}
 
+	@Registration.Self
+	public static class IsDomain {
+		public boolean isDomain() {
+			return false;
+		}
+	}
+
 	@TypedProperties
-	static class Ui extends AbstractUi<SequencePlace> {
+	static class Ui extends AbstractUi<SequencePlace> implements DomainUi {
 		static PackageProperties._SequenceBrowser_Ui properties = PackageProperties.sequenceBrowser_ui;
+
+		boolean isDomain;
+
+		Ui() {
+			isDomain = Registry.impl(IsDomain.class).isDomain();
+		}
 
 		public static Ui get() {
 			return (Ui) RemoteUi.get();
@@ -66,6 +79,14 @@ public class SequenceBrowser {
 			return "Sequence browser";
 		}
 
+		/**
+		 * By default false, but the app can override this via a registry check
+		 */
+		@Override
+		public boolean isDomain() {
+			return isDomain;
+		}
+
 		@Override
 		public void init() {
 			FmsForm.registerImplementations();
@@ -80,6 +101,7 @@ public class SequenceBrowser {
 		@Override
 		protected DirectedLayout render0() {
 			injectCss("res/css/styles.css");
+			//
 			Client.get().initAppHistory();
 			DirectedLayout layout = new DirectedLayout();
 			layout.render(resolver(), new RootArea()).getRendered()

@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -20,7 +21,7 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 @Bean(PropertySource.FIELDS)
 public class SequencePlace extends BasePlace
 		implements SequenceBrowserPlace, TreeSerializable {
-	public String sequenceKey;
+	public InstanceQuery instanceQuery = new InstanceQuery();
 
 	public String filter;
 
@@ -90,11 +91,6 @@ public class SequencePlace extends BasePlace
 		return this;
 	}
 
-	public SequencePlace withSequenceKey(String sequenceKey) {
-		this.sequenceKey = sequenceKey;
-		return this;
-	}
-
 	public SequencePlace withHighlightIndicies(int highlightIndex,
 			int selectedElementIdx) {
 		this.selectedElementIdx = selectedElementIdx;
@@ -127,11 +123,6 @@ public class SequencePlace extends BasePlace
 		if (selectedElementIdx >= size) {
 			selectedElementIdx = size == 0 ? -1 : 0;
 		}
-		return this;
-	}
-
-	public SequencePlace withDevGeneratorLocation() {
-		this.sequenceKey = "location_";
 		return this;
 	}
 }

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -14,12 +15,18 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.NotificationObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
+import cc.alcina.framework.common.client.service.InstanceOracle.Query;
+import cc.alcina.framework.common.client.service.InstanceProvider;
+import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.Csv;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
@@ -30,6 +37,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.PreText;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.servlet.component.sequence.Sequence.Loader.LoaderLocation;
+import cc.alcina.framework.servlet.component.sequence.Sequence.Loader.LoaderType;
 
 /**
  * <p>
@@ -156,6 +165,13 @@ public interface Sequence<T> {
 			return new LeafModel.HtmlBlock.To();
 		}
 
+		public static Blank createInstance() {
+			Blank blank = new Blank();
+			blank.name = "No sequence specified";
+			blank.elements = new ArrayList<>();
+			return blank;
+		}
+
 		public static class LoaderImpl implements Loader {
 			@Override
 			public boolean handlesSequenceLocation(String location) {
@@ -164,16 +180,40 @@ public interface Sequence<T> {
 
 			@Override
 			public Sequence<?> load(String location) {
-				Blank blank = new Blank();
-				blank.name = "No sequence specified";
-				blank.elements = new ArrayList<>();
-				return blank;
+				return Blank.createInstance();
 			}
+		}
+	}
+
+	public static class SequenceProvider
+			implements InstanceProvider.Async<Sequence> {
+		@Override
+		public void provide(Query<Sequence> query,
+				Consumer<Sequence> asyncReturn) {
+			LoaderType loaderType = query.typedParameter(LoaderType.class);
+			String location = query.optionalParameter(LoaderLocation.class)
+					.map(LoaderLocation::getValue).orElse(null);
+			String threadName = Ax.format("%s-%s", NestedName.get(this),
+					NestedName.get(loaderType.value));
+			ThrowingRunnable runnable = () -> {
+				Loader loader = Reflections.newInstance(loaderType.value);
+				Sequence<?> sequence = loader.load(location);
+				asyncReturn.accept(sequence);
+			};
+			AlcinaChildRunnable.runInTransaction(threadName, runnable);
 		}
 	}
 
 	@Registration(Loader.class)
 	public interface Loader {
+		public static class LoaderType
+				extends InstanceQuery.Parameter<Class<? extends Loader>> {
+		}
+
+		public static class LoaderLocation
+				extends InstanceQuery.Parameter<String> {
+		}
+
 		// this can be a name, or a name+parameters
 		boolean handlesSequenceLocation(String location);
 
@@ -200,6 +240,11 @@ public interface Sequence<T> {
 			LoggerFactory.getLogger(Loader.class).info(
 					"Logged {} sequence elements to {}", elements.size(),
 					folder);
+		}
+
+		default InstanceQuery getQuery() {
+			return new InstanceQuery().withType(Sequence.class).addParameters(
+					new Loader.LoaderType().withValue(getClass()));
 		}
 	}
 
