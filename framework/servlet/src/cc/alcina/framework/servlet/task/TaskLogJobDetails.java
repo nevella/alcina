@@ -291,9 +291,16 @@ public class TaskLogJobDetails extends PerformerTask {
 		}
 		if (job.provideIsComplete()) {
 			DomNode div = links.builder().tag("div").append();
-			String href = JobServlet.createTaskUrl(job.getTask());
-			div.html().addLink(Ax.format("Execute again (%s)",
-					NestedName.get(job.getTask())), href, "");
+			try {
+				String href = JobServlet.createTaskUrl(job.getTask());
+				div.html().addLink(Ax.format("Execute again (%s)",
+						NestedName.get(job.getTask())), href, "");
+			} catch (Exception e) {
+				e.printStackTrace();
+				div.html().addLink(
+						"Unable to execute again - job serialization issue",
+						"#", "");
+			}
 		}
 		DomNode div = links.builder().tag("div").append();
 		String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
