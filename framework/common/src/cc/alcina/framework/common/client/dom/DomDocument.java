@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Stack;
 
 import org.w3c.dom.Document;
@@ -15,6 +17,9 @@ import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.ranges.DocumentRange;
+import org.w3c.dom.traversal.DocumentTraversal;
+import org.w3c.dom.traversal.NodeFilter;
+import org.w3c.dom.traversal.TreeWalker;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -891,5 +896,26 @@ public class DomDocument extends DomNode implements Cloneable {
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrap(e);
 		}
+	}
+
+	/**
+	 * Cleanup things like DocumentFragment trees from #nodes
+	 */
+	public void removeDetachedNodeReferences() {
+		/*
+		 * find detach roots
+		 */
+		List<Node> detachRoots = nodes.keySet().stream().filter(
+				n -> n.getParentNode() == null && n.getOwnerDocument() != null)
+				.toList();
+		Set<Node> toDetach = new HashSet<>();
+		detachRoots.forEach(root -> {
+			TreeWalker walker = ((DocumentTraversal) root.getOwnerDocument())
+					.createTreeWalker(root, NodeFilter.SHOW_ALL, null, true);
+			do {
+				toDetach.add(walker.getCurrentNode());
+			} while (walker.nextNode() != null);
+		});
+		nodes.keySet().removeIf(toDetach::contains);
 	}
 }
