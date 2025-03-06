@@ -10,7 +10,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -46,11 +45,21 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * @formatter:off
  
 - Create a querytoken for each query
-- Look up the store - attach to the existing QueryToken entry if it exists
+- Look up the store - attach to the existing ProviderQueries entry if it exists
 - Add to 
 - If the existing entry has a result, fire that result
 
+
  * @formatter:on
+ * 
+ */
+/*
+ * Essentially, this acts as a broker (social mixer?) between instance
+ * requestors and providers. Once a contract (modelled by a ProviderQueries) is
+ * established, it shouldn't be removed - rather eviction should cause result
+ * instances to be evicted (and unbind of requestors removes the requestor refs)
+ * 
+ * 
  */
 @Registration.Singleton
 public class InstanceOracle {
@@ -62,10 +71,14 @@ public class InstanceOracle {
 		return new Query<>(clazz);
 	}
 
-	<T> QueryToken<T> submit(Query<T> query) {
-		QueryToken<T> active = store.getToken(query);
+	<T> ProviderQueries<T> submit(Query<T> query) {
+		ProviderQueries<T> active = store.getToken(query);
 		active.ensureSubmitted();
 		checkEviction();
+		if (!query.async) {
+			active.await();
+		}
+		active.passToConsumers();
 		return active;
 	}
 
@@ -80,16 +93,16 @@ public class InstanceOracle {
 	 * handles synchronized access to uniqueTokens
 	 */
 	class Store {
-		Map<QueryToken, QueryToken> uniqueTokens = new LinkedHashMap<>();
+		Map<ProviderQueries, ProviderQueries> uniqueTokens = new LinkedHashMap<>();
 
-		synchronized <T> QueryToken<T> getToken(Query<T> query) {
-			QueryToken<T> test = new QueryToken<>(query);
+		synchronized <T> ProviderQueries<T> getToken(Query<T> query) {
+			ProviderQueries<T> test = new ProviderQueries<>(query);
 			/*
 			 * NOTE - if the InstanceProvider call is already in progress, and
-			 * InstanceProvider is a one-off, the QueryToken equals() test will
-			 * fail, so a new token will be provided
+			 * InstanceProvider is a one-off, the ProviderQueries equals() test
+			 * will fail, so a new token will be provided
 			 */
-			QueryToken<T> active = uniqueTokens.computeIfAbsent(test,
+			ProviderQueries<T> active = uniqueTokens.computeIfAbsent(test,
 					k -> test);
 			active.add(query);
 			/*
@@ -100,28 +113,67 @@ public class InstanceOracle {
 		}
 	}
 
-	static class QueryToken<T> {
-		Query<T> query;
+	/**
+	 * <p>
+	 * Models the link between a provider and the 1-to-many queries it satisfies
+	 * <p>
+	 * Instances are unique modulo {@link #definingQuery} -
+	 * {@link Query#equals(Object)}
+	 */
+	static class ProviderQueries<T> {
+		/**
+		 * Models how the provider has satisfied this particular query
+		 */
+		class QueryState {
+			Query<T> query;
 
-		List<Query<T>> awaitingQueries = new ArrayList<>();
+			boolean canAccept = true;
 
-		QueryToken(Query<T> query) {
-			this.query = query;
+			T lastAcceptedInstance;
+
+			QueryState(Query<T> query) {
+				this.query = query;
+			}
+
+			void acceptInstance() {
+				if (canAccept && instance != null
+						&& query.instanceConsumer != null
+						&& lastAcceptedInstance != instance) {
+					lastAcceptedInstance = instance;
+					query.instanceConsumer.accept(lastAcceptedInstance);
+				}
+			}
+		}
+
+		Query<T> definingQuery;
+
+		List<QueryState> awaitingQueries = new ArrayList<>();
+
+		ProviderQueries(Query<T> query) {
+			this.definingQuery = query;
+			query.token = this;
+		}
+
+		/*
+		 * pass the result instance to any consumers
+		 */
+		synchronized void passToConsumers() {
+			awaitingQueries.forEach(QueryState::acceptInstance);
 		}
 
 		InstanceProvider<T> provider;
 
 		/*
 		 * not synchronized here, effectively synchronized in Store#getToken.
-		 * This will be called when the first QueryToken for the Query is
+		 * This will be called when the first ProviderQueries for the Query is
 		 * created
 		 */
 		void ensureSubmitted() {
 			if (provider == null) {
 				provider = Registry.query(InstanceProvider.class)
-						.addKeys(query.clazz).impl();
+						.addKeys(definingQuery.clazz).impl();
 				ensureLatch();
-				provider.provide(query, this::acceptInstance);
+				provider.provide(definingQuery, this::acceptInstance);
 			}
 		}
 
@@ -134,12 +186,12 @@ public class InstanceOracle {
 		}
 
 		synchronized void add(Query<T> query) {
-			awaitingQueries.add(query);
+			awaitingQueries.add(new QueryState(query));
 		}
 
 		@Override
 		public int hashCode() {
-			return query.hashCode();
+			return definingQuery.hashCode();
 		}
 
 		T instance;
@@ -150,12 +202,12 @@ public class InstanceOracle {
 
 		@Override
 		public boolean equals(Object obj) {
-			if (obj instanceof QueryToken) {
-				QueryToken o = (QueryToken) obj;
+			if (obj instanceof ProviderQueries) {
+				ProviderQueries o = (ProviderQueries) obj;
 				if (isOneOff() || o.isOneOff()) {
 					return obj == this;
 				} else {
-					return query.equals(o.query);
+					return definingQuery.equals(o.definingQuery);
 				}
 			} else {
 				return super.equals(obj);
@@ -184,15 +236,19 @@ public class InstanceOracle {
 	}
 
 	public static class Query<T> implements HasBind {
+		ProviderQueries<T> token;
+
 		Class<T> clazz;
 
 		List<InstanceQuery.Parameter<?>> parameters = new ArrayList<>();
 
-		AsyncCallback<T> callback;
-
 		Consumer<T> instanceConsumer;
 
 		boolean bound;
+
+		Consumer<Exception> exceptionConsumer;
+
+		boolean async;
 
 		@Override
 		public int hashCode() {
@@ -225,13 +281,22 @@ public class InstanceOracle {
 			this.clazz = clazz;
 		}
 
-		public void async(AsyncCallback<T> callback) {
-			this.callback = callback;
-			InstanceOracle.get().submit(this);
+		public T get() {
+			Preconditions.checkState(!async);
+			return submit0().await();
 		}
 
-		public T get() {
-			return InstanceOracle.get().submit(this).await();
+		/* Note that this will block if the query is not async */
+		ProviderQueries<T> submit0() {
+			return InstanceOracle.get().submit(this);
+		}
+
+		/*
+		 * Don't return anything (since ProviderQueries is intentionally
+		 * package-private)
+		 */
+		public void submit() {
+			submit0();
 		}
 
 		/**
@@ -255,8 +320,15 @@ public class InstanceOracle {
 			InstanceOracle.get().checkEviction();
 		}
 
-		public void setInstanceConsumer(Consumer<T> instanceConsumer) {
+		public Query<T> withInstanceConsumer(Consumer<T> instanceConsumer) {
 			this.instanceConsumer = instanceConsumer;
+			return this;
+		}
+
+		public Query<T>
+				withExceptionConsumer(Consumer<Exception> exceptionConsumer) {
+			this.exceptionConsumer = exceptionConsumer;
+			return this;
 		}
 
 		public void reemit() {
@@ -275,6 +347,11 @@ public class InstanceOracle {
 				optionalParameter(Class<PT> clazz) {
 			return (Optional<PT>) parameters.stream()
 					.filter(p -> p.getClass() == clazz).findFirst();
+		}
+
+		public Query<T> withAsync(boolean async) {
+			this.async = async;
+			return this;
 		}
 	}
 }

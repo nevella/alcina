@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.service.InstanceOracle.Query;
  * non-MT GWT apps, basically)
  * 
  * TODO - server-side async executors (most) should probably have a threadpool
+ * 
  */
 @Registration.NonGenericSubtypes(InstanceProvider.class)
 public interface InstanceProvider<T> extends Registration.AllSubtypes {

@@ -18,8 +18,8 @@ import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
-import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 import cc.alcina.framework.common.client.service.InstanceProvider;
 import cc.alcina.framework.common.client.service.InstanceQuery;
@@ -209,7 +209,7 @@ public interface Sequence<T> {
 	@Registration(Loader.class)
 	public interface Loader {
 		@TypeSerialization(
-			value = "type",
+			value = "loadertype",
 			properties = @PropertySerialization(
 				defaultProperty = true,
 				types = Class.class))
@@ -218,7 +218,7 @@ public interface Sequence<T> {
 		}
 
 		@TypeSerialization(
-			value = "location",
+			value = "loaderlocation",
 			properties = @PropertySerialization(
 				defaultProperty = true,
 				types = String.class))

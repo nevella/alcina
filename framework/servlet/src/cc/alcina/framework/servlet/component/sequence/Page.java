@@ -351,7 +351,7 @@ class Page extends Model.Fields
 		}
 		unbindOracleQuery();
 		this.oracleQuery = oracleQuery;
-		oracleQuery.setInstanceConsumer(this::putSequence);
+		oracleQuery.withInstanceConsumer(this::putSequence);
 		oracleQuery.bind();
 	}
 
