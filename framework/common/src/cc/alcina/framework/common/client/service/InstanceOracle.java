@@ -15,6 +15,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.util.HasBind;
 
 /**
@@ -173,7 +175,13 @@ public class InstanceOracle {
 				provider = Registry.query(InstanceProvider.class)
 						.addKeys(definingQuery.clazz).impl();
 				ensureLatch();
-				provider.provide(definingQuery, this::acceptInstance);
+				/*
+				 * In non-browser environments, this will run off-thread
+				 */
+				String name = Ax.format("instance-oracle::%s",
+						NestedName.get(provider));
+				Registry.impl(ProviderInvoker.class).invoke(name, () -> provider
+						.provide(definingQuery, this::acceptInstance));
 			}
 		}
 
@@ -232,6 +240,18 @@ public class InstanceOracle {
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
+		}
+	}
+
+	@Registration.Self
+	public static class ProviderInvoker {
+		/**
+		 * The naive (browser) implementation just executes the runnable
+		 * 
+		 * @param runnable
+		 */
+		public void invoke(String name, Runnable runnable) {
+			runnable.run();
 		}
 	}
 

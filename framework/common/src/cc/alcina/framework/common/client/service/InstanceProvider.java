@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.service.InstanceOracle.Query;
  */
 @Registration.NonGenericSubtypes(InstanceProvider.class)
 public interface InstanceProvider<T> extends Registration.AllSubtypes {
-	T provide(InstanceOracle.Query<T> query);
+	T provide(InstanceOracle.Query<T> query) throws Exception;
 
 	/**
 	 * Models a parameter used by the provider, arguments passed by the
@@ -81,19 +81,10 @@ public interface InstanceProvider<T> extends Registration.AllSubtypes {
 	 * entry point gives simpler upstream code
 	 */
 	default void provide(Query<T> query, Consumer<T> asyncReturn) {
-		asyncReturn.accept(provide(query));
-	}
-
-	public interface Async<T> extends InstanceProvider<T> {
-		@Override
-		default T provide(Query<T> query) {
-			throw new UnsupportedOperationException(
-					"Override provide(query, asyncReturn)");
-		}
-
-		default void provide(Query<T> query, Consumer<T> asyncReturn) {
-			throw new UnsupportedOperationException(
-					"Override this method in implementations");
+		try {
+			asyncReturn.accept(provide(query));
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
 		}
 	}
 }

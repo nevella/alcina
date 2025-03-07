@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,10 +24,8 @@ import cc.alcina.framework.common.client.service.InstanceProvider;
 import cc.alcina.framework.common.client.service.InstanceQuery;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
-import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.Csv;
 import cc.alcina.framework.entity.util.FileUtils;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
@@ -187,22 +184,16 @@ public interface Sequence<T> {
 		}
 	}
 
-	public static class SequenceProvider
-			implements InstanceProvider.Async<Sequence> {
+	public static class SequenceProvider implements InstanceProvider<Sequence> {
 		@Override
-		public void provide(Query<Sequence> query,
-				Consumer<Sequence> asyncReturn) {
+		public Sequence provide(Query<Sequence> query) throws Exception {
 			LoaderType loaderType = query.typedParameter(LoaderType.class);
 			String location = query.optionalParameter(LoaderLocation.class)
 					.map(LoaderLocation::getValue).orElse(null);
 			String threadName = Ax.format("%s-%s", NestedName.get(this),
 					NestedName.get(loaderType.value));
-			ThrowingRunnable runnable = () -> {
-				Loader loader = Reflections.newInstance(loaderType.value);
-				Sequence<?> sequence = loader.load(location);
-				asyncReturn.accept(sequence);
-			};
-			AlcinaChildRunnable.runInTransaction(threadName, runnable);
+			Loader loader = Reflections.newInstance(loaderType.value);
+			return loader.load(location);
 		}
 	}
 
