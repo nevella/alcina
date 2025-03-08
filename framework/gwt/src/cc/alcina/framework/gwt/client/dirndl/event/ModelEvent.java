@@ -73,8 +73,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  */
 @Registration(ClassSerialization.class)
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
-		extends NodeEvent<H>
-		implements NodeEvent.WithoutDomBinding, Registration.Ensure {
+		extends NodeEvent<H> implements NodeEvent.WithoutDomBinding,
+		Registration.Ensure, Registration.AllSubtypesClient {
 	// Although this is the one 'dispatch' call, access it via context (since
 	// context is always required)
 	static void dispatch(Context context, Class<? extends ModelEvent> type,

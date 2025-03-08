@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
+import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -703,7 +705,16 @@ class Environment {
 		EventFrame.contextProvider.registerFrame(eventFrame);
 		Document.contextProvider.registerFrame(document);
 		Document.get().onDocumentEventSystemInit();
+		InstanceOracle.DispatchRefProvider.context
+				.set(new DispatchRefProviderImpl());
 		GWTBridgeHeadless.inClient.set(true);
+	}
+
+	class DispatchRefProviderImpl extends InstanceOracle.DispatchRefProvider {
+		@Override
+		public Consumer<Runnable> getDispatch() {
+			return access()::invoke;
+		}
 	}
 
 	private void exitContext() {

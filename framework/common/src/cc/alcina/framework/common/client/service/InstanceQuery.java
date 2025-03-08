@@ -24,7 +24,8 @@ import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 public final class InstanceQuery implements TreeSerializable {
 	@Bean(PropertySource.FIELDS)
 	@Registration.Self
-	public abstract static class Parameter<V> implements TreeSerializable {
+	public abstract static class Parameter<V>
+			implements TreeSerializable, Registration.AllSubtypes {
 		public V value;
 
 		/*

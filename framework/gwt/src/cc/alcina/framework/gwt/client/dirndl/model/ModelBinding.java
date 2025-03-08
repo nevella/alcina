@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Ref;
@@ -45,6 +46,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
  * <p>
  * The {@link IfNotEqual} interface can be used to prevent bindings from
  * actually firing if the existing property value is 'good enough'
+ * 
+ * <p>
+ * One of the nicest bits of this is {@link #dispatchRef} - avoiding *a lot* of
+ * the threading cruft of traditional desktop apps by mandating that a
+ * multi-threaded (romcom) app propagate changes - and thus UI mutations - on
+ * the app's UI thread. There's a similar system for {@link InstanceOracle}
  * 
  * @param <T>
  */

@@ -58,3 +58,16 @@ it breaks stuff! always history.replace for any cascaded changes
 # ui - emit cleanup before changing global state
 
 see cc.alcina.framework.servlet.component.traversal.LayerFilterEditor.FilterSuggestor.onSelectionChanged(SelectionChanged event)
+
+# dirndl - event reemission of the same type
+
+if an event handler reemits an event of the same type, but with (say) more data, make sure to check reemit:
+
+```
+if (event.getModel()!=null) {
+	event.bubble();
+	return;
+}
+event.reemitAs(this, ModelEvent.class,
+some data);
+```

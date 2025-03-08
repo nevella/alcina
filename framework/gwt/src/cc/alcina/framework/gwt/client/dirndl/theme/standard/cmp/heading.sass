@@ -43,3 +43,18 @@
   box-sizing: border-box
   background: white
   color: #888
+
+@mixin heading-actions
+  margin:0 0 0.5rem
+  display: flex
+  width: 100%
+  font-weight: bold
+  justify-content: space-between
+
+  > actions
+    font-weight: normal
+    display: flex
+    gap: 1em
+
+    a
+      cursor: pointer

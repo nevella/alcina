@@ -2293,9 +2293,25 @@ public class DomainStore implements IDomainStore {
 	public static class Awaiter extends InstanceProvider.Awaiter<DomainStore> {
 		@Override
 		protected void start(Query<DomainStore> query) {
+			new AwaitingWriteableStore().publish();
 			DomainStore.topicStoreLoadingComplete
 					.addWithPublishedCheck(this::loaded);
+			if (!DomainStore.hasStores()) {
+				/*
+				 * early devconsole init, otherwise we'd need a publishing
+				 * history
+				 */
+				try {
+					Thread.sleep(500);
+				} catch (Exception e) {
+					throw WrappedRuntimeException.wrap(e);
+				}
+				new AwaitingWriteableStore().publish();
+			}
 		}
+	}
+
+	public static class AwaitingWriteableStore implements ProcessObservable {
 	}
 
 	public static void onAppSpecificLoadComplete() {

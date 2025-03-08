@@ -28,6 +28,11 @@ public class HeadingActions extends Model.All {
 		this.heading = heading;
 	}
 
+	public HeadingActions addAction(Model action) {
+		actions.add(action);
+		return this;
+	}
+
 	public HeadingActions
 			withModelActions(Class<? extends ModelEvent>... eventClasses) {
 		Arrays.stream(eventClasses).map(Link::of).forEach(actions::add);

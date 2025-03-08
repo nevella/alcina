@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
@@ -61,7 +62,7 @@ import cc.alcina.framework.gwt.client.util.HasBind;
  * established, it shouldn't be removed - rather eviction should cause result
  * instances to be evicted (and unbind of requestors removes the requestor refs)
  * 
- * 
+ * See ModelBinding for more docs on UI environment dispatch
  */
 @Registration.Singleton
 public class InstanceOracle {
@@ -124,7 +125,10 @@ public class InstanceOracle {
 	 */
 	static class ProviderQueries<T> {
 		/**
-		 * Models how the provider has satisfied this particular query
+		 * Models how the provider has satisfied this particular query. The
+		 * check against lastAccepted instance prevents possible
+		 * double-consumption due to the provider calling back (with the
+		 * instance) during submit()
 		 */
 		class QueryState {
 			Query<T> query;
@@ -133,8 +137,11 @@ public class InstanceOracle {
 
 			T lastAcceptedInstance;
 
+			Consumer<Runnable> dispatch;
+
 			QueryState(Query<T> query) {
 				this.query = query;
+				dispatch = DispatchRefProvider.get().getDispatch();
 			}
 
 			void acceptInstance() {
@@ -142,7 +149,10 @@ public class InstanceOracle {
 						&& query.instanceConsumer != null
 						&& lastAcceptedInstance != instance) {
 					lastAcceptedInstance = instance;
-					query.instanceConsumer.accept(lastAcceptedInstance);
+					// this possibly causes query.instanceConsumer to be called
+					// on the originating (UI) thread
+					dispatch.accept(() -> query.instanceConsumer
+							.accept(lastAcceptedInstance));
 				}
 			}
 		}
@@ -187,10 +197,15 @@ public class InstanceOracle {
 
 		/*
 		 * both sync + async instance provision route back to here
+		 * 
+		 * note this is not synchronized (can't be, since it might easily
+		 * conflict with await()) - but it calls into passToConsumers, which is.
+		 * That path has been checked
 		 */
 		void acceptInstance(T instance) {
 			this.instance = instance;
 			awaitLatch.countDown();
+			passToConsumers();
 		}
 
 		synchronized void add(Query<T> query) {
@@ -372,6 +387,19 @@ public class InstanceOracle {
 		public Query<T> withAsync(boolean async) {
 			this.async = async;
 			return this;
+		}
+	}
+
+	public static class DispatchRefProvider {
+		public static LooseContext.Key<DispatchRefProvider> context = LooseContext
+				.key(DispatchRefProvider.class, "context");
+
+		static DispatchRefProvider get() {
+			return context.optional().orElse(new DispatchRefProvider());
+		}
+
+		public Consumer<Runnable> getDispatch() {
+			return Runnable::run;
 		}
 	}
 }

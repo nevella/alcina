@@ -39,7 +39,6 @@ import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.extras.dev.console.DevHelper.MessagingWriter;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -55,6 +54,7 @@ import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResol
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObserver.AppDebug;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -71,6 +71,8 @@ import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore.AwaitingWriteableStore;
 import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.registry.ClassMetadata;
@@ -703,6 +705,19 @@ public abstract class DevHelper {
 	public void initTopics() {
 		ServletLayerTopics.topicRestartConsole
 				.add(() -> DevConsole.get().restart());
+		new AwaitingWriteableStoreObserver().bind();
+	}
+
+	class AwaitingWriteableStoreObserver
+			implements ProcessObserver<DomainStore.AwaitingWriteableStore> {
+		@Override
+		public void topicPublished(AwaitingWriteableStore message) {
+			try {
+				DevConsole.get().ensureDomainStore();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
 	}
 
 	public String reloadConfigurationFile() {

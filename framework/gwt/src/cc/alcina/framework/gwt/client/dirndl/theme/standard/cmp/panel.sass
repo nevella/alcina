@@ -1,20 +1,9 @@
 @use '../../theme/color'
+@use 'heading'
 
 @mixin heading
   > heading, > heading-actions
-    margin:0 0 0.5rem
-    display: flex
-    width: 100%
-    font-weight: bold
-    justify-content: space-between
-
-  > heading-actions > actions
-    font-weight: normal
-    display: flex
-    gap: 1em
-
-    a
-      cursor: pointer
+    @include heading.heading-actions
 
 @mixin content
   display: flex
