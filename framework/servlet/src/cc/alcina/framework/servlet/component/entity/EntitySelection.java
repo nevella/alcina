@@ -88,6 +88,7 @@ public class EntitySelection extends AbstractSelection<Entity> {
 				entity.domain().ensurePopulated();
 				id = entity.toStringId();
 				Reflections.at(selection.entityType()).properties().stream()
+						.filter(Property::isReadable)
 						.sorted(Comparator.comparing(Property::getName))
 						.map(p -> new PropertyValue(selection, p))
 						.forEach(pv -> pv.addTo(propertyValues));

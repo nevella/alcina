@@ -8,8 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -249,6 +247,7 @@ class EntityTraversalQueryLayer extends Layer
 
 	void processEntitySelection(EntitySelection selection) {
 		Reflections.at(selection.entityType()).properties().stream()
+				.filter(Property::isReadable)
 				.sorted(Comparator.comparing(Property::getName))
 				.map(p -> new PropertySelection(selection, p))
 				.forEach(this::select);
