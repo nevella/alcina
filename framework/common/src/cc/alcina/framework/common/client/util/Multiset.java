@@ -155,6 +155,15 @@ public class Multiset<K, V extends Set> implements Serializable {
 		}
 	}
 
+	public Multiset withInitialKeys(K[] keys) {
+		return withInitialKeys(List.of(keys));
+	}
+
+	public Multiset withInitialKeys(Collection<K> keys) {
+		keys.forEach(this::getAndEnsure);
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return isEmpty() ? "{}" : CommonUtils.join(entrySet(), "\n");
