@@ -67,6 +67,7 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.entity.SEUtilities.NestedNameJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
+import cc.alcina.framework.entity.util.TerminalStreams;
 import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.jscodeserver.JsCodeServerHttp;
 
@@ -81,6 +82,9 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 	 */
 	private static final Pattern STARTUP_FILE_PATTERN = Pattern
 			.compile(".*\\.(html|jsp)", Pattern.CASE_INSENSITIVE);
+	{
+		TerminalStreams.get().start();
+	}
 
 	/**
 	 * Startup development mode.
