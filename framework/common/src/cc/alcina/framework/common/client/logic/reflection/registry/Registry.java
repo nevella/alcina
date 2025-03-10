@@ -31,10 +31,13 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ClassPair;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
  * In place of dependency injection and JNDI...we have...the registry
@@ -196,6 +199,15 @@ public class Registry {
 		LookupTree<ImplementationData> lookup = new LookupTree<>();
 
 		<V> V ensure(Query<V> query, boolean throwIfNotNull) {
+			// FIXME - low - all routes to singletons should probably go via
+			// this (and singletons should allow an arbitrary-length key
+			// registration list)
+			if (query.keys.size() > 1) {
+				V singleton = (V) singletons.byClassKey(query.type, query.keys);
+				if (singleton != null) {
+					return singleton;
+				}
+			}
 			ImplementationData implementation = implementation(query,
 					throwIfNotNull, true);
 			return implementation == null ? null
@@ -831,11 +843,9 @@ public class Registry {
 					Registration.Priority._DEFAULT);
 		}
 
-		public void singleton(Class type, Class key0, Object implementation) {
-			/*
-			 * multi-key environment registration only
-			 */
-			throw new UnsupportedOperationException();
+		public void singleton(Class type, Class key, Object implementation) {
+			List<Class> keys = List.of(type, key);
+			singletons.put(type, keys, implementation);
 		}
 
 		// FIXME - reflection.2 - trim usage
@@ -973,12 +983,22 @@ public class Registry {
 		private Map<Class, Object> byClass = CollectionCreators.Bootstrap
 				.createConcurrentClassMap();
 
+		/*
+		 * type, key, impl
+		 */
+		MultikeyMap<Object> multikeyImplementations = new UnsortedMultikeyMap<>(
+				2);
+
 		boolean contains(Class singletonClass) {
 			return byClass.containsKey(singletonClass);
 		}
 
 		<V> V byClass(Class<V> type) {
 			return (V) byClass.get(type);
+		}
+
+		synchronized <V> V byClassKey(Class<V> type, List<Class> keys) {
+			return (V) multikeyImplementations.get(type, keys.get(1));
 		}
 
 		Object ensure(Class singletonClass) {
@@ -998,6 +1018,20 @@ public class Registry {
 					byClass.put(singletonClass, value);
 				}
 				return value;
+			}
+		}
+
+		void put(Class type, List<Class> keys, Object implementation) {
+			synchronized (this) {
+				Object existing = byClassKey(type, keys);
+				// a singleton can be registered to multiple keys, so the logic
+				// of this check is correct
+				if (existing != null && existing != implementation) {
+					throw new IllegalStateException(Ax.format(
+							"Existing registration of singleton - %s\n\t:: %s",
+							type.getName(), existing.getClass().getName()));
+				}
+				multikeyImplementations.put(type, keys.get(1), implementation);
 			}
 		}
 

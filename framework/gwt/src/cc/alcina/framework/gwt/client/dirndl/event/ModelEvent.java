@@ -8,7 +8,7 @@ import com.google.web.bindery.event.shared.SimpleEventBus;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
-import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ClassSerialization;
@@ -93,7 +93,6 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 				((SimpleEventBus) Client.eventBus()).fireEventFromSource(
 						modelEvent, context.node, List.of(handler.get()));
 			} else {
-				int debug = 3;
 				Optional<TopLevelCatchallHandler> catchallHandler = Registry
 						.optional(TopLevelCatchallHandler.class);
 				if (catchallHandler.isPresent()) {
@@ -255,6 +254,8 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	 @formatter:on
 	 */
 	// @Registration.NonGenericSubtypes(TopLevelHandler.class)
+	@Reflected
+	@EnvironmentRegistration
 	public static interface TopLevelHandler<M extends ModelEvent>
 			extends EventHandler, ModelEvent.Handler {
 	}

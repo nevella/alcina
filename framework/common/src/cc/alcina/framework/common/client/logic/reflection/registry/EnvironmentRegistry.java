@@ -334,15 +334,16 @@ public class EnvironmentRegistry extends Registry {
 	 * Register a collection of types for this environment, as singletons, at
 	 * points defined by their EnvironmentOptionalRegistration
 	 */
-	public static void registerEnvironmentOptionals(Class<?>... types) {
-		Arrays.stream(types).forEach(type -> {
-			ClassReflector<?> reflector = Reflections.at(type);
+	public static void
+			registerEnvironmentOptionals(Class<?>... implementationTypes) {
+		Arrays.stream(implementationTypes).forEach(implementationType -> {
+			ClassReflector<?> reflector = Reflections.at(implementationType);
 			EnvironmentOptionalRegistration registration = reflector
 					.annotation(EnvironmentOptionalRegistration.class);
 			Object impl = reflector.newInstance();
 			Registration instanceRegistration = registration.value();
 			Class[] keys = instanceRegistration.value();
-			Registry.register().singleton(type, keys[0], keys[1]);
+			Registry.register().singleton(keys[0], keys[1], impl);
 		});
 	}
 }
