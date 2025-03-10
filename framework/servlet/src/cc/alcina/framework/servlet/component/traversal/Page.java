@@ -30,7 +30,6 @@ import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Timer;
-import cc.alcina.framework.entity.ConsoleUtil;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -207,13 +206,18 @@ class Page extends Model.All
 	static class ActivityRoute extends DirectedActivity
 			// register in spite of non-public access
 			implements Registration.AllSubtypes, PlaceUpdateable,
-			ModelEvent.DelegatesDispatch {
+			ModelEvent.DelegatesDispatch,
+			ModelEvents.TopLevelMissedEvent.Emitter {
 		@Directed
 		Page page;
+
+		@Directed
+		Model eventHandlerCustomisation;
 
 		@Override
 		public void onBeforeRender(BeforeRender event) {
 			page = new Page();
+			eventHandlerCustomisation = Ui.get().getEventHandlerCustomisation();
 			super.onBeforeRender(event);
 		}
 

@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -9,11 +11,15 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentOptionalRegistration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
  * <p>
@@ -28,6 +34,19 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
  * Initially, the per-environment singletons must be manually registered. This
  * could be replaced with marking the per-environment singletons with a
  * particular interface
+ * <p>
+ * If a class is annotated with {@link Registration.EnvironmentSingleton} and
+ * registered with the {@link Registry} - (note the same class is registered for
+ * all Environments - that's not configurable) - it will be returned as the
+ * singleton for the current environment
+ * <p>
+ * If a class is annotated with {@link Registration.EnvironmentRegistration} and
+ * registered with the {@link Registry} - generally via
+ * <code>Registry.register().singleton([Key].class,
+					[Impl]);</code> - it will be returned as the singleton for
+ * the current environment. So this is the annotation to use for a situation
+ * (say TraversalBrowser vs EntityBrowser) where the implementation would be
+ * different, depending on the initial context
  */
 public class EnvironmentRegistry extends Registry {
 	static final String CONTEXT_REGISTRY = EnvironmentRegistry.class.getName()
@@ -103,7 +122,7 @@ public class EnvironmentRegistry extends Registry {
 		Query<V> delegateQuery() {
 			Query<V> delegateQuery = delegate().query0();
 			delegateQuery.type = type;
-			delegateQuery.classes = classes;
+			delegateQuery.keys = keys;
 			return delegateQuery;
 		}
 
@@ -114,16 +133,13 @@ public class EnvironmentRegistry extends Registry {
 
 		@Override
 		public V impl() {
-			if (type.getName().contains("ReflectiveRpcRemoteServiceAsync")) {
-				int debug = 3;
-			}
 			boolean hasEnvironmentSingleton = hasEnvironmentSingleton(type);
 			boolean hasEnvironmentRegistration = hasEnvironmentRegistration(
 					type);
 			if (hasEnvironmentSingleton) {
 				return (V) singletons.ensure(type);
 			} else if (hasEnvironmentRegistration) {
-				return (V) register.get(type);
+				return (V) register.get(type, keys);
 			} else {
 				return delegateQuery().impl();
 			}
@@ -136,7 +152,14 @@ public class EnvironmentRegistry extends Registry {
 
 		@Override
 		public Optional<V> optional() {
-			return delegateQuery().optional();
+			boolean hasEnvironmentSingleton = hasEnvironmentSingleton(type);
+			boolean hasEnvironmentRegistration = hasEnvironmentRegistration(
+					type);
+			if (hasEnvironmentRegistration || hasEnvironmentSingleton) {
+				return Optional.ofNullable(impl());
+			} else {
+				return delegateQuery().optional();
+			}
 		}
 
 		@Override
@@ -197,8 +220,22 @@ public class EnvironmentRegistry extends Registry {
 		Map<Class<?>, Object> environmentImplementations = AlcinaCollections
 				.newLinkedHashMap();
 
-		public <V> V get(Class<V> type) {
-			return (V) environmentImplementations.get(type);
+		/*
+		 * type, key, impl
+		 */
+		MultikeyMap<Object> environmentMultikeyImplementations = new UnsortedMultikeyMap<>(
+				2);
+
+		// note that type === keys[0]
+		public <V> V get(Class<V> type, List<Class> keys) {
+			if (keys.size() == 1) {
+				return (V) environmentImplementations.get(type);
+			} else if (keys.size() == 2) {
+				return (V) environmentMultikeyImplementations.get(type,
+						keys.get(1));
+			} else {
+				throw new UnsupportedOperationException();
+			}
 		}
 
 		@Override
@@ -235,6 +272,13 @@ public class EnvironmentRegistry extends Registry {
 			Preconditions
 					.checkState(!environmentImplementations.containsKey(type));
 			environmentImplementations.put(type, implementation);
+		}
+
+		@Override
+		public void singleton(Class type, Class key, Object implementation) {
+			Preconditions.checkState(
+					!environmentMultikeyImplementations.containsKey(type, key));
+			environmentMultikeyImplementations.put(type, key, implementation);
 		}
 	}
 
@@ -284,5 +328,21 @@ public class EnvironmentRegistry extends Registry {
 	@Override
 	protected <V> Query<V> query0(Class<V> type) {
 		return new EnvironmentQuery<>(type);
+	}
+
+	/**
+	 * Register a collection of types for this environment, as singletons, at
+	 * points defined by their EnvironmentOptionalRegistration
+	 */
+	public static void registerEnvironmentOptionals(Class<?>... types) {
+		Arrays.stream(types).forEach(type -> {
+			ClassReflector<?> reflector = Reflections.at(type);
+			EnvironmentOptionalRegistration registration = reflector
+					.annotation(EnvironmentOptionalRegistration.class);
+			Object impl = reflector.newInstance();
+			Registration instanceRegistration = registration.value();
+			Class[] keys = instanceRegistration.value();
+			Registry.register().singleton(type, keys[0], keys[1]);
+		});
 	}
 }

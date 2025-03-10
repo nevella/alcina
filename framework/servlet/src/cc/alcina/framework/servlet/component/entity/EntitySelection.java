@@ -13,11 +13,14 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables.Single.PropertyValues;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class EntitySelection extends AbstractSelection<Entity> {
@@ -44,11 +47,30 @@ public class EntitySelection extends AbstractSelection<Entity> {
 	@Registration.NonGenericSubtypes(EntityTypeExtended.class)
 	public abstract static class EntityTypeExtended<E extends Entity>
 			extends Model.All implements Registration.AllSubtypes {
+		Link deleteLink;
+
 		@Directed.Exclude
 		protected E entity;
 
 		public void withEntity(E entity) {
 			this.entity = entity;
+			deleteLink = Link.of(ModelEvents.Delete.class)
+					.withModelEventData(entity);
+		}
+
+		public static class Base extends EntityTypeExtended<Entity> {
+		}
+
+		@Registration.NonGenericSubtypes(EntityDeletionHandler.class)
+		public abstract static class EntityDeletionHandler<E extends Entity>
+				implements Registration.AllSubtypes {
+			public void delete(E e) {
+				e.delete();
+				Transaction.commit();
+			}
+
+			public static class Base extends EntityDeletionHandler<Entity> {
+			}
 		}
 	}
 
@@ -79,12 +101,11 @@ public class EntitySelection extends AbstractSelection<Entity> {
 				if (entity == null) {
 					return;
 				}
-				Registry.query(EntityTypeExtended.class)
-						.addKeys(entity.entityClass()).optional()
-						.ifPresent(ete -> {
-							ete.withEntity(entity);
-							entityTypeExtended = ete;
-						});
+				EntityTypeExtended ete = Registry
+						.query(EntityTypeExtended.class)
+						.addKeys(entity.entityClass()).impl();
+				ete.withEntity(entity);
+				entityTypeExtended = ete;
 				entity.domain().ensurePopulated();
 				id = entity.toStringId();
 				Reflections.at(selection.entityType()).properties().stream()

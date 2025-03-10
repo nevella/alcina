@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentOptionalRegistration;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
@@ -34,7 +35,8 @@ public abstract class TraversalCommand<T, H extends NodeEvent.Handler>
 			void onReloadApp(ReloadApp event);
 		}
 
-		@Registration({ TopLevelHandler.class, ReloadApp.class })
+		@EnvironmentOptionalRegistration(@Registration({ TopLevelHandler.class,
+				ReloadApp.class }))
 		public static class HandlerImpl implements Handler, TopLevelHandler {
 			@Override
 			public void onReloadApp(ReloadApp event) {

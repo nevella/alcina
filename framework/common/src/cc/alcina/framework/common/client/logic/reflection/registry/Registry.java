@@ -646,36 +646,36 @@ public class Registry {
 	public class Query<V> {
 		Class<V> type;
 
-		List<Class> classes = new ArrayList<>();
+		List<Class> keys = new ArrayList<>();
 
 		Query() {
 		}
 
 		Query(Class<V> type) {
 			this.type = type;
-			classes.add(type);
+			keys.add(type);
 		}
 
 		public Query<V> addKeys(Class... keys) {
 			for (Class clazz : keys) {
-				classes.add(clazz);
+				this.keys.add(clazz);
 			}
 			return this;
 		}
 
 		public List<RegistryKey> asRegistrationKeys() {
 			// optimisation
-			if (classes.size() == 1) {
-				return List.of(registryKeys.get(classes.get(0)));
-			} else if (classes.size() == 2) {
-				return List.of(registryKeys.get(classes.get(0)),
-						registryKeys.get(classes.get(1)));
-			} else if (classes.size() == 3) {
-				return List.of(registryKeys.get(classes.get(0)),
-						registryKeys.get(classes.get(1)),
-						registryKeys.get(classes.get(2)));
+			if (keys.size() == 1) {
+				return List.of(registryKeys.get(keys.get(0)));
+			} else if (keys.size() == 2) {
+				return List.of(registryKeys.get(keys.get(0)),
+						registryKeys.get(keys.get(1)));
+			} else if (keys.size() == 3) {
+				return List.of(registryKeys.get(keys.get(0)),
+						registryKeys.get(keys.get(1)),
+						registryKeys.get(keys.get(2)));
 			} else {
-				return classes.stream().map(registryKeys::get)
+				return keys.stream().map(registryKeys::get)
 						.collect(Collectors.toList());
 			}
 		}
@@ -757,14 +757,14 @@ public class Registry {
 		 * (ContentDelivery.class,ContentDeliveryType_EMAIL.class)
 		 */
 		public Query<V> setKeys(Class... keys) {
-			classes.clear();
+			this.keys.clear();
 			return addKeys(keys);
 		}
 
 		Query<V> subQuery(Class<? extends V> subKey) {
 			Query query = new Query(type);
-			query.classes = classes.stream().collect(Collectors.toList());
-			query.classes.add(subKey);
+			query.keys = keys.stream().collect(Collectors.toList());
+			query.keys.add(subKey);
 			return query;
 		}
 
@@ -829,6 +829,13 @@ public class Registry {
 			add(registeringClass, Arrays.asList(keys),
 					Registration.Implementation.INSTANCE,
 					Registration.Priority._DEFAULT);
+		}
+
+		public void singleton(Class type, Class key0, Object implementation) {
+			/*
+			 * multi-key environment registration only
+			 */
+			throw new UnsupportedOperationException();
 		}
 
 		// FIXME - reflection.2 - trim usage

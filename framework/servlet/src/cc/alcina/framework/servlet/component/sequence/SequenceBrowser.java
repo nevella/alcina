@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.sequence;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -90,6 +91,8 @@ public class SequenceBrowser {
 		@Override
 		public void init() {
 			FmsForm.registerImplementations();
+			EnvironmentRegistry.registerEnvironmentOptionals(
+					SequenceBrowserCommand.ReloadApp.HandlerImpl.class);
 		}
 
 		@Override

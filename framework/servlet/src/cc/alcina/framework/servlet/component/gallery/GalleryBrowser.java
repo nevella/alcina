@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.component.gallery;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.HasStringRepresentation;
@@ -69,6 +70,8 @@ public class GalleryBrowser {
 		@Override
 		public void init() {
 			FmsForm.registerImplementations();
+			EnvironmentRegistry.registerEnvironmentOptionals(
+					GalleryBrowserCommand.ReloadApp.HandlerImpl.class);
 		}
 
 		@Override

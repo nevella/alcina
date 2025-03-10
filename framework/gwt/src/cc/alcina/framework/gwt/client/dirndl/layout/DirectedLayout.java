@@ -203,8 +203,19 @@ public class DirectedLayout implements AlcinaProcess {
 			Model dispatchDelegate = ((ModelEvent.DelegatesDispatch) sourceModel)
 					.provideDispatchDelegate();
 			if (dispatchDelegate != null) {
-				modelEvent.reemitAs(dispatchDelegate, modelEvent.getClass(),
-						modelEvent.getModel());
+				if (modelEvent instanceof ModelEvent.DescendantEvent) {
+					Context delegateDescentContext = NodeEvent.Context
+							.fromEvent(modelEvent,
+									dispatchDelegate.provideNode());
+					ModelEvent delegateDescentEvent = Reflections
+							.newInstance(modelEvent.getClass());
+					delegateDescentContext.setNodeEvent(delegateDescentEvent);
+					delegateDescentEvent.setModel(modelEvent.getModel());
+					ModelEventDispatch.dispatchDescent(delegateDescentEvent);
+				} else {
+					modelEvent.reemitAs(dispatchDelegate, modelEvent.getClass(),
+							modelEvent.getModel());
+				}
 				return;
 			}
 		}

@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -25,9 +26,13 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpContentProvider;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelCatchallHandler;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
@@ -141,6 +146,12 @@ public class TraversalBrowser {
 			StatusModule.get();
 			Registry.register().singleton(HelpContentProvider.class,
 					new HelpContentProviderImpl());
+			EnvironmentRegistry.registerEnvironmentOptionals(
+					TraversalCommand.ReloadApp.HandlerImpl.class);
+		}
+
+		public static class TopLevelCatchallHandlerImpl
+				extends ModelEvent.TopLevelCatchallHandler.MissedEventEmitter {
 		}
 
 		@Override
@@ -168,8 +179,11 @@ public class TraversalBrowser {
 			injectCss("res/css/styles.css");
 			Client.get().initAppHistory();
 			DirectedLayout layout = new DirectedLayout();
-			layout.render(resolver(), new RootArea()).getRendered()
-					.appendToRoot();
+			RootArea rootArea = new RootArea();
+			layout.render(resolver(), rootArea).getRendered().appendToRoot();
+			Registry.register().singleton(TopLevelCatchallHandler.class,
+					new TopLevelCatchallHandlerImpl()
+							.withEmittingModel(rootArea));
 			return layout;
 		}
 
@@ -248,6 +262,10 @@ public class TraversalBrowser {
 			}
 			selectionPath.type = selectionType;
 			return selectionPath;
+		}
+
+		protected Model getEventHandlerCustomisation() {
+			return null;
 		}
 	}
 

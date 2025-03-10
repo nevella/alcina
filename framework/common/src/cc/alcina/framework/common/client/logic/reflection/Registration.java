@@ -100,9 +100,14 @@ public @interface Registration {
 	Class[] value();
 
 	/**
+	 * <p>
 	 * A marker interface, all subtypes should be registered irrespective of
 	 * public/abstract/interface rules [not visible in compiled gwt code, use
 	 * AllSubtypesClient for that]
+	 * 
+	 * <p>
+	 * To have the a base implementation, make a subtype that parameterizes
+	 * Object - the supertype should be abstract
 	 *
 	 */
 	public interface AllSubtypes {
@@ -595,5 +600,17 @@ public @interface Registration {
 	@ClientVisible
 	@Target({ ElementType.TYPE })
 	public @interface EnvironmentRegistration {
+	}
+
+	/*
+	 * Annotates a type with
+	 * "if registered in the environment (as a singleton), register with these keys"
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@ClientVisible
+	@Target({ ElementType.TYPE })
+	public @interface EnvironmentOptionalRegistration {
+		Registration value();
 	}
 }

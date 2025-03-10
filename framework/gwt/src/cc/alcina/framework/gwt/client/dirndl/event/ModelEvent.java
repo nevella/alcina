@@ -7,6 +7,8 @@ import com.google.gwt.event.shared.EventHandler;
 import com.google.web.bindery.event.shared.SimpleEventBus;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ClassSerialization;
@@ -14,6 +16,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.HasDisplayName.ClassDisplayName;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.TopLevelMissedEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -90,6 +93,7 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 				((SimpleEventBus) Client.eventBus()).fireEventFromSource(
 						modelEvent, context.node, List.of(handler.get()));
 			} else {
+				int debug = 3;
 				Optional<TopLevelCatchallHandler> catchallHandler = Registry
 						.optional(TopLevelCatchallHandler.class);
 				if (catchallHandler.isPresent()) {
@@ -194,19 +198,63 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	public interface NoHandlerRequired {
 	}
 
+	@EnvironmentRegistration
 	public static interface TopLevelCatchallHandler {
 		void handle(ModelEvent unhandledEvent);
+
+		public static class MissedEventEmitter
+				implements TopLevelCatchallHandler {
+			private Emitter emittingModel;
+
+			public <MEE extends MissedEventEmitter> MEE withEmittingModel(
+					TopLevelMissedEvent.Emitter emittingModel) {
+				this.emittingModel = emittingModel;
+				return (MEE) this;
+			}
+
+			int depth = 0;
+
+			@Override
+			public void handle(ModelEvent unhandledEvent) {
+				try {
+					/*
+					 * the depth check prevents infinite recursive loops
+					 */
+					if (depth > 0) {
+						return;
+					}
+					depth++;
+					((Model) emittingModel).emitEvent(TopLevelMissedEvent.class,
+							unhandledEvent);
+				} finally {
+					depth--;
+				}
+			}
+		}
 	}
 
 	/**
+	 * <p>
 	 * Marker for top-level handlers of unhandled ModelEvents (basically
 	 * links/actions where the context doesn't matter, such as 'logout' or
 	 * 'privacy')
 	 *
+	 * <p>
+	 * The handlers are currently singletons (since EnvironmentRegistration only
+	 * supports singletons)
 	 *
 	 *
 	 */
-	@Registration.NonGenericSubtypes(TopLevelHandler.class)
+	/*
+	 * Nope, this leaks. Instead annotate subtypes as so:
+	 @formatter:off
+
+@Registration.EnvironmentOptionalRegistration(@Registration({
+		TopLevelHandler.class, CreateDocument.class }))
+
+	 @formatter:on
+	 */
+	// @Registration.NonGenericSubtypes(TopLevelHandler.class)
 	public static interface TopLevelHandler<M extends ModelEvent>
 			extends EventHandler, ModelEvent.Handler {
 	}

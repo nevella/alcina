@@ -810,6 +810,11 @@ body > page > properties bean-editor entity-extended {
   flex-direction: column;
   gap: 0.5rem;
 }
+body > page > properties bean-editor entity-extended entity-type-extended {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
 body > page > properties bean-editor entity-extended a {
   text-decoration: none;
 }
@@ -1164,12 +1169,12 @@ help > heading, help > heading-actions {
   font-weight: bold;
   justify-content: space-between;
 }
-help > heading-actions > actions {
+help > heading > actions, help > heading-actions > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-help > heading-actions > actions a {
+help > heading > actions a, help > heading-actions > actions a {
   cursor: pointer;
 }
 help > key-values {
@@ -1280,12 +1285,12 @@ overlay.string-area string-area-expanded > heading, overlay.string-area string-a
   font-weight: bold;
   justify-content: space-between;
 }
-overlay.string-area string-area-expanded > heading-actions > actions {
+overlay.string-area string-area-expanded > heading > actions, overlay.string-area string-area-expanded > heading-actions > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-overlay.string-area string-area-expanded > heading-actions > actions a {
+overlay.string-area string-area-expanded > heading > actions a, overlay.string-area string-area-expanded > heading-actions > actions a {
   cursor: pointer;
 }
 overlay.string-area string-area-expanded > heading-actions > heading {
