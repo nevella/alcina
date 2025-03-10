@@ -1290,4 +1290,13 @@ public class Document extends Node
 		throw new UnsupportedOperationException(
 				"Unimplemented method 'ensureRemoteSelection'");
 	}
+
+	public void writeClipboardText(String clipboardText) {
+		invoke(() -> writeClipboardText0(clipboardText), Document.class,
+				"writeClipboardText0", null, List.of(clipboardText), false);
+	}
+
+	private native void writeClipboardText0(String clipboardText) /*-{
+    $wnd.navigator.clipboard.writeText(clipboardText);
+	}-*/;
 }
