@@ -1325,3 +1325,20 @@ overlay.string-area string-area-expanded > value {
   padding: 0.4rem;
   overflow: auto;
 }
+
+overlay.pre-text {
+  background: white;
+  user-select: none;
+  padding: 1rem 0;
+  border: solid 1px #ccc;
+  box-shadow: 0 16px 24px 2px rgba(0, 0, 0, 0.09), 0 6px 30px 5px rgba(0, 0, 0, 0.02), 0 8px 10px -5px rgba(0, 0, 0, 0.01);
+  padding: 1rem 2rem 2rem;
+  font-size: 1.1rem;
+}
+overlay.pre-text pre-text {
+  min-width: 30vw;
+  min-height: 30vh;
+  background: white;
+  display: block;
+  user-select: text;
+}

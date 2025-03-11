@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.component.traversal;
 
+import java.util.List;
+
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -81,6 +83,30 @@ public class TraversalEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onLayerSelectionChange(LayerSelectionChange event);
+		}
+	}
+
+	public static class ExecCommand
+			extends ModelEvent<String, ExecCommand.Handler> {
+		@Override
+		public void dispatch(ExecCommand.Handler handler) {
+			handler.onExecCommand(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onExecCommand(ExecCommand event);
+		}
+	}
+
+	public static class SelectionTableAreaChange
+			extends ModelEvent<List<?>, SelectionTableAreaChange.Handler> {
+		@Override
+		public void dispatch(SelectionTableAreaChange.Handler handler) {
+			handler.onSelectionTableAreaChange(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionTableAreaChange(SelectionTableAreaChange event);
 		}
 	}
 }

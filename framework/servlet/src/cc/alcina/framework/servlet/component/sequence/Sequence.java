@@ -125,7 +125,7 @@ public interface Sequence<T> {
 		}
 
 		static class Support {
-			public static void showAvailableCommands() {
+			static void showAvailableCommands() {
 				String message = Registry.query(CommandExecutor.class)
 						.implementations()
 						.map(qe -> Ax.format("%s - %s", qe.name(),

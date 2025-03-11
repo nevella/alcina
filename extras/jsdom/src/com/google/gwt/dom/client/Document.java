@@ -1297,6 +1297,10 @@ public class Document extends Node
 	}
 
 	private native void writeClipboardText0(String clipboardText) /*-{
-    $wnd.navigator.clipboard.writeText(clipboardText);
+	if($wnd.navigator.clipboard==null){
+		$wnd.alert('Cannot access clipboard in non-secure context')
+	}else{
+    	$wnd.navigator.clipboard.writeText(clipboardText);
+	}
 	}-*/;
 }

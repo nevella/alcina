@@ -15,6 +15,8 @@ import cc.alcina.framework.common.client.traversal.Selection.RowView;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.EmitDescent;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
@@ -67,6 +69,15 @@ public class SelectionTableArea extends Model.Fields
 		hasTable = new LayerToTable(layer, filteredLayerSelections);
 		selectionBindables = hasTable.getSelectionBindables();
 		appendRowSelectionTo = Ui.place().truncateTo(layer.index);
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (event.isBound()) {
+			emitEvent(TraversalEvents.SelectionTableAreaChange.class,
+					selectionBindables);
+		}
 	}
 
 	class LayerToTable implements Selection.HasTableRepresentation, IfNotEqual {

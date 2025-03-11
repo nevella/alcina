@@ -85,3 +85,17 @@ overlay > menu
   > choices
     @include choices.vertical
     margin-bottom: 0.5rem
+
+// TODO - make this a general style
+@mixin overlay
+  overlay.pre-text
+    @include context-menu.dropdown
+    padding: 1rem 2rem 2rem
+    font-size: 1.1rem
+
+    pre-text
+      min-width: 30vw
+      min-height: 30vh
+      background: white
+      display: block
+      user-select: text

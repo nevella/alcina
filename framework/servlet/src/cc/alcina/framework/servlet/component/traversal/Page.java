@@ -59,9 +59,11 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.T
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowKeyboardShortcuts;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.ExecCommand;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.LayerSelectionChange;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
+import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTableAreaChange;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingSelectionAreaHeight;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
@@ -92,9 +94,61 @@ class Page extends Model.All
 		TraversalEvents.LayerSelectionChange.Handler,
 		TraversalBrowserCommand.ToggleHelp.Handler,
 		ModelEvents.ApplicationHelp.Handler,
-		Selection.CopySelectionFilter.Handler, CopyToClipboardHandler {
-	public Page providePage() {
-		return this;
+		Selection.CopySelectionFilter.Handler, CopyToClipboardHandler,
+		TraversalEvents.ExecCommand.Handler,
+		TraversalEvents.SelectionTableAreaChange.Handler {
+	public static class CommandContextProviderImpl
+			implements CommandContext.Provider {
+		@Override
+		public Set<Class<? extends CommandContext>> getContexts() {
+			Set<Class<? extends CommandContext>> commandContexts = new LinkedHashSet<>();
+			commandContexts.add(appContext());
+			commandContexts.add(FlightEventCommand.CommandContext.class);
+			return commandContexts;
+		}
+
+		Class<? extends CommandContext> appContext() {
+			return TraversalBrowser.CommandContext.class;
+		}
+	}
+
+	/**
+	 * This activity hooks the Page up to the RootArea (the general routing
+	 * contract)
+	 */
+	@Directed.Delegating
+	@Bean(PropertySource.FIELDS)
+	@Registration({ DirectedActivity.class, TraversalPlace.class })
+	static class ActivityRoute extends DirectedActivity
+			// register in spite of non-public access
+			implements Registration.AllSubtypes, PlaceUpdateable,
+			ModelEvent.DelegatesDispatch,
+			ModelEvents.TopLevelMissedEvent.Emitter {
+		@Directed
+		Page page;
+
+		@Directed
+		Model eventHandlerCustomisation;
+
+		@Override
+		public void onBeforeRender(BeforeRender event) {
+			page = new Page();
+			eventHandlerCustomisation = Ui.get().getEventHandlerCustomisation();
+			super.onBeforeRender(event);
+		}
+
+		@Override
+		public boolean canUpdate(PlaceUpdateable otherActivity) {
+			/*
+			 * All place updates are handled by the Page
+			 */
+			return true;
+		}
+
+		@Override
+		public Model provideDispatchDelegate() {
+			return page;
+		}
 	}
 
 	static PackageProperties._Page properties = PackageProperties.page;
@@ -126,6 +180,9 @@ class Page extends Model.All
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	Timer observableObservedTimer;
+
+	@Property.Not
+	List<?> currentTableElements;
 
 	Page() {
 		this.ui = Ui.get();
@@ -188,156 +245,8 @@ class Page extends Model.All
 				.accept(this::updateStyles);
 	}
 
-	RenderedSelections renderedSelectionsIfVisible(SecondaryArea area) {
-		if (TraversalSettings.get().secondaryAreaDisplayMode.isVisible(area)) {
-			return new RenderedSelections(this, area);
-		} else {
-			return null;
-		}
-	}
-
-	/**
-	 * This activity hooks the Page up to the RootArea (the general routing
-	 * contract)
-	 */
-	@Directed.Delegating
-	@Bean(PropertySource.FIELDS)
-	@Registration({ DirectedActivity.class, TraversalPlace.class })
-	static class ActivityRoute extends DirectedActivity
-			// register in spite of non-public access
-			implements Registration.AllSubtypes, PlaceUpdateable,
-			ModelEvent.DelegatesDispatch,
-			ModelEvents.TopLevelMissedEvent.Emitter {
-		@Directed
-		Page page;
-
-		@Directed
-		Model eventHandlerCustomisation;
-
-		@Override
-		public void onBeforeRender(BeforeRender event) {
-			page = new Page();
-			eventHandlerCustomisation = Ui.get().getEventHandlerCustomisation();
-			super.onBeforeRender(event);
-		}
-
-		@Override
-		public boolean canUpdate(PlaceUpdateable otherActivity) {
-			/*
-			 * All place updates are handled by the Page
-			 */
-			return true;
-		}
-
-		@Override
-		public Model provideDispatchDelegate() {
-			return page;
-		}
-	}
-
-	void updateStyles(TraversalSettings settings) {
-		FormatBuilder builder = new FormatBuilder();
-		{
-			/*
-			 * body > page grid-template-areas - default:
-			 * "header header header header" "layers layers layers props"
-			 * "input input output output";
-			 */
-			List<String> rows = new ArrayList<>();
-			rows.add("header header header header");
-			switch (settings.propertyDisplayMode) {
-			case QUARTER_WIDTH:
-				rows.add("layers layers layers props");
-				break;
-			case HALF_WIDTH:
-				rows.add("layers layers props props");
-				break;
-			case FULL_WIDTH:
-				rows.add("props props props props");
-				builder.line("body > page > layers{display: none;}");
-				break;
-			case NONE:
-				rows.add("layers layers layers layers");
-				builder.line("body > page > properties{display: none;}");
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
-			builder.line("body > page {grid-template-rows: 50px 1fr %spx;}",
-					settings.selectionAreaHeight);
-			switch (settings.secondaryAreaDisplayMode) {
-			case INPUT_OUTPUT:
-				rows.add("input input output output");
-				builder.line("body > page > selections.table{display: none;}");
-				break;
-			case INPUT:
-				rows.add("input input input input");
-				builder.line("body > page > selections.output{display: none;}");
-				builder.line("body > page > selections.table{display: none;}");
-				break;
-			case OUTPUT:
-				rows.add("output output output output");
-				builder.line("body > page > selections.input{display: none;}");
-				builder.line("body > page > selections.table{display: none;}");
-				break;
-			case TABLE:
-				rows.add("table table table table");
-				builder.line("body > page > selections.input{display: none;}");
-				builder.line("body > page > selections.output{display: none;}");
-				break;
-			case NONE:
-				builder.line("body > page > selections{display: none;}");
-				builder.line("body > page {grid-template-rows: 50px 1fr;}");
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
-			//
-			String areas = rows.stream().map(s -> Ax.format("\"%s\"", s))
-					.collect(Collectors.joining(" "));
-			builder.line("body > page {grid-template-areas: %s;}", areas);
-		}
-		String text = builder.toString();
-		if (styleElement == null) {
-			styleElement = StyleInjector.createAndAttachElement(text);
-		} else {
-			((Text) styleElement.getChild(0)).setTextContent(text);
-		}
-	}
-
-	TraversalPlace place() {
-		return Ui.place();
-	}
-
-	void clearPlaceSelections() {
-		place().clearSelections();
-	}
-
-	@Property.Not
-	SelectionMarkup getSelectionMarkup() {
-		return ui.getSelectionMarkup();
-	}
-
-	void goPreserveScrollPosition(TraversalPlace place) {
-		Element scrollableLayers = layers.layersContainer.provideElement();
-		int top = scrollableLayers.getScrollTop();
-		place.go();
-		// layers.provideElement().getChildElement(1).setScrollTop(top);
-	}
-
-	public static class CommandContextProviderImpl
-			implements CommandContext.Provider {
-		Class<? extends CommandContext> appContext() {
-			return TraversalBrowser.CommandContext.class;
-		}
-
-		@Override
-		public Set<Class<? extends CommandContext>> getContexts() {
-			Set<Class<? extends CommandContext>> commandContexts = new LinkedHashSet<>();
-			commandContexts.add(appContext());
-			commandContexts.add(FlightEventCommand.CommandContext.class);
-			return commandContexts;
-		}
+	public Page providePage() {
+		return this;
 	}
 
 	@Override
@@ -358,20 +267,6 @@ class Page extends Model.All
 		changeSelectionType(selectionType);
 	}
 
-	void changeSelectionType(SelectionType selectionType) {
-		if (Ui.place().firstSelectionType() == selectionType) {
-			return;
-		}
-		TraversalPlace to = place().copy().withSelectionType(selectionType);
-		goPreserveScrollPosition(to);
-	}
-
-	void setHistory(
-			RemoteComponentObservables<SelectionTraversal>.ObservableEntry history) {
-		set(properties.history, this.history, history,
-				() -> this.history = history);
-	}
-
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
@@ -381,10 +276,6 @@ class Page extends Model.All
 		} else {
 			observableObservedTimer.cancel();
 		}
-	}
-
-	void observableAccessed() {
-		TraversalObserver.get().observableObserved(Ui.traversal());
 	}
 
 	@Override
@@ -487,5 +378,132 @@ class Page extends Model.All
 			SetSettingSelectionAreaHeight event) {
 		String model = event.getModel();
 		TraversalBrowser.Ui.get().settings.putSelectionAreaHeight(model);
+	}
+
+	@Override
+	public void onExecCommand(ExecCommand event) {
+		TraversalExecCommand.Support.execCommand(event, currentTableElements,
+				event.getModel());
+	}
+
+	@Override
+	public void onSelectionTableAreaChange(SelectionTableAreaChange event) {
+		currentTableElements = event.getModel();
+	}
+
+	RenderedSelections renderedSelectionsIfVisible(SecondaryArea area) {
+		if (TraversalSettings.get().secondaryAreaDisplayMode.isVisible(area)) {
+			return new RenderedSelections(this, area);
+		} else {
+			return null;
+		}
+	}
+
+	void updateStyles(TraversalSettings settings) {
+		FormatBuilder builder = new FormatBuilder();
+		{
+			/*
+			 * body > page grid-template-areas - default:
+			 * "header header header header" "layers layers layers props"
+			 * "input input output output";
+			 */
+			List<String> rows = new ArrayList<>();
+			rows.add("header header header header");
+			switch (settings.propertyDisplayMode) {
+			case QUARTER_WIDTH:
+				rows.add("layers layers layers props");
+				break;
+			case HALF_WIDTH:
+				rows.add("layers layers props props");
+				break;
+			case FULL_WIDTH:
+				rows.add("props props props props");
+				builder.line("body > page > layers{display: none;}");
+				break;
+			case NONE:
+				rows.add("layers layers layers layers");
+				builder.line("body > page > properties{display: none;}");
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+			builder.line("body > page {grid-template-rows: 50px 1fr %spx;}",
+					settings.selectionAreaHeight);
+			switch (settings.secondaryAreaDisplayMode) {
+			case INPUT_OUTPUT:
+				rows.add("input input output output");
+				builder.line("body > page > selections.table{display: none;}");
+				break;
+			case INPUT:
+				rows.add("input input input input");
+				builder.line("body > page > selections.output{display: none;}");
+				builder.line("body > page > selections.table{display: none;}");
+				break;
+			case OUTPUT:
+				rows.add("output output output output");
+				builder.line("body > page > selections.input{display: none;}");
+				builder.line("body > page > selections.table{display: none;}");
+				break;
+			case TABLE:
+				rows.add("table table table table");
+				builder.line("body > page > selections.input{display: none;}");
+				builder.line("body > page > selections.output{display: none;}");
+				break;
+			case NONE:
+				builder.line("body > page > selections{display: none;}");
+				builder.line("body > page {grid-template-rows: 50px 1fr;}");
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+			//
+			String areas = rows.stream().map(s -> Ax.format("\"%s\"", s))
+					.collect(Collectors.joining(" "));
+			builder.line("body > page {grid-template-areas: %s;}", areas);
+		}
+		String text = builder.toString();
+		if (styleElement == null) {
+			styleElement = StyleInjector.createAndAttachElement(text);
+		} else {
+			((Text) styleElement.getChild(0)).setTextContent(text);
+		}
+	}
+
+	TraversalPlace place() {
+		return Ui.place();
+	}
+
+	void clearPlaceSelections() {
+		place().clearSelections();
+	}
+
+	@Property.Not
+	SelectionMarkup getSelectionMarkup() {
+		return ui.getSelectionMarkup();
+	}
+
+	void goPreserveScrollPosition(TraversalPlace place) {
+		Element scrollableLayers = layers.layersContainer.provideElement();
+		int top = scrollableLayers.getScrollTop();
+		place.go();
+		// layers.provideElement().getChildElement(1).setScrollTop(top);
+	}
+
+	void changeSelectionType(SelectionType selectionType) {
+		if (Ui.place().firstSelectionType() == selectionType) {
+			return;
+		}
+		TraversalPlace to = place().copy().withSelectionType(selectionType);
+		goPreserveScrollPosition(to);
+	}
+
+	void setHistory(
+			RemoteComponentObservables<SelectionTraversal>.ObservableEntry history) {
+		set(properties.history, this.history, history,
+				() -> this.history = history);
+	}
+
+	void observableAccessed() {
+		TraversalObserver.get().observableObserved(Ui.traversal());
 	}
 }
