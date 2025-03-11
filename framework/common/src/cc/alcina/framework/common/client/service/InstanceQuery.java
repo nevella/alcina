@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesP
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
-import cc.alcina.framework.servlet.component.sequence.SequenceSearchDefinition;
 
 /**
  * Specifies an instance that will be produced by an InstanceProvider - this can

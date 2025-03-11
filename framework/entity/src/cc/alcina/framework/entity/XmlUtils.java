@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,6 +51,8 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.xerces.parsers.DOMParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMImplementation;
@@ -89,6 +92,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HtmlConstants;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
@@ -96,6 +100,8 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap;
  * @author Nick Reddel
  */
 public class XmlUtils {
+	static Logger logger = LoggerFactory.getLogger(XmlUtils.class);
+
 	private static boolean useJAXP;
 
 	public static boolean noTransformerCaching;
@@ -1888,5 +1894,26 @@ public class XmlUtils {
 			}
 		}
 		return doc.getDocumentElementNode().getInnerMarkup();
+	}
+
+	public static void cleanNestedAnchors(Document w3cDoc) {
+		DomDocument doc = DomDocument.from(w3cDoc);
+		Ref<Boolean> delta = Ref.of(false);
+		AtomicInteger deltaCount = new AtomicInteger(0);
+		do {
+			delta.set(false);
+			doc.stream().filter(n -> n.tagIs("a")).forEach(a -> {
+				DomNode ancestorA = a.ancestors().get("a");
+				if (ancestorA != null) {
+					a.strip();
+					ancestorA.relative().insertAfterThis(a);
+					delta.set(true);
+					deltaCount.incrementAndGet();
+				}
+			});
+		} while (delta.get());
+		if (deltaCount.get() > 0) {
+			logger.warn("Fixed {} nested A tags", deltaCount);
+		}
 	}
 }
