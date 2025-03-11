@@ -52,7 +52,10 @@ public class EntitySelection extends AbstractSelection<Entity> {
 	@Registration.NonGenericSubtypes(EntityTypeExtended.class)
 	public abstract static class EntityTypeExtended<E extends Entity>
 			extends Model.All implements Registration.AllSubtypes {
-		Link deleteLink;
+		/*
+		 * public for subclass visibility
+		 */
+		public Link deleteLink;
 
 		@Directed.Exclude
 		protected E entity;

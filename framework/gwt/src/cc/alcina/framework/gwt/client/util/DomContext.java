@@ -21,7 +21,10 @@ public abstract class DomContext {
 	}
 
 	public static void clearReferences() {
-		get().clearReferences0();
+		DomContext domContext = get();
+		if (domContext != null) {
+			domContext.clearReferences0();
+		}
 	}
 
 	private static DomContext get() {

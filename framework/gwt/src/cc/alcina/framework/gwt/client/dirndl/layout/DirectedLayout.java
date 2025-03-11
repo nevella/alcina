@@ -1444,13 +1444,21 @@ public class DirectedLayout implements AlcinaProcess {
 						} else if (property.getType() == Double.class) {
 							value = Double.parseDouble(stringValue);
 						}
-					}
-					if (property.getType() == boolean.class) {
-						value = Boolean.valueOf(stringValue);
-					} else if (property.getType() == int.class) {
-						value = Integer.parseInt(stringValue);
-					} else if (property.getType() == double.class) {
-						value = Double.parseDouble(stringValue);
+						if (property.getType() == boolean.class) {
+							value = Boolean.valueOf(stringValue);
+						} else if (property.getType() == int.class) {
+							value = Integer.parseInt(stringValue);
+						} else if (property.getType() == double.class) {
+							value = Double.parseDouble(stringValue);
+						}
+					} else {
+						if (property.getType() == boolean.class) {
+							value = false;
+						} else if (property.getType() == int.class) {
+							value = 0;
+						} else if (property.getType() == double.class) {
+							value = 0.0;
+						}
 					}
 				}
 				property.set(model, value);

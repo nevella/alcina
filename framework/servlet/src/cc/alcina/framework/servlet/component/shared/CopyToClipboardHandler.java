@@ -12,7 +12,7 @@ public interface CopyToClipboardHandler
 		extends ModelEvents.CopyToClipboard.Handler {
 	@Override
 	default void onCopyToClipboard(CopyToClipboard event) {
-		if (Ax.isTest() && false) {
+		if (Ax.isTest()) {
 			ConsoleUtil.copyToClipboard(event.getModel());
 		} else {
 			Document.get().writeClipboardText(event.getModel());
