@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.domain.IdOrdered;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.process.NotificationObservable;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
@@ -199,20 +199,12 @@ public interface Sequence<T> {
 
 	@Registration(Loader.class)
 	public interface Loader {
-		@TypeSerialization(
-			value = "loadertype",
-			properties = @PropertySerialization(
-				defaultProperty = true,
-				types = Class.class))
+		@TypeSerialization("loadertype")
 		public static class LoaderType
 				extends InstanceQuery.Parameter<Class<? extends Loader>> {
 		}
 
-		@TypeSerialization(
-			value = "loaderlocation",
-			properties = @PropertySerialization(
-				defaultProperty = true,
-				types = String.class))
+		@TypeSerialization("loaderlocation")
 		public static class LoaderLocation
 				extends InstanceQuery.Parameter<String> {
 		}

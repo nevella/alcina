@@ -306,9 +306,6 @@ class LayerSelections extends Model.All implements IfNotEqual {
 		void render() {
 			Stream<Selection> stream = selectionLayers.traversal()
 					.getSelections(layer).stream();
-			if (layer.getName().equals("VersionList.JsonLayer")) {
-				int debug = 3;
-			}
 			parallel = Configuration.is(LayerSelections.class, "parallelTest");
 			snapshot = LooseContext.getContext().snapshot();
 			if (parallel) {

@@ -373,6 +373,21 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 	boolean hasRelations();
 
+	default boolean equivalentTo(Selection o) {
+		return areEquivalentPaths(this, o);
+	}
+
+	public static boolean areEquivalentPaths(Selection s1, Selection s2) {
+		return Objects.equals(s1.processNode().treePath(),
+				s2.processNode().treePath());
+	}
+
+	public static boolean areEquivalentDepthsAndValues(Selection s1,
+			Selection s2) {
+		return s1.processNode().asNodePath().size() == s2.processNode()
+				.asNodePath().size() && Objects.equals(s1.get(), s2.get());
+	}
+
 	@Property.Not
 	default boolean isSelfOrAncestor(Selection selection,
 			boolean descentSelectionIncludesSecondaryRelations) {
@@ -381,13 +396,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			pending.add(selection);
 			while (pending.size() > 0) {
 				Selection test = pending.pop();
-				if (Objects.equals(test.processNode().treePath(),
-						processNode().treePath())) {
+				if (equivalentTo(test)) {
 					return true;
 				}
 				pending.add(test.parentSelection());
-				if (test.hasRelations()) {
-				}
 				if (test.hasRelations()) {
 					test.getRelations()
 							.stream(Relations.Type.SecondaryParent.class)
@@ -398,8 +410,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		} else {
 			Selection cursor = selection;
 			while (cursor != null) {
-				if (Objects.equals(cursor.processNode().treePath(),
-						processNode().treePath())) {
+				if (equivalentTo(cursor)) {
 					return true;
 				}
 				cursor = cursor.parentSelection();

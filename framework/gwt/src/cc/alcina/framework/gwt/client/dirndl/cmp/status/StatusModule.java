@@ -4,7 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ContextObservers;
-import cc.alcina.framework.common.client.process.NotificationObservable;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -66,11 +66,13 @@ public class StatusModule {
 			showMessage(message.message, Channel.MESSAGE_PUBLISHED);
 		}
 	}
+
 	@Reflected
-	class ContextNotificationObserver
-			implements ContextObservers.Observer<NotificationObservable> {
+	class ContextNotificationObserver implements
+			ContextObservers.Observer<NotificationObservable.ContextObservable> {
 		@Override
-		public void topicPublished(NotificationObservable message) {
+		public void topicPublished(
+				NotificationObservable.ContextObservable message) {
 			showMessage(message.message, Channel.MESSAGE_PUBLISHED);
 		}
 	}

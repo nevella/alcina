@@ -8,6 +8,7 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.HrefElement;
+import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event;
 
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -83,9 +84,14 @@ class ClientEventDispatch {
 			if (!focusEvent) {
 				if (eventTargetDomNode.ancestors().has("form")) {
 					boolean explicitPrevent = false;
-					if (eventType.equals("keydown") && event.getKeyCode() == 13
-							&& !elem.hasTagName("textarea")) {
-						explicitPrevent = true;
+					boolean explicitStopPropagation = false;
+					if (eventType.equals("keydown")
+							&& event.getKeyCode() == KeyCodes.KEY_ENTER) {
+						if (elem.hasTagName("textarea")) {
+							explicitStopPropagation = true;
+						} else {
+							explicitPrevent = true;
+						}
 					}
 					if (elem instanceof HrefElement
 							&& !((HrefElement) elem).hasLinkHref()) {
@@ -93,6 +99,9 @@ class ClientEventDispatch {
 					}
 					if (explicitPrevent) {
 						event.preventDefault();
+					}
+					if (explicitStopPropagation) {
+						event.stopPropagation();
 					}
 				}
 				// prevent default action on <a> with no href

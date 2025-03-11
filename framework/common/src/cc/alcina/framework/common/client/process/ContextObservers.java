@@ -41,8 +41,7 @@ public class ContextObservers {
 		}
 	}
 
-	public interface Observer<T extends ProcessObservable>
-			extends ProcessObserver<T> {
+	public interface Observer<T extends Observable> extends ProcessObserver<T> {
 		@Override
 		default void bind() {
 			ProcessObservers.context().observe(this);

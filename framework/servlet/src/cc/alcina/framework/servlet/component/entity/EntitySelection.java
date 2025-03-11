@@ -29,6 +29,11 @@ public class EntitySelection extends AbstractSelection<Entity> {
 	}
 
 	@Override
+	public boolean equivalentTo(Selection o) {
+		return Selection.areEquivalentDepthsAndValues(this, o);
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof EntitySelection) {
 			EntitySelection o = (EntitySelection) obj;

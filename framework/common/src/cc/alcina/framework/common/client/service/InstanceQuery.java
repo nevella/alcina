@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesP
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.service.InstanceOracle.Query;
+import cc.alcina.framework.servlet.component.sequence.SequenceSearchDefinition;
 
 /**
  * Specifies an instance that will be produced by an InstanceProvider - this can
@@ -28,11 +29,7 @@ public final class InstanceQuery implements TreeSerializable {
 			implements TreeSerializable, Registration.AllSubtypes {
 		public V value;
 
-		/*
-		 * TODO - annotate with something that instructs the serializer to get
-		 * the property type from reflection (at the moment hand-coding in
-		 * subtypes)
-		 */
+		@PropertySerialization(defaultProperty = true)
 		public V getValue() {
 			return value;
 		}
@@ -59,9 +56,10 @@ public final class InstanceQuery implements TreeSerializable {
 	}
 
 	/**
-	 * The result type
+	 * The result type. Unbounded, so problematic for reflective data pruning
+	 * (GWT)..probably a FIXME
 	 */
-	@PropertySerialization(name = "querytype")
+	@PropertySerialization(path = "querytype")
 	public Class type;
 
 	@PropertySerialization(

@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.context.LooseContext;
 
 /**
@@ -34,6 +36,10 @@ public class Al {
 		default:
 			return false;
 		}
+	}
+
+	public static boolean isRomcom() {
+		return GWT.isClient() && !isBrowser();
 	}
 
 	public static boolean isScript() {

@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.component.traversal;
 
-import cc.alcina.framework.common.client.process.NotificationObservable;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.servlet.component.traversal.FlightEventCommand.MarkFlightEvents;
