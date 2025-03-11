@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArrayInteger;
 import com.google.gwt.core.client.Scheduler;
@@ -313,7 +314,16 @@ class HasDataPresenter<T>
 			public void execute() {
 				// Verify that this command was the last one scheduled.
 				if (pendingStateCommand == this) {
-					resolvePendingState(null);
+					try {
+						resolvePendingState(null);
+					} catch (RuntimeException e) {
+						e.printStackTrace();
+						if (GWT.isScript()) {
+							// squelch, cell views are going away
+						} else {
+							throw e;
+						}
+					}
 				}
 			}
 		};
