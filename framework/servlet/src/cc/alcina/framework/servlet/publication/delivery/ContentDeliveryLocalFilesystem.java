@@ -33,7 +33,8 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 @Registration({ ContentDeliveryType.class,
 		ContentDeliveryType_LOCAL_FILESYSTEM.class })
 public class ContentDeliveryLocalFilesystem implements ContentDelivery {
-	Logger logger = LoggerFactory.getLogger(getClass());
+	static Logger logger = LoggerFactory
+			.getLogger(ContentDeliveryLocalFilesystem.class);
 
 	public static class FileGenerated implements ContextObservers.Observable {
 		public String path;

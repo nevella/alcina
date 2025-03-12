@@ -52,7 +52,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	private static transient final RemovedValueMarker REMOVED_VALUE_MARKER = new RemovedValueMarker();
 
-	static Logger logger = LoggerFactory.getLogger(TransactionalTreeMap.class);
+	static Logger logger = LoggerFactory.getLogger(TransactionalMap.class);
 
 	protected Class<K> keyClass;
 
@@ -133,7 +133,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	}
 
 	public void debugNotFound(long id) {
-		Logger logger = LoggerFactory.getLogger(getClass());
 		V v = get(id);
 		logger.info("debugNotFound - get - value {} - null: {}", v, v == null);
 		v = nonConcurrent.get(id);

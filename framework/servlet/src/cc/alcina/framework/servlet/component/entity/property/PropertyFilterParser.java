@@ -43,7 +43,7 @@ import cc.alcina.framework.servlet.job.JobContext;
  * class, valid operators for the property)
  */
 public class PropertyFilterParser {
-	Logger logger = LoggerFactory.getLogger(getClass());
+	static Logger logger = LoggerFactory.getLogger(PropertyFilterParser.class);
 
 	public List<StandardLayerAttributes.Filter>
 			proposeFilters(Class<? extends Entity> entityType, String query) {

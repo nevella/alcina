@@ -23,7 +23,8 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
  */
 @Registration({ ContentDeliveryType.class, ContentDeliveryType_MULTIPLE.class })
 public class ContentDeliveryMultiple implements ContentDelivery {
-	Logger logger = LoggerFactory.getLogger(getClass());
+	static Logger logger = LoggerFactory
+			.getLogger(ContentDeliveryMultiple.class);
 
 	private boolean returnsDownloadToken;
 

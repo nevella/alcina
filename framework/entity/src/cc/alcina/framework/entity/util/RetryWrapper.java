@@ -74,7 +74,7 @@ public class RetryWrapper<T> {
 				lastException);
 	}
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	static Logger logger = LoggerFactory.getLogger(RetryWrapper.class);
 
 	protected boolean isRetryableException(Exception e) {
 		return true;

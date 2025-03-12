@@ -71,7 +71,7 @@ class JobAllocator {
 
 	private StatusMessage lastStatus;
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	static Logger logger = LoggerFactory.getLogger(JobAllocator.class);
 
 	private ExecutorService allocatorService;
 
