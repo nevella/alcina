@@ -1,7 +1,13 @@
 package cc.alcina.framework.entity;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy;
 
 public class LogUtil {
 	public static Logger classLogger() {
@@ -13,6 +19,16 @@ public class LogUtil {
 					.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 					.getCallerClass();
 		}
-		return LoggerFactory.getLogger(clazz);
+		return getLogger(clazz);
+	}
+
+	static Map<Class, Logger> classLogger = new ConcurrentHashMap<>();
+
+	/*
+	 * I noticed huge numbers of loggers at times in Wildfly - so added this as
+	 * a possible preventitive
+	 */
+	public static Logger getLogger(Class<?> clazz) {
+		return classLogger.computeIfAbsent(clazz, LoggerFactory::getLogger);
 	}
 }

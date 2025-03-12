@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.LogUtil;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
@@ -791,7 +792,7 @@ public class JobScheduler {
 		}
 
 		protected Logger logger() {
-			return LoggerFactory.getLogger(getClass());
+			return LogUtil.getLogger(getClass());
 		}
 
 		protected T provideTask(Job job) {
@@ -891,7 +892,7 @@ public class JobScheduler {
 		}
 
 		protected Logger logger() {
-			return LoggerFactory.getLogger(getClass());
+			return LogUtil.getLogger(getClass());
 		}
 
 		public boolean retain(Job job) {
