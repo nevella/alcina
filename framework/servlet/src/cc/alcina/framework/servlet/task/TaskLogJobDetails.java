@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.task;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -76,6 +77,11 @@ public class TaskLogJobDetails extends PerformerTask {
 				.provideDescendantsAndSubsequents()
 				.filter(j -> j.getState() != JobState.PROCESSING)
 				.sorted(EntityComparator.INSTANCE).limit(limit);
+		List<Job> ancestorAndAwaitingJobs = new ArrayList<>();
+		top.provideParent().ifPresent(ancestorAndAwaitingJobs::add);
+		top.provideAwaiting().ifPresent(ancestorAndAwaitingJobs::add);
+		renderRelatedSection(body, "Ancestor/awaiting jobs",
+				ancestorAndAwaitingJobs.stream());
 		Stream<Job> childAndSubsequentJobs = Stream.concat(relatedProcessing,
 				relatedNonProcessing);
 		renderRelatedSection(body, "Child/Subsequent jobs",
