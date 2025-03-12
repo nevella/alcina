@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
+import cc.alcina.framework.gwt.client.util.StyleUtil;
 
 /**
  * <p>
@@ -102,12 +103,6 @@ public class DomNode {
 			document = node.getOwnerDocument();
 		}
 		return DomDocument.from(document).nodeFor(node);
-	}
-
-	public static String toStyleAttribute(StringMap result) {
-		return result.entrySet().stream()
-				.map(e -> Ax.format("%s: %s", e.getKey(), e.getValue()))
-				.collect(Collectors.joining("; "));
 	}
 
 	protected Node node;
@@ -1544,19 +1539,27 @@ public class DomNode {
 			return DomNode.this;
 		}
 
-		public void setProperty(String key, String value) {
+		public String getStyleProperty(String key) {
+			return getStyleMap().get(key);
+		}
+
+		public boolean hasStyleProperty(String key) {
+			return getStyleMap().containsKey(key);
+		}
+
+		/*
+		 * returns an empty map if the styles attr is null/empty
+		 */
+		public StringMap getStyleMap() {
+			return has("style") ? StyleUtil.styleAttributeToMap(attr("style"))
+					: new StringMap();
+		}
+
+		public void setStyleProperty(String key, String value) {
 			key = jsToDom(key);
-			StringMap styles = new StringMap();
-			// t0tes naive
-			if (has("style")) {
-				String existing = attr("style");
-				Arrays.stream(existing.split(";")).forEach(s -> {
-					String[] parts = s.split(":");
-					styles.put(parts[0], parts[1]);
-				});
-			}
+			StringMap styles = getStyleMap();
 			styles.put(key, value);
-			setAttr("style", toStyleAttribute(styles));
+			setAttr("style", StyleUtil.styleMapToAttribute(styles));
 		}
 
 		public Set<String> getClassNames() {

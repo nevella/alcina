@@ -84,7 +84,7 @@ public class DomContextServlet extends DomContext {
 
 	@Override
 	protected void setStyleProperty0(Element elem, String key, String value) {
-		DomNode.from(elem).style().setProperty(key, value);
+		DomNode.from(elem).style().setStyleProperty(key, value);
 	}
 
 	Map<Document, DomDocument> xmlDocs() {
