@@ -826,6 +826,7 @@ body > page > properties bean-editor entity-extended a:hover {
 }
 body > page > selections {
   display: block;
+  overflow: auto;
 }
 body > page > selections > selection-markup {
   display: block;

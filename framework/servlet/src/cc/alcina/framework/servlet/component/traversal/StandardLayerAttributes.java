@@ -45,7 +45,7 @@ public class StandardLayerAttributes {
 
 		@Override
 		public String toString() {
-			String rValue = value.contains(" ") ? Ax.format("'%s'", value)
+			String rValue = value.contains(" ") ? Ax.format("\"%s\"", value)
 					: value;
 			String result = key == null ? rValue
 					: Ax.format("%s %s %s", key, op, rValue);
