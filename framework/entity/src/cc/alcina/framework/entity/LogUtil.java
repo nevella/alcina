@@ -1,13 +1,10 @@
 package cc.alcina.framework.entity;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import cc.alcina.framework.servlet.job.JobScheduler.ExceptionPolicy;
 
 public class LogUtil {
 	public static Logger classLogger() {
