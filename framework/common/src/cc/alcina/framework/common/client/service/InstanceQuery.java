@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
-import cc.alcina.framework.common.client.service.InstanceOracle.Query;
 
 /**
  * Specifies an instance that will be produced by an InstanceProvider - this can
@@ -72,8 +71,8 @@ public final class InstanceQuery implements TreeSerializable {
 		return type == null;
 	}
 
-	public <T> Query<T> toOracleQuery() {
-		return new Query<>(type).addParameters(parameters);
+	public <T> InstanceOracle.Query<T> toOracleQuery() {
+		return new InstanceOracle.Query<>(type).addParameters(parameters);
 	}
 
 	public InstanceQuery withType(Class type) {

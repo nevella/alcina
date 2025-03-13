@@ -349,10 +349,11 @@ class Page extends Model.Fields
 			oracleQuery.reemit();
 			return;
 		}
-		unbindOracleQuery();
+		derefOracleQuery();
 		this.oracleQuery = oracleQuery;
 		oracleQuery.withInstanceConsumer(this::putSequence);
-		oracleQuery.bind();
+		oracleQuery.withOneOff(false);
+		oracleQuery.submit();
 	}
 
 	void putSequence(Sequence sequence) {
@@ -360,7 +361,7 @@ class Page extends Model.Fields
 		properties.sequence.set(this, sequence);
 	}
 
-	void unbindOracleQuery() {
+	void derefOracleQuery() {
 		if (this.oracleQuery != null) {
 			this.oracleQuery.unbind();
 			this.sequence = null;// just de-ref, no need to fire changes
@@ -376,7 +377,7 @@ class Page extends Model.Fields
 					.getTimer(this::observableAccessed);
 		} else {
 			observableObservedTimer.cancel();
-			unbindOracleQuery();
+			derefOracleQuery();
 		}
 	}
 
