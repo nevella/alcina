@@ -724,6 +724,8 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	public boolean nonListeningDomain;
+
 	public <T extends Entity> void onLocalObjectCreated(T newInstance) {
 		cache.put(newInstance);
 	}
@@ -768,6 +770,9 @@ public class DomainStore implements IDomainStore {
 									liSet, e, persistenceEvent);
 						}
 					});
+			LooseContext.set(
+					ThreadlocalTransformManager.CONTEXT_NON_LISTENING_DOMAIN,
+					nonListeningDomain);
 			TransformManager.get().setIgnorePropertyChanges(true);
 			postProcessStart = System.currentTimeMillis();
 			Transaction.ensureEnded();
@@ -783,7 +788,9 @@ public class DomainStore implements IDomainStore {
 							persistenceEvent.getMaxPersistedRequestId()));
 			// opportunistically load any lazy loads in this tx phase, to ensure
 			// they become a non-vacuumable part of the graph
-			Transactions.getEnqueuedLazyLoads().forEach(Domain::find);
+			if (isWritable()) {
+				Transactions.getEnqueuedLazyLoads().forEach(Domain::find);
+			}
 			postProcessThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();

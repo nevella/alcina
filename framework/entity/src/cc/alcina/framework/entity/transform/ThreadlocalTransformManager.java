@@ -138,6 +138,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP";
 
+	public static final String CONTEXT_NON_LISTENING_DOMAIN = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_NON_LISTENING_DOMAIN";
+
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
@@ -995,7 +998,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 			DomainStore.writableStore().getCache().put(entity);
 		}
 		if (!mvccObject || listenToMvccObjectVersion) {
-			listenTo(entity);
+			if (!LooseContext.is(CONTEXT_NON_LISTENING_DOMAIN)) {
+				listenTo(entity);
+			}
 		}
 		return entity;
 	}
@@ -1053,16 +1058,21 @@ public class ThreadlocalTransformManager extends TransformManager {
 			explicitlyPermittedTransforms.clear();
 			flushAfterTransforms.clear();
 		}
-		for (Entity entity : listeningTo.keySet()) {
-			if (entity != null) {
-				try {
-					entity.removePropertyChangeListener(this);
-				} catch (Exception e) {
-					logger.warn("DEVEX:0 - Exception removing listener: {} ",
-							entity.toStringEntity());
-					if (removeListenerExceptionCounter.incrementAndGet() < 50) {
-						logger.warn("DEVEX:0 - Exception removing listener ",
-								e);
+		if (!LooseContext.is(CONTEXT_NON_LISTENING_DOMAIN)) {
+			for (Entity entity : listeningTo.keySet()) {
+				if (entity != null) {
+					try {
+						entity.removePropertyChangeListener(this);
+					} catch (Exception e) {
+						logger.warn(
+								"DEVEX:0 - Exception removing listener: {} ",
+								entity.toStringEntity());
+						if (removeListenerExceptionCounter
+								.incrementAndGet() < 50) {
+							logger.warn(
+									"DEVEX:0 - Exception removing listener ",
+									e);
+						}
 					}
 				}
 			}

@@ -279,6 +279,10 @@ public class DomainTransformPersistenceQueue {
 		events.add(Event.aborted(requestId));
 	}
 
+	public void onTransformRequestPreCommitted(long requestId) {
+		sequencer.onPersistedRequestPreCommitted(requestId);
+	}
+
 	public void onTransformRequestCommitted(long requestId,
 			boolean fromLocalEvent) {
 		if (state.shouldPublishRequestCommitted(requestId, fromLocalEvent)) {

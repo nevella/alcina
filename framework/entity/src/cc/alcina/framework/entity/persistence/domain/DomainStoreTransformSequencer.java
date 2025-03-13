@@ -188,6 +188,9 @@ public class DomainStoreTransformSequencer
 		long queryFirst = 0;
 		long startMillis = System.currentTimeMillis();
 		pendingRequestIds.entrySet().removeIf(v -> {
+			if (v.getKey() == -1L) {
+				return true;
+			}
 			boolean remove = startMillis - v.getValue() > commitTimeout;
 			if (remove) {
 				logger.info("Removing timed out pending request: {} ", v);
