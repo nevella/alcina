@@ -100,15 +100,19 @@
             background: #e3fae3
 
 
-overlay-container overlay.filter-suggestor > suggestor
-  @include context-menu.dropdown-choices
-  padding: 0
-  position: relative
-  margin-top: -20px
-  margin-left: 18px
+overlay-container 
+  overlay.filter-suggestor > suggestor
+    @include context-menu.dropdown-choices
+    padding: 0
+    position: relative
+    margin-top: -20px
+    margin-left: 18px
 
-  input
-    line-height: 24px
-    font-size: 18px
-    width: 250px
-  
+    input
+      line-height: 24px
+      font-size: 18px
+      width: 250px
+
+  overlay.filter-suggestor.selection-table-area > suggestor
+    margin-top: 0px
+    margin-left: 0px

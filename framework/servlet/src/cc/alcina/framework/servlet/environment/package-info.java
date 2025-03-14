@@ -116,8 +116,14 @@
 /*
  * Debugging:
  * 
- * One option is config:EnvironmentManager.flightRecordingEnabled=true and
- * config:FlightEventRecorder.enabled=true -- you can then use the alcina
- * sequnce browser to view the rpc sequence
+ * One option is config:
+ * 
+ * EnvironmentManager.flightRecordingEnabled=true
+ * 
+ * and config:
+ * 
+ * FlightEventRecorder.enabled=true
+ * 
+ * -- you can then use the alcina sequnce browser to view the rpc sequence
  */
 package cc.alcina.framework.servlet.environment;

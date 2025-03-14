@@ -61,6 +61,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractConte
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata.ColumnMetadata;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
@@ -439,8 +440,8 @@ public class TableModel extends Model implements NodeEditorContext {
 	@TypeSerialization(reflectiveSerializable = false)
 	@TypedProperties
 	@PropertyOrder(value = {}, custom = CustomOrder.class)
-	public static class TableColumn extends Model
-			implements DomEvents.Click.Handler {
+	public static class TableColumn extends Model implements
+			DomEvents.Click.Handler, TableColumnMetadata.Change.Handler {
 		public static class CustomOrder implements PropertyOrder.Custom {
 			List<TypedProperty> defaultOrder = List.of(properties.caption,
 					properties.columnFilter, properties.sortDirection);
@@ -456,9 +457,14 @@ public class TableModel extends Model implements NodeEditorContext {
 			}
 		}
 
-		public class ColumnFilter extends Model
+		@TypedProperties
+		public class ColumnFilter extends Model.Fields
 				implements DomEvents.Click.Handler, Property.Has {
+			@Property.Not
 			Field field;
+
+			@Binding(type = Type.PROPERTY)
+			boolean filtered;
 
 			protected ColumnFilter(Field field) {
 				this.field = field;
@@ -493,6 +499,8 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		static PackageProperties._TableModel_TableColumn properties = PackageProperties.tableModel_tableColumn;
 
+		static PackageProperties._TableModel_TableColumn_ColumnFilter _ColumnFilter_properties = PackageProperties.tableModel_tableColumn_columnFilter;
+
 		private Field field;
 
 		private SortDirection sortDirection;
@@ -514,7 +522,6 @@ public class TableModel extends Model implements NodeEditorContext {
 			this.field = field;
 			this.sortDirection = sortDirection;
 			this.caption = field.getLabel();
-			// TODO - only populate columnfilter on TableColumnMetadata receipt
 			this.columnFilter = new ColumnFilter(field);
 		}
 
@@ -573,6 +580,20 @@ public class TableModel extends Model implements NodeEditorContext {
 		public void setSortDirection(SortDirection sortDirection) {
 			set("sortDirection", this.sortDirection, sortDirection,
 					() -> this.sortDirection = sortDirection);
+		}
+
+		@Override
+		public void
+				onTableColumnMetadataChange(TableColumnMetadata.Change event) {
+			TableColumnMetadata metadata = event.getModel();
+			ColumnMetadata columnMetadata = metadata
+					.getColumnMetadata(field.getProperty());
+			SortDirection columnDirection = columnMetadata.getSortDirection();
+			if (columnDirection != null) {
+				setSortDirection(columnDirection);
+			}
+			_ColumnFilter_properties.filtered.set(columnFilter,
+					columnMetadata.isFiltered());
 		}
 	}
 

@@ -119,6 +119,12 @@ public class WdContext implements PerformerResource {
 						break;
 					}
 				}
+				/*
+				 * try to force a reflow
+				 */
+				executor.executeScript(
+						"var v=window.innerHeight; var s = document.body.firstElementChild.outerHTML",
+						new Object[] { null });
 				long end = System.currentTimeMillis();
 				Ax.out("romcom await - %s ms", end - start);
 				Preconditions.checkState(matched,

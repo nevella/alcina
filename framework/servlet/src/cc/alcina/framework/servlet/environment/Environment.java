@@ -32,7 +32,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
-import cc.alcina.framework.common.client.service.InstanceOracle;
+import cc.alcina.framework.common.client.service.DispatchRefProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -705,12 +705,11 @@ class Environment {
 		EventFrame.contextProvider.registerFrame(eventFrame);
 		Document.contextProvider.registerFrame(document);
 		Document.get().onDocumentEventSystemInit();
-		InstanceOracle.DispatchRefProvider.context
-				.set(new DispatchRefProviderImpl());
+		DispatchRefProvider.context.set(new DispatchRefProviderImpl());
 		GWTBridgeHeadless.inClient.set(true);
 	}
 
-	class DispatchRefProviderImpl extends InstanceOracle.DispatchRefProvider {
+	class DispatchRefProviderImpl extends DispatchRefProvider {
 		@Override
 		public Consumer<Runnable> getDispatch() {
 			return access()::invoke;

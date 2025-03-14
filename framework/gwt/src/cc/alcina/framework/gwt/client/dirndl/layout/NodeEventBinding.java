@@ -256,6 +256,18 @@ class NodeEventBinding {
 		}
 	}
 
+	/**
+	 * <p>
+	 * One essential feature of descendant bindings is that they record the last
+	 * dispatched event, since an 'initialisation event' is often fired by an
+	 * ancestor before the descendant even exists, let alone is attached
+	 * 
+	 * <p>
+	 * So the last fired event is fired (if it exists) to any handlers on attach
+	 * *as a finally* - note the risk of memory leaks is really pretty remote
+	 * here, since whatever's reachable from the event should be reachable to
+	 * the firing model
+	 */
 	class DescendantBindings {
 		Set<NodeEventBinding> handlers = GWT.isScript()
 				? AlcinaCollections.newUniqueSet()
@@ -264,16 +276,33 @@ class NodeEventBinding {
 
 		NodeEventBinding ancestorEmitter;
 
+		ModelEvent lastDispatched;
+
 		public void addHandler(NodeEventBinding descendantBinding) {
 			handlers.add(descendantBinding);
 			descendantBinding
 					.ensureDescendantBindings().ancestorEmitter = NodeEventBinding.this;
+			if (lastDispatched != null) {
+				ModelEvent lastDispatchedRef = lastDispatched;
+				Client.eventBus().queued().lambda(() -> this
+						.fireAttachEvent(descendantBinding, lastDispatchedRef))
+						.dispatch();
+			}
+		}
+
+		void fireAttachEvent(NodeEventBinding descendantBinding,
+				ModelEvent lastDispatchedRef) {
+			if (lastDispatchedRef == lastDispatched) {
+				descendantBinding.fireEventIfType(lastDispatchedRef);
+			}
 		}
 
 		void dispatch(ModelEvent modelEvent) {
-			// it's in fact guaranteed that the handler NodeEventBinding is the
-			// right
-			// type
+			lastDispatched = modelEvent;
+			/*
+			 * it's guaranteed that the handler NodeEventBinding is the right
+			 * type
+			 */
 			handlers.forEach(h -> h.fireEventIfType(modelEvent));
 		}
 

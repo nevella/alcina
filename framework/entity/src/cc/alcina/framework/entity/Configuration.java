@@ -185,7 +185,7 @@ public class Configuration {
 		return new Key(clazz, keyPart);
 	}
 
-	public static Key key(String keyPart) {
+	public static <T> Key<T> key(String keyPart) {
 		Class clazz = null;
 		if (useStackTraceCallingClass) {
 			clazz = getStacktraceCallingClass();
@@ -356,7 +356,7 @@ public class Configuration {
 			return Long.valueOf(value);
 		}
 
-		public Optional<Key> optional() {
+		public Optional<Key<?>> optional() {
 			return has() ? Optional.of(this) : Optional.empty();
 		}
 

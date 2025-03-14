@@ -18,8 +18,14 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Ref;
+import cc.alcina.framework.entity.Configuration;
 
 public class ElementQuery {
+	/*
+	 * log the markup of the clicked element
+	 */
+	static Configuration.Key debugClick = Configuration.key("debugClick");
+
 	public interface DriverProvider {
 		public static DriverProvider get() {
 			return Registry.impl(DriverProvider.class);
@@ -156,6 +162,9 @@ public class ElementQuery {
 	}
 
 	public void click() {
+		if (debugClick.is()) {
+			Ax.out(outerHtml());
+		}
 		withElement(WebElement::click);
 	}
 

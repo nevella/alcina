@@ -5,6 +5,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import com.totsp.gwittir.client.ui.table.Field;
+import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Object;
 import java.lang.String;
@@ -20,6 +21,7 @@ public class PackageProperties {
     public static _HeadingActions headingActions = new _HeadingActions();
     public static _StandardModels_Panel standardModels_panel = new _StandardModels_Panel();
     public static _TableModel_TableColumn tableModel_tableColumn = new _TableModel_TableColumn();
+    public static _TableModel_TableColumn_ColumnFilter tableModel_tableColumn_columnFilter = new _TableModel_TableColumn_ColumnFilter();
     
     public static class _CollectionDeltaModel implements TypedProperty.Container {
       public TypedProperty<CollectionDeltaModel, Collection> collection = new TypedProperty<>(CollectionDeltaModel.class, "collection");
@@ -49,6 +51,10 @@ public class PackageProperties {
       public TypedProperty<TableModel.TableColumn, Field> field = new TypedProperty<>(TableModel.TableColumn.class, "field");
       public TypedProperty<TableModel.TableColumn, TableModel.SortDirection> sortDirection = new TypedProperty<>(TableModel.TableColumn.class, "sortDirection");
       public TypedProperty<TableModel.TableColumn, Class> valueClass = new TypedProperty<>(TableModel.TableColumn.class, "valueClass");
+    }
+    
+    public static class _TableModel_TableColumn_ColumnFilter implements TypedProperty.Container {
+      public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filtered = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filtered");
     }
     
 //@formatter:on

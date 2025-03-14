@@ -853,4 +853,9 @@ public class StyleLocal implements ClientDomStyle {
 	public Style styleObject() {
 		return styleObject;
 	}
+
+	@Override
+	public String toString() {
+		return properties.toString();
+	}
 }

@@ -58,6 +58,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SetSettingM
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
 import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
+import cc.alcina.framework.servlet.environment.RemoteUi;
 
 /*
  * TODO - look at an approach to prevent double-fires of say reloadSequence -
@@ -345,6 +346,7 @@ class Page extends Model.Fields
 		}
 		InstanceOracle.Query<? extends Sequence> oracleQuery = instanceQuery
 				.toOracleQuery();
+		oracleQuery.withExceptionConsumer(RemoteUi.Invoke.exceptionNotifier());
 		if (oracleQuery.equals(this.oracleQuery)) {
 			oracleQuery.reemit();
 			return;

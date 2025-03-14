@@ -12,11 +12,11 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.util.HasBind;
 
@@ -221,18 +221,11 @@ public class InstanceOracle {
 		ProviderQueries<T> submit0() {
 			return InstanceOracle.get().submit(this);
 		}
-	}
 
-	public static class DispatchRefProvider {
-		public static LooseContext.Key<DispatchRefProvider> context = LooseContext
-				.key(DispatchRefProvider.class, "context");
-
-		static DispatchRefProvider get() {
-			return context.optional().orElse(new DispatchRefProvider());
-		}
-
-		public Consumer<Runnable> getDispatch() {
-			return Runnable::run;
+		@Override
+		public String toString() {
+			return FormatBuilder.keyValues("clazz", clazz, "parameters",
+					parameters);
 		}
 	}
 
@@ -295,6 +288,8 @@ public class InstanceOracle {
 
 			T lastAcceptedInstance;
 
+			Exception lastAcceptedException;
+
 			Consumer<Runnable> dispatch;
 
 			QueryState(Query<T> query) {
@@ -306,18 +301,31 @@ public class InstanceOracle {
 			void reemit() {
 				if (instance != null) {
 					lastAcceptedInstance = null;
-					acceptInstance();
+					acceptInstanceOrException();
 				}
 			}
 
-			void acceptInstance() {
+			void acceptInstanceOrException() {
 				if (instance != null && query.instanceConsumer != null
 						&& lastAcceptedInstance != instance) {
+					lastAcceptedException = null;
 					lastAcceptedInstance = instance;
 					// this possibly causes query.instanceConsumer to be called
 					// on the originating (UI) thread
 					dispatch.accept(() -> query.instanceConsumer
 							.accept(lastAcceptedInstance));
+					if (query.oneOff) {
+						query.unbind();
+					}
+				}
+				if (exception != null && query.exceptionConsumer != null
+						&& lastAcceptedException != exception) {
+					lastAcceptedException = exception;
+					lastAcceptedInstance = null;
+					// this possibly causes query.instanceConsumer to be called
+					// on the originating (UI) thread
+					dispatch.accept(() -> query.exceptionConsumer
+							.accept(lastAcceptedException));
 					if (query.oneOff) {
 						query.unbind();
 					}
@@ -334,6 +342,8 @@ public class InstanceOracle {
 		T instance;
 
 		CountDownLatch awaitLatch = null;
+
+		Exception exception;
 
 		ProviderQueries(Query<T> query) {
 			this.definingQuery = query;
@@ -361,6 +371,7 @@ public class InstanceOracle {
 
 		synchronized void discardExistingInstance() {
 			instance = null;
+			exception = null;
 		}
 
 		/*
@@ -369,7 +380,7 @@ public class InstanceOracle {
 		synchronized void passToConsumers() {
 			try {
 				firing = true;
-				awaitingQueries.forEach(QueryState::acceptInstance);
+				awaitingQueries.forEach(QueryState::acceptInstanceOrException);
 			} finally {
 				firing = false;
 				checkEviction();
@@ -391,8 +402,9 @@ public class InstanceOracle {
 				 */
 				String name = Ax.format("instance-oracle::%s",
 						NestedName.get(provider));
-				Registry.impl(ProviderInvoker.class).invoke(name, () -> provider
-						.provide(definingQuery, this::acceptInstance));
+				Registry.impl(ProviderInvoker.class).invoke(name,
+						() -> provider.provide(definingQuery,
+								this::acceptInstance, this::acceptException));
 			}
 		}
 
@@ -405,6 +417,13 @@ public class InstanceOracle {
 		 */
 		void acceptInstance(T instance) {
 			this.instance = instance;
+			awaitLatch.countDown();
+			passToConsumers();
+		}
+
+		void acceptException(Exception exception) {
+			exception.printStackTrace();
+			this.exception = exception;
 			awaitLatch.countDown();
 			passToConsumers();
 		}

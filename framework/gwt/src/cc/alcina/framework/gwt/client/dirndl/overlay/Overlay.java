@@ -81,277 +81,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
 		InferredDomEvents.MouseDownOutside.Handler, ModelEvents.Submit.Handler,
 		ModelEvents.Closed.Handler {
-	public static Attributes attributes() {
-		return new Attributes();
-	}
-
-	private boolean open;
-	/*
-	 * For event bubbling - if the logicalParent is detached, try the secondary
-	 * (if it exists)
-	 */
-
-	/*
-	 * Don't close this overlay if the child is the event target
-	 */
-	private Overlay childOverlay;
-
-	private String cssClassParameter;
-
-	Attributes attributes;
-
-	private String cssClass;
-
-	private Overlay(Attributes attributes) {
-		this.attributes = attributes;
-		computeCssClass();
-	}
-
-	public boolean close() {
-		return close(null, false);
-	}
-
-	/**
-	 * @return true if closed
-	 */
-	public boolean close(GwtEvent from, boolean submit) {
-		if (!open) {
-			return true;
-		}
-		if (!submit && !attributes.allowCloseWithoutSubmit) {
-			return false;
-		}
-		if (childOverlay != null) {
-			if (!childOverlay.close(from, submit)) {
-				return false;
-			}
-		}
-		// double-check open, since childOverlay.close may have re-called
-		if (!open) {
-			return true;
-		}
-		open = false;
-		Node node = provideNode();
-		if (submit) {
-			// force commit of focussed element changes (textarea, input) if it
-			// is a child of this closing dialog.
-			if (Al.isBrowser()) {
-				Element focus = WidgetUtils.getFocussedDocumentElement();
-				if (focus != null
-						&& provideElement().provideIsAncestorOf(focus, true)) {
-					WidgetUtils.clearFocussedDocumentElement();
-				}
-			}
-			NodeEvent.Context.fromEvent(from, node)
-					.dispatch(ModelEvents.Submit.class, null);
-		}
-		/*
-		 * Any re-emission of events, model triggers should happen in the
-		 * BeforeClosed handlers
-		 */
-		NodeEvent.Context.fromEvent(from, node)
-				.dispatch(ModelEvents.BeforeClosed.class, null);
-		OverlayPositions.get().hide(this, true);
-		/*
-		 * node will be removed from the layout at this point, but its parent
-		 * refs will still be valid - a little dodgy, but it works
-		 */
-		NodeEvent.Context.fromEvent(from, node)
-				.dispatch(ModelEvents.Closed.class, null);
-		return true;
-	}
-
-	/*
-	 * Compute the overlay class based on logical ancestors + contents
-	 */
-	void computeCssClass() {
-		// deliberately does not try to access @Directed(cssClass) - since
-		// overlay creation is imperative and the caller has essentially full
-		// control of the class selector (via logicalAncestors)...this is good
-		// enough, I think
-		//
-		// FIXME - dirndl 1x3 - actually, at least for contentdecorator it would
-		// be nice
-		Stream<String> derivedClasses = Stream
-				.concat(attributes.logicalAncestors.stream(),
-						Stream.of(attributes.logicalParent, this,
-								attributes.contents))
-				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
-				.map(Class::getSimpleName);
-		String cssClass = Stream
-				.concat(derivedClasses, Stream.of(cssClassParameter))
-				.filter(Objects::nonNull).map(Ax::cssify)
-				.collect(Collectors.joining(" "));
-		setCssClass(cssClass);
-	}
-
-	@Directed
-	public Actions getActions() {
-		return attributes.actions;
-	}
-
-	protected Overlay getChildOverlay() {
-		return this.childOverlay;
-	}
-
-	@Directed
-	public Model getContents() {
-		return attributes.contents;
-	}
-
-	@Binding(type = Type.CLASS_PROPERTY)
-	public String getCssClass() {
-		return this.cssClass;
-	}
-
-	public OverlayPosition getPosition() {
-		return attributes.position;
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (attributes.logicalParent != null
-				&& attributes.logicalParent instanceof HasNode) {
-			Node sourceNode = ((HasNode) attributes.logicalParent)
-					.provideNode();
-			Overlay ancestorOverlay = DirndlAccess.ComponentAncestorAccess
-					.getAncestor(sourceNode, this);
-			if (ancestorOverlay != null) {
-				ancestorOverlay.setChildOverlay(event.isBound() ? this : null);
-				// and inherit logical ancestry for styling. order is (ancestor)
-				// ancestors > parent > overlay > contents
-				if (attributes.logicalAncestors.isEmpty()) {
-					attributes.logicalAncestors = Stream.concat(
-							ancestorOverlay.attributes.logicalAncestors
-									.stream(),
-							Stream.of(
-									ancestorOverlay.attributes.logicalParent
-											.getClass(),
-									ancestorOverlay.getClass(),
-									ancestorOverlay.getContents().getClass()))
-							.collect(Collectors.toList());
-					computeCssClass();
-				}
-			}
-		}
-		if (event.isBound()) {
-			event.reemitAs(this, ModelEvents.Opened.class);
-		} else {
-		}
-	}
-
-	@Override
-	public void onClose(Close event) {
-		close(event, true);
-	}
-
-	boolean reemittingClose;
-
-	@Override
-	public void onClosed(Closed event) {
-		Node node = provideNode();
-		if (node != null && event.getContext().node != node) {
-			// child overlay
-			return;
-		}
-		// custom reemission because node will be detached from layout
-		if (reemittingClose) {
-			event.bubble();
-			return;
-		}
-		if (attributes.closedHandler != null) {
-			attributes.closedHandler.onClosed(event);
-		}
-		try {
-			reemittingClose = true;
-			event.reemit();
-		} finally {
-			reemittingClose = false;
-		}
-	}
-
-	@Override
-	public void onCtrlEnterPressed(CtrlEnterPressed event) {
-		// TODO - probably better to route via an internal form, which then
-		// fires submit, and close on that
-		close(event, true);
-	}
-
-	@Override
-	public void onEscapePressed(EscapePressed event) {
-		close(event, false);
-	}
-
-	@Override
-	public void onMouseDownOutside(MouseDownOutside event) {
-		if (attributes.removeOnMouseDownOutside) {
-			GwtEvent gwtEvent = event.getContext().getOriginatingGwtEvent();
-			// don't close if a descendant overlay received the event
-			if (gwtEvent instanceof HasNativeEvent) {
-				NativeEvent nativeEvent = ((HasNativeEvent) gwtEvent)
-						.getNativeEvent();
-				EventTarget eventTarget = nativeEvent.getEventTarget();
-				if (eventTarget.isElement()) {
-					Element element = eventTarget.asElement();
-					if (selfOrDescendantOverlayContains(element)) {
-						return;
-					}
-				}
-			}
-			close(event, false);
-		}
-	}
-
-	@Override
-	public void onSubmit(Submit event) {
-		if (event.checkReemitted(this)) {
-			return;
-		}
-		if (attributes.submitHandler != null) {
-			attributes.submitHandler.onSubmit(event);
-		}
-		if (!attributes.consumeSubmit) {
-			event.reemit();
-		}
-	}
-
-	public void open() {
-		ContainerOptions options = new ContainerOptions()
-				.withModal(attributes.modal).withPosition(attributes.position);
-		OverlayPositions.get().show(this, options);
-		open = true;
-	}
-
-	private boolean selfOrDescendantOverlayContains(Element element) {
-		if (provideElement().provideIsAncestorOf(element, true)) {
-			return true;
-		}
-		if (childOverlay != null
-				&& childOverlay.selfOrDescendantOverlayContains(element)) {
-			return true;
-		}
-		return false;
-	}
-
-	protected void setChildOverlay(Overlay childOverlay) {
-		this.childOverlay = childOverlay;
-	}
-
-	public void setCssClass(String cssClass) {
-		String old_cssClass = this.cssClass;
-		this.cssClass = cssClass;
-		propertyChangeSupport().firePropertyChange("cssClass", old_cssClass,
-				cssClass);
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format(
-				"Overlay:\n\tcontents:     %s\n\tlogicalParent: %s\n\tchildOverlay: %s",
-				attributes.contents, attributes.logicalParent, childOverlay);
-	}
-
 	public static class Actions extends Model implements HasLinks {
 		public static Actions close() {
 			return new Actions().withClose();
@@ -417,6 +146,10 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		boolean consumeSubmit;
 
+		public OverlayPosition getPosition() {
+			return position;
+		}
+
 		public Attributes withConsumeSubmit(boolean consumeSubmit) {
 			this.consumeSubmit = consumeSubmit;
 			return this;
@@ -430,9 +163,23 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			return dropdown(Position.CENTER, rect, null, model);
 		}
 
+		/**
+		 * Creates the {@link Attributes} of a dropdown overlay, which can then
+		 * create an Overlay with {@link Attributes#create()}
+		 * 
+		 * @param xalign
+		 *            If null, the caller must call {@link #getPosition()} and
+		 *            position exactly
+		 * @param rect
+		 * @param logicalParent
+		 * @param contents
+		 * @return
+		 */
 		public Attributes dropdown(OverlayPosition.Position xalign,
 				DomRect rect, Model logicalParent, Model contents) {
-			position.dropdown(xalign, rect);
+			if (xalign != null) {
+				position.dropdown(xalign, rect, 0);
+			}
 			withLogicalParent(logicalParent);
 			withContents(contents);
 			withRemoveOnMouseDownOutside(true);
@@ -527,28 +274,299 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	public static class Positioned
 			extends ModelEvent<OverlayContainer, Positioned.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onPositioned(Positioned event);
+		}
+
 		@Override
 		public void dispatch(Positioned.Handler handler) {
 			handler.onPositioned(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onPositioned(Positioned event);
 		}
 	}
 
 	public static class PositionedDescendants extends
 			ModelEvent.DescendantEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Emitter> {
-		@Override
-		public void dispatch(PositionedDescendants.Handler handler) {
-			handler.onPositionedDescendants(this);
-		}
-
 		public interface Handler extends NodeEvent.Handler {
 			void onPositionedDescendants(PositionedDescendants event);
 		}
 
 		public interface Emitter extends ModelEvent.Emitter {
 		}
+
+		@Override
+		public void dispatch(PositionedDescendants.Handler handler) {
+			handler.onPositionedDescendants(this);
+		}
+	}
+
+	public static Attributes attributes() {
+		return new Attributes();
+	}
+
+	private boolean open;
+	/*
+	 * For event bubbling - if the logicalParent is detached, try the secondary
+	 * (if it exists)
+	 */
+
+	/*
+	 * Don't close this overlay if the child is the event target
+	 */
+	private Overlay childOverlay;
+
+	private String cssClassParameter;
+
+	Attributes attributes;
+
+	private String cssClass;
+
+	boolean reemittingClose;
+
+	private Overlay(Attributes attributes) {
+		this.attributes = attributes;
+		computeCssClass();
+	}
+
+	public boolean close() {
+		return close(null, false);
+	}
+
+	/**
+	 * @return true if closed
+	 */
+	public boolean close(GwtEvent from, boolean submit) {
+		if (!open) {
+			return true;
+		}
+		if (!submit && !attributes.allowCloseWithoutSubmit) {
+			return false;
+		}
+		if (childOverlay != null) {
+			if (!childOverlay.close(from, submit)) {
+				return false;
+			}
+		}
+		// double-check open, since childOverlay.close may have re-called
+		if (!open) {
+			return true;
+		}
+		open = false;
+		Node node = provideNode();
+		if (submit) {
+			// force commit of focussed element changes (textarea, input) if it
+			// is a child of this closing dialog.
+			if (Al.isBrowser()) {
+				Element focus = WidgetUtils.getFocussedDocumentElement();
+				if (focus != null
+						&& provideElement().provideIsAncestorOf(focus, true)) {
+					WidgetUtils.clearFocussedDocumentElement();
+				}
+			}
+			NodeEvent.Context.fromEvent(from, node)
+					.dispatch(ModelEvents.Submit.class, null);
+		}
+		/*
+		 * Any re-emission of events, model triggers should happen in the
+		 * BeforeClosed handlers
+		 */
+		NodeEvent.Context.fromEvent(from, node)
+				.dispatch(ModelEvents.BeforeClosed.class, null);
+		OverlayPositions.get().hide(this, true);
+		/*
+		 * node will be removed from the layout at this point, but its parent
+		 * refs will still be valid - a little dodgy, but it works
+		 */
+		NodeEvent.Context.fromEvent(from, node)
+				.dispatch(ModelEvents.Closed.class, null);
+		return true;
+	}
+
+	@Directed
+	public Actions getActions() {
+		return attributes.actions;
+	}
+
+	@Directed
+	public Model getContents() {
+		return attributes.contents;
+	}
+
+	@Binding(type = Type.CLASS_PROPERTY)
+	public String getCssClass() {
+		return this.cssClass;
+	}
+
+	public OverlayPosition getPosition() {
+		return attributes.position;
+	}
+
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (attributes.logicalParent != null
+				&& attributes.logicalParent instanceof HasNode) {
+			Node sourceNode = ((HasNode) attributes.logicalParent)
+					.provideNode();
+			Overlay ancestorOverlay = DirndlAccess.ComponentAncestorAccess
+					.getAncestor(sourceNode, this);
+			if (ancestorOverlay != null) {
+				ancestorOverlay.setChildOverlay(event.isBound() ? this : null);
+				// and inherit logical ancestry for styling. order is (ancestor)
+				// ancestors > parent > overlay > contents
+				if (attributes.logicalAncestors.isEmpty()) {
+					attributes.logicalAncestors = Stream.concat(
+							ancestorOverlay.attributes.logicalAncestors
+									.stream(),
+							Stream.of(
+									ancestorOverlay.attributes.logicalParent
+											.getClass(),
+									ancestorOverlay.getClass(),
+									ancestorOverlay.getContents().getClass()))
+							.collect(Collectors.toList());
+					computeCssClass();
+				}
+			}
+		}
+		if (event.isBound()) {
+			event.reemitAs(this, ModelEvents.Opened.class);
+		} else {
+		}
+	}
+
+	@Override
+	public void onClose(Close event) {
+		close(event, true);
+	}
+
+	@Override
+	public void onClosed(Closed event) {
+		Node node = provideNode();
+		if (node != null && event.getContext().node != node) {
+			// child overlay
+			return;
+		}
+		// custom reemission because node will be detached from layout
+		if (reemittingClose) {
+			event.bubble();
+			return;
+		}
+		if (attributes.closedHandler != null) {
+			attributes.closedHandler.onClosed(event);
+		}
+		try {
+			reemittingClose = true;
+			event.reemit();
+		} finally {
+			reemittingClose = false;
+		}
+	}
+
+	@Override
+	public void onCtrlEnterPressed(CtrlEnterPressed event) {
+		// TODO - probably better to route via an internal form, which then
+		// fires submit, and close on that
+		close(event, true);
+	}
+
+	@Override
+	public void onEscapePressed(EscapePressed event) {
+		close(event, false);
+	}
+
+	@Override
+	public void onMouseDownOutside(MouseDownOutside event) {
+		if (attributes.removeOnMouseDownOutside) {
+			GwtEvent gwtEvent = event.getContext().getOriginatingGwtEvent();
+			// don't close if a descendant overlay received the event
+			if (gwtEvent instanceof HasNativeEvent) {
+				NativeEvent nativeEvent = ((HasNativeEvent) gwtEvent)
+						.getNativeEvent();
+				EventTarget eventTarget = nativeEvent.getEventTarget();
+				if (eventTarget.isElement()) {
+					Element element = eventTarget.asElement();
+					if (selfOrDescendantOverlayContains(element)) {
+						return;
+					}
+				}
+			}
+			close(event, false);
+		}
+	}
+
+	@Override
+	public void onSubmit(Submit event) {
+		if (event.checkReemitted(this)) {
+			return;
+		}
+		if (attributes.submitHandler != null) {
+			attributes.submitHandler.onSubmit(event);
+		}
+		if (!attributes.consumeSubmit) {
+			event.reemit();
+		}
+	}
+
+	public void open() {
+		ContainerOptions options = new ContainerOptions()
+				.withModal(attributes.modal).withPosition(attributes.position);
+		OverlayPositions.get().show(this, options);
+		open = true;
+	}
+
+	public void setCssClass(String cssClass) {
+		String old_cssClass = this.cssClass;
+		this.cssClass = cssClass;
+		propertyChangeSupport().firePropertyChange("cssClass", old_cssClass,
+				cssClass);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format(
+				"Overlay:\n\tcontents:     %s\n\tlogicalParent: %s\n\tchildOverlay: %s",
+				attributes.contents, attributes.logicalParent, childOverlay);
+	}
+
+	protected Overlay getChildOverlay() {
+		return this.childOverlay;
+	}
+
+	protected void setChildOverlay(Overlay childOverlay) {
+		this.childOverlay = childOverlay;
+	}
+
+	/*
+	 * Compute the overlay class based on logical ancestors + contents
+	 */
+	void computeCssClass() {
+		// deliberately does not try to access @Directed(cssClass) - since
+		// overlay creation is imperative and the caller has essentially full
+		// control of the class selector (via logicalAncestors)...this is good
+		// enough, I think
+		//
+		// FIXME - dirndl 1x3 - actually, at least for contentdecorator it would
+		// be nice
+		Stream<String> derivedClasses = Stream
+				.concat(attributes.logicalAncestors.stream(),
+						Stream.of(attributes.logicalParent, this,
+								attributes.contents))
+				.filter(Objects::nonNull).map(CommonUtils::classOrSelf)
+				.map(Class::getSimpleName);
+		String cssClass = Stream
+				.concat(derivedClasses, Stream.of(cssClassParameter))
+				.filter(Objects::nonNull).map(Ax::cssify)
+				.collect(Collectors.joining(" "));
+		setCssClass(cssClass);
+	}
+
+	private boolean selfOrDescendantOverlayContains(Element element) {
+		if (provideElement().provideIsAncestorOf(element, true)) {
+			return true;
+		}
+		if (childOverlay != null
+				&& childOverlay.selfOrDescendantOverlayContains(element)) {
+			return true;
+		}
+		return false;
 	}
 }

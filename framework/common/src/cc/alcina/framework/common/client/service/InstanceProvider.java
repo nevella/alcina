@@ -80,11 +80,12 @@ public interface InstanceProvider<T> extends Registration.AllSubtypes {
 	 * The default is for the call to be evaluated sequentially, this (single)
 	 * entry point gives simpler upstream code
 	 */
-	default void provide(Query<T> query, Consumer<T> asyncReturn) {
+	default void provide(Query<T> query, Consumer<T> asyncReturn,
+			Consumer<Exception> asyncException) {
 		try {
 			asyncReturn.accept(provide(query));
 		} catch (Exception e) {
-			throw WrappedRuntimeException.wrap(e);
+			asyncException.accept(e);
 		}
 	}
 }

@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser;
 import cc.alcina.framework.servlet.component.entity.NonOptimisedQueryCache;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
@@ -28,6 +29,7 @@ public class PackageProperties {
       public TypedProperty<EntityBrowser.Ui, NonOptimisedQueryCache> cache = new TypedProperty<>(EntityBrowser.Ui.class, "cache");
       public TypedProperty<EntityBrowser.Ui, Boolean> clearPostSelectionLayers = new TypedProperty<>(EntityBrowser.Ui.class, "clearPostSelectionLayers");
       public TypedProperty<EntityBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(EntityBrowser.Ui.class, "commandContextProvider");
+      public TypedProperty<EntityBrowser.Ui, Model> eventHandlerCustomisation = new TypedProperty<>(EntityBrowser.Ui.class, "eventHandlerCustomisation");
       public TypedProperty<EntityBrowser.Ui, RemoteComponentObservables.ObservableEntry> history = new TypedProperty<>(EntityBrowser.Ui.class, "history");
       public TypedProperty<EntityBrowser.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(EntityBrowser.Ui.class, "keybindingsHandler");
       public TypedProperty<EntityBrowser.Ui, String> mainCaption = new TypedProperty<>(EntityBrowser.Ui.class, "mainCaption");

@@ -6,7 +6,6 @@ import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestionEntry;
@@ -15,7 +14,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.Answe
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.SuggestionSelected;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.TextTitle;
@@ -80,7 +78,7 @@ class LayerFilterEditor extends Model.All
 			attributes.withSuggestionXAlign(Position.CENTER);
 			attributes.withLogicalAncestors(List.of(FilterSuggestor.class));
 			attributes.withAnswer(new AnswerImpl(
-					Ui.get().createAnswerSupplier(host.getLayer().index - 1)));
+					Ui.get().createAnswerSupplier(host.getLayer().index)));
 			attributes.withNonOverlaySuggestionResults(true);
 			attributes.withInputPrompt("Filter layer");
 			attributes.withInputExpandable(true);

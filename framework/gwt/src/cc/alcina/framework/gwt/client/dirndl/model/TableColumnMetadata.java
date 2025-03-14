@@ -1,8 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -37,7 +34,7 @@ public interface TableColumnMetadata {
 	public static class Change extends
 			ModelEvent.DescendantEvent<TableColumnMetadata, Change.Handler, Change.Emitter> {
 		public interface Handler extends NodeEvent.Handler {
-			void onChange(Change event);
+			void onTableColumnMetadataChange(Change event);
 		}
 
 		public interface Emitter extends ModelEvent.Emitter {
@@ -45,7 +42,7 @@ public interface TableColumnMetadata {
 
 		@Override
 		public void dispatch(Change.Handler handler) {
-			handler.onChange(this);
+			handler.onTableColumnMetadataChange(this);
 		}
 	}
 

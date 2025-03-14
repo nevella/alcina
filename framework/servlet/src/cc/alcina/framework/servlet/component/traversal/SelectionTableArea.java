@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.traversal.Selection.RowView;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.EmitDescent;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
@@ -185,7 +184,7 @@ public class SelectionTableArea extends Model.Fields
 			FilterSuggestor suggestor = new FilterSuggestor(this);
 			overlay = Overlay.attributes()
 					.dropdown(Position.START,
-							provideElement().getBoundingClientRect(),
+							relativeTo.getBoundingClientRect(),
 							SelectionTableArea.this, suggestor)
 					.create();
 		}

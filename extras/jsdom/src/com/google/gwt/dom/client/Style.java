@@ -2039,4 +2039,10 @@ public class Style implements ClientDomStyle {
 			}
 		}
 	}
+
+	@Override
+	public String toString() {
+		return local.toString();
+	}
+	//
 }

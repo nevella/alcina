@@ -47,7 +47,9 @@ public class EventTarget implements JavascriptObjectEquivalent {
 		} else {
 			EventTarget result = new EventTarget();
 			if (target.isElement()) {
-				result.attachId = AttachId.forNode(target.asElement());
+				Element element = target.asElement();
+				result.attachId = AttachId.forNode(element);
+				result.name = element.getTagName();
 				result.type = Type.element;
 			} else {
 				result.type = Type.valueOf(target.getNativeTargetType());
@@ -135,6 +137,8 @@ public class EventTarget implements JavascriptObjectEquivalent {
 	AttachId attachId;
 
 	Type type;
+
+	String name;
 
 	@Reflected
 	public enum Type {

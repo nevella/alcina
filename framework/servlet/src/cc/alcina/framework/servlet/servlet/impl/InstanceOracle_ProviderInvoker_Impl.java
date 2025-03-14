@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.servlet.impl;
 
+import java.util.function.Consumer;
+
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;

@@ -33,8 +33,12 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
  */
 class EntityTraversalQueryLayer extends Layer
 		implements InputsFromPreviousSibling {
+	// for debugging
+	Selection selection;
+
 	@Override
 	public void process(Selection selection) throws Exception {
+		this.selection = selection;
 		if (!EntityBrowser.peer().isSelected(selection)) {
 			return;
 		} else {

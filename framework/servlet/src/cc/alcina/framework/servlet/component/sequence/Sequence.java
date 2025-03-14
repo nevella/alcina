@@ -273,9 +273,8 @@ public interface Sequence<T> {
 				// com.google.gwt.dom.client.mutations.MutationNode.remove(MutationNode
 				// remove, ApplyTo applyTo) -
 				// https://github.com/nevella/alcina/issues/34
-				StatusModule.get().showMessageTransitional(Ax.format(
+				throw new IllegalArgumentException(Ax.format(
 						"Load sequence - path '%s' does not exist", path));
-				sequence.elements = new ArrayList<>();
 			} else {
 				try {
 					sequence.elements = (List) SEUtilities

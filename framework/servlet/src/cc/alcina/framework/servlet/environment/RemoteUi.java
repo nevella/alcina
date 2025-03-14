@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.environment;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import com.google.gwt.activity.shared.ActivityMapper;
 import com.google.gwt.dom.client.StyleInjector;
@@ -12,12 +13,15 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.service.DispatchRefProvider;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivityManager;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.EnvironmentInitComplete.EnvironmentSettings;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
@@ -182,5 +186,40 @@ public interface RemoteUi {
 
 	default boolean isSendFullExceptionMessage() {
 		return true;
+	}
+
+	/**
+	 * Invoke utils for say posting off-thread notifications to the UI thread
+	 */
+	public static class Invoke {
+		public static void notify(String template, Object... args) {
+			invoke(() -> NotificationObservable.of(template, args).publish());
+		}
+
+		public static void invoke(Runnable runnable) {
+		}
+
+		public static Consumer<Exception> exceptionNotifier() {
+			return new Notifier<Exception>(
+					CommonUtils::toSimpleExceptionMessage);
+		}
+
+		static class Notifier<T> implements Consumer<T> {
+			Function<T, String> stringProvider;
+
+			Consumer<Runnable> dispatch;
+
+			Notifier(Function<T, String> stringProvider) {
+				this.stringProvider = stringProvider;
+				this.dispatch = DispatchRefProvider.get().getDispatch();
+			}
+
+			@Override
+			public void accept(T t) {
+				String message = stringProvider.apply(t);
+				dispatch.accept(
+						() -> NotificationObservable.of(message).publish());
+			}
+		}
 	}
 }

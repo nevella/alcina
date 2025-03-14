@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.component.sequence;
 
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
@@ -18,6 +19,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowser;
 import cc.alcina.framework.servlet.component.sequence.SequencePlace;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings;
 import com.google.gwt.dom.client.StyleElement;
+import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Integer;
 import java.lang.String;
@@ -64,8 +66,8 @@ public class PackageProperties {
       TypedProperty<Page, SequencePlace> lastFilterTestPlace = new TypedProperty<>(Page.class, "lastFilterTestPlace");
       TypedProperty<Page, SequencePlace> lastHighlightTestPlace = new TypedProperty<>(Page.class, "lastHighlightTestPlace");
       TypedProperty<Page, SequencePlace> lastSelectedIndexChangePlace = new TypedProperty<>(Page.class, "lastSelectedIndexChangePlace");
-      TypedProperty<Page, String> lastSequenceKey = new TypedProperty<>(Page.class, "lastSequenceKey");
       TypedProperty<Page, Timer> observableObservedTimer = new TypedProperty<>(Page.class, "observableObservedTimer");
+      TypedProperty<Page, InstanceOracle.Query> oracleQuery = new TypedProperty<>(Page.class, "oracleQuery");
       TypedProperty<Page, Sequence> sequence = new TypedProperty<>(Page.class, "sequence");
       TypedProperty<Page, SequenceArea> sequenceArea = new TypedProperty<>(Page.class, "sequenceArea");
       TypedProperty<Page, StyleElement> styleElement = new TypedProperty<>(Page.class, "styleElement");
@@ -89,6 +91,8 @@ public class PackageProperties {
     static class _SequenceBrowser_Ui implements TypedProperty.Container {
       TypedProperty<SequenceBrowser.Ui, Set> appCommandContexts = new TypedProperty<>(SequenceBrowser.Ui.class, "appCommandContexts");
       TypedProperty<SequenceBrowser.Ui, CommandContext.Provider> commandContextProvider = new TypedProperty<>(SequenceBrowser.Ui.class, "commandContextProvider");
+      TypedProperty<SequenceBrowser.Ui, Boolean> domain = new TypedProperty<>(SequenceBrowser.Ui.class, "domain");
+      TypedProperty<SequenceBrowser.Ui, Boolean> isDomain = new TypedProperty<>(SequenceBrowser.Ui.class, "isDomain");
       TypedProperty<SequenceBrowser.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(SequenceBrowser.Ui.class, "keybindingsHandler");
       TypedProperty<SequenceBrowser.Ui, String> mainCaption = new TypedProperty<>(SequenceBrowser.Ui.class, "mainCaption");
       TypedProperty<SequenceBrowser.Ui, Page> page = new TypedProperty<>(SequenceBrowser.Ui.class, "page");

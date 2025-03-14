@@ -147,8 +147,9 @@ public class FlightEventRecorder extends LifecycleService.AlsoDev {
 		}
 		String dateSessionId = Ax.format("%s.%s", Ax.timestampYmd(new Date()),
 				sessionId);
-		String appId = Configuration.get("appId");
-		appId = Ax.blankTo(appId, EntityLayerUtils.getLocalHostName());
+		String appId = Configuration.key("appId").optional()
+				.map(Configuration.Key::get)
+				.orElse(EntityLayerUtils.getLocalHostName());
 		String folderPath = Ax.format("%s/flight-%s-%s",
 				Configuration.get("path"), appId, dateSessionId);
 		eventsFolder = new File(folderPath);

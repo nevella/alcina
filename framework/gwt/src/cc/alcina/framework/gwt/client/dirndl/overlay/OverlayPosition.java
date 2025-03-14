@@ -62,10 +62,10 @@ public class OverlayPosition {
 		constraints.forEach(Constraint::apply);
 	}
 
-	public void dropdown(Position xalign, DomRect rect) {
+	public void dropdown(Position xalign, DomRect rect, int yOffset) {
 		fromRect(rect);
 		addConstraint(Direction.X_AXIS, xalign, xalign, 0);
-		addConstraint(Direction.Y_AXIS, Position.END, Position.START, 6);
+		addConstraint(Direction.Y_AXIS, Position.END, Position.START, yOffset);
 	}
 
 	public OverlayPosition fromRect(DomRect fromRect) {
