@@ -51,6 +51,17 @@ public class ClientReflections {
 				.map(mr -> mr.forName(fqn)).filter(Objects::nonNull)
 				.findFirst();
 		if (optional.isEmpty()) {
+			switch (fqn) {
+			case "java.util.ImmutableCollections$AbstractImmutableList":
+			case "java.util.Collections$UnmodifiableList":
+			case "java.util.Collections$SingletonList":
+			case "java.util.Collections$EmptyList":
+			case "java.util.Collections$UnmodifiableRandomAccessList":
+			case "java.util.ImmutableCollections$ListN":
+			case "java.util.ImmutableCollections$AbstractImmutableMap":
+			case "java.util.ImmutableCollections$AbstractImmutableSet":
+				return null;
+			}
 			throw new NoSuchElementException("No forName for " + fqn);
 		}
 		return optional.get();
@@ -74,7 +85,7 @@ public class ClientReflections {
 				// serialization
 				/*
 				 * sync to cc.alcina.framework.common.client.util.ClassUtil.
-				 * isImmutableJdkCollectionType()
+				 * isImmutableJdkCollectionType() and forName
 				 */
 				List<Class> interfaces = List.of();
 				switch (clazz.getName()) {
@@ -82,6 +93,8 @@ public class ClientReflections {
 				case "java.util.Collections$UnmodifiableList":
 				case "java.util.Collections$SingletonList":
 				case "java.util.Collections$EmptyList":
+				case "java.util.Collections$UnmodifiableRandomAccessList":
+				case "java.util.ImmutableCollections$ListN":
 					interfaces = List.of(List.class);
 					break;
 				case "java.util.ImmutableCollections$AbstractImmutableMap":

@@ -49,6 +49,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
@@ -693,6 +694,14 @@ public class GraphProjection {
 		// Trying hard to avoid the first case (it's very much not optimal)
 		if (source instanceof MvccObject
 				&& ((MvccObject) source).__getMvccVersions__() != null) {
+			/*
+			 * These probably shouldn't be projected in any case, but certainly
+			 * not in the case of lazily-populated fields
+			 */
+			if (Modifier.isTransient(field.getModifiers())
+					|| field.isAnnotationPresent(GwtTransient.class)) {
+				return null;
+			}
 			try {
 				return SEUtilities.getPropertyValue(source, field.getName());
 			} catch (Exception e) {

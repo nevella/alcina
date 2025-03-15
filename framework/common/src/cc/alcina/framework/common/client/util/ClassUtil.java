@@ -74,6 +74,8 @@ public class ClassUtil {
 			case "java.util.Collections$UnmodifiableList":
 			case "java.util.Collections$SingletonList":
 			case "java.util.Collections$EmptyList":
+			case "java.util.Collections$UnmodifiableRandomAccessList":
+			case "java.util.ImmutableCollections$ListN":
 				return true;
 			case "java.util.ImmutableCollections$AbstractImmutableMap":
 				return true;
