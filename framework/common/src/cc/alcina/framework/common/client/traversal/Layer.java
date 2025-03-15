@@ -336,7 +336,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			return traversalState.getTraversal();
 		}
 
-		void select(Selection selection) {
+		public void select(Selection selection) {
 			traversalState.select(selection);
 		}
 

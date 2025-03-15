@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
@@ -19,6 +20,82 @@ import cc.alcina.framework.common.client.util.NestedName;
 public class MeasureSelection extends AbstractSelection<Measure>
 		implements Comparable<MeasureSelection>, Selection.WithRange<Measure>,
 		HasReleaseableResources {
+	public interface IgnoreOverlaps {
+	}
+
+	// Not intended for final output
+	public interface Intermediate {
+	}
+
+	public static class View<M extends MeasureSelection>
+			extends AbstractSelection.View<M> {
+		@Override
+		public String getDiscriminator(MeasureSelection selection) {
+			FormatBuilder format = new FormatBuilder().separator(" - ");
+			format.appendIfNotBlank(selection.get().token,
+					selection.get().getData());
+			return format.toString();
+		}
+
+		@Override
+		public String getMarkup(MeasureSelection selection) {
+			try {
+				return selection.get().markup();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return "Unable to parse markup (possibly namespace issue)";
+			}
+		}
+
+		@Override
+		public String getPathSegment(MeasureSelection selection) {
+			return selection.get().toIntPair().toString();
+		}
+
+		@Override
+		public String computeText(MeasureSelection selection) {
+			return selection.get().ntc();
+		}
+	}
+
+	/*
+	 * A simple per-app cache to optimise range filtering
+	 */
+	static class TextRangeMatcher {
+		static class Data {
+			static Data last;
+
+			static Data get(String textFilter) {
+				Data data = last;
+				if (data != null && data.textFilter == textFilter) {
+					return data;
+				}
+				data = new Data(textFilter);
+				last = data;
+				return data;
+			}
+
+			String textFilter;
+
+			int idx = -1;
+
+			Data(String textFilter) {
+				this.textFilter = textFilter;
+				if (textFilter.matches("\\d{1,9}")) {
+					idx = Integer.parseInt(textFilter);
+				}
+			}
+
+			boolean matches(IntPair intPair) {
+				return idx == -1 ? false : intPair.contains(idx);
+			}
+		}
+
+		public static boolean matches(String textFilter, IntPair intPair) {
+			return Data.get(textFilter).matches(intPair);
+		}
+	}
+
 	/*
 	 * Utility to allow usage of measurecontainment etc from non-selection
 	 * measures
@@ -47,6 +124,11 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		this(parent, measure, null);
 	}
 
+	public MeasureSelection(Selection parent, Measure measure,
+			String pathSegment) {
+		super(parent, measure, pathSegment);
+	}
+
 	public Token token() {
 		return get().token;
 	}
@@ -55,11 +137,6 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	public void releaseResources() {
 		super.releaseResources();
 		get().detach();
-	}
-
-	public MeasureSelection(Selection parent, Measure measure,
-			String pathSegment) {
-		super(parent, measure, pathSegment);
 	}
 
 	@Override
@@ -101,6 +178,10 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		return get().markup();
 	}
 
+	public DomNode domNode() {
+		return get().containingNode();
+	}
+
 	public void setOmit(boolean omit) {
 		this.omit = omit;
 	}
@@ -121,44 +202,6 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		return super.matchesText(textFilter);
 	}
 
-	/*
-	 * A simple per-app cache to optimise range filtering
-	 */
-	static class TextRangeMatcher {
-		static class Data {
-			static Data last;
-
-			String textFilter;
-
-			int idx = -1;
-
-			Data(String textFilter) {
-				this.textFilter = textFilter;
-				if (textFilter.matches("\\d{1,9}")) {
-					idx = Integer.parseInt(textFilter);
-				}
-			}
-
-			static Data get(String textFilter) {
-				Data data = last;
-				if (data != null && data.textFilter == textFilter) {
-					return data;
-				}
-				data = new Data(textFilter);
-				last = data;
-				return data;
-			}
-
-			boolean matches(IntPair intPair) {
-				return idx == -1 ? false : intPair.contains(idx);
-			}
-		}
-
-		public static boolean matches(String textFilter, IntPair intPair) {
-			return Data.get(textFilter).matches(intPair);
-		}
-	}
-
 	@Override
 	public String toDebugString() {
 		return Ax.format("%s :: %s :: %s", super.toString(), get().getData(),
@@ -169,44 +212,6 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		Ax.err("[base measure-selection - perhaps override?] Attempting to truncate %s to %s",
 				NestedName.get(this), range);
 		throw new UnsupportedOperationException();
-	}
-
-	public interface IgnoreOverlaps {
-	}
-
-	// Not intended for final output
-	public interface Intermediate {
-	}
-
-	public static class View<M extends MeasureSelection>
-			extends AbstractSelection.View<M> {
-		@Override
-		public String getDiscriminator(MeasureSelection selection) {
-			FormatBuilder format = new FormatBuilder().separator(" - ");
-			format.appendIfNotBlank(selection.get().token,
-					selection.get().getData());
-			return format.toString();
-		}
-
-		@Override
-		public String getMarkup(MeasureSelection selection) {
-			try {
-				return selection.get().markup();
-			} catch (Exception e) {
-				e.printStackTrace();
-				return "Unable to parse markup (possibly namespace issue)";
-			}
-		}
-
-		@Override
-		public String getPathSegment(MeasureSelection selection) {
-			return selection.get().toIntPair().toString();
-		}
-
-		@Override
-		public String computeText(MeasureSelection selection) {
-			return selection.get().ntc();
-		}
 	}
 
 	@Override
