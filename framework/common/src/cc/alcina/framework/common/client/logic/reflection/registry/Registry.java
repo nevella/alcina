@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
@@ -31,7 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.ClassPair;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -60,6 +60,12 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Registry {
 	public static final String MARKER_RESOURCE = "registry.properties";
+
+	/*
+	 * Dev-only - allow redefinition for fast reload
+	 */
+	public static final LooseContext.Key CONTEXT_ALLOW_SINGLETON_REDEFINITION = LooseContext
+			.key(Registry.class, "CONTEXT_ALLOW_SINGLETON_REDEFINITION");
 
 	static RegistryProvider provider = new BasicRegistryProvider();
 
@@ -855,7 +861,8 @@ public class Registry {
 						implementation);
 			} else {
 				RegistryKey typeKey = registryKeys.get(type);
-				if (implementations.exists(typeKey)) {
+				if (implementations.exists(typeKey)
+						&& !CONTEXT_ALLOW_SINGLETON_REDEFINITION.is()) {
 					throw new IllegalStateException(Ax.format(
 							"Registering %s at key %s - existing registration",
 							implementation, typeKey));
@@ -1026,7 +1033,8 @@ public class Registry {
 				Object existing = byClassKey(type, keys);
 				// a singleton can be registered to multiple keys, so the logic
 				// of this check is correct
-				if (existing != null && existing != implementation) {
+				if (existing != null && existing != implementation
+						&& !CONTEXT_ALLOW_SINGLETON_REDEFINITION.is()) {
 					throw new IllegalStateException(Ax.format(
 							"Existing registration of singleton - %s\n\t:: %s",
 							type.getName(), existing.getClass().getName()));
@@ -1041,7 +1049,8 @@ public class Registry {
 				Object existing = byClass.get(clazz);
 				// a singleton can be registered to multiple keys, so the logic
 				// of this check is correct
-				if (existing != null && existing != implementation) {
+				if (existing != null && existing != implementation
+						&& !CONTEXT_ALLOW_SINGLETON_REDEFINITION.is()) {
 					throw new IllegalStateException(Ax.format(
 							"Existing registration of singleton - %s\n\t:: %s",
 							clazz.getName(),
