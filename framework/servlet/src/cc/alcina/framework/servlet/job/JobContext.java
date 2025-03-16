@@ -34,7 +34,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
-import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -410,9 +409,9 @@ public class JobContext {
 
 	private TreeProcess treeProcess;
 
-	public TreeSerializable typedResult;
+	public Object typedResult;
 
-	public <V extends TreeSerializable> V typedResult() {
+	public <V> V typedResult() {
 		return (V) typedResult;
 	}
 
