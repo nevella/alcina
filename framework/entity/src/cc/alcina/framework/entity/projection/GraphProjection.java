@@ -63,6 +63,7 @@ import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.HasReadPermission;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.ProjectByValue;
@@ -70,6 +71,8 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -696,11 +699,25 @@ public class GraphProjection {
 				&& ((MvccObject) source).__getMvccVersions__() != null) {
 			/*
 			 * These probably shouldn't be projected in any case, but certainly
-			 * not in the case of lazily-populated fields
+			 * not in the case of lazily-populated fields (primitives will not
+			 * be lazy-populated)
 			 */
 			if (Modifier.isTransient(field.getModifiers())
 					|| field.isAnnotationPresent(GwtTransient.class)) {
-				return null;
+				if (!field.getType().isPrimitive()) {
+					/*
+					 * previous checks were performance-opts, this is the real
+					 * one
+					 * 
+					 */
+					Property property = Reflections
+							.at(Domain.resolveEntityClass(source.getClass()))
+							.property(field.getName());
+					if (property.has(DomainProperty.class) && property
+							.annotation(DomainProperty.class).serialize()) {
+						return null;
+					}
+				}
 			}
 			try {
 				return SEUtilities.getPropertyValue(source, field.getName());
