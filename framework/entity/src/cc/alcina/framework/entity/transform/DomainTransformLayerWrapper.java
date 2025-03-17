@@ -91,4 +91,10 @@ public class DomainTransformLayerWrapper implements Serializable {
 	public void snapshotEntityLocatorMap() {
 		locatorMap = locatorMap.copy();
 	}
+
+	public void clearPersistentTransformData() {
+		persistentEvents.clear();
+		persistentRequests.clear();
+		remoteEventsPersisted.clear();
+	}
 }

@@ -25,9 +25,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicyFactory;
+import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformRetryPolicy;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 
 public class TransformPersistenceToken implements Serializable {
+	public enum Pass {
+		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
+	}
+
 	private final DomainTransformRequest request;
 
 	private EntityLocatorMap locatorMap;
@@ -43,6 +48,8 @@ public class TransformPersistenceToken implements Serializable {
 	private Set<DomainTransformEvent> ignoreInExceptionPass = new LinkedHashSet<DomainTransformEvent>();
 
 	private PersistenceLayerTransformExceptionPolicy transformExceptionPolicy;
+
+	private PersistenceLayerTransformRetryPolicy transformRetryPolicy = new PersistenceLayerTransformRetryPolicy.NoRetry();
 
 	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
 
@@ -86,6 +93,15 @@ public class TransformPersistenceToken implements Serializable {
 				.getPolicy(this, forOfflineTransforms);
 		this.transformPropagationPolicy = Registry
 				.impl(TransformPropagationPolicy.class);
+	}
+
+	public PersistenceLayerTransformRetryPolicy getTransformRetryPolicy() {
+		return transformRetryPolicy;
+	}
+
+	public void setTransformRetryPolicy(
+			PersistenceLayerTransformRetryPolicy transformRetryPolicy) {
+		this.transformRetryPolicy = transformRetryPolicy;
 	}
 
 	public boolean addCascadedEvents() {
@@ -340,14 +356,15 @@ public class TransformPersistenceToken implements Serializable {
 						.trimToWsChars(getRequest().toString(), 800000, true));
 	}
 
-	public enum Pass {
-		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
-	}
-
 	public void updateRequestFromCollation() {
 		Preconditions.checkState(
 				getRequest().getPriorRequestsWithoutResponse().size() == 0);
 		getRequest().getEvents().clear();
 		getRequest().getEvents().addAll(getTransformCollation().getAllEvents());
+	}
+
+	public void resetTransformsToCommitToStorage() {
+		getRequest().allTransforms().forEach(
+				transform -> transform.setCommitType(CommitType.TO_STORAGE));
 	}
 }

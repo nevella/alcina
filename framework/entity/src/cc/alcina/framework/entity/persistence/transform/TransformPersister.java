@@ -19,11 +19,15 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext.DeliberatelyThrownWrapperException;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
+import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken.Pass;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
@@ -81,25 +85,41 @@ public class TransformPersister implements AlcinaProcess {
 										token, wrapper);
 					}
 				} catch (RuntimeException ex) {
-					// TransformPersisterInPersistenceContext.ThreadData.get()
-					// .logLastFlushData();
-					InFlightPersistence.get().onThrowException(token, ex);
-					DeliberatelyThrownWrapperException dtwe = null;
-					if (ex instanceof DeliberatelyThrownWrapperException) {
-						dtwe = (DeliberatelyThrownWrapperException) ex;
-					} else if (ex
-							.getCause() instanceof DeliberatelyThrownWrapperException) {
-						dtwe = (DeliberatelyThrownWrapperException) ex
-								.getCause();
+					String preparedStatementCausingIssue = TransformPersisterInPersistenceContext.ThreadData
+							.get()
+							.getAndClearLastFlushPreparedStatementCausingIssue();
+					if (token.getTransformRetryPolicy().isRetry(token, wrapper,
+							ex, preparedStatementCausingIssue)) {
+						token.resetTransformsToCommitToStorage();
+						wrapper.clearPersistentTransformData();
+						DomainStore.writableStore().getPersistenceEvents()
+								.fireDomainTransformPersistenceEvent(
+										new DomainTransformPersistenceEvent(
+												token, wrapper,
+												DomainTransformPersistenceEventType.COMMIT_ERROR,
+												true));
+						token.setPass(Pass.RETRY_WITH_IGNORES);
 					} else {
-						// we used to throw - but we need to publish the
-						// exception to inform queues, listeners that the
-						// exception failed (an example issue is a JDBC issue)
-						//
-						// that said, we used to not arrive here because of
-						// flush() before the inPersistenceContext call exited
-						TransformPersisterInPersistenceContext
-								.putExceptionInWrapper(token, ex, wrapper);
+						InFlightPersistence.get().onThrowException(token, ex);
+						DeliberatelyThrownWrapperException dtwe = null;
+						if (ex instanceof DeliberatelyThrownWrapperException) {
+							dtwe = (DeliberatelyThrownWrapperException) ex;
+						} else if (ex
+								.getCause() instanceof DeliberatelyThrownWrapperException) {
+							dtwe = (DeliberatelyThrownWrapperException) ex
+									.getCause();
+						} else {
+							// we used to throw - but we need to publish the
+							// exception to inform queues, listeners that the
+							// exception failed (an example issue is a JDBC
+							// issue)
+							//
+							// that said, we used to not arrive here because of
+							// flush() before the inPersistenceContext call
+							// exited
+							TransformPersisterInPersistenceContext
+									.putExceptionInWrapper(token, ex, wrapper);
+						}
 					}
 				} finally {
 					InFlightPersistence.get().register(token, false);

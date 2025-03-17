@@ -78,6 +78,7 @@ import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
+import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformRetryPolicy;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.FileUtils;
@@ -121,6 +122,9 @@ public class TransformCommit {
 
 	public static final transient String CONTEXT_COMMITTING = TransformCommit.class
 			.getName() + ".CONTEXT_COMMITTING";
+
+	public static final LooseContext.Key<PersistenceLayerTransformRetryPolicy> CONTEXT_RETRY_POLICY = LooseContext
+			.key(TransformCommit.class, "CONTEXT_RETRY_POLICY");
 
 	static Logger logger = LoggerFactory.getLogger(TransformCommit.class);
 
@@ -531,6 +535,15 @@ public class TransformCommit {
 	 * (checked) concurrency exception and handling higher in the calling stack
 	 * - i.e. move from commitWithBackoff (no checked) to
 	 * commitWithConcurrencyCheck (checked)
+	 * 
+	 * Update - in the specific case of job update exceptions, backoff only
+	 * occurs on non-status updates - so the
+	 * PersistenceLayerTransformRetryPolicy.JobPersistenceBackoff is
+	 * appropriate, and this (more restricted than was true when the preceding 2
+	 * paras were written) code is ok
+	 * 
+	 * More generally - transformcommit wants an api rewrite - but this is
+	 * actually (because restricted) now OK, I think
 	 *
 	 */
 	public static int commitWithBackoff() {
@@ -540,21 +553,19 @@ public class TransformCommit {
 	public static int commitWithBackoff(int initialDelayMs, int retries,
 			double delayMs, double retryMultiplier) {
 		try {
-			Thread.sleep(initialDelayMs);
-			while (retries-- > 0) {
-				try {
-					return commitTransforms(true);
-				} catch (Exception e) {
-					Ax.simpleExceptionOut(e);
-					logger.warn("Exception in commitWithBackoff, retrying");
-					Thread.sleep((long) delayMs);
-					delayMs *= (0.5 + Math.random()) * retryMultiplier;
-				}
+			LooseContext.push();
+			try {
+				Thread.sleep(initialDelayMs);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
 			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+			CONTEXT_RETRY_POLICY.set(
+					new PersistenceLayerTransformRetryPolicy.JobPersistenceBackoff(
+							initialDelayMs, retries, delayMs, retryMultiplier));
+			return commitTransforms(true);
+		} finally {
+			LooseContext.pop();
 		}
-		return -1;
 	}
 
 	public static int enqueueTransforms(String transformQueueName,
@@ -991,6 +1002,8 @@ public class TransformCommit {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map, false, false, false, logger, true);
+			CONTEXT_RETRY_POLICY.optional()
+					.ifPresent(persistenceToken::setTransformRetryPolicy);
 			CommitClientInstanceContext clientInstanceContext = LooseContext
 					.get(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT);
 			persistenceToken.setOriginatingUserId(clientInstanceContext.userId);

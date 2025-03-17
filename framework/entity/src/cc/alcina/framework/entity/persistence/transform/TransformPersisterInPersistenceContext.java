@@ -757,6 +757,9 @@ public class TransformPersisterInPersistenceContext {
 				}
 				logger.warn("(Prepared) statement causing issue");
 				logger.warn(ps.toString());
+				lastFlushData.get(Thread
+						.currentThread()).preparedStatementCausingIssue = ps
+								.toString();
 			} catch (Exception e) {
 				throw WrappedRuntimeException.wrap(e);
 			}
@@ -804,6 +807,8 @@ public class TransformPersisterInPersistenceContext {
 
 		@SuppressWarnings("unused")
 		static class FlushData {
+			public String preparedStatementCausingIssue;
+
 			private Object entity;
 
 			private Serializable id;
@@ -847,6 +852,13 @@ public class TransformPersisterInPersistenceContext {
 				fb.line("Id: %s", id);
 				return fb.toString();
 			}
+		}
+
+		String getAndClearLastFlushPreparedStatementCausingIssue() {
+			FlushData flushData = lastFlushData.get(Thread.currentThread());
+			String result = flushData.preparedStatementCausingIssue;
+			flushData.preparedStatementCausingIssue = null;
+			return result;
 		}
 	}
 }
