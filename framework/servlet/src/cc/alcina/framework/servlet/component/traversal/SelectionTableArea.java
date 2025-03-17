@@ -17,6 +17,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.EmitDescent;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells.FmsCellsContextResolver.DisplayAllMixin;
 import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
@@ -54,6 +56,8 @@ public class SelectionTableArea extends Model.Fields
 	TraversalPlace appendRowSelectionTo;
 
 	Layer selectionLayer;
+
+	private FilterHostImpl openFilter;
 
 	public SelectionTableArea(Layer layer, Selection<?> selection) {
 		hasTable = (Selection.HasTableRepresentation) selection;
@@ -156,22 +160,39 @@ public class SelectionTableArea extends Model.Fields
 	class TableColumnMetadataImpl implements TableColumnMetadata {
 		@Override
 		public ColumnMetadata getColumnMetadata(Property property) {
-			return Ui.place().getColumnMetadata(selectionLayer, property);
+			ColumnMetadata columnMetadata = Ui.place()
+					.getColumnMetadata(selectionLayer, property);
+			if (openFilter != null && openFilter.property == property) {
+				columnMetadata.setFilterOpen(true);
+			}
+			return columnMetadata;
 		}
 	}
 
 	@Override
 	public void onEmitDescent(EmitDescent event) {
-		event.reemitAs(this, TableColumnMetadata.Change.class,
+		emitColumnMetadata();
+	}
+
+	void emitColumnMetadata() {
+		emitEvent(TableColumnMetadata.Change.class,
 				new TableColumnMetadataImpl());
 	}
 
 	@Override
 	public void onEditFilter(EditFilter event) {
-		new FilterHostImpl(event).open();
+		openFilter = new FilterHostImpl(event);
+		openFilter.open();
+		emitColumnMetadata();
 	}
 
-	class FilterHostImpl implements LayerFilterEditor.Host {
+	public void onFilterClosed() {
+		openFilter = null;
+		emitColumnMetadata();
+	}
+
+	class FilterHostImpl
+			implements LayerFilterEditor.Host, ModelEvents.Closed.Handler {
 		Property property;
 
 		Element relativeTo;
@@ -186,7 +207,7 @@ public class SelectionTableArea extends Model.Fields
 					.dropdown(Position.START,
 							relativeTo.getBoundingClientRect(),
 							SelectionTableArea.this, suggestor)
-					.create();
+					.withClosedHandler(this).create();
 		}
 
 		void open() {
@@ -207,6 +228,11 @@ public class SelectionTableArea extends Model.Fields
 		@Override
 		public void setFilterEditorOpen(boolean open) {
 			// we're causing this imperatively
+		}
+
+		@Override
+		public void onClosed(Closed event) {
+			onFilterClosed();
 		}
 	}
 }

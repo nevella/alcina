@@ -12,6 +12,12 @@ public interface TableColumnMetadata {
 
 			boolean filtered;
 
+			boolean filterOpen;
+
+			public void setFilterOpen(boolean filterOpen) {
+				this.filterOpen = filterOpen;
+			}
+
 			public Standard(SortDirection sortDirection, boolean filtered) {
 				this.sortDirection = sortDirection;
 				this.filtered = filtered;
@@ -24,11 +30,19 @@ public interface TableColumnMetadata {
 			public boolean isFiltered() {
 				return filtered;
 			}
+
+			public boolean isFilterOpen() {
+				return filterOpen;
+			}
 		}
 
 		SortDirection getSortDirection();
 
+		void setFilterOpen(boolean filterOpen);
+
 		boolean isFiltered();
+
+		boolean isFilterOpen();
 	}
 
 	public static class Change extends

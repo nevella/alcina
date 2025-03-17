@@ -54,6 +54,7 @@ public class PackageProperties {
     }
     
     public static class _TableModel_TableColumn_ColumnFilter implements TypedProperty.Container {
+      public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filterOpen = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filterOpen");
       public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filtered = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filtered");
     }
     

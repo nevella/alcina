@@ -152,7 +152,7 @@ public class ElementQuery {
 	}
 
 	public void clear() {
-		getElement().clear();
+		withElement(WebElement::clear);
 	}
 
 	public void clearAndEnterText(String searchString) {

@@ -466,6 +466,9 @@ public class TableModel extends Model implements NodeEditorContext {
 			@Binding(type = Type.PROPERTY)
 			boolean filtered;
 
+			@Binding(type = Type.PROPERTY)
+			boolean filterOpen;
+
 			protected ColumnFilter(Field field) {
 				this.field = field;
 			}
@@ -594,6 +597,8 @@ public class TableModel extends Model implements NodeEditorContext {
 			}
 			_ColumnFilter_properties.filtered.set(columnFilter,
 					columnMetadata.isFiltered());
+			_ColumnFilter_properties.filterOpen.set(columnFilter,
+					columnMetadata.isFilterOpen());
 		}
 	}
 
