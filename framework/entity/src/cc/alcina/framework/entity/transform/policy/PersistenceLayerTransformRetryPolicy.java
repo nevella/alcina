@@ -1,14 +1,15 @@
 package cc.alcina.framework.entity.transform.policy;
 
+import java.io.Serializable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 
-public interface PersistenceLayerTransformRetryPolicy {
+public interface PersistenceLayerTransformRetryPolicy extends Serializable {
 	public boolean isRetry(TransformPersistenceToken token,
 			DomainTransformLayerWrapper wrapper, RuntimeException ex,
 			String preparedStatementCausingIssue);
@@ -64,6 +65,10 @@ public interface PersistenceLayerTransformRetryPolicy {
 					}
 					delayMs *= (0.5 + Math.random()) * retryMultiplier;
 					return true;
+				} else {
+					logger.warn(
+							"Exception in commitWithBackoff [non-job persistence] [{} transforms]",
+							token.getRequest().getEvents().size());
 				}
 			}
 			return false;
