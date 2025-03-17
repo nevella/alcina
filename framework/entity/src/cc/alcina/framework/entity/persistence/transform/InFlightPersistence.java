@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 
@@ -55,7 +56,9 @@ public class InFlightPersistence {
 			format.line(
 					"--------------------------------------------------------------------------------------------------");
 			format.line("Request transforms:");
-			format.line(token.getRequest());
+			// this can be truly enormous, so to allow the actual trace to be
+			// read, log here
+			format.line(Ax.trim(token.getRequest().toString(), 100000));
 			format.line(
 					"--------------------------------------------------------------------------------------------------");
 			return format.toString();

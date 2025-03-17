@@ -547,6 +547,7 @@ public class TransformPersisterInPersistenceContext {
 				// make sure that event didn't try and add transforms
 				Preconditions.checkState(
 						TransformManager.get().getTransforms().isEmpty());
+				onBeforeTryCommitExit();
 				return;
 			case RETRY_WITH_IGNORES:
 				return;
@@ -588,6 +589,11 @@ public class TransformPersisterInPersistenceContext {
 			tlTransformManager.setUseCreatedLocals(true);
 			tlTransformManager.setEntityManager(null);
 		}
+	}
+
+	void onBeforeTryCommitExit() {
+		// attach a breakpoint to debug transform conflicts etc
+		int debug = 4;
 	}
 
 	private void undoLocatorMapDeltas(EntityLocatorMap locatorMap,
