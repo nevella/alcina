@@ -12,6 +12,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.util.DomContext;
+import cc.alcina.framework.gwt.client.util.DomContextGwt;
 import cc.alcina.framework.gwt.client.util.TimerGwt;
 
 /**
@@ -24,6 +26,7 @@ public class AlcinaGwtTestClient implements EntryPoint {
 		Client.Init.init();
 		Registry.register().singleton(Timer.Provider.class,
 				new TimerGwt.Provider());
+		Registry.register().singleton(DomContext.class, new DomContextGwt());
 		Scheduler.get().scheduleDeferred(this::test);
 	}
 
