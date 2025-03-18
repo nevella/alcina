@@ -204,7 +204,8 @@ public class DomainTransformPersistenceQueue {
 			return;
 		}
 		getLogger(event.isLocalToVm()).info(
-				"fired: {} - {} - {} events - {} ms ",
+				"fired: {} - {} - {} - {} events - {} ms ",
+				persistenceEvents.domainStore.name,
 				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				event.getTransformPersistenceToken().getRequest().getEvents()

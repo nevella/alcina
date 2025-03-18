@@ -549,7 +549,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private DomainTransformRequestPersistent
 			loadTransformRequest0(long requestId) throws Exception {
-		store.logger.info("{} - loading transform request {}", store.name,
+		store.logger.debug("{} - loading transform request {}", store.name,
 				requestId);
 		Connection conn = getConnection();
 		try {

@@ -1058,21 +1058,16 @@ public class ThreadlocalTransformManager extends TransformManager {
 			explicitlyPermittedTransforms.clear();
 			flushAfterTransforms.clear();
 		}
-		if (!LooseContext.is(CONTEXT_NON_LISTENING_DOMAIN)) {
-			for (Entity entity : listeningTo.keySet()) {
-				if (entity != null) {
-					try {
-						entity.removePropertyChangeListener(this);
-					} catch (Exception e) {
-						logger.warn(
-								"DEVEX:0 - Exception removing listener: {} ",
-								entity.toStringEntity());
-						if (removeListenerExceptionCounter
-								.incrementAndGet() < 50) {
-							logger.warn(
-									"DEVEX:0 - Exception removing listener ",
-									e);
-						}
+		for (Entity entity : listeningTo.keySet()) {
+			if (entity != null) {
+				try {
+					entity.removePropertyChangeListener(this);
+				} catch (Exception e) {
+					logger.warn("DEVEX:0 - Exception removing listener: {} ",
+							entity.toStringEntity());
+					if (removeListenerExceptionCounter.incrementAndGet() < 50) {
+						logger.warn("DEVEX:0 - Exception removing listener ",
+								e);
 					}
 				}
 			}
