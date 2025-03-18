@@ -1016,6 +1016,15 @@ public class SelectionTraversal
 		return state.selections.selectionLayer.keySet().stream();
 	}
 
+	/*
+	 * A selection may be selected in multiple layers, in which case it would
+	 * only appear once in 'getAllSelections'
+	 */
+	public Stream<Selection> getAllLayerSelections() {
+		return state.selections.byLayer.values().stream()
+				.flatMap(m -> m.keySet().stream());
+	}
+
 	public List<Layer> getVisitedLayers() {
 		return state.visitedLayers.keySet().stream()
 				.collect(Collectors.toList());

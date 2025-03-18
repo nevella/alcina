@@ -1,29 +1,13 @@
 # alcina > misc > notes
 
-## Gotchas
+## ui history + implicit history
 
-### Local copies of t/unsafe fields
+- make it explicit - TraversalPlace.listSource is a case in point, although during a session the table source can be
+  derived from navigation, refresh (and general stability) are better if the list source is explicit
 
-Always, always get a local copy of a field if it's not thread-safe. The following caused me a few hours of head-scratching:
+  - ditto helpplace (fragment) etc
 
-```
-//cc.alcina.framework.entity.persistence.mvcc.Transactions.TransactionsStats.getTimeInVacuum()
-
-public long getTimeInVacuum() {
-	return vacuum.getVacuumStarted() == 0 ? 0
-			: System.currentTimeMillis() - vacuum.getVacuumStarted();
-}
-```
-
-now:
-
-```
-public long getTimeInVacuum() {
-	long vacuumStarted = vacuum.getVacuumStarted();
-	return vacuumStarted == 0 ? 0
-			: System.currentTimeMillis() - vacuumStarted;
-}
-```
+- devex styles
 
  <h2>DEVEX styles</h2>
   <table>

@@ -28,7 +28,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpContentProvider;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelCatchallHandler;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsForm;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -219,6 +218,16 @@ public class TraversalBrowser {
 			int selectedLayerIndex = place().provideSelectedLayerIndex();
 			return traversal() == null ? null
 					: traversal().getLayer(selectedLayerIndex);
+		}
+
+		public static Layer getListSourceLayer() {
+			return get().getListSourceLayer0();
+		}
+
+		protected Layer getListSourceLayer0() {
+			int listSourceLayerIndex = place().provideListSourceLayerIndex();
+			return traversal() == null ? null
+					: traversal().getLayer(listSourceLayerIndex);
 		}
 
 		@Override

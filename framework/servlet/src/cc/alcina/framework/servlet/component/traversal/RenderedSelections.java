@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights;
 import cc.alcina.framework.gwt.client.dirndl.model.MarkupHighlights.MarkupClick;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.ListSource;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryArea;
@@ -123,37 +124,37 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 		// traversal variable is a required intermediate (rather than just
 		// page.history.getObservable)
 		conditionallyPopulateMarkup(traversal);
-		if (selection == null && Ui.getSelectedLayer() == null) {
-			properties.selectionTable.set(this, null);
-		} else {
-			conditionallyPopulateTable(traversal);
-		}
+		conditionallyPopulateTable(traversal);
 	}
 
 	void conditionallyPopulateTable(SelectionTraversal traversal) {
 		if (variant != SecondaryArea.TABLE) {
+			properties.selectionTable.set(this, null);
 			return;
 		}
-		Layer layer = Ui.getSelectedLayer();
-		if (layer != null) {
-			List<? extends Selection> filteredLayerSelections = page
-					.getFilteredSelections(layer);
-			properties.selectionTable.set(this,
-					new SelectionTableArea(layer, filteredLayerSelections));
-		} else if (selection instanceof Selection.HasTableRepresentation) {
-			properties.selectionTable.set(this, new SelectionTableArea(
-					traversal.getLayer(selection), selection));
-		} else {
-			if (selectionTable != null) {
-				Layer currentSelectionLayer = selectionTable.selectionLayer;
-				if (currentSelectionLayer != null) {
-					Layer incomingLayer = traversal.getLayer(selection);
-					if (incomingLayer.index >= currentSelectionLayer.index) {
-						// don't change the current table
-						return;
-					}
+		ListSource listSource = Ui.place().listSource;
+		if (listSource != null) {
+			Layer listSourceLayer = Ui.getListSourceLayer();
+			if (listSourceLayer != null) {
+				List<? extends Selection> filteredLayerSelections = page
+						.getFilteredSelections(listSourceLayer);
+				properties.selectionTable.set(this, new SelectionTableArea(
+						listSourceLayer, filteredLayerSelections));
+			} else {
+				Selection listSourceSelection = null;
+				if (listSource.path != null) {
+					listSourceSelection = listSource.path.selection();
+				}
+				if (listSourceSelection != null) {
+					properties.selectionTable.set(this,
+							new SelectionTableArea(
+									traversal.getLayer(listSourceSelection),
+									listSourceSelection));
+				} else {
+					properties.selectionTable.set(this, null);
 				}
 			}
+		} else {
 			properties.selectionTable.set(this, null);
 		}
 	}

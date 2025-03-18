@@ -8,9 +8,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.xpath.operations.Equals;
-
-import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -30,8 +27,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata.ColumnMet
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
-import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
-import cc.alcina.framework.gwt.client.place.UnparseablePlaceException;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
 
 /**
@@ -154,8 +149,9 @@ public class TraversalPlace extends BasePlace {
 							.traversal();
 					if (traversal.getRootSelection() != null) {
 						if (segmentPath != null) {
-							selection = traversal.getAllSelections().filter(
-									sel -> segmentPath.equals(sel.fullPath()))
+							selection = traversal.getAllLayerSelections()
+									.filter(sel -> segmentPath
+											.equals(sel.fullPath()))
 									.findFirst().orElse(null);
 						} else {
 							selection = (Selection) traversal.getRootSelection()
@@ -268,6 +264,8 @@ public class TraversalPlace extends BasePlace {
 	}
 
 	static class Data extends Bindable.Fields implements TreeSerializable {
+		ListSource listSource;
+
 		public static Data from(TraversalPlace place) {
 			Data data = new Data();
 			data.textFilter = place.textFilter;
@@ -275,6 +273,7 @@ public class TraversalPlace extends BasePlace {
 			data.layers = place.layers.values().stream()
 					.filter(LayerAttributes::hasData)
 					.collect(Collectors.toList());
+			data.listSource = place.listSource;
 			return data;
 		}
 
@@ -289,6 +288,7 @@ public class TraversalPlace extends BasePlace {
 			place.paths = paths;
 			place.layers = layers.stream()
 					.collect(AlcinaCollectors.toKeyMap(LayerAttributes::index));
+			place.listSource = listSource;
 		}
 	}
 
@@ -297,6 +297,23 @@ public class TraversalPlace extends BasePlace {
 	List<SelectionPath> paths = new ArrayList<>();
 
 	Map<Integer, LayerAttributes> layers = new LinkedHashMap<>();
+
+	ListSource listSource = null;
+
+	@Bean(PropertySource.FIELDS)
+	static class ListSource implements TreeSerializable {
+		int layerIndex = -1;
+
+		SelectionPath path;
+
+		public ListSource(int layerIndex, SelectionPath path) {
+			this.layerIndex = layerIndex;
+			this.path = path;
+		}
+
+		ListSource() {
+		}
+	}
 
 	transient SelectionPath viewPath;
 
@@ -429,7 +446,10 @@ public class TraversalPlace extends BasePlace {
 	}
 
 	public boolean isSelected(Selection selection) {
-		return viewPath().selection() == selection;
+		Selection viewPathSelection = viewPath().selection();
+		return viewPathSelection != null && (Objects
+				.equals(viewPathSelection.fullPath(), selection.fullPath())
+				|| viewPathSelection == selection);
 	}
 
 	public TraversalPlace appendSelections(List<Selection> selections) {
@@ -499,9 +519,13 @@ public class TraversalPlace extends BasePlace {
 				});
 	}
 
-	public int provideSelectedLayerIndex() {
+	int provideSelectedLayerIndex() {
 		return layers.entrySet().stream().filter(e -> e.getValue().selected)
 				.map(e -> e.getKey()).findFirst().orElse(-1);
+	}
+
+	int provideListSourceLayerIndex() {
+		return listSource == null ? -1 : listSource.layerIndex;
 	}
 
 	public void clearLayersPost(int index) {

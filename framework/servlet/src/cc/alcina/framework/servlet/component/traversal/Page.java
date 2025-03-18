@@ -67,6 +67,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalEvents.Selection
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionTypeSelected;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingSelectionAreaHeight;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SetSettingTableRows;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.ListSource;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.PropertyDisplayMode;
@@ -258,7 +259,30 @@ class Page extends Model.All
 			int index = Ui.traversal().getLayer(selectionPath.selection).index;
 			to.clearLayersPost(index);
 		}
+		updateListSource(to, null, selectionPath.selection);
 		goPreserveScrollPosition(to);
+	}
+
+	void updateListSource(TraversalPlace place, Layer selectedLayer,
+			Selection selection) {
+		if (selectedLayer != null) {
+			place.listSource = new ListSource(selectedLayer.index, null);
+		} else if (selection instanceof Selection.HasTableRepresentation) {
+			TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
+			SelectionPath selectionPath = new TraversalPlace.SelectionPath();
+			selectionPath.selection = selection;
+			selectionPath.path = selection.processNode().treePath();
+			selectionPath.type = selectionType;
+			place.listSource = new ListSource(-1, selectionPath);
+		} else {
+			if (place.listSource != null) {
+				boolean incomingGtCurrentIndex = true;
+				if (incomingGtCurrentIndex) {
+				} else {
+					place.listSource = null;
+				}
+			}
+		}
 	}
 
 	@Override
@@ -344,8 +368,10 @@ class Page extends Model.All
 		TraversalPlace to = place().copy();
 		int currentSelected = to.provideSelectedLayerIndex();
 		to.clearLayerSelection();
-		if (currentSelected != event.getModel().index) {
+		Layer selectedLayer = event.getModel();
+		if (currentSelected != selectedLayer.index) {
 			to.selectLayer(event.getModel());
+			updateListSource(to, selectedLayer, null);
 		}
 		to.go();
 	}
