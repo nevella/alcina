@@ -854,11 +854,10 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 			Element selectedElem = curSelection.getContentElem();
 			int containerLeft = getAbsoluteLeft();
 			int containerTop = getAbsoluteTop();
-			int left = DOM.getAbsoluteLeft(selectedElem) - containerLeft;
-			int top = DOM.getAbsoluteTop(selectedElem) - containerTop;
-			int width = DOM.getElementPropertyInt(selectedElem, "offsetWidth");
-			int height = DOM.getElementPropertyInt(selectedElem,
-					"offsetHeight");
+			int left = selectedElem.getAbsoluteLeft() - containerLeft;
+			int top = selectedElem.getAbsoluteTop() - containerTop;
+			int width = selectedElem.getOffsetWidth();
+			int height = selectedElem.getOffsetHeight();
 			// If the item is not visible, quite here
 			if (width == 0 || height == 0) {
 				DOM.setIntStyleAttribute(focusable, "left", 0);
