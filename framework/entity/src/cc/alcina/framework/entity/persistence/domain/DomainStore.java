@@ -441,7 +441,7 @@ public class DomainStore implements IDomainStore {
 				cache.ensureVersion(existing);
 				return existing;
 			}
-			if (localId != 0) {
+			if (localId != 0 && !nonListeningDomain) {
 				// this below is all a bit fancy - but is the only place where
 				// said fanciness is needed
 				Entity local = cache.getCreatedLocals().get(localId);
@@ -469,7 +469,7 @@ public class DomainStore implements IDomainStore {
 				return local;
 			} else {
 				Entity entity = Transaction.current().create(clazz, this, id,
-						0L);
+						localId);
 				cache.put(entity);
 				return entity;
 			}
@@ -852,8 +852,8 @@ public class DomainStore implements IDomainStore {
 						causes.add(dtex);
 					}
 				}
-				if (transform
-						.getTransformType() == TransformType.CREATE_OBJECT) {
+				if (transform.getTransformType() == TransformType.CREATE_OBJECT
+						&& !nonListeningDomain) {
 					ClientInstance requestInstance = persistenceEvent
 							.getPersistedRequests().iterator().next()
 							.getClientInstance();
