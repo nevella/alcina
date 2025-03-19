@@ -41,7 +41,6 @@ public class RichTextAreaImpl {
 
 	public RichTextAreaImpl() {
 		elemDelegating = createElement();
-		elem = elemDelegating.implAccess().ensureJsoRemote();
 	}
 
 	protected Element createElement() {

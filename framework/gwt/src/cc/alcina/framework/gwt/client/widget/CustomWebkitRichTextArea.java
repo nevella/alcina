@@ -39,7 +39,7 @@ public class CustomWebkitRichTextArea extends RichTextAreaImplSafari {
 
 	// guard against instantly-detached elts
 	@Override
-	public native void initElement() /*-{
+	protected native void initElement0() /*-{
     // Most browsers don't like setting designMode until slightly _after_
     // the iframe becomes attached to the DOM. Any non-zero timeout will do
     // just fine.

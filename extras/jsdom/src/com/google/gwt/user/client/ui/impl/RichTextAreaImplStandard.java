@@ -18,6 +18,7 @@ package com.google.gwt.user.client.ui.impl;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.safehtml.shared.annotations.IsSafeHtml;
 import com.google.gwt.safehtml.shared.annotations.SuppressIsSafeHtmlCastCheck;
 import com.google.gwt.user.client.DOM;
@@ -170,7 +171,13 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	}-*/;
 
 	@Override
-	public native void initElement() /*-{
+	public void initElement() {
+		LocalDom.flush();
+		elem = elemDelegating.implAccess().ensureJsoRemote();
+		initElement0();
+	}
+
+	protected native void initElement0() /*-{
     // Most browsers don't like setting designMode until slightly _after_
     // the iframe becomes attached to the DOM. Any non-zero timeout will do
     // just fine.
