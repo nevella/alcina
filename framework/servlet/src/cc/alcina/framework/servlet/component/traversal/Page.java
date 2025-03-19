@@ -271,13 +271,17 @@ class Page extends Model.All
 			TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
 			SelectionPath selectionPath = new TraversalPlace.SelectionPath();
 			selectionPath.selection = selection;
+			int layerIndex = Ui.getSelectedLayer(selection).index;
 			selectionPath.path = selection.processNode().treePath();
 			selectionPath.type = selectionType;
-			place.listSource = new ListSource(-1, selectionPath);
+			place.listSource = new ListSource(layerIndex, selectionPath);
 		} else {
 			if (place.listSource != null) {
-				boolean incomingGtCurrentIndex = true;
+				int layerIndex = Ui.getSelectedLayer(selection).index;
+				boolean incomingGtCurrentIndex = place.listSource == null ? true
+						: layerIndex >= place.listSource.layerIndex;
 				if (incomingGtCurrentIndex) {
+					// preserve
 				} else {
 					place.listSource = null;
 				}

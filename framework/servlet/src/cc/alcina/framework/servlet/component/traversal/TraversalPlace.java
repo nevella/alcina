@@ -212,7 +212,8 @@ public class TraversalPlace extends BasePlace {
 			}
 		}
 
-		void truncateTo(int index) {
+		//
+		public void truncateTo(int index) {
 			this.segmentPath = this.segmentPath == null ? null
 					: Arrays.stream(segmentParts()).limit(index + 1)
 							.collect(Collectors.joining("."));

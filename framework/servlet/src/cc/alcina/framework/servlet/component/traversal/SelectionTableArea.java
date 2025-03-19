@@ -57,11 +57,14 @@ public class SelectionTableArea extends Model.Fields
 
 	Layer selectionLayer;
 
+	Layer filterLayer;
+
 	private FilterHostImpl openFilter;
 
 	public SelectionTableArea(Layer layer, Selection<?> selection) {
 		hasTable = (Selection.HasTableRepresentation) selection;
 		selectionLayer = layer;
+		filterLayer = Ui.traversal().getLayer(selectionLayer.index + 1);
 		selectionBindables = hasTable.getSelectionBindables();
 		appendRowSelectionTo = Ui.place();
 	}
@@ -69,6 +72,7 @@ public class SelectionTableArea extends Model.Fields
 	public SelectionTableArea(Layer layer,
 			List<? extends Selection> filteredLayerSelections) {
 		selectionLayer = layer;
+		filterLayer = selectionLayer;
 		hasTable = new LayerToTable(layer, filteredLayerSelections);
 		selectionBindables = hasTable.getSelectionBindables();
 		appendRowSelectionTo = Ui.place().truncateTo(layer.index);
@@ -222,7 +226,7 @@ public class SelectionTableArea extends Model.Fields
 
 		@Override
 		public Layer getLayer() {
-			return selectionLayer;
+			return filterLayer;
 		}
 
 		@Override

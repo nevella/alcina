@@ -93,18 +93,27 @@ class EntityAnswers extends TraversalAnswerSupplier {
 		}
 
 		void proposePlaceContextSuggestions() {
-			SelectionPath firstSelectionPath = fromPlace.firstSelectionPath();
-			Selection selection = firstSelectionPath == null
-					|| firstSelectionPath.selection() == null
-							? Ui.traversal().getRootSelection()
-							: firstSelectionPath.selection();
+			Selection placeContextSelection = Ui.traversal().getRootSelection();
+			TraversalPlace toPlace = fromPlace.copy();
+			SelectionPath firstSelectionPath = toPlace.firstSelectionPath();
+			if (firstSelectionPath != null) {
+				if (fromLayer > 0) {
+					// no - we want to change the toPlace
+					// firstSelectionPath = firstSelectionPath.copy();
+					firstSelectionPath.truncateTo(fromLayer - 1);
+				}
+				Selection pathSelection = firstSelectionPath.selection();
+				if (pathSelection != null) {
+					placeContextSelection = pathSelection;
+				}
+			}
 			TypeSuggestor typeSuggestor = Registry.impl(TypeSuggestor.class,
-					selection.getClass());
+					placeContextSelection.getClass());
 			typeSuggestor.handler = this;
 			typeSuggestor.query = query;
 			typeSuggestor.parts = query.split(" ");
-			typeSuggestor.fromPlace = fromPlace;
-			typeSuggestor.propose(selection);
+			typeSuggestor.fromPlace = toPlace;
+			typeSuggestor.propose(placeContextSelection);
 		}
 
 		List<AppSuggestion> handle() {

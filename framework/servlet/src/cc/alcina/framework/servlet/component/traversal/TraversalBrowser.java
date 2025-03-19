@@ -214,15 +214,24 @@ public class TraversalBrowser {
 			return get().getSelectedLayer0();
 		}
 
+		public static Layer getSelectedLayer(Selection selection) {
+			return get().getSelectedLayer0(selection);
+		}
+
 		protected Layer getSelectedLayer0() {
 			int selectedLayerIndex = place().provideSelectedLayerIndex();
 			return traversal() == null ? null
 					: traversal().getLayer(selectedLayerIndex);
 		}
 
+		protected Layer getSelectedLayer0(Selection selection) {
+			return traversal().getLayer(selection);
+		}
+
 		public static Layer getListSourceLayer() {
 			return get().getListSourceLayer0();
 		}
+		//
 
 		protected Layer getListSourceLayer0() {
 			int listSourceLayerIndex = place().provideListSourceLayerIndex();

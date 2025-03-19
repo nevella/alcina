@@ -73,6 +73,11 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 	@Directed
 	SelectionTableArea selectionTable;
 
+	public void setSelectionTable(SelectionTableArea selectionTable) {
+		set("selectionTable", this.selectionTable, selectionTable,
+				() -> this.selectionTable = selectionTable);
+	}
+
 	Selection<?> selection;
 
 	SecondaryArea variant;
@@ -132,27 +137,27 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 			properties.selectionTable.set(this, null);
 			return;
 		}
-		ListSource listSource = Ui.place().listSource;
+		ListSource listSource = Ui.activePlace().listSource;
 		if (listSource != null) {
 			Layer listSourceLayer = Ui.getListSourceLayer();
-			if (listSourceLayer != null) {
+			Selection listSourceSelection = null;
+			if (listSource.path != null) {
+				listSource.path.clearSelection();
+				listSourceSelection = listSource.path.selection();
+			}
+			if (listSourceSelection != null) {
+				properties.selectionTable.setIfNotEqual(this,
+						new SelectionTableArea(
+								traversal.getLayer(listSourceSelection),
+								listSourceSelection));
+			} else if (listSourceLayer != null) {
 				List<? extends Selection> filteredLayerSelections = page
 						.getFilteredSelections(listSourceLayer);
-				properties.selectionTable.set(this, new SelectionTableArea(
-						listSourceLayer, filteredLayerSelections));
+				properties.selectionTable.setIfNotEqual(this,
+						new SelectionTableArea(listSourceLayer,
+								filteredLayerSelections));
 			} else {
-				Selection listSourceSelection = null;
-				if (listSource.path != null) {
-					listSourceSelection = listSource.path.selection();
-				}
-				if (listSourceSelection != null) {
-					properties.selectionTable.set(this,
-							new SelectionTableArea(
-									traversal.getLayer(listSourceSelection),
-									listSourceSelection));
-				} else {
-					properties.selectionTable.set(this, null);
-				}
+				properties.selectionTable.set(this, null);
 			}
 		} else {
 			properties.selectionTable.set(this, null);

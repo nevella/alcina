@@ -77,6 +77,10 @@ class LayerFilterEditor extends Model.All
 			attributes.withSelectAllOnFocus(true);
 			attributes.withSuggestionXAlign(Position.CENTER);
 			attributes.withLogicalAncestors(List.of(FilterSuggestor.class));
+			/*
+			 * note this routes via appsuggestor because it essentially does the
+			 * same work as appsuggestor (changing the global Place)
+			 */
 			attributes.withAnswer(new AnswerImpl(
 					Ui.get().createAnswerSupplier(host.getLayer().index)));
 			attributes.withNonOverlaySuggestionResults(true);
