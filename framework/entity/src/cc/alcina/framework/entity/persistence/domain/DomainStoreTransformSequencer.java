@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.OffThreadLogger;
+import cc.alcina.framework.entity.util.SqlUtils;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 
 /**
@@ -356,5 +358,14 @@ public class DomainStoreTransformSequencer
 			Thread.sleep(1000);
 		}
 		return System.currentTimeMillis() - start;
+	}
+
+	public Set<Long>
+			getVisiblePreWarmupCompletionPersistenceEvents(List<Long> dtrIds) {
+		String sql = Ax.format("select id from %s where id in %s ", tableName(),
+				EntityPersistenceHelper.toInClause(dtrIds));
+		return runWithConnection(
+				"getVisiblePreWarmupCompletionPersistenceEvents",
+				conn -> SqlUtils.toIdSet(xminStatement, sql, "id"));
 	}
 }

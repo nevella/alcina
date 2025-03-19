@@ -194,6 +194,8 @@ public class DomainStore implements IDomainStore {
 
 	public static final Topic<Void> topicStoreLoaded = Topic.create();
 
+	public Topic<Void> topicStoreBeforeDbWarmupCompleted = Topic.create();
+
 	/*
 	 * App-specific (allows for post-load configuration)
 	 */
@@ -2258,5 +2260,10 @@ public class DomainStore implements IDomainStore {
 			locator.setClazz(promoted.entityClass());
 			promotedEntitiesByPrePromotion.put(locator, promoted);
 		}
+	}
+
+	public Set<Long>
+			getVisiblePreWarmupCompletionPersistenceEvents(List<Long> dtrIds) {
+		return loader.getVisiblePreWarmupCompletionPersistenceEvents(dtrIds);
 	}
 }

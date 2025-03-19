@@ -684,6 +684,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	private void listenTo(Entity entity) {
 		if (!listeningTo.containsKey(entity)) {
+			if (Thread.currentThread().getName().contains("dev-cluster-1")) {
+				int debug = 3;
+			}
 			Transaction current = Transaction.current();
 			if (current.isReadOnly() && LooseContext
 					.is(CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS)) {
