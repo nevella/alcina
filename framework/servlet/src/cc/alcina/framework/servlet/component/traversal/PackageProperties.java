@@ -134,6 +134,7 @@ public class PackageProperties {
       public TypedProperty<TraversalBrowser.Ui, Model> eventHandlerCustomisation = new TypedProperty<>(TraversalBrowser.Ui.class, "eventHandlerCustomisation");
       public TypedProperty<TraversalBrowser.Ui, RemoteComponentObservables.ObservableEntry> history = new TypedProperty<>(TraversalBrowser.Ui.class, "history");
       public TypedProperty<TraversalBrowser.Ui, KeybindingsHandler> keybindingsHandler = new TypedProperty<>(TraversalBrowser.Ui.class, "keybindingsHandler");
+      public TypedProperty<TraversalBrowser.Ui, Layer> listSourceLayer0 = new TypedProperty<>(TraversalBrowser.Ui.class, "listSourceLayer0");
       public TypedProperty<TraversalBrowser.Ui, String> mainCaption = new TypedProperty<>(TraversalBrowser.Ui.class, "mainCaption");
       public TypedProperty<TraversalBrowser.Ui, Page> page = new TypedProperty<>(TraversalBrowser.Ui.class, "page");
       public TypedProperty<TraversalBrowser.Ui, TraversalPlace> place = new TypedProperty<>(TraversalBrowser.Ui.class, "place");
