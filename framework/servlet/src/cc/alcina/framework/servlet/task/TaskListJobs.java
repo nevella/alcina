@@ -124,6 +124,7 @@ public class TaskListJobs extends PerformerTask implements TaskWithHtmlResult {
 					.accept(Utils::instance).cell("Link").accept(Utils::links);
 			Predicate<Job> textFilter = job -> filter.test(job)
 					&& filter(job.getTaskClassName(), job.getTaskSerialized(),
+							job.provideName(),
 							Optional.ofNullable(job.getPerformer())
 									.map(ClientInstance::toString)
 									.orElse("--unmatched--"));
