@@ -117,6 +117,8 @@ public class InputEditor extends Model implements Suggestor.Editor,
 		input.setEnsureContentVisible(attributes.isInputExpandable());
 		input.setFocusOnBind(attributes.isFocusOnBind());
 		input.setSelectAllOnFocus(attributes.isSelectAllOnFocus());
+		input.setMoveCaretToEndOnFocus(
+				attributes.isFocusOnBind() && !attributes.isSelectAllOnFocus());
 		if (attributes.isInputEditorKeyboardNavigationEnabled()) {
 			keyboardNavigation = new KeyboardNavigation(this);
 		}

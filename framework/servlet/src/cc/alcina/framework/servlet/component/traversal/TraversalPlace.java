@@ -109,6 +109,10 @@ public class TraversalPlace extends BasePlace {
 			attributes.add(attr);
 		}
 
+		public void remove(Class<? extends Attribute> type) {
+			attributes.removeIf(a -> a.getClass() == type);
+		}
+
 		void clearSelection() {
 			selected = false;
 		}

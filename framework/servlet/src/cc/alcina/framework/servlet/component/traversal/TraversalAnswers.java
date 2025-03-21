@@ -14,12 +14,19 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorComman
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.MatchStyle;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
 
 class TraversalAnswers extends TraversalAnswerSupplier {
-	public TraversalAnswers(int forLayer) {
+	boolean hasClearableFilter;
+
+	public TraversalAnswers(int forLayer, boolean hasClearableFilter) {
 		super(forLayer);
+		this.hasClearableFilter = hasClearableFilter;
+	}
+
+	@Override
+	public boolean checkEmptyAsk() {
+		return hasClearableFilter;
 	}
 
 	static AppSuggestion createSuggestion(CommandNode node) {

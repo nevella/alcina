@@ -12,8 +12,10 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.RowView;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestor.SuggestionSelected;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.EmitDescent;
@@ -45,7 +47,7 @@ public class SelectionTableArea extends Model.Fields
 		implements TableEvents.RowClicked.Handler, IfNotEqual,
 		TableColumnMetadata.Change.Emitter,
 		TableColumnMetadata.EditFilter.Handler,
-		LayoutEvents.EmitDescent.Handler {
+		LayoutEvents.EmitDescent.Handler, SuggestionSelected.Handler {
 	@Directed.Transform(TableView.class)
 	@BeanViewModifiers(detached = true, nodeEditors = true)
 	@DirectedContextResolver(DisplayAllMixin.class)
@@ -59,7 +61,7 @@ public class SelectionTableArea extends Model.Fields
 
 	Layer filterLayer;
 
-	private FilterHostImpl openFilter;
+	FilterHostImpl openFilter;
 
 	public SelectionTableArea(Layer layer, Selection<?> selection) {
 		hasTable = (Selection.HasTableRepresentation) selection;
@@ -195,8 +197,8 @@ public class SelectionTableArea extends Model.Fields
 		emitColumnMetadata();
 	}
 
-	class FilterHostImpl
-			implements LayerFilterEditor.Host, ModelEvents.Closed.Handler {
+	class FilterHostImpl implements LayerFilterEditor.Host,
+			ModelEvents.Closed.Handler, SuggestionSelected.Handler {
 		Property property;
 
 		Element relativeTo;
@@ -237,6 +239,24 @@ public class SelectionTableArea extends Model.Fields
 		@Override
 		public void onClosed(Closed event) {
 			onFilterClosed();
+		}
+
+		@Override
+		public String getDefaultEditorText() {
+			return Ax.format("%s ", property.getName());
+		}
+
+		@Override
+		public void onSuggestionSelected(SuggestionSelected event) {
+			overlay.close(null, false);
+			onFilterClosed();
+		}
+	}
+
+	@Override
+	public void onSuggestionSelected(SuggestionSelected event) {
+		if (openFilter != null) {
+			openFilter.onSuggestionSelected(event);
 		}
 	}
 }

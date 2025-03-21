@@ -7,12 +7,10 @@ import java.util.Objects;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.user.client.History;
 
-import cc.alcina.framework.common.client.collections.NotifyingList.Notification;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
-import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
@@ -26,11 +24,10 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelCatchallHandler;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Delete;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.TopLevelMissedEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.servlet.component.entity.EntityBrowser.Ui.EntityPeer;
 import cc.alcina.framework.servlet.component.entity.EntitySelection.EntityTypeExtended.EntityDeletionHandler;
 import cc.alcina.framework.servlet.component.entity.RootLayer.DomainGraphSelection;
@@ -198,8 +195,10 @@ public class EntityBrowser {
 			evictPeer();
 		}
 
-		public TraversalAnswerSupplier createAnswerSupplier(int forLayer) {
-			return new EntityAnswers(forLayer);
+		@Override
+		public TraversalAnswerSupplier createAnswerSupplier(int forLayer,
+				boolean hasClearableFilter) {
+			return new EntityAnswers(forLayer, hasClearableFilter);
 		}
 
 		class EntityPeer

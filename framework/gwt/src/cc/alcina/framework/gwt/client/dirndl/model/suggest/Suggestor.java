@@ -56,8 +56,6 @@ public class Suggestor extends Model implements
 		SuggestorEvents.EditorAsk.Handler, ModelEvents.SelectionChanged.Handler,
 		HasSelectedValue, KeyboardNavigation.Navigation.Handler,
 		ModelEvents.Closed.Handler, Model.TransmitState {
-	public static PackageProperties._Suggestor properties = PackageProperties.suggestor;
-
 	// FIXME - dirndl 1x1e - add a default impl, which routes via a Debounce
 	// (which doesn't send if inflight, but has a timeout)
 	public interface Answer<A extends Ask> {
@@ -168,6 +166,12 @@ public class Suggestor extends Model implements
 
 		boolean closeSuggestionsOnEmptyAsk;
 
+		boolean checkEmptyAsk;
+
+		public boolean isCheckEmptyAsk() {
+			return checkEmptyAsk;
+		}
+
 		public String getInputTag() {
 			return inputTag;
 		}
@@ -222,6 +226,11 @@ public class Suggestor extends Model implements
 
 		public Attributes withAnswer(Answer answer) {
 			this.answer = answer;
+			return this;
+		}
+
+		public Attributes withCheckEmptyAsk(boolean checkEmptyAsk) {
+			this.checkEmptyAsk = checkEmptyAsk;
 			return this;
 		}
 
@@ -480,6 +489,8 @@ public class Suggestor extends Model implements
 
 		void toState(State state);
 	}
+
+	public static PackageProperties._Suggestor properties = PackageProperties.suggestor;
 
 	public static Attributes attributes() {
 		return new Attributes();

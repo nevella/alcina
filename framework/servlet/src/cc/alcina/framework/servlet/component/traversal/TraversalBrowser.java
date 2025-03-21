@@ -169,8 +169,9 @@ public class TraversalBrowser {
 			return false;
 		}
 
-		public TraversalAnswerSupplier createAnswerSupplier(int forLayer) {
-			return new TraversalAnswers(forLayer);
+		public TraversalAnswerSupplier createAnswerSupplier(int forLayer,
+				boolean hasClearableFilter) {
+			return new TraversalAnswers(forLayer, hasClearableFilter);
 		}
 
 		@Override

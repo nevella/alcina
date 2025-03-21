@@ -38,8 +38,11 @@ import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 
 class EntityAnswers extends TraversalAnswerSupplier {
-	public EntityAnswers(int fromLayer) {
-		super(fromLayer);
+	boolean hasClearableFilter;
+
+	public EntityAnswers(int forLayer, boolean hasClearableFilter) {
+		super(forLayer);
+		this.hasClearableFilter = hasClearableFilter;
 	}
 
 	static AppSuggestion createSuggestion(CommandNode node) {
@@ -51,9 +54,14 @@ class EntityAnswers extends TraversalAnswerSupplier {
 	}
 
 	@Override
+	public boolean checkEmptyAsk() {
+		return hasClearableFilter;
+	}
+
+	@Override
 	public void begin(Invocation invocation) {
 		List<AppSuggestion> suggestions = new InvocationHandler(invocation,
-				Ui.place(), this.fromLayer).handle();
+				Ui.place(), this.fromLayer, this.hasClearableFilter).handle();
 		AppSuggestorRequest request = new AppSuggestorRequest();
 		String query = invocation.ask.getValue();
 		request.setQuery(query);
@@ -76,10 +84,13 @@ class EntityAnswers extends TraversalAnswerSupplier {
 
 		boolean withCommandSuggestions;
 
+		boolean hasClearableFilter;
+
 		InvocationHandler(Invocation invocation, TraversalPlace fromPlace,
-				int fromLayer) {
+				int fromLayer, boolean hasClearableFilter) {
 			this.invocation = invocation;
 			this.fromLayer = fromLayer;
+			this.hasClearableFilter = hasClearableFilter;
 			if (fromLayer == -1) {
 				this.withCommandSuggestions = true;
 				this.fromPlace = fromPlace;
@@ -122,7 +133,21 @@ class EntityAnswers extends TraversalAnswerSupplier {
 				proposeCommandSuggestions();
 			}
 			proposePlaceContextSuggestions();
+			proposeClearSuggestion();
 			return suggestions;
+		}
+
+		void proposeClearSuggestion() {
+			if (query.isEmpty() && hasClearableFilter) {
+				AppSuggestionEntry suggestion = new AppSuggestionEntry();
+				suggestion.match = "(Clear filter)";
+				SelectionTraversal traversal = Ui.traversal();
+				TraversalPlace place = fromPlace.copy();
+				place.ensureAttributes(fromLayer)
+						.remove(StandardLayerAttributes.Filter.class);
+				suggestion.url = place.toTokenString();
+				suggestions.add(suggestion);
+			}
 		}
 
 		void proposeCommandSuggestions() {

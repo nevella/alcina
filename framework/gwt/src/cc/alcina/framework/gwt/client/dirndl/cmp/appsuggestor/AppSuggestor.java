@@ -108,6 +108,10 @@ public class AppSuggestor extends Model.Fields
 	public interface AnswerSupplier {
 		void begin(Invocation invocation);
 
+		default boolean checkEmptyAsk() {
+			return false;
+		}
+
 		default void processResults(Invocation invocation,
 				List<? extends AppSuggestion> appSuggestions) {
 			invocation.processResults(appSuggestions);
@@ -157,7 +161,7 @@ public class AppSuggestor extends Model.Fields
 		@Override
 		public void ask(StringAsk ask, Consumer<Answers> answersHandler,
 				Consumer<Throwable> exceptionHandler) {
-			if (Ax.isBlank(ask.getValue())) {
+			if (Ax.isBlank(ask.getValue()) && !answerSupplier.checkEmptyAsk()) {
 				Suggestor.Answers result = new Answers();
 				answersHandler.accept(result);
 				return;
@@ -262,6 +266,8 @@ public class AppSuggestor extends Model.Fields
 		attributes.withLogicalAncestors(List.of(AppSuggestor.class));
 		attributes.withAnswer(new AnswerImpl(this.attributes.answerSupplier));
 		attributes.withNonOverlaySuggestionResults(true);
+		attributes.withCheckEmptyAsk(
+				this.attributes.answerSupplier.checkEmptyAsk());
 		return attributes;
 	}
 

@@ -34,6 +34,10 @@ class LayerFilterEditor extends Model.All
 		Layer getLayer();
 
 		void setFilterEditorOpen(boolean open);
+
+		default String getDefaultEditorText() {
+			return null;
+		}
 	}
 
 	// TODO - dirndl - maybe a lightweight singleton Action? Although
@@ -74,19 +78,21 @@ class LayerFilterEditor extends Model.All
 					.getLayerFilterAttribute();
 			Suggestor.Attributes attributes = Suggestor.attributes();
 			attributes.withFocusOnBind(true);
-			attributes.withSelectAllOnFocus(true);
 			attributes.withSuggestionXAlign(Position.CENTER);
 			attributes.withLogicalAncestors(List.of(FilterSuggestor.class));
+			boolean hasExistingFilter = attr != null;
 			/*
 			 * note this routes via appsuggestor because it essentially does the
 			 * same work as appsuggestor (changing the global Place)
 			 */
-			attributes.withAnswer(new AnswerImpl(
-					Ui.get().createAnswerSupplier(host.getLayer().index)));
+			attributes.withAnswer(new AnswerImpl(Ui.get().createAnswerSupplier(
+					host.getLayer().index, hasExistingFilter)));
 			attributes.withNonOverlaySuggestionResults(true);
 			attributes.withInputPrompt("Filter layer");
 			attributes.withInputExpandable(true);
-			attributes.withInputText(attr != null ? attr.toString() : null);
+			attributes.withInputText(hasExistingFilter ? attr.toString()
+					: host.getDefaultEditorText());
+			attributes.withSelectAllOnFocus(hasExistingFilter);
 			suggestor = attributes.create();
 		}
 

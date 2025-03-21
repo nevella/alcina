@@ -16,7 +16,7 @@ public class AppSuggestorTraversal extends AppSuggestor {
 
 	static AppSuggestor.Attributes createAppAttributes() {
 		AppSuggestor.Attributes appSuggestorAttributes = new AppSuggestor.Attributes(
-				Ui.get().createAnswerSupplier(-1));
+				Ui.get().createAnswerSupplier(-1, false));
 		return appSuggestorAttributes;
 	}
 
