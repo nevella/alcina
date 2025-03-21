@@ -362,4 +362,27 @@ public class Measure extends Location.Range {
 		public interface IgnoreEmptyText {
 		}
 	}
+
+	public Measure trimWhitespace() {
+		Measure result = this;
+		Measure lastResult = null;
+		while (result != lastResult) {
+			lastResult = result;
+			String text = result.text();
+			if (text.startsWith(" ")) {
+				result = result.truncateMeasureToIndexStart(1);
+			} else if (text.endsWith(" ")) {
+				result = result.truncateMeasureToIndexEnd(text.length() - 1);
+			}
+		}
+		return result;
+	}
+
+	public Measure truncateMeasureToIndexStart(int startIndex) {
+		return Measure.fromRange(truncateToIndexStart(startIndex), token);
+	}
+
+	public Measure truncateMeasureToIndexEnd(int endIndex) {
+		return Measure.fromRange(truncateToIndexEnd(endIndex), token);
+	}
 }
