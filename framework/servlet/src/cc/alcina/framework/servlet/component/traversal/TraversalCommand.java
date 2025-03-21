@@ -96,4 +96,21 @@ public abstract class TraversalCommand<T, H extends NodeEvent.Handler>
 			void onShowKeyboardShortcuts(ShowKeyboardShortcuts event);
 		}
 	}
+
+	@AppSuggestorCommand(
+		parent = TraversalCommand.class,
+		name = "exec commands",
+		description = "Show the exec commands list")
+	@KeyBinding(key = "E")
+	public static class ShowExecCommands
+			extends TraversalCommand<Object, ShowExecCommands.Handler> {
+		@Override
+		public void dispatch(ShowExecCommands.Handler handler) {
+			handler.onShowExecCommands(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onShowExecCommands(ShowExecCommands event);
+		}
+	}
 }

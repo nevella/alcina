@@ -35,6 +35,13 @@ $box-shadow-bottom: 0 16px 24px 2px rgb(0 0 0 / 9%), 0 6px 30px 5px rgb(0 0 0 / 
   a:hover 
     color: theme.$grey-link-hover-color
 
+@mixin grey-link-blue-hover() 
+  #{$a-tags}
+    color: theme.$grey-link-color
+  
+  a:hover 
+    color: color.$blue_2
+
 @mixin panel-header($bkg-color: #eee)
   display: flex
   background-color: $bkg-color

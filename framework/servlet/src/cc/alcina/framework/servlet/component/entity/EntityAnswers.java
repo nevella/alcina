@@ -62,10 +62,11 @@ class EntityAnswers extends TraversalAnswerSupplier {
 	public void begin(Invocation invocation) {
 		List<AppSuggestion> suggestions = new InvocationHandler(invocation,
 				Ui.place(), this.fromLayer, this.hasClearableFilter).handle();
-		AppSuggestorRequest request = new AppSuggestorRequest();
 		String query = invocation.ask.getValue();
+		AppSuggestorRequest request = new AppSuggestorRequest();
 		request.setQuery(query);
 		request.commandContexts.add(TraversalBrowser.CommandContext.class);
+		addExecSuggestion(query, suggestions);
 		processResults(invocation, suggestions);
 	}
 

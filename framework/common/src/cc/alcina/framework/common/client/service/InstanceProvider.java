@@ -7,6 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -80,12 +81,13 @@ public interface InstanceProvider<T> extends Registration.AllSubtypes {
 	 * The default is for the call to be evaluated sequentially, this (single)
 	 * entry point gives simpler upstream code
 	 */
-	default void provide(Query<T> query, Consumer<T> asyncReturn,
-			Consumer<Exception> asyncException) {
+	default void provide(Query<T> query,
+			BiConsumer<InstanceProvider, T> asyncReturn,
+			BiConsumer<InstanceProvider, Exception> asyncException) {
 		try {
-			asyncReturn.accept(provide(query));
+			asyncReturn.accept(this, provide(query));
 		} catch (Exception e) {
-			asyncException.accept(e);
+			asyncException.accept(this, e);
 		}
 	}
 }

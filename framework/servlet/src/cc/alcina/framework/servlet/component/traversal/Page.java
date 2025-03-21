@@ -58,6 +58,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.S
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.ToggleHelp;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFilter;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
+import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowExecCommands;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.ExecCommand;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
@@ -92,6 +93,7 @@ class Page extends Model.All
 		TraversalEvents.SetSettingSelectionAreaHeight.Handler,
 		FlightEventCommandHandlers,
 		TraversalCommand.ShowKeyboardShortcuts.Handler,
+		TraversalCommand.ShowExecCommands.Handler,
 		TraversalEvents.LayerSelectionChange.Handler,
 		TraversalBrowserCommand.ToggleHelp.Handler,
 		ModelEvents.ApplicationHelp.Handler,
@@ -535,5 +537,10 @@ class Page extends Model.All
 
 	void observableAccessed() {
 		TraversalObserver.get().observableObserved(Ui.traversal());
+	}
+
+	@Override
+	public void onShowExecCommands(ShowExecCommands event) {
+		TraversalExecCommand.Support.showAvailableCommands();
 	}
 }

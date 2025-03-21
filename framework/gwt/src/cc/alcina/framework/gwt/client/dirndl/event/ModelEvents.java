@@ -426,6 +426,18 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Invalidate
+			extends ModelEvent<Object, Invalidate.Handler> {
+		@Override
+		public void dispatch(Invalidate.Handler handler) {
+			handler.onInvalidate(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onInvalidate(Invalidate event);
+		}
+	}
+
 	public static class LabelClicked
 			extends ModelEvent<Object, LabelClicked.Handler> {
 		@Override
@@ -491,6 +503,17 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onOptions(Options event);
+		}
+	}
+
+	public static class Refresh extends ModelEvent<Object, Refresh.Handler> {
+		@Override
+		public void dispatch(Refresh.Handler handler) {
+			handler.onRefresh(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onRefresh(Refresh event);
 		}
 	}
 

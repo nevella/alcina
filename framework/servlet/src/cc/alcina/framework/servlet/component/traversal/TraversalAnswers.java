@@ -63,20 +63,4 @@ class TraversalAnswers extends TraversalAnswerSupplier {
 		}
 		processResults(invocation, suggestions);
 	}
-
-	void addExecSuggestion(String query, List<AppSuggestion> suggestions) {
-		{
-			Pattern pattern = Pattern.compile("exec (\\S+)");
-			Matcher matcher = pattern.matcher(query);
-			if (matcher.matches()) {
-				AppSuggestionEntry suggestion = new AppSuggestionEntry();
-				suggestion.eventData = matcher.group(1);
-				suggestion.match = Ax.format(
-						"Exec '%s' ['l' lists available commands]",
-						suggestion.eventData);
-				suggestion.modelEvent = TraversalEvents.ExecCommand.class;
-				suggestions.add(suggestion);
-			}
-		}
-	}
 }

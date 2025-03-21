@@ -227,6 +227,13 @@ public class InstanceOracle {
 			return FormatBuilder.keyValues("clazz", clazz, "parameters",
 					parameters);
 		}
+
+		/**
+		 * Clear the existing value, if any
+		 */
+		public void invalidate() {
+			InstanceOracle.get().invalidate(this);
+		}
 	}
 
 	/*
@@ -415,13 +422,19 @@ public class InstanceOracle {
 		 * conflict with await()) - but it calls into passToConsumers, which is.
 		 * That path has been checked
 		 */
-		void acceptInstance(T instance) {
+		void acceptInstance(InstanceProvider provider, T instance) {
+			if (provider != this.provider) {
+				return;
+			}
 			this.instance = instance;
 			awaitLatch.countDown();
 			passToConsumers();
 		}
 
-		void acceptException(Exception exception) {
+		void acceptException(InstanceProvider provider, Exception exception) {
+			if (provider != this.provider) {
+				return;
+			}
 			exception.printStackTrace();
 			this.exception = exception;
 			awaitLatch.countDown();
@@ -453,10 +466,20 @@ public class InstanceOracle {
 				throw WrappedRuntimeException.wrap(e);
 			}
 		}
+
+		synchronized void invalidate() {
+			provider = null;
+			instance = null;
+			exception = null;
+		}
 	}
 
 	public static <T> Query<T> query(Class<T> clazz) {
 		return new Query<>(clazz);
+	}
+
+	<T> void invalidate(Query<T> query) {
+		store.getProviderQueries(query).invalidate();
 	}
 
 	static InstanceOracle get() {
