@@ -197,8 +197,19 @@ public class EnvironmentRegistry extends Registry {
 	static boolean hasEnvironmentRegistration(Class<?> type) {
 		try {
 			boolean hasEnvironmentRegistration = classEnvironmentRegistration
-					.computeIfAbsent(type, clazz -> Reflections.at(clazz)
-							.has(Registration.EnvironmentRegistration.class));
+					.computeIfAbsent(type, clazz -> {
+						ClassReflector reflector = Reflections.at(clazz);
+						boolean has = reflector.has(
+								Registration.EnvironmentRegistration.class);
+						if (has) {
+							/*
+							 * Model constraint - the two annotations conflict
+							 */
+							Preconditions.checkState(!reflector
+									.has(Registration.Singleton.class));
+						}
+						return has;
+					});
 			return hasEnvironmentRegistration;
 		} catch (Exception e) {
 			return false;
