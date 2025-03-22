@@ -427,11 +427,6 @@ edit-value textarea {
  *
  *  TODO - move some/most to dropdown
  * */
-body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts {
-  top: 3rem;
-  transform: translate(-50%, 0%);
-}
-
 overlay > menu {
   background: white;
   user-select: none;
@@ -841,6 +836,12 @@ keyboard-shortcuts {
   width: 750px;
   min-height: 50vh;
   user-select: auto;
+  display: grid;
+  justify-items: start;
+  grid-template-rows: min-content min-content min-content 1fr min-content;
+}
+keyboard-shortcuts > *:nth-child(3) {
+  overflow-y: auto;
 }
 keyboard-shortcuts > heading {
   margin: 1rem 0;
