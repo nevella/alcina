@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus;
+import cc.alcina.framework.gwt.client.dirndl.event.VariableDispatchEventBus.QueuedEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
@@ -272,4 +273,13 @@ public abstract class Client implements ContextFrame {
 	}
 
 	protected abstract void createPlaceController();
+
+	/**
+	 * Sugar for the most common EventQueue use
+	 * 
+	 * @return
+	 */
+	public static QueuedEvent lambda(Runnable runnable) {
+		return eventBus().queued().lambda(runnable);
+	}
 }

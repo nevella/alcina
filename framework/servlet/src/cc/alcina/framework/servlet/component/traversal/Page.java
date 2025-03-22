@@ -75,8 +75,6 @@ import cc.alcina.framework.servlet.component.traversal.TraversalSettings.Propert
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryArea;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
 
-@Directed(
-	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
 @TypedProperties
 class Page extends Model.All
 		implements HasPage, TraversalEvents.SelectionSelected.Handler,
@@ -99,7 +97,7 @@ class Page extends Model.All
 		ModelEvents.ApplicationHelp.Handler,
 		Selection.CopySelectionFilter.Handler, CopyToClipboardHandler,
 		ExecCommand.PerformCommand.Handler,
-		TraversalEvents.SelectionTableAreaChange.Handler {
+		TraversalEvents.SelectionTableAreaChange.Handler, Binding.TabIndexZero {
 	public static class CommandContextProviderImpl
 			implements CommandContext.Provider {
 		@Override

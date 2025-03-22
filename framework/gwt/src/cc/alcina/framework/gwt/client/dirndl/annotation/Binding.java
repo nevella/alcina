@@ -385,4 +385,15 @@ public @interface Binding {
 			super("monospace", "inherit");
 		}
 	}
+
+	/**
+	 * Mixin to ensure focusability of area
+	 */
+	@Directed(
+		bindings = @Binding(
+			to = "tabIndex",
+			literal = "0",
+			type = Type.PROPERTY))
+	public interface TabIndexZero {
+	}
 }

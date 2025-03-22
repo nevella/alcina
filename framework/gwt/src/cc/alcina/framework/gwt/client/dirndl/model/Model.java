@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -44,8 +45,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
-import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.PositionedDescendants;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents.PositionedDescendants;
 
 /**
  * <p>
@@ -494,15 +495,17 @@ public abstract class Model extends Bindable implements
 	public abstract static class Fields extends Model {
 	}
 
-	public interface FocusOnBind extends Overlay.PositionedDescendants.Handler {
+	public interface FocusOnBind
+			extends OverlayEvents.PositionedDescendants.Handler {
 		boolean isFocusOnBind();
 
 		// double-fire for overlay positioning. note this is deferred to allow
 		// flush() [which also sets the overlay to visible]
 		@Override
-		default void onPositionedDescendants(PositionedDescendants event) {
-			Scheduler.get().scheduleDeferred(
-					() -> focusIfAttached(event.getContext().node));
+		default void onPositionedDescendants(
+				OverlayEvents.PositionedDescendants event) {
+			Client.lambda(() -> focusIfAttached(event.getContext().node))
+					.deferred().dispatch();
 		}
 
 		default void onBind(FocusOnBind dispatchMarker, Bind event) {

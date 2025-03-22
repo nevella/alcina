@@ -69,8 +69,6 @@ import cc.alcina.framework.servlet.environment.RemoteUi;
  * reloadSequence keyed off some sort of 'context original event'
  */
 @TypedProperties
-@Directed(
-	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
 class Page extends Model.Fields
 		implements SequenceEvents.FilterElements.Handler,
 		SequenceEvents.HighlightElements.Handler,
@@ -87,7 +85,8 @@ class Page extends Model.Fields
 		SequenceEvents.SelectedIndexChanged.Emitter,
 		SequenceBrowserCommand.ShowKeyboardShortcuts.Handler,
 		ModelEvents.ApplicationHelp.Handler,
-		SequenceBrowserCommand.ToggleHelp.Handler, CopyToClipboardHandler {
+		SequenceBrowserCommand.ToggleHelp.Handler, CopyToClipboardHandler,
+		Binding.TabIndexZero {
 	/**
 	 * This activity hooks the Page up to the RootArea (the general routing
 	 * contract)

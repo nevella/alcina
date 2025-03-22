@@ -2,7 +2,6 @@ package cc.alcina.framework.servlet.component.gallery;
 
 import com.google.gwt.activity.shared.PlaceUpdateable;
 
-import cc.alcina.framework.servlet.component.gallery.GalleryBrowser.Ui;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
@@ -11,7 +10,6 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
@@ -21,6 +19,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.ApplicationHelp;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsArea;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.servlet.component.gallery.GalleryBrowser.Ui;
 
 /*
  * TODO - look at an approach to prevent double-fires of say reloadGallery - the
@@ -31,14 +30,12 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  * reloadGallery keyed off some sort of 'context original event'
  */
 @TypedProperties
-@Directed(
-	tag = "page",
-	bindings = @Binding(to = "tabIndex", literal = "0", type = Type.PROPERTY))
+@Directed(tag = "page")
 class GalleryPage extends Model.Fields
 		implements GalleryBrowserCommand.ClearFilter.Handler,
 		GalleryBrowserCommand.ShowKeyboardShortcuts.Handler,
 		ModelEvents.ApplicationHelp.Handler,
-		GalleryBrowserCommand.ToggleHelp.Handler {
+		GalleryBrowserCommand.ToggleHelp.Handler, Binding.TabIndexZero {
 	static PackageProperties._GalleryPage properties = PackageProperties.galleryPage;
 
 	/**

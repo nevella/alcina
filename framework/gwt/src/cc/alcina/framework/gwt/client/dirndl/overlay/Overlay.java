@@ -36,6 +36,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasLinks;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.ViewportRelative;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
@@ -69,6 +70,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  * gives *more or less* the same sass keys as would exist for the logical parent
  * (although css classes, not containing tags). FIXME - doc - example
  *
+ * FIXME - InferredDomEvents.EscapePressed.Handler should be a nativepreview
+ * handler (and respect topmost overlay)
  *
  *
  *
@@ -80,7 +83,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
 		InferredDomEvents.MouseDownOutside.Handler, ModelEvents.Submit.Handler,
-		ModelEvents.Closed.Handler {
+		ModelEvents.Closed.Handler, FocusOnBind, Binding.TabIndexZero {
 	public static class Actions extends Model implements HasLinks {
 		public static Actions close() {
 			return new Actions().withClose();
@@ -285,21 +288,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		@Override
 		public void dispatch(Positioned.Handler handler) {
 			handler.onPositioned(this);
-		}
-	}
-
-	public static class PositionedDescendants extends
-			ModelEvent.DescendantEvent<Object, PositionedDescendants.Handler, PositionedDescendants.Emitter> {
-		public interface Handler extends NodeEvent.Handler {
-			void onPositionedDescendants(PositionedDescendants event);
-		}
-
-		public interface Emitter extends ModelEvent.Emitter {
-		}
-
-		@Override
-		public void dispatch(PositionedDescendants.Handler handler) {
-			handler.onPositionedDescendants(this);
 		}
 	}
 
@@ -572,5 +560,10 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public boolean isFocusOnBind() {
+		return true;
 	}
 }

@@ -29,8 +29,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  *
  */
 @Directed
-public class OverlayContainer extends Model implements HasTag,
-		Model.RerouteBubbledEvents, Overlay.PositionedDescendants.Emitter {
+public class OverlayContainer extends Model
+		implements HasTag, Model.RerouteBubbledEvents,
+		OverlayEvents.PositionedDescendants.Emitter {
 	private final Overlay contents;
 
 	private final ContainerOptions containerOptions;
@@ -127,7 +128,7 @@ public class OverlayContainer extends Model implements HasTag,
 	void position() {
 		containerOptions.position.withToElement(provideElement()).apply();
 		emitEvent(Overlay.Positioned.class, this);
-		emitEvent(Overlay.PositionedDescendants.class, this);
+		emitEvent(OverlayEvents.PositionedDescendants.class, this);
 		Scheduler.get().scheduleFinally(() -> setVisible(true));
 	}
 }
