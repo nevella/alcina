@@ -149,6 +149,13 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		boolean consumeSubmit;
 
+		boolean focusOnBind = true;
+
+		public Attributes withFocusOnBind(boolean focusOnBind) {
+			this.focusOnBind = focusOnBind;
+			return this;
+		}
+
 		public OverlayPosition getPosition() {
 			return position;
 		}
@@ -564,6 +571,6 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	@Override
 	public boolean isFocusOnBind() {
-		return true;
+		return attributes.focusOnBind;
 	}
 }
