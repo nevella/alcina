@@ -19,8 +19,8 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 
 /**
  * <p>
- * Essentially unused if the overlay is non-modal, a glass (event interceptor)
- * if it is modal
+ * Essentially non-functional (as a DOM event receiver) if the overlay is
+ * non-modal, a glass (event interceptor) if it is modal
  * <p>
  * Note - this *must not* receive model events, since model events will be
  * routed to the Overlay.logicalParent (if any), not this
@@ -125,7 +125,7 @@ public class OverlayContainer extends Model implements HasTag,
 	 * remove visibility:hidden
 	 */
 	void position() {
-		containerOptions.position.toElement(provideElement()).apply();
+		containerOptions.position.withToElement(provideElement()).apply();
 		emitEvent(Overlay.Positioned.class, this);
 		emitEvent(Overlay.PositionedDescendants.class, this);
 		Scheduler.get().scheduleFinally(() -> setVisible(true));

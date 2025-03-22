@@ -24,6 +24,7 @@ import java.util.Map;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.event.dom.client.PageHideEvent;
 import com.google.gwt.event.dom.client.PageHideHandler;
 import com.google.gwt.event.logical.shared.CloseEvent;
@@ -268,7 +269,7 @@ public class Window {
 	}
 
 	private static native void alert0(String msg) /*-{
-    $wnd.alert(msg);
+    .alert(msg);
 	}-*/;
 
 	/**
@@ -281,7 +282,7 @@ public class Window {
 	 *         'Cancel' is clicked.
 	 */
 	public static native boolean confirm(String msg) /*-{
-    return $wnd.confirm(msg);
+    return .confirm(msg);
 	}-*/;
 
 	/**
@@ -403,7 +404,7 @@ public class Window {
 	 *            to move the top edge by
 	 */
 	public static native void moveBy(int dx, int dy) /*-{
-    $wnd.moveBy(dx, dy);
+    .moveBy(dx, dy);
 	}-*/;
 
 	/**
@@ -419,7 +420,7 @@ public class Window {
 	 *            The top coordinate
 	 */
 	public static native void moveTo(int x, int y) /*-{
-    $wnd.moveTo(x, y);
+    .moveTo(x, y);
 	}-*/;
 
 	static void onClosed() {
@@ -467,7 +468,7 @@ public class Window {
 	 *            the features to be enabled/disabled on this window
 	 */
 	public static native void open(String url, String name, String features) /*-{
-    $wnd.open(url, name, features);
+    .open(url, name, features);
 	}-*/;
 
 	/**
@@ -475,7 +476,7 @@ public class Window {
 	 * command.
 	 */
 	public static native void print() /*-{
-    $wnd.print();
+    .print();
 	}-*/;
 
 	/**
@@ -490,7 +491,7 @@ public class Window {
 	 *         <code>null</code> if 'Cancel' was pressed
 	 */
 	public static native String prompt(String msg, String initialValue) /*-{
-    return $wnd.prompt(msg, initialValue);
+    return .prompt(msg, initialValue);
 	}-*/;
 
 	/**
@@ -546,7 +547,7 @@ public class Window {
 	 *            to resize the height by
 	 */
 	public static native void resizeBy(int width, int height) /*-{
-    $wnd.resizeBy(width, height);
+    .resizeBy(width, height);
 	}-*/;
 
 	/**
@@ -562,7 +563,7 @@ public class Window {
 	 *            The height of the window, in pixels
 	 */
 	public static native void resizeTo(int width, int height) /*-{
-    $wnd.resizeTo(width, height);
+    .resizeTo(width, height);
 	}-*/;
 
 	/**
@@ -594,7 +595,7 @@ public class Window {
       'top' : top,
       'behavior' : smooth ? 'smooth' : 'auto'
     };
-    $wnd.scrollTo(args);
+    .scrollTo(args);
 	}-*/;
 
 	/**
@@ -607,7 +608,7 @@ public class Window {
 	 *            the window's new margin size, in CSS units.
 	 */
 	public static native void setMargin(String size) /*-{
-    $doc.body.style.margin = size;
+    .body.style.margin = size;
 	}-*/;
 
 	/**
@@ -618,7 +619,7 @@ public class Window {
 	 *            the new message to display.
 	 */
 	public static native void setStatus(String status) /*-{
-    $wnd.status = status;
+    .status = status;
 	}-*/;
 
 	private Window() {
@@ -965,7 +966,7 @@ public class Window {
 
 	public static class LocationImpl {
 		public native void assign(String newURL) /*-{
-      $wnd.location.assign(newURL);
+      .location.assign(newURL);
 		}-*/;
 
 		public String getHash() {
@@ -973,31 +974,31 @@ public class Window {
 		}
 
 		public native String getHost() /*-{
-      return $wnd.location.host;
+      return .location.host;
 		}-*/;
 
 		public native String getHostName() /*-{
-      return $wnd.location.hostname;
+      return .location.hostname;
 		}-*/;
 
 		public native String getHref() /*-{
-      return $wnd.location.href;
+      return .location.href;
 		}-*/;
 
 		public native String getOrigin() /*-{
-      return $wnd.location.origin;
+      return .location.origin;
 		}-*/;
 
 		public native String getPath() /*-{
-      return $wnd.location.pathname;
+      return .location.pathname;
 		}-*/;
 
 		public native String getPort() /*-{
-      return $wnd.location.port;
+      return .location.port;
 		}-*/;
 
 		public native String getProtocol() /*-{
-      return $wnd.location.protocol;
+      return .location.protocol;
 		}-*/;
 
 		public String getQueryString() {
@@ -1010,11 +1011,11 @@ public class Window {
 		}
 
 		public native void reload() /*-{
-      $wnd.location.reload();
+      .location.reload();
 		}-*/;
 
 		public native void replace(String newURL) /*-{
-      $wnd.location.replace(newURL);
+      .location.replace(newURL);
 		}-*/;
 
 		public void setHash(String token) {
@@ -1078,7 +1079,7 @@ public class Window {
 		 * @return the window's navigator.appCodeName.
 		 */
 		public native String getAppCodeName() /*-{
-      return $wnd.navigator.appCodeName;
+      return .navigator.appCodeName;
 		}-*/;
 
 		public void init(String appCodeName, String appName, String appVersion,
@@ -1092,7 +1093,7 @@ public class Window {
 		 * @return the window's navigator.appName.
 		 */
 		public native String getAppName() /*-{
-      return $wnd.navigator.appName;
+      return .navigator.appName;
 		}-*/;
 
 		/**
@@ -1101,7 +1102,7 @@ public class Window {
 		 * @return the window's navigator.appVersion.
 		 */
 		public native String getAppVersion() /*-{
-      return $wnd.navigator.appVersion;
+      return .navigator.appVersion;
 		}-*/;
 
 		/**
@@ -1110,7 +1111,7 @@ public class Window {
 		 * @return the window's navigator.platform.
 		 */
 		public native String getPlatform() /*-{
-      return $wnd.navigator.platform;
+      return .navigator.platform;
 		}-*/;
 
 		/**
@@ -1121,7 +1122,7 @@ public class Window {
 		public native String getUserAgent() /*-{
       //see http://bugs.jquery.com/ticket/6450
       try {
-        return $wnd.navigator.userAgent;
+        return .navigator.userAgent;
       } catch (e) {
         return "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2;";
       }
@@ -1142,7 +1143,7 @@ public class Window {
 		 * @return the window's navigator.javaEnabled.
 		 */
 		public native boolean isJavaEnabled() /*-{
-      return $wnd.navigator.javaEnabled();
+      return .navigator.javaEnabled();
 		}-*/;
 	}
 
@@ -1250,9 +1251,13 @@ public class Window {
 
 	private static native void setOrRemoveProperty0(String name, boolean value) /*-{
 	if(value){
-		$wnd[name] = true;
+		[name] = true;
 	}else{
-		delete $wnd[name]
+		delete [name]
 	}
 		}-*/;
+
+	public static DomRect getRect() {
+		return DomRect.fromOrigin(getClientWidth(), getClientHeight());
+	}
 }

@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model.component;
 
+import com.google.gwt.dom.client.DomRect;
+import com.google.gwt.dom.client.NativeEvent;
+
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -22,6 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.Attributes;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import elemental.json.Json;
 import elemental.json.JsonException;
@@ -159,8 +163,12 @@ public class StringArea extends Model.Fields
 		if (overlay == null) {
 			Expanded expanded = new Expanded();
 			Attributes attributes = Overlay.attributes();
-			attributes.dropdown(Position.CENTER,
-					provideElement().getBoundingClientRect(), this, expanded);
+			attributes.dropdown(Position.CENTER, null, this, expanded);
+			NativeEvent originatingNativeEvent = event.getContext()
+					.getOriginatingNativeEvent();
+			DomRect fromRect = OverlayPosition
+					.getTextClickRelativeRect(originatingNativeEvent);
+			attributes.getPosition().withFromRect(fromRect);
 			attributes.withLogicalParent(this);
 			overlay = attributes.create();
 			overlay.open();

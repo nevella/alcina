@@ -171,14 +171,18 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		 *            If null, the caller must call {@link #getPosition()} and
 		 *            position exactly
 		 * @param rect
+		 *            can be null, in which case logicalParent must be the rect
+		 *            source
 		 * @param logicalParent
+		 *            the logical parent, also the source of scrolling info for
+		 *            viewport-relative constraints
 		 * @param contents
 		 * @return
 		 */
 		public Attributes dropdown(OverlayPosition.Position xalign,
 				DomRect rect, Model logicalParent, Model contents) {
 			if (xalign != null) {
-				position.dropdown(xalign, rect, 0);
+				position.dropdown(xalign, rect, logicalParent, 0);
 			}
 			withLogicalParent(logicalParent);
 			withContents(contents);
@@ -193,7 +197,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		public Attributes
 				positionViewportRelative(ViewportRelative viewportRelative) {
-			position.viewportRelative(viewportRelative);
+			position.withViewportRelative(viewportRelative);
 			return this;
 		}
 

@@ -41,8 +41,23 @@ overlays and events
 	  an overlay would be a dom child of the parent - as it is, its *logical* dirndl aspects are 
 	  resolved up the parent chain, or at least intended to be.
 
+Viewport-relative positioning constraints - a story:
 
 
+
+Area A is rendered with Overlay.position
+- Is it too tall/wide? (That's a css constraint - if it can't fit on the screen or whatever req'd fraction)
+- Am I offscreen x? Fix is first align offscreen coord to viewport
+- Am I offscreen y? (note, y in a text area or contenteditable should be one line away from click, not rel to 
+  container elt.)
+- 1. Try to scroll the container (with an animation!) Note for romcom this will require:
+  - rect/scroll data of scrollable ancestor
+  - rect/scroll data of ancestor chain 
+  - only send event rects if they change
+  - optionally extend the scroll container (with css height) - not default
+- 2. If not possible, position above
+- 3. If that wouldn't be 100% visible, do nothing
+[the above should be a default 'position onscreen' strategy, which can be disabled]
  * @formatter:on
  *
  */

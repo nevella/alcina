@@ -43,7 +43,7 @@ public class DoublePair implements Comparable<DoublePair> {
 		return d1 == d2 ? d1 == d : ordered().d1 <= d && ordered().d2 > d;
 	}
 
-	public double distance() {
+	public double length() {
 		return Math.abs(d1 - d2);
 	}
 
@@ -100,7 +100,7 @@ public class DoublePair implements Comparable<DoublePair> {
 		if (intersection == null) {
 			return 0.0F;
 		}
-		return intersection.distance() * 2 / (distance() + fp2.distance());
+		return intersection.length() * 2 / (length() + fp2.length());
 	}
 
 	public void subtract(DoublePair dp) {
@@ -125,5 +125,9 @@ public class DoublePair implements Comparable<DoublePair> {
 		DoublePair result = clone();
 		result.subtract(o);
 		return result;
+	}
+
+	public boolean contains(DoublePair other) {
+		return other == null ? false : other.equals(intersection(other));
 	}
 }
