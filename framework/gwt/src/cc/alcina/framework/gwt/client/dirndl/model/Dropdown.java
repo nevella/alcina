@@ -92,6 +92,7 @@ public class Dropdown extends Model
 	static class LabelArrow extends Model.All
 			implements DomEvents.Click.Handler {
 		@Directed(
+			tag = "label-area",
 			reemits = { DomEvents.Click.class,
 					DropdownEvents.ComboLabelSelected.class })
 		Object label;

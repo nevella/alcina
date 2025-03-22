@@ -766,13 +766,13 @@ body > page > properties bean-editor form-element {
   padding-bottom: 1rem;
   display: block;
 }
-body > page > properties bean-editor form-element > value > action > label {
+body > page > properties bean-editor form-element > value > action > label-area {
   color: blue;
 }
-body > page > properties bean-editor form-element > value > action > label:hover {
+body > page > properties bean-editor form-element > value > action > label-area:hover {
   text-decoration: underline;
 }
-body > page > properties bean-editor label {
+body > page > properties bean-editor label-area {
   display: block;
   color: #666;
   padding-bottom: 0.3rem;

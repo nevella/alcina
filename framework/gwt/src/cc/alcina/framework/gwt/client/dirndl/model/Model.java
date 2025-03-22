@@ -534,6 +534,11 @@ public abstract class Model extends Bindable implements
 					return;
 				}
 			}
+			if (model instanceof FocusOnBind) {
+				if (!((FocusOnBind) model).isFocusOnBind()) {
+					return;
+				}
+			}
 			FocusImpl.getFocusImplForWidget()
 					.focus(node.getRendered().asElement());
 		}

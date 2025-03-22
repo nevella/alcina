@@ -92,7 +92,10 @@ public abstract class Action<T> implements Permissible {
 			return icon;
 		}
 
-		@Directed
+		/*
+		 * avoid html default tag label
+		 */
+		@Directed(tag = "label-area")
 		public String getLabel() {
 			return label;
 		}
