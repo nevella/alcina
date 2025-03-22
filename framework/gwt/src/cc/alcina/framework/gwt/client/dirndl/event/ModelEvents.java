@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.DescendantEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.NoHandlerRequired;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
@@ -317,6 +318,22 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onFilterContents(FilterContents event);
+		}
+
+		/**
+		 * A common pattern with a simple filter - receive the filter event, and
+		 * bounce it to descendants which are self-filtering (e.g.
+		 * {@link FilterContentsFilterable} subtypes)
+		 */
+		@Directed(
+			/*
+			 * bounce ancestor Filter events back as descendant FilterContent
+			 * events
+			 */
+			reemits = { ModelEvents.Filter.class,
+					ModelEvents.FilterContents.class })
+		public interface ReflectFiltering
+				extends ModelEvents.FilterContents.Emitter {
 		}
 	}
 

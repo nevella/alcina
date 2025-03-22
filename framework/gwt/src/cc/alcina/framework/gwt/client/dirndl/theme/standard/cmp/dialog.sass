@@ -1,5 +1,6 @@
 @use '../../theme/theme'
 @use '../../theme/color'
+@use 'context-menu'
 
 @mixin info-dialog
   padding: 1rem 2rem
@@ -11,4 +12,32 @@
     text-align: center
     font-weight: bold
   
+@mixin base-dialog
+  @include context-menu.dropdown
+  padding: 1rem 2rem 2rem
+  font-size: 1.1rem
+  width: 750px
+  min-height: 50vh
+  user-select: auto
 
+//if there's a footer, have a spacer as the 4th element
+@mixin two-elt-header
+  display: grid
+  justify-items: start
+  grid-template-rows: min-content min-content min-content 1fr min-content
+
+  > *:nth-child(3)
+    overflow-y: auto
+
+//if there's a footer, have a spacer as the 3rd element
+@mixin one-elt-header
+  display: grid
+  justify-items: start
+  grid-template-rows: min-content  min-content 1fr min-content
+
+  > *:nth-child(2)
+    overflow-y: auto
+
+@mixin top-offset($offset)
+  top: $offset
+  transform: translate(-50%, 0%)

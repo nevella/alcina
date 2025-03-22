@@ -1,0 +1,20 @@
+@use '../../theme/theme'  
+@use '../../theme/color'
+@use '../../dirndl/cmp/dialog'
+@use '../../dirndl/cmp/heading'
+
+@mixin contents
+  pre-text
+    @include dialog.base-dialog
+    @include dialog.one-elt-header
+    
+    > heading
+      @include heading.panel-3
+
+    > inner
+      display: block
+      white-space: pre
+@mixin overlay    
+  body > .overlay-container.viewport-middle-center > overlay.pre-text
+    @include dialog.top-offset(3rem)
+  

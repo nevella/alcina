@@ -5,7 +5,7 @@
 @use '../../dirndl/cmp/filter'
 
 @mixin contents
-  keyboard-shortcuts
+  exec-commands
     @include dialog.base-dialog
     @include dialog.two-elt-header
     
@@ -16,33 +16,21 @@
       @include filter.contents-filter
       font-size: 1.1rem
       
-    > shortcuts
+    > commands
       display: grid
-      grid-template-columns: 3rem 2rem 1fr
+      grid-template-columns: 3rem 1fr
       margin-top: 1rem
       column-gap: 1rem
       row-gap: 0.5rem
-      max-height: 50vh
-      overflow: auto
 
-      > shortcut
+      > command-area
         display: contents
+        > *:hover
+          cursor: pointer
+          text-decoration: underline
+          background-color: #f3f3fa
 
-        > modifier-cell
-          text-align: right
-          isplay: inline-block
-          margin-top: -2px
 
-          > modifier
-            border: solid 1px #777
-            border-radius: 3px
-            padding: 2px
-            font-size: 0.8rem
-            color: #777
-
-            &:empty
-              border: none
-    
 @mixin overlay
   body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts-area
     @include dialog.top-offset(3rem)

@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model.component;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
@@ -10,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding.MatchData;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FilterContentsFilterable;
+import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl_Documentation;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
@@ -17,12 +19,25 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /**
+ * <p>
  * Models a view of all keyboard shortcuts
  */
-@Directed(
-	reemits = { ModelEvents.Filter.class, ModelEvents.FilterContents.class })
+/**
+ * <p>
+ * Design decision - I was very tempted to create a Dialog class for this.
+ * <p>
+ * But Dialog classes always end up expanding and expanding...and what's really
+ * generalisable is the UI pattern - there's no benefit in say having an
+ * abstract with `heading`, `body`, `footer` - in fact it's a loss.
+ * <p>
+ * So the solution is a few sass mixins (1-header-elt panel,
+ * 2-header-elt-panel)...and we're good. Note the requirement for a spacer elt
+ * if you use a footer (possibly it could be done without with better grid
+ * thinking)
+ */
+@Feature.Ref(Feature_Dirndl_Documentation.DesignNotes.class)
 public class KeyboardShortcutsArea extends Model.All
-		implements ModelEvents.FilterContents.Emitter {
+		implements ModelEvents.FilterContents.ReflectFiltering {
 	public Heading heading = new Heading("Keyboard Shortcuts");
 
 	@StringInput.FocusOnBind

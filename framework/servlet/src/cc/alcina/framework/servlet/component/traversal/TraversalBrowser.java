@@ -34,6 +34,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponent;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
+import cc.alcina.framework.servlet.component.shared.ExecCommand;
+import cc.alcina.framework.servlet.component.shared.ExecCommand;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings.SecondaryAreaDisplayMode;
@@ -383,7 +385,7 @@ public class TraversalBrowser {
 					suggestion.match = Ax.format(
 							"Exec '%s' ['l' lists available commands]",
 							suggestion.eventData);
-					suggestion.modelEvent = TraversalEvents.ExecCommand.class;
+					suggestion.modelEvent = ExecCommand.PerformCommand.class;
 					suggestions.add(suggestion);
 				}
 			}

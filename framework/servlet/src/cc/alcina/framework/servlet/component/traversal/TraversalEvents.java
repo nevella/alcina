@@ -86,18 +86,6 @@ public class TraversalEvents {
 		}
 	}
 
-	public static class ExecCommand
-			extends ModelEvent<String, ExecCommand.Handler> {
-		@Override
-		public void dispatch(ExecCommand.Handler handler) {
-			handler.onExecCommand(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onExecCommand(ExecCommand event);
-		}
-	}
-
 	public static class SelectionTableAreaChange
 			extends ModelEvent<List<?>, SelectionTableAreaChange.Handler> {
 		@Override

@@ -49,6 +49,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.component.KeyboardShortcutsAr
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables.ObservableEntry;
 import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
+import cc.alcina.framework.servlet.component.shared.ExecCommand;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.PropertyDisplayCycle;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowserCommand.SecondaryAreaDisplayCycle;
@@ -60,7 +61,6 @@ import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ClearFil
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowExecCommands;
 import cc.alcina.framework.servlet.component.traversal.TraversalCommand.ShowKeyboardShortcuts;
-import cc.alcina.framework.servlet.component.traversal.TraversalEvents.ExecCommand;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.FilterSelections;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.LayerSelectionChange;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents.SelectionSelected;
@@ -98,7 +98,7 @@ class Page extends Model.All
 		TraversalBrowserCommand.ToggleHelp.Handler,
 		ModelEvents.ApplicationHelp.Handler,
 		Selection.CopySelectionFilter.Handler, CopyToClipboardHandler,
-		TraversalEvents.ExecCommand.Handler,
+		ExecCommand.PerformCommand.Handler,
 		TraversalEvents.SelectionTableAreaChange.Handler {
 	public static class CommandContextProviderImpl
 			implements CommandContext.Provider {
@@ -413,7 +413,7 @@ class Page extends Model.All
 	}
 
 	@Override
-	public void onExecCommand(ExecCommand event) {
+	public void onPerformCommand(ExecCommand.PerformCommand event) {
 		TraversalExecCommand.Support.execCommand(event, currentTableElements,
 				event.getModel());
 	}

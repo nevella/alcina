@@ -3,6 +3,8 @@ package cc.alcina.framework.servlet.story.component.traversal;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.gwt.client.story.Story;
 import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser;
+import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_SelectionCards;
+import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser_SelectionTable;
 
 /**
  * <p>
@@ -16,8 +18,12 @@ import cc.alcina.framework.servlet.component.traversal.Feature_TraversalBrowser;
  * <p>
  * To modify the telling context, modify the local class
  * AlcinaStoryTellers.Story_TraversalBrowser_PeerImpl
+ * <p>
+ * TODO: add a Column_filter and Column_sort test once client
+ * transactions/alcina croissainteria are implemented
  */
 @Feature.Ref(Feature_TraversalBrowser.class)
+@Feature.Ref(Feature_TraversalBrowser_SelectionTable.Column_filter.class)
 public class Story_TraversalBrowser implements Story {
 	/*
 	 * Declarative types

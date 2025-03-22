@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.component.traversal;
+package cc.alcina.framework.servlet.component.sequence;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,13 +12,13 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.CopyToClipboard;
 import cc.alcina.framework.gwt.client.dirndl.model.NotificationObservable;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
+import cc.alcina.framework.servlet.component.sequence.SequenceBrowser.Ui;
 import cc.alcina.framework.servlet.component.shared.ExecCommand;
 import cc.alcina.framework.servlet.component.shared.ExecCommandsArea;
-import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 @Registration.Self
-public interface TraversalExecCommand<T> extends ExecCommand<T> {
-	public static class ListCommands implements TraversalExecCommand {
+public interface SequenceExecCommand<T> extends ExecCommand<T> {
+	public static class ListCommands implements SequenceExecCommand {
 		@Override
 		public String name() {
 			return "l";
@@ -30,7 +30,7 @@ public interface TraversalExecCommand<T> extends ExecCommand<T> {
 		}
 	}
 
-	public static class ExportToCsv implements TraversalExecCommand {
+	public static class ExportToCsv implements SequenceExecCommand {
 		@Override
 		public String name() {
 			return "csv";
@@ -42,7 +42,7 @@ public interface TraversalExecCommand<T> extends ExecCommand<T> {
 					.toOutputString();
 			event.reemitAs(event.getContext().node.getModel(),
 					CopyToClipboard.class, csvText);
-			String path = "/tmp/traversal.csv";
+			String path = "/tmp/sequence.csv";
 			Io.write().string(csvText).toPath(path);
 			NotificationObservable
 					.of("CSV copied to clipboard and written to %s", path)
@@ -51,21 +51,21 @@ public interface TraversalExecCommand<T> extends ExecCommand<T> {
 	}
 
 	static class Support {
-		public static void showAvailableCommands() {
-			Stream<TraversalExecCommand> commands = Registry
-					.query(TraversalExecCommand.class).implementations();
+		static void showAvailableCommands() {
+			Stream<SequenceExecCommand> commands = Registry
+					.query(SequenceExecCommand.class).implementations();
 			Overlay.attributes().withContents(new ExecCommandsArea(commands))
 					.withLogicalParent(Ui.get().page).positionViewportCentered()
 					.withRemoveOnMouseDownOutside(true).create().open();
 		}
 
-		static void execCommand(ModelEvent event, List list,
+		static void execCommand(ModelEvent event, List filteredSequenceElements,
 				String commandString) {
-			Optional<TraversalExecCommand> exec = Registry
-					.query(TraversalExecCommand.class).implementations()
+			Optional<SequenceExecCommand> exec = Registry
+					.query(SequenceExecCommand.class).implementations()
 					.filter(i -> i.name().equals(commandString)).findFirst();
 			if (exec.isPresent()) {
-				exec.get().execCommand(event, list);
+				exec.get().execCommand(event, filteredSequenceElements);
 			} else {
 				NotificationObservable
 						.of("No command '%s' found", commandString).publish();

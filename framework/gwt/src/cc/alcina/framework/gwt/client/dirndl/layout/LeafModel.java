@@ -12,6 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer.HasDisplayNameRenderer;
+import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 // LeafModel itself is just a naming container
@@ -156,16 +157,27 @@ public abstract class LeafModel {
 		}
 	}
 
+	/**
+	 * An utterly simple dialog
+	 */
 	@Directed
-	public static class PreText extends Model.Fields {
-		@Binding(type = Type.INNER_TEXT)
-		public final String text;
+	public static class PreText extends Model.All {
+		Heading heading;
 
-		@Binding(type = Binding.Type.PROPERTY)
-		public final String style = "display: block; white-space: pre";
+		Inner inner;
 
-		public PreText(String text) {
-			this.text = text;
+		class Inner extends Model.All {
+			@Binding(type = Type.INNER_TEXT)
+			final String text;
+
+			Inner(String text) {
+				this.text = text;
+			}
+		}
+
+		public PreText(String caption, String text) {
+			heading = new Heading(caption);
+			this.inner = new Inner(text);
 		}
 	}
 

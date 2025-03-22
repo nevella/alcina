@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorComman
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommands.MatchStyle;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorRequest;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
+import cc.alcina.framework.servlet.component.shared.ExecCommand;
 import cc.alcina.framework.servlet.component.traversal.TraversalEvents;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
 
@@ -111,7 +112,7 @@ class SequenceAnswers implements AppSuggestor.AnswerSupplier {
 				suggestion.match = Ax.format(
 						"Exec '%s' ['l' lists available commands]",
 						suggestion.eventData);
-				suggestion.modelEvent = SequenceEvents.ExecCommand.class;
+				suggestion.modelEvent = ExecCommand.PerformCommand.class;
 				suggestions.add(suggestion);
 			}
 		}

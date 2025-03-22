@@ -131,6 +131,7 @@ public interface Feature extends Registration.AllSubtypes {
 		}
 		public interface In_Progress extends Status{}
 		public interface Open extends Status{}
+		public interface Open_and_interesting extends Status{}
 		@Retention(RetentionPolicy.RUNTIME)
 		@Inherited
 		@Documented

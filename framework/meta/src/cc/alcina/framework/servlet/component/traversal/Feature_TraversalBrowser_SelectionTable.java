@@ -21,6 +21,15 @@ public interface Feature_TraversalBrowser_SelectionTable extends Feature {
 	public interface Column_sort extends Feature {
 	}
 
+	/**
+	 * <p>
+	 * This is implemented and works for the Jade entity browser
+	 * <p>
+	 * Generalising to a TraversalBrowser implementation wouldn't be hard
+	 * (essentially just abstracting the <code>EntityAnswers</code>
+	 * parser/property matcher implementation)
+	 */
+	@Feature.Status.Ref(Feature.Status.Open_and_interesting.class)
 	@Feature.Parent(Feature_TraversalBrowser.class)
 	public interface Column_filter extends Feature {
 	}

@@ -40,4 +40,12 @@ public interface Feature_Dirndl_Documentation extends Feature {
 	@Feature.Parent(Feature_Dirndl_Documentation.class)
 	interface Sandbox extends Feature {
 	}
+
+	/**
+	 * Reference here when explaining a design decision
+	 */
+	@Feature.Status.Ref(Feature.Status.Open.class)
+	@Feature.Parent(Feature_Dirndl_Documentation.class)
+	interface DesignNotes extends Feature {
+	}
 }

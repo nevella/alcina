@@ -11,6 +11,7 @@
 @use '../../dirndl/cmp/heading'
 @use '../../dirndl/cmp/keyboard-shortcuts'
 @use '../../dirndl/cmp/help'
+@use '../../dirndl/cmp/exec-commands'
 
 @use 'header'
 
@@ -52,6 +53,8 @@ body > page
 
 @include app-suggestor.contents
 @include keyboard-shortcuts.contents
+@include keyboard-shortcuts.overlay
+@include exec-commands.contents
+@include exec-commands.overlay
 @include help.contents
 @include properties.overlay
-@include header.overlay

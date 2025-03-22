@@ -48,7 +48,6 @@ import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.Det
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.FocusSearch;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ShowKeyboardShortcuts;
 import cc.alcina.framework.servlet.component.sequence.SequenceBrowserCommand.ToggleHelp;
-import cc.alcina.framework.servlet.component.sequence.SequenceEvents.ExecCommand;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.FilterElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightElements;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.LoadSequence;
@@ -58,6 +57,7 @@ import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SetSettingM
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.ColumnSet;
 import cc.alcina.framework.servlet.component.sequence.SequenceSettings.DetailDisplayMode;
 import cc.alcina.framework.servlet.component.shared.CopyToClipboardHandler;
+import cc.alcina.framework.servlet.component.shared.ExecCommand;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
 /*
@@ -78,7 +78,7 @@ class Page extends Model.Fields
 		SequenceEvents.PreviousSelectable.Handler,
 		SequenceEvents.LoadSequence.Handler,
 		SequenceEvents.SetSettingMaxElementRows.Handler,
-		SequenceEvents.ExecCommand.Handler,
+		ExecCommand.PerformCommand.Handler,
 		SequenceBrowserCommand.ClearFilter.Handler,
 		SequenceBrowserCommand.DetailDisplayCycle.Handler,
 		SequenceBrowserCommand.ColumnSetCycle.Handler,
@@ -500,8 +500,8 @@ class Page extends Model.Fields
 	}
 
 	@Override
-	public void onExecCommand(ExecCommand event) {
-		Sequence.CommandExecutor.Support.execCommand(event,
-				filteredSequenceElements, event.getModel());
+	public void onPerformCommand(ExecCommand.PerformCommand event) {
+		SequenceExecCommand.Support.execCommand(event, filteredSequenceElements,
+				event.getModel());
 	}
 }
