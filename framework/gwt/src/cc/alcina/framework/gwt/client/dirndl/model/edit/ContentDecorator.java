@@ -316,7 +316,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		Element domElement = (Element) decorator.w3cElement();
 		chooser = chooserProvider.apply(this, decorator);
 		attributes.withCssClass("decorator-chooser");
-		attributes.withConsumeSubmit(true);
+		attributes.withConsumeSubmit(true).withFocusOnBind(false);
 		overlay = attributes.dropdown(OverlayPosition.Position.START,
 				domElement.getBoundingClientRect(), (Model) decoratorParent,
 				chooser).create();

@@ -1,72 +1,229 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.google.gwt.user.client.ui.SuggestOracle;
-import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Selected;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;
-import cc.alcina.framework.gwt.client.dirndl.model.suggest.StringAskAnswer;
-import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
-import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answer;
-import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.Answers;
-import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
-import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
+/**
+ * <p>
+ * Renders a set of choices as a contenteditable - suitable for email
+ * 'to/cc/bcc' fields, etc
+ * 
+ * <p>
+ * Unlike the parent (and other {@link Choices} subtypes), this doesn't have a
+ * fixed set of choices, so does not render the {@link #getChoices()} property
+ * 
+ * <p>
+ * The {@link #getSelectedValues()} property is modelled directly by the
+ * {@link #selectedValues} field.
+ * 
+ * <p>
+ * Note: this doesn't share much implementation with other {@link Choices}
+ * subtypes, but very much shares behavior, so I'm happy with the type structure
+ * (sure, Choices could be abstracted further to an interface, but...)
+ */
+@Bean(PropertySource.FIELDS)
+@TypedProperties
+@Feature.Ref(Feature_Dirndl_ChoiceSuggestions.class)
+@Directed(tag = "multiple-suggestions")
+public abstract class ChoiceSuggestions<T> extends Choices<T>
+		implements HasDecorators {
+	@Directed(tag = "choice-node")
+	@Bean(PropertySource.FIELDS)
+	static class ChoiceNode extends DecoratorNode<Choice, String> {
+		static class Descriptor
+				extends DecoratorNode.Descriptor<Choice, String, ChoiceNode> {
+			static transient Descriptor INSTANCE = new Descriptor();
 
-public class ChoiceSuggestions extends DecoratorSuggestions {
-	MultipleSuggestions multipleSuggestions;
+			@Override
+			public ChoiceNode createNode() {
+				return new ChoiceNode();
+			}
 
-	ChoiceSuggestions(MultipleSuggestions multipleSuggestions,
-			ContentDecorator contentDecorator, DomNode decoratorNode) {
-		super(contentDecorator, decoratorNode);
-		this.multipleSuggestions = multipleSuggestions;
+			@Override
+			public Function<Choice, String> itemRenderer() {
+				return ChoiceSuggestions::choiceToString;
+			}
+
+			public void onCommit(Commit event) {
+				// NOOP - ancestor handles changes
+			}
+
+			@Override
+			public String triggerSequence() {
+				return "";
+			}
+
+			@Override
+			protected String toStringRepresentable(Choice wrappedType) {
+				return choiceToString(wrappedType);
+			}
+		}
+
+		ChoiceNode() {
+		}
+
+		ChoiceNode(Choice choice) {
+			putReferenced(choice);
+		}
+
+		@Override
+		public DecoratorNode.Descriptor<Choice, String, ?> getDescriptor() {
+			return new ChoiceNode.Descriptor();
+		}
+	}
+
+	static PackageProperties._ChoiceSuggestions properties = PackageProperties.choiceSuggestions;
+
+	static String choiceToString(Choice choice) {
+		return CommonUtils.nullSafeToString(choice.getValue());
+	}
+
+	@Directed
+	EditArea editArea;
+
+	List<ContentDecorator> decorators = new ArrayList<>();
+
+	transient KeyboardNavigation keyboardNavigation;
+
+	public ChoiceSuggestions() {
+		editArea = new EditArea();
+		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
+		provideFragmentModel()
+				.addModelled(DecoratorNode.ZeroWidthCursorTarget.class);
+		keyboardNavigation = new KeyboardNavigation(this);
+		bindings().from(this).on(properties.selectedValues)
+				.accept(this::updateAreaFromSelectedValues);
+		bindings().from(editArea).on(EditArea.properties.value)
+				.withSetOnInitialise(false).signal(this::onEditCommit);
+		decorators.add(createChoiceDecorator());
 	}
 
 	@Override
-	protected Suggestor.Attributes createSuggestorAttributes() {
-		Suggestor.Attributes attributes = super.createSuggestorAttributes();
-		attributes.withInputPrompt("Select...");
-		attributes.withAnswer(new AnswerImpl());
-		return attributes;
+	public List<ContentDecorator> getDecorators() {
+		return this.decorators;
 	}
 
-	/*
-	 * Gets a list of Answer objects (wrapping JadeUser objects) that match the
-	 * decorator text
+	/**
+	 * FIXME - reflection - this shouldn't be needed (should be resolved from
+	 * {@link HasDecorators} - that's possibly a gwt vs jdk typemodel
+	 * inconsistency )
 	 */
-	class AnswerImpl implements Answer<StringAsk> {
-		protected CancellableAsyncCallback runningCallback = null;
+	@Binding(
+		type = Type.PROPERTY,
+		to = DecoratorBehavior.ExtendKeyboardNavigationAction.ATTR_NAME)
+	@Override
+	public boolean isMagicName() {
+		return true;
+	}
 
-		@Override
-		public void ask(StringAsk ask, Consumer<Answers> answersHandler,
-				Consumer<Throwable> exceptionHandler) {
-			// FIXME - FN - there's probably more layers here than needed. First
-			// step (funny that): docco the process
-			/*
-			 * Enums or suchlike
-			 */
-			List<?> values = multipleSuggestions.getValues();
-			SuggestOracle.Response response = StringAskAnswer
-					.selectValues(values, ask);
-			handleSuggestionResponse(ask, answersHandler, response);
-		}
+	@Override
+	public void onSelected(Selected event) {
+		/*
+		 * this will be from the decorator Selected event (so unrelated to the
+		 * selections of *this* area) and should be squelched
+		 */
+		/*
+		 * NOOP
+		 */
+	}
 
-		protected void handleSuggestionResponse(StringAsk ask,
-				Consumer<Answers> answersHandler,
-				SuggestOracle.Response response) {
-			Collection<? extends Suggestion> suggestions = response
-					.getSuggestions();
-			List<Choice> choices = suggestions.stream().map(s -> new Choice(
-					((BoundSuggestOracleResponseElement.UntypedSuggestion) s).suggestion))
-					.collect(Collectors.toList());
-			StringAskAnswer<Choice> router = new StringAskAnswer<>();
-			Answers answers = router.ask(ask, choices, Object::toString);
-			answersHandler.accept(answers);
+	@Override
+	public void onKeyDown(KeyDown event) {
+		if (hasActiveDecorator()) {
+			keyboardNavigation.onKeyDown(event);
 		}
+		HasDecorators.super.onKeyDown(event);
+	}
+
+	@Override
+	@Directed.Exclude
+	public List<Choice<T>> getChoices() {
+		return super.getChoices();
+	}
+
+	@Override
+	public FragmentModel provideFragmentModel() {
+		return editArea.provideFragmentModel();
+	}
+
+	@Override
+	public void validateDecorators() {
+	}
+
+	void onEditCommit() {
+		List<T> selectedValues = editArea.fragmentModel.byType(ChoiceNode.class)
+				.map(cn -> cn.getStringRepresentable()).filter(Objects::nonNull)
+				.map(this::selectedValueFromString)
+				.collect(Collectors.toList());
+		onSelectedValues(selectedValues);
+	}
+
+	protected abstract void onSelectedValues(List<T> selectedValues);
+
+	T selectedValueFromString(String uid) {
+		return getValues().stream().filter(
+				t -> Objects.equals(CommonUtils.nullSafeToString(t), uid))
+				.findFirst().orElse(null);
+	}
+
+	ContentDecorator createChoiceDecorator() {
+		ContentDecorator.Builder<Choice> builder = ContentDecorator.builder();
+		builder.setChooserProvider(
+				(decorator, decoratorNode) -> new ChoiceSuggestor(this,
+						decorator, decoratorNode));
+		builder.setDescriptor(ChoiceNode.Descriptor.INSTANCE);
+		builder.setDecoratorParent(this);
+		return builder.build();
+	}
+
+	// FIXME - fragmentNode - can this initial deferral be avoided?
+	void updateAreaFromSelectedValues0(List<T> values) {
+		// FIXME - FN - this should be a sync
+		if (editArea.fragmentModel.byType(ChoiceNode.class).count() > 0) {
+			return;
+		}
+		values.stream().map(Choice::new).map(ChoiceNode::new)
+				.forEach(editArea.fragmentModel.getFragmentRoot()::append);
+	}
+
+	void updateAreaFromSelectedValues(List<T> values) {
+		Client.eventBus().queued()
+				.lambda(() -> updateAreaFromSelectedValues0(values)).dispatch();
+	}
+
+	void areaContentsFromChoices0(List<Choice<?>> choices) {
+		choices.forEach(choice -> {
+			ChoiceNode choiceNode = new ChoiceNode();
+			choiceNode.putReferenced(choice);
+			editArea.fragmentModel.getFragmentRoot().append(choiceNode);
+		});
+	}
+
+	void areaContentsFromChoices(List<Choice<?>> choices) {
+		Client.eventBus().queued()
+				.lambda(() -> areaContentsFromChoices0(choices)).dispatch();
 	}
 }

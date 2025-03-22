@@ -25,5 +25,5 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Feature_Dirndl;
  */
 @Feature.Status.Ref(Feature.Status.In_Progress.class)
 @Feature.Parent(Feature_Dirndl.class)
-public interface Feature_Dirndl_MultipleSuggestions extends Feature {
+public interface Feature_Dirndl_ChoiceSuggestions extends Feature {
 }

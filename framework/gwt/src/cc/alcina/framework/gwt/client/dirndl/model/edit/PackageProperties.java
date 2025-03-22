@@ -9,11 +9,11 @@ import java.lang.String;
 import java.util.List;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     public static _EditArea editArea = new _EditArea();
-    public static _MultipleSuggestions multipleSuggestions = new _MultipleSuggestions();
+    public static _ChoiceSuggestions choiceSuggestions = new _ChoiceSuggestions();
     
     public static class _EditArea implements TypedProperty.Container {
       public TypedProperty<EditArea, Boolean> contentEditable = new TypedProperty<>(EditArea.class, "contentEditable");
@@ -26,14 +26,14 @@ public class PackageProperties {
       public TypedProperty<EditArea, String> value = new TypedProperty<>(EditArea.class, "value");
     }
     
-    public static class _MultipleSuggestions implements TypedProperty.Container {
-      public TypedProperty<MultipleSuggestions, List> choices = new TypedProperty<>(MultipleSuggestions.class, "choices");
-      public TypedProperty<MultipleSuggestions, List> decorators = new TypedProperty<>(MultipleSuggestions.class, "decorators");
-      public TypedProperty<MultipleSuggestions, EditArea> editArea = new TypedProperty<>(MultipleSuggestions.class, "editArea");
-      public TypedProperty<MultipleSuggestions, Boolean> magicName = new TypedProperty<>(MultipleSuggestions.class, "magicName");
-      public TypedProperty<MultipleSuggestions, List> selectedValues = new TypedProperty<>(MultipleSuggestions.class, "selectedValues");
-      public TypedProperty<MultipleSuggestions, Class> valueTransformer = new TypedProperty<>(MultipleSuggestions.class, "valueTransformer");
-      public TypedProperty<MultipleSuggestions, List> values = new TypedProperty<>(MultipleSuggestions.class, "values");
+    public static class _ChoiceSuggestions implements TypedProperty.Container {
+      public TypedProperty<ChoiceSuggestions, List> choices = new TypedProperty<>(ChoiceSuggestions.class, "choices");
+      public TypedProperty<ChoiceSuggestions, List> decorators = new TypedProperty<>(ChoiceSuggestions.class, "decorators");
+      public TypedProperty<ChoiceSuggestions, EditArea> editArea = new TypedProperty<>(ChoiceSuggestions.class, "editArea");
+      public TypedProperty<ChoiceSuggestions, Boolean> magicName = new TypedProperty<>(ChoiceSuggestions.class, "magicName");
+      public TypedProperty<ChoiceSuggestions, List> selectedValues = new TypedProperty<>(ChoiceSuggestions.class, "selectedValues");
+      public TypedProperty<ChoiceSuggestions, Class> valueTransformer = new TypedProperty<>(ChoiceSuggestions.class, "valueTransformer");
+      public TypedProperty<ChoiceSuggestions, List> values = new TypedProperty<>(ChoiceSuggestions.class, "values");
     }
     
 //@formatter:on
