@@ -61,6 +61,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
@@ -175,6 +176,8 @@ public class FormModel extends Model
 		DomEvents.KeyDown.Handler, ModelEvents.Cancel.Handler,
 		ModelEvents.Submit.Handler, FormEvents.PropertyValidationChange.Handler,
 		FormEvents.QueryValidity.Handler {
+	public static boolean deferFormReloadAfterCommit = false;
+
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
 	protected List<FormElement> elements = new ArrayList<>();
@@ -361,18 +364,24 @@ public class FormModel extends Model
 			return;
 		}
 		Place currentPlace = Client.currentPlace();
-		EntityPlace entityPlace = null;
 		if (currentPlace instanceof EntityPlace) {
 			/*
 			 * behaviour identical for either CREATE or EDIT ( -> view)
 			 */
 			EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
-			entityPlace = (EntityPlace) Reflections
+			EntityPlace entityPlace = (EntityPlace) Reflections
 					.newInstance(currentPlace.getClass());
 			entityPlace.id = currentEntityPlace.action == EntityAction.CREATE
 					? createdLocator.id
 					: currentEntityPlace.id;
-			entityPlace.go();
+			// FIXME - this patches an issue with refresh somehow seeing old
+			// values of collections...??
+			if (deferFormReloadAfterCommit) {
+				Timer.Provider.get().getTimer(() -> entityPlace.go())
+						.schedule(100);
+			} else {
+				entityPlace.go();
+			}
 		} else {
 			// NOOP, place has changed (since the created event should only
 			// have been fired from activity.place of type EntityPlace
