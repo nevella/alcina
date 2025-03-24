@@ -3,13 +3,12 @@ package cc.alcina.framework.servlet.component.gallery;
 import com.google.gwt.dom.client.NativeEvent.Modifier;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentOptionalRegistration;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @AppSuggestorCommand(
@@ -34,7 +33,8 @@ public abstract class GalleryBrowserCommand<T, H extends NodeEvent.Handler>
 			void onReloadApp(ReloadApp event);
 		}
 
-		@Registration({ TopLevelHandler.class, ReloadApp.class })
+		@EnvironmentOptionalRegistration(@Registration({ TopLevelHandler.class,
+				ReloadApp.class }))
 		public static class HandlerImpl implements Handler, TopLevelHandler {
 			@Override
 			public void onReloadApp(ReloadApp event) {
