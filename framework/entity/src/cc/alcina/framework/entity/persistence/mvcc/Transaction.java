@@ -729,7 +729,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public void setMaxAge(long maxAge) {
-		logger.debug("{} :: Setting timeout to {}", this, maxAge);
+		logger.debug("{} :: Setting maxAge to {}", this, maxAge);
 		this.maxAge = maxAge;
 	}
 
