@@ -21,11 +21,19 @@ import cc.alcina.framework.common.client.util.LooseContext;
  * 
  * 
  * 
+ * <p>
  * Uses ordering (by id or localid) to speed 'find' ops. This is *useful* even
  * though 'index' is mostly used to improve performance in add() because we have
  * to check we're not adding an element that already exists in the set.
  * 
+ * <p>
  * This class handles 'promoted' objects (local->global)
+ * 
+ * <p>
+ * This class should be used as the main mvcc referenced entity class - it's
+ * designed for contention - after some obscure issues with reads on other
+ * threads immediately after writes, marking all fields as volatile (rather than
+ * the entity fields themselves - a much bigger job) resolved these issues
  * 
  * @param <H>
  */
@@ -66,11 +74,11 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 
 	private transient volatile Entity[] elementData;
 
-	transient int size = 0;
+	transient volatile int size = 0;
 
-	transient int modCount = 0;
+	transient volatile int modCount = 0;
 
-	private transient Set<H> degenerate;
+	private transient volatile Set<H> degenerate;
 
 	public LiSet() {
 	}
