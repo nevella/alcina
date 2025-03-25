@@ -5,6 +5,7 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.gallery.GalleryArea;
 import cc.alcina.framework.servlet.component.gallery.GalleryBrowser;
@@ -21,12 +22,19 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
+    public static _AppSuggestorGallery appSuggestorGallery = new _AppSuggestorGallery();
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _GalleryArea galleryArea = new _GalleryArea();
     static _GalleryBrowser_Ui galleryBrowser_ui = new _GalleryBrowser_Ui();
     public static _GalleryContents galleryContents = new _GalleryContents();
     static _GalleryPage galleryPage = new _GalleryPage();
     static _GalleryPage_ActivityRoute galleryPage_activityRoute = new _GalleryPage_ActivityRoute();
+    
+    public static class _AppSuggestorGallery implements TypedProperty.Container {
+      public TypedProperty<AppSuggestorGallery, String> acceptedFilterText = new TypedProperty<>(AppSuggestorGallery.class, "acceptedFilterText");
+      public TypedProperty<AppSuggestorGallery, String> filterText = new TypedProperty<>(AppSuggestorGallery.class, "filterText");
+      public TypedProperty<AppSuggestorGallery, Suggestor> suggestor = new TypedProperty<>(AppSuggestorGallery.class, "suggestor");
+    }
     
     static class _Dotburger_Menu implements TypedProperty.Container {
       TypedProperty<Dotburger.Menu, Link> keyboardShortcuts = new TypedProperty<>(Dotburger.Menu.class, "keyboardShortcuts");
