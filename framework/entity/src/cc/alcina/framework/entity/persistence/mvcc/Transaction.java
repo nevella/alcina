@@ -422,7 +422,7 @@ public class Transaction implements Comparable<Transaction> {
 
 	Boolean emptyCommitted = null;
 
-	private DomainTransformCommitPosition commitPosition;
+	DomainTransformCommitPosition commitPosition;
 
 	List<Entity> createdLocalsForEviction = new ArrayList<>();
 
@@ -587,10 +587,6 @@ public class Transaction implements Comparable<Transaction> {
 
 	TransactionPhase getPhase() {
 		return this.phase;
-	}
-
-	public DomainTransformCommitPosition getPosition() {
-		return null;
 	}
 
 	public long getTimeout() {

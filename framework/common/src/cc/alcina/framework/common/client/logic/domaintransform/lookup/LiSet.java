@@ -64,7 +64,7 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return result;
 	}
 
-	private transient Entity[] elementData;
+	private transient volatile Entity[] elementData;
 
 	transient int size = 0;
 
