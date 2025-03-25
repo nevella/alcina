@@ -60,6 +60,7 @@ public class SuggestionChoices implements Suggestor.Suggestions,
 								suggestor.provideElement()
 										.getBoundingClientRect(),
 								suggestor, contents)
+						.withFocusOnBind(false)
 						.withLogicalAncestors(
 								suggestor.attributes.getLogicalAncestors())
 						.withLogicalParent(suggestor);
