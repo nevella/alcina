@@ -204,7 +204,8 @@ public class DomainTransformPersistenceQueue {
 			return;
 		}
 		getLogger(event.isLocalToVm()).info(
-				"fired: {} - {} - {} events - {} ms ",
+				"fired: {} - {} - {} - {} events - {} ms ",
+				persistenceEvents.domainStore.name,
 				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				event.getTransformPersistenceToken().getRequest().getEvents()
@@ -277,6 +278,10 @@ public class DomainTransformPersistenceQueue {
 	public void onTransformRequestAborted(long requestId) {
 		sequencer.onPersistedRequestAborted(requestId);
 		events.add(Event.aborted(requestId));
+	}
+
+	public void onTransformRequestPreCommitted(long requestId) {
+		sequencer.onPersistedRequestPreCommitted(requestId);
 	}
 
 	public void onTransformRequestCommitted(long requestId,

@@ -201,6 +201,8 @@ public class DomainStore implements IDomainStore {
 	 */
 	public static final Topic<Void> topicStoreLoaded = Topic.create();
 
+	public Topic<Void> topicStoreBeforeDbWarmupCompleted = Topic.create();
+
 	/*
 	 * App-specific (allows for post-load configuration)
 	 */
@@ -460,7 +462,7 @@ public class DomainStore implements IDomainStore {
 				cache.ensureVersion(existing);
 				return existing;
 			}
-			if (localId != 0) {
+			if (localId != 0 && !nonListeningDomain) {
 				// this below is all a bit fancy - but is the only place where
 				// said fanciness is needed
 				Entity local = cache.getCreatedLocals().get(localId);
@@ -488,7 +490,7 @@ public class DomainStore implements IDomainStore {
 				return local;
 			} else {
 				Entity entity = Transaction.current().create(clazz, this, id,
-						0L);
+						localId);
 				cache.put(entity);
 				return entity;
 			}
@@ -745,6 +747,8 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	public boolean nonListeningDomain;
+
 	public <T extends Entity> void onLocalObjectCreated(T newInstance) {
 		cache.put(newInstance);
 	}
@@ -795,6 +799,9 @@ public class DomainStore implements IDomainStore {
 									liSet, e, persistenceEvent);
 						}
 					});
+			LooseContext.set(
+					ThreadlocalTransformManager.CONTEXT_NON_LISTENING_DOMAIN,
+					nonListeningDomain);
 			TransformManager.get().setIgnorePropertyChanges(true);
 			postProcessStart = System.currentTimeMillis();
 			Transaction.ensureEnded();
@@ -810,7 +817,9 @@ public class DomainStore implements IDomainStore {
 							persistenceEvent.getMaxPersistedRequestId()));
 			// opportunistically load any lazy loads in this tx phase, to ensure
 			// they become a non-vacuumable part of the graph
-			Transactions.getEnqueuedLazyLoads().forEach(Domain::find);
+			if (isWritable()) {
+				Transactions.getEnqueuedLazyLoads().forEach(Domain::find);
+			}
 			postProcessThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();
@@ -870,8 +879,8 @@ public class DomainStore implements IDomainStore {
 						causes.add(dtex);
 					}
 				}
-				if (transform
-						.getTransformType() == TransformType.CREATE_OBJECT) {
+				if (transform.getTransformType() == TransformType.CREATE_OBJECT
+						&& !nonListeningDomain) {
 					ClientInstance requestInstance = persistenceEvent
 							.getPersistedRequests().iterator().next()
 							.getClientInstance();
@@ -2278,6 +2287,11 @@ public class DomainStore implements IDomainStore {
 			locator.setClazz(promoted.entityClass());
 			promotedEntitiesByPrePromotion.put(locator, promoted);
 		}
+	}
+
+	public Set<Long>
+			getVisiblePreWarmupCompletionPersistenceEvents(List<Long> dtrIds) {
+		return loader.getVisiblePreWarmupCompletionPersistenceEvents(dtrIds);
 	}
 
 	public EntityValuesMapper

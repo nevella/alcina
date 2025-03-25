@@ -550,7 +550,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private DomainTransformRequestPersistent
 			loadTransformRequest0(long requestId) throws Exception {
-		store.logger.info("{} - loading transform request {}", store.name,
+		store.logger.debug("{} - loading transform request {}", store.name,
 				requestId);
 		Connection conn = getConnection();
 		try {
@@ -569,12 +569,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							"select transactioncommittime from %s where id=%s",
 							requestTableName, requestId),
 					Timestamp.class));
-			request.setClientInstance(PersistentImpl.find(ClientInstance.class,
-					SqlUtils.getValue(statement, Ax.format(
-							"select clientInstance_id from %s where id=%s",
-							request.getClass().getAnnotation(Table.class)
-									.name(),
-							requestId), Long.class)));
+			if (!store.nonListeningDomain) {
+				request.setClientInstance(PersistentImpl.find(
+						ClientInstance.class,
+						SqlUtils.getValue(statement, Ax.format(
+								"select clientInstance_id from %s where id=%s",
+								request.getClass().getAnnotation(Table.class)
+										.name(),
+								requestId), Long.class)));
+			}
 			statement.close();
 			Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
 					.getShadowDomainTransformEventPersistentClass();
@@ -1005,6 +1008,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("projections");
 		new StatCategory_DomainStore.Warmup.Loader.Projections().emit();
+		store.topicStoreBeforeDbWarmupCompleted.signal();
 		store.initialising = false;
 		connectionPool.drain();
 		warmupExecutor.shutdown();
@@ -2604,5 +2608,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				Transaction.split();
 			}
 		}
+	}
+
+	@Override
+	public Set<Long>
+			getVisiblePreWarmupCompletionPersistenceEvents(List<Long> dtrIds) {
+		return transformSequencer
+				.getVisiblePreWarmupCompletionPersistenceEvents(dtrIds);
 	}
 }

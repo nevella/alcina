@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.domain.TransactionId;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -370,6 +371,8 @@ public class Transactions {
 	 */
 	private Set<TransactionId> committedDbTransactionIds = new ObjectOpenHashSet<>();
 
+	private DomainTransformCommitPosition highestCommitPosition;
+
 	private Transactions() {
 		Configuration.properties.topicInvalidated
 				.add(this::configurationInvalidated);
@@ -533,14 +536,21 @@ public class Transactions {
 				 * transaction, since it's exactly the set that's preventing
 				 * those transactions from being vacuumed
 				 */
-				transaction.committedTransactions = committedTransactions
-						.isEmpty() ? new ObjectAVLTreeSet<>()
-								: committedTransactions
-										.tailSet(committedTransactions.first());
+				if (committedTransactions.isEmpty()) {
+					transaction.committedTransactions = new ObjectAVLTreeSet<>();
+					transaction.commitPosition = this.highestCommitPosition;
+				} else {
+					Transaction first = committedTransactions.first();
+					transaction.committedTransactions = committedTransactions
+							.tailSet(first);
+					transaction.commitPosition = first.commitPosition;
+					this.highestCommitPosition = first.commitPosition;
+				}
 				transaction.highestVisibleCommittedTransactionId = highestVisibleCommittedTransactionId;
 			} else {
 				transaction.committedTransactions = copyVisibleTransactionsFrom.committedTransactions;
 				transaction.highestVisibleCommittedTransactionId = copyVisibleTransactionsFrom.highestVisibleCommittedTransactionId;
+				transaction.commitPosition = copyVisibleTransactionsFrom.commitPosition;
 			}
 			activeTransactions.put(transactionId, transaction);
 		}
