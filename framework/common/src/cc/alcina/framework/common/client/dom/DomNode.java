@@ -632,6 +632,10 @@ public class DomNode {
 		return node;
 	}
 
+	public Text w3cText() {
+		return (Text) node;
+	}
+
 	public DomNodeXpath xpath(String query) {
 		return xpath(query, new Object[] {});
 	}

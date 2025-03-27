@@ -138,6 +138,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_TRACE_RECONSTITUTE_ENTITY_MAP";
 
+	public static final String CONTEXT_NON_LISTENING_DOMAIN = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_NON_LISTENING_DOMAIN";
+
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
@@ -681,6 +684,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	private void listenTo(Entity entity) {
 		if (!listeningTo.containsKey(entity)) {
+			if (Thread.currentThread().getName().contains("dev-cluster-1")) {
+				int debug = 3;
+			}
 			Transaction current = Transaction.current();
 			if (current.isReadOnly() && LooseContext
 					.is(CONTEXT_SILENTLY_IGNORE_READONLY_REGISTRATIONS)) {
@@ -995,7 +1001,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 			DomainStore.writableStore().getCache().put(entity);
 		}
 		if (!mvccObject || listenToMvccObjectVersion) {
-			listenTo(entity);
+			if (!LooseContext.is(CONTEXT_NON_LISTENING_DOMAIN)) {
+				listenTo(entity);
+			}
 		}
 		return entity;
 	}

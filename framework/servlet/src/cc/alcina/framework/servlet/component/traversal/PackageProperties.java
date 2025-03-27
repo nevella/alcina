@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObservables;
 import cc.alcina.framework.servlet.component.traversal.Header;
@@ -38,6 +39,7 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
+    public static _AppSuggestorTraversal appSuggestorTraversal = new _AppSuggestorTraversal();
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Header_Left header_left = new _Header_Left();
     static _LayerSelections layerSelections = new _LayerSelections();
@@ -49,6 +51,12 @@ public class PackageProperties {
     static _SelectionLayers_LayersContainer selectionLayers_layersContainer = new _SelectionLayers_LayersContainer();
     public static _TraversalBrowser_Ui traversalBrowser_ui = new _TraversalBrowser_Ui();
     public static _TraversalSettings traversalSettings = new _TraversalSettings();
+    
+    public static class _AppSuggestorTraversal implements TypedProperty.Container {
+      public TypedProperty<AppSuggestorTraversal, String> acceptedFilterText = new TypedProperty<>(AppSuggestorTraversal.class, "acceptedFilterText");
+      public TypedProperty<AppSuggestorTraversal, String> filterText = new TypedProperty<>(AppSuggestorTraversal.class, "filterText");
+      public TypedProperty<AppSuggestorTraversal, Suggestor> suggestor = new TypedProperty<>(AppSuggestorTraversal.class, "suggestor");
+    }
     
     static class _Dotburger_Menu implements TypedProperty.Container {
       TypedProperty<Dotburger.Menu, Link> keyboardShortcuts = new TypedProperty<>(Dotburger.Menu.class, "keyboardShortcuts");

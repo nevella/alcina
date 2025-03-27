@@ -7,10 +7,8 @@ import cc.alcina.framework.common.client.logic.reflection.Registration.Environme
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorCommand;
 import cc.alcina.framework.gwt.client.dirndl.cmp.appsuggestor.AppSuggestorEvent;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeyBinding;
-import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.environment.RemoteUi;
 
 @AppSuggestorCommand(

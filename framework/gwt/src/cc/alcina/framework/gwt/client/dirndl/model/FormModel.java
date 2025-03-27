@@ -364,13 +364,12 @@ public class FormModel extends Model
 			return;
 		}
 		Place currentPlace = Client.currentPlace();
-		EntityPlace entityPlace = null;
 		if (currentPlace instanceof EntityPlace) {
 			/*
 			 * behaviour identical for either CREATE or EDIT ( -> view)
 			 */
 			EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
-			entityPlace = (EntityPlace) Reflections
+			EntityPlace entityPlace = (EntityPlace) Reflections
 					.newInstance(currentPlace.getClass());
 			entityPlace.id = currentEntityPlace.action == EntityAction.CREATE
 					? createdLocator.id

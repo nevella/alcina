@@ -434,7 +434,7 @@ public class Transaction implements Comparable<Transaction> {
 
 	Boolean emptyCommitted = null;
 
-	private DomainTransformCommitPosition commitPosition;
+	DomainTransformCommitPosition commitPosition;
 
 	List<Entity> createdLocalsForEviction = new ArrayList<>();
 
@@ -601,10 +601,6 @@ public class Transaction implements Comparable<Transaction> {
 		return this.phase;
 	}
 
-	public DomainTransformCommitPosition getPosition() {
-		return null;
-	}
-
 	long getTransformRequestId() {
 		return this.transformRequestId;
 	}
@@ -733,7 +729,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public void setMaxAge(long maxAge) {
-		logger.debug("{} :: Setting timeout to {}", this, maxAge);
+		logger.debug("{} :: Setting maxAge to {}", this, maxAge);
 		this.maxAge = maxAge;
 	}
 

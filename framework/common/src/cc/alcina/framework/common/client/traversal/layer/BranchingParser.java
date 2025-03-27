@@ -45,6 +45,11 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * 
  * <p>
  * A leaf token is a token not composed of other tokens
+ * 
+ * <h3>Debugging matches (at peer.confirmSentenceBranch())</h3>
+ * <p>
+ * Use branch.toResult().toStructuredString() to get a view of the matched
+ * structure
  */
 /*
  * The naive algorithm is:
@@ -78,7 +83,8 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * least be > L
  * 
  * FIXME - parser - this doesn't need to be tied to SelectionTraversal/Layer -
- * refactor out for reuse
+ * refactor out for reuse? But there's a fair bit of support from LayerParser, a
+ * look at factoring out suggested maybe more trouble than it's worth
  * 
  * 
  */

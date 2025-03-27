@@ -94,3 +94,11 @@ public long getTimeInVacuum() {
 			: System.currentTimeMillis() - vacuumStarted;
 }
 ```
+
+## mvcc - cache/volatile
+
+Somehow I never believed in volatile - but see the changes to LiSet in 03/2025 - this _may_ mean that all entity fields
+should be volatile (at the outside), or a rethink (sync?) on how version data is exposed.
+
+Note that this issue makes a strong argument for moving commit for a local tx from the main commit queue thread to the
+db commit thread - countervailing to that is 'what about coherency in the queue thread?'
