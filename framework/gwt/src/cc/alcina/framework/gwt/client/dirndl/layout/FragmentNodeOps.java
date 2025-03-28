@@ -45,6 +45,10 @@ public interface FragmentNodeOps {
 						.filter(n -> n instanceof FragmentNode);
 	}
 
+	default Stream<? extends FragmentNode> descemdants() {
+		return stream().filter(n -> n != this);
+	}
+
 	String toStringTree();
 
 	default List<Class<? extends FragmentNode>> types() {

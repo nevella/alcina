@@ -695,6 +695,10 @@ public class BranchingParser {
 			return Ax.first(list);
 		}
 
+		public boolean has(Token token) {
+			return measures(token).count() > 0;
+		}
+
 		public Stream<Measure> measures() {
 			return stream().filter(e -> !e.isNegated() && e.match != null)
 					// the root result will occur twice, so dedupe
