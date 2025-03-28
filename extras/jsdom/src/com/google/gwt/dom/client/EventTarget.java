@@ -23,6 +23,8 @@ import com.google.gwt.dom.client.Document.RemoteType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 
 /**
  * Represents the target of a JavaScript event.
@@ -202,6 +204,11 @@ public class EventTarget implements JavascriptObjectEquivalent {
 
 	@Override
 	public String toString() {
-		return super.toString() + ":" + nativeTarget;
+		if (nativeTarget != null) {
+			return Ax.format("%s :: %s ", NestedName.get(this), nativeTarget);
+		} else {
+			return Ax.format("%s :: %s :: %s", NestedName.get(this), type,
+					name);
+		}
 	}
 }

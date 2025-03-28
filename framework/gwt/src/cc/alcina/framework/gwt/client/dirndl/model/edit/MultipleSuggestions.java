@@ -86,9 +86,9 @@ public class MultipleSuggestions<T> extends ChoiceSuggestions<T> {
 
 	public void setSelectedValues(List<T> selectedValues) {
 		if (!Objects.equals(selectedValues, this.selectedValues)) {
-			emitChangeModelEvents(selectedValues);
 			set("selectedValues", this.selectedValues, selectedValues,
 					() -> this.selectedValues = selectedValues);
+			emitChangeModelEvents(selectedValues);
 		}
 	}
 

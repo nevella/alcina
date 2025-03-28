@@ -6,16 +6,24 @@ import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.IfNotEqual;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.servlet.component.gallery.GalleryBrowser.Ui;
 
 @TypedProperties
 public abstract class GalleryContents<RP extends GalleryPlace> extends Model.All
 		implements Registration.AllSubtypes, IfNotEqual {
+	static PackageProperties._GalleryContents properties = PackageProperties.galleryContents;
+
 	@Directed.Exclude
 	public RP place;
 
 	@Override
 	public int hashCode() {
 		return 1;
+	}
+
+	public GalleryContents() {
+		bindings().from(Ui.get()).on(Ui.properties.place).to(this)
+				.on(properties.place).oneWay();
 	}
 
 	/*
@@ -30,7 +38,6 @@ public abstract class GalleryContents<RP extends GalleryPlace> extends Model.All
 	static <RP extends GalleryPlace> GalleryContents<RP> forPlace(RP place) {
 		GalleryContents<RP> result = Registry.impl(GalleryContents.class,
 				place.getClass());
-		result.place = place;
 		return result;
 	}
 }

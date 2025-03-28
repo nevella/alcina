@@ -117,9 +117,14 @@ class ClientEventDispatch {
 			}
 			// TODO - why (why just this)? should probably be an attrbehavior.
 			// In general, a.withoutLink shd probably preventdefault
+			/*
+			 * FIXME - dirndl - make this a behaviour (although really it should
+			 * be the Choice )
+			 */
 			if (mouseDownEvent) {
-				if (eventTargetDomNode.ancestors().has("choice-suggestions")) {
+				if (eventTargetDomNode.ancestors().has("choice-suggestor")) {
 					event.preventDefault();
+					event.stopPropagation();
 				}
 			}
 			/*
