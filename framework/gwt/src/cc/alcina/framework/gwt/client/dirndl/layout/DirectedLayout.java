@@ -1927,7 +1927,7 @@ public class DirectedLayout implements AlcinaProcess {
 		 */
 		Rendered rendered;
 
-		boolean removeReplaced;
+		boolean removeReplaced = true;
 
 		private RendererInput() {
 		}

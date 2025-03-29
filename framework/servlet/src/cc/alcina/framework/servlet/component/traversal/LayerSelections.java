@@ -285,6 +285,8 @@ class LayerSelections extends Model.All implements IfNotEqual {
 
 		List<Selection> filteredSelections;
 
+		List<Selection> tableSelections;
+
 		@Directed.Exclude
 		TestHistory testHistory = new TestHistory();
 
@@ -310,7 +312,11 @@ class LayerSelections extends Model.All implements IfNotEqual {
 				stream.parallel();
 			}
 			testHistory.refreshTextFilter();
-			filteredSelections = stream.filter(this::test)
+			int maxSelections = Math.max(maxRenderedSelections,
+					TraversalSettings.get().tableRows);
+			tableSelections = stream.filter(this::test).limit(maxSelections)
+					.collect(Collectors.toList());
+			filteredSelections = tableSelections.stream()
 					.limit(maxRenderedSelections).collect(Collectors.toList());
 			boolean sortSelectedFirst = Ui.place()
 					.attributesOrEmpty(layer.index)
@@ -318,12 +324,14 @@ class LayerSelections extends Model.All implements IfNotEqual {
 			if (sortSelectedFirst) {
 				Selection selection = Ui.place()
 						.provideSelection(SelectionType.VIEW);
-				Selection inSelectionPath = filteredSelections.stream()
+				Selection inSelectionPath = tableSelections.stream()
 						.filter(s -> s.isSelfOrAncestor(selection, false))
 						.findFirst().orElse(null);
 				if (inSelectionPath != null) {
 					filteredSelections.remove(inSelectionPath);
 					filteredSelections.add(0, inSelectionPath);
+					tableSelections.remove(inSelectionPath);
+					tableSelections.add(0, inSelectionPath);
 				}
 			}
 			filtered = filteredSelections.stream().map(SelectionArea::new)

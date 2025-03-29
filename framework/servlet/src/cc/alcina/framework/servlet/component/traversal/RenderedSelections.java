@@ -96,6 +96,19 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 				.signal(this::populateViewSelection);
 		bindings().from(this).on(properties.selection)
 				.signal(this::onSelectionChange);
+		bindings().from(this).on(properties.selectionTable)
+				.signal(this::updateTableHeader);
+	}
+
+	void updateTableHeader() {
+		if (variant == SecondaryArea.TABLE) {
+			String headingText = Ax.friendly(variant);
+			if (selectionTable != null) {
+				headingText = Ax.format("%s [%s]", headingText,
+						selectionTable.selectionBindables.size());
+			}
+			properties.heading.set(this, new Heading(headingText));
+		}
 	}
 
 	@Override
