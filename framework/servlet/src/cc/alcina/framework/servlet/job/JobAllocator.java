@@ -61,7 +61,7 @@ class JobAllocator {
 
 	private AllocationQueue queue;
 
-	private AllocationTask allocationTask;
+	private volatile AllocationTask allocationTask;
 
 	private BlockingQueue<AllocationQueue.Event> eventQueue = new LinkedBlockingQueue<>();
 
@@ -86,7 +86,7 @@ class JobAllocator {
 	// locks actions which require lock over the whole processEvent0
 	private Object addSubsequentsMonitor = new Object();
 
-	private Job awaitJobExistenceBeforeContinueToExit;
+	private volatile Job awaitJobExistenceBeforeContinueToExit;
 
 	private boolean beforeAddSubsequentsBarrier = true;
 

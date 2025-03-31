@@ -55,7 +55,7 @@ public class TransformCommitLog {
 
 	private AtomicInteger consumerThreadCounter = new AtomicInteger(0);
 
-	private TransformCommitLogThread currentConsumerThread;
+	private volatile TransformCommitLogThread currentConsumerThread;
 
 	private long pollTimeout;
 

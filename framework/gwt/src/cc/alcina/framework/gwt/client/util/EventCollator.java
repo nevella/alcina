@@ -18,17 +18,7 @@ import cc.alcina.framework.common.client.util.Timer;
  * Synchronization - all access to finished should be synced on finishedMonitor
  */
 public class EventCollator<T> {
-	private long lastEventOccurred = 0;
-
-	private long firstEventOccurred = 0;
-
-	private T firstObject;
-
-	private T lastObject;
-
-	private int collationActionsInvoked;
-
-	private Runnable checkCallback = new Runnable() {
+	private final class CheckCallback implements Runnable {
 		@Override
 		public void run() {
 			long time = System.currentTimeMillis();
@@ -69,7 +59,19 @@ public class EventCollator<T> {
 				}
 			}
 		}
-	};
+	}
+
+	private long lastEventOccurred = 0;
+
+	private long firstEventOccurred = 0;
+
+	private volatile T firstObject;
+
+	private T lastObject;
+
+	private int collationActionsInvoked;
+
+	private CheckCallback checkCallback = new CheckCallback();
 
 	private final long waitToPerformAction;
 
@@ -85,7 +87,7 @@ public class EventCollator<T> {
 	// in the current collation. defaults to maxDelayFromFirstEvent
 	private long maxDelayFromFirstCollatedEvent;
 
-	private Timer timer = null;
+	private volatile Timer timer = null;
 
 	private boolean finished = false;
 

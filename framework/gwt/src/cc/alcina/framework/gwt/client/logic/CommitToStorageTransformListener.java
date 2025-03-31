@@ -144,7 +144,7 @@ public class CommitToStorageTransformListener
 
 	protected List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<>();
 
-	protected Timer queueingFinishedTimer;
+	protected volatile Timer queueingFinishedTimer;
 
 	protected long lastQueueAddMillis;
 

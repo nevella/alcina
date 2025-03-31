@@ -198,7 +198,7 @@ public class Topic<T> {
 		 * use a list - the listener may be added/removed multiple times
 		 * (although that's probably not what's wanted)
 		 */
-		private List<TopicListener> lookup;
+		private volatile List<TopicListener> lookup;
 
 		public void addListener(TopicListener listener) {
 			synchronized (this) {

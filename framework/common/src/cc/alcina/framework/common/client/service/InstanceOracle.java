@@ -348,7 +348,7 @@ public class InstanceOracle {
 
 		T instance;
 
-		CountDownLatch awaitLatch = null;
+		volatile CountDownLatch awaitLatch = null;
 
 		Exception exception;
 

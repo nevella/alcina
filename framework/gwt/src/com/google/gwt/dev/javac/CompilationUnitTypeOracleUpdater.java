@@ -1366,7 +1366,7 @@ public class CompilationUnitTypeOracleUpdater extends TypeOracleUpdater {
 	static class TypeData {
 		private final byte[] byteCode;
 
-		private CollectClassData classData;
+		private volatile CollectClassData classData;
 
 		private final String internalName;
 

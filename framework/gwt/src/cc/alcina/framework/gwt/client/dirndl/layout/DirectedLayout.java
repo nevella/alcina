@@ -1738,7 +1738,7 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	static class ReceivesEmitsEvents {
-		static ReceivesEmitsEvents instance;
+		static volatile ReceivesEmitsEvents instance;
 
 		static ClassData get(Class clazz) {
 			if (instance == null) {

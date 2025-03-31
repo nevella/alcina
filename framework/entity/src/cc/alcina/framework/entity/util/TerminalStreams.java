@@ -15,7 +15,7 @@ import cc.alcina.framework.entity.util.BiPrintStream.StreamNumber;
  * content
  */
 public class TerminalStreams {
-	static TerminalStreams instance;
+	static volatile TerminalStreams instance;
 
 	public static synchronized TerminalStreams get() {
 		if (instance == null) {

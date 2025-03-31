@@ -97,7 +97,7 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		return instance;
 	}
 
-	Map<ClassLoader, Registry> perClassLoader = new LinkedHashMap<ClassLoader, Registry>();
+	volatile Map<ClassLoader, Registry> perClassLoader = new LinkedHashMap<ClassLoader, Registry>();
 
 	ClassLoader lastClassLoader;
 

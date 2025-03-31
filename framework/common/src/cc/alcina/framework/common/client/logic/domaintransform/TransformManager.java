@@ -123,9 +123,9 @@ public abstract class TransformManager
 	protected static SequentialIdGenerator localIdGenerator = new SequentialIdGenerator(
 			1 << 29);
 
-	private static TransformManager factoryInstance;
+	private volatile static TransformManager factoryInstance;
 
-	protected static Map<Integer, List<Entity>> createdLocalAndPromoted = null;
+	protected volatile static Map<Integer, List<Entity>> createdLocalAndPromoted = null;
 
 	public static void convertToTargetObject(DomainTransformEvent event) {
 		Object value = event.getNewValue();

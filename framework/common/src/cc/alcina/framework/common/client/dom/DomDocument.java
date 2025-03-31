@@ -43,7 +43,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	// for server-side code to link w3c docs to the DomDocument
 	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
 
-	private static transient PerDocumentSupplier perDocumentSupplier;
+	private static volatile transient PerDocumentSupplier perDocumentSupplier;
 
 	public static DomDocument basicHtmlDoc() {
 		return DomDocument.from("<html><head></head><body></body></html>");

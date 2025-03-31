@@ -35,7 +35,7 @@ public interface UserPropertyPersistable
 	@Bean
 	public static class Support
 			implements Serializable, PropertyChangeListener {
-		private UserPropertyPersistable persistable;
+		private volatile UserPropertyPersistable persistable;
 
 		private UserProperty property;
 
