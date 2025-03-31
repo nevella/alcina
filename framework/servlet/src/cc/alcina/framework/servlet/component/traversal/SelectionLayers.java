@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.util.CollectionUtil;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
@@ -58,7 +57,7 @@ class SelectionLayers extends Model.Fields implements IfNotEqual {
 					.findFirst();
 			return match
 					.map(ls -> ls.selectionsArea == null ? null
-							: ls.selectionsArea.filteredSelections)
+							: ls.selectionsArea.tableSelections)
 					.orElse(List.of());
 		}
 	}

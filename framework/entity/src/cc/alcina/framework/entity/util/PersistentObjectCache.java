@@ -84,7 +84,7 @@ public interface PersistentObjectCache<T> {
 	public static class SingletonCache<T> {
 		private PersistentObjectCache<T> delegate;
 
-		T value = null;
+		volatile T value = null;
 
 		public SingletonCache(PersistentObjectCache<T> delegate) {
 			this.delegate = delegate;

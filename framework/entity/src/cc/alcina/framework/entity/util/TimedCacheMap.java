@@ -36,7 +36,7 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 
 	private Timer evictionTimer;
 
-	private TimerTask evictionTimerTask;
+	private volatile TimerTask evictionTimerTask;
 
 	/**
 	 * Instantiate a new TimedCacheMap with given expiry

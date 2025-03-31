@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -283,6 +284,10 @@ public abstract class FragmentNode extends Model.Fields
 					n -> Reflections.isAssignableFrom(test, n.getClass()));
 		}
 
+		public boolean has(Predicate<FragmentNode> test) {
+			return stream().anyMatch(test::test);
+		}
+
 		public Stream<FragmentNode> stream() {
 			return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
 					new Itr(), Spliterator.ORDERED), false);
@@ -497,7 +502,7 @@ public abstract class FragmentNode extends Model.Fields
 
 		public void removeFromParent() {
 			withMutating(() -> provideParentNode()
-					.removeChildNode(FragmentNode.this));
+					.removeChildNode(FragmentNode.this, true));
 		}
 
 		public void replaceWith(FragmentNode other) {

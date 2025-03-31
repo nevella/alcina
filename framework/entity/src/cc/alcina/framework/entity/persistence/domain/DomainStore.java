@@ -189,7 +189,7 @@ public class DomainStore implements IDomainStore {
 				new IndexingTransformListener());
 	}
 
-	private static DomainStores domainStores;
+	private static volatile DomainStores domainStores;
 
 	static final int LONG_POST_PROCESS_TRACE_LENGTH = 99999;
 

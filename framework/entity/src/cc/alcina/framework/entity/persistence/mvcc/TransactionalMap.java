@@ -75,7 +75,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	 * Non-generic because we use the NULL_KEY_MARKER - other than that; Map<K,
 	 * TransactionalValue<V>>
 	 */
-	protected Map concurrent;
+	protected volatile Map concurrent;
 
 	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
 		this(keyClass, valueClass, null);

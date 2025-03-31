@@ -65,7 +65,7 @@ public class EntityLayerObjects {
 	 */
 	private ClientInstance serverAsClientInstance;
 
-	private EntityLocatorMap serverAsClientInstanceEntityLocatorMap;
+	private volatile EntityLocatorMap serverAsClientInstanceEntityLocatorMap;
 
 	private EntityLayerObjects() {
 		super();

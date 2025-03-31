@@ -888,7 +888,7 @@ public class DirectedLayout implements AlcinaProcess {
 				FragmentNode refChildModel) {
 			ensureChildren();
 			Node oldNode = newChildModel.provideNode();
-			removeChildNode(newChildModel);
+			removeChildNode(newChildModel, false);
 			RendererInput input = getResolver().layout.enqueueInput(
 					getResolver(), newChildModel,
 					oldNode == null ? null : oldNode.property,
@@ -1068,7 +1068,26 @@ public class DirectedLayout implements AlcinaProcess {
 		 */
 		public void remove(boolean removeFromRendered) {
 			if (removeFromRendered) {
-				resolveRenderedRendereds().forEach(Rendered::removeFromParent);
+				if (children != null) {
+					/*
+					 * This *may* not be necessary for FragmentModel where
+					 * LocalMutations are operating - since Dom tree removal
+					 * would remove the descendant tree - but doesn't hurt
+					 * 
+					 * 
+					 */
+					// slightly more efficient in reverse
+					for (int idx = children.size() - 1; idx >= 0; idx--) {
+						Node child = children.get(idx);
+						child.remove(true);
+					}
+				}
+				if (hasRendered()) {
+					/*
+					 * Removed dom nodes will always have zero children
+					 */
+					rendered.removeFromParent();
+				}
 			}
 			if (parent != null) {
 				parent.children.remove(this);
@@ -1076,9 +1095,10 @@ public class DirectedLayout implements AlcinaProcess {
 			unbind();
 		}
 
-		void removeChildNode(Model child) {
-			if (child.provideNode() != null) {
-				child.provideNode().remove(true);
+		void removeChildNode(Model child, boolean removeRendered) {
+			Node childNode = child.provideNode();
+			if (childNode != null) {
+				childNode.remove(removeRendered);
 			}
 		}
 
@@ -1089,8 +1109,10 @@ public class DirectedLayout implements AlcinaProcess {
 					annotationLocation.copyWithClassLocationOf(newModel), null,
 					this);
 			input.replace = oldNode;
+			input.removeReplaced = false;
 			getResolver().layout.layout();
 			moveChildren(oldNode, newModel.provideNode());
+			oldNode.remove(true);
 		}
 
 		// this node will disappear, so refer to predecessor nodes
@@ -1150,33 +1172,6 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		/*
-		 * Either self.optionalRendered, or
-		 * sum(children.resolveRenderedRendereds()), recursive
-		 *
-		 * Used only for node.replace
-		 *
-		 * That's the delegation logic -
-		 */
-		List<Rendered> resolveRenderedRendereds() {
-			List<Rendered> list = new ArrayList<>();
-			// visitor, minimises list creation
-			resolveRenderedRendereds0(list);
-			return list;
-		}
-
-		private void resolveRenderedRendereds0(List<Rendered> list) {
-			if (hasRendered()) {
-				list.add(getRendered());
-			} else {
-				if (children != null) {
-					for (Node child : children) {
-						child.resolveRenderedRendereds0(list);
-					}
-				}
-			}
-		}
-
 		// Rare - but crucial - called by a DirectedRenderer
 		// (DirectedRenderer.Transform transform ), imperatively setup a child
 		// renderer
@@ -1195,6 +1190,11 @@ public class DirectedLayout implements AlcinaProcess {
 				parent.children.add(insertionIndex, child);
 				parent.rendered.insertChild(child.rendered, insertionIndex++);
 			}
+			/*
+			 * Performing a direct reparent in the loop, so need to clear
+			 * children.
+			 */
+			children.removeAll(oldChildren);
 			parent.children.remove(this);
 			rendered.removeFromParent();
 		}
@@ -1738,7 +1738,7 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	static class ReceivesEmitsEvents {
-		static ReceivesEmitsEvents instance;
+		static volatile ReceivesEmitsEvents instance;
 
 		static ClassData get(Class clazz) {
 			if (instance == null) {
@@ -1927,6 +1927,8 @@ public class DirectedLayout implements AlcinaProcess {
 		 */
 		Rendered rendered;
 
+		boolean removeReplaced = true;
+
 		private RendererInput() {
 		}
 
@@ -2101,7 +2103,9 @@ public class DirectedLayout implements AlcinaProcess {
 				DirectedLayout.this.insertionPoint = node.insertionPoint;
 				int indexInParentChildren = parentNode.children
 						.indexOf(replace);
-				replace.remove(true);
+				if (removeReplaced) {
+					replace.remove(true);
+				}
 				parentNode.children.add(indexInParentChildren, node);
 			} else if (before != null) {
 				node.insertionPoint = before.resolveInsertionPoint();

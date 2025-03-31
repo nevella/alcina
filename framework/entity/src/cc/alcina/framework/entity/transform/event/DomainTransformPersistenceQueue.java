@@ -713,7 +713,7 @@ public class DomainTransformPersistenceQueue {
 
 		private Set<Long> appLifetimeCommitEventsRegistered = new LongLinkedOpenHashSet();
 
-		private DomainTransformCommitPosition transformCommitPosition;
+		private volatile DomainTransformCommitPosition transformCommitPosition;
 
 		private Map<Timestamp, DomainTransformCommitPosition> commitPositionsByTimestamp = new Object2ObjectOpenHashMap<>();
 

@@ -43,7 +43,7 @@ public class Transactions {
 	public static final String CONTEXT_REVERTING_TO_DEFAULTS = Transactions.class
 			.getName() + ".CONTEXT_REVERTING_TO_DEFAULTS";
 
-	private static Transactions instance;
+	private volatile static Transactions instance;
 
 	private static ConcurrentHashMap<Class, Constructor> copyConstructors = new ConcurrentHashMap<>();
 

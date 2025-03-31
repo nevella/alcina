@@ -34,7 +34,7 @@ import cc.alcina.framework.servlet.task.TaskGenerateTreeSerializableSignatures;
  */
 public class SerializationSignatureListener
 		implements DomainTransformPersistenceListener {
-	private String signature;
+	private volatile String signature;
 
 	private boolean ensureFailed = false;
 

@@ -18,7 +18,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 public class ArrayBackedLongMap<V> implements Map<Long, V> {
 	private transient Object[] elementData;
 
-	private Long2ObjectLinkedOpenHashMap<V> failover;
+	private volatile Long2ObjectLinkedOpenHashMap<V> failover;
 
 	private int size;
 
