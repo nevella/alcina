@@ -138,9 +138,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	/*
 	 * The chooser used to edit the current decorator
 	 */
-	DecoratorSuggestions chooser;
+	DecoratorSuggestor chooser;
 
-	BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider;
+	BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> chooserProvider;
 
 	/*
 	 * The controller responsible for routing dom events to here, etc
@@ -405,7 +405,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	public static class Builder<T> {
 		HasDecorators decoratorParent;
 
-		BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider;
+		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> chooserProvider;
 
 		DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
@@ -418,7 +418,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		}
 
 		public void setChooserProvider(
-				BiFunction<ContentDecorator, DomNode, DecoratorSuggestions> chooserProvider) {
+				BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> chooserProvider) {
 			this.chooserProvider = chooserProvider;
 		}
 

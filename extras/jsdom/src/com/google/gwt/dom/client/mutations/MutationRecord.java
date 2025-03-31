@@ -8,6 +8,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.AttachIds;
 import com.google.gwt.dom.client.ClientDomElement;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.MutationRecordJso;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
@@ -202,10 +203,6 @@ public final class MutationRecord {
 		markupRecord.newValue = elem.getInnerHTML();
 		markupRecord.target = MutationNode.attachId(node);
 		markupRecord.attachIds = elem.getSubtreeIds();
-		if (markupRecord.newValue.isEmpty()
-				&& markupRecord.attachIds.ids.size() > 0) {
-			int debug = 3;
-		}
 		return markupRecord;
 	}
 
@@ -259,6 +256,8 @@ public final class MutationRecord {
 
 	public transient List<Class<? extends Flag>> flags;
 
+	transient MutationsAccess mutationsAccess;
+
 	// for serialization
 	public MutationRecord() {
 		flags = LooseContext.get(CONTEXT_FLAGS);
@@ -267,6 +266,7 @@ public final class MutationRecord {
 	public MutationRecord(SyncMutations sync, MutationRecordJso jso) {
 		this();
 		this.sync = sync;
+		this.mutationsAccess = sync.mutationsAccess;
 		this.jso = jso;
 		target = mutationNode(jso.getTarget());
 		target.records.add(this);
@@ -463,10 +463,22 @@ public final class MutationRecord {
 	}
 
 	public void populateAttachIds() {
-		MutationNode.populateAttachId(target);
-		MutationNode.populateAttachId(previousSibling);
-		MutationNode.populateAttachId(nextSibling);
-		addedNodes.forEach(MutationNode::populateAttachId);
-		removedNodes.forEach(MutationNode::populateAttachId);
+		populateAttachIds(false);
+	}
+
+	public void populateAttachIds(boolean allowLocalIdWithoutRemote) {
+		/*
+		 * This is needed to track attachids of removed nodes
+		 */
+		MutationsAccess mutationsAccess = allowLocalIdWithoutRemote
+				? this.mutationsAccess
+				: null;
+		MutationNode.populateAttachId(target, mutationsAccess);
+		MutationNode.populateAttachId(previousSibling, mutationsAccess);
+		MutationNode.populateAttachId(nextSibling, mutationsAccess);
+		addedNodes.forEach(
+				n -> MutationNode.populateAttachId(n, mutationsAccess));
+		removedNodes.forEach(
+				n -> MutationNode.populateAttachId(n, mutationsAccess));
 	}
 }

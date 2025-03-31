@@ -54,6 +54,8 @@ public interface AttributeBehaviorHandler extends NativePreviewHandler {
 
 		Set<String> eventTypes = AlcinaCollections.newUniqueSet();
 
+		boolean initialised = false;
+
 		/**
 		 * In a romcom context, the server does *not* need to populate the
 		 * handlers (the browser client will)
@@ -61,6 +63,10 @@ public interface AttributeBehaviorHandler extends NativePreviewHandler {
 		 * @param registerHandlers
 		 */
 		public void init(boolean registerHandlers) {
+			if (initialised) {
+				return;
+			}
+			initialised = true;
 			handlers = registerHandlers
 					? Registry.query(AttributeBehaviorHandler.class)
 							.implementations().collect(Collectors.toList())

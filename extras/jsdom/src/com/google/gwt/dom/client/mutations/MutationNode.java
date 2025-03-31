@@ -64,9 +64,24 @@ public final class MutationNode {
 		return result;
 	}
 
-	static void populateAttachId(MutationNode node) {
+	static void populateAttachId(MutationNode node,
+			MutationsAccess mutationsAccess) {
 		if (node != null) {
-			node.attachId = AttachId.forNode(node.remoteNode);
+			if (node.remoteNode != null) {
+				node.attachId = AttachId.forNode(node.remoteNode);
+			} else {
+				if (mutationsAccess != null) {
+					if (node.w3cNode instanceof Node) {
+						node.node = (Node) node.w3cNode;
+						node.attachId = AttachId.forNode(node.node);
+						if (node.attachId.isDetached()) {
+							mutationsAccess.applyPreRemovalAttachId(node);
+						}
+					} else {
+						node.attachId = AttachId.forNode(node.node);
+					}
+				}
+			}
 		}
 	}
 

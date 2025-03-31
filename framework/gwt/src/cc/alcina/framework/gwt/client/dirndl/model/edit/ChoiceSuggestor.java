@@ -18,7 +18,10 @@ import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor.StringAsk;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseElement;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 
-public class ChoiceSuggestor extends DecoratorSuggestions {
+/*
+ * Manages the dropdown suggestions for the ChoiceSuggestions editor
+ */
+public class ChoiceSuggestor extends DecoratorSuggestor {
 	ChoiceSuggestions choiceSuggestions;
 
 	ChoiceSuggestor(ChoiceSuggestions choiceSuggestions,

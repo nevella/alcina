@@ -40,6 +40,12 @@ public class LocalMutations {
 	 * which fires mutations
 	 */
 	public void notify(Runnable runnable) {
+		if (mutationsAccess.isApplyingDetachedMutationsToLocalDom()) {
+			/*
+			 * ignore, this is application of upstream mutations
+			 */
+			return;
+		}
 		if (!topicMutations.hasListeners()) {
 			return;
 		}
@@ -53,6 +59,7 @@ public class LocalMutations {
 	public void notifyAttributeModification(Node target, String name,
 			String data) {
 		MutationRecord record = new MutationRecord();
+		record.mutationsAccess = mutationsAccess;
 		record.type = Type.attributes;
 		record.target = MutationNode.forNode(target);
 		record.attributeName = name;
@@ -62,6 +69,7 @@ public class LocalMutations {
 
 	public void notifyCharacterData(Node target, String data) {
 		MutationRecord record = new MutationRecord();
+		record.mutationsAccess = mutationsAccess;
 		record.type = Type.characterData;
 		record.target = MutationNode.forNode(target);
 		record.newValue = data;
@@ -71,6 +79,7 @@ public class LocalMutations {
 	public void notifyChildListMutation(Node target, Node child,
 			Node previousSibling, boolean add) {
 		MutationRecord record = new MutationRecord();
+		record.mutationsAccess = mutationsAccess;
 		record.type = Type.childList;
 		record.target = MutationNode.forNode(target);
 		record.previousSibling = MutationNode.forNode(previousSibling);

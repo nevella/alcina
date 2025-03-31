@@ -195,6 +195,7 @@ public class RemoteComponentUi {
 		LocalDom.topicPublishException().add(this::onLocalDomException);
 		LocalDom.topicMutationsAppliedToLocal()
 				.add(this::onMutationsAppliedToLocal);
+		LocalDom.getLocalMutations().topicMutations.add(this::onLocalMutations);
 		ClientRpc.get().transportLayer.session = ReflectiveSerializer
 				.deserializeRpc(ClientUtils.wndString(
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));
@@ -205,6 +206,22 @@ public class RemoteComponentUi {
 		 */
 		// AlcinaLogUtils.setLogLevelClient(
 		// "cc.alcina.framework.servlet.component.romcom", Level.ALL);
+	}
+
+	/**
+	 * <p>
+	 * Most mutations of browser dom are either upstream (Environment/Romcom
+	 * server) of 'downstream' (user modification of a ContentEditable).
+	 * <p>
+	 * But there's a _small_ window of this-app-modifying-dom behaviour:
+	 * AttributeBehaviorHandler. This class propagates those changes back to the
+	 * server
+	 */
+	void onLocalMutations(List<MutationRecord> mutationRecords) {
+		mutationRecords.forEach(mr -> mr.populateAttachIds(true));
+		Message.Mutations mutations = new Message.Mutations();
+		mutations.domMutations = mutationRecords;
+		ClientRpc.send(mutations);
 	}
 
 	void onLocalDomException(Exception exception) {

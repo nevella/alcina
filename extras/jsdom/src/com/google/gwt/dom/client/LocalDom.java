@@ -579,6 +579,8 @@ public class LocalDom implements ContextFrame {
 	// FIXME - attachId - is this needed? verifyMutatingState0?
 	boolean syncing;
 
+	boolean applyingDetachedMutationsToLocalDom;
+
 	void flush0(boolean force) {
 		if (syncing) {
 			return;
@@ -941,6 +943,11 @@ public class LocalDom implements ContextFrame {
 			get().applyToRemote = applyToRemote;
 		}
 
+		public void setApplyingDetachedMutationsToLocalDom(
+				boolean applyingDetachedMutationsToLocalDom) {
+			get().applyingDetachedMutationsToLocalDom = applyingDetachedMutationsToLocalDom;
+		}
+
 		public Stream<NodeJso> streamChildren(NodeJso node) {
 			return node.getChildNodes0().streamRemote();
 		}
@@ -999,6 +1006,10 @@ public class LocalDom implements ContextFrame {
 				records.forEach(MutationRecord::populateAttachIds);
 				topicMutationsAppliedToLocal.publish(records);
 			}
+		}
+
+		public boolean isApplyingDetachedMutationsToLocalDom() {
+			return applyingDetachedMutationsToLocalDom;
 		}
 	}
 

@@ -10,7 +10,6 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
@@ -27,7 +26,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestions.BeforeChooserClosed;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestor.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
 /**
@@ -39,7 +38,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
  *
  */
 public interface HasDecorators
-		extends DecoratorSuggestions.BeforeChooserClosed.Handler,
+		extends DecoratorSuggestor.BeforeChooserClosed.Handler,
 		DomEvents.Input.Handler, InferredDomEvents.SelectionChanged.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		// routes overlay closed events back to the referencedecorators

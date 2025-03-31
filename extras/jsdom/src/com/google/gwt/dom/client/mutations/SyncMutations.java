@@ -56,6 +56,7 @@ class SyncMutations {
 	void applyDetachedMutationsToLocalDom(List<MutationRecord> recordList,
 			boolean applyToRemote) {
 		try {
+			mutationsAccess.setApplyingDetachedMutationsToLocalDom(true);
 			mutationsAccess.setApplyToRemote(applyToRemote);
 			recordList.stream().forEach(record -> {
 				record.sync = this;
@@ -90,6 +91,7 @@ class SyncMutations {
 			});
 		} finally {
 			mutationsAccess.setApplyToRemote(true);
+			mutationsAccess.setApplyingDetachedMutationsToLocalDom(false);
 		}
 	}
 
