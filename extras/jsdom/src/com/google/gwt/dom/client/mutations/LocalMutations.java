@@ -12,6 +12,12 @@ import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 
 import cc.alcina.framework.common.client.util.Topic;
 
+/*
+ * This class has two main logical clients: FragmentModel sync (i.e. sync the
+ * typed fragment model to the dom after dom mutations), and propagation of dom
+ * changes (browser) to the server in romcom (for...you guessed it...
+ * fragmentmodel update)
+ */
 public class LocalMutations {
 	MutationsAccess mutationsAccess;
 
@@ -36,16 +42,10 @@ public class LocalMutations {
 	}
 
 	/*
-	 * Run a notificaiton runnable. This will also ensure a finally runnable
+	 * Run a notification runnable. This will also ensure a finally runnable
 	 * which fires mutations
 	 */
 	public void notify(Runnable runnable) {
-		if (mutationsAccess.isApplyingDetachedMutationsToLocalDom()) {
-			/*
-			 * ignore, this is application of upstream mutations
-			 */
-			return;
-		}
 		if (!topicMutations.hasListeners()) {
 			return;
 		}
