@@ -78,7 +78,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 		switch (transform.getOperation()) {
 		case INSERT:
 		case CHANGE:
-			node.setNode(transform.getNode());
+			node.setNodeContent(transform.getNode());
 			afterNodeChange.publish(new NodeChangeEvent(node.getTreePath()));
 			break;
 		case REMOVE:
@@ -287,7 +287,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 	@Directed(bindings = @Binding(from = "pathSegment", type = Type.PROPERTY))
 	public static class DomainViewNode
 			extends Tree.AbstractPathNode<DomainViewNode> implements HasTag {
-		private DomainViewNodeContent<?> node;
+		private DomainViewNodeContent<?> nodeContent;
 
 		private LabelGenerator labelGenerator;
 
@@ -308,8 +308,8 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			populated = false;
 		}
 
-		protected void constructLabel(DomainViewNodeContent<?> node) {
-			getLabel().setLabel(labelGenerator.apply(node));
+		protected void constructLabel(DomainViewNodeContent<?> nodeContent) {
+			getLabel().setLabel(labelGenerator.apply(nodeContent));
 		}
 
 		public DomainViewNode ensureNode(DomainViewNodeContent nodeContent,
@@ -333,15 +333,15 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			return otherTreePath.getValue();
 		}
 
-		public DomainViewNodeContent<?> getNode() {
-			return this.node;
+		public DomainViewNodeContent<?> getNodeContent() {
+			return this.nodeContent;
 		}
 
 		/*
 		 * Expose path segment for possible subtree css rules
 		 */
 		public String getPathSegment() {
-			return this.node instanceof ExposePathSegment
+			return this.nodeContent instanceof ExposePathSegment
 					? getTreePath().getSegment()
 					: null;
 		}
@@ -409,11 +409,11 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			setParent(null);
 		}
 
-		public void setNode(DomainViewNodeContent<?> node) {
-			this.node = node;
-			constructLabel(node);
-			getLabel().setTitle(node.getTitle());
-			setLeaf(node.isLeaf());
+		public void setNodeContent(DomainViewNodeContent<?> nodeContent) {
+			this.nodeContent = nodeContent;
+			constructLabel(nodeContent);
+			getLabel().setTitle(nodeContent.getTitle());
+			setLeaf(nodeContent.isLeaf());
 		}
 
 		@Override
