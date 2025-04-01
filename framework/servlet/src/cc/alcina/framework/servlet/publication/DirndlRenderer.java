@@ -91,8 +91,8 @@ public class DirndlRenderer {
 
 	private Element renderElement() {
 		DirectedLayout layout = new DirectedLayout();
-		Element element = layout.render(contextResolver, renderable)
-				.getRendered().asElement();
+		Element element = (Element) layout.render(contextResolver, renderable)
+				.getRendered().asElement().cloneNode(true);
 		// unbind listeners
 		layout.remove();
 		return element;
