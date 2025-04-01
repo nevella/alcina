@@ -1065,6 +1065,12 @@ public class DirectedLayout implements AlcinaProcess {
 		/*
 		 * Only call from framework code (here, or FragmentModel). If syncing
 		 * from mutations, do not double-remove
+		 * 
+		 * Note that removeFromRendered==true calls a 'deep remove' - all
+		 * subnodes of the tree will be removed from their parent. This is
+		 * *normally* desired behaviour - to remove stray bindings in descendant
+		 * nodes, particularly. But it is different to say DOM behaviour where
+		 * removal just detaches the subtree.
 		 */
 		public void remove(boolean removeFromRendered) {
 			if (removeFromRendered) {
