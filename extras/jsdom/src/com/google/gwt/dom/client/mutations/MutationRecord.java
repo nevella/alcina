@@ -44,6 +44,9 @@ public final class MutationRecord {
 	public interface FlagTransportMarkupTree extends Flag {
 	}
 
+	public interface FlagApplyingDetachedMutationsToLocalDom extends Flag {
+	}
+
 	@Reflected
 	public enum Type {
 		attributes, characterData, childList, innerMarkup

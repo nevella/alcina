@@ -15,8 +15,7 @@ import cc.alcina.framework.common.client.util.Topic;
 /*
  * This class has two main logical clients: FragmentModel sync (i.e. sync the
  * typed fragment model to the dom after dom mutations), and propagation of dom
- * changes (browser) to the server in romcom (for...you guessed it...
- * fragmentmodel update)
+ * changes (browser) to the server in romcom (for...you guessed it...)
  */
 public class LocalMutations {
 	MutationsAccess mutationsAccess;
@@ -53,7 +52,15 @@ public class LocalMutations {
 			finallyCommand = this::fireMutations;
 			Scheduler.get().scheduleFinally(finallyCommand);
 		}
-		runnable.run();
+		try {
+			MutationRecord.deltaFlag(
+					MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
+					mutationsAccess.isApplyingDetachedMutationsToLocalDom());
+			runnable.run();
+		} finally {
+			MutationRecord.deltaFlag(
+					MutationRecord.FlagTransportMarkupTree.class, false);
+		}
 	}
 
 	public void notifyAttributeModification(Node target, String name,
