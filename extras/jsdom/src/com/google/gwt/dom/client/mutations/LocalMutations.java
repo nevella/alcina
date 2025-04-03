@@ -10,12 +10,16 @@ import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 
 /*
  * This class has two main logical clients: FragmentModel sync (i.e. sync the
  * typed fragment model to the dom after dom mutations), and propagation of dom
  * changes (browser) to the server in romcom (for...you guessed it...)
+ * 
+ * Note that this only fires for attached nodes (and fires the subtree for a
+ * child mutation)
  */
 public class LocalMutations {
 	MutationsAccess mutationsAccess;
@@ -65,6 +69,9 @@ public class LocalMutations {
 
 	public void notifyAttributeModification(Node target, String name,
 			String data) {
+		if (!target.isAttached()) {
+			return;
+		}
 		MutationRecord record = new MutationRecord();
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.attributes;
@@ -75,6 +82,9 @@ public class LocalMutations {
 	}
 
 	public void notifyCharacterData(Node target, String data) {
+		if (!target.isAttached()) {
+			return;
+		}
 		MutationRecord record = new MutationRecord();
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.characterData;
@@ -85,6 +95,9 @@ public class LocalMutations {
 
 	public void notifyChildListMutation(Node target, Node child,
 			Node previousSibling, boolean add) {
+		if (add && !target.isAttached()) {
+			return;
+		}
 		MutationRecord record = new MutationRecord();
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.childList;
@@ -92,9 +105,35 @@ public class LocalMutations {
 		record.previousSibling = MutationNode.forNode(previousSibling);
 		if (add) {
 			record.addedNodes.add(MutationNode.forNode(child));
+			mutations.addAll(nodeAsMutations(child, true));
 		} else {
 			record.removedNodes.add(MutationNode.forNode(child));
 		}
 		mutations.add(record);
+	}
+
+	List<MutationRecord> nodeAsMutations(Node node, boolean deep) {
+		List<MutationRecord> records = new ArrayList<>();
+		if (deep) {
+			/*
+			 * FIXME - probably unlike remotemutations, this should not fire a
+			 * markup subtree - instead, fire as a list of mutations.
+			 * 
+			 * Leave that for a bit further into localmutation/fragmentmodel
+			 * translation -
+			 */
+			try {
+				LooseContext.push();
+				MutationRecord.deltaFlag(
+						MutationRecord.FlagTransportMarkupTree.class, true);
+				MutationRecord.generateInsertMutations(node, records);
+			} finally {
+				LooseContext.pop();
+			}
+		} else {
+			// just this one, no inner markup
+			MutationRecord.generateInsertMutations(node, records);
+		}
+		return records;
 	}
 }

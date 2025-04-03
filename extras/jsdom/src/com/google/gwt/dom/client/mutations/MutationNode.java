@@ -60,6 +60,7 @@ public final class MutationNode {
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
 		result.attachId = AttachId.forNode(node);
+		result.w3cNode = node;
 		result.node = node;
 		return result;
 	}

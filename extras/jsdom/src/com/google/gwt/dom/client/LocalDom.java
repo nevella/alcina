@@ -1187,7 +1187,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	void ensurePending(Element elem) {
-		if (!pendingSync.contains(elem)) {
+		if (!pendingSync.contains(elem) && applyToRemote) {
 			pendingSync.add(elem);
 			ensureFlush();
 		}
