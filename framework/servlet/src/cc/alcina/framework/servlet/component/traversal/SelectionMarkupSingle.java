@@ -8,12 +8,12 @@ import com.google.gwt.dom.client.HtmlParser;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup;
 import cc.alcina.framework.common.client.util.Ax;

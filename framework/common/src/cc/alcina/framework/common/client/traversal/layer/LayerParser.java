@@ -13,13 +13,14 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.Measure.Token.NodeTraversalToken;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token.NodeTraversalToken;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;

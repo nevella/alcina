@@ -5,13 +5,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.DetachedRootSelection;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;

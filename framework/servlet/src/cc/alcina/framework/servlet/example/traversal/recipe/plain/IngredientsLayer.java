@@ -1,12 +1,12 @@
 package cc.alcina.framework.servlet.example.traversal.recipe.plain;
 
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser;
 import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
-import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 
 /**

@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.Set;
 
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.TrieMatcher.MatchCondition;
 import cc.alcina.framework.common.client.traversal.layer.TrieMatcher.MatchTest.TrieTest;

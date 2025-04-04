@@ -2,8 +2,8 @@ package cc.alcina.framework.common.client.traversal.layer;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token.Order;
+import cc.alcina.framework.common.client.dom.Measure.Token;
+import cc.alcina.framework.common.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class MeasureTreeComparator implements Comparator<MeasureSelection> {

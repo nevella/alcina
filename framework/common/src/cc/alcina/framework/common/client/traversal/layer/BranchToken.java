@@ -11,9 +11,10 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.TextUtils;

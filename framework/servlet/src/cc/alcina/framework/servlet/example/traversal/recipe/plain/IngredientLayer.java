@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.example.traversal.recipe.plain;
 
 import java.util.regex.Pattern;
 
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
@@ -11,7 +12,6 @@ import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
-import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 
 /**

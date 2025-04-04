@@ -6,8 +6,9 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.common.client.dom.Measure.Token.Order;
 import cc.alcina.framework.common.client.traversal.Layer;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token.Order;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**

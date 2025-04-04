@@ -1,16 +1,14 @@
-package cc.alcina.framework.common.client.traversal.layer;
+package cc.alcina.framework.common.client.dom;
 
 import java.util.Comparator;
 import java.util.Objects;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.dom.DomDocument;
-import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.Selection;
+import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FileLogger;
@@ -19,8 +17,9 @@ import cc.alcina.framework.common.client.util.NestedName;
 
 // FIXME - selection - Measure extends HasSelection? or hasParentSelection?
 /**
- * A Measure models a defined section of a {@link DomDocument} via one or more
- * containing {@Layer} instances, with additional semantic information (token)
+ * A Measure models a defined section of a {@link DomDocument} classified with
+ * additional semantic information ({@link Measure.Token}) and an aribtrary
+ * {@link #data} object.
  *
  * 
  * Measures often have a containment relationship - and thus a tree structure,

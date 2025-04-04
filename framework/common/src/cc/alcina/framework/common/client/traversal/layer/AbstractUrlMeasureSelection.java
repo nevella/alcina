@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.traversal.layer;
 
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.Selection;

@@ -2,13 +2,13 @@ package cc.alcina.framework.servlet.component.traversal;
 
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.Selection;
 import cc.alcina.framework.common.client.traversal.Selection.WithRange;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
-import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.SelectionMarkup.Query;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;

@@ -17,15 +17,16 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.traversal.layer.BranchToken.Group;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState.ParserEnvironment;
-import cc.alcina.framework.common.client.traversal.layer.Measure.Token;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Comparators;

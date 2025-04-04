@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.traversal.Layer;
@@ -18,7 +19,6 @@ import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Result;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser;
 import cc.alcina.framework.common.client.traversal.layer.LayerParser.ParserState;
 import cc.alcina.framework.common.client.traversal.layer.LayerParserPeer;
-import cc.alcina.framework.common.client.traversal.layer.Measure;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.servlet.component.entity.property.PropertyFilterParser.PropertyProposer;
