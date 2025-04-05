@@ -98,11 +98,11 @@ public class SelectionMarkupSingle extends SelectionMarkup {
 				int blockCount = 0;
 				while (!cursor.isAtDocumentStart()
 						&& !cursor.isAtDocumentEnd()) {
-					int charCount = Math.abs(cursor.index - from.index);
+					int charCount = Math.abs(cursor.getIndex() - from.getIndex());
 					if (charCount > maxContextChars) {
 						break;
 					}
-					DomNode containingNode = cursor.containingNode;
+					DomNode containingNode = cursor.getContainingNode();
 					if (cursor.isAtNodeStart() && containingNode.isElement()
 							&& isBlock.isBlock(containingNode)) {
 						blockCount++;
@@ -152,15 +152,15 @@ public class SelectionMarkupSingle extends SelectionMarkup {
 			domNode.document.setReadonly(true);
 			Range range = domNode.asRange();
 			Range truncated = range.truncateAbsolute(
-					selectionMeasure.start.index - expandedMeasure.start.index,
-					selectionMeasure.end.index - expandedMeasure.start.index);
+					selectionMeasure.start.index - expandedMeasure.start.getIndex(),
+					selectionMeasure.end.index - expandedMeasure.start.getIndex());
 			truncated.start.toTextLocation(true).ensureAtBoundary();
 			truncated.end.toTextLocation(true).ensureAtBoundary();
 			domNode.document.invalidateLocations();
 			List<DomNode> wrap = domNode.stream().filter(n -> {
-				int index = n.asDomNode().asLocation().index;
-				return n.isText() && index >= truncated.start.index
-						&& index < truncated.end.index;
+				int index = n.asDomNode().asLocation().getIndex();
+				return n.isText() && index >= truncated.start.getIndex()
+						&& index < truncated.end.getIndex();
 			}).collect(Collectors.toList());
 			wrap.forEach(t -> t.builder().tag("span")
 					.className("__traversal_markup_selected").wrap());

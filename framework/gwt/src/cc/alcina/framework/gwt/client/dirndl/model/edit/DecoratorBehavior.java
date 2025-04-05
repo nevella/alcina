@@ -147,7 +147,7 @@ public interface DecoratorBehavior {
 						TextTraversal.TO_START_OF_NODE);
 				break;
 			}
-			selection.collapse(boundary.containingNode.gwtNode(),
+			selection.collapse(boundary.getContainingNode().gwtNode(),
 					boundary.getTextOffsetInNode());
 			/*
 			 * don't delete the zws, just the decorator

@@ -165,7 +165,7 @@ public class BranchingParser {
 						 * be 'go to next char' rather than 'go to next
 						 * location'
 						 */
-						if (next.start.treeIndex == parserState.location.treeIndex) {
+						if (next.start.treeIndex == parserState.location.getTreeIndex()) {
 							parserState.location = next.start;
 						} else {
 							state.lookaheadMatches.nextLocationAfterNoMatch = null;
@@ -299,7 +299,7 @@ public class BranchingParser {
 					boolean matchesLocation = false;
 					if (match != null) {
 						boolean testMeasureEnd = !layerParser.forwardsTraversalOrder
-								&& !location.containingNode.isText();
+								&& !location.getContainingNode().isText();
 						/*
 						 * This is a little tricky. For the purposes of
 						 * continuation of a branch (match), just check indexes
@@ -309,7 +309,7 @@ public class BranchingParser {
 						 */
 						matchesLocation = Objects
 								.equals(testMeasureEnd ? match.end.index
-										: match.start.index, location.index);
+										: match.start.index, location.getIndex());
 					}
 					if (group.negated) {
 						if (matchesLocation) {
@@ -934,7 +934,7 @@ public class BranchingParser {
 				if (next != null) {
 					Location after = nextLocationAfterNoMatch();
 					if (after.equals(parserState.location)
-							|| after.treeIndex != parserState.location.treeIndex) {
+							|| after.getTreeIndex() != parserState.location.getTreeIndex()) {
 						after = null;
 					} else {
 						if (after.isAtNodeEnd() && after.isTextNode()) {

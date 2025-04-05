@@ -356,9 +356,9 @@ public interface BranchToken extends Token, BranchGroupMember {
 			@Override
 			public Measure match(ParserState state) {
 				Location location = state.getLocation();
-				if (location.isAtNodeStart() && location.containingNode
+				if (location.isAtNodeStart() && location.getContainingNode()
 						.isWhitespaceOrEmptyTextContent()) {
-					return Measure.fromNode(location.containingNode, this);
+					return Measure.fromNode(location.getContainingNode(), this);
 				} else {
 					return null;
 				}

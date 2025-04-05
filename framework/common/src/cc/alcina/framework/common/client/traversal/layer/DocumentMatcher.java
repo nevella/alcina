@@ -45,7 +45,7 @@ public class DocumentMatcher {
 		Measure match() {
 			if (matchedNode == null) {
 				matchedNode = matcher
-						.apply(parserState.input.start.containingNode.document
+						.apply(parserState.input.start.getContainingNode().document
 								.getDocumentElementNode());
 				if (matchedNode.isPresent()) {
 					matchedLocation = matchedNode.get().asLocation();

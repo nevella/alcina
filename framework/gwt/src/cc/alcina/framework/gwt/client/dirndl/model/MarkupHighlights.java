@@ -174,8 +174,8 @@ public class MarkupHighlights extends Model.Fields {
 			truncated.end.toTextLocation(true).ensureAtBoundary();
 			domNode.document.invalidateLocations();
 			List<DomNode> wrap = domNode.stream().filter(n -> {
-				int index = n.asDomNode().asLocation().index
-						- domNode.asLocation().index;
+				int index = n.asDomNode().asLocation().getIndex()
+						- domNode.asLocation().getIndex();
 				return n.isText() && index >= numericRange.i1
 						&& index < numericRange.i2;
 			}).filter(t ->

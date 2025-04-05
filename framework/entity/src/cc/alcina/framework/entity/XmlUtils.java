@@ -1875,7 +1875,7 @@ public class XmlUtils {
 		}
 		DomDocument doc = DomDocument.from(Ax.format("<div>%s</div>", string));
 		doc.setReadonly(true);
-		if (doc.getDocumentElementNode().asRange().end.index < maxHlLength) {
+		if (doc.getDocumentElementNode().asRange().end.getIndex() < maxHlLength) {
 			return string;
 		}
 		Location clip = doc.getDocumentElementNode().asLocation()
@@ -1883,7 +1883,7 @@ public class XmlUtils {
 				.toTextLocation(true);
 		DomNode containingNode = clip.getContainingNode();
 		String replaceContents = Ax.trim(containingNode.textContent(),
-				maxHlLength - clip.index);
+				maxHlLength - clip.getIndex());
 		containingNode.setText(replaceContents);
 		DomNodeTree tree = doc.getDocumentElementNode().tree();
 		tree.setCurrentNode(containingNode);

@@ -149,7 +149,7 @@ public abstract class LookaheadMatcher<C> {
 		}
 
 		Measure match() {
-			if (parserState.location.index == parserState.input.end.index) {
+			if (parserState.location.getIndex() == parserState.input.end.index) {
 				return null;
 			}
 			currentMatchInvalidated |= !options.lookaheadCaching;
