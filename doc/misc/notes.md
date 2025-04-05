@@ -7,7 +7,7 @@
 
   - ditto helpplace (fragment) etc
 
-- devex styles
+## devex styles
 
  <h2>DEVEX styles</h2>
   <table>
@@ -41,3 +41,11 @@
   <td>Cannot reproduce</td>
   </tr>
   </table>
+
+## Notes on transformation propagation
+
+This is a very rambly preamble to the big chunk of kit that is romcom transformation propagation:
+
+- two of the tricky things are:
+  - transactional or immediate?
+  - how to prevent feedback loops?
