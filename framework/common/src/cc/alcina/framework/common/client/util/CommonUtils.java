@@ -55,7 +55,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -2202,5 +2201,16 @@ public class CommonUtils {
 		} else {
 			return new HashSet<>(collection);
 		}
+	}
+
+	public static int charIncidenceCount(String string, char ofChar) {
+		int result = 0;
+		for (int idx = 0; idx < string.length(); idx++) {
+			char c = string.charAt(idx);
+			if (c == ofChar) {
+				result++;
+			}
+		}
+		return result;
 	}
 }
