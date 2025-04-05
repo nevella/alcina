@@ -13,10 +13,10 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token.NodeTraversalToken;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
@@ -258,7 +258,8 @@ public class LayerParser {
 		}
 
 		public CharSequence inputContent() {
-			return inputContent(new Range(location, input.end));
+			return inputContent(parserPeer
+					.computeInputRange(new Range(location, input.end)));
 		}
 
 		public CharSequence inputContent(Range range) {

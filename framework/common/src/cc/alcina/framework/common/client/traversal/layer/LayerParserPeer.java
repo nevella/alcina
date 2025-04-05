@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
@@ -49,5 +50,12 @@ public class LayerParserPeer {
 
 	public int getBranchSizeLimit() {
 		return Integer.MAX_VALUE;
+	}
+
+	/*
+	 * Customise the inputrange, if there are context-specific areas to ignore
+	 */
+	public Range computeInputRange(Range range) {
+		return range;
 	}
 }
