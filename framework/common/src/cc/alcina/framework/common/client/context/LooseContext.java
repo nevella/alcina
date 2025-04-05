@@ -272,11 +272,11 @@ public abstract class LooseContext {
 			}
 		}
 
-		public <T> T callWithTrue(Callable<T> callable) {
+		public <V> V callWithTrue(Callable<V> callable) {
 			return callWith(callable, true);
 		}
 
-		public <T> T callWith(Callable<T> callable, boolean b) {
+		public <V> V callWith(Callable<V> callable, boolean b) {
 			try {
 				LooseContext.pushWithBoolean(getPath(), b);
 				return callable.call();
@@ -293,6 +293,16 @@ public abstract class LooseContext {
 
 		public Optional<T> optional() {
 			return Optional.ofNullable(getTyped());
+		}
+
+		public String toPropertyString(T value) {
+			StringMap properties = new StringMap();
+			if (value instanceof Boolean) {
+				properties.setBooleanOrRemove(getPath(), (Boolean) value);
+			} else {
+				properties.put(getPath(), String.valueOf(value));
+			}
+			return properties.toPropertyString();
 		}
 	}
 
