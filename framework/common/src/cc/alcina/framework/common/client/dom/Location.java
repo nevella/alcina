@@ -16,12 +16,31 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
+ * <p>
  * Models a position in an alcina dom document via [T,I,A]
  *
+ * <p>
  * FIXME - Feature_Dirndl_ContentDecorator - make immutable, and encapsulate
  * fields (actually - no - locations are inherently mutable)
  *
- * Add plan re tracking of dom mutations
+ * <h2>The case for 'after'</h2>
+ * 
+ * <p>
+ * See the (text) diagram below. Note the sequence af3 - af2 - bf4. This is
+ * impossible to express uniquely with just "befores" - it could be expressed
+ * with a node/offset (as per XPointer) - as say E1[0] == bf2, E2[1]= af2 - but
+ * that's using a model of two different levels of the node hierarchy to express
+ * facts that are essentially about one level. In any case, that won't work for
+ * our model of the doc (where the second ordinal is absolute, not relative)
+ * 
+ * <p>
+ * <code><pre>
+
+(bf1) E1                                                                                   (af1)
+	(bf2)  E2                                           (af2)  (bf4) E4 (af4)  (bf5) E5 (af5)
+			(bf3.0) T3:'a'                      (af3)
+					  (3.1)'b' (3.2)
+ * </pre></code>
  *
  *
  */
@@ -53,7 +72,7 @@ mutation of parent.children.offset (only required if the child is not at the end
 			(bf3.0) T3:'a'                      (af3)
 					  (3.1)'b' (3.2)
 
-Traversal is the 'tree' of bf/afs (before/after) shown above. before/after is ire
+Traversal is the 'tree' of bf/afs (before/after) shown above. before/after is ignored when 
 
 
  *FIXME - ser - make most fields final
