@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -78,10 +79,18 @@ public class TaskLogJobDetails extends PerformerTask {
 				.filter(j -> j.getState() != JobState.PROCESSING)
 				.sorted(EntityComparator.INSTANCE).limit(limit);
 		List<Job> ancestorAndAwaitingJobs = new ArrayList<>();
-		top.provideParent().ifPresent(ancestorAndAwaitingJobs::add);
 		top.provideAwaiting().ifPresent(ancestorAndAwaitingJobs::add);
-		renderRelatedSection(body, "Ancestor/awaiting jobs",
-				ancestorAndAwaitingJobs.stream());
+		Optional<Job> cursor = top.provideParent();
+		while (cursor.isPresent()) {
+			ancestorAndAwaitingJobs.add(cursor.get());
+			cursor = cursor.get().provideParent();
+		}
+		ancestorAndAwaitingJobs.add(top.provideFirstInSequence());
+		top.providePrevious().ifPresent(ancestorAndAwaitingJobs::add);
+		renderRelatedSection(body, "Awaiting/ancestor/preceding jobs",
+				ancestorAndAwaitingJobs.stream().filter(Objects::nonNull)
+						.filter(j -> j != top).distinct()
+						.sorted(EntityComparator.INSTANCE));
 		Stream<Job> childAndSubsequentJobs = Stream.concat(relatedProcessing,
 				relatedNonProcessing);
 		renderRelatedSection(body, "Child/Subsequent jobs",
