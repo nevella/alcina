@@ -381,6 +381,13 @@ public class Measure extends Location.Range {
 		return Measure.fromRange(truncateToIndexStart(startIndex), token);
 	}
 
+	/**
+	 * 
+	 * @param endIndex
+	 *            (endIndex==measure.lengt() returns the whole range,
+	 *            endIndex==0 returns an empty measure at start)
+	 * @return
+	 */
 	public Measure truncateMeasureToIndexEnd(int endIndex) {
 		return Measure.fromRange(truncateToIndexEnd(endIndex), token);
 	}

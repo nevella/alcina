@@ -558,6 +558,12 @@ public class Location implements Comparable<Location> {
 			return new Range(modifiedStart, modifiedEnd);
 		}
 
+		/**
+		 * 
+		 * Creates a relative range. So [0,range.length()] parameters returns a
+		 * copy of the range, [0,range.length()-1] returns the range less the
+		 * last character, etc
+		 */
 		public Range truncateRelative(int startIndex, int endIndex) {
 			Location modifiedEnd = end.createTextRelativeLocation(
 					start.index + endIndex - end.index, true);
