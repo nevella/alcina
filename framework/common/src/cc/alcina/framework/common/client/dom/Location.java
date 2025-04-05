@@ -111,6 +111,8 @@ public class Location implements Comparable<Location> {
 
 	private transient LocationContext locationContext;
 
+	private transient int documentMutationPosition;
+
 	public Location(int treeIndex, int index, boolean after) {
 		this(treeIndex, index, after, null, null);
 	}
@@ -137,6 +139,8 @@ public class Location implements Comparable<Location> {
 		this.treeIndex = treeIndex;
 		this.index = index;
 		this.locationContext = locationContext;
+		this.documentMutationPosition = locationContext
+				.getDocumentMutationPosition();
 		if (containingNode == null) {
 			containingNode = locationContext.getContainingNode(this);
 		}

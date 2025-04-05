@@ -7,10 +7,10 @@ import java.util.Objects;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservable;
@@ -149,7 +149,8 @@ public abstract class LookaheadMatcher<C> {
 		}
 
 		Measure match() {
-			if (parserState.location.getIndex() == parserState.input.end.index) {
+			if (parserState.location.getIndex() == parserState.input.end
+					.getIndex()) {
 				return null;
 			}
 			currentMatchInvalidated |= !options.lookaheadCaching;

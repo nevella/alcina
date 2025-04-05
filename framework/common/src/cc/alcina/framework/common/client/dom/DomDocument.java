@@ -377,7 +377,8 @@ public class DomDocument extends DomNode implements Cloneable {
 			Location test = new Location(-1, index, after, null, this);
 			Location containingLocation = getContainingLocation(test);
 			return new Location(containingLocation.getTreeIndex(), index,
-					location.after, containingLocation.getContainingNode(), this);
+					location.after, containingLocation.getContainingNode(),
+					this);
 		}
 
 		private void ensureLookups() {
@@ -449,7 +450,8 @@ public class DomDocument extends DomNode implements Cloneable {
 					}
 				}
 				if (lastTextNode != null) {
-					String content = lastTextNode.getContainingNode().textContent();
+					String content = lastTextNode.getContainingNode()
+							.textContent();
 					Preconditions.checkState(lastTextNode.getIndex()
 							+ content.length() >= test.getIndex());
 				}
@@ -475,7 +477,8 @@ public class DomDocument extends DomNode implements Cloneable {
 			} else {
 				// there's no non-empty text node starting at index
 				// [contents.length]
-				Preconditions.checkArgument(test.getIndex() != contents.length());
+				Preconditions
+						.checkArgument(test.getIndex() != contents.length());
 				while (cursor < locations.length) {
 					Location found = locations[cursor];
 					// will loop until found.index > test.index (which will
@@ -498,7 +501,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 		@Override
 		public DomNode getContainingNode(Location test) {
-			return getContainingLocation(test).containingNode;
+			return getContainingLocation(test).getContainingNode();
 		}
 
 		/*
@@ -520,8 +523,8 @@ public class DomDocument extends DomNode implements Cloneable {
 			}
 			Preconditions.checkState(containingLocation.getIndex() >= index
 					&& containingLocation.getIndex() <= index
-							+ containingLocation.getContainingNode().textContent()
-									.length());
+							+ containingLocation.getContainingNode()
+									.textContent().length());
 			DomNode cursor = containingLocation.getContainingNode();
 			do {
 				result.add(cursor);
@@ -572,7 +575,8 @@ public class DomDocument extends DomNode implements Cloneable {
 						node, this);
 			}
 			if (node.isText()) {
-				int relativeIndex = location.getIndex() - baseLocation.getIndex();
+				int relativeIndex = location.getIndex()
+						- baseLocation.getIndex();
 				switch (direction) {
 				case NEXT_LOCATION: {
 					if (relativeIndex == node.textContent().length()) {
@@ -629,7 +633,8 @@ public class DomDocument extends DomNode implements Cloneable {
 									: 0;
 							targetAfter = true;
 						} else {
-							targetTreeIndex = byNode.get(nextSibling).getTreeIndex();
+							targetTreeIndex = byNode.get(nextSibling)
+									.getTreeIndex();
 						}
 					} else {
 						// descend or go to next sibling
@@ -659,8 +664,8 @@ public class DomDocument extends DomNode implements Cloneable {
 									: 0;
 							targetAfter = false;
 						} else {
-							targetTreeIndex = byNode
-									.get(previousSibling).getTreeIndex();
+							targetTreeIndex = byNode.get(previousSibling)
+									.getTreeIndex();
 						}
 					} else {
 						DomNode lastChild = node.children.lastNode();
@@ -668,7 +673,8 @@ public class DomDocument extends DomNode implements Cloneable {
 							// just the start of the current node
 						} else {
 							// end of the last child
-							targetTreeIndex = byNode.get(lastChild).getTreeIndex();
+							targetTreeIndex = byNode.get(lastChild)
+									.getTreeIndex();
 							targetAfter = true;
 						}
 					}
@@ -684,8 +690,8 @@ public class DomDocument extends DomNode implements Cloneable {
 						DomNode lastDescendant = node.relative()
 								.lastDescendant();
 						if (lastDescendant != null) {
-							targetTreeIndex = byNode
-									.get(lastDescendant).getTreeIndex();
+							targetTreeIndex = byNode.get(lastDescendant)
+									.getTreeIndex();
 						} else {
 							targetTreeIndex--;
 						}
@@ -703,8 +709,8 @@ public class DomDocument extends DomNode implements Cloneable {
 						DomNode lastDescendant = node.relative()
 								.lastDescendant();
 						if (lastDescendant != null) {
-							targetTreeIndex = byNode
-									.get(lastDescendant).getTreeIndex();
+							targetTreeIndex = byNode.get(lastDescendant)
+									.getTreeIndex();
 							targetTreeIndex++;
 						} else {
 							targetTreeIndex++;
@@ -779,7 +785,8 @@ public class DomDocument extends DomNode implements Cloneable {
 						w3cRange.setEnd(range.end.getContainingNode().node,
 								range.end.indexInNode());
 					} else {
-						w3cRange.setEndAfter(range.end.getContainingNode().node);
+						w3cRange.setEndAfter(
+								range.end.getContainingNode().node);
 					}
 					DocumentFragment fragment = w3cRange.cloneContents();
 					Element fragmentContainer = domDoc()
@@ -793,7 +800,8 @@ public class DomDocument extends DomNode implements Cloneable {
 		@Override
 		public String textContent(Location.Range range) {
 			ensureLookups();
-			return contents.substring(range.start.getIndex(), range.end.getIndex());
+			return contents.substring(range.start.getIndex(),
+					range.end.getIndex());
 		}
 
 		@Override
@@ -818,6 +826,11 @@ public class DomDocument extends DomNode implements Cloneable {
 		@Override
 		public void invalidate() {
 			invalidateLookups();
+		}
+
+		@Override
+		public int getDocumentMutationPosition() {
+			return 0;
 		}
 	}
 

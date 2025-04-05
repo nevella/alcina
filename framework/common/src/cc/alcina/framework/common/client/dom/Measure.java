@@ -187,7 +187,7 @@ public class Measure extends Location.Range {
 		String tokenData = getData() == null ? "" : getData().toString();
 		tokenData = CommonUtils.padStringRight(tokenData, 16, ' ');
 		return Ax.format("[%s,%s]%s :: %s :: %s :: %s",
-				Ax.padLeft(start.index, 8), Ax.padLeft(end.index, 8),
+				Ax.padLeft(start.getIndex(), 8), Ax.padLeft(end.getIndex(), 8),
 				aliasMarker, tokenString, tokenData, Ax.trimForLogging(text()));
 	}
 
@@ -196,8 +196,8 @@ public class Measure extends Location.Range {
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
-		return Ax.format("[%s,%s] %s #%s", Ax.padLeft(start.index, 8),
-				Ax.padLeft(end.index, 8), tokenString, counter.nextId());
+		return Ax.format("[%s,%s] %s #%s", Ax.padLeft(start.getIndex(), 8),
+				Ax.padLeft(end.getIndex(), 8), tokenString, counter.nextId());
 	}
 
 	@Override
@@ -206,9 +206,10 @@ public class Measure extends Location.Range {
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
-		if (start.treeIndex == end.treeIndex && start.getContainingNode() != null
+		if (start.getTreeIndex() == end.getTreeIndex()
+				&& start.getContainingNode() != null
 				&& start.getContainingNode().isText()) {
-			return Ax.format("%s-%s :: %s", start.index, end.index,
+			return Ax.format("%s-%s :: %s", start.getIndex(), end.getIndex(),
 					tokenString);
 		} else {
 			return Ax.format("[%s =>  %s] :: %s", start.toLocationString(),

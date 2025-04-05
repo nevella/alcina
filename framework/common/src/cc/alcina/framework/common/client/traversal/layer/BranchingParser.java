@@ -17,10 +17,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -165,7 +165,8 @@ public class BranchingParser {
 						 * be 'go to next char' rather than 'go to next
 						 * location'
 						 */
-						if (next.start.treeIndex == parserState.location.getTreeIndex()) {
+						if (next.start.getTreeIndex() == parserState.location
+								.getTreeIndex()) {
 							parserState.location = next.start;
 						} else {
 							state.lookaheadMatches.nextLocationAfterNoMatch = null;
@@ -307,9 +308,10 @@ public class BranchingParser {
 						 * contiguous _text_ runs to not be continuous - and
 						 * thus fail the sequence
 						 */
-						matchesLocation = Objects
-								.equals(testMeasureEnd ? match.end.index
-										: match.start.index, location.getIndex());
+						matchesLocation = Objects.equals(
+								testMeasureEnd ? match.end.getIndex()
+										: match.start.getIndex(),
+								location.getIndex());
 					}
 					if (group.negated) {
 						if (matchesLocation) {
@@ -934,7 +936,8 @@ public class BranchingParser {
 				if (next != null) {
 					Location after = nextLocationAfterNoMatch();
 					if (after.equals(parserState.location)
-							|| after.getTreeIndex() != parserState.location.getTreeIndex()) {
+							|| after.getTreeIndex() != parserState.location
+									.getTreeIndex()) {
 						after = null;
 					} else {
 						if (after.isAtNodeEnd() && after.isTextNode()) {

@@ -8,10 +8,10 @@ import com.google.gwt.dom.client.HtmlParser;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
@@ -98,7 +98,8 @@ public class SelectionMarkupSingle extends SelectionMarkup {
 				int blockCount = 0;
 				while (!cursor.isAtDocumentStart()
 						&& !cursor.isAtDocumentEnd()) {
-					int charCount = Math.abs(cursor.getIndex() - from.getIndex());
+					int charCount = Math
+							.abs(cursor.getIndex() - from.getIndex());
 					if (charCount > maxContextChars) {
 						break;
 					}
@@ -152,8 +153,10 @@ public class SelectionMarkupSingle extends SelectionMarkup {
 			domNode.document.setReadonly(true);
 			Range range = domNode.asRange();
 			Range truncated = range.truncateAbsolute(
-					selectionMeasure.start.index - expandedMeasure.start.getIndex(),
-					selectionMeasure.end.index - expandedMeasure.start.getIndex());
+					selectionMeasure.start.getIndex()
+							- expandedMeasure.start.getIndex(),
+					selectionMeasure.end.getIndex()
+							- expandedMeasure.start.getIndex());
 			truncated.start.toTextLocation(true).ensureAtBoundary();
 			truncated.end.toTextLocation(true).ensureAtBoundary();
 			domNode.document.invalidateLocations();

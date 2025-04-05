@@ -93,4 +93,6 @@ public interface LocationContext {
 
 	// FIXME - FN - remove once framework complete
 	void invalidate();
+
+	int getDocumentMutationPosition();
 }

@@ -13,10 +13,10 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token.NodeTraversalToken;
 import cc.alcina.framework.common.client.traversal.AbstractUrlSelection;
 import cc.alcina.framework.common.client.traversal.DocumentSelection;
@@ -232,7 +232,7 @@ public class LayerParser {
 		}
 
 		public int getOffsetInInput() {
-			return location.getIndex() - input.start.index;
+			return location.getIndex() - input.start.getIndex();
 		}
 
 		public MeasureSelection getSelection() {
@@ -269,15 +269,15 @@ public class LayerParser {
 			}
 			return inputSubSequences.computeIfAbsent(range,
 					r -> baseContent.subSequence(
-							r.start.getIndex() - input.start.index,
-							r.end.getIndex() - input.start.index));
+							r.start.getIndex() - input.start.getIndex(),
+							r.end.getIndex() - input.start.getIndex()));
 		}
 
 		public boolean isAtEnd(Measure match) {
 			if (match == null) {
 				return false;
 			}
-			return match.end.index == input.end.index;
+			return match.end.getIndex() == input.end.getIndex();
 		}
 
 		Measure match(BranchToken token) {
