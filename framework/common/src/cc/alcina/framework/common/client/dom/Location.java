@@ -81,6 +81,27 @@ All class usages should validate document locations (treeIndex, index, containin
  *FIXME - ser - make most fields final
  * @formatter:on
  */
+/*
+ * @formatter:off
+ * 
+ 
+ # Location mutation
+
+ ## Overview
+
+ - Each dom mutation is recorded as a location mutation - i.e. a delta of [index.delta,treeindex.delta] at [index,treeindex]
+ - Each mutation immediately updates directly affected nodes. Added/removed nodes are added/removed from the locations 
+   lookups, in the case of cdata mutations [an exception is thrown in non-split/join, pending diff computation]
+ - On access, the location recomputes its indicies from the locationmutations since the last mutation
+ - After a recomputation threshold is reached, all locations are recomputed
+ - TODO -
+   - How does this interact with ordering of locations? 
+   - Are locations unique for a given node/index? [should be] 
+   - If so, should they be modelled on the node [probably]
+
+
+ * @formatter:on
+ */
 public class Location implements Comparable<Location> {
 	/**
 	 * Node index in depth-first traversal.
