@@ -223,7 +223,7 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 	}
 
-	public Locations locations() {
+	public LocationContext locations() {
 		if (locations == null) {
 			locations = new Locations();
 		}
@@ -319,7 +319,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			}
 		}
 
-		Location asLocation(DomNode domNode) {
+		public Location asLocation(DomNode domNode) {
 			ensureLookups();
 			Location location = byNode.get(domNode);
 			if (location == null) {
@@ -332,7 +332,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			return location;
 		}
 
-		Location.Range asRange(DomNode domNode) {
+		public Location.Range asRange(DomNode domNode) {
 			Location start = asLocation(domNode);
 			Location end = null;
 			if (domNode.isText()) {
@@ -534,7 +534,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			return result;
 		}
 
-		Location.Range getDocumentRange() {
+		public Location.Range getDocumentRange() {
 			ensureLookups();
 			DomNode documentElementNode = getDocumentElementNode();
 			Location start = byNode.get(documentElementNode);

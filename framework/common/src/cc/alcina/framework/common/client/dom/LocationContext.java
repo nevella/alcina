@@ -95,4 +95,10 @@ public interface LocationContext {
 	void invalidate();
 
 	int getDocumentMutationPosition();
+
+	Location asLocation(DomNode domNode);
+
+	Range asRange(DomNode domNode);
+
+	Range getDocumentRange();
 }

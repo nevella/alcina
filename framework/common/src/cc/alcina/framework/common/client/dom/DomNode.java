@@ -117,6 +117,8 @@ public class DomNode {
 
 	private transient DomNodeReadonlyLookup lookup;
 
+	private List<Location> locations = null;
+
 	public DomNode(DomNode from) {
 		this(from.node, from.document);
 	}
@@ -168,12 +170,17 @@ public class DomNode {
 	}
 
 	public Location asLocation() {
-		return document.locations().asLocation(this);
+		if (locations != null) {
+			return locations.get(0);
+		}
+		Location location = document.locations().asLocation(this);
+		locations = new ArrayList<>();
+		locations.add(location);
+		return location;
 	}
 
 	public Location.Range asRange() {
-		return isAttachedToDocument() ? document.locations().asRange(this)
-				: null;
+		return isAttached() ? document.locations().asRange(this) : null;
 	}
 
 	public String attr(String name) {
@@ -352,8 +359,9 @@ public class DomNode {
 		return false;
 	}
 
-	public boolean isAttachedToDocument() {
-		return document.getDocumentElementNode().isAncestorOf(this);
+	public boolean isAttached() {
+		return isGwtNode() ? gwtNode().isAttached()
+				: document.getDocumentElementNode().isAncestorOf(this);
 	}
 
 	public boolean isComment() {
@@ -370,6 +378,10 @@ public class DomNode {
 
 	public boolean isEmptyTextContent() {
 		return textContent().isEmpty();
+	}
+
+	public boolean isGwtNode() {
+		return node instanceof com.google.gwt.dom.client.Node;
 	}
 
 	public boolean isNonWhitespaceTextContent() {

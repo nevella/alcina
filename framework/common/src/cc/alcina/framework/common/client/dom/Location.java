@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * <p>
@@ -99,6 +98,12 @@ All class usages should validate document locations (treeIndex, index, containin
    - Are locations unique for a given node/index? [should be] 
    - If so, should they be modelled on the node [probably]
 
+## Locations2 implementation
+
+- Locations are stored on the domnode
+- There's no explicit 'contents' text storage - just the dom text nodes. It's the indicies we store separately
+- 
+
 
  * @formatter:on
  */
@@ -128,6 +133,9 @@ public class Location implements Comparable<Location> {
 	 */
 	public boolean after;
 
+	/*
+	 * the domnode at treeindex
+	 */
 	private transient DomNode containingNode;
 
 	private transient LocationContext locationContext;
@@ -176,10 +184,6 @@ public class Location implements Comparable<Location> {
 	 * For serialization
 	 */
 	Location() {
-	}
-
-	public Adjust adjust() {
-		return new Adjust();
 	}
 
 	public Range asRange() {
@@ -260,6 +264,7 @@ public class Location implements Comparable<Location> {
 	}
 
 	public int getIndex() {
+		ensureCurrent();
 		return index;
 	}
 
@@ -281,6 +286,7 @@ public class Location implements Comparable<Location> {
 	}
 
 	public int getTreeIndex() {
+		ensureCurrent();
 		return treeIndex;
 	}
 
@@ -413,26 +419,6 @@ public class Location implements Comparable<Location> {
 	}
 
 	void validateIndicies() {
-	}
-
-	public class Adjust {
-		public Location trimToFirstNonWhitespaceCharacer() {
-			String text = getContainingNode().textContent();
-			int idx = 0;
-			for (; idx < text.length() - 1; idx++) {
-				if (TextUtils
-						.isWhitespaceOrEmpty(text.substring(idx, idx + 1))) {
-					// continue
-				} else {
-					break;
-				}
-			}
-			if (idx == 0) {
-				return Location.this;
-			} else {
-				return createTextRelativeLocation(idx, after);
-			}
-		}
 	}
 
 	// Feature group class for content access
@@ -757,5 +743,8 @@ public class Location implements Comparable<Location> {
 		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE, TO_END_OF_NODE,
 		// will throw if traversing a text node
 		UNDEFINED
+	}
+
+	private void ensureCurrent() {
 	}
 }

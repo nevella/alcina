@@ -83,13 +83,13 @@ public class Document extends Node
 
 	RemoteType remoteType;
 
-	LocalDom localDom;
-
 	DocumentLocal local;
 
 	ClientDomDocument remote;
 
 	Element documentElement;
+
+	public final LocalDom localDom;
 
 	public final DomDocument domDocument;
 
