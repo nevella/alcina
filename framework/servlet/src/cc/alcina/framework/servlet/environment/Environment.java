@@ -770,11 +770,10 @@ class Environment {
 		try {
 			ui.onEnterIteration();
 			try {
-				scheduler.pump(true);
+				queue.runCatchLoopException(() -> scheduler.pump(true));
 				runnable.run();
 			} finally {
-				//
-				scheduler.pump(false);
+				queue.runCatchLoopException(() -> scheduler.pump(false));
 				/**
 				 * If there are future timer events, this will queue a
 				 * noop-runnable (which will flush the scheduler) at the
