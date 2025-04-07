@@ -148,7 +148,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 						text.setValue(replaceValue);
 						// this is the non-bubbling, quick hack - FIXME FN
 						Document.get().getSelection().validate();
-						text.domNode().asLocation().locationContext
+						text.domNode().asLocation().getLocationContext()
 								.invalidate();
 					}
 				});

@@ -33,11 +33,13 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.w3c.dom.traversal.TreeWalker;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.mutations.MutationRecord;
 
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.context.ContextProvider;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  * <p>
@@ -83,13 +85,13 @@ public class Document extends Node
 
 	RemoteType remoteType;
 
-	LocalDom localDom;
-
 	DocumentLocal local;
 
 	ClientDomDocument remote;
 
 	Element documentElement;
+
+	final LocalDom localDom;
 
 	public final DomDocument domDocument;
 
@@ -1303,4 +1305,9 @@ public class Document extends Node
     	$wnd.navigator.clipboard.writeText(clipboardText);
 	}
 	}-*/;
+
+	public void addLocalMutationListener(
+			TopicListener<List<MutationRecord>> listener) {
+		localDom.localMutations.topicMutations.add(listener);
+	}
 }

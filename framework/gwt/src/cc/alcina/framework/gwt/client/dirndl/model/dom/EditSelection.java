@@ -97,14 +97,14 @@ public class EditSelection {
 		if (!location.after) {
 			return location;
 		}
-		DomNode containingNode = location.containingNode;
+		DomNode containingNode = location.getContainingNode();
 		DomNodeTree tree = containingNode.tree();
 		DomNode cursor = containingNode.children.lastNode();
 		tree.setCurrentNode(cursor);
 		while ((cursor = tree.currentNode()) != containingNode) {
 			if (cursor.isText() && !cursor.isEmptyTextContent()) {
 				Location result = cursor.asLocation().clone();
-				result.index += cursor.textContent().length();
+				result.setIndex(result.getIndex() + cursor.textContent().length());
 				return result;
 			}
 			tree.previousLogicalNode();
@@ -140,16 +140,16 @@ public class EditSelection {
 			}
 		}
 		if (modifiedAnchorLocation != null) {
-			selection.collapse(modifiedAnchorLocation.containingNode.gwtNode(),
+			selection.collapse(modifiedAnchorLocation.getContainingNode().gwtNode(),
 					modifiedAnchorLocation.indexInNode());
 			Location extendTo = modifiedFocusLocation != null
 					? modifiedFocusLocation
 					: focusLocation;
-			selection.extend(extendTo.containingNode.gwtNode(),
+			selection.extend(extendTo.getContainingNode().gwtNode(),
 					extendTo.indexInNode());
 		} else if (modifiedFocusLocation != null) {
 			Location extendTo = modifiedFocusLocation;
-			selection.extend(extendTo.containingNode.gwtNode(),
+			selection.extend(extendTo.getContainingNode().gwtNode(),
 					extendTo.indexInNode());
 		}
 	}

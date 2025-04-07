@@ -37,9 +37,9 @@ public class DomTokenStream implements Iterator<DomNode> {
 
 	public DomTokenStream(DomNode node) {
 		this.doc = node.document;
-		if (doc.domDoc() instanceof DocumentTraversal) {
+		if (doc.w3cDoc() instanceof DocumentTraversal) {
 			DocumentTraversal documentTraversal = (DocumentTraversal) doc
-					.domDoc();
+					.w3cDoc();
 			this.tw = documentTraversal.createTreeWalker(node.w3cNode(),
 					NodeFilter.SHOW_ALL, null, true);
 		} else {

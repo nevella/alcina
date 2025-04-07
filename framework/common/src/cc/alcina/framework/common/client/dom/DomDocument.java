@@ -39,6 +39,16 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.Topic;
 
+/**
+ * <p>
+ * This class corresponds to Document in the Alcina fluent DOM (DomNode)
+ * implementation
+ * <ul>
+ * <li>Read-only: the default mode for a DomDocument. It's an optimised mode
+ * where locations are assumed non-mutable. No post-initialisation dom
+ * modifications are permitted (impl; WIP)
+ * </ul>
+ */
 public class DomDocument extends DomNode implements Cloneable {
 	// for server-side code to link w3c docs to the DomDocument
 	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
@@ -146,8 +156,8 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	@Override
-	public Document domDoc() {
-		return super.domDoc();
+	public Document w3cDoc() {
+		return super.w3cDoc();
 	}
 
 	private void ensureByLookups() {
@@ -163,7 +173,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public DomNode getDocumentElementNode() {
 		return documentElementDomNode != null ? documentElementDomNode
-				: nodeFor(domDoc().getDocumentElement());
+				: nodeFor(w3cDoc().getDocumentElement());
 	}
 
 	public Element getElementById(String elementId) {
@@ -223,16 +233,19 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 	}
 
-	public Locations locations() {
+	public LocationContext locations() {
 		if (locations == null) {
 			locations = new Locations();
 		}
 		return locations;
 	}
 
-	public DomNode nodeFor(Node domNode) {
-		return nodes.computeIfAbsent(domNode,
-				dn -> dn == null ? null : new DomNode(domNode, this));
+	public DomNode nodeFor(Node w3cNode) {
+		if (w3cNode instanceof com.google.gwt.dom.client.Node) {
+			return ((com.google.gwt.dom.client.Node) w3cNode).asDomNode();
+		}
+		return nodes.computeIfAbsent(w3cNode,
+				dn -> dn == null ? null : new DomNode(w3cNode, this));
 	}
 
 	public void normaliseWhitespace() {
@@ -248,7 +261,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	@Override
 	public String prettyToString() {
 		try {
-			return DomEnvironment.get().prettyPrint(domDoc());
+			return DomEnvironment.get().prettyPrint(w3cDoc());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -271,7 +284,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	public DomNode root() {
-		return nodeFor(domDoc().getDocumentElement());
+		return nodeFor(w3cDoc().getDocumentElement());
 	}
 
 	public void setReadonly(boolean readonly) {
@@ -319,7 +332,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			}
 		}
 
-		Location asLocation(DomNode domNode) {
+		public Location asLocation(DomNode domNode) {
 			ensureLookups();
 			Location location = byNode.get(domNode);
 			if (location == null) {
@@ -332,7 +345,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			return location;
 		}
 
-		Location.Range asRange(DomNode domNode) {
+		public Location.Range asRange(DomNode domNode) {
 			Location start = asLocation(domNode);
 			Location end = null;
 			if (domNode.isText()) {
@@ -340,7 +353,7 @@ public class DomDocument extends DomNode implements Cloneable {
 						contentLengths.get(domNode), true);
 			} else {
 				end = asLocation(domNode).clone();
-				end.index += contentLengths.get(domNode);
+				end.setIndex(end.getIndex() + contentLengths.get(domNode));
 				// only for non-text (text locations do not use after)
 				end.after = true;
 			}
@@ -359,25 +372,26 @@ public class DomDocument extends DomNode implements Cloneable {
 		public Location createTextRelativeLocation(Location location,
 				int offset, boolean after) {
 			ensureLookups();
-			int index = location.index + offset;
+			int index = location.getIndex() + offset;
 			/*
 			 * Special case, preserve existing node if possible)
 			 */
-			DomNode containingNode = location.containingNode;
+			DomNode containingNode = location.getContainingNode();
 			int contentLength = contentLengths.get(containingNode);
-			int relativeIndex = location.index + offset
-					- byNode.get(containingNode).index;
+			int relativeIndex = location.getIndex() + offset
+					- byNode.get(containingNode).getIndex();
 			if (relativeIndex >= 0 && relativeIndex <= contentLength) {
 				if (relativeIndex == contentLength && contentLength != 0) {
 					after = true;
 				}
-				return new Location(location.treeIndex, index, after,
-						location.containingNode, this);
+				return new Location(location.getTreeIndex(), index, after,
+						location.getContainingNode(), this);
 			}
 			Location test = new Location(-1, index, after, null, this);
 			Location containingLocation = getContainingLocation(test);
-			return new Location(containingLocation.treeIndex, index,
-					location.after, containingLocation.containingNode, this);
+			return new Location(containingLocation.getTreeIndex(), index,
+					location.after, containingLocation.getContainingNode(),
+					this);
 		}
 
 		private void ensureLookups() {
@@ -425,8 +439,8 @@ public class DomDocument extends DomNode implements Cloneable {
 
 		Location getContainingLocation(Location test) {
 			ensureLookups();
-			if (test.treeIndex != -1) {
-				DomNode node = byTreeIndex.get(test.treeIndex);
+			if (test.getTreeIndex() != -1) {
+				DomNode node = byTreeIndex.get(test.getTreeIndex());
 				return byNode.get(node);
 			}
 			// searches for the lowest text node containing location
@@ -442,16 +456,17 @@ public class DomDocument extends DomNode implements Cloneable {
 				}
 				for (; treeIndex >= 0; treeIndex--) {
 					Location location = locations[treeIndex];
-					if (location.containingNode.isText()
-							&& location.index <= test.index) {
+					if (location.getContainingNode().isText()
+							&& location.getIndex() <= test.getIndex()) {
 						lastTextNode = location;
 						break;
 					}
 				}
 				if (lastTextNode != null) {
-					String content = lastTextNode.containingNode.textContent();
-					Preconditions.checkState(lastTextNode.index
-							+ content.length() >= test.index);
+					String content = lastTextNode.getContainingNode()
+							.textContent();
+					Preconditions.checkState(lastTextNode.getIndex()
+							+ content.length() >= test.getIndex());
 				}
 				if (treeIndex == -1) {
 					throw new UnsupportedOperationException();
@@ -460,12 +475,12 @@ public class DomDocument extends DomNode implements Cloneable {
 			int cursor = treeIndex;
 			if (test.after) {
 				// there's no non-empty text node ending at index 0
-				Preconditions.checkArgument(test.index != 0);
+				Preconditions.checkArgument(test.getIndex() != 0);
 				while (cursor >= 0) {
 					Location found = locations[cursor];
 					// will loop until found.index < test.index (which will
 					// be the text node that ends at test.index)
-					if (found.index < test.index) {
+					if (found.getIndex() < test.getIndex()) {
 						treeIndex = cursor;
 						break;
 					} else {
@@ -475,13 +490,14 @@ public class DomDocument extends DomNode implements Cloneable {
 			} else {
 				// there's no non-empty text node starting at index
 				// [contents.length]
-				Preconditions.checkArgument(test.index != contents.length());
+				Preconditions
+						.checkArgument(test.getIndex() != contents.length());
 				while (cursor < locations.length) {
 					Location found = locations[cursor];
 					// will loop until found.index > test.index (which will
 					// be the node immediately following the containing text
 					// node)
-					if (found.index > test.index) {
+					if (found.getIndex() > test.getIndex()) {
 						treeIndex = cursor - 1;
 						break;
 					} else {
@@ -498,7 +514,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 		@Override
 		public DomNode getContainingNode(Location test) {
-			return getContainingLocation(test).containingNode;
+			return getContainingLocation(test).getContainingNode();
 		}
 
 		/*
@@ -518,11 +534,11 @@ public class DomDocument extends DomNode implements Cloneable {
 				containingLocation = containingLocation
 						.relativeLocation(RelativeDirection.NEXT_LOCATION);
 			}
-			Preconditions.checkState(containingLocation.index >= index
-					&& containingLocation.index <= index
-							+ containingLocation.containingNode.textContent()
-									.length());
-			DomNode cursor = containingLocation.containingNode;
+			Preconditions.checkState(containingLocation.getIndex() >= index
+					&& containingLocation.getIndex() <= index
+							+ containingLocation.getContainingNode()
+									.textContent().length());
+			DomNode cursor = containingLocation.getContainingNode();
 			do {
 				result.add(cursor);
 				cursor = cursor.parent();
@@ -531,7 +547,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			return result;
 		}
 
-		Location.Range getDocumentRange() {
+		public Location.Range getDocumentRange() {
 			ensureLookups();
 			DomNode documentElementNode = getDocumentElementNode();
 			Location start = byNode.get(documentElementNode);
@@ -557,9 +573,9 @@ public class DomDocument extends DomNode implements Cloneable {
 			/*
 			 * See Location for a visual explanation of traversal
 			 */
-			DomNode node = location.containingNode;
-			int targetTreeIndex = location.treeIndex;
-			int targetIndex = location.index;
+			DomNode node = location.getContainingNode();
+			int targetTreeIndex = location.getTreeIndex();
+			int targetIndex = location.getIndex();
 			boolean targetAfter = !location.after;
 			Location baseLocation = byNode.get(node);
 			Location parentLocation = byNode.get(node.parent());
@@ -567,12 +583,13 @@ public class DomDocument extends DomNode implements Cloneable {
 			if (direction == RelativeDirection.CURRENT_NODE_END) {
 				Preconditions.checkArgument(targetAfter);
 				Integer length = contentLengths.get(node);
-				targetIndex = baseLocation.index + length;
+				targetIndex = baseLocation.getIndex() + length;
 				return new Location(targetTreeIndex, targetIndex, targetAfter,
 						node, this);
 			}
 			if (node.isText()) {
-				int relativeIndex = location.index - baseLocation.index;
+				int relativeIndex = location.getIndex()
+						- baseLocation.getIndex();
 				switch (direction) {
 				case NEXT_LOCATION: {
 					if (relativeIndex == node.textContent().length()) {
@@ -588,7 +605,7 @@ public class DomDocument extends DomNode implements Cloneable {
 							nodeTraversalRequired = true;
 							break;
 						case TO_END_OF_NODE:
-							targetIndex = baseLocation.index
+							targetIndex = baseLocation.getIndex()
 									+ node.textContent().length();
 							break;
 						default:
@@ -625,11 +642,12 @@ public class DomDocument extends DomNode implements Cloneable {
 						if (nextSibling == null) {
 							// last, ascend
 							targetTreeIndex = parentLocation != null
-									? parentLocation.treeIndex
+									? parentLocation.getTreeIndex()
 									: 0;
 							targetAfter = true;
 						} else {
-							targetTreeIndex = byNode.get(nextSibling).treeIndex;
+							targetTreeIndex = byNode.get(nextSibling)
+									.getTreeIndex();
 						}
 					} else {
 						// descend or go to next sibling
@@ -639,10 +657,10 @@ public class DomDocument extends DomNode implements Cloneable {
 						if (next == null) {
 							// top, ascend
 							targetTreeIndex = parentLocation != null
-									? parentLocation.treeIndex
+									? parentLocation.getTreeIndex()
 									: 0;
 						} else {
-							targetTreeIndex = byNode.get(next).treeIndex;
+							targetTreeIndex = byNode.get(next).getTreeIndex();
 							targetAfter = false;
 						}
 					}
@@ -655,12 +673,12 @@ public class DomDocument extends DomNode implements Cloneable {
 						if (previousSibling == null) {
 							// last, ascend
 							targetTreeIndex = parentLocation != null
-									? parentLocation.treeIndex
+									? parentLocation.getTreeIndex()
 									: 0;
 							targetAfter = false;
 						} else {
-							targetTreeIndex = byNode
-									.get(previousSibling).treeIndex;
+							targetTreeIndex = byNode.get(previousSibling)
+									.getTreeIndex();
 						}
 					} else {
 						DomNode lastChild = node.children.lastNode();
@@ -668,7 +686,8 @@ public class DomDocument extends DomNode implements Cloneable {
 							// just the start of the current node
 						} else {
 							// end of the last child
-							targetTreeIndex = byNode.get(lastChild).treeIndex;
+							targetTreeIndex = byNode.get(lastChild)
+									.getTreeIndex();
 							targetAfter = true;
 						}
 					}
@@ -684,8 +703,8 @@ public class DomDocument extends DomNode implements Cloneable {
 						DomNode lastDescendant = node.relative()
 								.lastDescendant();
 						if (lastDescendant != null) {
-							targetTreeIndex = byNode
-									.get(lastDescendant).treeIndex;
+							targetTreeIndex = byNode.get(lastDescendant)
+									.getTreeIndex();
 						} else {
 							targetTreeIndex--;
 						}
@@ -703,8 +722,8 @@ public class DomDocument extends DomNode implements Cloneable {
 						DomNode lastDescendant = node.relative()
 								.lastDescendant();
 						if (lastDescendant != null) {
-							targetTreeIndex = byNode
-									.get(lastDescendant).treeIndex;
+							targetTreeIndex = byNode.get(lastDescendant)
+									.getTreeIndex();
 							targetTreeIndex++;
 						} else {
 							targetTreeIndex++;
@@ -719,7 +738,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			DomNode containingNode = byTreeIndex.get(targetTreeIndex);
 			if (targetIndex == -1) {
 				Location nodeLocation = containingNode.asLocation();
-				targetIndex = nodeLocation.index;
+				targetIndex = nodeLocation.getIndex();
 				if (targetAfter) {
 					if (containingNode.isText()
 							&& textTraversal == TextTraversal.TO_START_OF_NODE) {
@@ -734,8 +753,8 @@ public class DomDocument extends DomNode implements Cloneable {
 
 		@Override
 		public String getSubsequentText(Location location, int chars) {
-			return contents.substring(location.index,
-					Math.min(contents.length(), location.index + chars));
+			return contents.substring(location.getIndex(),
+					Math.min(contents.length(), location.getIndex() + chars));
 		}
 
 		private void invalidateLookups() {
@@ -748,8 +767,8 @@ public class DomDocument extends DomNode implements Cloneable {
 			if (node.isText()) {
 				return range.text();
 			}
-			if (range.start.containingNode == node
-					&& range.end.containingNode == node) {
+			if (range.start.getContainingNode() == node
+					&& range.end.getContainingNode() == node) {
 				String markup = node.fullToString();
 				// if namespaced, return full
 				// FIXME - selection - have a 'robust pretty' that uses a
@@ -761,28 +780,29 @@ public class DomDocument extends DomNode implements Cloneable {
 					return node.prettyToString();
 				}
 			} else {
-				if (!(domDoc() instanceof DocumentRange)) {
+				if (!(w3cDoc() instanceof DocumentRange)) {
 					Ax.sysLogHigh(
 							"truncating markup - DocumentRange not implemented for gwt docs");
-					return range.start.containingNode.fullToString();
+					return range.start.getContainingNode().fullToString();
 				} else {
-					org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) domDoc())
+					org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) w3cDoc())
 							.createRange();
-					if (range.start.containingNode.isText()) {
-						w3cRange.setStart(range.start.containingNode.node,
+					if (range.start.getContainingNode().isText()) {
+						w3cRange.setStart(range.start.getContainingNode().node,
 								range.start.indexInNode());
 					} else {
 						w3cRange.setStartBefore(
-								range.start.containingNode.node);
+								range.start.getContainingNode().node);
 					}
-					if (range.end.containingNode.isText()) {
-						w3cRange.setEnd(range.end.containingNode.node,
+					if (range.end.getContainingNode().isText()) {
+						w3cRange.setEnd(range.end.getContainingNode().node,
 								range.end.indexInNode());
 					} else {
-						w3cRange.setEndAfter(range.end.containingNode.node);
+						w3cRange.setEndAfter(
+								range.end.getContainingNode().node);
 					}
 					DocumentFragment fragment = w3cRange.cloneContents();
-					Element fragmentContainer = domDoc()
+					Element fragmentContainer = w3cDoc()
 							.createElement("fragment-container");
 					fragmentContainer.appendChild(fragment);
 					return DomNode.from(fragmentContainer).fullToString();
@@ -793,7 +813,8 @@ public class DomDocument extends DomNode implements Cloneable {
 		@Override
 		public String textContent(Location.Range range) {
 			ensureLookups();
-			return contents.substring(range.start.index, range.end.index);
+			return contents.substring(range.start.getIndex(),
+					range.end.getIndex());
 		}
 
 		@Override
@@ -818,6 +839,17 @@ public class DomDocument extends DomNode implements Cloneable {
 		@Override
 		public void invalidate() {
 			invalidateLookups();
+		}
+
+		@Override
+		public int getDocumentMutationPosition() {
+			return 0;
+		}
+
+		@Override
+		public void ensureCurrent(Location location) {
+			Preconditions.checkArgument(
+					location.documentMutationPosition == getDocumentMutationPosition());
 		}
 	}
 

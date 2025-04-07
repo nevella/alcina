@@ -128,13 +128,13 @@ public class SelectionMarkupFull extends SelectionMarkup {
 				List<IntPair> pairs = null;
 				if (rangeSelectionSequence.fullDocument
 						|| containingNode == null
-						|| !containingNode.isAttachedToDocument()
-						|| !contentsNode.asRange()
-								.contains(containingNode.asRange())) {
+						|| !containingNode.isAttached() || !contentsNode
+								.asRange().contains(containingNode.asRange())) {
 					pairs = List.of();
 				} else {
 					IntPair pair = containingNode.asRange().toIntPair();
-					pair = pair.shiftRight(-contentsNode.asLocation().index);
+					pair = pair
+							.shiftRight(-contentsNode.asLocation().getIndex());
 					pairs = List.of(pair);
 				}
 				markupHighlights.updateRanges(pairs);
@@ -161,7 +161,8 @@ public class SelectionMarkupFull extends SelectionMarkup {
 			Range elementRange = source.asDomNode().asRange();
 			VariantHighlights highlights = query.input ? input : output;
 			Range containingRange = container.asDomNode().asRange();
-			int originalDocOffset = highlights.contentsNode.asLocation().index;
+			int originalDocOffset = highlights.contentsNode.asLocation()
+					.getIndex();
 			int originalDocIndex = elementRange.toIntPair().i1
 					- containingRange.toIntPair().i1 + originalDocOffset;
 			List<WithRange> matching = traversal

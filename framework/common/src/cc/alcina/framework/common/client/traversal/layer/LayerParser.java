@@ -117,7 +117,7 @@ public class LayerParser {
 		public ParserState parserState;
 
 		public DomNode domNode() {
-			return getLocation().containingNode;
+			return getLocation().getContainingNode();
 		}
 
 		/*
@@ -232,7 +232,7 @@ public class LayerParser {
 		}
 
 		public int getOffsetInInput() {
-			return location.index - input.start.index;
+			return location.getIndex() - input.start.getIndex();
 		}
 
 		public MeasureSelection getSelection() {
@@ -270,22 +270,22 @@ public class LayerParser {
 			}
 			return inputSubSequences.computeIfAbsent(range,
 					r -> baseContent.subSequence(
-							r.start.index - input.start.index,
-							r.end.index - input.start.index));
+							r.start.getIndex() - input.start.getIndex(),
+							r.end.getIndex() - input.start.getIndex()));
 		}
 
 		public boolean isAtEnd(Measure match) {
 			if (match == null) {
 				return false;
 			}
-			return match.end.index == input.end.index;
+			return match.end.getIndex() == input.end.getIndex();
 		}
 
 		Measure match(BranchToken token) {
 			boolean atEndBoundary = forwardsTraversalOrder ? location.after
 					: !location.after;
 			// text traversal is only at start location
-			if (!location.containingNode.isText()) {
+			if (!location.getContainingNode().isText()) {
 				switch (token.matchesBoundary()) {
 				case ANY:
 					break;
@@ -315,7 +315,7 @@ public class LayerParser {
 		}
 
 		public DomNode node() {
-			return location.containingNode;
+			return location.getContainingNode();
 		}
 
 		void onBeforeTokenMatch() {
@@ -367,7 +367,7 @@ public class LayerParser {
 				+ "\nMatches: %s",
 				Ax.ntrim(Ax.trim(input.toString(), 50)), getOffsetInInput(),
 				Ax.ntrim(Ax.trim(inputContent().toString(), 50)), location,
-				Ax.ntrim(Ax.trim(location.containingNode.toString(), 50)), matches);
+				Ax.ntrim(Ax.trim(location.getContainingNode().toString(), 50)), matches);
 			// @formatter:on
 		}
 

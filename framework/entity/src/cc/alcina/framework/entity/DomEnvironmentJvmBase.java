@@ -63,7 +63,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 
 	@Override
 	public String log(DomNode domNode, boolean pretty) {
-		if (isGwtDocument(domNode.document.domDoc())) {
+		if (isGwtDocument(domNode.document.w3cDoc())) {
 			String markup = getGwtNodeMarkup(domNode, pretty, true);
 			Io.log().toFile(markup);
 			return "ok";
@@ -113,7 +113,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 
 	@Override
 	public String prettyToString(DomNode xmlNode) {
-		if (isGwtDocument(xmlNode.document.domDoc())) {
+		if (isGwtDocument(xmlNode.document.w3cDoc())) {
 			return getGwtNodeMarkup(xmlNode, true, true);
 		} else {
 			Node node = xmlNode.w3cNode();
@@ -163,7 +163,7 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 
 	@Override
 	public String toHtml(DomDocument doc, boolean pretty) {
-		if (isGwtDocument(doc.domDoc())) {
+		if (isGwtDocument(doc.w3cDoc())) {
 			return getGwtNodeMarkup(doc, pretty, false);
 		} else {
 			String xml = pretty ? doc.prettyToString() : doc.fullToString();

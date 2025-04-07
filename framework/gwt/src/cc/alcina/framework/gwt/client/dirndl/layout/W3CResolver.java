@@ -29,7 +29,7 @@ public class W3CResolver extends ContextResolver {
 			}
 			domNode = document.getDocumentElementNode();
 		} else {
-			Element element = document.domDoc().createElement(tagName);
+			Element element = document.w3cDoc().createElement(tagName);
 			domNode = document.nodeFor(element);
 		}
 		String cssClass = layoutNode.directed.className();
@@ -46,7 +46,7 @@ public class W3CResolver extends ContextResolver {
 		}
 		switch (nodeType) {
 		case PROCESSING_INSTRUCTION:
-			ProcessingInstruction processingInstruction = document.domDoc()
+			ProcessingInstruction processingInstruction = document.w3cDoc()
 					.createProcessingInstruction(tagName, contents);
 			layoutNode.rendered = new RenderedW3cNode(processingInstruction);
 			break;
@@ -60,7 +60,7 @@ public class W3CResolver extends ContextResolver {
 		if (layoutNode.rendered != null) {
 			return;
 		}
-		Text text = document.domDoc().createTextNode(contents);
+		Text text = document.w3cDoc().createTextNode(contents);
 		layoutNode.rendered = new RenderedW3cNode(text);
 	}
 

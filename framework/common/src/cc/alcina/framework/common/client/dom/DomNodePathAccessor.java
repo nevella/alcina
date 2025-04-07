@@ -62,7 +62,7 @@ public class DomNodePathAccessor implements PathAccessor {
 		if (value instanceof Collection) {
 			Collection<DomNode> values = (Collection<DomNode>) value;
 			values = values.stream().map(
-					v -> node.document.nodeFor(node.domDoc().adoptNode(v.node)))
+					v -> node.document.nodeFor(node.w3cDoc().adoptNode(v.node)))
 					.collect(Collectors.toList());
 			leaf.children.append(values);
 		} else {

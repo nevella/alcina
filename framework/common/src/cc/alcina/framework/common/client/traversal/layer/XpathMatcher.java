@@ -44,7 +44,7 @@ public class XpathMatcher {
 		Measure match() {
 			if (matches == null) {
 				matches = new LinkedHashMap<>();
-				DomNode node = parserState.input.start.containingNode;
+				DomNode node = parserState.input.start.getContainingNode();
 				List<DomNode> nodes = node.xpath(xpathQuery).nodes();
 				nodes.forEach(n -> {
 					Range range = n.asRange();

@@ -40,8 +40,8 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  * damaged
  * <li>Scan the children of all 'damaged' elements. For each child:
  * <ul>
- * <li>Ensure the remote child's attachId (this <strike>is</strike> could be
- * optimised in a single .js call in devmode)
+ * <li>Ensure the remote child's attachId (this is optimised in a single .js
+ * call in devmode).
  * <li>If the child has a non-discarded local correspondent, preserve it.
  * <li>If not, regenerate the child node (and subtree)
  * </ul>
@@ -55,7 +55,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  * <p>
  * A correctness proof would use induction, and posit the worst case (B is
  * removed from A, C (child of B) is later reattached after unknown mutations,
- * does the process fully resync C)
+ * does the process fully resync C?)
  * 
  */
 class SyncMutations2 {

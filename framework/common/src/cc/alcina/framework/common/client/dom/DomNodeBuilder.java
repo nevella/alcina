@@ -79,14 +79,14 @@ public class DomNodeBuilder {
 			if (text == null) {
 				throw new RuntimeException("no text");
 			}
-			node = doc().domDoc().createProcessingInstruction(tag, text);
+			node = doc().w3cDoc().createProcessingInstruction(tag, text);
 		} else if (cdata) {
 			if (text == null) {
 				throw new RuntimeException("no text");
 			}
-			node = doc().domDoc().createCDATASection(text);
+			node = doc().w3cDoc().createCDATASection(text);
 		} else if (tag != null) {
-			node = doc().domDoc().createElement(tag);
+			node = doc().w3cDoc().createElement(tag);
 			if (text != null) {
 				if (LooseContext.is(CONTEXT_TEXT_UNESCAPED)
 						&& text.startsWith(CommonUtils.XML_PI)) {
@@ -103,7 +103,7 @@ public class DomNodeBuilder {
 				}
 			});
 		} else {
-			node = doc().domDoc().createTextNode(text);
+			node = doc().w3cDoc().createTextNode(text);
 		}
 		builtNode = doc().nodeFor(node);
 		return builtNode;

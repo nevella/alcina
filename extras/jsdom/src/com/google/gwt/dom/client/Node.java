@@ -16,7 +16,6 @@
 package com.google.gwt.dom.client;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.w3c.dom.DOMException;
@@ -44,18 +43,16 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  * children, and then synced to the "real" DOM tree modelled by their
  * {@link NodeRemote} children
  * <p>
- * Nodes have three boolean states:
+ * Nodes have two boolean states:
  * </p>
  * <ul>
  * <li>{@link #attached} - attached to the document element. This is stored in a
  * boolean field on {@link Node} and corresponds to browser DOM isConnected()
- * <li>{@link #isSynced()} - synced to the remote DOM, modelled by the presence
- * of a value in the remote field of the contract type
  * <li>{@link #isPending()} - ({@link Element} only) synced to the remote DOM,
  * but all children are *not* and will be synced at the end of the current event
  * loop cycle via (effectively) {@link Element#setInnerHTML(String)}. This is
  * modelled by the presence of the element in the {@link LocalDom#pendingSync}
- * list
+ * list (and is the main reason that the local/remote dom model is performant).
  * </ul>
  * <p>
  * For sync, note that {@link Element} has a {@link Style} child which has the
@@ -111,6 +108,12 @@ public abstract class Node
 	 */
 	int attachId;
 
+	/**
+	 * Use a direct reference (rather than lookup) for GWT dom - this allows (in
+	 * particular) tidy location mutation tracking
+	 */
+	transient DomNode domNode;
+
 	protected Node() {
 	}
 
@@ -139,7 +142,10 @@ public abstract class Node
 	}
 
 	public DomNode asDomNode() {
-		return DomNode.from(this);
+		if (domNode == null) {
+			domNode = DomNode.fromGwtNode(this);
+		}
+		return domNode;
 	}
 
 	@Override

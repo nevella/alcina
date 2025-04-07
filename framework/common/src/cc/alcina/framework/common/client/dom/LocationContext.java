@@ -12,14 +12,14 @@ public interface LocationContext {
 			return 0;
 		}
 		{
-			int cmp = l1.index - l2.index;
+			int cmp = l1.getIndex() - l2.getIndex();
 			if (cmp != 0) {
 				return cmp;
 			}
 		}
 		// if containingNode is not search, this is a search (rather than a
 		// comparison of fully-populated Location instances)
-		if (l1.containingNode == null || l2.containingNode == null) {
+		if (l1.getContainingNode() == null || l2.getContainingNode() == null) {
 			{
 				// for a given character, end is always after start (at any
 				// depth)
@@ -32,8 +32,8 @@ public interface LocationContext {
 			}
 			return 0;
 		}
-		DomNode n1 = l1.containingNode;
-		DomNode n2 = l2.containingNode;
+		DomNode n1 = l1.getContainingNode();
+		DomNode n2 = l2.getContainingNode();
 		if (n1.isAncestorOf(n2)) {
 			{
 				// for a given character, end is always after start (at any
@@ -58,12 +58,12 @@ public interface LocationContext {
 			return -compare(l2, l1);
 		} else {
 			// no ancestry
-			return l1.treeIndex - l2.treeIndex;
+			return l1.getTreeIndex() - l2.getTreeIndex();
 		}
 	}
 
 	default int compareIndexOnly(Location l1, Location l2) {
-		return l1.index - l2.index;
+		return l1.getIndex() - l2.getIndex();
 	}
 
 	Location createTextRelativeLocation(Location location, int offset,
@@ -93,4 +93,14 @@ public interface LocationContext {
 
 	// FIXME - FN - remove once framework complete
 	void invalidate();
+
+	int getDocumentMutationPosition();
+
+	Location asLocation(DomNode domNode);
+
+	Range asRange(DomNode domNode);
+
+	Range getDocumentRange();
+
+	void ensureCurrent(Location location);
 }

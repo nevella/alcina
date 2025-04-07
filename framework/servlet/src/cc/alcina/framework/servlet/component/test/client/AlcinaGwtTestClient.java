@@ -8,6 +8,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.user.client.ui.RootPanel;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.Client;
@@ -37,22 +38,18 @@ public class AlcinaGwtTestClient implements EntryPoint {
 		// new TestJsoLists().run();
 		// new TestSyncMutations2().run();
 		// new TestSyncMutations2a().run();
-		new TestChubbyTree().run();
+		// new TestChubbyTree().run();
+		new TestLocationMutation().run();
 		ClientUtils.consoleInfo("[AlcinaGwtTestClient] Tests passed");
 	}
 
 	static class Utils {
 		static void clearRootPanel() {
 			RootPanel.get().clear();
-			RootPanel.get().getElement().streamChildren().filter(n -> {
-				switch (n.getNodeName().toLowerCase()) {
-				case "iframe":
-				case "script":
-					return false;
-				default:
-					return true;
-				}
-			}).collect(Collectors.toList()).forEach(Node::removeFromParent);
+			RootPanel.get().getElement().streamChildren().filter(
+					n -> !DomNode.from(n).tagIsOneOf("iframe", "script"))
+					.collect(Collectors.toList())
+					.forEach(Node::removeFromParent);
 		}
 	}
 }
