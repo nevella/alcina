@@ -159,11 +159,7 @@ class ClientExecutionQueue implements Runnable {
 						handleFromClientMessageOnThread(
 								dispatchable.fromClientMessage);
 					} else {
-						try {
-							dispatchable.runnable.run();
-						} catch (Exception e) {
-							onLoopException(e);
-						}
+						runCatchLoopException(dispatchable.runnable);
 					}
 				});
 				dispatched = true;
@@ -194,6 +190,14 @@ class ClientExecutionQueue implements Runnable {
 			} catch (InterruptedException e) {
 				Ax.simpleExceptionOut(e);
 			}
+		}
+	}
+
+	void runCatchLoopException(Runnable runnable) {
+		try {
+			runnable.run();
+		} catch (Exception e) {
+			onLoopException(e);
 		}
 	}
 
