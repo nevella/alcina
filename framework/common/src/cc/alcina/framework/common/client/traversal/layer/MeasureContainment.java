@@ -34,18 +34,13 @@ public class MeasureContainment {
 
 	public List<Overlap> overlaps = new ArrayList<>();
 
-	List<MeasureSelection> openSelections = new LinkedList<>();
-
 	Containment root;
 
 	List<MeasureSelection> measures;
 
 	public MeasureContainment(Measure.Token.Order order,
 			Collection<? extends MeasureSelection> selections) {
-		MeasureTreeComparator comparator = new MeasureTreeComparator(
-				// this will also remove overlapping text nodes, so we
-				// need to relax a comparator constraint
-				order.copy().withIgnoreNoPossibleChildren());
+		MeasureTreeComparator comparator = new MeasureTreeComparator(order);
 		measures = selections.stream().sorted(comparator)
 				.collect(Collectors.toList());
 		ContainmentComputation computation = new ContainmentComputation(

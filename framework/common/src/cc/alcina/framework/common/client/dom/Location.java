@@ -10,6 +10,7 @@ import org.w3c.dom.Text;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -388,6 +389,18 @@ public class Location implements Comparable<Location> {
 		}
 	}
 
+	public Location toStartLocation() {
+		if (isAtNodeEnd() && isTextNode()) {
+			return new Location(treeIndex + 1, index, false, null,
+					locationContext);
+		} else if (after) {
+			return new Location(treeIndex + 1, index, false, null,
+					locationContext);
+		} else {
+			return this;
+		}
+	}
+
 	@Override
 	public String toString() {
 		String nodeData = null;
@@ -743,5 +756,21 @@ public class Location implements Comparable<Location> {
 		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE, TO_END_OF_NODE,
 		// will throw if traversing a text node
 		UNDEFINED
+	}
+
+	/**
+	 * Returns a location with the index/after of this node, but the treeIndex
+	 * of the containing location. Throws an IllegalArgumentException if
+	 * containingLocation.node does not contain this location
+	 * 
+	 * @param containingLocation
+	 *            the containing location.
+	 * @return the computed index
+	 */
+	public Location toContainingTreeIndex(Location containingLocation) {
+		Preconditions.checkArgument(
+				containingLocation.containingNode.asRange().contains(this));
+		return new Location(containingLocation.treeIndex, index, after,
+				containingLocation.containingNode, locationContext);
 	}
 }
