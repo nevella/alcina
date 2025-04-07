@@ -84,7 +84,11 @@ DomDocument.from(
  * DOM classes. There's also a fluent node builder - DomNode.builder() - and
  * other manipulation commands such as DomNode.strip()
  *
- *
+ * <p>
+ * Note that, if the underlying DOM Document is a GWT dom document, there are
+ * some type-specific various optimisations and behaviour extensions (such as
+ * field references from the DOM Node to the DomNode wrapper, and direct
+ * mutation notifications).
  *
  */
 public class DomNode {
@@ -95,6 +99,9 @@ public class DomNode {
 			.synchronizedMap(new LinkedHashMap<>());
 
 	public static DomNode from(Node node) {
+		if (node instanceof com.google.gwt.dom.client.Node) {
+			return ((com.google.gwt.dom.client.Node) node).asDomNode();
+		}
 		Document document = null;
 		DomDocument doc = null;
 		if (node.getNodeType() == Node.DOCUMENT_NODE) {
@@ -103,6 +110,20 @@ public class DomNode {
 			document = node.getOwnerDocument();
 		}
 		return DomDocument.from(document).nodeFor(node);
+	}
+
+	public static DomNode fromGwtNode(com.google.gwt.dom.client.Node gwtNode) {
+		com.google.gwt.dom.client.Document gwtDoc = null;
+		DomDocument domDoc = null;
+		if (gwtNode.getNodeType() == Node.DOCUMENT_NODE) {
+			gwtDoc = (com.google.gwt.dom.client.Document) gwtNode;
+			domDoc = DomDocument.from(gwtDoc);
+			return domDoc;
+		} else {
+			gwtDoc = gwtNode.getOwnerDocument();
+			domDoc = (DomDocument) fromGwtNode(gwtDoc);
+			return new DomNode(gwtNode, domDoc);
+		}
 	}
 
 	protected Node node;
@@ -115,9 +136,18 @@ public class DomNode {
 
 	private DomNodeXpath xpath;
 
-	private transient DomNodeReadonlyLookup lookup;
+	private DomNodeReadonlyLookup lookup;
 
-	private List<Location> locations = null;
+	Locations locations;
+
+	/*
+	 * Support class to handle location operations
+	 */
+	class Locations {
+		Location nodeLocation;
+
+		List<Location> offsetLocations = null;
+	}
 
 	public DomNode(DomNode from) {
 		this(from.node, from.document);
@@ -171,11 +201,11 @@ public class DomNode {
 
 	public Location asLocation() {
 		if (locations != null) {
-			return locations.get(0);
+			return locations.nodeLocation;
 		}
 		Location location = document.locations().asLocation(this);
-		locations = new ArrayList<>();
-		locations.add(location);
+		locations = new Locations();
+		locations.nodeLocation = location;
 		return location;
 	}
 
@@ -282,7 +312,7 @@ public class DomNode {
 		return stream(false);
 	}
 
-	protected Document domDoc() {
+	protected Document w3cDoc() {
 		return node.getNodeType() == Node.DOCUMENT_NODE ? (Document) node
 				: node.getOwnerDocument();
 	}
@@ -612,7 +642,7 @@ public class DomNode {
 	}
 
 	public DocumentFragment toFragment() {
-		DocumentFragment fragment = domDoc().createDocumentFragment();
+		DocumentFragment fragment = w3cDoc().createDocumentFragment();
 		fragment.appendChild(w3cNode());
 		return fragment;
 	}
@@ -868,7 +898,7 @@ public class DomNode {
 		}
 
 		public DomNode importAsFirstChild(DomNode n, boolean deep) {
-			Node importNode = document.domDoc().importNode(n.node, deep);
+			Node importNode = document.w3cDoc().importNode(n.node, deep);
 			DomNode imported = document.nodeFor(importNode);
 			insertAsFirstChild(imported);
 			return imported;
@@ -879,7 +909,7 @@ public class DomNode {
 		}
 
 		public DomNode importFrom(DomNode n, boolean deep) {
-			Node importNode = document.domDoc().importNode(n.node, deep);
+			Node importNode = document.w3cDoc().importNode(n.node, deep);
 			DomNode imported = document.nodeFor(importNode);
 			append(imported);
 			return imported;
@@ -1463,7 +1493,7 @@ public class DomNode {
 
 		public DomNode replaceWithTag(String tag) {
 			DomNode wrapper = document
-					.nodeFor(document.domDoc().createElement(tag));
+					.nodeFor(document.w3cDoc().createElement(tag));
 			return replaceWithMoveContents(wrapper);
 		}
 
@@ -1480,7 +1510,7 @@ public class DomNode {
 
 		public DomNode wrap(String tag) {
 			DomNode wrapper = document
-					.nodeFor(document.domDoc().createElement(tag));
+					.nodeFor(document.w3cDoc().createElement(tag));
 			replaceWith(wrapper);
 			wrapper.children.append(DomNode.this);
 			wrapper.copyAttributesFrom(DomNode.this);
@@ -1662,8 +1692,8 @@ public class DomNode {
 		private boolean currentIterated;
 
 		public DomNodeTree() {
-			tw = ((DocumentTraversal) document.domDoc()).createTreeWalker(
-					document.domDoc(), NodeFilter.SHOW_ALL, null, true);
+			tw = ((DocumentTraversal) document.w3cDoc()).createTreeWalker(
+					document.w3cDoc(), NodeFilter.SHOW_ALL, null, true);
 			tw.setCurrentNode(node);
 		}
 
@@ -1947,7 +1977,7 @@ public class DomNode {
 		}
 
 		private Range createRange() {
-			Range range = ((DocumentRange) document.domDoc()).createRange();
+			Range range = ((DocumentRange) document.w3cDoc()).createRange();
 			if (startAfterThis) {
 				range.setStartAfter(node);
 			} else {
@@ -2004,7 +2034,7 @@ public class DomNode {
 		}
 
 		public DomNode toWrappedNode(String tag, boolean clone) {
-			Element wrapper = document.domDoc().createElement(tag);
+			Element wrapper = document.w3cDoc().createElement(tag);
 			Range range = createRange();
 			DocumentFragment frag = range.cloneContents();
 			range.detach();

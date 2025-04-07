@@ -66,9 +66,9 @@ public class DomContextServlet extends DomContext {
 		/*
 		 * critical - otherwise very leak-possible
 		 */
-		if (!xmlDocs().containsKey(doc.domDoc())) {
+		if (!xmlDocs().containsKey(doc.w3cDoc())) {
 			xmlDocs().clear();
-			xmlDocs().put(doc.domDoc(), doc);
+			xmlDocs().put(doc.w3cDoc(), doc);
 		}
 	}
 

@@ -101,4 +101,6 @@ public interface LocationContext {
 	Range asRange(DomNode domNode);
 
 	Range getDocumentRange();
+
+	void ensureCurrent(Location location);
 }

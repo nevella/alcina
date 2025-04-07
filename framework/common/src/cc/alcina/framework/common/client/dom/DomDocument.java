@@ -39,6 +39,16 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.Topic;
 
+/**
+ * <p>
+ * This class corresponds to Document in the Alcina fluent DOM (DomNode)
+ * implementation
+ * <ul>
+ * <li>Read-only: the default mode for a DomDocument. It's an optimised mode
+ * where locations are assumed non-mutable. No post-initialisation dom
+ * modifications are permitted (impl; WIP)
+ * </ul>
+ */
 public class DomDocument extends DomNode implements Cloneable {
 	// for server-side code to link w3c docs to the DomDocument
 	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
@@ -146,8 +156,8 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	@Override
-	public Document domDoc() {
-		return super.domDoc();
+	public Document w3cDoc() {
+		return super.w3cDoc();
 	}
 
 	private void ensureByLookups() {
@@ -163,7 +173,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public DomNode getDocumentElementNode() {
 		return documentElementDomNode != null ? documentElementDomNode
-				: nodeFor(domDoc().getDocumentElement());
+				: nodeFor(w3cDoc().getDocumentElement());
 	}
 
 	public Element getElementById(String elementId) {
@@ -230,9 +240,12 @@ public class DomDocument extends DomNode implements Cloneable {
 		return locations;
 	}
 
-	public DomNode nodeFor(Node domNode) {
-		return nodes.computeIfAbsent(domNode,
-				dn -> dn == null ? null : new DomNode(domNode, this));
+	public DomNode nodeFor(Node w3cNode) {
+		if (w3cNode instanceof com.google.gwt.dom.client.Node) {
+			return ((com.google.gwt.dom.client.Node) w3cNode).asDomNode();
+		}
+		return nodes.computeIfAbsent(w3cNode,
+				dn -> dn == null ? null : new DomNode(w3cNode, this));
 	}
 
 	public void normaliseWhitespace() {
@@ -248,7 +261,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	@Override
 	public String prettyToString() {
 		try {
-			return DomEnvironment.get().prettyPrint(domDoc());
+			return DomEnvironment.get().prettyPrint(w3cDoc());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -271,7 +284,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	public DomNode root() {
-		return nodeFor(domDoc().getDocumentElement());
+		return nodeFor(w3cDoc().getDocumentElement());
 	}
 
 	public void setReadonly(boolean readonly) {
@@ -767,12 +780,12 @@ public class DomDocument extends DomNode implements Cloneable {
 					return node.prettyToString();
 				}
 			} else {
-				if (!(domDoc() instanceof DocumentRange)) {
+				if (!(w3cDoc() instanceof DocumentRange)) {
 					Ax.sysLogHigh(
 							"truncating markup - DocumentRange not implemented for gwt docs");
 					return range.start.getContainingNode().fullToString();
 				} else {
-					org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) domDoc())
+					org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) w3cDoc())
 							.createRange();
 					if (range.start.getContainingNode().isText()) {
 						w3cRange.setStart(range.start.getContainingNode().node,
@@ -789,7 +802,7 @@ public class DomDocument extends DomNode implements Cloneable {
 								range.end.getContainingNode().node);
 					}
 					DocumentFragment fragment = w3cRange.cloneContents();
-					Element fragmentContainer = domDoc()
+					Element fragmentContainer = w3cDoc()
 							.createElement("fragment-container");
 					fragmentContainer.appendChild(fragment);
 					return DomNode.from(fragmentContainer).fullToString();
@@ -831,6 +844,12 @@ public class DomDocument extends DomNode implements Cloneable {
 		@Override
 		public int getDocumentMutationPosition() {
 			return 0;
+		}
+
+		@Override
+		public void ensureCurrent(Location location) {
+			Preconditions.checkArgument(
+					location.documentMutationPosition == getDocumentMutationPosition());
 		}
 	}
 

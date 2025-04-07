@@ -182,7 +182,7 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 
 	public String toXml() {
 		return XmlUtils.streamXML(
-				outDoc.domDoc().getDocumentElement().getFirstChild());
+				outDoc.w3cDoc().getDocumentElement().getFirstChild());
 	}
 
 	public void writeXml(String xmlString) {

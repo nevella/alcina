@@ -701,7 +701,7 @@ public class XmlUtils {
 						n -> n.setText(trimAndNormaliseWrappingNewlines(
 								n.parent().nameIs("xsl:text"),
 								n.textContent())));
-				out = new StringBuffer(streamXML(doc.domDoc()));
+				out = new StringBuffer(streamXML(doc.w3cDoc()));
 			}
 			return new StreamSource(
 					Io.read().string(out.toString()).asInputStream());
@@ -1875,7 +1875,8 @@ public class XmlUtils {
 		}
 		DomDocument doc = DomDocument.from(Ax.format("<div>%s</div>", string));
 		doc.setReadonly(true);
-		if (doc.getDocumentElementNode().asRange().end.getIndex() < maxHlLength) {
+		if (doc.getDocumentElementNode().asRange().end
+				.getIndex() < maxHlLength) {
 			return string;
 		}
 		Location clip = doc.getDocumentElementNode().asLocation()

@@ -140,7 +140,7 @@ public class Location implements Comparable<Location> {
 
 	private transient LocationContext locationContext;
 
-	private transient int documentMutationPosition;
+	transient int documentMutationPosition;
 
 	public Location(int treeIndex, int index, boolean after) {
 		this(treeIndex, index, after, null, null);
@@ -264,7 +264,7 @@ public class Location implements Comparable<Location> {
 	}
 
 	public int getIndex() {
-		ensureCurrent();
+		locationContext.ensureCurrent(this);
 		return index;
 	}
 
@@ -286,7 +286,7 @@ public class Location implements Comparable<Location> {
 	}
 
 	public int getTreeIndex() {
-		ensureCurrent();
+		locationContext.ensureCurrent(this);
 		return treeIndex;
 	}
 
@@ -743,8 +743,5 @@ public class Location implements Comparable<Location> {
 		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE, TO_END_OF_NODE,
 		// will throw if traversing a text node
 		UNDEFINED
-	}
-
-	private void ensureCurrent() {
 	}
 }
