@@ -406,6 +406,7 @@ public class DomainStore implements IDomainStore {
 
 	public void close() {
 		loader.close();
+		appShutdown();
 		deregistered = true;
 	}
 
