@@ -265,6 +265,10 @@ public class Measure extends Location.Range {
 		 */
 		public interface CheckDescendantContainment extends Token {
 			boolean allowDescendantContainment(Token otherToken);
+
+			default boolean allowDescendantContainment(Measure measure) {
+				return allowDescendantContainment(measure.token);
+			}
 		}
 
 		/*
