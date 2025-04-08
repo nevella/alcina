@@ -18,16 +18,30 @@ public class MeasureTreeComparator implements Comparator<MeasureSelection> {
 		if (o1 == o2) {
 			return 0;
 		}
+		/*
+		 * Compare only text index. The reason for this is that the Token.Order
+		 * has a higher logical precedence than source tag order - particularly
+		 * when truncation is afoot
+		 */
 		{
-			int cmp = o1.get().compareTo(o2.get(), false);
+			int cmp = o1.get().compareTo(o2.get(), true);
 			if (cmp != 0) {
 				return cmp;
 			}
 		}
-		// order measures with range equality based on akbn
+		// order measures with index equality based on akbn
 		// containment logic
 		{
 			int cmp = order.compare(o1.get().token, o2.get().token);
+			if (cmp != 0) {
+				return cmp;
+			}
+		}
+		/*
+		 * compare tree index
+		 */
+		{
+			int cmp = o1.get().compareTo(o2.get(), false);
 			if (cmp != 0) {
 				return cmp;
 			}
