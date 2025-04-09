@@ -4,16 +4,20 @@ package cc.alcina.framework.common.client.util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
@@ -31,23 +35,68 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 @Registrations({ @Registration(JaxbContextRegistration.class), })
 public final class IntPair implements Comparable<IntPair>, Serializable,
 		Iterable<Integer>, TreeSerializable {
-	public static List<IntPair> asRangeList(List<Integer> ints) {
-		int start = -1;
-		int cursor = -1;
-		List<IntPair> result = new ArrayList<>();
-		for (Integer integer : ints) {
-			if (start == -1) {
-				start = integer;
-			} else {
-				if (cursor < integer - 1) {
-					result.add(new IntPair(start, cursor));
-					start = integer;
+	/*
+	 * later before earler; smaller before larger; (which handles overlaps) -
+	 * this is a superset of contained is before containing
+	 */
+	public static class MostSpecificComparator implements Comparator<IntPair> {
+		public static final transient MostSpecificComparator INSTANCE = new MostSpecificComparator();
+
+		@Override
+		public int compare(IntPair o1, IntPair o2) {
+			{
+				int cmp = o1.i1 - o2.i1;
+				if (cmp != 0) {
+					return cmp > 0 ? -1 : 1;
 				}
 			}
-			cursor = integer;
+			{
+				int cmp = o1.i2 - o2.i2;
+				if (cmp != 0) {
+					return cmp < 0 ? -1 : 1;
+				}
+			}
+			return 0;
 		}
-		if (start != -1) {
-			result.add(new IntPair(start, cursor));
+	}
+
+	public static class IntPairComparator implements Comparator<IntPair> {
+		private boolean xAxis;
+
+		public IntPairComparator(boolean xAxis) {
+			this.xAxis = xAxis;
+		}
+
+		@Override
+		public int compare(IntPair o1, IntPair o2) {
+			if (xAxis) {
+				return o1.i1 - o2.i1;
+			} else {
+				return o1.i2 - o2.i2;
+			}
+		}
+	}
+
+	public static enum IntPairRelation {
+		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
+		CONTAINS_END
+	}
+
+	/*
+	 * If the ints are out-of-order, they will be ignored
+	 */
+	public static List<IntPair> asRangeList(List<Integer> ints) {
+		int start = -1;
+		List<IntPair> result = new ArrayList<>();
+		for (Integer cursor : ints) {
+			if (start == -1) {
+				start = cursor;
+			} else {
+				if (start < cursor) {
+					result.add(new IntPair(start, cursor));
+					start = cursor;
+				}
+			}
 		}
 		return result;
 	}
@@ -127,6 +176,27 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 		return null;
 	}
 
+	public static List<IntPair> asContinuousRangeList(IntPair intPair,
+			List<IntPair> truncateTos) {
+		TreeSet<Integer> points = new TreeSet<>();
+		Stream.concat(Stream.of(intPair), truncateTos.stream())
+				.forEach(pair -> {
+					points.add(pair.i1);
+					points.add(pair.i2);
+				});
+		return asRangeList(points.stream().toList());
+	}
+
+	public static boolean sameStartAndAtLeastOnePoint(IntPair pair1,
+			IntPair pair2) {
+		return (pair1.i1 == pair2.i1) && (pair1.isPoint() || pair2.isPoint());
+	}
+
+	public static boolean sameEndAndAtLeastOnePoint(IntPair pair1,
+			IntPair pair2) {
+		return (pair1.i2 == pair2.i2) && (pair1.isPoint() || pair2.isPoint());
+	}
+
 	public int i1;
 
 	public int i2;
@@ -183,31 +253,6 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 	public int compareTo(IntPair ip) {
 		return i1 < ip.i1 ? -1
 				: i1 > ip.i1 ? 1 : i2 < ip.i2 ? -1 : i2 > ip.i2 ? 1 : 0;
-	}
-
-	/*
-	 * later before earler; smaller before larger; (which handles overlaps) -
-	 * this is a superset of contained is before containing
-	 */
-	public static class MostSpecificComparator implements Comparator<IntPair> {
-		public static final transient MostSpecificComparator INSTANCE = new MostSpecificComparator();
-
-		@Override
-		public int compare(IntPair o1, IntPair o2) {
-			{
-				int cmp = o1.i1 - o2.i1;
-				if (cmp != 0) {
-					return cmp > 0 ? -1 : 1;
-				}
-			}
-			{
-				int cmp = o1.i2 - o2.i2;
-				if (cmp != 0) {
-					return cmp < 0 ? -1 : 1;
-				}
-			}
-			return 0;
-		}
 	}
 
 	/**
@@ -430,28 +475,6 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 			return null;
 		}
 		return new IntPair(Math.min(i1, other.i1), Math.max(i2, other.i2));
-	}
-
-	public static class IntPairComparator implements Comparator<IntPair> {
-		private boolean xAxis;
-
-		public IntPairComparator(boolean xAxis) {
-			this.xAxis = xAxis;
-		}
-
-		@Override
-		public int compare(IntPair o1, IntPair o2) {
-			if (xAxis) {
-				return o1.i1 - o2.i1;
-			} else {
-				return o1.i2 - o2.i2;
-			}
-		}
-	}
-
-	public static enum IntPairRelation {
-		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
-		CONTAINS_END
 	}
 
 	public IntPair toLowestFirst() {

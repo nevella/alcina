@@ -323,43 +323,20 @@ public class Measure extends Location.Range {
 				return Reflections.newInstance(getClass());
 			}
 
-			Order withIgnoreNoPossibleChildren();
-
 			public interface Has {
 				Order getOrder();
 			}
 
 			@Reflected
 			public abstract static class Simple implements Order {
-				boolean ignoreNoPossibleChildren = false;
-
 				protected abstract int classOrdering(
 						Class<? extends Token> class1,
 						Class<? extends Token> class2);
 
 				@Override
 				public int compare(Token o1, Token o2) {
-					if (!ignoreNoPossibleChildren) {
-						int c1 = noPossibleChildrenWeight(o1);
-						int c2 = noPossibleChildrenWeight(o2);
-						if (c1 != c2) {
-							return c1 - c2;
-						}
-						// NoPossibleChildren tokens can't overlap
-						Preconditions.checkState(c1 == 0);
-					}
 					return classOrdering(CommonUtils.getComparableType(o1),
 							CommonUtils.getComparableType(o2));
-				}
-
-				private int noPossibleChildrenWeight(Token o) {
-					return o instanceof NoPossibleChildren ? 1 : 0;
-				}
-
-				@Override
-				public Order withIgnoreNoPossibleChildren() {
-					ignoreNoPossibleChildren = true;
-					return this;
 				}
 			}
 		}

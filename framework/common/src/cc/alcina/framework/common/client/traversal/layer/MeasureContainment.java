@@ -12,8 +12,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.dom.Measure;
+import cc.alcina.framework.common.client.dom.Measure.Token;
 import cc.alcina.framework.common.client.dom.Measure.Token.Order;
+import cc.alcina.framework.common.client.traversal.layer.MeasureContainment.Overlap;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -38,8 +42,11 @@ public class MeasureContainment {
 
 	List<MeasureSelection> measures;
 
+	Order order;
+
 	public MeasureContainment(Measure.Token.Order order,
 			Collection<? extends MeasureSelection> selections) {
+		this.order = order;
 		MeasureTreeComparator comparator = new MeasureTreeComparator(order);
 		measures = selections.stream().sorted(comparator)
 				.collect(Collectors.toList());
@@ -156,18 +163,18 @@ public class MeasureContainment {
 			return descendantList.stream().sorted();
 		}
 
-		void ensureImmediateChildSelections() {
+		public List<MeasureSelection> ensureImmediateChildSelections() {
 			if (immediateChildren == null) {
 				immediateChildren = descendants.stream()
 						.filter(this::isImmediateChild).sorted()
 						.collect(Collectors.toList());
 			}
+			return immediateChildren;
 		}
 
 		public List<Containment> getChildContainments() {
-			ensureImmediateChildSelections();
-			return immediateChildren.stream().map(containments::get)
-					.collect(Collectors.toList());
+			return ensureImmediateChildSelections().stream()
+					.map(containments::get).collect(Collectors.toList());
 		}
 
 		public Containment
@@ -279,7 +286,25 @@ public class MeasureContainment {
 					IntPair openRange = open.get().toIntPair();
 					IntPair cursorRange = cursor.get().toIntPair();
 					Containment openContainment = containments.get(open);
-					if (openRange.contains(cursorRange)) {
+					int openCmpCursor = order.compare(open.get().token,
+							cursor.get().token);
+					// as with MeasureTreeComparator, boundaries are special if
+					// one measure is a point -
+					if (IntPair.sameStartAndAtLeastOnePoint(openRange,
+							cursorRange) && openRange.isPoint()) {
+						/*
+						 * because the selections are ordered, cursorRange
+						 * closes openRange
+						 */
+						openItr.remove();
+					} else if (IntPair.sameEndAndAtLeastOnePoint(openRange,
+							cursorRange) && cursorRange.isPoint()
+							&& openCmpCursor > 0) {
+						/*
+						 * point selection (at end) closes open
+						 */
+						openItr.remove();
+					} else if (openRange.contains(cursorRange)) {
 						containment.containers.add(open);
 						openContainment.descendants.add(cursor);
 					} else if (cursorRange
