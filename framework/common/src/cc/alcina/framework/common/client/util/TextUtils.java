@@ -410,4 +410,8 @@ public class TextUtils {
 		}
 		return longestCommon;
 	}
+
+	public static boolean isEmptyHardOrSoftWhitespace(String string) {
+		return isWhitespaceOrEmpty(string.replace('\u00a0', ' '));
+	}
 }
