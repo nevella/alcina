@@ -288,6 +288,10 @@ public abstract class FragmentNode extends Model.Fields
 			return stream().anyMatch(test::test);
 		}
 
+		public FragmentNode get(Predicate<FragmentNode> test) {
+			return stream().filter(test::test).findFirst().orElse(null);
+		}
+
 		public Stream<FragmentNode> stream() {
 			return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
 					new Itr(), Spliterator.ORDERED), false);

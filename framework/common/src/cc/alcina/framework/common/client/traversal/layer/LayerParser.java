@@ -263,6 +263,7 @@ public class LayerParser {
 		}
 
 		public CharSequence inputContent(Range range) {
+			range = peer().computeInputRange(range);
 			if (baseContent == null) {
 				char[] charArray = input.text().toCharArray();
 				baseContent = new CharSequenceArray(charArray, 0,

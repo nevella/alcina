@@ -23,10 +23,7 @@ public abstract class MeasureLayer<S extends MeasureSelection>
 						&& !(m instanceof MeasureSelection.IgnoreOverlaps));
 		Order order = state.traversalContext(Order.Has.class).getOrder();
 		List<MeasureSelection> measures = filteredSelections
-				.sorted(new MeasureTreeComparator(
-						// this will also remove overlapping text nodes, so we
-						// need to relax a comparator constraint
-						order.copy().withIgnoreNoPossibleChildren()))
+				.sorted(new MeasureTreeComparator(order))
 				.collect(Collectors.toList());
 		return new MeasureContainment(order, measures);
 	}
