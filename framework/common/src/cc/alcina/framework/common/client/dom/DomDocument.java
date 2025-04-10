@@ -113,7 +113,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	private Multimap<String, List<DomNode>> byId;
 
-	private Locations locations;
+	private LocationContext locations;
 
 	/*
 	 * Normally this will be null, unless the DomDocument has no backing w3c/gwt
@@ -237,7 +237,13 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public LocationContext locations() {
 		if (locations == null) {
-			locations = new Locations();
+			if (useLocations2) {
+				LocationContext2 locationContext2 = new LocationContext2(this);
+				locations = locationContext2;
+				locationContext2.init();
+			} else {
+				locations = new Locations();
+			}
 		}
 		return locations;
 	}
@@ -301,7 +307,7 @@ public class DomDocument extends DomNode implements Cloneable {
 	// FIXME - remove with universal mutable location support
 	public void invalidateLocations() {
 		if (locations != null) {
-			locations.invalidateLookups();
+			((Locations) locations).invalidateLookups();
 		}
 	}
 
@@ -655,7 +661,7 @@ public class DomDocument extends DomNode implements Cloneable {
 						// descend or go to next sibling
 						DomNode next = node.children.firstNode();
 						next = next != null ? next
-								: node.relative().nextLogicalNode();
+								: node.relative().treeSubsequentNode();
 						if (next == null) {
 							// top, ascend
 							targetTreeIndex = parentLocation != null

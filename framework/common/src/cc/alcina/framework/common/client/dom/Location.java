@@ -10,7 +10,6 @@ import org.w3c.dom.Text;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.common.client.traversal.layer.MeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -431,9 +430,6 @@ public class Location implements Comparable<Location> {
 				locationContext);
 	}
 
-	void validateIndicies() {
-	}
-
 	// Feature group class for content access
 	public class Content {
 		public String absoluteString(int from, int to) {
@@ -772,5 +768,57 @@ public class Location implements Comparable<Location> {
 				containingLocation.containingNode.asRange().contains(this));
 		return new Location(containingLocation.treeIndex, index, after,
 				containingLocation.containingNode, locationContext);
+	}
+
+	IndexTuple asIndexTuple() {
+		return new IndexTuple(index, treeIndex);
+	}
+
+	static class IndexTuple {
+		int index;
+
+		int treeIndex;
+
+		IndexTuple() {
+		}
+
+		IndexTuple(int index, int treeIndex) {
+			this.index = index;
+			this.treeIndex = treeIndex;
+		}
+
+		public IndexTuple add(Object textLengthSelf) {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'add'");
+		}
+
+		public IndexTuple subtract(IndexTuple lastComputed) {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'subtract'");
+		}
+
+		public IndexTuple add(Object textLengthSelf, int i) {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'add'");
+		}
+
+		public boolean isEmpty() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'isEmpty'");
+		}
+	}
+
+	/*
+	 * The only mutation method
+	 */
+	void applyIndexDelta(IndexTuple deltaAccumulator) {
+		index += deltaAccumulator.index;
+		treeIndex += deltaAccumulator.treeIndex;
+		documentMutationPosition = locationContext
+				.getDocumentMutationPosition();
 	}
 }
