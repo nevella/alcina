@@ -597,7 +597,7 @@ public class XmlUtils {
 		DomNode currentBlockAncestor = blockResolver.getContainingBlock(cursor)
 				.orElse(null);
 		while (true) {
-			cursor = cursor.relative().previousSibOrParentSibNode();
+			cursor = cursor.relative().treePreviousNode();
 			if (cursor.isDocumentNode()) {
 				tuple.prevBlock = null;
 				break;
@@ -617,7 +617,7 @@ public class XmlUtils {
 		currentBlockAncestor = blockResolver.getContainingBlock(cursor)
 				.orElse(null);
 		while (true) {
-			cursor = cursor.relative().nextLogicalNode();
+			cursor = cursor.relative().treeSubsequentNode();
 			if (cursor == null || cursor.isDocumentNode()) {
 				tuple.nextBlock = null;
 				break;

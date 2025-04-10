@@ -1419,13 +1419,13 @@ public class DomNode {
 			return null;
 		}
 
-		public DomNode nextLogicalNode() {
+		public DomNode treeSubsequentNode() {
 			if (hasNextSibling()) {
 				return nextSibling();
 			}
 			DomNode parent = parent();
 			if (parent != null) {
-				return parent.relative().nextLogicalNode();
+				return parent.relative().treeSubsequentNode();
 			}
 			return null;
 		}
@@ -1476,7 +1476,7 @@ public class DomNode {
 			}
 		}
 
-		public DomNode previousSibOrParentSibNode() {
+		public DomNode treePreviousNode() {
 			if (hasPreviousSibling()) {
 				return previousSibling();
 			} else {
@@ -2077,5 +2077,9 @@ public class DomNode {
 		StringBuilder builder = new StringBuilder();
 		children.nodes().forEach(child -> builder.append(child.fullToString()));
 		return builder.toString();
+	}
+
+	public int textLengthSelf() {
+		return isText() ? textContent().length() : 0;
 	}
 }
