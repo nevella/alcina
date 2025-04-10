@@ -50,6 +50,8 @@ import cc.alcina.framework.common.client.util.Topic;
  * </ul>
  */
 public class DomDocument extends DomNode implements Cloneable {
+	public static boolean useLocations2;
+
 	// for server-side code to link w3c docs to the DomDocument
 	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
 
