@@ -136,6 +136,10 @@ public final class MutationRecord {
 				creationRecord.previousSibling = MutationNode
 						.attachId(previousSibling);
 			}
+			Node nextSibling = node.getNextSibling();
+			if (nextSibling != null) {
+				creationRecord.nextSibling = MutationNode.attachId(nextSibling);
+			}
 			records.add(creationRecord);
 		}
 		if (writeAsMarkupTree && node.getNodeType() == Node.ELEMENT_NODE
@@ -227,7 +231,6 @@ public final class MutationRecord {
 
 	public MutationNode previousSibling;
 
-	// never used
 	public MutationNode nextSibling;
 
 	public String attributeName;
@@ -304,8 +307,7 @@ public final class MutationRecord {
 				previousSibling = mutationNode(jso.getPreviousSibling());
 			}
 			if (jsonObj.getNumber("nextSibling") > 0) {
-				// optimisation
-				// nextSibling = mutationNode(jso.getNextSibling());
+				nextSibling = mutationNode(jso.getNextSibling());
 			}
 			attributeName = stringOrNull(jsonObj, "attributeName");
 			// attributeNamespace = stringOrNull(jsonObj, "attributeNamespace");
@@ -447,6 +449,7 @@ public final class MutationRecord {
 	void connectMutationNodeRefs() {
 		connectMutationNodeRef(target);
 		connectMutationNodeRef(previousSibling);
+		connectMutationNodeRef(nextSibling);
 		// Nope! they won't exist yet
 		// addedNodes.forEach(this::connectMutationNodeRef);
 		removedNodes.forEach(this::connectMutationNodeRef);

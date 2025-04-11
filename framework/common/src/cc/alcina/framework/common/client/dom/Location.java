@@ -16,7 +16,11 @@ import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * <p>
- * Models a position in an alcina dom document via [T,I,A]
+ * Models a position in an alcina dom document via [T,I,A] - T is the node index
+ * in a depth-first traversal of the tree, I is the index in the document text,
+ * A is the "bias" (before or after). Note re naming - I is termed "index"
+ * rather than say "text index" because it's - to me - more central to this
+ * method of addressing the DOM
  *
  * <p>
  * FIXME - Feature_Dirndl_ContentDecorator - make immutable, and encapsulate
@@ -771,44 +775,44 @@ public class Location implements Comparable<Location> {
 	}
 
 	IndexTuple asIndexTuple() {
-		return new IndexTuple(index, treeIndex);
+		return new IndexTuple(treeIndex, index);
 	}
 
+	/*
+	 * Used both as a point and as a delta (vector) - so not named either
+	 * 
+	 * Note that these are immutable
+	 */
 	static class IndexTuple {
-		int index;
+		final int treeIndex;
 
-		int treeIndex;
+		final int index;
 
-		IndexTuple() {
-		}
-
-		IndexTuple(int index, int treeIndex) {
-			this.index = index;
+		IndexTuple(int treeIndex, int index) {
 			this.treeIndex = treeIndex;
+			this.index = index;
 		}
 
-		public IndexTuple add(Object textLengthSelf) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'add'");
+		IndexTuple add(IndexTuple tuple) {
+			return add(tuple.treeIndex, tuple.index);
 		}
 
-		public IndexTuple subtract(IndexTuple lastComputed) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'subtract'");
+		IndexTuple subtract(IndexTuple tuple) {
+			return add(-tuple.treeIndex, -tuple.index);
 		}
 
-		public IndexTuple add(Object textLengthSelf, int i) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'add'");
+		IndexTuple add(int treeIndexDelta, int indexDelta) {
+			return new IndexTuple(treeIndex + treeIndexDelta,
+					index + indexDelta);
 		}
 
-		public boolean isEmpty() {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'isEmpty'");
+		boolean isZero() {
+			return index == 0 && treeIndex == 0;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("[%s,%s]", treeIndex, index);
 		}
 	}
 

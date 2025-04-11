@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
@@ -49,16 +50,18 @@ class LocationContext2 implements LocationContext {
 
 		int mutationIndex;
 
-		List<IndexMutation> mutations;
+		List<IndexMutation> mutations = new ArrayList<>();
 
 		static class IndexMutation {
 			public IndexMutation(Location asLocation, IndexTuple nodeDelta) {
-				// TODO Auto-generated constructor stub
+				at = asLocation.asIndexTuple();
+				treeIndexDelta = nodeDelta.treeIndex;
+				indexDelta = nodeDelta.index;
 			}
 
-			IndexTuple indexTuple;
+			IndexTuple at;
 
-			int treeDelta;
+			int treeIndexDelta;
 
 			int indexDelta;
 		}
@@ -150,36 +153,41 @@ class LocationContext2 implements LocationContext {
 					 */
 					continue;
 				}
-				IndexTuple actual = treePrevious == null ?
 				/*
 				 * If there is no previous, this is the documentelement node -
 				 * and its [0,0] is immutable
 				 */
-						new IndexTuple()
-						: treePrevious.asLocation().asIndexTuple()
-								.add(treePrevious.textLengthSelf(), 1);
-				IndexTuple nodeDelta = new IndexTuple();
+				IndexTuple actual = treePrevious == null ? new IndexTuple(0, 0)
+						: treePrevious.asLocation().asIndexTuple().add(1,
+								treePrevious.textLengthSelf());
+				IndexTuple nodeDelta = null;
 				if (node.locations == null) {
 					/*
 					 * new node. it's always just a simple [0,1] delta - it's
 					 * the *next* node that possibly has a text index delta
 					 */
-					nodeDelta.treeIndex = 1;
+					nodeDelta = new IndexTuple(1, node.textLengthSelf());
 					// ensure location
 					node.asLocation();
 				} else {
 					Location nodeLocation = node.locations.nodeLocation;
 					IndexTuple lastComputed = nodeLocation.asIndexTuple();
-					IndexTuple cumulativeDelta = new IndexTuple();
-					context.applyPriorMutations(nodeLocation, cumulativeDelta);
-					nodeDelta.add(actual).subtract(lastComputed)
+					IndexTuple lastComputedAccumulator = context
+							.applyPriorMutations(nodeLocation, lastComputed);
+					IndexTuple cumulativeDelta = lastComputedAccumulator
 							.subtract(lastComputed);
+					nodeDelta = actual.subtract(lastComputed)
+							.subtract(cumulativeDelta);
 					/*
-					 * Neatly, this updates the mutationSequencePosition
+					 * Neatly, this updates the mutationSequencePosition. Note
+					 * that two things happen, we compute the nodeDelta (changes
+					 * registered at this node only), but apply both the
+					 * tree-priors *and* those changes
 					 */
+					node.asLocation().applyIndexDelta(cumulativeDelta);
 					node.asLocation().applyIndexDelta(nodeDelta);
 				}
-				if (!nodeDelta.isEmpty()) {
+				if (!nodeDelta.isZero()) {
 					IndexMutation mutation = new IndexMutation(
 							node.asLocation(), nodeDelta);
 					mutations.add(mutation);
@@ -196,10 +204,26 @@ class LocationContext2 implements LocationContext {
 			node.asDomNode().stream().forEach(damaged::add);
 		}
 
-		public void apply(IndexTuple deltaAccumulator) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'apply'");
+		IndexTuple applyTo(IndexTuple locationAccumulator) {
+			for (IndexMutation mutation : mutations) {
+				/*
+				 * text run mutation is different depending on treeindex
+				 */
+				boolean applyTextRunMutation = mutation.at.index < locationAccumulator.index;
+				if (mutation.at.treeIndex < locationAccumulator.treeIndex) {
+					applyTextRunMutation = mutation.at.index <= locationAccumulator.index;
+				}
+				if (applyTextRunMutation) {
+					locationAccumulator = locationAccumulator.add(0,
+							mutation.indexDelta);
+				}
+				boolean applyTreeIndexMutation = mutation.at.treeIndex <= locationAccumulator.index;
+				if (applyTreeIndexMutation) {
+					locationAccumulator = locationAccumulator
+							.add(mutation.treeIndexDelta, 0);
+				}
+			}
+			return locationAccumulator;
 		}
 	}
 
@@ -207,7 +231,7 @@ class LocationContext2 implements LocationContext {
 
 	Document gwtDocument;
 
-	List<IndexMutations> mutations = new ArrayList<>();
+	List<IndexMutations> mutations;
 
 	DomNodeTree tree;
 
@@ -228,6 +252,9 @@ class LocationContext2 implements LocationContext {
 			implements TopicListener<List<MutationRecord>> {
 		@Override
 		public void topicPublished(List<MutationRecord> domMutations) {
+			domMutations.forEach(mutation -> {
+				mutation.target.node.asDomNode().children.invalidate();
+			});
 			IndexMutations indexMutations = new IndexMutations(
 					LocationContext2.this, domMutations);
 			indexMutations.mutationIndex = mutations.size();
@@ -339,6 +366,7 @@ class LocationContext2 implements LocationContext {
 
 	@Override
 	public void ensureCurrent(Location location) {
+		LocalDom.flush();
 		if (location.documentMutationPosition == getDocumentMutationPosition()) {
 			return;
 		}
@@ -350,21 +378,36 @@ class LocationContext2 implements LocationContext {
 		applyPriorMutations(location);
 	}
 
-	void applyPriorMutations(Location location, IndexTuple deltaAccumulator) {
+	/*
+	 * 'accumulator' is slightly wonky, since the object ref changes - not the
+	 * object - 'reference accumulator?'
+	 */
+	IndexTuple applyPriorMutations(Location location,
+			IndexTuple locationAccumulator) {
 		for (int idx = location.documentMutationPosition; idx < mutations
 				.size(); idx++) {
-			mutations.get(idx).apply(deltaAccumulator);
+			locationAccumulator = mutations.get(idx)
+					.applyTo(locationAccumulator);
 		}
+		return locationAccumulator;
 	}
 
 	void applyPriorMutations(Location location) {
-		IndexTuple deltaAccumulator = new IndexTuple();
-		applyPriorMutations(location, deltaAccumulator);
-		location.applyIndexDelta(deltaAccumulator);
+		IndexTuple locationAccumulator = location.asIndexTuple();
+		locationAccumulator = applyPriorMutations(location,
+				locationAccumulator);
+		IndexTuple locationDelta = locationAccumulator
+				.subtract(location.asIndexTuple());
+		location.applyIndexDelta(locationDelta);
+	}
+
+	void resetLocationMutations() {
+		mutations = new ArrayList<>();
+		document.descendants().forEach(DomNode::recomputeLocation);
 	}
 
 	void init() {
-		document.descendants().forEach(DomNode::asLocation);
+		resetLocationMutations();
 		gwtDocument.addLocalMutationListener(new LocalMutationTransformer());
 	}
 }

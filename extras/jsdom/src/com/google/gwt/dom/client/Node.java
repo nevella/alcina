@@ -136,7 +136,7 @@ public abstract class Node
 		newChild.removeFromParent();
 		T node = local().appendChild(newChild);
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				node, node.getPreviousSibling(), true));
+				node, node.getPreviousSibling(), null, true));
 		sync(() -> remote().appendChild(newChild));
 		return node;
 	}
@@ -320,7 +320,8 @@ public abstract class Node
 			newChild.removeFromParent();
 			Node result = local().insertBefore(newChild, refChild);
 			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
-					this, newChild, newChild.getPreviousSibling(), true));
+					this, newChild, newChild.getPreviousSibling(),
+					newChild.getNextSibling(), true));
 			sync(() -> remote().insertBefore(newChild, refChild));
 			return result;
 		} catch (Exception e) {
@@ -410,7 +411,8 @@ public abstract class Node
 	public Node removeChild(Node oldChild) {
 		validateRemoteStatePreTreeMutation(oldChild);
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				oldChild, null, false));
+				oldChild, oldChild.getPreviousSibling(),
+				oldChild.getNextSibling(), false));
 		Node result = local().removeChild(oldChild);
 		sync(() -> remote().removeChild(oldChild));
 		oldChild.resetRemote();
@@ -433,7 +435,7 @@ public abstract class Node
 		}
 		sync(() -> remote().removeFromParent());
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				this, null, false));
+				this, getPreviousSibling(), getNextSibling(), false));
 		local().removeFromParent();
 		resetRemote();
 	}
@@ -444,10 +446,12 @@ public abstract class Node
 		validateRemoteStatePreTreeMutation(newChild);
 		sync(() -> remote().replaceChild(newChild, oldChild));
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				oldChild, null, false));
-		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				newChild, newChild.getPreviousSibling(), true));
+				oldChild, oldChild.getPreviousSibling(),
+				oldChild.getNextSibling(), false));
 		Node result = local().replaceChild(newChild, oldChild);
+		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
+				newChild, newChild.getPreviousSibling(),
+				newChild.getNextSibling(), true));
 		oldChild.resetRemote();
 		return result;
 	}

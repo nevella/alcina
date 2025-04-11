@@ -94,7 +94,7 @@ public class LocalMutations {
 	}
 
 	public void notifyChildListMutation(Node target, Node child,
-			Node previousSibling, boolean add) {
+			Node previousSibling, Node nextSibling, boolean add) {
 		if (add && !target.isAttached()) {
 			return;
 		}
@@ -103,6 +103,7 @@ public class LocalMutations {
 		record.type = Type.childList;
 		record.target = MutationNode.forNode(target);
 		record.previousSibling = MutationNode.forNode(previousSibling);
+		record.nextSibling = MutationNode.forNode(nextSibling);
 		if (add) {
 			record.addedNodes.add(MutationNode.forNode(child));
 			mutations.addAll(nodeAsMutations(child, true));

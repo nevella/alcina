@@ -990,13 +990,10 @@ public class DomNode {
 			if (this.nodes != null) {
 				return this.nodes;
 			}
-			List<DomNode> nodes = DomEnvironment
-					.nodeListToList(node.getChildNodes()).stream()
-					.map(document::nodeFor).collect(Collectors.toList());
-			if (document.isReadonly()) {
-				this.nodes = nodes;
-			}
-			return nodes;
+			this.nodes = DomEnvironment.nodeListToList(node.getChildNodes())
+					.stream().map(document::nodeFor)
+					.collect(Collectors.toList());
+			return this.nodes;
 		}
 
 		public boolean noElements() {
@@ -1027,6 +1024,10 @@ public class DomNode {
 			return TextUtils.normalizeWhitespaceAndTrim(nodes().stream()
 					.filter(DomNode::isText).map(DomNode::textContent)
 					.collect(Collectors.joining()));
+		}
+
+		void invalidate() {
+			nodes = null;
 		}
 	}
 
@@ -1476,11 +1477,32 @@ public class DomNode {
 			}
 		}
 
-		public DomNode treePreviousNode() {
+		/**
+		 * Note - this is *not* treePreviousNode
+		 */
+		public DomNode previousSibOrParentSibNode() {
 			if (hasPreviousSibling()) {
 				return previousSibling();
 			} else {
 				return parent();
+			}
+		}
+
+		public DomNode treePreviousNode() {
+			DomNode cursor = DomNode.this;
+			DomNode previous = null;
+			while (cursor != null) {
+				if (cursor.relative().hasPreviousSibling()) {
+					previous = cursor.relative().previousSibling();
+					break;
+				} else {
+					cursor = cursor.parent();
+				}
+			}
+			if (previous == null) {
+				return null;
+			} else {
+				return previous.relative().lastDescendant();
 			}
 		}
 
@@ -2081,5 +2103,19 @@ public class DomNode {
 
 	public int textLengthSelf() {
 		return isText() ? textContent().length() : 0;
+	}
+
+	/*
+	 * FIXME - location.mutation - for non-start locations, the offset will need
+	 * to be recomputed before history discard *unless* there are no text
+	 * mutations
+	 * 
+	 * Note that the common case for lots of mutations *is* no text mutations
+	 * (bulk wrapping say) - so this may not be as performance-scary as it might
+	 * appear
+	 */
+	void recomputeLocation() {
+		Preconditions.checkState(locations == null);
+		asLocation();
 	}
 }

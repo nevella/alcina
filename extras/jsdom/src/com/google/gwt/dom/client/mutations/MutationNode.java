@@ -48,6 +48,9 @@ public final class MutationNode {
 		MutationNode result = new MutationNode();
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
+		if (node instanceof Node) {
+			result.node = (Node) node;
+		}
 		result.w3cNode = node;
 		return result;
 	}
