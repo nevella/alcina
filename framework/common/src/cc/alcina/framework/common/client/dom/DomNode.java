@@ -990,10 +990,13 @@ public class DomNode {
 			if (this.nodes != null) {
 				return this.nodes;
 			}
-			this.nodes = DomEnvironment.nodeListToList(node.getChildNodes())
-					.stream().map(document::nodeFor)
-					.collect(Collectors.toList());
-			return this.nodes;
+			List<DomNode> nodes = DomEnvironment
+					.nodeListToList(node.getChildNodes()).stream()
+					.map(document::nodeFor).collect(Collectors.toList());
+			if (document.isReadonly() || DomDocument.useLocations2) {
+				this.nodes = nodes;
+			}
+			return nodes;
 		}
 
 		public boolean noElements() {
