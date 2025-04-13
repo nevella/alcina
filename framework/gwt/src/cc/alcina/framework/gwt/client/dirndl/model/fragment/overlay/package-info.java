@@ -1,7 +1,7 @@
 /**
  * <p>
- * Propagate overlays of a document range (modelled by {@link Measure}
- * instances) using a {@link FragmentModel} mapping of the range
+ * Manage overlays of a document range (modelled by {@link Measure} instances)
+ * using a {@link FragmentModel} mapping of the range
  * 
  * <p>
  * Rough sketch:
@@ -14,6 +14,3 @@
  * </ul>
  */
 package cc.alcina.framework.gwt.client.dirndl.model.fragment.overlay;
-
-import cc.alcina.framework.common.client.dom.Measure;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
