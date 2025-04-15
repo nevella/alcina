@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.traversal.TraversalContext;
 import cc.alcina.framework.common.client.traversal.layer.overlay.BoundaryLayer.ExtendedMeasureSelection;
 import cc.alcina.framework.common.client.traversal.layer.overlay.MeasureOverlay.ExtendMeasureSelection;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.servlet.job.JobContext;
 
 /**
  * <p>
@@ -54,7 +53,8 @@ public class BoundaryParser implements TraversalContext {
 		 * Parse (from initialRange) until quota is exhausted
 		 */
 		traversal = new SelectionTraversal(this);
-		TreeProcess.Node parentNode = JobContext.getSelectedProcessNode();
+		TreeProcess.Node parentNode = new TreeProcess(getClass())
+				.getSelectedNode();
 		Measure measure = Measure.fromRange(measureOverlay.initialRange,
 				MeasureOverlay.ExtendToken.TYPE);
 		ExtendMeasureSelection extendSelection = new ExtendMeasureSelection(
