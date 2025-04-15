@@ -1423,15 +1423,23 @@ public class DomNode {
 			return null;
 		}
 
-		public DomNode treeSubsequentNode() {
+		public DomNode treeSubsequentNodeNoDescent() {
 			if (hasNextSibling()) {
 				return nextSibling();
 			}
 			DomNode parent = parent();
 			if (parent != null) {
-				return parent.relative().treeSubsequentNode();
+				return parent.relative().treeSubsequentNodeNoDescent();
 			}
 			return null;
+		}
+
+		public DomNode treeSubsequentNode() {
+			DomNode firstChild = children.firstNode();
+			if (firstChild != null) {
+				return firstChild;
+			}
+			return treeSubsequentNodeNoDescent();
 		}
 
 		public DomNode nextSibling() {

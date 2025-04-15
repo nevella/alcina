@@ -125,7 +125,7 @@ class LocationContext2 implements LocationContext {
 						damaged.add(domMutation.nextSibling.node.asDomNode());
 					} else {
 						damaged.add(domMutation.target.node.asDomNode()
-								.relative().treeSubsequentNode());
+								.relative().treeSubsequentNodeNoDescent());
 					}
 					break;
 				}

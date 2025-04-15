@@ -29,6 +29,10 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		return nextValue;
 	}
 
+	public CountingMap<K> clone() {
+		return new CountingMap<K>().addIntMap(this);
+	}
+
 	public CountingMap<K> addCollectionMap(Map<K, Collection> map) {
 		for (Map.Entry<K, Collection> entry : map.entrySet()) {
 			add(entry.getKey(), entry.getValue().size());
@@ -36,10 +40,11 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		return this;
 	}
 
-	public void addIntMap(Map<K, Integer> m) {
+	public CountingMap<K> addIntMap(Map<K, Integer> m) {
 		for (Map.Entry<K, Integer> entry : m.entrySet()) {
 			add(entry.getKey(), entry.getValue());
 		}
+		return this;
 	}
 
 	public void addMultimap(Multimap<K, List> mm) {

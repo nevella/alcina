@@ -13,4 +13,4 @@
  * <li>Apply the overlay
  * </ul>
  */
-package cc.alcina.framework.gwt.client.dirndl.model.fragment.overlay;
+package cc.alcina.framework.common.client.traversal.layer.overlay;

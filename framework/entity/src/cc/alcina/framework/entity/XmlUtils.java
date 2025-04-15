@@ -617,7 +617,7 @@ public class XmlUtils {
 		currentBlockAncestor = blockResolver.getContainingBlock(cursor)
 				.orElse(null);
 		while (true) {
-			cursor = cursor.relative().treeSubsequentNode();
+			cursor = cursor.relative().treeSubsequentNodeNoDescent();
 			if (cursor == null || cursor.isDocumentNode()) {
 				tuple.nextBlock = null;
 				break;

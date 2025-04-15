@@ -4,7 +4,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -17,7 +17,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
@@ -85,7 +84,7 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 	/*
 	 * If the ints are out-of-order, they will be ignored
 	 */
-	public static List<IntPair> asRangeList(List<Integer> ints) {
+	public static List<IntPair> asRangeList(Collection<Integer> ints) {
 		int start = -1;
 		List<IntPair> result = new ArrayList<>();
 		for (Integer cursor : ints) {
@@ -195,6 +194,19 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 	public static boolean sameEndAndAtLeastOnePoint(IntPair pair1,
 			IntPair pair2) {
 		return (pair1.i2 == pair2.i2) && (pair1.isPoint() || pair2.isPoint());
+	}
+
+	public static List<IntPair> mergeOverlapping(List<IntPair> pairs) {
+		List<IntPair> result = new ArrayList<>();
+		for (IntPair pair : pairs) {
+			IntPair lastPair = Ax.last(result);
+			if (lastPair != null && lastPair.intersectsWith(pair)) {
+				lastPair.expandToInclude(pair);
+			} else {
+				result.add(pair);
+			}
+		}
+		return result;
 	}
 
 	public int i1;

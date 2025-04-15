@@ -623,8 +623,25 @@ public class DomDocument extends DomNode implements Cloneable {
 					break;
 				}
 				case PREVIOUS_LOCATION: {
-					// reversed traversal does not currently match partial nodes
-					nodeTraversalRequired = true;
+					if (relativeIndex == 0) {
+						nodeTraversalRequired = true;
+					} else {
+						switch (textTraversal) {
+						case PREVIOUS_CHARACTER:
+							targetIndex--;
+							break;
+						case NO_CHANGE:
+							break;
+						case EXIT_NODE:
+							nodeTraversalRequired = true;
+							break;
+						case TO_START_OF_NODE:
+							targetIndex = baseLocation.getIndex();
+							break;
+						default:
+							throw new UnsupportedOperationException();
+						}
+					}
 					break;
 				}
 				case PREVIOUS_DOMNODE_START: {
@@ -659,9 +676,7 @@ public class DomDocument extends DomNode implements Cloneable {
 						}
 					} else {
 						// descend or go to next sibling
-						DomNode next = node.children.firstNode();
-						next = next != null ? next
-								: node.relative().treeSubsequentNode();
+						DomNode next = node.relative().treeSubsequentNode();
 						if (next == null) {
 							// top, ascend
 							targetTreeIndex = parentLocation != null

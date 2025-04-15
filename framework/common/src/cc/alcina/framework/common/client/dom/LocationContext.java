@@ -5,6 +5,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.util.IntPair;
 
 public interface LocationContext {
 	default int compare(Location l1, Location l2) {

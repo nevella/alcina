@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.layer.BranchingParser.Branch;
@@ -57,5 +58,16 @@ public class LayerParserPeer {
 	 */
 	public Range computeInputRange(Range range) {
 		return range;
+	}
+
+	protected Location computeParserStartLocation() {
+		return parser.forwardsTraversalOrder ? parser.parserState.input.start
+				: parser.parserState.input.end.relativeLocation(
+						RelativeDirection.PREVIOUS_DOMNODE_START);
+	}
+
+	public void onSentenceMatched(Branch bestMatch,
+			List<Branch> matchedSentenceBranches) {
+		onSentenceMatched(bestMatch);
 	}
 }

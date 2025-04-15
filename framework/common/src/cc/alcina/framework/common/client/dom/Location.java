@@ -9,6 +9,8 @@ import org.w3c.dom.Text;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.collections.PublicCloneable;
+import cc.alcina.framework.common.client.dom.Measure.Token.DocumentElementToken;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -315,6 +317,7 @@ public class Location implements Comparable<Location> {
 		return treeIndex == 0 && isAtNodeStart();
 	}
 
+	// FIXME - location.mutation - cache textContent() computation
 	public boolean isAtNodeEnd() {
 		return getTextOffsetInNode() == containingNode.textContent().length();
 	}
@@ -463,7 +466,8 @@ public class Location implements Comparable<Location> {
 		}
 	}
 
-	public static class Range implements Comparable<Range> {
+	public static class Range
+			implements Comparable<Range>, PublicCloneable<Range> {
 		/**
 		 * Create a range from start-end, or end-start if end is before start
 		 */
@@ -483,6 +487,10 @@ public class Location implements Comparable<Location> {
 		private transient String textContent;
 
 		private transient String normalisedTextContent;
+
+		public Range clone() {
+			return new Range(start, end);
+		}
 
 		public Range(Location start, Location end) {
 			if (start.isAfter(end)) {
@@ -669,6 +677,24 @@ public class Location implements Comparable<Location> {
 							end.after));
 		}
 
+		public Range toShallowestNodes() {
+			List<DomNode> startContainers = start.getLocationContext()
+					.getContainingNodes(start.getIndex(), start.after).stream()
+					.filter(n -> n.asDomNode().asLocation().getIndex() == start
+							.getIndex() || n.asDomNode().isText())
+					.toList();
+			List<DomNode> endContainers = start.getLocationContext()
+					.getContainingNodes(end.getIndex(), end.after).stream()
+					.filter(n -> n.asDomNode().asRange().end.getIndex() == end
+							.getIndex() || n.asDomNode().isText())
+					.toList();
+			Location start = this.start
+					.toContainingTreeIndex(startContainers.get(0).asLocation());
+			Location end = this.end
+					.toContainingTreeIndex(endContainers.get(0).asLocation());
+			return new Range(start, end);
+		}
+
 		public IntPair toIntPair() {
 			return new IntPair(start.getIndex(), end.getIndex());
 		}
@@ -744,6 +770,10 @@ public class Location implements Comparable<Location> {
 				return next;
 			}
 		}
+
+		public Measure toMeasure(Measure.Token token) {
+			return Measure.fromRange(this, token);
+		}
 	}
 
 	public enum RelativeDirection {
@@ -755,7 +785,7 @@ public class Location implements Comparable<Location> {
 	public enum TextTraversal {
 		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE, TO_END_OF_NODE,
 		// will throw if traversing a text node
-		UNDEFINED
+		UNDEFINED, PREVIOUS_CHARACTER
 	}
 
 	/**
@@ -768,8 +798,8 @@ public class Location implements Comparable<Location> {
 	 * @return the computed index
 	 */
 	public Location toContainingTreeIndex(Location containingLocation) {
-		Preconditions.checkArgument(
-				containingLocation.containingNode.asRange().contains(this));
+		Preconditions.checkArgument(containingLocation.containingNode.asRange()
+				.toIntPair().contains(getIndex()));
 		return new Location(containingLocation.treeIndex, index, after,
 				containingLocation.containingNode, locationContext);
 	}
@@ -824,5 +854,9 @@ public class Location implements Comparable<Location> {
 		treeIndex += deltaAccumulator.treeIndex;
 		documentMutationPosition = locationContext
 				.getDocumentMutationPosition();
+	}
+
+	public boolean provideIsAtNodeDirectionalEnd(boolean forwards) {
+		return forwards ? isAtNodeEnd() : isAtNodeStart();
 	}
 }
