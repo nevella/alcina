@@ -151,6 +151,14 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		boolean focusOnBind = true;
 
+		// models which - if their elements are clicked on - will not cause hide
+		List<Model> peerModels;
+
+		public Attributes withPeerModels(List<Model> peerModels) {
+			this.peerModels = peerModels;
+			return this;
+		}
+
 		public Attributes withFocusOnBind(boolean focusOnBind) {
 			this.focusOnBind = focusOnBind;
 			return this;
@@ -482,8 +490,15 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 						.getNativeEvent();
 				EventTarget eventTarget = nativeEvent.getEventTarget();
 				if (eventTarget.isElement()) {
-					Element element = eventTarget.asElement();
-					if (selfOrDescendantOverlayContains(element)) {
+					Element targetElement = eventTarget.asElement();
+					if (selfOrDescendantOverlayContains(targetElement)) {
+						return;
+					}
+					boolean peerClicked = attributes.peerModels.stream()
+							.filter(Model::provideIsBound)
+							.anyMatch(m -> m.provideElement()
+									.provideIsAncestorOf(targetElement, true));
+					if (peerClicked) {
 						return;
 					}
 				}

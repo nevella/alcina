@@ -1,25 +1,19 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.Objects;
-
 import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyDownEvent;
-import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 
 /**
@@ -28,10 +22,23 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthC
  * {@link cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget}
  */
 public interface DecoratorBehavior {
-	default void squelch(NodeEvent event) {
+	static void squelch(NodeEvent event) {
 		DomEvent domEvent = (DomEvent) event.getContext()
 				.getOriginatingGwtEvent();
 		domEvent.getNativeEvent().squelch();
+	}
+
+	/**
+	 * Handle repeatable choices (during ChoiceEditor ask)
+	 */
+	interface RepeatableChoiceHandling extends DecoratorBehavior {
+	}
+
+	/**
+	 * On fragmentnode mutation, ensure that a ZWS text node exists between
+	 * adjacent non-editables (DecoratorNodes)
+	 */
+	interface InsertZwsBetweenNonEditables extends DecoratorBehavior {
 	}
 
 	/**
@@ -39,8 +46,7 @@ public interface DecoratorBehavior {
 	 * backspace/delete) if the traversed range is a zero-width-space
 	 */
 	public static class ExtendKeyboardNavigationAction
-			implements DecoratorBehavior, DomEvents.KeyDown.Handler,
-			AttributeBehaviorHandler {
+			implements DecoratorBehavior, AttributeBehaviorHandler {
 		enum Direction {
 			left, right, none;
 
@@ -57,21 +63,12 @@ public interface DecoratorBehavior {
 		}
 
 		@Override
-		public void onKeyDown(KeyDown event) {
-			Context context = event.getContext();
-			if (context.util().hasKeyboardModifier()) {
-				return;
-			}
-			KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
-			onKeyDown(domEvent.getNativeEvent());
-		}
-
-		@Override
 		public String getEventType() {
 			return BrowserEvents.KEYDOWN;
 		}
 
-		public void onKeyDown(NativeEvent nativeKeydownEvent) {
+		public void onKeyDown(NativeEvent nativeKeydownEvent,
+				Element registeredElement) {
 			Selection selection = Document.get().getSelection();
 			if (!selection.isCollapsed()) {
 				return;
@@ -100,21 +97,34 @@ public interface DecoratorBehavior {
 				return;
 			}
 			Location.Range range = selection.getAnchorLocation().asRange();
+			Location.Range contextBoundary = registeredElement.asDomNode()
+					.asRange();
 			range = range.extendText(direction.numericDelta());
 			String text = range.text();
 			if (!ZeroWidthCursorTarget.is(text)) {
 				return;
 			}
-			range = range.extendText(direction.numericDelta());
+			Location.Range testExtended = range
+					.extendText(direction.numericDelta());
+			if (!contextBoundary.contains(testExtended)) {
+				return;
+			}
+			range = testExtended;
+			Location boundary = range.provideEndpoint(direction.numericDelta());
 			/*
 			 * Allow for editabledecorator/zws - boundary/zws -
 			 * decorator/non-zws
+			 * 
+			 * Do not extend at the registered (behavior element) boundary
 			 */
 			if (ZeroWidthCursorTarget.isOneOrMore(text)) {
 				text = range.text();
-				range = range.extendText(direction.numericDelta());
+				testExtended = range.extendText(direction.numericDelta());
+				if (contextBoundary.contains(testExtended)) {
+					range = testExtended;
+				}
 			}
-			Location boundary = range.provideEndpoint(direction.numericDelta());
+			boundary = range.provideEndpoint(direction.numericDelta());
 			/*
 			 * ZWS logic ensures the boundary is within a DecoratorNode - so
 			 * extend to cover that node (it will be the parent)
@@ -159,8 +169,9 @@ public interface DecoratorBehavior {
 		}
 
 		@Override
-		public void onPreviewNativeEvent(NativePreviewEvent event) {
-			onKeyDown(event.getNativeEvent());
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			onKeyDown(event.getNativeEvent(), registeredElement);
 		}
 
 		@Override

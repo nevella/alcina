@@ -241,7 +241,6 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 	}
 
 	void positionCursorPostReferencedSelection() {
-		LocalDom.flush();
 		LocalDom.flushLocalMutations();
 		if (provideIsUnbound()) {
 			return;// removed

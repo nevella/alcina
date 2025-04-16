@@ -56,15 +56,14 @@
     choice-node
       padding: 1px 4px
 
-@mixin multiple-suggestions-tag
-  multiple-suggestions
+@mixin choice-editor-tag
+  choice-editor
     @include suggestions
     
-//FIXME - rename - decorator-suggestion-choices?
-@mixin chooser-decorator
+@mixin decorator-suggestor
   overlay 
     //sass-unify: edit(-area)
-    > .decorator-chooser
+    > .decorator-suggestor
       @include context-menu.dropdown
 
       display: block

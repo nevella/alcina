@@ -89,12 +89,12 @@ gallery-home > cards > card > heading, gallery-home > cards > card > heading-act
   font-weight: bold;
   justify-content: space-between;
 }
-gallery-home > cards > card > heading-actions > actions {
+gallery-home > cards > card > heading > actions, gallery-home > cards > card > heading-actions > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-gallery-home > cards > card > heading-actions > actions a {
+gallery-home > cards > card > heading > actions a, gallery-home > cards > card > heading-actions > actions a {
   cursor: pointer;
 }
 gallery-home > cards > card > key-values {
@@ -114,7 +114,7 @@ gallery-home > cards > card > a {
   margin: 0 0 0.2rem;
 }
 
-multiple-suggestions-gallery > info {
+choice-editor-gallery > info {
   max-width: 600px;
   margin: 2rem auto;
   display: block;

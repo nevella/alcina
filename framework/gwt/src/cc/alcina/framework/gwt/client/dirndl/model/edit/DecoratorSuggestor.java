@@ -36,7 +36,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 @Directed(
 	// but see
 	// cc.alcina.framework.gwt.client.dirndl.overlay.Overlay.computeCssClass()
-	className = "decorator-chooser",
+	className = "decorator-suggestor",
 	emits = { ModelEvents.Selected.class, BeforeChooserClosed.class })
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class DecoratorSuggestor extends Model.Fields
@@ -94,7 +94,7 @@ public abstract class DecoratorSuggestor extends Model.Fields
 
 	@Override
 	public void onClosed(ModelEvents.Closed event) {
-		this.contentDecorator.chooser = null;
+		this.contentDecorator.suggestor = null;
 		if (event != null) {
 			event.bubble();
 		}

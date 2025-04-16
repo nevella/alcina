@@ -34,9 +34,13 @@ public class LocalMutations {
 		this.mutationsAccess = mutationsAccess;
 	}
 
+	boolean hasMutations() {
+		return mutations.size() > 0;
+	}
+
 	public void fireMutations() {
 		finallyCommand = null;
-		if (this.mutations.isEmpty()) {
+		if (!hasMutations()) {
 			return;
 		}
 		List<MutationRecord> mutations = this.mutations;
@@ -78,6 +82,10 @@ public class LocalMutations {
 		record.target = MutationNode.forNode(target);
 		record.attributeName = name;
 		record.newValue = data;
+		addMutation(record);
+	}
+
+	void addMutation(MutationRecord record) {
 		mutations.add(record);
 	}
 
@@ -90,7 +98,7 @@ public class LocalMutations {
 		record.type = Type.characterData;
 		record.target = MutationNode.forNode(target);
 		record.newValue = data;
-		mutations.add(record);
+		addMutation(record);
 	}
 
 	public void notifyChildListMutation(Node target, Node child,
@@ -106,11 +114,11 @@ public class LocalMutations {
 		record.nextSibling = MutationNode.forNode(nextSibling);
 		if (add) {
 			record.addedNodes.add(MutationNode.forNode(child));
-			mutations.addAll(nodeAsMutations(child, true));
+			nodeAsMutations(child, true).forEach(this::addMutation);
 		} else {
 			record.removedNodes.add(MutationNode.forNode(child));
 		}
-		mutations.add(record);
+		addMutation(record);
 	}
 
 	List<MutationRecord> nodeAsMutations(Node node, boolean deep) {
