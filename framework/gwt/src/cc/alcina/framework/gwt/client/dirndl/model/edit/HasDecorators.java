@@ -25,7 +25,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestor.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 
@@ -117,6 +116,9 @@ public interface HasDecorators
 		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
 		switch (domEvent.getNativeKeyCode()) {
 		case KeyCodes.KEY_BACKSPACE:
+			if ("disabled".length() > 0) {
+				return;
+			}
 			Selection selection = Document.get().getSelection();
 			Node focusNode = selection.getFocusNode();
 			if (focusNode != null && selection.isCollapsed()) {

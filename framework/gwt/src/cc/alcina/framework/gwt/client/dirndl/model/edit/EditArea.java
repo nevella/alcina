@@ -195,10 +195,9 @@ public class EditArea extends Model.Fields
 	}
 
 	void refreshSpacers(ModelMutation event) {
-		if (event.getData().entries.size() > 0) {
-			fragmentModel.byTypeAssignable(DecoratorNode.class)
-					.collect(Collectors.toList())
-					.forEach(DecoratorNode::ensureSpacers);
-		}
+		fragmentModel.byTypeAssignable(ZeroWidthCursorTarget.class).toList()
+				.forEach(ZeroWidthCursorTarget::removeIfNotRequired);
+		fragmentModel.byTypeAssignable(DecoratorNode.class).toList()
+				.forEach(DecoratorNode::ensureSpacers);
 	}
 }

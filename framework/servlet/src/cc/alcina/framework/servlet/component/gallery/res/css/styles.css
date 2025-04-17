@@ -997,16 +997,12 @@ choice-editor > edit:focus {
   border-color: #555;
   background-color: #FFF;
 }
-choice-editor > edit choice-node:not([contentEditable=false]) {
-  color: blue;
-}
 choice-editor > edit choice-node[contentEditable=false] {
   background: #e3e3e3;
   border-radius: 14px;
   border: solid 1px #ddd;
-}
-choice-editor > edit choice-node {
   padding: 1px 4px;
+  margin: 0 2px;
 }
 
 overlay > .decorator-suggestor {

@@ -30,7 +30,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
@@ -344,8 +343,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		}
 		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
 		List<? extends FragmentNode> list = fragmentModel.stream().toList();
-		fragmentModel.byType(ZeroWidthCursorTarget.class)
-				.forEach(ZeroWidthCursorTarget::unwrapIfContainsNonZwsText);
 		if (suggestor == null) {
 			/*
 			 * ensure the selection doesn't contain a partial decoratornode (in

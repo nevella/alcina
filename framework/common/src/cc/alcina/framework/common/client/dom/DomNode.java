@@ -238,6 +238,13 @@ public class DomNode {
 		return attributes().getOrDefault(key, "").equals(value);
 	}
 
+	public boolean attrIsIgnoreCase(String key, String value) {
+		return attributes().entrySet().stream()
+				.filter(e -> e.getKey().equalsIgnoreCase(key))
+				.map(e -> e.getValue().equalsIgnoreCase(value)).findFirst()
+				.orElse(false);
+	}
+
 	public boolean attrMatches(String attrName, String regex) {
 		return attr(attrName).matches(regex);
 	}

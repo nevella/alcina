@@ -152,7 +152,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		boolean focusOnBind = true;
 
 		// models which - if their elements are clicked on - will not cause hide
-		List<Model> peerModels;
+		List<Model> peerModels = List.of();
 
 		public Attributes withPeerModels(List<Model> peerModels) {
 			this.peerModels = peerModels;

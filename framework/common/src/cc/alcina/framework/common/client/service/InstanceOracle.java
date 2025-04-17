@@ -319,8 +319,9 @@ public class InstanceOracle {
 					lastAcceptedInstance = instance;
 					// this possibly causes query.instanceConsumer to be called
 					// on the originating (UI) thread
-					dispatch.accept(() -> query.instanceConsumer
-							.accept(lastAcceptedInstance));
+					dispatch.accept(() -> {
+						query.instanceConsumer.accept(lastAcceptedInstance);
+					});
 					if (query.oneOff) {
 						query.unbind();
 					}

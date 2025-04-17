@@ -108,8 +108,7 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	public ChoiceEditor() {
 		editArea = new EditArea();
 		editArea.provideFragmentModel().addModelled(ChoiceNode.class);
-		provideFragmentModel()
-				.addModelled(DecoratorNode.ZeroWidthCursorTarget.class);
+		provideFragmentModel().addModelled(ZeroWidthCursorTarget.class);
 		keyboardNavigation = new KeyboardNavigation(this);
 		bindings().from(editArea).on(EditArea.properties.value)
 				.withSetOnInitialise(false).signal(this::onEditCommit);

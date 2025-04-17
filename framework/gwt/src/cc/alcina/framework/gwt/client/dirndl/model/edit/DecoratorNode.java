@@ -1,9 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
@@ -15,13 +12,13 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
-import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -36,8 +33,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
  * or mention in a document, or a selected choice in a dropdown suggestor
  */
 @Directed(className = "decorator-node")
-public abstract class DecoratorNode<WT, SR> extends FragmentNode
-		implements HasStringRepresentableType<SR>, FragmentIsolate {
+public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
+		HasStringRepresentableType<SR>, FragmentIsolate, HasContentEditable {
 	/**
 	 * Models the characteristics of the content decorator, such as the key
 	 * sequence which triggers its creation, the class reference modelled, etc
@@ -102,58 +99,6 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 			Text text = (Text) splits.contents.w3cNode();
 			selection.collapse(text, text.getLength());
 			return created;
-		}
-	}
-
-	@Directed(tag = "span", className = "cursor-target")
-	public static class ZeroWidthCursorTarget extends FragmentNode {
-		public static final String ZWS_CONTENT = "\u200B";
-
-		public static boolean is(String text) {
-			return Objects.equals(text, ZWS_CONTENT);
-		}
-
-		public static boolean isOneOrMore(String text) {
-			return text.matches("\u200B+");
-		}
-
-		@Override
-		public void onFragmentRegistration() {
-			nodes().append(new TextNode(ZWS_CONTENT));
-		}
-
-		@Property.Not
-		public TextNode getSoleTextNode() {
-			if (provideChildNodes().size() != 1) {
-				return null;
-			}
-			FragmentNode child = children().findFirst().get();
-			return child instanceof TextNode ? (TextNode) child : null;
-		}
-
-		public void unwrapIfContainsNonZwsText() {
-			TextNode soleTextNode = getSoleTextNode();
-			if (soleTextNode == null
-					|| !Objects.equals(soleTextNode.liveValue(), ZWS_CONTENT)) {
-				List<TextNode> childTexts = (List) byType(TextNode.class)
-						.collect(Collectors.toList());
-				childTexts.forEach(text -> {
-					String nodeValue = text.liveValue();
-					String replaceValue = nodeValue.replace(ZWS_CONTENT, "");
-					if (!Objects.equals(nodeValue, replaceValue) &&
-					// localdom doesn't like 0-length text nodes
-							replaceValue.length() > 0) {
-						// this may move the selection cursor! so requires more
-						// bubbling/event chaining, non-deferred
-						text.setValue(replaceValue);
-						// this is the non-bubbling, quick hack - FIXME FN
-						Document.get().getSelection().validate();
-						text.domNode().asLocation().getLocationContext()
-								.invalidate();
-					}
-				});
-				nodes().strip();
-			}
 		}
 	}
 
@@ -272,6 +217,14 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		selection.collapse(cursorNode, 1);// after zws
 	}
 
+	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		if (!event.isBound()) {
+			new Exception().printStackTrace();
+		}
+	}
+
 	void stripIfInvalid() {
 		if (!isValid()) {
 			nodes().strip();
@@ -284,19 +237,19 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 	}
 
 	void ensureSpacers() {
-		if (!isEditableTextNodeOrSpace(nodes().previousSibling())) {
+		if (contentEditable) {
+			return;
+		}
+		if (HasContentEditable.isUneditableSibling(nodes().previousSibling())) {
 			nodes().insertBeforeThis(new ZeroWidthCursorTarget());
 		}
-		if (!isEditableTextNodeOrSpace(nodes().nextSibling())) {
+		if (HasContentEditable.isUneditableSibling(nodes().nextSibling())) {
 			nodes().insertAfterThis(new ZeroWidthCursorTarget());
 		}
 	}
 
-	boolean isEditableTextNodeOrSpace(FragmentNode sibling) {
-		if (sibling == null) {
-			return false;
-		}
-		return sibling instanceof ZeroWidthCursorTarget
-				|| sibling instanceof TextNode;
+	@Override
+	public boolean provideIsContentEditable() {
+		return contentEditable;
 	}
 }

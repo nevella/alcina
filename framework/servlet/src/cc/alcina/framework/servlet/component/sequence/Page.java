@@ -179,18 +179,18 @@ class Page extends Model.Fields
 				// todo - add ignoreable change filter
 				.filter(this::filterUnchangedSequencePlaceChange)
 				.signal(this::reloadSequence);
-		bindings().from(this).on(properties.sequence)
+		bindings().from(this).on(properties.filteredSequenceElements)
 				.signal(this::computeHighlightModel);
 		bindings().from(ui).on(Ui.properties.place)
 				// todo - add ignoreable change filter
 				.filter(this::filterUnchangedHighlightPlaceChange)
 				.signal(this::computeHighlightModel);
-		bindings().from(this).on(properties.sequence).value(this).debug()
-				.map(SequenceArea::new).to(this).on(properties.sequenceArea)
-				.oneWay();
-		bindings().from(this).on(properties.sequence).value(this)
-				.map(DetailArea::new).to(this).on(properties.detailArea)
-				.oneWay();
+		bindings().from(this).on(properties.filteredSequenceElements)
+				.value(this).debug().map(SequenceArea::new).to(this)
+				.on(properties.sequenceArea).oneWay();
+		bindings().from(this).on(properties.filteredSequenceElements)
+				.value(this).map(DetailArea::new).to(this)
+				.on(properties.detailArea).oneWay();
 		bindings().from(ui).on(Ui.properties.place)
 				.filter(this::filterSelectedIndexChange)
 				.signal(this::onSelectedIndexChange);
@@ -347,7 +347,7 @@ class Page extends Model.Fields
 				.toOracleQuery();
 		oracleQuery.withExceptionConsumer(RemoteUi.Invoke.exceptionNotifier());
 		if (oracleQuery.equals(this.oracleQuery)) {
-			oracleQuery.reemit();
+			this.oracleQuery.reemit();
 			return;
 		}
 		derefOracleQuery();
@@ -358,8 +358,9 @@ class Page extends Model.Fields
 	}
 
 	void putSequence(Sequence sequence) {
-		filteredSequenceElements = filteredSequenceElements(sequence);
 		properties.sequence.set(this, sequence);
+		List<?> filteredSequenceElements = filteredSequenceElements(sequence);
+		properties.filteredSequenceElements.set(this, filteredSequenceElements);
 	}
 
 	void derefOracleQuery() {

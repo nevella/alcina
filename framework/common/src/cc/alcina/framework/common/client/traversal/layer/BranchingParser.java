@@ -322,7 +322,7 @@ public class BranchingParser {
 							Location.Range range = new Location.Range(location,
 									end);
 							// ensure end is the deepest node
-							range = range.toDeepestNodes();
+							range = range.toDeepestCommonNode();
 							range = new Location.Range(location, range.end);
 							Measure negatedMatch = Measure.fromRange(range,
 									group.token);

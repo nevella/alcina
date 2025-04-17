@@ -660,9 +660,9 @@ public class Location implements Comparable<Location> {
 
 		/*
 		 * Preserves start.index and end.index, but changes treeindicies to that
-		 * of the lowest/highest node with those indicies
+		 * of the lowest common node containing those indicies
 		 */
-		public Range toDeepestNodes() {
+		public Range toDeepestCommonNode() {
 			List<DomNode> startContainers = start.getLocationContext()
 					.getContainingNodes(start.getIndex(), start.after);
 			List<DomNode> endContainers = start.getLocationContext()
@@ -677,6 +677,29 @@ public class Location implements Comparable<Location> {
 							end.after));
 		}
 
+		/*
+		 * Preserves start.index and end.index, but changes treeindicies to that
+		 * of the lowest node containing each index
+		 */
+		public Range toDeepestStartEndNode() {
+			List<DomNode> startContainers = start.getLocationContext()
+					.getContainingNodes(start.getIndex(), start.after);
+			List<DomNode> endContainers = start.getLocationContext()
+					.getContainingNodes(end.getIndex(), end.after);
+			Location toStart = Ax.last(startContainers).asLocation();
+			Location toEnd = Ax.last(endContainers).asLocation();
+			return new Range(
+					toStart.createTextRelativeLocation(
+							start.getIndex() - toStart.getIndex(), start.after),
+					toEnd.createTextRelativeLocation(
+							end.getIndex() - toEnd.getIndex(), end.after));
+		}
+
+		/**
+		 * 
+		 * @return the range containing the shallowest nodes which being/end at
+		 *         the location (or are the text node containing the location)
+		 */
 		public Range toShallowestNodes() {
 			List<DomNode> startContainers = start.getLocationContext()
 					.getContainingNodes(start.getIndex(), start.after).stream()

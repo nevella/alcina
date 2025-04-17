@@ -10,16 +10,17 @@ import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 
 /**
  * Complex/gritty mini-processes used to handle the extra appendages required by
  * the Decorator system, particularly
- * {@link cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget}
+ * {@link cc.alcina.framework.gwt.client.dirndl.model.edit.ZeroWidthCursorTarget}
  */
 public interface DecoratorBehavior {
 	static void squelch(NodeEvent event) {
@@ -99,32 +100,36 @@ public interface DecoratorBehavior {
 			Location.Range range = selection.getAnchorLocation().asRange();
 			Location.Range contextBoundary = registeredElement.asDomNode()
 					.asRange();
-			range = range.extendText(direction.numericDelta());
+			range = range.extendText(direction.numericDelta())
+					.toDeepestStartEndNode();
+			/*
+			 * range now covers what would be selected with shift-[cursor move]
+			 */
 			String text = range.text();
 			if (!ZeroWidthCursorTarget.is(text)) {
 				return;
 			}
+			/*
+			 * the text is a ZWS, so check extending one more
+			 */
 			Location.Range testExtended = range
-					.extendText(direction.numericDelta());
-			if (!contextBoundary.contains(testExtended)) {
+					.extendText(direction.numericDelta())
+					.toDeepestStartEndNode();
+			/*
+			 * FIXME - romcom - this *should* use location containment, but
+			 * selection -> location/range transformation is not quite right
+			 */
+			if (!contextBoundary.toIntPair()
+					.contains(testExtended.toIntPair())) {
 				return;
 			}
 			range = testExtended;
-			Location boundary = range.provideEndpoint(direction.numericDelta());
 			/*
-			 * Allow for editabledecorator/zws - boundary/zws -
-			 * decorator/non-zws
+			 * More outré combinations, like zws/zws, should be handled in
+			 * non-behavir code
 			 * 
-			 * Do not extend at the registered (behavior element) boundary
 			 */
-			if (ZeroWidthCursorTarget.isOneOrMore(text)) {
-				text = range.text();
-				testExtended = range.extendText(direction.numericDelta());
-				if (contextBoundary.contains(testExtended)) {
-					range = testExtended;
-				}
-			}
-			boundary = range.provideEndpoint(direction.numericDelta());
+			Location boundary = range.provideEndpoint(direction.numericDelta());
 			/*
 			 * ZWS logic ensures the boundary is within a DecoratorNode - so
 			 * extend to cover that node (it will be the parent)
@@ -142,6 +147,7 @@ public interface DecoratorBehavior {
 				break;
 			}
 			Location decoratorLocation = boundary;
+			DomNode containingNode = decoratorLocation.getContainingNode();
 			/*
 			 * position before/after the decorator
 			 */
@@ -160,10 +166,17 @@ public interface DecoratorBehavior {
 			selection.collapse(boundary.getContainingNode().gwtNode(),
 					boundary.getTextOffsetInNode());
 			/*
-			 * don't delete the zws, just the decorator
+			 * don't delete the zws, just the non-editable. confirm it's
+			 * non-editable
 			 */
 			if (delete) {
-				decoratorLocation.getContainingNode().removeFromParent();
+				/*
+				 * attrIsIgnoreCase is ok -just- for this
+				 */
+				if (containingNode.attrIsIgnoreCase("contenteditable",
+						"false")) {
+					containingNode.removeFromParent();
+				}
 			}
 			nativeKeydownEvent.squelch();
 		}
