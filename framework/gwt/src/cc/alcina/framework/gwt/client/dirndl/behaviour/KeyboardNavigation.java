@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.behaviour;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
@@ -91,7 +92,44 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 		}
 
 		public enum Type {
-			UP, DOWN, COMMIT, CANCEL, LEFT, RIGHT, FIRST
+			UP, DOWN, COMMIT, CANCEL, LEFT, RIGHT, FIRST,
+			/*
+			 * The exit methods are shown for inter-component navigation - for
+			 * instance, down-arrow on a tree filter might emit exit_down
+			 */
+			EXIT_UP, EXIT_DOWN
+		}
+	}
+
+	/**
+	 * Transforms a down-navigation event to an exit_down (a container may then
+	 * route to the filtered list/tree)
+	 */
+	public static class NavigationFilterTransformer<T> extends Model.Fields
+			implements DomEvents.KeyDown.Handler, Navigation.Handler {
+		@Directed
+		public T keyboardEventSource;
+
+		KeyboardNavigation keyboardNavigation;
+
+		public NavigationFilterTransformer(T keyboardEventSource) {
+			this.keyboardEventSource = keyboardEventSource;
+			keyboardNavigation = new KeyboardNavigation(this);
+		}
+
+		@Override
+		public void onKeyDown(KeyDown event) {
+			keyboardNavigation.onKeyDown(event);
+		}
+
+		@Override
+		public void onNavigation(Navigation event) {
+			if (event.getModel() == Type.DOWN) {
+				event.reemitAs(this, Navigation.class,
+						Navigation.Type.EXIT_DOWN);
+			} else if (event.getModel() == Type.EXIT_DOWN) {
+				event.bubble();
+			}
 		}
 	}
 }

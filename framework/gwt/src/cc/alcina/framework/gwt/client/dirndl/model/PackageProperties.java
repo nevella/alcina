@@ -1,15 +1,20 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
+import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
+import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import com.totsp.gwittir.client.ui.table.Field;
+import java.lang.Boolean;
+import java.lang.Class;
+import java.lang.Object;
+import java.lang.String;
 import java.util.Collection;
 import java.util.List;
 
-import com.totsp.gwittir.client.ui.table.Field;
-
-import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
-
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _CollectionDeltaModel collectionDeltaModel = new _CollectionDeltaModel();
     static _CollectionDeltaModel_RelativeInsert collectionDeltaModel_relativeInsert = new _CollectionDeltaModel_RelativeInsert();

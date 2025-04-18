@@ -2,9 +2,11 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -18,6 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Intersectio
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.KeyboardSelectNode;
@@ -127,6 +130,10 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	@Override
 	public void onNavigation(Navigation event) {
+		if (event.getModel() == Navigation.Type.EXIT_UP) {
+			event.bubble();
+			return;
+		}
 		if (keyboardSelectedNodeModel != null) {
 			if (keyboardSelectedNodeModel instanceof KeyboardNavigation.Navigation.Handler) {
 				((KeyboardNavigation.Navigation.Handler) keyboardSelectedNodeModel)
@@ -257,6 +264,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		@Override
 		public void onNavigation(Navigation event) {
 			TreePath keyboardSelect = null;
+			boolean exitUp = false;
 			Walker<PN> walker = treePath.walker();
 			switch (event.getModel()) {
 			case COMMIT:
@@ -283,6 +291,18 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 						break;
 					}
 				}
+				if (keyboardSelect == null) {
+					exitUp = true;
+				} else if (Objects.equals(keyboardSelect, treePath)) {
+					exitUp = true;
+				} else {
+					Tree tree = (Tree) keyboardSelect.provideContainingTree();
+					if (Objects.equals(keyboardSelect,
+							((AbstractPathNode) tree.root).treePath)
+							&& tree.rootHidden) {
+						exitUp = true;
+					}
+				}
 				break;
 			case DOWN:
 				while (walker.next() != null) {
@@ -292,10 +312,17 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 					}
 				}
 				break;
+			case EXIT_UP:
+				event.bubble();
+				break;
 			}
 			if (keyboardSelect != null) {
 				event.reemitAs(this, TreeEvents.KeyboardSelectNode.class,
 						keyboardSelect.getValue());
+			}
+			if (exitUp) {
+				event.reemitAs(this, KeyboardNavigation.Navigation.class,
+						KeyboardNavigation.Navigation.Type.EXIT_UP);
 			}
 		}
 
@@ -596,6 +623,14 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		@Override
 		public void onFocus(Focus event) {
 			event.reemitAs(this, KeyboardSelectNode.class, this);
+		}
+	}
+
+	public void focusForKeyboardNavigation() {
+		focusTree();
+		TreeNode<TN> toFocus = Ax.first(root.getChildren());
+		if (toFocus != null) {
+			emitEvent(TreeEvents.SelectNode.class, toFocus);
 		}
 	}
 }
