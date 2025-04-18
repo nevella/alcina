@@ -278,11 +278,7 @@ public class Location implements Comparable<Location> {
 		return locationContext;
 	}
 
-	public String getSubsequentText() {
-		return getSubsequentText(100);
-	}
-
-	public String getSubsequentText(int chars) {
+	public String getSubsequentDebugText(int chars) {
 		return locationContext.getSubsequentText(this, chars);
 	}
 
@@ -386,6 +382,19 @@ public class Location implements Comparable<Location> {
 		return Ax.format("%s,%s%s", treeIndex, index, dir);
 	}
 
+	public String toLocationTagString() {
+		String dir = containingNode == null ? "[detached location]"
+				: containingNode.isText() ? "" : after ? ",>" : ",<";
+		String tag = "[null]";
+		if (containingNode != null) {
+			tag = containingNode.name();
+			if (Ax.notBlank(containingNode.getClassName())) {
+				tag += "." + containingNode.getClassName();
+			}
+		}
+		return Ax.format("%s,%s%s,%s", treeIndex, index, dir, tag);
+	}
+
 	public Location toStartTextLocationIfAtEnd() {
 		if (isAtNodeEnd() && isTextNode()) {
 			return new Location(treeIndex + 1, index, false, null,
@@ -411,13 +420,13 @@ public class Location implements Comparable<Location> {
 	public String toString() {
 		String nodeData = null;
 		if (containingNode.isText()) {
-			nodeData = Ax.format("'%s'", getSubsequentText(50));
+			nodeData = Ax.format("'%s'", getSubsequentDebugText(50));
 		} else {
 			String classData = Ax.notBlank(containingNode.getClassName())
 					? "." + containingNode.getClassName()
 					: "";
 			nodeData = Ax.format("<%s%s> :: '%s'", containingNode.name(),
-					classData, getSubsequentText(50));
+					classData, getSubsequentDebugText(50));
 		}
 		String dir = containingNode.isText() ? "" : after ? ",>" : ",<";
 		return Ax.format("%s,%s%s %s", treeIndex, index, dir, nodeData);
@@ -724,8 +733,28 @@ public class Location implements Comparable<Location> {
 
 		@Override
 		public String toString() {
-			return FormatBuilder.keyValues("text", toIntPair(), "start", start,
-					"end", end, "text", Ax.trimForLogging(text()));
+			return FormatBuilder.keyValues("index.range", toIntPair(), "text",
+					Ax.trimForLogging(text()), "start", start, "end", end);
+		}
+
+		public String toLocationString() {
+			return Ax.format("[%s - %s]", start.toLocationTagString(),
+					end.toLocationTagString());
+		}
+
+		public String toAncestorLocationString() {
+			FormatBuilder format = new FormatBuilder();
+			format.line("self:");
+			format.line(toLocationString());
+			format.dashedLine();
+			format.line("start:");
+			start.getContainingNodes().stream().map(DomNode::asRange)
+					.map(Range::toLocationString).forEach(format::line);
+			format.dashedLine();
+			format.line("end:");
+			end.getContainingNodes().stream().map(DomNode::asRange)
+					.map(Range::toLocationString).forEach(format::line);
+			return format.toString();
 		}
 
 		public Range truncateAbsolute(int startIndex, int endIndex) {
@@ -825,6 +854,13 @@ public class Location implements Comparable<Location> {
 				.toIntPair().contains(getIndex()));
 		return new Location(containingLocation.treeIndex, index, after,
 				containingLocation.containingNode, locationContext);
+	}
+
+	public List<DomNode> getContainingNodes() {
+		boolean after = this.after || (getContainingNode().isText()
+				&& getTextOffsetInNode() == getContainingNode()
+						.textLengthSelf());
+		return getLocationContext().getContainingNodes(getIndex(), after);
 	}
 
 	IndexTuple asIndexTuple() {

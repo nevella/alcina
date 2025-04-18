@@ -620,10 +620,13 @@ public class LocalDom implements ContextFrame {
 		 * time it's called), so - what's below is an ok first approximation.
 		 */
 		if (get().applyToRemote) {
+			/*
+			 * fire localmutations immediately
+			 */
 			localMutations.fireMutations();
 		} else {
 			localMutations.notify(() -> {
-				// noop, just trigger a finally flush of mutations
+				// noop, just schedule a finally flush of mutations
 			});
 		}
 		attachIds.releaseRemoved();

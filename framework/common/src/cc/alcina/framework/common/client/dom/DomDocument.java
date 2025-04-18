@@ -532,7 +532,11 @@ public class DomDocument extends DomNode implements Cloneable {
 		public List<DomNode> getContainingNodes(int index, boolean after) {
 			ensureLookups();
 			List<DomNode> result = new ArrayList<>();
-			Location start = byNode.get(getDocumentElementNode());
+			DomNode root = getDocumentElementNode();
+			Location start = byNode.get(root);
+			/*
+			 * traverse to the first text node in the doc
+			 */
 			while (!start.isTextNode()) {
 				start = start.relativeLocation(RelativeDirection.NEXT_LOCATION);
 			}
@@ -541,6 +545,23 @@ public class DomDocument extends DomNode implements Cloneable {
 			while (!containingLocation.isTextNode()) {
 				containingLocation = containingLocation
 						.relativeLocation(RelativeDirection.NEXT_LOCATION);
+			}
+			/*
+			 * if this text starts at index, and we're ascending from an
+			 * 'after', go to the previous text
+			 */
+			if (after && containingLocation.getContainingNode().asLocation()
+					.getIndex() == index && index > 0) {
+				containingLocation = containingLocation.relativeLocation(
+						RelativeDirection.PREVIOUS_LOCATION,
+						TextTraversal.EXIT_NODE);
+				while (!containingLocation.isTextNode()) {
+					containingLocation = containingLocation.relativeLocation(
+							RelativeDirection.PREVIOUS_LOCATION);
+				}
+				containingLocation.relativeLocation(
+						RelativeDirection.NEXT_LOCATION,
+						TextTraversal.TO_END_OF_NODE);
 			}
 			Preconditions.checkState(containingLocation.getIndex() >= index
 					&& containingLocation.getIndex() <= index

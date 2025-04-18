@@ -43,8 +43,14 @@ public interface DecoratorBehavior {
 	}
 
 	/**
+	 * <p>
 	 * Extends the affected range of keyboard navigation events (and
-	 * backspace/delete) if the traversed range is a zero-width-space
+	 * backspace/delete) if the traversed range is a zero-width-space.
+	 * 
+	 * <p>
+	 * This effectively makes the ZWS nodes invisible to keyboard navigation -
+	 * they're there to allow (and control the appearance of) cursor targets,
+	 * but they should be otherwise invisible to the user.
 	 */
 	public static class ExtendKeyboardNavigationAction
 			implements DecoratorBehavior, AttributeBehaviorHandler {
@@ -100,8 +106,7 @@ public interface DecoratorBehavior {
 			Location.Range range = selection.getAnchorLocation().asRange();
 			Location.Range contextBoundary = registeredElement.asDomNode()
 					.asRange();
-			range = range.extendText(direction.numericDelta())
-					.toDeepestStartEndNode();
+			range = range.extendText(direction.numericDelta());
 			/*
 			 * range now covers what would be selected with shift-[cursor move]
 			 */
@@ -113,8 +118,7 @@ public interface DecoratorBehavior {
 			 * the text is a ZWS, so check extending one more
 			 */
 			Location.Range testExtended = range
-					.extendText(direction.numericDelta())
-					.toDeepestStartEndNode();
+					.extendText(direction.numericDelta());
 			/*
 			 * FIXME - romcom - this *should* use location containment, but
 			 * selection -> location/range transformation is not quite right
@@ -163,6 +167,7 @@ public interface DecoratorBehavior {
 						TextTraversal.TO_START_OF_NODE);
 				break;
 			}
+			Ax.out(range.toAncestorLocationString());
 			selection.collapse(boundary.getContainingNode().gwtNode(),
 					boundary.getTextOffsetInNode());
 			/*

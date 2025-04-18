@@ -1307,7 +1307,11 @@ public class Document extends Node
 	}-*/;
 
 	public void addLocalMutationListener(
-			TopicListener<List<MutationRecord>> listener) {
-		localDom.localMutations.topicMutations.add(listener);
+			TopicListener<List<MutationRecord>> listener, boolean batched) {
+		if (batched) {
+			localDom.localMutations.topicMutations.add(listener);
+		} else {
+			localDom.localMutations.topicUnbatchedMutations.add(listener);
+		}
 	}
 }

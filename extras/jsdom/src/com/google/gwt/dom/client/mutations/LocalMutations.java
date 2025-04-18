@@ -11,22 +11,45 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 
 import cc.alcina.framework.common.client.context.LooseContext;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.util.Topic;
 
-/*
+/**
+ * <p>
  * This class has two main logical clients: FragmentModel sync (i.e. sync the
  * typed fragment model to the dom after dom mutations), and propagation of dom
  * changes (browser) to the server in romcom (for...you guessed it...)
  * 
+ * <p>
  * Note that this only fires for attached nodes (and fires the subtree for a
  * child mutation)
+ * 
+ * <p>
+ * Update - this is in fact the perfect place to invalidate various dom caches,
+ * such as {@link DomNode#children} and {@link Location}. Those invalidations
+ * require immediate dispatch
  */
 public class LocalMutations {
 	MutationsAccess mutationsAccess;
 
 	List<MutationRecord> mutations = new ArrayList<>();
 
+	/*
+	 * track which events have been published to the unbatched topic
+	 */
+	int unbatchedIndex;
+
+	/**
+	 * Fires mutations when explicitly flushed, or (eventing dom) at the end of
+	 * the event cycle
+	 */
 	public Topic<List<MutationRecord>> topicMutations = Topic.create();
+
+	/**
+	 * Fires mutations as soon as they're published
+	 */
+	public Topic<List<MutationRecord>> topicUnbatchedMutations = Topic.create();
 
 	ScheduledCommand finallyCommand;
 
@@ -40,12 +63,15 @@ public class LocalMutations {
 
 	public void fireMutations() {
 		finallyCommand = null;
-		if (!hasMutations()) {
-			return;
+		while (true) {
+			if (!hasMutations()) {
+				return;
+			}
+			fireUnbatched();
+			List<MutationRecord> mutations = this.mutations;
+			this.mutations = new ArrayList<>();
+			topicMutations.publish(mutations);
 		}
-		List<MutationRecord> mutations = this.mutations;
-		this.mutations = new ArrayList<>();
-		topicMutations.publish(mutations);
 	}
 
 	/*
@@ -53,7 +79,8 @@ public class LocalMutations {
 	 * which fires mutations
 	 */
 	public void notify(Runnable runnable) {
-		if (!topicMutations.hasListeners()) {
+		if (!topicMutations.hasListeners()
+				&& !topicUnbatchedMutations.hasListeners()) {
 			return;
 		}
 		if (GWT.isClient() && finallyCommand == null) {
@@ -65,10 +92,24 @@ public class LocalMutations {
 					MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
 					mutationsAccess.isApplyingDetachedMutationsToLocalDom());
 			runnable.run();
+			fireUnbatched();
 		} finally {
 			MutationRecord.deltaFlag(
 					MutationRecord.FlagTransportMarkupTree.class, false);
 		}
+	}
+
+	void fireUnbatched() {
+		if (!topicUnbatchedMutations.hasListeners()) {
+			return;
+		}
+		List<MutationRecord> mutations = this.mutations.subList(unbatchedIndex,
+				this.mutations.size());
+		if (mutations.isEmpty()) {
+			return;
+		}
+		unbatchedIndex = mutations.size();
+		topicMutations.publish(mutations);
 	}
 
 	public void notifyAttributeModification(Node target, String name,

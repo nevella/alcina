@@ -408,6 +408,7 @@ class LocationContext2 implements LocationContext {
 
 	void init() {
 		resetLocationMutations();
-		gwtDocument.addLocalMutationListener(new LocalMutationTransformer());
+		gwtDocument.addLocalMutationListener(new LocalMutationTransformer(),
+				true);
 	}
 }
