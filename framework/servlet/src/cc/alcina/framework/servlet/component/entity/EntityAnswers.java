@@ -36,6 +36,7 @@ import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
+import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionType;
 
 class EntityAnswers extends TraversalAnswerSupplier {
 	boolean hasClearableFilter;
@@ -188,6 +189,12 @@ class EntityAnswers extends TraversalAnswerSupplier {
 			Preconditions.checkArgument(selections.isEmpty() || filter == null);
 			TraversalPlace place = fromPlace.copy();
 			place = place.appendSelections(selections);
+			if (selections.size() > 0) {
+				Selection last = Ax.last(selections);
+				Selection canonicaSelection = place
+						.provideSelection(SelectionType.VIEW);
+				place.computeListSource(null, canonicaSelection);
+			}
 			if (selections.size() > 0) {
 				// all appended selections should go at the start of layers
 				for (Selection sel : selections) {

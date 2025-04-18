@@ -259,34 +259,8 @@ class Page extends Model.All
 			int index = Ui.traversal().getLayer(selectionPath.selection).index;
 			to.clearLayersPost(index);
 		}
-		updateListSource(to, null, selectionPath.selection);
+		to.computeListSource(null, selectionPath.selection);
 		goPreserveScrollPosition(to);
-	}
-
-	void updateListSource(TraversalPlace place, Layer selectedLayer,
-			Selection selection) {
-		if (selectedLayer != null) {
-			place.listSource = new ListSource(selectedLayer.index, null);
-		} else if (selection instanceof Selection.HasTableRepresentation) {
-			TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
-			SelectionPath selectionPath = new TraversalPlace.SelectionPath();
-			selectionPath.selection = selection;
-			int layerIndex = Ui.getSelectedLayer(selection).index;
-			selectionPath.path = selection.processNode().treePath();
-			selectionPath.type = selectionType;
-			place.listSource = new ListSource(layerIndex, selectionPath);
-		} else {
-			if (place.listSource != null) {
-				int layerIndex = Ui.getSelectedLayer(selection).index;
-				boolean incomingGtCurrentIndex = place.listSource == null ? true
-						: layerIndex >= place.listSource.layerIndex;
-				if (incomingGtCurrentIndex) {
-					// preserve
-				} else {
-					place.listSource = null;
-				}
-			}
-		}
 	}
 
 	@Override
@@ -375,7 +349,7 @@ class Page extends Model.All
 		Layer selectedLayer = event.getModel();
 		if (currentSelected != selectedLayer.index) {
 			to.selectLayer(event.getModel());
-			updateListSource(to, selectedLayer, null);
+			to.computeListSource(selectedLayer, null);
 		}
 		to.go();
 	}
