@@ -33,9 +33,13 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
@@ -102,6 +106,8 @@ public class LocalDom implements ContextFrame {
 	private static boolean logParseAndMutationIssues;
 
 	private static Map<String, Supplier<Element>> elementCreators;
+
+	FastLcProvider lc;
 
 	static LocalDomCollections collections() {
 		return collections;
@@ -454,6 +460,7 @@ public class LocalDom implements ContextFrame {
 		topicUnableToParse = Topic.create();
 		topicMutationsAppliedToLocal = Topic.create();
 		topicReportException.add(this::handleReportedException);
+		lc = new FastLcProvider();
 		attachIds = new AttachIds();
 	}
 
@@ -487,7 +494,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private Element createElement0(String tagName) {
-		Supplier<Element> creator = elementCreators.get(tagName.toLowerCase());
+		Supplier<Element> creator = elementCreators.get(lc.lc(tagName));
 		if (creator == null) {
 			return new Element();
 		} else {
@@ -646,6 +653,12 @@ public class LocalDom implements ContextFrame {
 				CommonUtils.toSimpleExceptionMessage(exception));
 		topicPublishException
 				.publish(new LocalDomException(exception, message));
+	}
+
+	public void ensureLocalMutations() {
+		if (localMutations == null) {
+			localMutations = new LocalMutations(new MutationsAccess());
+		}
 	}
 
 	void initalizeDetachedSync0() {
@@ -852,7 +865,7 @@ public class LocalDom implements ContextFrame {
 
 	public static class LocalDomCollections {
 		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
-			return new LinkedHashMap<>();
+			return AlcinaCollections.newUnqiueMap();
 		}
 
 		public Map<String, String> createStringMap() {

@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.CollectionCreators.CoarseIntHashMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashMapCreator;
@@ -15,6 +16,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.HashSetCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.LinkedMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.WeakMapCreator;
+import cc.alcina.framework.entity.persistence.domain.ArrayBackedIntegerMap;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
@@ -105,6 +107,18 @@ public class CollectionCreatorsJvm {
 		@Override
 		public <K, V> Map<K, V> create() {
 			return new WeakHashMap<>();
+		}
+	}
+
+	@Reflected
+	@Registration.Singleton(
+		value = CollectionCreators.CoarseIntHashMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class CoarseIntArrayMapCreatorJvm
+			extends CoarseIntHashMapCreator {
+		@Override
+		public <V> Map<Integer, V> create() {
+			return new ArrayBackedIntegerMap<>(1000);
 		}
 	}
 }

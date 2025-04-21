@@ -302,8 +302,8 @@ public class LayerParser {
 				return true;
 			}
 			// FIXME - upa - can cache between selection updates
-			return parserPeer.traversal
-					.getSelections(MeasureSelection.class, true).stream()
+			return parserPeer.traversal.selections()
+					.get(MeasureSelection.class, true).stream()
 					.anyMatch(sel -> sel.get().token == token);
 		}
 

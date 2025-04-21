@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.behaviour;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
@@ -105,6 +106,7 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 	 * Transforms a down-navigation event to an exit_down (a container may then
 	 * route to the filtered list/tree)
 	 */
+	@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 	public static class NavigationFilterTransformer<T> extends Model.Fields
 			implements DomEvents.KeyDown.Handler, Navigation.Handler {
 		@Directed

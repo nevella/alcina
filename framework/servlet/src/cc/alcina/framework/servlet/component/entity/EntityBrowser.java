@@ -164,7 +164,7 @@ public class EntityBrowser {
 				// if the last layer matches exactly one entity, append it to
 				// the
 				// place + re-set
-				Layer lastLayer = Ax.last(traversal().getVisitedLayers());
+				Layer lastLayer = Ax.last(traversal().layers().getVisited());
 				// if (place.attributesOrEmpty(lastLayer.index)
 				// .has(StandardLayerAttributes.Filter.class)) {
 				Collection<Selection> selections = lastLayer.getSelections();
@@ -218,7 +218,7 @@ public class EntityBrowser {
 				traversal = new SelectionTraversal(this);
 				traversal.id = traversalId;
 				rootLayer = new RootLayer();
-				traversal.setRootLayer(rootLayer);
+				traversal.layers().setRoot(rootLayer);
 				TreeProcess.Node parentNode = JobContext
 						.getSelectedProcessNode();
 				traversal.select(new DomainGraphSelection(parentNode, this));

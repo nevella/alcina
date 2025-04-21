@@ -59,6 +59,13 @@ public class AlcinaCollections {
 		return CollectionCreators.Bootstrap.getLinkedMapCreator().create();
 	}
 
+	/*
+	 */
+	public static <V> Map<Integer, V> newCoarseIntHashMap() {
+		return Registry.impl(CollectionCreators.CoarseIntHashMapCreator.class)
+				.create();
+	}
+
 	public static <T> Set<T> newLinkedHashSet() {
 		return new LinkedHashSet<>();
 	}

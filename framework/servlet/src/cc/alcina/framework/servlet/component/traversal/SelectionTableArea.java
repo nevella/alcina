@@ -66,7 +66,7 @@ public class SelectionTableArea extends Model.Fields
 	public SelectionTableArea(Layer layer, Selection<?> selection) {
 		hasTable = (Selection.HasTableRepresentation) selection;
 		selectionLayer = layer;
-		filterLayer = Ui.traversal().getLayer(selectionLayer.index + 1);
+		filterLayer = Ui.traversal().layers().get(selectionLayer.index + 1);
 		selectionBindables = hasTable.getSelectionBindables();
 		appendRowSelectionTo = Ui.place();
 	}

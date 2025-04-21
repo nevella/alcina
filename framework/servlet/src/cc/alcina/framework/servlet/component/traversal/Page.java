@@ -256,7 +256,8 @@ class Page extends Model.All
 		TraversalPlace to = place().copy().withSelection(selectionPath);
 		to.clearLayerSelection();
 		if (Ui.get().isClearPostSelectionLayers()) {
-			int index = Ui.traversal().getLayer(selectionPath.selection).index;
+			int index = Ui.traversal().layers()
+					.get(selectionPath.selection).index;
 			to.clearLayersPost(index);
 		}
 		to.computeListSource(null, selectionPath.selection);

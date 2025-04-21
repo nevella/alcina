@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+
+import org.w3c.dom.DocumentFragment;
+import org.w3c.dom.Element;
+import org.w3c.dom.ranges.DocumentRange;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
@@ -18,6 +23,8 @@ import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
@@ -235,6 +242,8 @@ class LocationContext2 implements LocationContext {
 
 	DomNodeTree tree;
 
+	int documentTextRunLength;
+
 	LocationContext2(DomDocument document) {
 		Preconditions.checkState(document.w3cDoc() instanceof Document);
 		this.document = document;
@@ -267,68 +276,55 @@ class LocationContext2 implements LocationContext {
 	}
 
 	@Override
-	public Location createTextRelativeLocation(Location location, int offset,
-			boolean end) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'createTextRelativeLocation'");
-	}
-
-	@Override
-	public DomNode getContainingNode(Location location) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getContainingNode'");
-	}
-
-	@Override
-	public List<DomNode> getContainingNodes(int index, boolean after) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getContainingNodes'");
-	}
-
-	@Override
-	public Location getRelativeLocation(Location location,
-			RelativeDirection direction, TextTraversal textTraversal) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getRelativeLocation'");
-	}
-
-	@Override
 	public String getSubsequentText(Location location, int chars) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getSubsequentText'");
+		return buildSubstring(location,
+				new IntPair(location.getIndex(), location.getIndex() + chars));
 	}
 
-	@Override
-	public String markupContent(Range range) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'markupContent'");
+	String buildSubstring(Location startLocation, IntPair boundaries) {
+		StringBuilder builder = new StringBuilder();
+		DomNode cursor = startLocation.getContainingNode();
+		while (cursor != null) {
+			if (cursor.isText()) {
+				int index = cursor.asLocation().getIndex();
+				IntPair cursorRange = cursor.asRange().toIntPair();
+				if (cursorRange.i2 <= boundaries.i1) {
+					// continue
+				} else {
+					IntPair includedRange = boundaries
+							.intersection(cursorRange);
+					if (includedRange == null) {
+						break;
+					}
+					String part = cursor.textContent().substring(
+							includedRange.i1 - index, includedRange.i2 - index);
+					builder.append(part);
+				}
+			}
+			cursor = cursor.relative().treeSubsequentNode();
+		}
+		return builder.toString();
 	}
 
 	@Override
 	public String textContent(Range range) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'textContent'");
+		return buildSubstring(range.start, range.toIntPair());
 	}
 
 	@Override
 	public int toValidIndex(int idx) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'toValidIndex'");
+		if (idx < 0) {
+			return 0;
+		}
+		if (idx > documentTextRunLength) {
+			idx = documentTextRunLength;
+		}
+		return idx;
 	}
 
 	@Override
 	public void invalidate() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'invalidate'");
+		// NOOP
 	}
 
 	@Override
@@ -351,22 +347,101 @@ class LocationContext2 implements LocationContext {
 	}
 
 	@Override
-	public Range asRange(DomNode domNode) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'asRange'");
+	public Location getContainingLocation(Location test) {
+		return getContainingLocation(test, null);
+	}
+
+	@Override
+	public Location getContainingLocation(Location test, Location startAt) {
+		startAt = startAt == null ? getDocumentElementNode().asLocation()
+				: startAt;
+		int index = test.getIndex();
+		if (!getDocumentRange().toIntPair().contains(index)) {
+			return null;
+		}
+		boolean forwards = startAt.getIndex() <= index;
+		int itrCount = 0;
+		DomNodeTree tree = startAt.getContainingNode().tree();
+		tree.forwards = forwards;
+		DomNode node = null;
+		/*
+		 * This uses a linear search up to an iteration threshold, then switches
+		 * to binary
+		 */
+		while ((node = tree.currentNode()) != null && itrCount++ < 100) {
+			itrCount++;
+			Location.Range nodeRange = node.asRange();
+			IntPair nodePair = nodeRange.toIntPair();
+			if (node.isText()) {
+				if (nodePair.contains(index)) {
+					// only don't match if test index is at the end of
+					// this #TEXT, and test is not 'after'
+					if (nodePair.i2 == index && !test.after) {
+						//
+					} else {
+						return nodeRange.start;
+					}
+				}
+			} else {
+				tree.next();
+			}
+		}
+		/*
+		 * binary search
+		 */
+		while (!node.asRange().toIntPair().contains(index)) {
+			node = node.parent();
+		}
+		while (true) {
+			/*
+			 * descend loop
+			 */
+			List<DomNode> nodes = node.children.nodes();
+			int length = nodes.size();
+			int lowerBound = 0;
+			int upperBound = length;
+			while (true) {
+				/*
+				 * level binary search
+				 */
+				int binaryIdx = (upperBound - lowerBound) / 2 + lowerBound;
+				DomNode child = nodes.get(binaryIdx);
+				Location.Range childRange = child.asRange();
+				IntPair childPair = childRange.toIntPair();
+				if (!childPair.isPoint() && childPair.contains(index)) {
+					// only don't match if test index is at the end of
+					// the text run and test is not 'after'
+					//
+					if (childPair.i2 == index && !test.after) {
+					} else {
+						if (child.isText()) {
+							return childRange.start;
+						} else {
+							node = child;
+							break;
+						}
+					}
+				}
+				boolean binaryTowardsUpper = index >= childPair.i1;
+				if (binaryTowardsUpper) {
+					lowerBound = lowerBound == binaryIdx ? binaryIdx + 1
+							: binaryIdx;
+				} else {
+					upperBound = upperBound == binaryIdx ? binaryIdx - 1
+							: binaryIdx;
+				}
+			}
+		}
 	}
 
 	@Override
 	public Range getDocumentRange() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getDocumentRange'");
+		return gwtDocument.getDocumentElement().asDomNode().asRange();
 	}
 
 	@Override
 	public void ensureCurrent(Location location) {
-		LocalDom.flush();
+		gwtDocument.flushLocalMutations();
 		if (location.documentMutationPosition == getDocumentMutationPosition()) {
 			return;
 		}
@@ -403,12 +478,35 @@ class LocationContext2 implements LocationContext {
 
 	void resetLocationMutations() {
 		mutations = new ArrayList<>();
-		document.descendants().forEach(DomNode::recomputeLocation);
+		documentTextRunLength = 0;
+		document.descendants().forEach(n -> {
+			n.recomputeLocation();
+			documentTextRunLength += n.textLengthSelf();
+		});
 	}
 
 	void init() {
 		resetLocationMutations();
 		gwtDocument.addLocalMutationListener(new LocalMutationTransformer(),
 				true);
+	}
+
+	@Override
+	public int getContentLength(DomNode domNode) {
+		if (domNode.isText()) {
+			return domNode.textLengthSelf();
+		}
+		Location location = domNode.asLocation();
+		DomNode afterEnd = domNode.relative().treeSubsequentNodeNoDescent();
+		if (afterEnd != null) {
+			return afterEnd.asLocation().getIndex() - location.getIndex();
+		} else {
+			return documentTextRunLength - location.getIndex();
+		}
+	}
+
+	@Override
+	public DomNode getDocumentElementNode() {
+		return gwtDocument.domDocument.getDocumentElementNode();
 	}
 }

@@ -61,10 +61,10 @@ public class BoundaryParser implements TraversalContext {
 				parentNode, measure, quota, forwards);
 		traversal.select(extendSelection);
 		rootLayer = new BoundaryLayer();
-		traversal.setRootLayer(rootLayer);
+		traversal.layers().setRoot(rootLayer);
 		traversal.traverse();
-		ExtendedMeasureSelection extended = Ax
-				.first(traversal.getSelections(ExtendedMeasureSelection.class));
+		ExtendedMeasureSelection extended = Ax.first(
+				traversal.selections().get(ExtendedMeasureSelection.class));
 		return extended == null ? null : new ExtendResult(extended.get());
 	}
 }

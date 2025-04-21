@@ -152,14 +152,15 @@ public class TraversalPlace extends BasePlace {
 						&& TraversalBrowser.Ui.get().getHistory() != null) {
 					SelectionTraversal traversal = TraversalBrowser.Ui
 							.traversal();
-					if (traversal.getRootSelection() != null) {
+					if (traversal.selections().root != null) {
 						if (segmentPath != null) {
-							selection = traversal.getAllLayerSelections()
+							selection = traversal.selections()
+									.allLayerSelections()
 									.filter(sel -> segmentPath
 											.equals(sel.fullPath()))
 									.findFirst().orElse(null);
 						} else {
-							selection = (Selection) traversal.getRootSelection()
+							selection = (Selection) traversal.selections().root
 									.processNode().nodeForTreePath(path)
 									.map(Node::getValue).orElse(null);
 						}

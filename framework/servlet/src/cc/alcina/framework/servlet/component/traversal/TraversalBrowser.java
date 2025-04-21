@@ -224,11 +224,11 @@ public class TraversalBrowser {
 		protected Layer getSelectedLayer0() {
 			int selectedLayerIndex = place().provideSelectedLayerIndex();
 			return traversal() == null ? null
-					: traversal().getLayer(selectedLayerIndex);
+					: traversal().layers().get(selectedLayerIndex);
 		}
 
 		protected Layer getSelectedLayer0(Selection selection) {
-			return traversal().getLayer(selection);
+			return traversal().layers().get(selection);
 		}
 
 		public static Layer getListSourceLayer() {
@@ -239,7 +239,7 @@ public class TraversalBrowser {
 		protected Layer getListSourceLayer0() {
 			int listSourceLayerIndex = place().provideListSourceLayerIndex();
 			return traversal() == null ? null
-					: traversal().getLayer(listSourceLayerIndex);
+					: traversal().layers().get(listSourceLayerIndex);
 		}
 
 		@Override

@@ -30,7 +30,7 @@ public interface IntLookup<V> {
 	}
 
 	static class MapAdapter<V> implements IntLookup<V> {
-		Map<Integer, V> map = AlcinaCollections.newLinkedHashMap();
+		Map<Integer, V> map = AlcinaCollections.newCoarseIntHashMap();
 
 		@Override
 		public V get(int key) {

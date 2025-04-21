@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.persistence.domain;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2330,5 +2331,16 @@ public class DomainStore implements IDomainStore {
 
 	public static void onAppSpecificLoadComplete() {
 		topicStoreLoadingComplete.publish(writableStore());
+	}
+
+	/**
+	 * get a pooled connection
+	 */
+	public Connection getConnection() {
+		return ((DomainStoreLoaderDatabase) loader).getConnection();
+	}
+
+	public void releaseConnection(Connection conn) {
+		((DomainStoreLoaderDatabase) loader).releaseConn(conn);
 	}
 }

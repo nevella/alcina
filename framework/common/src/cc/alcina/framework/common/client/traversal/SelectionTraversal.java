@@ -148,11 +148,588 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
+	/*
+	 * An exception suppressed [to keep the traversal flow/logs clean], but
+	 * required for end-of-traversal exception wrangling
+	 */
+	public static class SuppressedException
+			implements ContextObservers.Observable {
+		Exception e;
+
+		public SuppressedException(Exception e) {
+			this.e = e;
+		}
+	}
+
+	/**
+	 * Usage: this example uses the selection observer to activate a layer
+	 * parser observer when the selection string matches the 'observe-foo'
+	 *
+	 * <code>
+	 * <pre>
+	
+	class SelectionObserver implements
+	ProcessObserver<SelectionTraversal.BeforeLayerSelection> {
+	@Override
+	public void topicPublished(BeforeLayerSelection message) {
+	if(message.layer.getClass()==ParserLayer.class&&message.selection.get().toString().contains("observe-foo")){
+		companionLayerParserObserver.active=true;
+	}else{
+		companionLayerParserObserver.active=false;
+	}
+	}
+	}
+	
+	 * </pre>
+	 *</code>
+	 *
+	 *
+	 *
+	 *
+	 */
+	public static class BeforeLayerSelection implements ProcessObservable {
+		public Layer layer;
+
+		public Selection selection;
+
+		public BeforeLayerSelection(Layer layer, Selection selection) {
+			this.layer = layer;
+			this.selection = selection;
+		}
+	}
+
+	public interface Context {
+	}
+
+	/**
+	 * Because the runnables will generally require Alcina contexts, use this
+	 * (custom) approach rather than java.util.concurrent.Executor
+	 *
+	 *
+	 *
+	 */
+	public interface Executor {
+		public static class CurrentThreadExecutor implements Executor {
+			private List<Runnable> runnables = new ArrayList<>();
+
+			@Override
+			public synchronized void awaitCompletion(boolean serialExecution) {
+				List<Runnable> current = runnables;
+				runnables = new ArrayList<>();
+				for (Runnable runnable : current) {
+					runnable.run();
+				}
+			}
+
+			@Override
+			public synchronized void submit(Runnable runnable) {
+				runnables.add(runnable);
+			}
+		}
+
+		void awaitCompletion(boolean serialExecution);
+
+		void submit(Runnable runnable);
+	}
+
+	public class LayerEntry implements ProcessObservable {
+		public Layer getLayer() {
+			return layers().getCurrent();
+		}
+
+		@Override
+		public String toString() {
+			return layers().getCurrent().getClass().getName() + "::"
+					+ layers().getCurrent().toString();
+		}
+	}
+
+	public class LayerExit implements ProcessObservable {
+		public Layer getLayer() {
+			return layers().getCurrent();
+		}
+
+		@Override
+		public String toString() {
+			return layers().getCurrent().getClass().getName() + "::"
+					+ layers().getCurrent().toString();
+		}
+	}
+
+	public static class SelectionException extends Exception {
+		public Selection selection;
+
+		public Exception exception;
+
+		public SelectionException(Selection selection, Exception exception) {
+			this.selection = selection;
+			this.exception = exception;
+		}
+	}
+
+	public class Selections {
+		public Topic<Selection> topicAdded = Topic.create();
+
+		public Topic<Selection> topicProcessed = Topic.create();
+
+		public Topic<SelectionException> topicException = Topic.create();
+
+		public Topic<Selection> topicBeforeProcessed = Topic.create();
+
+		public Selection root;
+
+		public Map<Selection, Exception> exceptions = new ConcurrentHashMap<>();
+
+		/*
+		 * These selections are available as inputs to subsequent, type-specific
+		 * layers. So, the multiset is not populated by outputs which are
+		 * ambiguous (could be routed to multiple) receiving layers
+		 */
+		Multiset<Class<? extends Selection>, Set<Selection>> byClassInputs = new Multiset<>();
+
+		// all selectioons, by type
+		Multiset<Class<? extends Selection>, Set<Selection>> byClass = new Multiset<>();
+
+		Map<Layer, Map<Selection, Integer>> byLayerCounts = AlcinaCollections
+				.newLinkedHashMap();
+
+		Map<Selection, Layer> selectionLayer = AlcinaCollections
+				.newLinkedHashMap();
+
+		// layer/segment
+		MultikeyMap<Selection> byLayerSegments = new UnsortedMultikeyMap<>(2);
+
+		// class/segment
+		MultikeyMap<Selection> byClassSegments = new UnsortedMultikeyMap<>(2);
+
+		int size;
+
+		public Stream<Selection> allSelections() {
+			return selectionLayer.keySet().stream();
+		}
+
+		/*
+		 * A selection may be selected in multiple layers, in which case it
+		 * would only appear once in 'getAllSelections'
+		 */
+		public Stream<Selection> allLayerSelections() {
+			return byLayerCounts.values().stream()
+					.flatMap(m -> m.keySet().stream());
+		}
+
+		public Map<Selection, Integer> byLayerCounts(Layer layer) {
+			return byLayerCounts.computeIfAbsent(layer,
+					l -> AlcinaCollections.newLinkedHashMap());
+		}
+
+		/**
+		 * Return all selections matching exactly the given type
+		 * 
+		 * @param <S>
+		 *            The filtering {@link Selection} subtype
+		 * @param clazz
+		 *            The filtering {@link Selection} subtype
+		 * @return The matching Selection instances
+		 */
+		public synchronized <S extends Selection> List<S>
+				get(Class<? extends S> clazz) {
+			return get(clazz, false);
+		}
+
+		/**
+		 * Return all selections matching a given type - either an exact class
+		 * match to S, or any subtype of S (if includeSubclasses is true)
+		 * 
+		 * @param <S>
+		 *            The filtering {@link Selection} subtype
+		 * @param clazz
+		 *            The filtering {@link Selection} subtype
+		 * @param includeSubclasses
+		 *            Whether to return all matching subtypes of S
+		 * @return The matching Selection instances
+		 */
+		public synchronized <S extends Selection> List<S>
+				get(Class<? extends S> clazz, boolean includeSubclasses) {
+			if (includeSubclasses) {
+				return (List<S>) byClass.keySet().stream()
+						.filter(selectionClass -> Reflections.at(selectionClass)
+								.isAssignableTo(clazz))
+						.map(byClass::get).flatMap(Collection::stream)
+						.collect(Collectors.toList());
+			} else {
+				return (List<S>) byClass.getAndEnsure(clazz).stream()
+						.collect(Collectors.toList());
+			}
+		}
+
+		/**
+		 * Return all potential input selections (see above for info about input
+		 * filtering) matching a given type - either an exact class match to S,
+		 * or any subtype of S (if includeSubclasses is true)
+		 * 
+		 * @param <S>
+		 *            The filtering {@link Selection} subtype
+		 * @param clazz
+		 *            The filtering {@link Selection} subtype
+		 * @param includeSubclasses
+		 *            Whether to return all matching subtypes of S
+		 * @return The matching Selection instances
+		 */
+		synchronized <S extends Selection> List<S>
+				getInputs(Class<? extends S> clazz, boolean includeSubclasses) {
+			if (includeSubclasses) {
+				return (List<S>) byClassInputs.keySet().stream()
+						.filter(selectionClass -> Reflections.at(selectionClass)
+								.isAssignableTo(clazz))
+						.map(byClassInputs::get).flatMap(Collection::stream)
+						.collect(Collectors.toList());
+			} else {
+				return (List<S>) byClassInputs.getAndEnsure(clazz).stream()
+						.collect(Collectors.toList());
+			}
+		}
+
+		public <T extends Selection> T getSingleSelection(Class<T> clazz) {
+			List<T> selections = get(clazz, false);
+			Preconditions.checkState(selections.size() == 1);
+			return selections.get(0);
+		}
+
+		public int size() {
+			return size;
+		}
+
+		synchronized boolean add(Selection selection) {
+			if (!testFilter(selection)) {
+				return false;
+			}
+			if (!checkSelectionPath(selection)) {
+				return false;
+			}
+			if (root == null) {
+				root = selection;
+			}
+			Map<Selection, Integer> byCurrentLayer = byLayerCounts(
+					layers().getCurrent());
+			byCurrentLayer.put(selection, byCurrentLayer.size());
+			byLayerSegments.put(layers().getCurrent(),
+					selection.getPathSegment(), selection);
+			byClass.add(selection.getClass(), selection);
+			selectionLayer.put(selection, layers().getCurrent());
+			boolean add = true;
+			if (isLayerOnly()) {
+			} else {
+				add = byClassInputs.add(selection.getClass(), selection);
+				byClassSegments.put(selection.getClass(),
+						selection.getPathSegment(), selection);
+			}
+			if (add) {
+				size++;
+				state.onSelectionAdded(selection);
+			}
+			return add;
+		}
+
+		Layer getLayer(Selection selection) {
+			return byLayerCounts.entrySet().stream()
+					.filter(e -> e.getValue().containsKey(selection))
+					.map(Entry::getKey).findFirst().get();
+		}
+
+		/**
+		 * Selection paths must be unique per generation - the traverser either
+		 * throws on a duplicate (default) or ignores (selection-specific
+		 * onDuplicatePathSelection override) -- an example of ignoreable
+		 * duplication would be if a pathsegment is reachable from multiple
+		 * ancestral routes/paths)
+		 *
+		 * @return Return false if selection should be ignored (duplicate)
+		 */
+		boolean checkSelectionPath(Selection selection) {
+			Selection existing = byLayerSegments.get(layers().getCurrent(),
+					selection.getPathSegment());
+			if (existing != null) {
+				existing.onDuplicatePathSelection(layers().getCurrent(),
+						selection);
+				return false;
+			} else {
+				return true;
+			}
+		}
+
+		synchronized IntPair getSelectionPosition(Selection value) {
+			Layer layer = selectionLayer.get(value);
+			Map<Selection, Integer> layerSelections = byLayerCounts.get(layer);
+			Integer layerPosition = layerSelections.get(value);
+			if (layerPosition != null) {
+				return new IntPair(layerPosition + 1, layerSelections.size());
+			}
+			return null;
+		}
+
+		boolean isLayerOnly() {
+			return layers().getCurrent() == null ? false
+					: layers().getCurrent().hasReceivingLayer();
+		}
+
+		boolean testFilter(Selection selection) {
+			if (filter == null) {
+				return true;
+			}
+			if (layers().getCurrent() == null) {
+				return true;
+			}
+			if (filter.maxExceptions > 0
+					&& selections().exceptions.size() >= filter.maxExceptions) {
+				return false;
+			}
+			if (filter.hasSelectionFilter(selection.getClass())) {
+				if (filter.matchesSelectionTypeFilter(selection.getClass(),
+						selection.getFilterableSegments())) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				int allLayersLimit = filter.allLayersLimit;
+				return allLayersLimit == 0 || allLayersLimit > size;
+			}
+		}
+
+		public Collection<Selection> byLayer(Layer layer) {
+			return byLayerCounts(layer).keySet();
+		}
+	}
+
+	/*
+	 * Note that Layer.State is reset each time the layer is processed, so
+	 * per-layer state that lasts the entire traversal lifetime is stored here
+	 * 
+	 * CLEAN - it'd be cleaner to have per-layer persistent state attached to
+	 * the layer
+	 */
+	public class State {
+		/*
+		 * handles groups of layers which receive the same input type, tracking
+		 * their dirty state (for rewind). If more than one layer receives type
+		 * X, all such layers must have a sibling or ancestor/descendant
+		 * relationship with other layers receiving type X
+		 */
+		class SelectionLayers {
+			class LayerSelections {
+				Layer layer;
+
+				Set<Selection> processed = AlcinaCollections.newUniqueSet();
+
+				boolean dirty;
+
+				LayerSelections(Layer layer) {
+					this.layer = layer;
+				}
+
+				void onSelectionProcessed(Selection selection) {
+					processed.add(selection);
+				}
+			}
+
+			boolean immutableInput;
+
+			Map<Layer, LayerSelections> layers = new LinkedHashMap<>();
+
+			void add(Layer layer) {
+				if (layers.containsKey(layer)) {
+					return;
+				}
+				this.immutableInput = Reflections.isAssignableFrom(
+						Selection.ImmutableInput.class, layer.inputType);
+				if (!immutableInput) {
+					Preconditions.checkState(layers.isEmpty() || layers.keySet()
+							.stream().anyMatch(l -> layer.parent == l
+									|| layer.parent == l.parent));
+				}
+				LayerSelections layerSelections = new LayerSelections(layer);
+				layers.put(layer, layerSelections);
+				selectionsByLayer.put(layer, layerSelections);
+			}
+
+			void onSelectionAdded(Selection selection) {
+				if (immutableInput) {
+				} else {
+					layers.values().forEach(ls -> ls.dirty = true);
+				}
+			}
+		}
+
+		public Layer<?> currentLayer;
+
+		DepthFirstTraversal<Layer> layerTraversal;
+
+		Layer rootLayer;
+
+		Map<Layer, Integer> visitedLayers = new LinkedHashMap<>();
+
+		public Selections selections = new Selections();
+
+		Map<Class<? extends Selection>, SelectionLayers> layersByInput = new LinkedHashMap<>();
+
+		Map<Layer, SelectionLayers.LayerSelections> selectionsByLayer = new LinkedHashMap<>();
+
+		public <T> T context(Class<T> clazz) {
+			return SelectionTraversal.this.context(clazz);
+		}
+
+		public SelectionTraversal getTraversal() {
+			return SelectionTraversal.this;
+		}
+
+		void releaseLastLayerResources() {
+			Layer last = visitedLayers.keySet().stream().reduce(Ax.last())
+					.orElse(null);
+			selections.byLayerCounts.getOrDefault(last, new LinkedHashMap<>())
+					.keySet().forEach(
+							SelectionTraversal.this::releaseCompletedSelections);
+		}
+
+		/*
+		 * If inputs were created for a previous layer, rewind to that layer
+		 */
+		void onAfterTraversal() {
+			Optional<LayerSelections> firstDirty = selectionsByLayer.values()
+					.stream().filter(ls -> ls.dirty).findFirst();
+			if (firstDirty.isPresent()) {
+				Layer layer = firstDirty.get().layer;
+				logger.info("  --> Rewind :: {}", layer.getName());
+				layerTraversal.setNext(layer);
+			}
+		}
+
+		void onBeforeLayerTraversal() {
+			Integer index = state.visitedLayers.computeIfAbsent(currentLayer,
+					l -> state.visitedLayers.size());
+			currentLayer.index = index;
+			if (!(currentLayer instanceof InputsFromPreviousSibling)) {
+				Class<?> inputType = currentLayer.inputType;
+				if (Reflections.isAssignableFrom(EmittedBySoleLayer.class,
+						inputType)) {
+					return;
+				}
+				SelectionLayers layerSelections = layersByInput.get(inputType);
+				if (layerSelections == null) {
+					layersByInput.put(currentLayer.inputType,
+							new SelectionLayers());
+				}
+				layersByInput.get(currentLayer.inputType).add(currentLayer);
+				selectionsByLayer.get(currentLayer).dirty = false;
+			}
+		}
+
+		void onSelectionAdded(Selection selection) {
+			if (currentLayer != null) {
+				SelectionLayers layerSelections = layersByInput
+						.get(selection.getClass());
+				if (layerSelections != null) {
+					layerSelections.onSelectionAdded(selection);
+				}
+			}
+			selections.topicAdded.publish(selection);
+		}
+
+		synchronized void onSelectionProcessed(Selection selection) {
+			LayerSelections layerSelections = selectionsByLayer
+					.get(currentLayer);
+			if (layerSelections != null) {
+				layerSelections.onSelectionProcessed(selection);
+			}
+			selections.topicProcessed.publish(selection);
+		}
+
+		void select(Selection selection) {
+			SelectionTraversal.this.select(selection);
+		}
+
+		boolean wasProcessed(Selection selection) {
+			LayerSelections layerSelections = state.selectionsByLayer
+					.get(currentLayer);
+			return layerSelections != null
+					&& layerSelections.processed.contains(selection);
+		}
+	}
+
+	public static class StatsLogger {
+		public class LayerEntry extends Bindable.Fields {
+			private Layer layer;
+
+			String key;
+
+			String outputs;
+
+			public LayerEntry(Layer layer) {
+				this.layer = layer;
+				FormatBuilder keyBuilder = new FormatBuilder();
+				keyBuilder.indent(layer.depth());
+				keyBuilder.append(layer.getName());
+				key = keyBuilder.toString();
+				outputs = computeOutputs();
+			}
+
+			String computeOutputs() {
+				int size = selectionTraversal.state.selections
+						.byLayerCounts(layer).size();
+				if (size != 0) {
+					return String.valueOf(size);
+				}
+				Layer firstLeaf = layer.firstLeaf();
+				int firstLeafSize = selectionTraversal.state.selections
+						.byLayerCounts(firstLeaf).size();
+				if (firstLeafSize != 0) {
+					return "-";
+				} else {
+					return "0";
+				}
+			}
+		}
+
+		private SelectionTraversal selectionTraversal;
+
+		public StatsLogger(SelectionTraversal selectionTraversal) {
+			this.selectionTraversal = selectionTraversal;
+		}
+
+		void execute() {
+			DepthFirstTraversal<Layer> debugTraversal = new DepthFirstTraversal<Layer>(
+					selectionTraversal.state.rootLayer, Layer::getChildren,
+					false);
+			List<LayerEntry> entries = debugTraversal.stream()
+					.map(LayerEntry::new).collect(Collectors.toList());
+			String log = ReflectionUtils.logBeans(LayerEntry.class, entries);
+			Ax.out(log);
+		}
+	}
+
+	public class TraversalComplete implements ProcessObservable {
+	}
+
+	class SuppressedExceptionObserver
+			implements ContextObservers.Observer<SuppressedException> {
+		@Override
+		public void topicPublished(SuppressedException message) {
+			selections().exceptions.put(contextSelection(), message.e);
+		}
+	}
+
 	static final String CONTEXT_TRAVERSAL = SelectionTraversal.class.getName()
 			+ ".CONTEXT_TRAVERSAL";
 
 	static final String CONTEXT_SELECTION = SelectionTraversal.class.getName()
 			+ ".CONTEXT_SELECTION";
+
+	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
+			.create();
+
+	/*
+	 * Each traversal in the VM lifetime is assigned a unique id
+	 */
+	static IdCounter counter = new IdCounter();
 
 	public static <S extends Selection> S contextSelection() {
 		return LooseContext.get(CONTEXT_SELECTION);
@@ -162,30 +739,15 @@ public class SelectionTraversal
 		return LooseContext.get(CONTEXT_TRAVERSAL);
 	}
 
-	public static Topic<SelectionTraversal> topicTraversalComplete = Topic
-			.create();
-
-	static IdCounter counter = new IdCounter();
-
-	public Topic<Selection> selectionAdded = Topic.create();
-
-	public Topic<Selection> selectionProcessed = Topic.create();
-
-	public Topic<SelectionException> selectionException = Topic.create();
-
-	public Topic<Selection> beforeSelectionProcessed = Topic.create();
-
 	public Topic<Layer> topicBeforeLayerTraversal = Topic.create();
 
-	private State state = new State();
+	State state = new State();
 
 	Map<Selection, Integer> selectionIndicies = new ConcurrentHashMap<>();
 
-	public Map<Selection, Exception> selectionExceptions = new ConcurrentHashMap<>();
+	SelectionFilter filter;
 
-	private SelectionFilter filter;
-
-	private Executor executor = new Executor.CurrentThreadExecutor();
+	Executor executor = new Executor.CurrentThreadExecutor();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -211,29 +773,46 @@ public class SelectionTraversal
 		this.traversalContext = traversalContext;
 	}
 
-	public Layer<?> currentLayer() {
-		return state.currentLayer;
-	}
-
-	private void enterSelectionContext(Selection<?> selection) {
-		selection.ancestorSelections().forEach(Selection::enterContext);
-	}
-
-	private void exitSelectionContext(Selection<?> selection) {
-		selection.ancestorSelections().forEach(Selection::exitContext);
-	}
-
-	/*
-	 * An exception suppressed [to keep the traversal flow/logs clean], but
-	 * required for end-of-traversal exception wrangling
+	/**
+	 * API grouping sugar class - provides access to layer operations
 	 */
-	public static class SuppressedException
-			implements ContextObservers.Observable {
-		Exception e;
-
-		public SuppressedException(Exception e) {
-			this.e = e;
+	public class Layers {
+		public Layer<?> getCurrent() {
+			return state.currentLayer;
 		}
+
+		public Layer getRoot() {
+			return state.rootLayer;
+		}
+
+		public Layer get(Selection selection) {
+			if (selection == selections().root) {
+				return null;
+			} else {
+				return state.selections.getLayer(selection);
+			}
+		}
+
+		public Layer get(int selectedLayerIndex) {
+			return getVisited().stream()
+					.filter(layer -> layer.index == selectedLayerIndex)
+					.findFirst().orElse(null);
+		}
+
+		public void setRoot(Layer rootLayer) {
+			state.rootLayer = rootLayer;
+		}
+
+		public List<Layer> getVisited() {
+			return state.visitedLayers.keySet().stream()
+					.collect(Collectors.toList());
+		}
+	}
+
+	Layers layers = new Layers();
+
+	public Layers layers() {
+		return layers;
 	}
 
 	@Override
@@ -242,12 +821,12 @@ public class SelectionTraversal
 		List<Node> selectionPath = node.asNodePath();
 		Node last = CommonUtils.last(selectionPath);
 		Selection value = (Selection) last.getValue();
-		// Layer layer = getLayer(value);
+		// Layer layer = layers().get(value);
 		/*
 		 * a little counterintuitively, emit the current layer (using the
 		 * selection as an input), not the layer the selection was generated in
 		 */
-		Layer layer = currentLayer();
+		Layer layer = layers().getCurrent();
 		if (layer != null) {
 			position.format("Layer: [%s/%s]", layer.layerPath(),
 					layer.root().getChildren().size());
@@ -271,112 +850,16 @@ public class SelectionTraversal
 		return this.filter;
 	}
 
-	public Layer getLayer(Selection selection) {
-		if (selection == getRootSelection()) {
-			return null;
-		} else {
-			return state.selections.getLayer(selection);
-		}
-	}
-
-	public Layer getRootLayer() {
-		return state.rootLayer;
-	}
-
-	public Selection getRootSelection() {
-		return state.selections.rootSelection;
-	}
-
-	public <S extends Selection> List<S>
-			getSelections(Class<? extends S> clazz) {
-		return state.getSelections(clazz);
-	}
-
-	public <S extends Selection> List<S> getSelections(Class<? extends S> clazz,
-			boolean includeSubclasses) {
-		return state.getSelections(clazz, includeSubclasses);
-	}
-
-	public Collection<Selection> getSelections(Layer layer) {
-		return state.getSelections(layer);
-	}
-
-	public <T extends Selection> T getSingleSelection(Class<T> clazz) {
-		return state.selections.getSingleSelection(clazz);
+	public Selections selections() {
+		return state.selections;
 	}
 
 	public void logTraversalStats() {
 		new StatsLogger(this).execute();
 	}
 
-	private void processSelection(Selection selection) {
-		try {
-			LooseContext.pushWithKey(CONTEXT_SELECTION, selection);
-			Layer layer = currentLayer();
-			enterSelectionContext(selection);
-			if (layer.state.traversalCancelled) {
-				return;
-			}
-			selection.processNode().select(null, this);
-			if (!layer.testFilter(selection) || !testLayerFilter(selection)) {
-				// skip processing if, for instance, the traversal has hit max
-				// exceptions
-				return;
-			}
-			try {
-				beforeSelectionProcessed.publish(selection);
-				ProcessObservers.publish(BeforeLayerSelection.class,
-						() -> new BeforeLayerSelection(layer, selection));
-				layer.process(selection);
-			} catch (Exception e) {
-				selectionExceptions.put(selection, e);
-				selection.processNode().onException(e);
-				selectionException
-						.publish(new SelectionException(selection, e));
-				logger.warn(Ax.format("Selection exception :: %s",
-						Ax.trimForLogging(selection)), e);
-				if (context(TraversalContext.ThrowOnException.class) != null) {
-					throw WrappedRuntimeException.wrap(e);
-				}
-			} finally {
-				layer.onAfterProcess(selection);
-			}
-		} finally {
-			try {
-				exitSelectionContext(selection);
-				releaseCompletedSelections(selection);
-				state.onSelectionProcessed(selection);
-				selectionProcessed.publish(selection);
-			} catch (Throwable e) {
-				logger.warn("DEVEX-0 :: selection cleanup", e);
-				throw e;
-			} finally {
-				LooseContext.pop();
-			}
-		}
-	}
-
 	public SelectionFilter provideExceptionSelectionFilter() {
-		return SelectionFilter.ofSelections(selectionExceptions.keySet());
-	}
-
-	/*
-	 * Intended for release of DOM references, particularly
-	 */
-	private void releaseCompletedSelections(Selection selection) {
-		selection.processNode().setSelfComplete(true);
-		if (!releaseResources) {
-			return;
-		}
-		Selection cursor = selection;
-		while (cursor != null) {
-			if (cursor.processNode().evaluateReleaseResources()) {
-				cursor.releaseResources();
-				cursor = cursor.parentSelection();
-			} else {
-				break;
-			}
-		}
+		return SelectionFilter.ofSelections(selections().exceptions.keySet());
 	}
 
 	public void select(Selection selection) {
@@ -399,26 +882,10 @@ public class SelectionTraversal
 		this.filter = filter;
 	}
 
-	public void setRootLayer(Layer rootLayer) {
-		state.rootLayer = rootLayer;
-	}
-
-	private boolean testLayerFilter(Selection selection) {
-		if (filter == null) {
-			return true;
-		}
-		if (filter.maxExceptions > 0
-				&& selectionExceptions.size() >= filter.maxExceptions) {
-			return false;
-		}
-		int allLayersLimit = filter.allLayersLimit;
-		return allLayersLimit == 0 || allLayersLimit > state.selections.size();
-	}
-
 	public void throwExceptions() {
-		if (selectionExceptions.size() > 0) {
-			throw new UmbrellaException(selectionExceptions.values().stream()
-					.collect(AlcinaCollectors.toLinkedHashSet()));
+		if (selections().exceptions.size() > 0) {
+			throw new UmbrellaException(selections().exceptions.values()
+					.stream().collect(AlcinaCollectors.toLinkedHashSet()));
 		}
 	}
 
@@ -433,12 +900,9 @@ public class SelectionTraversal
 		}
 	}
 
-	class SuppressedExceptionObserver
-			implements ContextObservers.Observer<SuppressedException> {
-		@Override
-		public void topicPublished(SuppressedException message) {
-			selectionExceptions.put(contextSelection(), message.e);
-		}
+	public <T> T context(Class<T> clazz) {
+		return traversalContext != null && Reflections.isAssignableFrom(clazz,
+				traversalContext.getClass()) ? (T) traversalContext : null;
 	}
 
 	void traverse0() {
@@ -491,548 +955,88 @@ public class SelectionTraversal
 				() -> new TraversalComplete());
 	}
 
-	/**
-	 * Usage: this example uses the selection observer to activate a layer
-	 * parser observer when the selection string matches the 'observe-foo'
-	 *
-	 * <code>
-	 * <pre>
-	
-	class SelectionObserver implements
-	ProcessObserver<SelectionTraversal.BeforeLayerSelection> {
-	@Override
-	public void topicPublished(BeforeLayerSelection message) {
-	if(message.layer.getClass()==ParserLayer.class&&message.selection.get().toString().contains("observe-foo")){
-		companionLayerParserObserver.active=true;
-	}else{
-		companionLayerParserObserver.active=false;
-	}
-	}
-	}
-	
-	 * </pre>
-	 *</code>
-	 *
-	 *
-	 *
-	 *
-	 */
-	public static class BeforeLayerSelection implements ProcessObservable {
-		public Layer layer;
-
-		public Selection selection;
-
-		public BeforeLayerSelection(Layer layer, Selection selection) {
-			this.layer = layer;
-			this.selection = selection;
-		}
+	void enterSelectionContext(Selection<?> selection) {
+		selection.ancestorSelections().forEach(Selection::enterContext);
 	}
 
-	public interface Context {
+	void exitSelectionContext(Selection<?> selection) {
+		selection.ancestorSelections().forEach(Selection::exitContext);
 	}
 
-	/**
-	 * Because the runnables will generally require Alcina contexts, use this
-	 * (custom) approach rather than java.util.concurrent.Executor
-	 *
-	 *
-	 *
-	 */
-	public interface Executor {
-		void awaitCompletion(boolean serialExecution);
-
-		void submit(Runnable runnable);
-
-		public static class CurrentThreadExecutor implements Executor {
-			private List<Runnable> runnables = new ArrayList<>();
-
-			@Override
-			public synchronized void awaitCompletion(boolean serialExecution) {
-				List<Runnable> current = runnables;
-				runnables = new ArrayList<>();
-				for (Runnable runnable : current) {
-					runnable.run();
+	void processSelection(Selection selection) {
+		try {
+			LooseContext.pushWithKey(CONTEXT_SELECTION, selection);
+			Layer layer = layers().getCurrent();
+			enterSelectionContext(selection);
+			if (layer.state.traversalCancelled) {
+				return;
+			}
+			selection.processNode().select(null, this);
+			if (!layer.testFilter(selection) || !testLayerFilter(selection)) {
+				// skip processing if, for instance, the traversal has hit max
+				// exceptions
+				return;
+			}
+			try {
+				selections().topicBeforeProcessed.publish(selection);
+				ProcessObservers.publish(BeforeLayerSelection.class,
+						() -> new BeforeLayerSelection(layer, selection));
+				layer.process(selection);
+			} catch (Exception e) {
+				selections().exceptions.put(selection, e);
+				selection.processNode().onException(e);
+				selections().topicException
+						.publish(new SelectionException(selection, e));
+				logger.warn(Ax.format("Selection exception :: %s",
+						Ax.trimForLogging(selection)), e);
+				if (context(TraversalContext.ThrowOnException.class) != null) {
+					throw WrappedRuntimeException.wrap(e);
 				}
+			} finally {
+				layer.onAfterProcess(selection);
 			}
-
-			@Override
-			public synchronized void submit(Runnable runnable) {
-				runnables.add(runnable);
-			}
-		}
-	}
-
-	public class LayerEntry implements ProcessObservable {
-		public Layer getLayer() {
-			return currentLayer();
-		}
-
-		@Override
-		public String toString() {
-			return currentLayer().getClass().getName() + "::"
-					+ currentLayer().toString();
-		}
-	}
-
-	public class LayerExit implements ProcessObservable {
-		public Layer getLayer() {
-			return currentLayer();
-		}
-
-		@Override
-		public String toString() {
-			return currentLayer().getClass().getName() + "::"
-					+ currentLayer().toString();
-		}
-	}
-
-	public static class SelectionException extends Exception {
-		public Selection selection;
-
-		public Exception exception;
-
-		public SelectionException(Selection selection, Exception exception) {
-			this.selection = selection;
-			this.exception = exception;
-		}
-	}
-
-	public class Selections {
-		Selection rootSelection;
-
-		// these selections can be inputs to subsequent, type-specific layers
-		// (so are not populated by outputs which are ambiguous for receiving
-		// layers)
-		Multiset<Class<? extends Selection>, Set<Selection>> byClassInputs = new Multiset<>();
-
-		// all selectioons, by type
-		Multiset<Class<? extends Selection>, Set<Selection>> byClass = new Multiset<>();
-
-		Map<Layer, Map<Selection, Integer>> byLayer = AlcinaCollections
-				.newLinkedHashMap();
-
-		Map<Selection, Layer> selectionLayer = AlcinaCollections
-				.newLinkedHashMap();
-
-		// layer/segment
-		MultikeyMap<Selection> byLayerSegments = new UnsortedMultikeyMap<>(2);
-
-		// class/segment
-		MultikeyMap<Selection> byClassSegments = new UnsortedMultikeyMap<>(2);
-
-		int size;
-
-		synchronized boolean add(Selection selection) {
-			if (!testFilter(selection)) {
-				return false;
-			}
-			if (!checkSelectionPath(selection)) {
-				return false;
-			}
-			if (rootSelection == null) {
-				rootSelection = selection;
-			}
-			Map<Selection, Integer> byCurrentLayer = byLayer(currentLayer());
-			byCurrentLayer.put(selection, byCurrentLayer.size());
-			byLayerSegments.put(currentLayer(), selection.getPathSegment(),
-					selection);
-			byClass.add(selection.getClass(), selection);
-			selectionLayer.put(selection, currentLayer());
-			boolean add = true;
-			if (isLayerOnly()) {
-			} else {
-				add = byClassInputs.add(selection.getClass(), selection);
-				byClassSegments.put(selection.getClass(),
-						selection.getPathSegment(), selection);
-			}
-			if (add) {
-				size++;
-				state.onSelectionAdded(selection);
-				selectionAdded.publish(selection);
-			}
-			return add;
-		}
-
-		Layer getLayer(Selection selection) {
-			return byLayer.entrySet().stream()
-					.filter(e -> e.getValue().containsKey(selection))
-					.map(Entry::getKey).findFirst().get();
-		}
-
-		public Map<Selection, Integer> byLayer(Layer layer) {
-			return byLayer.computeIfAbsent(layer,
-					l -> AlcinaCollections.newLinkedHashMap());
-		}
-
-		/**
-		 * Selection paths must be unique per generation - the traverser either
-		 * throws on a duplicate (default) or ignores (selection-specific
-		 * onDuplicatePathSelection override) -- an example of ignoreable
-		 * duplication would be if a pathsegment is reachable from multiple
-		 * ancestral routes/paths)
-		 *
-		 * @return Return false if selection should be ignored (duplicate)
-		 */
-		boolean checkSelectionPath(Selection selection) {
-			Selection existing = byLayerSegments.get(currentLayer(),
-					selection.getPathSegment());
-			if (existing != null) {
-				existing.onDuplicatePathSelection(currentLayer(), selection);
-				return false;
-			} else {
-				return true;
+		} finally {
+			try {
+				exitSelectionContext(selection);
+				releaseCompletedSelections(selection);
+				state.onSelectionProcessed(selection);
+			} catch (Throwable e) {
+				logger.warn("DEVEX-0 :: selection cleanup", e);
+				throw e;
+			} finally {
+				LooseContext.pop();
 			}
 		}
-
-		/**
-		 * Return all selections matching a given type - either an exact class
-		 * match to S, or any subtype of S (if includeSubclasses is true)
-		 * 
-		 * @param <S>
-		 *            The filtering {@link Selection} subtype
-		 * @param clazz
-		 *            The filtering {@link Selection} subtype
-		 * @param includeSubclasses
-		 *            Whether to return all matching subtypes of S
-		 * @return The matching Selection instances
-		 */
-		public synchronized <S extends Selection> List<S>
-				get(Class<? extends S> clazz, boolean includeSubclasses) {
-			if (includeSubclasses) {
-				return (List<S>) byClass.keySet().stream()
-						.filter(selectionClass -> Reflections.at(selectionClass)
-								.isAssignableTo(clazz))
-						.map(byClass::get).flatMap(Collection::stream)
-						.collect(Collectors.toList());
-			} else {
-				return (List<S>) byClass.getAndEnsure(clazz).stream()
-						.collect(Collectors.toList());
-			}
-		}
-
-		/**
-		 * Return all potential input selections (see above for info about input
-		 * filtering) matching a given type - either an exact class match to S,
-		 * or any subtype of S (if includeSubclasses is true)
-		 * 
-		 * @param <S>
-		 *            The filtering {@link Selection} subtype
-		 * @param clazz
-		 *            The filtering {@link Selection} subtype
-		 * @param includeSubclasses
-		 *            Whether to return all matching subtypes of S
-		 * @return The matching Selection instances
-		 */
-		public synchronized <S extends Selection> List<S>
-				getInputs(Class<? extends S> clazz, boolean includeSubclasses) {
-			if (includeSubclasses) {
-				return (List<S>) byClassInputs.keySet().stream()
-						.filter(selectionClass -> Reflections.at(selectionClass)
-								.isAssignableTo(clazz))
-						.map(byClassInputs::get).flatMap(Collection::stream)
-						.collect(Collectors.toList());
-			} else {
-				return (List<S>) byClassInputs.getAndEnsure(clazz).stream()
-						.collect(Collectors.toList());
-			}
-		}
-
-		synchronized IntPair getSelectionPosition(Selection value) {
-			Layer layer = selectionLayer.get(value);
-			Map<Selection, Integer> layerSelections = byLayer.get(layer);
-			Integer layerPosition = layerSelections.get(value);
-			if (layerPosition != null) {
-				return new IntPair(layerPosition + 1, layerSelections.size());
-			}
-			return null;
-		}
-
-		public <T extends Selection> T getSingleSelection(Class<T> clazz) {
-			List<T> selections = getSelections(clazz);
-			Preconditions.checkState(selections.size() == 1);
-			return selections.get(0);
-		}
-
-		boolean isLayerOnly() {
-			return currentLayer() == null ? false
-					: currentLayer().hasReceivingLayer();
-		}
-
-		public int size() {
-			return size;
-		}
-
-		boolean testFilter(Selection selection) {
-			if (filter == null) {
-				return true;
-			}
-			if (currentLayer() == null) {
-				return true;
-			}
-			if (filter.maxExceptions > 0
-					&& selectionExceptions.size() >= filter.maxExceptions) {
-				return false;
-			}
-			if (filter.hasSelectionFilter(selection.getClass())) {
-				if (filter.matchesSelectionTypeFilter(selection.getClass(),
-						selection.getFilterableSegments())) {
-					return true;
-				} else {
-					return false;
-				}
-			} else {
-				int allLayersLimit = filter.allLayersLimit;
-				return allLayersLimit == 0 || allLayersLimit > size;
-			}
-		}
-	}
-
-	public <T> T context(Class<T> clazz) {
-		return traversalContext != null && Reflections.isAssignableFrom(clazz,
-				traversalContext.getClass()) ? (T) traversalContext : null;
 	}
 
 	/*
-	 * Note that Layer.State is reset each time the layer is processed, so
-	 * per-layer state that lasts the entire traversal lifetime is stored here
-	 * 
-	 * CLEAN - it'd be cleaner to have per-layer persistent state attached to
-	 * the layer
+	 * Intended for release of DOM references, particularly
 	 */
-	public class State {
-		public Layer<?> currentLayer;
-
-		DepthFirstTraversal<Layer> layerTraversal;
-
-		Layer rootLayer;
-
-		Map<Layer, Integer> visitedLayers = new LinkedHashMap<>();
-
-		public Selections selections = new Selections();
-
-		Map<Class<? extends Selection>, SelectionLayers> layersByInput = new LinkedHashMap<>();
-
-		Map<Layer, SelectionLayers.LayerSelections> selectionsByLayer = new LinkedHashMap<>();
-
-		public <T> T context(Class<T> clazz) {
-			return SelectionTraversal.this.context(clazz);
+	void releaseCompletedSelections(Selection selection) {
+		selection.processNode().setSelfComplete(true);
+		if (!releaseResources) {
+			return;
 		}
-
-		void releaseLastLayerResources() {
-			Layer last = visitedLayers.keySet().stream().reduce(Ax.last())
-					.orElse(null);
-			selections.byLayer.getOrDefault(last, new LinkedHashMap<>())
-					.keySet().forEach(
-							SelectionTraversal.this::releaseCompletedSelections);
-		}
-
-		public <S extends Selection> List<S>
-				getSelections(Class<? extends S> clazz) {
-			return getSelections(clazz, false);
-		}
-
-		public <S extends Selection> List<S> getSelections(
-				Class<? extends S> clazz, boolean includeSubclasses) {
-			return selections.get(clazz, includeSubclasses);
-		}
-
-		Collection<Selection> getSelections(Layer layer) {
-			return selections.byLayer(layer).keySet();
-		}
-
-		public SelectionTraversal getTraversal() {
-			return SelectionTraversal.this;
-		}
-
-		/*
-		 * If inputs were created for a previous layer, rewind to that layer
-		 */
-		void onAfterTraversal() {
-			Optional<LayerSelections> firstDirty = selectionsByLayer.values()
-					.stream().filter(ls -> ls.dirty).findFirst();
-			if (firstDirty.isPresent()) {
-				Layer layer = firstDirty.get().layer;
-				logger.info("  --> Rewind :: {}", layer.getName());
-				layerTraversal.setNext(layer);
-			}
-		}
-
-		void onBeforeLayerTraversal() {
-			Integer index = state.visitedLayers.computeIfAbsent(currentLayer,
-					l -> state.visitedLayers.size());
-			currentLayer.index = index;
-			if (!(currentLayer instanceof InputsFromPreviousSibling)) {
-				Class<?> inputType = currentLayer.inputType;
-				if (Reflections.isAssignableFrom(EmittedBySoleLayer.class,
-						inputType)) {
-					return;
-				}
-				SelectionLayers layerSelections = layersByInput.get(inputType);
-				if (layerSelections == null) {
-					layersByInput.put(currentLayer.inputType,
-							new SelectionLayers());
-				}
-				layersByInput.get(currentLayer.inputType).add(currentLayer);
-				selectionsByLayer.get(currentLayer).dirty = false;
-			}
-		}
-
-		void onSelectionAdded(Selection selection) {
-			if (currentLayer != null) {
-				SelectionLayers layerSelections = layersByInput
-						.get(selection.getClass());
-				if (layerSelections != null) {
-					layerSelections.onSelectionAdded(selection);
-				}
-			}
-		}
-
-		synchronized void onSelectionProcessed(Selection selection) {
-			LayerSelections layerSelections = selectionsByLayer
-					.get(currentLayer);
-			if (layerSelections != null) {
-				layerSelections.onSelectionProcessed(selection);
-			}
-		}
-
-		void select(Selection selection) {
-			SelectionTraversal.this.select(selection);
-		}
-
-		boolean wasProcessed(Selection selection) {
-			LayerSelections layerSelections = state.selectionsByLayer
-					.get(currentLayer);
-			return layerSelections != null
-					&& layerSelections.processed.contains(selection);
-		}
-
-		/*
-		 * handles groups of layers which receive the same input type, tracking
-		 * their dirty state (for rewind). If more than one layer receives type
-		 * X, all such layers must have a sibling or ancestor/descendant
-		 * relationship with other layers receiving type X
-		 */
-		class SelectionLayers {
-			boolean immutableInput;
-
-			Map<Layer, LayerSelections> layers = new LinkedHashMap<>();
-
-			void add(Layer layer) {
-				if (layers.containsKey(layer)) {
-					return;
-				}
-				this.immutableInput = Reflections.isAssignableFrom(
-						Selection.ImmutableInput.class, layer.inputType);
-				if (!immutableInput) {
-					Preconditions.checkState(layers.isEmpty() || layers.keySet()
-							.stream().anyMatch(l -> layer.parent == l
-									|| layer.parent == l.parent));
-				}
-				LayerSelections layerSelections = new LayerSelections(layer);
-				layers.put(layer, layerSelections);
-				selectionsByLayer.put(layer, layerSelections);
-			}
-
-			void onSelectionAdded(Selection selection) {
-				if (immutableInput) {
-				} else {
-					layers.values().forEach(ls -> ls.dirty = true);
-				}
-			}
-
-			class LayerSelections {
-				Layer layer;
-
-				Set<Selection> processed = AlcinaCollections.newUniqueSet();
-
-				boolean dirty;
-
-				LayerSelections(Layer layer) {
-					this.layer = layer;
-				}
-
-				void onSelectionProcessed(Selection selection) {
-					processed.add(selection);
-				}
+		Selection cursor = selection;
+		while (cursor != null) {
+			if (cursor.processNode().evaluateReleaseResources()) {
+				cursor.releaseResources();
+				cursor = cursor.parentSelection();
+			} else {
+				break;
 			}
 		}
 	}
 
-	public static class StatsLogger {
-		private SelectionTraversal selectionTraversal;
-
-		public StatsLogger(SelectionTraversal selectionTraversal) {
-			this.selectionTraversal = selectionTraversal;
+	boolean testLayerFilter(Selection selection) {
+		if (filter == null) {
+			return true;
 		}
-
-		void execute() {
-			DepthFirstTraversal<Layer> debugTraversal = new DepthFirstTraversal<Layer>(
-					selectionTraversal.state.rootLayer, Layer::getChildren,
-					false);
-			List<LayerEntry> entries = debugTraversal.stream()
-					.map(LayerEntry::new).collect(Collectors.toList());
-			String log = ReflectionUtils.logBeans(LayerEntry.class, entries);
-			Ax.out(log);
+		if (filter.maxExceptions > 0
+				&& selections().exceptions.size() >= filter.maxExceptions) {
+			return false;
 		}
-
-		public class LayerEntry extends Bindable.Fields {
-			private Layer layer;
-
-			String key;
-
-			String outputs;
-
-			public LayerEntry(Layer layer) {
-				this.layer = layer;
-				FormatBuilder keyBuilder = new FormatBuilder();
-				keyBuilder.indent(layer.depth());
-				keyBuilder.append(layer.getName());
-				key = keyBuilder.toString();
-				outputs = computeOutputs();
-			}
-
-			String computeOutputs() {
-				int size = selectionTraversal.state.selections.byLayer(layer)
-						.size();
-				if (size != 0) {
-					return String.valueOf(size);
-				}
-				Layer firstLeaf = layer.firstLeaf();
-				int firstLeafSize = selectionTraversal.state.selections
-						.byLayer(firstLeaf).size();
-				if (firstLeafSize != 0) {
-					return "-";
-				} else {
-					return "0";
-				}
-			}
-		}
-	}
-
-	public class TraversalComplete implements ProcessObservable {
-	}
-
-	public Stream<Selection> getAllSelections() {
-		return state.selections.selectionLayer.keySet().stream();
-	}
-
-	/*
-	 * A selection may be selected in multiple layers, in which case it would
-	 * only appear once in 'getAllSelections'
-	 */
-	public Stream<Selection> getAllLayerSelections() {
-		return state.selections.byLayer.values().stream()
-				.flatMap(m -> m.keySet().stream());
-	}
-
-	public List<Layer> getVisitedLayers() {
-		return state.visitedLayers.keySet().stream()
-				.collect(Collectors.toList());
-	}
-
-	public Layer getLayer(int selectedLayerIndex) {
-		return getVisitedLayers().stream()
-				.filter(layer -> layer.index == selectedLayerIndex).findFirst()
-				.orElse(null);
+		int allLayersLimit = filter.allLayersLimit;
+		return allLayersLimit == 0 || allLayersLimit > state.selections.size();
 	}
 }

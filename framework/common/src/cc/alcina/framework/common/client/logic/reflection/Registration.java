@@ -106,8 +106,8 @@ public @interface Registration {
 	 * AllSubtypesClient for that]
 	 * 
 	 * <p>
-	 * To have the a base implementation, make a subtype that parameterizes
-	 * Object - the supertype should be abstract
+	 * To have a base implementation, make a subtype that parameterizes Object -
+	 * the supertype should be abstract
 	 *
 	 */
 	public interface AllSubtypes {

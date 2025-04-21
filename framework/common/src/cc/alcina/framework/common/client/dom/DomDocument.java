@@ -50,7 +50,7 @@ import cc.alcina.framework.common.client.util.Topic;
  * </ul>
  */
 public class DomDocument extends DomNode implements Cloneable {
-	public static boolean useLocations2;
+	public boolean useLocations2;
 
 	// for server-side code to link w3c docs to the DomDocument
 	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
@@ -113,7 +113,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	private Multimap<String, List<DomNode>> byId;
 
-	private LocationContext locations;
+	private LocationContext locationContext;
 
 	/*
 	 * Normally this will be null, unless the DomDocument has no backing w3c/gwt
@@ -236,16 +236,16 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	public LocationContext locations() {
-		if (locations == null) {
+		if (locationContext == null) {
 			if (useLocations2) {
 				LocationContext2 locationContext2 = new LocationContext2(this);
-				locations = locationContext2;
+				locationContext = locationContext2;
 				locationContext2.init();
 			} else {
-				locations = new Locations();
+				locationContext = new Locations();
 			}
 		}
-		return locations;
+		return locationContext;
 	}
 
 	public DomNode nodeFor(Node w3cNode) {
@@ -306,8 +306,8 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	// FIXME - remove with universal mutable location support
 	public void invalidateLocations() {
-		if (locations != null) {
-			((Locations) locations).invalidateLookups();
+		if (locationContext != null) {
+			((Locations) locationContext).invalidateLookups();
 		}
 	}
 
@@ -353,21 +353,6 @@ public class DomDocument extends DomNode implements Cloneable {
 			return location;
 		}
 
-		public Location.Range asRange(DomNode domNode) {
-			Location start = asLocation(domNode);
-			Location end = null;
-			if (domNode.isText()) {
-				end = createTextRelativeLocation(start,
-						contentLengths.get(domNode), true);
-			} else {
-				end = asLocation(domNode).clone();
-				end.setIndex(end.getIndex() + contentLengths.get(domNode));
-				// only for non-text (text locations do not use after)
-				end.after = true;
-			}
-			return new Location.Range(start, end);
-		}
-
 		private void attachMutationListener() {
 			MutableDocument mutableDocument = Registry
 					.impl(MutableDocumentDecorator.class)
@@ -377,29 +362,16 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 
 		@Override
+		public int getContentLength(DomNode domNode) {
+			return contentLengths.get(domNode);
+		}
+
+		@Override
 		public Location createTextRelativeLocation(Location location,
 				int offset, boolean after) {
 			ensureLookups();
-			int index = location.getIndex() + offset;
-			/*
-			 * Special case, preserve existing node if possible)
-			 */
-			DomNode containingNode = location.getContainingNode();
-			int contentLength = contentLengths.get(containingNode);
-			int relativeIndex = location.getIndex() + offset
-					- byNode.get(containingNode).getIndex();
-			if (relativeIndex >= 0 && relativeIndex <= contentLength) {
-				if (relativeIndex == contentLength && contentLength != 0) {
-					after = true;
-				}
-				return new Location(location.getTreeIndex(), index, after,
-						location.getContainingNode(), this);
-			}
-			Location test = new Location(-1, index, after, null, this);
-			Location containingLocation = getContainingLocation(test);
-			return new Location(containingLocation.getTreeIndex(), index,
-					location.after, containingLocation.getContainingNode(),
-					this);
+			return LocationContext.super.createTextRelativeLocation(location,
+					offset, after);
 		}
 
 		private void ensureLookups() {
@@ -445,7 +417,7 @@ public class DomDocument extends DomNode implements Cloneable {
 					.toArray(new Location[byNode.size()]);
 		}
 
-		Location getContainingLocation(Location test) {
+		public Location getContainingLocation(Location test) {
 			ensureLookups();
 			if (test.getTreeIndex() != -1) {
 				DomNode node = byTreeIndex.get(test.getTreeIndex());
@@ -521,22 +493,11 @@ public class DomDocument extends DomNode implements Cloneable {
 		}
 
 		@Override
-		public DomNode getContainingNode(Location test) {
-			return getContainingLocation(test).getContainingNode();
-		}
-
-		/*
-		 * This is fairly optimal, O(log(n))
-		 */
-		@Override
-		public List<DomNode> getContainingNodes(int index, boolean after) {
+		public List<DomNode> getContainingNodes(Location start, int index,
+				boolean after) {
 			ensureLookups();
 			List<DomNode> result = new ArrayList<>();
-			DomNode root = getDocumentElementNode();
-			Location start = byNode.get(root);
-			/*
-			 * traverse to the first text node in the doc
-			 */
+			start = byNode.get(getDocumentElementNode());
 			while (!start.isTextNode()) {
 				start = start.relativeLocation(RelativeDirection.NEXT_LOCATION);
 			}
@@ -545,23 +506,6 @@ public class DomDocument extends DomNode implements Cloneable {
 			while (!containingLocation.isTextNode()) {
 				containingLocation = containingLocation
 						.relativeLocation(RelativeDirection.NEXT_LOCATION);
-			}
-			/*
-			 * if this text starts at index, and we're ascending from an
-			 * 'after', go to the previous text
-			 */
-			if (after && containingLocation.getContainingNode().asLocation()
-					.getIndex() == index && index > 0) {
-				containingLocation = containingLocation.relativeLocation(
-						RelativeDirection.PREVIOUS_LOCATION,
-						TextTraversal.EXIT_NODE);
-				while (!containingLocation.isTextNode()) {
-					containingLocation = containingLocation.relativeLocation(
-							RelativeDirection.PREVIOUS_LOCATION);
-				}
-				containingLocation.relativeLocation(
-						RelativeDirection.NEXT_LOCATION,
-						TextTraversal.TO_END_OF_NODE);
 			}
 			Preconditions.checkState(containingLocation.getIndex() >= index
 					&& containingLocation.getIndex() <= index
@@ -585,216 +529,6 @@ public class DomDocument extends DomNode implements Cloneable {
 			return new Location.Range(start, end);
 		}
 
-		/**
-		 * <p>
-		 * Implementation for text is a little complicated, because "next"
-		 * depends on the caller to a degree
-		 * 
-		 * <p>
-		 * Note - don't use this for purely text traversal (e.g. mimicking
-		 * actions of a keyevent), instead just increment/decrement
-		 * location.index, and use
-		 * {@link #createTextRelativeLocation(Location, int, boolean)}
-		 */
-		@Override
-		public Location getRelativeLocation(Location location,
-				RelativeDirection direction, TextTraversal textTraversal) {
-			/*
-			 * See Location for a visual explanation of traversal
-			 */
-			DomNode node = location.getContainingNode();
-			int targetTreeIndex = location.getTreeIndex();
-			int targetIndex = location.getIndex();
-			boolean targetAfter = !location.after;
-			Location baseLocation = byNode.get(node);
-			Location parentLocation = byNode.get(node.parent());
-			boolean nodeTraversalRequired = false;
-			if (direction == RelativeDirection.CURRENT_NODE_END) {
-				Preconditions.checkArgument(targetAfter);
-				Integer length = contentLengths.get(node);
-				targetIndex = baseLocation.getIndex() + length;
-				return new Location(targetTreeIndex, targetIndex, targetAfter,
-						node, this);
-			}
-			if (node.isText()) {
-				int relativeIndex = location.getIndex()
-						- baseLocation.getIndex();
-				switch (direction) {
-				case NEXT_LOCATION: {
-					if (relativeIndex == node.textContent().length()) {
-						nodeTraversalRequired = true;
-					} else {
-						switch (textTraversal) {
-						case NEXT_CHARACTER:
-							targetIndex++;
-							break;
-						case NO_CHANGE:
-							break;
-						case EXIT_NODE:
-							nodeTraversalRequired = true;
-							break;
-						case TO_END_OF_NODE:
-							targetIndex = baseLocation.getIndex()
-									+ node.textContent().length();
-							break;
-						default:
-							throw new UnsupportedOperationException();
-						}
-					}
-					break;
-				}
-				case PREVIOUS_LOCATION: {
-					if (relativeIndex == 0) {
-						nodeTraversalRequired = true;
-					} else {
-						switch (textTraversal) {
-						case PREVIOUS_CHARACTER:
-							targetIndex--;
-							break;
-						case NO_CHANGE:
-							break;
-						case EXIT_NODE:
-							nodeTraversalRequired = true;
-							break;
-						case TO_START_OF_NODE:
-							targetIndex = baseLocation.getIndex();
-							break;
-						default:
-							throw new UnsupportedOperationException();
-						}
-					}
-					break;
-				}
-				case PREVIOUS_DOMNODE_START: {
-					nodeTraversalRequired = true;
-					break;
-				}
-				case NEXT_DOMNODE_START: {
-					nodeTraversalRequired = true;
-					break;
-				}
-				default:
-					throw new UnsupportedOperationException();
-				}
-			} else {
-				nodeTraversalRequired = true;
-			}
-			if (nodeTraversalRequired) {
-				targetIndex = -1;
-				switch (direction) {
-				case NEXT_LOCATION: {
-					if (location.after) {
-						DomNode nextSibling = node.relative().nextSibling();
-						if (nextSibling == null) {
-							// last, ascend
-							targetTreeIndex = parentLocation != null
-									? parentLocation.getTreeIndex()
-									: 0;
-							targetAfter = true;
-						} else {
-							targetTreeIndex = byNode.get(nextSibling)
-									.getTreeIndex();
-						}
-					} else {
-						// descend or go to next sibling
-						DomNode next = node.relative().treeSubsequentNode();
-						if (next == null) {
-							// top, ascend
-							targetTreeIndex = parentLocation != null
-									? parentLocation.getTreeIndex()
-									: 0;
-						} else {
-							targetTreeIndex = byNode.get(next).getTreeIndex();
-							targetAfter = false;
-						}
-					}
-					break;
-				}
-				case PREVIOUS_LOCATION: {
-					if (!location.after) {
-						DomNode previousSibling = node.relative()
-								.previousSibling();
-						if (previousSibling == null) {
-							// last, ascend
-							targetTreeIndex = parentLocation != null
-									? parentLocation.getTreeIndex()
-									: 0;
-							targetAfter = false;
-						} else {
-							targetTreeIndex = byNode.get(previousSibling)
-									.getTreeIndex();
-						}
-					} else {
-						DomNode lastChild = node.children.lastNode();
-						if (lastChild == null) {
-							// just the start of the current node
-						} else {
-							// end of the last child
-							targetTreeIndex = byNode.get(lastChild)
-									.getTreeIndex();
-							targetAfter = true;
-						}
-					}
-					break;
-				}
-				case PREVIOUS_DOMNODE_START: {
-					// if at start, go to previous logical node - if at end, go
-					// to last descendant
-					targetAfter = false;
-					if (!location.after) {
-						targetTreeIndex--;
-					} else {
-						DomNode lastDescendant = node.relative()
-								.lastDescendant();
-						if (lastDescendant != null) {
-							targetTreeIndex = byNode.get(lastDescendant)
-									.getTreeIndex();
-						} else {
-							targetTreeIndex--;
-						}
-					}
-					break;
-				}
-				case NEXT_DOMNODE_START: {
-					// if at start, go to next logical node from start - if at
-					// end, go
-					// next logical node from last descendant
-					targetAfter = false;
-					if (!location.after) {
-						targetTreeIndex++;
-					} else {
-						DomNode lastDescendant = node.relative()
-								.lastDescendant();
-						if (lastDescendant != null) {
-							targetTreeIndex = byNode.get(lastDescendant)
-									.getTreeIndex();
-							targetTreeIndex++;
-						} else {
-							targetTreeIndex++;
-						}
-					}
-					break;
-				}
-				default:
-					throw new UnsupportedOperationException();
-				}
-			}
-			DomNode containingNode = byTreeIndex.get(targetTreeIndex);
-			if (targetIndex == -1) {
-				Location nodeLocation = containingNode.asLocation();
-				targetIndex = nodeLocation.getIndex();
-				if (targetAfter) {
-					if (containingNode.isText()
-							&& textTraversal == TextTraversal.TO_START_OF_NODE) {
-					} else {
-						targetIndex += contentLengths.get(containingNode);
-					}
-				}
-			}
-			return new Location(targetTreeIndex, targetIndex, targetAfter,
-					containingNode, this);
-		}
-
 		@Override
 		public String getSubsequentText(Location location, int chars) {
 			return contents.substring(location.getIndex(),
@@ -803,55 +537,6 @@ public class DomDocument extends DomNode implements Cloneable {
 
 		private void invalidateLookups() {
 			byNode = null;
-		}
-
-		@Override
-		public String markupContent(Range range) {
-			DomNode node = range.containingNode();
-			if (node.isText()) {
-				return range.text();
-			}
-			if (range.start.getContainingNode() == node
-					&& range.end.getContainingNode() == node) {
-				String markup = node.fullToString();
-				// if namespaced, return full
-				// FIXME - selection - have a 'robust pretty' that uses a
-				// variant on Element.getOuterHtml()
-				if (markup.matches(
-						"(?s).*(</[a-zA-Z9-9]+:[a-zA-Z9-9]+>|&nbsp;).*")) {
-					return markup;
-				} else {
-					return node.prettyToString();
-				}
-			} else {
-				if (!(w3cDoc() instanceof DocumentRange)) {
-					Ax.sysLogHigh(
-							"truncating markup - DocumentRange not implemented for gwt docs");
-					return range.start.getContainingNode().fullToString();
-				} else {
-					org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) w3cDoc())
-							.createRange();
-					if (range.start.getContainingNode().isText()) {
-						w3cRange.setStart(range.start.getContainingNode().node,
-								range.start.indexInNode());
-					} else {
-						w3cRange.setStartBefore(
-								range.start.getContainingNode().node);
-					}
-					if (range.end.getContainingNode().isText()) {
-						w3cRange.setEnd(range.end.getContainingNode().node,
-								range.end.indexInNode());
-					} else {
-						w3cRange.setEndAfter(
-								range.end.getContainingNode().node);
-					}
-					DocumentFragment fragment = w3cRange.cloneContents();
-					Element fragmentContainer = w3cDoc()
-							.createElement("fragment-container");
-					fragmentContainer.appendChild(fragment);
-					return DomNode.from(fragmentContainer).fullToString();
-				}
-			}
 		}
 
 		@Override
@@ -894,6 +579,11 @@ public class DomDocument extends DomNode implements Cloneable {
 		public void ensureCurrent(Location location) {
 			Preconditions.checkArgument(
 					location.documentMutationPosition == getDocumentMutationPosition());
+		}
+
+		@Override
+		public DomNode getDocumentElementNode() {
+			return DomDocument.this.getDocumentElementNode();
 		}
 	}
 

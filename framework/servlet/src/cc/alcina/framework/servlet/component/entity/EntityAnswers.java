@@ -106,7 +106,7 @@ class EntityAnswers extends TraversalAnswerSupplier {
 		}
 
 		void proposePlaceContextSuggestions() {
-			Selection placeContextSelection = Ui.traversal().getRootSelection();
+			Selection placeContextSelection = Ui.traversal().selections().root;
 			TraversalPlace toPlace = fromPlace.copy();
 			SelectionPath firstSelectionPath = toPlace.firstSelectionPath();
 			if (firstSelectionPath != null) {
@@ -282,8 +282,8 @@ class EntityAnswers extends TraversalAnswerSupplier {
 						return;
 					}
 				}
-				List<TypeSelection> candidates = Ui.traversal()
-						.getSelections(TypeSelection.class);
+				List<TypeSelection> candidates = Ui.traversal().selections()
+						.get(TypeSelection.class);
 				matches(candidates, parts[0]).forEach(sel -> {
 					List<Selection> selections = new ArrayList<>();
 					selections.add(sel.parentSelection());

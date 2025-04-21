@@ -94,13 +94,16 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 		String relativeChar(ParserState state, int delta) {
 			ParserPeer peer = peer(state);
 			int absDelta = (peer.isForwardsTraversalOrder() ? 1 : -1) * delta;
-			IntPair pair = new IntPair(state.getLocation().getIndex(),
-					state.getLocation().getIndex() + absDelta).toLowestFirst();
-			IntPair documentPair = state.getLocation().getLocationContext()
+			Location location = state.getLocation();
+			IntPair pair = new IntPair(location.getIndex(),
+					location.getIndex() + absDelta).toLowestFirst();
+			IntPair documentPair = location.getLocationContext()
 					.getDocumentRange().toIntPair();
 			if (documentPair.containsExEnd(pair)) {
-				return state.getLocation().getLocationContext()
-						.textContent(pair.i1, pair.i2);
+				Location end = location.createTextRelativeLocation(absDelta,
+						false);
+				Range range = new Location.Range(location, end);
+				return location.getLocationContext().textContent(range);
 			} else {
 				return null;
 			}

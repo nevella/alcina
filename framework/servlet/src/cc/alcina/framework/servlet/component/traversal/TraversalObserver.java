@@ -30,7 +30,7 @@ public class TraversalObserver extends LifecycleService.AlsoDev {
 		observables = new RemoteComponentObservables<>(
 				TraversalBrowser.Component.class, SelectionTraversal.class,
 				t -> {
-					Layer rootLayer = t.getRootLayer();
+					Layer rootLayer = t.layers().getRoot();
 					return Registry
 							.impl(RootLayerNamer.class, rootLayer.getClass())
 							.rootLayerName(rootLayer);

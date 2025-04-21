@@ -27,7 +27,7 @@ public class LayerParserPeer {
 	public LayerParserPeer(SelectionTraversal traversal,
 			BranchToken... tokens) {
 		this.traversal = traversal;
-		this.layer = traversal.currentLayer();
+		this.layer = traversal.layers().getCurrent();
 		add(tokens);
 	}
 

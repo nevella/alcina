@@ -24,6 +24,7 @@ import org.w3c.dom.UserDataHandler;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
+import com.google.gwt.dom.client.NodeLocal.SiblingIterator;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeType;
@@ -512,7 +513,11 @@ public abstract class Node
 
 	protected void onAttach() {
 		getOwnerDocument().localDom.onAttach(this);
-		streamChildren().forEach(n -> n.setAttached(true, false));
+		SiblingIterator itr = local().childIterator();
+		while (itr.hasNext()) {
+			NodeLocal childLocal = itr.next();
+			childLocal.node().setAttached(true, false);
+		}
 	}
 
 	protected void onDetach() {

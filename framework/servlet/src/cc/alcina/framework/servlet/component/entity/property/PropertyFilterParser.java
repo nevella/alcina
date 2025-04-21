@@ -49,8 +49,8 @@ public class PropertyFilterParser {
 			proposeFilters(Class<? extends Entity> entityType, String query) {
 		parse(entityType, query);
 		traversal.throwExceptions();
-		List<PartSelection> parts = traversal
-				.getSelections(QueryPartLayer.PartSelection.class);
+		List<PartSelection> parts = traversal.selections()
+				.get(QueryPartLayer.PartSelection.class);
 		logger.info("{} parts", parts.size());
 		parts.forEach(i -> logger.debug(
 				"==========================================\n{}\n",
@@ -204,7 +204,7 @@ public class PropertyFilterParser {
 		TreeProcess.Node parentNode = JobContext.getSelectedProcessNode();
 		traversal.select(new Query(parentNode, entityType, text));
 		RootLayer rootLayer = new RootLayer();
-		traversal.setRootLayer(rootLayer);
+		traversal.layers().setRoot(rootLayer);
 	}
 
 	void parse(Class<? extends Entity> entityType, String text) {

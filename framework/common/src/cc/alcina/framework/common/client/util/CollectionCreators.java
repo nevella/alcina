@@ -11,7 +11,10 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -205,6 +208,19 @@ public class CollectionCreators {
 	public static class WeakMapCreator {
 		public <K, V> Map<K, V> create() {
 			return new LinkedHashMap<>();
+		}
+	}
+
+	@Reflected
+	@Registration.Singleton(CollectionCreators.CoarseIntHashMapCreator.class)
+	/*
+	 * FIXME - reflection - default (dev only, so not a big drama) impl is in
+	 * fact non-weak
+	 */
+	public static class CoarseIntHashMapCreator {
+		public <V> Map<Integer, V> create() {
+			return GWT.isScript() ? JsUniqueMap.create()
+					: new LinkedHashMap<>();
 		}
 	}
 }

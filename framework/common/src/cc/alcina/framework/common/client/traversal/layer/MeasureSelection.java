@@ -228,8 +228,9 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	public void logContainingSelections(Token.Order order) {
 		IntPair thisRange = get().toIntPair();
 		List<MeasureSelection> containers = SelectionTraversal
-				.contextTraversal().getSelections(MeasureSelection.class, true)
-				.stream().filter(ms -> ms.get().toIntPair().contains(thisRange))
+				.contextTraversal().selections()
+				.get(MeasureSelection.class, true).stream()
+				.filter(ms -> ms.get().toIntPair().contains(thisRange))
 				.toList();
 		new MeasureContainment(order, containers).dump();
 	}

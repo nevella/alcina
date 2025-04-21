@@ -161,7 +161,7 @@ class RenderedSelections extends Model.Fields implements IfNotEqual {
 			if (listSourceSelection != null) {
 				properties.selectionTable.setIfNotEqual(this,
 						new SelectionTableArea(
-								traversal.getLayer(listSourceSelection),
+								traversal.layers().get(listSourceSelection),
 								listSourceSelection));
 			} else if (listSourceLayer != null) {
 				List<? extends Selection> filteredLayerSelections = page

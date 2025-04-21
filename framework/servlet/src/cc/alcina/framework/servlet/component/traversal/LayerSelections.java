@@ -304,8 +304,8 @@ class LayerSelections extends Model.All implements IfNotEqual {
 		}
 
 		void render() {
-			Stream<Selection> stream = selectionLayers.traversal()
-					.getSelections(layer).stream();
+			Stream<Selection> stream = selectionLayers.traversal().selections()
+					.byLayer(layer).stream();
 			parallel = Configuration.is(LayerSelections.class, "parallelTest");
 			snapshot = LooseContext.getContext().snapshot();
 			if (parallel) {
@@ -453,8 +453,8 @@ class LayerSelections extends Model.All implements IfNotEqual {
 			}
 		}
 		Layer firstLeaf = layer.firstLeaf();
-		int firstLeafSize = selectionLayers.traversal().getSelections(firstLeaf)
-				.size();
+		int firstLeafSize = selectionLayers.traversal().selections()
+				.byLayer(firstLeaf).size();
 		if (firstLeafSize != 0) {
 			return "-";
 		} else {
@@ -463,7 +463,7 @@ class LayerSelections extends Model.All implements IfNotEqual {
 	}
 
 	int unfilteredSelectionCount() {
-		return selectionLayers.traversal().getSelections(layer).size();
+		return selectionLayers.traversal().selections().byLayer(layer).size();
 	}
 
 	@Property.Not
