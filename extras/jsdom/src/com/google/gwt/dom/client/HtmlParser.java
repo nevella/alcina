@@ -273,6 +273,8 @@ public class HtmlParser {
 				String endTag = html.substring(closeIdx0 + 2, closeIdx1);
 				if (endTag.equalsIgnoreCase(tag)) {
 					break;
+				} else {
+					closeIdx0 = closeIdx1 + 1;
 				}
 			}
 			String textContent = html.substring(idx, closeIdx0);
@@ -624,6 +626,7 @@ public class HtmlParser {
 			char c = markingBuilder.charAt(idx);
 			if (idx == start) {
 				if (c >= 'a' && c <= 'z') {
+				} else if (c >= 'A' && c <= 'Z') {
 				} else if (c == '_') {
 				} else if (c == '/') {
 				} else {
@@ -631,6 +634,7 @@ public class HtmlParser {
 				}
 			} else {
 				if (c >= 'a' && c <= 'z') {
+				} else if (c >= 'A' && c <= 'A') {
 				} else if (c >= '0' && c <= '9') {
 				} else {
 					switch (c) {

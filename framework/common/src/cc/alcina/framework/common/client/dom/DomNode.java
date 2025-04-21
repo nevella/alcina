@@ -997,6 +997,9 @@ public class DomNode {
 			if (this.nodes != null) {
 				return this.nodes;
 			}
+			if (isText() || isProcessingInstruction() || isComment()) {
+				return List.of();
+			}
 			List<DomNode> nodes = DomEnvironment
 					.nodeListToList(node.getChildNodes()).stream()
 					.map(document::nodeFor).collect(Collectors.toList());

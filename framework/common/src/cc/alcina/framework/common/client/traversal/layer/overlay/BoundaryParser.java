@@ -21,7 +21,8 @@ import cc.alcina.framework.common.client.util.Ax;
  * layers (and the use of traversal) is owing to the dependency of LayerParser
  * on the traversal framework
  */
-public class BoundaryParser implements TraversalContext {
+public class BoundaryParser
+		implements TraversalContext, TraversalContext.ShortTraversal {
 	MeasureOverlay measureOverlay;
 
 	SelectionTraversal traversal;

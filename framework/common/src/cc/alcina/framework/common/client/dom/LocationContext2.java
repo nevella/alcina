@@ -4,16 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-
-import org.w3c.dom.DocumentFragment;
-import org.w3c.dom.Element;
-import org.w3c.dom.ranges.DocumentRange;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
@@ -21,9 +15,6 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
-import cc.alcina.framework.common.client.dom.Location.TextTraversal;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -287,7 +278,7 @@ class LocationContext2 implements LocationContext {
 		while (cursor != null) {
 			if (cursor.isText()) {
 				int index = cursor.asLocation().getIndex();
-				IntPair cursorRange = cursor.asRange().toIntPair();
+				IntPair cursorRange = cursor.asLocation().toTextIndexPair();
 				if (cursorRange.i2 <= boundaries.i1) {
 					// continue
 				} else {
@@ -368,29 +359,30 @@ class LocationContext2 implements LocationContext {
 		 * This uses a linear search up to an iteration threshold, then switches
 		 * to binary
 		 */
-		while ((node = tree.currentNode()) != null && itrCount++ < 100) {
+		while ((node = tree.currentNode()) != null && itrCount++ < 10) {
 			itrCount++;
 			Location.Range nodeRange = node.asRange();
 			IntPair nodePair = nodeRange.toIntPair();
 			if (node.isText()) {
-				if (nodePair.contains(index)) {
-					// only don't match if test index is at the end of
-					// this #TEXT, and test is not 'after'
-					if (nodePair.i2 == index && !test.after) {
-						//
-					} else {
-						return nodeRange.start;
-					}
+				if (nodeRange.containsIndexUnlessLocationStartAndAtEnd(test)) {
+					return nodeRange.start;
 				}
-			} else {
-				tree.next();
 			}
+			tree.next();
 		}
 		/*
 		 * binary search
 		 */
-		while (!node.asRange().toIntPair().contains(index)) {
-			node = node.parent();
+		while (true) {
+			Location.Range nodeRange = node.asRange();
+			if (nodeRange.containsIndexUnlessLocationStartAndAtEnd(test)) {
+				break;
+			} else {
+				node = node.parent();
+			}
+		}
+		if (node.isText()) {
+			return node.asLocation();
 		}
 		while (true) {
 			/*
@@ -399,7 +391,7 @@ class LocationContext2 implements LocationContext {
 			List<DomNode> nodes = node.children.nodes();
 			int length = nodes.size();
 			int lowerBound = 0;
-			int upperBound = length;
+			int upperBound = length - 1;
 			while (true) {
 				/*
 				 * level binary search
@@ -408,18 +400,13 @@ class LocationContext2 implements LocationContext {
 				DomNode child = nodes.get(binaryIdx);
 				Location.Range childRange = child.asRange();
 				IntPair childPair = childRange.toIntPair();
-				if (!childPair.isPoint() && childPair.contains(index)) {
-					// only don't match if test index is at the end of
-					// the text run and test is not 'after'
-					//
-					if (childPair.i2 == index && !test.after) {
+				if (!childPair.isPoint() && childRange
+						.containsIndexUnlessLocationStartAndAtEnd(test)) {
+					if (child.isText()) {
+						return childRange.start;
 					} else {
-						if (child.isText()) {
-							return childRange.start;
-						} else {
-							node = child;
-							break;
-						}
+						node = child;
+						break;
 					}
 				}
 				boolean binaryTowardsUpper = index >= childPair.i1;
@@ -434,9 +421,15 @@ class LocationContext2 implements LocationContext {
 		}
 	}
 
+	Range documentRange;
+
 	@Override
 	public Range getDocumentRange() {
-		return gwtDocument.getDocumentElement().asDomNode().asRange();
+		if (documentRange == null) {
+			documentRange = gwtDocument.getDocumentElement().asDomNode()
+					.asRange();
+		}
+		return documentRange;
 	}
 
 	@Override

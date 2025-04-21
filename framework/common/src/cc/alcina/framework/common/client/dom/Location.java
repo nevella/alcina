@@ -10,7 +10,6 @@ import org.w3c.dom.Text;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.collections.PublicCloneable;
-import cc.alcina.framework.common.client.dom.Measure.Token.DocumentElementToken;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -565,6 +564,24 @@ public class Location implements Comparable<Location> {
 			return start.compareTo(l) <= 0 && end.compareTo(l) >= 0;
 		}
 
+		public boolean containsIndexUnlessLocationStartAndAtEnd(Location test) {
+			int testIndex = test.getIndex();
+			if (start.getIndex() <= testIndex) {
+				if (end.getIndex() < test.getIndex()) {
+					return false;
+				} else if (end.getIndex() == test.getIndex()) {
+					/*
+					 * true if test location is after
+					 */
+					return test.after;
+				} else {
+					return true;
+				}
+			} else {
+				return false;
+			}
+		}
+
 		/**
 		 * This method is end-inclusive (this.contains(this) == true)
 		 *
@@ -924,5 +941,15 @@ public class Location implements Comparable<Location> {
 
 	public boolean provideIsAtNodeDirectionalEnd(boolean forwards) {
 		return forwards ? isAtNodeEnd() : isAtNodeStart();
+	}
+
+	/**
+	 * 
+	 * @return the index offsets if the domNode is text, otherwise throws
+	 */
+	public IntPair toTextIndexPair() {
+		Preconditions.checkState(isTextNode());
+		return new IntPair(getIndex(),
+				getIndex() + getContainingNode().textLengthSelf());
 	}
 }
