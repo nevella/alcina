@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.Collection;
 import java.util.Objects;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.History;
@@ -36,7 +37,11 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(from = "text", type = Type.INNER_TEXT),
 			@Binding(from = "target", type = Type.PROPERTY),
 			@Binding(from = "title", type = Type.PROPERTY),
-			@Binding(from = "id", type = Type.PROPERTY) })
+			@Binding(from = "id", type = Type.PROPERTY),
+			@Binding(
+				from = "draggable",
+				type = Type.PROPERTY,
+				transform = Binding.DisplayFalseTrue.class) })
 // TODO - check conflicting properties pre-render (e.g. inner, innterHtml)
 // also document why this is a "non-standard" dirndl component (and merge
 // with link)
@@ -107,7 +112,18 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 
 	private Object modelEventData;
 
+	private Boolean draggable;
+
 	public Link() {
+	}
+
+	public Boolean getDraggable() {
+		return draggable;
+	}
+
+	public Link withDraggable(Boolean draggable) {
+		this.draggable = draggable;
+		return this;
 	}
 
 	@AlcinaTransient
@@ -188,6 +204,9 @@ public class Link extends Model implements DomEvents.Click.Handler, HasTag {
 	public void onClick(Click event) {
 		ClickEvent gwtEvent = (ClickEvent) event.getContext().getGwtEvent();
 		if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+			if (!Document.get().getSelection().isCollapsed()) {
+				return;
+			}
 			if (modelEvent != null) {
 				WidgetUtils.squelchCurrentEvent();
 				event.reemitAs(this, modelEvent, modelEventData);

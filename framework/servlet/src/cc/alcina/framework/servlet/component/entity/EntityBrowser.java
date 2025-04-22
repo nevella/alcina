@@ -202,7 +202,7 @@ public class EntityBrowser {
 
 		class EntityPeer
 				implements TraversalContext, TraversalContext.ThrowOnException,
-				TraversalContext.ShortTraversal {
+				TraversalContext.NonDefaultTraversal {
 			SelectionTraversal traversal;
 
 			RootLayer rootLayer;

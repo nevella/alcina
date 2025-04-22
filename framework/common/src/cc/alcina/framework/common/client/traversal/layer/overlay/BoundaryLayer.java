@@ -32,6 +32,14 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 			@Override
 			public Measure match(ParserState state) {
 				ParserPeer peer = peer(state);
+				/*
+				 * if after + fowards (or !after + backwards), return null. So
+				 * effectively return 'is start'
+				 */
+				if (state.getLocation().after
+						^ peer.isForwardsTraversalOrder()) {
+					return null;
+				}
 				DomNode containingNode = state.getLocation()
 						.getContainingNode();
 				if (peer.styleResolver().isBlock(containingNode)) {
@@ -40,11 +48,6 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 				} else {
 					return null;
 				}
-			}
-
-			@Override
-			public MatchesBoundary matchesBoundary() {
-				return MatchesBoundary.END;
 			}
 		},
 		SENTENCE_BOUNDARY {

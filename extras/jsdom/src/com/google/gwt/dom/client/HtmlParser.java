@@ -10,7 +10,6 @@ import org.w3c.dom.ProcessingInstruction;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.regexp.shared.RegExp;
-import com.sun.jna.platform.win32.DsGetDC;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
@@ -242,7 +241,7 @@ public class HtmlParser {
 	private void emitElement() {
 		boolean closeTag = false;
 		if (tag == null) {
-			tag = markingBuilder.toString().toLowerCase();
+			tag = markingBuilder.toStringLowerCase();
 			if (tag.startsWith("/")) {
 				tag = tag.substring(1);
 				closeTag = true;
@@ -634,7 +633,7 @@ public class HtmlParser {
 				}
 			} else {
 				if (c >= 'a' && c <= 'z') {
-				} else if (c >= 'A' && c <= 'A') {
+				} else if (c >= 'A' && c <= 'Z') {
 				} else if (c >= '0' && c <= '9') {
 				} else {
 					switch (c) {

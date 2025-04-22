@@ -15,4 +15,10 @@ public interface TraversalContext {
 			return false;
 		}
 	}
+
+	/*
+	 * Do not retain for traversal browser
+	 */
+	public interface NonDefaultTraversal extends TraversalContext {
+	}
 }

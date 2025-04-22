@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
+import cc.alcina.framework.common.client.traversal.TraversalContext.NonDefaultTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext.ShortTraversal;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -62,8 +63,13 @@ public class TraversalObserver extends LifecycleService.AlsoDev {
 	void onTraversalComplete(SelectionTraversal traversal) {
 		ShortTraversal shortTraversal = traversal
 				.context(TraversalContext.ShortTraversal.class);
-		if (shortTraversal == null || shortTraversal.provideRetain()) {
+		NonDefaultTraversal nonDefaultTraversal = traversal
+				.context(TraversalContext.NonDefaultTraversal.class);
+		if (nonDefaultTraversal == null
+				&& (shortTraversal == null || shortTraversal.provideRetain())) {
 			observables.publish(null, traversal);
+		}
+		if (shortTraversal == null || shortTraversal.provideRetain()) {
 			observables.publish(traversal.id, traversal);
 		}
 	}
