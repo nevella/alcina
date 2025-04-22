@@ -80,8 +80,12 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		this.model = model;
 	}
 
-	public Object sourceModel() {
+	public Model sourceModel() {
 		return context.getPrevious().node.getModel();
+	}
+
+	public Model firingModel() {
+		return context.node.getModel();
 	}
 
 	@Override
