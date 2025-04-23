@@ -8,7 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -117,6 +116,14 @@ public interface InstanceProvider<T> extends Registration.AllSubtypes {
 			start();
 		}
 
+		public boolean isAsync() {
+			return true;
+		}
+
 		protected abstract void start();
+	}
+
+	default boolean isAsync() {
+		return false;
 	}
 }

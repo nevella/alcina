@@ -2,9 +2,11 @@ package cc.alcina.framework.common.client.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -273,8 +275,15 @@ public class InstanceOracle {
 			return active;
 		}
 
-		synchronized List<ProviderQueries> getProviderQueriesSnapshot() {
-			return uniqueProviderQueries.values().stream().toList();
+		synchronized void checkEviction() {
+			Iterator<Entry<ProviderQueries, ProviderQueries>> itr = uniqueProviderQueries
+					.entrySet().iterator();
+			while (itr.hasNext()) {
+				Entry<ProviderQueries, ProviderQueries> entry = itr.next();
+				if (entry.getKey().checkEviction()) {
+					itr.remove();
+				}
+			}
 		}
 	}
 
@@ -288,11 +297,16 @@ public class InstanceOracle {
 	static class ProviderQueries<T> {
 		boolean firing;
 
-		synchronized void checkEviction() {
+		/**
+		 * 
+		 * @return true if the instance has no awaiting queries
+		 */
+		synchronized boolean checkEviction() {
 			if (firing) {
-				return;
+				return false;
 			}
 			awaitingQueries.removeIf(qs -> !qs.query.bound);
+			return awaitingQueries.isEmpty();
 		}
 
 		/**
@@ -469,7 +483,8 @@ public class InstanceOracle {
 		}
 
 		T await() {
-			Preconditions.checkState(Al.isMultiThreaded());
+			Preconditions
+					.checkState(Al.isMultiThreaded() && !provider.isAsync());
 			ensureLatch();
 			try {
 				awaitLatch.await();
@@ -502,18 +517,17 @@ public class InstanceOracle {
 
 	<T> ProviderQueries<T> submit(Query<T> query) {
 		query.bind();
-		ProviderQueries<T> active = store.getProviderQueries(query);
-		active.ensureSubmitted();
+		ProviderQueries<T> providerQueries = store.getProviderQueries(query);
+		providerQueries.ensureSubmitted();
 		checkEviction();
-		if (!query.async) {
-			active.await();
+		if (!query.async && !providerQueries.provider.isAsync()) {
+			providerQueries.await();
 		}
-		active.passToConsumers();
-		return active;
+		providerQueries.passToConsumers();
+		return providerQueries;
 	}
 
 	void checkEviction() {
-		store.getProviderQueriesSnapshot()
-				.forEach(ProviderQueries::checkEviction);
+		store.checkEviction();
 	}
 }
