@@ -2139,4 +2139,36 @@ public class DomNode {
 		Preconditions.checkState(locations == null);
 		asLocation();
 	}
+
+	/**
+	 * <p>
+	 * For HTML markup, ensure that start/end whitespace nodes are not elided
+	 * from view by inline/ws processing rules -
+	 * https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace
+	 * 
+	 * <p>
+	 * This assumes the node text content is already normalised whitespace
+	 * 
+	 * @return the node with start/end ws converted to NBS
+	 */
+	public DomNode ensureBoundaryWhitespaceHard() {
+		if (children.nodes().size() > 0) {
+			DomNode first = children.firstNode();
+			if (first.isText()) {
+				String content = first.textContent();
+				if (content.startsWith(" ")) {
+					first.setText("\u00A0" + content.substring(1));
+				}
+			}
+			DomNode last = children.firstNode();
+			if (last.isText()) {
+				String content = first.textContent();
+				if (content.endsWith(" ")) {
+					last.setText(content.substring(0, content.length() - 1)
+							+ "\u00A0");
+				}
+			}
+		}
+		return this;
+	}
 }

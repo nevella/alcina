@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
@@ -117,7 +118,7 @@ public class InstanceOracle {
 
 		@Override
 		public int hashCode() {
-			return clazz.hashCode();
+			return Objects.hash(clazz, parameters);
 		}
 
 		public Query<T>
@@ -136,7 +137,8 @@ public class InstanceOracle {
 		public boolean equals(Object obj) {
 			if (obj instanceof Query) {
 				Query o = (Query) obj;
-				return clazz.equals(o.clazz);
+				return clazz.equals(o.clazz)
+						&& Objects.equals(parameters, o.parameters);
 			} else {
 				return super.equals(obj);
 			}
@@ -177,6 +179,10 @@ public class InstanceOracle {
 		public Query<T> withInstanceConsumer(Consumer<T> instanceConsumer) {
 			this.instanceConsumer = instanceConsumer;
 			return this;
+		}
+
+		public Query<T> withInstanceSignal(Runnable runnable) {
+			return withInstanceConsumer(o -> runnable.run());
 		}
 
 		public Query<T>
@@ -233,6 +239,11 @@ public class InstanceOracle {
 		 */
 		public void invalidate() {
 			InstanceOracle.get().invalidate(this);
+		}
+
+		public <PT extends InstanceQuery.Parameter, V> V
+				parameterValue(Class<PT> clazz) {
+			return (V) typedParameter(clazz).getValue();
 		}
 	}
 

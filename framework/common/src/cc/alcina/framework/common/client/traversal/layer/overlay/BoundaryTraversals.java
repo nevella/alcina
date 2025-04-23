@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.CountingMap;
  */
 public class BoundaryTraversals {
 	public enum Unit {
-		character, word, sentence, block, segment;
+		character, word, sentence, block, segment, document;
 	}
 
 	public CountingMap<Unit> counts = new CountingMap<>();

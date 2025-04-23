@@ -28,23 +28,62 @@ import cc.alcina.framework.common.client.util.Multiset;
  */
 class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 	public enum Token implements BranchToken {
-		BLOCK_BOUNDARY {
+		DOCUMENT_BOUNDARY {
 			@Override
 			public Measure match(ParserState state) {
 				ParserPeer peer = peer(state);
 				/*
-				 * if after + fowards (or !after + backwards), return null. So
+				 * if !after + fowards (or after + backwards), return null. So
 				 * effectively return 'is start'
 				 */
-				if (state.getLocation().after
-						^ peer.isForwardsTraversalOrder()) {
+				if (!(state.getLocation().after
+						^ peer.isForwardsTraversalOrder())) {
 					return null;
 				}
-				DomNode containingNode = state.getLocation()
-						.getContainingNode();
-				if (peer.styleResolver().isBlock(containingNode)) {
-					return Measure.fromRange(state.getLocation().asRange(),
-							this);
+				boolean match = false;
+				int treeIndex = state.getLocation().getTreeIndex();
+				if (state.getLocation().getIndex() == 0) {
+					match = treeIndex == 2;
+				} else {
+					Range documentRange = state.getLocation()
+							.getLocationContext().getDocumentRange();
+					if (state.getLocation().getIndex() == documentRange
+							.length()) {
+						DomNode lastNode = state.getLocation()
+								.getContainingNode().children.lastNode();
+						if (lastNode != null && lastNode.asLocation()
+								.getTreeIndex() == treeIndex) {
+							match = true;
+						}
+					}
+				}
+				if (match) {
+					return matchMeasure(state);
+				} else {
+					return null;
+				}
+			}
+		},
+		BLOCK_BOUNDARY {
+			@Override
+			public Measure match(ParserState state) {
+				boolean match = DOCUMENT_BOUNDARY.match(state) != null;
+				if (!match) {
+					ParserPeer peer = peer(state);
+					/*
+					 * if after + fowards (or !after + backwards), return null.
+					 * So effectively return 'is start'
+					 */
+					if (state.getLocation().after
+							^ peer.isForwardsTraversalOrder()) {
+						return null;
+					}
+					DomNode containingNode = state.getLocation()
+							.getContainingNode();
+					match = peer.styleResolver().isBlock(containingNode);
+				}
+				if (match) {
+					return matchMeasure(state);
 				} else {
 					return null;
 				}
@@ -59,8 +98,7 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 							&& Objects.equals(previousChar(state), " ");
 				}
 				if (match) {
-					return Measure.fromRange(state.getLocation().asRange(),
-							this);
+					return matchMeasure(state);
 				} else {
 					return null;
 				}
@@ -74,13 +112,16 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 					match = Objects.equals(nextChar(state), " ");
 				}
 				if (match) {
-					return Measure.fromRange(state.getLocation().asRange(),
-							this);
+					return matchMeasure(state);
 				} else {
 					return null;
 				}
 			}
 		};
+
+		Measure matchMeasure(ParserState state) {
+			return Measure.fromRange(state.getLocation().asRange(), this);
+		}
 
 		ParserPeer peer(ParserState state) {
 			return (ParserPeer) state.peer();
@@ -114,6 +155,8 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 
 		Unit toUnit() {
 			switch (this) {
+			case DOCUMENT_BOUNDARY:
+				return Unit.document;
 			case BLOCK_BOUNDARY:
 				return Unit.block;
 			case SENTENCE_BOUNDARY:
@@ -142,6 +185,7 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 
 		public ParserPeer(SelectionTraversal selectionTraversal) {
 			super(selectionTraversal);
+			add(Token.DOCUMENT_BOUNDARY);
 			add(Token.BLOCK_BOUNDARY);
 			add(Token.SENTENCE_BOUNDARY);
 			add(Token.WORD_BOUNDARY);

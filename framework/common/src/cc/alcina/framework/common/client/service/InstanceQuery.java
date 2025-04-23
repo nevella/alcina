@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -37,6 +38,20 @@ public final class InstanceQuery implements TreeSerializable {
 		}
 
 		public Parameter() {
+		}
+
+		@Override
+		public int hashCode() {
+			return getClass().hashCode() ^ Objects.hashCode(value);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj != null && obj.getClass() == getClass()) {
+				return Objects.equals(((Parameter) obj).getValue(), getValue());
+			} else {
+				return false;
+			}
 		}
 
 		public Parameter(V value) {
