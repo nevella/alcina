@@ -54,7 +54,7 @@ public class ChoiceEditorGalleryPlace extends GalleryPlace {
 		public List<DemoUser> users = new ArrayList<>();
 
 		public Definition() {
-			users.add(DemoUser.nick);
+			// users.add(DemoUser.nick);
 		}
 
 		public boolean testUserName(String userName) {

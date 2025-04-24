@@ -14,11 +14,12 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -126,6 +127,15 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 	protected SR stringRepresentable;
 
 	@Override
+	public void onBind(Bind event) {
+		super.onBind(event);
+		new DecoratorEvent()
+				.withType(event.isBound() ? DecoratorEvent.Type.node_bound
+						: DecoratorEvent.Type.node_unbound)
+				.withMessage(NestedName.get(this)).publish();
+	}
+
+	@Override
 	public Class<SR> stringRepresentableType() {
 		return Reflections.at(this).getGenericBounds().bounds.get(1);
 	}
@@ -215,14 +225,6 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		Node cursorNode = cursorTarget.domNode().gwtNode();
 		Selection selection = Document.get().getSelection();
 		selection.collapse(cursorNode, 1);// after zws
-	}
-
-	@Override
-	public void onBind(Bind event) {
-		super.onBind(event);
-		if (!event.isBound()) {
-			new Exception().printStackTrace();
-		}
 	}
 
 	void stripIfInvalid() {
