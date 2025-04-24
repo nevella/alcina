@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 /**
  * Specifies an instance that will be produced by an InstanceProvider - this can
@@ -22,6 +23,10 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 @Bean(PropertySource.FIELDS)
 @ReflectiveSerializer.Checks(ignore = true)
 public final class InstanceQuery implements TreeSerializable {
+	@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
+	public abstract static class TransientParameter<V> extends Parameter<V> {
+	}
+
 	@Bean(PropertySource.FIELDS)
 	@Registration.Self
 	public abstract static class Parameter<V>
