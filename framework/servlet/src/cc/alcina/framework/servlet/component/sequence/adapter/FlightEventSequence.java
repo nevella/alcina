@@ -51,6 +51,8 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 
 		String type;
 
+		String subtype;
+
 		@Directed(className = "wide")
 		String detail;
 
@@ -62,8 +64,9 @@ public class FlightEventSequence extends Sequence.Abstract<FlightEvent> {
 			this.event = event;
 			index = (int) event.id;
 			time = new Date(event.provideTime());
-			type = NestedName.get(event.event);
 			duration = event.provideDuration();
+			type = NestedName.get(event.event);
+			subtype = event.provideSubtype();
 			detail = event.provideDetail();
 			in = event.provideInputBytes().length;
 			out = event.provideOutputBytes().length;

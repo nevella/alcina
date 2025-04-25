@@ -498,10 +498,10 @@ public abstract class FragmentNode extends Model.Fields
 		}
 
 		public FragmentNode nextSibling() {
-			DirectedLayout.Node directedPreviousSibling = provideNode()
+			DirectedLayout.Node directedNextSibling = provideNode()
 					.nextSibling();
-			return directedPreviousSibling == null ? null
-					: (FragmentNode) directedPreviousSibling.model;
+			return directedNextSibling == null ? null
+					: (FragmentNode) directedNextSibling.model;
 		}
 
 		public void removeFromParent() {

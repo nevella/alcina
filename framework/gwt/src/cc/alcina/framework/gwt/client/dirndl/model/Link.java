@@ -41,7 +41,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 			@Binding(
 				from = "draggable",
 				type = Type.PROPERTY,
-				transform = Binding.DisplayFalseTrue.class) })
+				transform = Binding.DisplayFalseTrueNull.class) })
 // TODO - check conflicting properties pre-render (e.g. inner, innterHtml)
 // also document why this is a "non-standard" dirndl component (and merge
 // with link)

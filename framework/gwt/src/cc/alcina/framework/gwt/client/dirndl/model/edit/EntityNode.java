@@ -54,15 +54,15 @@ public abstract class EntityNode<E extends Entity>
 	void handleGetPersistentLocators(Map<EntityLocator, EntityLocator> map) {
 		EntityLocator result = map.values().iterator().next();
 		if (result != null) {
-			setStringRepresentable(result);
+			properties.stringRepresentable.set(this, result);
 		}
 	}
 
 	public void putReferenced(E entity) {
-		setStringRepresentable(entity.toLocator());
+		properties.stringRepresentable.set(this, entity.toLocator());
 		String text = getDescriptor().triggerSequence()
 				+ ((Function) getDescriptor().itemRenderer()).apply(entity);
-		setContent(text);
+		properties.content.set(this, text);
 	}
 
 	/**

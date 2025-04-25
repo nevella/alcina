@@ -13,6 +13,7 @@ import com.google.gwt.regexp.shared.RegExp;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeText.SplitResult;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -34,8 +35,24 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
  * or mention in a document, or a selected choice in a dropdown suggestor
  */
 @Directed(className = "decorator-node")
+@TypedProperties
 public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		HasStringRepresentableType<SR>, FragmentIsolate, HasContentEditable {
+	public static PackageProperties._DecoratorNode properties = PackageProperties.decoratorNode;
+
+	public DecoratorNode() {
+		bindings().from(this).on(properties.contentEditable)
+				.accept(this::notifyContentEditableDelta);
+	}
+
+	void notifyContentEditableDelta(boolean contentEditable) {
+		new DecoratorEvent().withType(DecoratorEvent.Type.editable_delta)
+				.withSubtype(NestedName.get(this))
+				.withMessage(
+						Ax.format("[-->%s] :: %s", contentEditable, content))
+				.publish();
+	}
+
 	/**
 	 * Models the characteristics of the content decorator, such as the key
 	 * sequence which triggers its creation, the class reference modelled, etc
@@ -92,7 +109,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 				parent.nodes().strip();
 			}
 			DN created = createNode();
-			created.setContentEditable(true);
+			DecoratorNode.properties.contentEditable.set(created, true);
 			textFragment.nodes().insertBeforeThis(created);
 			created.nodes().append(textFragment);
 			LocalDom.flush();
@@ -124,7 +141,11 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 	@Binding(type = Type.INNER_TEXT)
 	public String content = "";
 
-	protected SR stringRepresentable;
+	@Binding(
+		type = Type.PROPERTY,
+		to = "uid",
+		transform = RepresentableToStringTransform.class)
+	public SR stringRepresentable;
 
 	@Override
 	public void onBind(Bind event) {
@@ -132,7 +153,8 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		new DecoratorEvent()
 				.withType(event.isBound() ? DecoratorEvent.Type.node_bound
 						: DecoratorEvent.Type.node_unbound)
-				.withMessage(NestedName.get(this)).publish();
+				.withSubtype(NestedName.get(this)).withMessage(content)
+				.publish();
 	}
 
 	@Override
@@ -148,45 +170,26 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		return internalModel;
 	}
 
-	public void setStringRepresentable(SR stringRepresentable) {
-		set("stringRepresentable", this.stringRepresentable,
-				stringRepresentable,
-				() -> this.stringRepresentable = stringRepresentable);
+	/*
+	 * for method refs
+	 */
+	public SR getStringRepresentable() {
+		return stringRepresentable;
 	}
 
 	public abstract Descriptor<WT, SR, ?> getDescriptor();
 
-	@Binding(
-		type = Type.PROPERTY,
-		to = "uid",
-		transform = RepresentableToStringTransform.class)
-	public SR getStringRepresentable() {
-		return this.stringRepresentable;
-	}
-
 	public void putReferenced(WT wrappedType) {
-		setStringRepresentable(
+		properties.stringRepresentable.set(this,
 				getDescriptor().toStringRepresentable(wrappedType));
 		String text = getDescriptor().triggerSequence()
 				+ ((Function) getDescriptor().itemRenderer())
 						.apply(wrappedType);
-		setContent(text);
-	}
-
-	public void setContent(String content) {
-		set("content", this.content, content, () -> this.content = content);
-	}
-
-	public void setContentEditable(boolean contentEditable) {
-		if (!contentEditable && this.contentEditable) {
-			int debug = 3;
-		}
-		set("contentEditable", this.contentEditable, contentEditable,
-				() -> this.contentEditable = contentEditable);
+		properties.content.set(this, text);
 	}
 
 	public void toNonEditable() {
-		setContentEditable(false);
+		properties.contentEditable.set(this, false);
 	}
 
 	boolean isValid() {

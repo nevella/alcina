@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -199,5 +200,7 @@ public class EditArea extends Model.Fields
 				.forEach(ZeroWidthCursorTarget::removeIfNotRequired);
 		fragmentModel.byTypeAssignable(DecoratorNode.class).toList()
 				.forEach(DecoratorNode::ensureSpacers);
+		new DecoratorEvent().withType(DecoratorEvent.Type.spacers_refreshed)
+				.publish();
 	}
 }

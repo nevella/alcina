@@ -20,6 +20,13 @@ public interface FlightEventWrappable
 	}
 
 	/*
+	 * subcategory of the event
+	 */
+	default String provideSubcategory() {
+		return null;
+	}
+
+	/*
 	 * detail of the event
 	 */
 	default String provideDetail() {

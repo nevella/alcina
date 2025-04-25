@@ -171,4 +171,9 @@ public class Selection implements ClientDomSelection {
 			}
 		}
 	}
+
+	@Override
+	public String toString() {
+		return local.toString();
+	}
 }

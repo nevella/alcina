@@ -175,8 +175,8 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 	@Property.Not
 	List<T> getEditorValues() {
 		return editArea.fragmentModel.byType(ChoiceNode.class)
-				.map(cn -> cn.getStringRepresentable()).filter(Objects::nonNull)
-				.map(this::selectedValueFromString)
+				.map(ChoiceNode::getStringRepresentable)
+				.filter(Objects::nonNull).map(this::selectedValueFromString)
 				.collect(Collectors.toList());
 	}
 

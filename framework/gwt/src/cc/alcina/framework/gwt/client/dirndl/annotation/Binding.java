@@ -107,6 +107,15 @@ public @interface Binding {
 	}
 
 	@Reflected
+	public static class DisplayFalseTrueNull
+			implements ToStringFunction<Boolean> {
+		@Override
+		public String apply(Boolean t) {
+			return t == null ? null : t ? "true" : "false";
+		}
+	}
+
+	@Reflected
 	public static class DisplayFalseTrueBidi implements Binding.Bidi<Boolean> {
 		@Override
 		public Function<Boolean, String> leftToRight() {

@@ -9,6 +9,7 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -87,6 +88,9 @@ public interface HasDecorators
 	@Override
 	default void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
 		getDecorators().forEach(d -> d.onSelectionChanged(event));
+		new DecoratorEvent().withType(DecoratorEvent.Type.selection_changed)
+				.withMessage(Document.get().getSelection().toString())
+				.publish();
 	}
 
 	@Override
