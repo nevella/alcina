@@ -17,12 +17,15 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
 /**
  * 
- * 
+ * Models the location of the sequence browser
  */
 @Bean(PropertySource.FIELDS)
 @ReflectiveSerializer.Checks(ignore = true)
 public class SequencePlace extends BasePlace
 		implements SequenceBrowserPlace, TreeSerializable {
+	/*
+	 * Models the provider of sequence elements
+	 */
 	public InstanceQuery instanceQuery = new InstanceQuery();
 
 	public String filter;
@@ -35,6 +38,10 @@ public class SequencePlace extends BasePlace
 
 	public IntPair selectedRange;
 
+	/**
+	 * Models the filter of sequence elements. The field type is abstract, so
+	 * any value will be a subtype of {@link SequenceSearchDefinition}
+	 */
 	@PropertySerialization(
 		typesProvider = { TypesProvider_Registry.class,
 				SequenceSearchDefinition.class })

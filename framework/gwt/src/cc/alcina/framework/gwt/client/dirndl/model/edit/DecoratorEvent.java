@@ -16,6 +16,15 @@ public class DecoratorEvent implements ProcessObservable, FlightEventWrappable {
 
 	public String subtype;
 
+	public MutationStrings mutationStrings;
+
+	@Bean(PropertySource.FIELDS)
+	public static class MutationStrings {
+		public String mutationRecords;
+
+		public String editorDom;
+	}
+
 	public DecoratorEvent withType(Type type) {
 		this.type = type;
 		return this;
@@ -33,7 +42,7 @@ public class DecoratorEvent implements ProcessObservable, FlightEventWrappable {
 
 	public enum Type {
 		node_bound, node_unbound, spacers_refreshed, editable_delta,
-		selection_changed
+		selection_changed, editor_transforms
 	}
 
 	public String getSessionId() {

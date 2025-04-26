@@ -33,11 +33,9 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.Topic;
@@ -89,8 +87,6 @@ public class LocalDom implements ContextFrame {
 	Topic<Exception> topicPublishException;
 
 	Topic<String> topicUnableToParse;
-
-	Topic<List<MutationRecord>> topicMutationsAppliedToLocal;
 
 	Topic<Exception> topicReportException;
 
@@ -458,7 +454,6 @@ public class LocalDom implements ContextFrame {
 		topicPublishException = Topic.create();
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
-		topicMutationsAppliedToLocal = Topic.create();
 		topicReportException.add(this::handleReportedException);
 		lc = new FastLcProvider();
 		attachIds = new AttachIds();
@@ -1016,14 +1011,6 @@ public class LocalDom implements ContextFrame {
 			return NodeJso.toNode(nodeJso);
 		}
 
-		public void onRemoteMutationsApplied(List<MutationRecord> records,
-				boolean hadException) {
-			if (!hadException) {
-				records.forEach(MutationRecord::populateAttachIds);
-				topicMutationsAppliedToLocal.publish(records);
-			}
-		}
-
 		public boolean isApplyingDetachedMutationsToLocalDom() {
 			return applyingDetachedMutationsToLocalDom;
 		}
@@ -1131,10 +1118,6 @@ public class LocalDom implements ContextFrame {
 
 	public static Topic<String> topicUnableToParse() {
 		return get().topicUnableToParse;
-	}
-
-	public static Topic<List<MutationRecord>> topicMutationsAppliedToLocal() {
-		return get().topicMutationsAppliedToLocal;
 	}
 
 	void onAttach(Node node) {

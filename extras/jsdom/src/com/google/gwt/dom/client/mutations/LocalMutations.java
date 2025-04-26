@@ -155,11 +155,13 @@ public class LocalMutations {
 		record.nextSibling = MutationNode.forNode(nextSibling);
 		if (add) {
 			record.addedNodes.add(MutationNode.forNode(child));
-			nodeAsMutations(child, true).forEach(this::addMutation);
+			nodeAsMutations(child,
+					!MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS.is())
+							.forEach(this::addMutation);
 		} else {
 			record.removedNodes.add(MutationNode.forNode(child));
+			addMutation(record);
 		}
-		addMutation(record);
 	}
 
 	List<MutationRecord> nodeAsMutations(Node node, boolean deep) {
@@ -176,13 +178,13 @@ public class LocalMutations {
 				LooseContext.push();
 				MutationRecord.deltaFlag(
 						MutationRecord.FlagTransportMarkupTree.class, true);
-				MutationRecord.generateInsertMutations(node, records);
+				MutationRecord.generateInsertMutations(node, records, deep);
 			} finally {
 				LooseContext.pop();
 			}
 		} else {
 			// just this one, no inner markup
-			MutationRecord.generateInsertMutations(node, records);
+			MutationRecord.generateInsertMutations(node, records, deep);
 		}
 		return records;
 	}

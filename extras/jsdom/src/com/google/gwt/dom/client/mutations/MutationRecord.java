@@ -116,7 +116,7 @@ public final class MutationRecord {
 	 * tree', a combination of *inner* markup and attr mutations will be sent,
 	 */
 	public static void generateInsertMutations(Node node,
-			List<MutationRecord> records) {
+			List<MutationRecord> records, boolean deep) {
 		Element parentElement = node.getParentElement();
 		MutationRecord creationRecord = null;
 		boolean writeAsMarkupTree = hasContextFlag(
@@ -141,6 +141,9 @@ public final class MutationRecord {
 				creationRecord.nextSibling = MutationNode.attachId(nextSibling);
 			}
 			records.add(creationRecord);
+		}
+		if (!deep) {
+			return;
 		}
 		if (writeAsMarkupTree && node.getNodeType() == Node.ELEMENT_NODE
 				&& node.getChildCount() > 0) {

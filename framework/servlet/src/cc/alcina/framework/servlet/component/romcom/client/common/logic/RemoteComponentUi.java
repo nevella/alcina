@@ -193,8 +193,6 @@ public class RemoteComponentUi {
 		 * correctly, the general case is not
 		 */
 		LocalDom.topicPublishException().add(this::onLocalDomException);
-		LocalDom.topicMutationsAppliedToLocal()
-				.add(this::onMutationsAppliedToLocal);
 		LocalDom.getLocalMutations().topicMutations.add(this::onLocalMutations);
 		ClientRpc.get().transportLayer.session = ReflectiveSerializer
 				.deserializeRpc(ClientUtils.wndString(
@@ -234,12 +232,6 @@ public class RemoteComponentUi {
 		ProcessingException processingException = RemoteComponentProtocol.Message.ProcessingException
 				.wrap(exception, true);
 		ClientRpc.send(processingException);
-	}
-
-	void onMutationsAppliedToLocal(List<MutationRecord> mutationRecords) {
-		Message.Mutations mutations = new Message.Mutations();
-		mutations.domMutations = mutationRecords;
-		ClientRpc.send(mutations);
 	}
 
 	// FIXME - dirndl - this can just be sent via normal event creation (ehich

@@ -3,7 +3,6 @@ package com.google.gwt.dom.client.mutations;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -20,7 +19,6 @@ import com.google.gwt.dom.client.mutations.MutationHistory.Event.Type;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class RemoteMutations {
 	/*
@@ -149,13 +147,13 @@ public class RemoteMutations {
 				LooseContext.push();
 				MutationRecord.deltaFlag(
 						MutationRecord.FlagTransportMarkupTree.class, true);
-				MutationRecord.generateInsertMutations(node, records);
+				MutationRecord.generateInsertMutations(node, records, deep);
 			} finally {
 				LooseContext.pop();
 			}
 		} else {
 			// just this one, no inner markup
-			MutationRecord.generateInsertMutations(node, records);
+			MutationRecord.generateInsertMutations(node, records, deep);
 		}
 		return records;
 	}
@@ -226,7 +224,8 @@ public class RemoteMutations {
 	// log exceptions
 	void syncMutations(JsArray<MutationRecordJso> records) {
 		try {
-			syncMutations0(records);
+			MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS
+					.runWithTrue(() -> syncMutations0(records));
 		} catch (Throwable e) {
 			GWT.log("Exception in handleMutations", e);
 			e.printStackTrace();
@@ -242,8 +241,6 @@ public class RemoteMutations {
 		hadExceptions |= syncMutations.hadException;
 		log(Ax.format("%s records", records.length()), false);
 		history.currentMutations = null;
-		mutationsAccess.onRemoteMutationsApplied(recordList,
-				syncMutations.hadException);
 	}
 
 	public void syncMutationsAndStopObserving() {

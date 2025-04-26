@@ -1,12 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.stream.Collectors;
-
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -24,6 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvent.MutationStrings;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel.ModelMutation;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentResolver;
@@ -165,6 +163,14 @@ public class EditArea extends Model.Fields
 
 	@Override
 	public void onMutation(Mutation event) {
+		DecoratorEvent decoratorEvent = new DecoratorEvent()
+				.withType(DecoratorEvent.Type.editor_transforms);
+		DecoratorEvent.MutationStrings mutationStrings = new MutationStrings();
+		mutationStrings.mutationRecords = Ax.newlineJoin(event.records);
+		mutationStrings.editorDom = provideElement().asDomNode()
+				.prettyToString();
+		decoratorEvent.mutationStrings = mutationStrings;
+		decoratorEvent.publish();
 		fragmentModel.onMutation(event);
 	}
 

@@ -453,7 +453,9 @@ public class InstanceOracle {
 				return;
 			}
 			this.instance = instance;
-			awaitLatch.countDown();
+			if (awaitLatch != null) {
+				awaitLatch.countDown();
+			}
 			passToConsumers();
 		}
 
@@ -463,7 +465,9 @@ public class InstanceOracle {
 			}
 			exception.printStackTrace();
 			this.exception = exception;
-			awaitLatch.countDown();
+			if (awaitLatch != null) {
+				awaitLatch.countDown();
+			}
 			passToConsumers();
 		}
 
@@ -475,9 +479,12 @@ public class InstanceOracle {
 			return provider != null && provider.isOneOff();
 		}
 
-		// SE only
 		synchronized void ensureLatch() {
-			if (awaitLatch == null) {
+			if (awaitLatch == null && !Al.isBrowser()) {
+				/*
+				 * Note that this is currently permitted in romcom - since
+				 * non-async is easier coding. TBD
+				 */
 				awaitLatch = new CountDownLatch(1);
 			}
 		}

@@ -888,6 +888,10 @@ public class DirectedLayout implements AlcinaProcess {
 				FragmentNode refChildModel) {
 			ensureChildren();
 			Node oldNode = newChildModel.provideNode();
+			/*
+			 * This doesn't remove (with recursion) existing rendered dom - we
+			 * move that rather than requiring a rerender
+			 */
 			removeChildNode(newChildModel, false);
 			RendererInput input = getResolver().layout.enqueueInput(
 					getResolver(), newChildModel,
@@ -2135,11 +2139,13 @@ public class DirectedLayout implements AlcinaProcess {
 							node.directed.renderer())
 					|| node.has(Directed.RenderNull.class)) {
 				if (rendered != null) {
-					// preserve domNode/model identity
+					// preserve domNode/model identity. Note relationship with
+					// #moveChildren()
 					node.rendered = rendered;
+				} else {
+					DirectedRenderer renderer = resolveRenderer();
+					renderer.render(this);
 				}
-				DirectedRenderer renderer = resolveRenderer();
-				renderer.render(this);
 			}
 			afterRender();
 		}

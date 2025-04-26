@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Timer;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.cmp.help.HelpPlace;
 import cc.alcina.framework.gwt.client.dirndl.cmp.status.StatusModule;
@@ -338,6 +337,7 @@ class Page extends Model.Fields
 		String sequenceKey = null;
 		InstanceQuery instanceQuery = ui.place.instanceQuery;
 		if (instanceQuery.isBlank()) {
+			instanceQuery = new Sequence.Blank.LoaderImpl().getQuery();
 			sequenceKey = ui.settings.sequenceKey;
 			sequenceKey = Ax.blankToEmpty(sequenceKey);
 			Sequence.Loader loader = Sequence.Loader.getLoader(sequenceKey);

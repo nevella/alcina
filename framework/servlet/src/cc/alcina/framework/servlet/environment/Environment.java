@@ -430,6 +430,7 @@ class Environment {
 				return;
 			}
 			// Ax.out("-------==========--------\n");
+			// Ax.sysLogHigh("mutations");
 			// Ax.out(mutations);
 			// Ax.out("\n-------==========--------\n");
 			queue.invoke(() -> LocalDom.attachIdRepresentations()
