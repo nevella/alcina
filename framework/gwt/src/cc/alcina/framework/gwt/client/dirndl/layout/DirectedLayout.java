@@ -1020,21 +1020,94 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		public Node previousSibling() {
-			if (parent == null) {
+		public class NodeRelative {
+			public Node previousSibling() {
+				if (parent == null) {
+					return null;
+				}
+				int idx = parent.children.indexOf(Node.this);
+				return idx == 0 ? null : parent.children.get(idx - 1);
+			}
+
+			// parallels DomNode.treePreviousNode
+			public Node treePreviousNode() {
+				Node cursor = Node.this;
+				Node previous = null;
+				while (cursor != null) {
+					previous = cursor.relative().previousSibling();
+					if (previous != null) {
+						break;
+					} else {
+						cursor = cursor.parent;
+					}
+				}
+				if (previous == null) {
+					return null;
+				} else {
+					return previous.relative().lastDescendant();
+				}
+			}
+
+			public Node treeSubsequentNodeNoDescent() {
+				if (hasNextSibling()) {
+					return nextSibling();
+				}
+				if (parent != null) {
+					return parent.relative().treeSubsequentNodeNoDescent();
+				}
 				return null;
 			}
-			int idx = parent.children.indexOf(this);
-			return idx == 0 ? null : parent.children.get(idx - 1);
+
+			public Node treeSubsequentNode() {
+				Node firstChild = firstChild();
+				if (firstChild != null) {
+					return firstChild;
+				}
+				return treeSubsequentNodeNoDescent();
+			}
+
+			public boolean hasNextSibling() {
+				return nextSibling() != null;
+			}
+
+			public Node lastDescendant() {
+				Node cursor = Node.this;
+				while (cursor != null) {
+					Node last = cursor.relative().lastChild();
+					if (last == null) {
+						return cursor;
+					}
+					cursor = last;
+				}
+				return null;
+			}
+
+			Node firstChild() {
+				if (children == null) {
+					return null;
+				}
+				return Ax.first(children);
+			}
+
+			Node lastChild() {
+				if (children == null) {
+					return null;
+				}
+				return Ax.last(children);
+			}
+
+			public Node nextSibling() {
+				if (parent == null) {
+					return null;
+				}
+				int idx = parent.children.indexOf(Node.this);
+				return idx == parent.children.size() - 1 ? null
+						: parent.children.get(idx + 1);
+			}
 		}
 
-		public Node nextSibling() {
-			if (parent == null) {
-				return null;
-			}
-			int idx = parent.children.indexOf(this);
-			return idx == parent.children.size() - 1 ? null
-					: parent.children.get(idx + 1);
+		public NodeRelative relative() {
+			return new NodeRelative();
 		}
 
 		public Node provideMostSpecificNodeForModel() {

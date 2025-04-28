@@ -74,9 +74,8 @@ public class ZeroWidthCursorTarget extends FragmentNode {
 			return;
 		}
 		boolean required = HasContentEditable
-				.isUneditableSibling(nodes().previousSibling())
-				&& HasContentEditable
-						.isUneditableSibling(nodes().nextSibling());
+				.isUneditable(nodes().previousSibling())
+				&& HasContentEditable.isUneditable(nodes().nextSibling());
 		if (!required) {
 			nodes().removeFromParent();
 			// this is the non-bubbling, quick hack - FIXME FN

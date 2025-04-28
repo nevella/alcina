@@ -326,9 +326,9 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		node.children().forEach(this::register);
 	}
 
-	NodeTransformer registerTransformer(DomNode n,
+	NodeTransformer registerTransformer(DomNode domNode,
 			NodeTransformer transformer) {
-		return domNodeTransformer.put(n, transformer);
+		return domNodeTransformer.put(domNode, transformer);
 	}
 
 	void removeDescent(DomNode node) {

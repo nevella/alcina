@@ -41,7 +41,7 @@ public class DecoratorEvent implements ProcessObservable, FlightEventWrappable {
 	}
 
 	public enum Type {
-		node_bound, node_unbound, spacers_refreshed, editable_delta,
+		node_bound, node_unbound, zws_refreshed, editable_delta,
 		selection_changed, editor_transforms
 	}
 

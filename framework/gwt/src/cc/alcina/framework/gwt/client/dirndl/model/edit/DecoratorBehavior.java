@@ -36,13 +36,8 @@ public interface DecoratorBehavior {
 	}
 
 	/**
-	 * On fragmentnode mutation, ensure that a ZWS text node exists between
-	 * adjacent non-editables (DecoratorNodes)
-	 */
-	interface InsertZwsBetweenNonEditables extends DecoratorBehavior {
-	}
-
-	/**
+	 * <p>
+	 * This is a client behavior, since it needs to occur synchronously
 	 * <p>
 	 * Extends the affected range of keyboard navigation events (and
 	 * backspace/delete) if the traversed range is a zero-width-space.

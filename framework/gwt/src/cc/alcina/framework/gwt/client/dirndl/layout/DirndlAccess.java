@@ -32,4 +32,9 @@ public class DirndlAccess {
 			Class<A> clazz) {
 		return n.parent.annotation(clazz);
 	}
+
+	public static void appendToNode(DirectedLayout.Node directedNode,
+			FragmentNode child) {
+		directedNode.append(child);
+	}
 }

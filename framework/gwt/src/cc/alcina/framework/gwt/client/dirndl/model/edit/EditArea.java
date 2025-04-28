@@ -1,5 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -18,6 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
@@ -66,6 +74,18 @@ public class EditArea extends Model.Fields
 	public boolean contentEditable = true;
 
 	FragmentModel fragmentModel;
+
+	/*
+	 * Note that a cusor target will always be inserted at document end (unless
+	 * there's an editable node). The following two parameters control other
+	 * cursor target insertions
+	 * 
+	 * An example that _doesn't_ require inter-non-editable targets is an
+	 * unordered ChoiceEditor
+	 */
+	protected boolean insertInterNonEditableCursorTargets = true;
+
+	protected boolean insertEditorStartCursorTarget = true;
 
 	public EditArea() {
 		createFragmentModel();
@@ -201,15 +221,116 @@ public class EditArea extends Model.Fields
 
 	@Override
 	public void onModelMutation(ModelMutation event) {
-		refreshSpacers(event);
+		new NonEditableCursorTargetConstraint().alignWithConstraint();
 	}
 
-	void refreshSpacers(ModelMutation event) {
-		fragmentModel.byTypeAssignable(ZeroWidthCursorTarget.class).toList()
-				.forEach(ZeroWidthCursorTarget::removeIfNotRequired);
-		fragmentModel.byTypeAssignable(DecoratorNode.class).toList()
-				.forEach(DecoratorNode::ensureSpacers);
-		new DecoratorEvent().withType(DecoratorEvent.Type.spacers_refreshed)
-				.publish();
+	/**
+	 * 
+	 * 
+	 * <p>
+	 * Thsi behaviour ensures that a ZWS text node exists between adjacent
+	 * non-editables (DecoratorNodes), and (optionally) at the editor
+	 * Boundaries.
+	 * 
+	 * <p>
+	 * It also ensures unneeded ZWS nodes are removed or unwrapped
+	 */
+	class NonEditableCursorTargetConstraint implements DecoratorBehavior {
+		void alignWithConstraint() {
+			fragmentModel.byTypeAssignable(ZeroWidthCursorTarget.class).toList()
+					.forEach(ZeroWidthCursorTarget::unwrapIfContainsNonZwsText);
+			Set<ZeroWidthCursorTarget> validZwsTargets = new LinkedHashSet<>();
+			if (insertInterNonEditableCursorTargets) {
+				fragmentModel.byTypeAssignable(DecoratorNode.class).toList()
+						.stream()
+						.map(DecoratorNode::ensureInterNonEditableTarget)
+						.forEach(validZwsTargets::add);
+			}
+			ensureBoundaryCursorTargets().stream()
+					.forEach(validZwsTargets::add);
+			fragmentModel.byTypeAssignable(ZeroWidthCursorTarget.class).toList()
+					.stream().filter(zws -> !validZwsTargets.contains(zws))
+					.forEach(zws -> zws.nodes().removeFromParent());
+			new DecoratorEvent().withType(DecoratorEvent.Type.zws_refreshed)
+					.publish();
+		}
+	}
+
+	List<ZeroWidthCursorTarget> ensureBoundaryCursorTargets() {
+		List<ZeroWidthCursorTarget> result = new ArrayList<>();
+		/*
+		 * start boundary
+		 */
+		{
+			boolean requiresInsert = false;
+			// not required - handled by end-of-pass validation
+			// boolean requiresDelete=false;
+			List<? extends FragmentNode> children = fragmentModel.children()
+					.toList();
+			int size = children.size();
+			FragmentNode first = Ax.first(children);
+			FragmentNode second = size >= 2 ? children.get(1) : null;
+			if (size == 0) {
+				requiresInsert = true;
+			} else if (size == 1) {
+				if (first instanceof ZeroWidthCursorTarget) {
+					result.add((ZeroWidthCursorTarget) first);
+				} else if (HasContentEditable.isUneditable(first)
+						&& insertEditorStartCursorTarget) {
+					requiresInsert = true;
+				}
+			} else {
+				if (first instanceof ZeroWidthCursorTarget) {
+					if (HasContentEditable.isUneditable(second)) {
+						result.add((ZeroWidthCursorTarget) first);
+					}
+				} else if (HasContentEditable.isUneditable(first)
+						&& insertEditorStartCursorTarget) {
+					requiresInsert = true;
+				}
+			}
+			if (requiresInsert) {
+				ZeroWidthCursorTarget cursorTarget = new ZeroWidthCursorTarget();
+				if (first == null) {
+					fragmentModel.getFragmentRoot().append(cursorTarget);
+				} else {
+					first.nodes().insertBeforeThis(cursorTarget);
+				}
+				result.add(cursorTarget);
+			}
+		}
+		/*
+		 * end boundary
+		 */
+		{
+			boolean requiresInsert = false;
+			List<? extends FragmentNode> children = fragmentModel.children()
+					.toList();
+			int size = children.size();
+			Preconditions.checkState(size > 0);
+			FragmentNode last = Ax.last(children);
+			FragmentNode secondLast = size >= 2 ? children.get(size - 2) : null;
+			if (size == 1) {
+				if (last instanceof ZeroWidthCursorTarget) {
+					result.add((ZeroWidthCursorTarget) last);
+				} else if (HasContentEditable.isUneditable(last)) {
+					requiresInsert = true;
+				}
+			} else {
+				if (last instanceof ZeroWidthCursorTarget) {
+					if (HasContentEditable.isUneditable(secondLast)) {
+						result.add((ZeroWidthCursorTarget) last);
+					}
+				} else if (HasContentEditable.isUneditable(last)) {
+					requiresInsert = true;
+				}
+			}
+			if (requiresInsert) {
+				ZeroWidthCursorTarget cursorTarget = new ZeroWidthCursorTarget();
+				last.nodes().insertAfterThis(cursorTarget);
+				result.add(cursorTarget);
+			}
+		}
+		return result;
 	}
 }
