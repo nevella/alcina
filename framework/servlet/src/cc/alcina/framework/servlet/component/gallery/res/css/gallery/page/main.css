@@ -26,7 +26,7 @@ bean-editor.label-over form-element {
   position: relative;
   margin-bottom: 0.8rem;
 }
-bean-editor.label-over form-element > label:has(+ value > :is(input, select)) {
+bean-editor.label-over form-element > label:has(+ value > *:is(input, select)) {
   position: absolute;
   background-color: #fefdfb;
   color: #555;
@@ -427,11 +427,6 @@ body > overlay-container-modal > overlay {
   background-color: white;
 }
 
-body > .overlay-container.viewport-middle-center > overlay.keyboard-shortcuts-area {
-  top: 3rem;
-  transform: translate(-50%, 0%);
-}
-
 overlay > menu {
   background: white;
   user-select: none;
@@ -443,6 +438,7 @@ overlay > menu {
   flex-direction: column;
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
   padding: 0.5rem 0;
 }
 overlay > menu > action {
@@ -477,6 +473,9 @@ overlay > menu > heading {
   font-weight: bold;
   color: #999;
   line-height: 2;
+}
+overlay > menu > heading:not(:first-of-type) {
+  margin-top: 1rem;
 }
 overlay > menu > choices {
   display: flex;
@@ -776,7 +775,7 @@ overlay.app-suggestor > results > choice > suggestion > app-suggestion > content
   display: block;
 }
 
-keyboard-shortcuts-area {
+keyboard-shortcuts {
   background: white;
   user-select: none;
   padding: 1rem 0;
@@ -787,24 +786,30 @@ keyboard-shortcuts-area {
   width: 750px;
   min-height: 50vh;
   user-select: auto;
+  display: grid;
+  justify-items: start;
+  grid-template-rows: min-content min-content min-content 1fr min-content;
 }
-keyboard-shortcuts-area > heading {
+keyboard-shortcuts > *:nth-child(3) {
+  overflow-y: auto;
+}
+keyboard-shortcuts > heading {
   margin: 1rem 0;
   font-size: 1.5rem;
   display: block;
 }
-keyboard-shortcuts-area > contents-filter {
+keyboard-shortcuts > contents-filter {
   display: block;
   padding: 0 0 1rem;
   font-size: 1.1rem;
 }
-keyboard-shortcuts-area > contents-filter > input {
+keyboard-shortcuts > contents-filter > input {
   border: solid 1px #ddd;
   padding: 4px 6px;
   width: 20rem;
   outline: none;
 }
-keyboard-shortcuts-area > shortcuts {
+keyboard-shortcuts > shortcuts {
   display: grid;
   grid-template-columns: 3rem 2rem 1fr;
   margin-top: 1rem;
@@ -813,26 +818,26 @@ keyboard-shortcuts-area > shortcuts {
   max-height: 50vh;
   overflow: auto;
 }
-keyboard-shortcuts-area > shortcuts > shortcut {
+keyboard-shortcuts > shortcuts > shortcut {
   display: contents;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell {
   text-align: right;
   isplay: inline-block;
   margin-top: -2px;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell > modifier {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell > modifier {
   border: solid 1px #777;
   border-radius: 3px;
   padding: 2px;
   font-size: 0.8rem;
   color: #777;
 }
-keyboard-shortcuts-area > shortcuts > shortcut > modifier-cell > modifier:empty {
+keyboard-shortcuts > shortcuts > shortcut > modifier-cell > modifier:empty {
   border: none;
 }
 
-help-area {
+help {
   height: 50vh;
   width: 25vw;
   display: flex;
@@ -850,38 +855,38 @@ help-area {
   padding: 1rem;
   user-select: auto;
 }
-help-area > heading, help-area > heading-actions {
+help > heading, help > heading-actions {
   margin: 0 0 0.5rem;
   display: flex;
   width: 100%;
   font-weight: bold;
   justify-content: space-between;
 }
-help-area > heading-actions > actions {
+help > heading > actions, help > heading-actions > actions {
   font-weight: normal;
   display: flex;
   gap: 1em;
 }
-help-area > heading-actions > actions a {
+help > heading > actions a, help > heading-actions > actions a {
   cursor: pointer;
 }
-help-area > key-values {
+help > key-values {
   display: grid;
   grid-template-columns: max-content 1fr;
   column-gap: 1rem;
   row-gap: 0.1rem;
 }
-help-area > key-values > key-value {
+help > key-values > key-value {
   display: contents;
 }
-help-area > key-values > key-value > key {
+help > key-values > key-value > key {
   color: #777;
 }
-help-area > a {
+help > a {
   display: block;
   margin: 0 0 0.2rem;
 }
-help-area sequence {
+help sequence {
   display: flex;
   flex-direction: column;
   max-width: 1200px;
@@ -891,66 +896,66 @@ help-area sequence {
   min-height: 100vh;
   align-items: flex-start;
 }
-help-area sequence a, help-area sequence a.link, help-area sequence a.visited {
+help sequence a, help sequence a.link, help sequence a.visited {
   text-decoration: none;
   color: black;
 }
-help-area sequence a:hover, help-area sequence a.link:hover, help-area sequence a.visited:hover {
+help sequence a:hover, help sequence a.link:hover, help sequence a.visited:hover {
   color: #387ed3;
 }
-help-area sequence > heading {
+help sequence > heading {
   display: block;
   font-weight: bold;
   color: #0f4589;
   margin: 1rem 0;
 }
-help-area sequence > doc-header {
+help sequence > doc-header {
   display: flex;
   width: 100%;
   align-items: center;
   justify-content: space-between;
 }
-help-area sequence > doc-header img {
+help sequence > doc-header img {
   width: 200px;
 }
-help-area sequence > doc-header heading {
+help sequence > doc-header heading {
   font-size: 18px;
   font-weight: bold;
 }
-help-area sequence > doc-header spacer {
+help sequence > doc-header spacer {
   display: block;
   width: 200px;
 }
-help-area sequence > table {
+help sequence > table {
   box-sizing: border-box;
   margin-bottom: 2rem;
   margin-top: 1rem;
   border-collapse: separate;
   border-spacing: 1rem 0.5rem;
 }
-help-area sequence > table th {
+help sequence > table th {
   text-align: left;
   width: 12rem;
 }
-help-area sequence > table td > value {
+help sequence > table td > value {
   white-space: pre-wrap;
 }
-help-area sequence > table td > value:not(:last-child):after {
+help sequence > table td > value:not(:last-child):after {
   content: ", ";
 }
-help-area sequence > visit-area {
+help sequence > visit {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 5rem;
 }
-help-area sequence > visit-area > path {
+help sequence > visit > path {
   font-weight: bold;
 }
-help-area sequence > visit-area > description {
+help sequence > visit > description {
   margin-bottom: 1rem;
 }
-help-area sequence > visit-area > img {
+help sequence > visit > img {
   max-width: 100%;
 }
 
@@ -959,7 +964,7 @@ bean-editor > heading {
   padding-left: 0;
 }
 
-multiple-suggestions > edit {
+choice-editor > edit {
   font-size: 16px;
   color: #666;
   width: 100%;
@@ -970,41 +975,37 @@ multiple-suggestions > edit {
   padding: 0.4rem 0.4rem;
   box-sizing: border-box;
   border-color: #aaa;
-  border-color-background-color: #ffffff20;
+  background-color: #ffffff20;
   display: block;
   color: #333;
   height: 100%;
   line-height: 145%;
   width: 30rem;
 }
-multiple-suggestions > edit::-webkit-input-placeholder {
+choice-editor > edit::-webkit-input-placeholder {
   color: transparent;
 }
-multiple-suggestions > edit:focus::-webkit-input-placeholder {
+choice-editor > edit:focus::-webkit-input-placeholder {
   color: #aaa;
   font-style: italic;
 }
-multiple-suggestions > edit:hover {
+choice-editor > edit:hover {
   border-color: #aaa;
-  border-color-background-color: #ffffff20;
+  background-color: #ffffff20;
 }
-multiple-suggestions > edit:focus {
+choice-editor > edit:focus {
   border-color: #555;
   background-color: #FFF;
 }
-multiple-suggestions > edit choice-node:not([contentEditable=false]) {
-  color: blue;
-}
-multiple-suggestions > edit choice-node[contentEditable=false] {
+choice-editor > edit choice-node[contentEditable=false] {
   background: #e3e3e3;
   border-radius: 14px;
   border: solid 1px #ddd;
-}
-multiple-suggestions > edit choice-node {
   padding: 1px 4px;
+  margin: 0 2px;
 }
 
-overlay > .decorator-chooser {
+overlay > .decorator-suggestor {
   background: white;
   user-select: none;
   padding: 1rem 0;
@@ -1014,7 +1015,7 @@ overlay > .decorator-chooser {
   width: 20rem;
   padding: 0;
 }
-overlay > .decorator-chooser > suggestor {
+overlay > .decorator-suggestor > suggestor {
   background: white;
   user-select: none;
   padding: 1rem 0;
@@ -1024,15 +1025,15 @@ overlay > .decorator-chooser > suggestor {
   display: flex;
   flex-direction: column;
 }
-overlay > .decorator-chooser > suggestor > results {
+overlay > .decorator-suggestor > suggestor > results {
   display: contents;
 }
-overlay > .decorator-chooser > suggestor > choice, overlay > .decorator-chooser > suggestor > results > choice {
+overlay > .decorator-suggestor > suggestor > choice, overlay > .decorator-suggestor > suggestor > results > choice {
   padding: 0.4rem 1rem;
   /* use padding, not line-height, so hover bkg is vertically centered*/
   line-height: 2;
   cursor: pointer;
 }
-overlay > .decorator-chooser > suggestor > choice:hover, overlay > .decorator-chooser > suggestor > choice[index-selected], overlay > .decorator-chooser > suggestor > results > choice:hover, overlay > .decorator-chooser > suggestor > results > choice[index-selected] {
+overlay > .decorator-suggestor > suggestor > choice:hover, overlay > .decorator-suggestor > suggestor > choice[index-selected], overlay > .decorator-suggestor > suggestor > results > choice:hover, overlay > .decorator-suggestor > suggestor > results > choice[index-selected] {
   background-color: #00000010;
 }

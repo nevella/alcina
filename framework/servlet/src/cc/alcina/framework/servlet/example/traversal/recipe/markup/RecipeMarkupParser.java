@@ -49,7 +49,7 @@ public class RecipeMarkupParser
 		TreeProcess.Node parentNode = JobContext.getSelectedProcessNode();
 		traversal.select(new RecipeMarkup(parentNode, text));
 		rootLayer = new RootLayer();
-		traversal.setRootLayer(rootLayer);
+		traversal.layers().setRoot(rootLayer);
 	}
 
 	class IsBlockImpl implements SelectionMarkupSingle.IsBlock {
@@ -67,13 +67,10 @@ public class RecipeMarkupParser
 	public void test(String text) {
 		parse(text);
 		traversal.throwExceptions();
-		Ax.out("%s raw ingredients",
-				traversal
-						.getSelections(
-								IngredientsLayer.RawIngredientSelection.class)
-						.size());
-		List<IngredientSelection> ingredients = traversal
-				.getSelections(IngredientLayer.IngredientSelection.class);
+		Ax.out("%s raw ingredients", traversal.selections()
+				.get(IngredientsLayer.RawIngredientSelection.class).size());
+		List<IngredientSelection> ingredients = traversal.selections()
+				.get(IngredientLayer.IngredientSelection.class);
 		Ax.out("%s ingredients", ingredients.size());
 	}
 

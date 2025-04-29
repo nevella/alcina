@@ -165,8 +165,8 @@ public class SelectionMarkupFull extends SelectionMarkup {
 					.getIndex();
 			int originalDocIndex = elementRange.toIntPair().i1
 					- containingRange.toIntPair().i1 + originalDocOffset;
-			List<WithRange> matching = traversal
-					.getSelections(Selection.WithRange.class, true).stream()
+			List<WithRange> matching = traversal.selections()
+					.get(Selection.WithRange.class, true).stream()
 					.filter(sel -> sel.provideRange() != null
 							&& sel.provideRange().toIntPair()
 									.contains(originalDocIndex))
@@ -177,7 +177,7 @@ public class SelectionMarkupFull extends SelectionMarkup {
 		}
 
 		boolean isOutput(Selection cursor) {
-			Layer layer = traversal.getLayer(cursor);
+			Layer layer = traversal.layers().get(cursor);
 			return layer.layerContext(Layer.Output.class) != null;
 		}
 	}

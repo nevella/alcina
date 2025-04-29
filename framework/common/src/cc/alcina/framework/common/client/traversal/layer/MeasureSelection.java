@@ -5,9 +5,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.dom.Measure;
 import cc.alcina.framework.common.client.dom.Measure.Token;
+import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.HasReleaseableResources;
 import cc.alcina.framework.common.client.traversal.AbstractSelection;
 import cc.alcina.framework.common.client.traversal.DetachedRootSelection;
@@ -125,6 +126,10 @@ public class MeasureSelection extends AbstractSelection<Measure>
 		this(parent, measure, null);
 	}
 
+	public MeasureSelection(TreeProcess.Node treeNode, Measure measure) {
+		super(treeNode, measure, treeNode.getClass().getSimpleName());
+	}
+
 	public MeasureSelection(Selection parent, Measure measure,
 			String pathSegment) {
 		super(parent, measure, pathSegment);
@@ -223,8 +228,9 @@ public class MeasureSelection extends AbstractSelection<Measure>
 	public void logContainingSelections(Token.Order order) {
 		IntPair thisRange = get().toIntPair();
 		List<MeasureSelection> containers = SelectionTraversal
-				.contextTraversal().getSelections(MeasureSelection.class, true)
-				.stream().filter(ms -> ms.get().toIntPair().contains(thisRange))
+				.contextTraversal().selections()
+				.get(MeasureSelection.class, true).stream()
+				.filter(ms -> ms.get().toIntPair().contains(thisRange))
 				.toList();
 		new MeasureContainment(order, containers).dump();
 	}

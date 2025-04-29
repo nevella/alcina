@@ -105,7 +105,7 @@ class SelectionLayers extends Model.Fields implements IfNotEqual {
 	}
 
 	List<LayerSelections> toLayerSelections(SelectionTraversal traversal) {
-		List<LayerSelections> layers = traversal.getVisitedLayers().stream()
+		List<LayerSelections> layers = traversal.layers().getVisited().stream()
 				.map(layer -> new LayerSelections(this, layer))
 				.collect(Collectors.toList());
 		layers.removeIf(layer -> !TraversalSettings.get().showContainerLayers

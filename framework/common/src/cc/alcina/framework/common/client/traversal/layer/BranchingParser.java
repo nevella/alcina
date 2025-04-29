@@ -119,7 +119,7 @@ public class BranchingParser {
 	BranchingParser(LayerParser layerParser) {
 		this.layerParser = layerParser;
 		parserState = layerParser.parserState;
-		peer = (LayerParserPeer) layerParser.parserPeer;
+		peer = layerParser.parserPeer;
 		branchSizeLimit = peer.getBranchSizeLimit();
 		logger = LoggerFactory.getLogger(getClass());
 		conditionalLogger = new ConditionalLogger(logger,
@@ -144,8 +144,6 @@ public class BranchingParser {
 		return debugLoggingEnabled;
 	}
 
-	// similar to LayerParser.linearParse -- but *dissimilar* enough to not try
-	// and extend
 	void parse(ParserEnvironment env) {
 		this.env = env;
 		this.state = new State();
@@ -154,9 +152,10 @@ public class BranchingParser {
 				&& !parserState.finished) {
 			state.onBeforeTokenMatch();
 			if (peer.filter == null || peer.filter.test(parserState.location)) {
-				if (layerParser.forwardsTraversalOrder) {
+				if (layerParser.forwardsTraversalOrder
+						&& layerParser.lookahead) {
 					state.computeFirstMatchedLocation();
-					Measure next = state.lookaheadMatches.next;
+					Measure next = state.lookaheadMatches.minimalNext;
 					if (next != null) {
 						/*
 						 * Move the location/cursor to this match iff it's an
@@ -185,8 +184,9 @@ public class BranchingParser {
 				parserState.sentenceBranches.add(state.bestMatch);
 				parserState.topicSentenceMatched.signal();
 				parserState.location = env.successorFollowingMatch
-						.apply(parserState.bestMatch);
-				peer.onSentenceMatched(state.bestMatch);
+						.get(parserState.bestMatch);
+				peer.onSentenceMatched(state.bestMatch,
+						state.matchedSentenceBranches);
 			} else {
 				parserState.location = env.successorFollowingNoMatch
 						.get(state.lookaheadMatches);
@@ -271,7 +271,7 @@ public class BranchingParser {
 					repetitionIndex);
 			if (predecessor.match != null) {
 				branch.location = env.successorFollowingMatch
-						.apply(predecessor.match);
+						.get(predecessor.match);
 			}
 			state.edgeBranches.add(branch);
 		}
@@ -322,7 +322,7 @@ public class BranchingParser {
 							Location.Range range = new Location.Range(location,
 									end);
 							// ensure end is the deepest node
-							range = range.toDeepestNodes();
+							range = range.toDeepestCommonNode();
 							range = new Location.Range(location, range.end);
 							Measure negatedMatch = Measure.fromRange(range,
 									group.token);
@@ -923,7 +923,7 @@ public class BranchingParser {
 		class LookaheadMatches {
 			List<Measure> matches;
 
-			Measure next;
+			Measure minimalNext;
 
 			// if this is null, use standard next location test
 			Location nextLocationAfterNoMatch;
@@ -932,8 +932,8 @@ public class BranchingParser {
 				matches = primitiveInitialTokens.stream()
 						.map(parserState::match).filter(Objects::nonNull)
 						.sorted().collect(Collectors.toList());
-				next = Ax.first(matches);
-				if (next != null) {
+				minimalNext = Ax.first(matches);
+				if (minimalNext != null) {
 					Location after = nextLocationAfterNoMatch();
 					if (after.equals(parserState.location)
 							|| after.getTreeIndex() != parserState.location
@@ -954,10 +954,11 @@ public class BranchingParser {
 				// return min :(end of(measures which start at location)) -
 				// (start of (measures which start after location))
 				Location endOfStartingAtCurrentLocation = matches.stream()
-						.filter(m -> m.start.equals(next.start)).map(m -> m.end)
-						.findFirst().get();
+						.filter(m -> m.start.equals(minimalNext.start))
+						.map(m -> m.end).findFirst().get();
 				Optional<Location> startOfStartingAfterCurrentLocation = matches
-						.stream().filter(m -> m.start.isAfter(next.start))
+						.stream()
+						.filter(m -> m.start.isAfter(minimalNext.start))
 						.map(m -> m.start).findFirst();
 				return startOfStartingAfterCurrentLocation
 						.map(s -> Comparators.min(

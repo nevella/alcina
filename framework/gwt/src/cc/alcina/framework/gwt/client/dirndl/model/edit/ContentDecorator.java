@@ -30,7 +30,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
@@ -126,7 +125,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	/*
 	 * Used to route (keyboard navigation) events from the HasDecorators -> this
-	 * -> the chooser
+	 * -> the suggestor
 	 */
 	Topic<Input> topicInput = Topic.create();
 
@@ -136,11 +135,11 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	DecoratorNode<?, ?> decorator;
 
 	/*
-	 * The chooser used to edit the current decorator
+	 * The suggestor used to edit the current decorator
 	 */
-	DecoratorSuggestor chooser;
+	DecoratorSuggestor suggestor;
 
-	BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> chooserProvider;
+	BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider;
 
 	/*
 	 * The controller responsible for routing dom events to here, etc
@@ -148,7 +147,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	HasDecorators decoratorParent;
 
 	/*
-	 * The overlay containing the chooser
+	 * The overlay containing the suggestor
 	 */
 	Overlay overlay;
 
@@ -165,7 +164,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		Preconditions.checkState(
 				AttributeBehaviorHandler.BehaviorRegistry.isInitialised());
 		this.descriptor = builder.descriptor;
-		this.chooserProvider = builder.chooserProvider;
+		this.suggestorProvider = builder.suggestorProvider;
 		this.decoratorParent = builder.decoratorParent;
 	}
 
@@ -174,7 +173,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	}
 
 	public boolean isActive() {
-		return chooser != null;
+		return suggestor != null;
 	}
 
 	boolean isSpaceOrLeftBracketish(String characterString) {
@@ -185,9 +184,9 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	@Override
 	public void onClosed(Closed event) {
 		if (isActive()) {
-			chooser.onClosed(null);
+			suggestor.onClosed(null);
 		}
-		chooser = null;
+		suggestor = null;
 		overlay = null;
 	}
 
@@ -253,7 +252,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	void checkTrigger0() {
 		validateSelection0();
 		EditSelection selection = new EditSelection();
-		if (selection.isTriggerable() && chooser == null) {
+		if (selection.isTriggerable() && suggestor == null) {
 			validateSelection0();
 			String triggerSequence = null;
 			if (!decoratorParent.canDecorate(selection)) {
@@ -284,8 +283,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	@Override
 	public void onNavigation(Navigation event) {
-		if (chooser != null) {
-			chooser.suggestor.onNavigation(event);
+		if (suggestor != null) {
+			suggestor.suggestor.onNavigation(event);
 		}
 		// FIXME - ui2 - there's probably a better way to do this. but not
 		// super-obvious. Possibly suggestor -> non-overlay results
@@ -299,36 +298,38 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	@Override
 	public void onReferenceSelected(ReferenceSelected event) {
-		if (event.getContext().getPrevious().node.getModel() == chooser) {
+		if (event.getContext().getPrevious().node.getModel() == suggestor) {
 			decorator.toNonEditable();
 			decorator.putReferenced(event.getModel());
 			decorator.positionCursorPostReferencedSelection();
 		}
 	}
 
-	void showOverlay(DomNode decorator) {
+	void showOverlay(DomNode decoratorDomNode) {
 		LocalDom.flush();
-		DomNode parent = decorator.parent();
+		DomNode parent = decoratorDomNode.parent();
 		if (parent.tagIs("font")) {
 			// Webkit style-preserving?
 		}
 		Overlay.Attributes attributes = Overlay.attributes();
-		Element domElement = (Element) decorator.w3cElement();
-		chooser = chooserProvider.apply(this, decorator);
-		attributes.withCssClass("decorator-chooser");
+		Element domElement = (Element) decoratorDomNode.w3cElement();
+		suggestor = suggestorProvider.apply(this, decoratorDomNode);
+		attributes.withCssClass("decorator-suggestor");
 		attributes.withConsumeSubmit(true).withFocusOnBind(false);
-		overlay = attributes.dropdown(OverlayPosition.Position.START,
-				domElement.getBoundingClientRect(), (Model) decoratorParent,
-				chooser).create();
+		overlay = attributes
+				.dropdown(OverlayPosition.Position.START,
+						domElement.getBoundingClientRect(),
+						(Model) decoratorParent, suggestor)
+				.withPeerModels(List.of(this.decorator)).create();
 		overlay.open();
 	}
 
 	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
 	void validateSelection() {
-		if (chooser == null) {
+		if (suggestor == null) {
 			/*
 			 * Defer helps handle alt-shift-arrow Keyboard cursor selection -
-			 * and also adds a check for chooser creation
+			 * and also adds a check for suggestor creation
 			 */
 			Client.eventBus().queued().lambda(validateSelection0Runnable)
 					.distinct().dispatch();
@@ -342,9 +343,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		}
 		FragmentModel fragmentModel = decoratorParent.provideFragmentModel();
 		List<? extends FragmentNode> list = fragmentModel.stream().toList();
-		fragmentModel.byType(ZeroWidthCursorTarget.class)
-				.forEach(ZeroWidthCursorTarget::unwrapIfContainsNonZwsText);
-		if (chooser == null) {
+		if (suggestor == null) {
 			/*
 			 * ensure the selection doesn't contain a partial decoratornode (in
 			 * dom terms it's totally fine, but not in FN terms)
@@ -405,21 +404,21 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	public static class Builder<T> {
 		HasDecorators decoratorParent;
 
-		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> chooserProvider;
+		BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider;
 
 		DecoratorNode.Descriptor<?, ?, ?> descriptor;
 
 		public ContentDecorator build() {
 			Preconditions.checkNotNull(decoratorParent);
 			Preconditions.checkState(decoratorParent instanceof Model);
-			Preconditions.checkNotNull(chooserProvider);
+			Preconditions.checkNotNull(suggestorProvider);
 			Preconditions.checkNotNull(descriptor);
 			return new ContentDecorator(this);
 		}
 
-		public void setChooserProvider(
-				BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> chooserProvider) {
-			this.chooserProvider = chooserProvider;
+		public void setSuggestorProvider(
+				BiFunction<ContentDecorator, DomNode, DecoratorSuggestor> suggestorProvider) {
+			this.suggestorProvider = suggestorProvider;
 		}
 
 		public void setDecoratorParent(HasDecorators decoratorParent) {

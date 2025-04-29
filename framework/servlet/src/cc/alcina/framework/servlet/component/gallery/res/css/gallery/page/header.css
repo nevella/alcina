@@ -13,6 +13,7 @@ overlay > menu {
   flex-direction: column;
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
   padding: 0.5rem 0;
 }
 overlay > menu > action {
@@ -47,6 +48,9 @@ overlay > menu > heading {
   font-weight: bold;
   color: #999;
   line-height: 2;
+}
+overlay > menu > heading:not(:first-of-type) {
+  margin-top: 1rem;
 }
 overlay > menu > choices {
   display: flex;

@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.story.Waypoint;
 public class Point_GalleryBrowser_MultipleSuggestions extends Waypoint {
 	static final String XPATH_USER_EDITOR = "//definition-editor//multiple-suggestions/edit";
 
-	static final String XPATH_OVERLAY = "//overlay[@class='decorator-chooser']";
+	static final String XPATH_OVERLAY = "//overlay[@class='decorator-suggestor']";
 
 	static final String _REL_EDIT_ENTRY = "//span[@class='cursor-target'][2]";
 

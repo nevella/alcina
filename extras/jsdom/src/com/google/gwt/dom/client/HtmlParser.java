@@ -15,9 +15,15 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.util.DomUtils;
 
+/**
+ * <p>
+ * This began more or less as a toy, but now is a decent dropin for well-formed
+ * DOM docs compared to say Xerces
+ */
 public class HtmlParser {
 	static final boolean debugCursor = false;
 
@@ -60,7 +66,11 @@ public class HtmlParser {
 
 	// https://www.thoughtco.com/html-singleton-tags-3468620
 	static boolean isSelfClosingTag(String tag) {
-		switch (tag.toLowerCase()) {
+		return isSelfClosingTagLc(tag.toLowerCase());
+	}
+
+	private static boolean isSelfClosingTagLc(String lcTag) {
+		switch (lcTag) {
 		case "area":
 		case "base":
 		case "br":
@@ -94,7 +104,81 @@ public class HtmlParser {
 	 */
 	private boolean emitBrowserCompatibleDom = true;
 
-	StringBuilder builder = new StringBuilder();
+	StringBuilder markingBuilder2 = new StringBuilder();
+
+	/*
+	 * Similar API to stringbuilder
+	 */
+	class MarkingBuilder {
+		String empty = "";
+
+		int start = -1;
+
+		int end;
+
+		String toString;
+
+		String toStringLowerCase;
+
+		int length() {
+			return start == -1 ? 0 : end - start;
+		}
+
+		void append(char c) {
+			toString = null;
+			int charIndex = idx - 1;
+			if (start == -1) {
+				start = charIndex;
+				end = charIndex;
+			} else {
+				Preconditions.checkState(charIndex == end);
+			}
+			end++;
+		}
+
+		void setLength(int length) {
+			toString = null;
+			if (length == 0) {
+				start = -1;
+			} else {
+				end = start + length;
+			}
+		}
+
+		@Override
+		public String toString() {
+			if (toString == null) {
+				toString = start == -1 ? empty : html.substring(start, end);
+			}
+			return toString;
+		}
+
+		public boolean textEquals(String string) {
+			int length = length();
+			if (length != string.length()) {
+				return false;
+			}
+			for (int idx = 0; idx < length; idx++) {
+				if (string.charAt(idx) != charAt(idx)) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		public String toStringLowerCase() {
+			if (toString == null || toStringLowerCase == null) {
+				toStringLowerCase = lc.lc(toString());
+			}
+			return toStringLowerCase;
+		}
+
+		public char charAt(int idx) {
+			return html.charAt(start + idx);
+		}
+	}
+
+	MarkingBuilder markingBuilder = new MarkingBuilder();
 
 	boolean builderIsWhiteSpace = true;
 
@@ -132,6 +216,8 @@ public class HtmlParser {
 
 	private int lineNumber;
 
+	private FastLcProvider lc = new FastLcProvider();
+
 	private void emitAttribute() {
 		attributes.put(attrName, decodeEntities(attrValue));
 	}
@@ -155,7 +241,7 @@ public class HtmlParser {
 	private void emitElement() {
 		boolean closeTag = false;
 		if (tag == null) {
-			tag = builder.toString().toLowerCase();
+			tag = markingBuilder.toStringLowerCase();
 			if (tag.startsWith("/")) {
 				tag = tag.substring(1);
 				closeTag = true;
@@ -164,7 +250,7 @@ public class HtmlParser {
 		if (!closeTag) {
 			emitStartElement(tag);
 		}
-		selfCloseTag |= isSelfClosingTag(tag);
+		selfCloseTag |= isSelfClosingTagLc(tag);
 		if (closeTag && selfCloseTag) {
 			// exclusive or really. we'll have already emitted the close here,
 			// so ignore
@@ -179,17 +265,21 @@ public class HtmlParser {
 		case "style":
 		case "noscript":
 			Preconditions.checkState(!closeTag);
-			String close = Ax.format("</%s>", tag);
-			String close2 = Ax.format("</%s>", tag.toUpperCase());
-			int idx2 = html.indexOf(close, idx);
-			int idx3 = html.indexOf(close2, idx);
-			if (idx2 == -1 || (idx3 != -1 && idx3 < idx2)) {
-				idx2 = idx3;
+			int closeIdx0 = idx;
+			while (closeIdx0 != -1) {
+				closeIdx0 = html.indexOf("</", closeIdx0);
+				int closeIdx1 = html.indexOf(">", closeIdx0);
+				String endTag = html.substring(closeIdx0 + 2, closeIdx1);
+				if (endTag.equalsIgnoreCase(tag)) {
+					break;
+				} else {
+					closeIdx0 = closeIdx1 + 1;
+				}
 			}
-			String textContent = html.substring(idx, idx2);
+			String textContent = html.substring(idx, closeIdx0);
 			emitText(textContent);
 			emitEndElement(tag);
-			idx = idx2 + close.length();
+			idx = closeIdx0 + 2 + tag.length() + 1;
 			break;
 		}
 		tokenState = TokenState.EXPECTING_NODE;
@@ -295,6 +385,10 @@ public class HtmlParser {
 		}
 	}
 
+	/*
+	 * Performance - markingbuilder should have a seenbuffer (char[]) which
+	 * handles startsWtih etc (implementing CharSequence?)
+	 */
 	private Element parse0(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		if (html.contains("\uFEFF")) {
@@ -320,7 +414,7 @@ public class HtmlParser {
 		while (idx < length) {
 			c = html.charAt(idx++);
 			boolean isWhiteSpace = false;
-			boolean emptyBuffer = builder.length() == 0;
+			boolean emptyBuffer = markingBuilder.length() == 0;
 			switch (c) {
 			case ' ':
 			case '\t':
@@ -341,41 +435,40 @@ public class HtmlParser {
 					tokenState = TokenState.EXPECTING_TAG;
 				} else {
 					tokenState = TokenState.TEXT;
-					builder.append(c);
+					markingBuilder.append(c);
 				}
 				break;
 			case TEXT:
 				if (c == '<') {
-					emitEscapedText(builder.toString());
+					emitEscapedText(markingBuilder.toString());
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_TAG;
 				} else {
-					builder.append(c);
+					markingBuilder.append(c);
 				}
 				break;
 			case EXPECTING_TAG:
 				selfCloseTag = false;
-				String tagLookahead = builder.toString();
-				if (tagLookahead.equals("!--")) {
-					tag = tagLookahead;
+				if (markingBuilder.textEquals("!--")) {
+					tag = markingBuilder.toString();
 					resetBuilder();
-					builder.append(c);
+					markingBuilder.append(c);
 					tokenState = TokenState.EXPECTING_COMMENT;
-				} else if (tagLookahead.equals("![CDATA[")) {
-					tag = tagLookahead;
+				} else if (markingBuilder.textEquals("![CDATA[")) {
+					tag = markingBuilder.toString();
 					resetBuilder();
-					builder.append(c);
+					markingBuilder.append(c);
 					tokenState = TokenState.EXPECTING_CDATA;
-				} else if (tagLookahead.startsWith("?")) {
-					tag = tagLookahead;
+				} else if (markingBuilder.textEquals("?")) {
+					tag = markingBuilder.toString();
 					resetBuilder();
-					builder.append(c);
+					markingBuilder.append(c);
 					tokenState = TokenState.EXPECTING_PROCESSING_INSTRUCTION;
 				} else {
 					boolean handled = false;
 					if (isWhiteSpace) {
-						if (isLookaheadValidTag(tagLookahead)) {
-							tag = tagLookahead.toLowerCase();
+						if (isLookaheadValidTag()) {
+							tag = markingBuilder.toStringLowerCase();
 							handled = true;
 							resetBuilder();
 							tokenState = TokenState.EXPECTING_ATTRIBUTES;
@@ -384,23 +477,23 @@ public class HtmlParser {
 					if (!handled) {
 						switch (c) {
 						case '/':
-							if (builder.length() > 0) {
+							if (markingBuilder.length() > 0) {
 								selfCloseTag = true;
 							} else {
-								builder.append(c);
+								markingBuilder.append(c);
 							}
 							break;
 						case '>':
-							if (isLookaheadValidTag(tagLookahead)) {
+							if (isLookaheadValidTag()) {
 								emitElement();
 							} else {
-								logInvalidMarkup(tagLookahead);
+								logInvalidMarkup(markingBuilder.toString());
 								tokenState = TokenState.EXPECTING_NODE;
 							}
 							resetBuilder();
 							break;
 						default:
-							builder.append(c);
+							markingBuilder.append(c);
 							break;
 						}
 					}
@@ -410,33 +503,33 @@ public class HtmlParser {
 				// FIXME - dirndl 1x1g - optimise end-of-builder checks (with
 				// some sort of buffering builder) - lowish priority since the
 				// node types that use this check are rare
-				if (c == '>' && builder.toString().endsWith("--")) {
-					builder.setLength(builder.length() - 2);
-					emitComment(builder.toString());
+				if (c == '>' && markingBuilder.toString().endsWith("--")) {
+					markingBuilder.setLength(markingBuilder.length() - 2);
+					emitComment(markingBuilder.toString());
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_NODE;
 				} else {
-					builder.append(c);
+					markingBuilder.append(c);
 				}
 				break;
 			case EXPECTING_CDATA:
-				if (c == '>' && builder.toString().endsWith("]]")) {
-					builder.setLength(builder.length() - 2);
-					emitCData(builder.toString());
+				if (c == '>' && markingBuilder.toString().endsWith("]]")) {
+					markingBuilder.setLength(markingBuilder.length() - 2);
+					emitCData(markingBuilder.toString());
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_NODE;
 				} else {
-					builder.append(c);
+					markingBuilder.append(c);
 				}
 				break;
 			case EXPECTING_PROCESSING_INSTRUCTION:
-				if (c == '>' && builder.toString().endsWith("?")) {
-					builder.setLength(builder.length() - 1);
-					emitProcessingInstruction(builder.toString());
+				if (c == '>' && markingBuilder.toString().endsWith("?")) {
+					markingBuilder.setLength(markingBuilder.length() - 1);
+					emitProcessingInstruction(markingBuilder.toString());
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_NODE;
 				} else {
-					builder.append(c);
+					markingBuilder.append(c);
 				}
 				break;
 			case EXPECTING_ATTRIBUTES:
@@ -452,7 +545,7 @@ public class HtmlParser {
 					resetBuilder();
 					break;
 				default:
-					builder.append(c);
+					markingBuilder.append(c);
 					tokenState = TokenState.EXPECTING_ATTR_SEP;
 					break;
 				}
@@ -460,13 +553,13 @@ public class HtmlParser {
 			case EXPECTING_ATTR_SEP:
 				switch (c) {
 				case '=':
-					attrName = builder.toString();
+					attrName = markingBuilder.toString();
 					attrValue = "";
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_ATTR_VALUE_DELIM;
 					break;
 				default:
-					builder.append(c);
+					markingBuilder.append(c);
 					break;
 				}
 				break;
@@ -484,7 +577,7 @@ public class HtmlParser {
 					break;
 				default:
 					attrDelim = ' ';
-					builder.append(c);
+					markingBuilder.append(c);
 					tokenState = TokenState.EXPECTING_ATTR_VALUE;
 					break;
 				}
@@ -492,7 +585,7 @@ public class HtmlParser {
 			case EXPECTING_ATTR_VALUE:
 				boolean handled = false;
 				if (attrDelim == ' ' && c == '>') {
-					attrValue = builder.toString();
+					attrValue = markingBuilder.toString();
 					emitAttribute();
 					emitElement();
 					resetBuilder();
@@ -500,13 +593,13 @@ public class HtmlParser {
 				}
 				if (c == attrDelim) {
 					// fix for quotes in attributes
-					attrValue = builder.toString();
+					attrValue = markingBuilder.toString();
 					emitAttribute();
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_ATTRIBUTES;
 					break;
 				}
-				builder.append(c);
+				markingBuilder.append(c);
 				break;
 			}
 		}
@@ -524,20 +617,46 @@ public class HtmlParser {
 
 	static RegExp validTag = RegExp.compile("^[a-z_][0-9a-z:_\\-.]*$");
 
-	boolean isLookaheadValidTag(String tagLookahead) {
-		String tag = tagLookahead.toLowerCase();
-		if (tag.startsWith("/")) {
-			tag = tag.substring(1);
+	boolean isLookaheadValidTag() {
+		int length = markingBuilder.length();
+		boolean closing = markingBuilder.charAt(0) == '/';
+		int start = closing ? 1 : 0;
+		for (int idx = start; idx < length; idx++) {
+			char c = markingBuilder.charAt(idx);
+			if (idx == start) {
+				if (c >= 'a' && c <= 'z') {
+				} else if (c >= 'A' && c <= 'Z') {
+				} else if (c == '_') {
+				} else if (c == '/') {
+				} else {
+					return false;
+				}
+			} else {
+				if (c >= 'a' && c <= 'z') {
+				} else if (c >= 'A' && c <= 'Z') {
+				} else if (c >= '0' && c <= '9') {
+				} else {
+					switch (c) {
+					case '_':
+					case '-':
+					case ':':
+					case '.':
+						break;
+					default:
+						return false;
+					}
+				}
+			}
 		}
-		if (validTag.exec(tag) != null) {
-			return !tag.startsWith("xml");
-		} else {
+		String tag = markingBuilder.toStringLowerCase();
+		if (tag.startsWith("xml")) {
 			return false;
 		}
+		return true;
 	}
 
 	void resetBuilder() {
-		builder.setLength(0);
+		markingBuilder.setLength(0);
 	}
 
 	private void setCursor(Element element, String tag, int delta) {

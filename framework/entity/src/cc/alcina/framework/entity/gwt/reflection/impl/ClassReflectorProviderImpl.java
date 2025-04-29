@@ -36,6 +36,7 @@ public class ClassReflectorProviderImpl implements ClassReflectorProvider.Impl {
 		try {
 			return getClassReflector0(clazz);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw WrappedRuntimeException.wrap(e);
 		}
 	}

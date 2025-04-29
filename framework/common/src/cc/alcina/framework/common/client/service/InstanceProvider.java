@@ -8,7 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -73,6 +72,10 @@ public interface InstanceProvider<T> extends Registration.AllSubtypes {
 		}
 	}
 
+	/**
+	 * If true, an individual provider must be constructed for each query, even
+	 * if a current provision operation is in-flight
+	 */
 	default boolean isOneOff() {
 		return false;
 	}
@@ -89,5 +92,38 @@ public interface InstanceProvider<T> extends Registration.AllSubtypes {
 		} catch (Exception e) {
 			asyncException.accept(this, e);
 		}
+	}
+
+	public static abstract class Async<T> implements InstanceProvider<T> {
+		protected Query<T> query;
+
+		protected BiConsumer<InstanceProvider, T> asyncReturn;
+
+		protected BiConsumer<InstanceProvider, Exception> asyncException;
+
+		@Override
+		public T provide(Query<T> query) throws Exception {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void provide(Query<T> query,
+				BiConsumer<InstanceProvider, T> asyncReturn,
+				BiConsumer<InstanceProvider, Exception> asyncException) {
+			this.query = query;
+			this.asyncReturn = asyncReturn;
+			this.asyncException = asyncException;
+			start();
+		}
+
+		public boolean isAsync() {
+			return true;
+		}
+
+		protected abstract void start();
+	}
+
+	default boolean isAsync() {
+		return false;
 	}
 }

@@ -41,8 +41,7 @@ public class ChoicesDropdown<T> extends Model.Value<T>
 		@Override
 		public Model get() {
 			choices = new Choices.Single<>();
-			choices.populateValuesFromNodeContext(provideNode(),
-					t -> t != value);
+			choices.populateFromNodeContext(provideNode(), t -> t != value);
 			choices.setSelectedValue(value);
 			return choices;
 		}

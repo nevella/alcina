@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.fragment;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 
 /**

@@ -1407,7 +1407,8 @@ public class Element extends Node implements ClientDomElement,
 	void insertAttachedBefore(Node newChild, Node refChild) {
 		local().insertBefore(newChild, refChild);
 		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				newChild, newChild.getPreviousSibling(), true));
+				newChild, newChild.getPreviousSibling(),
+				newChild.getNextSibling(), true));
 	}
 
 	public IntPair getScrollPosition() {

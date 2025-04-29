@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -12,6 +13,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 /**
  * Specifies an instance that will be produced by an InstanceProvider - this can
@@ -21,6 +23,10 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 @Bean(PropertySource.FIELDS)
 @ReflectiveSerializer.Checks(ignore = true)
 public final class InstanceQuery implements TreeSerializable {
+	@TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
+	public abstract static class TransientParameter<V> extends Parameter<V> {
+	}
+
 	@Bean(PropertySource.FIELDS)
 	@Registration.Self
 	public abstract static class Parameter<V>
@@ -37,6 +43,20 @@ public final class InstanceQuery implements TreeSerializable {
 		}
 
 		public Parameter() {
+		}
+
+		@Override
+		public int hashCode() {
+			return getClass().hashCode() ^ Objects.hashCode(value);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj != null && obj.getClass() == getClass()) {
+				return Objects.equals(((Parameter) obj).getValue(), getValue());
+			} else {
+				return false;
+			}
 		}
 
 		public Parameter(V value) {

@@ -61,7 +61,8 @@ public class RemoteComponentObservables<T> {
 	void evict(Map.Entry<String, Topic<ObservableEntry>> entry) {
 		ObservableEntry published = entry.getValue().getPublished();
 		entry.getValue().clearPublished();
-		logger.info("evicted-ObservableHistory - key: [{}]", entry.getKey());
+		logger.info("evicted - r.c.observables - observableEntry - key: [{}]",
+				entry.getKey());
 		if (published != null) {
 			EnvironmentManager.get()
 					.deregisterSource(published.toEnvironmentSource());

@@ -58,6 +58,10 @@ public class FlightEvent
 		return event == null ? null : event.provideDetail();
 	}
 
+	public String provideSubtype() {
+		return event == null ? null : event.provideSubcategory();
+	}
+
 	public byte[] provideInputBytes() {
 		return event == null ? new byte[0] : event.provideInputBytes();
 	}

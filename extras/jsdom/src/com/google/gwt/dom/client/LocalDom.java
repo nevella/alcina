@@ -34,8 +34,10 @@ import cc.alcina.framework.common.client.context.ContextFrame;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
@@ -86,8 +88,6 @@ public class LocalDom implements ContextFrame {
 
 	Topic<String> topicUnableToParse;
 
-	Topic<List<MutationRecord>> topicMutationsAppliedToLocal;
-
 	Topic<Exception> topicReportException;
 
 	private static LocalDomCollections collections;
@@ -102,6 +102,8 @@ public class LocalDom implements ContextFrame {
 	private static boolean logParseAndMutationIssues;
 
 	private static Map<String, Supplier<Element>> elementCreators;
+
+	FastLcProvider lc;
 
 	static LocalDomCollections collections() {
 		return collections;
@@ -452,8 +454,8 @@ public class LocalDom implements ContextFrame {
 		topicPublishException = Topic.create();
 		topicReportException = Topic.create();
 		topicUnableToParse = Topic.create();
-		topicMutationsAppliedToLocal = Topic.create();
 		topicReportException.add(this::handleReportedException);
+		lc = new FastLcProvider();
 		attachIds = new AttachIds();
 	}
 
@@ -487,7 +489,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	private Element createElement0(String tagName) {
-		Supplier<Element> creator = elementCreators.get(tagName.toLowerCase());
+		Supplier<Element> creator = elementCreators.get(lc.lc(tagName));
 		if (creator == null) {
 			return new Element();
 		} else {
@@ -620,10 +622,13 @@ public class LocalDom implements ContextFrame {
 		 * time it's called), so - what's below is an ok first approximation.
 		 */
 		if (get().applyToRemote) {
+			/*
+			 * fire localmutations immediately
+			 */
 			localMutations.fireMutations();
 		} else {
 			localMutations.notify(() -> {
-				// noop, just trigger a finally flush of mutations
+				// noop, just schedule a finally flush of mutations
 			});
 		}
 		attachIds.releaseRemoved();
@@ -643,6 +648,12 @@ public class LocalDom implements ContextFrame {
 				CommonUtils.toSimpleExceptionMessage(exception));
 		topicPublishException
 				.publish(new LocalDomException(exception, message));
+	}
+
+	public void ensureLocalMutations() {
+		if (localMutations == null) {
+			localMutations = new LocalMutations(new MutationsAccess());
+		}
 	}
 
 	void initalizeDetachedSync0() {
@@ -849,7 +860,7 @@ public class LocalDom implements ContextFrame {
 
 	public static class LocalDomCollections {
 		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
-			return new LinkedHashMap<>();
+			return AlcinaCollections.newUnqiueMap();
 		}
 
 		public Map<String, String> createStringMap() {
@@ -1000,14 +1011,6 @@ public class LocalDom implements ContextFrame {
 			return NodeJso.toNode(nodeJso);
 		}
 
-		public void onRemoteMutationsApplied(List<MutationRecord> records,
-				boolean hadException) {
-			if (!hadException) {
-				records.forEach(MutationRecord::populateAttachIds);
-				topicMutationsAppliedToLocal.publish(records);
-			}
-		}
-
 		public boolean isApplyingDetachedMutationsToLocalDom() {
 			return applyingDetachedMutationsToLocalDom;
 		}
@@ -1115,10 +1118,6 @@ public class LocalDom implements ContextFrame {
 
 	public static Topic<String> topicUnableToParse() {
 		return get().topicUnableToParse;
-	}
-
-	public static Topic<List<MutationRecord>> topicMutationsAppliedToLocal() {
-		return get().topicMutationsAppliedToLocal;
 	}
 
 	void onAttach(Node node) {

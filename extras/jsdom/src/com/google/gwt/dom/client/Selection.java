@@ -15,11 +15,14 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.List;
 import java.util.Objects;
 
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.util.Al;
 
 /**
  * Models the browser selection object
@@ -146,7 +149,31 @@ public class Selection implements ClientDomSelection {
 	}
 
 	public Location getAnchorLocation() {
-		return getAnchorNode().asDomNode().asLocation()
-				.createTextRelativeLocation(getAnchorOffset(), false);
+		return asLocation(getAnchorNode(), getAnchorOffset());
+	}
+
+	public Location getFocusLocation() {
+		return asLocation(getFocusNode(), getFocusOffset());
+	}
+
+	Location asLocation(Node node, int offset) {
+		DomNode domNode = node.asDomNode();
+		if (domNode.isText()) {
+			return domNode.asLocation().createTextRelativeLocation(offset,
+					false);
+		} else {
+			// note that - for node.class == Element - offset can be after all
+			// children
+			if (offset == node.getChildCount()) {
+				return domNode.asRange().end;
+			} else {
+				return node.getChild(offset).asDomNode().asLocation();
+			}
+		}
+	}
+
+	@Override
+	public String toString() {
+		return local.toString();
 	}
 }

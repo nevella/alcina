@@ -175,6 +175,8 @@ public abstract class Choices<T> extends Model implements
 
 		boolean withNull() default false;
 
+		boolean repeatedSelections() default false;
+
 		@Reflected
 		public static class EnumSupplier
 				implements Function<EnumValues, List<?>> {
@@ -191,6 +193,17 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
+	/**
+	 * If this exists on a property, the {@link Choices} will allow repeated
+	 * selections of a choice (if the UI permits)
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.METHOD, ElementType.FIELD })
+	public @interface RepeatableChoices {
+	}
+
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -201,8 +214,6 @@ public abstract class Choices<T> extends Model implements
 		 */
 		Class<? extends Function<Values, List<?>>> value();
 
-		boolean withNull() default false;
-
 		public interface ValueSupplier
 				extends Supplier<List<?>>, Function<Values, List<?>> {
 			@Override
@@ -212,7 +223,13 @@ public abstract class Choices<T> extends Model implements
 		}
 	}
 
-	protected void populateValuesFromNodeContext(Node node,
+	private boolean repeatableChoices;
+
+	public boolean isRepeatableChoices() {
+		return repeatableChoices;
+	}
+
+	protected void populateFromNodeContext(Node node,
 			Predicate<T> valueFilter) {
 		if (node == null) {
 			return;
@@ -222,6 +239,7 @@ public abstract class Choices<T> extends Model implements
 				valueFilter)));
 		node.optional(EnumValues.class).ifPresent(ann -> setValues(
 				filter((List<T>) new EnumSupplier().apply(ann), valueFilter)));
+		repeatableChoices = node.has(RepeatableChoices.class);
 	}
 
 	List<T> filter(List<T> list, Predicate<T> valueFilter) {
@@ -235,7 +253,7 @@ public abstract class Choices<T> extends Model implements
 
 	@Override
 	public void onBeforeRender(BeforeRender event) {
-		populateValuesFromNodeContext(event.node, null);
+		populateFromNodeContext(event.node, null);
 		super.onBeforeRender(event);
 	}
 
@@ -430,7 +448,8 @@ public abstract class Choices<T> extends Model implements
 	}
 
 	@Directed(emits = ModelEvents.SelectionChanged.class)
-	public static class Multiple<T> extends Choices<T> {
+	public static class Multiple<T> extends Choices<T>
+			implements HasSelectedValues<T> {
 		public Multiple() {
 		}
 
@@ -870,7 +889,7 @@ public abstract class Choices<T> extends Model implements
 		public void onBeforeRender(BeforeRender event) {
 			select = new MultipleSelect<>();
 			// populate the delegate values from this node's AnnotationLocation
-			select.populateValuesFromNodeContext(event.node, null);
+			select.populateFromNodeContext(event.node, null);
 			value = select.getSelectedValues();
 			super.onBeforeRender(event);
 		}

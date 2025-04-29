@@ -54,8 +54,7 @@
  * </p>
  * <h2>Linked DOM types</h2>
  * <ul>
- * <li><b>Server-only</b> ('one-way') For server-side html rendering, TODO check
- * - is this backed by a w3c doc? How does that work
+ * <li><b>Local-only</b> ('one-way') For server-side html rendering
  * <li><b>Browser</b> ('two-way') The DocumentLocal tree is synced with a
  * DocumentJso tree
  * <li><b>Romcom</b> ('four-way') Two local/remote pairs - server (owned by the
@@ -78,6 +77,8 @@
  * document'-centric html approach documented elsewhere). Can also be
  * preemptively validated via Element.setInnerHTMLWithValidation
  * </p>
+ * 
+ * 
  * <h2>Implementation notes</h2>
  * <ul>
  * <li>Why DomXxStatic? Because the devmode jso generator doesn't allow
@@ -152,6 +153,24 @@
  * system (Widget or Elemnent) can be used. It ain't pretty, but it's required
  * until Widget is removed from the codebase
  *
+ * 
+ * *
+ * <h2>Mutation events</h2>
+ * <p>
+ * A worked example
+ * <ul>
+ * <li><b>LocalMutation</b> - WIP, these are currently transactional, flushed by
+ * {@link LocalDom#flushLocalMutations()} or during flush-to-remote. TODO -
+ * never flush to remote until the 'localmutation flush queue' is empty - this
+ * allows cascading localmutations to cause only 1 remote mutation flush. TODO.2
+ * - give examples (DecoratorNode) TODO - split out into cookbook + dom
+ * mutations
+ * <li><b>FragmentModel</b> EditArea forwards dom mutations (fired by
+ * LocalMutation) to the FragmentModel, which enqueues the transformed
+ * FragmentModel.Mutation
+ * </ul>
+ * 
+ * 
  * <p>
  * See also {@link AttachId}
  * 

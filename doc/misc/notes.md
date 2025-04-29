@@ -44,8 +44,12 @@
 
 ## Notes on transformation propagation
 
-This is a very rambly preamble to the big chunk of kit that is romcom transformation propagation:
+(WIP) This is a very rambly preamble to the big chunk of kit that is romcom transformation propagation:
 
 - two of the tricky things are:
   - transactional or immediate?
   - how to prevent feedback loops?
+
+## How do I debug romcom protocol messages?
+
+[Here](debugging-and-metrics.md)

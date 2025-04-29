@@ -11,7 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
-import cc.alcina.framework.servlet.component.gallery.model.multiplesuggestions.MultipleSuggestionsGalleryPlace;
+import cc.alcina.framework.servlet.component.gallery.model.choiceeditor.ChoiceEditorGalleryPlace;
 
 @Registration({ GalleryContents.class, GalleryHomePlace.class })
 class GalleryHomeArea extends GalleryContents {
@@ -33,7 +33,7 @@ class GalleryHomeArea extends GalleryContents {
 	}
 
 	GalleryHomeArea() {
-		add(MultipleSuggestionsGalleryPlace.class);
+		add(ChoiceEditorGalleryPlace.class);
 	}
 
 	void add(Class<? extends GalleryPlace> clazz) {

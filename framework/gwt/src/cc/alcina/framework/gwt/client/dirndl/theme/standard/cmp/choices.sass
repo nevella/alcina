@@ -46,25 +46,25 @@
     width: 30rem
 
     choice-node:not([contentEditable='false'])
-      color: blue
+      //color: blue
 
     choice-node[contentEditable='false']
       background:#e3e3e3
       border-radius: 14px
       border: solid 1px #ddd
-
-    choice-node
       padding: 1px 4px
+      margin: 0 2px
 
-@mixin multiple-suggestions-tag
-  multiple-suggestions
+    //choice-node
+
+@mixin choice-editor-tag
+  choice-editor
     @include suggestions
     
-//FIXME - rename - decorator-suggestion-choices?
-@mixin chooser-decorator
+@mixin decorator-suggestor
   overlay 
     //sass-unify: edit(-area)
-    > .decorator-chooser
+    > .decorator-suggestor
       @include context-menu.dropdown
 
       display: block

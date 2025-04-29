@@ -1,46 +1,59 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import java.util.Objects;
-
 import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Selection;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyDownEvent;
-import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget;
 
 /**
  * Complex/gritty mini-processes used to handle the extra appendages required by
  * the Decorator system, particularly
- * {@link cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode.ZeroWidthCursorTarget}
+ * {@link cc.alcina.framework.gwt.client.dirndl.model.edit.ZeroWidthCursorTarget}
  */
 public interface DecoratorBehavior {
-	default void squelch(NodeEvent event) {
+	static void squelch(NodeEvent event) {
 		DomEvent domEvent = (DomEvent) event.getContext()
 				.getOriginatingGwtEvent();
 		domEvent.getNativeEvent().squelch();
 	}
 
 	/**
+	 * Handle repeatable choices (during ChoiceEditor ask)
+	 */
+	interface RepeatableChoiceHandling extends DecoratorBehavior {
+	}
+
+	/**
+	 * On fragmentnode mutation, ensure that a ZWS text node exists between
+	 * adjacent non-editables (DecoratorNodes)
+	 */
+	interface InsertZwsBetweenNonEditables extends DecoratorBehavior {
+	}
+
+	/**
+	 * <p>
 	 * Extends the affected range of keyboard navigation events (and
-	 * backspace/delete) if the traversed range is a zero-width-space
+	 * backspace/delete) if the traversed range is a zero-width-space.
+	 * 
+	 * <p>
+	 * This effectively makes the ZWS nodes invisible to keyboard navigation -
+	 * they're there to allow (and control the appearance of) cursor targets,
+	 * but they should be otherwise invisible to the user.
 	 */
 	public static class ExtendKeyboardNavigationAction
-			implements DecoratorBehavior, DomEvents.KeyDown.Handler,
-			AttributeBehaviorHandler {
+			implements DecoratorBehavior, AttributeBehaviorHandler {
 		enum Direction {
 			left, right, none;
 
@@ -57,21 +70,12 @@ public interface DecoratorBehavior {
 		}
 
 		@Override
-		public void onKeyDown(KeyDown event) {
-			Context context = event.getContext();
-			if (context.util().hasKeyboardModifier()) {
-				return;
-			}
-			KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
-			onKeyDown(domEvent.getNativeEvent());
-		}
-
-		@Override
 		public String getEventType() {
 			return BrowserEvents.KEYDOWN;
 		}
 
-		public void onKeyDown(NativeEvent nativeKeydownEvent) {
+		public void onKeyDown(NativeEvent nativeKeydownEvent,
+				Element registeredElement) {
 			Selection selection = Document.get().getSelection();
 			if (!selection.isCollapsed()) {
 				return;
@@ -100,20 +104,35 @@ public interface DecoratorBehavior {
 				return;
 			}
 			Location.Range range = selection.getAnchorLocation().asRange();
+			Location.Range contextBoundary = registeredElement.asDomNode()
+					.asRange();
 			range = range.extendText(direction.numericDelta());
+			/*
+			 * range now covers what would be selected with shift-[cursor move]
+			 */
 			String text = range.text();
 			if (!ZeroWidthCursorTarget.is(text)) {
 				return;
 			}
-			range = range.extendText(direction.numericDelta());
 			/*
-			 * Allow for editabledecorator/zws - boundary/zws -
-			 * decorator/non-zws
+			 * the text is a ZWS, so check extending one more
 			 */
-			if (ZeroWidthCursorTarget.isOneOrMore(text)) {
-				text = range.text();
-				range = range.extendText(direction.numericDelta());
+			Location.Range testExtended = range
+					.extendText(direction.numericDelta());
+			/*
+			 * FIXME - romcom - this *should* use location containment, but
+			 * selection -> location/range transformation is not quite right
+			 */
+			if (!contextBoundary.toIntPair()
+					.contains(testExtended.toIntPair())) {
+				return;
 			}
+			range = testExtended;
+			/*
+			 * More outré combinations, like zws/zws, should be handled in
+			 * non-behavir code
+			 * 
+			 */
 			Location boundary = range.provideEndpoint(direction.numericDelta());
 			/*
 			 * ZWS logic ensures the boundary is within a DecoratorNode - so
@@ -132,6 +151,7 @@ public interface DecoratorBehavior {
 				break;
 			}
 			Location decoratorLocation = boundary;
+			DomNode containingNode = decoratorLocation.getContainingNode();
 			/*
 			 * position before/after the decorator
 			 */
@@ -147,20 +167,29 @@ public interface DecoratorBehavior {
 						TextTraversal.TO_START_OF_NODE);
 				break;
 			}
+			Ax.out(range.toAncestorLocationString());
 			selection.collapse(boundary.getContainingNode().gwtNode(),
 					boundary.getTextOffsetInNode());
 			/*
-			 * don't delete the zws, just the decorator
+			 * don't delete the zws, just the non-editable. confirm it's
+			 * non-editable
 			 */
 			if (delete) {
-				decoratorLocation.getContainingNode().removeFromParent();
+				/*
+				 * attrIsIgnoreCase is ok -just- for this
+				 */
+				if (containingNode.attrIsIgnoreCase("contenteditable",
+						"false")) {
+					containingNode.removeFromParent();
+				}
 			}
 			nativeKeydownEvent.squelch();
 		}
 
 		@Override
-		public void onPreviewNativeEvent(NativePreviewEvent event) {
-			onKeyDown(event.getNativeEvent());
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			onKeyDown(event.getNativeEvent(), registeredElement);
 		}
 
 		@Override

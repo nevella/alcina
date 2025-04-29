@@ -20,14 +20,17 @@ import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 
 /*
  * Manages the dropdown suggestions for the ChoiceSuggestions editor
+ * 
+ * Doc :: behavior :: repeatablechoices - if repeatablechoices is not set (on
+ * the Choices), filter the ask answers by existing choices
  */
 public class ChoiceSuggestor extends DecoratorSuggestor {
-	ChoiceSuggestions choiceSuggestions;
+	ChoiceEditor choiceEditor;
 
-	ChoiceSuggestor(ChoiceSuggestions choiceSuggestions,
+	ChoiceSuggestor(ChoiceEditor choiceSuggestions,
 			ContentDecorator contentDecorator, DomNode decoratorNode) {
 		super(contentDecorator, decoratorNode);
-		this.choiceSuggestions = choiceSuggestions;
+		this.choiceEditor = choiceSuggestions;
 	}
 
 	@Override
@@ -53,7 +56,7 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 			/*
 			 * Enums or suchlike
 			 */
-			List<?> values = choiceSuggestions.getValues();
+			List<?> values = choiceEditor.getValues();
 			SuggestOracle.Response response = StringAskAnswer
 					.selectValues(values, ask);
 			handleSuggestionResponse(ask, answersHandler, response);
@@ -64,8 +67,17 @@ public class ChoiceSuggestor extends DecoratorSuggestor {
 				SuggestOracle.Response response) {
 			Collection<? extends Suggestion> suggestions = response
 					.getSuggestions();
-			List<Choice> choices = suggestions.stream().map(s -> new Choice(
-					((BoundSuggestOracleResponseElement.UntypedSuggestion) s).suggestion))
+			List<?> suggestedObjects = suggestions.stream().map(
+					s -> ((BoundSuggestOracleResponseElement.UntypedSuggestion) s).suggestion)
+					.collect(Collectors.toList());
+			/*
+			 * see DecoratorBehavior.RepeatableChoiceHandling
+			 */
+			if (!choiceEditor.isRepeatableChoices()) {
+				List<?> selectedValues = choiceEditor.getEditorValues();
+				suggestedObjects.removeIf(selectedValues::contains);
+			}
+			List<Choice> choices = suggestedObjects.stream().map(Choice::new)
 					.collect(Collectors.toList());
 			StringAskAnswer<Choice> router = new StringAskAnswer<>();
 			Answers answers = router.ask(ask, choices, Object::toString);

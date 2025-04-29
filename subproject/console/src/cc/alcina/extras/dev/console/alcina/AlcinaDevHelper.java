@@ -14,6 +14,7 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLayerObservables;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 
@@ -43,6 +44,8 @@ public class AlcinaDevHelper extends DevHelper {
 			Registry.register().singleton(AlcinaBeanSerializer.class,
 					new AlcinaBeanSerializerS());
 			MessageTransportLayerObservables.logMutationEvents();
+			RegistryHistoryMapper mapper = new RegistryHistoryMapper();
+			Registry.register().singleton(RegistryHistoryMapper.class, mapper);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

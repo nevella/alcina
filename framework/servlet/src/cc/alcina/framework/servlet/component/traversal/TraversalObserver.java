@@ -5,6 +5,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.traversal.Layer;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal;
 import cc.alcina.framework.common.client.traversal.TraversalContext;
+import cc.alcina.framework.common.client.traversal.TraversalContext.NonDefaultTraversal;
+import cc.alcina.framework.common.client.traversal.TraversalContext.ShortTraversal;
 import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -30,7 +32,7 @@ public class TraversalObserver extends LifecycleService.AlsoDev {
 		observables = new RemoteComponentObservables<>(
 				TraversalBrowser.Component.class, SelectionTraversal.class,
 				t -> {
-					Layer rootLayer = t.getRootLayer();
+					Layer rootLayer = t.layers().getRoot();
 					return Registry
 							.impl(RootLayerNamer.class, rootLayer.getClass())
 							.rootLayerName(rootLayer);
@@ -59,24 +61,22 @@ public class TraversalObserver extends LifecycleService.AlsoDev {
 	}
 
 	void onTraversalComplete(SelectionTraversal traversal) {
-		if (traversal
-				.context(TraversalDoesNotPublishNullObservable.class) == null) {
+		ShortTraversal shortTraversal = traversal
+				.context(TraversalContext.ShortTraversal.class);
+		NonDefaultTraversal nonDefaultTraversal = traversal
+				.context(TraversalContext.NonDefaultTraversal.class);
+		if (nonDefaultTraversal == null
+				&& (shortTraversal == null || shortTraversal.provideRetain())) {
 			observables.publish(null, traversal);
 		}
-		observables.publish(traversal.id, traversal);
+		if (shortTraversal == null || shortTraversal.provideRetain()) {
+			observables.publish(traversal.id, traversal);
+		}
 	}
 
 	public ListenerReference subscribe(String traversalKey,
 			TopicListener<RemoteComponentObservables<SelectionTraversal>.ObservableEntry> subscriber) {
 		return observables.subscribe(traversalKey, subscriber);
-	}
-
-	/*
-	 * Marker, if the TraversalContext implements this then a null-topic
-	 * completion obsevable will not be published
-	 */
-	public interface TraversalDoesNotPublishNullObservable
-			extends TraversalContext {
 	}
 
 	public void evict(SelectionTraversal traversal) {

@@ -2,9 +2,12 @@ package cc.alcina.framework.common.client.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
@@ -117,7 +120,7 @@ public class InstanceOracle {
 
 		@Override
 		public int hashCode() {
-			return clazz.hashCode();
+			return Objects.hash(clazz, parameters);
 		}
 
 		public Query<T>
@@ -136,7 +139,8 @@ public class InstanceOracle {
 		public boolean equals(Object obj) {
 			if (obj instanceof Query) {
 				Query o = (Query) obj;
-				return clazz.equals(o.clazz);
+				return clazz.equals(o.clazz)
+						&& Objects.equals(parameters, o.parameters);
 			} else {
 				return super.equals(obj);
 			}
@@ -177,6 +181,10 @@ public class InstanceOracle {
 		public Query<T> withInstanceConsumer(Consumer<T> instanceConsumer) {
 			this.instanceConsumer = instanceConsumer;
 			return this;
+		}
+
+		public Query<T> withInstanceSignal(Runnable runnable) {
+			return withInstanceConsumer(o -> runnable.run());
 		}
 
 		public Query<T>
@@ -234,6 +242,11 @@ public class InstanceOracle {
 		public void invalidate() {
 			InstanceOracle.get().invalidate(this);
 		}
+
+		public <PT extends InstanceQuery.Parameter, V> V
+				parameterValue(Class<PT> clazz) {
+			return (V) typedParameter(clazz).getValue();
+		}
 	}
 
 	/*
@@ -262,8 +275,15 @@ public class InstanceOracle {
 			return active;
 		}
 
-		synchronized List<ProviderQueries> getProviderQueriesSnapshot() {
-			return uniqueProviderQueries.values().stream().toList();
+		synchronized void checkEviction() {
+			Iterator<Entry<ProviderQueries, ProviderQueries>> itr = uniqueProviderQueries
+					.entrySet().iterator();
+			while (itr.hasNext()) {
+				Entry<ProviderQueries, ProviderQueries> entry = itr.next();
+				if (entry.getKey().checkEviction()) {
+					itr.remove();
+				}
+			}
 		}
 	}
 
@@ -277,11 +297,16 @@ public class InstanceOracle {
 	static class ProviderQueries<T> {
 		boolean firing;
 
-		synchronized void checkEviction() {
+		/**
+		 * 
+		 * @return true if the instance has no awaiting queries
+		 */
+		synchronized boolean checkEviction() {
 			if (firing) {
-				return;
+				return false;
 			}
 			awaitingQueries.removeIf(qs -> !qs.query.bound);
+			return awaitingQueries.isEmpty();
 		}
 
 		/**
@@ -319,8 +344,9 @@ public class InstanceOracle {
 					lastAcceptedInstance = instance;
 					// this possibly causes query.instanceConsumer to be called
 					// on the originating (UI) thread
-					dispatch.accept(() -> query.instanceConsumer
-							.accept(lastAcceptedInstance));
+					dispatch.accept(() -> {
+						query.instanceConsumer.accept(lastAcceptedInstance);
+					});
 					if (query.oneOff) {
 						query.unbind();
 					}
@@ -427,7 +453,9 @@ public class InstanceOracle {
 				return;
 			}
 			this.instance = instance;
-			awaitLatch.countDown();
+			if (awaitLatch != null) {
+				awaitLatch.countDown();
+			}
 			passToConsumers();
 		}
 
@@ -437,7 +465,9 @@ public class InstanceOracle {
 			}
 			exception.printStackTrace();
 			this.exception = exception;
-			awaitLatch.countDown();
+			if (awaitLatch != null) {
+				awaitLatch.countDown();
+			}
 			passToConsumers();
 		}
 
@@ -449,15 +479,19 @@ public class InstanceOracle {
 			return provider != null && provider.isOneOff();
 		}
 
-		// SE only
 		synchronized void ensureLatch() {
-			if (awaitLatch == null) {
+			if (awaitLatch == null && !Al.isBrowser()) {
+				/*
+				 * Note that this is currently permitted in romcom - since
+				 * non-async is easier coding. TBD
+				 */
 				awaitLatch = new CountDownLatch(1);
 			}
 		}
 
 		T await() {
-			Preconditions.checkState(Al.isMultiThreaded());
+			Preconditions
+					.checkState(Al.isMultiThreaded() && !provider.isAsync());
 			ensureLatch();
 			try {
 				awaitLatch.await();
@@ -490,18 +524,17 @@ public class InstanceOracle {
 
 	<T> ProviderQueries<T> submit(Query<T> query) {
 		query.bind();
-		ProviderQueries<T> active = store.getProviderQueries(query);
-		active.ensureSubmitted();
+		ProviderQueries<T> providerQueries = store.getProviderQueries(query);
+		providerQueries.ensureSubmitted();
 		checkEviction();
-		if (!query.async) {
-			active.await();
+		if (!query.async && !providerQueries.provider.isAsync()) {
+			providerQueries.await();
 		}
-		active.passToConsumers();
-		return active;
+		providerQueries.passToConsumers();
+		return providerQueries;
 	}
 
 	void checkEviction() {
-		store.getProviderQueriesSnapshot()
-				.forEach(ProviderQueries::checkEviction);
+		store.checkEviction();
 	}
 }

@@ -996,7 +996,8 @@ public class FlatTreeSerializer {
 				throw WrappedRuntimeException.wrap(e);
 			}
 		}
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException(
+				Ax.format("cannot synthesize type: %s", type));
 	}
 
 	private Object synthesiseSimpleValue(Class valueClass) {

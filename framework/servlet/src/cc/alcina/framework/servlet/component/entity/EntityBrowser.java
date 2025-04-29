@@ -36,7 +36,6 @@ import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentObserv
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser;
 import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.TraversalAnswerSupplier;
 import cc.alcina.framework.servlet.component.traversal.TraversalObserver;
-import cc.alcina.framework.servlet.component.traversal.TraversalObserver.TraversalDoesNotPublishNullObservable;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace;
 import cc.alcina.framework.servlet.component.traversal.TraversalPlace.SelectionPath;
 import cc.alcina.framework.servlet.component.traversal.TraversalSettings;
@@ -164,7 +163,7 @@ public class EntityBrowser {
 				// if the last layer matches exactly one entity, append it to
 				// the
 				// place + re-set
-				Layer lastLayer = Ax.last(traversal().getVisitedLayers());
+				Layer lastLayer = Ax.last(traversal().layers().getVisited());
 				// if (place.attributesOrEmpty(lastLayer.index)
 				// .has(StandardLayerAttributes.Filter.class)) {
 				Collection<Selection> selections = lastLayer.getSelections();
@@ -203,7 +202,7 @@ public class EntityBrowser {
 
 		class EntityPeer
 				implements TraversalContext, TraversalContext.ThrowOnException,
-				TraversalDoesNotPublishNullObservable {
+				TraversalContext.NonDefaultTraversal {
 			SelectionTraversal traversal;
 
 			RootLayer rootLayer;
@@ -218,7 +217,7 @@ public class EntityBrowser {
 				traversal = new SelectionTraversal(this);
 				traversal.id = traversalId;
 				rootLayer = new RootLayer();
-				traversal.setRootLayer(rootLayer);
+				traversal.layers().setRoot(rootLayer);
 				TreeProcess.Node parentNode = JobContext
 						.getSelectedProcessNode();
 				traversal.select(new DomainGraphSelection(parentNode, this));

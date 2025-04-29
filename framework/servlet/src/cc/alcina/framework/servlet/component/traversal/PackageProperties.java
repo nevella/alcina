@@ -98,6 +98,7 @@ public class PackageProperties {
       TypedProperty<LayerSelections.SelectionsArea, Boolean> parallel = new TypedProperty<>(LayerSelections.SelectionsArea.class, "parallel");
       TypedProperty<LayerSelections.SelectionsArea, List> selections = new TypedProperty<>(LayerSelections.SelectionsArea.class, "selections");
       TypedProperty<LayerSelections.SelectionsArea, LooseContextInstance> snapshot = new TypedProperty<>(LayerSelections.SelectionsArea.class, "snapshot");
+      TypedProperty<LayerSelections.SelectionsArea, List> tableSelections = new TypedProperty<>(LayerSelections.SelectionsArea.class, "tableSelections");
       TypedProperty<LayerSelections.SelectionsArea, LayerSelections.SelectionsArea.TestHistory> testHistory = new TypedProperty<>(LayerSelections.SelectionsArea.class, "testHistory");
     }
     

@@ -156,7 +156,11 @@ public class Ax {
 	}
 
 	public static void newlineDump(Collection collection) {
-		System.out.println(CommonUtils.joinWithNewlines(collection));
+		System.out.println(newlineJoin(collection));
+	}
+
+	public static String newlineJoin(Collection collection) {
+		return CommonUtils.joinWithNewlines(collection);
 	}
 
 	public static <T> T next(Collection<T> collection, T element) {

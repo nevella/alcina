@@ -288,6 +288,13 @@ public class Measure extends Location.Range {
 			}
 		}
 
+		public static class DocumentElementToken implements Measure.Token {
+			public static final DocumentElementToken TYPE = new DocumentElementToken();
+
+			DocumentElementToken() {
+			}
+		}
+
 		/*
 		 * Parser instruction - parser should traverse node-by-node (rather than
 		 * node-boundary-by-node-boundary, a denser traversal) when matching

@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.util.TextUtils;
  * Tokens must be unique to a given parser - so either use enums, singleton
  * instances or some other guarantee
  */
-public interface BranchToken extends Token, BranchGroupMember {
+public interface BranchToken extends Measure.Token, BranchGroupMember {
 	default Group getGroup() {
 		return null;
 	}

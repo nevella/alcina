@@ -28,6 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.servlet.component.traversal.StandardLayerAttributes.Filter;
+import cc.alcina.framework.servlet.component.traversal.TraversalBrowser.Ui;
 
 /**
  * <p>
@@ -151,14 +152,15 @@ public class TraversalPlace extends BasePlace {
 						&& TraversalBrowser.Ui.get().getHistory() != null) {
 					SelectionTraversal traversal = TraversalBrowser.Ui
 							.traversal();
-					if (traversal.getRootSelection() != null) {
+					if (traversal.selections().root != null) {
 						if (segmentPath != null) {
-							selection = traversal.getAllLayerSelections()
+							selection = traversal.selections()
+									.allLayerSelections()
 									.filter(sel -> segmentPath
 											.equals(sel.fullPath()))
 									.findFirst().orElse(null);
 						} else {
-							selection = (Selection) traversal.getRootSelection()
+							selection = (Selection) traversal.selections().root
 									.processNode().nodeForTreePath(path)
 									.map(Node::getValue).orElse(null);
 						}
@@ -546,5 +548,30 @@ public class TraversalPlace extends BasePlace {
 		// FIXME - sortDirection
 		SortDirection sortDirection = null;
 		return new ColumnMetadata.Standard(sortDirection, filtered);
+	}
+
+	public void computeListSource(Layer selectedLayer, Selection selection) {
+		if (selectedLayer != null) {
+			listSource = new ListSource(selectedLayer.index, null);
+		} else if (selection instanceof Selection.HasTableRepresentation) {
+			TraversalPlace.SelectionType selectionType = SelectionType.VIEW;
+			SelectionPath selectionPath = new TraversalPlace.SelectionPath();
+			selectionPath.selection = selection;
+			int layerIndex = Ui.getSelectedLayer(selection).index;
+			selectionPath.path = selection.processNode().treePath();
+			selectionPath.type = selectionType;
+			listSource = new ListSource(layerIndex, selectionPath);
+		} else {
+			if (listSource != null) {
+				int layerIndex = Ui.getSelectedLayer(selection).index;
+				boolean incomingGtCurrentIndex = listSource == null ? true
+						: layerIndex >= listSource.layerIndex;
+				if (incomingGtCurrentIndex) {
+					// preserve
+				} else {
+					listSource = null;
+				}
+			}
+		}
 	}
 }

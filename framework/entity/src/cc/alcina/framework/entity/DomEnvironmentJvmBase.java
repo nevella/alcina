@@ -42,14 +42,18 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	}
 
 	@Override
-	public Node loadFromXml(String xml, boolean gwtDocument) throws Exception {
+	public Node loadFromXml(String xml, boolean gwtDocument, boolean remote) {
 		if (gwtDocument) {
 			com.google.gwt.dom.client.Document document = com.google.gwt.dom.client.Document.contextProvider
-					.createFrame(RemoteType.REF_ID);
+					.createFrame(remote ? RemoteType.REF_ID : RemoteType.NONE);
 			document.createDocumentElement(xml, true);
 			return document;
 		} else {
-			return XmlUtils.loadDocument(xml, true);
+			try {
+				return XmlUtils.loadDocument(xml, true);
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
 		}
 	}
 

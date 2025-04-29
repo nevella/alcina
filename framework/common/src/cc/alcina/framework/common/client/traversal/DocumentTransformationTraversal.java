@@ -17,7 +17,7 @@ public class DocumentTransformationTraversal {
 	 */
 	public String getDocumentMarkup(boolean input) {
 		if (input) {
-			Object rootValue = traversal.getRootSelection().get();
+			Object rootValue = traversal.selections().root;
 			return rootValue instanceof HasMarkup
 					? ((HasMarkup) rootValue).provideMarkup()
 					: null;
@@ -30,7 +30,7 @@ public class DocumentTransformationTraversal {
 
 	public String getDocumentCss(boolean input) {
 		if (input) {
-			Object rootValue = traversal.getRootSelection().get();
+			Object rootValue = traversal.selections().root;
 			return rootValue instanceof HasCss
 					? ((HasCss) rootValue).provideCss()
 					: null;
@@ -53,7 +53,7 @@ public class DocumentTransformationTraversal {
 
 	public String getMarkupContainerClassnames(boolean input) {
 		if (input) {
-			Object rootValue = traversal.getRootSelection().get();
+			Object rootValue = traversal.selections().root;
 			return rootValue instanceof HasCss
 					? ((HasCss) rootValue).provideMarkupContainerClassNames()
 					: null;

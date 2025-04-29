@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  * 
  */
 @Registration.Self
-public interface AttributeBehaviorHandler extends NativePreviewHandler {
+public interface AttributeBehaviorHandler {
 	String getMagicAttributeName();
 
 	String getEventType();
@@ -111,13 +111,16 @@ public interface AttributeBehaviorHandler extends NativePreviewHandler {
 			Element targetElement = eventTarget.asElement();
 			Element cursor = targetElement;
 			while (cursor != null) {
-				Element test = cursor;
-				if (test.hasAttributes()) {
-					handlers.stream().filter(h -> h.matches(test))
-							.forEach(h -> h.onPreviewNativeEvent(event));
+				if (cursor.hasAttributes()) {
+					Element registeredElement = cursor;
+					handlers.stream().filter(h -> h.matches(registeredElement))
+							.forEach(h -> h.onNativeEvent(event,
+									registeredElement));
 				}
 				cursor = cursor.getParentElement();
 			}
 		}
 	}
+
+	void onNativeEvent(NativePreviewEvent event, Element registeredElement);
 }

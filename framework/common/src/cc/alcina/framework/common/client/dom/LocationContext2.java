@@ -15,8 +15,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
-import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
-import cc.alcina.framework.common.client.dom.Location.TextTraversal;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
@@ -49,16 +48,18 @@ class LocationContext2 implements LocationContext {
 
 		int mutationIndex;
 
-		List<IndexMutation> mutations;
+		List<IndexMutation> mutations = new ArrayList<>();
 
 		static class IndexMutation {
 			public IndexMutation(Location asLocation, IndexTuple nodeDelta) {
-				// TODO Auto-generated constructor stub
+				at = asLocation.asIndexTuple();
+				treeIndexDelta = nodeDelta.treeIndex;
+				indexDelta = nodeDelta.index;
 			}
 
-			IndexTuple indexTuple;
+			IndexTuple at;
 
-			int treeDelta;
+			int treeIndexDelta;
 
 			int indexDelta;
 		}
@@ -122,7 +123,7 @@ class LocationContext2 implements LocationContext {
 						damaged.add(domMutation.nextSibling.node.asDomNode());
 					} else {
 						damaged.add(domMutation.target.node.asDomNode()
-								.relative().treeSubsequentNode());
+								.relative().treeSubsequentNodeNoDescent());
 					}
 					break;
 				}
@@ -150,36 +151,41 @@ class LocationContext2 implements LocationContext {
 					 */
 					continue;
 				}
-				IndexTuple actual = treePrevious == null ?
 				/*
 				 * If there is no previous, this is the documentelement node -
 				 * and its [0,0] is immutable
 				 */
-						new IndexTuple()
-						: treePrevious.asLocation().asIndexTuple()
-								.add(treePrevious.textLengthSelf(), 1);
-				IndexTuple nodeDelta = new IndexTuple();
+				IndexTuple actual = treePrevious == null ? new IndexTuple(0, 0)
+						: treePrevious.asLocation().asIndexTuple().add(1,
+								treePrevious.textLengthSelf());
+				IndexTuple nodeDelta = null;
 				if (node.locations == null) {
 					/*
 					 * new node. it's always just a simple [0,1] delta - it's
 					 * the *next* node that possibly has a text index delta
 					 */
-					nodeDelta.treeIndex = 1;
+					nodeDelta = new IndexTuple(1, node.textLengthSelf());
 					// ensure location
 					node.asLocation();
 				} else {
 					Location nodeLocation = node.locations.nodeLocation;
 					IndexTuple lastComputed = nodeLocation.asIndexTuple();
-					IndexTuple cumulativeDelta = new IndexTuple();
-					context.applyPriorMutations(nodeLocation, cumulativeDelta);
-					nodeDelta.add(actual).subtract(lastComputed)
+					IndexTuple lastComputedAccumulator = context
+							.applyPriorMutations(nodeLocation, lastComputed);
+					IndexTuple cumulativeDelta = lastComputedAccumulator
 							.subtract(lastComputed);
+					nodeDelta = actual.subtract(lastComputed)
+							.subtract(cumulativeDelta);
 					/*
-					 * Neatly, this updates the mutationSequencePosition
+					 * Neatly, this updates the mutationSequencePosition. Note
+					 * that two things happen, we compute the nodeDelta (changes
+					 * registered at this node only), but apply both the
+					 * tree-priors *and* those changes
 					 */
+					node.asLocation().applyIndexDelta(cumulativeDelta);
 					node.asLocation().applyIndexDelta(nodeDelta);
 				}
-				if (!nodeDelta.isEmpty()) {
+				if (!nodeDelta.isZero()) {
 					IndexMutation mutation = new IndexMutation(
 							node.asLocation(), nodeDelta);
 					mutations.add(mutation);
@@ -196,10 +202,26 @@ class LocationContext2 implements LocationContext {
 			node.asDomNode().stream().forEach(damaged::add);
 		}
 
-		public void apply(IndexTuple deltaAccumulator) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'apply'");
+		IndexTuple applyTo(IndexTuple locationAccumulator) {
+			for (IndexMutation mutation : mutations) {
+				/*
+				 * text run mutation is different depending on treeindex
+				 */
+				boolean applyTextRunMutation = mutation.at.index < locationAccumulator.index;
+				if (mutation.at.treeIndex < locationAccumulator.treeIndex) {
+					applyTextRunMutation = mutation.at.index <= locationAccumulator.index;
+				}
+				if (applyTextRunMutation) {
+					locationAccumulator = locationAccumulator.add(0,
+							mutation.indexDelta);
+				}
+				boolean applyTreeIndexMutation = mutation.at.treeIndex <= locationAccumulator.index;
+				if (applyTreeIndexMutation) {
+					locationAccumulator = locationAccumulator
+							.add(mutation.treeIndexDelta, 0);
+				}
+			}
+			return locationAccumulator;
 		}
 	}
 
@@ -207,9 +229,11 @@ class LocationContext2 implements LocationContext {
 
 	Document gwtDocument;
 
-	List<IndexMutations> mutations = new ArrayList<>();
+	List<IndexMutations> mutations;
 
 	DomNodeTree tree;
+
+	int documentTextRunLength;
 
 	LocationContext2(DomDocument document) {
 		Preconditions.checkState(document.w3cDoc() instanceof Document);
@@ -228,6 +252,9 @@ class LocationContext2 implements LocationContext {
 			implements TopicListener<List<MutationRecord>> {
 		@Override
 		public void topicPublished(List<MutationRecord> domMutations) {
+			domMutations.forEach(mutation -> {
+				mutation.target.node.asDomNode().children.invalidate();
+			});
 			IndexMutations indexMutations = new IndexMutations(
 					LocationContext2.this, domMutations);
 			indexMutations.mutationIndex = mutations.size();
@@ -240,68 +267,55 @@ class LocationContext2 implements LocationContext {
 	}
 
 	@Override
-	public Location createTextRelativeLocation(Location location, int offset,
-			boolean end) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'createTextRelativeLocation'");
-	}
-
-	@Override
-	public DomNode getContainingNode(Location location) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getContainingNode'");
-	}
-
-	@Override
-	public List<DomNode> getContainingNodes(int index, boolean after) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getContainingNodes'");
-	}
-
-	@Override
-	public Location getRelativeLocation(Location location,
-			RelativeDirection direction, TextTraversal textTraversal) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getRelativeLocation'");
-	}
-
-	@Override
 	public String getSubsequentText(Location location, int chars) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getSubsequentText'");
+		return buildSubstring(location,
+				new IntPair(location.getIndex(), location.getIndex() + chars));
 	}
 
-	@Override
-	public String markupContent(Range range) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'markupContent'");
+	String buildSubstring(Location startLocation, IntPair boundaries) {
+		StringBuilder builder = new StringBuilder();
+		DomNode cursor = startLocation.getContainingNode();
+		while (cursor != null) {
+			if (cursor.isText()) {
+				int index = cursor.asLocation().getIndex();
+				IntPair cursorRange = cursor.asLocation().toTextIndexPair();
+				if (cursorRange.i2 <= boundaries.i1) {
+					// continue
+				} else {
+					IntPair includedRange = boundaries
+							.intersection(cursorRange);
+					if (includedRange == null) {
+						break;
+					}
+					String part = cursor.textContent().substring(
+							includedRange.i1 - index, includedRange.i2 - index);
+					builder.append(part);
+				}
+			}
+			cursor = cursor.relative().treeSubsequentNode();
+		}
+		return builder.toString();
 	}
 
 	@Override
 	public String textContent(Range range) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'textContent'");
+		return buildSubstring(range.start, range.toIntPair());
 	}
 
 	@Override
 	public int toValidIndex(int idx) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'toValidIndex'");
+		if (idx < 0) {
+			return 0;
+		}
+		if (idx > documentTextRunLength) {
+			idx = documentTextRunLength;
+		}
+		return idx;
 	}
 
 	@Override
 	public void invalidate() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'invalidate'");
+		// NOOP
 	}
 
 	@Override
@@ -324,21 +338,103 @@ class LocationContext2 implements LocationContext {
 	}
 
 	@Override
-	public Range asRange(DomNode domNode) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'asRange'");
+	public Location getContainingLocation(Location test) {
+		return getContainingLocation(test, null);
 	}
 
 	@Override
+	public Location getContainingLocation(Location test, Location startAt) {
+		startAt = startAt == null ? getDocumentElementNode().asLocation()
+				: startAt;
+		int index = test.getIndex();
+		if (!getDocumentRange().toIntPair().contains(index)) {
+			return null;
+		}
+		boolean forwards = startAt.getIndex() <= index;
+		int itrCount = 0;
+		DomNodeTree tree = startAt.getContainingNode().tree();
+		tree.forwards = forwards;
+		DomNode node = null;
+		/*
+		 * This uses a linear search up to an iteration threshold, then switches
+		 * to binary
+		 */
+		while ((node = tree.currentNode()) != null && itrCount++ < 10) {
+			itrCount++;
+			Location.Range nodeRange = node.asRange();
+			IntPair nodePair = nodeRange.toIntPair();
+			if (node.isText()) {
+				if (nodeRange.containsIndexUnlessLocationStartAndAtEnd(test)) {
+					return nodeRange.start;
+				}
+			}
+			tree.next();
+		}
+		/*
+		 * binary search
+		 */
+		while (true) {
+			Location.Range nodeRange = node.asRange();
+			if (nodeRange.containsIndexUnlessLocationStartAndAtEnd(test)) {
+				break;
+			} else {
+				node = node.parent();
+			}
+		}
+		if (node.isText()) {
+			return node.asLocation();
+		}
+		while (true) {
+			/*
+			 * descend loop
+			 */
+			List<DomNode> nodes = node.children.nodes();
+			int length = nodes.size();
+			int lowerBound = 0;
+			int upperBound = length - 1;
+			while (true) {
+				/*
+				 * level binary search
+				 */
+				int binaryIdx = (upperBound - lowerBound) / 2 + lowerBound;
+				DomNode child = nodes.get(binaryIdx);
+				Location.Range childRange = child.asRange();
+				IntPair childPair = childRange.toIntPair();
+				if (!childPair.isPoint() && childRange
+						.containsIndexUnlessLocationStartAndAtEnd(test)) {
+					if (child.isText()) {
+						return childRange.start;
+					} else {
+						node = child;
+						break;
+					}
+				}
+				boolean binaryTowardsUpper = index >= childPair.i1;
+				if (binaryTowardsUpper) {
+					lowerBound = lowerBound == binaryIdx ? binaryIdx + 1
+							: binaryIdx;
+				} else {
+					upperBound = upperBound == binaryIdx ? binaryIdx - 1
+							: binaryIdx;
+				}
+			}
+		}
+	}
+
+	Range documentRange;
+
+	@Override
 	public Range getDocumentRange() {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException(
-				"Unimplemented method 'getDocumentRange'");
+		if (documentRange == null) {
+			documentRange = gwtDocument.getDocumentElement().asDomNode()
+					.asRange();
+		}
+		return documentRange;
 	}
 
 	@Override
 	public void ensureCurrent(Location location) {
+		gwtDocument.flushLocalMutations();
 		if (location.documentMutationPosition == getDocumentMutationPosition()) {
 			return;
 		}
@@ -350,21 +446,60 @@ class LocationContext2 implements LocationContext {
 		applyPriorMutations(location);
 	}
 
-	void applyPriorMutations(Location location, IndexTuple deltaAccumulator) {
+	/*
+	 * 'accumulator' is slightly wonky, since the object ref changes - not the
+	 * object - 'reference accumulator?'
+	 */
+	IndexTuple applyPriorMutations(Location location,
+			IndexTuple locationAccumulator) {
 		for (int idx = location.documentMutationPosition; idx < mutations
 				.size(); idx++) {
-			mutations.get(idx).apply(deltaAccumulator);
+			locationAccumulator = mutations.get(idx)
+					.applyTo(locationAccumulator);
 		}
+		return locationAccumulator;
 	}
 
 	void applyPriorMutations(Location location) {
-		IndexTuple deltaAccumulator = new IndexTuple();
-		applyPriorMutations(location, deltaAccumulator);
-		location.applyIndexDelta(deltaAccumulator);
+		IndexTuple locationAccumulator = location.asIndexTuple();
+		locationAccumulator = applyPriorMutations(location,
+				locationAccumulator);
+		IndexTuple locationDelta = locationAccumulator
+				.subtract(location.asIndexTuple());
+		location.applyIndexDelta(locationDelta);
+	}
+
+	void resetLocationMutations() {
+		mutations = new ArrayList<>();
+		documentTextRunLength = 0;
+		document.descendants().forEach(n -> {
+			n.recomputeLocation();
+			documentTextRunLength += n.textLengthSelf();
+		});
 	}
 
 	void init() {
-		document.descendants().forEach(DomNode::asLocation);
-		gwtDocument.addLocalMutationListener(new LocalMutationTransformer());
+		resetLocationMutations();
+		gwtDocument.addLocalMutationListener(new LocalMutationTransformer(),
+				true);
+	}
+
+	@Override
+	public int getContentLength(DomNode domNode) {
+		if (domNode.isText()) {
+			return domNode.textLengthSelf();
+		}
+		Location location = domNode.asLocation();
+		DomNode afterEnd = domNode.relative().treeSubsequentNodeNoDescent();
+		if (afterEnd != null) {
+			return afterEnd.asLocation().getIndex() - location.getIndex();
+		} else {
+			return documentTextRunLength - location.getIndex();
+		}
+	}
+
+	@Override
+	public DomNode getDocumentElementNode() {
+		return gwtDocument.domDocument.getDocumentElementNode();
 	}
 }

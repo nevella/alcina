@@ -238,6 +238,13 @@ public class DomNode {
 		return attributes().getOrDefault(key, "").equals(value);
 	}
 
+	public boolean attrIsIgnoreCase(String key, String value) {
+		return attributes().entrySet().stream()
+				.filter(e -> e.getKey().equalsIgnoreCase(key))
+				.map(e -> e.getValue().equalsIgnoreCase(value)).findFirst()
+				.orElse(false);
+	}
+
 	public boolean attrMatches(String attrName, String regex) {
 		return attr(attrName).matches(regex);
 	}
@@ -990,10 +997,13 @@ public class DomNode {
 			if (this.nodes != null) {
 				return this.nodes;
 			}
+			if (isText() || isProcessingInstruction() || isComment()) {
+				return List.of();
+			}
 			List<DomNode> nodes = DomEnvironment
 					.nodeListToList(node.getChildNodes()).stream()
 					.map(document::nodeFor).collect(Collectors.toList());
-			if (document.isReadonly()) {
+			if (document.isReadonly() || document.useLocations2) {
 				this.nodes = nodes;
 			}
 			return nodes;
@@ -1027,6 +1037,10 @@ public class DomNode {
 			return TextUtils.normalizeWhitespaceAndTrim(nodes().stream()
 					.filter(DomNode::isText).map(DomNode::textContent)
 					.collect(Collectors.joining()));
+		}
+
+		void invalidate() {
+			nodes = null;
 		}
 	}
 
@@ -1419,15 +1433,23 @@ public class DomNode {
 			return null;
 		}
 
-		public DomNode treeSubsequentNode() {
+		public DomNode treeSubsequentNodeNoDescent() {
 			if (hasNextSibling()) {
 				return nextSibling();
 			}
 			DomNode parent = parent();
 			if (parent != null) {
-				return parent.relative().treeSubsequentNode();
+				return parent.relative().treeSubsequentNodeNoDescent();
 			}
 			return null;
+		}
+
+		public DomNode treeSubsequentNode() {
+			DomNode firstChild = children.firstNode();
+			if (firstChild != null) {
+				return firstChild;
+			}
+			return treeSubsequentNodeNoDescent();
 		}
 
 		public DomNode nextSibling() {
@@ -1476,11 +1498,32 @@ public class DomNode {
 			}
 		}
 
-		public DomNode treePreviousNode() {
+		/**
+		 * Note - this is *not* treePreviousNode
+		 */
+		public DomNode previousSibOrParentSibNode() {
 			if (hasPreviousSibling()) {
 				return previousSibling();
 			} else {
 				return parent();
+			}
+		}
+
+		public DomNode treePreviousNode() {
+			DomNode cursor = DomNode.this;
+			DomNode previous = null;
+			while (cursor != null) {
+				if (cursor.relative().hasPreviousSibling()) {
+					previous = cursor.relative().previousSibling();
+					break;
+				} else {
+					cursor = cursor.parent();
+				}
+			}
+			if (previous == null) {
+				return null;
+			} else {
+				return previous.relative().lastDescendant();
 			}
 		}
 
@@ -2081,5 +2124,51 @@ public class DomNode {
 
 	public int textLengthSelf() {
 		return isText() ? textContent().length() : 0;
+	}
+
+	/*
+	 * FIXME - location.mutation - for non-start locations, the offset will need
+	 * to be recomputed before history discard *unless* there are no text
+	 * mutations
+	 * 
+	 * Note that the common case for lots of mutations *is* no text mutations
+	 * (bulk wrapping say) - so this may not be as performance-scary as it might
+	 * appear
+	 */
+	void recomputeLocation() {
+		Preconditions.checkState(locations == null);
+		asLocation();
+	}
+
+	/**
+	 * <p>
+	 * For HTML markup, ensure that start/end whitespace nodes are not elided
+	 * from view by inline/ws processing rules -
+	 * https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace
+	 * 
+	 * <p>
+	 * This assumes the node text content is already normalised whitespace
+	 * 
+	 * @return the node with start/end ws converted to NBS
+	 */
+	public DomNode ensureBoundaryWhitespaceHard() {
+		if (children.nodes().size() > 0) {
+			DomNode first = children.firstNode();
+			if (first.isText()) {
+				String content = first.textContent();
+				if (content.startsWith(" ")) {
+					first.setText("\u00A0" + content.substring(1));
+				}
+			}
+			DomNode last = children.firstNode();
+			if (last.isText()) {
+				String content = first.textContent();
+				if (content.endsWith(" ")) {
+					last.setText(content.substring(0, content.length() - 1)
+							+ "\u00A0");
+				}
+			}
+		}
+		return this;
 	}
 }

@@ -38,7 +38,7 @@ public abstract class MeasureLayer<S extends MeasureSelection>
 
 	protected <S1 extends MeasureSelection> Stream<S1>
 			measureSelections(Class<S1> clazz, Measure.Token token) {
-		return state.traversalState.getSelections(clazz).stream()
+		return state.traversalState.selections.get(clazz).stream()
 				.filter(m -> m.get().token == token);
 	}
 }

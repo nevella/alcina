@@ -1,10 +1,13 @@
-@forward 'color'
 @use '../dirndl/theme/color' 
+@use '../dirndl/theme/part/font'
+@forward 'color'
 @forward '../dirndl/theme/part/misc'
 @forward '../dirndl/theme/part/font' 
-@forward '../dirndl/theme/part/form' 
+@forward '../dirndl/theme/part/form'
+@forward '../dirndl/theme/part/panel' 
 @forward '../dirndl/theme/part/app-suggestor' 
 
 $app-suggestor-first-weight: normal
 $link-color: color.$blue_1
 $link-hover-color: color.$blue_2
+$title-font-family: font.$sans-font-stack

@@ -142,10 +142,14 @@ public abstract class ProtocolMessageHandlerClient<PM extends Message>
 				LocalDom.flush();
 				selectionMutation.populateNodes();
 				Selection selection = Document.get().getSelection();
-				selection.collapse(selectionMutation.anchorNode,
-						selectionMutation.anchorOffset);
-				selection.extend(selectionMutation.focusNode,
-						selectionMutation.focusOffset);
+				if (selectionMutation.anchorNode != null) {
+					selection.collapse(selectionMutation.anchorNode,
+							selectionMutation.anchorOffset);
+				}
+				if (selectionMutation.focusNode != null) {
+					selection.extend(selectionMutation.focusNode,
+							selectionMutation.focusOffset);
+				}
 			}
 			message.eventSystemMutations.forEach(m -> {
 				try {

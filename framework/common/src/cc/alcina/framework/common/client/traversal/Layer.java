@@ -101,7 +101,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	public Collection<S> computeInputs() {
 		if (inputsFromLayer != null) {
 			return (Collection<S>) state.traversalState.selections
-					.byLayer(inputsFromLayer).keySet();
+					.byLayerCounts(inputsFromLayer).keySet();
 		} else {
 			return state.traversalState.selections.get(inputType, false);
 		}
@@ -146,11 +146,11 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	}
 
 	public Collection<Selection> getSelections() {
-		return state.traversalState.getSelections(this);
+		return state.traversalState.selections.byLayer(this);
 	}
 
 	public <S1 extends Selection> Stream<S1> getSelections(Class<S1> clazz) {
-		return state.traversalState.getSelections(clazz).stream();
+		return state.traversalState.selections.get(clazz).stream();
 	}
 
 	public boolean hasReceivingLayer() {

@@ -94,7 +94,7 @@ public final class SelectionRecord {
 				focusOffset);
 	}
 
-	public Object toNodeString() {
+	public String toNodeString() {
 		populateNodes();
 		return FormatBuilder.keyValues("anchorNodeId", anchorNodeId,
 				"anchorNode", anchorNode, "anchorOffset", anchorOffset,

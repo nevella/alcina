@@ -9,6 +9,7 @@ import org.w3c.dom.Text;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.collections.PublicCloneable;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -16,7 +17,11 @@ import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * <p>
- * Models a position in an alcina dom document via [T,I,A]
+ * Models a position in an alcina dom document via [T,I,A] - T is the node index
+ * in a depth-first traversal of the tree, I is the index in the document text,
+ * A is the "bias" (before or after). Note re naming - I is termed "index"
+ * rather than say "text index" because it's - to me - more central to this
+ * method of addressing the DOM
  *
  * <p>
  * FIXME - Feature_Dirndl_ContentDecorator - make immutable, and encapsulate
@@ -165,13 +170,19 @@ public class Location implements Comparable<Location> {
 	 */
 	public Location(int treeIndex, int index, boolean after,
 			DomNode containingNode, LocationContext locationContext) {
+		this(treeIndex, index, after, containingNode, locationContext, null);
+	}
+
+	Location(int treeIndex, int index, boolean after, DomNode containingNode,
+			LocationContext locationContext, Location searchFrom) {
 		this.treeIndex = treeIndex;
 		this.index = index;
 		this.locationContext = locationContext;
 		this.documentMutationPosition = locationContext
 				.getDocumentMutationPosition();
 		if (containingNode == null) {
-			containingNode = locationContext.getContainingNode(this);
+			containingNode = locationContext.getContainingNode(this,
+					searchFrom);
 		}
 		if (containingNode.isText()) {
 			after = false;
@@ -272,11 +283,7 @@ public class Location implements Comparable<Location> {
 		return locationContext;
 	}
 
-	public String getSubsequentText() {
-		return getSubsequentText(100);
-	}
-
-	public String getSubsequentText(int chars) {
+	public String getSubsequentDebugText(int chars) {
 		return locationContext.getSubsequentText(this, chars);
 	}
 
@@ -311,6 +318,7 @@ public class Location implements Comparable<Location> {
 		return treeIndex == 0 && isAtNodeStart();
 	}
 
+	// FIXME - location.mutation - cache textContent() computation
 	public boolean isAtNodeEnd() {
 		return getTextOffsetInNode() == containingNode.textContent().length();
 	}
@@ -379,6 +387,19 @@ public class Location implements Comparable<Location> {
 		return Ax.format("%s,%s%s", treeIndex, index, dir);
 	}
 
+	public String toLocationTagString() {
+		String dir = containingNode == null ? "[detached location]"
+				: containingNode.isText() ? "" : after ? ",>" : ",<";
+		String tag = "[null]";
+		if (containingNode != null) {
+			tag = containingNode.name();
+			if (Ax.notBlank(containingNode.getClassName())) {
+				tag += "." + containingNode.getClassName();
+			}
+		}
+		return Ax.format("%s,%s%s,%s", treeIndex, index, dir, tag);
+	}
+
 	public Location toStartTextLocationIfAtEnd() {
 		if (isAtNodeEnd() && isTextNode()) {
 			return new Location(treeIndex + 1, index, false, null,
@@ -404,13 +425,13 @@ public class Location implements Comparable<Location> {
 	public String toString() {
 		String nodeData = null;
 		if (containingNode.isText()) {
-			nodeData = Ax.format("'%s'", getSubsequentText(50));
+			nodeData = Ax.format("'%s'", getSubsequentDebugText(50));
 		} else {
 			String classData = Ax.notBlank(containingNode.getClassName())
 					? "." + containingNode.getClassName()
 					: "";
 			nodeData = Ax.format("<%s%s> :: '%s'", containingNode.name(),
-					classData, getSubsequentText(50));
+					classData, getSubsequentDebugText(50));
 		}
 		String dir = containingNode.isText() ? "" : after ? ",>" : ",<";
 		return Ax.format("%s,%s%s %s", treeIndex, index, dir, nodeData);
@@ -424,7 +445,7 @@ public class Location implements Comparable<Location> {
 			return this;
 		}
 		DomNode text = Ax
-				.last(locationContext.getContainingNodes(index, after));
+				.last(locationContext.getContainingNodes(this, index, after));
 		Preconditions.checkState(text.isText());
 		return new Location(text.asLocation().treeIndex, index, after, text,
 				locationContext);
@@ -459,7 +480,8 @@ public class Location implements Comparable<Location> {
 		}
 	}
 
-	public static class Range implements Comparable<Range> {
+	public static class Range
+			implements Comparable<Range>, PublicCloneable<Range> {
 		/**
 		 * Create a range from start-end, or end-start if end is before start
 		 */
@@ -479,6 +501,10 @@ public class Location implements Comparable<Location> {
 		private transient String textContent;
 
 		private transient String normalisedTextContent;
+
+		public Range clone() {
+			return new Range(start, end);
+		}
 
 		public Range(Location start, Location end) {
 			if (start.isAfter(end)) {
@@ -536,6 +562,24 @@ public class Location implements Comparable<Location> {
 
 		public boolean contains(Location l) {
 			return start.compareTo(l) <= 0 && end.compareTo(l) >= 0;
+		}
+
+		public boolean containsIndexUnlessLocationStartAndAtEnd(Location test) {
+			int testIndex = test.getIndex();
+			if (start.getIndex() <= testIndex) {
+				if (end.getIndex() < test.getIndex()) {
+					return false;
+				} else if (end.getIndex() == test.getIndex()) {
+					/*
+					 * true if test location is after
+					 */
+					return test.after;
+				} else {
+					return true;
+				}
+			} else {
+				return false;
+			}
 		}
 
 		/**
@@ -648,13 +692,13 @@ public class Location implements Comparable<Location> {
 
 		/*
 		 * Preserves start.index and end.index, but changes treeindicies to that
-		 * of the lowest/highest node with those indicies
+		 * of the lowest common node containing those indicies
 		 */
-		public Range toDeepestNodes() {
+		public Range toDeepestCommonNode() {
 			List<DomNode> startContainers = start.getLocationContext()
-					.getContainingNodes(start.getIndex(), start.after);
+					.getContainingNodes(start, start.getIndex(), start.after);
 			List<DomNode> endContainers = start.getLocationContext()
-					.getContainingNodes(end.getIndex(), end.after);
+					.getContainingNodes(end, end.getIndex(), end.after);
 			DomNode minimal = startContainers.stream()
 					.filter(endContainers::contains).reduce(Ax.last()).get();
 			Location minimalLocation = minimal.asLocation();
@@ -665,14 +709,76 @@ public class Location implements Comparable<Location> {
 							end.after));
 		}
 
+		/*
+		 * Preserves start.index and end.index, but changes treeindicies to that
+		 * of the lowest node containing each index
+		 */
+		public Range toDeepestStartEndNode() {
+			List<DomNode> startContainers = start.getLocationContext()
+					.getContainingNodes(start, start.getIndex(), start.after);
+			List<DomNode> endContainers = start.getLocationContext()
+					.getContainingNodes(end, end.getIndex(), end.after);
+			Location toStart = Ax.last(startContainers).asLocation();
+			Location toEnd = Ax.last(endContainers).asLocation();
+			return new Range(
+					toStart.createTextRelativeLocation(
+							start.getIndex() - toStart.getIndex(), start.after),
+					toEnd.createTextRelativeLocation(
+							end.getIndex() - toEnd.getIndex(), end.after));
+		}
+
+		/**
+		 * 
+		 * @return the range containing the shallowest nodes which being/end at
+		 *         the location (or are the text node containing the location)
+		 */
+		public Range toShallowestNodes() {
+			List<DomNode> startContainers = start.getLocationContext()
+					.getContainingNodes(start, start.getIndex(), start.after)
+					.stream()
+					.filter(n -> n.asDomNode().asLocation().getIndex() == start
+							.getIndex() || n.asDomNode().isText())
+					.toList();
+			List<DomNode> endContainers = start.getLocationContext()
+					.getContainingNodes(end, end.getIndex(), end.after).stream()
+					.filter(n -> n.asDomNode().asRange().end.getIndex() == end
+							.getIndex() || n.asDomNode().isText())
+					.toList();
+			Location start = this.start
+					.toContainingTreeIndex(startContainers.get(0).asLocation());
+			Location end = this.end
+					.toContainingTreeIndex(endContainers.get(0).asLocation());
+			return new Range(start, end);
+		}
+
 		public IntPair toIntPair() {
 			return new IntPair(start.getIndex(), end.getIndex());
 		}
 
 		@Override
 		public String toString() {
-			return FormatBuilder.keyValues("text", toIntPair(), "start", start,
-					"end", end, "text", Ax.trimForLogging(text()));
+			return FormatBuilder.keyValues("index.range", toIntPair(), "text",
+					Ax.trimForLogging(text()), "start", start, "end", end);
+		}
+
+		public String toLocationString() {
+			return Ax.format("[%s - %s]", start.toLocationTagString(),
+					end.toLocationTagString());
+		}
+
+		public String toAncestorLocationString() {
+			FormatBuilder format = new FormatBuilder();
+			format.line("self:");
+			format.line(toLocationString());
+			format.dashedLine();
+			format.line("start:");
+			start.getContainingNodes().stream().map(DomNode::asRange)
+					.map(Range::toLocationString).forEach(format::line);
+			format.dashedLine();
+			format.line("end:");
+			end.getContainingNodes().stream().map(DomNode::asRange)
+					.map(Range::toLocationString).forEach(format::line);
+			return format.toString();
 		}
 
 		public Range truncateAbsolute(int startIndex, int endIndex) {
@@ -740,6 +846,10 @@ public class Location implements Comparable<Location> {
 				return next;
 			}
 		}
+
+		public Measure toMeasure(Measure.Token token) {
+			return Measure.fromRange(this, token);
+		}
 	}
 
 	public enum RelativeDirection {
@@ -751,7 +861,7 @@ public class Location implements Comparable<Location> {
 	public enum TextTraversal {
 		NO_CHANGE, NEXT_CHARACTER, EXIT_NODE, TO_START_OF_NODE, TO_END_OF_NODE,
 		// will throw if traversing a text node
-		UNDEFINED
+		UNDEFINED, PREVIOUS_CHARACTER
 	}
 
 	/**
@@ -764,51 +874,58 @@ public class Location implements Comparable<Location> {
 	 * @return the computed index
 	 */
 	public Location toContainingTreeIndex(Location containingLocation) {
-		Preconditions.checkArgument(
-				containingLocation.containingNode.asRange().contains(this));
+		Preconditions.checkArgument(containingLocation.containingNode.asRange()
+				.toIntPair().contains(getIndex()));
 		return new Location(containingLocation.treeIndex, index, after,
 				containingLocation.containingNode, locationContext);
 	}
 
-	IndexTuple asIndexTuple() {
-		return new IndexTuple(index, treeIndex);
+	public List<DomNode> getContainingNodes() {
+		boolean after = this.after || (getContainingNode().isText()
+				&& getTextOffsetInNode() == getContainingNode()
+						.textLengthSelf());
+		return getLocationContext().getContainingNodes(this, getIndex(), after);
 	}
 
+	IndexTuple asIndexTuple() {
+		return new IndexTuple(treeIndex, index);
+	}
+
+	/*
+	 * Used both as a point and as a delta (vector) - so not named either
+	 * 
+	 * Note that these are immutable
+	 */
 	static class IndexTuple {
-		int index;
+		final int treeIndex;
 
-		int treeIndex;
+		final int index;
 
-		IndexTuple() {
-		}
-
-		IndexTuple(int index, int treeIndex) {
-			this.index = index;
+		IndexTuple(int treeIndex, int index) {
 			this.treeIndex = treeIndex;
+			this.index = index;
 		}
 
-		public IndexTuple add(Object textLengthSelf) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'add'");
+		IndexTuple add(IndexTuple tuple) {
+			return add(tuple.treeIndex, tuple.index);
 		}
 
-		public IndexTuple subtract(IndexTuple lastComputed) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'subtract'");
+		IndexTuple subtract(IndexTuple tuple) {
+			return add(-tuple.treeIndex, -tuple.index);
 		}
 
-		public IndexTuple add(Object textLengthSelf, int i) {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'add'");
+		IndexTuple add(int treeIndexDelta, int indexDelta) {
+			return new IndexTuple(treeIndex + treeIndexDelta,
+					index + indexDelta);
 		}
 
-		public boolean isEmpty() {
-			// TODO Auto-generated method stub
-			throw new UnsupportedOperationException(
-					"Unimplemented method 'isEmpty'");
+		boolean isZero() {
+			return index == 0 && treeIndex == 0;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("[%s,%s]", treeIndex, index);
 		}
 	}
 
@@ -820,5 +937,19 @@ public class Location implements Comparable<Location> {
 		treeIndex += deltaAccumulator.treeIndex;
 		documentMutationPosition = locationContext
 				.getDocumentMutationPosition();
+	}
+
+	public boolean provideIsAtNodeDirectionalEnd(boolean forwards) {
+		return forwards ? isAtNodeEnd() : isAtNodeStart();
+	}
+
+	/**
+	 * 
+	 * @return the index offsets if the domNode is text, otherwise throws
+	 */
+	public IntPair toTextIndexPair() {
+		Preconditions.checkState(isTextNode());
+		return new IntPair(getIndex(),
+				getIndex() + getContainingNode().textLengthSelf());
 	}
 }

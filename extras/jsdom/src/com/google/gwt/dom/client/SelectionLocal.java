@@ -143,4 +143,9 @@ public class SelectionLocal implements ClientDomSelection {
 		}
 		return offset;
 	}
+
+	@Override
+	public String toString() {
+		return getSelectionRecord().toNodeString();
+	}
 }

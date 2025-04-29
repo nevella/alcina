@@ -21,6 +21,7 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeJso;
 import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -41,6 +42,13 @@ import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 @Bean(PropertySource.FIELDS)
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 public final class MutationNode {
+	/**
+	 * Any mutations being applied will be shallow (i.e. if a node is attached,
+	 * it will have no children)
+	 */
+	public static LooseContext.Key CONTEXT_APPLYING_NON_MARKUP_MUTATIONS = LooseContext
+			.key(MutationNode.class, "CONTEXT_APPLYING_NON_MARKUP_MUTATIONS");
+
 	public static MutationNode forNode(org.w3c.dom.Node node) {
 		if (node == null) {
 			return null;
@@ -48,6 +56,9 @@ public final class MutationNode {
 		MutationNode result = new MutationNode();
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
+		if (node instanceof Node) {
+			result.node = (Node) node;
+		}
 		result.w3cNode = node;
 		return result;
 	}
@@ -110,13 +121,11 @@ public final class MutationNode {
 
 	public int ordinal;
 
-	public int id = -1;
-
 	public transient Node node;
 
 	transient NodeJso remoteNode;
 
-	transient MutationsAccess access;
+	transient MutationsAccess mutationsAccess;
 
 	transient List<MutationRecord> records = new ArrayList<>();
 
@@ -141,7 +150,7 @@ public final class MutationNode {
 			this.remoteNode = (NodeJso) clientDomNode;
 		}
 		this.sync = sync;
-		this.access = access;
+		this.mutationsAccess = access;
 		this.nodeType = clientDomNode.getNodeType();
 		this.nodeName = clientDomNode.getNodeName().toLowerCase();
 		this.nodeValue = clientDomNode.getNodeValue();
@@ -187,9 +196,6 @@ public final class MutationNode {
 				}
 			}
 		}
-		if (sync != null) {
-			this.id = sync.mutationNodes.size();
-		}
 	}
 
 	void ensureChildNodes() {
@@ -197,7 +203,7 @@ public final class MutationNode {
 			childNodes = new ArrayList<>();
 			Preconditions.checkState(remoteNode != null);
 			// avoid wrap-in-LD-node if remote
-			List<NodeJso> list = access.streamChildren(remoteNode)
+			List<NodeJso> list = mutationsAccess.streamChildren(remoteNode)
 					.collect(Collectors.toList());
 			int length = list.size();
 			MutationNode lastChild = null;
@@ -398,15 +404,18 @@ public final class MutationNode {
 
 	@Override
 	public String toString() {
+		ensureAttachId();
 		FormatBuilder format = new FormatBuilder().separator(" ");
 		format.appendPadRight(12, nodeName);
-		if (sync == null || id == -1) {
-			format.appendIfNotBlankKv("path", attachId);
-		} else {
-			format.appendIfNotBlankKv("id", id);
-		}
+		format.appendIfNotBlankKv("path", attachId);
 		format.appendIfNotBlankKv("value", nodeValue);
 		return format.toString();
+	}
+
+	void ensureAttachId() {
+		if (attachId == null && mutationsAccess != null) {
+			populateAttachId(this, mutationsAccess);
+		}
 	}
 
 	public org.w3c.dom.Node w3cNode() {

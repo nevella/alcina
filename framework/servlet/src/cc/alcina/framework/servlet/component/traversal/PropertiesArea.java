@@ -88,7 +88,7 @@ class PropertiesArea extends Model.Fields {
 			View view = Registry.impl(Selection.View.class,
 					selection.getClass());
 			treePath = view.getTreePath(selection);
-			layer = Ui.traversal().getLayer(selection).getName();
+			layer = Ui.traversal().layers().get(selection).getName();
 			pathSegment = view.getPathSegment(selection);
 			type = NestedName.get(selection);
 			discriminator = view.getDiscriminator(selection);

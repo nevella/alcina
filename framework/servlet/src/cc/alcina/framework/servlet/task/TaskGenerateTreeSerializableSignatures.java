@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.task;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.EncryptionUtils;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphTraversal;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -127,13 +129,31 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 				&& !typeSerialization.flatSerializable()) {
 			return false;
 		}
-		if (clazz.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
-			if (clazz.getAnnotation(ReflectiveSerializer.Checks.class)
-					.ignore()) {
-				return false;
-			}
+		if (omitDueToChecksAnnotation(clazz)) {
+			return false;
 		}
 		return true;
+	}
+
+	boolean omitDueToChecksAnnotation(Class<?> clazz) {
+		if (clazz.getName().startsWith("java")) {
+			return false;
+		}
+		AnnotatedElement element = clazz;
+		while (element != null) {
+			if (element
+					.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
+				return element.getAnnotation(ReflectiveSerializer.Checks.class)
+						.ignore();
+			}
+			if (element instanceof Class) {
+				element = ((Class) element).getPackage();
+			} else {
+				Package pkg = (Package) element;
+				element = SEUtilities.getNearestAncestorPackage(pkg, clazz);
+			}
+		}
+		return false;
 	}
 
 	private void generateSignature(TreeSerializable serializable) {

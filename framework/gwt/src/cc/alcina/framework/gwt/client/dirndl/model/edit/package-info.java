@@ -24,5 +24,14 @@
  * dropdown and routing events
  *
  * </ul>
+ * 
+ * *
+ * <h3>Behaviors</h3>
+ * <p>
+ * Because the interaction of moving parts to support editor/decorator behavior
+ * is so complex, the documentation and reasoning of the various behaviors is
+ * modelled as inner classes of {@link DecoratorBehavior} - at times, other
+ * classes/methods will reference a logical behavior where the actual
+ * implementation is a method (or part of a method) in another class
  */
 package cc.alcina.framework.gwt.client.dirndl.model.edit;

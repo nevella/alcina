@@ -37,11 +37,11 @@ class RangeSelectionSequence {
 		Selection fromCursor = query.selection;
 		// query.selection will be the whole (input/output) doc if not defined
 		if (fromCursor == null) {
-			WithRange inputSelection = traversal
-					.getSelections(Selection.WithRange.class, true).stream()
-					.findFirst().orElse(null);
-			WithRange outputSelection = traversal
-					.getSelections(Selection.WithRange.class, true).stream()
+			WithRange inputSelection = traversal.selections()
+					.get(Selection.WithRange.class, true).stream().findFirst()
+					.orElse(null);
+			WithRange outputSelection = traversal.selections()
+					.get(Selection.WithRange.class, true).stream()
 					.filter(this::isOutput).findFirst().orElse(null);
 			fromCursor = query.input ? inputSelection : outputSelection;
 			fullDocument = true;
@@ -72,8 +72,8 @@ class RangeSelectionSequence {
 			output = filtered.findFirst()
 					.map(n -> (Selection.WithRange) n.getValue()).orElse(null);
 			if (output == null) {
-				output = traversal
-						.getSelections(Selection.WithRange.class, true).stream()
+				output = traversal.selections()
+						.get(Selection.WithRange.class, true).stream()
 						.filter(this::isOutput).findFirst().orElse(null);
 				fullDocument = true;
 			}
@@ -84,7 +84,7 @@ class RangeSelectionSequence {
 	}
 
 	boolean isOutput(Selection cursor) {
-		Layer layer = traversal.getLayer(cursor);
+		Layer layer = traversal.layers().get(cursor);
 		return layer.layerContext(Layer.Output.class) != null;
 	}
 

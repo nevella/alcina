@@ -298,7 +298,11 @@ public class ReflectiveSerializer {
 		if (!options.topLevelTypeInfo) {
 			out = root.getChild(1);
 		}
-		return out.toJson(options.pretty);
+		String json = out.toJson(options.pretty);
+		if (json.length() > 500000) {
+			int debug = 3;
+		}
+		return json;
 	}
 
 	State state;

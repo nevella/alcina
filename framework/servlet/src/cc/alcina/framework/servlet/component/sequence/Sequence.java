@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -42,7 +43,7 @@ import cc.alcina.framework.servlet.component.sequence.Sequence.Loader.LoaderType
  * application for that (yet)
  * <p>
  * Currently the sequence specifies the sequence elements, and three transforms:
- * element to row, element to detail (properties) and elemenets to detail
+ * element to row, element to detail (properties) and element to detail
  * (additional). It also allows the specification of additional css/sass to
  * support the transform models
  */

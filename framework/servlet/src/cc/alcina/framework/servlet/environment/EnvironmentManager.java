@@ -21,7 +21,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.process.ProcessObserver;
-import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -37,6 +36,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.EventFrame;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorEvent;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
@@ -65,6 +65,15 @@ import cc.alcina.framework.servlet.dom.Feature_EnvironmentManager;
 @Registration.Singleton
 @Feature.Ref(Feature_EnvironmentManager.class)
 public class EnvironmentManager {
+	static Configuration.Key flightRecordingEnabled = Configuration
+			.key("flightRecordingEnabled");
+
+	/*
+	 * only used if flightRecordingEnabled
+	 */
+	static Configuration.Key decoratorEventRecordingEnabled = Configuration
+			.key("decoratorEventRecordingEnabled");
+
 	public static EnvironmentManager get() {
 		return Registry.impl(EnvironmentManager.class);
 	}
@@ -123,23 +132,31 @@ public class EnvironmentManager {
 		EventFrame.contextProvider = ContextProvider.createProvider(
 				ctx -> new EventFrame(), null, null, EventFrame.class, true);
 		AttributeBehaviorHandler.BehaviorRegistry.get().init(false);
-		flightRecordingEnabled = Configuration.is("flightRecordingEnabled");
-		if (flightRecordingEnabled) {
+		if (flightRecordingEnabled.is()) {
 			startFlightRecording();
 		}
 		new EnvironmentReaper().start();
 	}
 
-	boolean flightRecordingEnabled;
-
 	void startFlightRecording() {
-		ProcessObservers.observe(new RemoteComponentEventObserver(), true);
+		new RemoteComponentEventObserver().bind();
+		if (decoratorEventRecordingEnabled.is()) {
+			new DecoratorEventObserver().bind();
+		}
 	}
 
 	class RemoteComponentEventObserver
 			implements ProcessObserver<RemoteComponentEvent> {
 		@Override
 		public void topicPublished(RemoteComponentEvent message) {
+			new FlightEvent(message).publish();
+		}
+	}
+
+	class DecoratorEventObserver implements ProcessObserver<DecoratorEvent> {
+		@Override
+		public void topicPublished(DecoratorEvent message) {
+			message.sessionId = Environment.get().access().getSession().id;
 			new FlightEvent(message).publish();
 		}
 	}

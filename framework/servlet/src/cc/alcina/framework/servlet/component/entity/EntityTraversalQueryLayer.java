@@ -62,7 +62,7 @@ class EntityTraversalQueryLayer extends Layer
 		Entity selected = segmentPath != null
 				? Domain.find(entityClass, Long.parseLong(segmentPath))
 				: null;
-		Layer layer = getTraversal().getLayer(selection);
+		Layer layer = getTraversal().layers().get(selection);
 		Filter filter = Ui.traversingPlace().attributesOrEmpty(layer.index + 1)
 				.get(Filter.class);
 		DomainFilter domainFilter = filter == null ? null
@@ -95,7 +95,7 @@ class EntityTraversalQueryLayer extends Layer
 	}
 
 	void addStream(Selection selection, Stream stream, String cacheMarker) {
-		Layer layer = getTraversal().getLayer(selection);
+		Layer layer = getTraversal().layers().get(selection);
 		Filter filter = Ui.traversingPlace().attributesOrEmpty(layer.index + 1)
 				.get(Filter.class);
 		if (filter != null) {
