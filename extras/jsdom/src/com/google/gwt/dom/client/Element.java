@@ -1295,6 +1295,10 @@ public class Element extends Node implements ClientDomElement,
 			return Element.this.provideSelfOrAncestorLinkedToRemote();
 		}
 
+		public String getLocalAttrPlusLocalStyleCss() {
+			return local.getLocalAttrPlusLocalStyleCss();
+		}
+
 		public ClientDomElement remote() {
 			return Element.this.remote();
 		}

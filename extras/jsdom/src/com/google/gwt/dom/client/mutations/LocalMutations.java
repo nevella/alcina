@@ -147,18 +147,17 @@ public class LocalMutations {
 		if (add && !target.isAttached()) {
 			return;
 		}
-		MutationRecord record = new MutationRecord();
-		record.mutationsAccess = mutationsAccess;
-		record.type = Type.childList;
-		record.target = MutationNode.forNode(target);
-		record.previousSibling = MutationNode.forNode(previousSibling);
-		record.nextSibling = MutationNode.forNode(nextSibling);
 		if (add) {
-			record.addedNodes.add(MutationNode.forNode(child));
 			nodeAsMutations(child,
 					!MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS.is())
 							.forEach(this::addMutation);
 		} else {
+			MutationRecord record = new MutationRecord();
+			record.mutationsAccess = mutationsAccess;
+			record.type = Type.childList;
+			record.target = MutationNode.forNode(target);
+			record.previousSibling = MutationNode.forNode(previousSibling);
+			record.nextSibling = MutationNode.forNode(nextSibling);
 			record.removedNodes.add(MutationNode.forNode(child));
 			addMutation(record);
 		}

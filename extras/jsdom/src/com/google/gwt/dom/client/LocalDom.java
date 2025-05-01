@@ -813,7 +813,7 @@ public class LocalDom implements ContextFrame {
 				// FIXME - localdom - handle empty text nodes here - possibly by
 				// reverting to non-markup if we encounter any
 				remoteMutations.emitInnerMarkupMutation(element);
-				linkSubtreeToAttachIdRemotes(element);
+				remoteMutations.emitAttributeAndStyleMutations(element);
 			}
 		}
 		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);

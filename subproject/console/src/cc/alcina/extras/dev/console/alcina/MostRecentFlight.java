@@ -19,12 +19,20 @@ public class MostRecentFlight extends Sequence.AbstractLoader {
 	}
 
 	static String mostRecentFlightFolder() {
-		String path = Arrays.stream(new File("/tmp/flight-event").listFiles())
+		File eventFolder = new File("/tmp/flight-event");
+		if (!eventFolder.exists()) {
+			return null;
+		}
+		File file = Arrays.stream(eventFolder.listFiles())
 				.filter(f -> f.isDirectory()
 						&& !TimeConstants.within(f.lastModified(),
 								5 * TimeConstants.ONE_SECOND_MS))
 				.sorted(Comparator.comparing(File::lastModified).reversed())
-				.findFirst().get().getPath();
+				.findFirst().orElse(null);
+		if (file == null) {
+			return null;
+		}
+		String path = file.getPath();
 		Ax.out("Loaded most recent path [modified: %s] - %s",
 				Ax.timestampYmd(new Date(new File(path).lastModified())), path);
 		return path;

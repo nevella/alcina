@@ -41,8 +41,9 @@ public class DecoratorEvent implements ProcessObservable, FlightEventWrappable {
 	}
 
 	public enum Type {
-		node_bound, node_unbound, spacers_refreshed, editable_delta,
-		selection_changed, editor_transforms
+		node_bound, node_unbound, spacers_refreshed, editable_attr_changed,
+		selection_changed, editor_transforms_applied, overlay_opened,
+		overlay_closed
 	}
 
 	public String getSessionId() {

@@ -43,7 +43,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
  */
 @Bean(PropertySource.FIELDS)
 @TypedProperties
-@Feature.Ref(Feature_Dirndl_ChoiceSuggestions.class)
+@Feature.Ref(Feature_Dirndl_ChoiceEditor_Impl.class)
 @Directed(tag = "choice-editor")
 public abstract class ChoiceEditor<T> extends Choices<T>
 		implements HasDecorators {

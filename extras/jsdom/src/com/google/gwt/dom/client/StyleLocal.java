@@ -858,4 +858,15 @@ public class StyleLocal implements ClientDomStyle {
 	public String toString() {
 		return properties.toString();
 	}
+
+	public String toCssString() {
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder(false, false);
+		properties.entrySet().forEach(e -> {
+			builder.appendEscaped(LocalDom.declarativeCssName(e.getKey()));
+			builder.appendHtmlConstantNoCheck(":");
+			builder.appendEscaped(e.getValue());
+			builder.appendHtmlConstantNoCheck("; ");
+		});
+		return builder.toString();
+	}
 }

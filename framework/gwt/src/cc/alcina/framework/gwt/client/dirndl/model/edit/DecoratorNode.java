@@ -46,7 +46,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 	}
 
 	void notifyContentEditableDelta(boolean contentEditable) {
-		new DecoratorEvent().withType(DecoratorEvent.Type.editable_delta)
+		new DecoratorEvent().withType(DecoratorEvent.Type.editable_attr_changed)
 				.withSubtype(NestedName.get(this))
 				.withMessage(
 						Ax.format("[-->%s] :: %s", contentEditable, content))

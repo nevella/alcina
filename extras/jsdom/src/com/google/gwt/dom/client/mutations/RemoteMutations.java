@@ -280,4 +280,11 @@ public class RemoteMutations {
 				.generateMarkupMutationRecord(elem);
 		Document.get().implAccess().attachIdRemote().emitMutation(mutation);
 	}
+
+	public void emitAttributeAndStyleMutations(Element elem) {
+		List<MutationRecord> mutations = MutationRecord
+				.generateAttributeAndStyleMutationRecords(elem);
+		mutations.forEach(
+				Document.get().implAccess().attachIdRemote()::emitMutation);
+	}
 }

@@ -490,4 +490,34 @@ public final class MutationRecord {
 		removedNodes.forEach(
 				n -> MutationNode.populateAttachId(n, mutationsAccess));
 	}
+
+	public static List<MutationRecord>
+			generateAttributeAndStyleMutationRecords(Element elem) {
+		List<MutationRecord> result = new ArrayList<>();
+		elem.getAttributeMap().entrySet().forEach(e -> {
+			if (e.getKey().equals("style")) {
+				/*
+				 * handled below
+				 */
+				return;
+			}
+			String value = e.getValue();
+			MutationRecord record = new MutationRecord();
+			record.type = Type.attributes;
+			record.newValue = e.getValue();
+			record.attributeName = e.getKey();
+			record.target = MutationNode.attachId(elem);
+			result.add(record);
+		});
+		String style = elem.implAccess().getLocalAttrPlusLocalStyleCss();
+		if (Ax.notBlank(style)) {
+			MutationRecord record = new MutationRecord();
+			record.type = Type.attributes;
+			record.newValue = style;
+			record.attributeName = "style";
+			record.target = MutationNode.attachId(elem);
+			result.add(record);
+		}
+		return result;
+	}
 }
