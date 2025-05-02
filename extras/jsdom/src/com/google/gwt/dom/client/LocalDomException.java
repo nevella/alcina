@@ -12,4 +12,8 @@ public class LocalDomException extends RuntimeException {
 	public LocalDomException(Throwable cause, String message) {
 		super(message, cause);
 	}
+
+	public LocalDomException(String message) {
+		super(message);
+	}
 }

@@ -15,14 +15,12 @@
  */
 package com.google.gwt.dom.client;
 
-import java.util.List;
 import java.util.Objects;
 
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
-import cc.alcina.framework.common.client.util.Al;
 
 /**
  * Models the browser selection object
@@ -175,5 +173,10 @@ public class Selection implements ClientDomSelection {
 	@Override
 	public String toString() {
 		return local.toString();
+	}
+
+	public void select(Node node) {
+		collapse(node);
+		extend(node, node.getChildCount());
 	}
 }

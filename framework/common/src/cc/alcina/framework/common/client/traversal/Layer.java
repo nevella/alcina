@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -309,7 +310,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 		public boolean complete;
 
-		Set<S> submitted = new LinkedHashSet<>();
+		Set<S> submitted = AlcinaCollections.newHashSet();
 
 		Set<String> emittedWarnings = new LinkedHashSet<>();
 

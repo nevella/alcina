@@ -33,6 +33,8 @@ public class CollectionCreators {
 
 		private static HashMapCreator hashMapCreator = new HashMapCreator();
 
+		private static HashSetCreator hashSetCreator = new HashSetCreator();
+
 		private static LinkedMapCreator linkedMapCreator = new LinkedMapCreator();
 
 		private static ConcurrentMapCreator concurrentStringMapCreator = new ConcurrentMapCreator();
@@ -47,6 +49,10 @@ public class CollectionCreators {
 
 		public static HashMapCreator getHashMapCreator() {
 			return hashMapCreator;
+		}
+
+		public static HashSetCreator getHashSetCreator() {
+			return hashSetCreator;
 		}
 
 		public static LinkedMapCreator getLinkedMapCreator() {
@@ -65,6 +71,10 @@ public class CollectionCreators {
 
 		public static void setHashMapCreator(HashMapCreator hashMapCreator) {
 			Bootstrap.hashMapCreator = hashMapCreator;
+		}
+
+		public static void setHashSetCreator(HashSetCreator hashSetCreator) {
+			Bootstrap.hashSetCreator = hashSetCreator;
 		}
 
 		public static void

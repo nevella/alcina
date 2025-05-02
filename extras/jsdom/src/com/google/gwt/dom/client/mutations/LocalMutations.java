@@ -61,17 +61,34 @@ public class LocalMutations {
 		return mutations.size() > 0;
 	}
 
+	boolean firing = false;
+
 	public void fireMutations() {
-		finallyCommand = null;
-		while (true) {
-			if (!hasMutations()) {
-				return;
-			}
-			fireUnbatched();
-			List<MutationRecord> mutations = this.mutations;
-			this.mutations = new ArrayList<>();
-			topicMutations.publish(mutations);
+		if (firing) {
+			return;
 		}
+		try {
+			firing = true;
+			finallyCommand = null;
+			while (true) {
+				if (!hasMutations()) {
+					break;
+				}
+				fireUnbatched();
+				List<MutationRecord> mutations = this.mutations;
+				this.mutations = new ArrayList<>();
+				this.unbatchedIndex = 0;
+				topicMutations.publish(mutations);
+			}
+			validateLocations();
+		} finally {
+			firing = false;
+		}
+	}
+
+	void validateLocations() {
+		mutationsAccess.getDocument().domDocument.locations()
+				.validateLocations();
 	}
 
 	/*
@@ -108,8 +125,8 @@ public class LocalMutations {
 		if (mutations.isEmpty()) {
 			return;
 		}
-		unbatchedIndex = mutations.size();
-		topicMutations.publish(mutations);
+		unbatchedIndex = this.mutations.size();
+		topicUnbatchedMutations.publish(mutations);
 	}
 
 	public void notifyAttributeModification(Node target, String name,
@@ -130,7 +147,8 @@ public class LocalMutations {
 		mutations.add(record);
 	}
 
-	public void notifyCharacterData(Node target, String data) {
+	public void notifyCharacterData(Node target, String previousValue,
+			String newValue) {
 		if (!target.isAttached()) {
 			return;
 		}
@@ -138,13 +156,27 @@ public class LocalMutations {
 		record.mutationsAccess = mutationsAccess;
 		record.type = Type.characterData;
 		record.target = MutationNode.forNode(target);
-		record.newValue = data;
+		record.oldValue = previousValue;
+		record.newValue = newValue;
 		addMutation(record);
 	}
 
 	public void notifyChildListMutation(Node target, Node child,
 			Node previousSibling, Node nextSibling, boolean add) {
 		if (add && !target.isAttached()) {
+			MutationRecord record = new MutationRecord();
+			record.mutationsAccess = mutationsAccess;
+			record.type = Type.childList;
+			record.target = MutationNode.forNode(target);
+			record.previousSibling = MutationNode.forNode(previousSibling);
+			record.nextSibling = MutationNode.forNode(nextSibling);
+			record.addedNodes.add(MutationNode.forNode(child));
+			/*
+			 * This is to trigger Dom.Location invalidations. Better would be a
+			 * more formal differentiation between 'always send' vs 'send if
+			 * attached'
+			 */
+			topicUnbatchedMutations.publish(List.of(record));
 			return;
 		}
 		if (add) {

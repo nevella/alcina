@@ -241,15 +241,19 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		}
 	}
 
-	void ensureSpacers() {
+	ZeroWidthCursorTarget ensureInterNonEditableTarget() {
 		if (contentEditable) {
-			return;
+			return null;
 		}
-		if (HasContentEditable.isUneditableSibling(nodes().previousSibling())) {
-			nodes().insertBeforeThis(new ZeroWidthCursorTarget());
-		}
-		if (HasContentEditable.isUneditableSibling(nodes().nextSibling())) {
-			nodes().insertAfterThis(new ZeroWidthCursorTarget());
+		FragmentNode treeSubsequentNode = nodes().treeSubsequentNode();
+		if (treeSubsequentNode instanceof ZeroWidthCursorTarget) {
+			return (ZeroWidthCursorTarget) treeSubsequentNode;
+		} else if (HasContentEditable.isUneditable(treeSubsequentNode)) {
+			ZeroWidthCursorTarget newCursorTarget = new ZeroWidthCursorTarget();
+			nodes().insertAfterThis(newCursorTarget);
+			return newCursorTarget;
+		} else {
+			return null;
 		}
 	}
 

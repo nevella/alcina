@@ -66,7 +66,7 @@ public class TextAttachId extends NodeAttachId implements ClientDomText {
 	public void setNodeValue(String nodeValue) {
 		MutationRecord record = new MutationRecord();
 		record.type = MutationRecord.Type.characterData;
-		record.target = MutationNode.attachId(node());
+		record.target = MutationNode.forNode(node());
 		record.newValue = nodeValue;
 		emitMutation(record);
 	}

@@ -14,6 +14,7 @@ import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.Degene
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashMapCreatorJvm;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashSetCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.LinkedHashMapCreatorJvm;
 import elemental.json.impl.JsonUtil;
 
@@ -29,6 +30,7 @@ public class JvmReflections {
 		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
 		CollectionCreators.Bootstrap
 				.setLinkedMapCreator(new LinkedHashMapCreatorJvm());
+		CollectionCreators.Bootstrap.setHashSetCreator(new HashSetCreatorJvm());
 		NestedName.instance = new NestedNameJvm();
 	}
 

@@ -490,18 +490,37 @@ public abstract class FragmentNode extends Model.Fields
 			fragmentModel().register(fragmentNode);
 		}
 
+		FragmentNode sameIsolateFragment(DirectedLayout.Node node) {
+			if (node == null) {
+				return null;
+			}
+			if (!(node.model instanceof FragmentNode)) {
+				return null;
+			}
+			FragmentNode fragmentNode = (FragmentNode) node.model;
+			if (fragmentNode.fragmentModel != fragmentModel) {
+				return null;
+			}
+			return fragmentNode;
+		}
+
 		public FragmentNode previousSibling() {
-			DirectedLayout.Node directedPreviousSibling = provideNode()
-					.previousSibling();
-			return directedPreviousSibling == null ? null
-					: (FragmentNode) directedPreviousSibling.model;
+			return sameIsolateFragment(
+					provideNode().relative().previousSibling());
+		}
+
+		public FragmentNode treePreviousNode() {
+			return sameIsolateFragment(
+					provideNode().relative().treePreviousNode());
+		}
+
+		public FragmentNode treeSubsequentNode() {
+			return sameIsolateFragment(
+					provideNode().relative().treeSubsequentNode());
 		}
 
 		public FragmentNode nextSibling() {
-			DirectedLayout.Node directedNextSibling = provideNode()
-					.nextSibling();
-			return directedNextSibling == null ? null
-					: (FragmentNode) directedNextSibling.model;
+			return sameIsolateFragment(provideNode().relative().nextSibling());
 		}
 
 		public void removeFromParent() {

@@ -90,6 +90,8 @@ DomDocument.from(
  * field references from the DOM Node to the DomNode wrapper, and direct
  * mutation notifications).
  *
+ * <p>
+ * SKY - children for #Text (non-element) nodes should be an immutable singleton
  */
 public class DomNode {
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class
@@ -138,7 +140,7 @@ public class DomNode {
 
 	private DomNodeReadonlyLookup lookup;
 
-	Locations locations;
+	Location location;
 
 	/*
 	 * Support class to handle location operations
@@ -200,12 +202,9 @@ public class DomNode {
 	}
 
 	public Location asLocation() {
-		if (locations != null) {
-			return locations.nodeLocation;
+		if (location == null) {
+			location = document.locations().asLocation(this);
 		}
-		Location location = document.locations().asLocation(this);
-		locations = new Locations();
-		locations.nodeLocation = location;
 		return location;
 	}
 
@@ -394,6 +393,10 @@ public class DomNode {
 			cursor = cursor.parent();
 		}
 		return false;
+	}
+
+	public boolean isDetached() {
+		return !isAttached();
 	}
 
 	public boolean isAttached() {
@@ -1039,7 +1042,7 @@ public class DomNode {
 					.collect(Collectors.joining()));
 		}
 
-		void invalidate() {
+		public void invalidate() {
 			nodes = null;
 		}
 	}
@@ -1510,20 +1513,11 @@ public class DomNode {
 		}
 
 		public DomNode treePreviousNode() {
-			DomNode cursor = DomNode.this;
-			DomNode previous = null;
-			while (cursor != null) {
-				if (cursor.relative().hasPreviousSibling()) {
-					previous = cursor.relative().previousSibling();
-					break;
-				} else {
-					cursor = cursor.parent();
-				}
-			}
-			if (previous == null) {
-				return null;
+			DomNode previousSibling = relative().previousSibling();
+			if (previousSibling != null) {
+				return previousSibling.relative().lastDescendant();
 			} else {
-				return previous.relative().lastDescendant();
+				return parent();
 			}
 		}
 
@@ -2136,7 +2130,7 @@ public class DomNode {
 	 * appear
 	 */
 	void recomputeLocation() {
-		Preconditions.checkState(locations == null);
+		Preconditions.checkState(location == null);
 		asLocation();
 	}
 

@@ -45,6 +45,7 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
+		checkCanInsert(newChild);
 		NodeLocal local = newChild.local();
 		NodeLocal entryLastChild = lastChild;
 		updateSiblingRefs(lastChild, local, null);
@@ -194,6 +195,7 @@ public abstract class NodeLocal implements ClientDomNode {
 
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
+		checkCanInsert(newChild);
 		if (refChild == null) {
 			return appendChild(newChild);
 		} else {
@@ -211,6 +213,25 @@ public abstract class NodeLocal implements ClientDomNode {
 			}
 			childCount++;
 			return newChild;
+		}
+	}
+
+	protected void checkCanInsert(Node newChild) {
+		switch (getNodeType()) {
+		case Node.DOCUMENT_NODE:
+		case Node.DOCUMENT_FRAGMENT_NODE:
+		case Node.ELEMENT_NODE:
+			break;
+		default:
+			throw new LocalDomException("Node type does not allow insert");
+		}
+		NodeLocal cursor = newChild.local();
+		while (cursor != null) {
+			if (cursor == this) {
+				throw new LocalDomException(
+						"Node insertion would create a reference cycle");
+			}
+			cursor = cursor.parentNode;
 		}
 	}
 
@@ -288,6 +309,9 @@ public abstract class NodeLocal implements ClientDomNode {
 	@Override
 	public Node removeChild(Node oldChild) {
 		NodeLocal oldLocal = (NodeLocal) oldChild.local();
+		if (oldLocal.parentNode != this) {
+			throw new LocalDomException("Removing node from incorrect parent");
+		}
 		if (oldLocal.previousSibling != null) {
 			oldLocal.previousSibling.nextSibling = oldLocal.nextSibling;
 		}

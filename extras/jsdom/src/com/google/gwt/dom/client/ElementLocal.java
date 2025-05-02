@@ -510,7 +510,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	public void setInnerHTML(String html) {
 		if (Ax.notBlank(html)) {
 			if (!html.contains("<")) {
-				appendChild(ownerDocument
+				Node node = node();
+				node.appendChild(node.getOwnerDocument()
 						.createTextNode(HtmlParser.decodeEntities(html)));
 			} else {
 				// children will have been cleared, so outerHtml will just be
@@ -791,7 +792,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		}
 		builder.appendHtmlConstantNoCheck(
 				((StyleLocal) element.getStyle().local()).toCssString());
-		return builder.toString();
+		return builder.toSafeHtml().asString();
 	}
 
 	@Override

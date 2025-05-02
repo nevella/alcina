@@ -130,8 +130,7 @@ public class Text extends Node implements ClientDomText, org.w3c.dom.Text {
 
 	@Override
 	public void setData(String data) {
-		local().setData(data);
-		sync(() -> remote().setData(data));
+		setNodeValue(data);
 	}
 
 	/**

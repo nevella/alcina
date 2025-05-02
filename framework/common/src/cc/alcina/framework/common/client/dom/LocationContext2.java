@@ -1,9 +1,9 @@
 package cc.alcina.framework.common.client.dom;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
@@ -15,7 +15,11 @@ import com.google.gwt.dom.client.mutations.MutationRecord;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
@@ -30,39 +34,67 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * </ul>
  */
 class LocationContext2 implements LocationContext {
-	/*
+	/**
+	 * <p>
 	 * Models a series of index mutations, computed from an input state
 	 * [existing indicies], a list of MutationRecords and an outputstate (the
 	 * DOM at computation time)
+	 * 
+	 * <p>
+	 * TODO - (and such fun):
+	 * <ul>
+	 * <li>Have a minimum affected IndexTuple (maximum doesn't really help) -
+	 * which can optimise application
+	 * <li>Require that mutations be strictly ascending - if so, any location
+	 * mutated as part of this IndexMutations will be valid (since any
+	 * subsequent IndexMutation in the list will provably not affect that
+	 * location).
+	 * <li>Actually - have maximum, and cumulative delta (for the IndexMutation)
+	 * will apply
+	 * <li>Allow merge of an IndexMutations with the immediately prior if:
+	 * <ul>
+	 * <li>No computation involving *application* of the previous IndexMutations
+	 * has occurred (i.e. no validation of a {@link Location} was attempated, or
+	 * the Location was before {@link #minimumAffected} )
+	 * <li>The [n+1]th mutations are after the nth mutations
+	 * <li>Contiguous {@link IndexMutation} elements can be themselves merged
+	 * </ul>
+	 * </ul>
 	 */
 	static class IndexMutations {
-		LocationContext2 context;
-
-		List<MutationRecord> domMutations;
-
-		IndexMutations(LocationContext2 context,
-				List<MutationRecord> domMutations) {
-			this.context = context;
-			this.domMutations = domMutations;
-		}
-
-		int mutationIndex;
-
-		List<IndexMutation> mutations = new ArrayList<>();
-
 		static class IndexMutation {
-			public IndexMutation(Location asLocation, IndexTuple nodeDelta) {
-				at = asLocation.asIndexTuple();
-				treeIndexDelta = nodeDelta.treeIndex;
-				indexDelta = nodeDelta.index;
-			}
-
 			IndexTuple at;
 
 			int treeIndexDelta;
 
 			int indexDelta;
+
+			Location location;
+
+			IndexMutation(Location location, IndexTuple nodeDelta) {
+				this.location = location;
+				at = location.asIndexTuple();
+				treeIndexDelta = nodeDelta.treeIndex;
+				indexDelta = nodeDelta.index;
+			}
+
+			@Override
+			public String toString() {
+				return FormatBuilder.keyValues("containingNode",
+						location.getContainingNode(), "at", at, "delta",
+						new IndexTuple(treeIndexDelta, indexDelta));
+			}
 		}
+
+		LocationContext2 context;
+
+		List<MutationRecord> domMutations;
+
+		IndexTuple minimumAffected;
+
+		int mutationIndex;
+
+		List<IndexMutation> mutations = new ArrayList<>();
 
 		/*
 		 * The damaged will be _mostly_ in order (e.g. tree child) - so it
@@ -70,9 +102,64 @@ class LocationContext2 implements LocationContext {
 		 */
 		Set<DomNode> damaged = new LinkedHashSet<>();
 
+		IndexMutations(LocationContext2 context,
+				List<MutationRecord> domMutations) {
+			this.context = context;
+			this.domMutations = domMutations;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.newlineJoin(domMutations);
+		}
+
+		class DamagedDistance implements Comparable<DamagedDistance> {
+			DomNode node;
+
+			int nearestLocationTreeIndex;
+
+			int distanceToNearestLocation;
+
+			DamagedDistance(DomNode node) {
+				this.node = node;
+				DomNode cursor = node;
+				while (true) {
+					if (cursor.location != null) {
+						nearestLocationTreeIndex = cursor.location
+								.asIndexTuple().treeIndex;
+						break;
+					} else {
+						cursor = cursor.relative().treePreviousNode();
+						distanceToNearestLocation++;
+					}
+				}
+			}
+
+			@Override
+			public int compareTo(DamagedDistance o) {
+				int cmp = nearestLocationTreeIndex - o.nearestLocationTreeIndex;
+				if (cmp != 0) {
+					return cmp;
+				}
+				return distanceToNearestLocation - o.distanceToNearestLocation;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("[node/distance] %s :: %s",
+						node.gwtNode().toNameAttachId(),
+						distanceToNearestLocation);
+			}
+		}
+
 		/**
-		 * This mehtod computes the mutation list *and* (necessarily)
+		 * <p>
+		 * This method computes the mutation list *and* (necessarily)
 		 * immediately updates the location coordinates of any damaged nodes
+		 * 
+		 * <p>
+		 * The input will be a singleton list in all cases except
+		 * sync-from-browser-dom
 		 */
 		/*
 		@formatter:off
@@ -99,11 +186,14 @@ class LocationContext2 implements LocationContext {
 		 *   require at most 4t integer operations (plus a list iteration) where t is the number of mutations since the 
 		 *   location was last computed
 		 * 
+		 * - Note that code here has to be careful to not recompute locations, until the main 'damagedDistance' loop
+		 * 
 		 
 		 * 
 		 * @formatter:on
 		 */
 		void computeElements() {
+			Multimap<DomNode, List<MutationRecord>> nodeCharacterDataMutation = new Multimap<>();
 			/*
 			 * compute damaged
 			 */
@@ -112,7 +202,9 @@ class LocationContext2 implements LocationContext {
 				case attributes:
 					break;
 				case characterData:
-					damaged.add(domMutation.target.node.asDomNode());
+					DomNode domNode = domMutation.target.node.asDomNode();
+					damaged.add(domNode);
+					nodeCharacterDataMutation.add(domNode, domMutation);
 					break;
 				case childList: {
 					domMutation.addedNodes.forEach(this::damageSubtree);
@@ -122,17 +214,27 @@ class LocationContext2 implements LocationContext {
 					if (domMutation.nextSibling != null) {
 						damaged.add(domMutation.nextSibling.node.asDomNode());
 					} else {
-						damaged.add(domMutation.target.node.asDomNode()
-								.relative().treeSubsequentNodeNoDescent());
+						DomNode asDomNode2 = domMutation.target.node
+								.asDomNode();
+						damaged.add(asDomNode2.relative()
+								.treeSubsequentNodeNoDescent());
 					}
 					break;
 				}
 				}
 			}
 			damaged.remove(null);
-			while (!damaged.isEmpty()) {
-				Iterator<DomNode> itr = damaged.iterator();
-				DomNode node = itr.next();
+			damaged.removeIf(DomNode::isDetached);
+			/*
+			 * Sort damaged - the coordinates for sort are [(nearest preceding
+			 * existing location including self),(distance to nearest) ] - first
+			 * beats second
+			 */
+			List<DamagedDistance> list = damaged.stream()
+					.map(DamagedDistance::new).sorted().toList();
+			for (DamagedDistance damagedDistance : list) {
+				DomNode node = damagedDistance.node;
+				DomNode treePrevious = node.relative().treePreviousNode();
 				/*
 				 * key :: location.delta[new] = location.actual -
 				 * location[last.computed]+deltas
@@ -142,14 +244,18 @@ class LocationContext2 implements LocationContext {
 				 */
 				/*
 				 * WIP - what to do about text length changes? Probably it's
-				 * apply treeIndex before Index
+				 * apply treeIndex before Index (I think this is already fixed -
+				 * but test)
 				 */
-				DomNode treePrevious = node.relative().treePreviousNode();
-				if (treePrevious != null && treePrevious.locations == null) {
-					/*
-					 * damaged is not in current DOM order, continue
-					 */
-					continue;
+				/*
+				 * Due to the sort order, if treePrevious exists, it will have a
+				 * non-null location. That location needs to be ensuredcurrent
+				 */
+				if (treePrevious != null) {
+					Preconditions.checkState(treePrevious.location != null);
+					Location previousLocation = treePrevious.asLocation();
+					previousLocation.getLocationContext()
+							.ensureCurrent(previousLocation);
 				}
 				/*
 				 * If there is no previous, this is the documentelement node -
@@ -159,16 +265,16 @@ class LocationContext2 implements LocationContext {
 						: treePrevious.asLocation().asIndexTuple().add(1,
 								treePrevious.textLengthSelf());
 				IndexTuple nodeDelta = null;
-				if (node.locations == null) {
+				if (node.location == null) {
 					/*
-					 * new node. it's always just a simple [0,1] delta - it's
-					 * the *next* node that possibly has a text index delta
+					 * new node. it's always just a simple [1,textLengthSelf]
+					 * delta -
 					 */
 					nodeDelta = new IndexTuple(1, node.textLengthSelf());
 					// ensure location
 					node.asLocation();
 				} else {
-					Location nodeLocation = node.locations.nodeLocation;
+					Location nodeLocation = node.location;
 					IndexTuple lastComputed = nodeLocation.asIndexTuple();
 					IndexTuple lastComputedAccumulator = context
 							.applyPriorMutations(nodeLocation, lastComputed);
@@ -184,13 +290,34 @@ class LocationContext2 implements LocationContext {
 					 */
 					node.asLocation().applyIndexDelta(cumulativeDelta);
 					node.asLocation().applyIndexDelta(nodeDelta);
+					/*
+					 * Tricky - add any characterdata mutation delta here, if a
+					 * text node. It will not be applied to this (text) node's
+					 * start, but will be to all subsequents
+					 */
+					if (node.isText()) {
+						List<MutationRecord> cdataMutations = nodeCharacterDataMutation
+								.get(node);
+						if (cdataMutations != null) {
+							/*
+							 * TODO - concurrent editing support (operational
+							 * transform) would possibly use a diff and create
+							 * potentially several deltas
+							 */
+							for (MutationRecord cdataMutation : cdataMutations) {
+								nodeDelta = nodeDelta.add(0,
+										cdataMutation.newValue.length()
+												- cdataMutation.oldValue
+														.length());
+							}
+						}
+					}
 				}
 				if (!nodeDelta.isZero()) {
 					IndexMutation mutation = new IndexMutation(
 							node.asLocation(), nodeDelta);
 					mutations.add(mutation);
 				}
-				itr.remove();
 			}
 		}
 
@@ -208,14 +335,14 @@ class LocationContext2 implements LocationContext {
 				 * text run mutation is different depending on treeindex
 				 */
 				boolean applyTextRunMutation = mutation.at.index < locationAccumulator.index;
-				if (mutation.at.treeIndex < locationAccumulator.treeIndex) {
+				if (mutation.at.treeIndex <= locationAccumulator.treeIndex) {
 					applyTextRunMutation = mutation.at.index <= locationAccumulator.index;
 				}
 				if (applyTextRunMutation) {
 					locationAccumulator = locationAccumulator.add(0,
 							mutation.indexDelta);
 				}
-				boolean applyTreeIndexMutation = mutation.at.treeIndex <= locationAccumulator.index;
+				boolean applyTreeIndexMutation = mutation.at.treeIndex <= locationAccumulator.treeIndex;
 				if (applyTreeIndexMutation) {
 					locationAccumulator = locationAccumulator
 							.add(mutation.treeIndexDelta, 0);
@@ -223,23 +350,6 @@ class LocationContext2 implements LocationContext {
 			}
 			return locationAccumulator;
 		}
-	}
-
-	DomDocument document;
-
-	Document gwtDocument;
-
-	List<IndexMutations> mutations;
-
-	DomNodeTree tree;
-
-	int documentTextRunLength;
-
-	LocationContext2(DomDocument document) {
-		Preconditions.checkState(document.w3cDoc() instanceof Document);
-		this.document = document;
-		this.gwtDocument = (Document) document.w3cDoc();
-		tree = this.document.getDocumentElementNode().tree();
 	}
 
 	/*
@@ -252,49 +362,48 @@ class LocationContext2 implements LocationContext {
 			implements TopicListener<List<MutationRecord>> {
 		@Override
 		public void topicPublished(List<MutationRecord> domMutations) {
-			domMutations.forEach(mutation -> {
-				mutation.target.node.asDomNode().children.invalidate();
-			});
 			IndexMutations indexMutations = new IndexMutations(
 					LocationContext2.this, domMutations);
 			indexMutations.mutationIndex = mutations.size();
-			mutations.add(indexMutations);
 			/*
 			 * add before computation - the computation logic requires it
 			 */
+			mutations.add(indexMutations);
 			indexMutations.computeElements();
 		}
+	}
+
+	class LocalMutationInvalidationListener
+			implements TopicListener<List<MutationRecord>> {
+		@Override
+		public void topicPublished(List<MutationRecord> domMutations) {
+			domMutations.forEach(mutation -> {
+				mutation.target.node.asDomNode().children.invalidate();
+			});
+		}
+	}
+
+	DomDocument document;
+
+	Document gwtDocument;
+
+	List<IndexMutations> mutations;
+
+	DomNodeTree tree;
+
+	Range documentRange;
+
+	LocationContext2(DomDocument document) {
+		Preconditions.checkState(document.w3cDoc() instanceof Document);
+		this.document = document;
+		this.gwtDocument = (Document) document.w3cDoc();
+		tree = this.document.getDocumentElementNode().tree();
 	}
 
 	@Override
 	public String getSubsequentText(Location location, int chars) {
 		return buildSubstring(location,
 				new IntPair(location.getIndex(), location.getIndex() + chars));
-	}
-
-	String buildSubstring(Location startLocation, IntPair boundaries) {
-		StringBuilder builder = new StringBuilder();
-		DomNode cursor = startLocation.getContainingNode();
-		while (cursor != null) {
-			if (cursor.isText()) {
-				int index = cursor.asLocation().getIndex();
-				IntPair cursorRange = cursor.asLocation().toTextIndexPair();
-				if (cursorRange.i2 <= boundaries.i1) {
-					// continue
-				} else {
-					IntPair includedRange = boundaries
-							.intersection(cursorRange);
-					if (includedRange == null) {
-						break;
-					}
-					String part = cursor.textContent().substring(
-							includedRange.i1 - index, includedRange.i2 - index);
-					builder.append(part);
-				}
-			}
-			cursor = cursor.relative().treeSubsequentNode();
-		}
-		return builder.toString();
 	}
 
 	@Override
@@ -307,10 +416,15 @@ class LocationContext2 implements LocationContext {
 		if (idx < 0) {
 			return 0;
 		}
+		int documentTextRunLength = getDocumentTextRunLength();
 		if (idx > documentTextRunLength) {
 			idx = documentTextRunLength;
 		}
 		return idx;
+	}
+
+	int getDocumentTextRunLength() {
+		return documentRange.end.getIndex();
 	}
 
 	@Override
@@ -421,14 +535,8 @@ class LocationContext2 implements LocationContext {
 		}
 	}
 
-	Range documentRange;
-
 	@Override
 	public Range getDocumentRange() {
-		if (documentRange == null) {
-			documentRange = gwtDocument.getDocumentElement().asDomNode()
-					.asRange();
-		}
 		return documentRange;
 	}
 
@@ -443,7 +551,98 @@ class LocationContext2 implements LocationContext {
 		/*
 		 * Apply all indexmutations occuring node-previous and time-previous
 		 */
+		IndexTuple tuple = location.asIndexTuple();
 		applyPriorMutations(location);
+	}
+
+	@Override
+	public int getContentLength(DomNode domNode) {
+		if (domNode.isText()) {
+			return domNode.textLengthSelf();
+		}
+		Location location = domNode.asLocation();
+		DomNode afterEnd = domNode.relative().treeSubsequentNodeNoDescent();
+		if (afterEnd != null) {
+			return afterEnd.asLocation().getIndex() - location.getIndex();
+		} else {
+			int documentEndIndex = 0;
+			if (documentRange == null) {
+				Preconditions.checkState(
+						domNode == domNode.document.getDocumentElementNode());
+				DomNode lastDescendant = domNode.relative().lastDescendant();
+				if (lastDescendant != null) {
+					documentEndIndex = lastDescendant.asLocation().getIndex()
+							+ lastDescendant.textLengthSelf();
+				}
+			} else {
+				documentEndIndex = documentRange.end.getIndex();
+			}
+			return documentEndIndex - location.getIndex();
+		}
+	}
+
+	@Override
+	public DomNode getDocumentElementNode() {
+		return gwtDocument.domDocument.getDocumentElementNode();
+	}
+
+	@Override
+	public void validateLocations() {
+		Ref<IndexTuple> ref = Ref.of(new IndexTuple(0, 0));
+		gwtDocument.domDocument.stream().forEach(n -> {
+			if (n.location == null) {
+				throw new IllegalStateException();
+			} else {
+				Location location = n.asLocation();
+				IndexTuple preEnsure = location.asIndexTuple();
+				int documentMutationPosition = location.documentMutationPosition;
+				ensureCurrent(location);
+				IndexTuple locationTuple = location.asIndexTuple();
+				IndexTuple cumulative = ref.get();
+				if (Objects.equals(locationTuple, cumulative)) {
+					ref.set(cumulative.add(1, n.textLengthSelf()));
+				} else {
+					throw new IllegalStateException();
+				}
+			}
+		});
+	}
+
+	void dumpLocations() {
+		gwtDocument.domDocument.stream().forEach(n -> {
+			if (n.location == null) {
+			} else {
+				Location location = n.asLocation();
+				IndexTuple preEnsure = location.asIndexTuple();
+				Ax.out("%s :: %s", preEnsure, location.getContainingNode()
+						.gwtNode().toNameAttachId());
+			}
+		});
+	}
+
+	String buildSubstring(Location startLocation, IntPair boundaries) {
+		StringBuilder builder = new StringBuilder();
+		DomNode cursor = startLocation.getContainingNode();
+		while (cursor != null) {
+			if (cursor.isText()) {
+				int index = cursor.asLocation().getIndex();
+				IntPair cursorRange = cursor.asLocation().toTextIndexPair();
+				if (cursorRange.i2 <= boundaries.i1) {
+					// continue
+				} else {
+					IntPair includedRange = boundaries
+							.intersection(cursorRange);
+					if (includedRange == null) {
+						break;
+					}
+					String part = cursor.textContent().substring(
+							includedRange.i1 - index, includedRange.i2 - index);
+					builder.append(part);
+				}
+			}
+			cursor = cursor.relative().treeSubsequentNode();
+		}
+		return builder.toString();
 	}
 
 	/*
@@ -471,35 +670,17 @@ class LocationContext2 implements LocationContext {
 
 	void resetLocationMutations() {
 		mutations = new ArrayList<>();
-		documentTextRunLength = 0;
-		document.descendants().forEach(n -> {
+		document.stream().forEach(n -> {
 			n.recomputeLocation();
-			documentTextRunLength += n.textLengthSelf();
 		});
+		documentRange = gwtDocument.getDocumentElement().asDomNode().asRange();
 	}
 
 	void init() {
 		resetLocationMutations();
 		gwtDocument.addLocalMutationListener(new LocalMutationTransformer(),
 				true);
-	}
-
-	@Override
-	public int getContentLength(DomNode domNode) {
-		if (domNode.isText()) {
-			return domNode.textLengthSelf();
-		}
-		Location location = domNode.asLocation();
-		DomNode afterEnd = domNode.relative().treeSubsequentNodeNoDescent();
-		if (afterEnd != null) {
-			return afterEnd.asLocation().getIndex() - location.getIndex();
-		} else {
-			return documentTextRunLength - location.getIndex();
-		}
-	}
-
-	@Override
-	public DomNode getDocumentElementNode() {
-		return gwtDocument.domDocument.getDocumentElementNode();
+		gwtDocument.addLocalMutationListener(
+				new LocalMutationInvalidationListener(), false);
 	}
 }

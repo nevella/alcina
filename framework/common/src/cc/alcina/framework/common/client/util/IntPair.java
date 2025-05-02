@@ -24,6 +24,19 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
+/**
+ * <p>
+ * Models a general pair of ints. A few notes:
+ * <ul>
+ * <li>It'd be great to have typed subclasses - 'ordered pair'...'range',
+ * 'point'
+ * <li>This should probably be a record (but that requires GWT update)
+ * <li>This should *definitely* be immutable, as should all the other tuples
+ * (StringPair et al)
+ * </ul>
+ * 
+ * FIXME - alcina
+ */
 @JsonAutoDetect(
 	getterVisibility = JsonAutoDetect.Visibility.NONE,
 	isGetterVisibility = JsonAutoDetect.Visibility.NONE,

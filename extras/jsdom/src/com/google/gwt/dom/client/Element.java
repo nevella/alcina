@@ -1101,6 +1101,9 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerText(String text) {
+		// TODO - set contents of sole text child, if it exists
+		// removeAllChildren();
+		// appendChild(getOwnerDocument().createTextNode(text));
 		setInnerHTML(SafeHtmlUtils.htmlEscape(text));
 	}
 

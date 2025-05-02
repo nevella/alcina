@@ -867,6 +867,6 @@ public class StyleLocal implements ClientDomStyle {
 			builder.appendEscaped(e.getValue());
 			builder.appendHtmlConstantNoCheck("; ");
 		});
-		return builder.toString();
+		return builder.toSafeHtml().asString();
 	}
 }

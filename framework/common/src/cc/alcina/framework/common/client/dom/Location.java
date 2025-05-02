@@ -284,7 +284,8 @@ public class Location implements Comparable<Location> {
 	}
 
 	public String getSubsequentDebugText(int chars) {
-		return locationContext.getSubsequentText(this, chars);
+		return locationContext.getSubsequentText(this, chars).replace("\u200B",
+				"&zerowidthspace;");
 	}
 
 	@Property.Not
@@ -500,6 +501,8 @@ public class Location implements Comparable<Location> {
 
 		private transient String textContent;
 
+		private transient int textContentPosition;
+
 		private transient String normalisedTextContent;
 
 		public Range clone() {
@@ -653,8 +656,13 @@ public class Location implements Comparable<Location> {
 			return new Range(mergedStart, mergedEnd);
 		}
 
+		boolean isInvalidTextPosition() {
+			return textContentPosition != start.getLocationContext()
+					.getDocumentMutationPosition();
+		}
+
 		public String ntc() {
-			if (normalisedTextContent == null
+			if ((isInvalidTextPosition() || normalisedTextContent == null)
 					&& start.getLocationContext() != null) {
 				normalisedTextContent = Ax.ntrim(text());
 			}
@@ -684,8 +692,12 @@ public class Location implements Comparable<Location> {
 		}
 
 		public String text() {
-			if (textContent == null && start.getLocationContext() != null) {
-				textContent = start.getLocationContext().textContent(this);
+			LocationContext locationContext = start.getLocationContext();
+			if ((isInvalidTextPosition() || textContent == null)
+					&& locationContext != null) {
+				textContent = locationContext.textContent(this);
+				textContentPosition = locationContext
+						.getDocumentMutationPosition();
 			}
 			return textContent;
 		}
@@ -887,6 +899,10 @@ public class Location implements Comparable<Location> {
 		return getLocationContext().getContainingNodes(this, getIndex(), after);
 	}
 
+	/*
+	 * This is for internal use, and deliberately does not ensure the indicies
+	 * are current
+	 */
 	IndexTuple asIndexTuple() {
 		return new IndexTuple(treeIndex, index);
 	}
@@ -895,6 +911,7 @@ public class Location implements Comparable<Location> {
 	 * Used both as a point and as a delta (vector) - so not named either
 	 * 
 	 * Note that these are immutable
+	 * 
 	 */
 	static class IndexTuple {
 		final int treeIndex;
@@ -924,6 +941,21 @@ public class Location implements Comparable<Location> {
 		}
 
 		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof IndexTuple) {
+				IndexTuple o = (IndexTuple) obj;
+				return treeIndex == o.treeIndex && index == o.index;
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return treeIndex ^ index;
+		}
+
+		@Override
 		public String toString() {
 			return Ax.format("[%s,%s]", treeIndex, index);
 		}
@@ -932,9 +964,9 @@ public class Location implements Comparable<Location> {
 	/*
 	 * The only mutation method
 	 */
-	void applyIndexDelta(IndexTuple deltaAccumulator) {
-		index += deltaAccumulator.index;
-		treeIndex += deltaAccumulator.treeIndex;
+	void applyIndexDelta(IndexTuple delta) {
+		index += delta.index;
+		treeIndex += delta.treeIndex;
 		documentMutationPosition = locationContext
 				.getDocumentMutationPosition();
 	}
