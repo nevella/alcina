@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.entity.util.Shell;
 
 /**
  * Helper class to make web requests of various kinds
@@ -68,6 +69,8 @@ public class SimpleHttp {
 
 	// Add a custom HostnameVerifier when making the request
 	private HostnameVerifier hostnameVerifier;
+
+	private boolean useCurlOnException;
 
 	public SimpleHttp(String strUrl) {
 		this.strUrl = strUrl;
@@ -183,6 +186,15 @@ public class SimpleHttp {
 					.getHeaderField("Content-Disposition");
 			// Return byte arrays
 			return respBytes;
+		} catch (Exception e) {
+			if (useCurlOnException) {
+				Ax.simpleExceptionOut(e);
+				String curlRq = toCurlRequest();
+				String exec = Shell.exec(curlRq);
+				return exec.getBytes(StandardCharsets.UTF_8);
+			} else {
+				throw WrappedRuntimeException.wrap(e);
+			}
 		} finally {
 			// Ensure streams and connection are closed
 			if (in != null) {
@@ -214,7 +226,7 @@ public class SimpleHttp {
 	}
 
 	private String escapeBash(String value) {
-		return value.replace("'", "'\\''");
+		return value.replace("'", "'\''");
 	}
 
 	// Get Content-Disposition header value from response
@@ -377,6 +389,16 @@ public class SimpleHttp {
 	 */
 	public SimpleHttp withTimeout(int timeout) {
 		this.timeout = timeout;
+		return this;
+	}
+
+	/**
+	 * To workaround things like java ssl exceptions
+	 * 
+	 * @param
+	 */
+	public SimpleHttp withUseCurlOnException(boolean useCurlOnException) {
+		this.useCurlOnException = useCurlOnException;
 		return this;
 	}
 }
