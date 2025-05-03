@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.PeekingIterator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.process.TreeProcess.HasProcessNode;
@@ -291,9 +293,36 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		return null;
 	};
 
+	default Iterator<Selection> ancestorIterator() {
+		return new AncestorIterator(this);
+	}
+
+	static class AncestorIterator<T> extends PeekingIterator<Selection> {
+		Iterator<Node> nodeItr;
+
+		AncestorIterator(Selection<T> selection) {
+			nodeItr = selection.processNode().asNodePath().iterator();
+		}
+
+		@Override
+		protected Selection peekNext() {
+			while (nodeItr.hasNext()) {
+				Node node = nodeItr.next();
+				Object value = node.getValue();
+				if (value instanceof Selection) {
+					next = (Selection) value;
+					return next;
+				}
+			}
+			finished = true;
+			return null;
+		}
+	}
+
 	default Stream<Selection> ancestorSelections() {
 		return processNode().asNodePath().stream()
-				.filter(n -> n.hasValueClass(Selection.class))
+				// .filter(n -> n.hasValueClass(Selection.class))
+				.filter(n -> n.getValue() instanceof Selection)
 				.<Selection> map(Node::typedValue);
 	}
 

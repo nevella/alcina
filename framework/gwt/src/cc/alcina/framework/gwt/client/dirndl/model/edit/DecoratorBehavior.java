@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 
 /**
@@ -36,13 +35,8 @@ public interface DecoratorBehavior {
 	}
 
 	/**
-	 * On fragmentnode mutation, ensure that a ZWS text node exists between
-	 * adjacent non-editables (DecoratorNodes)
-	 */
-	interface InsertZwsBetweenNonEditables extends DecoratorBehavior {
-	}
-
-	/**
+	 * <p>
+	 * This is a client behavior, since it needs to occur synchronously
 	 * <p>
 	 * Extends the affected range of keyboard navigation events (and
 	 * backspace/delete) if the traversed range is a zero-width-space.
@@ -160,27 +154,31 @@ public interface DecoratorBehavior {
 				boundary = boundary.relativeLocation(
 						RelativeDirection.PREVIOUS_LOCATION,
 						TextTraversal.TO_END_OF_NODE);
+				range = new Location.Range(boundary, range.end);
 				break;
 			case right:
 				boundary = boundary.relativeLocation(
 						RelativeDirection.NEXT_LOCATION,
 						TextTraversal.TO_START_OF_NODE);
+				range = new Location.Range(range.start, boundary);
 				break;
 			}
-			Ax.out(range.toAncestorLocationString());
-			selection.collapse(boundary.getContainingNode().gwtNode(),
-					boundary.getTextOffsetInNode());
 			/*
-			 * don't delete the zws, just the non-editable. confirm it's
-			 * non-editable
+			 * don't delete the zws (we could, and rely on ensure-zws behavior
+			 * to re-insert, but that's async in the case of romcom), just the
+			 * non-editable. confirm it's non-editable
 			 */
-			if (delete) {
-				/*
-				 * attrIsIgnoreCase is ok -just- for this
-				 */
-				if (containingNode.attrIsIgnoreCase("contenteditable",
-						"false")) {
+			/*
+			 * attrIsIgnoreCase is ok -just- for this
+			 */
+			if (containingNode.attrIsIgnoreCase("contenteditable", "false")) {
+				if (delete) {
 					containingNode.removeFromParent();
+				} else {
+					/*
+					 * expand the selection to the whole non-editable
+					 */
+					selection.select(boundary.getContainingNode().gwtNode());
 				}
 			}
 			nativeKeydownEvent.squelch();

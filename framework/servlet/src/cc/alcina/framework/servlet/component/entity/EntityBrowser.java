@@ -124,7 +124,6 @@ public class EntityBrowser {
 					TraversalSettings.class, settings, newInstance -> {
 						newInstance.secondaryAreaDisplayMode = SecondaryAreaDisplayMode.TABLE;
 					});
-			int debug = 3;
 		}
 
 		void traverse(TraversalPlace place) {

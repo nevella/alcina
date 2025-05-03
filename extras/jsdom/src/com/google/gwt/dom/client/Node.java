@@ -431,12 +431,14 @@ public abstract class Node
 	 */
 	@Override
 	public void removeFromParent() {
-		if (getParentNode() == null) {
+		Node parentNode = getParentNode();
+		if (parentNode == null) {
 			return;
 		}
 		sync(() -> remote().removeFromParent());
-		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				this, getPreviousSibling(), getNextSibling(), false));
+		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
+				parentNode, this, getPreviousSibling(), getNextSibling(),
+				false));
 		local().removeFromParent();
 		resetRemote();
 	}
@@ -476,9 +478,10 @@ public abstract class Node
 
 	@Override
 	public void setNodeValue(String nodeValue) {
+		String previousValue = local().getNodeValue();
 		local().setNodeValue(nodeValue);
 		notify(() -> LocalDom.getLocalMutations().notifyCharacterData(this,
-				nodeValue));
+				previousValue, nodeValue));
 		sync(() -> remote().setNodeValue(nodeValue));
 	}
 
@@ -513,6 +516,9 @@ public abstract class Node
 
 	protected void onAttach() {
 		getOwnerDocument().localDom.onAttach(this);
+		if (domNode != null) {
+			domNode.children.invalidate();
+		}
 		SiblingIterator itr = local().childIterator();
 		while (itr.hasNext()) {
 			NodeLocal childLocal = itr.next();

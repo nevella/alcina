@@ -1,5 +1,7 @@
 package com.google.gwt.dom.client;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.util.Ax;
 
 public class TextLocal extends NodeLocal implements ClientDomText {
@@ -9,6 +11,7 @@ public class TextLocal extends NodeLocal implements ClientDomText {
 
 	TextLocal(DocumentLocal documentLocal, String text) {
 		this.ownerDocument = documentLocal;
+		Preconditions.checkNotNull(text);
 		setData(text);
 	}
 

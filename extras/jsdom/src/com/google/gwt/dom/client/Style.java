@@ -2045,4 +2045,8 @@ public class Style implements ClientDomStyle {
 		return local.toString();
 	}
 	//
+
+	public String toCssString() {
+		return local.toCssString();
+	}
 }

@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.util.AbstractCollection;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
@@ -11,11 +12,13 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ClassUtil;
+import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.activity.RootArea;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -87,12 +90,15 @@ public abstract class DirectedRenderer {
 		return Ax.blankTo(directedTag, tagName(modelClass));
 	}
 
+	static Map<Class, String> classTagName = Registry
+			.impl(ConcurrentMapCreator.class).create();
+
 	/*
 	 * Trims the trailing 'Model' or 'Area' from the class name
 	 */
 	public static String tagName(Class clazz) {
-		return Ax.cssify(clazz.getSimpleName()
-				.replaceFirst("^(.+?)(Model|Area)$", "$1"));
+		return classTagName.computeIfAbsent(clazz, clazz0 -> Ax.cssify(clazz0
+				.getSimpleName().replaceFirst("^(.+?)(Model|Area)$", "$1")));
 	}
 
 	protected void applyCssClass(Node node, Element element) {

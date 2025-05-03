@@ -103,6 +103,8 @@ public class LocalDom implements ContextFrame {
 
 	private static Map<String, Supplier<Element>> elementCreators;
 
+	Document document;
+
 	FastLcProvider lc;
 
 	static LocalDomCollections collections() {
@@ -355,13 +357,14 @@ public class LocalDom implements ContextFrame {
 		return get().attachIdRepresentations;
 	}
 
-	public static void register(Document doc) {
+	public static void register(Document document) {
 		if (Al.isBrowser()) {
-			get().initalizeRemoteSync(doc);
+			get().initalizeRemoteSync(document);
 			//
 		} else {
-			doc.setAttached(true, true);
+			document.setAttached(true, true);
 		}
+		get().document = document;
 	}
 
 	static String safeParseByBrowser(String html) {
@@ -663,17 +666,17 @@ public class LocalDom implements ContextFrame {
 		loggingConfiguration = new LoggingConfiguration();
 	}
 
-	void initalizeRemoteSync(Document doc) {
-		docRemote = doc.jsoRemote();
+	void initalizeRemoteSync(Document document) {
+		docRemote = document.jsoRemote();
 		loggingConfiguration = new LoggingConfiguration();
-		linkRemote(docRemote, doc);
+		linkRemote(docRemote, document);
 		localMutations = new LocalMutations(new MutationsAccess());
 		ElementJso documentElementJso = docRemote.getDocumentElement0();
 		Element documentElement = parse(documentElementJso, true);
-		documentElement.local().putParent(doc.local());
+		documentElement.local().putParent(document.local());
 		walkPutRemote(documentElementJso, documentElement);
 		// create
-		doc.setAttached(true, true);
+		document.setAttached(true, true);
 		nodeFor0(documentElementJso);
 		remoteMutations = new RemoteMutations(new MutationsAccess(),
 				loggingConfiguration.asMutationsConfiguration());
@@ -813,7 +816,7 @@ public class LocalDom implements ContextFrame {
 				// FIXME - localdom - handle empty text nodes here - possibly by
 				// reverting to non-markup if we encounter any
 				remoteMutations.emitInnerMarkupMutation(element);
-				linkSubtreeToAttachIdRemotes(element);
+				remoteMutations.emitAttributeAndStyleMutations(element);
 			}
 		}
 		int bits = ((ElementLocal) local).orSunkEventsOfAllChildren(0);
@@ -1013,6 +1016,14 @@ public class LocalDom implements ContextFrame {
 
 		public boolean isApplyingDetachedMutationsToLocalDom() {
 			return applyingDetachedMutationsToLocalDom;
+		}
+
+		public void invalidateLocations() {
+			document.domDocument.locations().invalidate();
+		}
+
+		public Document getDocument() {
+			return document;
 		}
 	}
 

@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Preconditions;
@@ -49,27 +50,16 @@ public final class MutationNode {
 	public static LooseContext.Key CONTEXT_APPLYING_NON_MARKUP_MUTATIONS = LooseContext
 			.key(MutationNode.class, "CONTEXT_APPLYING_NON_MARKUP_MUTATIONS");
 
-	public static MutationNode forNode(org.w3c.dom.Node node) {
+	public static MutationNode forNode(Node node) {
 		if (node == null) {
 			return null;
 		}
 		MutationNode result = new MutationNode();
 		result.nodeType = node.getNodeType();
 		result.nodeName = node.getNodeName();
-		if (node instanceof Node) {
-			result.node = (Node) node;
+		if (node instanceof CharacterData) {
+			result.nodeValue = node.getNodeValue();
 		}
-		result.w3cNode = node;
-		return result;
-	}
-
-	public static MutationNode attachId(Node node) {
-		if (node == null) {
-			return null;
-		}
-		MutationNode result = new MutationNode();
-		result.nodeType = node.getNodeType();
-		result.nodeName = node.getNodeName();
 		result.attachId = AttachId.forNode(node);
 		result.w3cNode = node;
 		result.node = node;
@@ -408,7 +398,7 @@ public final class MutationNode {
 		FormatBuilder format = new FormatBuilder().separator(" ");
 		format.appendPadRight(12, nodeName);
 		format.appendIfNotBlankKv("path", attachId);
-		format.appendIfNotBlankKv("value", nodeValue);
+		format.appendIfNotBlankKv("value", Ax.trimForLogging(nodeValue));
 		return format.toString();
 	}
 

@@ -13,10 +13,8 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.ranges.DocumentRange;
 import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
@@ -26,9 +24,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
-import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
-import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -50,7 +46,7 @@ import cc.alcina.framework.common.client.util.Topic;
  * </ul>
  */
 public class DomDocument extends DomNode implements Cloneable {
-	public boolean useLocations2;
+	public boolean useLocations2 = true;
 
 	// for server-side code to link w3c docs to the DomDocument
 	public static Topic<DomDocument> topicDocumentCreated = Topic.create();
@@ -306,7 +302,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	// FIXME - remove with universal mutable location support
 	public void invalidateLocations() {
-		if (locationContext != null) {
+		if (locationContext instanceof Locations) {
 			((Locations) locationContext).invalidateLookups();
 		}
 	}

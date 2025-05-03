@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -956,11 +957,17 @@ public class SelectionTraversal
 	}
 
 	void enterSelectionContext(Selection<?> selection) {
-		selection.ancestorSelections().forEach(Selection::enterContext);
+		Iterator<Selection> itr = selection.ancestorIterator();
+		while (itr.hasNext()) {
+			itr.next().enterContext();
+		}
 	}
 
 	void exitSelectionContext(Selection<?> selection) {
-		selection.ancestorSelections().forEach(Selection::exitContext);
+		Iterator<Selection> itr = selection.ancestorIterator();
+		while (itr.hasNext()) {
+			itr.next().exitContext();
+		}
 	}
 
 	void processSelection(Selection selection) {

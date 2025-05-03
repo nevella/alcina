@@ -31,17 +31,23 @@ public abstract class PeekingIterator<E> implements Iterator<E> {
 		return next;
 	}
 
-	public E peek() {
+	void peek() {
 		if (finished) {
 			throw new NoSuchElementException();
 		}
 		if (peeked) {
-			return next;
+			return;
 		}
 		peeked = true;
-		return peekNext();
+		next = peekNext();
 	}
 
+	/**
+	 * Note that this method must also set finished to true if the element
+	 * source is finished
+	 * 
+	 * @return the next value (or null if finished)
+	 */
 	protected abstract E peekNext();
 
 	protected void resetPeeked() {

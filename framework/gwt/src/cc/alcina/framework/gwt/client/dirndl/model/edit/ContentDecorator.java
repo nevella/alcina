@@ -185,9 +185,11 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	public void onClosed(Closed event) {
 		if (isActive()) {
 			suggestor.onClosed(null);
+			new DecoratorEvent().withType(DecoratorEvent.Type.overlay_closed)
+					.publish();
+			suggestor = null;
+			overlay = null;
 		}
-		suggestor = null;
-		overlay = null;
 	}
 
 	@Override
@@ -321,6 +323,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 						domElement.getBoundingClientRect(),
 						(Model) decoratorParent, suggestor)
 				.withPeerModels(List.of(this.decorator)).create();
+		new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
+				.publish();
 		overlay.open();
 	}
 

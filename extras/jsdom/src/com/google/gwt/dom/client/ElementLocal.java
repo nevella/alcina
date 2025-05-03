@@ -510,7 +510,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	public void setInnerHTML(String html) {
 		if (Ax.notBlank(html)) {
 			if (!html.contains("<")) {
-				appendChild(ownerDocument
+				Node node = node();
+				node.appendChild(node.getOwnerDocument()
 						.createTextNode(HtmlParser.decodeEntities(html)));
 			} else {
 				// children will have been cleared, so outerHtml will just be
@@ -750,7 +751,6 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 	void appendOuterHtml(UnsafeHtmlBuilder builder) {
 		builder.appendHtmlConstantNoCheck("<");
 		builder.appendHtmlConstant(tagName);
-		String styleAttributeValue = attributes.get("style");
 		if (!attributes.isEmpty()) {
 			boolean applyStyleAttribute = !element.hasStyle()
 					|| hasUnparsedStyle && getStyle().local.isEmpty();
@@ -769,18 +769,7 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 		}
 		if (element.style != null && !element.getStyle().local().isEmpty()) {
 			builder.appendHtmlConstantNoCheck(" style=\"");
-			if (Ax.notBlank(styleAttributeValue)) {
-				builder.appendUnsafeHtml(styleAttributeValue);
-				builder.appendHtmlConstantNoCheck("; ");
-			}
-			((StyleLocal) element.getStyle().local()).properties.entrySet()
-					.forEach(e -> {
-						builder.appendEscaped(
-								LocalDom.declarativeCssName(e.getKey()));
-						builder.appendHtmlConstantNoCheck(":");
-						builder.appendEscaped(e.getValue());
-						builder.appendHtmlConstantNoCheck("; ");
-					});
+			builder.appendUnsafeHtml(getLocalAttrPlusLocalStyleCss());
 			builder.appendHtmlConstantNoCheck("\"");
 		}
 		builder.appendHtmlConstantNoCheck(">");
@@ -792,6 +781,18 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 			builder.appendHtmlConstant(tagName);
 			builder.appendHtmlConstantNoCheck(">");
 		}
+	}
+
+	String getLocalAttrPlusLocalStyleCss() {
+		UnsafeHtmlBuilder builder = new UnsafeHtmlBuilder(false, false);
+		String styleAttributeValue = attributes.get("style");
+		if (Ax.notBlank(styleAttributeValue)) {
+			builder.appendUnsafeHtml(styleAttributeValue);
+			builder.appendHtmlConstantNoCheck("; ");
+		}
+		builder.appendHtmlConstantNoCheck(
+				((StyleLocal) element.getStyle().local()).toCssString());
+		return builder.toSafeHtml().asString();
 	}
 
 	@Override

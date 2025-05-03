@@ -128,17 +128,17 @@ public final class MutationRecord {
 			// flagged)
 		}
 		if (creationRecord != null) {
-			creationRecord.target = MutationNode.attachId(parentElement);
+			creationRecord.target = MutationNode.forNode(parentElement);
 			creationRecord.type = Type.childList;
-			creationRecord.addedNodes.add(MutationNode.attachId(node));
+			creationRecord.addedNodes.add(MutationNode.forNode(node));
 			Node previousSibling = node.getPreviousSibling();
 			if (previousSibling != null) {
 				creationRecord.previousSibling = MutationNode
-						.attachId(previousSibling);
+						.forNode(previousSibling);
 			}
 			Node nextSibling = node.getNextSibling();
 			if (nextSibling != null) {
-				creationRecord.nextSibling = MutationNode.attachId(nextSibling);
+				creationRecord.nextSibling = MutationNode.forNode(nextSibling);
 			}
 			records.add(creationRecord);
 		}
@@ -155,7 +155,7 @@ public final class MutationRecord {
 			ClientDomElement elem = (ClientDomElement) node;
 			elem.getAttributeMap().forEach((k, v) -> {
 				MutationRecord record = new MutationRecord();
-				record.target = MutationNode.attachId(node);
+				record.target = MutationNode.forNode(node);
 				record.type = Type.attributes;
 				record.attributeName = k;
 				record.newValue = v;
@@ -164,12 +164,12 @@ public final class MutationRecord {
 			break;
 		}
 		case Node.COMMENT_NODE:
-		case Node.TEXT_NODE: {
-			MutationRecord record = new MutationRecord();
-			record.target = MutationNode.attachId(node);
-			record.type = Type.characterData;
-			record.newValue = node.getNodeValue();
-			records.add(record);
+		case Node.TEXT_NODE:
+		case Node.PROCESSING_INSTRUCTION_NODE:
+		case Node.CDATA_SECTION_NODE: {
+			/*
+			 * Character data already sent in the createrecord
+			 */
 			break;
 		}
 		default:
@@ -185,9 +185,9 @@ public final class MutationRecord {
 	public static MutationRecord generateRemoveMutation(Node parent,
 			Node oldChild) {
 		MutationRecord record = new MutationRecord();
-		record.target = MutationNode.attachId(parent);
+		record.target = MutationNode.forNode(parent);
 		record.type = Type.childList;
-		record.removedNodes.add(MutationNode.attachId(oldChild));
+		record.removedNodes.add(MutationNode.forNode(oldChild));
 		return record;
 	}
 
@@ -211,7 +211,7 @@ public final class MutationRecord {
 		MutationRecord markupRecord = new MutationRecord();
 		markupRecord.type = Type.innerMarkup;
 		markupRecord.newValue = elem.getInnerHTML();
-		markupRecord.target = MutationNode.attachId(node);
+		markupRecord.target = MutationNode.forNode(node);
 		markupRecord.attachIds = elem.getSubtreeIds();
 		return markupRecord;
 	}
@@ -248,8 +248,11 @@ public final class MutationRecord {
 	 * If this is an element, the type = childList is and flag
 	 * FlagTransportMarkupTree is set this will be the previous outerXml of the
 	 * node
+	 * 
+	 * If this is a characterdata mutation, the value will be the value prior to
+	 * the mutation
 	 */
-	public String oldValue;
+	public transient String oldValue;
 
 	/**
 	 * If this is an element and flag FlagTransportMarkupTree is set this will
@@ -399,6 +402,8 @@ public final class MutationRecord {
 					characterData);
 			if (applyDirection == ApplyDirection.history_reversed) {
 				newValue = previousValue;
+			} else {
+				oldValue = previousValue;
 			}
 			break;
 		}
@@ -489,5 +494,48 @@ public final class MutationRecord {
 				n -> MutationNode.populateAttachId(n, mutationsAccess));
 		removedNodes.forEach(
 				n -> MutationNode.populateAttachId(n, mutationsAccess));
+	}
+
+	public static List<MutationRecord>
+			generateAttributeAndStyleMutationRecords(Element elem) {
+		List<MutationRecord> result = new ArrayList<>();
+		elem.getAttributeMap().entrySet().forEach(e -> {
+			if (e.getKey().equals("style")) {
+				/*
+				 * handled below
+				 */
+				return;
+			}
+			String value = e.getValue();
+			MutationRecord record = new MutationRecord();
+			record.type = Type.attributes;
+			record.newValue = e.getValue();
+			record.attributeName = e.getKey();
+			record.target = MutationNode.forNode(elem);
+			result.add(record);
+		});
+		String style = elem.implAccess().getLocalAttrPlusLocalStyleCss();
+		if (Ax.notBlank(style)) {
+			MutationRecord record = new MutationRecord();
+			record.type = Type.attributes;
+			record.newValue = style;
+			record.attributeName = "style";
+			record.target = MutationNode.forNode(elem);
+			result.add(record);
+		}
+		return result;
+	}
+
+	public boolean appliesTo(Node node) {
+		if (target.node == node) {
+			return true;
+		}
+		if (addedNodes.stream().anyMatch(n -> n.node == node)) {
+			return true;
+		}
+		if (removedNodes.stream().anyMatch(n -> n.node == node)) {
+			return true;
+		}
+		return false;
 	}
 }

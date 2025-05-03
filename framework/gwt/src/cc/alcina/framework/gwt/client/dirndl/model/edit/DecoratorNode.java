@@ -46,7 +46,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 	}
 
 	void notifyContentEditableDelta(boolean contentEditable) {
-		new DecoratorEvent().withType(DecoratorEvent.Type.editable_delta)
+		new DecoratorEvent().withType(DecoratorEvent.Type.editable_attr_changed)
 				.withSubtype(NestedName.get(this))
 				.withMessage(
 						Ax.format("[-->%s] :: %s", contentEditable, content))
@@ -241,15 +241,19 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		}
 	}
 
-	void ensureSpacers() {
+	ZeroWidthCursorTarget ensureInterNonEditableTarget() {
 		if (contentEditable) {
-			return;
+			return null;
 		}
-		if (HasContentEditable.isUneditableSibling(nodes().previousSibling())) {
-			nodes().insertBeforeThis(new ZeroWidthCursorTarget());
-		}
-		if (HasContentEditable.isUneditableSibling(nodes().nextSibling())) {
-			nodes().insertAfterThis(new ZeroWidthCursorTarget());
+		FragmentNode treeSubsequentNode = nodes().treeSubsequentNode();
+		if (treeSubsequentNode instanceof ZeroWidthCursorTarget) {
+			return (ZeroWidthCursorTarget) treeSubsequentNode;
+		} else if (HasContentEditable.isUneditable(treeSubsequentNode)) {
+			ZeroWidthCursorTarget newCursorTarget = new ZeroWidthCursorTarget();
+			nodes().insertAfterThis(newCursorTarget);
+			return newCursorTarget;
+		} else {
+			return null;
 		}
 	}
 

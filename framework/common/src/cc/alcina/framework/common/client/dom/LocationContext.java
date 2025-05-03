@@ -475,4 +475,7 @@ public interface LocationContext {
 	Range getDocumentRange();
 
 	void ensureCurrent(Location location);
+
+	default void validateLocations() {
+	}
 }
