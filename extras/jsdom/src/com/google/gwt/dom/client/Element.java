@@ -41,7 +41,6 @@ import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.event.shared.HasHandlers;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
@@ -477,7 +476,7 @@ public class Element extends Node implements ClientDomElement,
 	@Deprecated
 	@Override
 	public NodeList<Element> getElementsByTagName(String name) {
-		List<ElementLocal> list = traverse().filter(Node::isElement)
+		List<ElementLocal> list = traverse().filter(Node::provideIsElement)
 				.map(Node::local).map(ElementLocal.class::cast)
 				.collect(Collectors.toList());
 		return new NodeList(new NodeListLocal(list));
@@ -1095,16 +1094,22 @@ public class Element extends Node implements ClientDomElement,
 	}
 
 	@Override
-	public boolean isElement() {
-		return true;
-	}
-
-	@Override
 	public void setInnerText(String text) {
-		// TODO - set contents of sole text child, if it exists
-		// removeAllChildren();
-		// appendChild(getOwnerDocument().createTextNode(text));
-		setInnerHTML(SafeHtmlUtils.htmlEscape(text));
+		/*
+		 * Note that empty text nodes are *not* created (in fact, are removed)
+		 */
+		if (getChildCount() == 1 && text.length() > 0) {
+			Node firstChild = getFirstChild();
+			if (firstChild.provideIsText()) {
+				firstChild.setNodeValue(text);
+				return;
+			}
+		}
+		removeAllChildren();
+		if (text.isEmpty()) {
+			return;
+		}
+		appendChild(getOwnerDocument().createTextNode(text));
 	}
 
 	@Override

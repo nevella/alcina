@@ -1595,16 +1595,7 @@ public class DirectedLayout implements AlcinaProcess {
 								node.setNodeValue(stringValue);
 							}
 						} else {
-							DomNode domElementNode = element.asDomNode();
-							List<DomNode> domChildren = domElementNode.children
-									.nodes();
-							// avoid unneeded node deletion/creation
-							if (domChildren.size() == 1
-									&& Ax.first(domChildren).isText()) {
-								Ax.first(domChildren).setText(stringValue);
-							} else {
-								element.setInnerText(stringValue);
-							}
+							element.setInnerText(stringValue);
 						}
 						innerTextWasSet = true;
 					} else {

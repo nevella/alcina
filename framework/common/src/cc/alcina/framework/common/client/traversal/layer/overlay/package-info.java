@@ -11,6 +11,8 @@
  * <li>Possibly expand the overlay - this will use properties of the
  * fragmentmodel
  * <li>Apply the overlay
+ * <li>Note re wrap/strip - lower (element) level - preserve attachid over
+ * strip/wrap
  * </ul>
  */
 package cc.alcina.framework.common.client.traversal.layer.overlay;

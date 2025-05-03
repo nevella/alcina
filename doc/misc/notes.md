@@ -7,6 +7,11 @@
 
   - ditto helpplace (fragment) etc
 
+## when should an event be transactional?
+
+- when it can loop. so localmutation -> domnode invalidation, locationcontext/indexmutation updates shd be _non_ (preferably),
+  but localmutations which trigger other localmutations shd be transactional
+
 ## devex styles
 
  <h2>DEVEX styles</h2>

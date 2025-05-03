@@ -546,10 +546,6 @@ public abstract class Node
 		}
 	}
 
-	public boolean isElement() {
-		return false;
-	}
-
 	protected boolean isPendingSync() {
 		return false;
 	}

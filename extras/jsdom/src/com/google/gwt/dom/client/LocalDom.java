@@ -998,7 +998,7 @@ public class LocalDom implements ContextFrame {
 		public void insertAttachedBefore(Node newChild, Node refChild) {
 			newChild.jsoRemote().getParentElement()
 					.insertAttachedBefore(newChild, refChild);
-			if (newChild.isElement()) {
+			if (newChild.provideIsElement()) {
 				Element newElem = (Element) newChild;
 				IdList idList = newElem.getSubtreeIds();
 				MarkupToken markupToken = new MarkupToken(newElem, null,
