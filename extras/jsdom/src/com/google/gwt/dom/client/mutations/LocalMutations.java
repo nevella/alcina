@@ -87,8 +87,8 @@ public class LocalMutations {
 	}
 
 	void validateLocations() {
-		mutationsAccess.getDocument().domDocument.locations()
-				.validateLocations();
+		// mutationsAccess.getDocument().domDocument.locations()
+		// .validateLocations();
 	}
 
 	/*

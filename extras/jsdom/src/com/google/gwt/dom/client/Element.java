@@ -203,8 +203,8 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public boolean addClassName(String className) {
 		boolean result = local().addClassName(className);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, "class", local().getClassName()));
+		mutations().notifyAttributeModification(this, "class",
+				local().getClassName());
 		sync(() -> remote().addClassName(className));
 		return result;
 	}
@@ -889,9 +889,10 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void removeAttribute(String name) {
 		local().removeAttribute(name);
-		// FIXME - dirndl - dodesn't actually remove
-		notify(() -> LocalDom.getLocalMutations()
-				.notifyAttributeModification(this, name, ""));
+		// FIXME - dirndl - dodesn't actually remove. To remove via mutation
+		// (which isn't really covered in the w3c DomMutation) spec, possibly
+		// add another field to the Mutation API
+		mutations().notifyAttributeModification(this, name, "");
 		sync(() -> remote().removeAttribute(name));
 	}
 
@@ -909,8 +910,8 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public boolean removeClassName(String className) {
 		boolean result = local().removeClassName(className);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, "class", local().getClassName()));
+		mutations().notifyAttributeModification(this, "class",
+				local().getClassName());
 		sync(() -> remote().removeClassName(className));
 		return result;
 	}
@@ -918,8 +919,8 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void replaceClassName(String oldClassName, String newClassName) {
 		local().replaceClassName(oldClassName, newClassName);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, "class", local().getClassName()));
+		mutations().notifyAttributeModification(this, "class",
+				local().getClassName());
 		sync(() -> remote().replaceClassName(oldClassName, newClassName));
 	}
 
@@ -990,8 +991,7 @@ public class Element extends Node implements ClientDomElement,
 			return;
 		}
 		local().setAttribute(name, value);
-		notify(() -> LocalDom.getLocalMutations()
-				.notifyAttributeModification(this, name, value));
+		mutations().notifyAttributeModification(this, name, value);
 		sync(() -> remote().setAttribute(name, value));
 	}
 
@@ -1018,8 +1018,8 @@ public class Element extends Node implements ClientDomElement,
 			return;
 		}
 		local().setClassName(className);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, "class", local().getClassName()));
+		mutations().notifyAttributeModification(this, "class",
+				local().getClassName());
 		sync(() -> remote().setClassName(className));
 	}
 
@@ -1034,24 +1034,22 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void setDir(String dir) {
 		local().setDir(dir);
-		notify(() -> LocalDom.getLocalMutations()
-				.notifyAttributeModification(this, "dir", local().getDir()));
+		mutations().notifyAttributeModification(this, "dir", local().getDir());
 		sync(() -> remote().setDir(dir));
 	}
 
 	@Override
 	public void setDraggable(String draggable) {
 		local().setDraggable(draggable);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, "draggable", local().getDraggable()));
+		mutations().notifyAttributeModification(this, "draggable",
+				local().getDraggable());
 		sync(() -> remote().setDraggable(draggable));
 	}
 
 	@Override
 	public void setId(String id) {
 		local().setId(id);
-		notify(() -> LocalDom.getLocalMutations()
-				.notifyAttributeModification(this, "id", local().getId()));
+		mutations().notifyAttributeModification(this, "id", local().getId());
 		sync(() -> remote().setId(id));
 	}
 
@@ -1115,8 +1113,8 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void setLang(String lang) {
 		local().setLang(lang);
-		notify(() -> LocalDom.getLocalMutations()
-				.notifyAttributeModification(this, "lang", local().getLang()));
+		mutations().notifyAttributeModification(this, "lang",
+				local().getLang());
 		sync(() -> remote().setLang(lang));
 	}
 
@@ -1133,24 +1131,24 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void setPropertyBoolean(String name, boolean value) {
 		local().setPropertyBoolean(name, value);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, name, String.valueOf(value)));
+		mutations().notifyAttributeModification(this, name,
+				String.valueOf(value));
 		sync(() -> remote().setPropertyBoolean(name, value));
 	}
 
 	@Override
 	public void setPropertyDouble(String name, double value) {
 		local().setPropertyDouble(name, value);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, name, String.valueOf(value)));
+		mutations().notifyAttributeModification(this, name,
+				String.valueOf(value));
 		sync(() -> remote().setPropertyDouble(name, value));
 	}
 
 	@Override
 	public void setPropertyInt(String name, int value) {
 		local().setPropertyInt(name, value);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, name, String.valueOf(value)));
+		mutations().notifyAttributeModification(this, name,
+				String.valueOf(value));
 		sync(() -> remote().setPropertyInt(name, value));
 	}
 
@@ -1162,16 +1160,16 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void setPropertyObject(String name, Object value) {
 		local().setPropertyObject(name, value);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, name, String.valueOf(value)));
+		mutations().notifyAttributeModification(this, name,
+				String.valueOf(value));
 		sync(() -> remote().setPropertyObject(name, value));
 	}
 
 	@Override
 	public void setPropertyString(String name, String value) {
 		local().setPropertyString(name, value);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, name, String.valueOf(value)));
+		mutations().notifyAttributeModification(this, name,
+				String.valueOf(value));
 		sync(() -> remote().setPropertyString(name, value));
 	}
 
@@ -1188,8 +1186,8 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void setTabIndex(int tabIndex) {
 		local().setTabIndex(tabIndex);
-		notify(() -> LocalDom.getLocalMutations().notifyAttributeModification(
-				this, "tabIndex", String.valueOf(tabIndex)));
+		mutations().notifyAttributeModification(this, "tabIndex",
+				String.valueOf(tabIndex));
 		sync(() -> remote().setTabIndex(tabIndex));
 	}
 
@@ -1203,8 +1201,7 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void setTitle(String title) {
 		local().setTitle(title);
-		notify(() -> LocalDom.getLocalMutations()
-				.notifyAttributeModification(this, "title", title));
+		mutations().notifyAttributeModification(this, "title", title);
 		sync(() -> remote().setTitle(title));
 	}
 
@@ -1223,8 +1220,7 @@ public class Element extends Node implements ClientDomElement,
 	@Override
 	public void toggleClassName(String className) {
 		local().toggleClassName(className);
-		notify(() -> LocalDom.getLocalMutations()
-				.notifyAttributeModification(this, "class", getClassName()));
+		mutations().notifyAttributeModification(this, "class", getClassName());
 		sync(() -> remote().toggleClassName(className));
 	}
 
@@ -1418,9 +1414,8 @@ public class Element extends Node implements ClientDomElement,
 	 */
 	void insertAttachedBefore(Node newChild, Node refChild) {
 		local().insertBefore(newChild, refChild);
-		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				newChild, newChild.getPreviousSibling(),
-				newChild.getNextSibling(), true));
+		mutations().notifyChildListMutation(this, newChild,
+				newChild.getPreviousSibling(), newChild.getNextSibling(), true);
 	}
 
 	public IntPair getScrollPosition() {

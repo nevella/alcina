@@ -1308,7 +1308,6 @@ public class Document extends Node
 
 	public void addLocalMutationListener(
 			TopicListener<List<MutationRecord>> listener, boolean batched) {
-		localDom.ensureLocalMutations();
 		if (batched) {
 			localDom.localMutations.topicMutations.add(listener);
 		} else {

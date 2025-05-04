@@ -233,7 +233,8 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	public LocationContext locations() {
 		if (locationContext == null) {
-			if (useLocations2) {
+			if (useLocations2
+					&& w3cDoc() instanceof com.google.gwt.dom.client.Document) {
 				LocationContext2 locationContext2 = new LocationContext2(this);
 				locationContext = locationContext2;
 				locationContext2.init();

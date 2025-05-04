@@ -170,6 +170,9 @@ public final class IntPair implements Comparable<IntPair>, Serializable,
 
 	public static IntPair unionOf(List<IntPair> matchedRanges) {
 		// i.e clone
+		if (matchedRanges.isEmpty()) {
+			return null;
+		}
 		IntPair result = matchedRanges.get(0).shiftRight(0);
 		matchedRanges.forEach(ip -> {
 			result.i1 = Math.min(ip.i1, result.i1);
