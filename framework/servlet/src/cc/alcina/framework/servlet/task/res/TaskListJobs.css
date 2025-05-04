@@ -1,67 +1,66 @@
 body {
-	font-family: 'serif';
+  font-family: "serif";
 }
 
 tr:first-child td {
-	font-weight: bold;
+  font-weight: bold;
 }
 
 table {
-	border-collapse: collapse;
+  border-collapse: collapse;
 }
 
 tr:hover,
 tr:hover td {
-	background-color: hsl(207deg 47% 96%);
+  background-color: hsl(207deg 47% 96%);
 }
 
 td {
-	padding: 2px 8px;
+  padding: 2px 8px;
 }
 
 td.numeric {
-	max-width: 100px;
-	min-width: 100px;
+  max-width: 100px;
+  min-width: 100px;
 }
 
 td.numeric-right {
-	text-align: right;
-	padding-left: 2em;
+  text-align: right;
+  padding-left: 2em;
 }
-
 
 td.date,
 td.links {
-	min-width: 150px;
-	white-space: nowrap;
+  min-width: 150px;
+  white-space: nowrap;
 }
 
 td.instance {
-	max-width: 320px;
-	min-width: 250px;
+  max-width: 320px;
+  min-width: 250px;
+  white-space: nowrap;
 }
 
 td.trim-large {
-	min-width: 200px;
-	max-width: 500px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+  min-width: 200px;
+  max-width: 500px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 td.trim-medium {
-	min-width: 200px;
-	max-width: 300px;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+  min-width: 200px;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 td.imperfect-state {
-	color: #777;
+  color: #777;
 }
 
 td.imperfect-state.error-state {
-	color: #B00;
-	;
+  color: #b00;
 }

@@ -117,6 +117,11 @@ public class DomDocument extends DomNode implements Cloneable {
 	 */
 	private DomNode documentElementDomNode;
 
+	/*
+	 * Transitional, until all moved to new locationcontext
+	 */
+	public boolean cacheNodes = true;
+
 	public void setDocumentElementDomNode(DomNode documentElementDomNode) {
 		this.documentElementDomNode = documentElementDomNode;
 	}
@@ -534,6 +539,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 		private void invalidateLookups() {
 			byNode = null;
+			stream().forEach(n -> n.children.invalidate());
 		}
 
 		@Override
@@ -680,5 +686,9 @@ public class DomDocument extends DomNode implements Cloneable {
 			} while (walker.nextNode() != null);
 		});
 		nodes.keySet().removeIf(toDetach::contains);
+	}
+
+	public boolean isLocationContext2() {
+		return locationContext instanceof LocationContext2;
 	}
 }
