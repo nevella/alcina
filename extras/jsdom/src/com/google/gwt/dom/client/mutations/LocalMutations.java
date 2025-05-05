@@ -51,6 +51,9 @@ public class LocalMutations {
 	 */
 	public Topic<List<MutationRecord>> topicUnbatchedMutations = Topic.create();
 
+	public Topic<MutationRecord> topicUnbatchedUnattachedMutations = Topic
+			.create();
+
 	ScheduledCommand finallyCommand;
 
 	public LocalMutations(MutationsAccess mutationsAccess) {
@@ -91,40 +94,9 @@ public class LocalMutations {
 		// .validateLocations();
 	}
 
-	/*
-	 * Run a notification runnable. This will also ensure a finally runnable
-	 * which fires mutations
-	 */
-	public void notify(Runnable runnable) {
-		if (!topicMutations.hasListeners()
-				&& !topicUnbatchedMutations.hasListeners()) {
-			return;
-		}
-		if (GWT.isClient() && finallyCommand == null) {
-			finallyCommand = this::fireMutations;
-			Scheduler.get().scheduleFinally(finallyCommand);
-		}
-		try {
-			MutationRecord.deltaFlag(
-					MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
-					mutationsAccess.isApplyingDetachedMutationsToLocalDom());
-			runnable.run();
-			fireUnbatched();
-		} finally {
-			MutationRecord.deltaFlag(
-					MutationRecord.FlagTransportMarkupTree.class, false);
-		}
-	}
-
 	void fireUnbatched() {
-		if (!topicUnbatchedMutations.hasListeners()) {
-			return;
-		}
 		List<MutationRecord> mutations = this.mutations.subList(unbatchedIndex,
 				this.mutations.size());
-		if (mutations.isEmpty()) {
-			return;
-		}
 		unbatchedIndex = this.mutations.size();
 		topicUnbatchedMutations.publish(mutations);
 	}
@@ -144,7 +116,15 @@ public class LocalMutations {
 	}
 
 	void addMutation(MutationRecord record) {
-		mutations.add(record);
+		topicUnbatchedUnattachedMutations.publish(record);
+		if (record.target.node().isAttached()) {
+			mutations.add(record);
+			fireUnbatched();
+			if (GWT.isClient() && finallyCommand == null) {
+				finallyCommand = this::fireMutations;
+				Scheduler.get().scheduleFinally(finallyCommand);
+			}
+		}
 	}
 
 	public void notifyCharacterData(Node target, String previousValue,
@@ -163,35 +143,39 @@ public class LocalMutations {
 
 	public void notifyChildListMutation(Node target, Node child,
 			Node previousSibling, Node nextSibling, boolean add) {
-		if (add && !target.isAttached()) {
-			MutationRecord record = new MutationRecord();
-			record.mutationsAccess = mutationsAccess;
-			record.type = Type.childList;
-			record.target = MutationNode.forNode(target);
-			record.previousSibling = MutationNode.forNode(previousSibling);
-			record.nextSibling = MutationNode.forNode(nextSibling);
-			record.addedNodes.add(MutationNode.forNode(child));
-			/*
-			 * This is to trigger Dom.Location invalidations. Better would be a
-			 * more formal differentiation between 'always send' vs 'send if
-			 * attached'
-			 */
-			topicUnbatchedMutations.publish(List.of(record));
-			return;
-		}
-		if (add) {
-			nodeAsMutations(child,
-					!MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS.is())
-							.forEach(this::addMutation);
-		} else {
-			MutationRecord record = new MutationRecord();
-			record.mutationsAccess = mutationsAccess;
-			record.type = Type.childList;
-			record.target = MutationNode.forNode(target);
-			record.previousSibling = MutationNode.forNode(previousSibling);
-			record.nextSibling = MutationNode.forNode(nextSibling);
-			record.removedNodes.add(MutationNode.forNode(child));
-			addMutation(record);
+		try {
+			MutationRecord.deltaFlag(
+					MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
+					mutationsAccess.isApplyingDetachedMutationsToLocalDom());
+			if (add && !target.isAttached()) {
+				MutationRecord record = new MutationRecord();
+				record.mutationsAccess = mutationsAccess;
+				record.type = Type.childList;
+				record.target = MutationNode.forNode(target);
+				record.previousSibling = MutationNode.forNode(previousSibling);
+				record.nextSibling = MutationNode.forNode(nextSibling);
+				record.addedNodes.add(MutationNode.forNode(child));
+				addMutation(record);
+			} else {
+				if (add) {
+					nodeAsMutations(child,
+							!MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS
+									.is()).forEach(this::addMutation);
+				} else {
+					MutationRecord record = new MutationRecord();
+					record.mutationsAccess = mutationsAccess;
+					record.type = Type.childList;
+					record.target = MutationNode.forNode(target);
+					record.previousSibling = MutationNode
+							.forNode(previousSibling);
+					record.nextSibling = MutationNode.forNode(nextSibling);
+					record.removedNodes.add(MutationNode.forNode(child));
+					addMutation(record);
+				}
+			}
+		} finally {
+			MutationRecord.deltaFlag(
+					MutationRecord.FlagTransportMarkupTree.class, false);
 		}
 	}
 

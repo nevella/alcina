@@ -622,10 +622,6 @@ public class LocalDom implements ContextFrame {
 			 * fire localmutations immediately
 			 */
 			localMutations.fireMutations();
-		} else {
-			localMutations.notify(() -> {
-				// noop, just schedule a finally flush of mutations
-			});
 		}
 		attachIds.releaseRemoved();
 	}

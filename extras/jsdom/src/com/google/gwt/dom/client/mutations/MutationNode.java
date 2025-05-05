@@ -25,11 +25,13 @@ import com.google.gwt.dom.client.mutations.MutationRecord.ApplyTo;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 
 /**
  * <p>
@@ -64,6 +66,51 @@ public final class MutationNode {
 		result.w3cNode = node;
 		result.node = node;
 		return result;
+	}
+
+	/*
+	 * Non-added nodes just need the attachid. Currently not hooked up (because
+	 * the bandwidth used isn't that high, and the extra info is very useful for
+	 * debugging)
+	 * 
+	 * A fuller optimisation would pull 'id' out of attachid, into the node
+	 * 
+	 * @formatter:off
+
+	"domMutations": [
+{
+	"addedNodes": [
+	{
+		"attachId": {
+		"id": 83
+		},
+		"nodeType": 1,
+		"nodeName": "overlay-container"
+	}
+	],
+	"target": {
+	"attachId": {
+		"id": 40
+	},
+	"nodeType": 1,
+	"nodeName": "body"
+	},
+	"previousSibling": {
+	"attachId": {
+		"id": 7
+	},
+	"nodeType": 1,
+	"nodeName": "page"
+	},
+	"type": "childList"
+
+	 * @formatter:on
+	 */
+	@Feature.Ref(Feature_RemoteObjectComponent.Feature_Impl.class)
+	void minimizeRpc() {
+		attributes = null;
+		nodeType = 0;
+		nodeName = null;
 	}
 
 	static void populateAttachId(MutationNode node,
