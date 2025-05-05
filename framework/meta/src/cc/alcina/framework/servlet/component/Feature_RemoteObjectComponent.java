@@ -66,4 +66,11 @@ public interface Feature_RemoteObjectComponent extends Feature {
 	@Feature.Parent(Feature_RemoteObjectComponent.class)
 	public interface Feature_ClientEventThrottling extends Feature {
 	}
+
+	/**
+	 * Implementation features link here
+	 */
+	@Feature.Parent(Feature_RemoteObjectComponent.class)
+	public interface Feature_Impl extends Feature {
+	}
 }

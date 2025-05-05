@@ -336,14 +336,6 @@ public class LocalDom implements ContextFrame {
 		return (T) get().nodeFor0(remote);
 	}
 
-	public static void notifyLocalMutations(Runnable runnable) {
-		LocalMutations localMutations = get().localMutations;
-		if (localMutations == null) {
-			return;
-		}
-		localMutations.notify(runnable);
-	}
-
 	public static void onRelatedException(RuntimeException e) {
 		if (logParseAndMutationIssues) {
 			throw e;
@@ -460,6 +452,7 @@ public class LocalDom implements ContextFrame {
 		topicReportException.add(this::handleReportedException);
 		lc = new FastLcProvider();
 		attachIds = new AttachIds();
+		localMutations = new LocalMutations(new MutationsAccess());
 	}
 
 	Node createAndInsertAfter(Node parentNode, Node previousSibling,
@@ -629,10 +622,6 @@ public class LocalDom implements ContextFrame {
 			 * fire localmutations immediately
 			 */
 			localMutations.fireMutations();
-		} else {
-			localMutations.notify(() -> {
-				// noop, just schedule a finally flush of mutations
-			});
 		}
 		attachIds.releaseRemoved();
 	}
@@ -653,16 +642,9 @@ public class LocalDom implements ContextFrame {
 				.publish(new LocalDomException(exception, message));
 	}
 
-	public void ensureLocalMutations() {
-		if (localMutations == null) {
-			localMutations = new LocalMutations(new MutationsAccess());
-		}
-	}
-
 	void initalizeDetachedSync0() {
 		remoteMutations = new RemoteMutations(new MutationsAccess(),
 				new RemoteMutations.LoggingConfiguration());
-		localMutations = new LocalMutations(new MutationsAccess());
 		loggingConfiguration = new LoggingConfiguration();
 	}
 
@@ -670,7 +652,6 @@ public class LocalDom implements ContextFrame {
 		docRemote = document.jsoRemote();
 		loggingConfiguration = new LoggingConfiguration();
 		linkRemote(docRemote, document);
-		localMutations = new LocalMutations(new MutationsAccess());
 		ElementJso documentElementJso = docRemote.getDocumentElement0();
 		Element documentElement = parse(documentElementJso, true);
 		documentElement.local().putParent(document.local());
@@ -998,7 +979,7 @@ public class LocalDom implements ContextFrame {
 		public void insertAttachedBefore(Node newChild, Node refChild) {
 			newChild.jsoRemote().getParentElement()
 					.insertAttachedBefore(newChild, refChild);
-			if (newChild.isElement()) {
+			if (newChild.provideIsElement()) {
 				Element newElem = (Element) newChild;
 				IdList idList = newElem.getSubtreeIds();
 				MarkupToken markupToken = new MarkupToken(newElem, null,

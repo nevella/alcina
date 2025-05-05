@@ -695,6 +695,8 @@ class Environment {
 		document.implAccess().attachIdRemote()
 				.registerToRemoteInvokeProxy(invokeProxy);
 		LocalDom.initalizeDetachedSync();
+		// FIXME - locationcontext3 - remove
+		document.domDocument.asLocation();
 		GWTBridgeHeadless.inClient.set(true);
 		EnvironmentRegistry.enter(environmentRegistry);
 		Client.contextProvider.registerFrame(client);

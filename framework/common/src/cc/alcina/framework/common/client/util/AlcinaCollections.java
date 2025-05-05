@@ -85,4 +85,9 @@ public class AlcinaCollections {
 	public static <K, V> Map<K, V> newWeakMap() {
 		return Registry.impl(CollectionCreators.WeakMapCreator.class).create();
 	}
+
+	public static <T> Set<T> newHashSet(int size) {
+		return Registry.impl(CollectionCreators.HashSetCreator.class)
+				.create(size);
+	}
 }

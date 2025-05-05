@@ -33,12 +33,12 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * <li>WIP - next - implement 'compute IndexMutations', test live indicies
  * </ul>
  */
-class LocationContext2 implements LocationContext {
+class LocationContext3 implements LocationContext {
 	/**
 	 * <p>
 	 * Models a series of index mutations, computed from an input state
-	 * [existing indicies], a list of MutationRecords and an outputstate (the
-	 * DOM at computation time)
+	 * [existing indicies], a local MutationRecord and an outputstate (the DOM
+	 * at computation time)
 	 * 
 	 * <p>
 	 * TODO - (and such fun):
@@ -86,7 +86,7 @@ class LocationContext2 implements LocationContext {
 			}
 		}
 
-		LocationContext2 context;
+		LocationContext3 context;
 
 		List<MutationRecord> domMutations;
 
@@ -102,7 +102,7 @@ class LocationContext2 implements LocationContext {
 		 */
 		Set<DomNode> damaged = new LinkedHashSet<>();
 
-		IndexMutations(LocationContext2 context,
+		IndexMutations(LocationContext3 context,
 				List<MutationRecord> domMutations) {
 			this.context = context;
 			this.domMutations = domMutations;
@@ -357,13 +357,16 @@ class LocationContext2 implements LocationContext {
 	 * similarities to SyncMutations2 - since we only know the state at the end,
 	 * not at change time, we need to think in terms of "damage/regenerate"
 	 * rather than "incrementally mutate"
+	 * 
+	 * No! Here, since local, we *do* know the prior state - so the damage
+	 * approach is wrong (and won't work if listeners are out-of-order)
 	 */
 	class LocalMutationTransformer
 			implements TopicListener<List<MutationRecord>> {
 		@Override
 		public void topicPublished(List<MutationRecord> domMutations) {
 			IndexMutations indexMutations = new IndexMutations(
-					LocationContext2.this, domMutations);
+					LocationContext3.this, domMutations);
 			indexMutations.mutationIndex = mutations.size();
 			/*
 			 * add before computation - the computation logic requires it
@@ -391,7 +394,7 @@ class LocationContext2 implements LocationContext {
 
 	Range documentRange;
 
-	LocationContext2(DomDocument document) {
+	LocationContext3(DomDocument document) {
 		Preconditions.checkState(document.w3cDoc() instanceof Document);
 		this.document = document;
 		this.gwtDocument = (Document) document.w3cDoc();

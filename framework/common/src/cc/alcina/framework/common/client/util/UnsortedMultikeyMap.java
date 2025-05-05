@@ -78,7 +78,8 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 	@Override
 	protected DelegateMapCreator ensureDelegateMapCreator() {
 		if (this.delegateMapCreator == null) {
-			this.delegateMapCreator = new CollectionCreators.UnsortedMapCreator();
+			this.delegateMapCreator = CollectionCreators.Bootstrap
+					.getUnsortedMapCreator();
 		}
 		return delegateMapCreator;
 	}

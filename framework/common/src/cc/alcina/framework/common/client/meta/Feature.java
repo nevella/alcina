@@ -14,7 +14,9 @@ import cc.alcina.framework.common.client.relational.RelationalCode;
 
 /**
  * <p>
- * A project planning/structure - expressed in code
+ * A project planning/structure - expressed in code. A {@link Feature} can
+ * describe either functionality or implementation - the former will go in a
+ * shared project accessible to tests, the latter in the implementation package
  *
  * <p>
  * Most of the linkage is expressed by annotations on subtypes of Feature - one

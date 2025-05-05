@@ -206,8 +206,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	 * super.onAfterIteration()
 	 */
 	protected void onAfterIteration() {
-		state.complete = isSinglePass() || state.iterationSubmitted == 0;
-		state.iterationCount++;
+		state.onAfterIteration();
 	}
 
 	protected void onAfterProcess(Selection selection) {
@@ -262,7 +261,7 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 	 * Ensure a given input is only processed once
 	 */
 	public boolean submit(S selection) {
-		boolean submitted = state.submitted.add(selection);
+		boolean submitted = state.addToSubmitted(selection);
 		if (submitted) {
 			onSubmit(selection);
 		}
@@ -310,12 +309,34 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 
 		public boolean complete;
 
-		Set<S> submitted = AlcinaCollections.newHashSet();
+		Set<S> submitted;
+
+		List<S> firstPassSubmitted = new ArrayList<>();
 
 		Set<String> emittedWarnings = new LinkedHashSet<>();
 
 		public State(SelectionTraversal.State traversalState) {
 			this.traversalState = traversalState;
+		}
+
+		void onAfterIteration() {
+			complete = isSinglePass() || iterationSubmitted == 0;
+			if (!complete && iterationCount == 0) {
+				submitted = AlcinaCollections
+						.newHashSet(firstPassSubmitted.size());
+				submitted.addAll(firstPassSubmitted);
+				firstPassSubmitted = null;
+			}
+			iterationCount++;
+		}
+
+		public boolean addToSubmitted(S selection) {
+			if (submitted == null) {
+				firstPassSubmitted.add(selection);
+				return true;
+			} else {
+				return submitted.add(selection);
+			}
 		}
 
 		/**

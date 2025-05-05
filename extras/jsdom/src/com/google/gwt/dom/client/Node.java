@@ -25,6 +25,7 @@ import org.w3c.dom.UserDataHandler;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
 import com.google.gwt.dom.client.NodeLocal.SiblingIterator;
+import com.google.gwt.dom.client.mutations.LocalMutations;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeType;
@@ -128,6 +129,10 @@ public abstract class Node
 		return appendChild((Node) arg0);
 	}
 
+	LocalMutations mutations() {
+		return getOwnerDocument().localDom.localMutations;
+	}
+
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		validateInsert(newChild);
@@ -136,8 +141,8 @@ public abstract class Node
 		// to fire
 		newChild.removeFromParent();
 		T node = local().appendChild(newChild);
-		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				node, node.getPreviousSibling(), null, true));
+		mutations().notifyChildListMutation(this, node,
+				node.getPreviousSibling(), null, true);
 		sync(() -> remote().appendChild(newChild));
 		return node;
 	}
@@ -320,9 +325,9 @@ public abstract class Node
 			validateRemoteStatePreTreeMutation(refChild);
 			newChild.removeFromParent();
 			Node result = local().insertBefore(newChild, refChild);
-			notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
-					this, newChild, newChild.getPreviousSibling(),
-					newChild.getNextSibling(), true));
+			mutations().notifyChildListMutation(this, newChild,
+					newChild.getPreviousSibling(), newChild.getNextSibling(),
+					true);
 			sync(() -> remote().insertBefore(newChild, refChild));
 			return result;
 		} catch (Exception e) {
@@ -411,9 +416,9 @@ public abstract class Node
 	@Override
 	public Node removeChild(Node oldChild) {
 		validateRemoteStatePreTreeMutation(oldChild);
-		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				oldChild, oldChild.getPreviousSibling(),
-				oldChild.getNextSibling(), false));
+		mutations().notifyChildListMutation(this, oldChild,
+				oldChild.getPreviousSibling(), oldChild.getNextSibling(),
+				false);
 		Node result = local().removeChild(oldChild);
 		sync(() -> remote().removeChild(oldChild));
 		oldChild.resetRemote();
@@ -436,9 +441,8 @@ public abstract class Node
 			return;
 		}
 		sync(() -> remote().removeFromParent());
-		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(
-				parentNode, this, getPreviousSibling(), getNextSibling(),
-				false));
+		mutations().notifyChildListMutation(parentNode, this,
+				getPreviousSibling(), getNextSibling(), false);
 		local().removeFromParent();
 		resetRemote();
 	}
@@ -448,13 +452,12 @@ public abstract class Node
 		validateRemoteStatePreTreeMutation(oldChild);
 		validateRemoteStatePreTreeMutation(newChild);
 		sync(() -> remote().replaceChild(newChild, oldChild));
-		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				oldChild, oldChild.getPreviousSibling(),
-				oldChild.getNextSibling(), false));
+		mutations().notifyChildListMutation(this, oldChild,
+				oldChild.getPreviousSibling(), oldChild.getNextSibling(),
+				false);
 		Node result = local().replaceChild(newChild, oldChild);
-		notify(() -> LocalDom.getLocalMutations().notifyChildListMutation(this,
-				newChild, newChild.getPreviousSibling(),
-				newChild.getNextSibling(), true));
+		mutations().notifyChildListMutation(this, newChild,
+				newChild.getPreviousSibling(), newChild.getNextSibling(), true);
 		oldChild.resetRemote();
 		return result;
 	}
@@ -480,8 +483,7 @@ public abstract class Node
 	public void setNodeValue(String nodeValue) {
 		String previousValue = local().getNodeValue();
 		local().setNodeValue(nodeValue);
-		notify(() -> LocalDom.getLocalMutations().notifyCharacterData(this,
-				previousValue, nodeValue));
+		mutations().notifyCharacterData(this, previousValue, nodeValue);
 		sync(() -> remote().setNodeValue(nodeValue));
 	}
 
@@ -546,10 +548,6 @@ public abstract class Node
 		}
 	}
 
-	public boolean isElement() {
-		return false;
-	}
-
 	protected boolean isPendingSync() {
 		return false;
 	}
@@ -561,14 +559,6 @@ public abstract class Node
 	}
 
 	protected abstract <T extends NodeLocal> T local();
-
-	/**
-	 * Apply the runnable (to the local mutation list) only if the mutation
-	 * tracking state requires it
-	 */
-	protected final void notify(Runnable runnable) {
-		LocalDom.notifyLocalMutations(runnable);
-	}
 
 	protected Node provideRoot() {
 		if (getParentElement() != null) {

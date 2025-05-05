@@ -221,8 +221,6 @@ public final class MutationRecord {
 		return flags != null && flags.contains(flag);
 	}
 
-	transient MutationRecordJso jso;
-
 	public List<MutationNode> addedNodes = new ArrayList<>();
 
 	public List<MutationNode> removedNodes = new ArrayList<>();
@@ -241,8 +239,6 @@ public final class MutationRecord {
 	public String attributeNamespace;
 
 	public Type type;
-
-	transient SyncMutations sync;
 
 	/**
 	 * If this is an element, the type = childList is and flag
@@ -265,6 +261,10 @@ public final class MutationRecord {
 	 * the markup)
 	 */
 	public AttachIds.IdList attachIds;
+
+	transient MutationRecordJso jso;
+
+	transient SyncMutations sync;
 
 	public transient List<Class<? extends Flag>> flags;
 
