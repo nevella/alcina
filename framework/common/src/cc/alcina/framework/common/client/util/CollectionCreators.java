@@ -39,6 +39,8 @@ public class CollectionCreators {
 
 		private static ConcurrentMapCreator concurrentStringMapCreator = new ConcurrentMapCreator();
 
+		private static UnsortedMapCreator unsortedMapCreator = new UnsortedMapCreator();
+
 		public static <T> Map<Class, T> createConcurrentClassMap() {
 			return concurrentClassMapCreator.create();
 		}
@@ -81,6 +83,15 @@ public class CollectionCreators {
 				setLinkedMapCreator(LinkedMapCreator linkedMapCreator) {
 			Bootstrap.linkedMapCreator = linkedMapCreator;
 		}
+
+		public static UnsortedMapCreator getUnsortedMapCreator() {
+			return unsortedMapCreator;
+		}
+
+		public static void
+				setUnsortedMapCreator(UnsortedMapCreator unsortedMapCreator) {
+			Bootstrap.unsortedMapCreator = unsortedMapCreator;
+		}
 	}
 
 	@Reflected
@@ -120,6 +131,10 @@ public class CollectionCreators {
 	public static class HashSetCreator {
 		public <T> Set<T> create() {
 			return new HashSet<>();
+		}
+
+		public <T> Set<T> create(int size) {
+			return new HashSet<>(size);
 		}
 	}
 

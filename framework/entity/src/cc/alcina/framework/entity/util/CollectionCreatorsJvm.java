@@ -76,6 +76,10 @@ public class CollectionCreatorsJvm {
 		public <T> Set<T> create() {
 			return new ObjectLinkedOpenHashSet<>();
 		}
+
+		public <T> Set<T> create(int size) {
+			return new ObjectLinkedOpenHashSet<>(size);
+		}
 	}
 
 	@Reflected

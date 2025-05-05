@@ -16,6 +16,7 @@ import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorC
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashSetCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.LinkedHashMapCreatorJvm;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.UnsortedMapCreatorJvm;
 import elemental.json.impl.JsonUtil;
 
 @SuppressWarnings("deprecation")
@@ -31,6 +32,8 @@ public class JvmReflections {
 		CollectionCreators.Bootstrap
 				.setLinkedMapCreator(new LinkedHashMapCreatorJvm());
 		CollectionCreators.Bootstrap.setHashSetCreator(new HashSetCreatorJvm());
+		CollectionCreators.Bootstrap
+				.setUnsortedMapCreator(new UnsortedMapCreatorJvm());
 		NestedName.instance = new NestedNameJvm();
 	}
 
