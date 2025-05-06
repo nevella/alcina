@@ -221,12 +221,13 @@ public class Measure extends Location.Range {
 		return Ax.format("%s :: %s", toIntPair(), Ax.trimForLogging(text()));
 	}
 
-	public String toTokenTextString() {
+	public String toTokenRangeTextString() {
 		String tokenString = token.toString();
 		if (tokenString.contains(token.getClass().getName())) {
 			tokenString = token.getClass().getSimpleName();
 		}
-		return Ax.format("%s :: %s", tokenString, Ax.trimForLogging(text()));
+		return Ax.format("%s :: %s :: %s", tokenString, toIntPair(),
+				Ax.trimForLogging(text()));
 	}
 
 	public <T> T typedData() {
