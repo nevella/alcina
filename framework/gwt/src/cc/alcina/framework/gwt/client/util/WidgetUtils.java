@@ -587,7 +587,12 @@ public class WidgetUtils {
     return eltout;
 	}-*/;
 
-	public static native NodeList getElementsForSelector(Element elto,
+	public static NodeList getElementsForSelector(Element elto,
+			String selector) {
+		return getElementsForSelectorRaw(elto, selector.replace("/", "\\/"));
+	}
+
+	public static native NodeList getElementsForSelectorRaw(Element elto,
 			String selector) /*-{
     if (!($doc.querySelector)) {
       return null;
