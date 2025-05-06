@@ -1093,10 +1093,12 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public void setInnerText(String text) {
+		if (Ax.isBlank(text)) {
+		}
 		/*
 		 * Note that empty text nodes are *not* created (in fact, are removed)
 		 */
-		if (getChildCount() == 1 && text.length() > 0) {
+		if (getChildCount() == 1 && Ax.notBlank(text)) {
 			Node firstChild = getFirstChild();
 			if (firstChild.provideIsText()) {
 				firstChild.setNodeValue(text);
@@ -1104,7 +1106,7 @@ public class Element extends Node implements ClientDomElement,
 			}
 		}
 		removeAllChildren();
-		if (text.isEmpty()) {
+		if (Ax.isBlank(text)) {
 			return;
 		}
 		appendChild(getOwnerDocument().createTextNode(text));
