@@ -308,7 +308,8 @@ public class LayerParser {
 		}
 
 		public CharSequence inputContent() {
-			return inputContent(new Range(location, input.end));
+			return inputContent(parserPeer
+					.computeInputRange(new Range(location, input.end)));
 		}
 
 		public CharSequence inputContent(Range range) {
