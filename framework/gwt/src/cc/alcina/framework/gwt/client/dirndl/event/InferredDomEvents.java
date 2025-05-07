@@ -627,12 +627,12 @@ public class InferredDomEvents {
 			@Override
 			protected HandlerRegistration bind1(Element element) {
 				this.mutationRoot = element;
-				LocalDom.getLocalMutations().topicMutations
+				LocalDom.getLocalMutations().topicBatchedMutations
 						.add(mutationListener);
 				return new HandlerRegistration() {
 					@Override
 					public void removeHandler() {
-						LocalDom.getLocalMutations().topicMutations
+						LocalDom.getLocalMutations().topicBatchedMutations
 								.remove(mutationListener);
 					}
 				};

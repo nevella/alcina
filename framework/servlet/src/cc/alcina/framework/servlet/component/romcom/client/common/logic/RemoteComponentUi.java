@@ -193,7 +193,8 @@ public class RemoteComponentUi {
 		 * correctly, the general case is not
 		 */
 		LocalDom.topicPublishException().add(this::onLocalDomException);
-		LocalDom.getLocalMutations().topicMutations.add(this::onLocalMutations);
+		LocalDom.getLocalMutations().topicBatchedMutations
+				.add(this::onLocalMutations);
 		ClientRpc.get().transportLayer.session = ReflectiveSerializer
 				.deserializeRpc(ClientUtils.wndString(
 						RemoteComponentProtocolServer.ROMCOM_SERIALIZED_SESSION_KEY));

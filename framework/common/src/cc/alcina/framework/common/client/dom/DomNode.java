@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeReadonlyLookup.DomNodeReadonlyLookupQuery;
+import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -1007,7 +1008,7 @@ public class DomNode {
 					.nodeListToList(node.getChildNodes()).stream()
 					.map(document::nodeFor).collect(Collectors.toList());
 			if ((document.isReadonly() && document.cacheNodes)
-					|| document.isLocationContext2()) {
+					|| document.isLocationContext3()) {
 				this.nodes = nodes;
 			}
 			return nodes;
@@ -1045,6 +1046,10 @@ public class DomNode {
 
 		public void invalidate() {
 			nodes = null;
+		}
+
+		public boolean isEmpty() {
+			return nodes().isEmpty();
 		}
 	}
 
@@ -1415,26 +1420,25 @@ public class DomNode {
 
 		public DomNode lastDescendant() {
 			DomNode cursor = DomNode.this;
-			while (cursor != null) {
+			while (true) {
 				DomNode last = cursor.children.lastNode();
 				if (last == null) {
 					return cursor;
 				}
 				cursor = last;
 			}
-			return null;
 		}
 
 		public DomNode lastDescendantElement() {
+			Preconditions.checkState(isElement());
 			DomNode cursor = DomNode.this;
-			while (cursor != null) {
+			while (true) {
 				DomNode last = cursor.children.lastElementNode();
 				if (last == null) {
 					return cursor;
 				}
 				cursor = last;
 			}
-			return null;
 		}
 
 		public DomNode treeSubsequentNodeNoDescent() {
@@ -2165,5 +2169,15 @@ public class DomNode {
 			}
 		}
 		return this;
+	}
+
+	IndexTuple asEndIndexTuple() {
+		Preconditions.checkState(children.isEmpty());
+		return location.asIndexTuple().add(0, textLengthSelf());
+	}
+
+	public String toShortDebugString() {
+		return Ax.format("%s :: %s", gwtNode().toNameAttachId(),
+				Ax.ntrim(Ax.trimForLogging(textContent()), 25));
 	}
 }

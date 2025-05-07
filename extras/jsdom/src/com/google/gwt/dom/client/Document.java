@@ -1306,14 +1306,16 @@ public class Document extends Node
 	}
 	}-*/;
 
-	public void addLocalMutationListener(
-			TopicListener<List<MutationRecord>> listener) {
-		localDom.localMutations.topicMutations.add(listener);
-	}
-
-	public void addUnbatchedUnattachedLocalMutationListener(
-			TopicListener<MutationRecord> listener) {
-		localDom.localMutations.topicUnbatchedUnattachedMutations.add(listener);
+	public void addUnbatchedLocalMutationListener(
+			TopicListener<MutationRecord> listener,
+			boolean toAttachedListener) {
+		if (toAttachedListener) {
+			localDom.localMutations.topicUnbatchedAttachedMutations
+					.add(listener);
+		} else {
+			localDom.localMutations.topicUnbatchedUnattachedMutations
+					.add(listener);
+		}
 	}
 
 	public void flushLocalMutations() {

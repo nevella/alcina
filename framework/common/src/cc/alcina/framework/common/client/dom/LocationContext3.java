@@ -1,14 +1,11 @@
 package cc.alcina.framework.common.client.dom;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationNode;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 
@@ -16,9 +13,7 @@ import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -30,349 +25,216 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * <li>Location lifecycle? How to handle + model split/merge?
  * <li>Location lifecycle - when checking whether to do a full revalidate - look
  * at attached node count? or total?. Note that merge must disable revalidation
- * <li>WIP - next - implement 'compute IndexMutations', test live indicies
+ * </ul>
+ * 
+ * <p>
+ * Implementation
+ * <ul>
+ * <li>Any mutation to the attached DOM is recorded as part of an index mutation
+ * - either appending to the current mutation (if they form a continuous
+ * sequence, and there are no intervening applications of the mutation - or as
+ * the basis of a new mutation
+ * <li>The directly affected location is updated during recording. Any
+ * subsequent location computations apply outstanding index mutations and
+ * potentially cause reset of the current cumulative mutation
+ * <li>This allows a non-batched, roughly o(1) mutable location ordering system
  * </ul>
  */
 class LocationContext3 implements LocationContext {
-	/**
-	 * <p>
-	 * Models a series of index mutations, computed from an input state
-	 * [existing indicies], a local MutationRecord and an outputstate (the DOM
-	 * at computation time)
-	 * 
-	 * <p>
-	 * TODO - (and such fun):
-	 * <ul>
-	 * <li>Have a minimum affected IndexTuple (maximum doesn't really help) -
-	 * which can optimise application
-	 * <li>Require that mutations be strictly ascending - if so, any location
-	 * mutated as part of this IndexMutations will be valid (since any
-	 * subsequent IndexMutation in the list will provably not affect that
-	 * location).
-	 * <li>Actually - have maximum, and cumulative delta (for the IndexMutation)
-	 * will apply
-	 * <li>Allow merge of an IndexMutations with the immediately prior if:
-	 * <ul>
-	 * <li>No computation involving *application* of the previous IndexMutations
-	 * has occurred (i.e. no validation of a {@link Location} was attempated, or
-	 * the Location was before {@link #minimumAffected} )
-	 * <li>The [n+1]th mutations are after the nth mutations
-	 * <li>Contiguous {@link IndexMutation} elements can be themselves merged
-	 * </ul>
-	 * </ul>
-	 */
-	static class IndexMutations {
-		static class IndexMutation {
-			IndexTuple at;
+	static class IndexMutation {
+		IndexTuple at;
 
-			int treeIndexDelta;
+		IndexTuple delta;
 
-			int indexDelta;
-
-			Location location;
-
-			IndexMutation(Location location, IndexTuple nodeDelta) {
-				this.location = location;
-				at = location.asIndexTuple();
-				treeIndexDelta = nodeDelta.treeIndex;
-				indexDelta = nodeDelta.index;
-			}
-
-			@Override
-			public String toString() {
-				return FormatBuilder.keyValues("containingNode",
-						location.getContainingNode(), "at", at, "delta",
-						new IndexTuple(treeIndexDelta, indexDelta));
-			}
-		}
+		/*
+		 * The first location at which the mutation occurred
+		 */
+		Location location;
 
 		LocationContext3 context;
 
-		List<MutationRecord> domMutations;
-
-		IndexTuple minimumAffected;
+		List<MutationRecord> domMutations = new ArrayList<>();
 
 		int mutationIndex;
 
-		List<IndexMutation> mutations = new ArrayList<>();
+		boolean appliedNonContiguous = false;
+
+		IndexMutation(LocationContext3 context) {
+			this.context = context;
+			mutationIndex = context.mutations.size();
+		}
 
 		/*
-		 * The damaged will be _mostly_ in order (e.g. tree child) - so it
-		 * definitely makes performance sense to use an ordered collcation
+		 * separation from the constructor ensures mutationPosition correctness
 		 */
-		Set<DomNode> damaged = new LinkedHashSet<>();
+		void init(MutationRecord firstMutation) {
+			domMutations.add(firstMutation);
+			location = computeAffectedLocation(firstMutation);
+			at = location.asIndexTuple();
+			delta = computeDelta(firstMutation);
+			domMutations.add(firstMutation);
+		}
 
-		IndexMutations(LocationContext3 context,
-				List<MutationRecord> domMutations) {
-			this.context = context;
-			this.domMutations = domMutations;
+		IndexTuple computeDelta(MutationRecord mutation) {
+			if (mutation.type == MutationRecord.Type.characterData) {
+				return new IndexTuple(0, mutation.newValue.length()
+						- mutation.oldValue.length());
+			}
+			MutationNode added = Ax.first(mutation.addedNodes);
+			/*
+			 * One important side-effect is that the delta is computed from the
+			 * subsequent node, then the subsequent node is updated with the
+			 * delta. This allows efficient tree-sequential adds
+			 * 
+			 * Note that updating the subsequent node does *not* set
+			 * #appliedNonContiguous - so the IndexMutation can be extended
+			 */
+			if (added != null) {
+				DomNode node = added.node.asDomNode();
+				node.stream().forEach(DomNode::asLocation);
+				DomNode lastDescendant = node.relative().lastDescendant();
+				DomNode subsequent = node.relative()
+						.treeSubsequentNodeNoDescent();
+				Location subsequentLocation = subsequent == null
+						? context.documentRange.end
+						: subsequent.location;
+				context.ensureCurrent(subsequentLocation);
+				IndexTuple delta = lastDescendant.asEndIndexTuple()
+						/*
+						 * compute what subsequentLocation _should_ be by adding
+						 * (1,0) to the end of the last descendant
+						 */
+						.add(1, 0).subtract(subsequentLocation.asIndexTuple());
+				subsequentLocation.applyIndexDelta(delta);
+				return delta;
+			} else {
+				MutationNode removed = Ax.first(mutation.removedNodes);
+				DomNode node = removed.node.asDomNode();
+				/*
+				 * Note that this is emitted *prior* to DOM removal
+				 */
+				DomNode subsequent = node.relative()
+						.treeSubsequentNodeNoDescent();
+				Location subsequentLocation = subsequent == null
+						? context.documentRange.end
+						: subsequent.location;
+				Location removedLocation = node.location;
+				IndexTuple t0 = subsequentLocation.asIndexTuple();
+				IndexTuple t1 = removedLocation.asIndexTuple();
+				context.ensureCurrent(subsequentLocation);
+				context.ensureCurrent(removedLocation);
+				IndexTuple t2 = subsequentLocation.asIndexTuple();
+				IndexTuple t3 = removedLocation.asIndexTuple();
+				IndexTuple delta = removedLocation.asIndexTuple()
+						.subtract(subsequentLocation.asIndexTuple());
+				subsequentLocation.applyIndexDelta(delta);
+				return delta;
+			}
+		}
+
+		Location computeAffectedLocation(MutationRecord mutation) {
+			Location result = null;
+			if (mutation.type == MutationRecord.Type.characterData) {
+				result = mutation.target.node.asDomNode().location;
+			} else {
+				MutationNode added = Ax.first(mutation.addedNodes);
+				if (added != null) {
+					result = added.node.asDomNode().asLocation();
+				} else {
+					MutationNode removed = Ax.first(mutation.removedNodes);
+					result = removed.node.asDomNode().location;
+				}
+			}
+			context.ensureCurrent(result);
+			return result;
 		}
 
 		@Override
 		public String toString() {
-			return Ax.newlineJoin(domMutations);
+			return Ax.format("%s :: %s :: %s", at, delta,
+					location.getContainingNode().toShortDebugString());
 		}
 
-		class DamagedDistance implements Comparable<DamagedDistance> {
-			DomNode node;
-
-			int nearestLocationTreeIndex;
-
-			int distanceToNearestLocation;
-
-			DamagedDistance(DomNode node) {
-				this.node = node;
-				DomNode cursor = node;
-				while (true) {
-					if (cursor.location != null) {
-						nearestLocationTreeIndex = cursor.location
-								.asIndexTuple().treeIndex;
-						break;
-					} else {
-						cursor = cursor.relative().treePreviousNode();
-						distanceToNearestLocation++;
-					}
-				}
+		IndexTuple applyTo(IndexTuple mutatingPointRef) {
+			if (at == null) {
+				/*
+				 * edge case - updating treeprevious during IndexMutation init.
+				 * Logically, at will be strictly after treeprevious - so simply
+				 * return
+				 */
+				return mutatingPointRef;
 			}
-
-			@Override
-			public int compareTo(DamagedDistance o) {
-				int cmp = nearestLocationTreeIndex - o.nearestLocationTreeIndex;
-				if (cmp != 0) {
-					return cmp;
-				}
-				return distanceToNearestLocation - o.distanceToNearestLocation;
+			if (delta == null) {
+				/*
+				 * dge case - updating subsequent during IndexMutation init.
+				 */
+				return mutatingPointRef;
 			}
-
-			@Override
-			public String toString() {
-				return Ax.format("[node/distance] %s :: %s",
-						node.gwtNode().toNameAttachId(),
-						distanceToNearestLocation);
+			if (mutatingPointRef.isBefore(at)) {
+				return mutatingPointRef;
+			}
+			appliedNonContiguous = true;
+			if (mutatingPointRef.treeIndex < at.treeIndex) {
+				/*
+				 * the text run mutation is visible, the tree mutation is not
+				 * (to #mutatingPointRef)
+				 */
+				return mutatingPointRef.add(0, delta.index);
+			} else {
+				return mutatingPointRef.add(delta.treeIndex, delta.index);
 			}
 		}
 
-		/**
-		 * <p>
-		 * This method computes the mutation list *and* (necessarily)
-		 * immediately updates the location coordinates of any damaged nodes
-		 * 
-		 * <p>
-		 * The input will be a singleton list in all cases except
-		 * sync-from-browser-dom
-		 */
-		/*
-		@formatter:off
-		 * 
-		 * - determine the list of damaged:
-		 *   - added
-		 * 	 - added subtree
-		 *   - added tree-subsequent (next-sib/parent.next-sib/etc) ... probably not required, but doesn't hurt
-		 *     (and see note re multiple removals/addistions)
-		 *   - removed tree-subsequent 
-		 *   - note - the 
-		 *   - note that  adjacent-text merge/split might get special treatment here
-		 *     - that'd be nice (to avoid the need for special-casing of dom operations)
-		 *   - note that the root location - [0,0] - is immutable
-		 *   - note that multiple removals may occur, so removed/added tree-subsequent may be ex-tree at this time. 
-		 *     But any added/removed -union- of ranges the tree subsequent will exist in the current dom and be the 
-		 *     one we care about
-		 *  
-		 * - order damaged - either by treeindex of previous (if not damaged) or iter-length to tree-index [previous]
-		 * 
-		 * - recompute, in order [which implies recompute the pres] - this gives a (cumulative) list of deltas
-		 * 
-		 * - Note that this only recomputes at most 2n locations, for n mutations. Subsequent location recomputations 
-		 *   require at most 4t integer operations (plus a list iteration) where t is the number of mutations since the 
-		 *   location was last computed
-		 * 
-		 * - Note that code here has to be careful to not recompute locations, until the main 'damagedDistance' loop
-		 * 
-		 
-		 * 
-		 * @formatter:on
-		 */
-		void computeElements() {
-			Multimap<DomNode, List<MutationRecord>> nodeCharacterDataMutation = new Multimap<>();
-			/*
-			 * compute damaged
-			 */
-			for (MutationRecord domMutation : domMutations) {
-				switch (domMutation.type) {
-				case attributes:
-					break;
-				case characterData:
-					DomNode domNode = domMutation.target.node.asDomNode();
-					damaged.add(domNode);
-					nodeCharacterDataMutation.add(domNode, domMutation);
-					break;
-				case childList: {
-					domMutation.addedNodes.forEach(this::damageSubtree);
-					/*
-					 * removed nodes are not used
-					 */
-					if (domMutation.nextSibling != null) {
-						damaged.add(domMutation.nextSibling.node.asDomNode());
-					} else {
-						DomNode asDomNode2 = domMutation.target.node
-								.asDomNode();
-						damaged.add(asDomNode2.relative()
-								.treeSubsequentNodeNoDescent());
-					}
-					break;
-				}
-				}
+		boolean extendWith(MutationRecord mutation) {
+			if (appliedNonContiguous) {
+				return false;
 			}
-			damaged.remove(null);
-			damaged.removeIf(DomNode::isDetached);
-			/*
-			 * Sort damaged - the coordinates for sort are [(nearest preceding
-			 * existing location including self),(distance to nearest) ] - first
-			 * beats second
-			 */
-			List<DamagedDistance> list = damaged.stream()
-					.map(DamagedDistance::new).sorted().toList();
-			for (DamagedDistance damagedDistance : list) {
-				DomNode node = damagedDistance.node;
-				DomNode treePrevious = node.relative().treePreviousNode();
-				/*
-				 * key :: location.delta[new] = location.actual -
-				 * location[last.computed]+deltas
-				 * 
-				 * that allows us to only think in terms of numerical deltas
-				 * outside the computation
-				 */
-				/*
-				 * WIP - what to do about text length changes? Probably it's
-				 * apply treeIndex before Index (I think this is already fixed -
-				 * but test)
-				 */
-				/*
-				 * Due to the sort order, if treePrevious exists, it will have a
-				 * non-null location. That location needs to be ensuredcurrent
-				 */
-				if (treePrevious != null) {
-					Preconditions.checkState(treePrevious.location != null);
-					Location previousLocation = treePrevious.asLocation();
-					previousLocation.getLocationContext()
-							.ensureCurrent(previousLocation);
-				}
-				/*
-				 * If there is no previous, this is the documentelement node -
-				 * and its [0,0] is immutable
-				 */
-				IndexTuple actual = treePrevious == null ? new IndexTuple(0, 0)
-						: treePrevious.asLocation().asIndexTuple().add(1,
-								treePrevious.textLengthSelf());
-				IndexTuple nodeDelta = null;
-				if (node.location == null) {
-					/*
-					 * new node. it's always just a simple [1,textLengthSelf]
-					 * delta -
-					 */
-					nodeDelta = new IndexTuple(1, node.textLengthSelf());
-					// ensure location
-					node.asLocation();
-				} else {
-					Location nodeLocation = node.location;
-					IndexTuple lastComputed = nodeLocation.asIndexTuple();
-					IndexTuple lastComputedAccumulator = context
-							.applyPriorMutations(nodeLocation, lastComputed);
-					IndexTuple cumulativeDelta = lastComputedAccumulator
-							.subtract(lastComputed);
-					nodeDelta = actual.subtract(lastComputed)
-							.subtract(cumulativeDelta);
-					/*
-					 * Neatly, this updates the mutationSequencePosition. Note
-					 * that two things happen, we compute the nodeDelta (changes
-					 * registered at this node only), but apply both the
-					 * tree-priors *and* those changes
-					 */
-					node.asLocation().applyIndexDelta(cumulativeDelta);
-					node.asLocation().applyIndexDelta(nodeDelta);
-					/*
-					 * Tricky - add any characterdata mutation delta here, if a
-					 * text node. It will not be applied to this (text) node's
-					 * start, but will be to all subsequents
-					 */
-					if (node.isText()) {
-						List<MutationRecord> cdataMutations = nodeCharacterDataMutation
-								.get(node);
-						if (cdataMutations != null) {
-							/*
-							 * TODO - concurrent editing support (operational
-							 * transform) would possibly use a diff and create
-							 * potentially several deltas
-							 */
-							for (MutationRecord cdataMutation : cdataMutations) {
-								nodeDelta = nodeDelta.add(0,
-										cdataMutation.newValue.length()
-												- cdataMutation.oldValue
-														.length());
-							}
-						}
-					}
-				}
-				if (!nodeDelta.isZero()) {
-					IndexMutation mutation = new IndexMutation(
-							node.asLocation(), nodeDelta);
-					mutations.add(mutation);
-				}
+			Location affectedLocation = computeAffectedLocation(mutation);
+			if (!affectedLocation.asIndexTuple().subtract(delta).equals(at)) {
+				return false;
 			}
-		}
-
-		void damageSubtree(MutationNode mutationNode) {
-			Node node = mutationNode.node;
-			if (!node.isAttached()) {
-				return;
-			}
-			node.asDomNode().stream().forEach(damaged::add);
-		}
-
-		IndexTuple applyTo(IndexTuple locationAccumulator) {
-			for (IndexMutation mutation : mutations) {
-				/*
-				 * text run mutation is different depending on treeindex
-				 */
-				boolean applyTextRunMutation = mutation.at.index < locationAccumulator.index;
-				if (mutation.at.treeIndex <= locationAccumulator.treeIndex) {
-					applyTextRunMutation = mutation.at.index <= locationAccumulator.index;
-				}
-				if (applyTextRunMutation) {
-					locationAccumulator = locationAccumulator.add(0,
-							mutation.indexDelta);
-				}
-				boolean applyTreeIndexMutation = mutation.at.treeIndex <= locationAccumulator.treeIndex;
-				if (applyTreeIndexMutation) {
-					locationAccumulator = locationAccumulator
-							.add(mutation.treeIndexDelta, 0);
-				}
-			}
-			return locationAccumulator;
+			delta = delta.add(computeDelta(mutation));
+			domMutations.add(mutation);
+			return true;
 		}
 	}
 
-	/*
-	 * Most of the trickiness of mutation tracking happens here - note the
-	 * similarities to SyncMutations2 - since we only know the state at the end,
-	 * not at change time, we need to think in terms of "damage/regenerate"
-	 * rather than "incrementally mutate"
-	 * 
-	 * No! Here, since local, we *do* know the prior state - so the damage
-	 * approach is wrong (and won't work if listeners are out-of-order)
+	/**
+	 * Transforms {@link MutationRecord} instances to the {@link IndexMutation}
+	 * model
 	 */
-	class LocalMutationTransformer
-			implements TopicListener<List<MutationRecord>> {
+	class LocalMutationTransformer implements TopicListener<MutationRecord> {
 		@Override
-		public void topicPublished(List<MutationRecord> domMutations) {
-			IndexMutations indexMutations = new IndexMutations(
-					LocationContext3.this, domMutations);
-			indexMutations.mutationIndex = mutations.size();
-			/*
-			 * add before computation - the computation logic requires it
-			 */
-			mutations.add(indexMutations);
-			indexMutations.computeElements();
+		public void topicPublished(MutationRecord mutation) {
+			switch (mutation.type) {
+			case attributes:
+				/*
+				 * does not affect the index
+				 */
+				return;
+			case innerMarkup:
+				/*
+				 * When replaying remote innerMarkup mutations, the cascaded
+				 * creation mutations will fire, so this can be ignored for
+				 * index effects
+				 * 
+				 * 
+				 */
+				return;
+			case childList:
+				Preconditions.checkArgument((mutation.addedNodes.size() == 1
+						&& mutation.removedNodes.size() == 0)
+						|| (mutation.addedNodes.size() == 0
+								&& mutation.removedNodes.size() == 1));
+			default:
+				break;
+			}
+			if (currentMutation == null
+					|| !currentMutation.extendWith(mutation)) {
+				currentMutation = new IndexMutation(LocationContext3.this);
+				mutations.add(currentMutation);
+				currentMutation.init(mutation);
+			}
 		}
 	}
 
@@ -388,7 +250,9 @@ class LocationContext3 implements LocationContext {
 
 	Document gwtDocument;
 
-	List<IndexMutations> mutations;
+	List<IndexMutation> mutations;
+
+	IndexMutation currentMutation;
 
 	DomNodeTree tree;
 
@@ -422,10 +286,6 @@ class LocationContext3 implements LocationContext {
 			idx = documentTextRunLength;
 		}
 		return idx;
-	}
-
-	int getDocumentTextRunLength() {
-		return documentRange.end.getIndex();
 	}
 
 	@Override
@@ -543,7 +403,6 @@ class LocationContext3 implements LocationContext {
 
 	@Override
 	public void ensureCurrent(Location location) {
-		gwtDocument.flushLocalMutations();
 		if (location.documentMutationPosition == getDocumentMutationPosition()) {
 			return;
 		}
@@ -552,7 +411,6 @@ class LocationContext3 implements LocationContext {
 		/*
 		 * Apply all indexmutations occuring node-previous and time-previous
 		 */
-		IndexTuple tuple = location.asIndexTuple();
 		applyPriorMutations(location);
 	}
 
@@ -560,6 +418,9 @@ class LocationContext3 implements LocationContext {
 	public int getContentLength(DomNode domNode) {
 		if (domNode.isText()) {
 			return domNode.textLengthSelf();
+		}
+		if (domNode.children.isEmpty()) {
+			return 0;
 		}
 		Location location = domNode.asLocation();
 		DomNode afterEnd = domNode.relative().treeSubsequentNodeNoDescent();
@@ -609,6 +470,10 @@ class LocationContext3 implements LocationContext {
 		});
 	}
 
+	int getDocumentTextRunLength() {
+		return documentRange.end.getIndex();
+	}
+
 	void dumpLocations() {
 		gwtDocument.domDocument.stream().forEach(n -> {
 			if (n.location == null) {
@@ -646,25 +511,24 @@ class LocationContext3 implements LocationContext {
 		return builder.toString();
 	}
 
-	/*
-	 * 'accumulator' is slightly wonky, since the object ref changes - not the
-	 * object - 'reference accumulator?'
-	 */
 	IndexTuple applyPriorMutations(Location location,
-			IndexTuple locationAccumulator) {
+			IndexTuple mutatingPointRef) {
 		for (int idx = location.documentMutationPosition; idx < mutations
 				.size(); idx++) {
-			locationAccumulator = mutations.get(idx)
-					.applyTo(locationAccumulator);
+			mutatingPointRef = mutations.get(idx).applyTo(mutatingPointRef);
 		}
-		return locationAccumulator;
+		return mutatingPointRef;
 	}
 
 	void applyPriorMutations(Location location) {
-		IndexTuple locationAccumulator = location.asIndexTuple();
-		locationAccumulator = applyPriorMutations(location,
-				locationAccumulator);
-		IndexTuple locationDelta = locationAccumulator
+		/*
+		 * Since IndexTuple is immutable, this process maintains a mutating
+		 * reference to the an index tuple (as index mutations are applied) -
+		 * it's a sort of pointer/accumulator thing
+		 */
+		IndexTuple mutatingPointRef = location.asIndexTuple();
+		mutatingPointRef = applyPriorMutations(location, mutatingPointRef);
+		IndexTuple locationDelta = mutatingPointRef
 				.subtract(location.asIndexTuple());
 		location.applyIndexDelta(locationDelta);
 	}
@@ -679,8 +543,9 @@ class LocationContext3 implements LocationContext {
 
 	void init() {
 		resetLocationMutations();
-		gwtDocument.addLocalMutationListener(new LocalMutationTransformer());
-		gwtDocument.addUnbatchedUnattachedLocalMutationListener(
-				new LocalMutationInvalidationListener());
+		gwtDocument.addUnbatchedLocalMutationListener(
+				new LocalMutationTransformer(), true);
+		gwtDocument.addUnbatchedLocalMutationListener(
+				new LocalMutationInvalidationListener(), false);
 	}
 }

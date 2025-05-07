@@ -240,9 +240,9 @@ public class DomDocument extends DomNode implements Cloneable {
 		if (locationContext == null) {
 			if (useLocations2
 					&& w3cDoc() instanceof com.google.gwt.dom.client.Document) {
-				LocationContext2 locationContext2 = new LocationContext2(this);
-				locationContext = locationContext2;
-				locationContext2.init();
+				LocationContext3 locationContext3 = new LocationContext3(this);
+				locationContext = locationContext3;
+				locationContext3.init();
 			} else {
 				locationContext = new Locations();
 			}
@@ -688,7 +688,7 @@ public class DomDocument extends DomNode implements Cloneable {
 		nodes.keySet().removeIf(toDetach::contains);
 	}
 
-	public boolean isLocationContext2() {
+	public boolean isLocationContext3() {
 		return locationContext instanceof LocationContext2;
 	}
 }

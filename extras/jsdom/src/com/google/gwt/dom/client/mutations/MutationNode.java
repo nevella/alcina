@@ -46,8 +46,18 @@ import cc.alcina.framework.servlet.component.Feature_RemoteObjectComponent;
 @TypeSerialization(propertyOrder = PropertyOrder.FIELD)
 public final class MutationNode {
 	/**
+	 * <p>
 	 * Any mutations being applied will be shallow (i.e. if a node is attached,
 	 * it will have no children)
+	 * 
+	 * <p>
+	 * FIXME - this needs a list of mutation application modes, and some
+	 * correctness logic about how they affect various receivers
+	 * <ul>
+	 * <li>All affecting mutations invalidate DomNode.children
+	 * <li>All attach mutations affect LocationContext3
+	 * <li>inner_markup mutations don't directly affect any lookups
+	 * </ul>
 	 */
 	public static LooseContext.Key CONTEXT_APPLYING_NON_MARKUP_MUTATIONS = LooseContext
 			.key(MutationNode.class, "CONTEXT_APPLYING_NON_MARKUP_MUTATIONS");

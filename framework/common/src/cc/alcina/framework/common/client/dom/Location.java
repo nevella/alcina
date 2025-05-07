@@ -959,6 +959,18 @@ public class Location implements Comparable<Location> {
 		public String toString() {
 			return Ax.format("[%s,%s]", treeIndex, index);
 		}
+
+		/**
+		 * Equivalently, a mutation at other would not affect a location at this
+		 * indextuple. See also
+		 * {@link LocationContext3.IndexMutation#IndexMutation}
+		 */
+		boolean isBefore(IndexTuple other) {
+			if (treeIndex < other.treeIndex) {
+				return index <= other.index;
+			}
+			return index < other.index && treeIndex < other.treeIndex;
+		}
 	}
 
 	/*

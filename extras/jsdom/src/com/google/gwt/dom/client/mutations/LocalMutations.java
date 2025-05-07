@@ -35,21 +35,17 @@ public class LocalMutations {
 
 	List<MutationRecord> mutations = new ArrayList<>();
 
-	/*
-	 * track which events have been published to the unbatched topic
-	 */
-	int unbatchedIndex;
-
 	/**
 	 * Fires mutations when explicitly flushed, or (eventing dom) at the end of
 	 * the event cycle
 	 */
-	public Topic<List<MutationRecord>> topicMutations = Topic.create();
+	public Topic<List<MutationRecord>> topicBatchedMutations = Topic.create();
 
 	/**
 	 * Fires mutations as soon as they're published
 	 */
-	public Topic<List<MutationRecord>> topicUnbatchedMutations = Topic.create();
+	public Topic<MutationRecord> topicUnbatchedAttachedMutations = Topic
+			.create();
 
 	public Topic<MutationRecord> topicUnbatchedUnattachedMutations = Topic
 			.create();
@@ -77,11 +73,9 @@ public class LocalMutations {
 				if (!hasMutations()) {
 					break;
 				}
-				fireUnbatched();
 				List<MutationRecord> mutations = this.mutations;
 				this.mutations = new ArrayList<>();
-				this.unbatchedIndex = 0;
-				topicMutations.publish(mutations);
+				topicBatchedMutations.publish(mutations);
 			}
 			validateLocations();
 		} finally {
@@ -92,13 +86,6 @@ public class LocalMutations {
 	void validateLocations() {
 		// mutationsAccess.getDocument().domDocument.locations()
 		// .validateLocations();
-	}
-
-	void fireUnbatched() {
-		List<MutationRecord> mutations = this.mutations.subList(unbatchedIndex,
-				this.mutations.size());
-		unbatchedIndex = this.mutations.size();
-		topicUnbatchedMutations.publish(mutations);
 	}
 
 	public void notifyAttributeModification(Node target, String name,
@@ -119,7 +106,7 @@ public class LocalMutations {
 		topicUnbatchedUnattachedMutations.publish(record);
 		if (record.target.node().isAttached()) {
 			mutations.add(record);
-			fireUnbatched();
+			topicUnbatchedAttachedMutations.publish(record);
 			if (GWT.isClient() && finallyCommand == null) {
 				finallyCommand = this::fireMutations;
 				Scheduler.get().scheduleFinally(finallyCommand);
@@ -158,9 +145,10 @@ public class LocalMutations {
 				addMutation(record);
 			} else {
 				if (add) {
-					nodeAsMutations(child,
-							!MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS
-									.is()).forEach(this::addMutation);
+					nodeAsMutations(child, false
+					// !MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS
+					// .is()
+					).forEach(this::addMutation);
 				} else {
 					MutationRecord record = new MutationRecord();
 					record.mutationsAccess = mutationsAccess;
@@ -179,6 +167,12 @@ public class LocalMutations {
 		}
 	}
 
+	/*
+	 * All callers are deep:false. This may be correct, since LocalMutations
+	 * receives all (not just attached) mutations, so listeners should
+	 * differentiate rather than doing so here. FIXME - probably simplify to
+	 * just non-deep case
+	 */
 	List<MutationRecord> nodeAsMutations(Node node, boolean deep) {
 		List<MutationRecord> records = new ArrayList<>();
 		if (deep) {
