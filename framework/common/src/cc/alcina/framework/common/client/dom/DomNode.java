@@ -1158,6 +1158,19 @@ public class DomNode {
 		public Optional<DomNode> getContainingBlock() {
 			return style().containingBlock();
 		}
+
+		public boolean isVisibleBoundaryWhitespace(boolean end) {
+			String textContent = textContent();
+			Preconditions.checkArgument(textContent.length() > 0);
+			String boundary = end
+					? textContent.substring(textContent.length() - 1)
+					: textContent.substring(0, 1);
+			if (isText()) {
+				return TextUtils.isEmptyHardOrSoftWhitespace(boundary);
+			} else {
+				return Objects.equals(boundary, "\u00a0");
+			}
+		}
 	}
 
 	class DomNodeReadonlyLookup {
