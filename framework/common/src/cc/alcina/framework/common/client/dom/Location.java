@@ -921,6 +921,8 @@ public class Location implements Comparable<Location> {
 		IndexTuple(int treeIndex, int index) {
 			this.treeIndex = treeIndex;
 			this.index = index;
+			Preconditions.checkState((treeIndex >= 0 && index >= 0)
+					|| (treeIndex <= 0 && index <= 0));
 		}
 
 		IndexTuple add(IndexTuple tuple) {
@@ -970,6 +972,20 @@ public class Location implements Comparable<Location> {
 				return index <= other.index;
 			}
 			return index < other.index && treeIndex < other.treeIndex;
+		}
+
+		IndexTuple negate() {
+			return new IndexTuple(-treeIndex, -index);
+		}
+
+		int getDirection() {
+			if (treeIndex > 0 || index > 0) {
+				return 1;
+			} else if (treeIndex == 0 && index == 0) {
+				return 0;
+			} else {
+				return -1;
+			}
 		}
 	}
 
