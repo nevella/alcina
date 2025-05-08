@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
@@ -111,16 +112,31 @@ public class AttachIds {
 	 */
 	public IdList getSubtreeIds(Node node) {
 		IdList list = new IdList();
-		DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<Node>(
-				node,
-				n -> n.getChildNodes().stream().collect(Collectors.toList()));
-		traversal.forEach(n -> {
+		List<Node> depthFirstNodes = node.traverse().toList();
+		Node previous = null;
+		for (int idx = 0; idx < depthFirstNodes.size(); idx++) {
+			Node n = depthFirstNodes.get(idx);
+			if (n.provideIsText() && previous != null
+					&& previous.provideIsText()) {
+				if (n.getParentNode() == previous.getParentNode()) {
+					Ax.sysLogHigh("Merging adjacent text nodes :: %s %s -> %s",
+							n.getParentNode().toNameAttachId(), n, previous);
+					previous.setTextContent(
+							previous.getTextContent() + n.getTextContent());
+					n.removeFromParent();
+					continue;
+				}
+			}
+			// FEATURE - localdom - we should/will allow empty text nodes - and
+			// probably should allow adjacent text nodes (by customising the
+			// protocol with repetition, a little)
 			if (n.getNodeType() == Node.TEXT_NODE
 					&& n.getNodeValue().isEmpty()) {
 				n.setNodeValue(" ");
 			}
+			previous = n;
 			list.ids.add(n.attachId);
-		});
+		}
 		return list;
 	}
 

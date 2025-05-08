@@ -8,6 +8,7 @@ import com.google.gwt.core.client.impl.JavaScriptObjectList;
 import com.google.gwt.dom.client.AttachIds.IdList;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /**
  * <h2>LocalDom 3.0</h2>
@@ -72,6 +73,13 @@ class MarkupJso {
 			container.traverse()
 					.forEach(n -> n.putRemote((NodeJso) itr.next()));
 		}
+
+		public String toLocalAttachIdString() {
+			FormatBuilder builder = new FormatBuilder();
+			container.traverse().forEach(
+					n -> builder.line("%s - %s", n.attachId, n.getNodeName()));
+			return builder.toString();
+		}
 	}
 
 	void markup(MarkupToken token) {
@@ -103,10 +111,14 @@ class MarkupJso {
 							Ax.ntrim(token.localMarkup, 500),
 							Ax.ntrim(token.remoteMarkup, 500)));
 			LocalDom.topicPublishException().publish(reportedException);
+			Ax.out("Local attachIds:\n%s", token.toLocalAttachIdString());
 			/* probably some odd dom - compare to roundtripped
 			@formatter:off
 			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), token.localMarkup.replace("&nbsp;","\u00A0").getBytes());
 			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), token.remoteMarkup.replace("&nbsp;","\u00A0").getBytes());
+
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t2.txt"), e.toString().toLowerCase().getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t3.txt"), token.toLocalAttachIdString().getBytes());
 			 @formatter:on
 			 */
 			throw e;
@@ -128,6 +140,7 @@ class MarkupJso {
 		var idsIdx = 0;
 		var itr = document.createNodeIterator(container);
 		var coalesceLists = [];
+		var incorrect = false;
 		for (; ;) {
 			var node = itr.nextNode();
 			resultJsos.push(node);
@@ -135,7 +148,7 @@ class MarkupJso {
 				break;
 			}
 			if (idsIdx == ids.length) {
-				throw "incorrect-idlist-length";
+				incorrect=true;
 			}
 			node.__attachId = ids[idsIdx++];
 			if (node.nodeType == Node.TEXT_NODE) {
@@ -174,8 +187,20 @@ class MarkupJso {
 			}
 			coalesceList[0].nodeValue = content;
 		}
-		if (idsIdx != ids.length) {
-			throw "incorrect-idlist-length";
+		if (idsIdx != ids.length || incorrect) {
+			var buffer="";
+			debugger;
+			if(!@com.google.gwt.core.client.GWT::isScript()()){
+				for(var idx=0;idx<resultJsos.length;idx++){
+					var jso=resultJsos[idx];
+					if(jso!=null){
+						buffer+=""+jso.__attachId+" - "+jso.nodeName+"\n"	;
+					}else{
+						buffer+="[null jso] - idx "+idx+"\n";
+					}
+				}
+			}
+			throw "incorrect-idlist-length\n"+buffer;
 		}
 		// magic - return the createdJsos object to avoid round-tripping (devmode)
 		return idsIdx == ids.length ? createdJsos : null;
