@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents.RefreshPositioning;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
 
 /**
@@ -29,9 +30,9 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
  *
  */
 @Directed
-public class OverlayContainer extends Model
-		implements HasTag, Model.RerouteBubbledEvents,
-		OverlayEvents.PositionedDescendants.Emitter {
+public class OverlayContainer extends Model implements HasTag,
+		Model.RerouteBubbledEvents, OverlayEvents.PositionedDescendants.Emitter,
+		OverlayEvents.RefreshPositioning.Handler {
 	private final Overlay contents;
 
 	private final ContainerOptions containerOptions;
@@ -126,9 +127,29 @@ public class OverlayContainer extends Model
 	 * remove visibility:hidden
 	 */
 	void position() {
+		if (provideIsUnbound()) {
+			return;
+		}
 		containerOptions.position.withToElement(provideElement()).apply();
 		emitEvent(Overlay.Positioned.class, this);
 		emitEvent(OverlayEvents.PositionedDescendants.class, this);
 		Scheduler.get().scheduleFinally(() -> setVisible(true));
+	}
+
+	@Override
+	public void onRefreshPositioning(RefreshPositioning event) {
+		if (containerOptions.position.rectSourceElement == null) {
+			return;
+		}
+		Scheduler.get().scheduleDeferred(() -> {
+			if (containerOptions.position.rectSourceElement == null
+					|| !containerOptions.position.rectSourceElement
+							.isAttached()) {
+				return;
+			}
+			containerOptions.position.fromRect = containerOptions.position.rectSourceElement
+					.getBoundingClientRect();
+			this.position();
+		});
 	}
 }

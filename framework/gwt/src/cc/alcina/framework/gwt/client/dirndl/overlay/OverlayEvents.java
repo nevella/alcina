@@ -18,4 +18,16 @@ public class OverlayEvents {
 			handler.onPositionedDescendants(this);
 		}
 	}
+
+	public static class RefreshPositioning
+			extends ModelEvent<Object, RefreshPositioning.Handler> {
+		@Override
+		public void dispatch(RefreshPositioning.Handler handler) {
+			handler.onRefreshPositioning(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onRefreshPositioning(RefreshPositioning event);
+		}
+	}
 }

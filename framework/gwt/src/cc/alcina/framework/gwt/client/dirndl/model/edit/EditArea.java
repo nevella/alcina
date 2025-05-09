@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.process.ProcessObservers;
@@ -270,7 +271,10 @@ public class EditArea extends Model.Fields
 	 */
 	class SuggestorCurrencyConstraint implements DecoratorBehavior {
 		void maybeRefreshOverlays(ModelMutation event) {
-			int debug = 3;
+			if (!event.getData().isEmpty()) {
+				Scheduler.get().scheduleFinally(() -> emitEvent(
+						ContentDecoratorEvents.NodeDelta.class));
+			}
 		}
 	}
 

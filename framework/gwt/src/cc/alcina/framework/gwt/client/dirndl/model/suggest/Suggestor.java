@@ -506,6 +506,8 @@ public class Suggestor extends Model implements
 
 	private Object value;
 
+	EditorAsk lastAsk;
+
 	private Suggestor(Attributes attributes) {
 		this.attributes = attributes;
 		initFields();
@@ -585,6 +587,7 @@ public class Suggestor extends Model implements
 
 	@Override
 	public void onEditorAsk(EditorAsk event) {
+		this.lastAsk = event;
 		if (event.isEmptyAsk() && attributes.closeSuggestionsOnEmptyAsk) {
 			suggestions.toState(State.CLOSED);
 		} else {
@@ -653,6 +656,12 @@ public class Suggestor extends Model implements
 		} else {
 			setValue(((List<Suggestion>) value).stream()
 					.map(Suggestion::getModel).collect(Collectors.toList()));
+		}
+	}
+
+	public void refresh() {
+		if (lastAsk != null) {
+			emitEvent(EditorAsk.class, lastAsk.getModel());
 		}
 	}
 }

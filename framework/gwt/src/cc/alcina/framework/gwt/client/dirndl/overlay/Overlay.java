@@ -37,6 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents.RefreshPositioning;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.Position;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition.ViewportRelative;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
@@ -290,6 +291,11 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		public Attributes
 				withRemoveOnMouseDownOutside(boolean removeOnMouseDownOutside) {
 			this.removeOnMouseDownOutside = removeOnMouseDownOutside;
+			return this;
+		}
+
+		public Attributes withRectSourceElement(Element rectSourceElement) {
+			position.withRectSourceElement(rectSourceElement);
 			return this;
 		}
 	}
@@ -587,5 +593,9 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 	@Override
 	public boolean isFocusOnBind() {
 		return attributes.focusOnBind;
+	}
+
+	public void refreshPosition() {
+		emitEvent(RefreshPositioning.class);
 	}
 }

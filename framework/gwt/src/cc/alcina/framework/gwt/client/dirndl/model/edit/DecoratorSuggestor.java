@@ -126,4 +126,8 @@ public abstract class DecoratorSuggestor extends Model.Fields
 		DecoratorSuggestor provideChooser(ContentDecorator contentDecorator,
 				DomNode decorator, String triggerSequence);
 	}
+
+	public void refresh() {
+		suggestor.refresh();
+	}
 }

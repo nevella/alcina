@@ -91,6 +91,9 @@ public final class MutationRecord {
 			List<Class<? extends Flag>> flags, Class<? extends Flag> flag,
 			boolean add) {
 		// copy-on-write
+		/*
+		 * 
+		 */
 		flags = flags == null ? null : new ArrayList<>(flags);
 		if (add) {
 			if (flags == null) {

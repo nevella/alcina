@@ -15,4 +15,16 @@ public class ContentDecoratorEvents {
 			void onReferenceSelected(ReferenceSelected event);
 		}
 	}
+
+	public static class NodeDelta
+			extends ModelEvent<Object, NodeDelta.Handler> {
+		@Override
+		public void dispatch(NodeDelta.Handler handler) {
+			handler.onNodeDelta(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onNodeDelta(NodeDelta event);
+		}
+	}
 }

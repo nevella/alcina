@@ -29,6 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
@@ -117,6 +118,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
 public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		DomEvents.MouseUp.Handler, DomEvents.KeyDown.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
+		ContentDecoratorEvents.NodeDelta.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
 		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler {
 	public static ContentDecorator.Builder builder() {
@@ -309,9 +311,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	void refreshOverlayIfShowing() {
 		if (overlay != null) {
-			overlay.close(null, false);
-			overlay = null;
-			showOverlay(decorator.domNode());
+			overlay.refreshPosition();
+			suggestor.refresh();
 		}
 	}
 
@@ -330,6 +331,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 				.dropdown(OverlayPosition.Position.START,
 						domElement.getBoundingClientRect(),
 						(Model) decoratorParent, suggestor)
+				.withRectSourceElement(domElement)
 				.withPeerModels(List.of(this.decorator)).create();
 		new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
 				.publish();
@@ -446,5 +448,10 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	@Override
 	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
 		checkTrigger();
+	}
+
+	@Override
+	public void onNodeDelta(NodeDelta event) {
+		refreshOverlayIfShowing();
 	}
 }

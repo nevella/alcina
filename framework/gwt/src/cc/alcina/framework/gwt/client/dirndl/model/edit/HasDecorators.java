@@ -9,7 +9,6 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
@@ -25,6 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestor.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
@@ -41,6 +41,7 @@ public interface HasDecorators
 		extends DecoratorSuggestor.BeforeChooserClosed.Handler,
 		DomEvents.Input.Handler, InferredDomEvents.SelectionChanged.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
+		ContentDecoratorEvents.NodeDelta.Handler,
 		// routes overlay closed events back to the referencedecorators
 		ModelEvents.Closed.Handler,
 		// routes (contenteditable) commits to the decorators
@@ -175,6 +176,11 @@ public interface HasDecorators
 	@Override
 	default void onReferenceSelected(ReferenceSelected event) {
 		getDecorators().forEach(d -> d.onReferenceSelected(event));
+	}
+
+	@Override
+	default void onNodeDelta(NodeDelta event) {
+		getDecorators().forEach(d -> d.onNodeDelta(event));
 	}
 
 	@Override
