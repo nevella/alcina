@@ -6,14 +6,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -227,9 +225,10 @@ public class EditArea extends Model.Fields
 
 	@Override
 	public void onModelMutation(ModelMutation event) {
-		Scheduler.get()
-				.scheduleFinally(() -> new NonEditableCursorTargetConstraint()
-						.alignWithConstraint());
+		provideNode().deferIfFiring(() -> {
+			new NonEditableCursorTargetConstraint().alignWithConstraint();
+			new SuggestorCurrencyConstraint().maybeRefreshOverlays(event);
+		});
 	}
 
 	/**
@@ -261,6 +260,17 @@ public class EditArea extends Model.Fields
 					.forEach(zws -> zws.nodes().removeFromParent());
 			new DecoratorEvent().withType(DecoratorEvent.Type.zws_refreshed)
 					.publish();
+		}
+	}
+
+	/*
+	 * This class ensures the displayed suggestor (if any) is current - if say a
+	 * choice is deleted, the overlay should be repositioned and the available
+	 * choices modified
+	 */
+	class SuggestorCurrencyConstraint implements DecoratorBehavior {
+		void maybeRefreshOverlays(ModelMutation event) {
+			int debug = 3;
 		}
 	}
 

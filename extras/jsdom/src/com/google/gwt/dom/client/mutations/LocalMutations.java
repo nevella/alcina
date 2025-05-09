@@ -103,6 +103,9 @@ public class LocalMutations {
 	}
 
 	void addMutation(MutationRecord record) {
+		record.deltaFlagInstance(
+				MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
+				mutationsAccess.isApplyingDetachedMutationsToLocalDom());
 		topicUnbatchedUnattachedMutations.publish(record);
 		if (record.target.node().isAttached()) {
 			mutations.add(record);
@@ -130,40 +133,31 @@ public class LocalMutations {
 
 	public void notifyChildListMutation(Node target, Node child,
 			Node previousSibling, Node nextSibling, boolean add) {
-		try {
-			MutationRecord.deltaFlag(
-					MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
-					mutationsAccess.isApplyingDetachedMutationsToLocalDom());
-			if (add && !target.isAttached()) {
+		if (add && !target.isAttached()) {
+			MutationRecord record = new MutationRecord();
+			record.mutationsAccess = mutationsAccess;
+			record.type = Type.childList;
+			record.target = MutationNode.forNode(target);
+			record.previousSibling = MutationNode.forNode(previousSibling);
+			record.nextSibling = MutationNode.forNode(nextSibling);
+			record.addedNodes.add(MutationNode.forNode(child));
+			addMutation(record);
+		} else {
+			if (add) {
+				nodeAsMutations(child, false
+				// !MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS
+				// .is()
+				).forEach(this::addMutation);
+			} else {
 				MutationRecord record = new MutationRecord();
 				record.mutationsAccess = mutationsAccess;
 				record.type = Type.childList;
 				record.target = MutationNode.forNode(target);
 				record.previousSibling = MutationNode.forNode(previousSibling);
 				record.nextSibling = MutationNode.forNode(nextSibling);
-				record.addedNodes.add(MutationNode.forNode(child));
+				record.removedNodes.add(MutationNode.forNode(child));
 				addMutation(record);
-			} else {
-				if (add) {
-					nodeAsMutations(child, false
-					// !MutationNode.CONTEXT_APPLYING_NON_MARKUP_MUTATIONS
-					// .is()
-					).forEach(this::addMutation);
-				} else {
-					MutationRecord record = new MutationRecord();
-					record.mutationsAccess = mutationsAccess;
-					record.type = Type.childList;
-					record.target = MutationNode.forNode(target);
-					record.previousSibling = MutationNode
-							.forNode(previousSibling);
-					record.nextSibling = MutationNode.forNode(nextSibling);
-					record.removedNodes.add(MutationNode.forNode(child));
-					addMutation(record);
-				}
 			}
-		} finally {
-			MutationRecord.deltaFlag(
-					MutationRecord.FlagTransportMarkupTree.class, false);
 		}
 	}
 

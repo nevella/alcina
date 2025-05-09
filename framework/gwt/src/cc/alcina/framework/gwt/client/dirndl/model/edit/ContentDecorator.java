@@ -307,6 +307,14 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		}
 	}
 
+	void refreshOverlayIfShowing() {
+		if (overlay != null) {
+			overlay.close(null, false);
+			overlay = null;
+			showOverlay(decorator.domNode());
+		}
+	}
+
 	void showOverlay(DomNode decoratorDomNode) {
 		LocalDom.flush();
 		DomNode parent = decoratorDomNode.parent();

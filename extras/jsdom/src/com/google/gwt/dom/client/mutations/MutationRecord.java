@@ -76,12 +76,25 @@ public final class MutationRecord {
 
 	public static void deltaFlag(Class<? extends Flag> flag, boolean add) {
 		List<Class<? extends Flag>> flags = LooseContext.get(CONTEXT_FLAGS);
+		List<Class<? extends Flag>> mutatedFlags = mutateFlags(flags, flag,
+				add);
+		if (flags != mutatedFlags) {
+			if (mutatedFlags != null) {
+				LooseContext.set(CONTEXT_FLAGS, mutatedFlags);
+			} else {
+				LooseContext.remove(CONTEXT_FLAGS);
+			}
+		}
+	}
+
+	static List<Class<? extends Flag>> mutateFlags(
+			List<Class<? extends Flag>> flags, Class<? extends Flag> flag,
+			boolean add) {
 		// copy-on-write
 		flags = flags == null ? null : new ArrayList<>(flags);
 		if (add) {
 			if (flags == null) {
 				flags = new ArrayList<>();
-				LooseContext.set(CONTEXT_FLAGS, flags);
 			}
 			if (!flags.contains(flag)) {
 				flags.add(flag);
@@ -91,10 +104,10 @@ public final class MutationRecord {
 			} else {
 				flags.remove(flag);
 				if (flags.isEmpty()) {
-					LooseContext.remove(CONTEXT_FLAGS);
 				}
 			}
 		}
+		return flags;
 	}
 
 	public static MutationRecord generateDocumentInsert(String markup) {
@@ -273,6 +286,10 @@ public final class MutationRecord {
 	// for serialization
 	public MutationRecord() {
 		flags = LooseContext.get(CONTEXT_FLAGS);
+	}
+
+	public void deltaFlagInstance(Class<? extends Flag> flag, boolean add) {
+		flags = mutateFlags(flags, flag, add);
 	}
 
 	public MutationRecord(SyncMutations sync, MutationRecordJso jso) {

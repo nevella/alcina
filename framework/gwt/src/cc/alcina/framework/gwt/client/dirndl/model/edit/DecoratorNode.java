@@ -38,21 +38,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 @TypedProperties
 public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		HasStringRepresentableType<SR>, FragmentIsolate, HasContentEditable {
-	public static PackageProperties._DecoratorNode properties = PackageProperties.decoratorNode;
-
-	public DecoratorNode() {
-		bindings().from(this).on(properties.contentEditable)
-				.accept(this::notifyContentEditableDelta);
-	}
-
-	void notifyContentEditableDelta(boolean contentEditable) {
-		new DecoratorEvent().withType(DecoratorEvent.Type.editable_attr_changed)
-				.withSubtype(NestedName.get(this))
-				.withMessage(
-						Ax.format("[-->%s] :: %s", contentEditable, content))
-				.publish();
-	}
-
 	/**
 	 * Models the characteristics of the content decorator, such as the key
 	 * sequence which triggers its creation, the class reference modelled, etc
@@ -130,6 +115,8 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		}
 	}
 
+	public static PackageProperties._DecoratorNode properties = PackageProperties.decoratorNode;
+
 	InternalModel internalModel;
 
 	@Binding(
@@ -146,6 +133,11 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		to = "uid",
 		transform = RepresentableToStringTransform.class)
 	public SR stringRepresentable;
+
+	public DecoratorNode() {
+		bindings().from(this).on(properties.contentEditable)
+				.accept(this::notifyContentEditableDelta);
+	}
 
 	@Override
 	public void onBind(Bind event) {
@@ -192,6 +184,19 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		properties.contentEditable.set(this, false);
 	}
 
+	@Override
+	public boolean provideIsContentEditable() {
+		return contentEditable;
+	}
+
+	void notifyContentEditableDelta(boolean contentEditable) {
+		new DecoratorEvent().withType(DecoratorEvent.Type.editable_attr_changed)
+				.withSubtype(NestedName.get(this))
+				.withMessage(
+						Ax.format("[-->%s] :: %s", contentEditable, content))
+				.publish();
+	}
+
 	boolean isValid() {
 		// FIXME - DN server shd validate entity on update. and other
 		// validations (e.g. not contained in a decorator)
@@ -219,7 +224,6 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		 * null...maybe we've lost focus...
 		 */
 		if (cursorTarget == null) {
-			int debug = 3;
 			// Client.eventBus().queued()
 			// .lambda(this::positionCursorPostReferencedSelection)
 			// .deferred().dispatch();
@@ -255,10 +259,5 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		} else {
 			return null;
 		}
-	}
-
-	@Override
-	public boolean provideIsContentEditable() {
-		return contentEditable;
 	}
 }

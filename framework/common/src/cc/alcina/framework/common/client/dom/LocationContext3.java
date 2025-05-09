@@ -467,19 +467,22 @@ class LocationContext3 implements LocationContext {
 			return;
 		}
 		DomNode containingNode = location.getContainingNode();
-		Preconditions.checkState(containingNode.isAttached());
-		if (containingNode.isAttached()) {
-			DomNode treePreviousNode = location.getContainingNode().relative()
-					.treePreviousNode();
-			if (treePreviousNode != null) {
-				Location treePreviousLocation = treePreviousNode.location;
-				if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
-					IndexTuple nextFromTpl = treePreviousLocation.asIndexTuple()
-							.add(1, treePreviousNode.textLengthSelf());
-					location.applyIndexDelta(
-							nextFromTpl.subtract(location.asIndexTuple()));
-					return;
-				}
+		/*
+		 * Edge case - during client mutation sync/node removal, attached may be
+		 * false but the ancestry chain to document still intact
+		 */
+		Preconditions.checkState(containingNode.isAttached() || document
+				.getDocumentElementNode().isAncestorOf(containingNode));
+		DomNode treePreviousNode = location.getContainingNode().relative()
+				.treePreviousNode();
+		if (treePreviousNode != null) {
+			Location treePreviousLocation = treePreviousNode.location;
+			if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
+				IndexTuple nextFromTpl = treePreviousLocation.asIndexTuple()
+						.add(1, treePreviousNode.textLengthSelf());
+				location.applyIndexDelta(
+						nextFromTpl.subtract(location.asIndexTuple()));
+				return;
 			}
 		}
 		/*

@@ -981,6 +981,10 @@ public class Location implements Comparable<Location> {
 			return new IndexTuple(-treeIndex, -index);
 		}
 
+		/*
+		 * zero indicates no overall direction (either because the index
+		 * (deltas) point in different directions, or both zero)
+		 */
 		int getDirection() {
 			if (treeIndex == 0 && index == 0) {
 				return 0;
@@ -993,8 +997,10 @@ public class Location implements Comparable<Location> {
 			} else if (treeIndex <= 0 && index < 0) {
 				return -1;
 			} else {
-				throw new IllegalStateException(
-						"Should only be called against a non-summed tuple");
+				/*
+				 * really a separate value to zero,
+				 */
+				return 0;
 			}
 		}
 	}

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -1805,6 +1806,25 @@ public class DirectedLayout implements AlcinaProcess {
 		 */
 		public String provideLayoutId() {
 			return String.valueOf(DirectedLayout.this.hashCode());
+		}
+
+		/**
+		 * Use to dispatch a runnable if it may cause layout (but simplifies the
+		 * sequencing by non-deferrred execution if layout is not in progress)
+		 * 
+		 * @param runnable
+		 *            the runnable to execute which may cause layout
+		 */
+		public void deferIfFiring(Runnable runnable) {
+			DirectedLayout.this.deferIfFiring(runnable);
+		}
+	}
+
+	void deferIfFiring(Runnable runnable) {
+		if (inLayout) {
+			Scheduler.get().scheduleFinally(runnable::run);
+		} else {
+			runnable.run();
 		}
 	}
 

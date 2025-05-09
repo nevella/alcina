@@ -444,6 +444,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 				this.fragmentModel = fragmentModel;
 			}
 
+			public boolean isEmpty() {
+				return entries.isEmpty();
+			}
+
 			public void add(Entry entry) {
 				entries.add(entry);
 			}
