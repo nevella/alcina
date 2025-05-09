@@ -921,8 +921,11 @@ public class Location implements Comparable<Location> {
 		IndexTuple(int treeIndex, int index) {
 			this.treeIndex = treeIndex;
 			this.index = index;
-			Preconditions.checkState((treeIndex >= 0 && index >= 0)
-					|| (treeIndex <= 0 && index <= 0));
+			/*
+			 * Not true - individually, yes - but not as a sum
+			 */
+			// Preconditions.checkState((treeIndex >= 0 && index >= 0)
+			// || (treeIndex <= 0 && index <= 0));
 		}
 
 		IndexTuple add(IndexTuple tuple) {
@@ -979,12 +982,19 @@ public class Location implements Comparable<Location> {
 		}
 
 		int getDirection() {
-			if (treeIndex > 0 || index > 0) {
-				return 1;
-			} else if (treeIndex == 0 && index == 0) {
+			if (treeIndex == 0 && index == 0) {
 				return 0;
-			} else {
+			} else if (treeIndex > 0 && index >= 0) {
+				return 1;
+			} else if (treeIndex >= 0 && index > 0) {
+				return 1;
+			} else if (treeIndex < 0 && index <= 0) {
 				return -1;
+			} else if (treeIndex <= 0 && index < 0) {
+				return -1;
+			} else {
+				throw new IllegalStateException(
+						"Should only be called against a non-summed tuple");
 			}
 		}
 	}

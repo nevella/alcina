@@ -574,4 +574,19 @@ public interface HasEquivalence<T> {
 			return key;
 		}
 	}
+
+	public static <T extends HasEquivalenceString> Predicate<? super T>
+			unique() {
+		return new UniquePredicate<>();
+	}
+
+	static class UniquePredicate<T extends HasEquivalenceString>
+			implements Predicate<T> {
+		Set<String> equivalenceStrings = AlcinaCollections.newHashSet();
+
+		@Override
+		public boolean test(T t) {
+			return equivalenceStrings.add(t.equivalenceString());
+		}
+	}
 }

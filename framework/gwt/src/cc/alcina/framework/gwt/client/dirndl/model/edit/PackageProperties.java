@@ -67,6 +67,8 @@ public class PackageProperties {
       public TypedProperty<EditArea, String> currentValue = new TypedProperty<>(EditArea.class, "currentValue");
       public TypedProperty<EditArea, Boolean> focusOnBind = new TypedProperty<>(EditArea.class, "focusOnBind");
       public TypedProperty<EditArea, FragmentModel> fragmentModel = new TypedProperty<>(EditArea.class, "fragmentModel");
+      public TypedProperty<EditArea, Boolean> insertEditorStartCursorTarget = new TypedProperty<>(EditArea.class, "insertEditorStartCursorTarget");
+      public TypedProperty<EditArea, Boolean> insertInterNonEditableCursorTargets = new TypedProperty<>(EditArea.class, "insertInterNonEditableCursorTargets");
       public TypedProperty<EditArea, String> placeholder = new TypedProperty<>(EditArea.class, "placeholder");
       public TypedProperty<EditArea, Boolean> stripFontTagsOnInput = new TypedProperty<>(EditArea.class, "stripFontTagsOnInput");
       public TypedProperty<EditArea, String> tag = new TypedProperty<>(EditArea.class, "tag");
