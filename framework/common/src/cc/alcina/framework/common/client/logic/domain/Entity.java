@@ -44,9 +44,33 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 /**
+ * <p>
  * Base for classes which can be handled by the
  * {@link cc.alcina.framework.common.client.logic.domaintransform.TransformManager
  * TransformManager }. Note that the only id type supported is <code>long</code>
+ * <p>
+ * Gotchas
+ * <ul>
+ * <li>If an entity has a linked Set<? extends Entity> property, which is
+ * default null, it must be populated on get for transofrm association
+ * propagation - e.g:
+ * 
+ * <pre>
+ * <code>
+ * private Set<DodgyCitation> dodgyCitations;
+ * 
+ * ...
+ * 
+ * public Set<DodgyCitation> getDodgyCitations() {
+		if (this.dodgyCitations == null) {
+			dodgyCitations = new LiSet<>();
+		}
+		return dodgyCitations;
+	}
+ * 
+ * </code>
+ * </pre>
+ * </ul>
  */
 @MappedSuperclass
 @NonClientRegistryPointType

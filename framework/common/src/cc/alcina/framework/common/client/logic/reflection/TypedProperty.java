@@ -76,4 +76,13 @@ public class TypedProperty<S extends BaseSourcesPropertyChangeEvents, T>
 			set(propertySource, newValue);
 		}
 	}
+
+	public void setIfNotNull(S propertySource, T newValue) {
+		T existing = get(propertySource);
+		if (existing != null) {
+			return;
+		} else {
+			set(propertySource, newValue);
+		}
+	}
 }

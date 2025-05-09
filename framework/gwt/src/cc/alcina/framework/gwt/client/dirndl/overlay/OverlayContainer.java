@@ -6,9 +6,11 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
+import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -32,7 +34,7 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 @Directed
 public class OverlayContainer extends Model implements HasTag,
 		Model.RerouteBubbledEvents, OverlayEvents.PositionedDescendants.Emitter,
-		OverlayEvents.RefreshPositioning.Handler {
+		OverlayEvents.RefreshPositioning.Handler, PlaceChangeEvent.Handler {
 	private final Overlay contents;
 
 	private final ContainerOptions containerOptions;
@@ -67,6 +69,8 @@ public class OverlayContainer extends Model implements HasTag,
 		this.modal = containerOptions.modal;
 		bindings()
 				.addRegistration(() -> Window.addResizeHandler(this::onResize));
+		bindings().addRegistration(() -> Client.eventBus()
+				.addHandler(PlaceChangeEvent.TYPE, this));
 	}
 
 	@Override
@@ -151,5 +155,10 @@ public class OverlayContainer extends Model implements HasTag,
 					.getBoundingClientRect();
 			this.position();
 		});
+	}
+
+	@Override
+	public void onPlaceChange(PlaceChangeEvent event) {
+		contents.close(event, false);
 	}
 }
