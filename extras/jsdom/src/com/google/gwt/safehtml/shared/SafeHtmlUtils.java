@@ -262,4 +262,26 @@ public final class SafeHtmlUtils {
 	// prevent instantiation
 	private SafeHtmlUtils() {
 	}
+
+	/**
+	 * HTML-unescapes standard entities
+	 *
+	 * <pre>
+	 * &amp; - &amp;amp;
+	 * &lt; - &amp;lt;
+	 * &gt; - &amp;gt;
+	 * &quot; - &amp;quot;
+	 * &#39; - &amp;#39;
+	 * </pre>
+	 *
+	 * @param c
+	 *            the character to be escaped
+	 * @return a string containing either the input character or an equivalent
+	 *         HTML Entity Reference
+	 */
+	public static String unescapeEntities(String string) {
+		return string.replace("&lt;", "<").replace("&gt;", ">")
+				.replace("&quot;", "'").replace("&#39;", "\u0039")
+				.replace("&amp;", "&");
+	}
 }
