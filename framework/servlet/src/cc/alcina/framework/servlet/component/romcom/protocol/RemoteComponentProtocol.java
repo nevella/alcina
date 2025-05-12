@@ -386,7 +386,6 @@ public class RemoteComponentProtocol {
 		public static class Startup extends Message implements HasWindowState {
 			public static Startup forClient() {
 				Startup result = new Startup();
-				result.maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
 				result.domMutations = LocalDom.attachIdRepresentations()
 						.domAsMutations();
 				result.locationMutation = LocationMutation.ofWindow(true);
@@ -410,8 +409,6 @@ public class RemoteComponentProtocol {
 			SelectionRecord selectionMutation;
 
 			ElementSelectionRangeRecord elementSelectionRangeRecord;
-
-			public int maxCharsPerTextNode;
 
 			public String settings;
 

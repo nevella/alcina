@@ -49,9 +49,6 @@ public class HtmlParser {
 		if (string.contains("\r\n")) {
 			string = string.replace("\r\n", "\n");
 		}
-		int idx = 0;
-		int length = string.length();
-		int maxCharsPerTextNode = LocalDom.getMaxCharsPerTextNode();
 		Text text = document.createTextNode(string);
 		element.appendChild(text);
 		if (debugCursor) {

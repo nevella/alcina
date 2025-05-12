@@ -5,10 +5,8 @@ import java.util.Iterator;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.impl.JavaScriptIntList;
 import com.google.gwt.core.client.impl.JavaScriptObjectList;
-import com.google.gwt.dom.client.AttachIds.IdList;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.FormatBuilder;
 
 /**
  * <h2>LocalDom 3.0</h2>
@@ -54,7 +52,8 @@ class MarkupJso {
 
 		ElementJso remote;
 
-		MarkupToken(Element container, String localMarkup, IdList idList) {
+		MarkupToken(Element container, String localMarkup,
+				IdProtocolList idList) {
 			this.container = container;
 			this.localMarkup = localMarkup;
 			localAttachIds.javaArray = idList.toIntArray();
@@ -72,13 +71,6 @@ class MarkupJso {
 			Iterator<JavaScriptObject> itr = createdJsos.iterator();
 			container.traverse()
 					.forEach(n -> n.putRemote((NodeJso) itr.next()));
-		}
-
-		public String toLocalAttachIdString() {
-			FormatBuilder builder = new FormatBuilder();
-			container.traverse().forEach(
-					n -> builder.line("%s - %s", n.attachId, n.getNodeName()));
-			return builder.toString();
 		}
 	}
 
@@ -111,7 +103,8 @@ class MarkupJso {
 							Ax.ntrim(token.localMarkup, 500),
 							Ax.ntrim(token.remoteMarkup, 500)));
 			LocalDom.topicPublishException().publish(reportedException);
-			Ax.out("Local attachIds:\n%s", token.toLocalAttachIdString());
+			Ax.out("Local attachIds:\n%s",
+					token.container.implAccess().toLocalAttachIdString());
 			/* probably some odd dom - compare to roundtripped
 			@formatter:off
 			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), token.localMarkup.replace("&nbsp;","\u00A0").getBytes());
@@ -132,77 +125,123 @@ class MarkupJso {
 		}
 	}
 
+	/*
+	 * See the IdProtocolList protocol. id#0 is a 'special' marker code
+	 */
 	final native JavaScriptObjectList traverseAndMark(ElementJso container,
 			JavaScriptObjectList createdJsos, JavaScriptIntList attachIdList) /*-{
-		//traverse the node tree depth first, maintaining an array of cursors to track node position
-		var resultJsos = createdJsos.@com.google.gwt.core.client.impl.JavaScriptObjectList:: ensureJsArray()();
-		var ids = attachIdList.@com.google.gwt.core.client.impl.JavaScriptIntList:: ensureJsArray()();
-		var idsIdx = 0;
-		var itr = document.createNodeIterator(container);
-		var coalesceLists = [];
-		var incorrect = false;
-		for (; ;) {
-			var node = itr.nextNode();
-			resultJsos.push(node);
-			if (node == null) {
+	
+//traverse the node tree depth first, maintaining an array of cursors to track node position
+//traverse the node tree depth first, maintaining an array of cursors to track node position
+var resultJsos = createdJsos.@com.google.gwt.core.client.impl.JavaScriptObjectList::ensureJsArray()();
+var ids = attachIdList.@com.google.gwt.core.client.impl.JavaScriptIntList::ensureJsArray()();
+var idsIdx = 0;
+var itr = document.createNodeIterator(container);
+var incorrect = false;
+var cursor = container;
+var idJso = [];
+for (; ;) {
+	if (idsIdx == ids.length) {
+		cursor = itr.nextNode();
+		incorrect = cursor != null;
+		resultJsos.push(cursor);
+		break;
+	}
+	var int0 = ids[idsIdx++];
+	if (int0 == 0) {
+		//special
+		var int1 = ids[idsIdx++];
+		switch (int1) {
+			//PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE
+			case 0: {
+				var attachId = ids[idsIdx++];
+				var parentAttachId = ids[idsIdx++];
+				var previousSiblingAttachId = ids[idsIdx++];
+				var parentNode = idJso[parentAttachId];
+				var previousSiblingNode = idJso[previousSiblingAttachId];
+				previousSiblingNode = !previousSiblingNode ? null : previousSiblingNode;
+				var text = cursor.ownerDocument.createTextNode("");
+				resultJsos.push(text);
+				text.__attachId = attachId;
+				idJso[text.__attachId] = text;
+				parentNode.insertBefore(text, previousSiblingNode);
 				break;
 			}
-			if (idsIdx == ids.length) {
-				incorrect=true;
-			}
-			node.__attachId = ids[idsIdx++];
-			if (node.nodeType == Node.TEXT_NODE) {
-				var coalesceList = null;
-				var cursor = node;
-				for (; ;) {
-					var next = cursor.nextSibling;
-					if (next != null && next.nodeType == Node.TEXT_NODE) {
-						if (coalesceList == null) {
-							coalesceList = [];
-							coalesceLists.push(coalesceList);
-							coalesceList.push(node);
-						}
-						coalesceList.push(next);
-						itr.nextNode();
-						cursor = next;
-					} else {
-						break;
-					}
+			//PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE
+			case 1: {
+				var nodeCount = ids[idsIdx++];
+				var attachIds = [];
+				var lengths = [];
+				var strings = [];
+				for (var idx1 = 0; idx1 < nodeCount; idx1++) {
+					attachIds.push(ids[idsIdx++]);
 				}
+				var partLengthSum = 0;
+				for (var idx1 = 0; idx1 < nodeCount; idx1++) {
+					var length = ids[idsIdx++];
+					lengths.push(length);
+					partLengthSum += length;
+				}
+				var content = cursor.nodeValue;
+				var totalLength = content.length;
+				var offset = totalLength - partLengthSum;
+				cursor.nodeValue = content.substring(0, offset);
+				var appendCursor = cursor;
+				for (var idx1 = 0; idx1 < nodeCount; idx1++) {
+					var attachId = attachIds[idx1];
+					var length = lengths[idx1];
+					var nodeContent = content.substring(offset, length);
+					offset += length;
+					var text = cursor.ownerDocument.createTextNode(nodeContent);
+					resultJsos.push(text);
+					text.__attachId = attachId;
+					idJso[text.__attachId] = text;
+					parentNode.insertBefore(appendCursor.nextSibling);
+					appendCursor = text;
+				}
+				break;
+			}
+			default:
+				throw "Unsupported protocol token: " + int1;
+		}
+
+	} else {
+
+		//common case
+		cursor = itr.nextNode();
+		if (cursor.nodeType == Node.TEXT_NODE) {
+			
+			//Coalesce sequential text nodes produced by browser parseing of a DOM string (KHTML/WebKit legacy behavior)
+			
+			var peek = cursor.nextSibling;
+			while (peek != null && peek.nodeType == Node.TEXT_NODE) {
+				cursor.nodeValue = cursor.nodeValue + peek.nodeValue;
+				peek = peek.nextSibling;
+				itr.nextNode()
 			}
 		}
-		//this optimises combining-multiple-nodes (to workaround webkit/style splitting of text nodes). 
-		// It may be better to use the create-style::-- create-text-node::flush -- text-node.setNodeValue:: flush
-		// note that large text node creation is normally injection of a style or script node, and those do not use 
-		// this codepath
-		for (var idx = 0; idx < coalesceLists.length; idx++) {
-			var coalesceList = coalesceLists[idx];
-			var content = '';
-			for (var idx1 = 0; idx1 < coalesceList.length; idx1++) {
-				var node = coalesceList[idx1];
-				content += node.nodeValue;
-				if (idx1 > 0) {
-					node.remove();
-				}
+		resultJsos.push(cursor);
+		cursor.__attachId = int0;
+		idJso[cursor.__attachId] = cursor;
+	}
+}
+
+if (idsIdx != ids.length || incorrect) {
+	var buffer = "";
+	debugger;
+	if (!@com.google.gwt.core.client.GWT::isScript()()) {
+		for (var idx = 0; idx < resultJsos.length; idx++) {
+			var jso = resultJsos[idx];
+			if (jso != null) {
+				buffer += "" + jso.__attachId + " - " + jso.nodeName + "\n";
+			} else {
+				buffer += "[null jso] - idx " + idx + "\n";
 			}
-			coalesceList[0].nodeValue = content;
 		}
-		if (idsIdx != ids.length || incorrect) {
-			var buffer="";
-			debugger;
-			if(!@com.google.gwt.core.client.GWT::isScript()()){
-				for(var idx=0;idx<resultJsos.length;idx++){
-					var jso=resultJsos[idx];
-					if(jso!=null){
-						buffer+=""+jso.__attachId+" - "+jso.nodeName+"\n"	;
-					}else{
-						buffer+="[null jso] - idx "+idx+"\n";
-					}
-				}
-			}
-			throw "incorrect-idlist-length\n"+buffer;
-		}
-		// magic - return the createdJsos object to avoid round-tripping (devmode)
-		return idsIdx == ids.length ? createdJsos : null;
+	}
+	throw "incorrect-idlist-length\n" + buffer;
+}
+// magic - return the createdJsos object to avoid round-tripping (devmode)
+return idsIdx == ids.length ? createdJsos : null;
 	}-*/;
 }

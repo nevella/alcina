@@ -550,11 +550,8 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 
 	@Override
 	public void setInnerText(String text) {
-		if (Ax.isBlank(text)) {
-		} else {
-			clearChildren();
-			HtmlParser.appendTextNodes(ownerDocument, this, text);
-		}
+		clearChildren();
+		HtmlParser.appendTextNodes(ownerDocument, this, text);
 	}
 
 	@Override

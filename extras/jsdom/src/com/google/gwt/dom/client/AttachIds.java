@@ -1,6 +1,5 @@
 package com.google.gwt.dom.client;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -9,12 +8,8 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.IntLookup;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 
 /**
  * <p>
@@ -110,52 +105,8 @@ public class AttachIds {
 	 * empty nodes to " " - FIXME - attachId - later - remove the space (but
 	 * keep the remote node)
 	 */
-	public IdList getSubtreeIds(Node node) {
-		IdList list = new IdList();
-		List<Node> depthFirstNodes = node.traverse().toList();
-		Node previous = null;
-		for (int idx = 0; idx < depthFirstNodes.size(); idx++) {
-			Node n = depthFirstNodes.get(idx);
-			if (n.provideIsText() && previous != null
-					&& previous.provideIsText()) {
-				if (n.getParentNode() == previous.getParentNode()) {
-					Ax.sysLogHigh("Merging adjacent text nodes :: %s %s -> %s",
-							n.getParentNode().toNameAttachId(), n, previous);
-					previous.setTextContent(
-							previous.getTextContent() + n.getTextContent());
-					n.removeFromParent();
-					continue;
-				}
-			}
-			// FEATURE - localdom - we should/will allow empty text nodes - and
-			// probably should allow adjacent text nodes (by customising the
-			// protocol with repetition, a little)
-			if (n.getNodeType() == Node.TEXT_NODE
-					&& n.getNodeValue().isEmpty()) {
-				n.setNodeValue(" ");
-			}
-			previous = n;
-			list.ids.add(n.attachId);
-		}
-		return list;
-	}
-
-	@Bean(PropertySource.FIELDS)
-	public static class IdList {
-		@Override
-		public String toString() {
-			return ids.toString();
-		}
-
-		public List<Integer> ids = new ArrayList<>();
-
-		public int[] toIntArray() {
-			int[] result = new int[ids.size()];
-			for (int idx = 0; idx < result.length; idx++) {
-				result[idx] = ids.get(idx);
-			}
-			return result;
-		}
+	public IdProtocolList getSubtreeIds(Node node) {
+		return IdProtocolList.of(node);
 	}
 
 	public void setNextAttachId(int nextAttachId) {
@@ -186,7 +137,7 @@ public class AttachIds {
 	 * For replaying remote markup/idlist mutations - first verify the first id
 	 * matches elem
 	 */
-	void readFromIdList(Element elem, IdList idList) {
+	void readFromIdList(Element elem, IdProtocolList idList) {
 		if (idList != null) {
 			Preconditions.checkState(this.externalIds == null);
 			this.externalIds = idList.ids.iterator();
@@ -195,7 +146,7 @@ public class AttachIds {
 		}
 	}
 
-	void verifyIdList(IdList idList) {
+	void verifyIdList(IdProtocolList idList) {
 		if (idList != null) {
 			Preconditions.checkState(!externalIds.hasNext());
 			externalIds = null;

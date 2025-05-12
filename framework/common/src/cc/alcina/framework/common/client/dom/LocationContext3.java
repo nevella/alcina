@@ -75,6 +75,14 @@ class LocationContext3 implements LocationContext {
 			at = location.asIndexTuple();
 			delta = computeDelta(firstMutation);
 			addDomMutation(firstMutation);
+			clearLocationIfRemove(firstMutation);
+		}
+
+		void clearLocationIfRemove(MutationRecord mutationRecord) {
+			if (mutationRecord.removedNodes.size() > 0) {
+				mutationRecord.removedNodes.get(0).node
+						.asDomNode().location = null;
+			}
 		}
 
 		void addDomMutation(MutationRecord mutation) {
@@ -111,19 +119,11 @@ class LocationContext3 implements LocationContext {
 				DomNode node = added.node.asDomNode();
 				node.stream().forEach(DomNode::asLocation);
 				DomNode lastDescendant = node.relative().lastDescendant();
-				DomNode subsequent = node.relative()
-						.treeSubsequentNodeNoDescent();
-				Location subsequentLocation = subsequent == null
-						? context.documentRange.end
-						: subsequent.location;
-				context.ensureCurrent(subsequentLocation);
+				/*
+				 * This is the delta introduced by the mutation
+				 */
 				IndexTuple delta = lastDescendant.asEndIndexTuple()
-						/*
-						 * compute what subsequentLocation _should_ be by adding
-						 * (1,0) to the end of the last descendant
-						 */
-						.add(1, 0).subtract(subsequentLocation.asIndexTuple());
-				subsequentLocation.applyIndexDelta(delta);
+						.subtract(node.location.asIndexTuple()).add(1, 0);
 				return delta;
 			} else {
 				MutationNode removed = Ax.first(mutation.removedNodes);
@@ -132,8 +132,11 @@ class LocationContext3 implements LocationContext {
 				 * Note that this event is emitted *prior* to DOM removal
 				 */
 				/*
-				 * explicitly recompute the IndexTuple span of #node here -
-				 * although non-optimal for single removals, it changes the
+				 * Here we explicitly recompute the IndexTuple span of #node
+				 * here - rather than accessing any location, to avoid location
+				 * recomputation.
+				 * 
+				 * Although non-optimal for single removals, it changes the
 				 * effects of sequential removals from potentially o(n^2) for
 				 * large sequential removals to o(1)
 				 */
@@ -153,6 +156,11 @@ class LocationContext3 implements LocationContext {
 			} else {
 				MutationNode added = Ax.first(mutation.addedNodes);
 				if (added != null) {
+					/*
+					 * Note that affectedLocation must be (and is) current on
+					 * exit, otherwise the index mutation would be
+					 * double-counted (for it)
+					 */
 					result = added.node.asDomNode().asLocation();
 				} else {
 					MutationNode removed = Ax.first(mutation.removedNodes);
@@ -166,6 +174,15 @@ class LocationContext3 implements LocationContext {
 							removedNode.relative().treePreviousNode().location);
 				}
 			}
+			/*
+			 * You'd think not required, not desirable - added is new (and so
+			 * current), removed is being removed so its location is undefined
+			 * after this mutation -
+			 * 
+			 * - but that'd be wrong because - when removing - location is
+			 * needed to determine if the DomMutation is an extension of the
+			 * current IndexMutation
+			 */
 			context.ensureCurrent(result);
 			return result;
 		}
@@ -212,7 +229,8 @@ class LocationContext3 implements LocationContext {
 		/* only child list mutations in the same direction can be extended */
 		boolean extendWith(MutationRecord mutation) {
 			if (!extendable
-					|| mutation.type == MutationRecord.Type.characterData) {
+					|| mutation.type == MutationRecord.Type.characterData
+					|| false) {
 				return false;
 			}
 			Location affectedLocation = computeAffectedLocation(mutation);
@@ -247,6 +265,7 @@ class LocationContext3 implements LocationContext {
 			}
 			delta = delta.add(computeDelta(mutation));
 			addDomMutation(mutation);
+			clearLocationIfRemove(mutation);
 			return true;
 		}
 	}
@@ -374,6 +393,9 @@ class LocationContext3 implements LocationContext {
 		startAt = startAt == null ? getDocumentElementNode().asLocation()
 				: startAt;
 		int index = test.getIndex();
+		/*
+		 * 
+		 */
 		if (!getDocumentRange().toIntPair().contains(index)) {
 			return null;
 		}
@@ -462,7 +484,8 @@ class LocationContext3 implements LocationContext {
 		/*
 		 * document and documentelementnode start are invariant
 		 */
-		if (indexTuple.treeIndex <= 1 && indexTuple.index == 0) {
+		if (indexTuple.treeIndex <= 1 && indexTuple.index == 0
+				&& !location.after) {
 			location.applyIndexDelta(new IndexTuple(0, 0));
 			return;
 		}
@@ -473,8 +496,9 @@ class LocationContext3 implements LocationContext {
 		 */
 		Preconditions.checkState(containingNode.isAttached() || document
 				.getDocumentElementNode().isAncestorOf(containingNode));
-		DomNode treePreviousNode = location.getContainingNode().relative()
-				.treePreviousNode();
+		DomNode treePreviousNode = location.after
+				? containingNode.relative().lastDescendant()
+				: containingNode.relative().treePreviousNode();
 		if (treePreviousNode != null) {
 			Location treePreviousLocation = treePreviousNode.location;
 			if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
@@ -541,10 +565,13 @@ class LocationContext3 implements LocationContext {
 				if (Objects.equals(locationTuple, cumulative)) {
 					ref.set(cumulative.add(1, n.textLengthSelf()));
 				} else {
-					throw new IllegalStateException();
+					throw new LocationValidationException();
 				}
 			}
 		});
+	}
+
+	static class LocationValidationException extends IllegalStateException {
 	}
 
 	int getDocumentTextRunLength() {
@@ -588,18 +615,6 @@ class LocationContext3 implements LocationContext {
 		return builder.toString();
 	}
 
-	IndexTuple applyPriorMutations(Location location,
-			IndexTuple mutatingPointRef) {
-		if (mutations.size() - location.documentMutationPosition > 100) {
-			int debug = 3;
-		}
-		for (int idx = location.documentMutationPosition; idx < mutations
-				.size(); idx++) {
-			mutatingPointRef = mutations.get(idx).applyTo(mutatingPointRef);
-		}
-		return mutatingPointRef;
-	}
-
 	void applyPriorMutations(Location location) {
 		/*
 		 * Since IndexTuple is immutable, this process maintains a mutating
@@ -607,7 +622,10 @@ class LocationContext3 implements LocationContext {
 		 * it's a sort of pointer/accumulator thing
 		 */
 		IndexTuple mutatingPointRef = location.asIndexTuple();
-		mutatingPointRef = applyPriorMutations(location, mutatingPointRef);
+		for (int idx = location.documentMutationPosition; idx < mutations
+				.size(); idx++) {
+			mutatingPointRef = mutations.get(idx).applyTo(mutatingPointRef);
+		}
 		IndexTuple locationDelta = mutatingPointRef
 				.subtract(location.asIndexTuple());
 		location.applyIndexDelta(locationDelta);

@@ -31,7 +31,6 @@ import org.w3c.dom.TypeInfo;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
-import com.google.gwt.dom.client.AttachIds.IdList;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy;
 import com.google.gwt.dom.client.DocumentAttachId.InvokeProxy.Flag;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -1075,7 +1074,7 @@ public class Element extends Node implements ClientDomElement,
 		setInnerHTML(html, null);
 	}
 
-	void setInnerHTML(String html, AttachIds.IdList idList) {
+	void setInnerHTML(String html, IdProtocolList idList) {
 		removeAllChildren();
 		/*
 		 * this is the most conjoined part of localdom really - the idList (if
@@ -1321,8 +1320,15 @@ public class Element extends Node implements ClientDomElement,
 			return Element.this.ensureJsoRemote();
 		}
 
-		public void setInnerHTML(String html, IdList idList) {
+		public void setInnerHTML(String html, IdProtocolList idList) {
 			Element.this.setInnerHTML(html, idList);
+		}
+
+		public String toLocalAttachIdString() {
+			FormatBuilder builder = new FormatBuilder();
+			Element.this.traverse().forEach(
+					n -> builder.line("%s - %s", n.attachId, n.getNodeName()));
+			return builder.toString();
 		}
 	}
 
@@ -1393,7 +1399,7 @@ public class Element extends Node implements ClientDomElement,
 		}
 	}
 
-	public AttachIds.IdList getSubtreeIds() {
+	public IdProtocolList getSubtreeIds() {
 		return getOwnerDocument().localDom.attachIds.getSubtreeIds(this);
 	}
 

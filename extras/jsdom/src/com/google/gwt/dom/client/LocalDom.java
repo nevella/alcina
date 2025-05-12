@@ -19,7 +19,6 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.dom.client.AttachIds.IdList;
 import com.google.gwt.dom.client.Document.RemoteType;
 import com.google.gwt.dom.client.MarkupJso.MarkupToken;
 import com.google.gwt.dom.client.mutations.LocalMutations;
@@ -82,8 +81,6 @@ import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
  *
  */
 public class LocalDom implements ContextFrame {
-	public int maxCharsPerTextNode = 65536;
-
 	Topic<Exception> topicPublishException;
 
 	Topic<String> topicUnableToParse;
@@ -744,7 +741,7 @@ public class LocalDom implements ContextFrame {
 	}
 
 	void localToRemoteInner(Element element, String markup) {
-		IdList subtreeIds = attachIds.getSubtreeIds(element);
+		IdProtocolList subtreeIds = attachIds.getSubtreeIds(element);
 		pendingSync.remove(element);
 		MarkupToken markupToken = new MarkupToken(element, markup, subtreeIds);
 		new MarkupJso().markup(markupToken);
@@ -768,7 +765,7 @@ public class LocalDom implements ContextFrame {
 				Preconditions.checkState(childCount == 1);
 			} else {
 				String localMarkup = local.getInnerHTML();
-				IdList subtreeIds = attachIds.getSubtreeIds(element);
+				IdProtocolList subtreeIds = attachIds.getSubtreeIds(element);
 				MarkupToken markupToken = new MarkupToken(element, localMarkup,
 						subtreeIds);
 				new MarkupJso().markup(markupToken);
@@ -981,7 +978,7 @@ public class LocalDom implements ContextFrame {
 					.insertAttachedBefore(newChild, refChild);
 			if (newChild.provideIsElement()) {
 				Element newElem = (Element) newChild;
-				IdList idList = newElem.getSubtreeIds();
+				IdProtocolList idList = newElem.getSubtreeIds();
 				MarkupToken markupToken = new MarkupToken(newElem, null,
 						idList);
 				// this applies the local dom attachids to the jso nodes
@@ -1094,16 +1091,6 @@ public class LocalDom implements ContextFrame {
 		}
 	}
 
-	public static int getMaxCharsPerTextNode() {
-		// a big number
-		return 1024000000;
-		// get().maxCharsPerTextNode;
-	}
-
-	public static void setMaxCharsPerTextNode(int maxCharsPerTextNode) {
-		get().maxCharsPerTextNode = maxCharsPerTextNode;
-	}
-
 	public static Topic<Exception> topicPublishException() {
 		return get().topicPublishException;
 	}
@@ -1145,11 +1132,12 @@ public class LocalDom implements ContextFrame {
 		return pendingSync.contains(node);
 	}
 
-	static void setInnerHtml(Element element, String html, IdList idList) {
+	static void setInnerHtml(Element element, String html,
+			IdProtocolList idList) {
 		get().setInnerHtml0(element, html, idList);
 	}
 
-	void setInnerHtml0(Element elem, String html, IdList idList) {
+	void setInnerHtml0(Element elem, String html, IdProtocolList idList) {
 		/*
 		 * this element can be returned to the 'pending' state (all
 		 * manipulations are local-only until flush), since the remote is empty
@@ -1171,6 +1159,9 @@ public class LocalDom implements ContextFrame {
 			@formatter:off
 			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"),  remoteHtml.replace("&nbsp;","\u00A0").getBytes());
 			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), localHtml.replace("&nbsp;","\u00A0").getBytes());
+
+			  java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t2.txt"), e.toString().toLowerCase().getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t3.txt"), elem.implAccess().toLocalAttachIdString().getBytes());
 			 @formatter:on
 			 */
 			throw e;

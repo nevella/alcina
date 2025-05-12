@@ -76,13 +76,14 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 
 		DN splitAndWrap(EditSelection editSelection,
 				FragmentModel fragmentModel) {
+			LocalDom.flushLocalMutations();
 			String triggerSequence = getTriggerSequence(editSelection);
 			SplitResult splits = editSelection
 					.splitAtTriggerRange(triggerSequence);
 			DomNode splitContents = splits.contents;
 			// may need to flush (to populate FNs) - note for romcom, want to
 			// not force remote
-			LocalDom.flush();
+			LocalDom.flushLocalMutations();
 			FragmentNode textFragment = fragmentModel
 					.getFragmentNode(splitContents);
 			FragmentNode parent = textFragment.parent();

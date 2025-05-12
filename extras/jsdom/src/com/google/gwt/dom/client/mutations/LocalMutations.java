@@ -6,6 +6,7 @@ import java.util.List;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom.MutationsAccess;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.mutations.MutationRecord.Type;
@@ -84,8 +85,10 @@ public class LocalMutations {
 	}
 
 	void validateLocations() {
-		// mutationsAccess.getDocument().domDocument.locations()
-		// .validateLocations();
+		Document document = mutationsAccess.getDocument();
+		if (document != null) {
+			document.domDocument.locations().validateLocations();
+		}
 	}
 
 	public void notifyAttributeModification(Node target, String name,
@@ -107,6 +110,7 @@ public class LocalMutations {
 				MutationRecord.FlagApplyingDetachedMutationsToLocalDom.class,
 				mutationsAccess.isApplyingDetachedMutationsToLocalDom());
 		topicUnbatchedUnattachedMutations.publish(record);
+		// validateLocations();
 		if (record.target.node().isAttached()) {
 			mutations.add(record);
 			topicUnbatchedAttachedMutations.publish(record);
