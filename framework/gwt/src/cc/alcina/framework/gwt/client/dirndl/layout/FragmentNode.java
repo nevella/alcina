@@ -525,7 +525,7 @@ public abstract class FragmentNode extends Model.Fields
 
 		public void removeFromParent() {
 			withMutating(() -> provideParentNode()
-					.removeChildNode(FragmentNode.this, true));
+					.removeChildNode(FragmentNode.this, false));
 		}
 
 		public void replaceWith(FragmentNode other) {

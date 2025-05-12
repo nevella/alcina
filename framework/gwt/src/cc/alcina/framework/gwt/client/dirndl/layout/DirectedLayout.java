@@ -319,7 +319,7 @@ public class DirectedLayout implements AlcinaProcess {
 	// remove the root node (unbind all listeners following removal from the
 	// dom)
 	public void remove() {
-		root.remove(true);
+		root.remove(false);
 		root = null;
 	}
 
@@ -893,7 +893,7 @@ public class DirectedLayout implements AlcinaProcess {
 			 * This doesn't remove (with recursion) existing rendered dom - we
 			 * move that rather than requiring a rerender
 			 */
-			removeChildNode(newChildModel, false);
+			removeChildNode(newChildModel, true);
 			RendererInput input = getResolver().layout.enqueueInput(
 					getResolver(), newChildModel,
 					oldNode == null ? null : oldNode.property,
@@ -953,7 +953,7 @@ public class DirectedLayout implements AlcinaProcess {
 			Preconditions.checkState(to.children.isEmpty());
 			from.children.stream().collect(Collectors.toList())
 					.forEach(child -> {
-						child.remove(false);
+						child.remove(true);
 						child.parent = to;
 						to.children.add(child);
 						to.rendered.append(child.rendered);
@@ -1149,9 +1149,24 @@ public class DirectedLayout implements AlcinaProcess {
 		 * *normally* desired behaviour - to remove stray bindings in descendant
 		 * nodes, particularly. But it is different to say DOM behaviour where
 		 * removal just detaches the subtree.
+		 * 
+		 * Note further that this doesn't detach all the leaves of the
+		 * associated domNode (if any) - only the rootremoved
 		 */
-		public void remove(boolean removeFromRendered) {
+		public void remove(boolean willReattach) {
+			remove(!willReattach, !willReattach);
+		}
+
+		void remove(boolean removeFromRendered, boolean removeParentBindings) {
 			if (removeFromRendered) {
+				if (hasRendered() && rendered.asDomNode().isAttached()) {
+					/*
+					 * Removed dom nodes will always have zero children
+					 */
+					rendered.removeFromParent();
+				}
+			}
+			if (removeParentBindings) {
 				if (children != null) {
 					/*
 					 * This *may* not be necessary for FragmentModel where
@@ -1163,14 +1178,8 @@ public class DirectedLayout implements AlcinaProcess {
 					// slightly more efficient in reverse
 					for (int idx = children.size() - 1; idx >= 0; idx--) {
 						Node child = children.get(idx);
-						child.remove(true);
+						child.remove(false, true);
 					}
-				}
-				if (hasRendered()) {
-					/*
-					 * Removed dom nodes will always have zero children
-					 */
-					rendered.removeFromParent();
 				}
 			}
 			if (parent != null) {
@@ -1179,10 +1188,10 @@ public class DirectedLayout implements AlcinaProcess {
 			unbind();
 		}
 
-		void removeChildNode(Model child, boolean removeRendered) {
+		void removeChildNode(Model child, boolean willReattach) {
 			Node childNode = child.provideNode();
 			if (childNode != null) {
-				childNode.remove(removeRendered);
+				childNode.remove(willReattach);
 			}
 		}
 
@@ -1196,7 +1205,7 @@ public class DirectedLayout implements AlcinaProcess {
 			input.removeReplaced = false;
 			getResolver().layout.layout();
 			moveChildren(oldNode, newModel.provideNode());
-			oldNode.remove(true);
+			oldNode.remove(false);
 		}
 
 		// this node will disappear, so refer to predecessor nodes
@@ -2195,7 +2204,7 @@ public class DirectedLayout implements AlcinaProcess {
 				int indexInParentChildren = parentNode.children
 						.indexOf(replace);
 				if (removeReplaced) {
-					replace.remove(true);
+					replace.remove(false);
 				}
 				parentNode.children.add(indexInParentChildren, node);
 			} else if (before != null) {

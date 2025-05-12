@@ -343,7 +343,10 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 			// FIXME - fm - possibly do this via removal listen (or FN unbind)
 			NodeTransformer transformer = deregisterTransformer(n);
 		});
-		topTransformer.getLayoutNode().remove(false);
+		/*
+		 * Yep - not sure about this whole method - revisit
+		 */
+		topTransformer.getLayoutNode().remove(true);
 	}
 
 	public DomNode rootDomNode() {
