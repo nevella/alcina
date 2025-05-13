@@ -145,7 +145,8 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 	 * Note that this can't be delegating, since it needs to receive focus + key
 	 * events
 	 */
-	@Directed
+	@Directed(tag = "key-events")
+	@TypeSerialization(reflectiveSerializable = false, flatSerializable = false)
 	public static class RouteNavigationEvents extends Model.Fields
 			implements DomEvents.KeyDown.Handler, Navigation.Handler,
 			Model.FocusOnBind, Binding.TabIndexZero {
