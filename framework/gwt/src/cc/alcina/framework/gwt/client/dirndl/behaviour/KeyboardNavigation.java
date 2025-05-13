@@ -4,6 +4,7 @@ import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
@@ -132,6 +133,47 @@ public class KeyboardNavigation implements DomEvents.KeyDown.Handler {
 			} else if (event.getModel() == Type.EXIT_DOWN) {
 				event.bubble();
 			}
+		}
+	}
+
+	/**
+	 * <p>
+	 * Wrap an arbitrary model (e.g. a Choices.Single) in a navigation event
+	 * handler
+	 * 
+	 * <p>
+	 * Note that this can't be delegating, since it needs to receive focus + key
+	 * events
+	 */
+	@Directed
+	public static class RouteNavigationEvents extends Model.Fields
+			implements DomEvents.KeyDown.Handler, Navigation.Handler,
+			Model.FocusOnBind, Binding.TabIndexZero {
+		@Directed
+		Model delegate;
+
+		KeyboardNavigation keyboardNavigation;
+
+		public boolean focusOnBind = true;
+
+		public RouteNavigationEvents(Model delegate) {
+			this.delegate = delegate;
+			keyboardNavigation = new KeyboardNavigation(this);
+		}
+
+		@Override
+		public void onKeyDown(KeyDown event) {
+			keyboardNavigation.onKeyDown(event);
+		}
+
+		@Override
+		public void onNavigation(Navigation event) {
+			((Navigation.Handler) delegate).onNavigation(event);
+		}
+
+		@Override
+		public boolean isFocusOnBind() {
+			return focusOnBind;
 		}
 	}
 }

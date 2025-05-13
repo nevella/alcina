@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.shared.GwtEvent;
 
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -15,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.NativePreviewEventAsync;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
@@ -90,7 +93,8 @@ public class Dropdown extends Model
 	}
 
 	static class LabelArrow extends Model.All
-			implements DomEvents.Click.Handler {
+			implements DomEvents.Click.Handler, Binding.TabIndexZero,
+			DomEvents.KeyDown.Handler {
 		@Directed(
 			tag = "label-area",
 			reemits = { DomEvents.Click.class,
@@ -116,6 +120,18 @@ public class Dropdown extends Model
 		@Override
 		public void onClick(Click event) {
 			// squelch any border clicks
+		}
+
+		@Override
+		public void onKeyDown(KeyDown event) {
+			switch (((KeyDownEvent) event.getContext().getGwtEvent())
+					.getNativeKeyCode()) {
+			case KeyCodes.KEY_ENTER:
+			case KeyCodes.KEY_SPACE:
+				event.reemitAs(this,
+						DropdownEvents.DropdownButtonClicked.class);
+				break;
+			}
 		}
 	}
 

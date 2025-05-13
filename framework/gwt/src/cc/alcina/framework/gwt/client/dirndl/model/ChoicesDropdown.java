@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
@@ -41,9 +42,8 @@ public class ChoicesDropdown<T> extends Model.Value<T>
 		@Override
 		public Model get() {
 			choices = new Choices.Single<>();
-			choices.populateFromNodeContext(provideNode(), t -> t != value);
-			choices.setSelectedValue(value);
-			return choices;
+			choices.populateFromNodeContext(provideNode(), null);
+			return new KeyboardNavigation.RouteNavigationEvents(choices);
 		}
 	}
 

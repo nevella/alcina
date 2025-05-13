@@ -21,8 +21,7 @@ public class IndexedSelection implements KeyboardNavigation.Navigation.Handler {
 
 	public IndexedSelection(IndexedSelection.Host host) {
 		this.host = host;
-		indexSelected = host.getInitialSelectedIndex();
-		wrapIndex();
+		setIndexSelected(wrapIndex(host.getInitialSelectedIndex()));
 	}
 
 	public int getIndexSelected() {
@@ -31,29 +30,31 @@ public class IndexedSelection implements KeyboardNavigation.Navigation.Handler {
 
 	@Override
 	public void onNavigation(Navigation event) {
-		int entryIndex = indexSelected;
+		int newSelectedIndex = indexSelected;
 		switch (event.getModel()) {
 		case UP:
-			indexSelected--;
+			newSelectedIndex--;
 			break;
 		case DOWN:
-			indexSelected++;
+			newSelectedIndex++;
 			break;
 		case FIRST:
-			indexSelected = 0;
+			newSelectedIndex = 0;
 			break;
 		}
-		wrapIndex();
-		if (entryIndex != indexSelected) {
-			topicIndexChanged.publish(new Change(entryIndex, indexSelected));
-		}
+		setIndexSelected(wrapIndex(newSelectedIndex));
 	}
 
 	public void setIndexSelected(int indexSelected) {
+		int old_indexSelected = this.indexSelected;
 		this.indexSelected = indexSelected;
+		if (old_indexSelected != indexSelected) {
+			topicIndexChanged
+					.publish(new Change(old_indexSelected, indexSelected));
+		}
 	}
 
-	private void wrapIndex() {
+	private int wrapIndex(int indexSelected) {
 		int size = host.getItems().size();
 		if (size == 0) {
 			indexSelected = -1;
@@ -65,6 +66,7 @@ public class IndexedSelection implements KeyboardNavigation.Navigation.Handler {
 				indexSelected = 0;
 			}
 		}
+		return indexSelected;
 	}
 
 	public static class Change {
