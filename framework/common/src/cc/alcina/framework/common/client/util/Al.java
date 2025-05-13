@@ -69,4 +69,8 @@ public class Al {
 	public static boolean isMultiThreaded() {
 		return !isBrowser() && CONTEXT_multiThreaded.optional().orElse(true);
 	}
+
+	public static boolean isGwtCodesrver() {
+		return !isScript() && isBrowser();
+	}
 }

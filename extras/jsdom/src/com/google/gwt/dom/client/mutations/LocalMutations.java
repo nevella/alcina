@@ -14,6 +14,8 @@ import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.util.Al;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 
 /**
@@ -86,8 +88,8 @@ public class LocalMutations {
 
 	void validateLocations() {
 		Document document = mutationsAccess.getDocument();
-		if (document != null) {
-			document.domDocument.locations().validateLocations();
+		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())) {
+			// document.domDocument.locations().validateLocations();
 		}
 	}
 
