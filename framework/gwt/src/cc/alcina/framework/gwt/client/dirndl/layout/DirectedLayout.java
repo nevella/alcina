@@ -3,9 +3,11 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.util.AbstractCollection;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -1141,9 +1143,6 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		/*
-		 * Only call from framework code (here, or FragmentModel). If syncing
-		 * from mutations, do not double-remove
-		 * 
 		 * Note that removeFromRendered==true calls a 'deep remove' - all
 		 * subnodes of the tree will be removed from their parent. This is
 		 * *normally* desired behaviour - to remove stray bindings in descendant
@@ -1153,17 +1152,30 @@ public class DirectedLayout implements AlcinaProcess {
 		 * Note further that this doesn't detach all the leaves of the
 		 * associated domNode (if any) - only the rootremoved
 		 */
-		public void remove(boolean willReattach) {
+		void remove(boolean willReattach) {
 			remove(!willReattach, !willReattach);
 		}
 
 		void remove(boolean removeFromRendered, boolean removeParentBindings) {
 			if (removeFromRendered) {
-				if (hasRendered() && rendered.asDomNode().isAttached()) {
-					/*
-					 * Removed dom nodes will always have zero children
-					 */
-					rendered.removeFromParent();
+				/*
+				 * We want to minimize dom mutations, but have to allow for
+				 * delegation - so descend all branches until a DomNode
+				 * (hasRendered) is reached
+				 */
+				Deque<Node> removeFromDom = new ArrayDeque<>();
+				removeFromDom.push(this);
+				while (removeFromDom.size() > 0) {
+					Node node = removeFromDom.pop();
+					if (node.hasRendered()) {
+						if (node.rendered.asDomNode().isAttached()) {
+							node.rendered.removeFromParent();
+						}
+					} else {
+						if (node.children != null) {
+							node.children.forEach(removeFromDom::push);
+						}
+					}
 				}
 			}
 			if (removeParentBindings) {

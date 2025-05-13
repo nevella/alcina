@@ -37,4 +37,15 @@ public class DirndlAccess {
 			FragmentNode child) {
 		directedNode.append(child);
 	}
+
+	/*
+	 * Only call from framework code (here, or FragmentModel). If syncing from
+	 * mutations, do not double-remove
+	 * 
+	 * 
+	 */
+	public static void removeNode(DirectedLayout.Node directedNode,
+			boolean willReattach) {
+		directedNode.remove(willReattach);
+	}
 }

@@ -31,6 +31,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirndlAccess;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.FragmentRoot;
 import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNodeOps;
@@ -346,7 +347,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 		/*
 		 * Yep - not sure about this whole method - revisit
 		 */
-		topTransformer.getLayoutNode().remove(true);
+		DirndlAccess.removeNode(topTransformer.getLayoutNode(), false);
 	}
 
 	public DomNode rootDomNode() {
