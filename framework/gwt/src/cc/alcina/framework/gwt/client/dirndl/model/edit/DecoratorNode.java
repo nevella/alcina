@@ -250,10 +250,15 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
 		if (contentEditable) {
 			return null;
 		}
-		FragmentNode treeSubsequentNode = nodes().treeSubsequentNode();
-		if (treeSubsequentNode instanceof ZeroWidthCursorTarget) {
-			return (ZeroWidthCursorTarget) treeSubsequentNode;
-		} else if (HasContentEditable.isUneditable(treeSubsequentNode)) {
+		/*
+		 * Possibly review this - the treeSubsequentNodeNoDescent usage is
+		 * intended to handle effectively adjacent decorators such as
+		 * <container><decorator/></container><decorator>
+		 */
+		FragmentNode checkSubsequent = nodes().treeSubsequentNodeNoDescent();
+		if (checkSubsequent instanceof ZeroWidthCursorTarget) {
+			return (ZeroWidthCursorTarget) checkSubsequent;
+		} else if (HasContentEditable.isUneditable(checkSubsequent)) {
 			ZeroWidthCursorTarget newCursorTarget = new ZeroWidthCursorTarget();
 			nodes().insertAfterThis(newCursorTarget);
 			return newCursorTarget;

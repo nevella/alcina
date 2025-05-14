@@ -89,7 +89,7 @@ public class LocalMutations {
 	void validateLocations() {
 		Document document = mutationsAccess.getDocument();
 		if (document != null && (Ax.isTest() || Al.isGwtCodesrver())) {
-			// document.domDocument.locations().validateLocations();
+			document.domDocument.locations().validateLocations();
 		}
 	}
 

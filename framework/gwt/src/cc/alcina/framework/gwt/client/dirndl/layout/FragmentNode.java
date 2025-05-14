@@ -519,6 +519,11 @@ public abstract class FragmentNode extends Model.Fields
 					provideNode().relative().treeSubsequentNode());
 		}
 
+		public FragmentNode treeSubsequentNodeNoDescent() {
+			return sameIsolateFragment(
+					provideNode().relative().treeSubsequentNodeNoDescent());
+		}
+
 		public FragmentNode nextSibling() {
 			return sameIsolateFragment(provideNode().relative().nextSibling());
 		}

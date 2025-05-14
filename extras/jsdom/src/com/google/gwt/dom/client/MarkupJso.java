@@ -169,6 +169,8 @@ for (; ;) {
 			}
 			//PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE
 			case 1: {
+			// unused in the js replay, since it's sequential
+				var previousSiblingId = ids[idsIdx++];
 				var nodeCount = ids[idsIdx++];
 				var attachIds = [];
 				var lengths = [];
@@ -196,12 +198,13 @@ for (; ;) {
 					resultJsos.push(text);
 					text.__attachId = attachId;
 					idJso[text.__attachId] = text;
-					parentNode.insertBefore(appendCursor.nextSibling);
+					parentNode.insertBefore(text,appendCursor,nextSibling);
 					appendCursor = text;
 				}
 				break;
 			}
 			default:
+				debugger;
 				throw "Unsupported protocol token: " + int1;
 		}
 

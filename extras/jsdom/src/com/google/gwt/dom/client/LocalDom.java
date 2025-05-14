@@ -118,7 +118,9 @@ public class LocalDom implements ContextFrame {
 
 	static void consoleLog(String message, boolean error) {
 		Ax.sysLogHigh(message);
-		consoleLog0(message, error);
+		if (Al.isBrowser()) {
+			consoleLog0(message, error);
+		}
 	}
 
 	static Element createElement(String tagName) {
@@ -1150,9 +1152,10 @@ public class LocalDom implements ContextFrame {
 		attachIds.readFromIdList(elem, idList);
 		elem.local().setInnerHTML(html);
 		try {
-			attachIds.verifyIdList(idList);
+			attachIds.detachIdList(idList);
 		} catch (RuntimeException e) {
-			String remoteHtml = elem.jsoRemote().getInnerHTML0();
+			String remoteHtml = elem.jsoRemote() == null ? null
+					: elem.jsoRemote().getInnerHTML0();
 			String localHtml = elem.local().getInnerHTML();
 			consoleLog("setHtml::validation issue (probably wonky html)", true);
 			/* probably some odd dom - compare to roundtripped

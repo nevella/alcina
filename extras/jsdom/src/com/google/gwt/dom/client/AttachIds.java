@@ -1,6 +1,5 @@
 package com.google.gwt.dom.client;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,6 +41,38 @@ public class AttachIds {
 
 	int nextAttachId;
 
+	IdProtocolList externalIds;
+
+	/*
+	 * This class models the ids of all nodes in a subtree, in depth-first
+	 * order, for assigning post-set-innerhtml. This sets the text content of
+	 * empty nodes to " " - FIXME - attachId - later - remove the space (but
+	 * keep the remote node)
+	 */
+	public IdProtocolList getSubtreeIds(Node node) {
+		return IdProtocolList.of(node);
+	}
+
+	public void setNextAttachId(int nextAttachId) {
+		this.nextAttachId = nextAttachId;
+	}
+
+	public Node getNode(AttachId attachId) {
+		return byId.get(attachId.id);
+	}
+
+	Node getNode(int id) {
+		return byId.get(id);
+	}
+
+	// debug method
+	public List<Node> byTag(String tag) {
+		List<Node> list = byId.values().stream()
+				.filter(n -> n.getNodeName().equals(tag))
+				.collect(Collectors.toList());
+		return list;
+	}
+
 	void onAttach(Node node) {
 		int id = nextCounterValue();
 		Preconditions.checkState(node.attachId == 0);
@@ -51,7 +82,7 @@ public class AttachIds {
 
 	int nextCounterValue() {
 		if (externalIds != null) {
-			return externalIds.next();
+			return externalIds.nextAttachId();
 		}
 		int next = 0;
 		if (nextAttachId != 0) {
@@ -99,39 +130,11 @@ public class AttachIds {
 		node.setAttachId(0);
 	}
 
-	/*
-	 * This class models the ids of all nodes in a subtree, in depth-first
-	 * order, for assigning post-set-innerhtml. This sets the text content of
-	 * empty nodes to " " - FIXME - attachId - later - remove the space (but
-	 * keep the remote node)
-	 */
-	public IdProtocolList getSubtreeIds(Node node) {
-		return IdProtocolList.of(node);
-	}
-
-	public void setNextAttachId(int nextAttachId) {
-		this.nextAttachId = nextAttachId;
-	}
-
-	public Node getNode(AttachId attachId) {
-		return byId.get(attachId.id);
-	}
-
 	void applyPreRemovalAttachId(Node node, AttachId attachId) {
 		if (attachId.isDetached()) {
 			attachId.id = getRemovedId(node);
 		}
 	}
-
-	// debug method
-	public List<Node> byTag(String tag) {
-		List<Node> list = byId.values().stream()
-				.filter(n -> n.getNodeName().equals(tag))
-				.collect(Collectors.toList());
-		return list;
-	}
-
-	Iterator<Integer> externalIds;
 
 	/*
 	 * For replaying remote markup/idlist mutations - first verify the first id
@@ -140,15 +143,17 @@ public class AttachIds {
 	void readFromIdList(Element elem, IdProtocolList idList) {
 		if (idList != null) {
 			Preconditions.checkState(this.externalIds == null);
-			this.externalIds = idList.ids.iterator();
-			Preconditions
-					.checkState(elem.getAttachId() == this.externalIds.next());
+			idList.prepareForReplay(this);
+			this.externalIds = idList;
+			Preconditions.checkState(
+					elem.getAttachId() == this.externalIds.nextAttachId());
 		}
 	}
 
-	void verifyIdList(IdProtocolList idList) {
+	void detachIdList(IdProtocolList idList) {
 		if (idList != null) {
-			Preconditions.checkState(!externalIds.hasNext());
+			Preconditions.checkState(idList == externalIds);
+			idList.replayState.onAfterAttach();
 			externalIds = null;
 		}
 	}

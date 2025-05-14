@@ -147,23 +147,6 @@ public interface DecoratorBehavior {
 			Location decoratorLocation = boundary;
 			DomNode containingNode = decoratorLocation.getContainingNode();
 			/*
-			 * position before/after the decorator
-			 */
-			switch (direction) {
-			case left:
-				boundary = boundary.relativeLocation(
-						RelativeDirection.PREVIOUS_LOCATION,
-						TextTraversal.TO_END_OF_NODE);
-				range = new Location.Range(boundary, range.end);
-				break;
-			case right:
-				boundary = boundary.relativeLocation(
-						RelativeDirection.NEXT_LOCATION,
-						TextTraversal.TO_START_OF_NODE);
-				range = new Location.Range(range.start, boundary);
-				break;
-			}
-			/*
 			 * don't delete the zws (we could, and rely on ensure-zws behavior
 			 * to re-insert, but that's async in the case of romcom), just the
 			 * non-editable. confirm it's non-editable
@@ -178,7 +161,7 @@ public interface DecoratorBehavior {
 					/*
 					 * expand the selection to the whole non-editable
 					 */
-					selection.select(boundary.getContainingNode().gwtNode());
+					selection.select(containingNode.gwtNode());
 				}
 			}
 			nativeKeydownEvent.squelch();

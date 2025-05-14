@@ -33,5 +33,10 @@
  * modelled as inner classes of {@link DecoratorBehavior} - at times, other
  * classes/methods will reference a logical behavior where the actual
  * implementation is a method (or part of a method) in another class
+ * 
+ * <h3>Selection model</h3>
+ * <p>
+ * Decorator nodes, once their underlying value is selected, are normally
+ * uneditable and have a selection
  */
 package cc.alcina.framework.gwt.client.dirndl.model.edit;

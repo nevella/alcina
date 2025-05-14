@@ -1,6 +1,7 @@
 package com.google.gwt.dom.client;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
@@ -15,21 +16,28 @@ import cc.alcina.framework.common.client.reflection.Property;
  */
 @Bean(PropertySource.FIELDS)
 public class IdProtocolList {
-	static int PROTOCOL_0_SPECIAL = 0;
+	static final int PROTOCOL_0_SPECIAL = 0;
 
 	/*
 	 * [0,0,attachId,parentId,previousSiblingId]
 	 */
-	static int PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE = 0;
+	static final int PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE = 0;
 
 	/*
-	 * [0,1,n,attachIds,lengths](the last two will be int lists of length n)
+	 * [0,1,previousSiblingId,n,attachIds,lengths](the last two will be int
+	 * lists of length n)
+	 * 
+	 * previousSiblingId will be the attachId of the non-empty textnode which
+	 * contains the full text content
 	 */
-	static int PROTOCOL_1_TEXT_NODE_SEQUENCE = 1;
+	static final int PROTOCOL_1_TEXT_NODE_SEQUENCE = 1;
 
 	@Override
 	public String toString() {
 		return ids.toString();
+	}
+
+	IdProtocolList() {
 	}
 
 	public List<Integer> ids = new ArrayList<>();
@@ -42,11 +50,21 @@ public class IdProtocolList {
 		return result;
 	}
 
+	abstract class Attachable {
+		int attachId;
+
+		int parentAttachId;
+
+		int previousSiblingAttachId;
+
+		abstract void attach();
+	}
+
 	/*
 	 * Models nodes {t1,...tn} of a sequence {t0...tn} - they will be output as
 	 * a single node in the markup
 	 */
-	class ConsecutiveTextNodes {
+	class ConsecutiveTextNodes extends Attachable {
 		List<Integer> attachIds = new ArrayList<>();
 
 		List<Integer> lengths = new ArrayList<>();
@@ -61,6 +79,40 @@ public class IdProtocolList {
 		 * the most recent node added to this instance
 		 */
 		Text cursor;
+
+		ConsecutiveTextNodes() {
+		}
+
+		ConsecutiveTextNodes(Iterator<Integer> itr) {
+			previousSiblingAttachId = itr.next();
+			int nodeCount = itr.next();
+			for (int idx = 0; idx < nodeCount; idx++) {
+				attachIds.add(itr.next());
+			}
+			int partLengthSum = 0;
+			for (int idx = 0; idx < nodeCount; idx++) {
+				int length = itr.next();
+				lengths.add(length);
+				partLengthSum += length;
+			}
+			String content = cursor.getNodeValue();
+			int totalLength = content.length();
+			int offset = totalLength - partLengthSum;
+			cursor.setNodeValue(content.substring(0, offset));
+			Node appendCursor = cursor;
+			Node parentNode = appendCursor.getParentNode();
+			for (int idx0 = 0; idx0 < nodeCount; idx0++) {
+				int attachId = attachIds.get(idx0);
+				int length = lengths.get(idx0);
+				String nodeContent = content.substring(offset, length);
+				offset += length;
+				Text text = cursor.getOwnerDocument()
+						.createTextNode(nodeContent);
+				replayState.nextAttachId = attachId;
+				parentNode.insertAfter(text, appendCursor.getNextSibling());
+				appendCursor = text;
+			}
+		}
 
 		/*
 		 * Add a text to this sequence. The comprised texts are a sibling
@@ -84,6 +136,7 @@ public class IdProtocolList {
 			if (attachIds.size() > 0) {
 				add(PROTOCOL_0_SPECIAL);
 				add(PROTOCOL_1_TEXT_NODE_SEQUENCE);
+				add(first.attachId);
 				add(attachIds.size());
 				attachIds.forEach(id -> add(id));
 				lengths.forEach(id -> add(id));
@@ -96,6 +149,15 @@ public class IdProtocolList {
 				first = null;
 			}
 			cursor = first;
+		}
+
+		@Override
+		public void attach() {
+			Node parent = replayState.attachIds.getNode(parentAttachId);
+			Text created = parent.getOwnerDocument().createTextNode("");
+			Node refChild = previousSiblingAttachId == 0 ? null
+					: replayState.attachIds.getNode(previousSiblingAttachId);
+			parent.insertAfter(created, refChild);
 		}
 	}
 
@@ -163,5 +225,100 @@ public class IdProtocolList {
 
 	void add(int value) {
 		ids.add(value);
+	}
+
+	int nextAttachId() {
+		return replayState.nextAttachId();
+	}
+
+	transient ReplayState replayState;
+
+	class ZeroLengthText extends Attachable {
+		public ZeroLengthText(Iterator<Integer> itr) {
+			attachId = itr.next();
+			parentAttachId = itr.next();
+			previousSiblingAttachId = itr.next();
+		}
+
+		@Override
+		public void attach() {
+			Node parent = replayState.attachIds.getNode(parentAttachId);
+			Text created = parent.getOwnerDocument().createTextNode("");
+			Node refChild = previousSiblingAttachId == 0 ? null
+					: replayState.attachIds.getNode(previousSiblingAttachId);
+			replayState.nextAttachId = attachId;
+			parent.insertAfter(created, refChild);
+		}
+	}
+
+	class ReplayState {
+		Iterator<Integer> itr;
+
+		List<Attachable> attachables = new ArrayList<>();
+
+		List<ConsecutiveTextNodes> consecutiveTextNodes;
+
+		List<Integer> replayIds;
+
+		AttachIds attachIds;
+
+		int nextAttachId = -1;
+
+		public ReplayState(AttachIds attachIds) {
+			this.attachIds = attachIds;
+			itr = ids.iterator();
+		}
+
+		int nextAttachId() {
+			if (nextAttachId != -1) {
+				int result = nextAttachId;
+				nextAttachId = -1;
+				return result;
+			} else {
+				while (true) {
+					int next = itr.next();
+					if (next != PROTOCOL_0_SPECIAL) {
+						return next;
+					} else {
+						readSpecial();
+					}
+				}
+			}
+		}
+
+		void readSpecial() {
+			int instruction = itr.next();
+			switch (instruction) {
+			case PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE:
+				attachables.add(new ZeroLengthText(itr));
+				break;
+			case PROTOCOL_1_TEXT_NODE_SEQUENCE:
+				attachables.add(new ConsecutiveTextNodes(itr));
+			}
+		}
+
+		void attachAttachables() {
+			attachables.forEach(Attachable::attach);
+		}
+
+		boolean hasNext() {
+			return itr.hasNext();
+		}
+
+		void onAfterAttach() {
+			while (itr.hasNext()) {
+				int next = itr.next();
+				if (next != PROTOCOL_0_SPECIAL) {
+					throw new IllegalStateException("id length mismatch");
+				} else {
+					readSpecial();
+				}
+			}
+			attachAttachables();
+		}
+	}
+
+	void prepareForReplay(AttachIds attachIds) {
+		replayState = new ReplayState(attachIds);
 	}
 }

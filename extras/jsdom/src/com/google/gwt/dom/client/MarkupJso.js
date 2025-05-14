@@ -66,7 +66,7 @@ for (; ;) {
 					resultJsos.push(text);
 					text.__attachId = attachId;
 					idJso[text.__attachId] = text;
-					parentNode.insertBefore(appendCursor.nextSibling);
+					parentNode.insertBefore(text, appendCursor.nextSibling);
 					appendCursor = text;
 				}
 				break;

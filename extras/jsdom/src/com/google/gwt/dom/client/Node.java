@@ -318,6 +318,9 @@ public abstract class Node
 
 	@Override
 	public Node insertBefore(Node newChild, Node refChild) {
+		if (refChild == null) {
+			return appendChild(newChild);
+		}
 		try {
 			// new child first
 			validateInsert(newChild);
