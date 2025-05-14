@@ -165,6 +165,7 @@ for (; ;) {
 				text.__attachId = attachId;
 				idJso[text.__attachId] = text;
 				parentNode.insertBefore(text, previousSiblingNode);
+				itr.nextNode();
 				break;
 			}
 			//PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE
@@ -189,6 +190,7 @@ for (; ;) {
 				var offset = totalLength - partLengthSum;
 				cursor.nodeValue = content.substring(0, offset);
 				var appendCursor = cursor;
+				var parentNode = appendCursor.parentNode;
 				for (var idx1 = 0; idx1 < nodeCount; idx1++) {
 					var attachId = attachIds[idx1];
 					var length = lengths[idx1];
@@ -198,7 +200,8 @@ for (; ;) {
 					resultJsos.push(text);
 					text.__attachId = attachId;
 					idJso[text.__attachId] = text;
-					parentNode.insertBefore(text,appendCursor,nextSibling);
+					parentNode.insertBefore(text,appendCursor.nextSibling);
+					itr.nextNode()
 					appendCursor = text;
 				}
 				break;

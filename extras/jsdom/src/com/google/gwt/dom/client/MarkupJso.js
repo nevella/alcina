@@ -57,6 +57,7 @@ for (; ;) {
 				var offset = totalLength - partLengthSum;
 				cursor.nodeValue = content.substring(0, offset);
 				var appendCursor = cursor;
+				var parentNode = appendCursor.parentNode;
 				for (var idx1 = 0; idx1 < nodeCount; idx1++) {
 					var attachId = attachIds[idx1];
 					var length = lengths[idx1];
