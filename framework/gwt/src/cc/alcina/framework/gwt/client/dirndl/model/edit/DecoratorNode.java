@@ -36,8 +36,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
  */
 @Directed(className = "decorator-node")
 @TypedProperties
-public abstract class DecoratorNode<WT, SR> extends FragmentNode implements
-		HasStringRepresentableType<SR>, FragmentIsolate, HasContentEditable {
+public abstract class DecoratorNode<WT, SR> extends FragmentNode
+		implements HasStringRepresentableType<SR>, FragmentIsolate,
+		HasContentEditable, Binding.TabIndexMinusOne {
 	/**
 	 * Models the characteristics of the content decorator, such as the key
 	 * sequence which triggers its creation, the class reference modelled, etc

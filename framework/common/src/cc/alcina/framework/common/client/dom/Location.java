@@ -968,7 +968,7 @@ public class Location implements Comparable<Location> {
 		/**
 		 * Equivalently, a mutation at other would not affect a location at this
 		 * indextuple. See also
-		 * {@link LocationContext3.IndexMutation#IndexMutation}
+		 * {@link TrackingLocationContext.IndexMutation#IndexMutation}
 		 */
 		boolean isBefore(IndexTuple other) {
 			if (treeIndex < other.treeIndex) {

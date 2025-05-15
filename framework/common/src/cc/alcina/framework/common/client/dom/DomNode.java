@@ -1008,7 +1008,7 @@ public class DomNode {
 					.nodeListToList(node.getChildNodes()).stream()
 					.map(document::nodeFor).collect(Collectors.toList());
 			if ((document.isReadonly() && document.cacheNodes)
-					|| document.isLocationContext3()) {
+					|| document.isMutableLocationContext()) {
 				this.nodes = nodes;
 			}
 			return nodes;

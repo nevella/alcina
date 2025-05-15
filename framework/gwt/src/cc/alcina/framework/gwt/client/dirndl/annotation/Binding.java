@@ -396,7 +396,7 @@ public @interface Binding {
 	}
 
 	/**
-	 * Mixin to ensure focusability of area
+	 * Mixin to ensure focusability + keyboard navigability of area
 	 */
 	@Directed(
 		bindings = @Binding(
@@ -404,5 +404,16 @@ public @interface Binding {
 			literal = "0",
 			type = Type.PROPERTY))
 	public interface TabIndexZero {
+	}
+
+	/**
+	 * Mixin to ensure focusability + keyboard navigability of area
+	 */
+	@Directed(
+		bindings = @Binding(
+			to = "tabIndex",
+			literal = "-1",
+			type = Type.PROPERTY))
+	public interface TabIndexMinusOne {
 	}
 }

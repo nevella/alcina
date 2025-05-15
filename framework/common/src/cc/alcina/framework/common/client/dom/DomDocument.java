@@ -43,6 +43,9 @@ import cc.alcina.framework.common.client.util.Topic;
  * <li>Read-only: the default mode for a DomDocument. It's an optimised mode
  * where locations are assumed non-mutable. No post-initialisation dom
  * modifications are permitted (impl; WIP)
+ * <li>TODO Cleanup association of TrackingLocationContext/.gwt Document vs
+ * NonTracking/.w3c Document - neither should requiire manual invalidation,
+ * since the latter must support asMutableDocument
  * </ul>
  */
 public class DomDocument extends DomNode implements Cloneable {
@@ -240,11 +243,12 @@ public class DomDocument extends DomNode implements Cloneable {
 		if (locationContext == null) {
 			if (useLocations2
 					&& w3cDoc() instanceof com.google.gwt.dom.client.Document) {
-				LocationContext3 locationContext3 = new LocationContext3(this);
+				TrackingLocationContext locationContext3 = new TrackingLocationContext(
+						this);
 				locationContext = locationContext3;
 				locationContext3.init();
 			} else {
-				locationContext = new Locations();
+				locationContext = new NonTrackingLocationContext();
 			}
 		}
 		return locationContext;
@@ -308,20 +312,17 @@ public class DomDocument extends DomNode implements Cloneable {
 
 	// FIXME - remove with universal mutable location support
 	public void invalidateLocations() {
-		if (locationContext instanceof Locations) {
-			((Locations) locationContext).invalidateLookups();
+		if (locationContext instanceof NonTrackingLocationContext) {
+			((NonTrackingLocationContext) locationContext).invalidateLookups();
 		}
 	}
 
-	/*
-	 * Mutation support notes:
-	 *
-	 * Location must reference mutation generation and initially throw if
-	 * referencing an older generation
-	 *
+	/**
+	 * This LocationContext must be fully invalidated if any mutation occurs to
+	 * retain validity
 	 *
 	 */
-	public class Locations implements LocationContext {
+	public class NonTrackingLocationContext implements LocationContext {
 		private Map<DomNode, Location> byNode;
 
 		private Map<Integer, DomNode> byTreeIndex;
@@ -332,7 +333,7 @@ public class DomDocument extends DomNode implements Cloneable {
 
 		private String contents;
 
-		Locations() {
+		NonTrackingLocationContext() {
 			// Preconditions.checkState(readonly);
 			// FIXME - 1 - add document mutation support
 			//
@@ -688,7 +689,7 @@ public class DomDocument extends DomNode implements Cloneable {
 		nodes.keySet().removeIf(toDetach::contains);
 	}
 
-	public boolean isLocationContext3() {
-		return locationContext instanceof LocationContext2;
+	public boolean isMutableLocationContext() {
+		return locationContext instanceof TrackingLocationContext;
 	}
 }

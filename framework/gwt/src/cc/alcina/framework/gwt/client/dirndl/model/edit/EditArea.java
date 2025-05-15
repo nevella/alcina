@@ -242,6 +242,11 @@ public class EditArea extends Model.Fields
 	 * 
 	 * <p>
 	 * It also ensures unneeded ZWS nodes are removed or unwrapped
+	 * 
+	 * <p>
+	 * Note (future) re validation cost - for a given mutation, determine the
+	 * lowest affected block. If a decorator is not within the lowest affected
+	 * block (and that itself is something computed by FM), no need to recompute
 	 */
 	class NonEditableCursorTargetConstraint implements DecoratorBehavior {
 		void alignWithConstraint() {

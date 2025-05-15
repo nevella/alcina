@@ -19,6 +19,12 @@ import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
+ * <p>
+ * This {@link LocationContext} implementation - the default for GWT DOM
+ * documents (as extended by Alcina) - supports live, low-cost {@link Location}
+ * marking by recording mutation events and transforming to an IndexMutation
+ * structure.
+ * 
  * TODO
  * 
  * <ul>
@@ -43,7 +49,7 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * location coords from treeprevious if treeprevious is current' is key
  * </ul>
  */
-class LocationContext3 implements LocationContext {
+class TrackingLocationContext implements LocationContext {
 	static class IndexMutation {
 		IndexTuple at;
 
@@ -54,7 +60,7 @@ class LocationContext3 implements LocationContext {
 		 */
 		Location location;
 
-		LocationContext3 context;
+		TrackingLocationContext context;
 
 		List<MutationRecord> domMutations = new ArrayList<>();
 
@@ -62,7 +68,7 @@ class LocationContext3 implements LocationContext {
 
 		boolean extendable = true;
 
-		IndexMutation(LocationContext3 context) {
+		IndexMutation(TrackingLocationContext context) {
 			this.context = context;
 			mutationIndex = context.mutations.size();
 		}
@@ -302,7 +308,8 @@ class LocationContext3 implements LocationContext {
 			}
 			if (currentMutation == null
 					|| !currentMutation.extendWith(mutation)) {
-				currentMutation = new IndexMutation(LocationContext3.this);
+				currentMutation = new IndexMutation(
+						TrackingLocationContext.this);
 				mutations.add(currentMutation);
 				currentMutation.init(mutation);
 			}
@@ -329,7 +336,7 @@ class LocationContext3 implements LocationContext {
 
 	Range documentRange;
 
-	LocationContext3(DomDocument document) {
+	TrackingLocationContext(DomDocument document) {
 		Preconditions.checkState(document.w3cDoc() instanceof Document);
 		this.document = document;
 		this.gwtDocument = (Document) document.w3cDoc();

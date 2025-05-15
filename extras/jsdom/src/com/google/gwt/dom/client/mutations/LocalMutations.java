@@ -33,6 +33,23 @@ import cc.alcina.framework.common.client.util.Topic;
  * such as {@link DomNode#children} and {@link Location}. Those invalidations
  * require immediate dispatch
  */
+/*
+ * @formatter:off
+FIXME - doc
+
+Q: * how do innerhtml mutations relate to localmutatons/locations?
+	* romcom server->browser.local?
+	* browser.local->romcomserver?
+	* general attach of detached trees?
+
+A: (simple)
+ * If applying to remote, the remote innerhtml is set and the __attachid properties synced. Does not affect local mutations
+ * If applying to local, elements are generated + adjoined via parse and localmutations are generated normally
+ * Really the question is more "where are mutations *transported* as innerhtml" -
+ 	* 	romcom - server->client (all non-single-text trees), client->server(initial tree)
+
+ * @formatter:on
+ */
 public class LocalMutations {
 	MutationsAccess mutationsAccess;
 

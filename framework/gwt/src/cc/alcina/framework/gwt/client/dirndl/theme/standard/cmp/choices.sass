@@ -5,7 +5,7 @@
 @use 'context-menu'
 
 //various choices style mixins
-$selected-editor-choice: lightblue
+$selected-editor-choice: blue
 
 @mixin vertical
   display: flex
@@ -46,23 +46,22 @@ $selected-editor-choice: lightblue
     line-height: 145%
     width: 30rem
 
-    choice-node:not([contentEditable='false'])
+    choice-node:not([contenteditable='false'])
       //color: blue
 
-    choice-node[contentEditable='false']
+    choice-node[contenteditable='false']
       background: none
       border-radius: 4px
       border: solid 1px #333
       padding: 2px 6px
       margin: 0 2px
       user-select: all
+      outline: none
 
-      &:selection
-        background: none
+      &.selected, &:focus
+        border-color: $selected-editor-choice
         color: $selected-editor-choice
 
-      &.selected
-        border-color: $selected-editor-choice
 
     //choice-node
 

@@ -68,6 +68,41 @@ public interface DecoratorBehavior {
 			return BrowserEvents.KEYDOWN;
 		}
 
+		/*
+		 * TODO
+		 * 
+		 * @formatter:off
+		 * 
+		 * - this is really "treat contenteditable=false as wholes". Normally contenteditables are not in the keyboard selection flow
+		 * - if kb b/f nav (test focus) would cause overlap with a CE, hijack the nav and move the focus
+		 * - delete/bs is really "clear-sel, shift-move, delete/bs". we'll want an abstractish keyboard-move-result with a futureselection
+		 * - if focus is *on* the CE, again hijck
+		 * 
+		 * - PendingSelection object (backed by a SelectionLocal)
+		 * - it receives kb events, which are themselves "KeyboardSelectionMutation" events - selecting: boolean; direction: boolean
+		 * - it's the one that behaves differently when the Fn moves to/from a CEF
+		 * 
+		 * - move focus node *first* - then ensure selection boundaries contain (including the element) 
+		 * - actually no - *this* bit should just 'move one more if zws' - but honestly with invis text nodes let's try that first
+		 * - most of what we want is actually onSelectionChanged handling - to expand to cover the selection
+		 * - but do need 
+		 * 
+		 * 
+		 * * @formatter:on
+		 */
+		/*
+		 * - DOC: Normally browser keyboard navigation skips
+		 * contenteditable=false (CEF) 'islands' in a sea of
+		 * contenteditable=true (CET) sea.
+		 * 
+		 * In this case, we want to treat the CEF decorator nodes as part of the
+		 * KB navigation sequence, but as effectively 1-character atoms. So we
+		 * emulate kb navigation via the KeyboardSelectionMutation and
+		 * PendingSelection objects
+		 * 
+		 * Note that this is sort of orthogonal to ZWS (which will be removed?)
+		 * 
+		 */
 		public void onKeyDown(NativeEvent nativeKeydownEvent,
 				Element registeredElement) {
 			Selection selection = Document.get().getSelection();
@@ -97,7 +132,7 @@ public interface DecoratorBehavior {
 			if (direction == null) {
 				return;
 			}
-			Location.Range range = selection.getAnchorLocation().asRange();
+			Location.Range range = selection.getFocusLocation().asRange();
 			Location.Range contextBoundary = registeredElement.asDomNode()
 					.asRange();
 			range = range.extendText(direction.numericDelta());
@@ -162,6 +197,7 @@ public interface DecoratorBehavior {
 					 * expand the selection to the whole non-editable
 					 */
 					selection.select(containingNode.gwtNode());
+					containingNode.gwtElement().focus();
 				}
 			}
 			nativeKeydownEvent.squelch();
