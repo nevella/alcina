@@ -309,7 +309,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 		}
 
 		protected void constructLabel(DomainViewNodeContent<?> nodeContent) {
-			getLabel().setLabel(labelGenerator.apply(nodeContent));
+			getLabel().label = labelGenerator.apply(nodeContent);
 		}
 
 		public DomainViewNode ensureNode(DomainViewNodeContent nodeContent,
@@ -412,7 +412,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 		public void setNodeContent(DomainViewNodeContent<?> nodeContent) {
 			this.nodeContent = nodeContent;
 			constructLabel(nodeContent);
-			getLabel().setTitle(nodeContent.getTitle());
+			getLabel().title = nodeContent.getTitle();
 			setLeaf(nodeContent.isLeaf());
 		}
 
@@ -437,7 +437,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			@Override
 			public Object apply(DomainViewNodeContent<?> t) {
 				NodeLabelText nodeLabelText = new NodeLabelText();
-				nodeLabelText.setText(t.getName());
+				nodeLabelText.putText(t.getName());
 				return nodeLabelText;
 			}
 		}

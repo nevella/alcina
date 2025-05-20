@@ -8,7 +8,7 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent.TopLevelHandler;
@@ -35,7 +35,7 @@ public class EntityActions {
 			EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
 			EntityPlace entityPlace = Reflections
 					.newInstance(currentPlace.getClass());
-			Optional<TruncatedObjectCriterion> o_ownerCriterion = Entity.Ownership
+			Optional<EntityCriterion> o_ownerCriterion = Entity.Ownership
 					.getOwnerReflectors(entityPlace.provideEntityClass()).map(
 							ownerReflector -> currentPlace.def
 									.provideTruncatedObjectCriterion(
@@ -46,8 +46,7 @@ public class EntityActions {
 									.orElse(null))
 					.filter(Objects::nonNull).findFirst();
 			if (o_ownerCriterion.isPresent()) {
-				TruncatedObjectCriterion ownerCriterion = o_ownerCriterion
-						.get();
+				EntityCriterion ownerCriterion = o_ownerCriterion.get();
 				entityPlace.fromId = ownerCriterion.getId();
 				EntityPlace fromPlace = EntityPlace
 						.forClass(ownerCriterion.getObjectClass());

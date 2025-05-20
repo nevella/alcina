@@ -60,6 +60,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.EnumValues.EnumSupplier;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices.SelectResolver.OptionNameTransformer;
 
 /**
  * <p>
@@ -212,13 +213,24 @@ public abstract class Choices<T> extends Model implements
 		/**
 		 * The values supplier
 		 */
-		Class<? extends Function<Values, List<?>>> value();
+		Class<? extends ValueSupplier> value();
 
 		public interface ValueSupplier
 				extends Supplier<List<?>>, Function<Values, List<?>> {
 			@Override
 			default List<?> apply(Values t) {
 				return get();
+			}
+
+			default List<?> apply(Node contextNode, Values t) {
+				return apply(t);
+			}
+
+			public interface ContextSensitive extends ValueSupplier {
+				@Override
+				default List<?> get() {
+					throw new UnsupportedOperationException("Use 'apply'");
+				}
 			}
 		}
 	}
@@ -235,7 +247,7 @@ public abstract class Choices<T> extends Model implements
 			return;
 		}
 		node.optional(Values.class).ifPresent(ann -> setValues(filter(
-				(List<T>) Reflections.newInstance(ann.value()).apply(ann),
+				(List<T>) Reflections.newInstance(ann.value()).apply(node, ann),
 				valueFilter)));
 		node.optional(EnumValues.class).ifPresent(ann -> setValues(
 				filter((List<T>) new EnumSupplier().apply(ann), valueFilter)));
@@ -514,13 +526,10 @@ public abstract class Choices<T> extends Model implements
 	}
 
 	/*
-	 * Don't use @Choices.ValueTransformer (since there's already a transformer,
-	 * transforming the value into an HTML Option). Instead, override
-	 * transformOptionName (or - better - add another parameter annotation - say
-	 * ValueTransformer)
+	 * @OptionNameTransformer is used here to transform the choice.value to a
+	 * String - which is used by the Option.Transform
 	 */
 	@Directed(tag = "select")
-	@DirectedContextResolver(SelectResolver.class)
 	public static class Select<T> extends Single<T>
 			implements DomEvents.Change.Handler {
 		public static class To implements ModelTransform<Object, Single<?>> {
@@ -530,6 +539,15 @@ public abstract class Choices<T> extends Model implements
 				select.setValue(t);
 				return select;
 			}
+		}
+
+		@Override
+		@Property.Not
+		public ContextResolver getContextResolver(AnnotationLocation location) {
+			Class<? extends Function<?, String>> optionNameTransformerClass = location
+					.optional(OptionNameTransformer.class)
+					.map(ann -> ann.value()).orElse(null);
+			return new SelectResolver(optionNameTransformerClass);
 		}
 
 		@Override
@@ -568,6 +586,16 @@ public abstract class Choices<T> extends Model implements
 	 * to child inputs, not the input on which it is declared
 	 */
 	public static class SelectResolver extends ContextResolver {
+		Function<Object, String> optionNameTransformer;
+
+		protected SelectResolver(
+				Class<? extends Function<?, String>> optionNameTransformerClass) {
+			if (optionNameTransformerClass != null) {
+				this.optionNameTransformer = (Function) Reflections
+						.newInstance(optionNameTransformerClass);
+			}
+		}
+
 		@Override
 		protected Property resolveDirectedProperty0(Property property) {
 			if (property.getDeclaringType() == Choices.class
@@ -583,7 +611,17 @@ public abstract class Choices<T> extends Model implements
 		 * Override to customize the default
 		 */
 		protected String transformOptionName(Node node, Choice choice) {
-			return HasDisplayName.displayName(choice.getValue(), "");
+			return optionNameTransformer != null
+					? optionNameTransformer.apply(choice.getValue())
+					: HasDisplayName.displayName(choice.getValue(), "");
+		}
+
+		@ClientVisible
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.METHOD, ElementType.FIELD })
+		public @interface OptionNameTransformer {
+			Class<? extends Function<?, String>> value();
 		}
 
 		public static class Option extends Choices.Choice<String> {

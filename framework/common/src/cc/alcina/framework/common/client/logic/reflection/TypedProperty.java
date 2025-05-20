@@ -3,7 +3,8 @@ package cc.alcina.framework.common.client.logic.reflection;
 import java.util.List;
 import java.util.Objects;
 
-import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -18,7 +19,7 @@ import cc.alcina.framework.common.client.util.NestedName;
  * (and that would be a little tricky since it's the type of the field in the
  * PackageProperties container)
  */
-public class TypedProperty<S extends BaseSourcesPropertyChangeEvents, T>
+public class TypedProperty<S extends SourcesPropertyChangeEvents, T>
 		implements PropertyEnum {
 	public static int indexOf(List<TypedProperty> properties, String name) {
 		TypedProperty match = properties.stream()
@@ -84,5 +85,9 @@ public class TypedProperty<S extends BaseSourcesPropertyChangeEvents, T>
 		} else {
 			set(propertySource, newValue);
 		}
+	}
+
+	public InstanceProperty<S, T> instance(S source) {
+		return new InstanceProperty<>(source, this);
 	}
 }

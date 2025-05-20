@@ -16,10 +16,10 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -112,12 +112,11 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		}
 	}
 
-	public Optional<TruncatedObjectCriterion>
+	public Optional<EntityCriterion>
 			provideTruncatedObjectCriterion(Class clazz) {
 		return allCriteria().stream()
-				.filter(sc -> sc instanceof TruncatedObjectCriterion)
-				.map(sc -> (TruncatedObjectCriterion) sc)
-				.filter(toc -> toc.getId() != 0
+				.filter(sc -> sc instanceof EntityCriterion)
+				.map(sc -> (EntityCriterion) sc).filter(toc -> toc.getId() != 0
 						&& toc.getObjectClass() == clazz)
 				.findFirst();
 	}

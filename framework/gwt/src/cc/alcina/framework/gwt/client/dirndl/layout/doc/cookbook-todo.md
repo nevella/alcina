@@ -49,12 +49,13 @@ public void onSelected(Selected event) {
 	}
 ```
 
-### Property bindings
+### Property bindings (binding model properties to transformed model values)
 
 Notes:
 
-- Generally use ValueChange.Container (sooo simple)(see `cc.alcina.framework.servlet.component.traversal.Dotburger.Menu`)
+- Generally have the containing model implement ValueChange.Container (sooo simple)(see `cc.alcina.framework.servlet.component.traversal.Dotburger.Menu`)
 - Describe TypedProperty usage and generation (the docs should also go to the Manifesto)
+- Or encapsulate the properties ina form model (if validation etc required)
 
 ### Dialogs
 

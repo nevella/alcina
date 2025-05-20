@@ -6,10 +6,10 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -38,8 +38,8 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 			return places;
 		}
 		for (SearchCriterion sc : allCriteria()) {
-			if (sc instanceof TruncatedObjectCriterion) {
-				TruncatedObjectCriterion criterion = (TruncatedObjectCriterion) sc;
+			if (sc instanceof EntityCriterion) {
+				EntityCriterion criterion = (EntityCriterion) sc;
 				if (criterion.getId() != 0) {
 					places.add(EntityPlace.forClassAndId(
 							criterion.getObjectClass(), criterion.getId()));

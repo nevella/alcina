@@ -246,7 +246,8 @@ public class DomNode {
 	}
 
 	public boolean attrMatches(String attrName, String regex) {
-		return attr(attrName).matches(regex);
+		String attrValue = attr(attrName);
+		return attrValue != null && attrValue.matches(regex);
 	}
 
 	public DomNode attrNode(String name) {
@@ -489,7 +490,7 @@ public class DomNode {
 		return DomEnvironment.get().prettyToString(this);
 	}
 
-	public DomRange range() {
+	public DomRange domRange() {
 		return new DomRange();
 	}
 
@@ -2059,7 +2060,7 @@ public class DomNode {
 
 		public boolean isBefore(DomNode other) {
 			Range r1 = createRange();
-			Range r2 = other.range().createRange();
+			Range r2 = other.domRange().createRange();
 			boolean result = r1.compareBoundaryPoints(Range.START_TO_START,
 					r2) < 0;
 			r1.detach();
@@ -2069,7 +2070,7 @@ public class DomNode {
 
 		public boolean isEndAfter(DomNode other) {
 			Range r1 = createRange();
-			Range r2 = other.range().createRange();
+			Range r2 = other.domRange().createRange();
 			boolean result = r1.compareBoundaryPoints(Range.END_TO_END, r2) > 0;
 			r1.detach();
 			r2.detach();

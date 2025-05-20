@@ -67,6 +67,24 @@
 @mixin medium-inputs
   input, select, textarea, choice-editor, choice-editor > edit
     width: 16rem
+@mixin single-line
+  display: inline-block
+  flex: 1
+  min-width: auto
+  width: 100%
+  form 
+    display: flex
+    section 
+      display: inline-block
+      flex: 1
+      form-element,
+      select 
+        display: inline-block
+      form-element 
+        padding-right: 1rem
+    actions
+      display: inline-block
+      margin: 0
 
 @mixin bean-editor
   padding: 1em 2em
@@ -112,23 +130,8 @@
         display: none
   
   &.single-line 
-    display: inline-block
-    flex: 1
-    min-width: auto
-    width: 100%
-    form 
-      display: flex
-      section 
-        display: inline-block
-        flex: 1
-        form-element,
-        select 
-          display: inline-block
-        form-element 
-          padding-right: 1rem
-      actions
-        display: inline-block
-        margin: 0
+    @include single-line
+
   &.wide 
     form
       @include subtle-form

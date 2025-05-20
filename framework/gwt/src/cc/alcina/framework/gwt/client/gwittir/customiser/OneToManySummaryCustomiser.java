@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
@@ -66,8 +66,8 @@ public class OneToManySummaryCustomiser
 					.get().getPlaceByModelClass(
 							Reflections.forName(o.getEntityClassName()));
 			EntityPlace searchPlace = instancePlace.copy();
-			TruncatedObjectCriterion objectCriterion = Registry
-					.impl(TruncatedObjectCriterion.class, source.entityClass());
+			EntityCriterion objectCriterion = Registry
+					.impl(EntityCriterion.class, source.entityClass());
 			objectCriterion.withObject(source);
 			searchPlace.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 			if (mostRecent == null) {

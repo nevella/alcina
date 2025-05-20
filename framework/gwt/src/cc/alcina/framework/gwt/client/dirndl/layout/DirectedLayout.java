@@ -1839,6 +1839,12 @@ public class DirectedLayout implements AlcinaProcess {
 		public void deferIfFiring(Runnable runnable) {
 			DirectedLayout.this.deferIfFiring(runnable);
 		}
+
+		public <T> T getRegisteredContainer() {
+			return getResolver()
+					.getService(ContextResolver.ContainerObjectService.class)
+					.get().get();
+		}
 	}
 
 	void deferIfFiring(Runnable runnable) {

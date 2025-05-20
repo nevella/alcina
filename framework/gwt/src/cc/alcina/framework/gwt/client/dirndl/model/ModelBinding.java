@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.logic.ListenerBinding;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
@@ -56,7 +56,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.Bindings;
  * @param <T>
  */
 public class ModelBinding<T> {
-	public static class TargetBinding<BSP extends BaseSourcesPropertyChangeEvents, T2> {
+	public static class TargetBinding<BSP extends SourcesPropertyChangeEvents, T2> {
 		BSP to;
 
 		Object on;
@@ -157,7 +157,7 @@ public class ModelBinding<T> {
 
 	Bindings bindings;
 
-	BaseSourcesPropertyChangeEvents fromPropertyChangeSource;
+	SourcesPropertyChangeEvents fromPropertyChangeSource;
 
 	Object on;
 
@@ -255,7 +255,7 @@ public class ModelBinding<T> {
 	/**
 	 * The source of the binding property changes
 	 */
-	public ModelBinding<T> from(BaseSourcesPropertyChangeEvents from) {
+	public ModelBinding<T> from(SourcesPropertyChangeEvents from) {
 		Preconditions.checkNotNull(from);
 		this.fromPropertyChangeSource = from;
 		return this;
@@ -306,7 +306,7 @@ public class ModelBinding<T> {
 		this.consumer = t -> runnable.run();
 	}
 
-	public <BSP extends BaseSourcesPropertyChangeEvents> TargetBinding<BSP, T>
+	public <BSP extends SourcesPropertyChangeEvents> TargetBinding<BSP, T>
 			to(BSP to) {
 		Preconditions.checkNotNull(to);
 		return new TargetBinding(this, to);

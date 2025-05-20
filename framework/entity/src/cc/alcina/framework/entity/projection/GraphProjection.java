@@ -782,9 +782,11 @@ public class GraphProjection {
 		}
 		if (!constructorLookup.containsKey(sourceClass)) {
 			try {
-				switch (sourceClass.getName()) {
-				case "java.util.Collections$UnmodifiableRandomAccessList":
-				case "java.util.ImmutableCollections$ListN":
+				String className = sourceClass.getName();
+				if (className.equals(
+						"java.util.Collections$UnmodifiableRandomAccessList")
+						|| className.startsWith(
+								"java.util.ImmutableCollections$List")) {
 					return (T) new ArrayList();
 				}
 				Constructor ctor = null;

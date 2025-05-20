@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer.Text;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -77,8 +77,8 @@ public interface EntityDataObject {
 			size = collection.size();
 			place = (EntityPlace) RegistryHistoryMapper.get()
 					.getPlaceByModelClass(entityClass);
-			TruncatedObjectCriterion objectCriterion = Registry
-					.impl(TruncatedObjectCriterion.class, source.entityClass());
+			EntityCriterion objectCriterion = Registry
+					.impl(EntityCriterion.class, source.entityClass());
 			objectCriterion.withObject(source);
 			place.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 		}

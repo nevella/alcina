@@ -156,6 +156,8 @@ public abstract class Client implements ContextFrame {
 
 	public static ContextProvider<Object, Client> contextProvider;
 
+	private Place pendingPlace;
+
 	/**
 	 * Utility method for a common pattern (ui bind :: do xxx on place change);
 	 */
@@ -187,10 +189,23 @@ public abstract class Client implements ContextFrame {
 		return contextProvider.contextFrame();
 	}
 
-	// prefer place.go (which calls through to this, but is more fluent)
+	// Use by preference place.go (which calls through to this, but is more
+	// fluent)
 	public static void goTo(Place place) {
-		Runnable runnable = () -> get().placeController.goTo(place);
-		CommitToStorageTransformListener.flushAndRun(runnable);
+		get().goTo0(place);
+	}
+
+	void goTo0(Place place) {
+		pendingPlace = place;
+		Runnable runnable = () -> {
+			placeController.goTo(place);
+			if (pendingPlace == place) {
+				pendingPlace = null;
+			}
+		};
+		Runnable runnable2 = () -> eventBus().queued().lambda(runnable)
+				.dispatch();
+		CommitToStorageTransformListener.flushAndRun(runnable2);
 	}
 
 	public static boolean has() {
@@ -281,5 +296,9 @@ public abstract class Client implements ContextFrame {
 	 */
 	public static QueuedEvent lambda(Runnable runnable) {
 		return eventBus().queued().lambda(runnable);
+	}
+
+	public static <P extends Place> P pendingPlace() {
+		return (P) get().pendingPlace;
 	}
 }

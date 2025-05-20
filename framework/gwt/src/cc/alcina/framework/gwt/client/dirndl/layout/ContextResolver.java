@@ -110,6 +110,10 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	protected boolean resolveModelAscends = true;
 
+	/*
+	 * this is a map of optionals to allow modelling of
+	 * "checked for service x, and there's no result" - null means not checked
+	 */
 	protected Map<Class<? extends ContextService>, Optional<? extends ContextService>> services = AlcinaCollections
 			.newUnqiueMap();
 
@@ -471,23 +475,19 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 * resolver services (ContextService) and optionally delegate to a parent
 	 * via ancestorService
 	 */
-	public interface ContextService<T extends ContextService> {
+	public interface ContextService {
 		void register(ContextResolver resolver);
 
-		default Class<T> registration() {
-			return (Class<T>) Reflections.at(this)
-					.annotation(ServiceRegistration.class).value();
+		default Class registration() {
+			ServiceRegistration serviceRegistration = Reflections.at(this)
+					.annotation(ServiceRegistration.class);
+			return serviceRegistration == null ? getClass()
+					: (Class) serviceRegistration.value();
 		}
 
 		@Reflected
-		public static abstract class Base<T extends ContextService>
-				implements ContextService<T> {
+		public static abstract class Base implements ContextService {
 			ContextResolver resolver;
-
-			protected Optional<T> ancestorService() {
-				return resolver.parent == null ? Optional.empty()
-						: resolver.parent.getService(registration());
-			}
 
 			@Override
 			public void register(ContextResolver resolver) {
@@ -545,6 +545,22 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	public static class WithoutResolveModelAscends extends ContextResolver {
 		public WithoutResolveModelAscends() {
 			resolveModelAscends = false;
+		}
+	}
+
+	/**
+	 * Apply to the container model to access it (from within a deeper, complex
+	 * model such as Choice.Single)
+	 */
+	public static class ContainerModel extends ContextResolver {
+		public ContainerModel() {
+			new ContainerObjectService().register(this);
+		}
+	}
+
+	public class ContainerObjectService extends ContextService.Base {
+		public <T> T get() {
+			return (T) resolver.rootModel;
 		}
 	}
 

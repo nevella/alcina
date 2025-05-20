@@ -18,7 +18,7 @@ public @interface ValueTransformer {
 	/**
 	 * The value transformer
 	 */
-	Class<? extends Function<?, ?>> value();
+	Class<? extends Function> value();
 
 	public static class Impl implements ValueTransformer {
 		Class<? extends Function<?, ?>> value;

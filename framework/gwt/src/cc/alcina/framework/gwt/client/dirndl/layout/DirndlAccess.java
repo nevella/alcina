@@ -6,7 +6,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /*
- * Custom access for package-external classes
+ * Custom access for package-external classes. Sort of like Unsafe
  */
 public class DirndlAccess {
 	/*
@@ -48,4 +48,12 @@ public class DirndlAccess {
 			boolean willReattach) {
 		directedNode.remove(willReattach);
 	}
+	/**
+	 * Nope - use Direc
+	 * 
+	 * public static Object parentModel(Node n) { return n.parent.model; }
+	 * 
+	 * public static Object grandparentModel(Node n) { return
+	 * n.parent.parent.model; }
+	 */
 }

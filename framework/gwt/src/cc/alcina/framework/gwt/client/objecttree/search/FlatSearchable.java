@@ -21,9 +21,9 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -165,9 +165,8 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 		protected abstract List<FlatSearchable> createSearchables();
 
 		public String criterionDisplayName(SearchCriterion criterion) {
-			if (criterion instanceof TruncatedObjectCriterion) {
-				return ((TruncatedObjectCriterion) criterion)
-						.provideTypeDisplayName();
+			if (criterion instanceof EntityCriterion) {
+				return ((EntityCriterion) criterion).provideTypeDisplayName();
 			}
 			return searchableForCriterion(criterion)
 					.map(FlatSearchable::toString)

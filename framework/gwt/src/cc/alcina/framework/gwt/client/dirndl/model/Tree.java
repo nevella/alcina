@@ -20,7 +20,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Intersectio
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.KeyboardSelectNode;
@@ -42,175 +41,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		PaginatorVisible.Handler, KeyboardNavigation.Navigation.Handler,
 		// routes keydown events to the keyboardNavigation and
 		DomEvents.KeyDown.Handler {
-	private boolean rootHidden;
-
-	private TN root;
-
-	protected TN selectedNodeModel;
-
-	protected TN keyboardSelectedNodeModel;
-
-	private Paginator paginator;
-
-	KeyboardNavigation keyboardNavigation;
-
-	boolean commitAfterKeyboardNavigation;
-
-	public void attachKeyboardNavigation() {
-		keyboardNavigation = new KeyboardNavigation(this)
-				.withEmitLeftRightEvents(true);
-	}
-
-	void focusTree() {
-		provideElement().focus();
-	}
-
-	@Directed
-	public Paginator getPaginator() {
-		return this.paginator;
-	}
-
-	@Directed
-	public TN getRoot() {
-		return this.root;
-	}
-
-	public boolean isCommitAfterKeyboardNavigation() {
-		return this.commitAfterKeyboardNavigation;
-	}
-
-	@Binding(type = Type.CSS_CLASS)
-	public boolean isRootHidden() {
-		return this.rootHidden;
-	}
-
-	void onKeyboardSelectModelEvent(ModelEvent<TN, ?> event) {
-		TN node = event.getModel();
-		if (node == keyboardSelectedNodeModel) {
-			return;
-		}
-		keyboardSelectTreeNode(node);
-		if (commitAfterKeyboardNavigation) {
-			onSelectEvent(event);
-		}
-	}
-
-	void keyboardSelectTreeNode(TN node) {
-		if (node == keyboardSelectedNodeModel) {
-			return;
-		}
-		if (keyboardSelectedNodeModel != null) {
-			keyboardSelectedNodeModel.setKeyboardSelected(false);
-		}
-		if (selectedNodeModel != null) {
-			selectedNodeModel.setSelected(false);
-		}
-		keyboardSelectedNodeModel = node;
-		keyboardSelectedNodeModel.setKeyboardSelected(true);
-	}
-
-	protected void loadChildren(TN model) {
-	}
-
-	protected void loadNextPage() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void onKeyboardSelectNode(KeyboardSelectNode event) {
-		onKeyboardSelectModelEvent((ModelEvent) event);
-	}
-
-	@Override
-	public void onKeyDown(KeyDown event) {
-		if (keyboardNavigation != null) {
-			keyboardNavigation.onKeyDown(event);
-		}
-	}
-
-	@Override
-	public void onNavigation(Navigation event) {
-		if (event.getModel() == Navigation.Type.EXIT_UP) {
-			event.bubble();
-			return;
-		}
-		if (keyboardSelectedNodeModel != null) {
-			if (keyboardSelectedNodeModel instanceof KeyboardNavigation.Navigation.Handler) {
-				((KeyboardNavigation.Navigation.Handler) keyboardSelectedNodeModel)
-						.onNavigation(event);
-			}
-		}
-	}
-
-	@Override
-	public void onNodeLabelClicked(NodeLabelClicked event) {
-		focusTree();
-		onSelectEvent((ModelEvent) event);
-	}
-
-	@Override
-	public void onNodeToggleButtonClicked(NodeToggleButtonClicked event) {
-		focusTree();
-		TN model = event.getModel();
-		model.setOpen(!model.isOpen());
-		if (model.isOpen() && !model.populated) {
-			model.populated = true;
-			loadChildren(model);
-		}
-	}
-
-	@Override
-	public void onPaginatorVisible(PaginatorVisible event) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void onSelectNode(SelectNode event) {
-		onSelectEvent((ModelEvent) event);
-	}
-
-	public void selectNode(TN node) {
-		keyboardSelectTreeNode(node);
-		selectNode0(node);
-	}
-
-	void onSelectEvent(ModelEvent<TN, ?> event) {
-		onKeyboardSelectModelEvent(event);
-		TN node = event.getModel();
-		selectNode0(node);
-		event.reemitAs(this, SelectionChanged.class, node);
-	}
-
-	void selectNode0(TN node) {
-		if (selectedNodeModel != null) {
-			selectedNodeModel.setSelected(false);
-		}
-		selectedNodeModel = node;
-		selectedNodeModel.setSelected(true);
-	}
-
-	public void setCommitAfterKeyboardNavigation(
-			boolean commitAfterKeyboardNavigation) {
-		this.commitAfterKeyboardNavigation = commitAfterKeyboardNavigation;
-	}
-
-	public void setPaginator(Paginator paginator) {
-		Paginator old_paginator = this.paginator;
-		this.paginator = paginator;
-		propertyChangeSupport().firePropertyChange("paginator", old_paginator,
-				paginator);
-	}
-
-	public void setRoot(TN root) {
-		TN old_root = this.root;
-		this.root = root;
-		propertyChangeSupport().firePropertyChange("root", old_root, root);
-	}
-
-	public void setRootHidden(boolean rootHidden) {
-		this.rootHidden = rootHidden;
-	}
-
 	/**
 	 * Note that subclasses should *not* call the no-args constructor
 	 *
@@ -342,13 +172,13 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	public static class LabelClicked
 			extends ModelEvent<Object, LabelClicked.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onLabelClicked(LabelClicked LabelClicked);
+		}
+
 		@Override
 		public void dispatch(LabelClicked.Handler handler) {
 			handler.onLabelClicked(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onLabelClicked(LabelClicked LabelClicked);
 		}
 	}
 
@@ -391,37 +221,37 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 	public static class SelectionChanged
 			extends ModelEvent<TreeNode, SelectionChanged.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionChanged(SelectionChanged event);
+		}
+
 		@Override
 		public void dispatch(SelectionChanged.Handler handler) {
 			handler.onSelectionChanged(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onSelectionChanged(SelectionChanged event);
 		}
 	}
 
 	public static class ToggleButtonClicked
 			extends ModelEvent<Object, ToggleButtonClicked.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onToggleButtonClicked(ToggleButtonClicked event);
+		}
+
 		@Override
 		public void dispatch(ToggleButtonClicked.Handler handler) {
 			handler.onToggleButtonClicked(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onToggleButtonClicked(ToggleButtonClicked event);
 		}
 	}
 
 	public static class ToggleButtonMouseDown
 			extends ModelEvent<Object, ToggleButtonMouseDown.Handler> {
+		public interface Handler extends NodeEvent.Handler {
+			void onToggleButtonMousedown(ToggleButtonMouseDown event);
+		}
+
 		@Override
 		public void dispatch(ToggleButtonMouseDown.Handler handler) {
 			handler.onToggleButtonMousedown(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onToggleButtonMousedown(ToggleButtonMouseDown event);
 		}
 	}
 
@@ -431,6 +261,60 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 				ToggleButtonClicked.class, NodeToggleButtonClicked.class })
 	public static class TreeNode<NM extends TreeNode> extends Model
 			implements DomEvents.Focus.Handler {
+		@TypeSerialization(reflectiveSerializable = false)
+		@Directed(tag = "node-label")
+		public static class NodeLabel extends Model.All
+				implements ToggleButtonMouseDown.Handler {
+			@Directed(
+				tag = "span",
+				reemits = { DomEvents.Click.class, ToggleButtonClicked.class,
+						DomEvents.MouseDown.class,
+						ToggleButtonMouseDown.class })
+			public Object toggle = new Object();
+
+			@Directed(
+				merge = true,
+				reemits = { DomEvents.Click.class, LabelClicked.class })
+			public Object label = "";
+
+			@Binding(type = Type.PROPERTY)
+			public String title;
+
+			@Override
+			public void onToggleButtonMousedown(ToggleButtonMouseDown event) {
+				event.getContext().getOriginatingNativeEvent().preventDefault();
+			}
+		}
+
+		@Directed(tag = "node-label")
+		public static class NodeLabelText extends Model.Fields {
+			@Binding(type = Type.INNER_TEXT)
+			public String text;
+
+			@Binding(type = Type.PROPERTY)
+			public String title;
+
+			@Binding(type = Type.CLASS_PROPERTY)
+			public String className;
+
+			public NodeLabelText() {
+			}
+
+			public NodeLabelText(String text) {
+				this(text, null);
+			}
+
+			public NodeLabelText(String text, String className) {
+				putText(text);
+				this.className = className;
+			}
+
+			public void putText(String text) {
+				this.text = text;
+				this.title = text;
+			}
+		}
+
 		public transient boolean populated;
 
 		private boolean open;
@@ -545,85 +429,133 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			}
 		}
 
-		@Directed(
-			tag = "node-label",
-			bindings = { @Binding(
-				from = "title",
-				to = "title",
-				type = Binding.Type.PROPERTY) })
-		@TypeSerialization(reflectiveSerializable = false)
-		public static class NodeLabel extends Model
-				implements ToggleButtonMouseDown.Handler {
-			private Object toggle = new Object();
-
-			private Object label = "";
-
-			private String title;
-
-			@Directed(
-				merge = true,
-				reemits = { DomEvents.Click.class, LabelClicked.class })
-			public Object getLabel() {
-				return this.label;
-			}
-
-			public String getTitle() {
-				return this.title;
-			}
-
-			@Directed(
-				tag = "span",
-				reemits = { DomEvents.Click.class, ToggleButtonClicked.class,
-						DomEvents.MouseDown.class,
-						ToggleButtonMouseDown.class })
-			public Object getToggle() {
-				return this.toggle;
-			}
-
-			public void setLabel(Object label) {
-				set("label", this.label, label, () -> this.label = label);
-			}
-
-			public void setTitle(String title) {
-				set("title", this.title, title, () -> this.title = title);
-			}
-
-			@Override
-			public void onToggleButtonMousedown(ToggleButtonMouseDown event) {
-				event.getContext().getOriginatingNativeEvent().preventDefault();
-			}
-		}
-
-		@Directed(
-			tag = "node-label",
-			bindings = { @Binding(from = "text", type = Type.INNER_TEXT),
-					@Binding(
-						from = "text",
-						to = "title",
-						type = Type.PROPERTY) })
-		public static class NodeLabelText extends Model {
-			private String text;
-
-			public NodeLabelText() {
-			}
-
-			public NodeLabelText(String text) {
-				this.text = text;
-			}
-
-			public String getText() {
-				return this.text;
-			}
-
-			public void setText(String text) {
-				this.text = text;
-			}
-		}
-
 		@Override
 		public void onFocus(Focus event) {
 			event.reemitAs(this, KeyboardSelectNode.class, this);
 		}
+	}
+
+	private boolean rootHidden;
+
+	private TN root;
+
+	protected TN selectedNodeModel;
+
+	protected TN keyboardSelectedNodeModel;
+
+	private Paginator paginator;
+
+	KeyboardNavigation keyboardNavigation;
+
+	boolean commitAfterKeyboardNavigation;
+
+	/**
+	 * If true, repeated selection (clicks etc) of a node toggle selection
+	 */
+	public boolean selectionToggle;
+
+	public void attachKeyboardNavigation() {
+		keyboardNavigation = new KeyboardNavigation(this)
+				.withEmitLeftRightEvents(true);
+	}
+
+	@Directed
+	public Paginator getPaginator() {
+		return this.paginator;
+	}
+
+	@Directed
+	public TN getRoot() {
+		return this.root;
+	}
+
+	public boolean isCommitAfterKeyboardNavigation() {
+		return this.commitAfterKeyboardNavigation;
+	}
+
+	@Binding(type = Type.CSS_CLASS)
+	public boolean isRootHidden() {
+		return this.rootHidden;
+	}
+
+	@Override
+	public void onKeyboardSelectNode(KeyboardSelectNode event) {
+		onKeyboardSelectModelEvent((ModelEvent) event);
+	}
+
+	@Override
+	public void onKeyDown(KeyDown event) {
+		if (keyboardNavigation != null) {
+			keyboardNavigation.onKeyDown(event);
+		}
+	}
+
+	@Override
+	public void onNavigation(Navigation event) {
+		if (event.getModel() == Navigation.Type.EXIT_UP) {
+			event.bubble();
+			return;
+		}
+		if (keyboardSelectedNodeModel != null) {
+			if (keyboardSelectedNodeModel instanceof KeyboardNavigation.Navigation.Handler) {
+				((KeyboardNavigation.Navigation.Handler) keyboardSelectedNodeModel)
+						.onNavigation(event);
+			}
+		}
+	}
+
+	@Override
+	public void onNodeLabelClicked(NodeLabelClicked event) {
+		focusTree();
+		onSelectEvent((ModelEvent) event);
+	}
+
+	@Override
+	public void onNodeToggleButtonClicked(NodeToggleButtonClicked event) {
+		focusTree();
+		TN model = event.getModel();
+		model.setOpen(!model.isOpen());
+		if (model.isOpen() && !model.populated) {
+			model.populated = true;
+			loadChildren(model);
+		}
+	}
+
+	@Override
+	public void onPaginatorVisible(PaginatorVisible event) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void onSelectNode(SelectNode event) {
+		onSelectEvent((ModelEvent) event);
+	}
+
+	public void selectNode(TN node) {
+		keyboardSelectTreeNode(node);
+		selectNode0(node);
+	}
+
+	public void setCommitAfterKeyboardNavigation(
+			boolean commitAfterKeyboardNavigation) {
+		this.commitAfterKeyboardNavigation = commitAfterKeyboardNavigation;
+	}
+
+	public void setPaginator(Paginator paginator) {
+		Paginator old_paginator = this.paginator;
+		this.paginator = paginator;
+		propertyChangeSupport().firePropertyChange("paginator", old_paginator,
+				paginator);
+	}
+
+	public void setRoot(TN root) {
+		TN old_root = this.root;
+		this.root = root;
+		propertyChangeSupport().firePropertyChange("root", old_root, root);
+	}
+
+	public void setRootHidden(boolean rootHidden) {
+		this.rootHidden = rootHidden;
 	}
 
 	public void focusForKeyboardNavigation() {
@@ -631,6 +563,62 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		TreeNode<TN> toFocus = Ax.first(root.getChildren());
 		if (toFocus != null) {
 			emitEvent(TreeEvents.SelectNode.class, toFocus);
+		}
+	}
+
+	protected void loadChildren(TN model) {
+	}
+
+	protected void loadNextPage() {
+		throw new UnsupportedOperationException();
+	}
+
+	void focusTree() {
+		provideElement().focus();
+	}
+
+	void onKeyboardSelectModelEvent(ModelEvent<TN, ?> event) {
+		TN node = event.getModel();
+		if (node == keyboardSelectedNodeModel) {
+			return;
+		}
+		keyboardSelectTreeNode(node);
+		if (commitAfterKeyboardNavigation) {
+			onSelectEvent(event);
+		}
+	}
+
+	void keyboardSelectTreeNode(TN node) {
+		if (node == keyboardSelectedNodeModel) {
+			return;
+		}
+		if (keyboardSelectedNodeModel != null) {
+			keyboardSelectedNodeModel.setKeyboardSelected(false);
+		}
+		if (selectedNodeModel != null) {
+			selectedNodeModel.setSelected(false);
+		}
+		keyboardSelectedNodeModel = node;
+		keyboardSelectedNodeModel.setKeyboardSelected(true);
+	}
+
+	void onSelectEvent(ModelEvent<TN, ?> event) {
+		onKeyboardSelectModelEvent(event);
+		TN node = event.getModel();
+		TN selectedNode = selectNode0(node);
+		event.reemitAs(this, SelectionChanged.class, selectedNode);
+	}
+
+	TN selectNode0(TN node) {
+		if (selectedNodeModel != null) {
+			selectedNodeModel.setSelected(false);
+		}
+		if (selectedNodeModel == node && selectionToggle) {
+			return null;
+		} else {
+			selectedNodeModel = node;
+			selectedNodeModel.setSelected(true);
+			return node;
 		}
 	}
 }

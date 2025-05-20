@@ -41,4 +41,31 @@ public enum StandardSearchOperator implements SearchOperator {
 		return Optional.ofNullable(displayName)
 				.orElse(CommonUtils.friendlyConstant(this));
 	}
+
+	public boolean isOrdered() {
+		switch (this) {
+		case GREATER_THAN:
+		case GREATER_THAN_OR_EQUAL_TO:
+		case LESS_THAN:
+		case LESS_THAN_OR_EQUAL_TO:
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	public boolean evaluateComparatorResult(int comparatorResult) {
+		switch (this) {
+		case GREATER_THAN:
+			return comparatorResult > 0;
+		case GREATER_THAN_OR_EQUAL_TO:
+			return comparatorResult >= 0;
+		case LESS_THAN:
+			return comparatorResult < 0;
+		case LESS_THAN_OR_EQUAL_TO:
+			return comparatorResult <= 0;
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
 }

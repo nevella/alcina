@@ -6,12 +6,12 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracle;
 
-public class FlatSuggestorSearchable<TC extends TruncatedObjectCriterion>
+public class FlatSuggestorSearchable<TC extends EntityCriterion>
 		extends FlatSearchable<TC> {
 	public FlatSuggestorSearchable(Class<TC> clazz, String category,
 			String name) {

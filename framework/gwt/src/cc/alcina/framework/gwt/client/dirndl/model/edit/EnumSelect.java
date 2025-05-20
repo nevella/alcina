@@ -20,6 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Choice;
 import cc.alcina.framework.gwt.client.dirndl.model.Choices.Select;
@@ -91,6 +92,11 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 	}
 
 	public static class SelectResolver extends Choices.SelectResolver {
+		public SelectResolver(
+				Class<? extends ModelTransform<?, String>> valueTransformerClass) {
+			super(valueTransformerClass);
+		}
+
 		String nullString = DEFAULT_NULL_STRING;
 
 		@Override

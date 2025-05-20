@@ -675,9 +675,12 @@ public class Registry {
 		}
 
 		public Query<V> addKeys(Class... keys) {
-			for (Class clazz : keys) {
-				this.keys.add(clazz);
-			}
+			Arrays.stream(keys).forEach(this.keys::add);
+			return this;
+		}
+
+		public Query<V> addKeys(List<Class> keys) {
+			keys.forEach(this.keys::add);
 			return this;
 		}
 

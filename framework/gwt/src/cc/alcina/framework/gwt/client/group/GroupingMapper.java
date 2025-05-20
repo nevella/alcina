@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRendererFunction;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedTransform;
 
 public class GroupingMapper<V> {
 	private GroupingClassifier<V, Comparable> columnClassifier;
@@ -31,13 +31,13 @@ public class GroupingMapper<V> {
 
 	private Function<List<V>, Object> valueTotaller;
 
-	private Function<Object, String> valueRenderer = new FriendlyEnumRendererFunction();
+	private Function<Object, String> valueRenderer = new DirectedTransform.FriendlyEnum();
 
-	public Function<Object, String> columnNameRenderer = new FriendlyEnumRendererFunction();
+	public Function<Object, String> columnNameRenderer = new DirectedTransform.FriendlyEnum();
 
-	public Function<Object, String> rowNameRenderer = new FriendlyEnumRendererFunction();
+	public Function<Object, String> rowNameRenderer = new DirectedTransform.FriendlyEnum();
 
-	public Function<Object, String> sectionNameRenderer = new FriendlyEnumRendererFunction();
+	public Function<Object, String> sectionNameRenderer = new DirectedTransform.FriendlyEnum();
 
 	public GroupingHrefSupplier hrefSupplier;
 

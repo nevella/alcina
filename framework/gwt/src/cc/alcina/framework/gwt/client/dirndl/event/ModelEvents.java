@@ -523,6 +523,17 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Overflow extends ModelEvent<Object, Overflow.Handler> {
+		@Override
+		public void dispatch(Overflow.Handler handler) {
+			handler.onOverflow(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onOverflow(Overflow event);
+		}
+	}
+
 	public static class Refresh extends ModelEvent<Object, Refresh.Handler> {
 		@Override
 		public void dispatch(Refresh.Handler handler) {
@@ -531,6 +542,17 @@ public class ModelEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onRefresh(Refresh event);
+		}
+	}
+
+	public static class Reload extends ModelEvent<Object, Reload.Handler> {
+		@Override
+		public void dispatch(Reload.Handler handler) {
+			handler.onReload(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onReload(Reload event);
 		}
 	}
 

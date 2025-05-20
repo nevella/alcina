@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -16,11 +17,12 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
-public abstract class TruncatedObjectCriterion<E extends HasId>
-		extends SearchCriterion implements HasId {
-	private static Map<EntityLocator, String> clientDisplayTexts;
+public abstract class EntityCriterion<E extends HasId> extends SearchCriterion
+		implements HasId {
+	private static transient Map<EntityLocator, String> clientDisplayTexts;
 
 	static final transient long serialVersionUID = 1;
 
@@ -32,7 +34,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 
 	private long id;
 
-	public TruncatedObjectCriterion() {
+	public EntityCriterion() {
 		setOperator(StandardSearchOperator.EQUALS);
 	}
 
@@ -63,9 +65,9 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 
 	@Override
 	public boolean equivalentTo(SearchCriterion other) {
-		if (other instanceof TruncatedObjectCriterion) {
+		if (other instanceof EntityCriterion) {
 			return other.getClass() == getClass()
-					&& ((TruncatedObjectCriterion) other).getId() == getId();
+					&& ((EntityCriterion) other).getId() == getId();
 		}
 		return super.equivalentTo(other);
 	}
@@ -82,6 +84,13 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 					clientDisplayTexts.put(locator, displayText);
 				} else {
 					this.displayText = clientDisplayTexts.get(locator);
+					if (this.displayText == null) {
+						Entity entity = Domain.find(locator);
+						if (entity != null) {
+							this.displayText = HasDisplayName
+									.displayName(entity);
+						}
+					}
 				}
 			}
 		}
@@ -102,6 +111,10 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	@JsonIgnore
 	@AlcinaTransient
 	public E getValue() {
+		if (value == null && !GWT.isClient() && id != 0) {
+			value = (E) Domain.find((Class<? extends Entity>) getObjectClass(),
+					id);
+		}
 		return value;
 	}
 
@@ -144,7 +157,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 				() -> Ax.format("(id:%s)", getId()));
 	}
 
-	public <T extends TruncatedObjectCriterion<E>> T withObject(E withValue) {
+	public <T extends EntityCriterion<E>> T withObject(E withValue) {
 		setValue(withValue);
 		return (T) this;
 	}

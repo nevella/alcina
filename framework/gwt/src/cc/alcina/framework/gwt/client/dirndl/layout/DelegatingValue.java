@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.util.function.Function;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -24,7 +26,7 @@ public class DelegatingValue extends Model.Value<Object>
 		implements ContextResolver.Has {
 	Object value;
 
-	Class<? extends ModelTransform> valueTransformer;
+	Class<? extends Function> valueTransformer;
 
 	@Override
 	@Property.Not

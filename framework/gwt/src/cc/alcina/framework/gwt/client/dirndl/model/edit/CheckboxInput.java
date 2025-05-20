@@ -43,7 +43,7 @@ public class CheckboxInput extends Model.Value<Boolean>
 	public CheckboxInput() {
 	}
 
-	public CheckboxInput(boolean value) {
+	public CheckboxInput(Boolean value) {
 		setValue(value);
 	}
 

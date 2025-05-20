@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
+import java.util.Comparator;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -10,14 +11,18 @@ import cc.alcina.framework.common.client.domain.search.DomainCriterionFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSuggestorSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
-public class BaseTruncatedObjectCriterionPack {
-	public interface BaseTruncatedObjectCriterionHandler<I extends HasId, O extends Entity, SC extends TruncatedObjectCriterion<O>>
+public class EntityCriterionPack {
+	public interface EntityCriterionHandler<I, O extends Entity, SC extends EntityCriterion<O>>
 			extends DomainCriterionFilter<SC> {
+		default Comparator getComparator() {
+			return null;
+		}
+
 		@Override
 		default DomainFilter getFilter(SC sc) {
 			long id = sc.getId();
@@ -36,7 +41,14 @@ public class BaseTruncatedObjectCriterionPack {
 						return false;
 					}
 					Entity linked = getLinkedObjectMapper().apply(i);
-					return linked != null && linked.getId() == id;
+					if (linked == null) {
+						return false;
+					}
+					if (sc.getOperator().isOrdered()) {
+						return sc.getOperator().evaluateComparatorResult(
+								getComparator().compare(linked, sc.getValue()));
+					}
+					return linked.getId() == id;
 				}
 			}).invertIf(
 					sc.getOperator() == StandardSearchOperator.DOES_NOT_EQUAL);
@@ -49,10 +61,9 @@ public class BaseTruncatedObjectCriterionPack {
 		}
 	}
 
-	public static abstract class BaseTruncatedObjectCriterionSearchable<TC extends TruncatedObjectCriterion>
+	public static abstract class BaseEntityCriterionSearchable<TC extends EntityCriterion>
 			extends FlatSuggestorSearchable<TC> {
-		public BaseTruncatedObjectCriterionSearchable(String category,
-				Class<TC> clazz) {
+		public BaseEntityCriterionSearchable(String category, Class<TC> clazz) {
 			super(clazz, category, "", StandardSearchOperator.EQUAL_OR_NOT);
 			this.name = Ax.friendly(Reflections.at(getCriterionClass())
 					.templateInstance().getObjectClass().getSimpleName());
@@ -69,7 +80,7 @@ public class BaseTruncatedObjectCriterionPack {
 			return super.isNonDefaultValue(sc);
 		}
 
-		public <S extends BaseTruncatedObjectCriterionSearchable> S
+		public <S extends BaseEntityCriterionSearchable> S
 				withOverrideName(String name) {
 			this.name = name;
 			this.category = "";
@@ -77,7 +88,7 @@ public class BaseTruncatedObjectCriterionPack {
 		}
 	}
 
-	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends Entity, SC extends TruncatedObjectCriterion<O>>
+	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends Entity, SC extends EntityCriterion<O>>
 			extends DomainCriterionFilter<SC> {
 		@Override
 		default DomainFilter getFilter(SC sc) {

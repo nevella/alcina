@@ -31,8 +31,10 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphTraversal;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -111,7 +113,7 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 			}
 		} catch (Exception e) {
 			String message = Ax.format("%s - %s",
-					serializable.getClass().getSimpleName(),
+					NestedName.get(serializable.getClass()),
 					CommonUtils.toSimpleExceptionMessage(e));
 			// e.printStackTrace();
 			Ax.err(message);
@@ -222,11 +224,13 @@ public class TaskGenerateTreeSerializableSignatures extends PerformerTask {
 		this.signature = sha1;
 		String key = Ax.format("%s::%s",
 				TreeSerializableSignatures.class.getName(), sha1);
-		MethodContext.instance().withRootPermissions(true).run(() -> {
-			UserProperty.ensure(key).domain().ensurePopulated()
-					.setValue(signaturesBytes);
-			Transaction.commit();
-		});
+		if (DomainStore.hasStores()) {
+			MethodContext.instance().withRootPermissions(true).run(() -> {
+				UserProperty.ensure(key).domain().ensurePopulated()
+						.setValue(signaturesBytes);
+				Transaction.commit();
+			});
+		}
 		logger.info("TreeSerializable serializedDefaults signature: ({}) : {} ",
 				signatures.classNameDefaultSerializedForms.size(), sha1);
 	}

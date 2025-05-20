@@ -1031,7 +1031,8 @@ public class Document extends Node
 
 	@Override
 	public Node importNode(org.w3c.dom.Node w3cNode, boolean deep) {
-		Preconditions.checkState(remote instanceof NodeAttachId);
+		Preconditions
+				.checkState(remote instanceof NodeAttachId || remote == null);
 		if (deep) {
 			return new NodeImport(w3cNode).run();
 		} else {

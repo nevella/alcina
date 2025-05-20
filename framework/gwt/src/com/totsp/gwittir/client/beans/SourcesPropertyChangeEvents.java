@@ -42,4 +42,8 @@ public interface SourcesPropertyChangeEvents {
 
 	public void removePropertyChangeListener(String propertyName,
 			PropertyChangeListener l);
+
+	default void set(String name, Object newValue) {
+		throw new UnsupportedOperationException();
+	}
 }

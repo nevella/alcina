@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.common.client.search.EntityCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
@@ -92,8 +92,8 @@ public class OneToManyCustomiser implements Customiser, BoundWidgetProvider {
 			Args args = propertyLocation.getAnnotation(Args.class);
 			EntityPlace searchPlace = (EntityPlace) RegistryHistoryMapper.get()
 					.getPlaceByModelClass(args.entityClass());
-			TruncatedObjectCriterion objectCriterion = Registry
-					.impl(TruncatedObjectCriterion.class, source.entityClass());
+			EntityCriterion objectCriterion = Registry
+					.impl(EntityCriterion.class, source.entityClass());
 			objectCriterion.withObject(source);
 			searchPlace.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 			String template = "<a href='#%s'>%s</a>";

@@ -95,6 +95,7 @@ import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.Ref;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
+import cc.alcina.framework.entity.xml.EntityCleaner;
 
 /**
  * @author Nick Reddel
@@ -1305,10 +1306,14 @@ public class XmlUtils {
 	}
 
 	public static String streamNCleanForBrowserHtmlFragment(Node n) {
-		String s = streamXML(n);
-		s = expandEmptyElements(s);
-		s = cleanXmlHeaders(s);
-		return s;
+		return streamNCleanForBrowserHtmlFragment(streamXML(n));
+	}
+
+	public static String streamNCleanForBrowserHtmlFragment(String markup) {
+		markup = expandEmptyElements(markup);
+		markup = cleanXmlHeaders(markup);
+		markup = EntityCleaner.get().htmlToUnicodeEntities(markup);
+		return markup;
 	}
 
 	public static String streamXML(Node n) {

@@ -52,14 +52,13 @@ public class ClientReflections {
 				.findFirst();
 		if (optional.isEmpty()) {
 			switch (fqn) {
-			case "java.util.ImmutableCollections$AbstractImmutableList":
 			case "java.util.Collections$UnmodifiableList":
 			case "java.util.Collections$SingletonList":
 			case "java.util.Collections$EmptyList":
 			case "java.util.Collections$UnmodifiableRandomAccessList":
-			case "java.util.ImmutableCollections$ListN":
-			case "java.util.ImmutableCollections$AbstractImmutableMap":
-			case "java.util.ImmutableCollections$AbstractImmutableSet":
+				return null;
+			}
+			if (fqn.startsWith("java.util.ImmutableCollections$")) {
 				return null;
 			}
 			throw new NoSuchElementException("No forName for " + fqn);
@@ -94,7 +93,6 @@ public class ClientReflections {
 				case "java.util.Collections$SingletonList":
 				case "java.util.Collections$EmptyList":
 				case "java.util.Collections$UnmodifiableRandomAccessList":
-				case "java.util.ImmutableCollections$ListN":
 					interfaces = List.of(List.class);
 					break;
 				case "java.util.ImmutableCollections$AbstractImmutableMap":
@@ -103,6 +101,10 @@ public class ClientReflections {
 				case "java.util.ImmutableCollections$AbstractImmutableSet":
 					interfaces = List.of(Set.class);
 					break;
+				}
+				if (clazz.getName()
+						.startsWith("java.util.ImmutableCollections$List")) {
+					interfaces = List.of(List.class);
 				}
 				return ClassReflector.emptyReflector(clazz, interfaces);
 			}

@@ -3,14 +3,18 @@ package cc.alcina.framework.common.client.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.PropertySerialization.TypesProvider_Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -36,6 +40,27 @@ public final class InstanceQuery implements TreeSerializable {
 		@PropertySerialization(defaultProperty = true)
 		public V getValue() {
 			return value;
+		}
+
+		public static class Support {
+			static volatile Map<Class<?>, Class<? extends Parameter>> valueTypeParameterType;
+
+			public static synchronized Parameter
+					getSoleParameterOfType(Class clazz) {
+				if (valueTypeParameterType == null) {
+					valueTypeParameterType = AlcinaCollections.newUnqiueMap();
+					List<Class<? extends Parameter>> candidates = Registry
+							.query(Parameter.class).registrations()
+							.filter(t -> Reflections.at(t)
+									.firstGenericBound() == clazz)
+							.toList();
+					if (candidates.size() == 1) {
+						valueTypeParameterType.put(clazz, candidates.get(0));
+					}
+				}
+				return Reflections
+						.newInstance(valueTypeParameterType.get(clazz));
+			}
 		}
 
 		public void setValue(V value) {

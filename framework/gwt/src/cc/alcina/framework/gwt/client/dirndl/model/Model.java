@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.ListenerBindings;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.reflection.InstanceProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
@@ -45,6 +46,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.ModelBinding.TargetBinding;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayEvents.PositionedDescendants;
 
@@ -425,11 +427,16 @@ public abstract class Model extends Bindable implements
 			bound = true;
 		}
 
-		public <T extends BaseSourcesPropertyChangeEvents> ModelBinding<T>
+		public <T extends SourcesPropertyChangeEvents> ModelBinding<T>
 				from(T source) {
 			ModelBinding binding = new ModelBinding(this);
 			modelBindings.add(binding);
 			return binding.from(source);
+		}
+
+		public <T> ModelBinding<T>
+				from(InstanceProperty<?, T> instanceProperty) {
+			return from(instanceProperty.source).on(instanceProperty.property);
 		}
 
 		public <TE> ModelBinding<TE> fromTopic(Topic<TE> topic) {
@@ -499,7 +506,8 @@ public abstract class Model extends Bindable implements
 			extends OverlayEvents.PositionedDescendants.Handler {
 		boolean isFocusOnBind();
 
-		// double-fire for overlay positioning. note this is deferred to allow
+		// double-fire for overlay positioning. note this is deferred to
+		// allow
 		// flush() [which also sets the overlay to visible]
 		@Override
 		default void onPositionedDescendants(

@@ -17,7 +17,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -417,8 +416,8 @@ public abstract class SearchDefinition extends Bindable
 
 	public boolean provideHasUndefinedDisplayText() {
 		return allCriteria().stream().anyMatch(c -> {
-			if (c instanceof TruncatedObjectCriterion) {
-				return ((TruncatedObjectCriterion) c).getDisplayText() == null;
+			if (c instanceof EntityCriterion) {
+				return ((EntityCriterion) c).getDisplayText() == null;
 			}
 			return false;
 		});

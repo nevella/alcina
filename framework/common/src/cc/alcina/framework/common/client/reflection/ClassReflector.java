@@ -132,6 +132,12 @@ public class ClassReflector<T> implements HasAnnotations {
 		properties.forEach(p -> p.copy(from, to));
 	}
 
+	public static <T> boolean equalProperties(T a, T b) {
+		ClassReflector<?> reflector = Reflections.at(a);
+		Predicate<Property> predicate = p -> Objects.equals(p.get(a), p.get(b));
+		return reflector.properties().stream().allMatch(predicate);
+	}
+
 	public static <T> void copyProperties(T from, T to,
 			String... propertyNames) {
 		List<String> list = Arrays.asList(propertyNames);
@@ -343,8 +349,16 @@ public class ClassReflector<T> implements HasAnnotations {
 		return false;
 	}
 
+	/**
+	 * 
+	 * @param <B>
+	 *            the (an) expected type of the bound
+	 * @return the first generic bound of the type, or null if the type has no
+	 *         generic bounds
+	 */
 	public <B> Class<B> firstGenericBound() {
-		return genericBounds.bounds.get(0);
+		return genericBounds.bounds.isEmpty() ? null
+				: genericBounds.bounds.get(0);
 	}
 
 	protected void init(Class<T> reflectedClass, List<Property> properties,

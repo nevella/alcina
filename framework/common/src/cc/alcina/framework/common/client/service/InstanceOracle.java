@@ -87,7 +87,7 @@ public class InstanceOracle {
 	public static class Query<T> implements HasBind {
 		ProviderQueries<T> token;
 
-		Class<T> clazz;
+		List<Class> providerKeys = new ArrayList<>();
 
 		List<InstanceQuery.Parameter<?>> parameters = new ArrayList<>();
 
@@ -115,12 +115,12 @@ public class InstanceOracle {
 		boolean refresh;
 
 		Query(Class<T> clazz) {
-			this.clazz = clazz;
+			this.providerKeys.add(clazz);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(clazz, parameters);
+			return Objects.hash(providerKeys, parameters);
 		}
 
 		public Query<T>
@@ -135,11 +135,16 @@ public class InstanceOracle {
 			return this;
 		}
 
+		public Query<T> addResultKey(Class<?> key) {
+			this.providerKeys.add(key);
+			return this;
+		}
+
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof Query) {
 				Query o = (Query) obj;
-				return clazz.equals(o.clazz)
+				return providerKeys.equals(o.providerKeys)
 						&& Objects.equals(parameters, o.parameters);
 			} else {
 				return super.equals(obj);
@@ -232,7 +237,7 @@ public class InstanceOracle {
 
 		@Override
 		public String toString() {
-			return FormatBuilder.keyValues("clazz", clazz, "parameters",
+			return FormatBuilder.keyValues("keys", providerKeys, "parameters",
 					parameters);
 		}
 
@@ -246,6 +251,29 @@ public class InstanceOracle {
 		public <PT extends InstanceQuery.Parameter, V> V
 				parameterValue(Class<PT> clazz) {
 			return (V) typedParameter(clazz).getValue();
+		}
+
+		/**
+		 * A convenience method to add parameter values where there's only one
+		 * possible Parameter class for the value types
+		 * 
+		 * @param values
+		 *            A list of values
+		 * @return the query
+		 */
+		public Query<T> withValues(Object... values) {
+			Arrays.stream(values).forEach(value -> {
+				addParameters(InstanceQuery.Parameter.Support
+						.getSoleParameterOfType(value.getClass())
+						.withValue(value));
+			});
+			return this;
+		}
+
+		public Class[] keys() {
+			// TODO Auto-generated method stub
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'keys'");
 		}
 	}
 
@@ -428,16 +456,22 @@ public class InstanceOracle {
 		void ensureSubmitted() {
 			if (provider == null) {
 				provider = Registry.query(InstanceProvider.class)
-						.addKeys(definingQuery.clazz).impl();
+						.addKeys(definingQuery.providerKeys).impl();
 				ensureLatch();
-				/*
-				 * In non-browser environments, this will run off-thread
-				 */
-				String name = Ax.format("instance-oracle::%s",
-						NestedName.get(provider));
-				Registry.impl(ProviderInvoker.class).invoke(name,
-						() -> provider.provide(definingQuery,
-								this::acceptInstance, this::acceptException));
+				if (provider.isOneOff()) {
+					provider.provide(definingQuery, this::acceptInstance,
+							this::acceptException);
+				} else {
+					/*
+					 * In non-browser environments, this will run off-thread
+					 */
+					String name = Ax.format("instance-oracle::%s",
+							NestedName.get(provider));
+					Registry.impl(ProviderInvoker.class).invoke(name,
+							() -> provider.provide(definingQuery,
+									this::acceptInstance,
+									this::acceptException));
+				}
 			}
 		}
 
