@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 
 public interface HasContentEditable {
 	boolean provideIsContentEditable();

@@ -32,10 +32,8 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirndlAccess;
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.FragmentRoot;
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNodeOps;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode.FragmentRoot;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.FragmentRootTransformer;
 
 /**
@@ -56,6 +54,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.NodeTransformer.Frag
  * <li>Note that a future, better implementation would add on-demand mutation
  * processing - any call which might be affected by the results of mutation
  * processing would first trigger a flush
+ * <li>(Update - lookups handle mutations continuously, higher-level handle
+ * changes as batches)
  * </ul>
  * <li>The model converts dommutations into changes to its model structure,
  * which are themselves batched and emitted (on localdom mutation processing
@@ -140,8 +140,7 @@ public class FragmentModel implements InferredDomEvents.Mutation.Handler,
 	}
 
 	protected void addDefaultModelledTypes() {
-		addModelled(List.of(FragmentNode.TextNode.class,
-				FragmentNode.GenericElement.class,
+		addModelled(List.of(TextNode.class, GenericElement.class,
 				FragmentNode.GenericProcessingInstruction.class,
 				FragmentNode.GenericComment.class));
 	}

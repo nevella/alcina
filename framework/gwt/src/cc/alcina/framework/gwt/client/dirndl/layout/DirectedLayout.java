@@ -74,6 +74,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer.RendersNull
 import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 import cc.alcina.framework.gwt.client.dirndl.model.HasNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 import cc.alcina.framework.gwt.client.util.ClassNames;
 import cc.alcina.framework.gwt.client.util.StyleUtil;
 
@@ -577,7 +578,7 @@ public class DirectedLayout implements AlcinaProcess {
 			return annotationLocation.getAnnotation(clazz);
 		}
 
-		void append(FragmentNode child) {
+		public void append(FragmentNode child) {
 			insertBefore(child, null);
 		}
 
@@ -881,13 +882,13 @@ public class DirectedLayout implements AlcinaProcess {
 		 *
 		 * Note this is a reparent of an existing node
 		 */
-		void insertAsFirstChild(FragmentNode newChildModel) {
+		public void insertAsFirstChild(FragmentNode newChildModel) {
 			ensureChildren();
 			insertBefore(newChildModel, Ax.firstOptional(children)
 					.<FragmentNode> map(Node::getModel).orElse(null));
 		}
 
-		void insertBefore(FragmentNode newChildModel,
+		public void insertBefore(FragmentNode newChildModel,
 				FragmentNode refChildModel) {
 			ensureChildren();
 			Node oldNode = newChildModel.provideNode();
@@ -1200,14 +1201,14 @@ public class DirectedLayout implements AlcinaProcess {
 			unbind();
 		}
 
-		void removeChildNode(Model child, boolean willReattach) {
+		public void removeChildNode(Model child, boolean willReattach) {
 			Node childNode = child.provideNode();
 			if (childNode != null) {
 				childNode.remove(willReattach);
 			}
 		}
 
-		void replaceChild(Model oldModel, Model newModel) {
+		public void replaceChild(Model oldModel, Model newModel) {
 			Node oldNode = oldModel.provideNode();
 			RendererInput input = getResolver().layout.enqueueInput(
 					getResolver(), newModel, oldNode.property,
@@ -1284,7 +1285,7 @@ public class DirectedLayout implements AlcinaProcess {
 			this.resolver = resolver;
 		}
 
-		void strip() {
+		public void strip() {
 			List<Node> oldChildren = children.stream()
 					.collect(Collectors.toList());
 			int insertionIndex = parent.children.indexOf(this);

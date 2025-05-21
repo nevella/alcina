@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model.edit;
 
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.LocalDom;
@@ -22,13 +23,14 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.StringRepresentable.RepresentableToStringTransform.HasStringRepresentableType;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 
 /**
  * The base class for a visual model of a decorated measure, such as a hashtag
@@ -39,6 +41,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		implements HasStringRepresentableType<SR>, FragmentIsolate,
 		HasContentEditable, Binding.TabIndexMinusOne {
+	static boolean isNonEditable(FragmentNode node) {
+		return node instanceof DecoratorNode
+				&& !((DecoratorNode) node).contentEditable;
+	}
+
 	/**
 	 * Models the characteristics of the content decorator, such as the key
 	 * sequence which triggers its creation, the class reference modelled, etc
@@ -85,16 +92,9 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 			// may need to flush (to populate FNs) - note for romcom, want to
 			// not force remote
 			LocalDom.flushLocalMutations();
-			FragmentNode textFragment = fragmentModel
+			TextNode textFragment = (TextNode) fragmentModel
 					.getFragmentNode(splitContents);
 			FragmentNode parent = textFragment.parent();
-			/*
-			 * key - but it'd be nice to handle more elegantly (?named
-			 * behaviour?)
-			 */
-			if (parent instanceof ZeroWidthCursorTarget) {
-				parent.nodes().strip();
-			}
 			DN created = createNode();
 			DecoratorNode.properties.contentEditable.set(created, true);
 			textFragment.nodes().insertBeforeThis(created);
@@ -218,8 +218,8 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		// current:
 		// try positioning cursor immediately after the decorator
 		// guaranteed non-null (due to zws insertion)
-		FragmentNode.TextNode cursorTarget = nextSibling instanceof FragmentNode.TextNode
-				? (FragmentNode.TextNode) nextSibling
+		TextNode cursorTarget = nextSibling instanceof TextNode
+				? (TextNode) nextSibling
 				: nextSibling.fragmentTree().nextTextNode(true).orElse(null);
 		/*
 		 * well - what's the dispatch model for ZWS insertion? Maybe it is
@@ -233,7 +233,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		}
 		Node cursorNode = cursorTarget.domNode().gwtNode();
 		Selection selection = Document.get().getSelection();
-		selection.collapse(cursorNode, 1);// after zws
+		selection.collapse(cursorNode, 0);// after zws
 	}
 
 	void stripIfInvalid() {
@@ -247,9 +247,13 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		}
 	}
 
-	ZeroWidthCursorTarget ensureInterNonEditableTarget() {
+	/*
+	 * insert a blank text node if the subsequent is also a non-editable
+	 * decorator
+	 */
+	void ensureInterNonEditableTarget() {
 		if (contentEditable) {
-			return null;
+			return;
 		}
 		/*
 		 * Possibly review this - the treeSubsequentNodeNoDescent usage is
@@ -257,14 +261,9 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		 * <container><decorator/></container><decorator>
 		 */
 		FragmentNode checkSubsequent = nodes().treeSubsequentNodeNoDescent();
-		if (checkSubsequent instanceof ZeroWidthCursorTarget) {
-			return (ZeroWidthCursorTarget) checkSubsequent;
-		} else if (HasContentEditable.isUneditable(checkSubsequent)) {
-			ZeroWidthCursorTarget newCursorTarget = new ZeroWidthCursorTarget();
+		if (HasContentEditable.isUneditable(checkSubsequent)) {
+			TextNode newCursorTarget = new TextNode();
 			nodes().insertAfterThis(newCursorTarget);
-			return newCursorTarget;
-		} else {
-			return null;
 		}
 	}
 }

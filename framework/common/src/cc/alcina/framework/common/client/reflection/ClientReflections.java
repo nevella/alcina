@@ -56,6 +56,7 @@ public class ClientReflections {
 			case "java.util.Collections$SingletonList":
 			case "java.util.Collections$EmptyList":
 			case "java.util.Collections$UnmodifiableRandomAccessList":
+			case "java.util.Arrays$ArrayList":
 				return null;
 			}
 			if (fqn.startsWith("java.util.ImmutableCollections$")) {
@@ -93,6 +94,7 @@ public class ClientReflections {
 				case "java.util.Collections$SingletonList":
 				case "java.util.Collections$EmptyList":
 				case "java.util.Collections$UnmodifiableRandomAccessList":
+				case "java.util.Arrays$ArrayList":
 					interfaces = List.of(List.class);
 					break;
 				case "java.util.ImmutableCollections$AbstractImmutableMap":

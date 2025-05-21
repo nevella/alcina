@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
@@ -200,7 +199,8 @@ public interface NodeTransformer {
 	/**
 	 * Default, catchall element transform (to a GenericDomModel)
 	 */
-	public static class GenericElement extends AbstractNodeTransformer {
+	public static class GenericElementTransformer
+			extends AbstractNodeTransformer {
 		@Override
 		public boolean appliesTo(DomNode node) {
 			return node.isElement();
@@ -208,7 +208,7 @@ public interface NodeTransformer {
 
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
-			FragmentNode.GenericElement model = new FragmentNode.GenericElement();
+			GenericElement model = new GenericElement();
 			model.tag = node.w3cElement().getTagName();
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
@@ -248,7 +248,7 @@ public interface NodeTransformer {
 
 		@Override
 		public void apply(DirectedLayout.Node parentNode) {
-			Model model = new FragmentNode.TextNode();
+			Model model = new TextNode();
 			setLayoutNode(
 					parentNode.insertFragmentChild(model, node.w3cNode()));
 		}

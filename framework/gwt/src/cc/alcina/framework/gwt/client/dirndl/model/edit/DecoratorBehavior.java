@@ -140,11 +140,9 @@ public interface DecoratorBehavior {
 			 * range now covers what would be selected with shift-[cursor move]
 			 */
 			String text = range.text();
-			if (!ZeroWidthCursorTarget.is(text)) {
-				return;
-			}
 			/*
-			 * the text is a ZWS, so check extending one more
+			 * the text is a ZWS, so check extending one more FIXME change
+			 * post-zws
 			 */
 			Location.Range testExtended = range
 					.extendText(direction.numericDelta());

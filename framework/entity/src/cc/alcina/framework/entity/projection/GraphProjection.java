@@ -785,6 +785,7 @@ public class GraphProjection {
 				String className = sourceClass.getName();
 				if (className.equals(
 						"java.util.Collections$UnmodifiableRandomAccessList")
+						|| className.equals("java.util.Arrays$ArrayList")
 						|| className.startsWith(
 								"java.util.ImmutableCollections$List")) {
 					return (T) new ArrayList();

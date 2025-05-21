@@ -22,12 +22,12 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorSuggestor.BeforeChooserClosed;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 
 /**
  * <p>
@@ -117,50 +117,6 @@ public interface HasDecorators
 	@Override
 	default void onKeyDown(KeyDown event) {
 		getDecorators().forEach(d -> d.onKeyDown(event));
-		Context context = event.getContext();
-		KeyDownEvent domEvent = (KeyDownEvent) context.getGwtEvent();
-		switch (domEvent.getNativeKeyCode()) {
-		case KeyCodes.KEY_BACKSPACE:
-			if ("disabled".length() > 0) {
-				return;
-			}
-			Selection selection = Document.get().getSelection();
-			Node focusNode = selection.getFocusNode();
-			if (focusNode != null && selection.isCollapsed()) {
-				DomNode focusDomNode = focusNode.asDomNode();
-				DomNode effectiveFocusElement = null;
-				if (focusDomNode.isElement()) {
-					List<DomNode> childNodes = focusDomNode.children.nodes();
-					if (selection.getFocusOffset() < childNodes.size()) {
-						DomNode focusChild = childNodes
-								.get(selection.getFocusOffset());
-						effectiveFocusElement = focusChild;
-					}
-				} else {
-					if (selection.getFocusOffset() == 0) {
-						effectiveFocusElement = focusDomNode.parent();
-					} else {
-						FragmentNode parentFragment = provideFragmentModel()
-								.getFragmentNode(focusDomNode.parent());
-						if (parentFragment instanceof ZeroWidthCursorTarget) {
-							effectiveFocusElement = focusDomNode.parent();
-						}
-					}
-				}
-				if (effectiveFocusElement != null) {
-					FragmentNode fragmentNode = provideFragmentModel()
-							.getFragmentNode(effectiveFocusElement);
-					if (fragmentNode instanceof ZeroWidthCursorTarget) {
-						FragmentNode previousSibling = fragmentNode.nodes()
-								.previousSibling();
-						if (previousSibling instanceof DecoratorNode) {
-							previousSibling.nodes().removeFromParent();
-						}
-					}
-				}
-			}
-			break;
-		}
 	}
 
 	@Override

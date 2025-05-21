@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
 
 /*
  * Custom access for package-external classes. Sort of like Unsafe

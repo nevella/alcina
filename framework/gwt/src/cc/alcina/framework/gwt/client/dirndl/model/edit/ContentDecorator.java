@@ -25,14 +25,14 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode;
-import cc.alcina.framework.gwt.client.dirndl.layout.FragmentNode.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
+import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
@@ -380,19 +380,11 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 			 */
 			fragmentModel.byTypeAssignable(DecoratorNode.class)
 					.filter(dn -> dn.contentEditable)
-					.forEach(this::stripRemovingZws);
-			fragmentModel.byTypeAssignable(ZeroWidthCursorTarget.class)
-					.forEach(zwct -> {
-						FragmentNode previousSibling = zwct.nodes()
-								.previousSibling();
-						if (previousSibling instanceof ZeroWidthCursorTarget) {
-							previousSibling.nodes().removeFromParent();
-						}
-					});
+					.forEach(this::stripRespectingIsolate);
 		}
 	}
 
-	void stripRemovingZws(FragmentNode node) {
+	void stripRespectingIsolate(FragmentNode node) {
 		List<? extends FragmentNode> children = node.children()
 				.collect(Collectors.toList());
 		if (node instanceof FragmentIsolate) {
@@ -400,19 +392,6 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 					.collect(Collectors.toList());
 		}
 		node.nodes().strip();
-		children.stream()
-				.filter(child -> child instanceof FragmentNode.TextNode)
-				.forEach(child -> {
-					FragmentNode.TextNode textNode = (TextNode) child;
-					String value = textNode.getValue();
-					String newValue = value
-							.replace(ZeroWidthCursorTarget.ZWS_CONTENT, "");
-					if (newValue.isEmpty()) {
-						child.nodes().removeFromParent();
-					} else {
-						textNode.setValue(newValue);
-					}
-				});
 	}
 
 	public static class Builder<T> {
