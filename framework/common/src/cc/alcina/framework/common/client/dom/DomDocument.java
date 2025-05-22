@@ -61,7 +61,8 @@ public class DomDocument extends DomNode implements Cloneable {
 	}
 
 	public DomDocument clone() {
-		DomDocument clone = from(fullToString());
+		DomDocument clone = DomDocument.from((Document) DomEnvironment.get()
+				.loadFromXml(fullToString(), isGwtNode()));
 		clone.setReadonly(isReadonly());
 		return clone;
 	}
