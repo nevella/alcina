@@ -95,8 +95,13 @@ public class DomDocument extends DomNode implements Cloneable {
 		return new DomDocument(document);
 	}
 
-	public static DomDocument from(String xml) {
-		return new DomDocument(xml);
+	public static DomDocument from(String markup) {
+		return new DomDocument(markup);
+	}
+
+	public static DomDocument from(String markup, boolean gwtDom) {
+		return DomDocument.from(
+				(Document) DomEnvironment.get().loadFromXml(markup, gwtDom));
 	}
 
 	private Map<Node, DomNode> nodes;

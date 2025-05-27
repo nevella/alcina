@@ -4,9 +4,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -602,7 +605,36 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		keyboardSelectedNodeModel.setKeyboardSelected(true);
 	}
 
+	LastEvent lastEvent;
+
+	/*
+	 * Prevent double-firing due to focus/click
+	 */
+	class LastEvent {
+		ModelEvent<TN, ?> event;
+
+		long time;
+
+		LastEvent(ModelEvent<TN, ?> event) {
+			this.event = event;
+			this.time = System.currentTimeMillis();
+		}
+
+		boolean isRecastBy(ModelEvent<TN, ?> event) {
+			if (event.getModel() == this.event.getModel()) {
+				if (TimeConstants.within(time, GWT.isProdMode() ? 200 : 2000)) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+
 	void onSelectEvent(ModelEvent<TN, ?> event) {
+		if (lastEvent != null && lastEvent.isRecastBy(event)) {
+			return;
+		}
+		lastEvent = new LastEvent(event);
 		onKeyboardSelectModelEvent(event);
 		TN node = event.getModel();
 		TN selectedNode = selectNode0(node);

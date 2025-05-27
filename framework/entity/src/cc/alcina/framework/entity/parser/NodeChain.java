@@ -10,8 +10,41 @@ import org.w3c.dom.Node;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.gwt.client.util.DomUtils.IsBlockFilter;
 
 public class NodeChain {
+	public static class NodeChainContext {
+		public List<Node> chainEndNodes = new ArrayList<>();
+	}
+
+	public static class SplitResult {
+		public static class Pair {
+			public DomNode from;
+
+			public DomNode to;
+
+			public Pair(DomNode from, DomNode to) {
+				this.from = from;
+				this.to = to;
+			}
+		}
+
+		public NodeChain splitIncluding;
+
+		public NodeChain splitNotIncluding;
+
+		boolean notIncludingIsBeforeIncluding;
+
+		public List<Pair> pairs = new ArrayList<>();
+
+		public void addPair(Node from, Node to) {
+			pairs.add(new Pair(DomNode.from(from), DomNode.from(to)));
+		}
+
+		void insertChain(NodeChain newChain) {
+		}
+	}
+
 	public static NodeChain parentChain(NodeChain.NodeChainContext context,
 			Node node) {
 		return parentChain(context, node, null, false);
@@ -169,14 +202,14 @@ public class NodeChain {
 		return chain.get(idx);
 	}
 
-	private Node getBlockAncestor() {
-		return null;// XmlUtils.getContainingBlock(fromChild);
-	}
-
 	public boolean isSameBlock(NodeChain otherChain) {
 		Node blockAncestor = getBlockAncestor();
 		Node otherBlockAncestor = otherChain.getBlockAncestor();
 		return blockAncestor == otherBlockAncestor;
+	}
+
+	public void stripBlocks() {
+		chain.removeIf(new IsBlockFilter());
 	}
 
 	public int length() {
@@ -186,14 +219,6 @@ public class NodeChain {
 	public NodeChain removeFromNode() {
 		chain.remove(fromChild);
 		return this;
-	}
-
-	private String tagNameAt(int idx) {
-		Node n = chain.get(idx);
-		if (n.getNodeType() == Node.ELEMENT_NODE) {
-			return ((Element) n).getTagName();
-		}
-		return null;
 	}
 
 	@Override
@@ -213,35 +238,15 @@ public class NodeChain {
 		}).collect(Collectors.joining("\n")));
 	}
 
-	public static class NodeChainContext {
-		public List<Node> chainEndNodes = new ArrayList<>();
+	private Node getBlockAncestor() {
+		return null;// XmlUtils.getContainingBlock(fromChild);
 	}
 
-	public static class SplitResult {
-		public NodeChain splitIncluding;
-
-		public NodeChain splitNotIncluding;
-
-		boolean notIncludingIsBeforeIncluding;
-
-		void insertChain(NodeChain newChain) {
+	private String tagNameAt(int idx) {
+		Node n = chain.get(idx);
+		if (n.getNodeType() == Node.ELEMENT_NODE) {
+			return ((Element) n).getTagName();
 		}
-
-		public List<Pair> pairs = new ArrayList<>();
-
-		public void addPair(Node from, Node to) {
-			pairs.add(new Pair(DomNode.from(from), DomNode.from(to)));
-		}
-
-		public static class Pair {
-			public DomNode from;
-
-			public Pair(DomNode from, DomNode to) {
-				this.from = from;
-				this.to = to;
-			}
-
-			public DomNode to;
-		}
+		return null;
 	}
 }

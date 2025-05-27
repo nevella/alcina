@@ -809,6 +809,14 @@ public class DomNode {
 			return Optional.empty();
 		}
 
+		public DomNodeAncestors orSelf(boolean orSelf) {
+			if (orSelf) {
+				return orSelf();
+			} else {
+				return this;
+			}
+		}
+
 		public DomNodeAncestors orSelf() {
 			DomNodeAncestors ancestor = new DomNodeAncestors();
 			ancestor.orSelf = true;
@@ -2193,5 +2201,16 @@ public class DomNode {
 	public String toShortDebugString() {
 		return Ax.format("%s :: %s", gwtNode().toNameAttachId(),
 				Ax.ntrim(Ax.trimForLogging(textContent()), 25));
+	}
+
+	public DomNode getCommonAncestorContainer(DomNode other,
+			boolean includingSelf) {
+		Set<DomNode> otherAncestors = other.ancestors().orSelf(includingSelf)
+				.stream().collect(Collectors.toSet());
+		/*
+		 * detached nodes may not have a common ancestor
+		 */
+		return ancestors().orSelf(includingSelf).stream()
+				.filter(otherAncestors::contains).findFirst().orElse(null);
 	}
 }

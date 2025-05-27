@@ -104,7 +104,8 @@ public abstract class Layer<S extends Selection> implements Iterable<S> {
 			return (Collection<S>) state.traversalState.selections
 					.byLayerCounts(inputsFromLayer).keySet();
 		} else {
-			return state.traversalState.selections.get(inputType, false);
+			return state.traversalState.selections.get(inputType, false)
+					.stream().filter(Selection::hasNoReplacedBy).toList();
 		}
 	}
 

@@ -7,6 +7,7 @@ import java.util.List;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.ranges.DocumentRange;
 
 import com.google.common.base.Preconditions;
@@ -14,7 +15,6 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
 import cc.alcina.framework.common.client.dom.Location.TextTraversal;
-import cc.alcina.framework.common.client.util.Ax;
 
 public interface LocationContext {
 	default int compare(Location l1, Location l2) {
@@ -408,32 +408,25 @@ public interface LocationContext {
 				return node.prettyToString();
 			}
 		} else {
-			if (!(w3cDoc() instanceof DocumentRange)) {
-				Ax.sysLogHigh(
-						"truncating markup - DocumentRange not implemented for gwt docs");
-				return range.start.getContainingNode().fullToString();
+			org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) w3cDoc())
+					.createRange();
+			if (range.start.getContainingNode().isText()) {
+				w3cRange.setStart(range.start.getContainingNode().node,
+						range.start.indexInNode());
 			} else {
-				org.w3c.dom.ranges.Range w3cRange = ((DocumentRange) w3cDoc())
-						.createRange();
-				if (range.start.getContainingNode().isText()) {
-					w3cRange.setStart(range.start.getContainingNode().node,
-							range.start.indexInNode());
-				} else {
-					w3cRange.setStartBefore(
-							range.start.getContainingNode().node);
-				}
-				if (range.end.getContainingNode().isText()) {
-					w3cRange.setEnd(range.end.getContainingNode().node,
-							range.end.indexInNode());
-				} else {
-					w3cRange.setEndAfter(range.end.getContainingNode().node);
-				}
-				DocumentFragment fragment = w3cRange.cloneContents();
-				Element fragmentContainer = w3cDoc()
-						.createElement("fragment-container");
-				fragmentContainer.appendChild(fragment);
-				return DomNode.from(fragmentContainer).fullToString();
+				w3cRange.setStartBefore(range.start.getContainingNode().node);
 			}
+			if (range.end.getContainingNode().isText()) {
+				w3cRange.setEnd(range.end.getContainingNode().node,
+						range.end.indexInNode());
+			} else {
+				w3cRange.setEndAfter(range.end.getContainingNode().node);
+			}
+			DocumentFragment fragment = w3cRange.cloneContents();
+			Element fragmentContainer = w3cDoc()
+					.createElement("fragment-container");
+			fragmentContainer.appendChild(fragment);
+			return DomNode.from(fragmentContainer).fullToString();
 		}
 	}
 
@@ -477,5 +470,28 @@ public interface LocationContext {
 	void ensureCurrent(Location location);
 
 	default void validateLocations() {
+	}
+
+	default Location getLocation(Node refNode, int offset, boolean after) {
+		DomNode domNode = getDocumentElementNode().document.nodeFor(refNode);
+		if (domNode.isText()) {
+			return domNode.asLocation().createTextRelativeLocation(offset,
+					after);
+		} else {
+			Location location = domNode.children.nodes().get(offset)
+					.asLocation();
+			return after
+					? location.relativeLocation(
+							RelativeDirection.CURRENT_NODE_END)
+					: location;
+		}
+	}
+
+	default Location getLocation(Node refNode, boolean after) {
+		Location location = getDocumentElementNode().document.nodeFor(refNode)
+				.asLocation();
+		return after
+				? location.relativeLocation(RelativeDirection.CURRENT_NODE_END)
+				: location;
 	}
 }

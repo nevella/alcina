@@ -135,6 +135,10 @@ public abstract class Node
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
+		if (newChild instanceof DocumentFragment) {
+			newChild.getChildren().forEach(this::appendChild);
+			return null;
+		}
 		validateInsert(newChild);
 		validateRemoteStatePreTreeMutation(newChild);
 		// explicit remove-before-insert is the neatest way to cause sync events
@@ -614,6 +618,8 @@ public abstract class Node
 	 * since that would cause a local/remote mismatch
 	 */
 	protected void validateInsert(Node newChild) {
+		// FIXME disallow invalid inserts (i.e. Node throws by default, Element
+		// disallows Document insert etc)
 	}
 
 	/**

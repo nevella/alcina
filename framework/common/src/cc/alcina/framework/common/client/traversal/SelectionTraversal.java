@@ -541,6 +541,12 @@ public class SelectionTraversal
 				if (layers.containsKey(layer)) {
 					return;
 				}
+				/*
+				 * Note that normally if a selection could cause a loop, it
+				 * *should if possible* implement Selection.ImmutableInput and
+				 * emit a replacement selection of the same type - unbounded
+				 * loops are discouraged (but sometimes the only way)
+				 */
 				this.immutableInput = Reflections.isAssignableFrom(
 						Selection.ImmutableInput.class, layer.inputType);
 				if (!immutableInput) {

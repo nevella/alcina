@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.dom;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -1027,5 +1028,68 @@ public class Location implements Comparable<Location> {
 		Preconditions.checkState(isTextNode());
 		return new IntPair(getIndex(),
 				getIndex() + getContainingNode().textLengthSelf());
+	}
+
+	public DomLocation asDomLocation() {
+		return new DomLocation();
+	}
+
+	/**
+	 * <p>
+	 * A w3c dom coordinate view of the location
+	 * 
+	 * <p>
+	 * Note that w3c ranges represent 'before start of n' as [n.parent,
+	 * n.parent.children.indexOf(n)] and 'after end of' as [n,n.children.size]
+	 */
+	public class DomLocation {
+		org.w3c.dom.Node node;
+
+		int offset;
+
+		DomLocation() {
+			DomNode containingDomNode = getContainingNode();
+			if (containingDomNode.isText()) {
+				node = containingDomNode.w3cNode();
+				offset = getTextOffsetInNode();
+			} else {
+				if (after) {
+					node = containingDomNode.w3cNode();
+					offset = containingNode.children.nodes().size();
+				} else {
+					node = containingDomNode.parent().w3cNode();
+					offset = containingDomNode.parent().children.nodes()
+							.indexOf(containingDomNode);
+				}
+			}
+		}
+
+		public Location getLocation() {
+			return Location.this;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof DomLocation) {
+				DomLocation o = (DomLocation) obj;
+				return Objects.equals(getLocation(), o.getLocation());
+			} else {
+				return super.equals(obj);
+			}
+		}
+
+		public org.w3c.dom.Node getNode() {
+			return node;
+		}
+
+		public int getOffset() {
+			return offset;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s/%s - %s", getNode().getNodeName(), getOffset(),
+					getLocation().toString());
+		}
 	}
 }

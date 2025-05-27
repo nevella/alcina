@@ -11,8 +11,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.NodeLocal;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
@@ -83,6 +87,14 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 			public interface SecondaryChild extends Type {
 			}
+
+			/**
+			 * For the process type where multiple layers emit successive
+			 * versions of the same Selection type, this allows a sort of
+			 * copy-on-write model
+			 */
+			public interface Replacement extends Type {
+			}
 		}
 
 		static class Entry {
@@ -100,6 +112,8 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 
 		Selection<?> selection;
 
+		boolean hasReplacement;
+
 		Relations(Selection<?> selection) {
 			this.selection = selection;
 		}
@@ -116,11 +130,18 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		public void addRelation(Class<? extends Type> type,
 				Selection toSelection) {
 			entries.add(new Entry(type, toSelection));
+			if (type == Type.Replacement.class) {
+				hasReplacement = true;
+			}
 		}
 
 		Stream<Selection> stream(Class<? extends Relations.Type> clazz) {
 			return entries.stream().filter(e -> e.type == clazz)
 					.map(e -> e.selection);
+		}
+
+		public boolean hasReplacedBy() {
+			return hasReplacement;
 		}
 	}
 
@@ -294,13 +315,13 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	};
 
 	default Iterator<Selection> ancestorIterator() {
-		return new AncestorIterator(this);
+		return new AncestorIteratorTopDown(this);
 	}
 
-	static class AncestorIterator<T> extends PeekingIterator<Selection> {
+	static class AncestorIteratorTopDown<T> extends PeekingIterator<Selection> {
 		Iterator<Node> nodeItr;
 
-		AncestorIterator(Selection<T> selection) {
+		AncestorIteratorTopDown(Selection<T> selection) {
 			nodeItr = selection.processNode().asNodePath().iterator();
 		}
 
@@ -319,11 +340,35 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 		}
 	}
 
+	static class AncestorIteratorBottomUp implements Iterator<Selection> {
+		Selection<?> cursor;
+
+		AncestorIteratorBottomUp(Selection<?> selection) {
+			this.cursor = selection;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return cursor != null;
+		}
+
+		@Override
+		public Selection next() {
+			Preconditions.checkState(hasNext());
+			Selection<?> result = cursor;
+			cursor = (Selection<?>) result.parentSelection();
+			return cursor;
+		}
+	}
+
+	/**
+	 * Note that these are in newest-to-oldest order
+	 * 
+	 * @return a stream of selections
+	 */
 	default Stream<Selection> ancestorSelections() {
-		return processNode().asNodePath().stream()
-				// .filter(n -> n.hasValueClass(Selection.class))
-				.filter(n -> n.getValue() instanceof Selection)
-				.<Selection> map(Node::typedValue);
+		Iterable<Selection> iterable = () -> new AncestorIteratorBottomUp(this);
+		return StreamSupport.stream(iterable.spliterator(), false);
 	}
 
 	default <ST extends T> ST cast() {
@@ -538,4 +583,10 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 	View view();
 
 	RowView rowView();
+
+	boolean hasReplacedBy();
+
+	default boolean hasNoReplacedBy() {
+		return !hasReplacedBy();
+	}
 }

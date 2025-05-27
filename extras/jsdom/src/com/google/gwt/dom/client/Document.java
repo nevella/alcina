@@ -25,7 +25,6 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.EntityReference;
 import org.w3c.dom.traversal.NodeFilter;
@@ -56,8 +55,8 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * context document construction easier, but it may be better to add the
  * complexity to doc creation to match the w3c model
  */
-public class Document extends Node
-		implements ClientDomDocument, org.w3c.dom.Document,
+public class Document extends Node implements ClientDomDocument,
+		org.w3c.dom.Document, org.w3c.dom.ranges.DocumentRange,
 		org.w3c.dom.traversal.DocumentTraversal, ContextFrame {
 	public static ContextProvider<RemoteType, Document> contextProvider;
 
@@ -298,7 +297,9 @@ public class Document extends Node
 
 	@Override
 	public DocumentFragment createDocumentFragment() {
-		throw new UnsupportedOperationException();
+		DocumentFragment documentFragment = new DocumentFragment();
+		documentFragment.local().ownerDocument = local;
+		return documentFragment;
 	}
 
 	@Override
@@ -1321,5 +1322,10 @@ public class Document extends Node
 
 	public void flushLocalMutations() {
 		localDom.flush0();
+	}
+
+	@Override
+	public org.w3c.dom.ranges.Range createRange() {
+		return new Range(this);
 	}
 }

@@ -30,6 +30,10 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	volatile Selection.Relations relations;
 
+	public boolean hasReplacedBy() {
+		return hasRelations() && relations.hasReplacedBy();
+	}
+
 	@Override
 	public boolean hasRelations() {
 		return relations != null;
