@@ -178,7 +178,6 @@ public class Range implements org.w3c.dom.ranges.Range {
 			cursor = cursor
 					.relativeLocation(RelativeDirection.NEXT_DOMNODE_START);
 		}
-		String markup = documentFragment.getMarkup();
 		return documentFragment;
 	}
 

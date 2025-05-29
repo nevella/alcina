@@ -297,12 +297,16 @@ public abstract class LooseContext {
 
 		public String toPropertyString(T value) {
 			StringMap properties = new StringMap();
+			put(properties, value);
+			return properties.toPropertyString();
+		}
+
+		public void put(StringMap properties, T value) {
 			if (value instanceof Boolean) {
 				properties.setBooleanOrRemove(getPath(), (Boolean) value);
 			} else {
 				properties.put(getPath(), String.valueOf(value));
 			}
-			return properties.toPropertyString();
 		}
 	}
 

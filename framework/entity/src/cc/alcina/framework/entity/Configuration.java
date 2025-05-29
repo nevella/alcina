@@ -341,6 +341,10 @@ public class Configuration {
 			return Ax.notBlank(get());
 		}
 
+		public boolean isBlank() {
+			return Ax.isBlank(get());
+		}
+
 		public int intValue() {
 			String value = get();
 			return Integer.valueOf(value);

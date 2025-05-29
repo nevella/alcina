@@ -24,7 +24,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableEvents;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.RowsModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableView;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.HighlightModelChanged;
 import cc.alcina.framework.servlet.component.sequence.SequenceEvents.SelectedIndexChanged;
@@ -137,51 +136,45 @@ class SequenceArea extends Model.Fields
 		}
 	}
 
-	RowsModel rowsModel;
+	RowsModelSupport selectionSupport = new RowsModelSupport();
 
-	@Override
-	public void onRowsModelAttached(RowsModelAttached event) {
-		this.rowsModel = event.getModel();
-		this.rowsModel.topicSelectedRowsChanged
-				.add(this::onSelectedRowsChanged);
-		updateRowDecoratorsAndScroll();
-	}
-
-	private void updateRowDecoratorsAndScroll() {
-		for (int idx = 0; idx < filteredElements.size(); idx++) {
-			Object filteredElement = filteredElements.get(idx);
-			boolean hasMatch = page.highlightModel.hasMatch(filteredElement);
-			rowsModel.meta.get(idx).setFlag("matches", hasMatch);
+	class RowsModelSupport extends TableModel.RowsModel.Support {
+		protected void updateRowDecoratorsAndScroll() {
+			for (int idx = 0; idx < filteredElements.size(); idx++) {
+				Object filteredElement = filteredElements.get(idx);
+				boolean hasMatch = page.highlightModel
+						.hasMatch(filteredElement);
+				rowsModel.meta.get(idx).setFlag("matches", hasMatch);
+			}
+			selectAndScroll(page.ui.place.selectedElementIdx, filteredElements);
 		}
-		int selectedElementIdx = page.ui.place.selectedElementIdx;
-		if (selectedElementIdx != -1
-				&& selectedElementIdx < filteredElements.size()) {
-			Object selectedElement = filteredElements.get(selectedElementIdx);
-			int visibleRowIndex = filteredElements.indexOf(selectedElement);
-			rowsModel.select(visibleRowIndex);
-			rowsModel.scrollSelectedIntoView();
-		}
-	}
 
-	void onSelectedRowsChanged() {
-		IntPair selected = rowsModel.getSelectedRowsRange();
-		if (selected != null) {
-			if (selected.isPoint()) {
-				page.ui.place.copy().withSelectedElementIdx(selected.i1).go();
-			} else {
-				page.ui.place.copy().withSelectedElementIdx(selected.i1)
-						.withSelectedRange(selected).go();
+		protected void onSelectedRowsChanged() {
+			IntPair selected = rowsModel.getSelectedRowsRange();
+			if (selected != null) {
+				if (selected.isPoint()) {
+					page.ui.place.copy().withSelectedElementIdx(selected.i1)
+							.go();
+				} else {
+					page.ui.place.copy().withSelectedElementIdx(selected.i1)
+							.withSelectedRange(selected).go();
+				}
 			}
 		}
 	}
 
 	@Override
+	public void onRowsModelAttached(RowsModelAttached event) {
+		selectionSupport.onRowsModelAttached(event);
+	}
+
+	@Override
 	public void onHighlightModelChanged(HighlightModelChanged event) {
-		updateRowDecoratorsAndScroll();
+		selectionSupport.updateRowDecoratorsAndScroll();
 	}
 
 	@Override
 	public void onSelectedIndexChanged(SelectedIndexChanged event) {
-		updateRowDecoratorsAndScroll();
+		selectionSupport.updateRowDecoratorsAndScroll();
 	}
 }

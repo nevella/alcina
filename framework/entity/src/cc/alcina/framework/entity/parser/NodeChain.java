@@ -2,12 +2,14 @@ package cc.alcina.framework.entity.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.gwt.client.util.DomUtils.IsBlockFilter;
@@ -209,7 +211,12 @@ public class NodeChain {
 	}
 
 	public void stripBlocks() {
-		chain.removeIf(new IsBlockFilter());
+		Optional<Node> lastBlock = Ax
+				.last(chain.stream().filter(new IsBlockFilter()));
+		if (lastBlock.isPresent()) {
+			int idx = chain.indexOf(lastBlock.get());
+			chain = chain.stream().skip(idx + 1).collect(Collectors.toList());
+		}
 	}
 
 	public int length() {

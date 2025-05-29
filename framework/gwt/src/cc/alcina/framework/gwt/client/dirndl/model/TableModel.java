@@ -277,6 +277,32 @@ public class TableModel extends Model implements NodeEditorContext {
 	 * the tablemodel, rather the tablemodel is replaced if the rows change
 	 */
 	public static class RowsModel {
+		public abstract static class Support
+				implements TableEvents.RowsModelAttached.Handler {
+			protected RowsModel rowsModel;
+
+			@Override
+			public void onRowsModelAttached(RowsModelAttached event) {
+				this.rowsModel = event.getModel();
+				this.rowsModel.topicSelectedRowsChanged
+						.add(this::onSelectedRowsChanged);
+				updateRowDecoratorsAndScroll();
+			}
+
+			protected abstract void onSelectedRowsChanged();
+
+			protected abstract void updateRowDecoratorsAndScroll();
+
+			protected void selectAndScroll(int selectedElementIdx,
+					List<?> rowElements) {
+				if (selectedElementIdx != -1
+						&& selectedElementIdx < rowElements.size()) {
+					rowsModel.select(selectedElementIdx);
+					rowsModel.scrollSelectedIntoView();
+				}
+			}
+		}
+
 		public class RowMeta implements TableEvents.RowClicked.Handler {
 			public TableRow row;
 
@@ -317,7 +343,11 @@ public class TableModel extends Model implements NodeEditorContext {
 					meta.forEach(r -> r.setSelected(pair.contains(r.index)));
 					// does not change selectedRowIndex
 				} else {
-					select(toIndex);
+					if (selected) {
+						deSelect(toIndex);
+					} else {
+						select(toIndex);
+					}
 				}
 			}
 
@@ -372,6 +402,15 @@ public class TableModel extends Model implements NodeEditorContext {
 			} else {
 				return new IntPair(i1, i2);
 			}
+		}
+
+		public void deSelect(int selectedIndex) {
+			if (this.selectedRowIndex == -1) {
+				return;
+			}
+			meta.get(selectedIndex).setSelected(false);
+			this.selectedRowIndex = -1;
+			topicSelectedRowsChanged.signal();
 		}
 
 		public void select(int selectedIndex) {

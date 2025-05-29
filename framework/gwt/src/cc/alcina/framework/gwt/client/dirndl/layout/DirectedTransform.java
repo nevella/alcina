@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.HasDisplayName.HasDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ShortDateRenderer;
 
@@ -11,6 +12,10 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.ShortDateRenderer;
 public class DirectedTransform {
 	@Reflected
 	public static class FriendlyEnum extends FriendlyEnumRenderer {
+	}
+
+	@Reflected
+	public static class DisplayName extends HasDisplayNameRenderer {
 	}
 
 	@Reflected

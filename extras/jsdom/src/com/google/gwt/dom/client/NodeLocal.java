@@ -35,25 +35,24 @@ public abstract class NodeLocal implements ClientDomNode {
 			NodeLocal after) {
 		if (before != null) {
 			before.nextSibling = target;
-			target.previousSibling = before;
 		}
+		target.previousSibling = before;
 		if (after != null) {
 			after.previousSibling = target;
-			target.nextSibling = after;
 		}
+		target.nextSibling = after;
 	}
 
 	@Override
 	public <T extends Node> T appendChild(T newChild) {
 		checkCanInsert(newChild);
 		NodeLocal local = newChild.local();
-		NodeLocal entryLastChild = lastChild;
+		local.setParentNode(this, true, true);
 		updateSiblingRefs(lastChild, local, null);
 		lastChild = local;
 		if (firstChild == null) {
 			firstChild = local;
 		}
-		local.setParentNode(this, true, true);
 		childCount++;
 		return newChild;
 	}
@@ -203,7 +202,8 @@ public abstract class NodeLocal implements ClientDomNode {
 			Preconditions.checkArgument(localRefChild.parentNode == this,
 					"refchild not a child of this node");
 			NodeLocal local = newChild.local();
-			// key - don't want this to be parented when updating sibling refs,
+			// key - don't want this to be reparented after updating sibling
+			// refs,
 			// so do it first
 			local.setParentNode(this, true, true);
 			updateSiblingRefs(localRefChild.previousSibling, local,

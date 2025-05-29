@@ -27,7 +27,7 @@ public class EntityHelper {
 		if (hi instanceof Entity) {
 			Entity entity = (Entity) hi;
 			return Ax.format("%s : %s / %s",
-					CommonUtils.simpleClassName(entity.getClass()),
+					CommonUtils.simpleClassName(entity.entityClass()),
 					entity.getId(), entity.getLocalId());
 		}
 		return Ax.format("%s : %s ", CommonUtils.simpleClassName(hi.getClass()),
@@ -35,7 +35,8 @@ public class EntityHelper {
 	}
 
 	public static int compare(Entity o1, Entity o2) {
-		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+		int i = o1.entityClass().getName()
+				.compareTo(o2.entityClass().getName());
 		if (i != 0) {
 			return i;
 		}
@@ -51,7 +52,8 @@ public class EntityHelper {
 	}
 
 	public static int compareLocalsHigh(Entity o1, Entity o2) {
-		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+		int i = o1.entityClass().getName()
+				.compareTo(o2.entityClass().getName());
 		if (i != 0) {
 			return i;
 		}
@@ -67,7 +69,8 @@ public class EntityHelper {
 	}
 
 	public static int compareNoLocals(Entity o1, Entity o2) {
-		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+		int i = o1.entityClass().getName()
+				.compareTo(o2.entityClass().getName());
 		if (i != 0) {
 			return i;
 		}

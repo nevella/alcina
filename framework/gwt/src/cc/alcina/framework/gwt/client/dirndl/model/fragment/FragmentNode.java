@@ -546,6 +546,10 @@ public abstract class FragmentNode extends Model.Fields
 			}
 			return provideChildNodes().isEmpty();
 		}
+
+		public void removeAllChildren() {
+			children().toList().forEach(fn -> fn.nodes().removeFromParent());
+		}
 	}
 
 	// text DOM structure

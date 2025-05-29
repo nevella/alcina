@@ -16,7 +16,6 @@ import java.util.stream.StreamSupport;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.dom.client.NodeLocal;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
@@ -357,7 +356,7 @@ public interface Selection<T> extends HasProcessNode<Selection> {
 			Preconditions.checkState(hasNext());
 			Selection<?> result = cursor;
 			cursor = (Selection<?>) result.parentSelection();
-			return cursor;
+			return result;
 		}
 	}
 
