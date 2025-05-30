@@ -46,6 +46,82 @@ public interface DecoratorBehavior {
 	 * they're there to allow (and control the appearance of) cursor targets,
 	 * but they should be otherwise invisible to the user.
 	 */
+	public static class ModifyNonEditableSelectionBehaviour
+			implements DecoratorBehavior, AttributeBehaviorHandler {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.SELECTIONCHANGE;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			onSelectionChange(event.getNativeEvent(), registeredElement);
+		}
+
+		public void onSelectionChange(NativeEvent nativeSelectionChangeEvent,
+				Element registeredElement) {
+			Selection selection = Document.get().getSelection();
+			if (!selection.isCollapsed()) {
+				return;
+			}
+			Location anchorLocation = selection.getAnchorLocation();
+			DomNode containingNode = anchorLocation.getContainingNode();
+			if (containingNode.attrIsIgnoreCase("contenteditable", "false")) {
+				/*
+				 * focus on a non-editable (choice) - this indicates the user
+				 * clicked between two non-eds. Try and reposition
+				 */
+				if (anchorLocation.isAtNodeStart()) {
+					DomNode previousSibling = containingNode.relative()
+							.previousSibling();
+					if (previousSibling != null) {
+						if (previousSibling.isText()) {
+							selection.select(previousSibling.gwtNode());
+						}
+					}
+				} else if (anchorLocation.isAtNodeEnd()) {
+					DomNode nextSibling = containingNode.relative()
+							.nextSibling();
+					if (nextSibling != null) {
+						if (nextSibling.isText()) {
+							selection.select(nextSibling.gwtNode());
+						}
+					}
+				}
+			} else {
+				if (containingNode.isElement() && containingNode
+						.parent() == registeredElement.asDomNode()) {
+					if (anchorLocation.isAtNodeEnd()) {
+						DomNode lastChild = containingNode.children.lastNode();
+						if (lastChild != null && lastChild.isText()) {
+							selection.select(lastChild.gwtNode());
+						}
+					}
+				}
+			}
+		}
+
+		@Override
+		public String getMagicAttributeName() {
+			return ATTR_NAME;
+		}
+
+		public static final String ATTR_NAME = "__bhvr_mnesb";
+	}
+
+	/**
+	 * <p>
+	 * This is a client behavior, since it needs to occur synchronously
+	 * <p>
+	 * Extends the affected range of keyboard navigation events (and
+	 * backspace/delete) if the traversed range is a zero-width-space.
+	 * 
+	 * <p>
+	 * This effectively makes the ZWS nodes invisible to keyboard navigation -
+	 * they're there to allow (and control the appearance of) cursor targets,
+	 * but they should be otherwise invisible to the user.
+	 */
 	public static class ExtendKeyboardNavigationAction
 			implements DecoratorBehavior, AttributeBehaviorHandler {
 		enum Direction {

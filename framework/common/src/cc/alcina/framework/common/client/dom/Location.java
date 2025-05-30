@@ -863,6 +863,18 @@ public class Location implements Comparable<Location> {
 		public Measure toMeasure(Measure.Token token) {
 			return Measure.fromRange(this, token);
 		}
+
+		public Range asOrderedRange() {
+			if (provideIsOrdered()) {
+				return this;
+			} else {
+				return new Range(end, start);
+			}
+		}
+
+		public boolean provideIsOrdered() {
+			return start.compareTo(end) <= 0;
+		}
 	}
 
 	public enum RelativeDirection {

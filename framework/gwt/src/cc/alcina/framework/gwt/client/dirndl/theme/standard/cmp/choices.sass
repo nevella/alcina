@@ -46,8 +46,20 @@ $selected-editor-choice: blue
     line-height: 145%
     width: 30rem
 
-    choice-node:not([contenteditable='false'])
-      //color: blue
+    choice-node
+      white-space: nowrap
+
+    //browsers are weird around that very first choice (with empty text child)  
+    // min-height is sensitive (it affects cursor size + overall line height)
+    // so override if the editor font size changes
+    choice-node:not([contenteditable='false']):first-child
+      display: inline-block
+      margin-right: 3px
+      min-height: 16px
+      min-width: 1px
+
+    choice-node:not([contenteditable='false']):first-child + choice-node[contenteditable='false']
+      margin-left: 0
 
     choice-node[contenteditable='false']
       background: none

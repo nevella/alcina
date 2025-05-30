@@ -997,6 +997,18 @@ choice-editor > edit:focus {
   border-color: #555;
   background-color: #FFF;
 }
+choice-editor > edit choice-node {
+  white-space: nowrap;
+}
+choice-editor > edit choice-node:not([contenteditable=false]):first-child {
+  display: inline-block;
+  margin-right: 3px;
+  min-height: 16px;
+  min-width: 1px;
+}
+choice-editor > edit choice-node:not([contenteditable=false]):first-child + choice-node[contenteditable=false] {
+  margin-left: 0;
+}
 choice-editor > edit choice-node[contenteditable=false] {
   background: none;
   border-radius: 4px;

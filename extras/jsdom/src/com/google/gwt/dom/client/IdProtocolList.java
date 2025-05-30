@@ -194,7 +194,6 @@ public class IdProtocolList {
 
 	void fromSubtree(Node subtreeRoot) {
 		List<Node> depthFirstNodes = subtreeRoot.traverse().toList();
-		Text lastNonemptyEmittedText = null;
 		for (int idx = 0; idx < depthFirstNodes.size(); idx++) {
 			Node node = depthFirstNodes.get(idx);
 			boolean special = false;

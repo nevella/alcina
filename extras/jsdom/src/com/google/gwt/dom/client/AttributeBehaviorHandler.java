@@ -10,6 +10,8 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
@@ -97,23 +99,43 @@ public interface AttributeBehaviorHandler {
 				return;
 			}
 			Event nativeEvent = (Event) event.getNativeEvent();
-			String type = nativeEvent.getType();
-			if (!eventTypes.contains(type)) {
+			String eventType = nativeEvent.getType();
+			if (!eventTypes.contains(eventType)) {
 				return;
 			}
 			EventTarget eventTarget = nativeEvent.getEventTarget();
-			if (!eventTarget.isElement()) {
+			Element targetElement = null;
+			if (eventTarget.isElement()) {
+				targetElement = eventTarget.asElement();
+			} else {
+				switch (eventType) {
+				case "selectionchange":
+					Selection selection = Document.get().getSelection();
+					Location focusLocation = selection.getFocusLocation();
+					if (focusLocation != null) {
+						DomNode node = focusLocation.getContainingNode();
+						if (node.isElement()) {
+							targetElement = node.gwtElement();
+						} else if (node.isText()) {
+							targetElement = node.parent().gwtElement();
+						}
+					}
+					break;
+				}
+			}
+			if (targetElement == null) {
 				return;
 			}
 			if (handlers.isEmpty()) {
 				return;
 			}
-			Element targetElement = eventTarget.asElement();
 			Element cursor = targetElement;
 			while (cursor != null) {
 				if (cursor.hasAttributes()) {
 					Element registeredElement = cursor;
-					handlers.stream().filter(h -> h.matches(registeredElement))
+					handlers.stream()
+							.filter(h -> h.matches(registeredElement)
+									&& h.getEventType().equals(eventType))
 							.forEach(h -> h.onNativeEvent(event,
 									registeredElement));
 				}

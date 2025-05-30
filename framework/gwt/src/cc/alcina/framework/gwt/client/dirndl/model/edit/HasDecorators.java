@@ -3,10 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.model.edit;
 import java.util.List;
 
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.Selection;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyDownEvent;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -21,7 +17,6 @@ import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Closed;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
-import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.model.dom.EditSelection;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.NodeDelta;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.ReferenceSelected;
@@ -58,6 +53,16 @@ public interface HasDecorators
 		type = Type.PROPERTY,
 		to = DecoratorBehavior.ExtendKeyboardNavigationAction.ATTR_NAME)
 	default boolean isMagicName() {
+		return true;
+	}
+
+	/*
+	 * Marker attribute
+	 */
+	@Binding(
+		type = Type.PROPERTY,
+		to = DecoratorBehavior.ModifyNonEditableSelectionBehaviour.ATTR_NAME)
+	default boolean isMagicName2() {
 		return true;
 	}
 

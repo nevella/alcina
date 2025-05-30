@@ -132,6 +132,16 @@ public abstract class ChoiceEditor<T> extends Choices<T>
 		return true;
 	}
 
+	/*
+	 * Marker attribute
+	 */
+	@Binding(
+		type = Type.PROPERTY,
+		to = DecoratorBehavior.ModifyNonEditableSelectionBehaviour.ATTR_NAME)
+	public boolean isMagicName2() {
+		return true;
+	}
+
 	@Override
 	public void onSelected(Selected event) {
 		/*

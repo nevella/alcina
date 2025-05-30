@@ -23,7 +23,8 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 
 /**
- * Models the browser selection object
+ * Models the browser selection object. Normally use the exposed Location
+ * objects, since they handle DOM's "unique" addressing, and track mutations
  *
  */
 public class Selection implements ClientDomSelection {
@@ -82,6 +83,11 @@ public class Selection implements ClientDomSelection {
 		remote.extend(node, offset);
 	}
 
+	/**
+	 * Note - this is not the "anchor node", if it's an element, rather its
+	 * parent. In general, use getAnchorLocation (also, locations track
+	 * mutations)
+	 */
 	@Override
 	public Node getAnchorNode() {
 		return local.getAnchorNode();
@@ -97,6 +103,10 @@ public class Selection implements ClientDomSelection {
 		return local.getClientRect();
 	}
 
+	/**
+	 * Note - this is not the "focussed node", if it's an element, rather its
+	 * parent. In general, use getFocusLocation
+	 */
 	@Override
 	public Node getFocusNode() {
 		return local.getFocusNode();
@@ -147,27 +157,63 @@ public class Selection implements ClientDomSelection {
 	}
 
 	public Location getAnchorLocation() {
-		return asLocation(getAnchorNode(), getAnchorOffset());
+		return cachedLocations.ensureCurrent().anchorLocation;
 	}
 
 	public Location getFocusLocation() {
-		return asLocation(getFocusNode(), getFocusOffset());
+		return cachedLocations.ensureCurrent().focusLocation;
 	}
 
-	Location asLocation(Node node, int offset) {
-		DomNode domNode = node.asDomNode();
-		if (domNode.isText()) {
-			return domNode.asLocation().createTextRelativeLocation(offset,
-					false);
-		} else {
-			// note that - for node.class == Element - offset can be after all
-			// children
-			if (offset == node.getChildCount()) {
-				return domNode.asRange().end;
+	CachedLocations cachedLocations = new CachedLocations();
+
+	class CachedLocations {
+		Location anchorLocation;
+
+		Location focusLocation;
+
+		SelectionRecord lastSelectionRecord;
+
+		CachedLocations ensureCurrent() {
+			SelectionRecord currenSelectionRecord = local()
+					.getSelectionRecord();
+			if (currenSelectionRecord != lastSelectionRecord) {
+				if (currenSelectionRecord == null) {
+					anchorLocation = null;
+					focusLocation = null;
+				} else {
+					anchorLocation = asLocation(getAnchorNode(),
+							getAnchorOffset());
+					focusLocation = asLocation(getFocusNode(),
+							getFocusOffset());
+				}
+				lastSelectionRecord = currenSelectionRecord;
+			}
+			return this;
+		}
+
+		Location asLocation(Node node, int offset) {
+			if (node == null) {
+				return null;
+			}
+			DomNode domNode = node.asDomNode();
+			if (domNode.isText()) {
+				return domNode.asLocation().createTextRelativeLocation(offset,
+						false);
 			} else {
-				return node.getChild(offset).asDomNode().asLocation();
+				// note that - for node.class == Element - offset can be after
+				// all
+				// children
+				if (offset == node.getChildCount()) {
+					return domNode.asRange().end;
+				} else {
+					return node.getChild(offset).asDomNode().asLocation();
+				}
 			}
 		}
+	}
+
+	public Location.Range asRange() {
+		return new Location.Range(getAnchorLocation(), getFocusLocation());
 	}
 
 	@Override

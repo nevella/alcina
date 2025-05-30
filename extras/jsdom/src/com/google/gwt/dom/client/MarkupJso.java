@@ -149,7 +149,7 @@ for (; ;) {
 	}
 	var int0 = ids[idsIdx++];
 	if (int0 == 0) {
-		//special
+		//special - PROTOCOL_0_SPECIAL
 		var int1 = ids[idsIdx++];
 		switch (int1) {
 			//PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE
@@ -160,18 +160,21 @@ for (; ;) {
 				var parentNode = idJso[parentAttachId];
 				var previousSiblingNode = idJso[previousSiblingAttachId];
 				previousSiblingNode = !previousSiblingNode ? null : previousSiblingNode;
+				if(previousSiblingNode && previousSiblingNode.parentNode != parentNode){
+					debugger;
+					throw "incorrect previousSiblingNode parenting";
+				}
+				var nextSiblingNode = previousSiblingNode == null ? parentNode.firstChild : previousSiblingNode.nextSibling;
 				var text = cursor.ownerDocument.createTextNode("");
 				resultJsos.push(text);
 				text.__attachId = attachId;
 				idJso[text.__attachId] = text;
-				parentNode.insertBefore(text, previousSiblingNode);
+				parentNode.insertBefore(text, nextSiblingNode);
 				itr.nextNode();
 				break;
 			}
-			//PROTOCOL_1_TEXT_BLANK_NON_SEQUENCE
+			//PROTOCOL_1_TEXT_NODE_SEQUENCE
 			case 1: {
-			// unused in the js replay, since it's sequential
-				var previousSiblingId = ids[idsIdx++];
 				var nodeCount = ids[idsIdx++];
 				var attachIds = [];
 				var lengths = [];

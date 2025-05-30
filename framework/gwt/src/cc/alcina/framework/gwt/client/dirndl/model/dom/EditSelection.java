@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Selection;
 
@@ -24,26 +23,12 @@ public class EditSelection {
 
 	boolean triggerable;
 
-	Location focusLocation;
-
-	int focusOffset;
-
-	int anchorOffset;
-
-	Location anchorLocation;
-
-	boolean collapsed;
-
 	Location.Range range;
 
 	/*
 	 * the range from the start of the caret textnode to the caret, if any
 	 */
 	Location.Range priorRange;
-
-	DomNode focusDomNode;
-
-	DomNode anchorDomNode;
 
 	boolean hasEditSelection;
 
@@ -52,37 +37,28 @@ public class EditSelection {
 	 *
 	 * for a selection of #TEXT[@] - after the char '@' - the selection offset
 	 * is 1, but our location offset is 0/end (since max location offset =
-	 * length of content)
+	 * length of content) [test this!](I think it's wrong)
 	 *
 	 * And...this gives rise to 'do we need Location.after' - and answer is
 	 * probably 'maybe',
 	 */
 	public EditSelection() {
 		selection = Document.get().getSelection();
-		collapsed = selection.isCollapsed();
-		focusDomNode = selection.getFocusNode() == null ? null
-				: selection.getFocusNode().asDomNode();
-		anchorDomNode = selection.getAnchorNode() == null ? null
-				: selection.getAnchorNode().asDomNode();
-		if (!selection.hasSelection() || focusDomNode == null
-				|| !focusDomNode.gwtNode().isAttached()) {
+		if (!selection.hasSelection() || selection.getFocusLocation() == null
+				|| !selection.getFocusLocation().getContainingNode()
+						.isAttached()) {
 			return;
 		}
 		hasEditSelection = true;
-		focusOffset = selection.getFocusOffset();
-		focusLocation = focusDomNode.asLocation()
-				.createTextRelativeLocation(focusOffset, false);
-		anchorOffset = selection.getAnchorOffset();
-		anchorLocation = anchorDomNode.asLocation()
-				.createTextRelativeLocation(anchorOffset, false);
-		range = new Location.Range(anchorLocation, focusLocation);
-		if (anchorDomNode.isText() && collapsed) {
+		range = selection.asRange().asOrderedRange();
+		if (range.start.isTextNode() && selection.isCollapsed()) {
 			// non-rtl
-			Location anchorTextStartLocation = anchorDomNode.asLocation();
-			priorRange = new Location.Range(anchorTextStartLocation,
-					anchorLocation);
+			Location startNodeStartLocation = range.start.getContainingNode()
+					.asLocation();
+			priorRange = new Location.Range(startNodeStartLocation,
+					range.start);
 		}
-		if (collapsed && focusLocation != null) {
+		if (selection.isCollapsed()) {
 			setTriggerable(true);
 		}
 	}
@@ -104,7 +80,8 @@ public class EditSelection {
 		while ((cursor = tree.currentNode()) != containingNode) {
 			if (cursor.isText() && !cursor.isEmptyTextContent()) {
 				Location result = cursor.asLocation().clone();
-				result.setIndex(result.getIndex() + cursor.textContent().length());
+				result.setIndex(
+						result.getIndex() + cursor.textContent().length());
 				return result;
 			}
 			tree.previousLogicalNode();
@@ -115,10 +92,8 @@ public class EditSelection {
 	}
 
 	public void extendSelectionToIncludeAllOf(DomNode node) {
-		String text = ((Element) node.gwtNode()).getInnerText();
 		Location.Range tagRange = node.asRange();
-		boolean anchorBeforeFocus = anchorLocation
-				.compareTo(focusLocation) <= 0;
+		boolean anchorBeforeFocus = selection.asRange().provideIsOrdered();
 		Location modifiedFocusLocation = null;
 		Location modifiedAnchorLocation = null;
 		if (tagRange.start.isBefore(range.start)) {
@@ -140,11 +115,12 @@ public class EditSelection {
 			}
 		}
 		if (modifiedAnchorLocation != null) {
-			selection.collapse(modifiedAnchorLocation.getContainingNode().gwtNode(),
+			selection.collapse(
+					modifiedAnchorLocation.getContainingNode().gwtNode(),
 					modifiedAnchorLocation.indexInNode());
 			Location extendTo = modifiedFocusLocation != null
 					? modifiedFocusLocation
-					: focusLocation;
+					: selection.getFocusLocation();
 			selection.extend(extendTo.getContainingNode().gwtNode(),
 					extendTo.indexInNode());
 		} else if (modifiedFocusLocation != null) {
@@ -155,7 +131,7 @@ public class EditSelection {
 	}
 
 	public DomNode focusNode() {
-		return focusDomNode;
+		return selection.getFocusLocation().getContainingNode();
 	}
 
 	public Optional<DomNode> getFocusNodePartiallySelectedAncestor(
@@ -164,15 +140,11 @@ public class EditSelection {
 		if (ancestor.isEmpty()) {
 			return Optional.empty();
 		}
-		if (collapsed) {
+		if (selection.isCollapsed()) {
 			return ancestor;
 		}
 		Location.Range ancestorRange = ancestor.get().asRange();
 		return !range.contains(ancestorRange) ? ancestor : Optional.empty();
-	}
-
-	public int getFocusOffset() {
-		return this.focusOffset;
 	}
 
 	public boolean hasAncestorFocusTag(String tag) {
@@ -184,7 +156,8 @@ public class EditSelection {
 	}
 
 	public String relativeString(int startOffset, int endOffset) {
-		return focusLocation.content().relativeString(startOffset, endOffset);
+		return selection.getFocusLocation().content()
+				.relativeString(startOffset, endOffset);
 	}
 
 	public void setTriggerable(boolean triggerable) {
@@ -192,11 +165,15 @@ public class EditSelection {
 	}
 
 	public SplitResult splitAt(int from, int to) {
-		if (focusOffset > focusNode().textContent().length()) {
-			// temporary hack - focusNode has been mutated without a selection
-			// update
-			focusOffset = focusNode().textContent().length();
-		}
+		/*
+		 * Probably handled by IndexMutation
+		 */
+		// if (focusOffset > focusNode().textContent().length()) {
+		// // temporary hack - focusNode has been mutated without a selection
+		// // update
+		// focusOffset = focusNode().textContent().length();
+		// }
+		int focusOffset = selection.getFocusLocation().getTextOffsetInNode();
 		return focusNode().text().split(from + focusOffset, to + focusOffset);
 	}
 
