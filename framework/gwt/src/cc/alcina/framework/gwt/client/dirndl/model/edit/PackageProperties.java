@@ -27,6 +27,7 @@ public class PackageProperties {
       public TypedProperty<ChoiceEditor, List> decorators = new TypedProperty<>(ChoiceEditor.class, "decorators");
       public TypedProperty<ChoiceEditor, EditArea> editArea = new TypedProperty<>(ChoiceEditor.class, "editArea");
       public TypedProperty<ChoiceEditor, Boolean> magicName = new TypedProperty<>(ChoiceEditor.class, "magicName");
+      public TypedProperty<ChoiceEditor, Boolean> magicName2 = new TypedProperty<>(ChoiceEditor.class, "magicName2");
       public TypedProperty<ChoiceEditor, Boolean> repeatableChoices = new TypedProperty<>(ChoiceEditor.class, "repeatableChoices");
       public TypedProperty<ChoiceEditor, Class> valueTransformer = new TypedProperty<>(ChoiceEditor.class, "valueTransformer");
       public TypedProperty<ChoiceEditor, List> values = new TypedProperty<>(ChoiceEditor.class, "values");
@@ -46,6 +47,7 @@ public class PackageProperties {
       public TypedProperty<ChoicesEditorMultiple, List> decorators = new TypedProperty<>(ChoicesEditorMultiple.class, "decorators");
       public TypedProperty<ChoicesEditorMultiple, EditArea> editArea = new TypedProperty<>(ChoicesEditorMultiple.class, "editArea");
       public TypedProperty<ChoicesEditorMultiple, Boolean> magicName = new TypedProperty<>(ChoicesEditorMultiple.class, "magicName");
+      public TypedProperty<ChoicesEditorMultiple, Boolean> magicName2 = new TypedProperty<>(ChoicesEditorMultiple.class, "magicName2");
       public TypedProperty<ChoicesEditorMultiple, Boolean> repeatableChoices = new TypedProperty<>(ChoicesEditorMultiple.class, "repeatableChoices");
       public TypedProperty<ChoicesEditorMultiple, List> selectedValues = new TypedProperty<>(ChoicesEditorMultiple.class, "selectedValues");
       public TypedProperty<ChoicesEditorMultiple, Class> valueTransformer = new TypedProperty<>(ChoicesEditorMultiple.class, "valueTransformer");

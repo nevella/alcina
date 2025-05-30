@@ -7,7 +7,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.sequence.DetailArea;
 import cc.alcina.framework.servlet.component.sequence.Header;
@@ -85,7 +84,7 @@ public class PackageProperties {
       TypedProperty<SequenceArea, List> filteredElements = new TypedProperty<>(SequenceArea.class, "filteredElements");
       TypedProperty<SequenceArea, Heading> header = new TypedProperty<>(SequenceArea.class, "header");
       TypedProperty<SequenceArea, Page> page = new TypedProperty<>(SequenceArea.class, "page");
-      TypedProperty<SequenceArea, TableModel.RowsModel> rowsModel = new TypedProperty<>(SequenceArea.class, "rowsModel");
+      TypedProperty<SequenceArea, SequenceArea.RowsModelSupport> selectionSupport = new TypedProperty<>(SequenceArea.class, "selectionSupport");
     }
     
     static class _SequenceBrowser_Ui implements TypedProperty.Container {

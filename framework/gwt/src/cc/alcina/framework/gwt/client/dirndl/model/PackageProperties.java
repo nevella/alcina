@@ -38,7 +38,7 @@ public class PackageProperties {
     
     public static class _HeadingActions implements TypedProperty.Container {
       public TypedProperty<HeadingActions, List> actions = new TypedProperty<>(HeadingActions.class, "actions");
-      public TypedProperty<HeadingActions, String> heading = new TypedProperty<>(HeadingActions.class, "heading");
+      public TypedProperty<HeadingActions, Object> heading = new TypedProperty<>(HeadingActions.class, "heading");
     }
     
     public static class _StandardModels_Panel implements TypedProperty.Container {

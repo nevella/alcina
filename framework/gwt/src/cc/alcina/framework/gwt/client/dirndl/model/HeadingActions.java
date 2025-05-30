@@ -16,7 +16,7 @@ public class HeadingActions extends Model.All {
 	public static PackageProperties._HeadingActions properties = PackageProperties.headingActions;
 
 	@Directed
-	public String heading;
+	public Object heading;
 
 	@Directed.Wrap("actions")
 	public List<? super Model> actions = new ArrayList<>();
@@ -24,7 +24,7 @@ public class HeadingActions extends Model.All {
 	public HeadingActions() {
 	}
 
-	public HeadingActions(String heading) {
+	public HeadingActions(Object heading) {
 		this.heading = heading;
 	}
 
