@@ -1,11 +1,13 @@
 package com.google.gwt.dom.client;
 
 import java.util.Iterator;
+import java.util.List;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.impl.JavaScriptIntList;
 import com.google.gwt.core.client.impl.JavaScriptObjectList;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -98,20 +100,22 @@ class MarkupJso {
 			token.populateRemotes();
 		} catch (RuntimeException e) {
 			token.remoteMarkup = token.remote.getInnerHTML0();
+			List<DomNode> redundantAs = token.container.asDomNode().stream()
+					.filter(n -> n.tagIs("a") && !n.has("href")).toList();
 			Exception reportedException = new IllegalArgumentException(Ax
 					.format("invalid markup -- mismatched remote, local markup -- \nlocal:\n%s\n\nremote:\n%s",
 							Ax.ntrim(token.localMarkup, 500),
 							Ax.ntrim(token.remoteMarkup, 500)));
 			LocalDom.topicPublishException().publish(reportedException);
 			Ax.out("Local attachIds:\n%s",
-					token.container.implAccess().toLocalAttachIdString());
+					token.container.implAccess().toLocalAttachIdString(true));
 			/* probably some odd dom - compare to roundtripped
 			@formatter:off
 			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t0.html"), token.localMarkup.replace("&nbsp;","\u00A0").getBytes());
 			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t1.html"), token.remoteMarkup.replace("&nbsp;","\u00A0").getBytes());
-
-			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t2.txt"), e.toString().toLowerCase().getBytes());
-			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t3.txt"), token.toLocalAttachIdString().getBytes());
+			
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t2.txt"), e.toString().getBytes());
+			 java.nio.file.Files.write(java.nio.file.Path.of("/g/alcina/tmp/t3.txt"), token.container.implAccess().toLocalAttachIdString(false).getBytes());
 			 @formatter:on
 			 */
 			throw e;
@@ -218,6 +222,10 @@ for (; ;) {
 
 		//common case
 		cursor = itr.nextNode();
+		if (cursor == null) {
+			incorrect = true;
+			break;
+		}
 		if (cursor.nodeType == Node.TEXT_NODE) {
 			
 			//Coalesce sequential text nodes produced by browser parseing of a DOM string (KHTML/WebKit legacy behavior)
@@ -242,7 +250,31 @@ if (idsIdx != ids.length || incorrect) {
 		for (var idx = 0; idx < resultJsos.length; idx++) {
 			var jso = resultJsos[idx];
 			if (jso != null) {
-				buffer += "" + jso.__attachId + " - " + jso.nodeName + "\n";
+				buffer += "" + jso.__attachId + " - " + jso.nodeName.toLowerCase() + "\n";
+			} else {
+				buffer += "[null jso] - idx " + idx + "\n";
+			}
+		}
+			buffer+="\n\n----------\n\n";
+
+		for (var idx = 0; idx < resultJsos.length; idx++) {
+			var jso = resultJsos[idx];
+			
+			if (jso != null) {
+				var cursor = jso;
+				while(cursor!=null){
+					buffer+=" ";
+					cursor=cursor.parentNode;
+				}
+				buffer += "" + jso.nodeName.toLowerCase() + " - " + jso.__attachId;
+				if(jso.nodeType == Node.TEXT_NODE){
+					buffer += "[" + jso.nodeValue.length + "] ";
+					var str= jso.nodeValue;
+					str=str.substring(0,Math.min(20,str.length));
+					str=str.replaceAll("\n","\\n").replaceAll("\r","\\r").replaceAll("\t","\\t");
+					buffer+= str;
+				}
+				buffer+="\n";
 			} else {
 				buffer += "[null jso] - idx " + idx + "\n";
 			}

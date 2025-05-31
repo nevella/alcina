@@ -1324,10 +1324,38 @@ public class Element extends Node implements ClientDomElement,
 			Element.this.setInnerHTML(html, idList);
 		}
 
-		public String toLocalAttachIdString() {
+		public String toLocalAttachIdString(boolean withTextSnippet) {
 			FormatBuilder builder = new FormatBuilder();
-			Element.this.traverse().forEach(
-					n -> builder.line("%s - %s", n.attachId, n.getNodeName()));
+			Element.this.traverse().forEach(n -> {
+				String textSnippet = "";
+				if (withTextSnippet && n.provideIsText()) {
+					textSnippet = Ax.format("[%s] %s",
+							n.getTextContent().length(),
+							Ax.trim(n.getTextContent(), 20).replace("\n", "\\n")
+									.replace("\r", "\\r").replace("\t", "\\t"));
+				}
+				builder.line("%s - %s%s", n.attachId, n.getNodeName(),
+						textSnippet);
+			});
+			Ax.out("\n\n----------\n\n");
+			Element.this.traverse().forEach(n -> {
+				Node cursor = n;
+				while (cursor != null) {
+					builder.append(" ");
+					cursor = cursor.getParentNode();
+				}
+				String textSnippet = "";
+				if (n.provideIsText()) {
+					String textContent = n.getTextContent();
+					String substring = textContent.substring(0,
+							Math.min(20, textContent.length()));
+					textSnippet = Ax.format("[%s] %s", textContent.length(),
+							substring.replace("\n", "\\n").replace("\r", "\\r")
+									.replace("\t", "\\t"));
+				}
+				builder.line("%s - %s%s", n.getNodeName(), n.attachId,
+						textSnippet);
+			});
 			return builder.toString();
 		}
 	}
