@@ -1,0 +1,3 @@
+/* - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
+ * - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
+ * */

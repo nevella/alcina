@@ -88,6 +88,15 @@ class MarkupJso {
 		}
 	}
 
+	/**
+	 * This will throw if there's an issue with matching the resultant browser
+	 * node structure to the local
+	 * 
+	 * There are two possible causes - invalid local markup (say nested A tags
+	 * or some other browser no-no), or an issue with the protocol, probably
+	 * around text nodes. Check the first first, and dodge with
+	 * LocalDom.validateMarkup if invalid structure is indeed the issue
+	 */
 	void markup0(MarkupToken token) {
 		if (token.localMarkup != null) {
 			token.remote.setInnerHTML(token.localMarkup);

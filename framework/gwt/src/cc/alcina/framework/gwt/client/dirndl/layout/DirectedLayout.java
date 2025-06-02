@@ -2252,6 +2252,10 @@ public class DirectedLayout implements AlcinaProcess {
 					// #moveChildren()
 					node.rendered = rendered;
 				} else {
+					if (model != null && model.getClass().getName()
+							.contains("TableValueModel")) {
+						int debug = 3;
+					}
 					DirectedRenderer renderer = resolveRenderer();
 					renderer.render(this);
 				}

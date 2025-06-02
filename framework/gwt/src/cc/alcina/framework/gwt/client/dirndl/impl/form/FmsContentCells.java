@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.impl.form;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import com.totsp.gwittir.client.beans.Binding;
@@ -10,6 +11,8 @@ import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -17,6 +20,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeTable;
 
 public class FmsContentCells {
 	// FIXME - dirndl 1x2 - remove
@@ -50,6 +55,65 @@ public class FmsContentCells {
 						: super.resolveAnnotations0(annotationClass, location);
 			}
 		}
+
+		/**
+		 * Don't return FmsTableCell/FmsTableColumn, since the container is not
+		 * a table
+		 */
+		public static class TreeTableResolver extends FmsContextResolver {
+			@Override
+			protected boolean returnTableCellElements() {
+				return false;
+			}
+
+			/*
+			 * location of AbstractNode.contents
+			 */
+			AnnotationLocation contentsLocation;
+
+			@Override
+			protected <A extends Annotation> List<A> resolveAnnotations0(
+					Class<A> annotationClass, AnnotationLocation location) {
+				Class incomingClass = location.classLocation;
+				Class modifiedClass = location.classLocation;
+				AnnotationLocation outgoingLocation = location;
+				if (contentsLocation == null && location.property != null) {
+					if (Reflections.isAssignableFrom(
+							TreeTable.AbstractNode.class,
+							location.property.getDeclaringType())
+							&& Objects.equals(location.property.getName(),
+									TreeTable.AbstractNode.properties.contents
+											.name())) {
+						contentsLocation = location;
+					}
+				}
+				if (Objects.equals(location, contentsLocation)) {
+					modifiedClass = FmsTable.FmsTreeTableRow.class;
+				}
+				if (modifiedClass != null) {
+					outgoingLocation = new AnnotationLocation(modifiedClass,
+							location.property, this);
+					// note that we need to preserve the parent resolution state
+					outgoingLocation.setResolutionState(
+							location.ensureResolutionState());
+				}
+				return super.resolveAnnotations0(annotationClass,
+						outgoingLocation);
+			}
+
+			@Override
+			protected Property resolveDirectedProperty0(Property property) {
+				Property override = null;
+				if (property.getOwningType() == TableModel.TableRow.class) {
+					override = Reflections.at(FmsTable.FmsTreeTableRow.class)
+							.property(property.getName());
+				}
+				if (override != null) {
+					property = override;
+				}
+				return super.resolveDirectedProperty0(property);
+			}
+		}
 	}
 
 	public static class FmsValidationFeedbackSupplier
@@ -61,16 +125,12 @@ public class FmsContentCells {
 		}
 	}
 
+	/*
+	 * Never instantiated
+	 */
 	@Directed(renderer = FmsValueRenderer.class)
 	public static class FmsValueModel extends Model implements ValueModel {
 		public ValueModel delegate;
-
-		public FmsValueModel() {
-		}
-
-		public FmsValueModel(ValueModel valueModel) {
-			delegate = valueModel;
-		}
 
 		@Override
 		public Bindable getBindable() {

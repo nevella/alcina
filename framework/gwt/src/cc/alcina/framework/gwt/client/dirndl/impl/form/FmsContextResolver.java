@@ -40,7 +40,8 @@ public class FmsContextResolver extends ContextResolver {
 			modifiedClass = FmsFormElement.class;
 		} else if (incomingClass == LabelModel.class) {
 			modifiedClass = FmsLabelModel.class;
-		} else if (incomingClass == TableCell.class) {
+		} else if (incomingClass == TableCell.class
+				&& returnTableCellElements()) {
 			modifiedClass = FmsTableCell.class;
 		} else if (incomingClass == FormValueModel.class) {
 			modifiedClass = FmsValueModel.class;
@@ -62,6 +63,10 @@ public class FmsContextResolver extends ContextResolver {
 		return resolveAnnotations0Super(annotationClass, outgoingLocation);
 	}
 
+	protected boolean returnTableCellElements() {
+		return true;
+	}
+
 	protected <A extends Annotation> List<A> resolveAnnotations0Super(
 			Class<A> annotationClass, AnnotationLocation location) {
 		return super.resolveAnnotations0(annotationClass, location);
@@ -74,11 +79,13 @@ public class FmsContextResolver extends ContextResolver {
 			override = Reflections.at(FmsTableModel.class)
 					.property(property.getName());
 		}
-		if (property.getOwningType() == TableColumn.class) {
+		if (property.getOwningType() == TableColumn.class
+				&& returnTableCellElements()) {
 			override = Reflections.at(FmsTableColumn.class)
 					.property(property.getName());
 		}
-		if (property.getOwningType() == TableCell.class) {
+		if (property.getOwningType() == TableCell.class
+				&& returnTableCellElements()) {
 			override = Reflections.at(FmsTableCell.class)
 					.property(property.getName());
 		}

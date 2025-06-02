@@ -173,7 +173,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			 * buffer changes
 			 */
 			if (requestPath != null) {
-				IdentityArrayList<TreeNode<DomainViewNode>> forceEmitEvent = new IdentityArrayList<>(
+				IdentityArrayList<DomainViewNode> forceEmitEvent = new IdentityArrayList<>(
 						target.getChildren());
 				boolean mustSetTwice = target.getChildren()
 						.equals(forceEmitEvent);
@@ -348,7 +348,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 
 		private void modifyChildren(Operation operation, String beforePath,
 				DomainViewNode node, boolean fireCollectionModificationEvents) {
-			List<TreeNode<DomainViewNode>> newValue = getChildren();
+			List<DomainViewNode> newValue = getChildren();
 			if (fireCollectionModificationEvents) {
 				newValue = new ArrayList<>(newValue);
 			}

@@ -1,9 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.CollectionDeltaModel;
 import cc.alcina.framework.gwt.client.dirndl.model.HeadingActions;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import cc.alcina.framework.gwt.client.dirndl.model.Tree;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeTable;
 import com.totsp.gwittir.client.ui.table.Field;
 import java.lang.Boolean;
 import java.lang.Class;
@@ -22,6 +25,7 @@ public class PackageProperties {
     public static _StandardModels_Panel standardModels_panel = new _StandardModels_Panel();
     public static _TableModel_TableColumn tableModel_tableColumn = new _TableModel_TableColumn();
     public static _TableModel_TableColumn_ColumnFilter tableModel_tableColumn_columnFilter = new _TableModel_TableColumn_ColumnFilter();
+    public static _TreeTable_AbstractNode treeTable_abstractNode = new _TreeTable_AbstractNode();
     
     public static class _CollectionDeltaModel implements TypedProperty.Container {
       public TypedProperty<CollectionDeltaModel, Collection> collection = new TypedProperty<>(CollectionDeltaModel.class, "collection");
@@ -56,6 +60,17 @@ public class PackageProperties {
     public static class _TableModel_TableColumn_ColumnFilter implements TypedProperty.Container {
       public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filterOpen = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filterOpen");
       public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filtered = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filtered");
+    }
+    
+    public static class _TreeTable_AbstractNode implements TypedProperty.Container {
+      public TypedProperty<TreeTable.AbstractNode, List> children = new TypedProperty<>(TreeTable.AbstractNode.class, "children");
+      public TypedProperty<TreeTable.AbstractNode, Bindable> contents = new TypedProperty<>(TreeTable.AbstractNode.class, "contents");
+      public TypedProperty<TreeTable.AbstractNode, Boolean> keyboardSelected = new TypedProperty<>(TreeTable.AbstractNode.class, "keyboardSelected");
+      public TypedProperty<TreeTable.AbstractNode, Tree.TreeNode.NodeLabel> label = new TypedProperty<>(TreeTable.AbstractNode.class, "label");
+      public TypedProperty<TreeTable.AbstractNode, Boolean> leaf = new TypedProperty<>(TreeTable.AbstractNode.class, "leaf");
+      public TypedProperty<TreeTable.AbstractNode, Boolean> open = new TypedProperty<>(TreeTable.AbstractNode.class, "open");
+      public TypedProperty<TreeTable.AbstractNode, TreeTable.AbstractNode> parent = new TypedProperty<>(TreeTable.AbstractNode.class, "parent");
+      public TypedProperty<TreeTable.AbstractNode, Boolean> selected = new TypedProperty<>(TreeTable.AbstractNode.class, "selected");
     }
     
 //@formatter:on

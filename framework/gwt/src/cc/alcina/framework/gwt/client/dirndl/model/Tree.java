@@ -3,6 +3,8 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import com.google.gwt.core.client.GWT;
 
@@ -10,6 +12,7 @@ import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -258,12 +261,25 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 	}
 
+	/**
+	 * Note that the code almost always refers to NM (the concrete type of the
+	 * node in the tree), rather than TreeNod<NM>
+	 */
 	@Directed(
 		className = "node",
 		reemits = { LabelClicked.class, NodeLabelClicked.class,
 				ToggleButtonClicked.class, NodeToggleButtonClicked.class })
-	public static class TreeNode<NM extends TreeNode> extends Model
+	public abstract static class TreeNode<NM extends TreeNode> extends Model
 			implements DomEvents.Focus.Handler {
+		/**
+		 * Use this for simple/demo trees
+		 */
+		public static class BasicNode extends TreeNode<BasicNode> {
+			public BasicNode(BasicNode parent, String label) {
+				super(parent, label);
+			}
+		}
+
 		@TypeSerialization(reflectiveSerializable = false)
 		@Directed(tag = "node-label")
 		public static class NodeLabel extends Model.All
@@ -324,7 +340,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 		private NodeLabel label = new NodeLabel();
 
-		private List<TreeNode<NM>> children = new IdentityArrayList<>();
+		private List<NM> children = new IdentityArrayList<>();
 
 		private NM parent;
 
@@ -333,6 +349,21 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		private boolean selected;
 
 		private boolean keyboardSelected;
+
+		public TreeNode() {
+		}
+
+		public TreeNode(NM parent, String label) {
+			addTo(parent);
+			this.label.label = label;
+		}
+
+		public Stream<NM> stream(boolean includeSelf) {
+			Function<NM, List<NM>> childSupplier = n -> (List) n.getChildren();
+			DepthFirstTraversal<NM> traversal = new DepthFirstTraversal<>(
+					(NM) this, childSupplier);
+			return traversal.stream().skip(includeSelf ? 0 : 1);
+		}
 
 		public int depth() {
 			int depth = 0;
@@ -344,8 +375,17 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			return depth;
 		}
 
+		protected NM addTo(TreeNode<? extends NM> genericParent) {
+			NM parent = (NM) genericParent;
+			if (parent != null) {
+				parent.getChildren().add(this);
+				this.parent = parent;
+			}
+			return (NM) this;
+		}
+
 		@Directed.Wrap("nodes")
-		public List<TreeNode<NM>> getChildren() {
+		public List<NM> getChildren() {
 			return this.children;
 		}
 
@@ -386,8 +426,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		// immediately, rather adds to queue (although I think that's required
 		// by the reentrancy logic anyway - at least if there's an active layout
 		// pass)
-		public void setChildren(List<TreeNode<NM>> children) {
-			List<TreeNode<NM>> old_children = this.children;
+		public void setChildren(List<NM> children) {
+			List<NM> old_children = this.children;
 			this.children = children;
 			propertyChangeSupport().firePropertyChange("children", old_children,
 					children);
@@ -416,8 +456,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 
 		public void sortChildren() {
-			IdentityArrayList<TreeNode<NM>> sorted = IdentityArrayList
-					.copyOf(children);
+			IdentityArrayList<NM> sorted = IdentityArrayList.copyOf(children);
 			Collections.sort((List<? extends Comparable>) (List<?>) sorted);
 			setChildren(sorted);
 		}

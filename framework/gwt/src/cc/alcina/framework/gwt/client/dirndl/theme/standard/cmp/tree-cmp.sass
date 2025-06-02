@@ -5,69 +5,111 @@
  - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
  */
 
+@mixin common
+  font-size: 15px
+  line-height: 23px
+  padding: 0.5rem
+  outline: none
+
 @mixin tree
-  .tree,
-  .flat-tree
-    font-size: 15px
-    line-height: 23px
-    padding: 0.5rem
-    outline: none
-
-  .tree
-    &.root-hidden>.node
-      >node-label
-        display: none
-      >nodes
-        padding-left: 0
-    .node
-      >node-label
-        position: relative
-        display: block
-        margin-bottom: 5px
-        >span:first-child
-          display: inline-block
-          width: 12px
-          border: solid 1px #ccc
-          text-align: center
-          font-size: 10px
-          border-radius: 6px
-          color: #777
-          height: 12px
-          box-sizing: border-box
-          vertical-align: top
-          margin-top: 5px
-          margin-right: 8px
-          cursor: pointer
-        >node-label
-          display: inline-block
-          cursor: pointer
-      &:not(.open)>node-label>span:before
-        content: ' '
-        position: absolute
-        border-radius: 3px
-        color: #bbb
-        background-color: #bbb
-        width: 6px
-        height: 6px
-        left: 3px
-        top: 7.5px
-      &.leaf>node-label>span
-        visibility: hidden
-      &.keyboard-selected>node-label
-        background-color: theme.$tree-selected-background-color
-      >nodes
-        padding-left: 20px
-        display: none
-      &.open>nodes
-        display: block
-
-  .flat-tree
-    >paginator
+  &.root-hidden>.node
+    >node-label
+      display: none
+    >nodes
+      padding-left: 0
+  .node
+    >node-label
+      position: relative
       display: block
-      padding: 1em
-      text-align: center
+      margin-bottom: 5px
+      >span:first-child
+        display: inline-block
+        width: 12px
+        border: solid 1px #ccc
+        text-align: center
+        font-size: 10px
+        border-radius: 6px
+        color: #777
+        height: 12px
+        box-sizing: border-box
+        vertical-align: top
+        margin-top: 5px
+        margin-right: 8px
+        cursor: pointer
+      >node-label
+        display: inline-block
+        cursor: pointer
+    &:not(.open)>node-label>span:before
+      content: ' '
+      position: absolute
+      border-radius: 3px
       color: #bbb
+      background-color: #bbb
+      width: 6px
+      height: 6px
+      left: 3px
+      top: 7.5px
+    &.leaf>node-label>span
+      visibility: hidden
+    &.keyboard-selected>node-label
+      background-color: theme.$tree-selected-background-color
+    >nodes
+      padding-left: 20px
+      display: none
+    &.open>nodes
+      display: block
 
+@mixin flat-tree
+  > paginator
+    display: block
+    padding: 1em
+    text-align: center
+    color: #bbb
+
+
+@mixin tree-classes
+  .flat-tree
+    @include common
+    @include flat-tree
+  
+  .tree
+    @include common
+    @include tree
+    
 @mixin open-toggle-hidden()
   .node > node-label > span:first-child
     display: none
+
+@mixin tree-table
+  display: grid
+  column-gap: 1rem
+
+  .node, .node , .node.open > nodes, .node > cells
+    display: contents
+
+  > .node 
+    > node-label
+      margin-left: 0
+
+    > nodes > .node 
+      > node-label
+        margin-left: 1rem
+
+      > nodes > .node 
+        > node-label
+          margin-left: 2rem
+
+        > nodes > .node 
+          > node-label
+            margin-left: 3rem
+
+          > nodes > .node 
+            > node-label
+              margin-left: 4rem
+
+            > nodes > .node 
+              > node-label
+                margin-left: 5rem
+
+
+

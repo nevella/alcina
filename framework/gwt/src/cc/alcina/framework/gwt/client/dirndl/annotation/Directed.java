@@ -379,6 +379,9 @@ public @interface Directed {
 		}
 
 		public void setRenderer(Class<? extends DirectedRenderer> renderer) {
+			if (renderer.getName().contains("FmsValueRenderer")) {
+				int debug = 3;
+			}
 			this.renderer = renderer;
 		}
 

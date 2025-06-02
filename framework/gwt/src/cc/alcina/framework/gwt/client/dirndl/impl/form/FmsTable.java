@@ -2,11 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.impl.form;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.AttributeTemplate;
-import cc.alcina.framework.common.client.util.ToStringFunction;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
@@ -77,5 +73,10 @@ public class FmsTable {
 
 		public void setRows(List<TableModel.TableRow> rows) {
 		}
+	}
+
+	@Directed(tag = "cells")
+	public static class FmsTreeTableRow extends TableModel.TableRow
+			implements AttributeTemplate {
 	}
 }

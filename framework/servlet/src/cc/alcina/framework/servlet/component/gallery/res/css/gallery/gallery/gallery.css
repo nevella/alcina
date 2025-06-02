@@ -1,3 +1,6 @@
+/* - a  flat-tree has the tag structure of a tree, but is presented as a vertical list of leaves
+ * - implemented as a mixin so it can be scoped (if there are other/non-dirndl tree elements in the document)
+ * */
 gallery {
   display: flex;
   flex-direction: column;
@@ -121,4 +124,139 @@ choice-editor-gallery > info {
   padding: 1rem 3rem;
   border: solid 1px blue;
   width: 450px;
+}
+
+tree-area tree.root-hidden > .node > node-label {
+  display: none;
+}
+tree-area tree.root-hidden > .node > nodes {
+  padding-left: 0;
+}
+tree-area tree .node > node-label {
+  position: relative;
+  display: block;
+  margin-bottom: 5px;
+}
+tree-area tree .node > node-label > span:first-child {
+  display: inline-block;
+  width: 12px;
+  border: solid 1px #ccc;
+  text-align: center;
+  font-size: 10px;
+  border-radius: 6px;
+  color: #777;
+  height: 12px;
+  box-sizing: border-box;
+  vertical-align: top;
+  margin-top: 5px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+tree-area tree .node > node-label > node-label {
+  display: inline-block;
+  cursor: pointer;
+}
+tree-area tree .node:not(.open) > node-label > span:before {
+  content: " ";
+  position: absolute;
+  border-radius: 3px;
+  color: #bbb;
+  background-color: #bbb;
+  width: 6px;
+  height: 6px;
+  left: 3px;
+  top: 7.5px;
+}
+tree-area tree .node.leaf > node-label > span {
+  visibility: hidden;
+}
+tree-area tree .node.keyboard-selected > node-label {
+  background-color: #E6E6E6;
+}
+tree-area tree .node > nodes {
+  padding-left: 20px;
+  display: none;
+}
+tree-area tree .node.open > nodes {
+  display: block;
+}
+
+tree-table-area tree {
+  display: grid;
+  column-gap: 1rem;
+}
+tree-table-area tree.root-hidden > .node > node-label {
+  display: none;
+}
+tree-table-area tree.root-hidden > .node > nodes {
+  padding-left: 0;
+}
+tree-table-area tree .node > node-label {
+  position: relative;
+  display: block;
+  margin-bottom: 5px;
+}
+tree-table-area tree .node > node-label > span:first-child {
+  display: inline-block;
+  width: 12px;
+  border: solid 1px #ccc;
+  text-align: center;
+  font-size: 10px;
+  border-radius: 6px;
+  color: #777;
+  height: 12px;
+  box-sizing: border-box;
+  vertical-align: top;
+  margin-top: 5px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+tree-table-area tree .node > node-label > node-label {
+  display: inline-block;
+  cursor: pointer;
+}
+tree-table-area tree .node:not(.open) > node-label > span:before {
+  content: " ";
+  position: absolute;
+  border-radius: 3px;
+  color: #bbb;
+  background-color: #bbb;
+  width: 6px;
+  height: 6px;
+  left: 3px;
+  top: 7.5px;
+}
+tree-table-area tree .node.leaf > node-label > span {
+  visibility: hidden;
+}
+tree-table-area tree .node.keyboard-selected > node-label {
+  background-color: #E6E6E6;
+}
+tree-table-area tree .node > nodes {
+  padding-left: 20px;
+  display: none;
+}
+tree-table-area tree .node.open > nodes {
+  display: block;
+}
+tree-table-area tree .node, tree-table-area tree .node, tree-table-area tree .node.open > nodes, tree-table-area tree .node > cells {
+  display: contents;
+}
+tree-table-area tree > .node > node-label {
+  margin-left: 0;
+}
+tree-table-area tree > .node > nodes > .node > node-label {
+  margin-left: 1rem;
+}
+tree-table-area tree > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 2rem;
+}
+tree-table-area tree > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 3rem;
+}
+tree-table-area tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 4rem;
+}
+tree-table-area tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 5rem;
 }

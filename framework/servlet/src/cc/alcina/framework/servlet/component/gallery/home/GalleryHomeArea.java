@@ -12,6 +12,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 import cc.alcina.framework.servlet.component.gallery.GalleryPlace;
 import cc.alcina.framework.servlet.component.gallery.model.choiceeditor.ChoiceEditorGalleryPlace;
+import cc.alcina.framework.servlet.component.gallery.model.tree.TreeGalleryPlace;
+import cc.alcina.framework.servlet.component.gallery.model.treetable.TreeTableGalleryPlace;
 
 @Registration({ GalleryContents.class, GalleryHomePlace.class })
 class GalleryHomeArea extends GalleryContents {
@@ -34,6 +36,8 @@ class GalleryHomeArea extends GalleryContents {
 
 	GalleryHomeArea() {
 		add(ChoiceEditorGalleryPlace.class);
+		add(TreeGalleryPlace.class);
+		add(TreeTableGalleryPlace.class);
 	}
 
 	void add(Class<? extends GalleryPlace> clazz) {

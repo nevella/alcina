@@ -1,0 +1,8 @@
+@use '../multi/common'
+@use '../../dirndl/cmp/tree-cmp'
+
+@mixin content
+  tree
+    @include tree-cmp.tree
+    @include tree-cmp.tree-table
+

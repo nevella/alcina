@@ -286,18 +286,23 @@ public class Ax {
 		return CommonUtils.trimToWsChars(s, maxChars, true);
 	}
 
+	public static String trimForLogging(Object object) {
+		return trimForLogging(object, 500);
+	}
+
 	/**
 	 * Also cunningly exposes the \u200B zerowidthspace char in strings
 	 * 
 	 * @param object
 	 * @return
 	 */
-	public static String trimForLogging(Object object) {
+	public static String trimForLogging(Object object, int charCount) {
 		if (object == null) {
 			return null;
 		}
-		return trim(object.toString().replace("\n", "\n").replace("\u200B",
-				"&zerowidthspace;"), 1000);
+		return trim(object.toString().replace("\n", "\\n").replace("\r", "\\r")
+				.replace("\t", "\\t").replace("\u200B", "&zerowidthspace;"),
+				charCount);
 	}
 
 	public static double twoPlaces(double d) {

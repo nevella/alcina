@@ -108,7 +108,18 @@ public class ContextResolver extends AnnotationLocation.Resolver
 
 	protected Ref<Consumer<Runnable>> dispatch = null;
 
+	/*
+	 * //FIX - dirndl - these should be replaced by contextservices - as should
+	 * most of the resolution logic.
+	 * 
+	 * other fields should stay (possibly services should not, rather concrete
+	 * ContextService subclass service fields)
+	 */
 	protected boolean resolveModelAscends = true;
+
+	protected boolean resolveDirectedPropertyAscends = false;
+
+	protected boolean resolveAnnotationsAscends = false;
 
 	/*
 	 * this is a map of optionals to allow modelling of
@@ -302,6 +313,9 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	@Override
 	protected <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
+		if (resolveAnnotationsAscends) {
+			return parent.resolveAnnotations0(annotationClass, location);
+		}
 		ProcessObservers.publish(DirndlObservables.ResolveAnnotations0.class,
 				() -> new DirndlObservables.ResolveAnnotations0(annotationClass,
 						location));
@@ -344,7 +358,11 @@ public class ContextResolver extends AnnotationLocation.Resolver
 	 * {@link BridgingValueRenderer}via the package/protected access route
 	 */
 	Property resolveDirectedProperty(Property property) {
-		return resolveDirectedProperty0(property);
+		if (resolveDirectedPropertyAscends) {
+			return parent().resolveDirectedProperty(property);
+		} else {
+			return resolveDirectedProperty0(property);
+		}
 	}
 
 	protected Property resolveDirectedProperty0(Property property) {
