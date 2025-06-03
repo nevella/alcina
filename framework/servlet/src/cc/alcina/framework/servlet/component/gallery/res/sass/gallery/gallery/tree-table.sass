@@ -2,7 +2,9 @@
 @use '../../dirndl/cmp/tree-cmp'
 
 @mixin content
-  tree
-    @include tree-cmp.tree
+  tree-table
     @include tree-cmp.tree-table
+    
+    > tree
+      @include tree-cmp.tree
 

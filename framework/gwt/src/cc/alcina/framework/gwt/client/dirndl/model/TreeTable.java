@@ -4,12 +4,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.hibernate.jpa.criteria.AbstractNode;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.reflection.TypedProperties;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -21,8 +20,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Tables.ColumnWidth;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.BindableClassTransformer;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableRow;
-import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeTable.AbstractNode.DisplayOrder;
 
 /**
  * <p>
@@ -34,51 +31,28 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreeTable.AbstractNode.Displa
  * models
  */
 public class TreeTable extends Model.Fields {
+	public String nodeLabelWidth = "200px";
+
+	@Binding(type = Type.STYLE_ATTRIBUTE)
+	String gridTemplateColumns;
+
 	/*
 	 * The resolver is applied here (rather than on the TreeTable) so that the
 	 * TreeTable property can have an app-specific resolver (for custom tablerow
 	 * rendering)
+	 * 
+	 * The model may be a tree or a model containing a tree, the sass
+	 * association is slightly different in each case
 	 */
 	@DirectedContextResolver(Resolver.class)
-	@Directed(
-		bindings = { @Binding(
-			// unused, but required
-			from = "root",
-			type = Type.STYLE_ATTRIBUTE,
-			to = "gridTemplateColumns",
-			transform = GridTemplateColumnsTransform.class) })
-	Tree tree;
-
-	static class GridTemplateColumnsTransform
-			extends Binding.AbstractContextSensitiveTransform<Object> {
-		@Override
-		public String apply(Object t) {
-			Resolver resolver = (Resolver) node.getResolver();
-			List<TableColumn> columns = resolver.treeTable().tableModel
-					.getHeader().getColumns();
-			/*
-			 * see
-			 * dirndl.layout.Tables.Multiple.IntermediateModel.IntermediateModel
-			 * for example of how to get default col width
-			 */
-			String gridColumnWidth = "minmax(min-content, 8rem)";
-			String cellColumns = columns.stream()
-					.map(col -> col.getField().getProperty()).map(p -> {
-						ColumnWidth columnWidth = p
-								.annotation(ColumnWidth.class);
-						return columnWidth != null ? columnWidth.value()
-								: gridColumnWidth;
-					}).collect(Collectors.joining(" "));
-			String nodeLabelWidth = "200px";
-			return Ax.format("%s %s", nodeLabelWidth, cellColumns);
-		}
-	}
+	@Directed
+	Model tree;
 
 	Class<? extends Bindable> bindableClass;
 
 	TableModel tableModel;
 
-	public TreeTable(Tree tree, Class<? extends Bindable> bindableClass) {
+	public TreeTable(Model tree, Class<? extends Bindable> bindableClass) {
 		this.tree = tree;
 		this.bindableClass = bindableClass;
 	}
@@ -89,45 +63,24 @@ public class TreeTable extends Model.Fields {
 		transformer.withContextNode(event.node);
 		tableModel = transformer.apply(bindableClass);
 		tableModel.init(event.node);
+		populateGridTemplateColumns();
 		super.onBeforeRender(event);
 	}
 
-	/**
-	 * <p>
-	 * Because this class inserts a @Directed in the superclass property order,
-	 * it needs a custom ordering
-	 */
-	@ReflectiveSerializer.Checks(ignore = true)
-	@PropertyOrder(custom = DisplayOrder.class)
-	@TypedProperties
-	public static class AbstractNode<NM extends AbstractNode, B extends Bindable>
-			extends TreeNode<NM> {
-		public static PackageProperties._TreeTable_AbstractNode properties = PackageProperties.treeTable_abstractNode;
-
-		static class DisplayOrder extends PropertyOrder.Custom.Defined {
-			DisplayOrder() {
-				super(properties.label, properties.contents,
-						properties.children);
-			}
-		}
-
-		public AbstractNode() {
-		}
-
-		public AbstractNode(NM parent, String label) {
-			super(parent, label);
-		}
-
-		private B contents;
-
-		@Directed
-		public B getContents() {
-			return contents;
-		}
-
-		public void setContents(B contents) {
-			this.contents = contents;
-		}
+	void populateGridTemplateColumns() {
+		List<TableColumn> columns = tableModel.getHeader().getColumns();
+		/*
+		 * see dirndl.layout.Tables.Multiple.IntermediateModel.IntermediateModel
+		 * for example of how to get default col width
+		 */
+		String gridColumnWidth = "minmax(min-content, 8rem)";
+		String cellColumns = columns.stream()
+				.map(col -> col.getField().getProperty()).map(p -> {
+					ColumnWidth columnWidth = p.annotation(ColumnWidth.class);
+					return columnWidth != null ? columnWidth.value()
+							: gridColumnWidth;
+				}).collect(Collectors.joining(" "));
+		gridTemplateColumns = Ax.format("%s %s", nodeLabelWidth, cellColumns);
 	}
 
 	public static class Resolver extends ContextResolver
@@ -157,10 +110,10 @@ public class TreeTable extends Model.Fields {
 		protected Object resolveModel(AnnotationLocation location,
 				Object model) {
 			if (contentsLocation == null && location.property != null) {
-				if (Reflections.isAssignableFrom(AbstractNode.class,
+				if (Reflections.isAssignableFrom(Tree.TreeNode.class,
 						location.property.getDeclaringType())
 						&& Objects.equals(location.property.getName(),
-								AbstractNode.properties.contents.name())) {
+								Tree.TreeNode.properties.contents.name())) {
 					contentsLocation = location;
 				}
 			}

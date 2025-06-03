@@ -181,22 +181,46 @@ tree-area tree .node.open > nodes {
   display: block;
 }
 
-tree-table-area tree {
+tree-table-area tree-table {
   display: grid;
   column-gap: 1rem;
 }
-tree-table-area tree.root-hidden > .node > node-label {
+tree-table-area tree-table > tree {
+  display: contents;
+}
+tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node.open > nodes, tree-table-area tree-table > tree .node > cells {
+  display: contents !important;
+}
+tree-table-area tree-table > tree > .node > node-label {
+  margin-left: 0;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > node-label {
+  margin-left: 1rem;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 2rem;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 3rem;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 4rem;
+}
+tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
+  margin-left: 5rem;
+}
+tree-table-area tree-table > tree.root-hidden > .node > node-label {
   display: none;
 }
-tree-table-area tree.root-hidden > .node > nodes {
+tree-table-area tree-table > tree.root-hidden > .node > nodes {
   padding-left: 0;
 }
-tree-table-area tree .node > node-label {
+tree-table-area tree-table > tree .node > node-label {
   position: relative;
   display: block;
   margin-bottom: 5px;
 }
-tree-table-area tree .node > node-label > span:first-child {
+tree-table-area tree-table > tree .node > node-label > span:first-child {
   display: inline-block;
   width: 12px;
   border: solid 1px #ccc;
@@ -211,11 +235,11 @@ tree-table-area tree .node > node-label > span:first-child {
   margin-right: 8px;
   cursor: pointer;
 }
-tree-table-area tree .node > node-label > node-label {
+tree-table-area tree-table > tree .node > node-label > node-label {
   display: inline-block;
   cursor: pointer;
 }
-tree-table-area tree .node:not(.open) > node-label > span:before {
+tree-table-area tree-table > tree .node:not(.open) > node-label > span:before {
   content: " ";
   position: absolute;
   border-radius: 3px;
@@ -226,37 +250,16 @@ tree-table-area tree .node:not(.open) > node-label > span:before {
   left: 3px;
   top: 7.5px;
 }
-tree-table-area tree .node.leaf > node-label > span {
+tree-table-area tree-table > tree .node.leaf > node-label > span {
   visibility: hidden;
 }
-tree-table-area tree .node.keyboard-selected > node-label {
+tree-table-area tree-table > tree .node.keyboard-selected > node-label {
   background-color: #E6E6E6;
 }
-tree-table-area tree .node > nodes {
+tree-table-area tree-table > tree .node > nodes {
   padding-left: 20px;
   display: none;
 }
-tree-table-area tree .node.open > nodes {
+tree-table-area tree-table > tree .node.open > nodes {
   display: block;
-}
-tree-table-area tree .node, tree-table-area tree .node, tree-table-area tree .node.open > nodes, tree-table-area tree .node > cells {
-  display: contents;
-}
-tree-table-area tree > .node > node-label {
-  margin-left: 0;
-}
-tree-table-area tree > .node > nodes > .node > node-label {
-  margin-left: 1rem;
-}
-tree-table-area tree > .node > nodes > .node > nodes > .node > node-label {
-  margin-left: 2rem;
-}
-tree-table-area tree > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
-  margin-left: 3rem;
-}
-tree-table-area tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
-  margin-left: 4rem;
-}
-tree-table-area tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
-  margin-left: 5rem;
 }

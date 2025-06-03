@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Request;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Response;
@@ -23,6 +24,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
+import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode.NodeLabelText;
 import cc.alcina.framework.gwt.client.dirndl.model.TreePath.Operation;
 
 public abstract class DomainViewTree extends Tree<DomainViewNode> {

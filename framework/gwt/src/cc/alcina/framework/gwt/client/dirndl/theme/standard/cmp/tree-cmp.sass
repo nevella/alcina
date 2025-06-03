@@ -84,32 +84,40 @@
   display: grid
   column-gap: 1rem
 
-  .node, .node , .node.open > nodes, .node > cells
+  > tree
     display: contents
+  
+    .node, .node , .node.open > nodes, .node > cells
+      display: contents !important
 
-  > .node 
-    > node-label
-      margin-left: 0
+    node-label
+      white-space: nowrap
+      display: inline-block
+      overflow: auto
 
-    > nodes > .node 
+    > .node 
       > node-label
-        margin-left: 1rem
+        margin-left: 0
 
       > nodes > .node 
         > node-label
-          margin-left: 2rem
+          margin-left: 1rem
 
         > nodes > .node 
           > node-label
-            margin-left: 3rem
+            margin-left: 2rem
 
           > nodes > .node 
             > node-label
-              margin-left: 4rem
+              margin-left: 3rem
 
             > nodes > .node 
               > node-label
-                margin-left: 5rem
+                margin-left: 4rem
+
+              > nodes > .node 
+                > node-label
+                  margin-left: 5rem
 
 
 

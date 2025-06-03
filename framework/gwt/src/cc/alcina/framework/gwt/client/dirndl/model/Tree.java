@@ -9,6 +9,8 @@ import java.util.stream.Stream;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -47,6 +49,9 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		PaginatorVisible.Handler, KeyboardNavigation.Navigation.Handler,
 		// routes keydown events to the keyboardNavigation and
 		DomEvents.KeyDown.Handler {
+	public interface Has {
+	}
+
 	/**
 	 * Note that subclasses should *not* call the no-args constructor
 	 *
@@ -269,8 +274,11 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		className = "node",
 		reemits = { LabelClicked.class, NodeLabelClicked.class,
 				ToggleButtonClicked.class, NodeToggleButtonClicked.class })
+	@TypedProperties
 	public abstract static class TreeNode<NM extends TreeNode> extends Model
 			implements DomEvents.Focus.Handler {
+		public static PackageProperties._Tree_TreeNode properties = PackageProperties.tree_treeNode;
+
 		/**
 		 * Use this for simple/demo trees
 		 */
@@ -340,6 +348,11 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 		private NodeLabel label = new NodeLabel();
 
+		/*
+		 * This is not generic - *most* trees aren't treetables
+		 */
+		public Bindable contents;
+
 		private List<NM> children = new IdentityArrayList<>();
 
 		private NM parent;
@@ -358,6 +371,15 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			this.label.label = label;
 		}
 
+		@Directed
+		public <B extends Bindable> B getContents() {
+			return (B) contents;
+		}
+
+		public void setContents(Bindable contents) {
+			this.contents = contents;
+		}
+
 		public Stream<NM> stream(boolean includeSelf) {
 			Function<NM, List<NM>> childSupplier = n -> (List) n.getChildren();
 			DepthFirstTraversal<NM> traversal = new DepthFirstTraversal<>(
@@ -373,15 +395,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 				cursor = cursor.getParent();
 			}
 			return depth;
-		}
-
-		protected NM addTo(TreeNode<? extends NM> genericParent) {
-			NM parent = (NM) genericParent;
-			if (parent != null) {
-				parent.getChildren().add(this);
-				this.parent = parent;
-			}
-			return (NM) this;
 		}
 
 		@Directed.Wrap("nodes")
@@ -475,6 +488,38 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		public void onFocus(Focus event) {
 			event.reemitAs(this, KeyboardSelectNode.class, this);
 		}
+
+		protected NM addTo(TreeNode<? extends NM> genericParent) {
+			NM parent = (NM) genericParent;
+			if (parent != null) {
+				parent.getChildren().add(this);
+				this.parent = parent;
+			}
+			return (NM) this;
+		}
+	}
+
+	/*
+	 * Prevent double-firing due to focus/click
+	 */
+	class LastEvent {
+		ModelEvent<TN, ?> event;
+
+		long time;
+
+		LastEvent(ModelEvent<TN, ?> event) {
+			this.event = event;
+			this.time = System.currentTimeMillis();
+		}
+
+		boolean isRecastBy(ModelEvent<TN, ?> event) {
+			if (event.getModel() == this.event.getModel()) {
+				if (TimeConstants.within(time, GWT.isProdMode() ? 200 : 2000)) {
+					return true;
+				}
+			}
+			return false;
+		}
 	}
 
 	private boolean rootHidden;
@@ -495,6 +540,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	 * If true, repeated selection (clicks etc) of a node toggle selection
 	 */
 	public boolean selectionToggle;
+
+	LastEvent lastEvent;
 
 	public void attachKeyboardNavigation() {
 		keyboardNavigation = new KeyboardNavigation(this)
@@ -642,31 +689,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 		keyboardSelectedNodeModel = node;
 		keyboardSelectedNodeModel.setKeyboardSelected(true);
-	}
-
-	LastEvent lastEvent;
-
-	/*
-	 * Prevent double-firing due to focus/click
-	 */
-	class LastEvent {
-		ModelEvent<TN, ?> event;
-
-		long time;
-
-		LastEvent(ModelEvent<TN, ?> event) {
-			this.event = event;
-			this.time = System.currentTimeMillis();
-		}
-
-		boolean isRecastBy(ModelEvent<TN, ?> event) {
-			if (event.getModel() == this.event.getModel()) {
-				if (TimeConstants.within(time, GWT.isProdMode() ? 200 : 2000)) {
-					return true;
-				}
-			}
-			return false;
-		}
 	}
 
 	void onSelectEvent(ModelEvent<TN, ?> event) {

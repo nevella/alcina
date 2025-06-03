@@ -25,13 +25,8 @@ import cc.alcina.framework.servlet.component.gallery.GalleryContents;
 @TypedProperties
 @Directed(tag = "tree-table-area")
 class TreeTableArea extends GalleryContents<TreeTableGalleryPlace> {
-	@Display.AllProperties
-	@PropertyOrder(fieldOrder = true)
-	@ObjectPermissions(
-		read = @Permission(access = AccessLevel.EVERYONE),
-		write = @Permission(access = AccessLevel.EVERYONE))
 	@TypedProperties
-	static class Attributes extends Bindable.Fields {
+	static class Attributes extends Bindable.Fields.All {
 		Integer limbs;
 
 		String description;
@@ -39,11 +34,15 @@ class TreeTableArea extends GalleryContents<TreeTableGalleryPlace> {
 		String colour;
 	}
 
-	class TreeOfLifeNode
-			extends TreeTable.AbstractNode<TreeOfLifeNode, Attributes> {
+	class TreeOfLifeNode extends Tree.TreeNode<TreeOfLifeNode> {
 		TreeOfLifeNode(TreeOfLifeNode parent, String name) {
 			super(parent, name);
 			setContents(new Attributes());
+		}
+
+		@Override
+		public Attributes getContents() {
+			return super.getContents();
 		}
 	}
 

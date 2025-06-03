@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeTable;
 
 public class FmsContentCells {
@@ -78,12 +79,10 @@ public class FmsContentCells {
 				Class modifiedClass = location.classLocation;
 				AnnotationLocation outgoingLocation = location;
 				if (contentsLocation == null && location.property != null) {
-					if (Reflections.isAssignableFrom(
-							TreeTable.AbstractNode.class,
+					if (Reflections.isAssignableFrom(Tree.TreeNode.class,
 							location.property.getDeclaringType())
 							&& Objects.equals(location.property.getName(),
-									TreeTable.AbstractNode.properties.contents
-											.name())) {
+									Tree.TreeNode.properties.contents.name())) {
 						contentsLocation = location;
 					}
 				}

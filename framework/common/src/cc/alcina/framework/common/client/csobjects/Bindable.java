@@ -15,6 +15,11 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 
@@ -36,6 +41,13 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 
 	@Bean(PropertySource.FIELDS)
 	public abstract static class Fields extends Bindable {
+		@Display.AllProperties
+		@PropertyOrder(fieldOrder = true)
+		@ObjectPermissions(
+			read = @Permission(access = AccessLevel.EVERYONE),
+			write = @Permission(access = AccessLevel.EVERYONE))
+		public abstract static class All extends Bindable.Fields {
+		}
 	}
 
 	public interface HasBindableContext<T> {
