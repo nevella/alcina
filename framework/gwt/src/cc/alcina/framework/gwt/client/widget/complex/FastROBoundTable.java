@@ -370,8 +370,8 @@ public class FastROBoundTable extends BoundTableExt {
 			}
 			Field col = columns[rowCol.col - startColumn];
 			final Field field = BeanFields.query().forClass(target.getClass())
-					.forPropertyName(col.getPropertyName()).asEditable(true)
-					.asAdjunctEditor(false).getField();
+					.forPropertyName(col.getPropertyName()).withEditable(true)
+					.withAdjunctEditor(false).getField();
 			if (!checkEditable(target, field)) {
 				return;
 			}

@@ -100,7 +100,7 @@ public class ChildBeanCustomiser implements Customiser {
 					: Arrays.asList(excludesStr.split(","));
 			Predicate<String> filter = n -> !excludeList.contains(n);
 			List<Field> fields = BeanFields.query().forClass(objectClass)
-					.asEditable(editable).withEditableNamePredicate(filter)
+					.withEditable(editable).withEditableNamePredicate(filter)
 					.listFields();
 			this.gridForm = new GridForm(fields, 1,
 					new GridFormCellRendererGrid(false));

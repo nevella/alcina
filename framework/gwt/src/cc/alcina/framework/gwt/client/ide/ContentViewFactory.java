@@ -334,7 +334,7 @@ public class ContentViewFactory {
 			cp.add(createCaption(bean, cp));
 		}
 		List<Field> fieldList = BeanFields.query().forBean(bean)
-				.asEditable(editable).asAdjunctEditor(autoSave)
+				.withEditable(editable).withAdjunctEditor(autoSave)
 				.withEditableNamePredicate(editableFieldFilter).listFields();
 		if (fieldFilter != null) {
 			fieldList.removeIf(f -> !fieldFilter.test(f));
@@ -556,7 +556,7 @@ public class ContentViewFactory {
 	public BoundTableExt createTable(Collection beans, boolean editable,
 			int tableMask, Class type) {
 		List<Field> fields = BeanFields.query().forClass(type)
-				.asEditable(editable).forMultipleWidgetContainer(true)
+				.withEditable(editable).forMultipleWidgetContainer(true)
 				.listFields();
 		if (fieldFilter != null) {
 			fields.removeIf(f -> !fieldFilter.test(f));

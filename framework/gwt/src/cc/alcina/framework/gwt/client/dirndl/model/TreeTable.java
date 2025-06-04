@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables.ColumnWidth;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.CellClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.BindableClassTransformer;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableRow;
@@ -28,11 +29,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableRow;
  * Note that this doesn't have a table model so much as a tree-shaped set of row
  * models
  */
-public class TreeTable extends Model.Fields {
+public class TreeTable extends Model.Fields
+		implements TableEvents.CellClicked.Handler {
 	public String nodeLabelWidth = "200px";
 
 	@Binding(type = Type.STYLE_ATTRIBUTE)
 	String gridTemplateColumns;
+
+	@Directed.Wrap("columns")
+	List<TableModel.TableColumn> columns;
 
 	/*
 	 * The resolver is applied here (rather than on the TreeTable) so that the
@@ -61,6 +66,9 @@ public class TreeTable extends Model.Fields {
 		transformer.withContextNode(event.node);
 		tableModel = transformer.apply(bindableClass);
 		tableModel.init(event.node);
+		columns = tableModel.header.getColumns().stream()
+				.collect(Collectors.toList());
+		columns.add(0, new TableColumn(""));
 		populateGridTemplateColumns();
 		super.onBeforeRender(event);
 	}
@@ -122,5 +130,10 @@ public class TreeTable extends Model.Fields {
 			}
 			return super.resolveModel(location, model);
 		}
+	}
+
+	@Override
+	public void onCellClicked(CellClicked event) {
+		tableModel.onCellClicked(event);
 	}
 }

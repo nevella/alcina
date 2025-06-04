@@ -40,4 +40,16 @@ public class TableEvents {
 			void onRowsModelAttached(RowsModelAttached event);
 		}
 	}
+
+	public static class CellClicked
+			extends ModelEvent<TableModel.TableCell, CellClicked.Handler> {
+		@Override
+		public void dispatch(CellClicked.Handler handler) {
+			handler.onCellClicked(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCellClicked(CellClicked event);
+		}
+	}
 }

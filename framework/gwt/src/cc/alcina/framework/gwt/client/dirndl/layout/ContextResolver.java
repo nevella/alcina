@@ -566,6 +566,60 @@ public class ContextResolver extends AnnotationLocation.Resolver
 		}
 	}
 
+	public static abstract class DelegateToParent extends ContextResolver {
+		ContextResolver logicalParent;
+
+		public DelegateToParent(ContextResolver logicalParent) {
+			this.logicalParent = logicalParent;
+		}
+
+		@Override
+		protected void init(ContextResolver parent, DirectedLayout layout,
+				Object rootModel) {
+			super.init(parent, layout, rootModel);
+			this.parent = logicalParent;
+		}
+
+		@Override
+		public synchronized <A extends Annotation> List<A> resolveAnnotations(
+				Class<A> annotationClass, AnnotationLocation location) {
+			return parent.resolveAnnotations(annotationClass, location);
+		}
+
+		@Override
+		protected <A extends Annotation> List<A> resolveAnnotations0(
+				Class<A> annotationClass, AnnotationLocation location) {
+			return parent.resolveAnnotations0(annotationClass, location);
+		}
+
+		@Override
+		protected <A extends Annotation> List<A> resolveAnnotations1(
+				Class<A> annotationClass, AnnotationLocation location) {
+			return parent.resolveAnnotations1(annotationClass, location);
+		}
+
+		@Override
+		Property resolveDirectedProperty(Property property) {
+			return parent.resolveDirectedProperty(property);
+		}
+
+		@Override
+		protected Property resolveDirectedProperty0(Property property) {
+			return parent.resolveDirectedProperty0(property);
+		}
+
+		@Override
+		protected Object resolveModel(AnnotationLocation location,
+				Object model) {
+			return parent.resolveModel(location, model);
+		}
+
+		@Override
+		protected Class resolveLocationClass(AnnotationLocation location) {
+			return parent.resolveLocationClass(location);
+		}
+	}
+
 	/**
 	 * Apply to the container model to access it (from within a deeper, complex
 	 * model such as Choice.Single)

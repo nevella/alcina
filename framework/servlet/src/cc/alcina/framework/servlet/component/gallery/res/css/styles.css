@@ -1243,11 +1243,20 @@ tree-table-area tree-table {
   display: grid;
   column-gap: 1rem;
 }
+tree-table-area tree-table > columns {
+  display: contents;
+  font-weight: bold;
+}
 tree-table-area tree-table > tree {
   display: contents;
 }
 tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node.open > nodes, tree-table-area tree-table > tree .node > cells {
   display: contents !important;
+}
+tree-table-area tree-table > tree node-label {
+  white-space: nowrap;
+  display: inline-block;
+  overflow: auto;
 }
 tree-table-area tree-table > tree > .node > node-label {
   margin-left: 0;
@@ -1266,6 +1275,13 @@ tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > node
 }
 tree-table-area tree-table > tree > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > nodes > .node > node-label {
   margin-left: 5rem;
+}
+tree-table-area tree-table > tree .node > cells > *:hover {
+  outline: solid 1px #AAF;
+  background: #FCFCFF;
+}
+tree-table-area tree-table > tree .node > cells > *.editing {
+  visibility: hidden;
 }
 tree-table-area tree-table > tree.root-hidden > .node > node-label {
   display: none;

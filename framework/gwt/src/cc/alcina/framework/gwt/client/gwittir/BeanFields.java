@@ -592,7 +592,7 @@ public class BeanFields {
 			}
 			boolean editableField = query.editable
 					&& query.editableNamePredicate.test(propertyName);
-			FieldQuery perFieldQuery = query.clone().asEditable(editableField)
+			FieldQuery perFieldQuery = query.clone().withEditable(editableField)
 					.forPropertyName(propertyName).withAllowNullWidgetProviders(
 							query.allowNullWidgetProviders);
 			return getField(perFieldQuery);
@@ -697,20 +697,20 @@ public class BeanFields {
 
 		private boolean allowNullWidgetProviders;
 
-		public FieldQuery asAdjunctEditor(boolean adjunct) {
+		public FieldQuery withAdjunctEditor(boolean adjunct) {
 			this.adjunct = adjunct;
 			return this;
 		}
 
-		public FieldQuery asEditable(boolean editable) {
+		public FieldQuery withEditable(boolean editable) {
 			this.editable = editable;
 			return this;
 		}
 
 		@Override
 		public FieldQuery clone() {
-			return new FieldQuery().asAdjunctEditor(adjunct)
-					.asEditable(editable).forBean(bean).forClass(clazz)
+			return new FieldQuery().withAdjunctEditor(adjunct)
+					.withEditable(editable).forBean(bean).forClass(clazz)
 					.forPropertyName(propertyName)
 					.forMultipleWidgetContainer(multiple)
 					.withEditableNamePredicate(editableNamePredicate)

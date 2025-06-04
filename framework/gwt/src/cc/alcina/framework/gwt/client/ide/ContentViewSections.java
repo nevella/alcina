@@ -92,7 +92,7 @@ public class ContentViewSections {
 
 	public ContentViewSections allFields(Object bean, Predicate<Field> filter) {
 		List<Field> fields = BeanFields.query().forBean(bean)
-				.asEditable(editable).listFields();
+				.withEditable(editable).listFields();
 		section("").fields(fields.stream().filter(filter)
 				.map(Field::getPropertyName).collect(Collectors.toList()));
 		buildWidget(bean);

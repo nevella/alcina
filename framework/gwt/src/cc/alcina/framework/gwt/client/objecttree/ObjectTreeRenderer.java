@@ -320,7 +320,8 @@ public class ObjectTreeRenderer {
 			Class type = Reflections.at(renderable).property(propertyName)
 					.getType();
 			Field f = BeanFields.query().forClass(renderable.getClass())
-					.forPropertyName(propertyName).asEditable(true).getField();
+					.forPropertyName(propertyName).withEditable(true)
+					.getField();
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
 					RelativePopupValidationFeedback.BOTTOM, f.getFeedback());
 			vf.addCssBackground();

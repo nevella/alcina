@@ -371,8 +371,9 @@ public class ColumnsBuilder<T> {
 				editInfo.cell = editableCell;
 			} else {
 				field = BeanFields.query().forClass(clazz)
-						.forPropertyName(editInfo.propertyName).asEditable(true)
-						.forMultipleWidgetContainer(true).getField();
+						.forPropertyName(editInfo.propertyName)
+						.withEditable(true).forMultipleWidgetContainer(true)
+						.getField();
 				BoundWidgetProvider cellProvider = field.getCellProvider();
 				if (cellProvider instanceof ListBoxEnumProvider) {
 					ListBoxEnumProvider listBoxEnumProvider = (ListBoxEnumProvider) cellProvider;

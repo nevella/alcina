@@ -80,10 +80,22 @@
   .node > node-label > span:first-child
     display: none
 
+@mixin editable
+  &:hover
+    outline: solid 1px #AAF
+    background: #FCFCFF
+
+  &.editing
+    visibility: hidden
+
 @mixin tree-table
   display: grid
   column-gap: 1rem
 
+  > columns
+    display: contents
+    font-weight: bold
+    
   > tree
     display: contents
   
@@ -119,5 +131,8 @@
                 > node-label
                   margin-left: 5rem
 
-
+@mixin tree-table-editable
+  > tree .node > cells > *
+    @include editable
+    
 

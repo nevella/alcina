@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -35,12 +36,14 @@ import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.meta.Feature;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -56,6 +59,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
@@ -63,11 +67,13 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensit
 import cc.alcina.framework.gwt.client.dirndl.layout.Tables;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableColumnMetadata.ColumnMetadata;
+import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.CellClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.RowsModelAttached;
 import cc.alcina.framework.gwt.client.dirndl.model.TableEvents.SortTable;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.DirectedEntitySearchActivityTransformer.TableContainer;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn.CustomOrder;
+import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.BeanFields;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
@@ -104,7 +110,8 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
  * attributes such as the url doesn't have many examples)
  *
  */
-public class TableModel extends Model implements NodeEditorContext {
+public class TableModel extends Model
+		implements NodeEditorContext, TableEvents.CellClicked.Handler {
 	public static class DirectedCategoriesActivityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedCategoriesActivity<?>, TableModel> {
 		@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE))
@@ -166,6 +173,7 @@ public class TableModel extends Model implements NodeEditorContext {
 
 	/**
 	 * Used by treetable to construct a TableModel from a generic Bindable class
+	 * 
 	 */
 	public static class BindableClassTransformer extends
 			AbstractContextSensitiveModelTransform<Class<? extends Bindable>, TableModel> {
@@ -176,6 +184,13 @@ public class TableModel extends Model implements NodeEditorContext {
 					.withResolver(node.getResolver()).listFields().stream()
 					.map(TableColumn::new)
 					.forEach(tableModel.header.columns::add);
+			tableModel.editableFields = BeanFields.query().forClass(clazz)
+					.forMultipleWidgetContainer(true)
+					.withResolver(node.getResolver()).withEditable(true)
+					.withValidationFeedbackProvider(
+							new FormModel.ValidationFeedbackProvider())
+					.listFields().stream()
+					.collect(AlcinaCollectors.toKeyMap(Field::getProperty));
 			/*
 			 * do not populate rows, to handle a variable row set
 			 */
@@ -472,6 +487,8 @@ public class TableModel extends Model implements NodeEditorContext {
 		ASCENDING, DESCENDING
 	}
 
+	@Directed(
+		reemits = { DomEvents.Click.class, TableEvents.CellClicked.class })
 	public static class TableCell extends Model {
 		public static transient boolean trackColumnValues = false;
 
@@ -480,6 +497,8 @@ public class TableModel extends Model implements NodeEditorContext {
 		protected TableColumn column;
 
 		protected TableModel.TableRow row;
+
+		boolean editing;
 
 		public TableCell() {
 		}
@@ -491,6 +510,15 @@ public class TableModel extends Model implements NodeEditorContext {
 			if (trackColumnValues) {
 				column.onValueAdded(value.getBindable());
 			}
+		}
+
+		@Binding(type = Type.CSS_CLASS)
+		public boolean isEditing() {
+			return editing;
+		}
+
+		public void setEditing(boolean editing) {
+			set("editing", this.editing, editing, () -> this.editing = editing);
 		}
 
 		@Directed
@@ -584,6 +612,12 @@ public class TableModel extends Model implements NodeEditorContext {
 		private ColumnFilter columnFilter;
 
 		public TableColumn() {
+		}
+
+		public TableColumn(String caption) {
+			/*
+			 * A placeholder column
+			 */
 		}
 
 		public TableColumn(Field field) {
@@ -706,8 +740,16 @@ public class TableModel extends Model implements NodeEditorContext {
 		public TableValueModel() {
 		}
 
-		public TableValueModel(TableCell formElement) {
-			this.cell = formElement;
+		public TableValueModel(TableCell cell) {
+			this.cell = cell;
+		}
+
+		public TableCell getCell() {
+			return cell;
+		}
+
+		public void setCell(TableCell cell) {
+			this.cell = cell;
 		}
 
 		@Override
@@ -718,10 +760,6 @@ public class TableModel extends Model implements NodeEditorContext {
 		@Override
 		public Field getField() {
 			return cell.column.field;
-		}
-
-		public TableCell getFormElement() {
-			return this.cell;
 		}
 
 		@Override
@@ -790,7 +828,10 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		@Override
 		public void onRowClicked(RowClicked event) {
-			rowMeta.onRowClicked(event);
+			if (rowMeta != null) {
+				// FIXME - treetable
+				rowMeta.onRowClicked(event);
+			}
 			event.bubble();
 		}
 
@@ -809,6 +850,85 @@ public class TableModel extends Model implements NodeEditorContext {
 
 		boolean adjunct;
 	}
+
+	class CellEditor {
+		class ValueEditor extends Model.All implements ContextResolver.Has {
+			class Resolver extends ContextResolver.DelegateToParent
+					implements NodeEditorContext.Has {
+				class NodeEditorContextImpl implements NodeEditorContext {
+					@Override
+					public boolean isEditable() {
+						return true;
+					}
+
+					@Override
+					public boolean isRenderAsNodeEditors() {
+						return true;
+					}
+				}
+
+				Resolver(ContextResolver logicalParent) {
+					super(logicalParent);
+				}
+
+				@Override
+				@Property.Not
+				public NodeEditorContext getNodeEditorContext() {
+					return new NodeEditorContextImpl();
+				}
+			}
+
+			class EditableCell extends TableCell {
+				EditableCell() {
+					this.row = cell.row;
+					this.column = new TableColumn(editableFields
+							.get(cell.column.field.getProperty()));
+					this.value = cell.value;
+				}
+			}
+
+			TableValueModel value;
+
+			ValueEditor() {
+				value = Reflections.newInstance(cell.getValue().getClass());
+				value.setCell(new EditableCell());
+			}
+
+			@Override
+			@Property.Not
+			public ContextResolver
+					getContextResolver(AnnotationLocation location) {
+				return new Resolver(cell.provideNode().getResolver());
+			}
+
+			@Override
+			public void onBind(Bind event) {
+				super.onBind(event);
+				cell.setEditing(event.isBound());
+			}
+		}
+
+		CellClicked event;
+
+		TableCell cell;
+
+		ValueEditor valueEditor;
+
+		Overlay overlay;
+
+		CellEditor(CellClicked event) {
+			this.event = event;
+			cell = event.getModel();
+		}
+
+		void open() {
+			valueEditor = new ValueEditor();
+			overlay = Overlay.attributes().overlay(cell, valueEditor).create();
+			overlay.open();
+		}
+	}
+
+	Map<Property, Field> editableFields;
 
 	protected TableHeader header = new TableHeader();
 
@@ -866,7 +986,12 @@ public class TableModel extends Model implements NodeEditorContext {
 
 	@Override
 	public boolean isEditable() {
-		return attributes.editable;
+		/*
+		 * return attributes.editable;
+		 * 
+		 * table editing should always be via overlay
+		 */
+		return false;
 	}
 
 	@Override
@@ -880,6 +1005,13 @@ public class TableModel extends Model implements NodeEditorContext {
 
 	public void setRows(List<TableModel.TableRow> rows) {
 		set("rows", this.rows, rows, () -> this.rows = rows);
+	}
+
+	@Override
+	public void onCellClicked(CellClicked event) {
+		if (attributes.editable) {
+			new CellEditor(event).open();
+		}
 	}
 
 	ModalResolver init(Node node) {

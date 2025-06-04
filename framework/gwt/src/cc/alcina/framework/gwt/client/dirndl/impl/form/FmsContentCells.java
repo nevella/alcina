@@ -16,11 +16,14 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsTable.FmsTableColumn;
+import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsTable.FmsTreeTableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.NodeEditorContext;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeTable;
 
@@ -89,6 +92,9 @@ public class FmsContentCells {
 				if (Objects.equals(location, contentsLocation)) {
 					modifiedClass = FmsTable.FmsTreeTableRow.class;
 				}
+				if (incomingClass == TableModel.TableColumn.class) {
+					modifiedClass = FmsTreeTableColumn.class;
+				}
 				if (modifiedClass != null) {
 					outgoingLocation = new AnnotationLocation(modifiedClass,
 							location.property, this);
@@ -105,6 +111,10 @@ public class FmsContentCells {
 				Property override = null;
 				if (property.getOwningType() == TableModel.TableRow.class) {
 					override = Reflections.at(FmsTable.FmsTreeTableRow.class)
+							.property(property.getName());
+				}
+				if (property.getOwningType() == TableModel.TableColumn.class) {
+					override = Reflections.at(FmsTable.FmsTreeTableColumn.class)
 							.property(property.getName());
 				}
 				if (override != null) {

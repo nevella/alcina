@@ -25,6 +25,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * 
  *
  */
+/*
+ * FIX - auto tracking of source rect-relative positioning via mutation observer
+ */
 public class OverlayPosition {
 	@Reflected
 	public enum ViewportRelative {
@@ -312,5 +315,15 @@ public class OverlayPosition {
 		double x = originatingNativeEvent.getClientX();
 		double y = originatingNativeEvent.getClientY();
 		return DomRect.ofCoordinatePairs(x - 20, y - 20, x + 20, y + 20);
+	}
+
+	public void overlay(Model rectSource) {
+		Element rectSourceElement = rectSource.provideNode().getRendered()
+				.asElement();
+		DomRect rect = rectSourceElement.getBoundingClientRect();
+		withRectSourceElement(rectSourceElement);
+		withFromRect(rect);
+		addConstraint(Direction.X_AXIS, Position.START, Position.START, 0);
+		addConstraint(Direction.Y_AXIS, Position.START, Position.START, 0);
 	}
 }

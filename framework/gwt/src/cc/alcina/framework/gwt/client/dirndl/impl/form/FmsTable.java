@@ -9,6 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableCell;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn.ColumnFilter;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableHeader;
@@ -20,7 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableValueModel;
  */
 public class FmsTable {
 	@Directed(tag = "td")
-	public static class FmsTableCell extends Model {
+	public static class FmsTableCell extends TableModel.TableCell {
 		public FmsTableCell() {
 		}
 
@@ -78,5 +79,26 @@ public class FmsTable {
 	@Directed(tag = "cells")
 	public static class FmsTreeTableRow extends TableModel.TableRow
 			implements AttributeTemplate {
+	}
+
+	@Directed(tag = "tt-col")
+	public static class FmsTreeTableColumn extends TableModel.TableColumn
+			implements AttributeTemplate {
+		@Directed(tag = "span", renderer = LeafRenderer.Text.class)
+		public String getCaption() {
+			return null;
+		}
+
+		@Directed
+		public ColumnFilter getColumnFilter() {
+			return null;
+		}
+
+		@Directed.Transform(
+			value = TableColumn.SortDirectionModel.class,
+			transformsNull = true)
+		public SortDirection getSortDirection() {
+			return null;
+		}
 	}
 }

@@ -341,7 +341,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			try {
 				PermissionsManager.get().setOverrideAsOwnedObject(true);
 				fields = BeanFields.query().forBean(bean)
-						.asEditable(isEditableWidgets())
+						.withEditable(isEditableWidgets())
 						.forMultipleWidgetContainer(true)
 						.withEditableNamePredicate(
 								n -> !ignoreProperties.contains(n))

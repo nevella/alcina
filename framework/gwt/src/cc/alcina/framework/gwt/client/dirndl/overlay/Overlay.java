@@ -298,6 +298,14 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			position.withRectSourceElement(rectSourceElement);
 			return this;
 		}
+
+		public Attributes overlay(Model toOverlay, Model contents) {
+			position.overlay(toOverlay);
+			withLogicalParent(logicalParent);
+			withContents(contents);
+			withRemoveOnMouseDownOutside(true);
+			return this;
+		}
 	}
 
 	public static class Positioned

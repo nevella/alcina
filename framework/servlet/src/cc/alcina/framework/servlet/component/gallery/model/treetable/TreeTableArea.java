@@ -7,10 +7,12 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.impl.form.FmsContentCells;
+import cc.alcina.framework.gwt.client.dirndl.model.BeanViewModifiers;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeTable;
 import cc.alcina.framework.servlet.component.gallery.GalleryContents;
@@ -31,7 +33,12 @@ class TreeTableArea extends GalleryContents<TreeTableGalleryPlace> {
 
 		String description;
 
-		String colour;
+		Colour colour;
+	}
+
+	@Reflected
+	enum Colour {
+		blue, green, chartreuse
 	}
 
 	class TreeOfLifeNode extends Tree.TreeNode<TreeOfLifeNode> {
@@ -47,16 +54,17 @@ class TreeTableArea extends GalleryContents<TreeTableGalleryPlace> {
 	}
 
 	@DirectedContextResolver(FmsContentCells.FmsCellsContextResolver.TreeTableResolver.class)
+	@BeanViewModifiers(nodeEditors = true, editable = true)
 	TreeTable treeTable;
 
 	TreeTableArea() {
 		TreeOfLifeNode root = new TreeOfLifeNode(null, "");
-		root.getContents().colour = "green";
+		root.getContents().colour = Colour.chartreuse;
 		TreeOfLifeNode eukaryotes = new TreeOfLifeNode(root, "eukaryotes");
 		eukaryotes.getContents().description = "complex structured life things";
 		TreeOfLifeNode plants = new TreeOfLifeNode(eukaryotes, "plants");
 		TreeOfLifeNode clover = new TreeOfLifeNode(plants, "clover");
-		clover.getContents().colour = "green";
+		clover.getContents().colour = Colour.green;
 		TreeOfLifeNode animals = new TreeOfLifeNode(eukaryotes, "animals");
 		TreeOfLifeNode celaphopods = new TreeOfLifeNode(animals, "celaphopods");
 		TreeOfLifeNode octopus = new TreeOfLifeNode(celaphopods, "octopus");

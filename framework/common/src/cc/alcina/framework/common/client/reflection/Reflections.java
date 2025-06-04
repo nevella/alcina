@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.reflection;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -8,6 +9,7 @@ import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.ClassUtil;
 import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableValueModel;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Reflections {
@@ -137,5 +139,11 @@ public class Reflections {
 	private boolean hasReflectionMetadata(Class clazz) {
 		return hasReflectionMetadata.computeIfAbsent(clazz,
 				c -> forName(c.getName()) != null);
+	}
+
+	public static <T> T propertyClone(T source) {
+		T target = at(source).newInstance();
+		ClassReflector.copyProperties(source, target, p -> true);
+		return target;
 	}
 }

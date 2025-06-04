@@ -14,7 +14,7 @@ public class PropertyFieldGetter<O> implements Function<O, Object> {
 
 	public PropertyFieldGetter(String propertyName, Class clazz) {
 		this.field = BeanFields.query().forClass(clazz)
-				.forPropertyName(propertyName).asEditable(true).getField();
+				.forPropertyName(propertyName).withEditable(true).getField();
 		// FIXME - reflection.post-gwittir - use field.property
 	}
 

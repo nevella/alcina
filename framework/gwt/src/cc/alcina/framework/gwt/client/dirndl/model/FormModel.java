@@ -905,8 +905,8 @@ public class FormModel extends Model
 						.forBean(state.presentationModel).withResolver(resolver)
 						.withValidationFeedbackProvider(
 								validationFeedbackProvider)
-						.asEditable(state.editable)
-						.asAdjunctEditor(state.adjunct).listFields();
+						.withEditable(state.editable)
+						.withAdjunctEditor(state.adjunct).listFields();
 				fields.stream()
 						.filter(field -> fieldModulator
 								.accept(state.presentationModel, field))
