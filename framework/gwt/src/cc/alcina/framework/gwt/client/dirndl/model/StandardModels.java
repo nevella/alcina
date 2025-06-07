@@ -67,7 +67,7 @@ public class StandardModels {
 	@Directed(className = "panel")
 	@TypedProperties
 	public static abstract class Panel extends Model.Fields {
-		public static PackageProperties._StandardModels_Panel properties = PackageProperties.standardModels_panel;
+		public static transient PackageProperties._StandardModels_Panel properties = PackageProperties.standardModels_panel;
 
 		@Directed
 		public final HeadingActions header;

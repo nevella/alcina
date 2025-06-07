@@ -7,8 +7,8 @@ import cc.alcina.framework.servlet.component.gallery.model.choiceeditor.ChoiceEd
 import java.util.List;
 
 public class PackageProperties {
-    // auto-generated, do not modify
-    //@formatter:off
+	// auto-generated, do not modify
+	//@formatter:off
     
     static _ChoiceEditorGalleryArea choiceEditorGalleryArea = new _ChoiceEditorGalleryArea();
     public static _ChoiceEditorGalleryPlace_Definition choiceEditorGalleryPlace_definition = new _ChoiceEditorGalleryPlace_Definition();

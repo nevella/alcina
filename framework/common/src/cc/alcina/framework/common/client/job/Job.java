@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Al;
@@ -68,8 +69,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.ValueTransformer;
 	delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 @Registration({ PersistentImpl.class, Job.class })
+@TypedProperties
 public abstract class Job extends VersionableEntity<Job>
 		implements HasIUser, Comparable<Job> {
+	public static transient PackageProperties._Job properties = PackageProperties.job;
+
 	public static final transient String CONTEXT_DO_NOT_POPULATE_DURING_TRACKER_CREATION = Job.class
 			.getName() + ".CONTEXT_DO_NOT_POPULATE_DURING_TRACKER_CREATION";
 
@@ -1243,10 +1247,6 @@ public abstract class Job extends VersionableEntity<Job>
 		public void setTrimmedStackTrace(String trimmedStackTrace) {
 			this.trimmedStackTrace = trimmedStackTrace;
 		}
-	}
-
-	public enum Property implements PropertyEnum {
-		state, resultType
 	}
 
 	public static class ResourceRecord extends Bindable

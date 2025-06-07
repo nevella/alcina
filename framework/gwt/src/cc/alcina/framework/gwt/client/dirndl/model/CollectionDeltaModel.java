@@ -45,7 +45,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 @TypedProperties
 @Directed.Delegating
 public class CollectionDeltaModel extends Model.Fields {
-	public static PackageProperties._CollectionDeltaModel properties = PackageProperties.collectionDeltaModel;
+	public static transient PackageProperties._CollectionDeltaModel properties = PackageProperties.collectionDeltaModel;
 
 	/*
 	 * FIXME - jdk16 - move to static member of inner class

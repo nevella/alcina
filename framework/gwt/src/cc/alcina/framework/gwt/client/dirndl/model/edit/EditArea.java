@@ -55,7 +55,7 @@ public class EditArea extends Model.Fields
 		DomEvents.BeforeInput.Handler, LayoutEvents.BeforeRender.Handler,
 		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
 		FragmentModel.Has, ModelMutation.Handler {
-	public static PackageProperties._EditArea properties = PackageProperties.editArea;
+	public static transient PackageProperties._EditArea properties = PackageProperties.editArea;
 
 	@Binding(type = Type.INNER_HTML)
 	public String value;

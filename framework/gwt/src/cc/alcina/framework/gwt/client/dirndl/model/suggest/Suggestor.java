@@ -490,7 +490,7 @@ public class Suggestor extends Model implements
 		void toState(State state);
 	}
 
-	public static PackageProperties._Suggestor properties = PackageProperties.suggestor;
+	public static transient PackageProperties._Suggestor properties = PackageProperties.suggestor;
 
 	public static Attributes attributes() {
 		return new Attributes();

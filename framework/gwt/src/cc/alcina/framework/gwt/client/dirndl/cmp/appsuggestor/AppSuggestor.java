@@ -42,7 +42,7 @@ public class AppSuggestor extends Model.Fields
 		implements ModelEvents.SelectionChanged.Handler,
 		ModelEvents.Closed.Handler, ModelEvents.Opened.Handler,
 		AppSuggestorEvents.Close.Handler, ModelEvents.SelectionHandled.Handler {
-	public static PackageProperties._AppSuggestor properties = PackageProperties.appSuggestor;
+	public static transient PackageProperties._AppSuggestor properties = PackageProperties.appSuggestor;
 
 	public static class Attributes {
 		public final AnswerSupplier answerSupplier;

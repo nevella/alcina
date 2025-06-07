@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
@@ -60,8 +61,11 @@ public class TypedProperty<S extends SourcesPropertyChangeEvents, T>
 	}
 
 	public T get(S propertySource) {
-		return (T) Reflections.at(definingType).property(name)
-				.get(propertySource);
+		return (T) getProperty().get(propertySource);
+	}
+
+	Property getProperty() {
+		return Reflections.at(definingType).property(name);
 	}
 
 	@Override

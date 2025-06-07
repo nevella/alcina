@@ -117,7 +117,7 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		}
 	}
 
-	public static PackageProperties._DecoratorNode properties = PackageProperties.decoratorNode;
+	public static transient PackageProperties._DecoratorNode properties = PackageProperties.decoratorNode;
 
 	InternalModel internalModel;
 

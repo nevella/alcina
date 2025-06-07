@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 
 /**
  * A persistent view of the domain (entity graph), characterised by its
@@ -20,8 +21,11 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
  * @param <V>
  */
 @MappedSuperclass
+@TypedProperties
 public abstract class DomainView<V extends DomainView>
 		extends VersionableEntity<V> {
+	public static transient PackageProperties._DomainView properties = PackageProperties.domainView;
+
 	@GwtTransient
 	private ContentDefinition entityDefinition;
 
@@ -66,45 +70,33 @@ public abstract class DomainView<V extends DomainView>
 	}
 
 	public void setEntityDefinition(ContentDefinition entityDefinition) {
-		ContentDefinition old_entityDefinition = this.entityDefinition;
-		this.entityDefinition = entityDefinition;
-		propertyChangeSupport().firePropertyChange("entityDefinition",
-				old_entityDefinition, entityDefinition);
+		set("entityDefinition", this.entityDefinition, entityDefinition,
+				() -> this.entityDefinition = entityDefinition);
 	}
 
 	public void
 			setEntityDefinitionSerialized(String entityDefinitionSerialized) {
-		String old_entityDefinitionSerialized = this.entityDefinitionSerialized;
-		this.entityDefinitionSerialized = entityDefinitionSerialized;
-		propertyChangeSupport().firePropertyChange("entityDefinitionSerialized",
-				old_entityDefinitionSerialized, entityDefinitionSerialized);
+		set("entityDefinitionSerialized", this.entityDefinitionSerialized,
+				entityDefinitionSerialized,
+				() -> this.entityDefinitionSerialized = entityDefinitionSerialized);
 	}
 
 	public void
 			setEntityTransformModel(EntityTransformModel entityTransformModel) {
-		EntityTransformModel old_entityTransformModel = this.entityTransformModel;
-		this.entityTransformModel = entityTransformModel;
-		propertyChangeSupport().firePropertyChange("entityTransformModel",
-				old_entityTransformModel, entityTransformModel);
+		set("entityTransformModel", this.entityTransformModel,
+				entityTransformModel,
+				() -> this.entityTransformModel = entityTransformModel);
 	}
 
 	public void setEntityTransformModelSerialized(
 			String entityTransformModelSerialized) {
-		String old_entityTransformModelSerialized = this.entityTransformModelSerialized;
-		this.entityTransformModelSerialized = entityTransformModelSerialized;
-		propertyChangeSupport().firePropertyChange(
-				"entityTransformModelSerialized",
-				old_entityTransformModelSerialized,
-				entityTransformModelSerialized);
+		set("entityTransformModelSerialized",
+				this.entityTransformModelSerialized,
+				entityTransformModelSerialized,
+				() -> this.entityTransformModelSerialized = entityTransformModelSerialized);
 	}
 
 	public void setName(String name) {
-		String old_name = this.name;
-		this.name = name;
-		propertyChangeSupport().firePropertyChange("name", old_name, name);
-	}
-
-	public enum Property implements PropertyEnum {
-		entityDefinitionSerialized, entityTransformModelSerialized, name
+		set("name", this.name, name, () -> this.name = name);
 	}
 }

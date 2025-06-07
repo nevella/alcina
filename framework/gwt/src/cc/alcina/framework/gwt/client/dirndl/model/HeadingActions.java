@@ -15,7 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 @TypedProperties
 @ReflectiveSerializer.Checks(ignore = true)
 public class HeadingActions extends Model.All {
-	public static PackageProperties._HeadingActions properties = PackageProperties.headingActions;
+	public static transient PackageProperties._HeadingActions properties = PackageProperties.headingActions;
 
 	@Directed
 	public Object heading;

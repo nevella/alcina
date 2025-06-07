@@ -277,7 +277,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	@TypedProperties
 	public abstract static class TreeNode<NM extends TreeNode> extends Model
 			implements DomEvents.Focus.Handler {
-		public static PackageProperties._Tree_TreeNode properties = PackageProperties.tree_treeNode;
+		public static transient PackageProperties._Tree_TreeNode properties = PackageProperties.tree_treeNode;
 
 		/**
 		 * Use this for simple/demo trees

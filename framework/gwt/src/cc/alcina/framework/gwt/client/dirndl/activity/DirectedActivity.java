@@ -161,7 +161,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		return (DA) this;
 	}
 
-	public static PackageProperties._DirectedActivity properties = PackageProperties.directedActivity;
+	public static transient PackageProperties._DirectedActivity properties = PackageProperties.directedActivity;
 
 	@Registration.NonGenericSubtypes(Provider.class)
 	public static interface Provider<P extends Place> {

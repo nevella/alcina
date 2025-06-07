@@ -36,7 +36,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 @TypeSerialization(flatSerializable = false, reflectiveSerializable = false)
 public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		implements RemoteUi {
-	public static PackageProperties._AbstractUi properties = PackageProperties.abstractUi;
+	public static transient PackageProperties._AbstractUi properties = PackageProperties.abstractUi;
 
 	DirectedLayout layout;
 

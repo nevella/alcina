@@ -43,7 +43,7 @@ public class RootArea extends Model.Fields
 		// implemented here (for hookup), but actual dispatch is done by the
 		// dispatch delegate (which must also implement this interface)
 		ModelEvents.TopLevelMissedEvent.Emitter {
-	public static PackageProperties._RootArea properties = PackageProperties.rootArea;
+	public static transient PackageProperties._RootArea properties = PackageProperties.rootArea;
 
 	@Directed
 	public DirectedActivity mainActivity;
@@ -54,7 +54,7 @@ public class RootArea extends Model.Fields
 	@TypedProperties
 	@Bean(PropertySource.FIELDS)
 	static class ChannelOverlay extends Model.Fields {
-		public static PackageProperties._RootArea properties = PackageProperties.rootArea;
+		public static transient PackageProperties._RootArea properties = PackageProperties.rootArea;
 
 		Class<? extends BasePlace> channel;
 

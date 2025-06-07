@@ -197,8 +197,8 @@ public class TransformCollation {
 				.filter(Objects::nonNull);
 	}
 
-	public <T extends Entity> Stream<T>
-			modifiedExcludingProperties(Class<T> clazz, Enum... excludes) {
+	public <T extends Entity> Stream<T> modifiedExcludingProperties(
+			Class<T> clazz, PropertyEnum... excludes) {
 		return query(clazz).stream()
 				.filter(qr -> qr.hasPropertyNameExcluding(excludes))
 				.<T> map(QueryResult::getEntity).filter(Objects::nonNull);
@@ -444,6 +444,11 @@ public class TransformCollation {
 			return this;
 		}
 
+		public Query withPropertyName(PropertyEnum propertyEnum) {
+			this.propertyName = propertyEnum.name();
+			return this;
+		}
+
 		public Query withPropertyName(String propertyName) {
 			this.propertyName = propertyName;
 			return this;
@@ -502,6 +507,10 @@ public class TransformCollation {
 			return hasPropertyName(e.name());
 		}
 
+		public boolean hasPropertyName(PropertyEnum e) {
+			return hasPropertyName(e.name());
+		}
+
 		public boolean hasPropertyName(String name) {
 			return ensurePropertyNames().contains(name);
 		}
@@ -511,6 +520,20 @@ public class TransformCollation {
 					.collect(Collectors.toSet());
 			return ensurePropertyNames().stream()
 					.anyMatch(n -> !names.contains(n));
+		}
+
+		public boolean hasPropertyNameExcluding(PropertyEnum... namesArray) {
+			Set<String> names = Arrays.stream(namesArray)
+					.map(PropertyEnum::name).collect(Collectors.toSet());
+			return ensurePropertyNames().stream()
+					.anyMatch(n -> !names.contains(n));
+		}
+
+		public boolean hasPropertyNames(PropertyEnum... namesArray) {
+			Set<String> names = Arrays.stream(namesArray)
+					.map(PropertyEnum::name).collect(Collectors.toSet());
+			return ensurePropertyNames().stream()
+					.anyMatch(n -> names.contains(n));
 		}
 
 		public boolean hasPropertyNames(Enum... namesArray) {
@@ -532,6 +555,13 @@ public class TransformCollation {
 		}
 
 		public boolean hasTransformsOtherThan(Enum... names) {
+			return events.stream()
+					.anyMatch(e -> e.getPropertyName() == null
+							|| Arrays.stream(names).noneMatch(name -> Objects
+									.equals(e.getPropertyName(), name.name())));
+		}
+
+		public boolean hasTransformsOtherThan(PropertyEnum... names) {
 			return events.stream()
 					.anyMatch(e -> e.getPropertyName() == null
 							|| Arrays.stream(names).noneMatch(name -> Objects
