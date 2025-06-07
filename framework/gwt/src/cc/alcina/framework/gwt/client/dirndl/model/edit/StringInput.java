@@ -8,6 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Date;
 import java.util.Objects;
+import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
@@ -16,26 +17,33 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.user.client.ui.impl.FocusImpl;
-import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
+import cc.alcina.framework.common.client.gwittir.validator.ShortIso8601DateValidator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.reflection.TypedProperties;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Blur;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusin;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyPress;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.Commit;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents.FormElementLabelClicked;
+import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
@@ -82,11 +90,14 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 	emits = { ModelEvents.Change.class, ModelEvents.Input.class,
 			ModelEvents.Commit.class })
 @TypeSerialization(reflectiveSerializable = false)
+@TypedProperties
 public class StringInput extends Model.Value<String>
 		implements FocusOnBind, HasTag, DomEvents.Change.Handler,
 		DomEvents.Input.Handler, LayoutEvents.BeforeRender.Handler,
 		DomEvents.Focusin.Handler, DomEvents.Focusout.Handler,
 		DomEvents.KeyDown.Handler, ModelEvents.FormElementLabelClicked.Handler {
+	static PackageProperties._StringInput properties = PackageProperties.stringInput;
+
 	private String value;
 
 	private String currentValue;
@@ -244,6 +255,10 @@ public class StringInput extends Model.Value<String>
 
 	@Override
 	public void onChange(Change event) {
+		handleChange(event);
+	}
+
+	protected void handleChange(NodeEvent event) {
 		currentValue = elementValue();
 		setValue(currentValue);
 		event.reemitAs(this, ModelEvents.Change.class, currentValue);
@@ -511,15 +526,101 @@ public class StringInput extends Model.Value<String>
 	}
 
 	@Registration({ Model.Value.class, FormModel.Editor.class, Date.class })
-	public static class DateInput extends StringInput {
+	public static class DateInput extends StringInput
+			implements DomEvents.KeyPress.Handler, DomEvents.Blur.Handler {
 		public DateInput() {
 			setType("date");
+		}
+
+		boolean suppressedChange = false;
+
+		@Override
+		public void onChange(Change event) {
+			if (TimeConstants.within(lastKeyPress, 100)
+					&& provideElement() != null && WidgetUtils
+							.getFocussedDocumentElement() == provideElement()) {
+				suppressedChange = true;
+				return;
+			}
+			super.onChange(event);
 		}
 
 		@Override
 		public void setType(String type) {
 			Preconditions.checkArgument(type.equals("date"));
 			super.setType(type);
+		}
+
+		long lastKeyPress;
+
+		@Override
+		public void onKeyPress(KeyPress event) {
+			lastKeyPress = System.currentTimeMillis();
+		}
+
+		@Override
+		public void onBlur(Blur event) {
+			if (suppressedChange) {
+				handleChange(event);
+				suppressedChange = false;
+			}
+		}
+	}
+
+	@Directed.Delegating
+	@Bean(PropertySource.FIELDS)
+	@TypedProperties
+	public static class DateEditor extends Model.Value<Date>
+			implements ModelEvents.Change.Handler {
+		static PackageProperties._StringInput_DateEditor properties = PackageProperties.stringInput_dateEditor;
+
+		private Date value;
+
+		public Date getValue() {
+			return value;
+		}
+
+		@Directed
+		DateInput input = new DateInput();
+
+		public void setValue(Date value) {
+			set("value", this.value, value, () -> this.value = value);
+		}
+
+		public DateEditor(Date date) {
+			setValue(date);
+			ShortIso8601DateValidator validator = new ShortIso8601DateValidator();
+			Function<Date, String> revTypedValidator = (Function<Date, String>) validator
+					.inverseValidator();
+			Function<String, Date> typedValidator = (Function<String, Date>) validator;
+			bindings().from(this).on(properties.value).map(revTypedValidator)
+					.to(input).on(DateInput.properties.value)
+					.map(typedValidator).bidi();
+			bindings().from(this).on(properties.value)
+					.withSetOnInitialise(false).signal(this::emitValueChange);
+		}
+
+		void emitValueChange() {
+			emitEvent(ModelEvents.Change.class, getValue());
+		}
+
+		public static class To implements ModelTransform<Date, DateEditor> {
+			@Override
+			public DateEditor apply(Date t) {
+				return new DateEditor(t);
+			}
+		}
+
+		/**
+		 * Capture events emitted by the DateInput child
+		 */
+		@Override
+		public void onChange(ModelEvents.Change event) {
+			if (event.getModel() instanceof String) {
+				// capture
+			} else {
+				event.bubble();
+			}
 		}
 	}
 

@@ -24,7 +24,7 @@ public class PackageProperties {
     }
     
     static class _TreeTableArea_Attributes implements TypedProperty.Container {
-      TypedProperty<TreeTableArea.Attributes, String> colour = new TypedProperty<>(TreeTableArea.Attributes.class, "colour");
+      TypedProperty<TreeTableArea.Attributes, TreeTableArea.Colour> colour = new TypedProperty<>(TreeTableArea.Attributes.class, "colour");
       TypedProperty<TreeTableArea.Attributes, String> description = new TypedProperty<>(TreeTableArea.Attributes.class, "description");
       TypedProperty<TreeTableArea.Attributes, Integer> limbs = new TypedProperty<>(TreeTableArea.Attributes.class, "limbs");
     }

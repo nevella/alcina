@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
@@ -16,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Rendered;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 @EnvironmentSingleton
 @Registration.Singleton
@@ -34,6 +36,13 @@ public class OverlayPositions {
 			 * the emitting node)
 			 */
 			if (GWT.isClient()) {
+				Element focussedDocumentElement = WidgetUtils
+						.getFocussedDocumentElement();
+				if (focussedDocumentElement != null
+						&& overlay.overlay.provideElement().provideIsAncestorOf(
+								focussedDocumentElement, false)) {
+					focussedDocumentElement.blur();
+				}
 				Client.eventBus().queued().lambda(overlay::remove).dispatch();
 			} else {
 				// FIXME - romcom

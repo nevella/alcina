@@ -139,8 +139,14 @@ public class OverlayPosition {
 		Preconditions.checkState(fromRect != null);
 		if (constraints.stream().noneMatch(Constraint::requiresActualToRect)) {
 			// will return a [0,0,0,0] domRect - which is fine if positioning
-			// non-center constraints
-			toRect = new DomRect();
+			// all-start constraints
+			/*
+			 * correction - minus (scroll-coords)
+			 */
+			int scrollLeft = Window.getScrollLeft();
+			int scrollTop = Window.getScrollTop();
+			toRect = DomRect.ofCoordinatePairs(-scrollLeft, -scrollTop,
+					-scrollLeft, -scrollTop);
 		} else {
 			toRect = toElement.getBoundingClientRect();
 		}

@@ -81,6 +81,7 @@ public class ModelBinding<T> {
 			reverse.fromPropertyChangeSource = to;
 			reverse.map = map;
 			reverse.on = on;
+			reverse.transformsNull = binding.transformsNull;
 			TargetBinding reverseTargetBinding = reverse
 					.to(source.fromPropertyChangeSource);
 			reverseTargetBinding.on = source.on;

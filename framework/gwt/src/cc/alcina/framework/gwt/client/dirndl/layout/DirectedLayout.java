@@ -2218,18 +2218,25 @@ public class DirectedLayout implements AlcinaProcess {
 			ProcessObservers.publish(RenderObservable.class,
 					() -> new RenderObservable(node));
 			if (replace != null) {
-				node.insertionPoint = replace.resolveInsertionPoint();
-				DirectedLayout.this.insertionPoint = node.insertionPoint;
 				int indexInParentChildren = parentNode.children
 						.indexOf(replace);
+				if (indexInParentChildren == -1) {
+					/*
+					 * double modification - bail. Node will be created but
+					 * never attached to parent (ditto rendered)
+					 */
+					return;
+				}
+				node.insertionPoint = replace.resolveInsertionPoint();
+				DirectedLayout.this.insertionPoint = node.insertionPoint;
 				if (removeReplaced) {
 					replace.remove(false);
 				}
 				parentNode.children.add(indexInParentChildren, node);
 			} else if (before != null) {
 				node.insertionPoint = before.resolveInsertionPoint();
-				DirectedLayout.this.insertionPoint = node.insertionPoint;
 				int indexInParentChildren = parentNode.children.indexOf(before);
+				DirectedLayout.this.insertionPoint = node.insertionPoint;
 				parentNode.children.add(indexInParentChildren, node);
 			} else {
 				if (parentNode != null) {

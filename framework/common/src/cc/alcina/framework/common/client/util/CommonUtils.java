@@ -2213,4 +2213,14 @@ public class CommonUtils {
 		}
 		return result;
 	}
+
+	public static Date max(Date d0, Date d1) {
+		if (d0 == null) {
+			return d1;
+		}
+		if (d1 == null) {
+			return d0;
+		}
+		return d0.after(d1) ? d0 : d1;
+	}
 }

@@ -4,11 +4,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.TypedProperty;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.DecoratorNode;
 import cc.alcina.framework.gwt.client.dirndl.model.edit.EditArea;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import java.lang.Boolean;
 import java.lang.Class;
 import java.lang.Object;
 import java.lang.String;
+import java.util.Date;
 import java.util.List;
 
 public class PackageProperties {
@@ -21,6 +23,10 @@ public class PackageProperties {
     public static _DecoratorNode decoratorNode = new _DecoratorNode();
     public static _EditArea editArea = new _EditArea();
     public static _EntityNode entityNode = new _EntityNode();
+    public static _StringInput stringInput = new _StringInput();
+    public static _StringInput_DateEditor stringInput_dateEditor = new _StringInput_DateEditor();
+    public static _StringInput_DateInput stringInput_dateInput = new _StringInput_DateInput();
+    public static _StringInput_Editor stringInput_editor = new _StringInput_Editor();
     
     public static class _ChoiceEditor implements TypedProperty.Container {
       public TypedProperty<ChoiceEditor, List> choices = new TypedProperty<>(ChoiceEditor.class, "choices");
@@ -84,6 +90,68 @@ public class PackageProperties {
       public TypedProperty<EntityNode, FragmentModel> fragmentModel = new TypedProperty<>(EntityNode.class, "fragmentModel");
       public TypedProperty<EntityNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(EntityNode.class, "internalModel");
       public TypedProperty<EntityNode, EntityLocator> stringRepresentable = new TypedProperty<>(EntityNode.class, "stringRepresentable");
+    }
+    
+    public static class _StringInput implements TypedProperty.Container {
+      public TypedProperty<StringInput, String> autocomplete = new TypedProperty<>(StringInput.class, "autocomplete");
+      public TypedProperty<StringInput, Boolean> commitOnEnter = new TypedProperty<>(StringInput.class, "commitOnEnter");
+      public TypedProperty<StringInput, String> currentValue = new TypedProperty<>(StringInput.class, "currentValue");
+      public TypedProperty<StringInput, Boolean> disabled = new TypedProperty<>(StringInput.class, "disabled");
+      public TypedProperty<StringInput, Boolean> ensureContentVisible = new TypedProperty<>(StringInput.class, "ensureContentVisible");
+      public TypedProperty<StringInput, Boolean> focusOnBind = new TypedProperty<>(StringInput.class, "focusOnBind");
+      public TypedProperty<StringInput, Boolean> moveCaretToEndOnFocus = new TypedProperty<>(StringInput.class, "moveCaretToEndOnFocus");
+      public TypedProperty<StringInput, String> placeholder = new TypedProperty<>(StringInput.class, "placeholder");
+      public TypedProperty<StringInput, Boolean> preserveSelectionOverFocusChange = new TypedProperty<>(StringInput.class, "preserveSelectionOverFocusChange");
+      public TypedProperty<StringInput, String> rows = new TypedProperty<>(StringInput.class, "rows");
+      public TypedProperty<StringInput, Boolean> selectAllOnFocus = new TypedProperty<>(StringInput.class, "selectAllOnFocus");
+      public TypedProperty<StringInput, String> spellcheck = new TypedProperty<>(StringInput.class, "spellcheck");
+      public TypedProperty<StringInput, String> tag = new TypedProperty<>(StringInput.class, "tag");
+      public TypedProperty<StringInput, String> title = new TypedProperty<>(StringInput.class, "title");
+      public TypedProperty<StringInput, String> type = new TypedProperty<>(StringInput.class, "type");
+      public TypedProperty<StringInput, String> value = new TypedProperty<>(StringInput.class, "value");
+    }
+    
+    public static class _StringInput_DateEditor implements TypedProperty.Container {
+      public TypedProperty<StringInput.DateEditor, StringInput.DateInput> input = new TypedProperty<>(StringInput.DateEditor.class, "input");
+      public TypedProperty<StringInput.DateEditor, Date> value = new TypedProperty<>(StringInput.DateEditor.class, "value");
+    }
+    
+    public static class _StringInput_DateInput implements TypedProperty.Container {
+      public TypedProperty<StringInput.DateInput, String> autocomplete = new TypedProperty<>(StringInput.DateInput.class, "autocomplete");
+      public TypedProperty<StringInput.DateInput, Boolean> commitOnEnter = new TypedProperty<>(StringInput.DateInput.class, "commitOnEnter");
+      public TypedProperty<StringInput.DateInput, String> currentValue = new TypedProperty<>(StringInput.DateInput.class, "currentValue");
+      public TypedProperty<StringInput.DateInput, Boolean> disabled = new TypedProperty<>(StringInput.DateInput.class, "disabled");
+      public TypedProperty<StringInput.DateInput, Boolean> ensureContentVisible = new TypedProperty<>(StringInput.DateInput.class, "ensureContentVisible");
+      public TypedProperty<StringInput.DateInput, Boolean> focusOnBind = new TypedProperty<>(StringInput.DateInput.class, "focusOnBind");
+      public TypedProperty<StringInput.DateInput, Boolean> moveCaretToEndOnFocus = new TypedProperty<>(StringInput.DateInput.class, "moveCaretToEndOnFocus");
+      public TypedProperty<StringInput.DateInput, String> placeholder = new TypedProperty<>(StringInput.DateInput.class, "placeholder");
+      public TypedProperty<StringInput.DateInput, Boolean> preserveSelectionOverFocusChange = new TypedProperty<>(StringInput.DateInput.class, "preserveSelectionOverFocusChange");
+      public TypedProperty<StringInput.DateInput, String> rows = new TypedProperty<>(StringInput.DateInput.class, "rows");
+      public TypedProperty<StringInput.DateInput, Boolean> selectAllOnFocus = new TypedProperty<>(StringInput.DateInput.class, "selectAllOnFocus");
+      public TypedProperty<StringInput.DateInput, String> spellcheck = new TypedProperty<>(StringInput.DateInput.class, "spellcheck");
+      public TypedProperty<StringInput.DateInput, String> tag = new TypedProperty<>(StringInput.DateInput.class, "tag");
+      public TypedProperty<StringInput.DateInput, String> title = new TypedProperty<>(StringInput.DateInput.class, "title");
+      public TypedProperty<StringInput.DateInput, String> type = new TypedProperty<>(StringInput.DateInput.class, "type");
+      public TypedProperty<StringInput.DateInput, String> value = new TypedProperty<>(StringInput.DateInput.class, "value");
+    }
+    
+    public static class _StringInput_Editor implements TypedProperty.Container {
+      public TypedProperty<StringInput.Editor, String> autocomplete = new TypedProperty<>(StringInput.Editor.class, "autocomplete");
+      public TypedProperty<StringInput.Editor, Boolean> commitOnEnter = new TypedProperty<>(StringInput.Editor.class, "commitOnEnter");
+      public TypedProperty<StringInput.Editor, String> currentValue = new TypedProperty<>(StringInput.Editor.class, "currentValue");
+      public TypedProperty<StringInput.Editor, Boolean> disabled = new TypedProperty<>(StringInput.Editor.class, "disabled");
+      public TypedProperty<StringInput.Editor, Boolean> ensureContentVisible = new TypedProperty<>(StringInput.Editor.class, "ensureContentVisible");
+      public TypedProperty<StringInput.Editor, Boolean> focusOnBind = new TypedProperty<>(StringInput.Editor.class, "focusOnBind");
+      public TypedProperty<StringInput.Editor, Boolean> moveCaretToEndOnFocus = new TypedProperty<>(StringInput.Editor.class, "moveCaretToEndOnFocus");
+      public TypedProperty<StringInput.Editor, String> placeholder = new TypedProperty<>(StringInput.Editor.class, "placeholder");
+      public TypedProperty<StringInput.Editor, Boolean> preserveSelectionOverFocusChange = new TypedProperty<>(StringInput.Editor.class, "preserveSelectionOverFocusChange");
+      public TypedProperty<StringInput.Editor, String> rows = new TypedProperty<>(StringInput.Editor.class, "rows");
+      public TypedProperty<StringInput.Editor, Boolean> selectAllOnFocus = new TypedProperty<>(StringInput.Editor.class, "selectAllOnFocus");
+      public TypedProperty<StringInput.Editor, String> spellcheck = new TypedProperty<>(StringInput.Editor.class, "spellcheck");
+      public TypedProperty<StringInput.Editor, String> tag = new TypedProperty<>(StringInput.Editor.class, "tag");
+      public TypedProperty<StringInput.Editor, String> title = new TypedProperty<>(StringInput.Editor.class, "title");
+      public TypedProperty<StringInput.Editor, String> type = new TypedProperty<>(StringInput.Editor.class, "type");
+      public TypedProperty<StringInput.Editor, String> value = new TypedProperty<>(StringInput.Editor.class, "value");
     }
     
 //@formatter:on

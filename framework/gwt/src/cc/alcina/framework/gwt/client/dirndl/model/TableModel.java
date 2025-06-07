@@ -56,6 +56,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Click;
+import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.BeforeRender;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
@@ -824,6 +825,22 @@ public class TableModel extends Model
 		@Directed
 		public List<TableCell> getCells() {
 			return this.cells;
+		}
+
+		@Override
+		public void onBeforeRender(BeforeRender event) {
+			if (originalRowModel instanceof Model) {
+				((Model) originalRowModel).onBeforeRender(event);
+			}
+			super.onBeforeRender(event);
+		}
+
+		@Override
+		public void onBind(Bind event) {
+			super.onBind(event);
+			if (originalRowModel instanceof Model) {
+				((Model) originalRowModel).onBind(event);
+			}
 		}
 
 		@Override

@@ -19,6 +19,9 @@
  */
 package com.totsp.gwittir.client.validator;
 
+import java.util.function.Function;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.Property;
 
 /**
@@ -35,7 +38,15 @@ import cc.alcina.framework.common.client.reflection.Property;
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
-public interface Validator {
+public interface Validator extends Function {
+	default Object apply(Object value) {
+		try {
+			return validate(value);
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
+	}
+
 	public Object validate(Object value) throws ValidationException;
 
 	public interface Has {

@@ -82,6 +82,12 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	// context is always required)
 	static void dispatch(Context context, Class<? extends ModelEvent> type,
 			Object model) {
+		if (context.node == null) {
+			/*
+			 * detached before fire
+			 */
+			return;
+		}
 		ModelEvent modelEvent = Reflections.newInstance(type);
 		context.setNodeEvent(modelEvent);
 		modelEvent.setModel(model);

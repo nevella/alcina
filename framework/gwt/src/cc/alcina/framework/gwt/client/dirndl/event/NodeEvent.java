@@ -68,8 +68,9 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 	public <O extends ModelEvent> void reemitAs(Model from, Class<O> eventClass,
 			Object eventModel) {
-		NodeEvent.Context.fromEvent(this, from.provideNode())
-				.dispatch(eventClass, eventModel);
+		Node node = from.provideNode();
+		NodeEvent.Context.fromEvent(this, node).dispatch(eventClass,
+				eventModel);
 	}
 
 	public void setContext(Context context) {
