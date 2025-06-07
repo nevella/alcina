@@ -127,6 +127,13 @@ public class PackageProperties {
       public TypedProperty<Tree.TreeNode.BasicNode, Tree.TreeNode.BasicNode> parent = new TypedProperty<>(Tree.TreeNode.BasicNode.class, "parent");
       public TypedProperty<Tree.TreeNode.BasicNode, Boolean> selected = new TypedProperty<>(Tree.TreeNode.BasicNode.class, "selected");
     }
+	public static class _Toggle implements TypedProperty.Container {
+      public TypedProperty<Toggle, Object> active = new TypedProperty<>(Toggle.class, "active");
+      public TypedProperty<Toggle, Object> displayed = new TypedProperty<>(Toggle.class, "displayed");
+      public TypedProperty<Toggle, Integer> displayedIndex = new TypedProperty<>(Toggle.class, "displayedIndex");
+      public TypedProperty<Toggle, List> values = new TypedProperty<>(Toggle.class, "values");
+    }
+	public static _Toggle toggle = new _Toggle();
     
 //@formatter:on
 }

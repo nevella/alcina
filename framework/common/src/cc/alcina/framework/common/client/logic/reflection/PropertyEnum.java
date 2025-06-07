@@ -6,7 +6,13 @@ import java.util.function.Predicate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 
 /**
+ * <p>
+ * Classes where the properties track fields should use the auto-generated
+ * TypedProperty companion class
+ * <p>
  * Note - an implementing type need not necessarily be an enum
+ * 
+ * 
  */
 public interface PropertyEnum {
 	public static String asPropertyName(Object name) {
