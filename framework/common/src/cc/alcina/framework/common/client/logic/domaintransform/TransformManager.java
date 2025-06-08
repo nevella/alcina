@@ -70,6 +70,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
@@ -509,6 +510,31 @@ public abstract class TransformManager
 	 */
 	public void addDomainTransformListener(DomainTransformListener listener) {
 		this.transformListenerSupport.addDomainTransformListener(listener);
+	}
+
+	public DomainTransformListenerReference addDomainTransformListenerReference(
+			DomainTransformListener listener) {
+		this.transformListenerSupport.addDomainTransformListener(listener);
+		return new DomainTransformListenerReference(listener);
+	}
+
+	public class DomainTransformListenerReference implements ListenerReference {
+		DomainTransformListener listener;
+
+		DomainTransformListenerReference(DomainTransformListener listener) {
+			this.listener = listener;
+		}
+
+		@Override
+		public void remove() {
+			removeDomainTransformListener(listener);
+		}
+
+		@Override
+		public void removeOnFire() {
+			throw new UnsupportedOperationException(
+					"Unimplemented method 'removeOnFire'");
+		}
 	}
 
 	public void addTransform(DomainTransformEvent evt) {
