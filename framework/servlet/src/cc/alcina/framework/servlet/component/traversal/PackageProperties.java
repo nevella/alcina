@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Set;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _AppSuggestorTraversal appSuggestorTraversal = new _AppSuggestorTraversal();
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();

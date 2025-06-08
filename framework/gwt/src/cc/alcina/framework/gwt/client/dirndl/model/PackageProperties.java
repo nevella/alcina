@@ -12,14 +12,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreePath;
 import com.totsp.gwittir.client.ui.table.Field;
 import java.lang.Boolean;
 import java.lang.Class;
+import java.lang.Integer;
 import java.lang.Object;
 import java.lang.String;
 import java.util.Collection;
 import java.util.List;
 
 public class PackageProperties {
-	// auto-generated, do not modify
-	//@formatter:off
+    // auto-generated, do not modify
+    //@formatter:off
     
     public static _CollectionDeltaModel collectionDeltaModel = new _CollectionDeltaModel();
     static _CollectionDeltaModel_RelativeInsert collectionDeltaModel_relativeInsert = new _CollectionDeltaModel_RelativeInsert();
@@ -28,6 +29,7 @@ public class PackageProperties {
     public static _StandardModels_Panel standardModels_panel = new _StandardModels_Panel();
     public static _TableModel_TableColumn tableModel_tableColumn = new _TableModel_TableColumn();
     public static _TableModel_TableColumn_ColumnFilter tableModel_tableColumn_columnFilter = new _TableModel_TableColumn_ColumnFilter();
+    public static _Toggle toggle = new _Toggle();
     public static _Tree_AbstractPathNode tree_abstractPathNode = new _Tree_AbstractPathNode();
     public static _Tree_PathNode tree_pathNode = new _Tree_PathNode();
     public static _Tree_TreeNode tree_treeNode = new _Tree_TreeNode();
@@ -82,6 +84,13 @@ public class PackageProperties {
       public TypedProperty<TableModel.TableColumn.ColumnFilter, Boolean> filtered = new TypedProperty<>(TableModel.TableColumn.ColumnFilter.class, "filtered");
     }
     
+    public static class _Toggle implements TypedProperty.Container {
+      public TypedProperty<Toggle, Object> active = new TypedProperty<>(Toggle.class, "active");
+      public TypedProperty<Toggle, Object> displayed = new TypedProperty<>(Toggle.class, "displayed");
+      public TypedProperty<Toggle, Integer> displayedIndex = new TypedProperty<>(Toggle.class, "displayedIndex");
+      public TypedProperty<Toggle, List> values = new TypedProperty<>(Toggle.class, "values");
+    }
+    
     public static class _Tree_AbstractPathNode implements TypedProperty.Container {
       public TypedProperty<Tree.AbstractPathNode, List> children = new TypedProperty<>(Tree.AbstractPathNode.class, "children");
       public TypedProperty<Tree.AbstractPathNode, Bindable> contents = new TypedProperty<>(Tree.AbstractPathNode.class, "contents");
@@ -127,13 +136,6 @@ public class PackageProperties {
       public TypedProperty<Tree.TreeNode.BasicNode, Tree.TreeNode.BasicNode> parent = new TypedProperty<>(Tree.TreeNode.BasicNode.class, "parent");
       public TypedProperty<Tree.TreeNode.BasicNode, Boolean> selected = new TypedProperty<>(Tree.TreeNode.BasicNode.class, "selected");
     }
-	public static class _Toggle implements TypedProperty.Container {
-      public TypedProperty<Toggle, Object> active = new TypedProperty<>(Toggle.class, "active");
-      public TypedProperty<Toggle, Object> displayed = new TypedProperty<>(Toggle.class, "displayed");
-      public TypedProperty<Toggle, Integer> displayedIndex = new TypedProperty<>(Toggle.class, "displayedIndex");
-      public TypedProperty<Toggle, List> values = new TypedProperty<>(Toggle.class, "values");
-    }
-	public static _Toggle toggle = new _Toggle();
     
 //@formatter:on
 }
