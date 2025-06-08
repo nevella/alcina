@@ -288,6 +288,7 @@ class ClassTransformer {
 		private void checkDuplicateFieldNames() {
 			Multimap<String, List<Field>> byName = SEUtilities
 					.allFields(originalClass).stream()
+					.filter(f -> (f.getModifiers() & Modifier.STATIC) == 0)
 					.collect(AlcinaCollectors.toKeyMultimap(Field::getName));
 			byName.entrySet().stream().filter(e -> e.getValue().size() > 1)
 					.filter(e -> !(e.getKey().equals("id") && Configuration

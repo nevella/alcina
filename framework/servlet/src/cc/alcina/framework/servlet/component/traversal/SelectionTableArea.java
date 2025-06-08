@@ -49,7 +49,7 @@ public class SelectionTableArea extends Model.Fields
 		TableColumnMetadata.EditFilter.Handler,
 		LayoutEvents.EmitDescent.Handler, SuggestionSelected.Handler {
 	@Directed.Transform(TableView.class)
-	@BeanViewModifiers(detached = true, nodeEditors = true)
+	@BeanViewModifiers(detached = true, nodeEditors = true, editable = false)
 	@DirectedContextResolver(DisplayAllMixin.class)
 	List<? extends Bindable> selectionBindables;
 

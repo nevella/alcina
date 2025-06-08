@@ -10,6 +10,7 @@ import com.google.gwt.dom.client.Element;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
@@ -34,14 +35,18 @@ public class OverlayPositions {
 			/*
 			 * enqueue (don't mutate during event handling, since could trash
 			 * the emitting node)
+			 * 
+			 * //FIX - romcom
 			 */
 			if (GWT.isClient()) {
-				Element focussedDocumentElement = WidgetUtils
-						.getFocussedDocumentElement();
-				if (focussedDocumentElement != null
-						&& overlay.overlay.provideElement().provideIsAncestorOf(
-								focussedDocumentElement, false)) {
-					focussedDocumentElement.blur();
+				if (!Al.isRomcom()) {
+					Element focussedDocumentElement = WidgetUtils
+							.getFocussedDocumentElement();
+					if (focussedDocumentElement != null && overlay.overlay
+							.provideElement().provideIsAncestorOf(
+									focussedDocumentElement, false)) {
+						focussedDocumentElement.blur();
+					}
 				}
 				Client.eventBus().queued().lambda(overlay::remove).dispatch();
 			} else {
