@@ -273,8 +273,8 @@ public interface DecoratorBehavior {
 					selection.select(containingNode.gwtNode());
 					containingNode.gwtElement().focus();
 				}
+				nativeKeydownEvent.squelch();
 			}
-			nativeKeydownEvent.squelch();
 		}
 
 		@Override

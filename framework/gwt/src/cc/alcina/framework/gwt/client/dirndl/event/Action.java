@@ -59,6 +59,10 @@ public abstract class Action<T> implements Permissible {
 	}
 
 	public String name() {
+		return CommonUtils.deInfix(getClass().getSimpleName()).trim();
+	}
+
+	public String getCssClassName() {
 		String cssClassName = Ax.cssify(getClass().getSimpleName());
 		return cssClassName;
 	}
@@ -83,7 +87,7 @@ public abstract class Action<T> implements Permissible {
 		public ActionArea(Action action) {
 			this.action = action;
 			this.label = CommonUtils.capitaliseFirst(action.name());
-			String className = Ax.format("icon %s", action.name());
+			String className = Ax.format("icon %s", action.getCssClassName());
 			this.icon = new TagClass("icon", className);
 		}
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.reflection.Property;
@@ -103,6 +104,8 @@ public class DocumentRenderer implements StoryDocRenderer {
 			header = new Header();
 			metadata = new ReportMetadata();
 			visits = DocumentRenderer.this.observables.stream()
+					.filter(obs -> Ax.notBlank(obs.description)
+							&& !Objects.equals(obs.description, obs.label))
 					.map(VisitArea::new).collect(Collectors.toList());
 		}
 
