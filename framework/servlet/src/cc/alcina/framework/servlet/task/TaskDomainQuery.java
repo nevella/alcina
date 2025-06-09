@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.PerformerTask;
 
@@ -332,8 +333,17 @@ public class TaskDomainQuery extends PerformerTask.Fields
 			ClassReflector classReflector = Reflections
 					.at(entity.entityClass());
 			String segment = segments.get(activeSegments.size());
-			return segment.equals("*") ? classReflector.properties()
-					: List.of(classReflector.property(segment));
+			if (segment.equals("*")) {
+				return classReflector.properties();
+			} else {
+				Property property = classReflector.property(segment);
+				if (property == null) {
+					throw new IllegalArgumentException(Ax.format(
+							"No property :: %s.%s",
+							NestedName.get(entity.entityClass()), segment));
+				}
+				return List.of(property);
+			}
 		}
 
 		boolean tryDescend(String segment) {

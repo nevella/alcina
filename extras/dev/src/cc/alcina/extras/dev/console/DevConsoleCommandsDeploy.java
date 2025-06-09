@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
+import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.control.ControlServlet;
 
 public class DevConsoleCommandsDeploy {
@@ -32,8 +33,15 @@ public class DevConsoleCommandsDeploy {
 		if (Configuration.is("executeLocal")) {
 			response = null;
 			Job job = task.perform();
-			response = Ax.blankTo(job.getLog(),
-					Ax.format("Job %s - complete", job));
+			switch (executionType) {
+			case WAIT_RETURN_LARGE_OBJECT_SERIALIZED:
+				response = JobRegistry.get().getLargeResult(job);
+				break;
+			default:
+				response = Ax.blankTo(job.getLog(),
+						Ax.format("Job %s - complete", job));
+				break;
+			}
 		} else {
 			response = ControlServlet.invokeTask(task,
 					targetContainerControlServletPath,
