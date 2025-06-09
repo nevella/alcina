@@ -1241,8 +1241,12 @@ public class GraphProjection {
 		}
 
 		public boolean matches(Class<?> clazz, PropertyEnum property) {
+			return matches(clazz, property.name());
+		}
+
+		public boolean matches(Class<?> clazz, String propertyName) {
 			return this.clazz == clazz
-					&& Objects.equals(property.toString(), fieldName);
+					&& Objects.equals(propertyName, fieldName);
 		}
 
 		public Optional<Object> parent(Predicate predicate) {
