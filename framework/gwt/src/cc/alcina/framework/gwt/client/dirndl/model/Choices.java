@@ -588,6 +588,9 @@ public abstract class Choices<T> extends Model implements
 	public static class SelectResolver extends ContextResolver {
 		Function<Object, String> optionNameTransformer;
 
+		public SelectResolver() {
+		}
+
 		protected SelectResolver(
 				Class<? extends Function<?, String>> optionNameTransformerClass) {
 			if (optionNameTransformerClass != null) {

@@ -92,6 +92,9 @@ public class EnumSelect<E extends Enum> extends Model.Value<E>
 	}
 
 	public static class SelectResolver extends Choices.SelectResolver {
+		public SelectResolver() {
+		}
+
 		public SelectResolver(
 				Class<? extends ModelTransform<?, String>> valueTransformerClass) {
 			super(valueTransformerClass);
