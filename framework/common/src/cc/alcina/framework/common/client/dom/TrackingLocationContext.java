@@ -507,7 +507,15 @@ class TrackingLocationContext implements LocationContext {
 				? containingNode.relative().lastDescendant()
 				: containingNode.relative().treePreviousNode();
 		if (treePreviousNode != null) {
-			Location treePreviousLocation = treePreviousNode.location;
+			/*
+			 * FIXME - location - revisit - rather than
+			 * treePreviousNode.location - the question is, should location ever
+			 * be null? doesn't the act of attaching ensure the location? in
+			 * order, if the attached is a tree?
+			 * 
+			 * 
+			 */
+			Location treePreviousLocation = treePreviousNode.asLocation();
 			if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
 				IndexTuple nextFromTpl = treePreviousLocation.asIndexTuple()
 						.add(1, treePreviousNode.textLengthSelf());
