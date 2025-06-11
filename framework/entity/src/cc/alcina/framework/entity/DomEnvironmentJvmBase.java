@@ -108,8 +108,8 @@ public abstract class DomEnvironmentJvmBase implements DomEnvironment {
 	@Override
 	public String prettyPrint(Document w3cDoc) {
 		if (isGwtDocument(w3cDoc)) {
-			return asGwtDocument(w3cDoc).getDocumentElement()
-					.getOuterHtml(true);
+			return asGwtDocument(w3cDoc).getDocumentElement().getOuterHtml(true,
+					false);
 		} else {
 			return XmlUtils.prettyPrintWithDOM3LS(w3cDoc);
 		}

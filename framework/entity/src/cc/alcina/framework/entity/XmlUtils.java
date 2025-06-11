@@ -1878,7 +1878,8 @@ public class XmlUtils {
 		if (string.length() < maxHlLength) {
 			return string;
 		}
-		DomDocument doc = DomDocument.from(Ax.format("<div>%s</div>", string));
+		DomDocument doc = DomDocument.from(Ax.format("<div>%s</div>",
+				EntityCleaner.get().htmlToUnicodeEntities(string)));
 		doc.setReadonly(true);
 		if (doc.getDocumentElementNode().asRange().end
 				.getIndex() < maxHlLength) {
