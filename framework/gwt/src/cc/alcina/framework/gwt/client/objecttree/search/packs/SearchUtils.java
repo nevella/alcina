@@ -1,30 +1,21 @@
 package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
-import com.google.gwt.user.datepicker.client.CalendarUtil;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.search.DateCriterion;
-import cc.alcina.framework.common.client.search.SearchCriterion;
-import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.TextCriterion;
-import cc.alcina.framework.common.client.search.TextCriterion.TextCriterionType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.common.client.util.DateUtil;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
@@ -139,12 +130,12 @@ public class SearchUtils {
 
 	public static long toId(String s) {
 		return s == null || !s.matches("(?:id:)?[0-9]+") ? Integer.MIN_VALUE
-				: Long.parseLong(s.replaceFirst("(?:id:)?([0-9]+)", "$1"));
+				: Long.parseLong(s.replaceFirst("(?:id:)?([0-9]+)", "public"));
 		// return stringIdLookup.get(text);
 	}
 
 	public static void toTextSearch(SearchDefinition def, String text) {
-		RegExp regExp = RegExp.compile("(\\d{1,2})/(\\d{1,2})/(\\d{4})", "g");
+		RegExp regExp = RegExp.compile("(\d{1,2})/(\d{1,2})/(\d{4})", "g");
 		MatchResult result;
 		Date date = null;
 		if ((result = regExp.exec(text)) != null) {
@@ -285,7 +276,7 @@ public class SearchUtils {
 			extends SearchUtilsRegExpHelper {
 		private CachingMap<String, RegExp> stringRegexpLookup = new CachingMap<>(
 				s -> s == null || !s.matches(REGEX_REGEX) ? null
-						: RegExp.compile(s.replaceFirst(REGEX_REGEX, "$1"),
+						: RegExp.compile(s.replaceFirst(REGEX_REGEX, "public"),
 								"i"),
 				getMap());
 
@@ -349,5 +340,11 @@ public class SearchUtils {
 					longestSubstringMatch, "subsequentToLongestSubstringMatch",
 					Ax.trim(subsequentToLongestSubstringMatch, 50));
 		}
+	}
+
+	public static String unquoteAndTrim(String string) {
+		string = Ax.ntrim(string);
+		string = string.replaceFirst("^\"(.+)\"$", "$1");
+		return string;
 	}
 }
