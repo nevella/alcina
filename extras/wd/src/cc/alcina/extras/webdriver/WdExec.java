@@ -374,16 +374,6 @@ public class WdExec {
 		throw lastException;
 	}
 
-	public String readRelativeUrl(String relativeUrl) {
-		try {
-			String url = CommonUtils.combinePaths(token.getConfiguration().uri,
-					relativeUrl);
-			return Io.read().url(url).asString();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	public void scrollIntoView() {
 		WDUtils.scrollIntoView(driver, getElement());
 	}
@@ -546,5 +536,9 @@ public class WdExec {
 			}
 			throw new TimedOutException();
 		}
+	}
+
+	public WDToken getToken() {
+		return token;
 	}
 }
