@@ -515,7 +515,9 @@ public abstract class DevHelper {
 			Logger logger = getTestLogger();
 			long t1 = System.currentTimeMillis();
 			ClassMetadataCache classes = null;
-			classes = new ServletClasspathScanner("*", true, true, null,
+			boolean ignoreJars = !Boolean
+					.getBoolean("console.registry.includeJars");
+			classes = new ServletClasspathScanner("*", true, ignoreJars, null,
 					Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
 							.getClasses();
 			new RegistryScanner().scan(classes, null, "console");

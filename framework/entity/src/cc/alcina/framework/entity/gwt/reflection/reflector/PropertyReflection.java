@@ -439,18 +439,9 @@ public class PropertyReflection extends ReflectionElement
 				}
 				Method otherMethod = (Method) test;
 				/*
-				 * compare enclosing types, then return types, then parameter
-				 * types (last must be equal length arrays)
+				 * compare return types, then parameter types (last must be
+				 * equal length arrays), then enclosing types
 				 */
-				int enclosingTypeSpecicifity = computeSpecicifity(
-						getEnclosingType(), otherMethod.getEnclosingType());
-				if (enclosingTypeSpecicifity != 0) {
-					if (enclosingTypeSpecicifity == -1) {
-						return true;
-					} else {
-						return false;
-					}
-				}
 				int returnTypeSpecicifity = computeSpecicifity(
 						method.getReturnType(),
 						otherMethod.method.getReturnType());
@@ -471,6 +462,15 @@ public class PropertyReflection extends ReflectionElement
 						} else {
 							return false;
 						}
+					}
+				}
+				int enclosingTypeSpecicifity = computeSpecicifity(
+						getEnclosingType(), otherMethod.getEnclosingType());
+				if (enclosingTypeSpecicifity != 0) {
+					if (enclosingTypeSpecicifity == -1) {
+						return true;
+					} else {
+						return false;
 					}
 				}
 				/*
