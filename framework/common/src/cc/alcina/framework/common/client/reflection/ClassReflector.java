@@ -401,4 +401,78 @@ public class ClassReflector<T> implements HasAnnotations {
 		}
 		return locationClass == reflectedClass;
 	}
+
+	public PropertyComparator<T> propertyComparator() {
+		return new PropertyComparator<>(this);
+	}
+
+	public static class PropertyComparator<T> {
+		ClassReflector<T> reflector;
+
+		PropertyComparator(ClassReflector<T> reflector) {
+			this.reflector = reflector;
+		}
+
+		public class Comparison {
+			public ClassReflector<T> reflector;
+
+			public T left;
+
+			public T right;
+
+			public List<Difference> differences;
+
+			public Comparison(ClassReflector<T> reflector, T left, T right) {
+				this.reflector = reflector;
+				this.left = left;
+				this.right = right;
+			}
+
+			public boolean hasDiffs() {
+				return differences.size() > 0;
+			}
+
+			@Override
+			public String toString() {
+				return differences.toString();
+			}
+		}
+
+		public class Difference {
+			public Property property;
+
+			public Object left;
+
+			public Object right;
+
+			Difference(Property property, Object left, Object right) {
+				this.property = property;
+				this.left = left;
+				this.right = right;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s: '%s', '%s'", property.getName(),
+						Ax.trimForLogging(left, 50),
+						Ax.trimForLogging(right, 50));
+			}
+		}
+
+		public PropertyComparator<T>.Comparison compare(T left, T right) {
+			Comparison comparison = new Comparison(reflector, left, right);
+			comparison.differences = reflector.properties().stream()
+					.map(property -> {
+						Object leftValue = property.get(left);
+						Object rightValue = property.get(right);
+						if (Objects.equals(leftValue, rightValue)) {
+							return null;
+						} else {
+							return new Difference(property, leftValue,
+									rightValue);
+						}
+					}).filter(Objects::nonNull).toList();
+			return comparison;
+		}
+	}
 }
