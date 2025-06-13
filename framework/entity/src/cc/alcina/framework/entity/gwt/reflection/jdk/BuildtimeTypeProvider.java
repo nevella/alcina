@@ -66,7 +66,6 @@ class BuildtimeTypeProvider implements TypeOracle.TypeProvider {
 		EntityLayerObjects.get().setDataFolder(
 				jdkReflectionGenerator.attributes.generationDataFolder());
 		ValidityScanner validityScanner = new ValidityScanner();
-		validityScanner.ignoreJars = jdkReflectionGenerator.attributes.scannerIgnoresJars;
 		validityScanner.cacheFile = FileUtils.child(
 				jdkReflectionGenerator.attributes.generationDataFolder(),
 				"validity-scanner.dat");

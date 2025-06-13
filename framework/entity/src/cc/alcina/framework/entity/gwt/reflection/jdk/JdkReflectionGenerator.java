@@ -78,8 +78,6 @@ public class JdkReflectionGenerator {
 
 		public boolean clean;
 
-		public boolean scannerIgnoresJars = true;
-
 		/*
 		 * All reflection metadata will go to this module
 		 */

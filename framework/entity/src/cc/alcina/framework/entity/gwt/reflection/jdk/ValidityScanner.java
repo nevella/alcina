@@ -37,8 +37,6 @@ class ValidityScanner extends CachingScanner<ValidityMetadata> {
 
 	File cacheFile;
 
-	boolean ignoreJars;
-
 	protected Class maybeNormaliseClass(Class c) {
 		return c;
 	}
@@ -62,8 +60,7 @@ class ValidityScanner extends CachingScanner<ValidityMetadata> {
 	ClassMetadataCache<ValidityMetadata>
 			scan(List<String> classDirectoryPaths) {
 		try {
-			ClasspathScanner scanner = new ClasspathScanner("*", true,
-					ignoreJars);
+			ClasspathScanner scanner = new ClasspathScanner("*", true, true);
 			for (String path : classDirectoryPaths) {
 				scanner.scanDirectory(path);
 			}
