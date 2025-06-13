@@ -34,6 +34,11 @@ public class TextUtils {
 			.compile(WS_PATTERN_STR, "g");
 
 	public static List<IntPair> findStringMatches(String text, String search) {
+		return findStringMatches(text, search, true);
+	}
+
+	public static List<IntPair> findStringMatches(String text, String search,
+			boolean fallbackOnNormalisedQuotes) {
 		int idx0 = 0;
 		List<IntPair> result = new ArrayList<>();
 		while (true) {
@@ -45,7 +50,39 @@ public class TextUtils {
 				idx0 = idx1 + search.length();
 			}
 		}
+		if (result.isEmpty() && fallbackOnNormalisedQuotes) {
+			return findStringMatches(normaliseQuotes(text),
+					normaliseQuotes(search), false);
+		}
 		return result;
+	}
+
+	public static String normaliseQuotes(String input) {
+		StringBuilder out = null;
+		int len = input.length();
+		for (int idx = 0; idx < len; idx++) {
+			char c = input.charAt(idx);
+			char outChar = c;
+			switch (c) {
+			case '\u201C':
+			case '\u201D':
+				outChar = '"';
+				break;
+			case '\u2018':
+			case '\u2019':
+				outChar = '\'';
+				break;
+			}
+			if (c != outChar) {
+				if (out == null) {
+					out = new StringBuilder(input.substring(0, idx));
+				}
+			}
+			if (out != null) {
+				out.append(outChar);
+			}
+		}
+		return out != null ? out.toString() : input;
 	}
 
 	public static int getWordCount(String data) {
