@@ -2,13 +2,11 @@ package com.google.gwt.dom.client;
 
 import java.io.Serializable;
 
-import com.google.common.base.Preconditions;
-
-import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean.PropertySource;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization.PropertyOrder;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DoublePair;
 
 /**
@@ -83,5 +81,10 @@ public final class DomRect implements Serializable {
 
 	public DoublePair yRange() {
 		return new DoublePair(top, bottom);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("[%s,%s],[%s,%s]", left, top, right, bottom);
 	}
 }
