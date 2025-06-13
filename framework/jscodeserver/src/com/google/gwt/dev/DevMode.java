@@ -16,8 +16,13 @@
 package com.google.gwt.dev;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.net.BindException;
 import java.net.URL;
 import java.util.LinkedHashMap;
@@ -60,14 +65,19 @@ import com.google.gwt.util.tools.ArgHandlerFlag;
 import com.google.gwt.util.tools.ArgHandlerString;
 import com.google.gwt.util.tools.Utility;
 
+import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DateTzAdjustment;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.Timer;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.SEUtilities.NestedNameJvm;
+import cc.alcina.framework.entity.util.BiPrintStream.StreamNumber;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.TerminalStreams;
+import cc.alcina.framework.entity.util.TerminalStreams.TerminalStream;
 import cc.alcina.framework.entity.util.TimerJvm;
 import cc.alcina.framework.jscodeserver.JsCodeServerHttp;
 
@@ -139,6 +149,23 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 	protected DevMode() {
 		System.setProperty("java.awt.headless", "true");
 		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
+		String echoFilePath = System.getProperties().getProperty("gwt.echo");
+		if (Ax.notBlank(echoFilePath)) {
+			File consoleOutputFile = new File(echoFilePath);
+			consoleOutputFile.delete();
+			consoleOutputFile.getParentFile().mkdirs();
+			try {
+				consoleOutputFile.createNewFile();
+				PrintStream fileOutPrintStream = new PrintStream(
+						new FileOutputStream(consoleOutputFile), true);
+				TerminalStreams.get().redirect(TerminalStream.out,
+						StreamNumber._2, fileOutPrintStream);
+				TerminalStreams.get().redirect(TerminalStream.err,
+						StreamNumber._2, fileOutPrintStream);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
+		}
 	}
 
 	@Override
