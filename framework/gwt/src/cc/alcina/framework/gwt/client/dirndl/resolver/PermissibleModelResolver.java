@@ -60,7 +60,7 @@ public class PermissibleModelResolver extends ContextResolver {
 		}
 	}
 
-	@Directed(tag = "acccess-denied")
+	@Directed
 	static class AccessDenied extends Model.All
 			implements Model.ResetDirecteds {
 		AccessDenied(Object model) {
