@@ -1345,6 +1345,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			this.ownerLabel = ownerLabel;
 			this.filter = filter;
 			String text = (String) renderer.apply(item);
+			text = SafeHtmlUtils.htmlEscape(text);
 			filterableText = text.toLowerCase();
 			setHTML(text + sep);
 			setStyleName("chooser-item");
