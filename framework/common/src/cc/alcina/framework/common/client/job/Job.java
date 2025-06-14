@@ -1340,4 +1340,13 @@ public abstract class Job extends VersionableEntity<Job>
 	public boolean provideCanAppendPending() {
 		return state == JobState.ALLOCATED || state == JobState.PROCESSING;
 	}
+
+	public Job provideOriginatingJob() {
+		Optional<Job> parentOrAwaiter = provideParentOrAwaiter();
+		if (parentOrAwaiter.isPresent()) {
+			return parentOrAwaiter.get().provideOriginatingJob();
+		} else {
+			return provideFirstInSequence();
+		}
+	}
 }
