@@ -188,6 +188,8 @@ for (; ;) {
 			}
 			//PROTOCOL_1_TEXT_NODE_SEQUENCE
 			case 1: {
+			//unused
+				var attachId = ids[idsIdx++];
 				var nodeCount = ids[idsIdx++];
 				var attachIds = [];
 				var lengths = [];
