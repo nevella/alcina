@@ -25,6 +25,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
@@ -57,7 +58,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	protected PermissibleAction finish = new PermissibleAction.FinishAction();
 
-	protected PermissibleAction cancel = new PermissibleAction.CancelAction();
+	protected PermissibleAction cancel = new CancelAction();
 
 	protected ArrayList<PermissibleAction> actions;
 

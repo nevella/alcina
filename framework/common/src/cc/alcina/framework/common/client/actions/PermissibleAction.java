@@ -64,15 +64,6 @@ public abstract class PermissibleAction implements Permissible {
 	public void wasCalled() {
 	}
 
-	public static class CancelAction extends PermissibleAction {
-		public static final transient String CANCEL_ACTION = "Cancel";
-
-		@Override
-		public String getActionName() {
-			return CANCEL_ACTION;
-		}
-	}
-
 	public static class FinishAction extends PermissibleAction {
 		private static final transient String FINISH = "Finish";
 

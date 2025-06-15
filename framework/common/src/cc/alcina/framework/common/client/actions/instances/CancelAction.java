@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 public class CancelAction extends PermissibleAction {
 	public static final CancelAction INSTANCE = new CancelAction();
 
-	private CancelAction() {
+	public CancelAction() {
 	}
 
 	@Override

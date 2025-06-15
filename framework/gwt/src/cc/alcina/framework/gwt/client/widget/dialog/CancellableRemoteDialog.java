@@ -21,9 +21,9 @@ import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 
-import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
@@ -74,8 +74,8 @@ public class CancellableRemoteDialog extends GlassDialogBox
 		cancelButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				lCopy.vetoableAction(new PermissibleActionEvent(this,
-						new PermissibleAction.CancelAction()));
+				lCopy.vetoableAction(
+						new PermissibleActionEvent(this, new CancelAction()));
 			}
 		});
 		grr.setWidget(0, 0, statusLabel);

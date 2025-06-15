@@ -31,6 +31,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -201,7 +202,7 @@ public class LoginDisplayer {
 		cancelButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				PermissibleAction action = new PermissibleAction.CancelAction();
+				PermissibleAction action = new CancelAction();
 				listener.vetoableAction(
 						new PermissibleActionEvent(this, action));
 			}
