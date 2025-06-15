@@ -3,13 +3,14 @@ package cc.alcina.framework.gwt.client.dirndl.impl.form;
 import java.util.List;
 
 import cc.alcina.framework.common.client.reflection.AttributeTemplate;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SortDirection;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableCell;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableColumn.ColumnFilter;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableHeader;
@@ -91,6 +92,12 @@ public class FmsTable {
 
 		@Directed
 		public ColumnFilter getColumnFilter() {
+			return null;
+		}
+
+		@Override
+		@Binding(type = Type.PROPERTY)
+		public String getTitle() {
 			return null;
 		}
 

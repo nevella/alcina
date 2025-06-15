@@ -612,6 +612,8 @@ public class TableModel extends Model
 
 		private ColumnFilter columnFilter;
 
+		private String title;
+
 		public TableColumn() {
 		}
 
@@ -629,7 +631,17 @@ public class TableModel extends Model
 			this.field = field;
 			this.sortDirection = sortDirection;
 			this.caption = field.getLabel();
+			this.title = field.getHelpText();
 			this.columnFilter = new ColumnFilter(field);
+		}
+
+		@Binding(type = Type.PROPERTY)
+		public String getTitle() {
+			return title;
+		}
+
+		public void setTitle(String title) {
+			this.title = title;
 		}
 
 		public ColumnFilter getColumnFilter() {
