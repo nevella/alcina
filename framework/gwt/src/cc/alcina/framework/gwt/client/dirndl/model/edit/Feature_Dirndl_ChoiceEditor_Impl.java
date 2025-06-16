@@ -9,17 +9,10 @@ import cc.alcina.framework.common.client.meta.Feature;
 /*
  * @formatter:off
  
-  [these are some points in the implementation which are probably all done]
-
-## tmorra
-
-- migra to ProjectModel (romcom)
-- get test to display
-- test focuses (at end) the editable [will need to implement romcom/selection here]
-- possibly implement fragmentmodel/pending as well.
-- that (onclick/focus) causes decoratornodegen [extend hasdecorators]
-- chooser answer/ask works on choice contents, not choice (hook up to original property)
-- document pending vs 
+ Areas:
+ - keyboard and selection behavior
+   -  
+  
 
 
  @formatter:on
