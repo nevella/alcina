@@ -101,6 +101,7 @@ public class ChoicesDropdown<T> extends Model.Value<T>
 
 	@Override
 	public void onClosed(Closed event) {
+		dropdown.onClosed(event);
 		// squelch close events
 	}
 }
