@@ -116,4 +116,10 @@ public class ClassUtil {
 		}
 		throw new UnsupportedOperationException();
 	}
+
+	public static boolean isSameClass(Object o1, Object o2) {
+		Class clazz1 = o1 == null ? null : o1.getClass();
+		Class clazz2 = o2 == null ? null : o2.getClass();
+		return clazz1 == clazz2;
+	}
 }
