@@ -2,7 +2,9 @@ package cc.alcina.extras.webdriver.story;
 
 import java.util.Objects;
 
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -11,6 +13,7 @@ import org.openqa.selenium.interactions.Actions;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.extras.webdriver.query.ElementQuery;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.gwt.client.story.Story;
@@ -278,6 +281,35 @@ public class UiPerformer extends WdActionPerformer<Story.Action.Ui> {
 				script = Ax.format(script, fromTop).replace("//", "");
 				executor.executeScript(script, elem);
 			});
+		}
+	}
+
+	public static class ResizeViewport
+			implements TypedPerformer<Story.Action.Ui.ResizeViewport> {
+		@Override
+		public void perform(WdActionPerformer wdPerformer,
+				Story.Action.Ui.ResizeViewport action) throws Exception {
+			WebDriver driver = wdPerformer.wdContext.exec.getDriver();
+			try {
+				driver.manage().window().setPosition(new Point(0, 0));
+				int width = action.width;
+				int height = action.height;
+				if (action.maximise) {
+					width = java.awt.Toolkit.getDefaultToolkit()
+							.getScreenSize().width;
+					height = java.awt.Toolkit.getDefaultToolkit()
+							.getScreenSize().height;
+				}
+				Dimension toSize = new Dimension(width, height);
+				driver.manage().window().setSize(toSize);
+				Dimension sized = driver.manage().window().getSize();
+				if (!Objects.equals(toSize, sized)) {
+					driver.manage().window().maximize();
+					driver.manage().window().setSize(toSize);
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 }

@@ -509,6 +509,28 @@ public interface Story {
 					}
 				}
 
+				/** Define a script action */
+				@Retention(RetentionPolicy.RUNTIME)
+				@Documented
+				@Target({ ElementType.TYPE })
+				@Registration(DeclarativeAction.class)
+				public @interface ResizeViewport {
+					int width() default 0;
+
+					int height() default 0;
+
+					boolean maximise() default false;
+
+					public static class ConverterImpl
+							implements Converter<ResizeViewport> {
+						@Override
+						public Story.Action convert(ResizeViewport ann) {
+							return new Story.Action.Ui.ResizeViewport(
+									ann.width(), ann.height(), ann.maximise());
+						}
+					}
+				}
+
 				public interface Select {
 					/** Define a select-by-value action */
 					@Retention(RetentionPolicy.RUNTIME)
@@ -1159,6 +1181,23 @@ public interface Story {
 			}
 
 			public static class Script extends ActionWithText {
+			}
+
+			public static class ResizeViewport extends ActionWithText {
+				public ResizeViewport() {
+				}
+
+				public ResizeViewport(int width, int height, boolean maximise) {
+					this.width = width;
+					this.height = height;
+					this.maximise = maximise;
+				}
+
+				public int width;
+
+				public int height;
+
+				public boolean maximise;
 			}
 		}
 

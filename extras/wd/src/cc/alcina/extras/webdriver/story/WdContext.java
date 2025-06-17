@@ -1,6 +1,9 @@
 package cc.alcina.extras.webdriver.story;
 
+import java.awt.Toolkit;
+
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.WebDriver;
 
 import com.google.common.base.Preconditions;

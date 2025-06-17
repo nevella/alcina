@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebElement;
 
@@ -79,7 +80,13 @@ public class AnnotatePerformer
 					.ensure(wdPerformer.context);
 			ElementQuery query = createQuery(wdPerformer);
 			WebElement element = query.getElement();
-			elements.createAnnotated(element).highlight(wdPerformer);
+			try {
+				elements.createAnnotated(element).highlight(wdPerformer);
+			} catch (StaleElementReferenceException e) {
+				Ax.simpleExceptionOut(e);
+				element = query.getElement();
+				elements.createAnnotated(element).highlight(wdPerformer);
+			}
 		}
 	}
 

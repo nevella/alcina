@@ -134,6 +134,7 @@ public class ElementQuery {
 	}
 
 	public void awaitRemoval(double timeout) {
+		String stringRep = toString();
 		withXpath("//*");
 		WebElement element = (WebElement) context;
 		long start = System.currentTimeMillis();
@@ -148,7 +149,7 @@ public class ElementQuery {
 			}
 		}
 		throw new IllegalStateException(
-				String.format("Element not removed :: %s", this));
+				String.format("Element not removed :: %s", stringRep));
 	}
 
 	public void clear() {

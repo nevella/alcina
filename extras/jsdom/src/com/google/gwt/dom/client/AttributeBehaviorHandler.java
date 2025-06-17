@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  * 
  */
 @Registration.Self
-public interface AttributeBehaviorHandler {
+public interface AttributeBehaviorHandler extends EventBehavior {
 	String getMagicAttributeName();
 
 	String getEventType();
