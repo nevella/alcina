@@ -193,11 +193,16 @@ public class Dropdown extends Model
 		boolean isSuppress(DropdownButtonClicked event) {
 			GwtEvent originatingGwtEvent = event.getContext()
 					.getOriginatingGwtEvent();
-			ClickEvent click = (ClickEvent) originatingGwtEvent;
-			return this.mouseDown
-					&& TimeConstants.within(time, TimeConstants.ONE_SECOND_MS)
-					&& click.getScreenX() == this.screenX
-					&& click.getScreenY() == this.screenY;
+			if (originatingGwtEvent instanceof ClickEvent) {
+				ClickEvent click = (ClickEvent) originatingGwtEvent;
+				return this.mouseDown
+						&& TimeConstants.within(time,
+								TimeConstants.ONE_SECOND_MS)
+						&& click.getScreenX() == this.screenX
+						&& click.getScreenY() == this.screenY;
+			} else {
+				return false;
+			}
 		}
 	}
 
