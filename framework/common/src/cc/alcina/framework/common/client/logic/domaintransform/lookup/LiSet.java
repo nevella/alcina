@@ -35,16 +35,86 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
  * threads immediately after writes, marking all fields as volatile (rather than
  * the entity fields themselves - a much bigger job) resolved these issues
  * 
+ * <p>
+ * This class is not designed for field-level serialization (the fields are
+ * transient) - but all serialization frameworks (except JVM) use iterator-based
+ * serialization for the general serializer case, so serialize without issues
+ * 
  * @param <H>
  */
 public class LiSet<H extends Entity> extends AbstractSet<H>
 		implements Cloneable, Serializable {
+	public static class DegenerateCreator {
+		public Set copy(Set degenerate) {
+			throw new UnsupportedOperationException();
+		}
+
+		public Set create() {
+			return new LinkedHashSet<>();
+		}
+	}
+
+	public interface NonDomainNotifier {
+		public void notifyNonDomain(LiSet liSet, Entity e);
+	}
+
+	public static class TestComparator implements Comparator<Entity> {
+		@Override
+		public int compare(Entity o1, Entity o2) {
+			return LiSet.compare(o1, o2);
+		}
+	}
+
+	class LiSetIterator implements Iterator<H> {
+		int idx = 0;
+
+		int itrModCount = modCount;
+
+		boolean nextCalled = false;
+
+		@Override
+		public boolean hasNext() {
+			return idx < size;
+		}
+
+		@Override
+		public H next() {
+			if (modCount != itrModCount) {
+				throw new ConcurrentModificationException();
+			}
+			if (idx >= size) {
+				throw new NoSuchElementException();
+			}
+			nextCalled = true;
+			return (H) elementData[idx++];
+		}
+
+		@Override
+		public void remove() {
+			if (modCount != itrModCount) {
+				throw new ConcurrentModificationException();
+			}
+			if (!nextCalled) {
+				throw new IllegalStateException();
+			}
+			LiSet.this.remove(elementData[--idx]);
+			itrModCount++;
+			nextCalled = false;
+		}
+	}
+
 	public static final transient String CONTEXT_NON_DOMAIN_NOTIFIER = LiSet.class
 			.getName() + ".CONTEXT_NON_DOMAIN_NOTIFIER";
 
 	static final transient int DEGENERATE_THRESHOLD = 30;
 
 	public static transient DegenerateCreator degenerateCreator = new DegenerateCreator();
+
+	public static <H extends Entity> LiSet<H> of(H h) {
+		LiSet<H> result = new LiSet<>();
+		result.add(h);
+		return result;
+	}
 
 	private static int compare(Entity o1, Entity o2) {
 		if (o1.getLocalId() != 0 || o2.getLocalId() != 0) {
@@ -64,12 +134,6 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 			return 1;
 		}
 		return 0;
-	}
-
-	public static <H extends Entity> LiSet<H> of(H h) {
-		LiSet<H> result = new LiSet<>();
-		result.add(h);
-		return result;
 	}
 
 	private transient volatile Entity[] elementData;
@@ -184,44 +248,6 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return o.equals(elementData[idx]);
 	}
 
-	/*
-	 * If elementData contains e, returns the index of e. If not, return index
-	 * of least f gt e (or value of field 'size' if no f gt e)
-	 * 
-	 */
-	private int indexOf(Entity e) {
-		int rangeMin = 0;
-		// open range - i.e. rangeMax is guaranteed gt target index (unless
-		// target index==size)
-		int rangeMax = size;
-		int arrayPos = 0;
-		int res = 0;
-		if (size == 0) {
-			return 0;
-		}
-		while (true) {
-			arrayPos = (rangeMax - rangeMin) / 2 + rangeMin;
-			Entity f = elementData[arrayPos];
-			res = compare(e, f);
-			if (res == 0) {
-				return arrayPos;
-			}
-			if (rangeMax == rangeMin) {
-				return arrayPos;
-			} else {
-				if (res < 0) {
-					rangeMax = arrayPos;
-				} else {
-					rangeMin = arrayPos + 1;
-				}
-				if (rangeMin >= size) {
-					// no elt f gt e
-					return size;
-				}
-			}
-		}
-	}
-
 	@Override
 	public Iterator<H> iterator() {
 		if (degenerate != null) {
@@ -281,62 +307,41 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		size = -1;
 	}
 
-	public static class DegenerateCreator {
-		public Set copy(Set degenerate) {
-			throw new UnsupportedOperationException();
+	/*
+	 * If elementData contains e, returns the index of e. If not, return index
+	 * of least f gt e (or value of field 'size' if no f gt e)
+	 * 
+	 */
+	private int indexOf(Entity e) {
+		int rangeMin = 0;
+		// open range - i.e. rangeMax is guaranteed gt target index (unless
+		// target index==size)
+		int rangeMax = size;
+		int arrayPos = 0;
+		int res = 0;
+		if (size == 0) {
+			return 0;
 		}
-
-		public Set create() {
-			return new LinkedHashSet<>();
-		}
-	}
-
-	class LiSetIterator implements Iterator<H> {
-		int idx = 0;
-
-		int itrModCount = modCount;
-
-		boolean nextCalled = false;
-
-		@Override
-		public boolean hasNext() {
-			return idx < size;
-		}
-
-		@Override
-		public H next() {
-			if (modCount != itrModCount) {
-				throw new ConcurrentModificationException();
+		while (true) {
+			arrayPos = (rangeMax - rangeMin) / 2 + rangeMin;
+			Entity f = elementData[arrayPos];
+			res = compare(e, f);
+			if (res == 0) {
+				return arrayPos;
 			}
-			if (idx >= size) {
-				throw new NoSuchElementException();
+			if (rangeMax == rangeMin) {
+				return arrayPos;
+			} else {
+				if (res < 0) {
+					rangeMax = arrayPos;
+				} else {
+					rangeMin = arrayPos + 1;
+				}
+				if (rangeMin >= size) {
+					// no elt f gt e
+					return size;
+				}
 			}
-			nextCalled = true;
-			return (H) elementData[idx++];
-		}
-
-		@Override
-		public void remove() {
-			if (modCount != itrModCount) {
-				throw new ConcurrentModificationException();
-			}
-			if (!nextCalled) {
-				throw new IllegalStateException();
-			}
-			LiSet.this.remove(elementData[--idx]);
-			itrModCount++;
-			nextCalled = false;
-		}
-	}
-
-	public interface NonDomainNotifier {
-		public void notifyNonDomain(LiSet liSet, Entity e);
-	}
-
-	public static class TestComparator implements Comparator<Entity> {
-		@Override
-		public int compare(Entity o1, Entity o2) {
-			return LiSet.compare(o1, o2);
 		}
 	}
 }
