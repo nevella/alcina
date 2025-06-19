@@ -64,10 +64,36 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 				}
 			}
 		},
-		BLOCK_BOUNDARY {
+		SEGMENT_BOUNDARY {
 			@Override
 			public Measure match(ParserState state) {
 				boolean match = DOCUMENT_BOUNDARY.match(state) != null;
+				if (!match) {
+					ParserPeer peer = peer(state);
+					/*
+					 * if after + fowards (or !after + backwards), return null.
+					 * So effectively return 'is start'
+					 */
+					if (!(state.getLocation().after
+							^ peer.isForwardsTraversalOrder())) {
+						return null;
+					}
+					DomNode containingNode = state.getLocation()
+							.getContainingNode();
+					match = peer.styleResolver()
+							.isSegmentBoundary(containingNode);
+				}
+				if (match) {
+					return matchMeasure(state);
+				} else {
+					return null;
+				}
+			}
+		},
+		BLOCK_BOUNDARY {
+			@Override
+			public Measure match(ParserState state) {
+				boolean match = SEGMENT_BOUNDARY.match(state) != null;
 				if (!match) {
 					ParserPeer peer = peer(state);
 					/*
@@ -156,6 +182,8 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 			switch (this) {
 			case DOCUMENT_BOUNDARY:
 				return Unit.document;
+			case SEGMENT_BOUNDARY:
+				return Unit.segment;
 			case BLOCK_BOUNDARY:
 				return Unit.block;
 			case SENTENCE_BOUNDARY:
@@ -185,6 +213,7 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 		public ParserPeer(SelectionTraversal selectionTraversal) {
 			super(selectionTraversal);
 			add(Token.DOCUMENT_BOUNDARY);
+			add(Token.SEGMENT_BOUNDARY);
 			add(Token.BLOCK_BOUNDARY);
 			add(Token.SENTENCE_BOUNDARY);
 			add(Token.WORD_BOUNDARY);

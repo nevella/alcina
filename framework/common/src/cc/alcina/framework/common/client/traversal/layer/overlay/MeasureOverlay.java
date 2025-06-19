@@ -63,6 +63,8 @@ public class MeasureOverlay {
 	 */
 	public interface StyleResolver {
 		boolean isBlock(DomNode node);
+
+		boolean isSegmentBoundary(DomNode containingNode);
 	}
 
 	/**
