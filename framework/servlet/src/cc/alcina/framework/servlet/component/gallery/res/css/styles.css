@@ -1256,6 +1256,9 @@ tree-table-area tree-table > tree .node, tree-table-area tree-table > tree .node
 tree-table-area tree-table > tree node-label {
   white-space: nowrap;
   display: inline-block;
+  overflow: hidden;
+}
+tree-table-area tree-table > tree node-label:hover {
   overflow: auto;
 }
 tree-table-area tree-table > tree > .node > node-label {

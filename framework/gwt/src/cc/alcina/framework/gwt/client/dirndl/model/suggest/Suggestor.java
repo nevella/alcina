@@ -364,6 +364,21 @@ public class Suggestor extends Model implements
 					resultRange);
 		}
 
+		@Override
+		public int hashCode() {
+			return Objects.hash(value);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof StringAsk) {
+				StringAsk o = (StringAsk) obj;
+				return Objects.equals(value, o.value);
+			} else {
+				return false;
+			}
+		}
+
 		@Property.Not
 		@Override
 		public boolean isEmpty() {

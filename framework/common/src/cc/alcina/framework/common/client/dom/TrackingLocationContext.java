@@ -13,6 +13,7 @@ import com.google.gwt.dom.client.mutations.MutationRecord.Type;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.dom.Location.Range;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Ref;
@@ -119,7 +120,7 @@ class TrackingLocationContext implements LocationContext {
 			 * #appliedNonContiguous - so the IndexMutation can be extended.
 			 * 
 			 * So multiple consecutive additions can be performed without
-			 * causing the creation an additional IndexMutation
+			 * causing the creation of an additional IndexMutation
 			 */
 			if (added != null) {
 				DomNode node = added.node.asDomNode();
@@ -332,15 +333,12 @@ class TrackingLocationContext implements LocationContext {
 
 	IndexMutation currentMutation;
 
-	DomNodeTree tree;
-
 	Range documentRange;
 
 	TrackingLocationContext(DomDocument document) {
 		Preconditions.checkState(document.w3cDoc() instanceof Document);
 		this.document = document;
 		this.gwtDocument = (Document) document.w3cDoc();
-		tree = this.document.getDocumentElementNode().tree();
 	}
 
 	@Override
@@ -378,11 +376,13 @@ class TrackingLocationContext implements LocationContext {
 
 	@Override
 	public Location asLocation(DomNode domNode) {
-		tree.setCurrentNode(domNode);
-		DomNode previous = tree.previousLogicalNode();
+		/*
+		 * guaranteed non-null
+		 */
 		int index = 0;
 		int treeIndex = 0;
-		if (previous != null) {
+		if (domNode.parent() != null) {
+			DomNode previous = domNode.relative().treePreviousNode();
 			Location previousLocation = previous.asLocation();
 			treeIndex = previousLocation.getTreeIndex() + 1;
 			index = previousLocation.getIndex() + previous.textLengthSelf();
@@ -517,8 +517,10 @@ class TrackingLocationContext implements LocationContext {
 			 */
 			Location treePreviousLocation = treePreviousNode.asLocation();
 			if (treePreviousLocation.documentMutationPosition == getDocumentMutationPosition()) {
-				IndexTuple nextFromTpl = treePreviousLocation.asIndexTuple()
-						.add(1, treePreviousNode.textLengthSelf());
+				IndexTuple treePreviousTuple = treePreviousLocation
+						.asIndexTuple();
+				IndexTuple nextFromTpl = treePreviousTuple.add(1,
+						treePreviousNode.textLengthSelf());
 				location.applyIndexDelta(
 						nextFromTpl.subtract(location.asIndexTuple()));
 				return;

@@ -49,6 +49,7 @@ import cc.alcina.framework.common.client.dom.Location.IndexTuple;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -1111,6 +1112,41 @@ public class DomNode {
 		public DomNode addLink(String text, String href, String target) {
 			return builder().tag("a").attr("href", href).attr("target", target)
 					.text(text).append();
+		}
+
+		public ContentEditable contentEditable() {
+			return new ContentEditable();
+		}
+
+		/**
+		 * A helper for working with elements with the contenteditable attribute
+		 * expicitly set/unset
+		 */
+		public class ContentEditable {
+			public DomNode getNonEditableAncestor() {
+				return ancestors().orSelf().stream().filter(
+						n -> n.html().contentEditable().isDefined(false))
+						.findFirst().orElse(null);
+			}
+
+			public DomNode getEditableAncestor() {
+				return ancestors().orSelf().stream()
+						.filter(n -> n.html().contentEditable().isDefined(true))
+						.findFirst().orElse(null);
+			}
+
+			public boolean isDefined(boolean definedValue) {
+				if (!has(HtmlConstants.CONTENT_EDITABLE)) {
+					return false;
+				}
+				boolean value = Boolean
+						.valueOf(attr(HtmlConstants.CONTENT_EDITABLE));
+				return value == definedValue;
+			}
+
+			public boolean hasNonEditableAncestor() {
+				return getNonEditableAncestor() != null;
+			}
 		}
 
 		public void appendStyleNode(String css) {

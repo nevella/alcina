@@ -145,7 +145,7 @@ public interface LocationContext {
 				test = test.relativeLocation(RelativeDirection.NEXT_LOCATION);
 			}
 		}
-		test = test.createTextRelativeLocation(index - test.getIndex(), after);
+		test = test.textRelativeLocation(index - test.getIndex(), after);
 		Location containingLocation = test;
 		while (!containingLocation.isTextNode()) {
 			containingLocation = containingLocation
@@ -475,8 +475,7 @@ public interface LocationContext {
 	default Location getLocation(Node refNode, int offset, boolean after) {
 		DomNode domNode = getDocumentElementNode().document.nodeFor(refNode);
 		if (domNode.isText()) {
-			return domNode.asLocation().createTextRelativeLocation(offset,
-					after);
+			return domNode.asLocation().textRelativeLocation(offset, after);
 		} else {
 			Location location = domNode.children.nodes().get(offset)
 					.asLocation();

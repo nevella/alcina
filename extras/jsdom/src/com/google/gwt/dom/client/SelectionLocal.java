@@ -71,7 +71,7 @@ public class SelectionLocal implements ClientDomSelection {
 
 	@Override
 	public void extend(Node node, int offset) {
-		SelectionRecord selectionRecord = getSelectionRecord();
+		SelectionRecord selectionRecord = getSelectionRecord().copy();
 		selectionRecord.focusNode = node;
 		selectionRecord.focusOffset = offset;
 		selectionRecord.populateNodeIds();

@@ -70,7 +70,7 @@ public class ChoiceEditorGalleryPlace extends GalleryPlace {
 
 	@Reflected
 	enum DemoUser implements HasDisplayName {
-		nick, lars, jumail, vlad;
+		nick, lars, jumail, vlad, jess, jian;
 
 		@Override
 		public String displayName() {

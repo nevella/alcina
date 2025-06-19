@@ -85,11 +85,15 @@ public final class SelectionRecord {
 		copy.focusNodeId = focusNodeId;
 		copy.focusOffset = focusOffset;
 		copy.type = type;
+		copy.populateNodes();
 		return copy;
 	}
 
 	@Property.Not
 	public boolean isCollapsed() {
+		if (anchorNode != null) {
+			populateNodeIds();
+		}
 		return CommonUtils.equals(anchorNodeId, focusNodeId, anchorOffset,
 				focusOffset);
 	}

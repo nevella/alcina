@@ -510,7 +510,7 @@ public class DomDocument extends DomNode implements Cloneable {
 			while (!start.isTextNode()) {
 				start = start.relativeLocation(RelativeDirection.NEXT_LOCATION);
 			}
-			Location test = start.createTextRelativeLocation(index, after);
+			Location test = start.textRelativeLocation(index, after);
 			Location containingLocation = test;
 			while (!containingLocation.isTextNode()) {
 				containingLocation = containingLocation

@@ -81,6 +81,8 @@ public abstract class DecoratorSuggestor extends Model.Fields
 		suggestor = createSuggestorAttributes().create();
 		bindings().addListener(
 				() -> this.contentDecorator.topicInput.add(tagEditor::onInput));
+		bindings().addListener(() -> this.contentDecorator.topicSelectionChanged
+				.add(tagEditor::onSelectionChanged));
 	}
 
 	@Override

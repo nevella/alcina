@@ -144,8 +144,7 @@ class BoundaryLayer extends Layer<ExtendMeasureSelection> {
 			IntPair documentPair = location.getLocationContext()
 					.getDocumentRange().toIntPair();
 			if (documentPair.containsExEnd(pair)) {
-				Location end = location.createTextRelativeLocation(absDelta,
-						false);
+				Location end = location.textRelativeLocation(absDelta, false);
 				Range range = new Location.Range(location, end);
 				return location.getLocationContext().textContent(range);
 			} else {

@@ -32,7 +32,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.edit.ContentDecoratorEvents.R
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentIsolate;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentModel;
 import cc.alcina.framework.gwt.client.dirndl.model.fragment.FragmentNode;
-import cc.alcina.framework.gwt.client.dirndl.model.fragment.TextNode;
 import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.dirndl.overlay.Overlay;
 import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPosition;
@@ -130,6 +129,12 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	 * -> the suggestor
 	 */
 	Topic<Input> topicInput = Topic.create();
+
+	/*
+	 * Used to route selection change events
+	 */
+	Topic<InferredDomEvents.SelectionChanged> topicSelectionChanged = Topic
+			.create();
 
 	/*
 	 * The decorator node currently being edited
@@ -427,6 +432,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	@Override
 	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
 		checkTrigger();
+		topicSelectionChanged.publish(event);
 	}
 
 	@Override

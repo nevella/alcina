@@ -9,9 +9,21 @@ import cc.alcina.framework.common.client.meta.Feature;
 /*
  * @formatter:off
  
- Areas:
- - keyboard and selection behavior
-   -  
+Areas:
+  - keyboard and selection behavior (Behaviors)
+    - ExtendKeyboardNavigationAction
+      Manages keyboard selection mutation (left, right arrows) to maintain content-non-editable logic.
+	  Basically, arrow onto a non-editable selects the non-editable, next arrow moves off
+    - EditInsertBehavior
+	  Insert blank text nodes where appropriate (given editable insert constraints) to allow edits at appropriate locations
+	  e.g. between two non-editables, insert a blank text node to allow choice insert there
+	  Also ensure the editor contains one blank text node
+	- NonEditableSelectionBehavior
+	  If the text contents of a non-editable are selected, mark it (attribute) as selected
+	  Also select entire non-editable (isolate) if partially selected
+	  Also shift to blank text node if at start/end of non-editable element (normal clicks will select containing text)
+	- CommitBehavior
+	  Handle [esc] reverts changes, [enter] commits (and returns focus to the outer editable)
   
 
 

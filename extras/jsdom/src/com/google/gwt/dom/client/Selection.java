@@ -15,12 +15,15 @@
  */
 package com.google.gwt.dom.client;
 
+import java.util.List;
 import java.util.Objects;
 
 import com.google.gwt.dom.client.mutations.SelectionRecord;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
+import cc.alcina.framework.common.client.dom.Location.DomLocation;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Models the browser selection object. Normally use the exposed Location
@@ -187,6 +190,14 @@ public class Selection implements ClientDomSelection {
 							getFocusOffset());
 				}
 				lastSelectionRecord = currenSelectionRecord;
+				if (focusLocation != null) {
+					Ax.out("focusLocation: %s", focusLocation);
+					Ax.out("focusLocation.node: %s", focusLocation
+							.asDomLocation().getLocation().getContainingNode());
+					Ax.out("focusLocation.parent: %s",
+							focusLocation.asDomLocation().getLocation()
+									.getContainingNode().parent());
+				}
 			}
 			return this;
 		}
@@ -197,8 +208,7 @@ public class Selection implements ClientDomSelection {
 			}
 			DomNode domNode = node.asDomNode();
 			if (domNode.isText()) {
-				return domNode.asLocation().createTextRelativeLocation(offset,
-						false);
+				return domNode.asLocation().textRelativeLocation(offset, false);
 			} else {
 				// note that - for node.class == Element - offset can be after
 				// all
@@ -224,5 +234,33 @@ public class Selection implements ClientDomSelection {
 	public void select(Node node) {
 		collapse(node);
 		extend(node, node.getChildCount());
+	}
+
+	public void extend(Location toLocation) {
+		DomLocation domLocation = toLocation.asDomLocation();
+		extend((Node) domLocation.getNode(), domLocation.getOffset());
+	}
+
+	public void collapse(Location toLocation) {
+		DomLocation domLocation = toLocation.asDomLocation();
+		collapse((Node) domLocation.getNode(), domLocation.getOffset());
+	}
+
+	public void deleteFromDocument() {
+		/*
+		 * prepare the post-delete cursor, delete the range, position the cursor
+		 */
+		List<Location.Range> treeRanges = asRange().asTreeRanges();
+		Location focusLocation = getFocusLocation();
+		Location postDeleteCursorPosition = null;
+		if (focusLocation.isTextNode()) {
+			Location.Range focusRange = treeRanges.stream().filter(tr -> tr
+					.containingNode() == focusLocation.getContainingNode())
+					.findFirst().orElse(null);
+			/*
+			 * TODO - just let the dom do this for now
+			 */
+		}
+		asRange().delete();
 	}
 }
