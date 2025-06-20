@@ -190,14 +190,6 @@ public class Selection implements ClientDomSelection {
 							getFocusOffset());
 				}
 				lastSelectionRecord = currenSelectionRecord;
-				if (focusLocation != null) {
-					Ax.out("focusLocation: %s", focusLocation);
-					Ax.out("focusLocation.node: %s", focusLocation
-							.asDomLocation().getLocation().getContainingNode());
-					Ax.out("focusLocation.parent: %s",
-							focusLocation.asDomLocation().getLocation()
-									.getContainingNode().parent());
-				}
 			}
 			return this;
 		}

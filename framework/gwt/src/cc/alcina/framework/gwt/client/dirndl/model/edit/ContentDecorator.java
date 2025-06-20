@@ -7,8 +7,10 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.AttributeBehaviorHandler;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Selection;
 
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.meta.Feature;
@@ -196,6 +198,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 					.publish();
 			suggestor = null;
 			overlay = null;
+			overlayEditNode = null;
 		}
 	}
 
@@ -228,6 +231,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	class CancelledDecoratorSuggestion {
 	}
 
+	/* reference the runnable via a field to ensure distinct() works */
 	Runnable checkTrigger0Runnable = this::checkTrigger0;
 
 	Runnable validateSelection0Runnable = this::validateSelection0;
@@ -300,9 +304,13 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		if (overlay != null) {
 			if (event.getModel() == Type.CANCEL
 					|| event.getModel() == Type.COMMIT) {
-				overlay.close(null, false);
+				closeOverlay();
 			}
 		}
+	}
+
+	void closeOverlay() {
+		overlay.close(null, false);
 	}
 
 	@Override
@@ -341,7 +349,10 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		new DecoratorEvent().withType(DecoratorEvent.Type.overlay_opened)
 				.publish();
 		overlay.open();
+		this.overlayEditNode = decoratorDomNode;
 	}
+
+	DomNode overlayEditNode;
 
 	@Feature.Ref(Feature_Dirndl_ContentDecorator.Constraint_NonSuggesting_DecoratorTag_Selection.class)
 	void validateSelection() {
@@ -431,8 +442,27 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	@Override
 	public void onSelectionChanged(InferredDomEvents.SelectionChanged event) {
+		checkOverlayValid();
 		checkTrigger();
 		topicSelectionChanged.publish(event);
+	}
+
+	void checkOverlayValid() {
+		if (overlayEditNode != null) {
+			boolean retain = false;
+			Selection selection = Document.get().getSelection();
+			if (selection.hasSelection()
+					&& selection.getAnchorLocation() != null
+					&& selection.getFocusLocation() != null) {
+				retain = selection.getAnchorLocation().getContainingNode()
+						.ancestors().orSelf().has(overlayEditNode)
+						&& selection.getFocusLocation().getContainingNode()
+								.ancestors().orSelf().has(overlayEditNode);
+			}
+			if (!retain) {
+				closeOverlay();
+			}
+		}
 	}
 
 	@Override

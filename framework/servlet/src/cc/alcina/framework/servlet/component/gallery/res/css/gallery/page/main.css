@@ -1019,8 +1019,11 @@ choice-editor > edit choice-node[contenteditable=false] {
   outline: none;
 }
 choice-editor > edit choice-node[contenteditable=false].selected, choice-editor > edit choice-node[contenteditable=false]:focus {
-  border-color: blue;
-  color: blue;
+  border-color: #77e;
+  color: #77e;
+}
+choice-editor > edit choice-node[contenteditable=false].selected::selection, choice-editor > edit choice-node[contenteditable=false]:focus::selection {
+  background-color: transparent;
 }
 
 overlay > .decorator-suggestor {

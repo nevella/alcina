@@ -125,7 +125,10 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		type = Type.PROPERTY,
 		to = "contentEditable",
 		transform = Binding.DisplayFalseTrueBidi.class)
-	public boolean contentEditable = false;
+	public boolean contentEditable;
+
+	@Binding(type = Type.CSS_CLASS)
+	public boolean selected;
 
 	@Binding(type = Type.INNER_TEXT)
 	public String content = "";
@@ -139,6 +142,14 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 	public DecoratorNode() {
 		bindings().from(this).on(properties.contentEditable)
 				.accept(this::notifyContentEditableDelta);
+	}
+
+	void updateSelected() {
+		Selection selection = Document.get().getSelection();
+		boolean selected = selection.hasSelection() && !selection.isCollapsed()
+				&& selection.asRange()
+						.contains(provideElement().asDomNode().asRange());
+		properties.selected.set(this, selected);
 	}
 
 	@Override

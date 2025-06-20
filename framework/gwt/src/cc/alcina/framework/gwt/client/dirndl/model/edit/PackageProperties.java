@@ -45,6 +45,7 @@ public class PackageProperties {
       TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "descriptor");
       TypedProperty<ChoiceEditor.ChoiceNode, FragmentModel> fragmentModel = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "fragmentModel");
       TypedProperty<ChoiceEditor.ChoiceNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "internalModel");
+      TypedProperty<ChoiceEditor.ChoiceNode, Boolean> selected = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "selected");
       TypedProperty<ChoiceEditor.ChoiceNode, String> stringRepresentable = new TypedProperty<>(ChoiceEditor.ChoiceNode.class, "stringRepresentable");
     }
     
@@ -66,6 +67,7 @@ public class PackageProperties {
       public TypedProperty<DecoratorNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(DecoratorNode.class, "descriptor");
       public TypedProperty<DecoratorNode, FragmentModel> fragmentModel = new TypedProperty<>(DecoratorNode.class, "fragmentModel");
       public TypedProperty<DecoratorNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(DecoratorNode.class, "internalModel");
+      public TypedProperty<DecoratorNode, Boolean> selected = new TypedProperty<>(DecoratorNode.class, "selected");
       public TypedProperty<DecoratorNode, Object> stringRepresentable = new TypedProperty<>(DecoratorNode.class, "stringRepresentable");
       public TypedProperty<DecoratorNode, Boolean> valid = new TypedProperty<>(DecoratorNode.class, "valid");
     }
@@ -89,6 +91,7 @@ public class PackageProperties {
       public TypedProperty<EntityNode, DecoratorNode.Descriptor> descriptor = new TypedProperty<>(EntityNode.class, "descriptor");
       public TypedProperty<EntityNode, FragmentModel> fragmentModel = new TypedProperty<>(EntityNode.class, "fragmentModel");
       public TypedProperty<EntityNode, DecoratorNode.InternalModel> internalModel = new TypedProperty<>(EntityNode.class, "internalModel");
+      public TypedProperty<EntityNode, Boolean> selected = new TypedProperty<>(EntityNode.class, "selected");
       public TypedProperty<EntityNode, EntityLocator> stringRepresentable = new TypedProperty<>(EntityNode.class, "stringRepresentable");
     }
     

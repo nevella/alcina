@@ -5,7 +5,7 @@
 @use 'context-menu'
 
 //various choices style mixins
-$selected-editor-choice: blue
+$selected-editor-choice: #77e
 
 @mixin vertical
   display: flex
@@ -73,6 +73,9 @@ $selected-editor-choice: blue
       &.selected, &:focus
         border-color: $selected-editor-choice
         color: $selected-editor-choice
+
+        &::selection
+          background-color: transparent
 
 
     //choice-node

@@ -76,6 +76,7 @@ public class PackageProperties {
       public TypedProperty<TableModel.TableColumn, TableModel.TableColumn.ColumnFilter> columnFilter = new TypedProperty<>(TableModel.TableColumn.class, "columnFilter");
       public TypedProperty<TableModel.TableColumn, Field> field = new TypedProperty<>(TableModel.TableColumn.class, "field");
       public TypedProperty<TableModel.TableColumn, TableModel.SortDirection> sortDirection = new TypedProperty<>(TableModel.TableColumn.class, "sortDirection");
+      public TypedProperty<TableModel.TableColumn, String> title = new TypedProperty<>(TableModel.TableColumn.class, "title");
       public TypedProperty<TableModel.TableColumn, Class> valueClass = new TypedProperty<>(TableModel.TableColumn.class, "valueClass");
     }
     

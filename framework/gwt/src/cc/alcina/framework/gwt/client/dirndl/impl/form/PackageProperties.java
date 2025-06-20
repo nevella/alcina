@@ -17,6 +17,7 @@ public class PackageProperties {
       public TypedProperty<FmsTable.FmsTreeTableColumn, TableModel.TableColumn.ColumnFilter> columnFilter = new TypedProperty<>(FmsTable.FmsTreeTableColumn.class, "columnFilter");
       public TypedProperty<FmsTable.FmsTreeTableColumn, Field> field = new TypedProperty<>(FmsTable.FmsTreeTableColumn.class, "field");
       public TypedProperty<FmsTable.FmsTreeTableColumn, TableModel.SortDirection> sortDirection = new TypedProperty<>(FmsTable.FmsTreeTableColumn.class, "sortDirection");
+      public TypedProperty<FmsTable.FmsTreeTableColumn, String> title = new TypedProperty<>(FmsTable.FmsTreeTableColumn.class, "title");
       public TypedProperty<FmsTable.FmsTreeTableColumn, Class> valueClass = new TypedProperty<>(FmsTable.FmsTreeTableColumn.class, "valueClass");
     }
     

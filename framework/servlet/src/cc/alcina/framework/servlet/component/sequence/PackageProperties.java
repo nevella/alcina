@@ -7,7 +7,6 @@ import cc.alcina.framework.gwt.client.dirndl.cmp.command.CommandContext;
 import cc.alcina.framework.gwt.client.dirndl.cmp.command.KeybindingsHandler;
 import cc.alcina.framework.gwt.client.dirndl.model.Heading;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
-import cc.alcina.framework.gwt.client.dirndl.model.suggest.Suggestor;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.servlet.component.sequence.DetailArea;
 import cc.alcina.framework.servlet.component.sequence.Header;
@@ -30,7 +29,6 @@ public class PackageProperties {
     // auto-generated, do not modify
     //@formatter:off
     
-    public static _AppSuggestorSequence appSuggestorSequence = new _AppSuggestorSequence();
     static _Dotburger_Menu dotburger_menu = new _Dotburger_Menu();
     static _Header header = new _Header();
     static _Header_Left header_left = new _Header_Left();
@@ -39,12 +37,6 @@ public class PackageProperties {
     static _SequenceArea sequenceArea = new _SequenceArea();
     static _SequenceBrowser_Ui sequenceBrowser_ui = new _SequenceBrowser_Ui();
     public static _SequenceSettings sequenceSettings = new _SequenceSettings();
-    
-    public static class _AppSuggestorSequence implements TypedProperty.Container {
-      public TypedProperty<AppSuggestorSequence, String> acceptedFilterText = new TypedProperty<>(AppSuggestorSequence.class, "acceptedFilterText");
-      public TypedProperty<AppSuggestorSequence, String> filterText = new TypedProperty<>(AppSuggestorSequence.class, "filterText");
-      public TypedProperty<AppSuggestorSequence, Suggestor> suggestor = new TypedProperty<>(AppSuggestorSequence.class, "suggestor");
-    }
     
     static class _Dotburger_Menu implements TypedProperty.Container {
       TypedProperty<Dotburger.Menu, SequenceSettings.DetailDisplayMode> detailDisplayMode = new TypedProperty<>(Dotburger.Menu.class, "detailDisplayMode");

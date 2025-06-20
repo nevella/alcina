@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.Mutation;
+import cc.alcina.framework.gwt.client.dirndl.event.InferredDomEvents.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.event.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.event.ModelEvents;
@@ -54,7 +55,8 @@ public class EditArea extends Model.Fields
 		implements FocusOnBind, HasTag, DomEvents.Input.Handler,
 		DomEvents.BeforeInput.Handler, LayoutEvents.BeforeRender.Handler,
 		DomEvents.Focusout.Handler, InferredDomEvents.Mutation.Handler,
-		FragmentModel.Has, ModelMutation.Handler {
+		InferredDomEvents.SelectionChanged.Handler, FragmentModel.Has,
+		ModelMutation.Handler {
 	public static transient PackageProperties._EditArea properties = PackageProperties.editArea;
 
 	@Binding(type = Type.INNER_HTML)
@@ -306,7 +308,8 @@ public class EditArea extends Model.Fields
 	/*
 	 * This class ensures the displayed suggestor (if any) is current - if say a
 	 * choice is deleted, the overlay should be repositioned and the available
-	 * choices modified
+	 * choices modified.
+	 * 
 	 */
 	class SuggestorCurrencyConstraint implements DecoratorBehavior {
 		void maybeRefreshOverlays(ModelMutation event) {
@@ -315,5 +318,23 @@ public class EditArea extends Model.Fields
 						ContentDecoratorEvents.NodeDelta.class));
 			}
 		}
+	}
+
+	/*
+	 * This class ensures the displayed suggestor (if any) is current - if say a
+	 * choice is deleted, the overlay should be repositioned and the available
+	 * choices modified.
+	 * 
+	 */
+	class ContentEditableSelected implements DecoratorBehavior {
+		void updateDecoratorSelected(SelectionChanged event) {
+			fragmentModel.byTypeAssignable(DecoratorNode.class).toList()
+					.forEach(DecoratorNode::updateSelected);
+		}
+	}
+
+	@Override
+	public void onSelectionChanged(SelectionChanged event) {
+		new ContentEditableSelected().updateDecoratorSelected(event);
 	}
 }
