@@ -10,6 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
@@ -45,7 +46,7 @@ public interface HasDecorators
 		DomEvents.KeyDown.Handler,
 		// routes MouseUp events to decorators
 		DomEvents.MouseUp.Handler, KeyboardNavigation.Navigation.Handler,
-		FragmentModel.Has {
+		FragmentModel.Has, DomEvents.Focusout.Handler {
 	/*
 	 * Marker attribute
 	 */
@@ -148,4 +149,9 @@ public interface HasDecorators
 	FragmentModel provideFragmentModel();
 
 	void validateDecorators();
+
+	@Override
+	default void onFocusout(Focusout event) {
+		getDecorators().forEach(d -> d.onFocusout(event));
+	}
 }

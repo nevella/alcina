@@ -20,6 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.KeyboardNavigation.Navigation.Type;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Focusout;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.Input;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.event.DomEvents.MouseUp;
@@ -121,7 +122,8 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 		ContentDecoratorEvents.ReferenceSelected.Handler,
 		ContentDecoratorEvents.NodeDelta.Handler,
 		KeyboardNavigation.Navigation.Handler, ModelEvents.Closed.Handler,
-		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler {
+		ModelEvents.Commit.Handler, InferredDomEvents.SelectionChanged.Handler,
+		DomEvents.Focusout.Handler {
 	public static ContentDecorator.Builder builder() {
 		return new Builder();
 	}
@@ -187,7 +189,7 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 
 	boolean isSpaceOrLeftBracketish(String characterString) {
 		return characterString != null
-				&& characterString.matches("[ \u200B({\\[]");
+				&& characterString.matches("[ \\u200B({\\[]");
 	}
 
 	@Override
@@ -468,5 +470,12 @@ public class ContentDecorator<T> implements DomEvents.Input.Handler,
 	@Override
 	public void onNodeDelta(NodeDelta event) {
 		refreshOverlayIfShowing();
+	}
+
+	@Override
+	public void onFocusout(Focusout event) {
+		if (overlay != null) {
+			closeOverlay();
+		}
 	}
 }
