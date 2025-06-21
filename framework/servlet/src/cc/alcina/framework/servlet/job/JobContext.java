@@ -587,6 +587,7 @@ public class JobContext {
 						job.getEndTime(), job.getEndTime().getTime()
 								- job.getStartTime().getTime());
 			}
+			treeProcess = null;
 			persistMetadata();
 		} catch (Throwable t) {
 			logger.warn("DEVEX-0 -- job end0 issue - " + job.getId(), t);
