@@ -107,21 +107,21 @@ public interface AttributeBehaviorHandler extends EventBehavior {
 			Element targetElement = null;
 			if (eventTarget.isElement()) {
 				targetElement = eventTarget.asElement();
-			} else {
-				switch (eventType) {
-				case "selectionchange":
-					Selection selection = Document.get().getSelection();
-					Location focusLocation = selection.getFocusLocation();
-					if (focusLocation != null) {
-						DomNode node = focusLocation.getContainingNode();
-						if (node.isElement()) {
-							targetElement = node.gwtElement();
-						} else if (node.isText()) {
-							targetElement = node.parent().gwtElement();
-						}
+			}
+			switch (eventType) {
+			case "selectionchange":
+			case "keydown":
+				Selection selection = Document.get().getSelection();
+				Location focusLocation = selection.getFocusLocation();
+				if (focusLocation != null) {
+					DomNode node = focusLocation.getContainingNode();
+					if (node.isElement()) {
+						targetElement = node.gwtElement();
+					} else if (node.isText()) {
+						targetElement = node.parent().gwtElement();
 					}
-					break;
 				}
+				break;
 			}
 			if (targetElement == null) {
 				return;

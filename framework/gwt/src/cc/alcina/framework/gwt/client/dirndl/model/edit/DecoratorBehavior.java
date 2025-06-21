@@ -14,9 +14,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.Location;
 import cc.alcina.framework.common.client.dom.Location.Range;
 import cc.alcina.framework.common.client.dom.Location.RelativeDirection;
-import cc.alcina.framework.common.client.dom.Location.TextTraversal;
 import cc.alcina.framework.gwt.client.dirndl.event.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.edit.Feature_Dirndl_ContentDecorator.ContentEditableSync;
 
 /**
  * Complex/gritty mini-processes used to handle the extra appendages required by
@@ -110,6 +108,45 @@ public interface DecoratorBehavior {
 		}
 
 		public static final String ATTR_NAME = "__bhvr_mnesb";
+	}
+
+	/**
+	 * <p>
+	 * This is a client behavior, since it needs to occur synchronously
+	 * <p>
+	 * If in a content editable, *and* effectively with an overlay showing,
+	 * prevent default up/down
+	 * 
+	 */
+	public static class InterceptUpDownBehaviour
+			implements DecoratorBehavior, AttributeBehaviorHandler {
+		@Override
+		public String getEventType() {
+			return BrowserEvents.KEYDOWN;
+		}
+
+		@Override
+		public void onNativeEvent(NativePreviewEvent event,
+				Element registeredElement) {
+			onKeyDown(event.getNativeEvent(), registeredElement);
+		}
+
+		public void onKeyDown(NativeEvent nativeKeydownEvent,
+				Element registeredElement) {
+			switch (nativeKeydownEvent.getKeyCode()) {
+			case KeyCodes.KEY_DOWN:
+			case KeyCodes.KEY_UP:
+				nativeKeydownEvent.preventDefault();
+				break;
+			}
+		}
+
+		@Override
+		public String getMagicAttributeName() {
+			return ATTR_NAME;
+		}
+
+		public static final String ATTR_NAME = "__bhvr_iudbb";
 	}
 
 	/**

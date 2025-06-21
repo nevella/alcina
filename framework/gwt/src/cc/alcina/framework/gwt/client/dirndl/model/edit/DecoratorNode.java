@@ -139,6 +139,13 @@ public abstract class DecoratorNode<WT, SR> extends FragmentNode
 		transform = RepresentableToStringTransform.class)
 	public SR stringRepresentable;
 
+	@Binding(
+		type = Type.PROPERTY,
+		to = DecoratorBehavior.InterceptUpDownBehaviour.ATTR_NAME)
+	public boolean isMagicName() {
+		return true;
+	}
+
 	public DecoratorNode() {
 		bindings().from(this).on(properties.contentEditable)
 				.accept(this::notifyContentEditableDelta);
