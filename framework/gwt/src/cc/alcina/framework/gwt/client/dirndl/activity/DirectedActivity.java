@@ -11,6 +11,7 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.MultipleImplementationsException;
 import cc.alcina.framework.common.client.reflection.TypedProperties;
@@ -163,7 +164,11 @@ public class DirectedActivity<P extends BasePlace> extends Model
 
 	public static transient PackageProperties._DirectedActivity properties = PackageProperties.directedActivity;
 
-	@Registration.NonGenericSubtypes(Provider.class)
+	/*
+	 * Non-auto-registered
+	 */
+	// @Registration.NonGenericSubtypes(Provider.class)
+	@EnvironmentRegistration
 	public static interface Provider<P extends Place> {
 		DirectedActivity getActivity(P place);
 	}

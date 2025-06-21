@@ -13,4 +13,6 @@ public class UrlRouterPart implements TellerContext.Part {
 	public int port;
 
 	public boolean gwtDevMode;
+
+	public String path;
 }

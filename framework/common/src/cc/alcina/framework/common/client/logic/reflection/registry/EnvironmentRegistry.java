@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
-import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +16,10 @@ import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
@@ -280,8 +281,15 @@ public class EnvironmentRegistry extends Registry {
 
 		@Override
 		public void singleton(Class type, Object implementation) {
-			Preconditions
-					.checkState(!environmentImplementations.containsKey(type));
+			Object existingImplementation = environmentImplementations
+					.get(type);
+			if (existingImplementation != null) {
+				throw new IllegalStateException(Ax.format(
+						"Existing implementation: %s :: %s, attempted registration %s",
+						NestedName.get(type),
+						NestedName.get(existingImplementation),
+						NestedName.get(implementation)));
+			}
 			environmentImplementations.put(type, implementation);
 		}
 

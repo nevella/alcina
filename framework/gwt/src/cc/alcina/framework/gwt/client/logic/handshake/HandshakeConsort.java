@@ -7,6 +7,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.consort.ConsortWithSignals;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentSingleton;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Topic;
@@ -40,15 +41,13 @@ import cc.alcina.framework.common.client.util.Topic;
  */
 @Reflected
 @Registration.Singleton
+@EnvironmentSingleton
 public class HandshakeConsort
 		extends ConsortWithSignals<HandshakeState, HandshakeSignal> {
 	public static final Topic<String> topicStartupProgress = Topic.create();
 
 	public static HandshakeConsort get() {
 		return Registry.impl(HandshakeConsort.class);
-	}
-
-	public HandshakeConsort() {
 	}
 
 	public void handleLoggedIn(LoginResponse loginResponse) {

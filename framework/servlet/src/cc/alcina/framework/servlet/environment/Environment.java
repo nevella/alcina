@@ -691,7 +691,9 @@ class Environment {
 		scheduler.commandExecutor = new CommandExecutorImpl();
 		document = Document.contextProvider.createFrame(RemoteType.REF_ID);
 		document.createDocumentElement("<html/>", true);
+		Ax.err("created doc: %s", document.hashCode());
 		document.implAccess().attachIdRemote().mutationProxy = mutationProxy;
+		Ax.err("registered mproxy doc: %s", mutationProxy.hashCode());
 		document.implAccess().attachIdRemote()
 				.registerToRemoteInvokeProxy(invokeProxy);
 		LocalDom.initalizeDetachedSync();

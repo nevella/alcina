@@ -27,6 +27,11 @@ import cc.alcina.framework.common.client.util.AlcinaCollections;
  */
 @Registration.Self
 public interface AttributeBehaviorHandler extends EventBehavior {
+	/**
+	 * Prevent default on a link click, romcom
+	 */
+	public static String BEHAVIOR_PREVENT_DEFAULT = "__bhvr_pd";
+
 	String getMagicAttributeName();
 
 	String getEventType();

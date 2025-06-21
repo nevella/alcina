@@ -215,6 +215,7 @@ public class DeltaStore {
 
 	public void initialiseNoOffline() {
 		cache = new DomainModelDeltaLookup();
+		registerDelegate(new ObjectStoreMemoryImpl());
 	}
 
 	public void mergeResponse(final LoadObjectsResponse response,

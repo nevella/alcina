@@ -40,7 +40,7 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 
 	@Override
 	public void blur() {
-		throw new UnsupportedOperationException();
+		invokeAsync("blur");
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.AttachId;
+import com.google.gwt.dom.client.AttributeBehaviorHandler;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.DomEventData;
 import com.google.gwt.dom.client.Element;
@@ -109,8 +110,12 @@ class ClientEventDispatch {
 				if (eventType.equals("click") || eventType.equals("keydown")) {
 					if (elem.hasTagName("a")) {
 						String href = elem.getAttribute("href");
-						if (Ax.isBlank(href) || href.equals("#")) {
-							event.preventDefault();
+						if (Ax.isBlank(href) || href.equals("#")
+								|| elem.hasAttribute(
+										AttributeBehaviorHandler.BEHAVIOR_PREVENT_DEFAULT)) {
+							if (!(event.getMetaKey() || event.getCtrlKey())) {
+								event.preventDefault();
+							}
 						}
 					}
 				}

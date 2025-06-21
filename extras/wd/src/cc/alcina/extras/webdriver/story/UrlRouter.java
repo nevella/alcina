@@ -1,5 +1,6 @@
 package cc.alcina.extras.webdriver.story;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Url;
 import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.gwt.client.story.Story.Action.Context;
@@ -20,6 +21,9 @@ public class UrlRouter implements PerformerResource {
 			builder.protocol(part.protocol);
 			builder.host(part.host);
 			builder.port(part.port);
+		}
+		if (to.equals("/") && Ax.notBlank(part.path)) {
+			builder.path(part.path);
 		}
 		if (part.gwtDevMode) {
 			builder.qsParam("gwt.l", null);
