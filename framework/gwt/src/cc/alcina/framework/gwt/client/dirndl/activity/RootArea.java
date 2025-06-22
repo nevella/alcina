@@ -67,7 +67,7 @@ public class RootArea extends Model.Fields
 				DirectedActivity activity) {
 			this.channel = channel;
 			Overlay.Attributes attributes = Overlay.attributes()
-					.withContents(this).withRemoveOnMouseDownOutside(false);
+					.withContents(this).withCloseOnMouseDownOutside(false);
 			Registry.impl(ChannelOverlayPosition.class, channel)
 					.position(attributes);
 			this.overlay = attributes.create();

@@ -13,11 +13,15 @@ import com.google.gwt.resources.client.TextResource;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.Io.ReadOp;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 
+// FIXME - romcom - finer cache invalidation based on dep resources
 public class ClientBundleFactory implements RegistryFactory<ClientBundle> {
+	static Configuration.Key cacheEnabled = Configuration.key("cacheEnabled");
+
 	@Override
 	public ClientBundle impl() {
 		Class<? extends ClientBundle> registrationClass = Reflections
@@ -38,21 +42,27 @@ public class ClientBundleFactory implements RegistryFactory<ClientBundle> {
 		}
 
 		@Override
-		public Object invoke(Object proxy, Method m, Object[] args)
+		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
-			return cache.computeIfAbsent(m, method -> {
-				Source source = method.getAnnotation(Source.class);
-				ReadOp readOp = Io.read().relativeTo(bundleClass)
-						.resource(source.value()[0]);
-				Class<?> returnType = method.getReturnType();
-				if (returnType == SimpleCssResource.class) {
-					return new SimpleCssResourceImpl(readOp.asString());
-				} else if (returnType == TextResource.class) {
-					return new TextResourceImpl(readOp.asString());
-				} else {
-					throw new UnsupportedOperationException();
-				}
-			});
+			if (cacheEnabled.is()) {
+				return cache.computeIfAbsent(method, this::computeResource);
+			} else {
+				return computeResource(method);
+			}
+		}
+
+		ResourcePrototype computeResource(Method method) {
+			Source source = method.getAnnotation(Source.class);
+			ReadOp readOp = Io.read().relativeTo(bundleClass)
+					.resource(source.value()[0]);
+			Class<?> returnType = method.getReturnType();
+			if (returnType == SimpleCssResource.class) {
+				return new SimpleCssResourceImpl(readOp.asString());
+			} else if (returnType == TextResource.class) {
+				return new TextResourceImpl(readOp.asString());
+			} else {
+				throw new UnsupportedOperationException();
+			}
 		}
 	}
 

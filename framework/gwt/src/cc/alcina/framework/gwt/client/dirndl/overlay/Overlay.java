@@ -136,7 +136,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 		boolean modal;
 
-		boolean removeOnMouseDownOutside = true;
+		boolean closeOnMouseDownOutside = true;
 
 		boolean allowCloseWithoutSubmit = true;
 
@@ -205,7 +205,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			}
 			withLogicalParent(logicalParent);
 			withContents(contents);
-			withRemoveOnMouseDownOutside(true);
+			withCloseOnMouseDownOutside(true);
 			return this;
 		}
 
@@ -289,8 +289,8 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 		}
 
 		public Attributes
-				withRemoveOnMouseDownOutside(boolean removeOnMouseDownOutside) {
-			this.removeOnMouseDownOutside = removeOnMouseDownOutside;
+				withCloseOnMouseDownOutside(boolean closeOnMouseDownOutside) {
+			this.closeOnMouseDownOutside = closeOnMouseDownOutside;
 			return this;
 		}
 
@@ -303,7 +303,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			position.overlay(toOverlay);
 			withLogicalParent(logicalParent);
 			withContents(contents);
-			withRemoveOnMouseDownOutside(true);
+			withCloseOnMouseDownOutside(true);
 			return this;
 		}
 	}
@@ -496,7 +496,7 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 
 	@Override
 	public void onMouseDownOutside(MouseDownOutside event) {
-		if (attributes.removeOnMouseDownOutside) {
+		if (attributes.closeOnMouseDownOutside) {
 			GwtEvent gwtEvent = event.getContext().getOriginatingGwtEvent();
 			// don't close if a descendant overlay received the event
 			if (gwtEvent instanceof HasNativeEvent) {

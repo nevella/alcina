@@ -56,7 +56,7 @@ public interface TraversalExecCommand<T> extends ExecCommand<T> {
 					.query(TraversalExecCommand.class).implementations();
 			Overlay.attributes().withContents(new ExecCommandsArea(commands))
 					.withLogicalParent(Ui.get().page).positionViewportCentered()
-					.withRemoveOnMouseDownOutside(true).create().open();
+					.withCloseOnMouseDownOutside(true).create().open();
 		}
 
 		static void execCommand(ModelEvent event, List list,
