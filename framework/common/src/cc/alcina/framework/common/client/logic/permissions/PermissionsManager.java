@@ -63,6 +63,10 @@ import cc.alcina.framework.common.client.util.Topic;
  * <p>
  * FIXME - dirndl 1x2 - move Permission.rule to a type, (Rule) - rule is the
  * name + the evaluator.
+ * 
+ * <p>
+ * FIXME - possibly (probably) clientinstance should be a normal part of state,
+ * but that'll take testing
  *
  * @author Nick Reddel
  */
@@ -790,12 +794,16 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
 		stackDebug.maybeDebugStack(stateStack, true);
-		PermissionsState state = new PermissionsState(getUser(),
-				getLoginState(), isRoot());
+		PermissionsState state = toPermissionsState();
 		stateStack.push(state);
 		setLoginState(loginState);
 		setUser(user);
 		setRoot(asRoot);
+	}
+
+	public PermissionsState toPermissionsState() {
+		return new PermissionsState(getUser(), getLoginState(), isRoot(),
+				getClientInstance());
 	}
 
 	/*
@@ -947,17 +955,20 @@ public class PermissionsManager implements DomainTransformListener {
 
 		public boolean asRoot;
 
+		public ClientInstance clientInstance;
+
 		public PermissionsState(IUser user, LoginState loginState,
-				boolean asRoot) {
+				boolean asRoot, ClientInstance clientInstance) {
 			this.user = user;
 			this.loginState = loginState;
 			this.asRoot = asRoot;
+			this.clientInstance = clientInstance;
 		}
 
 		public static PermissionsState root() {
 			return new PermissionsState(
 					PermissionsManager.get().getSystemUser(),
-					LoginState.LOGGED_IN, true);
+					LoginState.LOGGED_IN, true, null);
 		}
 	}
 
@@ -1027,5 +1038,8 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public void pushState(PermissionsState state) {
 		pushUser(state.user, state.loginState, state.asRoot);
+		if (state.clientInstance != null) {
+			this.clientInstance = state.clientInstance;
+		}
 	}
 }

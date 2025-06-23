@@ -28,23 +28,20 @@ import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class AlcinaServletContext {
-	private static final String CONTEXT_SERVLET_CONTEXT = AlcinaServletContext.class
-			.getName() + ".CONTEXT_SERVLET_CONTEXT";
+	static final LooseContext.Key<AlcinaServletContext> contextServletContext = LooseContext
+			.key(AlcinaServletContext.class, "contextServletContext");
 
 	/** For use when accessing a cookie value outside an AlcinaServletContext */
-	public static final String CONTEXT_SERVLET_REQUEST = AlcinaServletContext.class
-			.getName() + ".CONTEXT_SERVLET_REQUEST";
+	public static final LooseContext.Key<HttpServletRequest> contextServletRequest = LooseContext
+			.key(AlcinaServletContext.class, "contextServletRequest");
 
 	public static void endContext() {
-		AlcinaServletContext threadContext = servletContext();
-		if (threadContext != null) {
-			threadContext.end();
-		}
+		contextServletContext.optional().ifPresent(AlcinaServletContext::end);
 	}
 
 	public static HttpContext httpContext() {
-		AlcinaServletContext servletContext = servletContext();
-		return servletContext != null ? servletContext.httpContext : null;
+		return contextServletContext.optional().map(ctx -> ctx.httpContext)
+				.orElse(null);
 	}
 
 	public static void removePerThreadContexts() {
@@ -58,7 +55,7 @@ public class AlcinaServletContext {
 	}
 
 	public static AlcinaServletContext servletContext() {
-		return LooseContext.get(CONTEXT_SERVLET_CONTEXT);
+		return contextServletContext.getTyped();
 	}
 
 	private int looseContextDepth = -1;
@@ -110,12 +107,12 @@ public class AlcinaServletContext {
 	public void begin(HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String threadName,
 			Map<String, ?> initialContext) {
-		Preconditions.checkState(!LooseContext.has(CONTEXT_SERVLET_CONTEXT));
+		Preconditions.checkState(!contextServletContext.has());
 		removePerThreadContexts();
 		LooseContext.push();
 		looseContextDepth = LooseContext.depth();
 		initialContext.forEach((key, value) -> LooseContext.set(key, value));
-		LooseContext.set(CONTEXT_SERVLET_CONTEXT, this);
+		contextServletContext.set(this);
 		httpContext = new HttpContext(httpServletRequest, httpServletResponse);
 		originalThreadName = Thread.currentThread().getName();
 		Thread.currentThread().setName(threadName);
@@ -172,7 +169,7 @@ public class AlcinaServletContext {
 	}
 
 	public static void putContextRequest(HttpServletRequest request) {
-		LooseContext.set(CONTEXT_SERVLET_REQUEST, request);
+		contextServletRequest.set(request);
 	}
 
 	public static class NonClientCookiesImpl implements NonClientCookies {
@@ -181,8 +178,7 @@ public class AlcinaServletContext {
 				return httpContext()
 						.getCookieValue(ClientProperties.class.getName());
 			} else {
-				HttpServletRequest request = LooseContext
-						.get(CONTEXT_SERVLET_REQUEST);
+				HttpServletRequest request = contextServletRequest.getTyped();
 				if (request != null) {
 					return CookieUtils.getCookieValueByName(request,
 							cookieName);

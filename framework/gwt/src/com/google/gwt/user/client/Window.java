@@ -272,6 +272,13 @@ public class Window {
     $wnd.alert(msg);
 	}-*/;
 
+	/*
+	 * Hack - fix would really be to get rid of the Location/LocationImpl split
+	 */
+	public static native void reload0() /*-{
+    $wnd.location.reload();
+	}-*/;
+
 	/**
 	 * Displays a message in a modal dialog box, along with the standard 'OK'
 	 * and 'Cancel' buttons.

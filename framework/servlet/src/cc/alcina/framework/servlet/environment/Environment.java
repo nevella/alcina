@@ -61,6 +61,8 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
+import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
+import cc.alcina.framework.servlet.servlet.HttpContext;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -174,6 +176,17 @@ class Environment {
 			return awaitResponse(node, methodName, handler);
 		}
 
+		@Override
+		public <T> T invokeScript(Class clazz, String methodName,
+				List<Class> argumentTypes, List<?> arguments) {
+			String methodBody = new JsInvokeBuilder().build(clazz, methodName,
+					argumentTypes, arguments);
+			ResponseHandler handler = invoke0(null, null, null, null, List.of(),
+					methodBody, null);
+			// currently non-sync
+			return null;
+		}
+
 		<T> T awaitResponse(NodeAttachId node, String methodName,
 				ResponseHandler handler) {
 			boolean timedOut = false;
@@ -207,17 +220,6 @@ class Environment {
 							handler.response.exception);
 				}
 			}
-		}
-
-		@Override
-		public <T> T invokeScript(Class clazz, String methodName,
-				List<Class> argumentTypes, List<?> arguments) {
-			String methodBody = new JsInvokeBuilder().build(clazz, methodName,
-					argumentTypes, arguments);
-			ResponseHandler handler = invoke0(null, null, null, null, List.of(),
-					methodBody, null);
-			// currently non-sync
-			return null;
 		}
 
 		ResponseHandler invoke0(NodeAttachId node, String methodName,
@@ -545,27 +547,25 @@ class Environment {
 		boolean isSendFullExceptionMessage() {
 			return ui.isSendFullExceptionMessage();
 		}
+
+		/**
+		 * <p>
+		 * The HttpContext of an environment is complex, given that there's a
+		 * non-1-1 relationship between messages and http request/response
+		 * 
+		 * <p>
+		 * so....this essentially routes to the "current live token"
+		 */
+		public HttpContext getCurrentHttpContext() {
+			return queue.transportLayer.getCurrentHttpContext();
+		}
 	}
 
-	private void emitServerDebugProtocolResponse(
-			ServerDebugProtocolRequest message) {
-		logger.info("Client requested protocol dump -- client state:\n{}",
-				message.clientState);
-		FormatBuilder format = new FormatBuilder();
-		format.line("Server execution/transport state");
-		format.dashedLine();
-		format.line("execution thread:");
-		Thread thread = queue.executionThread;
-		format.line(SEUtilities.dumpStackTrace(thread));
-		format.dashedLine();
-		format.line("transport:");
-		format.line(queue.transportLayer.toStateDebugString());
-		ServerDebugProtocolResponse responseMessage = new ServerDebugProtocolResponse();
-		responseMessage.serverState = format.toString();
-		logger.info("Server protocol response state:\n{}",
-				responseMessage.serverState);
-		queue.sendToClient(responseMessage);
-		queue.flush();
+	class DispatchRefProviderImpl extends DispatchRefProvider {
+		@Override
+		public Consumer<Runnable> getDispatch() {
+			return access()::invoke;
+		}
 	}
 
 	static final transient String CONTEXT_ENVIRONMENT = Environment.class
@@ -644,16 +644,16 @@ class Environment {
 		queue = new ClientExecutionQueue(this);
 	}
 
+	@Override
+	public String toString() {
+		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
+	}
+
 	void flushNonClientMutations() {
 		access().invoke(() -> {
 			emitMutations();
 			access().flush();
 		});
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("env::%s [%s/%s]", uid, session.id, session.auth);
 	}
 
 	ClientExecutionThreadAccess fromClientExecutionThreadAccess() {
@@ -670,6 +670,41 @@ class Environment {
 
 	Access access() {
 		return access;
+	}
+
+	void emitMutations() {
+		SelectionRecord pendingSelectionMutation = Document.get()
+				.attachIdRemote().getPendingSelectionMutationAndClear();
+		if (mutations == null && pendingSelectionMutation != null) {
+			mutations = new Message.Mutations();
+		}
+		if (mutations != null) {
+			Document.get().attachIdRemote().flushSinkEventsQueue();
+			mutations.setSelectionMutation(pendingSelectionMutation);
+			queue.sendToClient(mutations);
+			mutations = null;
+		}
+	}
+
+	private void emitServerDebugProtocolResponse(
+			ServerDebugProtocolRequest message) {
+		logger.info("Client requested protocol dump -- client state:\n{}",
+				message.clientState);
+		FormatBuilder format = new FormatBuilder();
+		format.line("Server execution/transport state");
+		format.dashedLine();
+		format.line("execution thread:");
+		Thread thread = queue.executionThread;
+		format.line(SEUtilities.dumpStackTrace(thread));
+		format.dashedLine();
+		format.line("transport:");
+		format.line(queue.transportLayer.toStateDebugString());
+		ServerDebugProtocolResponse responseMessage = new ServerDebugProtocolResponse();
+		responseMessage.serverState = format.toString();
+		logger.info("Server protocol response state:\n{}",
+				responseMessage.serverState);
+		queue.sendToClient(responseMessage);
+		queue.flush();
 	}
 
 	private void enterContext() {
@@ -712,13 +747,6 @@ class Environment {
 		Document.get().onDocumentEventSystemInit();
 		DispatchRefProvider.context.set(new DispatchRefProviderImpl());
 		GWTBridgeHeadless.inClient.set(true);
-	}
-
-	class DispatchRefProviderImpl extends DispatchRefProvider {
-		@Override
-		public Consumer<Runnable> getDispatch() {
-			return access()::invoke;
-		}
 	}
 
 	private void exitContext() {
@@ -792,20 +820,6 @@ class Environment {
 			throw e;
 		} finally {
 			ui.onExitIteration();
-		}
-	}
-
-	void emitMutations() {
-		SelectionRecord pendingSelectionMutation = Document.get()
-				.attachIdRemote().getPendingSelectionMutationAndClear();
-		if (mutations == null && pendingSelectionMutation != null) {
-			mutations = new Message.Mutations();
-		}
-		if (mutations != null) {
-			Document.get().attachIdRemote().flushSinkEventsQueue();
-			mutations.setSelectionMutation(pendingSelectionMutation);
-			queue.sendToClient(mutations);
-			mutations = null;
 		}
 	}
 

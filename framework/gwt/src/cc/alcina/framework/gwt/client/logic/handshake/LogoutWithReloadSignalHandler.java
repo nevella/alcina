@@ -6,6 +6,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.ConsortSignalHandler;
+import cc.alcina.framework.common.client.util.Al;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.logic.CallManager;
 
@@ -24,7 +25,11 @@ public class LogoutWithReloadSignalHandler
 
 	@Override
 	public void onSuccess(Object result) {
-		CallManager.get().completed(this);
+		// FIXME - romcom - better handle at another level (post-close mutations
+		// should be silently dropped, not fail)
+		if (Al.isBrowser()) {
+			CallManager.get().completed(this);
+		}
 		Window.Location.reload();
 	}
 
@@ -32,6 +37,10 @@ public class LogoutWithReloadSignalHandler
 	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
 		consort.addOneTimeFinishedCallback(signalHandledCallback);
 		Client.commonRemoteService().logout(this);
-		CallManager.get().register(this, "Logging out");
+		// FIXME - romcom - better handle at another level (post-close mutations
+		// should be silently dropped, not fail)
+		if (Al.isBrowser()) {
+			CallManager.get().register(this, "Logging out");
+		}
 	}
 }

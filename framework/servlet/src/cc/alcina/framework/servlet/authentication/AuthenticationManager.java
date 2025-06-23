@@ -207,9 +207,31 @@ public class AuthenticationManager {
 		}
 	}
 
+	public static class ContextRef {
+		AuthenticationContext context;
+
+		ContextRef(AuthenticationContext context) {
+			this.context = context;
+		}
+	}
+
 	private AuthenticationContext ensureContext() {
 		return LooseContext.ensure(CONTEXT_AUTHENTICATION_CONTEXT,
 				AuthenticationContext::new);
+	}
+
+	/*
+	 * For copying context across threads
+	 */
+	public static void setContext(ContextRef contextRef) {
+		LooseContext.set(CONTEXT_AUTHENTICATION_CONTEXT, contextRef.context);
+	}
+
+	/*
+	 * For copying context across threads
+	 */
+	public static ContextRef getContextRef() {
+		return new ContextRef(get().ensureContext());
 	}
 
 	private void ensureIid(AuthenticationContext context) {

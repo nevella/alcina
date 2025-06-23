@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -43,11 +44,13 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.Iid;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.PublicationCounter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -55,6 +58,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -70,6 +74,7 @@ import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.persistence.AuthenticationPersistence.BootstrapCreationResult;
 import cc.alcina.framework.entity.persistence.domain.DomainLinker;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
 import cc.alcina.framework.entity.persistence.transform.TransformCache;
@@ -784,5 +789,102 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	@Registration(CommonPersistenceConnectionProvider.class)
 	public abstract static class CommonPersistenceConnectionProvider {
 		public abstract Connection getConnection();
+	}
+
+	@Override
+	public void authenticationResetIid(long id) {
+		String eql = Ax.format("update iid set optlock=0 where id=%s", id);
+		getEntityManager().createNativeQuery(eql).executeUpdate();
+	}
+
+	@Override
+	public BootstrapCreationResult
+			authenticationCreateBootstrapClientInstance(String hostName) {
+		EntityManager em = getEntityManager();
+		BootstrapCreationResult result = new BootstrapCreationResult();
+		String authenticationSessionUid = Ax.format("%s%s",
+				ClientInstance.SERVLET_PREFIX, hostName);
+		String iidUid = authenticationSessionUid;
+		List<Entity> createdObjects = new ArrayList<>();
+		Iid iid = (Iid) Ax.first(em.createQuery(Ax.format(
+				"select iid from %s iid where instanceId = '%s'",
+				PersistentImpl.getImplementationSimpleClassName(Iid.class),
+				iidUid)).getResultList());
+		if (iid == null) {
+			iid = PersistentImpl.getNewImplementationInstance(Iid.class);
+			iid.setInstanceId(iidUid);
+			em.persist(iid);
+			createdObjects.add(iid);
+		}
+		AuthenticationSession authenticationSession = (AuthenticationSession) Ax
+				.first(em.createQuery(Ax.format(
+						"select authenticationSession from %s authenticationSession where sessionId = '%s'",
+						PersistentImpl.getImplementationSimpleClassName(
+								AuthenticationSession.class),
+						authenticationSessionUid)).getResultList());
+		if (authenticationSession == null) {
+			authenticationSession = PersistentImpl
+					.getNewImplementationInstance(AuthenticationSession.class);
+			authenticationSession.setSessionId(authenticationSessionUid);
+			authenticationSession.setStartTime(new Date());
+			authenticationSession.setUser((IUser) persistentImpl(em,
+					(Entity) PermissionsManager.get().getUser()));
+			authenticationSession.setAuthenticationType("server-instance");
+			authenticationSession.setIid(iid);
+			em.persist(authenticationSession);
+			createdObjects.add(authenticationSession);
+		}
+		ClientInstance clientInstance = PersistentImpl
+				.getNewImplementationInstance(ClientInstance.class);
+		clientInstance.setHelloDate(new Date());
+		clientInstance.setUserAgent(authenticationSessionUid);
+		clientInstance.setAuthenticationSession(authenticationSession);
+		clientInstance.setAuth(Math.abs(new Random().nextInt()));
+		clientInstance.setIpAddress("127.0.0.1");
+		clientInstance.setBotUserAgent(false);
+		em.persist(clientInstance);
+		Iid detachedIid = PersistentImpl
+				.getNewImplementationInstance(Iid.class);
+		detachedIid.setId(iid.getId());
+		if (createdObjects.contains(iid)) {
+			result.createdDetached.add(detachedIid);
+		}
+		AuthenticationSession detachedSession = PersistentImpl
+				.getNewImplementationInstance(AuthenticationSession.class);
+		detachedSession.setId(authenticationSession.getId());
+		detachedSession.setIid(detachedIid);
+		if (createdObjects.contains(authenticationSession)) {
+			result.createdDetached.add(detachedSession);
+		}
+		ClientInstance detachedInstance = PersistentImpl
+				.getNewImplementationInstance(ClientInstance.class);
+		detachedInstance.setId(clientInstance.getId());
+		detachedInstance.setAuthenticationSession(detachedSession);
+		result.createdDetached.add(detachedInstance);
+		result.clientInstance = detachedInstance;
+		return result;
+	}
+
+	<V extends Entity> V persistentImpl(EntityManager em, V v) {
+		return (V) em.find(v.entityClass(), v.getId());
+	}
+
+	public Long authenticationGetAuthenticationSessionId(String sessionId) {
+		Class<? extends AuthenticationSession> clazz = PersistentImpl
+				.getImplementation(AuthenticationSession.class);
+		String query = Ax.format(
+				"select authenticationSession.id from %s authenticationSession where %s='%s'",
+				clazz.getSimpleName(), "sessionId", sessionId);
+		return Ax.first((List<Long>) getEntityManager().createQuery(query)
+				.getResultList());
+	}
+
+	public Long authenticationGetIidId(String instanceId) {
+		Class<? extends Iid> clazz = PersistentImpl
+				.getImplementation(Iid.class);
+		String query = Ax.format("select id from %s where %s='%s'",
+				clazz.getSimpleName(), "instanceId", instanceId);
+		return Ax.first((List<Long>) getEntityManager().createQuery(query)
+				.getResultList());
 	}
 }

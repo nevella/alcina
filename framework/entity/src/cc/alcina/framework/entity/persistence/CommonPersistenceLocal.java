@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
+import cc.alcina.framework.entity.persistence.AuthenticationPersistence.BootstrapCreationResult;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
 import cc.alcina.framework.entity.persistence.transform.TransformCache;
 import cc.alcina.framework.entity.persistence.transform.TransformPersister.TransformPersisterToken;
@@ -113,4 +114,13 @@ public interface CommonPersistenceLocal {
 	public TransformCache warmupTransformCache();
 
 	public long getMaxId(Class<? extends Entity> clazz);
+
+	public void authenticationResetIid(long id);
+
+	BootstrapCreationResult
+			authenticationCreateBootstrapClientInstance(String hostName);
+
+	Long authenticationGetAuthenticationSessionId(String sessionId);
+
+	Long authenticationGetIidId(String instanceId);
 }

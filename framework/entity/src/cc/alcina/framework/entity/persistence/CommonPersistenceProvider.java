@@ -24,7 +24,7 @@ public interface CommonPersistenceProvider {
 		return Registry.impl(CommonPersistenceProvider.class);
 	}
 
-	public CommonPersistenceLocal getCommonPersistence();
+	CommonPersistenceLocal getCommonPersistence();
 
 	CommonPersistenceLocal getCommonPersistenceExTransaction();
 }

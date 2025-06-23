@@ -31,12 +31,14 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.Registration.EnvironmentRegistration;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
 /**
  *
  * @author Nick Reddel
  */
+@EnvironmentRegistration
 public interface CommonRemoteServiceAsync {
 	public void getJobLog(long jobId, AsyncCallback<String> callback);
 

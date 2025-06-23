@@ -1,19 +1,50 @@
 package cc.alcina.framework.servlet.component.romcom.server;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.environment.EnvironmentManager;
 import cc.alcina.framework.servlet.environment.EnvironmentManager.Credentials;
 import cc.alcina.framework.servlet.environment.RemoteUi;
+import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
 public interface RemoteComponent {
+	default boolean isUseContextIdentity() {
+		return false;
+	}
+
+	default RemoteComponentProtocol.Session createEnvironment(
+			HttpServletRequest request, HttpServletResponse response) {
+		if (isUseContextIdentity()) {
+			InstanceOracle.query(DomainStore.class).await();
+			AlcinaServletContext alcinaContext = new AlcinaServletContext();
+			try {
+				alcinaContext.begin(request, response,
+						Thread.currentThread().getName());
+				return createEnvironmentAuthenticated(request);
+			} finally {
+				alcinaContext.end();
+			}
+		} else {
+			try {
+				LooseContext.push();
+				return createEnvironmentAuthenticated(request);
+			} finally {
+				LooseContext.pop();
+			}
+		}
+	}
+
 	default RemoteComponentProtocol.Session
-			createEnvironment(HttpServletRequest request) {
+			createEnvironmentAuthenticated(HttpServletRequest request) {
 		Credentials credentials = Credentials.createUnique();
 		RemoteUi ui = getUiInstance();
 		RemoteComponentProtocol.Session session = new RemoteComponentProtocol.Session();

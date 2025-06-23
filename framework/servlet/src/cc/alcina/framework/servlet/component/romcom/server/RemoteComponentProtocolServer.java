@@ -2,6 +2,9 @@ package cc.alcina.framework.servlet.component.romcom.server;
 
 import java.util.concurrent.CountDownLatch;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +13,7 @@ import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
+import cc.alcina.framework.servlet.servlet.HttpContext;
 
 public class RemoteComponentProtocolServer {
 	public static final transient String ROMCOM_SERIALIZED_SESSION_KEY = "__alc_romcom_session";
@@ -60,11 +64,16 @@ public class RemoteComponentProtocolServer {
 
 		public final String requestJson;
 
+		public final HttpContext httpContext;
+
 		public RequestToken(String requestJson, RemoteComponentRequest request,
-				RemoteComponentResponse response) {
+				RemoteComponentResponse response,
+				HttpServletRequest servletRequest,
+				HttpServletResponse servletResponse) {
 			this.requestJson = requestJson;
 			this.request = request;
 			this.response = response;
+			this.httpContext = new HttpContext(servletRequest, servletResponse);
 			this.latch = new CountDownLatch(1);
 		}
 

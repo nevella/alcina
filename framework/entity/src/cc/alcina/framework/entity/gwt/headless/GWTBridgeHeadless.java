@@ -2,12 +2,14 @@ package cc.alcina.framework.entity.gwt.headless;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWTBridge;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.i18n.client.BidiPolicy.BidiPolicyImpl;
 import com.google.gwt.i18n.client.impl.CldrImpl;
@@ -307,7 +309,8 @@ public class GWTBridgeHeadless extends GWTBridge {
 
 		@Override
 		public void reload() {
-			throw new UnsupportedOperationException();
+			Document.get().invoke(() -> Window.reload0(), Window.class,
+					"reload0", List.of(), List.of(), false);
 		}
 
 		@Override

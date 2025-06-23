@@ -16,6 +16,7 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.AwaitRemote;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
+import cc.alcina.framework.servlet.servlet.HttpContext;
 
 /**
  * <p>
@@ -131,6 +132,12 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 
 		// FIXME - DOC - this is really the key for metadata exchange
 		RequestToken getPreferredDispatchableTokenAndRemoveFromAvailable() {
+			DispatchableToken dispatchable = getPreferredDispatchableToken();
+			dispatchableTokens.remove(dispatchable);
+			return dispatchable.token;
+		}
+
+		DispatchableToken getPreferredDispatchableToken() {
 			DispatchableToken dispatchable = null;
 			// second awaiter, if > 1 awaiters
 			dispatchable = dispatchableTokens.stream()
@@ -147,8 +154,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 				dispatchable = dispatchableTokens.stream()
 						.filter(token -> token.isAwaiter()).findFirst().get();
 			}
-			dispatchableTokens.remove(dispatchable);
-			return dispatchable.token;
+			return dispatchable;
 		}
 
 		// FIXME - DOC - this is really the key for metadata exchange [#2]
@@ -369,5 +375,10 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 			format.line(envelopeDispatcher().toDebugString());
 		}
 		return format.toString();
+	}
+
+	public HttpContext getCurrentHttpContext() {
+		return aggregateDispatcher
+				.getPreferredDispatchableToken().token.httpContext;
 	}
 }

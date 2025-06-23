@@ -52,12 +52,6 @@ public class AuthenticationPersistence {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	private <V> V
-			callWithEntityManager(ThrowingFunction<EntityManager, V> function) {
-		return CommonPersistenceProvider.get().getCommonPersistence()
-				.callWithEntityManager(function);
-	}
-
 	public AuthenticationSession createAuthenticationSession(Iid iid,
 			Date startDate, String sessionId, IUser user,
 			String authenticationType) {
@@ -68,11 +62,8 @@ public class AuthenticationPersistence {
 			iid.setVersionNumber(0);
 			String eql = Ax.format("update iid set optlock=0 where id=%s",
 					iid.getId());
-			callWithEntityManager(em -> {
-				em.createNativeQuery(eql).executeUpdate();
-				//
-				return null;
-			});
+			CommonPersistenceProvider.get().getCommonPersistence()
+					.authenticationResetIid(iid.getId());
 		}
 		session.setIid(iid);
 		session.setSessionId(sessionId);
@@ -83,8 +74,10 @@ public class AuthenticationPersistence {
 	}
 
 	public void createBootstrapClientInstance() {
-		BootstrapCreationResult bootstrapInstanceResult = callWithEntityManager(
-				new BootstrapInstanceCreator());
+		BootstrapCreationResult bootstrapInstanceResult = CommonPersistenceProvider
+				.get().getCommonPersistence()
+				.authenticationCreateBootstrapClientInstance(
+						EntityLayerUtils.getLocalHostName());
 		ClientInstance persistent = bootstrapInstanceResult.clientInstance;
 		EntityLayerObjects.get().setServerAsClientInstance(persistent);
 		ClientInstance preCommit = persistent.domain().domainVersion();
@@ -113,72 +106,6 @@ public class AuthenticationPersistence {
 		ClientInstance domainVersion = persistent.domain().domainVersion();
 		// ensure this instance is the only one ever created in the domain
 		EntityLayerObjects.get().setServerAsClientInstance(domainVersion);
-	}
-
-	private BootstrapCreationResult
-			createBootstrapClientInstance(EntityManager em, String hostName) {
-		BootstrapCreationResult result = new BootstrapCreationResult();
-		String authenticationSessionUid = Ax.format("%s%s",
-				ClientInstance.SERVLET_PREFIX, hostName);
-		String iidUid = authenticationSessionUid;
-		List<Entity> createdObjects = new ArrayList<>();
-		Iid iid = (Iid) Ax.first(em.createQuery(Ax.format(
-				"select iid from %s iid where instanceId = '%s'",
-				PersistentImpl.getImplementationSimpleClassName(Iid.class),
-				iidUid)).getResultList());
-		if (iid == null) {
-			iid = PersistentImpl.getNewImplementationInstance(Iid.class);
-			iid.setInstanceId(iidUid);
-			em.persist(iid);
-			createdObjects.add(iid);
-		}
-		AuthenticationSession authenticationSession = (AuthenticationSession) Ax
-				.first(em.createQuery(Ax.format(
-						"select authenticationSession from %s authenticationSession where sessionId = '%s'",
-						PersistentImpl.getImplementationSimpleClassName(
-								AuthenticationSession.class),
-						authenticationSessionUid)).getResultList());
-		if (authenticationSession == null) {
-			authenticationSession = PersistentImpl
-					.getNewImplementationInstance(AuthenticationSession.class);
-			authenticationSession.setSessionId(authenticationSessionUid);
-			authenticationSession.setStartTime(new Date());
-			authenticationSession.setUser((IUser) persistentImpl(em,
-					(Entity) PermissionsManager.get().getUser()));
-			authenticationSession.setAuthenticationType("server-instance");
-			authenticationSession.setIid(iid);
-			em.persist(authenticationSession);
-			createdObjects.add(authenticationSession);
-		}
-		ClientInstance clientInstance = PersistentImpl
-				.getNewImplementationInstance(ClientInstance.class);
-		clientInstance.setHelloDate(new Date());
-		clientInstance.setUserAgent(authenticationSessionUid);
-		clientInstance.setAuthenticationSession(authenticationSession);
-		clientInstance.setAuth(Math.abs(new Random().nextInt()));
-		clientInstance.setIpAddress("127.0.0.1");
-		clientInstance.setBotUserAgent(false);
-		em.persist(clientInstance);
-		Iid detachedIid = PersistentImpl
-				.getNewImplementationInstance(Iid.class);
-		detachedIid.setId(iid.getId());
-		if (createdObjects.contains(iid)) {
-			result.createdDetached.add(detachedIid);
-		}
-		AuthenticationSession detachedSession = PersistentImpl
-				.getNewImplementationInstance(AuthenticationSession.class);
-		detachedSession.setId(authenticationSession.getId());
-		detachedSession.setIid(detachedIid);
-		if (createdObjects.contains(authenticationSession)) {
-			result.createdDetached.add(detachedSession);
-		}
-		ClientInstance detachedInstance = PersistentImpl
-				.getNewImplementationInstance(ClientInstance.class);
-		detachedInstance.setId(clientInstance.getId());
-		detachedInstance.setAuthenticationSession(detachedSession);
-		result.createdDetached.add(detachedInstance);
-		result.clientInstance = detachedInstance;
-		return result;
 	}
 
 	public ClientInstance createClientInstance(AuthenticationSession session,
@@ -226,8 +153,8 @@ public class AuthenticationPersistence {
 		// if (lookupQueries.put(query, query) != null) {
 		// return null;
 		// }
-		Long id = Ax.first((List<Long>) callWithEntityManager(
-				em -> em.createQuery(query).getResultList()));
+		Long id = CommonPersistenceProvider.get().getCommonPersistence()
+				.authenticationGetAuthenticationSessionId(sessionId);
 		if (id == null) {
 			return null;
 		}
@@ -247,21 +174,9 @@ public class AuthenticationPersistence {
 		if (domainEntity.isPresent()) {
 			return domainEntity.get();
 		}
-		String query = Ax.format("select id from %s where %s='%s'",
-				clazz.getSimpleName(), "instanceId", instanceId);
-		/*
-		 * caching issue if not in postProcess - see DomainStore.find
-		 */
-		// if (lookupQueries.put(query, query) != null) {
-		// return null;
-		// }
-		Long id = Ax.first((List<Long>) callWithEntityManager(
-				em -> em.createQuery(query).getResultList()));
+		Long id = CommonPersistenceProvider.get().getCommonPersistence()
+				.authenticationGetIidId(instanceId);
 		return id == null ? null : Domain.find(clazz, id);
-	}
-
-	private <V extends Entity> V persistentImpl(EntityManager em, V v) {
-		return (V) em.find(v.entityClass(), v.getId());
 	}
 
 	public void populateSessionUserFromRememberMeUser(
@@ -300,20 +215,5 @@ public class AuthenticationPersistence {
 		ClientInstance clientInstance;
 
 		List<Entity> createdDetached = new ArrayList<>();
-	}
-
-	public static class BootstrapInstanceCreator implements
-			ThrowingFunction<EntityManager, BootstrapCreationResult> {
-		private String hostName;
-
-		public BootstrapInstanceCreator() {
-			hostName = EntityLayerUtils.getLocalHostName();
-		}
-
-		@Override
-		public BootstrapCreationResult apply(EntityManager em) {
-			return AuthenticationPersistence.get()
-					.createBootstrapClientInstance(em, hostName);
-		}
 	}
 }
