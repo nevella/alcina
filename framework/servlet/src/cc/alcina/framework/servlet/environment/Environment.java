@@ -547,18 +547,6 @@ class Environment {
 		boolean isSendFullExceptionMessage() {
 			return ui.isSendFullExceptionMessage();
 		}
-
-		/**
-		 * <p>
-		 * The HttpContext of an environment is complex, given that there's a
-		 * non-1-1 relationship between messages and http request/response
-		 * 
-		 * <p>
-		 * so....this essentially routes to the "current live token"
-		 */
-		public HttpContext getCurrentHttpContext() {
-			return queue.transportLayer.getCurrentHttpContext();
-		}
 	}
 
 	class DispatchRefProviderImpl extends DispatchRefProvider {

@@ -26,8 +26,7 @@ import cc.alcina.framework.gwt.client.util.KeyboardShortcuts;
 import cc.alcina.framework.servlet.ServletLayerTopics;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
-import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
-import cc.alcina.framework.servlet.servlet.HttpContext;
+import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 
 /**
  * <p>
@@ -172,8 +171,8 @@ public abstract class AbstractUi<P extends Place> extends Bindable.Fields
 		return environment.access().getSession();
 	}
 
-	public HttpContext getHttpContext() {
-		return environment.access().getCurrentHttpContext();
+	protected AuthenticationTokenStore getAuthenticationTokenStore() {
+		return new RemoteAuthenticationStore(environment);
 	}
 
 	@Override

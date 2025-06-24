@@ -64,16 +64,11 @@ public class RemoteComponentProtocolServer {
 
 		public final String requestJson;
 
-		public final HttpContext httpContext;
-
 		public RequestToken(String requestJson, RemoteComponentRequest request,
-				RemoteComponentResponse response,
-				HttpServletRequest servletRequest,
-				HttpServletResponse servletResponse) {
+				RemoteComponentResponse response) {
 			this.requestJson = requestJson;
 			this.request = request;
 			this.response = response;
-			this.httpContext = new HttpContext(servletRequest, servletResponse);
 			this.latch = new CountDownLatch(1);
 		}
 

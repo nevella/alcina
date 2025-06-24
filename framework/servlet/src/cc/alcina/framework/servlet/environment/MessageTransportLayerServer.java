@@ -376,9 +376,4 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 		}
 		return format.toString();
 	}
-
-	public HttpContext getCurrentHttpContext() {
-		return aggregateDispatcher
-				.getPreferredDispatchableToken().token.httpContext;
-	}
 }

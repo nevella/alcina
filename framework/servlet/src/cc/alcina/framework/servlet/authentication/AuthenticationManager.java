@@ -213,6 +213,12 @@ public class AuthenticationManager {
 		ContextRef(AuthenticationContext context) {
 			this.context = context;
 		}
+
+		public void setTokenStore(
+				AuthenticationTokenStore authenticationTokenStore) {
+			authenticationTokenStore.wrapDelegate(context.tokenStore);
+			context.tokenStore = authenticationTokenStore;
+		}
 	}
 
 	private AuthenticationContext ensureContext() {

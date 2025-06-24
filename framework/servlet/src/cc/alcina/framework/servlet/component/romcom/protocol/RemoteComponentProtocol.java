@@ -206,6 +206,24 @@ public class RemoteComponentProtocol {
 			public String serverState;
 		}
 
+		/**
+		 * An odd one, this is processed server-side but is part of the
+		 * to-client message sequence
+		 */
+		public static class SetCookieServerSide extends Message {
+			public SetCookieServerSide() {
+			}
+
+			public SetCookieServerSide(String name, String value) {
+				this.name = name;
+				this.value = value;
+			}
+
+			public String name;
+
+			public String value;
+		}
+
 		// FIXME - doc this annotation
 		@ReflectiveSerializer.Checks(ignore = true)
 		public static class InvokeResponse extends Message {

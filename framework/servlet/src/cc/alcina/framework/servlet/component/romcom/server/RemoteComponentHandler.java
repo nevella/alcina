@@ -8,6 +8,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -28,7 +29,9 @@ import cc.alcina.framework.servlet.component.romcom.protocol.MessageTransportLay
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.InvalidClientException.Action;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.ProcessingException;
+import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message.SetCookieServerSide;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.ProtocolException;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentRequest;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentResponse;
@@ -279,7 +282,7 @@ public class RemoteComponentHandler {
 						request.messageEnvelope.toMessageDebugString());
 				try {
 					RequestToken token = new RequestToken(requestJson, request,
-							response, servletRequest, servletResponse);
+							response);
 					EnvironmentManager.get().acceptRequest(token);
 					token.latch.await();
 				} catch (Exception e) {
@@ -322,6 +325,8 @@ public class RemoteComponentHandler {
 						response.messageEnvelope.toMessageSummaryString());
 				new RemoteComponentEvent(request, response, start,
 						System.currentTimeMillis()).publish();
+				applyOutgoingMessagesToServletResponse(servletResponse,
+						response);
 				servletResponse.getWriter()
 						.write(ReflectiveSerializer.serializeForRpc(response));
 			}
@@ -331,6 +336,21 @@ public class RemoteComponentHandler {
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	void applyOutgoingMessagesToServletResponse(
+			HttpServletResponse servletResponse,
+			RemoteComponentResponse response) {
+		response.messageEnvelope.packets.forEach(packet -> {
+			Message message = packet.message;
+			if (message instanceof SetCookieServerSide) {
+				SetCookieServerSide cookieMessage = (SetCookieServerSide) message;
+				servletResponse.addCookie(
+						new Cookie(cookieMessage.name, cookieMessage.value));
+				logger.info("Set cookie: {}->'{}'", cookieMessage.name,
+						cookieMessage.value);
+			}
+		});
 	}
 
 	public void setLoadIndicatorHtml(String loadIndicatorHtml) {

@@ -24,6 +24,10 @@ public interface AuthenticationTokenStore {
 
 	void setCookieValue(String name, String value);
 
+	default void wrapDelegate(AuthenticationTokenStore existingStore) {
+		// noop
+	}
+
 	public static class ApiAuthenticationTokenStore
 			implements AuthenticationTokenStore {
 		private String userAgent;
