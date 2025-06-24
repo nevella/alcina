@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.function.Supplier;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
@@ -105,7 +106,7 @@ public class ChoicesDropdown<T> extends Model.Value<T>
 	public void onClosed(Closed event) {
 		dropdown.onClosed(event);
 		if (labelArrow.provideIsBound()
-				&& WidgetUtils.getFocussedDocumentElement() == null) {
+				&& Document.get().getActiveElement() == null) {
 			labelArrow.provideElement().focus();
 		}
 		// squelch close events

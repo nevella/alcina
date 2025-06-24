@@ -1030,13 +1030,20 @@ public final class DocumentJso extends NodeJso implements ClientDomDocument {
 	}
 
 	@Override
-	public Element getActiveElement() {
-		ElementJso activeElementJso = getActiveElement0();
-		return activeElementJso == null ? null : activeElementJso.elementFor();
-	}
+	public native Element getActiveElement()/*-{
+		return this.activeElement
+		?@com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(this.activeElement)
+		:null;
+		}-*/;
 
-	native ElementJso getActiveElement0()/*-{
-		return this.activeElement;
+	@Override
+	public native void setActiveElement(Element elem)/*-{
+		if(elem!=null){
+			throw "parameter must be null";
+		}
+		if(this.activeElement){
+			this.activeElement.blur();
+		}
 		}-*/;
 
 	@Override
@@ -1054,13 +1061,4 @@ public final class DocumentJso extends NodeJso implements ClientDomDocument {
 	public ClientDomSelection ensureRemoteSelection(Selection selection) {
 		return getSelection();
 	}
-
-	public native Element getFocussedDocumentElement()/*-{
-		if (this.activeElement) {
-		  var tagName = this.activeElement.tagName.toLowerCase();
-		  return tagName != "body" && tagName != "html" ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(this.activeElement)
-			  : null;
-		}
-		return null;
-		}-*/;
 }

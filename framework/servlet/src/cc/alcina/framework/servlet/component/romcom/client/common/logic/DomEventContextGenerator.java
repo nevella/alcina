@@ -21,7 +21,7 @@ class DomEventContextGenerator {
 		addRect(doc.getDocumentElement());
 		Element activeElement = doc.getActiveElement();
 		if (activeElement != null) {
-			result.focussedElement = AttachId.forNode(activeElement);
+			result.activeElement = AttachId.forNode(activeElement);
 			Element cursor = activeElement;
 			while (cursor != doc.getDocumentElement()) {
 				addRect(cursor);

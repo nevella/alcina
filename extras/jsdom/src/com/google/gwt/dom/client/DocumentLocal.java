@@ -781,4 +781,9 @@ public class DocumentLocal extends NodeLocal implements ClientDomDocument {
 	public ClientDomSelection ensureRemoteSelection(Selection selection) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void setActiveElement(Element elem) {
+		throw new UnsupportedOperationException();
+	}
 }

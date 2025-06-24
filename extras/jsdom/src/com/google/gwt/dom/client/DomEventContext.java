@@ -19,12 +19,12 @@ import cc.alcina.framework.common.client.util.IntPair;
  * - focus, scroll position, selection etc
  * 
  * <p>
- * Data are sent for: [window, all ancestors inclusive of the focussed element,
+ * Data are sent for: [window, all ancestors inclusive of the active element,
  * elements with attribute -rc-transmit-state]
  */
 @Bean(PropertySource.FIELDS)
 public final class DomEventContext {
-	public AttachId focussedElement;
+	public AttachId activeElement;
 
 	public List<NodeUiState> nodeUiStates = new ArrayList<>();
 

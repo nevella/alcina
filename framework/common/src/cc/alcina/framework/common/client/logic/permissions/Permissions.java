@@ -87,18 +87,6 @@ public class Permissions implements DomainTransformListener {
 		public Boolean isPermitted(Object o, Permissible p);
 	}
 
-	public static void pushSystemOrCurrentUserAsRoot() {
-		get().pushSystemOrCurrentUserAsRoot0();
-	}
-
-	protected void pushSystemOrCurrentUserAsRoot0() {
-		if (isLoggedIn()) {
-			pushUser(getUser(), getLoginState(), true);
-		} else {
-			pushSystemUser();
-		}
-	}
-
 	@Reflected
 	@Registration(PermissionsExtensionForRule.class)
 	public static abstract class PermissionsExtensionForRule
@@ -265,6 +253,10 @@ public class Permissions implements DomainTransformListener {
 			.getName() + ".CONTEXT_CREATION_PARENT";
 
 	public static StackDebug stackDebug = new StackDebug("Permissions");
+
+	public static void pushSystemOrCurrentUserAsRoot() {
+		get().pushSystemOrCurrentUserAsRoot0();
+	}
 
 	public static void
 			runThrowingWithPushedSystemUserIfNeeded(ThrowingRunnable runnable) {
@@ -759,19 +751,17 @@ public class Permissions implements DomainTransformListener {
 		if (groupMap != null) {
 			return groupMap;
 		}
-		synchronized (this) {
-			Set<IGroup> groups = getReachableGroups(user);
-			groupMap = new HashMap<String, IGroup>();
-			for (Iterator<IGroup> itr = groups.iterator(); itr.hasNext();) {
-				IGroup group = itr.next();
-				groupMap.put(group.getName(), group);
-			}
-			Map<String, IGroup> result = groupMap;
-			if (user != this.user) {
-				invalidateGroupMap();
-			}
-			return result;
+		Set<IGroup> groups = getReachableGroups(user);
+		groupMap = new HashMap<String, IGroup>();
+		for (Iterator<IGroup> itr = groups.iterator(); itr.hasNext();) {
+			IGroup group = itr.next();
+			groupMap.put(group.getName(), group);
 		}
+		Map<String, IGroup> result = groupMap;
+		if (user != this.user) {
+			invalidateGroupMap();
+		}
+		return result;
 	}
 
 	public long getUserId() {
@@ -986,7 +976,7 @@ public class Permissions implements DomainTransformListener {
 		this.root = root;
 	}
 
-	public synchronized void setUser(IUser user) {
+	public void setUser(IUser user) {
 		root = false;
 		invalidateGroupMap();
 		this.user = user;
@@ -996,7 +986,7 @@ public class Permissions implements DomainTransformListener {
 		}
 	}
 
-	public synchronized PermissionsState snapshotState() {
+	public PermissionsState snapshotState() {
 		PermissionsState state = new PermissionsState();
 		state.user = user;
 		state.groupMap = groupMap == null ? null : new HashMap<>(groupMap);
@@ -1007,9 +997,18 @@ public class Permissions implements DomainTransformListener {
 	}
 
 	public void pushState(PermissionsState state) {
+		// don't push the group map
 		pushUser(state.user, state.loginState, state.root);
 		if (state.clientInstance != null) {
 			this.clientInstance = state.clientInstance;
+		}
+	}
+
+	protected void pushSystemOrCurrentUserAsRoot0() {
+		if (isLoggedIn()) {
+			pushUser(getUser(), getLoginState(), true);
+		} else {
+			pushSystemUser();
 		}
 	}
 

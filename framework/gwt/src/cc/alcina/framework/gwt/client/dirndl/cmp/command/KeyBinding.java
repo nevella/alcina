@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.NativeEvent.Modifier;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -136,8 +137,7 @@ public @interface KeyBinding {
 						case KeyCodes.KEY_SPACE:
 							// these have focus meanings, so don't fire if an
 							// element has focus
-							if (WidgetUtils
-									.getFocussedDocumentElement() != null) {
+							if (Document.get().getActiveElement() != null) {
 								return false;
 							}
 						}

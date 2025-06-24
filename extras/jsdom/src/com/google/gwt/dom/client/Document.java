@@ -1328,4 +1328,9 @@ public class Document extends Node implements ClientDomDocument,
 	public org.w3c.dom.ranges.Range createRange() {
 		return new Range(this);
 	}
+
+	@Override
+	public void setActiveElement(Element elem) {
+		remote.setActiveElement(elem);
+	}
 }

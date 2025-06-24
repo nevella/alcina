@@ -1190,4 +1190,6 @@ public interface ClientDomDocument extends ClientDomNode {
 	ClientDomSelection getSelection();
 
 	ClientDomSelection ensureRemoteSelection(Selection selection);
+
+	void setActiveElement(Element elem);
 }

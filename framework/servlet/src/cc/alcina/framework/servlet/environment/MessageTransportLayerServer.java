@@ -150,7 +150,7 @@ class MessageTransportLayerServer extends MessageTransportLayer {
 						.orElse(null);
 			}
 			if (dispatchable == null) {
-				// fall through to non-awaiter
+				// fall through to the awaiter
 				dispatchable = dispatchableTokens.stream()
 						.filter(token -> token.isAwaiter()).findFirst().get();
 			}

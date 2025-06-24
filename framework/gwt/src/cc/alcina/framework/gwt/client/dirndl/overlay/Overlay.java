@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
@@ -377,10 +378,10 @@ public class Overlay extends Model implements ModelEvents.Close.Handler,
 			// force commit of focussed element changes (textarea, input) if it
 			// is a child of this closing dialog.
 			if (Al.isBrowser()) {
-				Element focus = WidgetUtils.getFocussedDocumentElement();
-				if (focus != null
-						&& provideElement().provideIsAncestorOf(focus, true)) {
-					WidgetUtils.clearFocussedDocumentElement();
+				Element active = Document.get().getActiveElement();
+				if (active != null
+						&& provideElement().provideIsAncestorOf(active, true)) {
+					Document.get().setActiveElement(null);
 				}
 			}
 			NodeEvent.Context.fromEvent(from, node)

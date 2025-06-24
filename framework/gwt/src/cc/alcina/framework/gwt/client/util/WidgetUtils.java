@@ -604,7 +604,7 @@ public class WidgetUtils {
 	}-*/;
 
 	public static Element getFocussedDocumentElement() {
-		return Document.get().jsoRemote().getFocussedDocumentElement();
+		return Document.get().jsoRemote().getActiveElement();
 	}
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{

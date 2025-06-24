@@ -19,6 +19,16 @@ class RemoteWindowState implements InvokeProxy {
 	public void invoke(NodeAttachId node, String methodName,
 			List<Class> argumentTypes, List<?> arguments, List<Flag> flags,
 			AsyncCallback<?> callback) {
+		if (eventContext != null && node != null
+				&& node instanceof DocumentAttachId) {
+			switch (methodName) {
+			case "setActiveElement":
+				if (eventContext.activeElement != null) {
+					((Element) eventContext.activeElement.node()).blur();
+				}
+				return;
+			}
+		}
 		remoteDelegate.invoke(node, methodName, argumentTypes, arguments, flags,
 				callback);
 	}
@@ -37,9 +47,13 @@ class RemoteWindowState implements InvokeProxy {
 						return (T) nodeUiState.boundingClientRect;
 					case "getClientHeight":
 					case "getClientWidth":
-						int debug = 3;
 						break;
 					}
+				}
+				switch (methodName) {
+				case "getActiveElement":
+					return eventContext.activeElement == null ? null
+							: (T) eventContext.activeElement.node();
 				}
 			}
 		}

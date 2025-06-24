@@ -12,6 +12,7 @@ import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -537,8 +538,8 @@ public class StringInput extends Model.Value<String>
 		@Override
 		public void onChange(Change event) {
 			if (TimeConstants.within(lastKeyPress, 100)
-					&& provideElement() != null && WidgetUtils
-							.getFocussedDocumentElement() == provideElement()) {
+					&& provideElement() != null
+					&& Document.get().getActiveElement() == provideElement()) {
 				suppressedChange = true;
 				return;
 			}

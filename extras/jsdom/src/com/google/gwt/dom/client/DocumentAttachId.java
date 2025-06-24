@@ -12,6 +12,7 @@ import org.w3c.dom.Comment;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.ProcessingInstruction;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.mutations.LocationMutation;
 import com.google.gwt.dom.client.mutations.MutationRecord;
 import com.google.gwt.dom.client.mutations.SelectionRecord;
@@ -869,5 +870,10 @@ public class DocumentAttachId extends NodeAttachId
 
 	public SelectionRecord getPendingSelectionMutationAndClear() {
 		return getSelection().getPendingSelectionMutationAndClear();
+	}
+
+	@Override
+	public void setActiveElement(Element elem) {
+		invokeAsync("setActiveElement", List.of(Element.class), List.of(elem));
 	}
 }

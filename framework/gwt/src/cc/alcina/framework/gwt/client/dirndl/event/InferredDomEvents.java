@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementJso;
 import com.google.gwt.dom.client.EventTarget;
@@ -401,9 +402,8 @@ public class InferredDomEvents {
 				EventTarget eventTarget = event.getNativeEvent()
 						.getEventTarget();
 				if (Element.is(eventTarget)) {
-					Element focussedElement = WidgetUtils
-							.getFocussedDocumentElement();
-					if (Element.as(eventTarget) == focussedElement) {
+					Element activeElement = Document.get().getActiveElement();
+					if (Element.as(eventTarget) == activeElement) {
 						changeReceivedWhileFocussedElement = true;
 						checkFire(event);
 					}
