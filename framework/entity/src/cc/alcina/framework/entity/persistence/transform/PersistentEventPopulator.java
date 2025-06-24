@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
@@ -33,8 +33,8 @@ class PersistentEventPopulator {
 		boolean pushed = false;
 		try {
 			if (originatingUser != null) {
-				PermissionsManager.get().pushUser(originatingUser,
-						PermissionsManager.get().getLoginState());
+				Permissions.pushUser(originatingUser,
+						Permissions.get().getLoginState());
 				pushed = true;
 			}
 			populate0(persistentEvents, tltm, eventsPersisted,
@@ -45,7 +45,7 @@ class PersistentEventPopulator {
 					false);
 		} finally {
 			if (pushed) {
-				PermissionsManager.get().popUser();
+				Permissions.popUser();
 			}
 		}
 	}

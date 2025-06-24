@@ -8,16 +8,16 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.context.LooseContextInstance;
+import cc.alcina.framework.common.client.csobjects.LogMessageType;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsState;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 public abstract class AlcinaChildRunnable implements Runnable {
@@ -54,9 +54,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			@Override
 			protected void run0() throws Exception {
 				if (asRoot) {
-					ThreadedPermissionsManager.cast()
-							.runThrowingWithPushedSystemUserIfNeeded(
-									() -> runnable.run());
+					Permissions.runThrowingWithPushedSystemUserIfNeeded(
+							() -> runnable.run());
 				} else {
 					runnable.run();
 				}
@@ -118,7 +117,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	private boolean inTransaction;
 
-	private PermissionsManagerState permissionsManagerState;
+	private PermissionsState permissionsState;
 
 	private String threadName;
 
@@ -132,7 +131,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	public AlcinaChildRunnable(String name) {
 		this.threadName = name;
-		this.permissionsManagerState = PermissionsManager.get().snapshotState();
+		this.permissionsState = Permissions.get().snapshotState();
 		this.contextClassLoader = Thread.currentThread()
 				.getContextClassLoader();
 		if (Configuration.is("traceConstruction")) {
@@ -169,12 +168,11 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			LooseContext.push();
 			// different thread-local
 			getRunContext().tLooseContextDepth = LooseContext.depth();
-			this.permissionsManagerState.copyTo(PermissionsManager.get());
+			this.permissionsState.copyTo(Permissions.get());
 			Thread.currentThread().setContextClassLoader(contextClassLoader);
 			copyContext.forEach((k, v) -> LooseContext.set(k, v));
 			if (runAsRoot) {
-				ThreadedPermissionsManager.cast()
-						.pushSystemOrCurrentUserAsRoot();
+				Permissions.pushSystemOrCurrentUserAsRoot();
 			}
 			Transaction.ensureBegun();
 			run0();
@@ -197,7 +195,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 				Transaction.ensureEnded();
 			}
 			if (runAsRoot) {
-				ThreadedPermissionsManager.cast().popSystemOrCurrentUser();
+				Permissions.popUser();
 			}
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();

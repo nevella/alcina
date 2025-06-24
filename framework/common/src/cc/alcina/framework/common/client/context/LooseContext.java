@@ -7,7 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
@@ -45,7 +45,7 @@ import cc.alcina.framework.entity.util.AlcinaParallel;
  * <p>
  * When threads are spawned (for instance for parallel job execution), the
  * {@link AlcinaParallel} class can be used to replicate the LooseContext of the
- * caller (along with other contexts, such as {@link PermissionsManager})
+ * caller (along with other contexts, such as {@link Permissions})
  * 
  * <h3>A simple example</h3>
  * 

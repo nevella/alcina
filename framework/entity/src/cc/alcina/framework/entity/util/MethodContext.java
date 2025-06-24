@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.context.LooseContext.Key;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.NestedName;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 public class MethodContext {
@@ -81,10 +81,8 @@ public class MethodContext {
 			if (metricKey != null) {
 				MetricLogging.get().start(metricKey);
 			}
-			if (rootPermissions
-					&& !ThreadedPermissionsManager.cast().isRoot()) {
-				ThreadedPermissionsManager.cast()
-						.pushSystemOrCurrentUserAsRoot();
+			if (rootPermissions && !Permissions.isRoot()) {
+				Permissions.pushSystemOrCurrentUserAsRoot();
 				pushedRoot = true;
 			}
 			if (contextClassLoader != null) {
@@ -98,7 +96,7 @@ public class MethodContext {
 			try {
 				currentThread.setContextClassLoader(entryClassLoader);
 				if (pushedRoot) {
-					ThreadedPermissionsManager.cast().popUser();
+					Permissions.popUser();
 				}
 				if (metricKey != null) {
 					Logger logger = metricKeyClass == null ? null

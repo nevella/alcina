@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
@@ -127,21 +127,20 @@ public @interface Display {
 				PropertyPermissions pp = property
 						.annotation(PropertyPermissions.class);
 				Display display = property.annotation(Display.class);
-				boolean fieldVisible = PermissionsManager.get()
+				boolean fieldVisible = Permissions.get()
 						.checkEffectivePropertyPermission(op, pp,
 								templateInstance, true)
 						&& display != null
-						&& PermissionsManager.get().isPermitted(
-								templateInstance, display.visible())
+						&& Permissions.get().isPermitted(templateInstance,
+								display.visible())
 						&& ((display.displayMask() & DISPLAY_AS_PROPERTY) != 0);
 				if (!fieldVisible) {
 					return false;
 				}
 				boolean propertyIsCollection = (property
 						.getType() == Set.class);
-				return PermissionsManager.get()
-						.checkEffectivePropertyPermission(op, pp,
-								templateInstance, false)
+				return Permissions.get().checkEffectivePropertyPermission(op,
+						pp, templateInstance, false)
 						&& ((display.displayMask() & DISPLAY_RO) == 0);
 			}
 			return false;

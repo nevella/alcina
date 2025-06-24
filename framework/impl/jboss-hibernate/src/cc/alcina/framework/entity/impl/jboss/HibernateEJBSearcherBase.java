@@ -13,7 +13,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.OrderCriterion;
@@ -103,7 +103,7 @@ public abstract class HibernateEJBSearcherBase {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		Set<OrderGroup> orderGroups = def.getOrderGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
-			if (!PermissionsManager.get().isPermitted(cg)) {
+			if (!Permissions.get().isPermitted(cg)) {
 				continue;
 			}
 			if (!cg.provideIsEmpty() && getEntityClass(cg) != null) {
@@ -120,7 +120,7 @@ public abstract class HibernateEJBSearcherBase {
 	protected void processHandlers(SearchDefinition def) {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
-			if (!PermissionsManager.get().isPermitted(cg)) {
+			if (!Permissions.get().isPermitted(cg)) {
 				continue;
 			}
 			if (!cg.provideIsEmpty()) {

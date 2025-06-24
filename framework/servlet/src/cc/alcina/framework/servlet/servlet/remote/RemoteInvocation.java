@@ -20,7 +20,7 @@ import org.apache.http.params.HttpParams;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -94,12 +94,12 @@ public class RemoteInvocation {
 			PostAndClient png = getHttpPost(new URI(address));
 			// params.username = ResourceUtilities
 			// .getBundledString(DevRemoter.class, "username");
-			params.asRoot = PermissionsManager.get().isRoot();
+			params.asRoot = Permissions.isRoot();
 			params.methodName = methodName;
 			params.args = args == null ? new Object[0] : args;
 			boolean transformMethod = methodName
 					.equals("transformInPersistenceContext");
-			ClientInstance clientInstance = PermissionsManager.get()
+			ClientInstance clientInstance = Permissions.get()
 					.getClientInstance();
 			EntityLocatorMap thisJvmLocatorMap = null;
 			if (transformMethod) {

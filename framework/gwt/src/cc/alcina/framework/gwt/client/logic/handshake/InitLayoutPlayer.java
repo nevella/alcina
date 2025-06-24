@@ -3,8 +3,8 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.logic.permissions.OnlineState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -27,7 +27,7 @@ public class InitLayoutPlayer extends RunnablePlayer {
 
 	@Override
 	public void run() {
-		if (PermissionsManager.get().getOnlineState() == OnlineState.ONLINE) {
+		if (OnlineState.isOnline()) {
 			Registry.impl(CommitToStorageTransformListener.class).flush();
 		}
 		Registry.impl(LayoutManagerBase.class).redrawLayout();

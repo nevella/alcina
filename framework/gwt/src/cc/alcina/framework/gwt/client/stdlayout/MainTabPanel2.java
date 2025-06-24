@@ -17,7 +17,7 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 // 14 years and change on, reimplement with 'modern' markup/css
@@ -106,7 +106,7 @@ public class MainTabPanel2 extends Composite implements IMainTabPanel {
 				nonTabButtons.stream().filter(b -> {
 					if (b instanceof LoginStateVisible) {
 						return ((LoginStateVisible) b).visibleForLoginState(
-								PermissionsManager.get().getLoginState());
+								Permissions.get().getLoginState());
 					} else {
 						return true;
 					}

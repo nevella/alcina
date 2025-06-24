@@ -61,7 +61,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.HasReadPermission;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -571,7 +571,7 @@ public class GraphProjection {
 				return true;
 			} else {
 				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
-				return PermissionsManager.get().isPermitted(source, ap);
+				return Permissions.get().isPermitted(source, ap);
 			}
 		}
 		return valid;
@@ -826,7 +826,7 @@ public class GraphProjection {
 		PropertyPermissions pp = perFieldPermission.get(field);
 		if (pp != null) {
 			AnnotatedPermissible ap = new AnnotatedPermissible(pp.read());
-			return PermissionsManager.get().isPermitted(source, ap);
+			return Permissions.get().isPermitted(source, ap);
 		}
 		return false;
 	}

@@ -27,13 +27,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPositionProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -555,7 +555,7 @@ public class DomainTransformPersistenceQueue {
 					logger.debug("Polled event from queue: {}", firingEvent);
 					try {
 						Transaction.ensureBegun();
-						ThreadedPermissionsManager.cast().pushSystemUser();
+						Permissions.pushSystemUser();
 						publishTransformEvent(firingEvent);
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -563,7 +563,7 @@ public class DomainTransformPersistenceQueue {
 						throw e;
 					} finally {
 						Transaction.ensureBegun();
-						ThreadedPermissionsManager.cast().popSystemUser();
+						Permissions.popUser();
 						Transaction.ensureEnded();
 						// LooseContext.pop();
 					}

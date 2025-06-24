@@ -48,8 +48,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -588,7 +588,7 @@ public abstract class DevConsoleCommand {
 									new StatCategory_Console.InitCommands());
 							console.ensureDomainStore();
 							pushedUser = DevHelper.getDefaultUser();
-							PermissionsManager.get().pushUser(pushedUser,
+							Permissions.pushUser(pushedUser,
 									LoginState.LOGGED_IN);
 						}
 						console.currentRunnables.push(runnable);
@@ -621,7 +621,7 @@ public abstract class DevConsoleCommand {
 						}
 						try {
 							if (pushedUser != null) {
-								PermissionsManager.get().popUser();
+								Permissions.popUser();
 							}
 							if (Transactions.isInitialised()) {
 								Transaction.end();

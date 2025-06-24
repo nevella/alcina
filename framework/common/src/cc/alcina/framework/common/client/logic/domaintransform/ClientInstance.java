@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Ax;
 
 @MappedSuperclass
@@ -48,7 +48,7 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	 * permissions context frame.
 	 */
 	public static ClientInstance self() {
-		return PermissionsManager.get().getClientInstance();
+		return Permissions.get().getClientInstance();
 	}
 
 	private Date helloDate;

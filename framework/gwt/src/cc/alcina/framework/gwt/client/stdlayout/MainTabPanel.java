@@ -33,8 +33,8 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
 import cc.alcina.framework.gwt.client.widget.SpanPanel;
@@ -194,19 +194,19 @@ public class MainTabPanel extends TabPanel implements IMainTabPanel {
 	@Override
 	protected void onAttach() {
 		super.onAttach();
-		PermissionsManager.topicLoginState().delta(visListener, true);
+		Permissions.topicLoginStateChange().delta(visListener, true);
 	}
 
 	@Override
 	protected void onDetach() {
-		PermissionsManager.topicLoginState().delta(visListener, false);
+		Permissions.topicLoginStateChange().delta(visListener, false);
 		super.onDetach();
 	}
 
 	private void refreshButtonPanelVis() {
 		int index = 0;
 		boolean visBefore = false;
-		LoginState state = PermissionsManager.get().getLoginState();
+		LoginState state = Permissions.get().getLoginState();
 		for (IsWidget button : buttons) {
 			boolean curVis = true;
 			if (button instanceof LoginStateVisibleWithWidget) {
@@ -214,8 +214,7 @@ public class MainTabPanel extends TabPanel implements IMainTabPanel {
 						.visibleForLoginState(state);
 			}
 			if (button instanceof Permissible) {
-				curVis &= PermissionsManager.get()
-						.isPermitted((Permissible) button);
+				curVis &= Permissions.get().isPermitted((Permissible) button);
 			}
 			bp.getWidget(index++).setVisible(curVis);
 			if (index > 1) {

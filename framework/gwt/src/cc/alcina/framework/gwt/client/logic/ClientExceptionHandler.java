@@ -14,7 +14,7 @@ import com.google.gwt.user.client.Window.ClosingHandler;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -64,15 +64,14 @@ public class ClientExceptionHandler
 	}
 
 	public String extraInfoForExceptionText() {
-		ClientInstance clientInstance = PermissionsManager.get()
-				.getClientInstance();
+		ClientInstance clientInstance = Permissions.get().getClientInstance();
 		long clientInstanceId = EntityHelper.getIdOrZero(clientInstance);
 		String extraInfo = "\n\nUser agent: " + BrowserMod.getUserAgent()
 				+ "\nHistory token: " + History.getToken()
 				+ "\nPermutation name: " + GWT.getPermutationStrongName()
 				+ Ax.format("\nUser name/id/cli: [%s/%s/%s]",
-						PermissionsManager.get().getUserName(),
-						PermissionsManager.get().getUserId(), clientInstanceId);
+						Permissions.get().getUserName(),
+						Permissions.get().getUserId(), clientInstanceId);
 		return extraInfo;
 	}
 

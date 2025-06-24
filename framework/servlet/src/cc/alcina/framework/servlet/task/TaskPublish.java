@@ -1,8 +1,8 @@
 package cc.alcina.framework.servlet.task;
 
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
@@ -60,10 +60,10 @@ public class TaskPublish extends PerformerTask implements ServletAwaitTask {
 			result = publicationRequest.publish();
 		} else {
 			try {
-				PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
+				Permissions.pushUser(user, LoginState.LOGGED_IN);
 				result = publicationRequest.publish();
 			} finally {
-				PermissionsManager.get().popUser();
+				Permissions.popUser();
 			}
 		}
 		if (copyContentToLargeResult || Ax.isTest()) {

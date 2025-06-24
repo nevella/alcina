@@ -5,7 +5,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.servlet.servlet.AlcinaServlet;
 
@@ -56,7 +56,7 @@ public class RemoteComponentServlet extends AlcinaServlet {
 	protected void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
 		if (requiresAdmin) {
-			if (!PermissionsManager.get().isAdmin()) {
+			if (!Permissions.get().isAdmin()) {
 				String message = "Administrator permissions required\n";
 				writeTextResponse(response, message);
 				throw new Exception(message);

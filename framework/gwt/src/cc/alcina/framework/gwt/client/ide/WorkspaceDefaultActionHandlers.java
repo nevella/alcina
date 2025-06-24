@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -132,7 +132,7 @@ public class WorkspaceDefaultActionHandlers {
 				TextProvider.get().putDisplayName(newObj, "New " + tdn);
 				if (newObj instanceof IVersionableOwnable) {
 					((IVersionableOwnable) newObj)
-							.setOwner(PermissionsManager.get().getUser());
+							.setOwner(Permissions.get().getUser());
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

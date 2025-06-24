@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.dom.DomDocument.PerDocumentSupplier;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -217,8 +217,7 @@ public abstract class Client implements ContextFrame {
 	}
 
 	public static boolean isDeveloper() {
-		return EntityClientUtils.isTestServer()
-				|| PermissionsManager.isDeveloper();
+		return EntityClientUtils.isTestServer() || Permissions.isDeveloper();
 	}
 
 	public static void refreshCurrentPlace() {

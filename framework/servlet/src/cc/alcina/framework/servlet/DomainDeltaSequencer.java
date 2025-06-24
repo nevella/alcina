@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -165,7 +165,7 @@ public class DomainDeltaSequencer {
 			}
 			Class<?> clazz = Class
 					.forName(metadata.getContentObjectClassName());
-			return PermissionsManager.get().getUserId() == CommonUtils
+			return Permissions.get().getUserId() == CommonUtils
 					.lv(metadata.getUserId())
 					&& rpcSignature(clazz).equals(
 							metadata.getContentObjectRpcTypeSignature());
@@ -183,7 +183,7 @@ public class DomainDeltaSequencer {
 		metadata.setContentObjectRpcTypeSignature(
 				rpcSignature(tranche.getClass()));
 		metadata.setContentObjectClassName(tranche.getClass().getName());
-		metadata.setUserId(PermissionsManager.get().getUserId());
+		metadata.setUserId(Permissions.get().getUserId());
 		metadata.setDomainObjectsFieldSet(
 				tranche.getDomainModelHolder() != null);
 		return metadata;

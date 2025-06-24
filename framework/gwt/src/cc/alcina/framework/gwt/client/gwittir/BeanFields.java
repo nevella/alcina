@@ -49,7 +49,7 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValid
 import cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
@@ -349,10 +349,9 @@ public class BeanFields {
 		if (display != null) {
 			PropertyPermissions pp = propertyLocation
 					.getAnnotation(PropertyPermissions.class);
-			boolean fieldVisible = PermissionsManager.get()
+			boolean fieldVisible = Permissions.get()
 					.checkEffectivePropertyPermission(op, pp, object, true)
-					&& PermissionsManager.get().isPermitted(object,
-							display.visible())
+					&& Permissions.get().isPermitted(object, display.visible())
 					&& ((display.displayMask()
 							& Display.DISPLAY_AS_PROPERTY) != 0);
 			if (!fieldVisible) {
@@ -361,9 +360,8 @@ public class BeanFields {
 			// not currently supported
 			boolean focus = display.focus();
 			boolean fieldEditable = query.editable
-					&& (PermissionsManager.get()
-							.checkEffectivePropertyPermission(op, pp, object,
-									false)
+					&& (Permissions.get().checkEffectivePropertyPermission(op,
+							pp, object, false)
 							|| ((display.displayMask()
 									& Display.DISPLAY_EDITABLE) != 0))
 					&& ((display.displayMask() & Display.DISPLAY_RO) == 0);
@@ -456,8 +454,8 @@ public class BeanFields {
 				return field;
 			}
 		} else if (displayAllProperties != null
-				&& PermissionsManager.get().checkEffectivePropertyPermission(op,
-						null, object, !query.editable)) {
+				&& Permissions.get().checkEffectivePropertyPermission(op, null,
+						object, !query.editable)) {
 			ValidationFeedback validationFeedback = null;
 			Validator validator = null;
 			if (query.editable) {

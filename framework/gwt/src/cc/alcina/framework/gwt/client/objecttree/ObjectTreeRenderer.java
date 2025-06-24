@@ -35,7 +35,7 @@ import com.totsp.gwittir.client.ui.table.Field;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.HasWithNull;
@@ -117,7 +117,7 @@ public class ObjectTreeRenderer {
 			TreeRenderer parent) {
 		if (renderable instanceof Permissible) {
 			Permissible permissible = (Permissible) renderable;
-			if (!PermissionsManager.get().isPermitted(permissible)) {
+			if (!Permissions.get().isPermitted(permissible)) {
 				return;
 			}
 		}

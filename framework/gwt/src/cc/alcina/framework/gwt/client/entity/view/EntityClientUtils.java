@@ -11,7 +11,7 @@ import com.google.gwt.view.client.SelectionModel;
 import com.google.gwt.view.client.SingleSelectionModel;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.entity.view.res.DataClientResources;
@@ -44,7 +44,7 @@ public class EntityClientUtils {
 	}
 
 	public static boolean isLoggedIn() {
-		return PermissionsManager.get().isLoggedIn();
+		return Permissions.get().isLoggedIn();
 	}
 
 	public static boolean isTestServer() {

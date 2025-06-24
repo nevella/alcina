@@ -54,7 +54,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Standalone
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoManager;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -1228,8 +1228,8 @@ public abstract class TransformManager
 	protected boolean ignorePropertyForObjectsToDtes(Class objectType,
 			Class propertyType, String propertyName) {
 		return ignorePropertiesForCaching.contains(propertyName)
-				|| !PermissionsManager.get().checkReadable(objectType,
-						propertyName, null)
+				|| !Permissions.get().checkReadable(objectType, propertyName,
+						null)
 				|| (Reflections.at(objectType).property(propertyName)
 						.has(AlcinaTransient.class)
 						&& AlcinaTransient.Support.isTransient(Reflections

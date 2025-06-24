@@ -68,7 +68,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AssignmentPermission;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -319,8 +319,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 			Class<? extends Entity> objectClass = entity.entityClass();
 			ObjectPermissions op = objectClass
 					.getAnnotation(ObjectPermissions.class);
-			op = op == null
-					? PermissionsManager.get().getDefaultObjectPermissions()
+			op = op == null ? Permissions.get().getDefaultObjectPermissions()
 					: op;
 			ObjectPermissions oph = null;
 			AssignmentPermission aph = propertyName == null ? null
@@ -330,7 +329,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 				oph = entityChange.entityClass()
 						.getAnnotation(ObjectPermissions.class);
 				oph = oph == null
-						? PermissionsManager.get().getDefaultObjectPermissions()
+						? Permissions.get().getDefaultObjectPermissions()
 						: oph;
 			}
 			switch (evt.getTransformType()) {
@@ -351,15 +350,13 @@ public class ThreadlocalTransformManager extends TransformManager {
 				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
 				break;
 			case CREATE_OBJECT:
-				if (!PermissionsManager.get().isPermitted(entity,
-						op.create())) {
+				if (!Permissions.get().isPermitted(entity, op.create())) {
 					throw new DomainTransformException(new PermissionsException(
 							"Permission denied : create - object " + evt));
 				}
 				break;
 			case DELETE_OBJECT:
-				if (!PermissionsManager.get().isPermitted(entity,
-						op.delete())) {
+				if (!Permissions.get().isPermitted(entity, op.delete())) {
 					throw new DomainTransformException(new PermissionsException(
 							"Permission denied : delete - object " + evt));
 				}
@@ -400,8 +397,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 					.getReadMethod().getAnnotation(PropertyPermissions.class);
 			ObjectPermissions op = entityClass
 					.getAnnotation(ObjectPermissions.class);
-			return PermissionsManager.get().checkEffectivePropertyPermission(op,
-					pp, entity, read);
+			return Permissions.get().checkEffectivePropertyPermission(op, pp,
+					entity, read);
 		}
 		return true;
 	}
@@ -433,11 +430,11 @@ public class ThreadlocalTransformManager extends TransformManager {
 		if (assigning == null) {
 			return;
 		}
-		if (!PermissionsManager.get().isPermitted(assigning, oph.read())) {
+		if (!Permissions.get().isPermitted(assigning, oph.read())) {
 			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : read - target object " + evt));
 		}
-		if (aph != null && !PermissionsManager.get().isPermitted(assigning,
+		if (aph != null && !Permissions.get().isPermitted(assigning,
 				assigningTo, new AnnotatedPermissible(aph.value()), false)) {
 			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : assign - target object " + evt));
@@ -1094,7 +1091,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
 		// user cache invalidation
-		addDomainTransformListener(PermissionsManager.get());
+		addDomainTransformListener(Permissions.get());
 		for (DomainTransformListener listener : threadLocalListeners) {
 			addDomainTransformListener(listener);
 		}

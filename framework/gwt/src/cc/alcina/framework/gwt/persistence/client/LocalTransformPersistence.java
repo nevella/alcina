@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
@@ -356,11 +356,10 @@ public abstract class LocalTransformPersistence
 
 	public void recordDeltaApplication(DomainModelDeltaSignature signature,
 			AsyncCallback<Void> AsyncCallback) {
-		ClientInstance clientInstance = PermissionsManager.get()
-				.getClientInstance();
+		ClientInstance clientInstance = Permissions.get().getClientInstance();
 		DeltaApplicationRecord wrapper = new DeltaApplicationRecord(0,
 				signature.toString(), System.currentTimeMillis(),
-				PermissionsManager.get().getUserId(), clientInstance.getId(), 0,
+				Permissions.get().getUserId(), clientInstance.getId(), 0,
 				clientInstance.getAuth(),
 				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
 				DomainTrancheProtocolHandler.VERSION, "", null);
@@ -479,7 +478,7 @@ public abstract class LocalTransformPersistence
 					}
 					DomainTransformRequest rq = DomainTransformRequest
 							.createNonServerPersistableRequest();
-					ClientInstance clientInstance = PermissionsManager.get()
+					ClientInstance clientInstance = Permissions.get()
 							.getClientInstance();
 					rq.setClientInstance(clientInstance);
 					rq.setRequestId(0);

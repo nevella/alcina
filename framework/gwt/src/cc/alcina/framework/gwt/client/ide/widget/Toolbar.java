@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.HasHref;
@@ -236,9 +236,8 @@ public class Toolbar extends Composite
 					actionButtonsByAction.put(action, button);
 					actions.add(action);
 					if (isHideUnpermittedActions()
-							&& action instanceof Permissible
-							&& !PermissionsManager.get()
-									.isPermitted((Permissible) action)) {
+							&& action instanceof Permissible && !Permissions
+									.get().isPermitted((Permissible) action)) {
 						button.setVisible(false);
 					}
 				}
@@ -254,7 +253,7 @@ public class Toolbar extends Composite
 				actionButtons.put(action.getClass(), button);
 				actionButtonsByAction.put(action, button);
 				if (isHideUnpermittedActions() && action instanceof Permissible
-						&& !PermissionsManager.get()
+						&& !Permissions.get()
 								.isPermitted((Permissible) action)) {
 					button.setVisible(false);
 				}

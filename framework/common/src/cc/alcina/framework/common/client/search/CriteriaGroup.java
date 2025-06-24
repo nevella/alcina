@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
@@ -253,7 +253,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 
 	@Override
 	public String validatePermissions() {
-		if (!PermissionsManager.get().isPermitted(this)) {
+		if (!Permissions.get().isPermitted(this)) {
 			// won't be used in search anyway
 			return null;
 		}

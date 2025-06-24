@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.lock.JobResource;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.process.TreeProcess;
@@ -522,7 +522,7 @@ public class JobContext {
 
 	String describeTask(Task task, String msg) {
 		msg += "Clazz: " + task.getClass().getName() + "\n";
-		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
+		msg += "User: " + Permissions.get().getUserString() + "\n";
 		msg += "\nParameters: \n";
 		try {
 			msg += new JacksonJsonObjectSerializer().withIdRefs()

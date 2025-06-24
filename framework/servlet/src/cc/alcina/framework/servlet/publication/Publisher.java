@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -115,7 +115,7 @@ public class Publisher {
 						&& definition.provideDeliveryModel() == deliveryModel);
 		publication.setDefinition(definition);
 		publication.setDefinitionDescription(definition.toString());
-		publication.setUser(PermissionsManager.get().getUser());
+		publication.setUser(Permissions.get().getUser());
 		publication.setPublicationDate(new Date());
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
@@ -172,7 +172,7 @@ public class Publisher {
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {
 		if (deliveryModel instanceof NonRootPublicationRequest
-				&& PermissionsManager.get().isRoot()) {
+				&& Permissions.isRoot()) {
 			throw Ax.runtimeException(
 					"Publication %s cannot be published as root",
 					deliveryModel);
@@ -198,7 +198,7 @@ public class Publisher {
 		boolean persistPublication = forPublication
 				&& !AppPersistenceBase.isInstanceReadOnly();
 		if (persistPublication) {
-			IUser user = PermissionsManager.get().getUser();
+			IUser user = Permissions.get().getUser();
 			if (user == null) {
 				user = UserlandProvider.get().getSystemUser();
 			}

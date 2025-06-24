@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
@@ -213,7 +213,7 @@ public abstract class SearchDefinition extends Bindable
 		int ct = 0;
 		int paramCounter = 1;
 		for (CriteriaGroup cg : getCriteriaGroups()) {
-			if (!PermissionsManager.get().isPermitted(cg)) {
+			if (!Permissions.get().isPermitted(cg)) {
 				continue;
 			}
 			EqlWithParameters ewp2 = cg.eql();

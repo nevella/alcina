@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -51,7 +51,7 @@ public abstract class UserProperty<T extends UserProperty>
 	}
 
 	public static <P extends UserProperty<?>> Optional<P> byKey(String key) {
-		return byUserKey(PermissionsManager.get().getUser(), key);
+		return byUserKey(Permissions.get().getUser(), key);
 	}
 
 	public static <P extends UserProperty<?>> Optional<P> byUserClass(
@@ -86,7 +86,7 @@ public abstract class UserProperty<T extends UserProperty>
 	}
 
 	public static <P extends UserProperty<?>> P ensure(String key) {
-		return ensure(PermissionsManager.get().getUser(), key);
+		return ensure(Permissions.get().getUser(), key);
 	}
 
 	private static <P extends UserProperty<?>> Class<P> implementation() {

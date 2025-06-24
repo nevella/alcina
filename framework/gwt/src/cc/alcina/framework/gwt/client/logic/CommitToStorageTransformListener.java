@@ -41,8 +41,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.logic.permissions.OnlineState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -209,9 +209,9 @@ public class CommitToStorageTransformListener
 		int requestId = localRequestId++;
 		final DomainTransformRequest request = DomainTransformRequest
 				.createPersistableRequest(requestId,
-						PermissionsManager.get().getClientInstanceId());
+						Permissions.get().getClientInstanceId());
 		request.setRequestId(requestId);
-		request.setClientInstance(PermissionsManager.get().getClientInstance());
+		request.setClientInstance(Permissions.get().getClientInstance());
 		if (transformQueue.size() > 0) {
 			/*
 			 * Note that commit and queue modification are not causally related
@@ -266,7 +266,7 @@ public class CommitToStorageTransformListener
 			topicStateChanged.publish(State.OFFLINE);
 			return;
 		}
-		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
+		if (OnlineState.isOffline()) {
 			Client.commonRemoteService().ping(new AsyncCallback<Void>() {
 				@Override
 				public void onFailure(Throwable caught) {
@@ -564,7 +564,7 @@ public class CommitToStorageTransformListener
 		// callbacks/events
 		private void onSuccess0(DomainTransformResponse response) {
 			synchronized (CommitToStorageTransformListener.this) {
-				PermissionsManager.get().setOnlineState(OnlineState.ONLINE);
+				OnlineState.set(OnlineState.ONLINE);
 				TransformManager tm = TransformManager.get();
 				tm.setReplayingRemoteEvent(true);
 				List<DomainTransformEvent> synthesisedEvents = new ArrayList<>();

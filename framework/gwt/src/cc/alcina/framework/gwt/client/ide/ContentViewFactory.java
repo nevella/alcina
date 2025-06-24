@@ -77,7 +77,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
@@ -641,8 +641,8 @@ public class ContentViewFactory {
 						|| actionClass == EditAction.class
 						|| actionClass == ViewAction.class
 						|| actionClass == DeleteAction.class;
-				if (noPermissionsCheck || PermissionsManager.get().isPermitted(
-						bean, new AnnotatedPermissible(action.permission()))) {
+				if (noPermissionsCheck || Permissions.get().isPermitted(bean,
+						new AnnotatedPermissible(action.permission()))) {
 					result.add(actionClass);
 				}
 			}
@@ -1328,8 +1328,8 @@ public class ContentViewFactory {
 							}
 						}
 					}
-					if (PermissionsManager.get().isMemberOfGroup(
-							PermissionsManager.getAdministratorGroupName())
+					if (Permissions.get().isMemberOfGroup(
+							Permissions.getAdministratorGroupName())
 							&& sender != null) {
 						if (GeneralProperties.get()
 								.isAllowAdminInvalidObjectWrite()
@@ -1407,16 +1407,16 @@ public class ContentViewFactory {
 						Display display = rightProperty
 								.annotation(Display.class);
 						if (display != null) {
-							if (!PermissionsManager.get().isPermitted(
-									right.object, display.visible())) {
+							if (!Permissions.get().isPermitted(right.object,
+									display.visible())) {
 								grid.setRowVisibility(r, false);
 							}
 						}
 						PropertyPermissions pp = rightProperty
 								.annotation(PropertyPermissions.class);
 						if (pp != null) {
-							if (!PermissionsManager.get()
-									.isPermitted(right.object, pp.write())) {
+							if (!Permissions.get().isPermitted(right.object,
+									pp.write())) {
 								SourcesPropertyChangeEvents left = b
 										.getLeft().object;
 								if (left instanceof HasEnabled

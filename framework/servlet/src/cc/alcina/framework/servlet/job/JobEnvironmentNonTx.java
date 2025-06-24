@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.job;
 import cc.alcina.framework.common.client.domain.TransactionEnvironment;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.local.LocalDomainQueue;
@@ -49,7 +49,7 @@ public class JobEnvironmentNonTx implements JobEnvironment {
 
 	@Override
 	public void prepareUserContext(Job job) {
-		PermissionsManager.get().pushCurrentUser();
+		Permissions.pushCurrentUser();
 	}
 
 	@Override

@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -53,7 +53,7 @@ public @interface ObjectPermissions {
 			ObjectPermissions objectPermissions = Reflections.at(clazz)
 					.annotation(ObjectPermissions.class);
 			if (objectPermissions == null) {
-				objectPermissions = PermissionsManager.get()
+				objectPermissions = Permissions.get()
 						.getDefaultObjectPermissions();
 			}
 			switch (this) {

@@ -15,8 +15,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -27,7 +27,7 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
@@ -81,10 +81,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					.setTrue(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
 			doPost0(req, res);
 		} catch (Exception e) {
-			System.out.println(
-					String.format("RemoteInvocationServlet: user:%s - url: %s",
-							PermissionsManager.get().getUserName(),
-							req.getRequestURI()));
+			System.out.println(String.format(
+					"RemoteInvocationServlet: user:%s - url: %s",
+					Permissions.get().getUserName(), req.getRequestURI()));
 			if (e instanceof ServletException) {
 				throw (ServletException) e;
 			}
@@ -127,11 +126,11 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			boolean asRoot = UserlandProvider.get()
 					.getSystemUser() == clientInstance
 							.getAuthenticationSession().getUser();
-			PermissionsManager.get().pushUser(
+			Permissions.pushUser(
 					clientInstance.getAuthenticationSession().getUser(),
 					LoginState.LOGGED_IN, asRoot);
 			pushedUser = true;
-			PermissionsManager.get().setClientInstance(clientInstance);
+			Permissions.get().setClientInstance(clientInstance);
 			Object invocationTarget = getInvocationTarget(params);
 			Class<? extends Object> targetClass = invocationTarget.getClass();
 			Object[] args = params.args;
@@ -175,13 +174,11 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					token.setLocatorMap(locatorMap);
 					token.getRequest().setRequestId(
 							CommonUtils.iv(highestPersistedRequestId) + 1);
-					ThreadedPermissionsManager tpm = ThreadedPermissionsManager
-							.cast();
 					if (params.asRoot && params.api.isAllowAsRoot()) {
-						tpm.pushSystemUser();
+						Permissions.pushSystemUser();
 						token.setIgnoreClientAuthMismatch(true);
 					} else {
-						tpm.pushUser(clientInstance.provideUser(),
+						Permissions.pushUser(clientInstance.provideUser(),
 								LoginState.LOGGED_IN);
 					}
 				}
@@ -224,7 +221,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				}
 			} finally {
 				if (transformMethod) {
-					PermissionsManager.get().popUser();
+					Permissions.popUser();
 				}
 				InternalMetrics.get().endTracker(request);
 				if (!methodName.equals("callRpc")) {
@@ -266,7 +263,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			throw new ServletException(e);
 		} finally {
 			if (pushedUser) {
-				PermissionsManager.get().popUser();
+				Permissions.popUser();
 			}
 		}
 	}

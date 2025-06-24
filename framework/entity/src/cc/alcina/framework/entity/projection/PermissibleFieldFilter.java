@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -55,7 +55,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 				return true;
 				// optimisation for clustered transform commit
 			}
-			if (PermissionsManager.get().isPermitted(null, ap, true)) {
+			if (Permissions.get().isPermitted(null, ap, true)) {
 				return true;
 			}
 			if (ap.accessLevel() == AccessLevel.GROUP) {
@@ -68,7 +68,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 				if (ap.rule().length() > 0) {
 					return null;
 				}
-				if (!PermissionsManager.get().isLoggedIn()) {
+				if (!Permissions.get().isLoggedIn()) {
 					return false;
 				}
 				if (!HasOwner.class.isAssignableFrom(clazz)) {

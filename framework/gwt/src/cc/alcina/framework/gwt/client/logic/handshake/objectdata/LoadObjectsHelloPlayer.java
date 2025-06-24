@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 
 import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.logic.permissions.OnlineState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -43,7 +43,7 @@ public class LoadObjectsHelloPlayer extends
 	@Override
 	public void onFailure(Throwable caught) {
 		if (ClientUtils.maybeOffline(caught)) {
-			PermissionsManager.get().setOnlineState(OnlineState.OFFLINE);
+			OnlineState.set(OnlineState.OFFLINE);
 			signal(false);
 			return;
 		}
@@ -58,7 +58,7 @@ public class LoadObjectsHelloPlayer extends
 
 	@Override
 	public void run() {
-		if (PermissionsManager.isOffline()) {
+		if (OnlineState.isOffline()) {
 			signal(false);
 			return;
 		}
@@ -75,7 +75,7 @@ public class LoadObjectsHelloPlayer extends
 	 * call logic is a bit fraught here - it works, but ain't pretty
 	 */
 	protected void signal(boolean continueObjectLoad) {
-		if (PermissionsManager.isOffline()) {
+		if (OnlineState.isOffline()) {
 			wasPlayed(LoadObjectDataState.HELLO_OFFLINE);
 		} else {
 			if (continueObjectLoad) {

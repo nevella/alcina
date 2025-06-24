@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.process.ContextObservers;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -91,7 +91,7 @@ public class ContentDeliveryLocalFilesystem implements ContentDelivery {
 		String suggestedFileName = deliveryModel.getSuggestedFileName();
 		File folder = new File(localDeliveryFolder);
 		folder.mkdirs();
-		if (!PermissionsManager.hasAdminAccessLevel()
+		if (!Permissions.hasAdminAccessLevel()
 				|| !Configuration.is("permitAbsoluteSuggestedPath")) {
 			suggestedFileName = suggestedFileName.replace("/", "_")
 					.replace("\\", "_");

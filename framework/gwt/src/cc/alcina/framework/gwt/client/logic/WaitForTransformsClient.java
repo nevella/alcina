@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -48,7 +48,7 @@ public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
 		TransformManager tm = TransformManager.get();
 		for (DomainTransformRequest dtr : result.requests) {
 			long clientInstanceId = dtr.getClientInstance().getId();
-			ClientInstance clientInstance = PermissionsManager.get()
+			ClientInstance clientInstance = Permissions.get()
 					.getClientInstance();
 			boolean ignoreCreates = clientInstance.getId() == clientInstanceId;
 			try {

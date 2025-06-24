@@ -21,7 +21,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -69,7 +69,7 @@ public class DeltaApplicationRecord extends Bindable
 	public DeltaApplicationRecord(DomainTransformRequest request,
 			DeltaApplicationRecordType type, boolean async) {
 		this.timestamp = new Date().getTime();
-		this.userId = PermissionsManager.get().getUserId();
+		this.userId = Permissions.get().getUserId();
 		if (!async) {
 			if (GWT.isClient()) {
 				Registry.impl(ClientNotifications.class)

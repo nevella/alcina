@@ -14,8 +14,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSes
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.Iid;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -178,7 +178,7 @@ public class AuthenticationManager {
 		if (validSession) {
 			IUser sessionUser = context.session.getUser();
 			boolean anonymousSession = Objects.equals(sessionUser.getUserName(),
-					PermissionsManager.ANONYMOUS_USER_NAME);
+					Permissions.ANONYMOUS_USER_NAME);
 			IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
 			if (anonymousSession && sessionUser != anonymousUser) {
 				// handle differing anonymous user sessions (some authentication
@@ -328,19 +328,19 @@ public class AuthenticationManager {
 		AuthenticationContext context = ensureContext();
 		context.tokenStore = tokenStore;
 		IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
-		PermissionsManager.get().setUser(anonymousUser);
-		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
+		Permissions.get().setUser(anonymousUser);
+		Permissions.get().setLoginState(LoginState.NOT_LOGGED_IN);
 		ensureIid(context);
 		ensureAuthenticationSession(context);
 		setupClientInstanceFromHeaders(context);
 		if (context.session != null
 				&& context.session.getUser() != anonymousUser) {
-			PermissionsManager.get().setUser(context.session.getUser());
-			PermissionsManager.get().setLoginState(LoginState.LOGGED_IN);
+			Permissions.get().setUser(context.session.getUser());
+			Permissions.get().setLoginState(LoginState.LOGGED_IN);
 		}
 		if (context.clientInstance != null) {
 			persistence.wasAccessed(context.clientInstance);
-			PermissionsManager.get().setClientInstance(context.clientInstance);
+			Permissions.get().setClientInstance(context.clientInstance);
 		}
 		// all auth objects persisted as root
 		Transaction.commit();

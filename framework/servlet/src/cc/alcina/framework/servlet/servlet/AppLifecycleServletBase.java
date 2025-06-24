@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
@@ -63,7 +63,7 @@ import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMetadataCacheProvider;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
@@ -212,10 +212,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 		try {
 			Transaction.begin();
-			ThreadedPermissionsManager.cast().pushSystemUser();
+			Permissions.pushSystemUser();
 			AuthenticationPersistence.get().createBootstrapClientInstance();
 		} finally {
-			ThreadedPermissionsManager.cast().popSystemUser();
+			Permissions.popUser();
 			Transaction.end();
 		}
 	}
@@ -332,8 +332,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected abstract void initCommonImplServices();
 
 	protected void initCommonServices() {
-		PermissionsManager permissionsManager = PermissionsManager.get();
-		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		Permissions permissions = Permissions.get();
+		Permissions.register(ThreadedPermissions.tpmInstance());
 		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
 		ThreadlocalLooseContextProvider.setDebugStackEntry(
 				Configuration.is("debugLooseContextStackEntry"));
@@ -623,7 +623,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void runFinalPreInitTasks() throws Exception {
 		try {
 			Transaction.begin();
-			ThreadedPermissionsManager.cast().pushSystemUser();
+			Permissions.pushSystemUser();
 			initLifecycleServiceClasses(LifecycleService.class);
 			if (serializationSignatureListener != null) {
 				/*
@@ -658,7 +658,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				}
 			}
 		} finally {
-			ThreadedPermissionsManager.cast().popSystemUser();
+			Permissions.popUser();
 			Transaction.end();
 		}
 	}

@@ -9,7 +9,8 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecordI
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecordKeepNonCriticalPrecedingContextFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.OnlineState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.persistence.client.LogStoreCompactor.Phase;
@@ -18,7 +19,7 @@ public class LogStoreCompactor extends Consort<Phase> {
 	private int minNonCompactedLogRecordId = -1;
 
 	private TopicListener<IntPair> logPersistedListener = message -> {
-		if (PermissionsManager.isOffline() && !isRunning()) {
+		if (OnlineState.isOffline() && !isRunning()) {
 			LogStore.get().setLocalPersistencePaused(true);
 			restart();
 		}

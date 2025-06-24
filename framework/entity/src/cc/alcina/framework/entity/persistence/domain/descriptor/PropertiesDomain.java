@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -31,14 +31,14 @@ public class PropertiesDomain {
 			getUserPropertyContainer(Class<P> clazz) {
 		IUser user = PersistentSingleton.class.isAssignableFrom(clazz)
 				? new UserlandProvider().getSystemUser()
-				: PermissionsManager.get().getUser();
+				: Permissions.get().getUser();
 		return UserProperty.byUserClass(user, clazz);
 	}
 
 	public <P extends UserPropertyPersistable> P getProperties(Class<P> clazz) {
 		IUser user = PersistentSingleton.class.isAssignableFrom(clazz)
 				? new UserlandProvider().getSystemUser()
-				: PermissionsManager.get().getUser();
+				: Permissions.get().getUser();
 		Optional<UserProperty> byUserClass = UserProperty.byUserClass(user,
 				clazz);
 		if (!byUserClass.isPresent()) {

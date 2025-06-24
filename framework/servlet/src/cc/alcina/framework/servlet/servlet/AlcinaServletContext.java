@@ -10,7 +10,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.gwt.client.logic.ClientProperties;
@@ -47,7 +47,7 @@ public class AlcinaServletContext {
 	public static void removePerThreadContexts() {
 		if (TransformManager.hasInstance()) {
 			TransformManager.removePerThreadContext();
-			PermissionsManager.removePerThreadContext();
+			Permissions.removePerThreadContext();
 			Transaction.removePerThreadContext();
 		}
 		LooseContext.removePerThreadContext();
@@ -60,7 +60,7 @@ public class AlcinaServletContext {
 
 	private int looseContextDepth = -1;
 
-	private int permissionsManagerDepth;
+	private int permissionsDepth;
 
 	private String originalThreadName;
 
@@ -121,9 +121,9 @@ public class AlcinaServletContext {
 		}
 		if (TransformManager.hasInstance()) {
 			AuthenticationManager.get().initialiseContext(httpContext);
-			permissionsManagerDepth = PermissionsManager.depth();
+			permissionsDepth = Permissions.depth();
 			if (rootPermissions) {
-				ThreadedPermissionsManager.cast().pushSystemUser();
+				Permissions.pushSystemUser();
 			}
 		}
 	}
@@ -131,7 +131,7 @@ public class AlcinaServletContext {
 	public void end() {
 		try {
 			if (rootPermissions) {
-				ThreadedPermissionsManager.cast().popSystemUser();
+				Permissions.popUser();
 			}
 			if (looseContextDepth == -1) {
 				// begin failed/did not run - fall through to
@@ -146,8 +146,8 @@ public class AlcinaServletContext {
 					"begin");
 			if (TransformManager.hasInstance()) {
 				ThreadlocalTransformManager.cast().resetTltm(null);
-				PermissionsManager.confirmDepth(permissionsManagerDepth);
-				PermissionsManager.get().reset();
+				Permissions.confirmDepth(permissionsDepth);
+				Permissions.get().reset();
 				LooseContext.pop();
 				Transaction.ensureEnded();
 			} else {

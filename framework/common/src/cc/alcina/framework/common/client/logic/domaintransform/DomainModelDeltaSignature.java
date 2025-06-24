@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -49,11 +49,11 @@ public class DomainModelDeltaSignature implements Serializable {
 	private long id;
 
 	public DomainModelDeltaSignature() {
-		userId = PermissionsManager.get().getUserId();
+		userId = Permissions.get().getUserId();
 	}
 
 	public DomainModelDeltaSignature checkValidUser() {
-		return userId == PermissionsManager.get().getUserId() ? this : null;
+		return userId == Permissions.get().getUserId() ? this : null;
 	}
 
 	public DomainModelDeltaSignature classSimpleName(String classSimpleName) {

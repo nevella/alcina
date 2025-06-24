@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.common.client.logic.permissions;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 
 /**
  *

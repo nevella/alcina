@@ -78,7 +78,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -307,7 +307,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	protected String describeRpcRequest(RPCRequest rpcRequest, String msg) {
 		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
-		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
+		msg += "User: " + Permissions.get().getUserString() + "\n";
 		msg += "Types: " + CommonUtils.joinWithNewlineTab(
 				Arrays.asList(rpcRequest.getMethod().getParameters()));
 		msg += "\nParameters: \n";
@@ -417,8 +417,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public String getJobLog(long jobId) {
 		Job job = Job.byId(jobId).domain().ensurePopulated();
 		Preconditions.checkState(
-				PermissionsManager.get().isAdmin()
-						|| IUser.current() == job.getUser(),
+				Permissions.get().isAdmin() || IUser.current() == job.getUser(),
 				"Illegal access to job " + jobId);
 		return job.getLog();
 	}
@@ -630,7 +629,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	protected void onAfterResponseSerialized(String serializedResponse) {
 		LooseContext.confirmDepth(looseContextDepth.get());
-		PermissionsManager.get().setUser(null);
+		Permissions.get().setUser(null);
 		super.onAfterResponseSerialized(serializedResponse);
 	}
 
@@ -782,14 +781,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			RPCRequest f_rpcRequest = rpcRequest;
 			onAfterAlcinaAuthentication(name);
 			LooseContext.set(CONTEXT_RPC_USER_ID,
-					PermissionsManager.get().getUserId());
+					Permissions.get().getUserId());
 			InternalMetrics.get().startTracker(rpcRequest,
 					() -> describeRpcRequest(f_rpcRequest, ""),
 					InternalMetricTypeAlcina.client,
 					Thread.currentThread().getName(), () -> true);
 			TransformCommit.prepareHttpRequestCommitContext(
-					PermissionsManager.get().getClientInstance().getId(),
-					PermissionsManager.get().getUserId(), ServletLayerUtils
+					Permissions.get().getClientInstance().getId(),
+					Permissions.get().getUserId(), ServletLayerUtils
 							.robustGetRemoteAddress(threadLocalRequest));
 			try {
 				if (webMethod != null) {
@@ -836,7 +835,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					 * cleared before the metrics are output
 					 */
 					threadLocalRequest.setAttribute(THRD_LOCAL_USER_NAME,
-							PermissionsManager.get().getUserName());
+							Permissions.get().getUserName());
 				}
 				if (rpcRequest != null) {
 					InternalMetrics.get().endTracker(rpcRequest);
@@ -853,7 +852,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws SerializationException {
 		AnnotatedPermissible ap = new AnnotatedPermissible(
 				webMethod.customPermission());
-		if (!PermissionsManager.get().isPermitted(ap)) {
+		if (!Permissions.get().isPermitted(ap)) {
 			WebException wex = new WebException(
 					"Action not permitted: " + method.toString());
 			logRpcException(wex,

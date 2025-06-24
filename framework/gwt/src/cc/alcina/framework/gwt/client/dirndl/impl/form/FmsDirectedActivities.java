@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.impl.form;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermissions;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActivity;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity;
@@ -16,7 +16,7 @@ public class FmsDirectedActivities {
 			extends DirectedCategoriesActivityTransformer {
 		@Override
 		protected boolean isPermitted(CategoryNamePlace place) {
-			return PermissionsManager.get().isPermittedClass(place,
+			return Permissions.get().isPermittedClass(place,
 					SimplePermissions.getPermission(AccessLevel.ADMIN));
 		}
 	}

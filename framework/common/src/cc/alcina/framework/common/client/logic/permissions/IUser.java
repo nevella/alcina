@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 public interface IUser
 		extends IVersionable, HasDisplayName.Settable, AclSubject {
 	public static <IU extends IUser> IU current() {
-		return (IU) PermissionsManager.get().getUser();
+		return (IU) Permissions.get().getUser();
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public interface IUser
 	 * Provide if this user is the current user
 	 */
 	default boolean provideIsCurrent() {
-		return this.equals(PermissionsManager.get().getUser());
+		return this.equals(Permissions.get().getUser());
 	}
 
 	default boolean provideIsMemberOf(IGroup group) {

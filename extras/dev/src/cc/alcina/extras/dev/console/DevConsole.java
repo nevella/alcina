@@ -52,8 +52,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity.EntityBrowser;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
@@ -805,7 +805,7 @@ public abstract class DevConsole implements ClipboardOwner {
 			DevConsoleCommand command, boolean topLevel) {
 		try {
 			LooseContext.push();
-			PermissionsManager.get().pushUser(DevHelper.getDefaultUser(),
+			Permissions.pushUser(DevHelper.getDefaultUser(),
 					LoginState.LOGGED_IN);
 			runningJobs.add(command);
 			if (!noHistory) {
@@ -845,7 +845,7 @@ public abstract class DevConsole implements ClipboardOwner {
 			runningLastCommand = false;
 			// txs just to allow propertychangelistener removal from user
 			Transaction.ensureBegun();
-			PermissionsManager.get().popUser();
+			Permissions.popUser();
 			Transaction.end();
 			LooseContext.pop();
 			runningJobs.remove(command);

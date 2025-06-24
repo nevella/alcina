@@ -54,7 +54,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -286,18 +286,17 @@ public class WorkspaceView extends Composite implements HasName,
 				}
 			}
 			if (item instanceof ActionDisplayNode) {
-				if (PermissionsManager.get().isPermitted(
+				if (Permissions.get().isPermitted(
 						(PermissibleAction) item.getUserObject())) {
 					actions.add(ViewAction.class);
 				}
 			}
 			if (domainClass != null) {
-				ObjectPermissions op = PermissionsManager
+				ObjectPermissions op = Permissions
 						.getObjectPermissions(domainClass);
 				try {
 					LooseContext.pushWithKey(
-							PermissionsManager.CONTEXT_CREATION_PARENT,
-							parentObject);
+							Permissions.CONTEXT_CREATION_PARENT, parentObject);
 					for (Iterator<Class<? extends PermissibleAction>> itr = actions
 							.iterator(); itr.hasNext();) {
 						Class<? extends PermissibleAction> actionClass = itr
@@ -316,7 +315,7 @@ public class WorkspaceView extends Composite implements HasName,
 							p = op.delete();
 						}
 						if (p != null) {
-							if (!PermissionsManager.get().isPermitted(obj,
+							if (!Permissions.get().isPermitted(obj,
 									new AnnotatedPermissible(p))) {
 								itr.remove();
 							}

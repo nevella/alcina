@@ -23,9 +23,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.Callable;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -70,7 +72,143 @@ import cc.alcina.framework.common.client.util.Topic;
  *
  * @author Nick Reddel
  */
-public class PermissionsManager implements DomainTransformListener {
+public class Permissions implements DomainTransformListener {
+	@Reflected
+	public enum LoginState {
+		NOT_LOGGED_IN, LOGGED_IN
+	}
+
+	public static interface PermissionsExtension extends Registration.Ensure {
+		default Boolean isPermitted(Object o, Object assigningTo,
+				Permissible p) {
+			return isPermitted(o, p);
+		}
+
+		public Boolean isPermitted(Object o, Permissible p);
+	}
+
+	public static void pushSystemOrCurrentUserAsRoot() {
+		get().pushSystemOrCurrentUserAsRoot0();
+	}
+
+	protected void pushSystemOrCurrentUserAsRoot0() {
+		if (isLoggedIn()) {
+			pushUser(getUser(), getLoginState(), true);
+		} else {
+			pushSystemUser();
+		}
+	}
+
+	@Reflected
+	@Registration(PermissionsExtensionForRule.class)
+	public static abstract class PermissionsExtensionForRule
+			implements PermissionsExtension {
+		public abstract String getRuleName();
+	}
+
+	public static class PermissionsState {
+		public static PermissionsState root() {
+			return new PermissionsState(Permissions.get().getSystemUser(),
+					LoginState.LOGGED_IN, true, null);
+		}
+
+		public IUser user;
+
+		public ClientInstance clientInstance;
+
+		public boolean root;
+
+		public LoginState loginState;
+
+		public OnlineState onlineState;
+
+		public Map<String, IGroup> groupMap;
+
+		public PermissionsState(IUser user, LoginState loginState, boolean root,
+				ClientInstance clientInstance) {
+			this.user = user;
+			this.loginState = loginState;
+			this.root = root;
+			this.clientInstance = clientInstance;
+		}
+
+		PermissionsState() {
+		}
+
+		public void copyTo(Permissions pm) {
+			pm.user = user;
+			pm.groupMap = groupMap;
+			pm.loginState = loginState;
+			pm.onlineState = onlineState;
+			pm.root = root;
+			pm.clientInstance = clientInstance;
+		}
+	}
+
+	/**
+	 * <p>
+	 * Note - make sure the environment is ready before instantiating i.e.
+	 * servlet layer:
+	 * </p>
+	 * <code>
+	 *  ObjectPersistenceHelper.get();
+	 * 		Permissions.register(ThreadedPermissions.tpmInstance());
+	 * 		</code>
+	 *
+	 *
+	 */
+	public static class RegistryPermissionsExtension
+			implements PermissionsExtension {
+		Map<String, PermissionsExtensionForRule> perNameRules = AlcinaCollections
+				.newUnqiueMap();
+
+		Map<Class<? extends Permissible>, Rule> perClassRules = AlcinaCollections
+				.newUnqiueMap();
+
+		public RegistryPermissionsExtension() {
+			Registry.query(PermissionsExtensionForRule.class).implementations()
+					.forEach(this::register);
+		}
+
+		public PermissionsExtensionForRule getExtension(String ruleName) {
+			return perNameRules.get(ruleName);
+		}
+
+		@Override
+		public Boolean isPermitted(Object target, Object assigningTo,
+				Permissible p) {
+			Class<? extends Object> targetClass = target == null ? null
+					: target.getClass();
+			String ruleName = p != null ? p.rule() : "";
+			Class<? extends Permissible> permissibleClass = p != null
+					? p.getClass()
+					: null;
+			if (permissibleClass != null) {
+				Rule rule = perClassRules.computeIfAbsent(permissibleClass,
+						clazz -> Registry.optional(Rule.class, permissibleClass)
+								.orElse(null));
+				if (rule != null) {
+					return rule.isPermittedTyped(target, assigningTo, p);
+				}
+			}
+			if (perNameRules.containsKey(ruleName)) {
+				PermissionsExtensionForRule extension = perNameRules
+						.get(ruleName);
+				return extension.isPermitted(target, assigningTo, p);
+			}
+			return null;
+		}
+
+		@Override
+		public Boolean isPermitted(Object o, Permissible p) {
+			return isPermitted(o, null, p);
+		}
+
+		public void register(PermissionsExtensionForRule ext) {
+			perNameRules.put(ext.getRuleName(), ext);
+		}
+	}
+
 	public static String SYSTEM_GROUP_NAME = "system";
 
 	public static String SYSTEM_USER_NAME = "system_user";
@@ -93,7 +231,7 @@ public class PermissionsManager implements DomainTransformListener {
 
 	private static String anonymousUserName = "anonymous";
 
-	private static PermissionsManager factoryInstance;
+	private static Permissions factoryInstance;
 
 	private static PermissionsExtension permissionsExtension;
 
@@ -123,19 +261,52 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 	};
 
-	public static final String CONTEXT_CREATION_PARENT = PermissionsManager.class
+	public static final String CONTEXT_CREATION_PARENT = Permissions.class
 			.getName() + ".CONTEXT_CREATION_PARENT";
 
-	public static StackDebug stackDebug = new StackDebug("PermissionsManager");
+	public static StackDebug stackDebug = new StackDebug("Permissions");
 
-	private static Topic<ClientInstance> topicClientInstance = Topic.create();
+	public static void
+			runThrowingWithPushedSystemUserIfNeeded(ThrowingRunnable runnable) {
+		try {
+			if (isRoot()) {
+				runnable.run();
+			} else {
+				try {
+					pushSystemUser();
+					runnable.run();
+				} finally {
+					popUser();
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-	private static Topic<LoginState> topicLoginState = Topic.create();
-
-	private static Topic<OnlineState> topicOnlineState = Topic.create();
+	public static void runWithPushedSystemUserIfNeeded(Runnable runnable) {
+		try {
+			if (isRoot()) {
+				runnable.run();
+			} else {
+				try {
+					pushSystemUser();
+					runnable.run();
+				} finally {
+					popUser();
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
 	public static void confirmDepth(int depth) {
 		Preconditions.checkState(get().depth0() == depth);
+	}
+
+	public static Topic<LoginState> topicLoginStateChange() {
+		return get().topicLoginStateChange;
 	}
 
 	public static int depth() {
@@ -145,11 +316,11 @@ public class PermissionsManager implements DomainTransformListener {
 		return get().depth0();
 	}
 
-	public static PermissionsManager get() {
+	public static Permissions get() {
 		if (factoryInstance == null) {
-			factoryInstance = new PermissionsManager();
+			factoryInstance = new Permissions();
 		}
-		PermissionsManager pm = factoryInstance.getT();
+		Permissions pm = factoryInstance.getPerThreadInstance();
 		if (pm != null) {
 			return pm;
 		}
@@ -204,7 +375,7 @@ public class PermissionsManager implements DomainTransformListener {
 		if (op == null) {
 			return false;
 		} else {
-			return PermissionsManager.get().isPermitted(object, op.delete());
+			return Permissions.get().isPermitted(object, op.delete());
 		}
 	}
 
@@ -217,8 +388,8 @@ public class PermissionsManager implements DomainTransformListener {
 		if (op == null) {
 			return false;
 		} else {
-			return PermissionsManager.get().checkEffectivePropertyPermission(op,
-					null, object, true);
+			return Permissions.get().checkEffectivePropertyPermission(op, null,
+					object, true);
 		}
 	}
 
@@ -231,8 +402,8 @@ public class PermissionsManager implements DomainTransformListener {
 		if (op == null) {
 			return false;
 		} else {
-			return PermissionsManager.get().checkEffectivePropertyPermission(op,
-					null, object, false);
+			return Permissions.get().checkEffectivePropertyPermission(op, null,
+					object, false);
 		}
 	}
 
@@ -246,14 +417,6 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public static boolean isEnabled() {
 		return enabled;
-	}
-
-	public static boolean isOffline() {
-		return get().getOnlineState() == OnlineState.OFFLINE;
-	}
-
-	public static boolean isOnline() {
-		return !isOffline();
 	}
 
 	public static boolean isPermitted(Object o, String ruleName) {
@@ -293,6 +456,105 @@ public class PermissionsManager implements DomainTransformListener {
 		return Objects.equals(get().getSystemUser(), get().getUser());
 	}
 
+	public static void register(Permissions pm) {
+		factoryInstance = pm;
+	}
+
+	public static void removePerThreadContext() {
+		if (factoryInstance == null) {
+			return;
+		}
+		factoryInstance.removePerThreadContext0();
+	}
+
+	public static void runAsUser(IUser user, ThrowingRunnable runnable) {
+		try {
+			Permissions.pushUser(user, LoginState.LOGGED_IN);
+			ThrowingRunnable.asRunnable(runnable).run();
+		} finally {
+			Permissions.popUser();
+		}
+	}
+
+	public static void
+			setAdministratorGroupName(String administratorGroupName) {
+		Permissions.administratorGroupName = administratorGroupName;
+	}
+
+	public static void setAnonymousUserName(String anonymousUserName) {
+		Permissions.anonymousUserName = anonymousUserName;
+	}
+
+	public static void setDeveloperGroupName(String developerGroupName) {
+		Permissions.developerGroupName = developerGroupName;
+	}
+
+	public static void setEnabled(boolean enabled) {
+		Permissions.enabled = enabled;
+	}
+
+	public static void
+			setPermissionsExtension(PermissionsExtension permissionsExtension) {
+		Permissions.permissionsExtension = permissionsExtension;
+	}
+
+	public static boolean isRoot() {
+		return get().isRoot0();
+	}
+
+	public static IUser popUser() {
+		return get().popUser0();
+	}
+
+	public static void pushCurrentUser() {
+		get().pushCurrentUser0();
+	}
+
+	public static IUser pushSystemUser() {
+		return get().pushSystemUser0();
+	}
+
+	public static <T> T callWithPushedSystemUserIfNeeded(Callable<T> callable)
+			throws Exception {
+		if (isRoot()) {
+			return callable.call();
+		} else {
+			try {
+				pushSystemUser();
+				return callable.call();
+			} finally {
+				popUser();
+			}
+		}
+	}
+
+	public static <T> T
+			callWithPushedSystemUserIfNeededNoThrow(Callable<T> callable) {
+		try {
+			if (isRoot()) {
+				return callable.call();
+			} else {
+				try {
+					pushSystemUser();
+					return callable.call();
+				} finally {
+					popUser();
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static void pushUser(IUser user, LoginState loginState) {
+		get().pushUser0(user, loginState);
+	}
+
+	public static void pushUser(IUser user, LoginState loginState,
+			boolean asRoot) {
+		get().pushUser0(user, loginState, asRoot);
+	}
+
 	private static void recursivePopulateGroupMemberships(Set<IGroup> members,
 			Set<IGroup> processed) {
 		while (true) {
@@ -314,71 +576,19 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 	}
 
-	public static void register(PermissionsManager pm) {
-		factoryInstance = pm;
-	}
+	protected Topic<ClientInstance> topicClientInstanceChange = Topic.create();
 
-	public static void removePerThreadContext() {
-		if (factoryInstance == null) {
-			return;
-		}
-		factoryInstance.removePerThreadContext0();
-	}
-
-	public static void runAsUser(IUser user, ThrowingRunnable runnable) {
-		try {
-			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
-			ThrowingRunnable.asRunnable(runnable).run();
-		} finally {
-			PermissionsManager.get().popUser();
-		}
-	}
-
-	public static void
-			setAdministratorGroupName(String administratorGroupName) {
-		PermissionsManager.administratorGroupName = administratorGroupName;
-	}
-
-	public static void setAnonymousUserName(String anonymousUserName) {
-		PermissionsManager.anonymousUserName = anonymousUserName;
-	}
-
-	public static void setDeveloperGroupName(String developerGroupName) {
-		PermissionsManager.developerGroupName = developerGroupName;
-	}
-
-	public static void setEnabled(boolean enabled) {
-		PermissionsManager.enabled = enabled;
-	}
-
-	public static void
-			setPermissionsExtension(PermissionsExtension permissionsExtension) {
-		PermissionsManager.permissionsExtension = permissionsExtension;
-	}
-
-	public static final Topic<ClientInstance> topicClientInstance() {
-		return topicClientInstance;
-	}
-
-	public static final Topic<LoginState> topicLoginState() {
-		return topicLoginState;
-	}
-
-	public static final Topic<OnlineState> topicOnlineState() {
-		return topicOnlineState;
-	}
+	private Topic<LoginState> topicLoginStateChange = Topic.create();
 
 	private LoginState loginState = LoginState.NOT_LOGGED_IN;
 
 	private OnlineState onlineState = OnlineState.ONLINE;
 
-	private long userId;
-
 	private IUser user;
 
 	private ClientInstance clientInstance;
 
-	private HashMap<String, IGroup> groupMap;
+	private Map<String, IGroup> groupMap;
 
 	private PropertyPermissions defaultPropertyPermissions = new PropertyPermissions() {
 		@Override
@@ -434,7 +644,7 @@ public class PermissionsManager implements DomainTransformListener {
 
 	private boolean overrideAsOwnedObject;
 
-	protected PermissionsManager() {
+	protected Permissions() {
 		super();
 	}
 
@@ -454,9 +664,8 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public boolean checkEffectivePropertyPermission(ObjectPermissions op,
 			PropertyPermissions pp, Object bean, boolean read) {
-		op = op == null ? PermissionsManager.get().getDefaultObjectPermissions()
-				: op;
-		if (pp == null && !PermissionsManager.get().isPermitted(bean,
+		op = op == null ? Permissions.get().getDefaultObjectPermissions() : op;
+		if (pp == null && !Permissions.get().isPermitted(bean,
 				read ? op.read() : op.write())) {
 			return false;
 		}
@@ -477,12 +686,8 @@ public class PermissionsManager implements DomainTransformListener {
 		ObjectPermissions op = reflector.annotation(ObjectPermissions.class);
 		PropertyPermissions pp = reflector.property(propertyName)
 				.annotation(PropertyPermissions.class);
-		return PermissionsManager.get().checkEffectivePropertyPermission(op, pp,
+		return Permissions.get().checkEffectivePropertyPermission(op, pp,
 				bean == null ? reflector.templateInstance() : bean, true);
-	}
-
-	private int depth0() {
-		return stateStack.size();
 	}
 
 	@Override
@@ -491,20 +696,6 @@ public class PermissionsManager implements DomainTransformListener {
 		if (evt.getSource() instanceof IGroup) {
 			invalidateGroupMap();
 		}
-	}
-
-	private boolean evaluatePermissionsExtension(Object o, Object assigningTo,
-			Permissible p, boolean permitted) {
-		Boolean b = null;
-		if (assigningTo != null) {
-			b = getPermissionsExtension().isPermitted(o, assigningTo, p);
-		} else {
-			b = getPermissionsExtension().isPermitted(o, p);
-		}
-		if (b != null) {
-			permitted = b;
-		}
-		return permitted;
 	}
 
 	public Long getAuthenticatedClientInstanceId() {
@@ -552,23 +743,6 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 	}
 
-	public OnlineState getOnlineState() {
-		return onlineState;
-	}
-
-	protected IUser getSystemUser() {
-		return UserlandProvider.get().getSystemUser();
-	}
-
-	public String getSystemUserName() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public PermissionsManager getT() {
-		return null;
-	}
-
 	public IUser getUser() {
 		return this.user;
 	}
@@ -592,7 +766,7 @@ public class PermissionsManager implements DomainTransformListener {
 				IGroup group = itr.next();
 				groupMap.put(group.getName(), group);
 			}
-			HashMap<String, IGroup> result = groupMap;
+			Map<String, IGroup> result = groupMap;
 			if (user != this.user) {
 				invalidateGroupMap();
 			}
@@ -601,19 +775,15 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	public long getUserId() {
-		return this.userId;
+		return getUser() == null ? 0L : getUser().getId();
 	}
 
 	public String getUserName() {
-		return (getUser() == null) ? null : getUser().getUserName();
+		return getUser() == null ? null : getUser().getUserName();
 	}
 
 	public String getUserString() {
 		return Ax.format("%s/%s", getUserId(), getUserName());
-	}
-
-	protected void invalidateGroupMap() {
-		groupMap = null;
 	}
 
 	public boolean isAdmin() {
@@ -695,8 +865,7 @@ public class PermissionsManager implements DomainTransformListener {
 					permitted |= permitDueToOwnership((HasOwner) o);
 				}
 			} else {
-				permitted |= Objects.equals(PermissionsManager.get().getUser(),
-						o);
+				permitted |= Objects.equals(Permissions.get().getUser(), o);
 			}
 		}
 		if (!permitted && !doNotEvaluateNullObjectPermissions) {
@@ -742,10 +911,6 @@ public class PermissionsManager implements DomainTransformListener {
 		return isPermitted(permission != null ? permission : defaultPermission);
 	}
 
-	public boolean isRoot() {
-		return root;
-	}
-
 	public boolean permitDueToOwnership(HasOwner hasOwner) {
 		if (overrideAsOwnedObject) {
 			return true;
@@ -764,52 +929,9 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 	}
 
-	public IUser popSystemUser() {
-		return popUser();
-	}
-
-	public IUser popUser() {
-		stackDebug.maybeDebugStack(stateStack, false);
-		IUser currentUser = getUser();
-		PermissionsState state = stateStack.pop();
-		setLoginState(state.loginState);
-		setUser(state.user);
-		setRoot(state.asRoot);
-		return currentUser;
-	}
-
-	public void pushCurrentUser() {
-		pushUser(getUser(), getLoginState(), isRoot());
-	}
-
-	public IUser pushSystemUser() {
-		IUser systemUser = getSystemUser();
-		pushUser(systemUser, LoginState.LOGGED_IN, true);
-		return systemUser;
-	}
-
-	public void pushUser(IUser user, LoginState loginState) {
-		pushUser(user, loginState, false);
-	}
-
-	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
-		stackDebug.maybeDebugStack(stateStack, true);
-		PermissionsState state = toPermissionsState();
-		stateStack.push(state);
-		setLoginState(loginState);
-		setUser(user);
-		setRoot(asRoot);
-	}
-
 	public PermissionsState toPermissionsState() {
 		return new PermissionsState(getUser(), getLoginState(), isRoot(),
 				getClientInstance());
-	}
-
-	/*
-	 * Overridden by threaded subclasses
-	 */
-	protected void removePerThreadContext0() {
 	}
 
 	// This should never be necessary, if the code always surrounds user
@@ -834,7 +956,7 @@ public class PermissionsManager implements DomainTransformListener {
 		ClientInstance old_clientInstance = clientInstance;
 		this.clientInstance = clientInstance;
 		if (!Objects.equals(clientInstance, old_clientInstance)) {
-			topicClientInstance().publish(clientInstance);
+			topicClientInstanceChange.publish(clientInstance);
 		}
 	}
 
@@ -852,15 +974,7 @@ public class PermissionsManager implements DomainTransformListener {
 		LoginState old_loginState = this.loginState;
 		this.loginState = loginState;
 		if (loginState != old_loginState) {
-			topicLoginState().publish(loginState);
-		}
-	}
-
-	public void setOnlineState(OnlineState onlineState) {
-		OnlineState old_onlineState = this.onlineState;
-		this.onlineState = onlineState;
-		if (onlineState != old_onlineState) {
-			topicOnlineState().publish(onlineState);
+			topicLoginStateChange().publish(loginState);
 		}
 	}
 
@@ -876,170 +990,101 @@ public class PermissionsManager implements DomainTransformListener {
 		root = false;
 		invalidateGroupMap();
 		this.user = user;
-		if (this.user != null) {
-			this.userId = user.getId();
-		}
 		if (user == null) {
 			// do not fire listeners
 			loginState = LoginState.NOT_LOGGED_IN;
 		}
 	}
 
-	public void setUserId(long userId) {
-		this.userId = userId;
-	}
-
-	public synchronized PermissionsManagerState snapshotState() {
-		PermissionsManagerState state = new PermissionsManagerState();
+	public synchronized PermissionsState snapshotState() {
+		PermissionsState state = new PermissionsState();
 		state.user = user;
 		state.groupMap = groupMap == null ? null : new HashMap<>(groupMap);
 		state.loginState = loginState;
-		state.userId = userId;
 		state.onlineState = onlineState;
 		state.root = root;
 		return state;
 	}
 
-	@Reflected
-	public enum LoginState {
-		NOT_LOGGED_IN, LOGGED_IN
-	}
-
-	public enum OnlineState {
-		OFFLINE, ONLINE
-	}
-
-	public static interface PermissionsExtension extends Registration.Ensure {
-		default Boolean isPermitted(Object o, Object assigningTo,
-				Permissible p) {
-			return isPermitted(o, p);
-		}
-
-		public Boolean isPermitted(Object o, Permissible p);
-	}
-
-	@Reflected
-	@Registration(PermissionsExtensionForRule.class)
-	public static abstract class PermissionsExtensionForRule
-			implements PermissionsExtension {
-		public abstract String getRuleName();
-	}
-
-	public static class PermissionsManagerState {
-		public IUser user;
-
-		public HashMap<String, IGroup> groupMap;
-
-		public LoginState loginState;
-
-		public long userId;
-
-		public OnlineState onlineState;
-
-		public boolean root;
-
-		public void copyTo(PermissionsManager pm) {
-			pm.user = user;
-			pm.groupMap = groupMap;
-			pm.loginState = loginState;
-			pm.userId = userId;
-			pm.onlineState = onlineState;
-			pm.root = root;
-		}
-	}
-
-	public static class PermissionsState {
-		public IUser user;
-
-		public LoginState loginState;
-
-		public boolean asRoot;
-
-		public ClientInstance clientInstance;
-
-		public PermissionsState(IUser user, LoginState loginState,
-				boolean asRoot, ClientInstance clientInstance) {
-			this.user = user;
-			this.loginState = loginState;
-			this.asRoot = asRoot;
-			this.clientInstance = clientInstance;
-		}
-
-		public static PermissionsState root() {
-			return new PermissionsState(
-					PermissionsManager.get().getSystemUser(),
-					LoginState.LOGGED_IN, true, null);
-		}
-	}
-
-	/**
-	 * <p>
-	 * Note - make sure the environment is ready before instantiating i.e.
-	 * servlet layer:
-	 * </p>
-	 * <code>
-	 *  ObjectPersistenceHelper.get();
-	 * 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-	 * 		</code>
-	 *
-	 *
-	 */
-	public static class RegistryPermissionsExtension
-			implements PermissionsExtension {
-		Map<String, PermissionsExtensionForRule> perNameRules = AlcinaCollections
-				.newUnqiueMap();
-
-		Map<Class<? extends Permissible>, Rule> perClassRules = AlcinaCollections
-				.newUnqiueMap();
-
-		public RegistryPermissionsExtension() {
-			Registry.query(PermissionsExtensionForRule.class).implementations()
-					.forEach(this::register);
-		}
-
-		public PermissionsExtensionForRule getExtension(String ruleName) {
-			return perNameRules.get(ruleName);
-		}
-
-		@Override
-		public Boolean isPermitted(Object target, Object assigningTo,
-				Permissible p) {
-			Class<? extends Object> targetClass = target == null ? null
-					: target.getClass();
-			String ruleName = p != null ? p.rule() : "";
-			Class<? extends Permissible> permissibleClass = p != null
-					? p.getClass()
-					: null;
-			if (permissibleClass != null) {
-				Rule rule = perClassRules.computeIfAbsent(permissibleClass,
-						clazz -> Registry.optional(Rule.class, permissibleClass)
-								.orElse(null));
-				if (rule != null) {
-					return rule.isPermittedTyped(target, assigningTo, p);
-				}
-			}
-			if (perNameRules.containsKey(ruleName)) {
-				PermissionsExtensionForRule extension = perNameRules
-						.get(ruleName);
-				return extension.isPermitted(target, assigningTo, p);
-			}
-			return null;
-		}
-
-		@Override
-		public Boolean isPermitted(Object o, Permissible p) {
-			return isPermitted(o, null, p);
-		}
-
-		public void register(PermissionsExtensionForRule ext) {
-			perNameRules.put(ext.getRuleName(), ext);
-		}
-	}
-
 	public void pushState(PermissionsState state) {
-		pushUser(state.user, state.loginState, state.asRoot);
+		pushUser(state.user, state.loginState, state.root);
 		if (state.clientInstance != null) {
 			this.clientInstance = state.clientInstance;
 		}
+	}
+
+	protected Permissions getPerThreadInstance() {
+		return null;
+	}
+
+	protected boolean isRoot0() {
+		return root;
+	}
+
+	protected IUser popUser0() {
+		stackDebug.maybeDebugStack(stateStack, false);
+		IUser currentUser = getUser();
+		PermissionsState state = stateStack.pop();
+		setLoginState(state.loginState);
+		setUser(state.user);
+		setRoot(state.root);
+		setClientInstance(state.clientInstance);
+		return currentUser;
+	}
+
+	protected void pushCurrentUser0() {
+		pushUser(getUser(), getLoginState(), isRoot());
+	}
+
+	protected IUser pushSystemUser0() {
+		IUser systemUser = getSystemUser();
+		pushUser(systemUser, LoginState.LOGGED_IN, true);
+		return systemUser;
+	}
+
+	protected void pushUser0(IUser user, LoginState loginState) {
+		pushUser(user, loginState, false);
+	}
+
+	protected void pushUser0(IUser user, LoginState loginState,
+			boolean asRoot) {
+		stackDebug.maybeDebugStack(stateStack, true);
+		PermissionsState state = toPermissionsState();
+		stateStack.push(state);
+		setLoginState(loginState);
+		setUser(user);
+		setRoot(asRoot);
+	}
+
+	protected IUser getSystemUser() {
+		return UserlandProvider.get().getSystemUser();
+	}
+
+	protected void invalidateGroupMap() {
+		groupMap = null;
+	}
+
+	/*
+	 * Overridden by threaded subclasses
+	 */
+	protected void removePerThreadContext0() {
+	}
+
+	private int depth0() {
+		return stateStack.size();
+	}
+
+	private boolean evaluatePermissionsExtension(Object o, Object assigningTo,
+			Permissible p, boolean permitted) {
+		Boolean b = null;
+		if (assigningTo != null) {
+			b = getPermissionsExtension().isPermitted(o, assigningTo, p);
+		} else {
+			b = getPermissionsExtension().isPermitted(o, p);
+		}
+		if (b != null) {
+			permitted = b;
+		}
+		return permitted;
 	}
 }

@@ -7,7 +7,7 @@ import com.google.gwt.core.client.GWT;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
@@ -17,7 +17,7 @@ public class DtrSimpleAdminPersistenceAction
 	public DtrSimpleAdminPersistenceAction() {
 		DeltaApplicationRecord wrapper = new DeltaApplicationRecord();
 		if (GWT.isClient()) {
-			ClientInstance clientInstance = PermissionsManager.get()
+			ClientInstance clientInstance = Permissions.get()
 					.getClientInstance();
 			wrapper.setClientInstanceAuth(clientInstance.getAuth());
 			wrapper.setClientInstanceId(clientInstance.getId());

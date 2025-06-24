@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -133,7 +133,7 @@ public abstract class AlcinaServlet extends HttpServlet
 			}
 		} catch (Throwable t) {
 			logger.warn("Alcina servlet request issue - user {} - url {}",
-					PermissionsManager.get().getUser().toIdNameString(),
+					Permissions.get().getUser().toIdNameString(),
 					request.getRequestURI());
 			// If the connection has been reset, we can't print anything to the
 			// response

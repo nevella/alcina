@@ -43,8 +43,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -58,7 +58,7 @@ import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
@@ -213,16 +213,15 @@ public class TransformCommit {
 							persistableRequest.getChunkUuidString());
 				}
 				boolean committingUserIsAdministrator = UserlandProvider.get()
-						.getGroupByName(
-								PermissionsManager.ADMINISTRATORS_GROUP_NAME)
+						.getGroupByName(Permissions.ADMINISTRATORS_GROUP_NAME)
 						.containsUserOrMemberGroupContainsUser(UserlandProvider
 								.get().getUserById(deltaRecord.getUserId()));
 				if (useWrapperUser == null) {
 					useWrapperUser = committingUserIsAdministrator
 							&& LooseContext.getContext().getBoolean(
 									TransformCommit.CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
-							&& deltaRecord.getUserId() != PermissionsManager
-									.get().getUserId();
+							&& deltaRecord.getUserId() != Permissions.get()
+									.getUserId();
 				}
 				DomainTransformLayerWrapper transformLayerWrapper;
 				// NOTE - at the moment, if all records are pushed in one
@@ -238,7 +237,7 @@ public class TransformCommit {
 				}
 				try {
 					if (useWrapperUser) {
-						if (!PermissionsManager.get().isAdmin()) {
+						if (!Permissions.get().isAdmin()) {
 							try {
 								LooseContext.pushWithTrue(
 										AuthenticationPersistence.CONTEXT_IDLE_TIMEOUT_DISABLED);
@@ -268,21 +267,21 @@ public class TransformCommit {
 						}
 						if (wrapperUser == null) {
 							// admin persistence
-							wrapperUser = PermissionsManager.get().getUser();
+							wrapperUser = Permissions.get().getUser();
 						}
 						boolean asRoot = wrapperUser == UserlandProvider.get()
 								.getSystemUser();
-						PermissionsManager.get().pushUser(wrapperUser,
-								LoginState.LOGGED_IN, asRoot);
+						Permissions.pushUser(wrapperUser, LoginState.LOGGED_IN,
+								asRoot);
 					} else {
 						if (!Objects.equals(
 								request.getClientInstance().domain()
 										.domainVersion().provideUser(),
-								PermissionsManager.get().getUser())) {
+								Permissions.get().getUser())) {
 							throw new UnsupportedOperationException(
 									"May need to create an additional authenticationSession");
 							// request.getClientInstance()
-							// .setUser(PermissionsManager.get().getUser());
+							// .setUser(Permissions.get().getUser());
 						}
 					}
 					boolean last = idx == records.size() - 1;
@@ -314,7 +313,7 @@ public class TransformCommit {
 					}
 				} finally {
 					if (useWrapperUser) {
-						PermissionsManager.get().popUser();
+						Permissions.popUser();
 					}
 				}
 				committed++;
@@ -407,10 +406,8 @@ public class TransformCommit {
 	public static void
 			commitLocalTransformsInChunks(int maxTransformChunkSize) {
 		try {
-			ThreadedPermissionsManager.cast()
-					.runThrowingWithPushedSystemUserIfNeeded(
-							() -> get().commitLocalTranformInChunks0(
-									maxTransformChunkSize));
+			Permissions.runThrowingWithPushedSystemUserIfNeeded(() -> get()
+					.commitLocalTranformInChunks0(maxTransformChunkSize));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		} finally {
@@ -476,7 +473,7 @@ public class TransformCommit {
 				() -> new CommitClientInstanceContext(
 						EntityLayerObjects.get().getServerAsClientInstance()
 								.getId(),
-						PermissionsManager.get().getUserId(), "0.0.0.0"));
+						Permissions.get().getUserId(), "0.0.0.0"));
 		long persistentTransformRecordCount = TransformPropagationPolicy.get()
 				.getProjectedPersistentCount(TransformManager.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
@@ -685,14 +682,13 @@ public class TransformCommit {
 		// for debugging
 		Set<DomainTransformEvent> transforms = TransformManager.get()
 				.getTransforms();
-		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
 		boolean muted = MetricLogging.get().isMuted();
 		try {
 			MetricLogging.get().setMuted(true);
 			if (asRoot) {
-				tpm.pushSystemUser();
+				Permissions.pushSystemUser();
 			} else {
-				tpm.pushCurrentUser();
+				Permissions.pushCurrentUser();
 			}
 			return get().transformFromServletLayer(tag);
 		} catch (Exception ex) {
@@ -702,7 +698,7 @@ public class TransformCommit {
 			Transaction.endAndBeginNew();
 			throw WrappedRuntimeException.wrap(ex);
 		} finally {
-			tpm.popUser();
+			Permissions.popUser();
 			Preconditions.checkState(
 					TransformManager.get().getTransforms().size() == 0);
 			MetricLogging.get().setMuted(muted);
@@ -762,8 +758,7 @@ public class TransformCommit {
 		logger.warn(String.format(
 				"domain transform problem - clientInstance: %s - rqId: %s - user ",
 				response.getRequest().getClientInstance().getId(),
-				response.getRequestId(),
-				PermissionsManager.get().getUserName()));
+				response.getRequestId(), Permissions.get().getUserName()));
 		List<DomainTransformException> transformExceptions = response
 				.getTransformExceptions();
 		for (DomainTransformException ex : transformExceptions) {
@@ -845,7 +840,7 @@ public class TransformCommit {
 			LooseContext.push();
 			LooseContext.remove(
 					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
-			if (!PermissionsManager.get().isRoot()) {
+			if (!Permissions.isRoot()) {
 				AppPersistenceBase.checkNotReadOnly();
 			}
 			persistenceToken.getTransformCollation().refreshFromRequest();
@@ -999,7 +994,7 @@ public class TransformCommit {
 		}
 		request.getEvents().addAll(transforms);
 		try {
-			ThreadedPermissionsManager.cast().pushSystemUser();
+			Permissions.pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map, false, false, false, logger, true);
 			CONTEXT_RETRY_POLICY.optional()
@@ -1009,7 +1004,7 @@ public class TransformCommit {
 			persistenceToken.setOriginatingUserId(clientInstanceContext.userId);
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
-			ThreadedPermissionsManager.cast().popSystemUser();
+			Permissions.popUser();
 		}
 	}
 

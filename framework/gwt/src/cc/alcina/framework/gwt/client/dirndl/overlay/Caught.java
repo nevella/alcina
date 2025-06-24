@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.overlay;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -21,8 +21,7 @@ public class Caught extends Model {
 	@Directed
 	public String getMessage() {
 		return "There's been a problem with the requested operation.\n"
-				+ (PermissionsManager.get().isAdmin() ? builder.toString()
-						: "");
+				+ (Permissions.get().isAdmin() ? builder.toString() : "");
 	}
 
 	public static class Builder {

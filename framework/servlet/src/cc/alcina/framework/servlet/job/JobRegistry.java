@@ -56,7 +56,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
@@ -244,7 +244,7 @@ public class JobRegistry {
 	private static void checkAnnotatedPermissions(Object o) {
 		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
 		if (annotation != null) {
-			if (!PermissionsManager.get().isPermitted(o,
+			if (!Permissions.get().isPermitted(o,
 					new AnnotatedPermissible(annotation.customPermission()))) {
 				RuntimeException e = new RuntimeException(
 						"Permission denied for action " + o);
@@ -820,7 +820,7 @@ public class JobRegistry {
 				e.printStackTrace();
 			}
 		} finally {
-			PermissionsManager.get().popUser();
+			Permissions.popUser();
 			TransactionEnvironment.get().end();
 			LooseContext.pop();
 			LooseContext.confirmDepth(0);
@@ -1109,7 +1109,7 @@ public class JobRegistry {
 		public Job create() {
 			checkAnnotatedPermissions(task);
 			Job job = PersistentImpl.create(Job.class);
-			job.setUser(PermissionsManager.get().getUser());
+			job.setUser(Permissions.get().getUser());
 			job.setState(initialState);
 			try {
 				LooseContext.push();
@@ -1141,7 +1141,7 @@ public class JobRegistry {
 							.get(CONTEXT_DEFAULT_FUTURE_CONSISTENCY_PRIORITY)
 							.toString();
 				}
-				if (!PermissionsManager.isSystemUser()) {
+				if (!Permissions.isSystemUser()) {
 					// raise the priority of jobs that are directly caused by
 					// non-system users
 					consistencyPriority = JobDomain.DefaultConsistencyPriorities.high

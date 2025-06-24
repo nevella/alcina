@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -52,14 +52,14 @@ public @interface AppSuggestorCommand {
 		public static class IsAdmin implements Filter {
 			@Override
 			public boolean test(Class<? extends AppSuggestorEvent> t) {
-				return PermissionsManager.get().isAdmin();
+				return Permissions.get().isAdmin();
 			}
 		}
 
 		public static class IsDeveloper implements Filter {
 			@Override
 			public boolean test(Class<? extends AppSuggestorEvent> t) {
-				return PermissionsManager.isDeveloper() || !GWT.isScript();
+				return Permissions.isDeveloper() || !GWT.isScript();
 			}
 		}
 

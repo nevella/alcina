@@ -35,7 +35,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.context.LooseContext;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -339,7 +339,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			}
 			List<Field> fields = null;
 			try {
-				PermissionsManager.get().setOverrideAsOwnedObject(true);
+				Permissions.get().setOverrideAsOwnedObject(true);
 				fields = BeanFields.query().forBean(bean)
 						.withEditable(isEditableWidgets())
 						.forMultipleWidgetContainer(true)
@@ -347,7 +347,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 								n -> !ignoreProperties.contains(n))
 						.listFields();
 			} finally {
-				PermissionsManager.get().setOverrideAsOwnedObject(false);
+				Permissions.get().setOverrideAsOwnedObject(false);
 			}
 			int mask = BoundTableExt.HEADER_MASK;
 			if (def.isOrderable()) {

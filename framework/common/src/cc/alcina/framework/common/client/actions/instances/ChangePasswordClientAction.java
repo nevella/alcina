@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.common.client.actions.instances;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.provider.TextProvider;
 
 /**
@@ -29,6 +29,6 @@ public class ChangePasswordClientAction extends NonstandardObjectAction {
 
 	@Override
 	public String rule() {
-		return PermissionsManager.getAdministratorGroupName();
+		return Permissions.getAdministratorGroupName();
 	}
 }

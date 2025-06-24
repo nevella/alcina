@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -53,7 +53,7 @@ public class PermissibleModelResolver extends ContextResolver {
 			}
 			Permission permission = Reflections.at(modelClass)
 					.annotation(Permission.class);
-			if (!PermissionsManager.isPermitted(model)) {
+			if (!Permissions.isPermitted(model)) {
 				return new AccessDenied(model);
 			}
 			return superResolveModel.apply(location, model);

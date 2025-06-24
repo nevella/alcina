@@ -6,10 +6,10 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -52,11 +52,10 @@ class JobEnvironmentTx implements JobEnvironment {
 	public void prepareUserContext(Job job) {
 		Task task = job.getTask();
 		if (task instanceof NonRootTask) {
-			ThreadedPermissionsManager.cast().pushUser(
-					((NonRootTask) task).provideIUser(job),
+			Permissions.pushUser(((NonRootTask) task).provideIUser(job),
 					LoginState.LOGGED_IN);
 		} else {
-			ThreadedPermissionsManager.cast().pushSystemUser();
+			Permissions.pushSystemUser();
 		}
 	}
 

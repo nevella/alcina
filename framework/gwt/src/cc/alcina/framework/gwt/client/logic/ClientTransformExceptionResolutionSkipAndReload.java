@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -115,7 +115,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			}
 			DTEView view = new DTEView(dte);
 			if (view.recommendedAction != RecommendedAction.OK
-					|| !dte.isSilent() || !PermissionsManager.get().isAdmin()) {
+					|| !dte.isSilent() || !Permissions.get().isAdmin()) {
 				adapters.add(view);
 			}
 			reloadRequired |= view.reloadRequired;

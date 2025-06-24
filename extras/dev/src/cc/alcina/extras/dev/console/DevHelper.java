@@ -49,7 +49,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TestTransformMana
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.registry.EnvironmentRegistry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -69,7 +69,7 @@ import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.gwt.headless.SchedulerFrame;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStore.AwaitingWriteableStore;
@@ -439,7 +439,7 @@ public abstract class DevHelper {
 		AlcinaTopics.devWarning.add(devWarningListener);
 		EnvironmentManager.registerEnvironmentSensitiveTimerProvider();
 		EnvironmentManager.get();
-		PermissionsManager.register(new ThreadedPermissionsManager());
+		Permissions.register(new ThreadedPermissions());
 		JsonUtil.FAST_STRINGIFY = true;
 		try {
 			Method m = GWT.class.getDeclaredMethod("setBridge",

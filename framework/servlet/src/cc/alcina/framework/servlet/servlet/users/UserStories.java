@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.DateStyle;
@@ -42,7 +42,7 @@ import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.Io;
 import cc.alcina.framework.entity.ObjectUtil;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissions;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
@@ -58,7 +58,7 @@ public class UserStories {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public String asHtml(long id) {
-		if (!PermissionsManager.get().isAdmin() && !EntityLayerUtils.isTest()) {
+		if (!Permissions.get().isAdmin() && !EntityLayerUtils.isTest()) {
 			throw new RuntimeException("Not permitted");
 		}
 		build(id, null);
@@ -250,16 +250,13 @@ public class UserStories {
 
 	private Optional<? extends IUserStory> getUserStory(
 			ClientInstance clientInstance, String clientInstanceUid) {
-		return ThreadedPermissionsManager.cast()
-				.callWithPushedSystemUserIfNeededNoThrow(() -> {
-					Predicate<IUserStory> predicate = us -> clientInstanceUid != null
-							? clientInstanceUid
-									.equals(us.getClientInstanceUid())
-							: us.getClientInstanceId() == clientInstance
-									.getId();
-					return Domain.query(getImplementation())
-							.filter((Predicate) predicate).stream().findFirst();
-				});
+		return Permissions.callWithPushedSystemUserIfNeededNoThrow(() -> {
+			Predicate<IUserStory> predicate = us -> clientInstanceUid != null
+					? clientInstanceUid.equals(us.getClientInstanceUid())
+					: us.getClientInstanceId() == clientInstance.getId();
+			return Domain.query(getImplementation())
+					.filter((Predicate) predicate).stream().findFirst();
+		});
 	}
 
 	protected List<String> getUserStoryPropertiesNotPopulatedByClient() {

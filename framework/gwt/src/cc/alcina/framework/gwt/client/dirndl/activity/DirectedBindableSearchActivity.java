@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -68,8 +68,8 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 			Class<? extends Entity> entityClass = ((EntityPlace) getPlace())
 					.provideEntityClass();
 			Stream<Class<? extends ModelEvent>> superStream = super.getActions();
-			if (PermissionsManager.get().isPermitted(PermissionsManager
-					.getObjectPermissions(entityClass).create())) {
+			if (Permissions.get().isPermitted(
+					Permissions.getObjectPermissions(entityClass).create())) {
 				return Stream.concat(superStream,
 						Stream.of(ModelEvents.Create.class));
 			} else {

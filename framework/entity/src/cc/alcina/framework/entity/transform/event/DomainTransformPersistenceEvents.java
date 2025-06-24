@@ -14,7 +14,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.SEUtilities;
@@ -275,7 +275,7 @@ public class DomainTransformPersistenceEvents
 		synchronized void runWithOffsetLocalIdCounter(Runnable runnable) {
 			ClientInstance serverAsClientInstance = EntityLayerObjects.get()
 					.getServerAsClientInstance();
-			ClientInstance threadInstance = PermissionsManager.get()
+			ClientInstance threadInstance = Permissions.get()
 					.getClientInstance();
 			// hack - Jumail's config? threadInstance should never be null
 			// mvcc.jobs.2 - this branch should never be reached

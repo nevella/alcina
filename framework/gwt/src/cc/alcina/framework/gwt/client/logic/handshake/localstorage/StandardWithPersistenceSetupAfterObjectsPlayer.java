@@ -5,7 +5,7 @@ import java.util.Arrays;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Consort;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.OnlineState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.StringPair;
@@ -55,7 +55,7 @@ public abstract class StandardWithPersistenceSetupAfterObjectsPlayer
 	}
 
 	protected void saveToLocalPersistenceAndStat() {
-		if (PermissionsManager.isOnline()) {
+		if (OnlineState.isOnline()) {
 			saveConsort = new SaveToLocalStorageConsort();
 			saveConsort.start();
 			saveConsort.listenerDelta(Consort.TopicChannel.FINISHED,

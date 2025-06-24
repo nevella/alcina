@@ -11,7 +11,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -150,8 +150,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		this.id = id;
 		setLocalId(localId);
 		if (id == 0) {
-			this.clientInstanceId = PermissionsManager.get()
-					.getClientInstanceId();
+			this.clientInstanceId = Permissions.get().getClientInstanceId();
 		}
 	}
 
@@ -297,9 +296,8 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		if (id != 0) {
 			return String.valueOf(id);
 		}
-		return Ax.format("%s%s%s",
-				PermissionsManager.get().getClientInstanceId(), separator,
-				localId);
+		return Ax.format("%s%s%s", Permissions.get().getClientInstanceId(),
+				separator, localId);
 	}
 
 	public String toRecoverableString(long clientInstanceId) {
@@ -315,7 +313,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	public String toString() {
 		if (id == 0) {
 			long clientInstanceId = CommonUtils
-					.lv(PermissionsManager.get().getClientInstanceId());
+					.lv(Permissions.get().getClientInstanceId());
 			return toRecoverableString(clientInstanceId);
 		}
 		return Ax.format("%s - %s",

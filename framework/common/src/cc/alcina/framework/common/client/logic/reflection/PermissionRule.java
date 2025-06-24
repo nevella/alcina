@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public abstract class PermissionRule<E extends Entity> {
@@ -24,7 +24,7 @@ public abstract class PermissionRule<E extends Entity> {
 		public E checkPermission(E e) throws PermissionsException {
 			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
-			throwIfFalse(PermissionsManager.get().isPermitted(e,
+			throwIfFalse(Permissions.get().isPermitted(e,
 					objectPermissions.create()));
 			return e;
 		}
@@ -36,7 +36,7 @@ public abstract class PermissionRule<E extends Entity> {
 		public E checkPermission(E e) throws PermissionsException {
 			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
-			throwIfFalse(PermissionsManager.get().isPermitted(e,
+			throwIfFalse(Permissions.get().isPermitted(e,
 					objectPermissions.delete()));
 			return e;
 		}
@@ -46,7 +46,7 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			throwIfFalse(e.containsUser(PermissionsManager.get().getUser()));
+			throwIfFalse(e.containsUser(Permissions.get().getUser()));
 			return e;
 		}
 	}
@@ -55,8 +55,8 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			throwIfFalse(Objects.equals(e.getOwner(),
-					PermissionsManager.get().getUser()));
+			throwIfFalse(
+					Objects.equals(e.getOwner(), Permissions.get().getUser()));
 			return e;
 		}
 	}
@@ -67,8 +67,8 @@ public abstract class PermissionRule<E extends Entity> {
 		public E checkPermission(E e) throws PermissionsException {
 			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
-			throwIfFalse(PermissionsManager.get().isPermitted(e,
-					objectPermissions.read()));
+			throwIfFalse(
+					Permissions.get().isPermitted(e, objectPermissions.read()));
 			return e;
 		}
 	}
@@ -79,7 +79,7 @@ public abstract class PermissionRule<E extends Entity> {
 		public E checkPermission(E e) throws PermissionsException {
 			ObjectPermissions objectPermissions = Reflections.at(e)
 					.annotation(ObjectPermissions.class);
-			throwIfFalse(PermissionsManager.get().isPermitted(e,
+			throwIfFalse(Permissions.get().isPermitted(e,
 					objectPermissions.write()));
 			return e;
 		}

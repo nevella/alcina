@@ -47,7 +47,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
@@ -1088,9 +1088,9 @@ public class FormModel extends Model
 				ObjectPermissions op = Reflections.at(entity)
 						.annotation(ObjectPermissions.class);
 				op = op == null
-						? PermissionsManager.get().getDefaultObjectPermissions()
+						? Permissions.get().getDefaultObjectPermissions()
 						: op;
-				state.editable = PermissionsManager.get().isPermitted(entity,
+				state.editable = Permissions.get().isPermitted(entity,
 						op.write());
 				if (state.editable) {
 					entity = ClientTransformManager.cast()

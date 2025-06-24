@@ -22,8 +22,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaM
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.OnlineState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -73,13 +74,13 @@ public class HandshakeConsortModel {
 	}
 
 	public void ensureClientInstanceFromModelDeltas() {
-		if (PermissionsManager.get().getClientInstance() == null) {
+		if (Permissions.get().getClientInstance() == null) {
 			ClientInstance impl = Registry.impl(ClientInstance.class);
 			DeltaApplicationRecord wrapper = ((DtrWrapperBackedDomainModelDelta) deltasToApply
 					.current()).getWrapper();
 			impl.setAuth(wrapper.getClientInstanceAuth());
 			impl.setId(wrapper.getClientInstanceId());
-			PermissionsManager.get().setClientInstance(impl);
+			Permissions.get().setClientInstance(impl);
 		}
 	}
 
@@ -129,11 +130,10 @@ public class HandshakeConsortModel {
 	}
 
 	public LoginState getLoginState() {
-		if (PermissionsManager.get().getClientInstance() == null) {
+		if (Permissions.get().getClientInstance() == null) {
 			return LoginState.NOT_LOGGED_IN;
 		}
-		return PermissionsManager.get().isAnonymousUser()
-				? LoginState.NOT_LOGGED_IN
+		return Permissions.get().isAnonymousUser() ? LoginState.NOT_LOGGED_IN
 				: LoginState.LOGGED_IN;
 	}
 
@@ -146,8 +146,7 @@ public class HandshakeConsortModel {
 	}
 
 	public boolean haveAllChunksNeededForOptimalObjectLoad() {
-		return PermissionsManager.isOffline()
-				&& deltasToApply.current() != null;
+		return OnlineState.isOffline() && deltasToApply.current() != null;
 	}
 
 	public boolean isLoadedWithLocalOnlyTransforms() {
@@ -195,8 +194,8 @@ public class HandshakeConsortModel {
 					.setInstance(generalProperties);
 		}
 		if (currentUser != null) {
-			PermissionsManager.get().setUser(currentUser);
-			PermissionsManager.get()
+			Permissions.get().setUser(currentUser);
+			Permissions.get()
 					.setLoginState(HandshakeConsortModel.get().getLoginState());
 			Registry.impl(ClientNotifications.class).log(Ax.format("User: %s",
 					currentUser == null ? null : currentUser.getUserName()));
@@ -230,7 +229,7 @@ public class HandshakeConsortModel {
 	public void setLoginResponse(LoginResponse loginResponse) {
 		this.loginResponse = loginResponse;
 		if (loginResponse != null) {
-			PermissionsManager.get()
+			Permissions.get()
 					.setClientInstance(loginResponse.getClientInstance());
 		}
 	}
@@ -254,10 +253,10 @@ public class HandshakeConsortModel {
 		@Override
 		public DeltaApplicationRecord
 				convert(DomainModelDeltaTransport transport) {
-			ClientInstance clientInstance = PermissionsManager.get()
+			ClientInstance clientInstance = Permissions.get()
 					.getClientInstance();
 			return new DeltaApplicationRecord(0, transport.getSignature(),
-					new Date().getTime(), PermissionsManager.get().getUserId(),
+					new Date().getTime(), Permissions.get().getUserId(),
 					clientInstance.getId(), 0, clientInstance.getAuth(),
 					DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
 					DomainTrancheProtocolHandler.VERSION, null, null);

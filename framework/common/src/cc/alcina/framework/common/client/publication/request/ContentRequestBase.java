@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -238,8 +238,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	@Override
 	public String getEmailAddress() {
 		return emailAddress == null
-				? PermissionsManager.get().getUser() == null ? null
-						: PermissionsManager.get().getUser().getEmail()
+				? Permissions.get().getUser() == null ? null
+						: Permissions.get().getUser().getEmail()
 				: this.emailAddress;
 	}
 

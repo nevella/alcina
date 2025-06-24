@@ -58,7 +58,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -828,7 +828,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			authenticationSession.setSessionId(authenticationSessionUid);
 			authenticationSession.setStartTime(new Date());
 			authenticationSession.setUser((IUser) persistentImpl(em,
-					(Entity) PermissionsManager.get().getUser()));
+					(Entity) Permissions.get().getUser()));
 			authenticationSession.setAuthenticationType("server-instance");
 			authenticationSession.setIid(iid);
 			em.persist(authenticationSession);

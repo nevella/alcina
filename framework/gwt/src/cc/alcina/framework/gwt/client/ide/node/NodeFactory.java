@@ -22,7 +22,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -95,11 +95,11 @@ public class NodeFactory {
 					boolean fieldVisible = display != null
 							&& ((display.displayMask()
 									& Display.DISPLAY_AS_TREE_NODE) != 0)
-							&& PermissionsManager.get()
+							&& Permissions.get()
 									.checkEffectivePropertyPermission(op, pp,
 											domainObject, true)
-							&& PermissionsManager.get().isPermitted(
-									domainObject, display.visible());
+							&& Permissions.get().isPermitted(domainObject,
+									display.visible());
 					return fieldVisible;
 				}).collect(Collectors.toList()));
 		visibleProperties.forEach(property -> {

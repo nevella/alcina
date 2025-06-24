@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainHandlerClient;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -47,8 +47,7 @@ public class ClientConfiguration {
 		Domain.registerHandler(new DomainHandlerClient());
 		LooseContext.register(new ClientLooseContextProvider());
 		ClientTransformManager.cast().setupClientListeners();
-		TransformManager.get()
-				.addDomainTransformListener(PermissionsManager.get());
+		TransformManager.get().addDomainTransformListener(Permissions.get());
 		Registry.register().singleton(CommitToStorageTransformListener.class,
 				createStorageTransformListener());
 		Registry.register().singleton(Timer.Provider.class,

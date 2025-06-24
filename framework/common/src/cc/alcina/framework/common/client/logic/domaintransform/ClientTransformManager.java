@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersista
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -183,8 +183,8 @@ public abstract class ClientTransformManager extends TransformManager {
 					.annotation(PropertyPermissions.class);
 			DomainProperty instructions = property
 					.annotation(DomainProperty.class);
-			if (!PermissionsManager.get().checkEffectivePropertyPermission(op,
-					pp, domainObject, false)) {
+			if (!Permissions.get().checkEffectivePropertyPermission(op, pp,
+					domainObject, false)) {
 				continue;
 			}
 			if (property.isReadOnly() || property.isWriteOnly()) {

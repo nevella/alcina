@@ -13,7 +13,7 @@ import com.google.gwt.user.client.rpc.RpcRequestBuilder;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExpiredException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -64,8 +64,7 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		if (noCache) {
 			requestBuilder.setHeader("Cache-Control", "no-cache");
 		}
-		ClientInstance clientInstance = PermissionsManager.get()
-				.getClientInstance();
+		ClientInstance clientInstance = Permissions.get().getClientInstance();
 		if (clientInstance != null) {
 			requestBuilder.setHeader(REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY,
 					String.valueOf(clientInstance.getId()));

@@ -20,8 +20,7 @@ public class UserlandProvider {
 
 	public <U extends Entity & IUser> U getAnonymousUser() {
 		if (anonymousUser == null) {
-			anonymousUser = getUserByName(
-					PermissionsManager.ANONYMOUS_USER_NAME);
+			anonymousUser = getUserByName(Permissions.ANONYMOUS_USER_NAME);
 		}
 		return (U) anonymousUser;
 	}
@@ -34,7 +33,7 @@ public class UserlandProvider {
 
 	public <U extends Entity & IUser> U getSystemUser() {
 		if (systemUser == null) {
-			systemUser = getUserByName(PermissionsManager.SYSTEM_USER_NAME);
+			systemUser = getUserByName(Permissions.SYSTEM_USER_NAME);
 		}
 		return (U) systemUser;
 	}
@@ -52,6 +51,6 @@ public class UserlandProvider {
 
 	public boolean isSystemUser(IUser user) {
 		return Objects.equals(user,
-				(IUser) getUserByName(PermissionsManager.SYSTEM_USER_NAME));
+				(IUser) getUserByName(Permissions.SYSTEM_USER_NAME));
 	}
 }

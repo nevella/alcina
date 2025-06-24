@@ -18,7 +18,7 @@ import java.util.concurrent.Callable;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
@@ -27,55 +27,24 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
  * @author Nick Reddel
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
-public class ThreadedPermissionsManager extends PermissionsManager {
+public class ThreadedPermissions extends Permissions {
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
-			return new ThreadedPermissionsManager();
+			return new ThreadedPermissions();
 		}
 	};
 
-	public static ThreadedPermissionsManager cast() {
-		return (ThreadedPermissionsManager) PermissionsManager.get();
+	public static ThreadedPermissions cast0() {
+		return (ThreadedPermissions) Permissions.get();
 	}
 
 	public static boolean is() {
-		return get() instanceof ThreadedPermissionsManager;
+		return get() instanceof ThreadedPermissions;
 	}
 
-	public static ThreadedPermissionsManager tpmInstance() {
-		return new ThreadedPermissionsManager();
-	}
-
-	public <T> T callWithPushedSystemUserIfNeeded(Callable<T> callable)
-			throws Exception {
-		if (isRoot()) {
-			return callable.call();
-		} else {
-			try {
-				pushSystemUser();
-				return callable.call();
-			} finally {
-				popSystemUser();
-			}
-		}
-	}
-
-	public <T> T callWithPushedSystemUserIfNeededNoThrow(Callable<T> callable) {
-		try {
-			if (isRoot()) {
-				return callable.call();
-			} else {
-				try {
-					pushSystemUser();
-					return callable.call();
-				} finally {
-					popSystemUser();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public static ThreadedPermissions tpmInstance() {
+		return new ThreadedPermissions();
 	}
 
 	@Override
@@ -89,12 +58,8 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 	}
 
 	@Override
-	public PermissionsManager getT() {
-		return (ThreadedPermissionsManager) threadLocalInstance.get();
-	}
-
-	public void popSystemOrCurrentUser() {
-		popUser();
+	public Permissions getPerThreadInstance() {
+		return (ThreadedPermissions) threadLocalInstance.get();
 	}
 
 	public <IU extends IUser> IU provideNonSystemUserInStackOrThrow() {
@@ -105,7 +70,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 			provideNonSystemUserInStackOrThrow(boolean throwIfNotFound) {
 		int idx = stateStack.size() - 1;
 		while (idx >= 0) {
-			Boolean isRoot = stateStack.get(idx).asRoot;
+			Boolean isRoot = stateStack.get(idx).root;
 			if (!isRoot) {
 				return (IU) stateStack.get(idx).user;
 			}
@@ -118,51 +83,8 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		}
 	}
 
-	public void pushSystemOrCurrentUserAsRoot() {
-		if (isLoggedIn()) {
-			pushUser(getUser(), getLoginState(), true);
-		} else {
-			pushSystemUser();
-		}
-	}
-
 	@Override
 	protected void removePerThreadContext0() {
 		threadLocalInstance.remove();
-	}
-
-	public void
-			runThrowingWithPushedSystemUserIfNeeded(ThrowingRunnable runnable) {
-		try {
-			if (isRoot()) {
-				runnable.run();
-			} else {
-				try {
-					pushSystemUser();
-					runnable.run();
-				} finally {
-					popSystemUser();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public void runWithPushedSystemUserIfNeeded(Runnable runnable) {
-		try {
-			if (isRoot()) {
-				runnable.run();
-			} else {
-				try {
-					pushSystemUser();
-					runnable.run();
-				} finally {
-					popSystemUser();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 }

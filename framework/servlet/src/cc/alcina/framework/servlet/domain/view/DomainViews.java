@@ -32,8 +32,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.QueryResult;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -457,13 +457,12 @@ public abstract class DomainViews {
 					}
 					if (task != null) {
 						try {
-							PermissionsManager.get().pushUser(task.user,
-									task.loginState);
+							Permissions.pushUser(task.user, task.loginState);
 							Transaction.begin();
 							processEvent(task);
 						} finally {
 							Transaction.ensureEnded();
-							PermissionsManager.get().popUser();
+							Permissions.popUser();
 						}
 					}
 					long now = System.currentTimeMillis();
@@ -504,8 +503,8 @@ public abstract class DomainViews {
 		CountDownLatch latch = new CountDownLatch(1);
 
 		public ViewsTask() {
-			loginState = PermissionsManager.get().getLoginState();
-			user = PermissionsManager.get().getUser();
+			loginState = Permissions.get().getLoginState();
+			user = Permissions.get().getUser();
 		}
 
 		void await() {

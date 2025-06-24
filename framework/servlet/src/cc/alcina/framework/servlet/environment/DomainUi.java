@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet.environment;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.service.InstanceOracle;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -19,9 +19,13 @@ public interface DomainUi extends RemoteUi {
 	@Override
 	default void onEnterIteration() {
 		if (isDomain()) {
-			PermissionsManager.get().pushSystemUser();
+			pushUser();
 			Transaction.ensureBegun();
 		}
+	}
+
+	default void pushUser() {
+		Permissions.pushSystemUser();
 	}
 
 	default boolean isDomain() {
@@ -32,7 +36,7 @@ public interface DomainUi extends RemoteUi {
 	default void onExitIteration() {
 		if (isDomain()) {
 			Transaction.end();
-			PermissionsManager.get().popSystemUser();
+			Permissions.popUser();
 		}
 	}
 }

@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -239,7 +239,7 @@ public class LocalDomainStore {
 				int requestId = localRequestId++;
 				request.setRequestId(requestId);
 				request.setClientInstance(
-						PermissionsManager.get().getClientInstance());
+						Permissions.get().getClientInstance());
 				transformQueue.forEach(event -> {
 					DomainTransformEventPersistent persistentEvent = Reflections
 							.newInstance(persistenceImplementations

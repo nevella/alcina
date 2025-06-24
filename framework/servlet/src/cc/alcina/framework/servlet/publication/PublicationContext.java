@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.context.LooseContext;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -108,7 +108,7 @@ public class PublicationContext {
 			e2.printStackTrace();
 		}
 		String message = String.format("Publication exception: %s %s\n%s",
-				PermissionsManager.get().getUserName(), modelString, jsonForm);
+				Permissions.get().getUserName(), modelString, jsonForm);
 		return message;
 	}
 

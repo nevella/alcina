@@ -4,7 +4,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 
 public abstract class AbstractUserCriteriaGroup<SC extends AbstractUserCriterion>
 		extends CriteriaGroup<SC> {
@@ -21,11 +21,11 @@ public abstract class AbstractUserCriteriaGroup<SC extends AbstractUserCriterion
 		if (result != null) {
 			return result;
 		}
-		if (!PermissionsManager.get().isAdmin()
+		if (!Permissions.get().isAdmin()
 				&& getCriteria().iterator().hasNext()) {
 			AbstractUserCriterion uc = getCriteria().iterator().next();
 			if (uc != null && uc.getUserId() != null && uc.getUserId()
-					.longValue() != PermissionsManager.get().getUserId()) {
+					.longValue() != Permissions.get().getUserId()) {
 				return "Access denied: not restricted to current user";
 			}
 		}

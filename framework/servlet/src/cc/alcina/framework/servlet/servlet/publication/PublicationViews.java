@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -29,7 +29,7 @@ public class PublicationViews {
 	private String html;
 
 	public String asHtml(long id) {
-		if (!PermissionsManager.get().isAdmin() && !EntityLayerUtils.isTest()) {
+		if (!Permissions.get().isAdmin() && !EntityLayerUtils.isTest()) {
 			throw new RuntimeException("Not permitted");
 		}
 		build(id, null);

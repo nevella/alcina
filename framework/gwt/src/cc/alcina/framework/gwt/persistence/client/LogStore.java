@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -277,8 +277,7 @@ public class LogStore {
 		}
 		this.lastMessage = message;
 		this.lastTopic = topic;
-		ClientInstance clientInstance = PermissionsManager.get()
-				.getClientInstance();
+		ClientInstance clientInstance = Permissions.get().getClientInstance();
 		String clientInstanceAuth = clientInstance == null ? "(before cli)"
 				: String.valueOf(clientInstance.getAuth());
 		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,

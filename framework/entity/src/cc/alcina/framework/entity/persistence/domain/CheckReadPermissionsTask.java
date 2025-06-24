@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 
 public class CheckReadPermissionsTask<T extends Entity>
@@ -48,13 +48,13 @@ public class CheckReadPermissionsTask<T extends Entity>
 		}
 		ObjectPermissions op = t.getClass()
 				.getAnnotation(ObjectPermissions.class);
-		return PermissionsManager.get().checkEffectivePropertyPermission(op,
-				null, t, true);
+		return Permissions.get().checkEffectivePropertyPermission(op, null, t,
+				true);
 	}
 
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
-		if (PermissionsManager.get().isRoot()) {
+		if (Permissions.isRoot()) {
 			return stream;
 		}
 		return stream.filter(this);

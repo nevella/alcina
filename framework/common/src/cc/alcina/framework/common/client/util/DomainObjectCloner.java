@@ -21,7 +21,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -71,8 +71,8 @@ public class DomainObjectCloner extends CloneHelper {
 				.annotation(ObjectPermissions.class);
 		PropertyPermissions pp = classReflector.property(propertyName)
 				.annotation(PropertyPermissions.class);
-		return !PermissionsManager.get().checkEffectivePropertyPermission(op,
-				pp, obj, false);
+		return !Permissions.get().checkEffectivePropertyPermission(op, pp, obj,
+				false);
 	}
 
 	public boolean isCreateProvisionalObjects() {

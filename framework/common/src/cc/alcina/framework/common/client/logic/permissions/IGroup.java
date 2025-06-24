@@ -47,7 +47,7 @@ public interface IGroup
 	}
 
 	default <IU extends IUser> boolean containsCurrentUser() {
-		return getMemberUsers().contains(PermissionsManager.get().getUser());
+		return getMemberUsers().contains(Permissions.get().getUser());
 	}
 
 	default <IG extends IGroup> boolean containsGroup(IG group) {
@@ -71,7 +71,7 @@ public interface IGroup
 	 */
 	default <IU extends IUser> boolean containsCurrentUserTransitive() {
 		return containsUserOrMemberGroupContainsUser(
-				PermissionsManager.get().getUser());
+				Permissions.get().getUser());
 	}
 
 	@Override

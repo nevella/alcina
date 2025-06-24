@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.logic.permissions;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsExtension;
+import cc.alcina.framework.common.client.logic.permissions.Permissions.PermissionsExtension;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 

@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.Permissions;
 import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
@@ -38,8 +38,8 @@ public class RenderedClass {
 					|| actionClass == EditAction.class
 					|| actionClass == ViewAction.class
 					|| actionClass == DeleteAction.class;
-			if (noPermissionsCheck || PermissionsManager.get().isPermitted(
-					object, new AnnotatedPermissible(action.permission()))) {
+			if (noPermissionsCheck || Permissions.get().isPermitted(object,
+					new AnnotatedPermissible(action.permission()))) {
 				result.add(actionClass);
 			}
 		}
