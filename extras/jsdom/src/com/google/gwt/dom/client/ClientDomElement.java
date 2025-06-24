@@ -321,4 +321,6 @@ public interface ClientDomElement extends ClientDomNode {
 	void setSelectionRange(int pos, int length);
 
 	IntPair getScrollPosition();
+
+	String getComputedStyleValue(String key);
 }

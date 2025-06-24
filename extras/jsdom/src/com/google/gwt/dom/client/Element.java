@@ -403,6 +403,11 @@ public class Element extends Node implements ClientDomElement,
 		return super.getChild(index);
 	}
 
+	public String getComputedStyleValue(String key) {
+		return callWithRemoteOrDefault(true,
+				() -> remote().getComputedStyleValue(key), null);
+	}
+
 	public Element getChildElement(int index) {
 		for (int idx = 0; idx < getChildCount(); idx++) {
 			Node child = getChild(idx);
@@ -1407,6 +1412,11 @@ public class Element extends Node implements ClientDomElement,
 				if (argumentTypes.size() == 1) {
 					return elem.getPropertyString((String) arguments.get(0));
 				}
+			case "getComputedStyleValue":
+				if (argumentTypes.size() == 1) {
+					return elem
+							.getComputedStyleValue((String) arguments.get(0));
+				}
 			case "setPropertyString":
 				if (argumentTypes.size() == 2) {
 					elem.setPropertyString((String) arguments.get(0),
@@ -1456,5 +1466,10 @@ public class Element extends Node implements ClientDomElement,
 
 	public IntPair getScrollPosition() {
 		return remote().getScrollPosition();
+	}
+
+	public double getComputedStyleValueNumeric(String key) {
+		String value = getComputedStyleValue(key);
+		return value == null ? 0.0 : Double.parseDouble(value);
 	}
 }

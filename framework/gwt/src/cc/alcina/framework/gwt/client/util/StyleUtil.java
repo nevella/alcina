@@ -60,14 +60,14 @@ public class StyleUtil {
 
 		public Element execute() {
 			Element cursor = from;
-			Predicate<Element> p = e -> true;
-			p = p.and(e -> !block ^ (WidgetUtils
-					.getComputedStyle(e, "visibility").equals("block")
-					|| WidgetUtils.getComputedStyle(e, "visibility")
+			Predicate<Element> p = element -> true;
+			p = p.and(element -> !block ^ (element
+					.getComputedStyleValue("visibility").equals("block")
+					|| element.getComputedStyleValue("visibility")
 							.equals("flex")));
-			p = p.and(e -> !positioningContainer ^ (WidgetUtils
-					.getComputedStyle(e, "position").equals("relative")
-					|| WidgetUtils.getComputedStyle(e, "position")
+			p = p.and(element -> !positioningContainer ^ (element
+					.getComputedStyleValue("position").equals("relative")
+					|| element.getComputedStyleValue("position")
 							.equals("absolute")));
 			do {
 				if (p.test(cursor)) {

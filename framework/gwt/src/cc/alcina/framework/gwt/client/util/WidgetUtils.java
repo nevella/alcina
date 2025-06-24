@@ -398,50 +398,6 @@ public class WidgetUtils {
 				parentPass);
 	}
 
-	public static native String getBoundingClientRect(Element elem) /*-{
-    if (!String.prototype.format) {
-      String.prototype.format = String.prototype.f = function() {
-        var s = this, i = arguments.length;
-
-        while (i--) {
-          s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
-        }
-        return s;
-      };
-    }
-    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureJsoRemote()();
-    var rect = remote.getBoundingClientRect();
-    return "x:{0}, y:{1},w:{2},h:{3}".format(rect.x, rect.y, rect.width,
-        rect.height);
-	}-*/;
-
-	public static native String getComputedStyle(Element eltMulti,
-			String attributeName)/*-{
-    var elt = eltMulti.@com.google.gwt.dom.client.Element::ensureJsoRemote()();
-    if (elt.currentStyle) {
-      return elt.currentStyle[attributeName];
-    }
-    if ($wnd.getComputedStyle) {
-      return $wnd.getComputedStyle(elt, null)[attributeName];
-    }
-	}-*/;
-
-	public static native String getComputedStyleProperty(Element eltMulti,
-			String strCssRule) /*-{
-    var elem = eltMulti.@com.google.gwt.dom.client.Element::jsoRemote()();
-    if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
-      strValue = $doc.defaultView.getComputedStyle(elem, "").getPropertyValue(
-          strCssRule);
-    } else if (oElm.currentStyle) {
-      strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
-        return p1.toUpperCase();
-      });
-      strValue = oElm.currentStyle[strCssRule];
-    }
-    return strValue;
-	}-*/;
-
 	public static List<Element> getElementAncestors(Element elem) {
 		List<Element> elements = new ArrayList<>();
 		while (elem != null) {
@@ -614,8 +570,9 @@ public class WidgetUtils {
       return 0;
     }
     var h = remote.offsetHeight;
-    var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-    var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+	//note - dodgy, just uses margin
+    var marginTop = elem.@com.google.gwt.dom.client.Element::getComputedStyleValue(Ljava/lang/String;)("margin");
+    var marginBottom = elem.@com.google.gwt.dom.client.Element::getComputedStyleValue(Ljava/lang/String;)("margin");
     if (marginTop.indexOf("px") != -1) {
       h += parseInt(marginTop.substring(0, marginTop.length - 2));
     }
@@ -627,7 +584,7 @@ public class WidgetUtils {
 
 	public static Widget getPositioningParent(Widget widget) {
 		while (widget.getParent() != null) {
-			String pos = getComputedStyle(widget.getElement(), "position");
+			String pos = widget.getElement().getComputedStyleValue("position");
 			if (pos != null
 					&& (pos.equals("relative") || pos.equals("absolute"))) {
 				return widget;
@@ -705,7 +662,8 @@ public class WidgetUtils {
 
 	public static boolean isEditable(Element element) {
 		return element.hasTagName("input") || element.hasTagName("textarea")
-				|| Objects.equals(getComputedStyle(element, "contentEditable"),
+				|| Objects.equals(
+						element.getComputedStyleValue("contentEditable"),
 						"true");
 	}
 

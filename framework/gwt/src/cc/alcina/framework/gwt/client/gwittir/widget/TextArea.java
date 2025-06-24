@@ -433,12 +433,10 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 					return;
 				}
 				element.getStyle().setProperty("height", "auto");
-				String paddingTop = WidgetUtils.getComputedStyle(element,
-						"paddingTop");
-				String paddingBottom = WidgetUtils.getComputedStyle(element,
-						"paddingBottom");
-				String computedHeight = WidgetUtils.getComputedStyle(element,
-						"height");
+				String paddingTop = element.getComputedStyleValue("paddingTop");
+				String paddingBottom = element
+						.getComputedStyleValue("paddingBottom");
+				String computedHeight = element.getComputedStyleValue("height");
 				double paddingTopPx = paddingTop.endsWith("px")
 						? Double.parseDouble(paddingTop.replace("px", ""))
 						: 0;

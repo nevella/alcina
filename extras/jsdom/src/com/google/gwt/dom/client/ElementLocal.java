@@ -877,4 +877,9 @@ public class ElementLocal extends NodeLocal implements ClientDomElement {
 			return false;
 		}
 	}
+
+	@Override
+	public String getComputedStyleValue(String key) {
+		throw new UnsupportedOperationException();
+	}
 }

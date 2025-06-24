@@ -555,4 +555,10 @@ public class ElementAttachId extends NodeAttachId implements ElementRemote {
 	int orSunkEventsOfAllChildren(int sunk) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public String getComputedStyleValue(String key) {
+		return invokeSync("getComputedStyleValue", List.of(String.class),
+				List.of(key));
+	}
 }

@@ -1151,4 +1151,9 @@ public final class ElementJso extends NodeJso implements ElementRemote {
 	public IntPair getScrollPosition() {
 		return new IntPair(getScrollLeft(), getScrollTop());
 	}
+
+	@Override
+	public native String getComputedStyleValue(String key)/*-{
+		return $wnd.getComputedStyle(this)[key];
+	}-*/;
 }
