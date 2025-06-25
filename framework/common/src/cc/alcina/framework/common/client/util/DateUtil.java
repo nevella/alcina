@@ -1,9 +1,10 @@
 package cc.alcina.framework.common.client.util;
 
-import java.util.Arrays;
 import java.util.Date;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.datepicker.client.CalendarUtil;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -159,5 +160,13 @@ public class DateUtil {
 			}
 		}
 		return -1;
+	}
+
+	public static Date parseYyyyMmDd(String ymd) {
+		RegExp regExp = RegExp.compile("(\\d{4}).(\\d{2}).(\\d{2})");
+		MatchResult matchResult = regExp.exec(ymd);
+		return Ax.date(Integer.parseInt(matchResult.getGroup(1)),
+				Integer.parseInt(matchResult.getGroup(2)),
+				Integer.parseInt(matchResult.getGroup(3)));
 	}
 }
