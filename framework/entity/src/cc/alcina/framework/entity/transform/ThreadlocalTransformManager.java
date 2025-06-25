@@ -67,8 +67,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.Permissions;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.reflection.AssignmentPermission;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -141,15 +141,41 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_NON_LISTENING_DOMAIN = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_NON_LISTENING_DOMAIN";
 
-	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
+	private static ThreadLocalStore threadLocalStore = new ThreadLocalStore();
+
+	static final class ThreadLocalStore extends ThreadLocal<TransformManager> {
 		@Override
-		protected synchronized Object initialValue() {
+		protected synchronized TransformManager initialValue() {
+			return createInstance();
+		}
+
+		ThreadlocalTransformManager originalInstance;
+
+		ThreadlocalTransformManager createInstance() {
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager
 					.ttmInstance();
 			tm.resetTltm(null, null, false, true, true);
 			return tm;
 		}
-	};
+
+		void push(TransformManager otherManager) {
+			originalInstance = (ThreadlocalTransformManager) get();
+			set(otherManager);
+		}
+
+		void pop() {
+			set(originalInstance);
+		}
+	}
+
+	public static void
+			enterAltTransformManagerContext(TransformManager otherManager) {
+		threadLocalStore.push(otherManager);
+	}
+
+	public static void exitAltTransformManagerContext() {
+		threadLocalStore.pop();
+	}
 
 	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
 
@@ -210,7 +236,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	// for testing
 	public static void registerPerThreadTransformManager(
 			TransformManager perThreadTransformManager) {
-		threadLocalInstance.set(perThreadTransformManager);
+		threadLocalStore.set(perThreadTransformManager);
 	}
 
 	public static ThreadlocalTransformManager ttmInstance() {
@@ -614,7 +640,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	@Override
 	public TransformManager getT() {
-		return (TransformManager) threadLocalInstance.get();
+		return (TransformManager) threadLocalStore.get();
 	}
 
 	@Override
@@ -1007,7 +1033,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	@Override
 	protected void removePerThreadContext0() {
-		threadLocalInstance.remove();
+		threadLocalStore.remove();
 	}
 
 	public void resetLocalIdCounterForCurrentThread() {

@@ -10,7 +10,7 @@ public class UrlRouterPart implements TellerContext.Part {
 
 	public String host;
 
-	public int port;
+	public int port = -1;
 
 	public boolean gwtDevMode;
 

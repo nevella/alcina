@@ -222,4 +222,7 @@ public interface RemoteUi {
 			}
 		}
 	}
+
+	default void onExitContext() {
+	}
 }

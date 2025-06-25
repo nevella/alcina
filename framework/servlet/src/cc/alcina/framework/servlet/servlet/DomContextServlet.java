@@ -27,11 +27,6 @@ public class DomContextServlet extends DomContext {
 	}
 
 	@Override
-	protected int getAbsoluteTop0(Element parentElement) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	protected boolean isZeroOffsetDims0(Element elem) {
 		throw new UnsupportedOperationException();
 	}

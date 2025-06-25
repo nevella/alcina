@@ -14,4 +14,12 @@ public interface Feature_Romcom_Impl extends Feature {
 	@Feature.Parent(Feature_Romcom_Impl.class)
 	public interface _Authentication extends Feature {
 	}
+
+	/*
+	 * Romcom reuses the client transform manager (and per-client-instance
+	 * Domain)
+	 */
+	@Feature.Parent(Feature_Romcom_Impl.class)
+	public interface _Transforms extends Feature {
+	}
 }

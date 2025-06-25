@@ -10,14 +10,14 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 @EnvironmentRegistration
 public abstract class DomContext {
 	// transitional, use boundingclientrect for positioning computations
-	private boolean useBoundingClientRect;
+	private static boolean useBoundingClientRect;
 
-	public boolean isUseBoundingClientRect() {
+	public static boolean isUseBoundingClientRect() {
 		return useBoundingClientRect;
 	}
 
-	public void setUseBoundingClientRect(boolean useBoundingClientRect) {
-		this.useBoundingClientRect = useBoundingClientRect;
+	public static void setUseBoundingClientRect(boolean useBoundingClientRect) {
+		DomContext.useBoundingClientRect = useBoundingClientRect;
 	}
 
 	public static void clearReferences() {
@@ -29,10 +29,6 @@ public abstract class DomContext {
 
 	private static DomContext get() {
 		return Registry.impl(DomContext.class);
-	}
-
-	public static int getAbsoluteTop(Element elem) {
-		return get().getAbsoluteTop0(elem);
 	}
 
 	/* ensure cache exists at a given context level */
@@ -83,8 +79,6 @@ public abstract class DomContext {
 
 	protected abstract void clearReferences0();
 
-	protected abstract int getAbsoluteTop0(Element parentElement);
-
 	protected abstract Document getDocument0();
 
 	protected void ensure0() {
@@ -109,4 +103,8 @@ public abstract class DomContext {
 
 	protected abstract void setStyleProperty0(Element elem, String key,
 			String value);
+
+	public static int getAbsoluteTop(Element elem) {
+		return ((com.google.gwt.dom.client.Element) elem).getAbsoluteTop();
+	}
 }

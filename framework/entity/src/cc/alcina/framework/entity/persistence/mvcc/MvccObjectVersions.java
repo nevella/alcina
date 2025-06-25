@@ -439,6 +439,16 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			mostRecentObject = mostRecentVersion.object;
 		} else {
 			mostRecentObject = visibleAllTransactions;
+			if (visibleAllTransactions == null) {
+				/*
+				 * This works - I think. But I really need a language to talk
+				 * about all the possible cases/states.
+				 * 
+				 * Repro: jade romcom with tests (once things are compiled I
+				 * guess)
+				 */
+				mostRecentObject = domainIdentity;
+			}
 		}
 		if (write) {
 			version = new ObjectVersion<>();

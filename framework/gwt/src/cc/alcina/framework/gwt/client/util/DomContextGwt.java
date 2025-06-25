@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.util;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 
@@ -13,17 +12,6 @@ public class DomContextGwt extends DomContext {
 	@Override
 	protected void clearReferences0() {
 		getXmlDoc(null).clearElementReferences();
-	}
-
-	@Override
-	protected int getAbsoluteTop0(org.w3c.dom.Element w3cElem) {
-		Element elem = (Element) w3cElem;
-		if (isUseBoundingClientRect()) {
-			return (int) elem.getBoundingClientRect().top
-					+ Window.getScrollTop();
-		} else {
-			return elem.getAbsoluteTop();
-		}
 	}
 
 	@Override

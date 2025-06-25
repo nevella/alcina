@@ -61,8 +61,6 @@ import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProt
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Session;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.MessageProcessingToken;
 import cc.alcina.framework.servlet.component.romcom.server.RemoteComponentProtocolServer.RequestToken;
-import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
-import cc.alcina.framework.servlet.servlet.HttpContext;
 
 /*
  * Sync note - most methods will be called already synced on the environment
@@ -356,6 +354,7 @@ class Environment {
 		}
 
 		void exitContext() {
+			ui.onExitContext();
 			Environment.this.exitContext();
 		}
 

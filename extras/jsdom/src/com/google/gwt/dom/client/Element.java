@@ -43,6 +43,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.impl.TextBoxImpl;
 
@@ -64,6 +65,8 @@ import cc.alcina.framework.common.client.util.IntPair;
  */
 public class Element extends Node implements ClientDomElement,
 		org.w3c.dom.Element, EventListener, HasHandlers {
+	public static boolean useDomRectForOffsets = false;
+
 	public static final Predicate<Element> DISPLAY_NONE = e -> {
 		if (e.implAccess().isJsoRemote()) {
 			return e.jsoRemote().getComputedStyle()
@@ -357,8 +360,12 @@ public class Element extends Node implements ClientDomElement,
 
 	@Override
 	public int getAbsoluteTop() {
-		return callWithRemoteOrDefault(true, () -> remote().getAbsoluteTop(),
-				0);
+		if (useDomRectForOffsets) {
+			return (int) getBoundingClientRect().top + Window.getScrollTop();
+		} else {
+			return callWithRemoteOrDefault(true,
+					() -> remote().getAbsoluteTop(), 0);
+		}
 	}
 
 	@Override
