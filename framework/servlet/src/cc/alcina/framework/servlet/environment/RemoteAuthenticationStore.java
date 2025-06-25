@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.environment;
 
+import cc.alcina.framework.common.client.meta.Feature;
+import cc.alcina.framework.servlet.component.romcom.Feature_Romcom_Impl;
 import cc.alcina.framework.servlet.component.romcom.protocol.RemoteComponentProtocol.Message;
 import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 
@@ -7,6 +9,7 @@ import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
  * Provides a way for romcom threads (not directly associated with an
  * HttpServletResponse) to send auth cookie deltas to the browser
  */
+@Feature.Ref(Feature_Romcom_Impl._Authentication.class)
 class RemoteAuthenticationStore implements AuthenticationTokenStore {
 	Environment environment;
 
