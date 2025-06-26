@@ -182,12 +182,14 @@ public class TableModel extends Model
 		public TableModel apply(Class<? extends Bindable> clazz) {
 			TableModel tableModel = new TableModel();
 			BeanFields.query().forClass(clazz).forMultipleWidgetContainer(true)
+					.withAllowNullWidgetProviders(true)
 					.withResolver(node.getResolver()).listFields().stream()
 					.map(TableColumn::new)
 					.forEach(tableModel.header.columns::add);
 			tableModel.editableFields = BeanFields.query().forClass(clazz)
 					.forMultipleWidgetContainer(true)
 					.withResolver(node.getResolver()).withEditable(true)
+					.withAllowNullWidgetProviders(true)
 					.withValidationFeedbackProvider(
 							new FormModel.ValidationFeedbackProvider())
 					.listFields().stream()
